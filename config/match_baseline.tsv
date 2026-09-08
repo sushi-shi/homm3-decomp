@@ -365,7 +365,7 @@ ai_player	?getTown@game@@QAEPAVtown@@H@Z	100.0000	100.0000	100.0000	0x2ba30	f0e6
 ai_player	?getValue@type_angelic_alliance_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33130	f1c644e22459
 ai_player	?getValue@type_antiluck_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32ba0	d76d5a263437
 ai_player	?getValue@type_antimagic_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32a50	568102fafc71
-ai_player	?getValue@type_antimorale_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32b20	43a34a62cb70
+ai_player	?getValue@type_antimorale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32b20	767707242287
 ai_player	?getValue@type_combat_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32560	bddca8cec957
 ai_player	?getValue@type_creature_growth_artifact@@UBEJPBVhero@@EE@Z	99.4253	100.0000	100.0000	0x32d70	81e38a63493f
 ai_player	?getValue@type_duration_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32860	987c6c430e55
@@ -3221,14 +3221,16 @@ resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator
 resourcemanager	?write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	d3480559d589
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	8e254a7e6155
 resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	d198be5c7e9e
-rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
+rmg	??0?$vector@PAUTRmgTownSlot@@V?$allocator@PAUTRmgTownSlot@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTownSlot@@@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
 rmg	??0TProgressSink@@QAE@H@Z	100.0000	100.0000	100.0000	0x130e20	2f16a6d32876
 rmg	??0TRandomMapRequest@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x14bf00	54af77fef39e
-rmg	??0TRmgGeneratorBase@@QAE@HHHPAVTProgressSink@@HH@Z	100.0000	100.0000	100.0000	0x136070	2dd45993d495
+rmg	??0TRmgGeneratorBase@@QAE@HHHPAVTProgressSink@@HH@Z	48.0526	100.0000	100.0000	0x136070	2dd45993d495
 rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130e90	edb4b65aac52
 rmg	??0TRmgZone@@QAE@PAUTRmgTownSlot@@@Z	100.0000	100.0000	100.0000	0x1329e0	43c69784e0da
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	20e010faae4c
 rmg	??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z	100.0000	100.0000	100.0000	0x1330e0	34e5f00dfd63
+rmg	??0type_random_map@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x130fb0	61d6eaf41b8e
+rmg	??0type_random_map_generator@@QAE@HHHHHHHHHPAVTProgressSink@@H@Z	86.5872	86.5872	86.5872	0x137b10	993331788bba
 rmg	??0type_shrine_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1349d0	1621d989a619
 rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	b2ccc452185f
 rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	9611a9b6da8a
@@ -3236,7 +3238,7 @@ rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8a
 rmg	??1?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x14c6a0	-
 rmg	??1?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x14c170	-
 rmg	??1TProgressSink@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	bcaf4bd86ff6
-rmg	??1TRmgGeneratorBase@@UAE@XZ	100.0000	100.0000	100.0000	0x1363b0	7f03472a9252
+rmg	??1TRmgGeneratorBase@@UAE@XZ	100.0000	100.0000	100.0000	0x1363b0	cab4b9eae298
 rmg	??1TRmgMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132510	da5961006db4
 rmg	??1TRmgMapInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x1361a0	6576d5852847
 rmg	??1TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130ee0	-
@@ -3248,7 +3250,8 @@ rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	443032e6b8c1
 rmg	??1rmgBlackBoxObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
 rmg	??1rmgQuestArtifactObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1339f0	6fff44d8e0d1
 rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	3456f3994041
-rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	a9bf0b2d1edd
+rmg	??1type_random_map@@UAE@XZ	100.0000	100.0000	100.0000	0x1310b0	457181e8e3f9
+rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	1fcbc94b2af0
 rmg	??DTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcd0	f507d47c1a08
 rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	b2718bbe2d90
 rmg	??H@YI?AUTPoint@@U0@UTRmgVector@@@Z	100.0000	100.0000	100.0000	0x1fdd20	c95ef38ef830
@@ -3282,22 +3285,28 @@ rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x1
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	dee98657ed05
 rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.7153	83.7153	83.7153	0x147880	ccb9360f304b
 rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	96.3209	96.3209	96.3209	0x13e050	81cb4443c469
+rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	99.3582	99.3582	99.3582	0x1405d0	5ce7acf63a39
 rmg	?canConnect@TRmgZone@@QBEEPBU1@@Z	96.4286	96.4286	96.4286	0x132bd0	bea039f48ee9
 rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@PAUTRmgZone@@@Z	86.6848	86.6848	86.6848	0x131cf0	8645631febc0
-rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	89.9022	89.9022	90.7594	0x141960	06f4777db579
+rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	90.7594	90.7594	90.7594	0x141960	06f4777db579
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374	98.0374	0x13ad60	a726380b0ba3
 rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	73.0200	73.0200	73.0200	0x143e20	a143c265e4d9
 rmg	?clear@TRmgMapItem@@QAEXXZ	91.0263	91.0263	91.0263	0x130f10	5159625cc405
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	e059e164a096
 rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150	9f4ec684d983
 rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	9f6a8d239172
-rmg	?connectZones@type_random_map_generator@@QAEXXZ	92.3423	92.8281	93.6151	0x143240	dcb7dbc0bfdd
+rmg	?connectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x143240	dcb7dbc0bfdd
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
-rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	76.7013	81.8175	81.8175	0x141140	29940445411f
+rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	78.0716	81.8175	81.8175	0x141140	29940445411f
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	95.6907	95.6907	95.6907	0x140b20	c23122dafb4b
-rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	75.6332	75.6332	85.9575	0x148df0	95cf293ed77f
-rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	94.7490	94.7490	94.8591	0x141ad0	fb3b3934c7bc
+rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	85.9575	85.9575	85.9575	0x148df0	95cf293ed77f
+rmg	?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	89.6141	89.6141	89.6141	0x148500	924954480891
+rmg	?createRivers@type_random_map_generator@@QAEXXZ	90.5077	90.5077	90.5077	0x149870	d531782fa8ec
+rmg	?createRoads@type_random_map_generator@@QAEXXZ	71.7235	71.7235	71.7235	0x148290	0868594354bd
+rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	92.4189	94.7490	94.8591	0x141ad0	fb3b3934c7bc
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	82.1005	82.1005	82.1005	0x142080	b0bd0cb2060b
+rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	93.5790	93.5790	93.5790	0x13efa0	049d9f1d80da
+rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	91.1321	91.1321	91.1321	0x137970	ef8d60ed01f4
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	fe6f09922735
 rmg	?drawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	0fe372b1d6ef
 rmg	?erase@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x14d060	-
@@ -3305,9 +3314,13 @@ rmg	?erase@?$vector@EV?$allocator@E@std@@@std@@QAEPAEPAE0@Z	100.0000	100.0000	10
 rmg	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	100.0000	100.0000	100.0000	0x14cdb0	-
 rmg	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0x14cd70	-
 rmg	?erase@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@@Z	100.0000	100.0000	100.0000	0x14c610	-
+rmg	?expandObstacleClearance@type_random_map_generator@@QAEXXZ	86.9809	86.9809	86.9809	0x13f880	28a10c8ef027
 rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	94.4493	94.4493	94.4493	0x13b2f0	1402733f8da9
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
-rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.7786	84.8000	84.8000	0x141780	5cf7083c6a52
+rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	62.4753	62.4753	62.4753	0x131460	d4ef35e59ac9
+rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	84.8000	84.8000	84.8000	0x141780	5cf7083c6a52
+rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	65.6485	65.6485	65.6485	0x13f1a0	7ca9bc1d6a03
+rmg	?generate@TRandomMapRequest@@QAEHPBDPAX@Z	100.0000	100.0000	100.0000	0x14c090	b4514748d705
 rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341f0	d4b7c7591c29
 rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134380	03c960846c3a
 rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134410	0e7e1e9770bd
@@ -3316,11 +3329,14 @@ rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	64ccd4bf338d
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	eb1bf6a35a59
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	09167083d057
+rmg	?generate@type_random_map_generator@@QAEEXZ	96.8971	96.8971	96.8971	0x149930	6e4cccd152be
 rmg	?generate@type_resource_lump_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134870	fdb40e62cfdb
 rmg	?generate@type_scholar_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134970	3d336a522202
 rmg	?generate@type_shrine_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134a00	9b219239ae05
 rmg	?generate@type_treasure_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341a0	7a39a864a012
 rmg	?generate@type_witch_hut_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134a90	436b0d5377a5
+rmg	?generateRmgIslandMask@@YIXPAEHH@Z	82.2075	82.2075	82.2075	0x13ed00	e121044ae1d2
+rmg	?generateToFile@TRandomMapRequest@@QAEHPAVTAbstractFile@@PAX@Z	85.5534	85.5534	85.5534	0x14bf60	cf8a5809a7a7
 rmg	?getLand@TRmgMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132830	07d537798ace
 rmg	?getLand@TRmgRoadMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132480	8e0b8e78a32d
 rmg	?getLand@type_random_map@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1322c0	7c46881ce0c6
@@ -3336,6 +3352,7 @@ rmg	?getTile@TRmgRoadMapAdapter@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.
 rmg	?getTile@type_random_map@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132260	8014560cbb01
 rmg	?getValue@type_black_box_creature_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134310	5557e97c67d1
 rmg	?getValue@type_key_tent_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134fa0	aab5f01f5123
+rmg	?getValue@type_map_dwelling_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x1347f0	8f350214acc8
 rmg	?getValue@type_quest_experience_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134c80	3983c518b002
 rmg	?getValue@type_treasure_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134190	cff23a10f777
 rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@UTRmgMapPosition@@EPAUTRmgZone@@E@Z	100.0000	100.0000	100.0000	0x131170	2b94a415ae67
@@ -3349,19 +3366,32 @@ rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMa
 rmg	?isWritable@rmgKeyTentObject@@UAEEXZ	100.0000	100.0000	100.0000	0x1338e0	f9ea77af984a
 rmg	?isWritable@rmgQuestArtifactObject@@UAEEXZ	100.0000	100.0000	100.0000	0x133a50	dbce2154517d
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	68.8871	68.8871	68.8871	0x13dad0	dfea2c88fc86
+rmg	?loadObjectPrototypes@TRmgGeneratorBase@@QAEXXZ	99.5878	99.5878	99.5878	0x136200	1a538906fd27
+rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	78.6256	78.6256	78.6256	0x137ff0	b14bf53aa554
 rmg	?markBorderObjectArea@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	100.0000	100.0000	100.0000	0x140fc0	d9f8ea61997c
 rmg	?markBorderPatch@type_random_map@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x131bd0	1cf72f22b469
+rmg	?markCoastalTiles@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131310	d8b52f00ae73
+rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	76.7216	76.7216	76.7216	0x148a40	f9b2d7900e30
+rmg	?markRiverObjectTargets@type_random_map_generator@@QAEXXZ	95.8442	95.8442	95.8442	0x1497a0	a406dca24f82
+rmg	?markRiverTargets@type_random_map_generator@@QAEXXZ	80.9379	80.9379	80.9379	0x148c70	9a2431ada24d
 rmg	?openConnectionPath@type_random_map_generator@@QAEXUTRmgMapPosition@@E@Z	79.9698	79.9698	79.9698	0x1408e0	563b48d3c2c2
 rmg	?openPathPatch@type_random_map@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x131ad0	8b9fb68bfdf5
 rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	70.4101	70.4101	70.4101	0x148040	3627024fcec5
 rmg	?placeBorderObject@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140d60	d15d1657d5ba
+rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x145e60	155c221bb434
+rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	84.2575	84.2575	84.2575	0x145580	7d9c46c0ca7e
+rmg	?placeMines@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x145f60	364b5b0c60aa
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	93.5774	93.5774	93.5774	0x142930	563a5853e293
+rmg	?placePrimaryTown@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x144a50	9bbb6e048614
+rmg	?prepareWaterZoneConnections@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	93.4037	93.4037	93.4037	0x13f470	b7097a3620a4
+rmg	?prepareZoneConnections@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x144920	90b9e7cee918
 rmg	?propagateZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.1353	77.1353	77.1353	0x13d8e0	b52f34245923
 rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.7862	99.7862	99.7862	0x136560	713b0702a838
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	c92ec28cb951
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	46e584623115
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	99.6581	99.6581	99.6581	0x146040	b7f108f4c39a
+rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	016693b63aaf
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	11dcda4772f3
 rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
@@ -3377,7 +3407,10 @@ rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@
 rmg	?subdivideRmgNoiseRegion@@YIXAAV?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@HUTRmgNoiseRegion@@UTRmgNoiseMidpoints@@@Z	99.9545	99.9545	99.9545	0x13e9e0	85fc80319627
 rmg	?traceBranchEnd@type_random_map@@QAE?AUTPoint@@U2@0H@Z	99.8683	99.8683	99.8683	0x143c70	67175da2d85e
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
+rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	69.3906	69.3906	69.3906	0x145990	003e56c49f26
+rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	76.3310	76.3310	76.3310	0x145250	55c6af6ee3e2
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	12671cc1c8ff
+rmg	?write@TRmgMapItem@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x132890	693f935807a5
 rmg	?write@rmgArtifactObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133500	af70fb7423ba
 rmg	?write@rmgBlackBoxObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1336f0	ea1c6a22dc19
 rmg	?write@rmgMonsterObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1331f0	d6e36466fdab
@@ -3386,9 +3419,13 @@ rmg	?write@rmgResourceObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 rmg	?write@rmgScholarObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133e70	948dffdb44ba
 rmg	?write@rmgSeerHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133a90	312ce68cd070
 rmg	?write@rmgShrineObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133f40	4bd333d567ee
+rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1332f0	619ad98fa536
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
+rmg	TRmgGeneratorBase_decorateMapCell	0.0000	0.0000	0.0000	0x1373a0	b61b573f5494
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
@@ -3397,6 +3434,12 @@ rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0
 rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
 rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
+rmg	type_random_map_generator_decorateUnderground	0.0000	0.0000	0.0000	0x1439e0	a557805353c2
+rmg	type_random_map_generator_initializeZones	0.0000	0.0000	0.0000	0x13bcb0	d88aa8e3e5b6
+rmg	type_random_map_generator_paintZoneTerrain	0.0000	0.0000	0.0000	0x13e6a0	058951b1a3e3
+rmg	type_random_map_generator_placeAdditionalTowns	0.0000	0.0000	0.0000	0x144ae0	8eb1f85b9816
+rmg	type_random_map_generator_placeZoneTreasures	0.0000	0.0000	0.0000	0x147360	d6930cf6415f
+rmg	type_random_map_generator_prepareJunctionZone	0.0000	0.0000	0.0000	0x1446a0	dfc771a5149a
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	cf2bb081468e
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	0265024cf345
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7d51c45007f5
@@ -3473,7 +3516,7 @@ rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	72.8497	72.8497	72.849
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	63.9923	63.9923	63.9923	0xf9f00	ab30f992e664
-rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	89.9680	89.9680	89.9680	0x1b5440	2c693c3b66d3
+rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	91.3389	91.3389	91.3389	0x1b5440	111af9a68376
 rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	d2fa6bcbbe7b
 rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	f937b618fa48
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
@@ -4626,282 +4669,3 @@ winmgr	?saveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.00
 winmgr	?updateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	77fe700a0bfa
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-
-# Retail-ordered switch bodies, the creature-record cursor, the direct
-# spell-table field_c access, and the byte-proven attrs 0x400 gate raised
-# this from 53.1589 to 88.5071 (2026-08-09).
-# GetCommand ACCEPTED 92.5714 -> 92.5357 again (2026-08-27, command lane).
-# THE TRADE: cmbtmgr.h gained the three member declarators the class was
-# missing for spells.obj's last three bodies - ShowMassSpell (0x5a67c0),
-# SummonElemental (0x5a7080) and Earthquake (0x5a7c80). Without them the
-# definitions do not compile at all: VC6 reports a member function never
-# declared in its class as C2673 "global functions do not have 'this'
-# pointers" plus a cascade of C2065 on every this-relative member.
-# WHAT IT BOUGHT: 2.9 KB of spells.obj, and with it the unit's last
-# unreconstructed bodies. WHAT IT COST: this row alone, and it is the
-# documented include-set class at its documented value - the exact
-# 0.0357 a single cmbtmgr.h declarator has cost GetCommand four times
-# before (see cmbtmgr.h's own notes at its simulate_combat and
-# numSpellCasts declarations). Admitting automate_catapult and
-# automate_first_aid_tent re-exposes the same include-set/codegen class;
-# GetCommand's 62 branches and 20 returns still agree exactly. hist stays
-# at 92.5714.
-# DoCombat max ACCEPTED 99.0481 -> 98.5741 (2026-08-27, townmgr lane):
-# the 99.0481 peak was minted by THIS lane's own earlier delink
-# generation ("2 max raised" at the set_bonus_display integration) and
-# the next generation - ~30 new townmgr VA/DATA claims renaming the
-# synth PDB - returned the row to master's own 98.5741 to the digit
-# with events.cpp untouched. Cross-generation noise, the
-# recruit::Update revert-control precedent; hist keeps 99.1139.
-# monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
-# THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
-# SPELL_TELEPORT 0x3f (un-gated out of HOMM3_SPELL_TELEPORT_DECL) and
-# SPELL_REMOVE_OBSTACLE 0x40 (new) - so that spells.obj's message
-# bodies can spell their 53- and 37-entry jump tables as
-# `case <enumerator>:` rather than magic numbers. WHAT IT BOUGHT:
-# ~4.4 KB of spells.obj that could not be written at all without those
-# labels, since the magic-case-label AND .cpp-local-enum cleanliness
-# floors are both 0. WHAT IT COST: this row and initialize_game_data,
-# both the documented include-set class - no semantic change reaches
-# either TU and events.cpp does not include armygrp.h at all.
-# The delta here is one addressing-mode choice, 3 bytes of 6216.
-# `max` and `hist` both keep 100.0000, so this is a re-measure owed to
-# a later lane, not lost work. Do NOT hunt a local spelling: see the
-# initialize_game_data block further down for the sweep that
-# established the class is non-monotonic and not source-nameable.
-# monsters_sell_out max ACCEPTED 100.0000 -> 99.9517 AGAIN (2026-08-27,
-# townmgr lane): the identical value the spells lane accepted 2026-08-20
-# (block above) and this row's own checked-in cur - the one-declarator
-# include-set step from townmgr.h's byte-proven bonus_creatures member
-# (push 0xb4 in townManager::Open), layout-required and not gateable
-# per-TU. hist keeps 100.0000; the saturation law says a later
-# declarator can carry it back.
-# game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
-# promoted source names in the same change. Two are renames rather
-# than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
-# ...QAE_NXZ (the DC mangling proves a `bool` return, and retail's
-# byte-only materialisation agrees), and playerData_SetName ->
-# ?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z (the claim at
-# 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
-# EXACT 2026-08-30. The former 98.9923 deliberate lower was source-false:
-# Dreamcast proves CMCHideHero constructs its CMapChange base before the
-# separate heroId statement. Restoring that order closes this row; the sibling
-# SwapHeroes dip remains history rather than a waiver for reversing the fact.
-# DELIBERATE LOWER 2026-08-20, integration of lane/cmbtmgr4. This row
-# fell 57.88 -> 57.79 at the MERGE, not in either lane: cmbtmgr4 and the
-# hero lanes each measured clean in isolation and the 0.09 appears only
-# in combination. Investigated before accepting: cmbtmgr4 added ~60
-# declarators and 20 pad slices, but every one is behind a gate hero.cpp
-# does NOT define (checked macro by macro), and no ungated line landed in
-# any header hero.cpp includes. The delta is real codegen, not reloc
-# naming. Cause not isolated; 0.09 on a body that is itself an incomplete
-# reconstruction at 58% is below the resolution worth a lane's time.
-# CAUSE IDENTIFIED LATER, 2026-08-20: almost certainly the same
-# delink-generation effect proven on recruit::Update below - new
-# claims in another TU change the synth PDB, so vostok delinks THIS
-# unit's reference differently and the comparison moves with our
-# object unchanged. The header audit above found nothing because
-# there was nothing in the headers to find.
-# 2026-09-06 hand-lowered 95.4461 -> 93.7128 (hist too): polish lane 26 banked this
-# peak from a build that carried six #pragma inline_depth(0) pins it then
-# removed - no pin-free spelling reaches it; the pin recipe is in the note.
-# 2026-09-06 hand-lowered 93.9111 -> 91.6489 (hist too): polish lane 26 banked this
-# peak from a build that carried six #pragma inline_depth(0) pins it then
-# removed - no pin-free spelling reaches it; the pin recipe is in the note.
-# initialize_game_data ACCEPTED 100.0000 -> 96.0880 AGAIN (2026-08-20,
-# spells lane), the seventh recorded movement of this row and the
-# fourth time it has landed on exactly 96.0880. THE TRADE, in full:
-# armygrp.h's ESpellId gained two UNGATED enumerators, SPELL_TELEPORT
-# 0x3f (un-gated out of a view) and SPELL_REMOVE_OBSTACLE 0x40 (new),
-# and armygrp.h is inside initialize.cpp's include closure through
-# town.h. What that bought is ~4.4 KB of spells.obj message bodies -
-# SpellTargetMessage 0x5a8690, ShowSpellMessage 0x5a8950 - whose whole
-# shape is a jump table over named spell ids; without the enumerators
-# they cannot be written at all, because `case 0x40:` is floored at 0
-# and a .cpp-local enum is floored at 0 too. The two enumerators are
-# byte-proven by those same tables (0x40 is the top entry of the
-# 53-wide table and gets its own strcpy arm).
-# The measurement was taken ALONE, with the two enumerators the only
-# change in the tree, and it moved exactly two rows: this one and
-# events' monsters_sell_out (100.0000 -> 99.9517, block above).
-# `max` and `hist` both keep 100.0000. This costs a re-measure, not a
-# result. It is also the SECOND datum for the step-function reading of
-# this class: two enumerators moved the row by the same amount one
-# enumerator did on 2026-08-08, which is what a population threshold
-# looks like and not what a per-declarator penalty looks like.
-# DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
-# cause is PROVEN rather than guessed: recruit.cpp and every header it
-# sees are byte-identical to the pre-merge tree, yet this row moved
-# 90.8376 -> 88.2360. The REFERENCE moved, not our object. Reverting
-# only mapcell.cpp's two new VA claims and re-delinking returns it to
-# exactly 90.83756; restoring them returns it to 88.23604.
-#
-# MECHANISM: new claims rename symbols in the synth PDB, vostok
-# delinks every unit against that PDB, so recruit.c.obj - the TARGET
-# half of the comparison - changes when an unrelated TU gains claims.
-# A recorded max is therefore only comparable WITHIN a delink
-# generation, and the newer, more-claimed reference is the more
-# accurate one. 88.24 is the honest number against today's target;
-# 90.84 was measured against a coarser one.
-# recruitUnit::Update ACCEPTED 90.8376 -> 88.2360 (2026-08-20, game/command
-# lane). NOT A CODE CHANGE - recruit.cpp and its ENTIRE include closure are
-# byte-identical across the two measurements, and the closure provably does
-# not contain cmbtmgr.h, combatresultswindow.h or command.h (the only headers
-# this lane touched besides hero.h). It is the delink generation the match
-# skill documents: naming combatManager::DoVictory (0x477470) adds symbols to
-# the synth PDB, vostok re-delinks EVERY unit against it, and recruit.obj's
-# TARGET half moves. PROVEN BY A REVERT CONTROL, not by argument: stashing
-# only this lane's src/command.cpp + headers and re-delinking returns the row
-# to exactly 90.8376, and restoring them returns it to exactly 88.2360 - the
-# same two numbers, on the same row, as the precedent in the skill.
-# The bisect ALSO cleared the obvious suspect: hero.h gained a
-# SetPrimarySkill inline in this lane, and deleting that alone leaves the row
-# at 88.2360. Per doctrine the more-claimed reference is the more accurate
-# one, so the lower number is the honest one; hist keeps 90.8376.
-# RE-ACCEPTED 2026-08-20 (lane/army-recon2): the same 90.8376 <->
-# 88.2360 flip fired again when army.cpp's session landed new claims
-# and reconstructions (cast_spell exact among them) - the delink
-# generation moved, recruit.cpp and its headers untouched by the
-# regression commit. Same mechanism as above; hist keeps the peak.
-# RESOLVED 2026-08-30: that generation-sensitive plateau was not source
-# closure. Restoring raw-NB11's message constructor and maxGold local plus
-# the nested GetArmyName and UpdateCost -> GetMonsterCost source boundaries
-# first raised the source checkpoint to 94.1574. A later dependent rebuild and
-# fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
-# rebuild returned current to 94.1574 while max/history retain that transient.
-# 2026-09-05 DELIBERATE LOWER: add_creature_widgets reached 100.0000 only through a
-# `creature_background` file-static the Dreamcast roster does not name (recruit.obj has
-# no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
-# numerator carrier. Reverted; max/hist reset to the last genuine value 93.6325.
-# 2026-08-27 hand-lowered 90.5627 -> 89.7825 (hist keeps 90.5627): TU
-# optimizer-state coupling, not a source change - the row moved when the
-# round-2 stub lifts (TurnOff pair, the five advanced-option accessors)
-# landed in the same TU with this function's own source byte-identical.
-# Its register-homing residual note is in-source; reaching 100 there is
-# also the documented recovery for the CEnterNameEdit pair.
-# 2026-08-27 (round 3) hand-lowered 100.0000 -> 99.8868 (hist keeps
-# 100.0000): the same documented TU-state flap as OnKillFocus below -
-# this interim's full build had re-banked the transient peak, and the
-# SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
-# pair again with both sources byte-identical. Recovery rides with
-# DrawHeroAdvancedOption reaching 100.
-# 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
-# documented TU-state flap (master accepted this pair down at 99.89/99.87
-# when DrawHeroAdvancedOption fell off 100). The chat-pair commit 12d947e2
-# transiently restored the peak; the TurnOff-pair commit dropped it again
-# with OnKillFocus's own source byte-identical - the residual is one
-# scheduler flap (a mov esi,[ebp-x] order swap) inside the inlined
-# OnEnter. Recovery rides with DrawHeroAdvancedOption reaching 100.
-# 2026-08-27 (later): hand-lowered a second time after an interim full
-# build re-banked the transient peak; the flap recurred with each body
-# landing in the TU. Twin OnKeyPress sits AT 100 in the same build.
-# 2026-08-27 (round 3): the interim full build re-banked the transient
-# peak a third time; re-lowered with the round's bodies landed. Same
-# scheduler flap, same recovery path.
-# DELIBERATE SOURCE-SHAPE LOWER 2026-08-30. This row's 100.0000 historical
-# peak used a member-first CMCHideHero spelling contradicted by the dependent
-# Dreamcast constructor. The coherent base-first source is 97.7744 here and
-# exact in add_garrison_hero; raw NB11 also fixes CNetMsg/CMapChange/CMCHideHero
-# parameter types and names. Keep max/history and do not flatten the helper.
-# 2026-08-24: both carrier-free peaks are recovered by the real source call
-# Dreamcast records at each tail: vector::clear(), not the former manual
-# erase(begin(), end()). Building is honestly exact; creature's 99.0596 is
-# its one-schedule residual, now also spelling the DC-attested GetArmyName.
-# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
-# audit. hist holds 99.3021 and recovering it is ordinary work.
-#
-# CAUSE: town::get_army()'s NON-const overload was declared to return
-# `armyGroup*` in one view and used as a reference in another - town.cpp
-# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
-# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
-# other's declaration. With the gates gone both are visible at once and the
-# contradiction is forced. The DC mangled name settles it:
-# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
-# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
-# prototype printer. town.cpp's four call sites were converted to `.`, which
-# is what moved this row.
-#
-# This is the clearest instance of what the audit was for: a per-TU view let
-# two incompatible models of one function coexist indefinitely.
-# GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
-# first batch of byte-proven field slices, and RECOVERED to 92.5714 later
-# the same day when a SECOND batch of slices (bloodlustRounds /
-# precisionRounds, slayerRounds, bloodlustAmount / precisionAmount,
-# slayerLevel, frenzyFactor) landed on the same header. Nothing in
-# command.cpp changed in either direction. Recorded because it is a clean
-# demonstration of the include-set-sensitivity class being NON-MONOTONIC
-# in the way the initialize_game_data notes describe: the whole delta in
-# the lowered state was TWO instructions swapping order (`mov ecx,
-# [ebp-4]` trading places with the `mov eax, [ebp+8]` in front of it,
-# twice), inside a region that matches retail in NEITHER state, and it
-# came back on its own as the header kept growing. Removing any ONE of
-# the four slice groups did not restore it while it was down, and adding
-# further evidenced slices (+0x28c, +0xd8) in either combination did not
-# either - only the later batch, as a whole, did.
-# LOWERED AGAIN 2026-08-20 to the same 92.5357, on the view-gate policy
-# rather than on a measurement. The lane/army-recon work added three
-# things to army.h - `#include <deque>` for the SpellInfluenceQueue
-# member, the army::Cure declarator and the army::compute_attacker_bonus
-# declarator - and each was FIRST put behind an existing army.cpp-only
-# view precisely to hold this row at 92.5714. That gating is exactly
-# what the view-gate audit is unwinding, so all three were un-gated and
-# this row was lowered instead. hist stays 92.5714, and the row has
-# recovered from this exact value once before, on its own, as the header
-# kept growing.
-# THE BLAST RADIUS IS THE MEASUREMENT WORTH KEEPING: making <deque>
-# unconditional in a header that reaches most of the tree moved NOTHING
-# but this one row - not one of the other 1881 functions changed, in
-# either direction. A whole standard container's worth of type
-# definitions therefore costs the same as the single bare member
-# declaration that has fired this canary three times, which is what a
-# step function on the closure's declarator population predicts and what
-# a per-declarator penalty model does not.
-# GetCommand ACCEPTED 92.5714 -> 92.5357 AGAIN (2026-08-20, spells lane),
-# the same two-instruction swap, in the same never-matching region, for
-# the same reason. THE CHANGE: the ESpellId roster in armygrp.h was
-# FLATTENED - six view gates retired (LAND_MINE, the WALL pair,
-# SACRIFICE, SLOW, COUNTERSTRIKE, the nine-row enchantment tail) plus
-# artifact.h's two auto-cast combination ids - so that spells.obj's
-# message bodies can name every case label they need. Nothing in
-# command.cpp moved.
-# WHAT THE FLATTENING COST, measured as one change over all 131 units:
-# this row and nothing else. It also GAINED one exact function
-# elsewhere (1495 -> 1496), which is the class being non-monotonic in
-# the other direction. `max` and `hist` keep 92.5714.
-# Compile-required fallout of the same change, recorded here because it
-# is the only place the two meet: army.h's EArmySpellRowId and
-# viewarmywindow.cpp's `const int SPELL_BIND` were duplicate copies of
-# four ESpellId names that only ever compiled because their gates never
-# opened together. Both retired; same names, same values, byte-inert.
-# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
-# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
-# it is not re-opened: lane/townmgr-14 banked
-# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
-# member, lane/army-6 needed the `inline` keyword for
-# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
-# emitted no out-of-line body, so the merge kept the caller and lost
-# the row.
-# The two were never in tension. VC6 emits an `inline` function's
-# out-of-line copy exactly when the TU holds a use it DECLINES to
-# expand, and retail's army.obj holds one: the two rejected sites in
-# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
-# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
-# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
-# stands in for them until it lands. Full matrix in army.cpp above
-# can_shoot; the key negative is that with NO keyword the body is not
-# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
-# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
-# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
-# now hold together.
-# DELIBERATE LOWER 2026-08-20, lane/cmbtmgr3. The LootDeadHero row below
-# is held at 0 on purpose and its hist 33.3711 is NOT a target to chase.
-# That 33.37 was banked by a DIAGNOSTIC build that deleted the two vector
-# appends from the body - i.e. by shipping a semantic defect - and it
-# scores only because deleting them stops this object emitting the
-# std::vector<type_artifact> template COMDATs. objdiff refuses to diff
-# LootDeadHero once those COMDATs are present (report.json carries the
-# entry with no fuzzy_match_percent at all), so the COMPLETE body cannot
-# be measured yet. Ruled out as causes: symbol-name mismatch (base and
-# target strings are byte-identical raw and normalized), name length (a
-# 180-char template name scores 100 in textresource), the mnemonic set,
-# and pointer-vs-reference in the signature. Restore the appends, not
-# the number: when the diff tool learns this case the row banks itself.
