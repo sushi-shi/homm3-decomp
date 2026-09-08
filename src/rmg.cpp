@@ -6123,11 +6123,107 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
         tryPlacePrimaryTown(zone, alignment, -1, 0);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Retail generation places its primary town before this pass. The first
+// nonempty fixed-count category therefore skips one placement. Density
+// placement balances four weighted counters until every category fails.
+// Complete-only role names; count/density offsets and call order are retail facts.
+// First reconstruction: 93.0076%. The fixed-count loop layout differs first;
+// candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
+// call sites and the category-specific failure flags while resolving that layout.
 VA(0x00544AE0, 0x2B0)
-void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone) {} // @stub
+void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    int alignment = zone->m_alignment;
+    int player = m_playerIndexMap[slot->m_playerIndex + 1];
+    unsigned char skipPrimary = 1;
+    if (slot->m_parameters0020[1] > 0) {
+        for (int i = 1; i < slot->m_parameters0020[1]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[0] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[0]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[5] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[5]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[4] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[4]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
+    }
+    int densities[4] = { slot->m_parameters0020[3], slot->m_parameters0020[2],
+        slot->m_parameters0020[7], slot->m_parameters0020[6] };
+    int counts[4] = { slot->m_parameters0020[1], slot->m_parameters0020[0],
+        slot->m_parameters0020[5], slot->m_parameters0020[4] };
+    int steps[4];
+    unsigned char finished[4];
+    int totalDensity = 0;
+    int product = 1;
+    for (int category = 0; category < 4; ++category) {
+        if (densities[category] <= 0) {
+            finished[category] = 1;
+        } else {
+            totalDensity += densities[category];
+            product *= densities[category];
+            finished[category] = 0;
+        }
+    }
+    if (!totalDensity)
+        return;
+    int spacing = static_cast<int>(sqrt(static_cast<double>(82944 / totalDensity)));
+    for (category = 0; category < 4; ++category) {
+        if (densities[category] > 0) {
+            steps[category] = product / densities[category];
+            counts[category] *= steps[category];
+        }
+    }
+    while (1) {
+        int selected = -1;
+        int lowest = 0;
+        for (category = 0; category < 4; ++category) {
+            if (!finished[category] && (selected == -1 || counts[category] < lowest)) {
+                lowest = counts[category];
+                selected = category;
+            }
+        }
+        if (selected == -1)
+            break;
+        counts[selected] += steps[selected];
+        switch (selected) {
+        case RMG_TOWN_PLAYER_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 1, spacing))
+                finished[RMG_TOWN_PLAYER_OPTION] = 1;
+            break;
+        case RMG_TOWN_PLAYER_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 0, spacing))
+                finished[RMG_TOWN_PLAYER_BASIC] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 1, spacing))
+                finished[RMG_TOWN_NEUTRAL_OPTION] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 0, spacing))
+                finished[RMG_TOWN_NEUTRAL_BASIC] = 1;
+            break;
+        }
+    }
+}
+
+// The retained placement boundary consumes zone, alignment, player, option,
+// and spacing (ret 0x14), returning success in AL to the density loop.
+#if 0 // @carcass
+VA(0x00544D90, 0x4B7)
+unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
+    int alignment, int player, unsigned char townOption, int spacing) { return 0; } // @stub
 #endif
+
+
 
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
