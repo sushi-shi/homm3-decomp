@@ -6108,24 +6108,22 @@ long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped
     return value - m * 25;
 }
 
-// Residual (90.68%): the sole delta is the morale>0 fall-through exit - retail
-// commits `result` to edi (mov edi,eax) and merges all three exits at one
-// mov eax,edi epilogue, while our SP3 CL fuses that arm's epilogue inline and
-// returns eax directly. Merged-return / stale-CL-generation class; a goto-done
-// spelling that pins the fall-through arm measured identical. Everything else
-// (army-double reuse, both AI_value_of_morale calls, the +result accumulation)
-// is byte-exact.
+// Dreamcast ai_player.cpp
+// lines 5392-5393 explicitly return for exact, before querying morale.
+// Preserving that boundary matches retail's shared result epilogue exactly.
+// The nested !exact form and compound assignment both measured 90.6818%;
+// adding a second early return for nonpositive morale measured 65.4545%.
 // E:\gamedcs\ai_player.cpp:5387
 VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
 long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
-    if (!exact) {
-        int morale = const_cast<hero*>(owner)->getMorale(0, 0, 1);
-        if (morale > 0)
-            result = static_cast<long>(aiValueOfMorale(morale, -morale) * army + result);
-    }
+    if (exact)
+        return result;
+    int morale = const_cast<hero*>(owner)->getMorale(0, 0, 1);
+    if (morale > 0)
+        result = static_cast<long>(aiValueOfMorale(morale, -morale) * army + result);
     return result;
 }
 
