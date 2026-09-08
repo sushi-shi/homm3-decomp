@@ -582,6 +582,10 @@ struct TRmgGridPoint {
     // 118 bytes; an implicit copy interleaves adapter and y stores (99.71%).
     // Moving the adapter into the caller ctor body instead stores its vptr
     // too early (99.10%); a copy assignment does not affect construction.
+    // Mixed-constructor/return controls can lift brush destruction to 92.1398%
+    // and terrain paintPoint to 98.3653% by copying through assignment, but
+    // then no RMG TU emits the retained 22-byte constructor at 0x4fa520.
+    // Explicit assignment forms do not recover it; preserve this boundary.
     TRmgGridPoint(const TRmgGridPoint& other)
         : m_x(other.m_x), m_y(other.m_y) {}
 
@@ -1329,6 +1333,8 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    unsigned char addGuard(type_object* guard);
+    void traceOutline();
 };
 SIZE(TRmgTreasureGroup, 0x64);
 
@@ -1885,6 +1891,8 @@ public:
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        unsigned char alternate, int value);
     unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         unsigned char alternate, int minimum, int maximum);
     unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);

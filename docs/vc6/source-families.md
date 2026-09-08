@@ -328,6 +328,105 @@ to retain its exact 33-byte body at `0x4fa540`. The existing grid copy construct
 also reproduces all 22 bytes at `0x4fa520`. Their painter call sites and unsigned
 coordinate ownership establish the two admissions; body size alone does not.
 
+The mixed grid-constructor family extends that boundary with genuine
+initializer/body splits, copy-through-assignment, translation lifetimes and
+member-definition order. It preserves the unsigned layout, both constructor
+signatures and the ordinary compound-add definition. Each stage compiles 60
+source states across **all three** RMG TUs:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-ctors.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-grid-ctors.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-returns.json --parents-from build/source-families/CTOR_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-grid-returns.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-orders.json --member-orders-from build/source-families/RETURN_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-grid-orders.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-assignment.json --assignment-from build/source-families/ORDER_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-grid-assignment.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-proxy.json --proxy-from build/source-families/ASSIGNMENT_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-temporaries.json --temporaries-from build/source-families/PROXY_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-visibility.json --visibility-from build/source-families/TEMPORARY_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-binding.json --binding-from build/source-families/TEMPORARY_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-ctors-family.py \
+  build/rmg-grid-factory.json --factory-from build/source-families/BINDING_CONTEXT/checkpoint.json
+```
+
+Run each generated manifest with the same runner arguments before generating
+its descendant. The visibility test is a separate negative-control branch;
+binding consumes the pre-visibility parents. Factory returns have portable
+semantic coverage but are not part of the completed retail matrix below.
+
+Six copy forms, five coordinate forms and two returns produce six distinct
+code/relocation results. Crossing those reproduced constructor parents with
+ten returns produces 36 results. Crossing the ten retained parents with six
+definition orders produces the same ten code results: source-order variation
+alone is neutral here. Each follow-up validates the parent source snapshot
+and carries the exactly unchanged source as its control, replacing only an
+object-identical equivalent parent when necessary.
+
+At the `3464038c` baseline, the assignment-built copy form raises brush
+destruction from 78.6021% to 92.1398% and terrain `paintPoint` from 90.9656%
+to 98.3653%, but stops emitting the retained 22-byte copy constructor in
+**every** RMG TU. The missing body is not a renamed equivalent. It also lowers
+the exact brush `changeTerrain` method to 81.3309%. No such header is adopted
+or banked as an observation of the unchanged source. The assignment follow-up
+tests the actual copy-assignment boundary: the implicit operation and five
+explicit in-class value implementations, all with the same signature and
+receiver-reference result. It does not add guards or artificial work.
+
+The completed chain contains 480 successful source states. The distinction
+between source alternatives and resulting code matters:
+
+| Family | Source states | Distinct code/relocation results |
+| --- | ---: | ---: |
+| Mixed construction | 60 | 6 |
+| Translation return | 60 | 36 |
+| Member-definition order | 60 | 10 |
+| Copy assignment | 60 | 40 |
+| Proxy construction | 60 | 50 |
+| Returned temporaries | 60 | 37 |
+| Ordinary translation visibility | 60 | 20 |
+| Proxy parameter binding | 60 | 45 |
+
+The latter stages carry each parent's header **and** proxy implementation
+together. Value versus const-reference proxy parameters change the ordinary
+constructor declaration and definition atomically; the retained factory's
+`at(const grid&)` ABI never changes. All ten binding finalists retain the
+reference parameter. Moving the translation body to five ordinary TU locations
+adds no tracked gain. These controls do not supply evidence for an inline pin.
+
+A coordinate-assigned translation result preserves every currently exact body
+and raises line point painting to 83.3411% and terrain repair to 92.3508%, but
+lowers terrain point painting and line refresh. Another parent restores the
+refresh compound-add call and reaches 70.2846%, while introducing unwanted
+arithmetic calls in terrain painting. No candidate closes the mismatching named
+helper sequence across callers, so the canonical header remains unchanged.
+Further work needs a different source hypothesis, not another sample of these
+exhausted matrices. The optional factory-return axis tests real named values
+and const-reference-bound temporaries; the return copy completes before the
+local's lifetime ends, and no artificial destructor is added.
+
+Portable C++98 checks disable copy elision and compile the actual point class
+with its canonical compound-add body. They cover all 300 initial
+constructor/return combinations, plus 60 controls for each follow-up:
+extreme unsigned coordinates, signed offsets, wrapping, copied value ownership,
+aliased coordinate inputs, self-assignment and returned receiver identity.
+The proxy checks use actual constructors/factories and virtual queries, including
+mutating the input after construction to reject borrowed-coordinate ownership.
+These are semantic controls, not a substitute for VC6 or retail-byte verification.
+
 For finite single-TU source matrices, the newer
 [`homm3 hypotheses` runner](../source-hypotheses.md) also records every scored
 function in that TU. The river sprite/presence generators use this path, while

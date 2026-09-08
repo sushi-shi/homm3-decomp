@@ -15,19 +15,30 @@ def _symbol(name: str, value: int, section: int, typ: int,
                        section, typ, storage, aux)
 
 
-def _fixture(functions: int = 1) -> bytes:
+def _fixture(functions: int = 1, files: tuple[str, ...] | None = None) -> bytes:
     """Minimal i386 COFF with one /Z7-style contribution per function."""
     header_size = 20 + functions * 40
     chunks = []
     sections = []
     cursor = header_size
     symbol_indices = []
+    file_records = []
+    symbol_cursor = 0
     for index in range(functions):
+        file_record = b""
+        if files is not None:
+            filename = files[index].encode("latin1") + b"\0"
+            count = (len(filename) + 17) // 18
+            file_record = (_symbol(".file", 0, -2, 0, 103, count)
+                           + filename.ljust(count * 18, b"\0"))
+            symbol_cursor += 1 + count
+        file_records.append(file_record)
         code = bytes((0x90 + index, 0xC3))
         raw_offset = cursor
         chunks.append(code)
         cursor += len(code)
-        symbol_index = index * 4
+        symbol_index = symbol_cursor
+        symbol_cursor += 4
         symbol_indices.append(symbol_index)
         records = (
             struct.pack("<IH", symbol_index, 0)
@@ -45,6 +56,7 @@ def _fixture(functions: int = 1) -> bytes:
     sym_offset = cursor
     symbols = []
     for index, symbol_index in enumerate(symbol_indices):
+        symbols.append(file_records[index])
         begin = 10 + index * 10
         symbols.append(_symbol("func", 0, index + 1, 0x20, 2, 1))
         function_aux = bytearray(18)
@@ -55,7 +67,7 @@ def _fixture(functions: int = 1) -> bytes:
         struct.pack_into("<H", bf_aux, 4, begin)
         symbols.append(bytes(bf_aux))
     header = struct.pack("<HHIIIHH", 0x14C, functions, 0, sym_offset,
-                         functions * 4, 0, 0)
+                         symbol_cursor, 0, 0)
     return header + b"".join(sections) + b"".join(chunks) \
         + b"".join(symbols) + struct.pack("<I", 4)
 
@@ -74,6 +86,41 @@ class CodeViewLinesTest(unittest.TestCase):
         self.assertEqual([(row.offset, row.line) for row in result.lines],
                          [(0, 11), (0, 12), (1, 13)])
         self.assertEqual(result.code, b"\x90\xc3")
+        self.assertIsNone(result.source_file)
+
+    def test_long_file_records_switch_between_tu_and_header(self):
+        files = (r"Z:\repo\src\unit.cpp", r"Z:\repo\include\retained_header.h",
+                 r"Z:\repo\src\unit.cpp")
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(_fixture(3, files), directory)
+            result = codeview.parse_lines(path)
+        self.assertEqual([result[("func", index)].source_file for index in range(3)],
+                         list(files))
+
+    def test_file_ownership_follows_symbols_not_section_order(self):
+        payload = bytearray(_fixture(2, ("source.cpp", "header.h")))
+        # Reverse the code-section order, updating section references but
+        # leaving symbol/.file order intact. Duplicate-name ordinals reverse.
+        payload[20:60], payload[60:100] = payload[60:100], payload[20:60]
+        sym_offset, count = struct.unpack_from("<II", payload, 8)
+        index = 0
+        while index < count:
+            offset = sym_offset + index * 18
+            section = struct.unpack_from("<h", payload, offset + 12)[0]
+            if section > 0:
+                struct.pack_into("<h", payload, offset + 12, 3 - section)
+            index += 1 + payload[offset + 17]
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(bytes(payload), directory)
+            result = codeview.parse_lines(path)
+        self.assertEqual(result[("func", 0)].source_file, "header.h")
+        self.assertEqual(result[("func", 1)].source_file, "source.cpp")
+
+    def test_empty_file_record_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(_fixture(files=("",)), directory)
+            with self.assertRaisesRegex(codeview.CodeViewError, "empty COFF .file"):
+                codeview.parse_lines(path)
 
     def test_duplicate_function_names_are_ordinal(self):
         with tempfile.TemporaryDirectory() as directory:
