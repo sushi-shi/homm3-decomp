@@ -455,6 +455,12 @@ static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
     return TRmgTerrainFlip(x, y);
 }
 
+// The retained fill is exact. A 60-case tile-lifetime / packed-receiver /
+// existing-setter matrix leaves paintRectangle at 72.8497%; crossing its
+// top ten parents with six orders of the cache query/terrain/dimension
+// helpers also leaves that caller flat. Both batches move other terrain
+// bodies, but none improves a current score. Preserve this canonical fill;
+// its missing expansion in paintRectangle remains a caller-boundary lead.
 VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, unsigned int index)
@@ -1105,13 +1111,20 @@ unsigned char rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
 // guards. Booleanizing it through &&, != 0, or a final conditional 1/0
 // instead changes the two destructors' cmp al,bl into test al,al. This one
 // comparison was their final raw-byte difference (549 and 521 bytes).
+// An else-if chain preserves those direct byte returns and raises the
+// repairTerrainPoint caller from 89.9680% to 90.0961% with no collateral.
+// Six predicate forms over ten worklist parents, followed by six helper
+// orders over ten joint parents, isolate this gain; keep the original order.
 unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 {
-    if (isHorizontalGap(point) || isVerticalGap(point))
+    if (isHorizontalGap(point))
         return 1;
-    if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
+    else if (isVerticalGap(point))
+        return 1;
+    else if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
         return 0;
-    return hasSeparatedNeighbours(point);
+    else
+        return hasSeparatedNeighbours(point);
 }
 
 // Repair a one-cell terrain gap, then merge all but the largest remaining
@@ -1130,6 +1143,16 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // named point after += is byte-flat; copy-constructing it changes the load
 // order (89.8583% scratch) but still omits retail's copied-x store. Retain the
 // coordinate construction supported by paintPoint's separate retail evidence.
+// The neighbour-ring scan uses an explicit while(1) header and a word-sized
+// diagonal local: retail +0x4de has a single advance/test header and +0x511
+// copies the full direction before masking its low bit. This raises 90.0961%
+// to 91.3390% and restores the complete retail CFG, without TU collateral.
+// Sixty outer-loop/receiver/width controls and six inner-loop forms over the
+// ten best parents retain the original inner do loop. A top-tested for(;;),
+// explicit header label, do(1), or assignment-condition while still rotates
+// the outer test; reference/pointer gap receivers also lose code agreement.
+// Retail +0x52d leaves both loops directly. A compound inner do condition
+// followed by another test duplicates this comparison and rotates the exit.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1167,21 +1190,21 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
             ++first;
 
         unsigned int direction = first;
-        while ((direction = (direction + 1) % TILE_DIR_COUNT) != first) {
+        while (1) {
+            direction = (direction + 1) % TILE_DIR_COUNT;
+            if (direction == first)
+                goto gapsBuilt;
             if (!matches[direction]) {
                 unsigned int currentGap = gapCount++;
                 gaps[currentGap].m_weight = 0;
                 gaps[currentGap].m_start = direction;
                 gaps[currentGap].m_length = 0;
                 do {
-                    unsigned char diagonal = direction & 1;
+                    unsigned int diagonal = direction & 1;
                     gaps[currentGap].m_weight += diagonal ? 1 : 2;
                     ++gaps[currentGap].m_length;
                     direction = (direction + 1) % TILE_DIR_COUNT;
                     if (direction == first)
-                        // Retail +0x52d leaves both loops directly. A
-                        // compound do condition followed by another test
-                        // duplicates this comparison and rotates the exit.
                         goto gapsBuilt;
                 } while (!matches[direction]);
             }
@@ -1731,6 +1754,16 @@ TRmgTerrainBrush::TRmgTerrainBrush(
         throw TAllocationFailure();
 }
 
+// Residual (78.6021%): ownership cleanup and the completion worklist expand,
+// but needsTerrainRepair remains a call where retail expands it and retains
+// its nested cache/gap queries. The standalone painter destructor is exact.
+// Sixty snapshot/condition/loop forms, ten parents crossed with six predicate
+// forms, and ten joint parents crossed with six helper orders do not improve
+// this boundary. Keep canonical auto_ptr cleanup and the ordinary finish;
+// the predicate family independently improves repairTerrainPoint above.
+// Fifty independent primary/secondary snapshot combinations also stay at
+// this peak or lower: the two snapshot sites do not expose an intermediate
+// expansion state in the measured five-lifetime/two-condition family.
 VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {

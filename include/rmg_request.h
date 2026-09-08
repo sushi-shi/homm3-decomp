@@ -3,6 +3,7 @@
 #define HOMM3_RMG_REQUEST_H
 
 #include "va.h"
+class TAbstractFile;
 
 // The generator's result code (retail 0x54c090's return, dispatched through
 // GenerateRandomMap's four-entry jump table). Zero is success; each failure
@@ -65,6 +66,7 @@ public:
     // switches on.
     // Before normalization (function): TRandomMapRequest::Generate.
     int generate(const char* fileName, void* progress);
+    int generateToFile(TAbstractFile* outfile, void* progress);
 };
 SIZE(TRandomMapRequest, 0x50);
 

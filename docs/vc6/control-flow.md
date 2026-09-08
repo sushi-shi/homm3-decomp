@@ -160,6 +160,19 @@ The search independently reproduces the catalog's D2 claim: only the
 `while (1)+break` forms unrotate; `for (;;)+break`, do-while and the goto
 transcription still rotate/duplicate.
 
+The Complete-only RMG repair method (`0x5b5440`) confirms this distinction
+with a nested circular scan and an exit from both loops. Retail `+0x4de`
+advances at one header. An assignment-condition outer `while` duplicates
+that test; an explicit `while (1)` advance/test/goto restores the entire
+71-block CFG, whereas equivalent `for (;;)`, `do (1)` and labelled-header
+forms still rotate. A word-width diagonal local also recovers the full-register
+copy at `+0x511`. The combined source change raises 90.0961% to 91.3390%
+without collateral. The 60 outer-loop/receiver/width candidates and 60 top-ten
+inner-loop refinements in `generate-rmg-gap-scan-hypotheses.py` all compile;
+the latter add no gain. The native oracle exhausts all nonempty ring masks.
+This extends the measured D2 behaviour to a multi-loop exit; it does not make
+equivalent source loop forms interchangeable in the VC6 oracle.
+
 **D4 merged return — recovered, rc 0.**
 ```
 $ homm3 vc6 why-branch .../whybranch_splitret.cpp --fn fetch \
