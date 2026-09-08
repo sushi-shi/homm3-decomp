@@ -3020,6 +3020,11 @@ VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
 // All 51 raw bytes agree; no calls or data relocations remain unresolved.
 VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
 
+// InitializeObjectGenerators removes a byte range from its temporary work
+// vector through this specialization.  The emitted COMDAT has the same five
+// blocks and all 47 retail bytes; its byte-copy loop fixes the element type.
+VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
+
 // FilterZonePositions erases 12-byte positions through this forward copy;
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)

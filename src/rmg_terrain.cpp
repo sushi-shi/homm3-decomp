@@ -76,6 +76,20 @@ int TRmgTableTerrainRule::getEntry(int index)
     return g_rmgTerrainPatterns[index].m_frame;
 }
 
+// Slot 4 chooses from the first generated range when there is no old frame or
+// the old pattern has a nonzero frame tag. A zero-tagged pattern preserves the
+// caller's old index; keeping that index in EAX gives retail's shared return.
+VA(0x005B3AA0, 0x31)  // vtable 0x642cb0 slot 4; Complete-only table rule
+int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
+{
+    if (oldFrame == -1
+        || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
+        oldFrame = rand() % g_rmgTerrainPatternRanges[0].m_count
+            + g_rmgTerrainPatternRanges[0].m_firstIndex;
+    }
+    return oldFrame;
+}
+
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.
@@ -1229,6 +1243,10 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // The four late point constructions in RepairTerrainPoint pass x and y by
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
+
+// The terrain painter constructor erases a range of packed two-byte cells.
+// The naturally emitted specialization agrees with all 53 retail bytes.
+VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
