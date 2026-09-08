@@ -5964,21 +5964,30 @@ static void randomizeWagon(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4761. The vector local and its teardown belong to the
-// inlined source helper; retail calls only the packed pyramid setter.
+// E:\gamedcs\game.cpp:4753, dc 0xabfe8: ordinary static helper.
+// Dreamcast selects a SpellID with a retry loop; Complete instead builds
+// this eligible-spell vector (retail RandomizeEvents +0xd00..+0xddd).
+// The vector and its teardown are retail evidence, not Dreamcast locals.
+// Retail expands this helper and retains setPyramid at +0xdbd.
+// Retail +0xd6a tests game+0x4a+index: the 70-entry spell prohibition
+// array, not the 28-entry secondary-skill mask at +0x4e658. The insert
+// receives the index itself by reference, consistent with vector<SpellID>
+// (our retail SpellID declaration is int), rather than a converted long
+// temporary. Ordinary declaration alone is byte-neutral; the domain type
+// restores direct insertion and raises RandomizeEvents 86.3856 -> 86.9615.
 // Before normalization (function): randomize_pyramid.
-static __forceinline void randomizePyramid(NewmapCell* cell)
+static void randomizePyramid(NewmapCell* cell)
 {
-    std::vector<long> possibleSpells;
+    std::vector<SpellID> possibleSpells;
     int i;
     for (i = 0; i < 70; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
             && g_spellTraits[i].m_level == g_pyramidSpellLevel
-            && !g_game->m_ssDisabled[i])
+            && !g_game->m_spellDisabledInfo[i])
             possibleSpells.push_back(i);
     }
 
-    int spell = possibleSpells[random(0, possibleSpells.size() - 1)];
+    SpellID spell = possibleSpells[random(0, possibleSpells.size() - 1)];
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
     info->setPyramid(true, spell);
