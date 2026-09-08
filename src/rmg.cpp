@@ -4737,6 +4737,106 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     }
 }
 
+// The zone coordinator passes its zone and a closed Voronoi edge ring.
+// Retail starts at the zone center, or clips it toward the interior ring
+// site with the largest edge clearance. A vector of three-coordinate seeds
+// then drives a scanline fill of cells whose signed zone byte is -1.
+// Residual (90.0984%): 18 seed/pop/insertion forms favor erasing the consumed
+// one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
+// and lower span seeds at function scope reaches 90.0984%; nine bounds/span
+// lifetime forms find no further gain, with no other RMG score changes.
+// Retail retains copy and _Destroy inside seed erasure; VC6 expands them
+// and retains an extra size call in the final lower-span insertion.
+// Isolated erase inline_depth(1) is flat; depth zero retains the wrong outer
+// boundary and scores 88.1434%. Neither diagnostic pragma is retained.
+// The compiled scanline body agrees with an independent BFS on all 13,824
+// in-bounds seed/3x3 grid/level/water-mode cases, with address and undefined-
+// behavior sanitizers. That oracle covers filling and flags, not seed clipping.
+VA(0x0053D380, 0x551) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
+void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    std::vector<TRmgMapPosition> pending;
+    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgMapPosition upper;
+    TRmgMapPosition lower;
+    if (position.m_x < 0 || position.m_x >= m_map.m_mapWidth
+        || position.m_y < 0 || position.m_y >= m_map.m_mapHeight) {
+        int bestClearance = 0;
+        TPoint best;
+        best.m_x = -1;
+        TRmgBoundaryVertex* edge = first;
+        do {
+            edge = edge->m_next;
+            TPoint point = edge->m_twin->m_sitePosition;
+            if (point.m_x >= 1 && point.m_x < m_map.m_mapWidth - 1
+                && point.m_y >= 1 && point.m_y < m_map.m_mapHeight - 1) {
+                int clearance = min(min(min(point.m_x,
+                    m_map.m_mapWidth - point.m_x - 1), point.m_y),
+                    m_map.m_mapHeight - point.m_y - 1);
+                if (clearance > bestClearance) {
+                    bestClearance = clearance;
+                    best = point;
+                }
+            }
+        } while (edge != first);
+        if (best.m_x < 0)
+            return;
+        TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
+        TPoint clipped = clipRmgBoundaryPoint(bounds,
+            TPoint(position.m_x, position.m_y), best);
+        position.m_x = clipped.m_x;
+        position.m_y = clipped.m_y;
+    }
+    pending.push_back(position);
+    while (pending.size()) {
+        position = pending.back();
+        pending.erase(pending.end() - 1, pending.end());
+        TRmgMapItem* item = m_map.getMapItem(position);
+        unsigned char upperSpan = 0;
+        unsigned char lowerSpan = 0;
+        while (position.m_x > 0 && (item - 1)->m_zoneState.m_zone == -1) {
+            --item;
+            --position.m_x;
+        }
+        while (position.m_x < m_map.m_mapWidth && item->m_zoneState.m_zone == -1) {
+            item->m_zoneState.m_zone = zoneIndex;
+            if (m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1)
+                item->m_tileData.m_zoneBoundary = 1;
+            if (position.m_y > 0) {
+                if ((item - m_map.m_mapWidth)->m_zoneState.m_zone == -1) {
+                    if (!upperSpan) {
+                        upper = position;
+                        --upper.m_y;
+                        upperSpan = 1;
+                    }
+                } else if (upperSpan) {
+                    upperSpan = 0;
+                    pending.push_back(upper);
+                }
+            }
+            if (position.m_y < m_map.m_mapHeight - 1) {
+                if ((item + m_map.m_mapWidth)->m_zoneState.m_zone == -1) {
+                    if (!lowerSpan) {
+                        lower = position;
+                        ++lower.m_y;
+                        lowerSpan = 1;
+                    }
+                } else if (lowerSpan) {
+                    lowerSpan = 0;
+                    pending.push_back(lower);
+                }
+            }
+            ++item;
+            ++position.m_x;
+        }
+        if (upperSpan)
+            pending.push_back(upper);
+        if (lowerSpan)
+            pending.push_back(lower);
+    }
+}
+
 // JoinExtraZones initializes the short distance columns to 32000, zeros
 // each original zone's own column, and calls this relaxation after adding
 // graph edges. Parallel vectors keep pending zones sorted by distance;
@@ -10294,6 +10394,45 @@ VA_COMPGEN(0x0054DED0, 0x63, BITSET_SET, Bitset129)
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
 // recovery of the canonical site/point ownership and retained helper surface.
+
+// Each uncomputed interior half-edge identifies an incident triangle. Retail
+// computes its integer circumcenter through the canonical point/vector
+// operations, then shares the result with the other two incident half-edges.
+// The first point subtraction expands; the two later subtractions are calls.
+// Residual (31.6268%): the triangle walk and all eight CFG blocks agree,
+// but VC6 expands seven arithmetic calls retained by retail. Direct dot
+// products and ordinary by-value/by-reference dot helpers are byte-neutral.
+// An isolated inline_depth(0) diagnostic covering secondSide through position
+// raises 72.2254%; flattening that region restores 31.6268%, with scratch
+// space 0x44 rather than retail's 0x78. The diagnostic is not retained:
+// canonical operators remain ordinary and visible to their RMG callers.
+VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
+void TRmgVoronoi::buildVertices()
+{
+    for (unsigned int index = 0; index < m_edges.size(); ++index) {
+        TRmgBoundaryVertex* edge = m_edges[index];
+        if (edge->m_zone && !edge->m_positionComputed) {
+            TPoint origin = edge->m_sitePosition;
+            TPoint third = edge->m_next->m_twin->m_sitePosition;
+            TRmgVector axis = edge->m_twin->m_sitePosition - origin;
+            TRmgVector perpendicular(-axis.m_y, axis.m_x);
+            TRmgVector secondSide = edge->m_next->m_twin->m_sitePosition
+                - edge->m_twin->m_sitePosition;
+            TRmgVector thirdSide = origin - third;
+            int numerator = secondSide.m_x * thirdSide.m_x + secondSide.m_y * thirdSide.m_y;
+            int denominator = perpendicular.m_x * thirdSide.m_x + perpendicular.m_y * thirdSide.m_y;
+            TPoint position = origin + (axis + perpendicular * numerator / denominator) / 2;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+            edge = edge->m_next->m_twin;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+            edge = edge->m_next->m_twin;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+        }
+    }
+}
 
 // BuildVertices at 0x5fdb40 distinguishes displacement arithmetic from point
 // translation. It calls these five bodies while forming the circumcenter:
