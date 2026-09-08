@@ -7,6 +7,8 @@
 
 #include "basemgr.h"
 #include "sskilltraits.h"
+#include "primaryskill.h"
+#include "secondaryskill.h"
 #include "struct.h"
 // EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
 // `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
@@ -350,6 +352,47 @@ union ExtraInfoUnion {
     type_creature_bank_info m_creatureBankInfo;
     // Before normalization: university_info.
     type_university_info m_universityInfo;
+    // Before normalization: scholar_info.
+    ScholarInfo m_scholarInfo;
+
+    // MapCell.h:1063..1089, dc 0x9c898..0x9c8bc and 0xbca4c.
+    // These accessors belong to ExtraInfoUnion. Retail DoEventScholar
+    // sign-extends the same 3/3/7/10-bit lanes; scalar bridges preserve
+    // the recovered enum return types over their packed representation.
+    // Before normalization (function): ExtraInfoUnion::GetScholarAward.
+    ScholarAwards getScholarAward() const
+    {
+        union {
+            int m_integer;
+            ScholarAwards m_award;
+        } converted;
+        converted.m_integer = m_scholarInfo.m_award;
+        return converted.m_award;
+    }
+    // Before normalization (function): ExtraInfoUnion::GetScholarPrimarySkill.
+    TPrimarySkill getScholarPrimarySkill() const
+    { return primarySkillFromInt(m_scholarInfo.m_primary); }
+    // Before normalization (function): ExtraInfoUnion::GetScholarSecondarySkill.
+    TSecondarySkill getScholarSecondarySkill() const
+    {
+        union {
+            int m_integer;
+            TSecondarySkill m_skill;
+        } converted;
+        converted.m_integer = m_scholarInfo.m_secondary;
+        return converted.m_skill;
+    }
+    // Before normalization (function): ExtraInfoUnion::GetScholarSpell.
+    SpellID getScholarSpell() const { return m_scholarInfo.m_spell; }
+    // Before normalization (function): ExtraInfoUnion::SetScholar.
+    void setScholar(ScholarAwards award, TPrimarySkill primary,
+                    TSecondarySkill secondary, SpellID spell)
+    {
+        m_scholarInfo.m_award = award;
+        m_scholarInfo.m_primary = primary;
+        m_scholarInfo.m_secondary = secondary;
+        m_scholarInfo.m_spell = spell;
+    }
 
     // Before normalization (function): ExtraInfoUnion::SetCellVisited.
     void setCellVisited(short player);
@@ -2884,7 +2927,7 @@ extern int g_highMemBuffer;
 // CODEVIEW(E:\gamedcs\CreatureType.h:296, dc 0x1ef94) const char* GetArmyName(int type, int count);
 // CODEVIEW(E:\gamedcs\AdvMgr.h:1254, dc 0x1f084) int GetMapExtra(type_point point);
 // CODEVIEW(E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04) const int* _cpp_max(const int* _X, const int* _Y);
-// CODEVIEW(E:\gamedcs\includes.h:124, dc 0x20d2c) const int* t_limit(const int* min, const int* value, const int* max);
+// CODEVIEW(E:\gamedcs\includes.h:124, dc 0x20d2c) const int& t_limit(const int& min, const int& value, const int& max);
 
 // --- Bitmap16Bit ---
 // CODEVIEW(E:\gamedcs\Bitmap16.h:111, dc 0x1f100) int Bitmap16Bit::GetWidth();

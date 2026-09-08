@@ -58,6 +58,7 @@ model cannot rot.
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
+| `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
@@ -249,6 +250,19 @@ are the two deque iterators' map pointers, so they do not indicate a custom
 array class. This join checks the protected element-pointer-pointer return
 and unsigned size argument; reversed equal-size element tests and allocator,
 return-type, access and argument controls keep it separate from other bodies.
+
+
+A full-expression constructor temporary can change scheduling even when a
+named local emits the same instructions and calls. In `game::claimGarrison`
+(`0x4c6960`), `sendMapChange(&CMCClaimGarrison(id, owner))` lets VC6 interleave
+five message stores with the preceding point construction and reaches 100%.
+A named message followed by `sendMapChange(&message)` remains at 84.4118%,
+as does the former expansion into individual member assignments. Dreamcast
+line 7446 passes the constructor result directly to `SendMapChange`, providing
+positive evidence for the temporary; the retail byte result corroborates it.
+This address-of-temporary form uses the original compiler's C++ extension.
+Check expression lifetime before attributing equal-CFG store ordering to
+unrecoverable register allocation.
 
 ## Status
 

@@ -3606,8 +3606,8 @@ VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronge
 // ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
 // game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
 // 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
-// compares against 0x81 (129) at all three of its callers and has moved to
-// game.cpp - customcampaign.obj does not emit a bitset<129> instantiation.
+// compares against 0x81 (129) at all three of its callers and is claimed in
+// game.cpp. Recovered campaign readers now emit 129-bit members here too.
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
@@ -3861,6 +3861,12 @@ VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
 // Artifact-vector callers retain the range erase for the eight-byte element.
 // The naturally emitted COMDAT agrees with all 57 retail bytes.
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
+
+// The canonical 129-bit setter also survives here. Its 99-byte COMDAT matches
+// retail 0x54ded0 in every non-relocation byte and calls the same bitset<129>
+// _Xran helper. RMG expands this setter after its local reference pin is
+// removed; claim this naturally emitted representative of the shared body.
+VA_COMPGEN(0x0054ded0, 0x63, BITSET_SET, Bitset129)
 
 // The facet's installation and teardown. _Addfac copies the locale, adds
 // the codecvt to its facet vector and hands the locale back; _Tidyfac's

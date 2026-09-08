@@ -28,21 +28,8 @@ class CSprite;
 // Before normalization (function): GetArmyName.
 inline const char* getArmyName(int type, int count);
 
-// E:\gamedcs\includes.h:124/134. Army.h's GetMorale/GetLuck class-body
-// accessors see the shared reference-returning template and its ordinary
-// by-value wrapper through the original common-header include order.
-template<class T>
-// Before normalization (function): t_limit.
-inline const T& tLimit(const T& minimum, const T& value, const T& maximum)
-{
-    return value < minimum ? minimum
-                           : (maximum < value ? maximum : value);
-}
-
-inline int limit(int minimum, int value, int maximum)
-{
-    return tLimit(minimum, value, maximum);
-}
+// Shared includes.h limit helpers used by the class-body accessors.
+#include "homm3_limit.h"
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7

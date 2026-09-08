@@ -1506,28 +1506,19 @@ public:
     // Before normalization (function): hero::GetHighestSchool.
     // Before normalization (locals): school_mask.
     TSpellSchool getHighestSchool(TSpellSchool schoolMask) const;
-    // Before normalization (function): hero::GetManaCost.
-    // Before normalization (locals): iWhichSpell, magic_terrain.
-    int getManaCost(int whichSpell, const class armyGroup* enemy,
-                    int magicTerrain);
-    // The one-argument Hero.h facades are positive Dreamcast source facts.
-    // Complete widens their terrain input, then expands each facade into the
-    // same get_special_terrain + out-of-line overload pair.
+    // The one-argument Hero.h facade is a positive Dreamcast source fact.
+    // Complete widens its terrain input and expands the facade into the
+    // get_special_terrain + out-of-line overload pair.
     // Before normalization (function): hero::get_spell_level.
     TSkillMastery getSpellLevel(SpellID spell)
     {
         return getSpellLevel(spell, getSpecialTerrain());
     }
-    // Before normalization (function): hero::GetManaCost.
-    int getManaCost(int whichSpell)
-    {
-        return getManaCost(whichSpell, 0, getSpecialTerrain());
-    }
     // E:\gamedcs\Hero.h:702
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.
     // Before normalization (function): hero::HasArmy.
-    unsigned char hasArmy(TCreatureType type)
+    unsigned char hasArmy(TCreatureType type) const
     {
         return m_army.isMember(type);
     }
@@ -1535,9 +1526,11 @@ public:
     // The two calls on Hero.h:708 are one statement in the Dreamcast line
     // table. Complete's get_special_terrain returns the full terrain domain,
     // which the widened three-argument overload consumes directly. Both DC
-    // publics are const; the Complete non-const out-of-line overload above
-    // remains a separate, independently byte-proven body.
+    // publics are const. One canonical ordinary overload owns the retained
+    // 0x4e5240 body and its expansion into Fly; x86 bytes do not justify a
+    // second non-const overload or a separate inline implementation.
     // Before normalization (function): hero::GetManaCost.
+    // Before normalization (locals): iWhichSpell, magic_terrain.
     int getManaCost(int whichSpell, const class armyGroup* enemy,
                     int magicTerrain) const;
     // Before normalization (function): hero::GetManaCost.

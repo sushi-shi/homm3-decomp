@@ -4682,33 +4682,31 @@ void cleanUpMenus()
 VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
 int getNextHumanPlayer(int start)
 {
-    // Residual (95.1191%): after the opening modulo, every instruction and
-    // branch agrees.  Retail defers `mov ebx,ecx` between `and esi,7` and
-    // `jns`; this CL hoists it ahead of the saved-register pushes.  Tried and
-    // A 33-state source batch also tested the DC while-loop/shared-exit
-    // form, four initialization orders, and separate counter updates:
-    // none beat 95.1191% (the copy-start family falls to 66.5476%).
-    // Earlier rejected controls: reversing the locals, splitting the modulo assignment, a
-    // preserved initial-seat local, and both together (flat or 66.5476%).
-    // Thirty batched combinations of six initialization schedules, three
-    // loop forms, parameter const/register hints, and counter widths retain
-    // the same 95.1190% maximum; the prologue scheduling difference remains.
+    // DC kb.cpp:4787..4800 tests the scan condition before advancing,
+    // returns -1 after eight failures, then rejects a wrap to start.
+    // Keep that while-loop and separate final guard; the previous positive
+    // if/for(;;) rewrite is byte-flat at 95.1191% across this TU.
+    // Residual: retail delays mov ebx,ecx until after the initial modulo's
+    // and; VC6 hoists it and uses EBX instead of ECX for the opening lea.
+    // Initializing player before checked moves the counter zero below the
+    // modulo join (66.5476%; inlined caller 100 -> 99.0610%). Counter-first
+    // preserves retail's early zero and the caller's exact bytes.
+    // Earlier controls: 33 loop/initialization/shared-exit states and 30
+    // counter-width/parameter-hint combinations never exceed 95.1191%.
     int checked = 0;
     int player = (start + 1) % 8;
 
-    for (;;) {
-        if (g_game->isHuman(player)
-            && !g_game->m_playerDisabled[player]) {
-            if (player == start)
-                break;
-            return player;
-        }
-
+    while (!g_game->isHuman(player) || g_game->m_playerDisabled[player]) {
         player = (player + 1) % 8;
-        if (++checked >= 8)
-            break;
+        ++checked;
+        if (checked >= 8) {
+            return -1;
+        }
     }
-    return -1;
+    if (player == start) {
+        return -1;
+    }
+    return player;
 }
 
 // E:\gamedcs\kb.cpp:4806

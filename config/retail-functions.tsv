@@ -28,10 +28,18 @@
 #   0x114d80 TObjectTypeTable::load 627 -> 644 (0x284), absorbing the
 #     0x114ff3 funclet (17 B: virtual Dispose through [ebp+8] then the
 #     same rethrow); twelve nops to 0x115010.
-# Two remaining out-of-row funclets are the continuation-returning kind
-# (`mov eax,<continuation>; ret`) on rows nothing claims yet and are left
-# alone: 0x004c29 under basic_string::_Copy at 0x4bd0 and 0x212600 whose
-# parent the handler-stub walk cannot resolve.
+# The continuation-returning funclet at 0x212600 remains separate because
+# the handler-stub walk cannot resolve its parent. The former 0x004c29
+# row is covered by the exact basic_string::_Copy parent described below.
+# BOUNDARY CORRECTION 2026-09-08: basic_string<char>::_Copy at 0x4bd0
+# is one 264-byte function through 0x4cd8. Its main path jumps from 0x4c27
+# to 0x4c50, preserving the parent EBP/EBX/ESI frame. FuncInfo 0x248070
+# -> TryBlockMap 0x2480a0 -> HandlerType 0x2480b8 names catch 0x4c29,
+# which returns 0x404c4a; the six bytes there restore EBX/ESI before the
+# same copy-and-release continuation. Its ret 4 ends at 0x4cd8, followed
+# by eight NOPs before independent assign at 0x4ce0. The earlier parked
+# catch row is not an independent function; neither is the 0x4c50 tail.
+# Adventuremapwindow already emits the whole Dinkumware COMDAT.
 # BOUNDARY CORRECTION 2026-09-08: TRandomMapRequest::generate at
 # 0x14c090 includes its typed catch handler at 0x14c0fe AND the continuation
 # 0x14c104..0x14c11c. FuncInfo 0x251f98 -> TryBlockMap 0x251fd0 ->
@@ -293,9 +301,7 @@ rva	size
 0x4a70	20
 0x4a90	290
 0x4bc0	6
-0x4bd0	89
-0x4c29	33
-0x4c50	136
+0x4bd0	264
 0x4ce0	216
 0x4dc0	9
 0x4dd0	32

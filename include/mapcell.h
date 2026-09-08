@@ -854,23 +854,6 @@ public:
     // Before normalization (function): NewmapCell::GetTreasureSize.
     short getTreasureSize() const { return m_treasureInfo.m_gold * 500; }
 
-    // The scholar's four accessors, all published by the Dreamcast
-    // (MapCell.h:1063/1068/1073/1078) with their own enum return types -
-    // ScholarAwards, TPrimarySkill, TSecondarySkill and SpellID. All four
-    // are spelled `int` for get_tomb_artifact's reason: none of those
-    // domains has a modelled definition, an enum return is int-wide under
-    // VC6, and the WIDTH is what the bytes constrain. Scoped to NewmapCell
-    // for the campfire's reason - the handler hands the whole cell to
-    // EraseAndFizzle.
-    // Before normalization (function): NewmapCell::GetScholarAward.
-    int getScholarAward() const { return m_scholarInfo.m_award; }
-    // Before normalization (function): NewmapCell::GetScholarPrimarySkill.
-    int getScholarPrimarySkill() const { return m_scholarInfo.m_primary; }
-    // Before normalization (function): NewmapCell::GetScholarSecondarySkill.
-    int getScholarSecondarySkill() const { return m_scholarInfo.m_secondary; }
-    // Before normalization (function): NewmapCell::GetScholarSpell.
-    int getScholarSpell() const { return m_scholarInfo.m_spell; }
-
     // The sea chest's pair, both Dreamcast-published with their own enum
     // returns (SeaChestRewardTypes and TArtifact) and both spelled `int`
     // for get_tomb_artifact's reason.

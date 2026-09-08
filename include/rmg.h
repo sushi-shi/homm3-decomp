@@ -1085,6 +1085,19 @@ public:
 };
 SIZE(rmgShrineObject, 0x1c);
 
+// Complete-only spell-scroll object. Factory 0x534ed0 allocates 0x20
+// bytes, stores its selected spell at +0x1c and installs vtable 0x640b44.
+// Writer 0x533ff0 emits that spell as one byte. Original class name unknown.
+// Full-build collateral on admission: unchanged CEnterNameEdit::onKillFocus
+// CUR 100 -> 99.8710 (two loads exchange order); MAX/HIST retain 100.
+class rmgSpellScrollObject : public type_object {
+public:
+    int m_spell; // +0x1c, role-derived name
+    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgSpellScrollObject, 0x20);
+
 // Retail vtable 0x640b54.
 class rmgWitchHutObject : public type_object {
 public:
@@ -1641,9 +1654,12 @@ struct TRmgZone {
     TRmgMapPosition m_position;        // +0x30: main town
     // Before normalization: active.
     unsigned char m_active;            // +0x3c
-    // Before normalization: opaque003d. The +0x40 word remains unresolved;
-    // retain its surrounding storage rather than calling it padding.
-    char m_opaque003d[7];              // +0x3d..+0x43
+    // Before normalization: opaque003d.
+    char m_opaque003d[3];              // +0x3d..+0x3f
+    // Previously the tail of opaque003d. Retail 0x54b180 relaxes graph
+    // distances here; 0x54b300 converts them into randomized quest-zone
+    // priorities, penalizing immediately adjacent zones. Role-derived name.
+    int m_questPlacementScore;         // +0x40
     // Retail ctor 0x5329e0 clears 232 dwords beginning at +0x44.
     // Placement 0x54039a increments by object type, removal 0x54bd30
     // decrements it, and 0x546270 checks the per-zone object-type limit.
@@ -1724,6 +1740,10 @@ public:
 
     TRmgVoronoi();
     ~TRmgVoronoi();
+    // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
+    TRmgBoundaryVertex* createEdge(TPoint first, TRmgZone* firstZone,
+        TPoint second, TRmgZone* secondZone);
+    void removeEdge(TRmgBoundaryVertex* edge);
     void addSite(TPoint point, TRmgZone* zone);
     TRmgBoundaryVertex* locate(TPoint point);
     void buildVertices();
@@ -1921,8 +1941,9 @@ public:
     void calculateZoneBounds();
     void recenterZone(TRmgZone* zone);
     void insetIslandZone(TRmgZone* zone);
-    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+    // Complete-only 0x53cf50 marks the inset island interior; provisional name.
     void fillIslandInterior(TRmgZone* zone);
+    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption, int spacing);
@@ -1997,6 +2018,8 @@ public:
     // Before normalization (function): type_random_map_generator::CreateSubterraneanGate.
     unsigned char createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
+    // Complete-only 0x542b00 places and marks a monolith entrance border.
+    unsigned char placeMonolithBorder(TRmgMapPosition position, TRmgZone* zone);
     // Before normalization (function): type_random_map_generator::CreateMonolithConnection.
     void createMonolithConnection(
         TRmgZone* source,
@@ -2030,8 +2053,13 @@ public:
     // Retail 0x54b490, called by the quest-artifact writable override.
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
-    // boundary with one mutable artifact argument; larger body not recovered.
+    // boundary with one mutable artifact argument.
     unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
+    // artifact caller supplies its origin zone and the prepared hut group.
+    // Original names are unavailable; the graph and placement roles are proven.
+    void calculateQuestZoneDistances(TRmgZone* origin);
+    unsigned char placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Retained helpers used by the key-tent override at 0x5338e0.
     // 0x54b8c0 finds objectPrototypes[9] of the same color and tries a
     // guarded treasure group; 0x54bc50 removes the old object's map marks,

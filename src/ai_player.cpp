@@ -768,65 +768,39 @@ void type_AI_player::endTurn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (84.5868%; older measurements 79.8885, 80.5192): the 0x7c frame,
-// local offsets, player-id lifetime, threshold block, network payloads,
-// dialog flow and timeout tail agree. More importantly, all 55 branches,
-// both returns and all 28 out-of-line calls now agree; `diagnose` reports
-// flow-distance zero and only a callee-saved/register-homing permutation.
+// Dreamcast names player as playerData& and calls the by-value min/max
+// wrappers in the surplus calculation (lines 519, 522/526, 541). Retail
+// independently copies both inputs to each selector into temporary homes.
+// Those recovered boundaries move the current 79.71% implementation to
+// 84.82%. The recipient-demand selector also copies both inputs in retail
+// (0x4292d6 / 0x4292db), unlike DC's direct-reference std::min; the ordinary
+// min wrapper reproduces those copies and reaches 85.05%.
 //
-// The missing source boundary was narrower than a lexical inline-depth
-// region. The tiny one-body helper below is inlined into both format sites,
-// but pins only the three-argument string::append call inside itself. Thus
-// GetText and each format temporary's destructor compile in the caller at
-// normal depth, exactly reproducing retail. This measured 80.5192 -> 82.58
-// for the single-request site and 82.58 -> 83.89 when shared by the gift
-// site. Spelling `list.clear()` as its direct Dinkumware operation,
-// `erase(begin(), end())`, removes the last wrapper depth and lets the trivial
-// vector `_Destroy` disappear, reaching 84.5868 and the exact call ledger.
+// Both dialog-resource records are initialized BEFORE IsLocalHuman, then
+// shared by the local display and remote-message arms. DC lines 591-600 and
+// 622-631 prove the scope; retail stores the first pair at 0x4293c9/0x4293d1
+// before the call and reloads it for CGiftMsg. Recovering these lifetimes
+// reaches 87.31% and fixes the entry register roles previously described as
+// an unreachable compiler-state wall.
 //
-// Naming the temporary, direct assign, depth-one and broader override probes
-// regress or are byte-inert and remain rejected. Other residuals are register
-// permutations in the transfer loops and one deliberately retained retail
-// gate after the human transfer.
-// Release-elided diagnostic carriers at one, two, four and eight entry sites
-// are byte-flat at 80.5192 with the same 52-vs-55 branch count (2026-08-21).
-// The recovered branch/call threshold was governed by source scope, not by
-// this caller-mass family.
-
-//
-// IT ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc census).
-// Retail's calls at make_gift fn+0x38b and fn+0x4cc are
-// basic_string::assign(const basic_string&, uint, uint) where ours were
-// append(...); the surrounding instruction stream is identical on both sides,
-// so only the relocation target differed and objdiff does not score it. The
-// third message site in the same body already spelled `message = ...`, which
-// lowers to that same assign, so all three agree now and the call view drops
-// to the two vector-insert ICF twins.
-// The wrapper's own `inline_depth(0)` pin came out with the reloc census
-// above: byte-flat once all three sites agree on assign (2026-09-06).
-// Before normalization (function): assign_formatted_ai_message.
-static inline void assignFormattedAiMessage(
-    std::string& message, const std::string& formatted)
-{
-    message.assign(formatted, 0, std::string::npos);
-}
-
-// Residual (84.5868%, polish-45): the B1 whole-body role swap and nothing
-// else.  Blocks (100/100), branches (55/55) and the report-level call view
-// all AGREE; `vc6 diagnose` reads "callee-saved role swap, schedule aligned:
-// edx->eax x24, eax->edx x19".  The transposed pair is `this` against the
-// gpGame load - retail takes `mov edx,ecx` / `mov ecx,[gpGame]`, this compile
-// takes `mov eax,ecx` / `mov edx,[gpGame]` - and docs/vc6/regalloc.md section
-// 5 records that when one side of the pair is a parameter or `this` the alias
-// is copy-propagated and NO statement-local spelling reaches it.  This is the
-// C1 handle-state class; do not spend builds on operand or naming variants
-// here.
+// DC's list.clear() boundary is retained. Expanding it to erase(begin,end)
+// measured 87.31%, but loses the evidenced wrapper; clear() currently keeps
+// an extra nested _Destroy call and measures 86.52%. The two formatted
+// string sites likewise use DC's operator= directly. The artificial
+// assignFormattedAiMessage wrapper (formerly assign_formatted_ai_message)
+// was removed byte-flat; all three assignment calls select retail's assign,
+// never append. Older named-format-temporary and broader inline-depth probes
+// did not recover the allocation, and release-elided entry carriers were
+// byte-flat. No such probes are retained.
+// Residual (86.52%): resource/recipient address scheduling and register
+// allocation, plus the nested _Destroy call inside clear. The two insertion
+// call names differ through the type_artifact/type_dialog_resource ICF pair.
 // Before normalization (locals): player_id, recipient_amount, has_surplus, recipient_ai,
 // displayed_resource, requested_resource.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::makeGift(long playerId)
 {
-    playerData* player = &g_game->m_players[m_team];
+    playerData& player = g_game->m_players[m_team];
     long surplus[7];
     int resource;
 
@@ -835,15 +809,15 @@ void type_AI_player::makeGift(long playerId)
             - m_resourceDemand[resource];
         if (surplus[resource] > 0) {
             long recipientAmount = g_game->m_players[playerId].m_resources[resource];
-            surplus[resource] = cppMin(
+            surplus[resource] = min(
                 surplus[resource],
-                (player->m_resources[resource] - recipientAmount) / 2L);
+                (player.m_resources[resource] - recipientAmount) / 2L);
             if (resource == GOLD)
-                surplus[resource] = cppMin(
-                    surplus[resource], player->m_resources[resource] - 10000L);
+                surplus[resource] = min(
+                    surplus[resource], player.m_resources[resource] - 10000L);
             else
-                surplus[resource] = cppMin(
-                    surplus[resource], player->m_resources[resource] - 20L);
+                surplus[resource] = min(
+                    surplus[resource], player.m_resources[resource] - 20L);
 
             surplus[resource] -= m_reservedFunds[resource];
             if (resource == GOLD) {
@@ -854,7 +828,7 @@ void type_AI_player::makeGift(long playerId)
             }
             if (surplus[resource] < 5 * recipientAmount)
                 surplus[resource] = 0;
-            surplus[resource] = cppMax(surplus[resource], 0L);
+            surplus[resource] = max(surplus[resource], 0L);
         }
     }
 
@@ -870,13 +844,13 @@ void type_AI_player::makeGift(long playerId)
         type_AI_player* recipientAi = &g_aiPlayers[playerId];
         recipientAi->calculateDemand();
         for (resource = 0; resource < 7; resource++) {
-            surplus[resource] = cppMin(
+            surplus[resource] = min(
                 surplus[resource],
                 recipientAi->m_resourceDemand[resource]
                     - recipientAi->m_resourceSupply[resource]);
             if (surplus[resource] > 0) {
                 g_game->m_players[playerId].m_resources[resource] += surplus[resource];
-                player->m_resources[resource] -= surplus[resource];
+                player.m_resources[resource] -= surplus[resource];
             }
         }
         return;
@@ -885,7 +859,7 @@ void type_AI_player::makeGift(long playerId)
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] > 0) {
             g_game->m_players[playerId].m_resources[resource] += surplus[resource];
-            player->m_resources[resource] -= surplus[resource];
+            player.m_resources[resource] -= surplus[resource];
         }
     }
 
@@ -895,13 +869,14 @@ void type_AI_player::makeGift(long playerId)
     std::vector<type_dialog_resource> list;
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] > 0) {
+            type_dialog_resource displayedResource;
+            displayedResource.m_resource = resource;
+            displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
-                type_dialog_resource displayedResource;
-                displayedResource.m_resource = resource;
-                displayedResource.m_qualifier = surplus[resource];
                 list.push_back(displayedResource);
             } else if (g_networkActive69954c) {
-                CGiftMsg msg(g_netLocalGamePos, resource, surplus[resource]);
+                CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
+                             displayedResource.m_qualifier);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
         }
@@ -909,24 +884,22 @@ void type_AI_player::makeGift(long playerId)
 
     std::string message;
     if (g_game->m_players[playerId].isLocalHuman()) {
-        assignFormattedAiMessage(
-            message,
-            formatString(
-                g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-                g_playerColorNames[m_team]));
+        message = formatString(
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_playerColorNames[m_team]);
         extendedDialog(message.c_str(), list, -1, -1, 0);
     }
 
-    list.erase(list.begin(), list.end());
+    list.clear();
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] < 0) {
+            type_dialog_resource requestedResource;
+            requestedResource.m_resource = resource;
+            requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
-                type_dialog_resource requestedResource;
-                requestedResource.m_resource = resource;
-                requestedResource.m_qualifier = 0;
                 list.push_back(requestedResource);
             } else if (g_networkActive69954c) {
-                CGiftRequestMsg msg(g_netLocalGamePos, resource);
+                CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
         }
@@ -934,13 +907,11 @@ void type_AI_player::makeGift(long playerId)
 
     if (g_game->m_players[playerId].isLocalHuman() && list.size()) {
         if (list.size() == 1) {
-            assignFormattedAiMessage(
-                message,
-                formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
-                    g_playerColorNames[m_team],
-                    g_resourceNames[list[0].m_resource]));
+            message = formatString(
+                g_generalText->getText(
+                    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+                g_playerColorNames[m_team],
+                g_resourceNames[list[0].m_resource]);
         } else {
             message = formatString(
                 g_generalText->getText(
@@ -1087,7 +1058,9 @@ void type_AI_player::calculateReserve()
         }
 
         std::sort(creatures.begin(), creatures.end());
-        int totalCost[7];
+        // Dreamcast names total_cost as long[7], distinct from int cost[7].
+        // Restoring that type is byte-flat at 91.2557%.
+        long totalCost[7];
         memset(totalCost, 0, sizeof(totalCost));
         int cost[7];
         for (short creature = static_cast<short>(creatures.size() - 1);
@@ -1406,20 +1379,28 @@ void type_AI_player::tradeResources(const int* cost, long number)
 // per-unit price; market_value totals what selling the surplus earns. The
 // largest affordable candidate is refined by whole units of unit_cost and
 // the supply shortfalls are relaxed to what that quantity leaves out.
-// Residual (81.03%, MAX 81.35%): the current 34/34 out-of-line call multiset
-// agrees. Retail's direct unsigned size comparison (`jae`) is retained below;
-// removing the source-false signed cast moved 81.35 -> 81.03 by perturbing
-// downstream register allocation, but closes that retail/DC-positive branch.
-// The remaining 88/89-block split and register story start downstream of the
-// players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
-// reloads it per use, and rebases the same temp by +0x9c as the resources
-// walker, with markets in EDI / flag in BL; every spelling tried gives the
-// address a callee-saved register instead. Tried and rejected: named
-// playerData* player (78.94/79.42 - grabs EDI), markets/flag declared
-// first (byte-flat on the grab), hoisted int town_index (79.42), unnaming
-// efficiency (82.79 fuzzy but byte-FALSE: it moves the table read into
-// the loop as fmul dword, where retail flds once into the named qword
-// home - do not resurrect), why-reg volatile proposals (doctrine).
+// Dreamcast lines 1477-1494 and retail agree on a retained player pointer,
+// signed town loop, HasBuilding(..., true), and the by-value min(int,int)
+// wrapper. The old unsigned loop and repeated player address calculation
+// were not compiler-state residuals. Restoring the signed loop measures
+// 76.16% from 76.66%; retaining player then reaches 78.22%; the min wrapper
+// and named double efficiency reach 82.50%. Restoring HasBuilding and the
+// retail zero guard on the second supply arm reaches 82.61%.
+// Retail 0x42a66d loads the float efficiency once and widens it into the
+// qword home later used by fmul. Dreamcast also names a double efficiency.
+// The former const double& bound a conversion temporary; it did not reread
+// the float table at each multiply as its old comment claimed.
+// Residual (82.61%): the first insertion retains two extra vector::size
+// calls (its count expression and first size guard) where retail expands
+// them. The player pointer still occupies a register instead of retail's
+// reusable stack home. Later long-vector helper names differ through ICF.
+// Prior controls: declaring markets/flag first and hoisting townIndex did
+// not recover the player's stack home. Inlining the efficiency expression
+// into the multiply is retail-false: it replaces the one-time widened load
+// with a per-iteration float read. The vector-size comparisons below remain
+// unsigned, independently of the signed town-count comparison.
+// The old return-site inline-depth pin is unnecessary: removing it is
+// byte-flat, and both final vector destructors remain calls naturally.
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          // Before normalization (locals): trade_qty,
@@ -1429,27 +1410,25 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 {
     long markets = 0;
     unsigned char canBuildMarket = 0;
+    playerData* player = &g_game->m_players[m_team];
     if (supply[0] >= 0
-        && g_game->m_players[m_team].m_ai.m_turnProductionResource[0] > 0)
+        && player->m_ai.m_turnProductionResource[0] > 0)
         canBuildMarket = 1;
 
-    for (unsigned int townIndex = 0; townIndex < g_game->m_players[m_team].m_numTowns;
+    for (int townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
         town* currentTown = g_game->getTown(
-            g_game->m_players[m_team].m_townIds[townIndex]);
-        if ((currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+            player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)
             || (canBuildMarket
                 && currentTown->canBuild(MARKETPLACE_ID)))
             ++markets;
     }
 
-    markets = cppMin(markets, 10L);
+    markets = min(markets, 10);
     if (markets == 0)
         return false;
-    // BOUND BY `const double&`: retail re-reads the table entry at each
-    // multiply rather than keeping the double live in a register/slot.
-    // 81.3465 -> 84.4350.
-    const double& efficiency = g_tradingPostEfficency[markets];
+    double efficiency = g_tradingPostEfficency[markets];
     long marketValue = 0;
 
     std::vector<long> baseCost;
@@ -1463,17 +1442,8 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
             marketValue = static_cast<long>(
                 getMarketValue(gameResourceFromInt(i)) * supply[i]
                 * efficiency + marketValue);
-        // Retail's second guard is `je`, not `jge`: spelling this
-        // `supply[i] != 0` (or the bare `supply[i]`) takes the branch
-        // census CLEAN at 45/45 and measures 81.1900 - ABOVE the current
-        // 81.0339 but still under the row's banked 81.3465 MAX, which was
-        // set in an older delink generation, so it is recorded rather than
-        // shipped. The rest of the gap is the induction base: retail walks
-        // `supply` with ESI and biases `cost` off it, we walk `cost` and
-        // bias `supply`; the ICF-folded vector<long>/vector<army*> call
-        // rows are cosmetic.
-        } else if (supply[i] < 0) {
-            long onHand = g_game->m_players[m_team].m_resources[i];
+        } else if (supply[i] != 0) {
+            long onHand = player->m_resources[i];
             long value = getMarketValue(gameResourceFromInt(i));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
@@ -1512,12 +1482,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 supply[k] = 0;
         }
     }
-    // Retail calls ~vector<long> for both locals at this exit only, while
-    // expanding the teardown at the two earlier ones - the return-statement
-    // pin reaches the scope-exit destructors of function-scoped locals.
-#pragma inline_depth(0)
     return true;
-#pragma inline_depth()
 }
 
 // E:\gamedcs\ai_player.cpp:1587
@@ -3217,6 +3182,8 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // adds the Complete elemental-alignment gate and exposes both shooter-policy
 // predicates: preserve a sole shooter, but replace a shooter once there are
 // already more than three. Alignment checking admits only a singleton group.
+// DC's two flags are unsigned char, not bool; retail reads their low bytes.
+// Restoring the declared types is byte-flat at 88.3357%, including its caller.
 // Residual (88.34%): all policy/filter calls and 135 of retail's 140
 // instructions are present across 41 versus 42 blocks. The remaining split
 // is a VC6 register-role permutation in the Complete alignment fold;
@@ -3228,7 +3195,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
     // Before normalization (locals): is_shooter, check_alignments, shooter_count, shooter_slot,
     // replace_shooter, preserve_shooter, weakest_slot, weakest_value, grouped_alignment,
     // allied_alignments.
-    bool isShooter, bool checkAlignments)
+    unsigned char isShooter, unsigned char checkAlignments)
 {
     long shooterCount = 0;
     int shooterSlot;
@@ -3305,17 +3272,24 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // `why-reg` leaves distance 155; its best volatile-value probe moves that
 // metric by only five and does not improve objdiff, while the measured
 // pointer/reference, declaration and expression variants are flat or worse.
+// DC records an unsigned-char must_replace_creature parameter and the
+// min(int,int) wrapper at line 2404. Retail likewise copies both the current
+// minimum and creature speed to separate temporary homes before choosing
+// their addresses. Restoring min instead of the reference-only cppMin
+// recovers 89.0856% from 86.1781%; the byte-flag signature is retained too.
+// DC lines 2351/2352 place traits and value before the morale locals;
+// restoring that declaration order is byte-flat at the recovered peak.
 VA(0x0042c830, 0x33F)  // DC method/callgraph + retail Complete body; dc 0x31af4
 long type_AI_creature_swapper::valueOfAddingArmy(
     TCreatureType type, short count, short& slot,
     // Before normalization (locals): must_replace_creature, bad_morale, morale_army_value,
     // allied_alignments, minimum_morale, slowest_speed, old_move, new_move, army_value.
-    bool mustReplaceCreature)
+    unsigned char mustReplaceCreature)
 {
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
+    long value = traits->m_aiValue * count;
     bool badMorale = false;
     long moraleArmyValue = 0;
-    long value = traits->m_aiValue * count;
 
     int alignment;
     if (g_game->m_f1f698 == 0
@@ -3381,7 +3355,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
         TCreatureType current = m_army->m_armyTypes[index];
         if (current != CREATURE_NONE) {
-            slowestSpeed = cppMin(
+            slowestSpeed = min(
                 slowestSpeed, g_creatureTypeTraits[current].m_speed);
         }
     }
@@ -3801,47 +3775,52 @@ void aiArrangeArmy(armyGroup* currentArmy)
     }
 }
 
-// split_army is split_armies' DC-roster neighbour; its body remains in the
-// carcass, but the retail label is a sufficient call target.
+// split_army is split_armies' DC-roster neighbour. Keep its declaration
+// before the caller and its retained retail body below.
 // Before normalization (function): split_army.
 // Before normalization (locals): current_army, open_slots.
 long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots);
 
 // E:\gamedcs\ai_player.cpp:2817
-// Residual (83.62%): closed since 79.53 by duplicating the AI_arrange_army
-// exit into the second split loop's ==0 arm (+1.5) and rewriting the merge
-// as the canonical first/duplicate consolidate loop (+2.6, retail's
-// lea/cmp-6 back edge). Remaining delta is register homing: retail keeps
-// the enemy-census counter in a recycled param slot and the int-to-float
-// product temp in a negative local, and holds open_slots in EDI across the
-// split loops where we re-home it - tried and rejected: named-local
-// respellings of the census counter.
+// Dreamcast proves the const armyGroup& enemy parameter, armyGroup&
+// current_army local, and long walker_count local. Retail's consolidation
+// prefix is the ordinary aiConsolidateArmy body expanded at this call site;
+// the canonical helper naturally inlines here, so no copied merge loop is
+// needed. Its retained body and other callers keep their own decisions.
+// The enemy counters precede the combat-value calls in DC lines 2832-2846
+// and retail. The first split loop exits immediately when no slots remain.
+// Recovering that order and exit reaches 86.50% from the old 83.62%.
+//
+// Retail adds army arrangement to DC's early exits, sharing one exit block
+// for the guards and retaining a separate ordinary completion call. The
+// scoped body and common arrange label reproduce those two call sites and
+// reach 97.71%. Individual arrange/return pairs at every DC guard produced
+// five epilogues (76.55%); the former nested positive guards retained an
+// unnecessary slots test and could not reproduce the shared exit topology.
+// Residual (97.71%): two consolidation reloads schedule in reverse order,
+// and the final split loop retains currentArmy in ECX where retail reloads
+// it at the call. Separate empty-stack/shooter continue guards in that loop
+// are byte-flat. Earlier census-counter naming probes did not fix allocation.
 // Before normalization (locals): current_hero, enemy_hero, open_slots, enemy_shooter_count,
 // enemy_shooter_value, enemy_max_value, hero_shooter_value, hero_nonshooter_count,
 // splits_needed.
 VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
 void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup* enemy)
+                  const armyGroup& enemy)
 {
-    armyGroup* army = &currentHero->m_army;
-    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
-         ++first) {
-        TCreatureType type = army->m_armyTypes[first];
-        if (type != CREATURE_NONE) {
-            for (int duplicate = first + 1;
-                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                 ++duplicate) {
-                if (army->m_armyTypes[duplicate] == type) {
-                    army->m_numTroops[first] += army->m_numTroops[duplicate];
-                    army->dismiss(duplicate);
-                }
-            }
-        }
-    }
+    // Before normalization (locals): current_army, walker_count.
+    armyGroup& currentArmy = currentHero->m_army;
+    aiConsolidateArmy(&currentArmy);
 
-    int openSlots = 7 - army->getNumArmies();
-    if (openSlots > 0) {
+    {
+        int openSlots = 7 - currentArmy.getNumArmies();
+        if (openSlots <= 0) {
+            goto arrange;
+        }
+        int enemyShooterCount = 0;
+        int enemyShooterValue = 0;
+        int enemyMaxValue = 0;
         float ratio;
         if (enemyHero == 0)
             ratio = 1.0f;
@@ -3850,16 +3829,13 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
                         ->getCombatValueModifier();
         ratio /= currentHero->getCombatValueModifier();
 
-        int enemyShooterCount = 0;
-        int enemyShooterValue = 0;
-        int enemyMaxValue = 0;
         int k;
         for (k = 0; k < 7; ++k) {
-            TCreatureType type = enemy->m_armyTypes[k];
+            TCreatureType type = enemy.m_armyTypes[k];
             if (type == CREATURE_NONE)
                 continue;
             long value = static_cast<long>(
-                enemy->m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+                enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
                 * ratio);
             if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
                 ++enemyShooterCount;
@@ -3871,58 +3847,62 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 
         int slot;
         for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = army->m_armyTypes[slot];
+            TCreatureType type = currentArmy.m_armyTypes[slot];
             if (type != CREATURE_NONE
                 && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
-                openSlots -= splitArmy(army, slot, enemyMaxValue * 5,
+                openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                          openSlots);
-                if (openSlots == 0)
-                    break;
-            }
-        }
-
-        if (openSlots != 0 && enemyShooterCount != 0) {
-            long heroShooterValue = 0;
-            int heroNonshooterCount = 0;
-            int m;
-            for (m = 0; m < 7; ++m) {
-                TCreatureType type = army->m_armyTypes[m];
-                if (type == CREATURE_NONE)
-                    continue;
-                if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                    heroShooterValue += army->m_numTroops[m]
-                        * g_creatureTypeTraits[type].m_aiValue;
-                else
-                    ++heroNonshooterCount;
-            }
-
-            if (heroShooterValue < enemyShooterValue) {
-                int splitsNeeded = (enemyShooterCount
-                    - heroShooterValue * enemyShooterCount
-                        / enemyShooterValue
-                    + 1) / 2 - heroNonshooterCount;
-                if (splitsNeeded > 0) {
-                    if (splitsNeeded < openSlots)
-                        openSlots = splitsNeeded;
-                    for (slot = 0; slot < 7; ++slot) {
-                        TCreatureType type = army->m_armyTypes[slot];
-                        if (type != CREATURE_NONE
-                            && !(g_creatureTypeTraits[type].m_attributes
-                                 & g_ctaShooter)) {
-                            openSlots -= splitArmy(army, slot,
-                                                     enemyMaxValue,
-                                                     openSlots);
-                            if (openSlots == 0) {
-                                aiArrangeArmy(army);
-                                return;
-                            }
-                        }
-                    }
+                if (openSlots == 0) {
+                    goto arrange;
                 }
             }
         }
+
+        if (enemyShooterCount == 0) {
+            goto arrange;
+        }
+        long heroShooterValue = 0;
+        long walkerCount = 0;
+        int m;
+        for (m = 0; m < 7; ++m) {
+            TCreatureType type = currentArmy.m_armyTypes[m];
+            if (type == CREATURE_NONE)
+                continue;
+            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+                heroShooterValue += currentArmy.m_numTroops[m]
+                    * g_creatureTypeTraits[type].m_aiValue;
+            else
+                ++walkerCount;
+        }
+
+        if (heroShooterValue >= enemyShooterValue) {
+            goto arrange;
+        }
+        int splitsNeeded = (enemyShooterCount
+            - heroShooterValue * enemyShooterCount
+                / enemyShooterValue
+            + 1) / 2 - walkerCount;
+        if (splitsNeeded <= 0) {
+            goto arrange;
+        }
+        if (splitsNeeded < openSlots)
+            openSlots = splitsNeeded;
+        for (slot = 0; slot < 7; ++slot) {
+            TCreatureType type = currentArmy.m_armyTypes[slot];
+            if (type == CREATURE_NONE)
+                continue;
+            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+                continue;
+            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
+                                   openSlots);
+            if (openSlots == 0)
+                goto arrange;
+        }
+        aiArrangeArmy(&currentArmy);
+        return;
     }
-    aiArrangeArmy(army);
+arrange:
+    aiArrangeArmy(&currentArmy);
 }
 
 // E:\gamedcs\ai_player.cpp:2778
@@ -5924,32 +5904,40 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->m_valueOfKnowledge * m_bonus;
 }
 
-// Residual (82.56%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
-// then min(necro,bonus) / necro=min(necro,0)+bonus, army*necro/250). The delta
+// Residual (85.8871%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
+// then min(effect,bonus) / effect=min(effect,0)+bonus, army*effect/250). The delta
 // is register scheduling: retail delays `push esi` past the skillLevel early-out
-// and spills necro to [ebp+8] only inside the min arm, while our SP3 CL pushes
-// esi in the prologue and hoists the spill above the equipped branch; the /250
+// while our SP3 CL pushes esi in the prologue; the /250
 // sign-correction also keeps the quotient in edx where ours uses eax. The 1.0f
 // and 100.0f literals pool as __real@ COMDATs vs retail's const_23b6e0/const_23ac68
 // (cosmetic reloc-name difference). Register-homing class.
+// Dreamcast retains the local `long effect`. Retail's unequipped arm at
+// 0x43268b copies BOTH min inputs to parameter homes before selecting their
+// addresses, so its arguments are temporaries rather than the direct member
+// and local references used by DC's std::min. The existing int min(int,int)
+// wrapper reproduces those copies with the recovered long local (85.8871%).
+// Keeping long effect with std::_cpp_min<long> and a cast bonus gives 82.56%
+// and spills effect before the equipped branch; direct reference arguments
+// give 79.92% and omit retail's bonus copy. The previous int necro plus two
+// converted std::_cpp_min<long> arguments was byte-identical to the wrapper.
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
 {
     if (owner->m_skillLevel[12] == 0)
         return 0;
-    int necro = static_cast<int>(
+    long effect = static_cast<long>(
         (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
-        if (necro > 0)
-            necro = 0;
-        necro += m_bonus;
+        if (effect > 0)
+            effect = 0;
+        effect += m_bonus;
     } else {
-        necro = std::_cpp_min<long>(necro, static_cast<int>(m_bonus));
+        effect = min(effect, m_bonus);
     }
-    if (necro <= 0)
+    if (effect <= 0)
         return 0;
-    return owner->m_army.getAIValue() * necro / 250;
+    return owner->m_army.getAIValue() * effect / 250;
 }
 
 // E:\gamedcs\ai_player.cpp:5189
@@ -6116,20 +6104,22 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     return result;
 }
 
-// Residual (90.68%): same merged-return / stale-CL-generation delta as
-// antimorale above (the luck twin) - retail commits result to edi and merges
-// one epilogue; our CL fuses the morale>0 arm's exit. Rest byte-exact.
+// Dreamcast lines 5418-5419 return immediately for exact, before GetLuck.
+// Preserving that boundary also restores retail's shared result epilogue:
+// all 120 bytes match, including the result store to EDI. The former nested
+// !exact form measured 90.6818% by duplicating the positive-luck exit; this
+// was a source-boundary mismatch, not a compiler-generation residual.
 // E:\gamedcs\ai_player.cpp:5413
 VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
 long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
-    if (!exact) {
-        int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
-        if (luck > 0)
-            result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
-    }
+    if (exact)
+        return result;
+    int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
+    if (luck > 0)
+        result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
 }
 
