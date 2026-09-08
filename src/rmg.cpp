@@ -26,6 +26,7 @@
 #include "homm3_minmax.h"
 #include "objnames.h"
 #include "resourcemanager.h"
+#include "rmg_request.h"
 #include "rmg.h"
 #include "rmg_terrain.h"
 #include "textresource.h"
@@ -5505,6 +5506,27 @@ static void __fastcall assignRmgTeams(
         teams[player] = firstTeam + static_cast<char>(team);
         --playersPerTeam[team];
     }
+}
+
+// GenerateRandomMap's call at 0x5862e8 passes width, height and level count.
+// The request worker 0x54bf60 independently reads each scalar and copies the
+// human-seat and town-choice arrays into the generator. The shared request
+// declaration retains these proven UI/RMG fields and their constructor defaults.
+// Exact: clear the two arrays with memset and assign strength before water.
+// The 36-form array/scalar batch reached 96%; the eight-form store-boundary
+// refinement found three exact forms. Initializing both fields in declaration
+// order, even with their initializer text reversed, keeps the 96% store swap.
+VA(0x0054BF00, 0x57) // anchor-callee 0x5862e8; Complete-only, thiscall ret 0xc
+TRandomMapRequest::TRandomMapRequest(int width, int height, int levels)
+    : m_width(width), m_height(height), m_levels(levels),
+      m_humanPlayerCount(2), m_humanTeamCount(2),
+      m_computerPlayerCount(0), m_computerTeamCount(8),
+      m_mapVersion(2)
+{
+    m_monsterStrength = 0;
+    m_waterContent = 3;
+    memset(m_isHumanSeat, 0, sizeof(m_isHumanSeat));
+    memset(m_townType, -1, sizeof(m_townType));
 }
 
 // The legacy artifact-mask conversion calls Dinkumware's 129-bit setter.
