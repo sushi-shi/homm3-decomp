@@ -2903,6 +2903,9 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 // copy. why-reg's model finds no binding divergence and its guided volatile
 // probe is worse (5 rather than 3 masked slots), so the residual is a bounded
 // C1 dead-address-materialization wall.
+// Twenty-one further source candidates combine context/list references,
+// pointers, list snapshots, and while/do/for lookup loops. Their maximum is
+// still 96.7742%; the canonical archive model and original loop are retained.
 VA(0x0055d070, 0x5C)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {

@@ -165,6 +165,13 @@ def _build_parser() -> argparse.ArgumentParser:
     pq.add_argument("--limit", type=int, default=20, metavar="N",
                     help="maximum ranked functions to display (default 20; 0 = all)")
 
+    ph = ss.add_parser("hypotheses", help="compile and score a Cartesian source-hypothesis manifest")
+    ph.add_argument("manifest")
+    ph.add_argument("-j", "--jobs", type=int, default=8)
+    ph.add_argument("--limit", type=int, default=256)
+    ph.add_argument("--keep-top", type=int, default=8)
+    ph.add_argument("--output")
+
     ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
                        "all MAX < HIST rows")
     ps.add_argument("--trials", type=int, default=30,
@@ -205,6 +212,7 @@ _TOOLS = {
     "report": ("report", "run"),
     "queue": ("queue", "run"),
     "state-sweep": ("tu_state_sweep", "run"),
+    "hypotheses": ("hypotheses", "run"),
     "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }

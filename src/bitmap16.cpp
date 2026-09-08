@@ -194,16 +194,28 @@ unsigned int Bitmap16Bit::getSize() const
 // E:\gamedcs\bitmap16.cpp:335. Re-point the bitmap at memory somebody else
 // owns: drop whatever this object allocated, then take the caller's extent,
 // stride and pointer and mark the map borrowed.
-// Residual (94.8%): one scheduled load. Retail pulls `pitch` into EDX
-// between the extent product and the two size stores; ours loads it after
-// them. Naming the product in an `int size` local ahead of the run is worth
-// 8.81 (85.95 -> 94.76) - the two size stores then share one register and
-// free EDX early - but no further arrangement closes it: the local placed
-// after the Width store (85.95), a second local for the stride (94.76,
-// byte-flat), DataSize before ImageSize (85.95) and both chained-assignment
-// forms (85.95) were all measured.
+// DC lines 342..346 assign width, height, pitch, image size, then data size.
+// Keeping that order and the ordinary clear() call is byte-exact in retail.
+// Moving pitch after the size stores scores 85.95%; an early product local
+// with that late pitch store reaches only 94.7568%.
 VA(0x0044e250, 0x5D)  // order-map(DC bitmap16.obj, between Remap and Draw), dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
+{
+    clear();
+    m_width = w;
+    m_height = h;
+    m_pitch = pitch;
+    m_imageSize = w * h * 2;
+    m_dataSize = m_imageSize;
+    m_map = data;
+    m_referenced = 1;
+}
+
+// DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
+// Complete inlines its scalar resets and borrowed-buffer release; the DC-only
+// surface-release arm has no corresponding field or operation in retail.
+DC_ONLY(0x51198, 0x90)
+void Bitmap16Bit::clear()
 {
     m_width = 0;
     m_height = 0;
@@ -215,15 +227,8 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
         m_map = 0;
         m_referenced = 0;
     }
-    int size = w * h * 2;
-    m_width = w;
-    m_height = h;
-    m_imageSize = size;
-    m_dataSize = size;
-    m_pitch = pitch;
-    m_map = data;
-    m_referenced = 1;
 }
+
 
 // E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
 // destination origin by walking the source in, clip the far edge against
@@ -660,11 +665,7 @@ void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
 // E:\gamedcs\bitmap16.cpp:335
 
 // E:\gamedcs\bitmap16.cpp:358
-DC_ONLY(0x51198, 0x90)
-void Bitmap16Bit::clear()
-{
-    // @stub
-}
+
 
 // E:\gamedcs\bitmap16.cpp:472
 DC_ONLY(0x51228, 0x150)

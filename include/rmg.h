@@ -562,14 +562,22 @@ struct TRmgGridPoint {
     }
     TRmgGridPoint operator+(const TPoint& offset) const
     {
-        // Copy-initialize the coordinate value, then return the compound
-        // translation. Retail paintPoint 0x5b4e38..0x5b4e55 retains original x
-        // at EBP-0x14 before the additions. With its guard-return terrain
-        // predicate, a separate named return changes the direction register
-        // and addition schedule (99.0163% versus 99.9204%). The older named-
-        // return result depended on the comparison-return predicate.
-        TRmgGridPoint result = TRmgGridPoint(m_x, m_y);
-        return result += offset;
+        // Retail paintPoint 0x5b4e38..0x5b4e55 retains original x at EBP-0x14
+        // before the additions. Earlier TU controls favored copy-initialized
+        // construction plus compound return (99.9204%) over a named return
+        // (99.0163%); those controls predate the current retained-add call.
+        // Direct-construction control under the preceding TU: construction
+        // and a named return restore expansion of this helper in paintPoint
+        // (89.0488 -> 89.7848) and repairTerrainPoint (89.7150 -> 89.9680).
+        // The retained ctor/copy/compound-add interfaces remain unchanged.
+        // With the shared line proxy admitted, an assignment-built result
+        // raises terrain paintPoint to 90.9656% and line refresh to 63.9923%.
+        // Named and compound returns both reproduce those gains; neither
+        // closes the remaining copy/add call decisions in either caller.
+        TRmgGridPoint result;
+        result = *this;
+        result += offset;
+        return result;
     }
 };
 
@@ -603,6 +611,17 @@ enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
     RMG_WATER_NONE = 0,
     RMG_WATER_ISLANDS = 2
+};
+
+// Complete's guard selector 0x540b20 uses these bounds, not the full combat
+// creature array. Its RoE exclusion starts at 118 even though evaluation
+// stops before 117; keep that observed boundary distinct.
+enum ERmgGuardConstants {
+    RMG_GUARD_CREATURE_COUNT = 145,
+    RMG_GUARD_ROE_CREATURE_LIMIT = 117,
+    RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
+    RMG_GUARD_MAXIMUM_COUNT = 100,
+    RMG_GUARD_DISPOSITION = 3
 };
 
 // The function-local river-delta table has a non-trivial empty destructor:
@@ -767,7 +786,7 @@ struct TRmgObjectPropertiesRef {
     unsigned m_refCount;                   // +0x08
     // Before normalization: prototypeIndex.
     int m_prototypeIndex;
-    // Previously opaque0010: ctor 0x532c80 owns outline; 0x532e40
+    // Previously opaque0010: lazy builder 0x532c80 owns outline; 0x532e40
     // initializes overlapPriorities and the +0xe4 flag. +0xe5..e7 aligns the tail.
     TRmgObjectPlacementRule* m_placementRule; // +0x10
     std::vector<TPoint> m_outline;         // +0x14
@@ -777,6 +796,8 @@ struct TRmgObjectPropertiesRef {
     // Before normalization: pad00e5.
     char m_pad00e5[3];
 
+    // Lazy perimeter builder retained at 0x532c80; role name, retail-only.
+    void buildOutline();
     void buildOverlapPriorities();
 };
 
@@ -821,9 +842,31 @@ public:
     virtual unsigned char isWritable() const;
     // Before normalization (function): type_object::Write.
     // Retail base/ownable writers 0x533170/0x533460 both pop eight bytes.
-    // The second stack word is unused there; its source role is unresolved.
+    // The second stack word is the map version: the monster override uses
+    // it to gate the object-id field, while base/ownable do not inspect it.
     virtual void write(TAbstractFile* outfile, int parameter);
 };
+
+// Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
+// installs vtable 0x640a84. Slot 3 (0x5331f0) serializes the id, count and
+// disposition below; +0x28 is neither initialized nor read by those bodies.
+class rmgMonsterObject : public type_object {
+public:
+    int m_objectId;       // +0x1c
+    int m_count;          // +0x20, serialized as two bytes
+    int m_disposition;    // +0x24, serialized as one byte
+    int m_unknown28;      // +0x28
+
+    rmgMonsterObject(TRmgObjectPropertiesRef* properties, int objectId, int count)
+        : type_object(properties)
+    {
+        m_count = count;
+        m_disposition = RMG_GUARD_DISPOSITION;
+        m_objectId = objectId;
+    }
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgMonsterObject, 0x2c);
 
 // Provisional Complete-only role. The shipyard path allocates 0x1c bytes,
 // calls type_object's constructor, then replaces its vptr with 0x640aa4.
@@ -875,6 +918,14 @@ struct TRmgMapItem {
     // instead use dword masks. Names remain provisional without RMG symbols.
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
+
+    // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
+    // test the truncated byte. Direct bitfield conditions fold to a dword
+    // mask; keep this same ordinary query at each recovered boundary.
+    unsigned char isRoadEntrance() const
+    {
+        return m_tileData.m_roadEntrance;
+    }
 
     // ScoreObjectPlacement reads bit 27 with shr/test dl, whereas its
     // direct roadPassable condition tests the containing dword. The
@@ -1021,10 +1072,35 @@ public:
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 
     // Before normalization (function): type_random_map::CanPlaceObject.
+    // The two retained helpers below precede its trigger/terrain checks.
+    // Spellings describe their Complete-only roles, not Dreamcast names.
+    unsigned char hasConnectedOutline(
+        const std::vector<TPoint>& outline, TRmgMapPosition position,
+        unsigned char allowEntrances, TRmgZone* zone, unsigned char requireGate);
+    unsigned char isPlacementBlocked(
+        TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
+        int zoneIndex, unsigned char rejectBorder);
     unsigned char canPlaceObject(
         TRmgObjectPropertiesRef* properties,
         TRmgMapPosition position,
         TRmgZone* zone);
+};
+
+// Complete-only road adapter, provisional role name. Vtable 0x640a04 has
+// the seven-slot road interface; 0x548120 constructs the eight-byte object
+// with the address of a type_random_map view at +4. Its methods independently
+// index that map's 0x30-byte cells and read/write the road packed fields.
+class TRmgRoadMapAdapter : public TRmgRoadMapAdapterInterface {
+public:
+    type_random_map* m_map;
+
+    TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
+    virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint getSize();
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getOverlay(const TRmgGridPoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1052,53 +1128,156 @@ public:
 // the retained constructor at 0x4f9be0. That constructor allocates the copied
 // pattern ids, then records the first index and occurrence count for each of
 // the nine pattern values.
-struct TRmgLinePatternTable {
-    int m_patternCount;
-    int* m_patterns;
-    int m_firstIndex[9];
-    int m_valueCount[9];
+struct TRmgLinePatternRange {
+    // Role-derived names: the constructor writes index/count at an 8-byte
+    // stride, not two separate nine-element arrays. Before normalization:
+    // TRmgLinePatternTable::m_firstIndex / m_valueCount.
+    unsigned int m_firstIndex;
+    unsigned int m_valueCount;
+};
+SIZE(TRmgLinePatternRange, 0x8);
 
-    TRmgLinePatternTable(int patternCount, const int* patterns);
+struct TRmgLinePatternTable {
+    unsigned int m_patternCount;
+    int* m_patterns;
+    TRmgLinePatternRange m_ranges[9];
+
+    TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
     ~TRmgLinePatternTable();
 };
 SIZE(TRmgLinePatternTable, 0x50);
 
-class TRmgLinePainter {
+// The generator owns the real globals. Their constructor and destructor
+// remain ordinary support-library bodies, retained by both init/exit paths.
+extern TRmgLinePatternTable g_rmgRiverPatternTable;
+extern TRmgLinePatternTable g_rmgRoadPatternTable;
+
+// Complete-only selector 0x4f9cb0. Caller 0x4f9f00 passes the eight-byte
+// neighbour mask and pattern table in ECX/EDX, plus three distinct output
+// locals on the stack. Pattern is an id in the table, not a frame index.
+void selectRmgLinePattern(
+    const unsigned char* neighbours, const TRmgLinePatternTable* table,
+    int& pattern, unsigned char& flipX, unsigned char& flipY);
+
+struct TRmgLinePainterTile;
+
+// Both painter constructors pass their first base to the same retained walker
+// constructor at 0x4fa280. Its helpers dispatch the six slots and read the
+// dimensions at +4/+8 (0x4fa45b/0x4fa45f and 0x4fa122/0x4fa16a).
+// This common abstract prefix is a retail-derived source model; the original
+// Complete-only interface spelling is unknown. It has no virtual destructor
+// slot: only the final river/road painters append slot 6.
+class TRmgLinePainterInterface {
 public:
     // Before normalization: size.
     TRmgGridPoint m_size;
+
+    TRmgLinePainterInterface(const TRmgGridPoint& size);
+    virtual TRmgLinePatternTable* getPattern(int value) = 0;
+    virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual int canPaint(const TRmgGridPoint& point) = 0;
+    virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
+    virtual int getLand(const TRmgGridPoint& point) = 0;
+
+    TRmgLinePainterTile at(const TRmgGridPoint& point);
+};
+
+// The value returned at 0x4fa050 holds the painter and a copied coordinate.
+// Caller 0x4f9f00 then dispatches through those stored members; the same
+// twelve-byte record is expanded at its entry and in 0x4fa080/0x4fa3c0.
+// These Complete-only names describe roles, not recovered original spellings.
+struct TRmgLinePainterTile {
+    TRmgLinePainterInterface* m_painter;
+    TRmgGridPoint m_point;
+
+    TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
+    int getLand();
+    void getTile(rmgTerrainTile& tile);
+    void setTile(const rmgTerrainTile& tile);
+    unsigned char isBlocked();
+    void setOverlay(int value);
+};
+SIZE(TRmgLinePainterTile, 0x0c);
+
+// Retail clear 0x4fa080 reads an unsigned origin and extent, not the signed
+// min/max bounds used for zones. The point walker builds a one-cell rectangle.
+// This Complete-only role name does not assert an original class spelling.
+struct TRmgGridRectangle {
+    TRmgGridPoint m_origin;
+    TRmgGridPoint m_size;
+
+    TRmgGridRectangle(const TRmgGridPoint& origin, unsigned int width, unsigned int height);
+};
+SIZE(TRmgGridRectangle, 0x10);
+
+// Shared fastcall refresh reached by the rectangle clear and point walker.
+void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
+void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle);
+
+class TRmgLinePainter : public TRmgLinePainterInterface {
+public:
     // Before normalization: adapter.
     TRmgMapAdapterInterface* m_adapter;
 
     inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
-        : m_size(newAdapter->getSize()), m_adapter(newAdapter)
+        : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
     ~TRmgLinePainter() {}
 
     // Before normalization (function): TRmgLinePainter::GetPattern.
-    virtual void* getPattern(int value);
+    virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
+    // retained wrapper 0x55f350 writes through its second explicit argument;
+    // unlike the adapter, this interface does not return a tile by value.
+    virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
+
+// The retained walk at 0x4fa2b0 builds two three-dword records, selects them
+// by distance, then updates their coordinate and step through those pointers.
+// It walks from destination back toward the stored position; unsigned bounds
+// at 0x4fa2c8/0x4fa2f4 and 0x4fa30c establish the coordinate/distance types.
+// This Complete-only role name is provisional, not a recovered source name.
+struct TRmgLineWalkAxis {
+    unsigned int m_position;
+    unsigned int m_distance;
+    int m_step;
+
+    TRmgLineWalkAxis(const unsigned int& destination, const unsigned int& previous)
+        : m_position(destination)
+    {
+        if (destination <= previous) {
+            m_distance = previous - destination;
+            m_step = 1;
+        } else {
+            m_distance = destination - previous;
+            m_step = -1;
+        }
+    }
+};
+SIZE(TRmgLineWalkAxis, 0x0c);
 
 class TRmgLineWalker {
 public:
     // Before normalization: painter.
-    TRmgLinePainter* m_painter;
+    TRmgLinePainterInterface* m_painter;
     // Before normalization: riverType.
     int m_riverType;
     TRmgGridPoint m_position;
 
     TRmgLineWalker(
-        TRmgLinePainter* newPainter,
+        TRmgLinePainterInterface* newPainter,
         int newRiverType,
         const TRmgGridPoint& start);
     void drawTo(const TRmgGridPoint& destination);
+    // Shared by constructor 0x4fa280 and the two-axis walk 0x4fa2b0.
+    void paintPoint(const TRmgGridPoint& point);
 };
 
 class TRmgRiverPainter : public TRmgLinePainter, public TRmgLineWalker {
@@ -1114,30 +1293,29 @@ public:
 // Its base and derived vtables at 0x6411f0/0x64120c differ from the river
 // hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
 // interface shape. Original Complete-only class spellings are unavailable.
-class TRmgRoadLinePainter {
+class TRmgRoadLinePainter : public TRmgLinePainterInterface {
 public:
-    TRmgGridPoint m_size;
-    TRmgMapAdapterInterface* m_adapter;
+    TRmgRoadMapAdapterInterface* m_adapter;
 
-    inline TRmgRoadLinePainter(TRmgMapAdapterInterface* newAdapter)
-        : m_size(newAdapter->getSize()), m_adapter(newAdapter)
+    inline TRmgRoadLinePainter(TRmgRoadMapAdapterInterface* newAdapter)
+        : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
     ~TRmgRoadLinePainter() {}
 
-    virtual void* getPattern(int value);
+    virtual TRmgLinePatternTable* getPattern(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
 
 class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
 public:
     TRmgRoadPainter(
-        TRmgMapAdapterInterface* newAdapter,
+        TRmgRoadMapAdapterInterface* newAdapter,
         int newRoadType,
         const TRmgGridPoint& start);
     virtual ~TRmgRoadPainter();
@@ -1442,6 +1620,9 @@ public:
     type_object* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(TRmgMapPosition position, int value);
+    // Complete-only prototype/subtype/terrain filter at retail 0x546040.
+    TRmgObjectPropertiesRef* selectObjectPrototype(
+        TTerrainType terrain, int objectType, int subtype);
     void resetMovementCosts();
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
@@ -1474,9 +1655,12 @@ SIZE(TRmgMapInterface, 0x04);
 SIZE(TRmgMapAdapterInterface, 0x04);
 SIZE(TRmgRoadMapAdapterInterface, 0x04);
 SIZE(TRmgMapAdapter, 0x08);
+SIZE(TRmgLinePainterInterface, 0x0c);
 SIZE(TRmgLinePainter, 0x10);
+SIZE(TRmgRoadLinePainter, 0x10);
 SIZE(TRmgLineWalker, 0x10);
 SIZE(TRmgRiverPainter, 0x20);
+SIZE(TRmgRoadPainter, 0x20);
 SIZE(type_random_map_generator, 0x14e0);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before

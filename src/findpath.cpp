@@ -1049,7 +1049,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (destCell->m_isTrigger && searchType >= const_AI_search
                 && (destCell->m_type == HERO || destCell->m_type == GARRISON
                     || destCell->m_type == MONSTER)
-                && !enterHostileTrigger(currentHero, &candidate)) {
+                && !enterHostileTrigger(currentHero, candidate)) {
             blocked = 1;
             candidate.m_canStop = 0;
         } else if (!blocked && !impassable

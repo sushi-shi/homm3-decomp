@@ -13,25 +13,12 @@
 #include <stdlib.h>  // abs, check_town_portal's distance surcharge
 #include "includes.h"
 
-// CodeView proves that the original header supplied const-reference
-// operator==/operator!= methods.  TU-local inline spellings preserve that
-// source-level expansion without exposing two new member declarations to
-// unrelated exact compilands (initialize_game_data is definition-count
-// sensitive).  Direct != is required: implementing it as !operator== drops
-// one retail branch and scores 64.78% instead of the current maximum.
-// Before normalization (function): PointsEqual.
-inline unsigned char pointsEqual(const type_point& point,
-                                 const type_point& arg)
-{
-    return point.m_x == arg.m_x && point.m_y == arg.m_y && point.m_z == arg.m_z;
-}
+// DC struct.h proves the const-reference comparison operators. Their canonical
+// definitions now live in struct.h; use them directly instead of TU-local
+// duplicate free helpers. The direct != body preserves retail's three tests.
 
-// Before normalization (function): PointsNotEqual.
-inline unsigned char pointsNotEqual(const type_point& point,
-                                    const type_point& arg)
-{
-    return point.m_x != arg.m_x || point.m_y != arg.m_y || point.m_z != arg.m_z;
-}
+// Using the canonical comparisons changes buildPath from 82.5524% to
+// 81.4143%; its 86.3333% historical peak remains recorded below and in HIST.
 
 // E:\gamedcs\search.cpp:32
 // Residual (86.3333%): two enregistration choices, both measured unreachable
@@ -62,7 +49,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
     // loop locals before clearing result raises the retail score materially.
     clearPath();
 
-    while (pointsNotEqual(dest, source)) {
+    while (dest != source) {
         if (!dest.isValid()) {
             clearPath();
             break;
@@ -75,7 +62,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
         }
         previousCost = currentPathCell->m_adjustedCost;
 
-        if (pointsNotEqual(currentPathCell->m_point, dest) || !currentPathCell->m_visited) {
+        if (currentPathCell->m_point != dest || !currentPathCell->m_visited) {
             clearPath();
             break;
         }
@@ -83,7 +70,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
         if (currentPathCell->m_cost <= limit)
             m_result.insert(m_result.end(), 1, currentPathCell);
 
-        if (pointsEqual(currentPathCell->m_lastPoint, dest)) {
+        if (currentPathCell->m_lastPoint == dest) {
             clearPath();
             break;
         }
@@ -325,24 +312,26 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
 // `monster` slot doubles as the "already charged" mark), refused outright
 // below -500000000, and otherwise folded into the barrier value.
 //
-// Residual (91.54%): five masked rows, all in the two stores. Retail
-// schedules `mov edx,[esi]` before the `add` and writes monster (+0xc)
-// ahead of barrier_value (+0x10); we load the point after the add and
-// write the two in the opposite order. MEASURED NEGATIVE (polish 49):
-// swapping the two source statements is 91.5385 -> 89.8461 - the store
-// order here follows the scheduler, not the statement order.
+// Exact: give the event query a by-value point snapshot. DC line 372 copies
+// the point into an argument temporary; retail reloads the current point
+// after that call. The 35-source batch proves that naming this copy changes
+// both the argument register and the later store schedule to retail's bytes.
+// A reference alias is flat at 91.5385%; a copy only at the later update
+// reaches 99.1026%. Preserve DC's barrier update before the monster assignment;
+// the previously tried reversal scored 89.8461%.
 // Before normalization (locals): current_hero.
 VA(0x0056aad0, 0x68)  // exhaustive search.obj order-map, dc 0x12bbc8
 unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
-                                                 pathCell* cell)
+                                              pathCell& cell)
 {
-    if (pointsNotEqual(cell->m_point, cell->m_monster)) {
-        long value = aiValueOfEvent(currentHero, cell->m_point);
+    if (cell.m_point != cell.m_monster) {
+        type_point point = cell.m_point;
+        long value = aiValueOfEvent(currentHero, point);
         if (value <= -500000000)
             return 0;
         if (value < 0) {
-            cell->m_barrierValue += value;
-            cell->m_monster = cell->m_point;
+            cell.m_barrierValue += value;
+            cell.m_monster = cell.m_point;
         }
     }
     return 1;

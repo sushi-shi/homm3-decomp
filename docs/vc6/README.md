@@ -46,6 +46,8 @@ model cannot rot.
 | `homm3 vc6 il-locals UNIT --fn NAME` | candidate local handles from GL-recorded SY body offsets, using the canonical source/profile; named-symbol overlay, not optimizer register order |
 | `scripts/homm3/vc6/{diagnose,report,queue}.py` | one-function routing, plateau report, and recoverable-byte wall census |
 | `scripts/homm3/vc6/tu_state_sweep.py` | resumable random-include search once per TU with `MAX < HIST` rows, recording all function scores |
+| `scripts/homm3/vc6/hypotheses.py` | [reviewed Cartesian source batches](source-hypotheses.md), adapted from King's Field, compiled in parallel with the unit's VC6 profile |
+| `scripts/homm3/vc6/source_families.py` | generated C++ source-family axes, 50–60 candidates per generation, top-N refinement and all-TU collateral scoring; see [source-families.md](source-families.md) |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
