@@ -1717,14 +1717,11 @@ class type_random_map_generator : public TRmgGeneratorBase {
 public:
     // Before normalization: fixedHumanPlayers.
     unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
-    // Retail 0x5499fb initializes nine ints beginning here to -1;
-    // 0x549a75/0x549ab8 populate entries 1..8. Readers use +0xee4 with
-    // zero-based indexes. This is the mapping's sentinel entry, but the
-    // full mapping extent and storage through +0xf23 remain unresolved.
-    // Before normalization: opaque0ee0.
-    char m_opaque0ee0[0x4];
-    // Before normalization: playerIndexMap.
-    int m_playerIndexMap[16];                          // +0x0ee4
+    // Retail 0x5499fb clears nine integers at +0xee0; slot +1 is used
+    // at 0x549a75/0x549ab8. Entry zero preserves the unmapped sentinel.
+    // Before normalization: opaque0ee0, playerIndexMap (previously +0xee4).
+    int m_playerIndexMap[9];                          // +0x0ee0
+    char m_opaque0f04[0x20];                          // +0x0f04
     // Before normalization: townChoices.
     int m_townChoices[8];                              // +0x0f24
     // Role-derived; original name unknown. Constructor 0x537b10 seeds
@@ -1817,6 +1814,12 @@ public:
     void placePrimaryTown(TRmgZone* zone);
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
+    void initializeZones(TRmgTemplate* mapTemplate);
+    void paintZoneTerrain();
+    void placeAdditionalTowns(TRmgZone* zone);
+    void prepareJunctionZone(TRmgZone* zone);
+    void placeZoneTreasures(TRmgZone* zone);
+    void decorateUnderground();
     unsigned char generate();
     unsigned char writeMap(TAbstractFile* outfile);
     virtual ~type_random_map_generator();
