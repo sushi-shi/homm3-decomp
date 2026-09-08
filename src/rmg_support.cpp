@@ -7,6 +7,7 @@
 #include <va.h>
 #include <math.h>
 #include "rmg.h"
+#include "rmg_terrain.h"
 
 // The Complete-only painter pattern tables are built by cinit 0x55ed70 and
 // 0x55f2f0 from the constant pattern-id arrays at 0x641140 and 0x6411ac.
@@ -57,10 +58,31 @@ void* TRmgLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
+// Slot 1 makes a fieldwise tile copy before forwarding its address to the
+// adapter. That copy deliberately omits the two tail-padding bytes and the
+// indirect call agrees with all 54 retail bytes; all four painter vtables
+// share this ICF representative.
+VA(0x0055EDC0, 0x36)  // vtables 0x641174/0x641190/0x6411f0/0x64120c slot 1
+void TRmgLinePainter::setTile(
+    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    rmgTerrainTile copiedTile;
+    copiedTile.m_terrain = tile.m_terrain;
+    copiedTile.m_frame = tile.m_frame;
+    copiedTile.m_flipX = tile.m_flipX;
+    copiedTile.m_flipY = tile.m_flipY;
+    m_adapter->setTile(point, copiedTile);
+}
+
 void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
 }
+
+// The shared getTile slot at 0x55f350 remains banked after five candidates.
+// Direct and named returns plus implicit/fieldwise copies all keep the slot-4
+// call, but best output saves EBX and loads the flip bytes separately; retail
+// uses one ECX load and stores CL/CH (81.74%).
 
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
 // overlay query and accepts exactly the two retained paintable values.
@@ -106,6 +128,17 @@ VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
 void* TRmgRoadLinePainter::getPattern(int)
 {
     return &g_rmgRoadPatternTable;
+}
+
+void TRmgRoadLinePainter::setTile(
+    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    rmgTerrainTile copiedTile;
+    copiedTile.m_terrain = tile.m_terrain;
+    copiedTile.m_frame = tile.m_frame;
+    copiedTile.m_flipX = tile.m_flipX;
+    copiedTile.m_flipY = tile.m_flipY;
+    m_adapter->setTile(point, copiedTile);
 }
 
 // The river and road line-painter vtables all share this ICF representative.
