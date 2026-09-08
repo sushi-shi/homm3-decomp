@@ -1169,6 +1169,12 @@ struct TRmgMapItem {
         return m_tileData.m_borderObject;
     }
 
+    // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
+    unsigned char isPlacementOutline() const
+    {
+        return m_tileData.m_placementOutline;
+    }
+
     // Retail road/river relaxation copies the predecessor to a separate
     // parameter home before storing cost and coordinates. The by-value
     // boundary is inferred from those repeated x86 copies; the name is
@@ -1331,8 +1337,12 @@ struct TRmgTreasureGroup {
     TRmgZoneBounds m_bounds;                // +0x18
     std::vector<type_object*> m_objects;    // +0x28
     std::vector<TPoint> m_outline;           // +0x38
-    unsigned char m_flag0048;               // +0x48, cleared by reset
-    char m_opaque0049[0x0b];                // +0x49..+0x53, not yet recovered
+    // Before normalization: flag0048. addGuard 0x535575 sets this flag
+    // with the guard's local coordinates; canPlaceTreasureGroup checks them.
+    unsigned char m_hasGuard;               // +0x48, cleared by reset
+    char m_padding0049[3];
+    // Previously part of opaque0049; addGuard stores x/y at 0x53556f.
+    TPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
     // Role-derived name; previously part of opaque0049.
     TRmgMapPosition m_position;             // +0x54
@@ -1340,7 +1350,7 @@ struct TRmgTreasureGroup {
     char m_padding0061[3];
 
     TRmgTreasureGroup(int width, int height)
-        : m_map(width, height, 1), m_flag0048(0), m_ready(0)
+        : m_map(width, height, 1), m_hasGuard(0), m_ready(0)
     {
         reset();
     }
