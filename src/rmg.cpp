@@ -166,7 +166,7 @@ namespace {
 // resolving the 16 table references, including repeated constant loads.
 // Before normalization: gRmgDirections.
 DATA(0x0069CDC0)
-TPoint g_rmgDirections[8] = {
+TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, 0),
     TPoint(1, 1),
     TPoint(0, 1),
@@ -2357,15 +2357,69 @@ VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
 #endif
 
-// The adjacent guard/object placement callers pass properties and a
-// three-dword position. The predicate checks neighboring entrance flags,
-// then calls the contained map's isPlacementBlocked with zone -1.
-// Complete-only provisional group helper; ret 0x10 and AL result are proven.
-#if 0 // @carcass
+// Complete-only group fit predicate. Restricted approach types reject
+// entrances behind them; the other five neighbors reject incompatible
+// entrance objects. Monsters and border guards ignore the border veto but
+// must leave at least one traversable, non-border neighboring cell.
+// Every neighbor query uses the group's surface plane, independently of
+// the by-value position passed to the canonical placement-blocking helper.
+// Residual (87.8889%): all 25 blocks align and both retained calls agree;
+// frame size, loop register homes and merged failure targets differ. Full
+// map-position neighbor queries score 86.3757%; copied direction offsets
+// plus translation score 86.3016%. Copying origin x/y before subtraction
+// is flat at 87.8889%; keep the direct surface queries and named domain.
 VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
-    TRmgMapPosition position) { return 0; } // @stub
-#endif
+    TRmgMapPosition position)
+{
+    TObjectType* prototype = properties->m_prototype;
+    int x = position.m_x;
+    int y = position.m_y;
+    int objectType = prototype->m_objectType;
+    x -= prototype->m_triggerCell.m_x;
+    y -= prototype->m_triggerCell.m_y;
+    if (!g_adventureObjectLandBlocked[objectType][1]) {
+        for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
+            TPoint nearby;
+            nearby.m_x = g_rmgDirections[direction].m_x + x;
+            nearby.m_y = g_rmgDirections[direction].m_y + y;
+            if (m_map.getMapItem(nearby.m_x, nearby.m_y, 0)->isRoadEntrance())
+                return 0;
+        }
+    }
+    for (int direction = 0; direction < 5; ++direction) {
+        TPoint nearby;
+        nearby.m_x = g_rmgDirections[direction].m_x + x;
+        nearby.m_y = g_rmgDirections[direction].m_y + y;
+        TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+        if (item->isRoadEntrance()) {
+            int neighborType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
+            if (!g_adventureObjectLandBlocked[neighborType][2]
+                || !g_adventureObjectLandBlocked[neighborType][1])
+                return 0;
+        }
+    }
+    if (objectType != MONSTER && objectType != BORDER_GUARD) {
+        if (m_map.isPlacementBlocked(properties, position, -1, 1))
+            return 0;
+    } else {
+        if (m_map.isPlacementBlocked(properties, position, -1, 0))
+            return 0;
+        int direction;
+        for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+            TPoint nearby;
+            nearby.m_x = g_rmgDirections[direction].m_x + x;
+            nearby.m_y = g_rmgDirections[direction].m_y + y;
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && !item->hasBorderObject())
+                break;
+        }
+        if (direction == RMG_DIRECTION_COUNT)
+            return 0;
+    }
+    return 1;
+}
 
 // Collect positions next to existing object entrances. Objects whose land
 // traits permit full approach consider all eight directions; others use
