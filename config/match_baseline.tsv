@@ -3295,6 +3295,7 @@ rmg	?clear@TRmgMapItem@@QAEXXZ	91.0263	91.0263	91.0263	0x130f10	5159625cc405
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	e059e164a096
 rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150	9f4ec684d983
 rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	9f6a8d239172
+rmg	?connectJunctionEntrance@type_random_map_generator@@QAEXUTPoint@@0PAUTRmgZone@@@Z	99.5699	99.5699	99.5699	0x1443a0	b0daa32a6ef0
 rmg	?connectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x143240	dcb7dbc0bfdd
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	78.0716	81.8175	81.8175	0x141140	29940445411f
@@ -3436,7 +3437,6 @@ rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0
 rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
 rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
-rmg	type_random_map_generator_connectJunctionEntrance	0.0000	0.0000	0.0000	0x1443a0	f18d242abd6d
 rmg	type_random_map_generator_initializeZones	0.0000	0.0000	0.0000	0x13bcb0	d88aa8e3e5b6
 rmg	type_random_map_generator_paintZoneTerrain	0.0000	0.0000	0.0000	0x13e6a0	058951b1a3e3
 rmg	type_random_map_generator_placeAdditionalTowns	0.0000	0.0000	0.0000	0x144ae0	8eb1f85b9816

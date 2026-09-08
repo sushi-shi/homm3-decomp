@@ -5944,11 +5944,67 @@ void type_random_map_generator::carveBranchingPaths()
 
 // Retail 0x5448eb passes two points by value followed by the zone. The
 // eight-byte vector elements and midpoint operations prove the point ABI.
-#if 0 // @carcass
+// This Complete-only path uses the same retained point/vector arithmetic
+// as boundary drawing, but marks only matching-zone cells and neighbours.
+// First reconstruction: 99.5699%. All 40 CFG blocks match in size and
+// flow; the remaining differences are instruction operands/scheduling.
 VA(0x005443A0, 0x2F5)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
-    TRmgZone* zone) {} // @stub
-#endif
+    TRmgZone* zone)
+{
+    std::vector<TPoint> pending;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int roughness = zone->m_boundaryRoughness;
+    pending.push_back(to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+            if (item->m_zoneState.m_zone == zoneIndex) {
+                if (!item->m_connection.m_present) {
+                    item->m_tileData.m_borderObject = 0;
+                    item->m_tileData.m_subterraneanGate = 1;
+                }
+                TRmgZoneBounds bounds;
+                bounds.m_minimumX = std::_cpp_max<long>(x - 1, 0);
+                bounds.m_minimumY = std::_cpp_max<long>(y - 1, 0);
+                bounds.m_maximumX = std::_cpp_min<long>(x + 2, m_map.m_mapWidth);
+                bounds.m_maximumY = std::_cpp_min<long>(y + 2, m_map.m_mapHeight);
+                for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
+                    for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
+                        TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
+                        if (nearby->m_zoneState.m_zone == zoneIndex
+                            && !nearby->m_connection.m_present)
+                            nearby->m_tileData.m_borderObject = 0;
+                    }
+                }
+            }
+            from = to;
+        }
+    }
+}
 
 // Junction zones reset their dry cells, seed the first entrance, then trace
 // each reachable entrance back to a zero-cost cell before carving its path.
