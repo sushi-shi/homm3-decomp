@@ -11310,66 +11310,23 @@ inline const char* getRandomTownName(int townType)
     return g_townNames[townType][name];
 }
 
-// E:\gamedcs\game.cpp:9833
-// The Dreamcast locals and callees fix the setup sweep. Complete widens the
-// map setup record and town-name storage, but retains the same resize,
-// z/y/x map scan, random-town conversion, name selection and initialize
-// phases. RESIDUAL (80.3907%, 2026-08-26): retail expands one more layer of
-// Dinkumware inside vector::resize and the non-custom string assignment,
-// while this build calls the nested vector::size/_Grow helpers. Explicitly
-// spelling resize scored 66.13, assign(ptr,strlen(ptr)) scored 79.45, and
-// statement-local inline_depth(3) was byte-flat; retain the semantic source.
-//
-// THE HOLE IS MEASURED (2026-09-05) AND IT IS CALLER MASS, NOT A SPELLING.
-// An `if (0)` carrier at the head of the body - the measuring instrument,
-// NOT a fix, and deliberately not shipped - gives a sharp peak:
-//   N =  1,2,3,5,8,20 -> 80.3907 (flat, the /Ob2 1000-byte floor)
-//   N = 30, 40        -> 84.2809
-//   N = 50            -> 98.6301   <- CFG CLOSED: 57 vs 57 blocks (56 exact),
-//                                     31 vs 31 branches, calls AGREE, and
-//                                     only 10 masked instruction rows left
-//   N = 60            -> 89.4404
-//   N = 70, 90, 150   -> 85.71 / 76.87 / 51.08
-// At the peak retail's `_Grow` expansion appears with its `max_size`/`_Xlen`
-// /`_Tidy` x3/`_Copy` call set exactly, and the `vector<town>::size` census
-// closes 1-vs-1.  So every statement, call, constant and field offset in this
-// body is already correct and the ONLY divergence is that our caller_cb sits
-// under the threshold where 2*caller_cb clears the 1000-byte floor by enough
-// to buy the assign->_Grow expansion.  Byte-for-byte comparison of the head
-// (ResetRandomTownNames' inlined 0x18-stride loop, the resize, the whole
-// z/y/x scan, the RANDOM_TOWN arm and the custom-name assign) shows retail
-// and this compile agreeing instruction for instruction with only slot
-// displacements differing, so the missing mass is NOT in any of them.
-// The Dreamcast body has four statements this one does not (dc rows 9876,
-// 9878, 9880 `pick_alignment`, 9884 - 62 SH4 B, and the unused `owner` local
-// they would write); retail's RANDOM_TOWN arm does NOT emit them, but a
-// front-end-visible / C2-eliminated statement would carry cb without
-// emitting.  That is the shape to look for - do not ship the carrier.
-// CORRECTION 2026-09-06: THE CFG IS NOT CLOSED, and the note above is wrong
-// to say so.  Retail has 57 blocks against this compile's 42 and 31 branches
-// against 23, with FIVE target-only calls - `_Xlen`, `_Tidy` x3 and `_Copy`,
-// all of them internals of `basic_string::_Grow`.  The fifteen missing blocks
-// are one construct: retail EXPANDS the random-name arm's
-// `assign(const char*, size_type)` and the `_Grow` inside it, and calls only
-// _Grow's own helpers, where this compile CALLS `_Grow` itself and stops a
-// level short.  That is an UNDER-inline, whose lever is caller mass - which
-// is exactly why polish lane 21's `if (0)` titration reached 98.63 at N=50:
-// the dose was buying the budget that expands _Grow, not filling fifteen
-// separate holes.  The number to look for is therefore ONE construct worth
-// ~50 statements of caller_cb, not fifty statements.
-// Measured and rejected 2026-09-06 (baseline 80.3874):
-//   * `cName = GetRandomTownName(...)` (operator=(const char*)) 80.3874,
-//     byte-flat - the library level of the RANDOM arm is not the selector;
-//   * `cName.assign(ptr, strlen(ptr))` 65.4176, and with the pointer named
-//     first 79.4547 - both still 15 blocks short;
-//   * `cName.assign(townExtra->name, 0, npos)` in the CUSTOM arm makes the
-//     block count EXACT (57 = 57, 0 missing) and scores 50.4032 - the
-//     structure it buys is the wrong one, because retail CALLS that same
-//     three-argument assign at that site (the two sides already pair there)
-//     and the frame goes from 4 B under retail's 0x18c to 4 B over.
-// So the custom arm is right as written and the whole deficit is the random
-// arm's expansion depth.
-VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
+// E:\gamedcs\game.cpp:9833; original name: ProcessOnMapTowns.
+// DC proves the setup sweep's locals and resize, z/y/x scan, random-town
+// conversion, direct town-name assignment, initialize and ConvertObject order.
+// Complete uses std::string for the name; DC uses strcpy/strncpy. Complete's
+// random-town arm also omits DC's owner-dependent pick_alignment operation.
+// Residual (94.3642%): current retail comparison aligns the CFG topology;
+// all 17 candidate calls pair, with one additional retail max_size call in
+// the random-name string assignment. Our VC6 expands that nested helper.
+// The old 80.39% diagnosis of missing _Grow expansion is obsolete: _Grow's
+// branches and _Xlen/_Tidy/_Copy calls now align. Remaining register/frame
+// allocation differs around that assignment (both frames are 0x18c bytes).
+// Prior failed controls: explicit resize 66.13%; assign(ptr, strlen(ptr))
+// 79.45%; operator=(const char*) and temporary inline_depth(3) were byte-flat
+// at the old baseline. Three-argument custom-name assign added the wrong
+// expansion. Synthetic dead statements once altered the inline budget but
+// provide no source evidence and are not a reconstruction strategy.
+VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
 void game::processOnMapTowns()
 {
     int numMapLayers;
