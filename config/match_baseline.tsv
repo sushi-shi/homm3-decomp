@@ -723,9 +723,10 @@ border	?main@bitmapBorder16@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x508
 border	?main@bitmapBorder@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50550	ab5dc2453599
 border	?main@border@@UAEHPAVmessage@@@Z	94.9505	94.9505	94.9505	0x4ff60	3afca95235bc
 border	?main@coloredBorderFrame@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50240	61c179663840
+border	?onSetFocus@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x4df0	667b3527909d
 border	?setImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0	f0e84fd9318e
 border	?setPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520	c752e56c830d
-border	?zBufferDraw@bitmapBorder@@UAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0	850f3b121e26
+border	?zBufferDraw@bitmapBorder@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0	81b234196183
 bottomviewsubwindow	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	100.0000	100.0000	100.0000	0x53970	-
 bottomviewsubwindow	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	100.0000	100.0000	100.0000	0x53f50	-
 bottomviewsubwindow	??0?$fpos@H@std@@QAE@J@Z	100.0000	100.0000	100.0000	0x54390	-
@@ -3946,7 +3947,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
@@ -4273,9 +4274,11 @@ textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0	c
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0	5d3054b5141f
 textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc6a0	-
 textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250	-
+textwdgt	?dim@textWidget@@UBEXXZ	100.0000	100.0000	100.0000	0x1bc690	76200d463e68
 textwdgt	?draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0	c8bdb17734dd
 textwdgt	?draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0	8dfe94089328
 textwdgt	?main@textWidget@@UAEHPAVmessage@@@Z	98.4931	98.4931	98.4931	0x1bc440	c2e41bfd6deb
+textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0	2c3ec4d9c50a
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	270b78507ca4
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	4d04fc51e8d6
 town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	6d830b23a7c9
@@ -4598,7 +4601,7 @@ widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340	f838470339c5
 widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410	40ea259c2d80
 widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430	550a3bc2cf96
 widget	??_Gwidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fe3b0	-
-widget	?dim@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x1fe800	fb472bbd79d5
+widget	?dim@widget@@UBEXXZ	100.0000	100.0000	100.0000	0x1fe800	59c83ca2479b
 widget	?enable@widget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fe940	85d18b2bd489
 widget	?initialize@widget@@QAEXHHHHHH@Z	100.0000	100.0000	100.0000	0x1fe480	e6160dff56c9
 widget	?main@widget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fe4f0	ffc192e81c9b
