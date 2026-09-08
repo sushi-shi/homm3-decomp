@@ -3328,6 +3328,7 @@ rmg	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	100.0000	100.0000	10
 rmg	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0x14cd70	-
 rmg	?erase@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@@Z	100.0000	100.0000	100.0000	0x14c610	-
 rmg	?expandObstacleClearance@type_random_map_generator@@QAEXXZ	86.9809	86.9809	86.9809	0x13f880	28a10c8ef027
+rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	97.7697	97.7697	97.7697	0x146520	4216ef695a15
 rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	94.4493	94.4493	94.4493	0x13b2f0	1402733f8da9
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	62.4753	62.4753	62.4753	0x131460	d4ef35e59ac9
@@ -3454,6 +3455,7 @@ rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	TRmgGeneratorBase_decorateMapCell	0.0000	0.0000	0.0000	0x1373a0	b61b573f5494
 rmg	TRmgTreasureGroup_addGuard	0.0000	0.0000	0.0000	0x135110	70498bcabc05
+rmg	TRmgTreasureGroup_tryAddObject	0.0000	0.0000	0.0000	0x135970	d5544bf30cc1
 rmg	TRmgZone_chooseTerrain	0.0000	0.0000	0.0000	0x132ab0	9c889de3a9a1
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -3463,9 +3465,10 @@ rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0
 rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
 rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
+rmg	type_random_map_addObject	0.0000	0.0000	0.0000	0x131ea0	325a11b0740e
 rmg	type_random_map_generator_canPlaceTreasureGroup	0.0000	0.0000	0.0000	0x146c70	e6807dbb4201
 rmg	type_random_map_generator_commitTreasureGroup	0.0000	0.0000	0.0000	0x1469b0	0d47c2224963
-rmg	type_random_map_generator_fillTreasureGroup	0.0000	0.0000	0.0000	0x146520	de7ee8c5a819
+rmg	type_random_map_generator_createTreasureObject	0.0000	0.0000	0.0000	0x146190	d0a0d3b58799
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	cf2bb081468e
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	0265024cf345
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7d51c45007f5
