@@ -424,7 +424,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_ITERATOR_DEREF",
-                 "BITSET_AND_ASSIGN",
+                 "BITSET_AND_ASSIGN", "BITSET_OR",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "BITSET_XRAN", "BITSET_XINV",
@@ -1293,6 +1293,8 @@ def _demangle_key(mangled: str):
             return f"bitset{bitset_width}@bitset_reference_assign"
         if mangled.startswith("??_4?$bitset@"):
             return f"bitset{bitset_width}@bitset_and_assign"
+        if mangled.startswith("??U@"):
+            return f"bitset{bitset_width}@bitset_or"
         for member in (
                 "_Tidy", "_Xran", "_Xinv", "flip", "count", "any", "set",
                 "test"):
@@ -2145,7 +2147,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@bitset_tidy", []).append(row)
             continue
         bitset_member = next((member for member in (
-            "ctor", "subscript", "reference_assign", "and_assign", "flip", "count",
+            "ctor", "subscript", "reference_assign", "and_assign", "or", "flip", "count",
             "any", "set", "test", "xran", "xinv")
             if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
@@ -2875,6 +2877,8 @@ def selftest() -> list[str]:
             "bitset5@bitset_reference_assign",
         "??_4?$bitset@$03@std@@QAEAAV01@ABV01@@Z":
             "bitset4@bitset_and_assign",
+        "??U@YI?AV?$bitset@$0DA@@std@@ABV01@0@Z":
+            "bitset48@bitset_or",
         "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":
             "bitset28@bitset_flip",
         "?count@?$bitset@$0BM@@std@@QBEIXZ": "bitset28@bitset_count",

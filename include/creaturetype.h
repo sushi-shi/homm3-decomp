@@ -13,6 +13,8 @@ int isBaseCreature(TCreatureType monType);
 unsigned char isSiegeWeapon(TCreatureType creature);
 // Before normalization (function): UpgradedCreatureType.
 TCreatureType upgradedCreatureType(TCreatureType type);
+// Before normalization (function): DowngradedCreatureType.
+TCreatureType downgradedCreatureType(TCreatureType type);
 
 // Complete extends the Dreamcast creature-name domain through id 0x96.
 // GetArmyName's retail range guard proves the inclusive upper bound.

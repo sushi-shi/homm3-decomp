@@ -105,17 +105,7 @@ enum EKeyCodes {
 // GetEvent returns the message BY VALUE (retail body 0x4ec590).
 class inputBufferMessage : public message {
 public:
-    inputBufferMessage()
-    {
-        m_id = 0;
-        m_codeX = 0;
-        m_codeY = 0;
-        m_qualifier = 0;
-        m_mouseX = 0;
-        m_mouseY = 0;
-        m_extra = 0;
-        m_window = 0;
-    }
+    inputBufferMessage() {}
 };
 SIZE(inputBufferMessage, 32);
 

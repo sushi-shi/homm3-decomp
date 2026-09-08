@@ -201,9 +201,9 @@ no_position:
 // E:\gamedcs\inputmgr.cpp:779
 // EXACT 2026-08-09: retail clears the 64 buffer elements before installing
 // inputManager's vptr, proving that the clear belongs to nontrivial member
-// construction rather than this constructor body. The input-only
-// inputBufferMessage type models that lifetime without adding a global
-// message default constructor or perturbing unrelated message producers.
+// construction rather than this constructor body. inputBufferMessage uses
+// message's canonical default constructor; repeating its eight stores in the
+// derived constructor emits a second clear pass that retail does not contain.
 VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
