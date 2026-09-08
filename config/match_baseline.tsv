@@ -1322,7 +1322,7 @@ customcampaign	?isBuildingBonus@TCampaignBonus@@UBE_NXZ	100.0000	100.0000	100.00
 customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84620	62ab07baaf5d
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	0652a4942adf
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	0dccac502696
-customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9868	80.9474	0x88880	49d69307bc8d
+customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9868	53.9868	80.9474	0x88880	49d69307bc8d
 customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	70.3423	70.3423	79.2531	0x8a310	ebac753a08fe
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	1be04c1bd184
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	c3dd1f3789da
@@ -2201,7 +2201,7 @@ hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.000
 hero	?equipArtifact@hero@@QAEEPBUtype_artifact@@J@Z	93.2051	93.2051	93.2051	0xe2a00	573dff3df73d
 hero	?exitDialog@THeroScreenWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdd2a0	d95c3889000f
 hero	?findSummonableBoat@hero@@QBEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0	b9058f07cfde
-hero	?fly@hero@@QAEXH@Z	32.6234	32.6234	100.0000	0xe59a0	f17438d411e6
+hero	?fly@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe59a0	f17438d411e6
 hero	?getArcheryFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4160	df4f196c4165
 hero	?getBackpackError@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0	35e07fcb4d38
 hero	?getCombatSpeedBonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0	8268ce252d24
@@ -2223,7 +2223,7 @@ hero	?getLastBackpackIndex@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	3fae2
 hero	?getLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	49fcd4fcd860
 hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	95.4461	0xdcac0	a32057760d70
 hero	?getMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	d58556297163
-hero	?getManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	845fdc6eb5c8
+hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	686a328b7385
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	f40179578af7
 hero	?getMobility@hero@@QAEHE@Z	100.0000	100.0000	100.0000	0xe4990	153d5fcf1fc0
 hero	?getMobility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4d90	3dbe81f7063e
@@ -3485,7 +3485,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
