@@ -555,6 +555,13 @@ struct TPoint {
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 
+// Complete-only Voronoi addSite 0x5fd790 passes whole site positions to
+// retained integer predicates. Aggregate-by-value arguments occupy the
+// stack under /Gr: orientation 0x5fdae0 returns with ret 0x18, distance
+// 0x5fdb10 with ret 0x10. Names describe the proven geometry operations.
+int getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
+int getRmgSquaredDistance(TPoint first, TPoint second);
+
 // The map-painting grid uses unsigned coordinates: the terrain set's lower
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
 // at 0x5b76b0 reads both arguments through pointers. This role name is
