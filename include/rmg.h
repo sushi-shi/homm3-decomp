@@ -577,12 +577,7 @@ struct TRmgGridPoint {
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
 
-    TRmgGridPoint& operator+=(const TPoint& offset)
-    {
-        m_x += offset.m_x;
-        m_y += offset.m_y;
-        return *this;
-    }
+    TRmgGridPoint& operator+=(const TPoint& offset);
     TRmgGridPoint operator+(const TPoint& offset) const
     {
         // Retail paintPoint 0x5b4e38..0x5b4e55 retains original x at EBP-0x14
@@ -757,8 +752,10 @@ struct TRmgGroundTileData {
     unsigned m_subterraneanGate : 1;
     // Before normalization: zoneBoundary.
     unsigned m_zoneBoundary : 1;
-    // Before normalization: roadTarget.
-    unsigned m_roadTarget : 1;
+    // Before normalization: roadTarget. Retail river writers 0x53259b..0x5325ac
+    // and 0x532769..0x532780 set bit 29 from a nonzero river kind. This is
+    // river presence, not the separate routing target at bit 30.
+    unsigned m_hasRiver : 1;
     // Before normalization: riverTarget.
     unsigned m_riverTarget : 1;
     // Before normalization: impassable.

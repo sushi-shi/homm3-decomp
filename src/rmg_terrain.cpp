@@ -286,6 +286,27 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
+// Refresh 0x4f9f77 copies the translated grid value before passing it to
+// the retained painter proxy at 0x4f9f86. The shared unsigned grid identity
+// follows that proxy's copied coordinate and the painter dimensions, not
+// merely a same-sized point body. Its existing explicit copy constructor
+// reproduces all 22 raw bytes without relocations.
+VA_COMPGEN(0x004FA520, 0x16, CLASS_CTOR, TRmgGridPoint)
+
+// Refresh 0x4f9f60 and line paintPoint's first neighbour pass retain this
+// same two-dword add, returning the receiver for the subsequent value copy.
+// There is no Dreamcast RMG inline declaration. One ordinary definition in
+// this painting TU emits all 33 raw retail bytes while staying available for
+// auto-inlining. The 168-state placement/lifetime family (48 code results)
+// leaves every other tracked RMG score unchanged with this placement alone.
+VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
+TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)
+{
+    m_x += offset.m_x;
+    m_y += offset.m_y;
+    return *this;
+}
+
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
@@ -669,6 +690,8 @@ int __fastcall selectTerrainTransition(
 // Signed dimension fields, reversed dimension stores, a named area product,
 // and moving the packed-cell flag initialization into its ctor body are flat.
 // Copy-initializing the empty size temporary retains the wrong size call (92.04%).
+// A focused 60-case matrix of dimension snapshots, member/local area operands,
+// assignment-result references and named products is also flat at 97.9205%.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
@@ -1630,6 +1653,11 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // copy-initialized point values do not recover the missing cache boundaries.
 // Residual: the first frame query expands getPackedCell where retail calls
 // it; later source call/expansion decisions are also displaced. No pins.
+// A 60-case point/query matrix and a 60-case follow-up crossing ten parents
+// with canonical cache-helper definition order both retain 70.1029% as best,
+// with no collateral gain. Shared/copied points and named frame queries lower
+// the score; moving the existing helper definitions leaves the leading caller
+// unchanged. Reopening this family requires new evidence, not resampling it.
 VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)

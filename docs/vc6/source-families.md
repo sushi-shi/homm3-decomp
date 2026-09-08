@@ -321,6 +321,18 @@ move atomically, and the same body remains available for ordinary auto-inlining
 in the painting TU. Translation result lifetimes and representative neighbour
 constructions remain independent axes. Round-trip checks enforce one definition;
 the portable oracle crosses every placement with the real lifetime alternatives.
+After rebasing onto the newer adapter checkpoint, all 168 combinations compiled
+into 48 distinct code results without raising an existing RMG score. Moving only
+the ordinary compound-add definition after the painting cluster is sufficient
+to retain its exact 33-byte body at `0x4fa540`. The existing grid copy constructor
+also reproduces all 22 bytes at `0x4fa520`. Their painter call sites and unsigned
+coordinate ownership establish the two admissions; body size alone does not.
+
+For finite single-TU source matrices, the newer
+[`homm3 hypotheses` runner](../source-hypotheses.md) also records every scored
+function in that TU. The river sprite/presence generators use this path, while
+the multi-TU family runner remains useful for shared declarations and population
+search. Both require semantic review and a canonical checkpoint before adoption.
 
 Real global ownership can also expose an ordinary helper boundary. The river
 and road pattern globals call the shared pattern-table constructor and register
