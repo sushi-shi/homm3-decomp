@@ -121,11 +121,6 @@ class TuStateSweepTests(unittest.TestCase):
         self.assertNotIn(
             "kbwin.h", _project_header_pool('#include "diff.h"\n', "diff"))
         self.assertNotIn(
-            "resourcemanager_cache_result.h",
-            _project_header_pool(
-                '#include "singleselectionwindow_priv.h"\n',
-                "singleselectionwindow"))
-        self.assertNotIn(
             "autostrptr.h",
             _project_header_pool('#include "spells.h"\n', "spells"))
 

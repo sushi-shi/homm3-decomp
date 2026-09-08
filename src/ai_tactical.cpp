@@ -236,22 +236,10 @@ double aiValueOfLuck(long luck, long change)
 // +0x450..+0x4c1 as plain dwords. One frame artefact rides with it: retail
 // recycles the dead `[ebp+8]` parameter home for the array end pointer where
 // this compile takes a fresh slot.
-// THE MEMBER IS ALREADY MODELLED - army.h's `std::deque<int>
-// SpellInfluenceQueue` at +0x420 - so the layout job is done and the two
-// bodies retail calls per element are NOT reachable, 2026-09-06:
-//   0x43cb20 (719 B) is `deque<int>::push_back`: `push 0x1000` for the
-//     block, the map purchase, and a const_iterator construction the delink
-//     names with deque<CNetMsg*>'s spelling because /OPT:ICF folded the two
-//     instantiations' iterator constructors onto 0x5586d0;
-//   0x43cdf0 (109 B) is its `_Growmap`.
-// NO base object in the tree emits either. The whole image has exactly two
-// push_back sites - THIS compiler-generated copy constructor, whose size is
-// fixed by the class layout and therefore not shrinkable, and army.cpp's
-// SetSpellInfluence (0x4448f0), where retail EXPANDS it too (that row's
-// call sequence agrees 31/31 at 98.94%). So the only lever left is a
-// committed `#pragma inline_depth(0)` at the copy site, and a
-// compiler-generated body has no source to carry one. Recorded so the next
-// lane does not re-derive it.
+// The member is army.h's std::deque<int> spell-influence queue at +0x420.
+// Current source naturally emits push_back at 0x43cb20; its claim is below.
+// The earlier no-emission observation is obsolete. The retained append's
+// map-growth callee at 0x43cdf0 remains outside this unparked admission pass.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
@@ -5005,3 +4993,12 @@ void std::construct(SpellID* __p, const SpellID* __value)
 // it, recording the second spelling as an alias. It sits 8 bytes past the
 // end of this compiland's last claimed function, in its COMDAT tail.
 VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
+
+// The army copy path described above retains this deque<int> append.
+// Retail uses four-byte elements, 0x1000-byte blocks, and the deque's map
+// and finish fields; the existing source naturally emits the specialization.
+// Retail-only, anchor-callee: 719 bytes match, including all 20 blocks.
+// Seven iterator calls use the 36-byte body shared with CNetMsg* at 0x5586d0;
+// the emitted int iterator has identical raw bytes. Both map-growth calls
+// reach 0x43cdf0, whose 109-byte body also agrees after call relocation.
+VA_COMPGEN(0x0043CB20, 0x2CF, DEQUE_PUSH_BACK, int)

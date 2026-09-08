@@ -45,107 +45,36 @@ DATA(0x00682378) static int g_quickHeroArmyPositions[7][2] = {
     {63, 132}, {99, 132}, {135, 132}
 };
 
-// Single-use /Ob2 codegen helper for the constructor below; no Dreamcast row.
-// VC6 expands it completely, but pricing the two scans in their own caller
-// moves the constructor from 90.7834 to 91.4264 and removes three excess
-// branches.  See the residual note on the constructor.
-// Before normalization (function): choose_quick_hero_disguise.
-static int chooseQuickHeroDisguise(hero* thisHero)
-{
-    // Before normalization (locals): disguise_creature, current_army, town_type.
-    int disguiseCreature = CREATURE_NONE;
-    if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
-        thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-        const int* currentArmy = thisHero->m_army.m_armies;
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             ++slot, ++currentArmy) {
-            int creature = *currentArmy;
-            // Retail compares the slot ordinal, not the creature loaded just
-            // above.  Preserve that byte-proven source-level wart.
-            if (slot != CREATURE_NONE &&
-                (disguiseCreature == CREATURE_NONE ||
-                 g_creatureTypeTraits[creature].m_aiValue >
-                     g_creatureTypeTraits[disguiseCreature].m_aiValue))
-                disguiseCreature = creature;
-        }
-    } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
-        int creature = g_game->m_f1f698 ? 145 : 118;
-        int owner = thisHero->m_owner;
-        while (creature--) {
-            int townType;
-            if (!g_game->m_f1f698 &&
-                (creature == CREATURE_AIR_ELEMENTAL ||
-                 creature == CREATURE_EARTH_ELEMENTAL ||
-                 creature == CREATURE_FIRE_ELEMENTAL ||
-                 creature == CREATURE_WATER_ELEMENTAL))
-                townType = -1;
-            else
-                townType = g_creatureTypeTraits[creature].m_townType;
-
-            int alignment = owner >= 0
-                ? g_game->m_setup.m_alignment[owner]
-                : -1;
-            if (townType == alignment &&
-                (disguiseCreature == CREATURE_NONE ||
-                 g_creatureTypeTraits[creature].m_aiValue >
-                     g_creatureTypeTraits[disguiseCreature].m_aiValue))
-                disguiseCreature = creature;
-        }
-    }
-    return disguiseCreature;
-}
-
-// E:\gamedcs\quickherowindow.cpp:37
-// CURRENT 92.5668% (from 90.7834, 2026-09-01).  Moving the two disguise
-// scans behind the single-use helper above changes VC6's caller-budget
-// context without emitting a helper symbol: 90.7834 -> 91.4264 and three
-// excess branches disappear.  Spelling the troop-count select as a positive
-// `>= DisguiseAdvanced` if/else then chooses retail's arm placement and
-// reaches 92.1471.  Chaining each `std::ends` insertion to the preceding
-// stream expression preserves retail's returned-stream carry (92.3106), and
-// advancing the coordinate pointer only after an occupied stack matches the
-// exact quick-town sibling's packing and target scheduling (92.5668).  DC
-// lines 52/55/61 prove the separately initialized/incremented primary-skill
-// widget id; the DC xrefs also prove the shared `t_limit`/`limit` wrapper
-// pair.  Both restorations are byte-flat source-shape facts.
+// Dreamcast 0x1170bc locates the disguise scans in this constructor at
+// lines 94..129 and proves the separate primary-skill widget id, limit/tLimit
+// calls, and widget push_back operations. Complete replaces quantity_text's
+// 100-byte sprintf buffer with an owning ostrstream; the per-arm textWidget
+// constructions and freeze(false) follow retail's EH lifetimes.
 //
-// Residual: all 111 CFG blocks have exact flow (100 exact-size, 11 size-only)
-// and the branch transcript is exact at 54 branches and one return.
-// `diagnose` reports a 253-row
-// register distance dominated by the EDX/ECX role swap.  The mana temporary's
-// _Tidy call now agrees, but our EH transcript has one later extra state:
-// after state 0xb our expanded ostrstream construction opens 0xc around the
-// separate basic_streambuf constructor before reaching 0xd; retail calls the
-// higher-level strstreambuf constructor and goes directly 0xb -> 0xd.
-// `predict-inline` confirms this is the sole call-count divergence.  A scoped
-// depth-zero pin on the ostrstream declaration is too blunt and falls to
-// 90.50; reordering the three army-loop locals falls to 92.3965; making the
-// disguise local const is byte-flat.  The primary-stat loop as a second
-// caller-shrink dose removes the EH difference, but worsens register distance
-// and scores 91.8229, so it is rejected.  A tiny helper around the final
-// AddWidget loop is byte-flat at the earlier 92.1471 peak.  This bounds the
-// fresh caller-shrink search after the measured hypotheses.
+// Restoring those constructor scopes removes the former unclaimed helper,
+// whose only justification was caller-budget manipulation. The resulting
+// ostrstream construction expands basic_ostream and retains basic_ios::init
+// at 0x52f440 plus the strstreambuf constructor, exactly as retail does.
+// Eight hypotheses crossed scan placement, the existing mana inline-depth
+// pin, and push_back/insert at the quantity arm. All four constructor-scope
+// candidates emit init; none of the helper candidates do. Ordinary push_back
+// gives 94.1662% here, versus 92.7752% for insert(end(), value). Removing the
+// old mana pin is byte-flat in both contexts, so it is not retained.
 //
-// Earlier rejected forms remain rejected: an indexed/shared ostrstream
-// construction (75.28%), a pointer-form primary-stat loop (85.31%), a named
-// mana string with a scoped depth-zero destructor (85.07%), and a depth-zero
-// whole mana expression (86.54%).
+// Residual (94.1662%): the first source difference is reserve's temporary
+// stack home (-0x18 versus -0x14); primary-stat addressing and register roles
+// also differ. The mana string's _Tidy now expands where retail calls it,
+// contributing four extra CFG blocks and three branches. Keep its meaningful
+// temporary lifetime rather than adding an inliner gate. The init helper and
+// both window destructors are independently exact.
 //
-// THE TROOP-COUNT WIDGET IS PUSHED IN EACH ARM, not assigned to a shared
-// `textWidget* troop_text` and pushed once after the if/else (86.84 ->
-// 90.78, 2026-08-14; the EH cleanup transcript is what found it, see
-// docs/vc6/eh-cleanup.md). Retail's `[ebp-4]` states ran ...,0xf,0xe,0x10,
-// 0xe,0x0 against our ...,0xf,0x10,0xe,0x0: retail closes the raw
-// textWidget pointer's cleanup region at the END OF EACH ARM, ours closed
-// it once. A region per arm is a `push_back(new ...)` per arm - VC6 then
-// tail-merges only the vector::insert call itself, so there is still just
-// one `insert` in the object, which is why the call multiset could not see
-// this and the transcript could. The proven-exact sibling
-// TQuickTownWindow::initialize_army_display writes it the same way.  That old
-// per-arm signal remains absent; the current single extra state is later,
-// inside ostrstream construction as documented above.
-// Before normalization (locals): view_level, widget_id, disguise_creature, current_count,
-// quantity_text.
+// Retained failed probes from the earlier context: sharing the troop-text
+// push after the arms loses their separate cleanup regions; indexed/shared
+// ostrstream construction scored 75.28%, a pointer primary-stat loop 85.31%,
+// a named mana string with a depth-zero destructor 85.07%, and a depth-zero
+// whole mana expression 86.54%. Those pins were diagnostics, not source.
+// Before normalization (locals): view_level, widget_id, disguise_creature,
+// current_army, town_type, current_count, quantity_text.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
@@ -180,12 +109,10 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             ++widgetId;
         }
 
-#pragma inline_depth(1)
         m_widgets.push_back(new textWidget(
             154, 104, 27, 13,
             formatString("%d", thisHero->m_mana).c_str(), "tiny.fnt",
             font::WHITE, MANA_ID, 1, 0, 8));
-#pragma inline_depth(255)
 
         int morale = limit(
             -3, thisHero->getMorale(0, 0, 1), 3);
@@ -201,7 +128,46 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     }
 
     if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
-        int disguiseCreature = chooseQuickHeroDisguise(thisHero);
+        // Before normalization (locals): disguise_creature, current_army, town_type.
+        int disguiseCreature = CREATURE_NONE;
+        if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
+            thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
+            const int* currentArmy = thisHero->m_army.m_armies;
+            for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                 ++slot, ++currentArmy) {
+                int creature = *currentArmy;
+                // Retail compares the slot ordinal, not the creature loaded just
+                // above.  Preserve that byte-proven source-level wart.
+                if (slot != CREATURE_NONE &&
+                    (disguiseCreature == CREATURE_NONE ||
+                     g_creatureTypeTraits[creature].m_aiValue >
+                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                    disguiseCreature = creature;
+            }
+        } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
+            int creature = g_game->m_f1f698 ? 145 : 118;
+            int owner = thisHero->m_owner;
+            while (creature--) {
+                int townType;
+                if (!g_game->m_f1f698 &&
+                    (creature == CREATURE_AIR_ELEMENTAL ||
+                     creature == CREATURE_EARTH_ELEMENTAL ||
+                     creature == CREATURE_FIRE_ELEMENTAL ||
+                     creature == CREATURE_WATER_ELEMENTAL))
+                    townType = -1;
+                else
+                    townType = g_creatureTypeTraits[creature].m_townType;
+
+                int alignment = owner >= 0
+                    ? g_game->m_setup.m_alignment[owner]
+                    : -1;
+                if (townType == alignment &&
+                    (disguiseCreature == CREATURE_NONE ||
+                     g_creatureTypeTraits[creature].m_aiValue >
+                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                    disguiseCreature = creature;
+            }
+        }
 
         int widgetId = ARMY_1_SPRITE_ID;
         int* coordinates = &g_quickHeroArmyPositions[0][0];
@@ -230,11 +196,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                 else
                     quantityText << count / 1000 << "k" << std::ends;
 
-                // DEPTH LADDER: this ONE append is `insert(end(), x)` -
-                // the other nine in this constructor stay push_back.
-                // 92.5668 -> 94.0777; #9 is the runner-up at 93.8869 and a
-                // greedy second round finds nothing.
-                m_widgets.insert(m_widgets.end(), new textWidget(
+                m_widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
@@ -268,6 +230,15 @@ TQuickHeroWindow::~TQuickHeroWindow()
             delete *it;
     }
 }
+
+// Retail's ostrstream construction in the window constructor retains this
+// protected basic_ios<char>::init(streambuf*, bool) body: streambuf/tie/fill
+// stores at +0x28/+0x2c/+0x30, then ios_base::_Init, conditional clear(badbit),
+// and conditional _Addstd. It appears naturally when the disguise scans keep
+// their constructor scopes. Extracting those scans into the former single-use
+// helper instead retains the enclosing basic_ostream constructor and does
+// not emit this 71-byte specialization.
+VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 
 // E:\gamedcs\quickherowindow.cpp:221
 // Retail folds this body with the identical quick-creature/quick-town
