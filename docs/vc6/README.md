@@ -223,6 +223,17 @@ two-argument signature; overload, stream-type, traits, access and qualifier
 negative controls prevent it from claiming an enclosing constructor or a
 different initializer.
 
+A deque advance body can share every arithmetic operation with `operator+=`
+while belonging to `const_iterator::_Add`. Retail `0x4491c0` leaves arithmetic
+in EAX at both returns; the public operator must instead return the iterator
+address. The protected void helper already emitted by the ordinary deque
+subscript in `TCombatCreatureSubWindow::update` matches all 105 raw bytes.
+The previous 93.9535% operator claim was an identity error, not an allocator
+plateau. Claim the existing emitted helper in its consuming TU; no extra
+caller or inlining control is needed. `DEQUE_CONST_ITERATOR_ADD` checks the
+complete protected void signature, primitive element and matching allocator,
+with negative controls for the returning operators and other signatures.
+
 Primitive `deque::push_back` claims require an element-specific symbol key,
 just as pointer-element claims do. The natural `deque<int>` append in
 ai_tactical at `0x43cb20` was emitted but remained unpaired because the join
@@ -232,6 +243,12 @@ equal-sized int/unsigned-int bodies in reversed symbol order and reject
 inconsistent allocator and argument types. Its iterator constructor is
 byte-identical to the retail CNetMsg-pointer representative at `0x5586d0`;
 that relocation spelling is an ICF alias, not a different operation.
+The same primitive-element binding applies to its `_Growmap` callee at
+`0x43cdf0`, whose 109-byte retained body is exact. Offsets +0x10 and +0x20
+are the two deque iterators' map pointers, so they do not indicate a custom
+array class. This join checks the protected element-pointer-pointer return
+and unsigned size argument; reversed equal-size element tests and allocator,
+return-type, access and argument controls keep it separate from other bodies.
 
 ## Status
 

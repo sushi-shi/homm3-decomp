@@ -7726,8 +7726,9 @@ VA_COMPGEN(0x00448db0, 0x2FE, DEQUE_ERASE, int)
 // COMDAT pairing: vector<army*>::clear, agreement 0.954.
 VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
 
-// COMDAT pairing: deque<int>::iterator::operator+=, agreement 0.935.
-VA_COMPGEN(0x004491c0, 0x69, DEQUE_ITERATOR_ADD_ASSIGN, int)
+// The former operator+= claim at 0x4491c0 is const_iterator::_Add: retail
+// returns no iterator reference. Its naturally retained, exact instance is
+// claimed in combatcontrolsubwindow.cpp; the operator body here is distinct.
 
 // COMDAT pairing: deque<int>::iterator::operator++ and ::operator--, both
 // 51 bytes and byte-identical apart from the step they add - 0x449230 adds

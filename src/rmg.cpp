@@ -2060,8 +2060,8 @@ rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
     : type_object(properties)
 {
     m_generator = generator;
-    m_objectId = objectId;
     m_heroIndex = heroIndex;
+    m_objectId = objectId;
     m_experience = experience;
 }
 
@@ -2299,12 +2299,15 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 // a hero, returns null on exhaustion, and expands the 0x2c-byte object's
 // constructor with the definition's experience and the next generator id.
 // Complete-only: no Dreamcast counterpart; constructor spelling provisional.
-// Partial 9.0702%: VC6 expands the exact selectPrisonHero body, while
-// retail retains its call at 0x5348dc. A temporary inline_depth(0) control
-// restores all five retail blocks and both calls (63.72%), leaving the
-// constructor's store scheduling; the control is removed. Constructor
-// member initializers give 8.96%; predecrement while scans in the selector
-// are byte-neutral for both this caller and its exact standalone body.
+// Residual (95.1754%): the selector's nested decrement/test retains retail's
+// call at 0x5348dc naturally, while its standalone body remains exact.
+// The combined && form expands it and gives 9.0702%; nested/continue forms
+// give 63.7193% before constructor refinement. Assigning heroIndex before
+// objectId recovers the base-position stores and derived-vptr ordering.
+// The 16 initializer/body combinations peak at 94.6316%; 30 constructor
+// assignment-order forms peak here, and all six integer-parameter orders
+// are flat. Retail still loads experience later and stores the first
+// placement byte before the position fields. No other RMG scores changed.
 VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -9738,6 +9741,9 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
 // zero entries, marking the chosen hero used. The version at +8 selects the
 // 128/145 roster bound. selectPrisonHero is a provisional role-derived name;
 // Dreamcast contains no RMG compiland.
+// Keep the decrement and negative test as distinct nested statements:
+// combining them with && preserves this exact body but causes VC6 to expand
+// it in type_prison_def::generate, where retail calls it at 0x5348dc.
 VA(0x0054B100, 0x71) // anchor-callee 0x5348dc + generator layout; retail-only
 int type_random_map_generator::selectPrisonHero()
 {
@@ -9752,8 +9758,11 @@ int type_random_map_generator::selectPrisonHero()
 
     int selected = rand() % available;
     for (hero = (m_mapVersion >= 1 ? 145 : 128) - 1; hero >= 0; --hero) {
-        if (!m_disabledHeroes[hero] && --selected < 0)
-            break;
+        if (!m_disabledHeroes[hero]) {
+            --selected;
+            if (selected < 0)
+                break;
+        }
     }
     m_disabledHeroes[hero] = 1;
     return hero;
