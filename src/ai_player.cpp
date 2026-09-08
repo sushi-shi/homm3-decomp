@@ -3182,6 +3182,8 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // adds the Complete elemental-alignment gate and exposes both shooter-policy
 // predicates: preserve a sole shooter, but replace a shooter once there are
 // already more than three. Alignment checking admits only a singleton group.
+// DC's two flags are unsigned char, not bool; retail reads their low bytes.
+// Restoring the declared types is byte-flat at 88.3357%, including its caller.
 // Residual (88.34%): all policy/filter calls and 135 of retail's 140
 // instructions are present across 41 versus 42 blocks. The remaining split
 // is a VC6 register-role permutation in the Complete alignment fold;
@@ -3193,7 +3195,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
     // Before normalization (locals): is_shooter, check_alignments, shooter_count, shooter_slot,
     // replace_shooter, preserve_shooter, weakest_slot, weakest_value, grouped_alignment,
     // allied_alignments.
-    bool isShooter, bool checkAlignments)
+    unsigned char isShooter, unsigned char checkAlignments)
 {
     long shooterCount = 0;
     int shooterSlot;
@@ -3270,17 +3272,24 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // `why-reg` leaves distance 155; its best volatile-value probe moves that
 // metric by only five and does not improve objdiff, while the measured
 // pointer/reference, declaration and expression variants are flat or worse.
+// DC records an unsigned-char must_replace_creature parameter and the
+// min(int,int) wrapper at line 2404. Retail likewise copies both the current
+// minimum and creature speed to separate temporary homes before choosing
+// their addresses. Restoring min instead of the reference-only cppMin
+// recovers 89.0856% from 86.1781%; the byte-flag signature is retained too.
+// DC lines 2351/2352 place traits and value before the morale locals;
+// restoring that declaration order is byte-flat at the recovered peak.
 VA(0x0042c830, 0x33F)  // DC method/callgraph + retail Complete body; dc 0x31af4
 long type_AI_creature_swapper::valueOfAddingArmy(
     TCreatureType type, short count, short& slot,
     // Before normalization (locals): must_replace_creature, bad_morale, morale_army_value,
     // allied_alignments, minimum_morale, slowest_speed, old_move, new_move, army_value.
-    bool mustReplaceCreature)
+    unsigned char mustReplaceCreature)
 {
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
+    long value = traits->m_aiValue * count;
     bool badMorale = false;
     long moraleArmyValue = 0;
-    long value = traits->m_aiValue * count;
 
     int alignment;
     if (g_game->m_f1f698 == 0
@@ -3346,7 +3355,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
         TCreatureType current = m_army->m_armyTypes[index];
         if (current != CREATURE_NONE) {
-            slowestSpeed = cppMin(
+            slowestSpeed = min(
                 slowestSpeed, g_creatureTypeTraits[current].m_speed);
         }
     }
