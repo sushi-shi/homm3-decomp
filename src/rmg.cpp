@@ -3056,6 +3056,74 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
+// The midpoint-noise generator passes its work vector in ECX, center sample
+// in EDX, then the complete nine-dword region and four edge midpoints by
+// value. Each nondegenerate quadrant preserves the original variation.
+// Retail 0x53ed00 consumes these records as a stack and clamps final samples
+// to bytes; the terrain painter at 0x53efa0 consumes the resulting noise.
+// Residual 99.9545%: Y-before-X reproduces the operation schedule; the three
+// center/X/Y stack homes are permuted. The 24 midpoint-order/operand probes
+// improve the initial 99.6818%, but 49 center-snapshot/lifetime probes are
+// flat at that peak. All 32 CFG blocks and insertion decisions agree.
+// A separate 3,136-case coverage/corner invariant check includes negative
+// origins and degenerate bounds; every child preserves the sample meanings.
+VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
+void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
+    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
+{
+    int middleY = (region.m_bounds.m_minimumY + region.m_bounds.m_maximumY) / 2;
+    int middleX = (region.m_bounds.m_minimumX + region.m_bounds.m_maximumX) / 2;
+    TRmgNoiseRegion part = region;
+    part.m_bounds.m_minimumX = middleX;
+    part.m_bounds.m_minimumY = middleY;
+    part.m_corners[0] = centerValue;
+    part.m_corners[1] = midpoints.m_maxYValue;
+    part.m_corners[2] = midpoints.m_maxXValue;
+    if (part.m_bounds.m_minimumX != part.m_bounds.m_maximumX
+        && part.m_bounds.m_minimumY != part.m_bounds.m_maximumY)
+        pending.push_back(part);
+
+    part = region;
+    part.m_bounds.m_minimumX = middleX;
+    part.m_bounds.m_maximumY = middleY;
+    part.m_corners[0] = midpoints.m_minYValue;
+    part.m_corners[1] = centerValue;
+    part.m_corners[3] = midpoints.m_maxXValue;
+    if (part.m_bounds.m_minimumX != part.m_bounds.m_maximumX
+        && part.m_bounds.m_minimumY != part.m_bounds.m_maximumY)
+        pending.push_back(part);
+
+    part = region;
+    part.m_bounds.m_maximumX = middleX;
+    part.m_bounds.m_minimumY = middleY;
+    part.m_corners[0] = midpoints.m_minXValue;
+    part.m_corners[2] = centerValue;
+    part.m_corners[3] = midpoints.m_maxYValue;
+    if (part.m_bounds.m_minimumX != part.m_bounds.m_maximumX
+        && part.m_bounds.m_minimumY != part.m_bounds.m_maximumY)
+        pending.push_back(part);
+
+    part = region;
+    part.m_bounds.m_maximumX = middleX;
+    part.m_bounds.m_maximumY = middleY;
+    part.m_corners[1] = midpoints.m_minXValue;
+    part.m_corners[2] = midpoints.m_minYValue;
+    part.m_corners[3] = centerValue;
+    if (part.m_bounds.m_minimumX != part.m_bounds.m_maximumX
+        && part.m_bounds.m_minimumY != part.m_bounds.m_maximumY)
+        pending.push_back(part);
+}
+
+// Retained by the subdivision helper's ordinary vector insertion paths.
+// The nine-dword copy stride identifies the specialization independently of
+// all other 36-byte structures. No source-only emission anchor is required.
+VA_COMPGEN(0x0054C670, 0x21, VECTOR_SIZE, TRmgNoiseRegion)
+// First three quadrant appends retain count-insert; the fourth expands it.
+// Retail's three arguments and 36-byte element arithmetic prove this overload.
+VA_COMPGEN(0x0054D5C0, 0x2E4, VECTOR_INSERT_COUNT, TRmgNoiseRegion)
+VA_COMPGEN(0x0054D960, 0x3B, VECTOR_UCOPY, TRmgNoiseRegion)
+VA_COMPGEN(0x0054D9A0, 0x31, VECTOR_UFILL, TRmgNoiseRegion)
+
 // The inlined search at 0x53fe7a returns an element pointer and its caller
 // then tests that pointer, even on the found arm. Preserve that ordinary
 // helper boundary rather than reducing the search to a boolean.
