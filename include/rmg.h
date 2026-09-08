@@ -1100,7 +1100,11 @@ public:
     type_random_map_generator* m_generator; // +0x1c
     int m_objectId;                         // +0x20
     int m_heroIndex;                        // +0x24
-    int m_unknown28;                        // +0x28
+    int m_experience;                       // +0x28, prison definition experience
+
+    rmgHeroObject(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, int objectId, int heroIndex,
+        int experience);
 
     virtual void unknownOperation();
     virtual void write(TAbstractFile* outfile, int parameter);
