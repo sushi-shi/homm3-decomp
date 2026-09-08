@@ -17,6 +17,7 @@
 #include "game.h"
 #include "campaignbrief.h"
 #include "customcampaign.h"
+#include "customcampaignwindow.h"
 #include "misc.h"
 #include "slider.h"
 #include "bitmap816.h"

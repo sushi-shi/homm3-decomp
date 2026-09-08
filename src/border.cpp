@@ -13,18 +13,12 @@
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:34
-DC_ONLY(0x5433c, 0x3C)
-void border::border()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:62
-
-#endif  // @carcass
+// Original: border::border; border.cpp:34, dc 0x5433c.
+// Ordinary source-local body. Retail expands it in the three derived
+// constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
+// constructor call and a single derived vtable store. No explicit inline
+// declaration is needed to expose this body to those same-TU callers.
+border::border() {}
 
 // E:\gamedcs\border.cpp:35 - border::`scalar deleting destructor'
 // (dc 0x54d24). Slot 0 of border's vtable 0x63ba24; the 33-byte row
@@ -186,10 +180,9 @@ VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 // - the derived vtable store is dead-store-eliminated against the
 // inlined ~border, so only ??_7border@@6B@ survives before the
 // tail-jump to ~widget (the ~type_func_button shape in button.cpp).
-VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
-coloredBorderFrame::~coloredBorderFrame()
-{
-}
+// CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 
 // E:\gamedcs\border.cpp:213 - slot 4 of vtable 0x63ba5c, nil-ary. Both
 // arms share the first three pushes (colour, height, width), which is
@@ -382,7 +375,7 @@ void bitmapBorder::Draw()
 // resource base is 0x1c on both builds). Retail's bitmapBorder does NOT
 // emit SetPalette between them, which is why the two rows are adjacent.
 VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
-int bitmapBorder::GetRealWidth()
+int bitmapBorder::GetRealWidth() const
 {
     if (image)
         return image->Width;
@@ -391,7 +384,7 @@ int bitmapBorder::GetRealWidth()
 
 // E:\gamedcs\border.cpp:318
 VA(0x004504b0, 0xE)  // anchor-vtable (slot 5 of 0x63ba94), dc 0x54968
-int bitmapBorder::GetRealHeight()
+int bitmapBorder::GetRealHeight() const
 {
     if (image)
         return image->Height;

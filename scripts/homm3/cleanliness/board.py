@@ -39,11 +39,12 @@ The rows (all ratcheted; floors start at the tree's current counts):
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
-  .cpp-local views    a struct/class DEFINITION inside a .cpp is a
-                      per-TU view of a class whose one true shape belongs
-                      in a header. Fix: move the definition to include/.
+  .cpp-local views    an unproven/duplicate class definition in a .cpp.
+                      A unique class whose CodeView methods originate only
+                      in that .cpp is a legitimate source-local class.
   .cpp-local enums    the enum twin: a cross-TU domain stranded in a .cpp
-                      gets re-declared by the next TU that needs it.
+                      gets re-declared by the next TU that needs it. Member
+                      enums stay with their proven source-local class.
   casts to enum types static_cast<E>(...) where E is any enum declared in
                       the tree. An enum-to-enum cast (and its lexically
                       indistinguishable int-to-enum sibling) usually
@@ -158,7 +159,99 @@ _CPP_EXTERN = re.compile(r"^[ \t]*extern\b", re.MULTILINE)
 _CPP_LOCAL_DEF = re.compile(
     r"\b(?:struct|class)\s+\w+\b(?:\s+final)?\s*(?::[^;{]*)?\{")
 _CPP_LOCAL_ENUM = re.compile(
-    r"^[ \t]*(?:typedef[ \t]+)?enum\b[ \t]*\w*\s*\{", re.MULTILINE)
+    r"\b(?:typedef\s+)?enum\b\s*\w*\s*\{")
+
+def _cpp_local_view_sites(code: str, ctx) -> list:
+    """A source-proven local class is not a per-TU reconstruction view."""
+    allowed = ctx.get("dc_local_classes", frozenset()) if isinstance(ctx, dict) else frozenset()
+    out = []
+    for match in _CPP_LOCAL_DEF.finditer(code):
+        name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+        if name not in allowed:
+            out.append(match.start())
+    return out
+
+
+def _cpp_local_enum_sites(code: str, ctx) -> list:
+    """Keep member domains with a unique, CodeView-proven local class.
+
+    Only direct class members qualify: an enum in a method body, another
+    nested class, or after the closing class brace is still checked.
+    """
+    allowed = ctx.get("dc_local_classes", frozenset())
+    classes = {}
+    for match in _CPP_LOCAL_DEF.finditer(code):
+        name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+        classes[match.end() - 1] = name in allowed
+    enums = {match.start(): match for match in _CPP_LOCAL_ENUM.finditer(code)}
+    out = []
+    stack = []
+    for token in re.finditer(r"[{}]|\b(?:typedef\s+)?enum\b\s*\w*\s*(?=\{)", code):
+        if token.group() == "{":
+            stack.append(classes.get(token.start(), False))
+        elif token.group() == "}":
+            if stack:
+                stack.pop()
+        elif token.start() in enums and (not stack or not stack[-1]):
+            out.append(token.start())
+    return out
+
+
+def _dc_local_classes(sources):
+    from collections import Counter, defaultdict
+    from homm3.match.source_ownership import read_dc, family_name
+    origins = defaultdict(set)
+    private_origins = defaultdict(set)
+    for row in read_dc(REPO):
+        name = family_name(row.name)
+        if name.startswith("`anonymous namespace'::"):
+            member = name[len("`anonymous namespace'::"):]
+            if "::" not in member:
+                continue
+            owner = member.rsplit("::", 1)[0]
+            # Anonymous-namespace classes are distinct in each source module.
+            # Only the direct class is admitted here; nested/other generated
+            # spellings still need their own evidence.
+            if "::" not in owner and "`" not in owner:
+                private_origins[owner].add(row.file)
+            continue
+        if "::" in name and "`" not in name:
+            owner = name.rsplit("::", 1)[0]
+            # The lexical class metric names nested definitions by their
+            # local identifier. Merge source evidence for that identifier;
+            # uniqueness below still rejects another physical definition or
+            # a competing namespace/header owner with the same local name.
+            origins[owner.rsplit("::", 1)[-1]].add(row.file)
+    counts = Counter()
+    file_counts = Counter()
+    private_sites = defaultdict(set)
+    for path, code in sources:
+        classes = {}
+        for match in _CPP_LOCAL_DEF.finditer(code):
+            name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+            counts[name] += 1
+            file_counts[path, name] += 1
+            classes[match.end() - 1] = name
+        anonymous = {m.end() - 1 for m in re.finditer(r"\bnamespace\s*\{", code)}
+        scopes = []
+        for brace in re.finditer(r"[{}]", code):
+            if brace.group() == "{":
+                if brace.start() in classes and scopes == [True]:
+                    private_sites[path].add(classes[brace.start()])
+                scopes.append(brace.start() in anonymous)
+            elif scopes:
+                scopes.pop()
+    # Require a single physical definition and positive .cpp source evidence,
+    # with no competing header origin. A duplicate view remains debt even if
+    # it happens to use an authentic class name.
+    return {path: frozenset(name for name, files in origins.items()
+                           if counts[name] == 1 and files == {path.name.lower()})
+                  | frozenset(name for name in private_sites[path]
+                              if file_counts[path, name] == 1
+                              and path.name.lower() in private_origins[name]
+                              and all(f.endswith('.cpp') for f in private_origins[name]))
+            for path, _code in sources if path.suffix in _CPP}
+
 _MAGIC_CASE = re.compile(
     r"^[ \t]*case[ \t]+(?:0[xX][0-9a-fA-F]+|-?[0-9]+)[ \t]*:", re.MULTILINE)
 _UNNAMED_COMPARE = re.compile(
@@ -290,9 +383,9 @@ METRICS = (
     ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
-    (".cpp-local views", _regex_sites(_CPP_LOCAL_DEF), True,
-     "the type's one true shape belongs in include/ - move it"),
-    (".cpp-local enums", _regex_sites(_CPP_LOCAL_ENUM), True,
+    (".cpp-local views", _cpp_local_view_sites, True,
+     "restore the unique CodeView source owner; unproven or duplicate .cpp views remain forbidden"),
+    (".cpp-local enums", _cpp_local_enum_sites, True,
      "a cross-TU domain stranded in a .cpp gets re-declared by the next "
      "TU that needs it - move the enum to include/"),
     ("casts to enum types", _enum_cast_sites, False,
@@ -337,9 +430,11 @@ def count(per_file: bool = False):
     ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names),
            "pp_legit": _legit_pp_names(sources)}
 
+    local_classes = _dc_local_classes(sources)
     totals = {label: 0 for label, _, _, _ in METRICS}
     offenders = []
     for path, code in sources:
+        ctx["dc_local_classes"] = local_classes.get(path, frozenset())
         for label, sites, cpp_only, _fix in METRICS:
             if cpp_only and path.suffix not in _CPP:
                 continue

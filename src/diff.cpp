@@ -3,30 +3,35 @@
 #include <va.h>
 #include "terrain.h"
 #include "diff.h"
+#include "includes.h"
 
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+
+// E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
+// owns this record's single in-class constructor; only this TU uses it.
+class CDiffHeader
 {
-    return (_X < _Y ? _Y : _X);
+public:
+    int m_numBytes;
+    int m_oldNumBytes;
+    unsigned char m_copy;
+    unsigned char _pad[3];
+
+    CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
+        : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
+    {
+    }
+};
+
+// E:\gamedcs\diff.cpp:52, dc 0x822e0
+CDiffFile::CDiffFile()
+{
 }
 
-inline int max(int a, int b)
-{
-    return _cpp_max(a, b);
-}
-
-#if 0 // @carcass: trivial retail-dropped/inlined bodies
-DC_ONLY(0x822e0, 0x4)
-void CDiffFile::CDiffFile()
-{
-}
-
-DC_ONLY(0x822e4, 0x6)
+// E:\gamedcs\diff.cpp:57, dc 0x822e4
 unsigned char* CDiffFile::GetData()
 {
-    return 0;
+    return m_data;
 }
-#endif
 
 // Residual (99.6429%): B18 commutative scale-1 SIB base/index swap on the three
 // `this + diffOffset` addresses - retail encodes base=EAX(diffOffset),
@@ -105,13 +110,19 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 {
 }
 
-#if 0 // @carcass: retail inlined into MakeDiff
-DC_ONLY(0x8238c, 0x4c)
+// E:\gamedcs\diff.cpp:115, dc 0x8238c. Ordinary helper defined
+// before MakeDiff; Complete's /Ob2 chooses its caller expansion.
 int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
 {
-    return 0;
+    int count = 0;
+    while (m_oldData[oldOffset + count] ==
+               m_newData[newOffset + count] &&
+           oldOffset + count < m_oldSize &&
+           newOffset + count < m_newSize) {
+        ++count;
+    }
+    return count;
 }
-#endif
 
 // Residual (84.1667%): everything up to the two epilogues is now byte-identical
 // (retail's success block updates newCount BEFORE oldCount - the reverse of the
@@ -244,10 +255,4 @@ CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
 
 }
 
-#if 0 // @carcass: retail inlined into MakeDiff
-DC_ONLY(0x825b8, 0xe)
-void CDiffHeader::CDiffHeader(int numBytes, unsigned char copy,
-                             int oldNumBytes)
-{
-}
-#endif
+// CDiffHeader's canonical source-local body is above at DC line 43.

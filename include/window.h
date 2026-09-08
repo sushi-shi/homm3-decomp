@@ -183,7 +183,7 @@ public:
 //   10  ProcessHover        0x5ff6e0  (ret 8 - findWidgetPtr(x, y))
 //   11  ProcessRightSelect  0x5ff790  (ret 4 - one widget id)
 //   12  OnWidgetDeselect    0x559140  (`xor eax,eax; ret 8` - the
-//       ICF-folded inline below, so window.obj has NO body for it)
+//       ICF-folded ordinary body, defined in window.cpp)
 //   13  GetRolloverWidget   0x5ff8d0  (`xor eax,eax; ret`)
 // This CORRECTS the previous 1:1 DC-order mapping of the seven retail
 // rows onto the seven DC roster entries: the sdd sits second (the
@@ -198,11 +198,15 @@ public:
 
     // Window.h:210, dc 0x2dcc. Dreamcast's public signature and retail's
     // shared slot-3 forwarder both prove this header-inline override.
-    virtual int handle_message(message& msg);                         // slot 3, 0x405680
+    VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
+    virtual int handle_message(message& msg)
+    {
+        return WindowHandler(&msg);
+    }
     virtual int WindowHandler(message* msg);                            // slot 9
     virtual unsigned char ProcessHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char ProcessRightSelect(int id);                   // slot 11
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag) { return 0; }  // slot 12
+    virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);       // slot 12
     virtual textWidget* GetRolloverWidget();                            // slot 13
 };
 

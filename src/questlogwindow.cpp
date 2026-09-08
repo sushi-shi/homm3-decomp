@@ -21,27 +21,6 @@
 
 DATA(0x0069cd20) static TQuestLogWindow* gpQuestLogWindow;
 
-// Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
-// helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
-// Complete's virtual quest model replaces the latter byte with a live quest
-// and a non-empty quest-log line, but retail keeps the same final visited-bit
-// and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
-// forms a named quest_text_row pointer for SeerHutList, while the exact
-// UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-inline unsigned char TSeerHut::QuestActiveforPlayer(
-    const unsigned char playerNum) const
-{
-    type_quest* thisQuest = quest;
-    if (!thisQuest)
-        return 0;
-
-    const std::string* questTexts = thisQuest->quest_text_row()
-        + type_quest::QUEST_TEXT_COLUMNS * thisQuest->quest_type();
-    return questTexts[type_quest::QUEST_TEXT_LOG].length()
-        && (visitedPlayers & (1 << playerNum))
-        && quest;
-}
-
 inline unsigned char TQuestGuard::QuestActiveforPlayer(
     const unsigned char playerNum) const
 {

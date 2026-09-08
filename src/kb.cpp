@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "kb.h"
+#include "seerhut.h"
 #include "game.h"
 #include "textresource.h"
 #include "advmgr.h"
@@ -24,6 +25,7 @@
 #include "csprite.h"
 #include "cursor.h"
 #include "customcampaign.h"
+#include "customcampaignwindow.h"
 #include "dialogbox.h"
 #include "kbwin.h"
 #include "exec.h"
@@ -258,7 +260,6 @@ static int gUnnamed6985bc;
 // bodies are claimed elsewhere but whose owner headers carry them only as
 // CODEVIEW comments.
 void InitLogFile(const char* path);
-unsigned char InitializeSeerHutText();
 unsigned char InitializeRandomTavernText();
 unsigned char initialize_creature_bank_traits();
 unsigned char InitializeCreatureGeneratorNames();
@@ -292,149 +293,12 @@ namespace ResourceManager {
 bool Open(bool bCheckCd, bool bLoadLod, int* piResult);
 }
 
-// E:\gamedcs\kb.cpp:4214. Source-static and single-call: retail has no
-// standalone body because /Ob2 expands the whole run into EarlySetup, where
-// every `return 0` lands on the one ShutDown. The order is retail's; the
-// four event/sign/tavern rows genuinely appear TWICE, once before the
-// creature tables and once after.
-static unsigned char LoadGameData()
-{
-    if (!InitializeGeneralText())
-        return 0;
-    if (!InitializeCustomCampaignText())
-        return 0;
-    if (!InitializeSeerHutText())
-        return 0;
-    if (!InitializeMineEventText())
-        return 0;
-    if (!InitializeAdventureEventText())
-        return 0;
-    if (!InitializeArtifactEventText())
-        return 0;
-    if (!InitializeRandomSignText())
-        return 0;
-    if (!InitializeRandomTavernText())
-        return 0;
-    if (!InitializeCampaignRegionNames())
-        return 0;
-    if (!InitializeHighScoreDefaults())
-        return 0;
-    if (!InitializeTerrainNames())
-        return 0;
-    if (!InitializeAdvObjNames())
-        return 0;
-    if (!InitializeResourceNames())
-        return 0;
-    if (!InitializeMineNames())
-        return 0;
-    if (!InitializePlayerColors())
-        return 0;
-    if (!InitializePrimaryStatNames())
-        return 0;
-    if (!InitializeSecondarySkillLevelNames())
-        return 0;
-    if (!initialize_creature_bank_traits())
-        return 0;
-    if (!InitializeCreatureGeneratorNames())
-        return 0;
-    if (!InitializeAdventureEventText())
-        return 0;
-    if (!InitializeArtifactEventText())
-        return 0;
-    if (!InitializeRandomSignText())
-        return 0;
-    if (!InitializeRandomTavernText())
-        return 0;
-    if (!InitializeCreatureTypeTraitsTable())
-        return 0;
-    InitializeAdventureObjectNames();
-    if (!InitializeArtifactTraitsTable())
-        return 0;
-    if (!InitializeSpellTraitsTable())
-        return 0;
-    if (!InitializeHeroTraitsTable())
-        return 0;
-    if (!InitializeHeroClassTraitsTable())
-        return 0;
-    if (!initialize_ballistics_table())
-        return 0;
-    if (!InitializeSSkillTraitsTable())
-        return 0;
-    if (!town::InitializeBuildingCostsTables())
-        return 0;
-    if (!InitializeVCDescriptions())
-        return 0;
-    if (!InitializeLCDescriptions())
-        return 0;
-    if (!InitializeTurnDurationText())
-        return 0;
-    if (!InitializeExtraInfoText())
-        return 0;
-    if (!combatManager::LoadWallTraitsTable())
-        return 0;
-    if (!InitializeHelpText())
-        return 0;
-    if (!InitializeCreatureAnimationTraitsTable())
-        return 0;
-    if (!InitializeNeutralBuildingText())
-        return 0;
-    if (!InitializeSpecialBuildingText())
-        return 0;
-    if (!InitializeDwellingText())
-        return 0;
-    if (!InitializeTownNameText())
-        return 0;
-    if (!InitializeHeroSpecificAbilitiesTable())
-        return 0;
-    if (!InitializeHeroBioText())
-        return 0;
-    if (!InitializeCastleText())
-        return 0;
-    if (!InitializeTavernText())
-        return 0;
-    if (!InitializeHallText())
-        return 0;
-    if (!InitializeTownText())
-        return 0;
-    if (!InitializeOverviewText())
-        return 0;
-    if (!InitializeHeroText())
-        return 0;
-    if (!InitializeCampaignDialogText())
-        return 0;
-    if (!InitializeCreditsText())
-        return 0;
-    if (!InitializeTentColorText())
-        return 0;
-    if (!InitializeWinSetupText())
-        return 0;
-    if (!InitializeArrayText())
-        return 0;
-    return InitializeCampaignMusicTable();
-}
 
-// E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
-// LoadGameData is: retail expands the whole reset into EarlySetup's tail.
-static void InitVars()
-{
-    NULL_SAMPLE2.resSample = 0;
-    NULL_SAMPLE2.playSample = 0;
-    gGameCommand = -1;
-    gUnnamed6985bc = 0;
-    gpGame->field_4e678 = 0;
-    strcpy(gpGame->setup.filename,
-           DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
-    gpGame->setup.fileInitialized = 0;
-    memset(glTimers, 0, sizeof(glTimers));
-    gbInSetup698400 = 0;
-    if (gUnnamed698a34) {
-        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6f));
-        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x71));
-    } else {
-        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6e));
-        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x70));
-    }
-}
+
+// Source-static helpers defined later in CodeView order.
+static unsigned char LoadGameData();
+static void InitVars();
+static int CheckMem();
 
 // E:\gamedcs\kb.cpp:645
 // WinMain's first gate, and the Dreamcast line program matches it row for
@@ -849,6 +713,55 @@ int GetEnemyCount()
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
 
+// E:\gamedcs\kb.cpp:481. Retail has no body of its own: a static with
+// ShutDown as its single call site, so /Ob2 expands it there (the
+// Dreamcast keeps it out of line). The delete order is the Dreamcast's
+// statement order exactly; Complete's combatManager and advManager have
+// compiler-generated destructors (both retained in kb.obj right after
+// ShutDown), soundManager's is the header inline, and the window, input,
+// town and executive managers plus the AI turn driver are trivially
+// destructible.
+DC_ONLY(0xdf6d0, 0x170)
+static void DeleteMainClasses()
+{
+    if (gpUnnamed69928c)
+        delete gpUnnamed69928c;
+    gpUnnamed69928c = 0;
+    if (gpSearchArray)
+        delete gpSearchArray;
+    gpSearchArray = 0;
+    if (gpTownManager)
+        delete gpTownManager;
+    gpTownManager = 0;
+    if (gpCombatManager)
+        delete gpCombatManager;
+    gpCombatManager = 0;
+    if (gpAdvManager)
+        delete gpAdvManager;
+    gpAdvManager = 0;
+    if (gpGame)
+        delete gpGame;
+    gpGame = 0;
+    if (gpHighScoreManager)
+        delete gpHighScoreManager;
+    gpHighScoreManager = 0;
+    if (gpSoundManager)
+        delete gpSoundManager;
+    gpSoundManager = 0;
+    if (gpWindowManager)
+        delete gpWindowManager;
+    gpWindowManager = 0;
+    if (gpMouseManager)
+        delete gpMouseManager;
+    gpMouseManager = 0;
+    if (gpInputManager)
+        delete gpInputManager;
+    gpInputManager = 0;
+    if (gpExecutive)
+        delete gpExecutive;
+    gpExecutive = 0;
+}
+
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
 // parameter names and SetupCDRom call sites survive in CodeView. Retail's
 // corresponding paths inline the Win32 MessageBoxA body and then exit.
@@ -899,14 +812,6 @@ static void SetupCDRom()
     gbNoSound = oldNoSound;
 }
 
-// E:\gamedcs\kb.cpp:4855. The helper is source-static and only oldmain calls
-// it; retail therefore contains these two stores solely in the caller.
-static int CheckMem()
-{
-    gUnnamed6994ec = 16000;
-    giHighMemBuffer = 8000;
-    return 1;
-}
 
 // Complete-only sibling of Dreamcast ShowCredits in the kb.obj link slot.
 // The source name did not survive, so retain an ordinal until stronger
@@ -970,7 +875,7 @@ void LostGame()
     gpSoundManager->StartMP3("UltimateLose", 1, 1);
     for (int i = 0; i < 3; i++) {
         Sleep(500);
-        gpSoundManager->service_sounds();
+        gpSoundManager->serviceSounds();
     }
     gpInputManager->Flush();
     if (VideoNeedsUpdate())
@@ -1002,7 +907,7 @@ stop_video:
     gpWindowManager->FadeScreen(1, 4, 0);
     int status;
     do {
-        gpSoundManager->service_sounds();
+        gpSoundManager->serviceSounds();
         Sleep(100);
         status = AIL_stream_status(gMP3Stream);
     } while (gMP3Stream && !done && status == AIL_STREAM_PLAYING);
@@ -1571,9 +1476,9 @@ int oldmain()
                     SaveGame(1);
                     campaign.PlayScenarioEpilogue(&campaignBrief);
                     if ((campaign.currentCampaign == CAMPAIGN_ORDINAL_03
-                         && campaign.CampaignComplete())
+                         && campaign.campaignComplete())
                         || (campaign.currentCampaign == CAMPAIGN_ORDINAL_18
-                            && campaign.CampaignComplete())) {
+                            && campaign.campaignComplete())) {
                         if (campaign.currentCampaign == CAMPAIGN_ORDINAL_03)
                             KbFn_004EE1B0(
                                 32,
@@ -1597,7 +1502,7 @@ int oldmain()
                 else
                     nextCampaign = (campaign.currentCampaign >= 13) + 1;
 
-                if (campaign.CampaignComplete()
+                if (campaign.campaignComplete()
                     && bDefeatedAllPlayers
                            != GAME_RESULT_CAMPAIGN_MAP_SCORED) {
                     ShowCongrats(0);
@@ -1632,7 +1537,7 @@ int oldmain()
                     }
                 } else if (bDefeatedAllPlayers
                                == GAME_RESULT_CAMPAIGN_MAP_SCORED
-                           && campaign.CampaignComplete()) {
+                           && campaign.campaignComplete()) {
                     if (campaign.currentCampaign != CAMPAIGN_ORDINAL_LAST) {
                         gbUnk69774c = 1;
                         while (1) {
@@ -1830,26 +1735,11 @@ static int DoNewGame()
 // emits the COMDATs and carry declarators only.
 #if 0  // @carcass: header inlines emitted by this compiland
 
-VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
-unsigned short* Bitmap16Bit::GetMap(int x, int y)
-{
-    // @stub
-}
+// Canonical body and VA: include/bitmap16.h.
 
-VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
-void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
-                       Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
-{
-    // @stub
-}
+// Canonical body and VA: include/bitmap16.h.
 
-VA(0x004f0050, 0x47)  // COMDAT owner (kb.obj emits ?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z), body in csprite.h
-void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
-                   Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
-                   unsigned char tblit)
-{
-    // @stub
-}
+// Canonical body and VA: include/csprite.h.
 
 #endif  // @carcass
 
@@ -2673,6 +2563,16 @@ unsigned char GetTeamNames(int player, char* sNames)
     return 1;
 }
 
+// E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
+type_normal_dialog_frame::type_normal_dialog_frame(
+    long x, long y, long w, long h, long id,
+    EGameResource new_resource, long new_qualifier)
+    : coloredBorderFrame(x, y, w, h, id, gSystemPalette->data[45], 0x400)
+{
+    resource = new_resource;
+    qualifier = new_qualifier;
+}
+
 // E:\gamedcs\kb.cpp:2867. Dreamcast preserves this source helper and its
 // two calls. Complete expands it at every DisplayVCWinLoss site, including
 // the nested CPlayerWonMsg constructor; retaining the helper is therefore
@@ -3161,11 +3061,7 @@ normal_artifact_message:
 // out-of-line copy of the header constructor: five stores in exactly the
 // CNetMsg(eRS_Messages, unsigned long) source order and `ret 8`.
 #if 0  // claim-only home for the netmsg.h COMDAT selected by kb.obj
-VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
-CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
-{
-    // @stub: the authoritative active body is in netmsg.h
-}
+// Canonical body and VA: include/netmsg.h.
 #endif
 
 // E:\gamedcs\kb.cpp:3440
@@ -3512,53 +3408,28 @@ void game::ShowLuckInfo(hero* thisHero, int iMBType)
                  -1, 0, -1, 0, -1, 0);
 }
 
-// E:\gamedcs\kb.cpp:481. Retail has no body of its own: a static with
-// ShutDown as its single call site, so /Ob2 expands it there (the
-// Dreamcast keeps it out of line). The delete order is the Dreamcast's
-// statement order exactly; Complete's combatManager and advManager have
-// compiler-generated destructors (both retained in kb.obj right after
-// ShutDown), soundManager's is the header inline, and the window, input,
-// town and executive managers plus the AI turn driver are trivially
-// destructible.
-DC_ONLY(0xdf6d0, 0x170)
-static void DeleteMainClasses()
+
+// E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
+// LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+static void InitVars()
 {
-    if (gpUnnamed69928c)
-        delete gpUnnamed69928c;
-    gpUnnamed69928c = 0;
-    if (gpSearchArray)
-        delete gpSearchArray;
-    gpSearchArray = 0;
-    if (gpTownManager)
-        delete gpTownManager;
-    gpTownManager = 0;
-    if (gpCombatManager)
-        delete gpCombatManager;
-    gpCombatManager = 0;
-    if (gpAdvManager)
-        delete gpAdvManager;
-    gpAdvManager = 0;
-    if (gpGame)
-        delete gpGame;
-    gpGame = 0;
-    if (gpHighScoreManager)
-        delete gpHighScoreManager;
-    gpHighScoreManager = 0;
-    if (gpSoundManager)
-        delete gpSoundManager;
-    gpSoundManager = 0;
-    if (gpWindowManager)
-        delete gpWindowManager;
-    gpWindowManager = 0;
-    if (gpMouseManager)
-        delete gpMouseManager;
-    gpMouseManager = 0;
-    if (gpInputManager)
-        delete gpInputManager;
-    gpInputManager = 0;
-    if (gpExecutive)
-        delete gpExecutive;
-    gpExecutive = 0;
+    NULL_SAMPLE2.resSample = 0;
+    NULL_SAMPLE2.playSample = 0;
+    gGameCommand = -1;
+    gUnnamed6985bc = 0;
+    gpGame->field_4e678 = 0;
+    strcpy(gpGame->setup.filename,
+           DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
+    gpGame->setup.fileInitialized = 0;
+    memset(glTimers, 0, sizeof(glTimers));
+    gbInSetup698400 = 0;
+    if (gUnnamed698a34) {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6f));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x71));
+    } else {
+        dfltMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x6e));
+        gameMenu = LoadMenu(ghInstance, MAKEINTRESOURCE(0x70));
+    }
 }
 
 // E:\gamedcs\kb.cpp:3867
@@ -3636,6 +3507,136 @@ VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 DC_ONLY(0xe4530, 0x78)
 void EarlyShutDownSystem()
 {
+}
+
+// E:\gamedcs\kb.cpp:4214. Source-static and single-call: retail has no
+// standalone body because /Ob2 expands the whole run into EarlySetup, where
+// every `return 0` lands on the one ShutDown. The order is retail's; the
+// four event/sign/tavern rows genuinely appear TWICE, once before the
+// creature tables and once after.
+static unsigned char LoadGameData()
+{
+    if (!InitializeGeneralText())
+        return 0;
+    if (!InitializeCustomCampaignText())
+        return 0;
+    if (!initializeSeerHutText())
+        return 0;
+    if (!InitializeMineEventText())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCampaignRegionNames())
+        return 0;
+    if (!InitializeHighScoreDefaults())
+        return 0;
+    if (!InitializeTerrainNames())
+        return 0;
+    if (!InitializeAdvObjNames())
+        return 0;
+    if (!InitializeResourceNames())
+        return 0;
+    if (!InitializeMineNames())
+        return 0;
+    if (!InitializePlayerColors())
+        return 0;
+    if (!InitializePrimaryStatNames())
+        return 0;
+    if (!InitializeSecondarySkillLevelNames())
+        return 0;
+    if (!initialize_creature_bank_traits())
+        return 0;
+    if (!InitializeCreatureGeneratorNames())
+        return 0;
+    if (!InitializeAdventureEventText())
+        return 0;
+    if (!InitializeArtifactEventText())
+        return 0;
+    if (!InitializeRandomSignText())
+        return 0;
+    if (!InitializeRandomTavernText())
+        return 0;
+    if (!InitializeCreatureTypeTraitsTable())
+        return 0;
+    InitializeAdventureObjectNames();
+    if (!InitializeArtifactTraitsTable())
+        return 0;
+    if (!InitializeSpellTraitsTable())
+        return 0;
+    if (!InitializeHeroTraitsTable())
+        return 0;
+    if (!InitializeHeroClassTraitsTable())
+        return 0;
+    if (!initialize_ballistics_table())
+        return 0;
+    if (!InitializeSSkillTraitsTable())
+        return 0;
+    if (!town::InitializeBuildingCostsTables())
+        return 0;
+    if (!InitializeVCDescriptions())
+        return 0;
+    if (!InitializeLCDescriptions())
+        return 0;
+    if (!InitializeTurnDurationText())
+        return 0;
+    if (!InitializeExtraInfoText())
+        return 0;
+    if (!combatManager::LoadWallTraitsTable())
+        return 0;
+    if (!InitializeHelpText())
+        return 0;
+    if (!InitializeCreatureAnimationTraitsTable())
+        return 0;
+    if (!InitializeNeutralBuildingText())
+        return 0;
+    if (!InitializeSpecialBuildingText())
+        return 0;
+    if (!InitializeDwellingText())
+        return 0;
+    if (!InitializeTownNameText())
+        return 0;
+    if (!InitializeHeroSpecificAbilitiesTable())
+        return 0;
+    if (!InitializeHeroBioText())
+        return 0;
+    if (!InitializeCastleText())
+        return 0;
+    if (!InitializeTavernText())
+        return 0;
+    if (!InitializeHallText())
+        return 0;
+    if (!InitializeTownText())
+        return 0;
+    if (!InitializeOverviewText())
+        return 0;
+    if (!InitializeHeroText())
+        return 0;
+    if (!InitializeCampaignDialogText())
+        return 0;
+    if (!InitializeCreditsText())
+        return 0;
+    if (!InitializeTentColorText())
+        return 0;
+    if (!InitializeWinSetupText())
+        return 0;
+    if (!InitializeArrayText())
+        return 0;
+    return InitializeCampaignMusicTable();
+}
+
+// E:\gamedcs\kb.cpp:4855. The helper is source-static and only oldmain calls
+// it; retail therefore contains these two stores solely in the caller.
+static int CheckMem()
+{
+    gUnnamed6994ec = 16000;
+    giHighMemBuffer = 8000;
+    return 1;
 }
 
 #if 0  // @carcass
@@ -3758,7 +3759,7 @@ void soundManager::~soundManager()
 
 // E:\gamedcs\SoundMgr.h:140
 DC_ONLY(0xe6ef4, 0x4)
-void soundManager::service_sounds()
+void soundManager::serviceSounds()
 {
     // @stub
 }
@@ -4365,14 +4366,6 @@ inline TArtifact artifact_from_int(int value)
     return converted.artifact;
 }
 
-type_normal_dialog_frame::type_normal_dialog_frame(
-    long x, long y, long w, long h, long id,
-    EGameResource new_resource, long new_qualifier)
-    : coloredBorderFrame(x, y, w, h, id, gSystemPalette->data[45], 0x400)
-{
-    resource = new_resource;
-    qualifier = new_qualifier;
-}
 
 // kb.obj-owned recursion guard: both writers (the credits loop 0x4edda0
 // and MemError below) live in this TU, and the .bss slot sits in kb's

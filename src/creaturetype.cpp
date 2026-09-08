@@ -4,7 +4,6 @@
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>
-#include "autostrptr.h"
 #include "creaturetype.h"
 #include "resourcemanager.h"
 #include "textresource.h"
@@ -177,6 +176,27 @@ unsigned char InitializeCreatureTypeTraitsTable()
     traitsSheet->Dispose();
     return 1;
 }
+
+namespace {
+
+// CodeView field pStr; each loader owns its own private string class.
+class TAutoStrPtr {
+public:
+    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; creaturetype.cpp:399, dc 0x71eec.
+    TAutoStrPtr() : m_string(0) {}
+    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; creaturetype.cpp:402, dc 0x71ef4.
+    ~TAutoStrPtr() { delete[] m_string; }
+    // Original: `anonymous namespace'::TAutoStrPtr::set; creaturetype.cpp:404, dc 0x71f0c.
+    void set(char* value) { m_string = value; }
+    // Original: `anonymous namespace'::TAutoStrPtr::get; creaturetype.cpp:406, dc 0x71f10.
+    char* get() const { return m_string; }
+
+private:
+    char* m_string;
+};
+
+}
+
 
 // E:\gamedcs\creaturetype.cpp:416
 // The per-row parser, EXTERN rather than file-static: retail emits it out

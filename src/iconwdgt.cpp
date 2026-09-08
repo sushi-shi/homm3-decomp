@@ -258,14 +258,14 @@ unsigned char iconWidget::handle_click(unsigned char down_click, unsigned char r
 // (widget::GetRealHeight) is 0x4eab30, which is also what fixes which
 // CSprite field each one reads (Width@0x30 / Height@0x34).
 VA(0x004eab20, 0x7)  // anchor-vtable (slot 6 of 0x63ec48), dc 0xd96bc
-int iconWidget::GetRealWidth()
+int iconWidget::GetRealWidth() const
 {
     return Sprite->Width;
 }
 
 // E:\gamedcs\iconwdgt.cpp:269
 VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
-int iconWidget::GetRealHeight()
+int iconWidget::GetRealHeight() const
 {
     return Sprite->Height;
 }

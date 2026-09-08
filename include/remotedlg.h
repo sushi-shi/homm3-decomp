@@ -148,83 +148,6 @@ public:
 };
 SIZE(CLevelPickWaitDlg, 0x90);
 
-class TAbstractFile;
-
-// Retail's complex wire-message base is a vptr followed by an ordinary
-// 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
-// that layout, and 0x512e00 copies a received header into netmsg before
-// dispatching the remaining payload through virtual read(). The ordinal name
-// is retained because neither retail nor DC names that PC-only bridge.
-class t_complex_net_message {
-public:
-    // The no-subtype form at 0x512c20 (stores the base vtable and
-    // zeroes the netmsg image); singleselectionwindow's received-row
-    // message constructs through it. ADDITIVE 2026-08-27 - one
-    // declarator; re-measure the include-set-sensitive rows of the
-    // five includers on merge.
-    t_complex_net_message();
-    // eRS_Messages, not int: the constructor reaches the message image
-    // through CNetMsg's own two-argument constructor (the vptr store lands
-    // AFTER the five member stores, which only a member-initialiser list
-    // produces), and CNetMsg's first parameter is the DC-attested enum.
-    t_complex_net_message(eRS_Messages subType);
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
-    unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
-    // 0x512d40, the send half of the 0x512e00 bridge: serialize this
-    // message and hand it to the transport (toWho / compress /
-    // guaranteed mirror TransmitRemoteData's tail). Ordinal name for
-    // the same reason as its receive twin. Not claimed from here.
-    // The two flags are BOOL, not byte: retail pushes both parameter slots
-    // straight through to the transport, which takes `_N` in its own
-    // mangled name, and a byte parameter would have to be normalised with a
-    // `test`/`setne` pair at each site first.
-    unsigned char RemoteFn_00512D40(int toWho, bool compressMsg,
-                                    bool guaranteed);
-    // 0x512c80, the DPID-addressed send twin (its args mirror
-    // TransmitRemoteDataDPID's tail); CNewPlayerUpdateProc's
-    // HandleRequests hands each re-requested header row through it.
-    // ADDITIVE 2026-08-27 (round 3) - one declarator; re-measure the
-    // include-set-sensitive rows of the five includers on merge.
-    unsigned char RemoteFn_00512C80(unsigned long dpid, bool compressMsg,
-                                    bool guaranteed);
-
-    CNetMsg netmsg;  // +0x04
-};
-SIZE(t_complex_net_message, 0x18);
-
-// DC supplies all seventeen payload names and their order. Retail shifts the
-// scalar prefix by four bytes for t_complex_net_message's vptr, retains both
-// 0x38-byte army groups, aligns town to +0xb0, and widens each hero to 0x492.
-// The last hero ends at +0xb3c; town's natural eight-byte alignment rounds the
-// complete PC class to 0xb40, exactly the stack extent in DoNetCombat and the
-// member extent in the wait-dialog constructor.
-class CCombatInitMsg : public t_complex_net_message {
-public:
-    CCombatInitMsg();
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
-
-    type_point m_point;             // +0x018
-    unsigned char m_leftHero;       // +0x01c
-    unsigned char m_rightTown;      // +0x01d
-    unsigned char m_rightHero;      // +0x01e
-    int m_seed;                     // +0x020
-    int m_winner;                   // +0x024
-    unsigned char m_retreatWin;     // +0x028
-    unsigned char m_combatSurrender;// +0x029
-    int m_leftOwner;                // +0x02c
-    int m_leftGold;                 // +0x030
-    int m_rightOwner;               // +0x034
-    int m_rightGold;                // +0x038
-    armyGroup m_leftArmyGroup;      // +0x03c
-    armyGroup m_rightArmyGroup;     // +0x074
-    town m_town;                    // +0x0b0
-    hero m_leftHeroData;            // +0x218
-    hero m_rightHeroData;           // +0x6aa
-};
-SIZE(CCombatInitMsg, 0xb40);
-
 // The remote-combat wait dialog shares CAnimatedDlg's 0x78-byte prefix.
 // Dreamcast proves the method names and m_playerPos at the first derived
 // dword; retail 0x557090 independently reads/writes it at +0x78. The PC
@@ -313,7 +236,7 @@ public:
     void Setup(int x, int y, unsigned char sending, unsigned char drawText);
     void Start();
     void SetPercentage(float pct);
-    void DrawCurrentFrame() { DrawCurrentSmackFrame(); }
+    void drawCurrentFrame();
     void Stop();
     void SaveScreen();
     void RestoreScreen();

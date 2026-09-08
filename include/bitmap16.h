@@ -69,6 +69,7 @@ public:
     // a union scratch is exact standalone but changes nested expansions.
     // Direct reinterpret-cast control is byte-identical in Underlay, Ground
     // and the clipped scaler; the void casts do not cause the inline gap.
+    VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     unsigned short* GetMap(int x, int y)
     {
         return static_cast<unsigned short*>(static_cast<void*>(
@@ -100,6 +101,7 @@ public:
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
     // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
     // graphics remappers expand this wrapper into their retail bodies.
+    VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight,
               Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
     {

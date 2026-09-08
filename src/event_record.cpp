@@ -15,6 +15,7 @@
 #include "prefs.h"
 #include "advmgr.h"
 #include "kb.h"
+#include "includes.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the
@@ -25,54 +26,6 @@
 // step over it, and the cleanliness floor wants the domain named.
 const int SAVE_VERSION_BOAT_FIELDS_ABSENT = 0x1c;
 
-// E:\gamedcs\includes.h - the reference-returning clamp templates the
-// visibility sweeps use. Both take BY VALUE and return `const T&`, which is
-// what puts their two temporaries in stack slots and makes retail select
-// between them with a `lea` pair rather than a cmov-style fold.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-
-inline type_record_erase::type_record_erase(type_point _location,
-                                            long _object_id,
-                                            unsigned long _extra_info,
-                                            long _object_index)
-{
-    location = _location;
-    object_id = _object_id;
-    extra_info = _extra_info;
-    object_index = _object_index;
-}
-
-inline type_record_hide_hero::type_record_hide_hero(hero* who, char _new_owner,
-                                                    unsigned char _town_garrison)
-{
-    // DC preserves this helper boundary; the two retail inline expansions
-    // prove the snapshot is written before the requested replacement owner.
-    current_hero = who;
-    prev_owner = who->owner;
-    new_owner = _new_owner;
-    town_garrison = _town_garrison;
-}
-
-inline type_record_show_hero::type_record_show_hero(hero* who, char _new_owner,
-                                                    type_point _location,
-                                                    unsigned char _on_boat)
-    : type_record_hide_hero(who, _new_owner, 0)
-{
-    previous_boat = (who->flags >> 18) & 1;
-    on_boat = _on_boat;
-    previous_location = type_point(who->x, who->y, who->z);
-    location = _location;
-}
 
 // E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
 // construction site expands it - but the expansions prove the whole body:
@@ -774,6 +727,17 @@ type_event_record* type_record_erase::create()
 
 #endif  // @carcass
 
+inline type_record_erase::type_record_erase(type_point _location,
+                                            long _object_id,
+                                            unsigned long _extra_info,
+                                            long _object_index)
+{
+    location = _location;
+    object_id = _object_id;
+    extra_info = _extra_info;
+    object_index = _object_index;
+}
+
 // E:\gamedcs\event_record.cpp:544
 // Entry 7 of the record factory table at .data 0x6776b0 (see the table's
 // own note beside game::load_recorded_events). Thirty-nine bytes:
@@ -874,6 +838,17 @@ type_event_record_type type_record_hide_hero::get_type()
 }
 
 #endif  // @carcass
+
+inline type_record_hide_hero::type_record_hide_hero(hero* who, char _new_owner,
+                                                    unsigned char _town_garrison)
+{
+    // DC preserves this helper boundary; the two retail inline expansions
+    // prove the snapshot is written before the requested replacement owner.
+    current_hero = who;
+    prev_owner = who->owner;
+    new_owner = _new_owner;
+    town_garrison = _town_garrison;
+}
 
 // E:\gamedcs\event_record.cpp:638
 // Entry 8 of the record factory table at .data 0x6776b0 (see the table's
@@ -998,6 +973,17 @@ type_event_record_type type_record_show_hero::get_type()
 }
 
 #endif  // @carcass
+
+inline type_record_show_hero::type_record_show_hero(hero* who, char _new_owner,
+                                                    type_point _location,
+                                                    unsigned char _on_boat)
+    : type_record_hide_hero(who, _new_owner, 0)
+{
+    previous_boat = (who->flags >> 18) & 1;
+    on_boat = _on_boat;
+    previous_location = type_point(who->x, who->y, who->z);
+    location = _location;
+}
 
 // E:\gamedcs\event_record.cpp:736
 // Entry 9 of the record factory table at .data 0x6776b0 (see the table's
@@ -1508,9 +1494,9 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max_ref(startX - range, 0);
+    int x0 = max(startX - range, 0);
     int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
-    int y0 = max_ref(startY - range, 0);
+    int y0 = max(startY - range, 0);
     int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
 
     for (int y = y0; y < y1; ++y) {
@@ -1564,9 +1550,9 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max_ref(startX - range, 0);
+    int x0 = max(startX - range, 0);
     int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
-    int y0 = max_ref(startY - range, 0);
+    int y0 = max(startY - range, 0);
     int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
 
     for (int y = y0; y < y1; ++y) {

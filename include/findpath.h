@@ -7,13 +7,13 @@
 
 #include <va.h>
 #include <vector>
+#include <windows.h>
 
 #include "struct.h"
 
 class army;
 class hero;
 class NewmapCell;
-struct tagRECT;
 
 // Dreamcast CodeView supplies the complete domain and names; SeedTo's retail
 // call proves const_normal_search == 0 on x86.
@@ -83,14 +83,9 @@ struct pathCell {
     unsigned short adjusted_cost;
     unsigned short move_left;
 
-    // DC findpath.cpp:79 attests a pathCell::pathCell, and retail's
-    // searchArray::Init (0x4b1460) proves the retail one is EMPTY but
-    // USER-DECLARED: `new pathCell[n]` there allocates through plain
-    // operator new (no vector-new helper, so nothing is constructed)
-    // and yet still emits VC6's array-construction preamble - the
-    // `dec esi; mov [ebp-4], esi` count-1 temp that a POD would never
-    // produce, and that forces the stack frame Init carries.
-    pathCell() {}
+    // CodeView dc 0xa115c explicitly marks the default constructor generated
+    // (compgenx). Its type_point members already make construction nontrivial;
+    // searchArray::Init's array preamble does not prove a user-written body.
 };
 #pragma pack(pop)
 SIZE(pathCell, 30);
@@ -182,7 +177,7 @@ public:
     pathCell* getCellData(long pos);
     // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
     // two expansions in check_adjacent_hexes and no retained retail call.
-    pathCell* get_hex(long x)
+    pathCell* get_hex(long x) const
     {
         if (cellData == 0)
             return 0;
@@ -247,16 +242,21 @@ public:
     void mark_enemy(long hex, long cost);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     void set_moat(const army* current_army);
-    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
-    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
-    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
-    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
-    // 16-bit value, and FindCombatPath even does the neighbour's
-    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
-    // add; movsx ecx, cx`) - which only a short parameter forces. The
-    // one call whose argument is already a sign-extended 16-bit value
-    // loses the movsx, exactly as it should.
-    unsigned char is_moat(short hex) { return bIsMoatSlowed[hex]; }
+
+    // Header-inline in the DC roster and expanded by ProcessHover in retail.
+    // The public decoration is
+    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
+    // a const member and _N proves the source parameter was native bool.
+    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
+    // only the low byte and never writes through this.
+    VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
+    pathCell* get_cell(type_point point, bool flying) const
+    {
+        if (!cellData)
+            return cellData;
+        return &cellData[((point.z * 2 + flying) * MAP_HEIGHT + point.y)
+                         * MAP_WIDTH + point.x];
+    }
     // DC findpath.cpp:1187. Retail inlines it at both of FindCombatPath's
     // call sites and carries no distinct body; the range check the
     // second site needs is spelled at that site, because the first
@@ -271,21 +271,7 @@ public:
     // body's.
     long get_travel_time(const army* current_army, long hex);
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
-    long get_danger_value(type_point point) const;  // 0x42ed30 (ai_player.obj)
-
-    // Header-inline in the DC roster and expanded by ProcessHover in retail.
-    // The public decoration is
-    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
-    // a const member and _N proves the source parameter was native bool.
-    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
-    // only the low byte and never writes through this.
-    pathCell* get_cell(type_point point, bool flying) const
-    {
-        if (!cellData)
-            return cellData;
-        return &cellData[((point.z * 2 + flying) * MAP_HEIGHT + point.y)
-                         * MAP_WIDTH + point.x];
-    }
+    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
 
     void clear_path()
     {
@@ -303,6 +289,11 @@ public:
     {
         return result[i];
     }
+    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
+    // folded into ai_player.obj's destination chooser on retail x86.  Keep
+    // the boundaries visible in C++ even where the selected lowering is a
+    // vector::size call or direct field/index arithmetic.
+    long get_visited_count() const { return visited_points.size(); }
 
     int BuildPath(const hero* current_hero, long limit);
     void SeedPosition(hero* current_hero, type_point start,
@@ -311,6 +302,17 @@ public:
                       type_search_type search_type,
                       int iCurTempMobility,
                       unsigned char bSeedContinuation);
+    pathCell* get_visited_cell(long index) { return visited_points[index]; }
+    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
+    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
+    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
+    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
+    // 16-bit value, and FindCombatPath even does the neighbour's
+    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
+    // add; movsx ecx, cx`) - which only a short parameter forces. The
+    // one call whose argument is already a sign-extended 16-bit value
+    // loses the movsx, exactly as it should.
+    unsigned char is_moat(short hex) const { return bIsMoatSlowed[hex]; }
     // E:\\gamedcs\\findpath.h:247 (dc 0x37e7c). Retail folds this
     // const tiny helper into move_hero and AI_choose_destination as the
     // byte read at +0x20.
@@ -321,20 +323,30 @@ public:
     {
         danger_zones = danger_zone_map;
     }
-    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
-    // folded into ai_player.obj's destination chooser on retail x86.  Keep
-    // the boundaries visible in C++ even where the selected lowering is a
-    // vector::size call or direct field/index arithmetic.
-    long get_visited_count() const { return visited_points.size(); }
-    pathCell* get_visited_cell(long index) { return visited_points[index]; }
-    void set_rectangle(tagRECT& rect);
+    // Original: searchArray::set_rectangle; FindPath.h:257, dc 0x37e84.
+    void setRectangle(tagRECT& rect)
+    {
+        valid_left = rect.left;
+        valid_top = rect.top;
+        valid_right = rect.right;
+        valid_bottom = rect.bottom;
+    }
 };
 
-// findpath.h:265 in the DC roster; no retail row of its own - /Ob2
+// Original: get_danger_cell; FindPath.h:265, dc 0x37e98. No retail row - /Ob2
 // folds it into every caller, ai_player.obj's get_danger_value included.
-inline long* get_danger_cell(long* danger_zones, type_point point)
+inline long* getDangerCell(long* danger_zones, type_point point)
 {
     return &danger_zones[(point.z * MAP_HEIGHT + point.y) * MAP_WIDTH + point.x];
+}
+
+// Original: searchArray::get_danger_value; FindPath.h:270, dc 0x37eec.
+VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
+inline long searchArray::getDangerValue(type_point point) const
+{
+    if (!danger_zones)
+        return 0;
+    return *getDangerCell(danger_zones, point);
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:

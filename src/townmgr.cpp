@@ -62,6 +62,7 @@
 #include "university_window.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
 
 // singleselectionwindow.obj's pair, retail 0x577790 / 0x577810 (dc
 // 0x12fdb8 / 0x12fdd4). 0x577790 is the STARTER - it tests the thread
@@ -277,6 +278,7 @@ static bool ShipyardAffordable()
 char* GetBuildingInfo(const town* this_town, int buildingId,
                       unsigned char bIncludeTitle, unsigned char extended);
 
+
 // The two unclaimed rows behind it, screened 2026-08-14 by CALLSITE.
 //
 // 0x5d2da0 (488 B) IS a townManager method, and the body says so
@@ -309,41 +311,6 @@ char* GetBuildingInfo(const town* this_town, int buildingId,
 // roster is contiguous across the gap anyway (GetBuildingInfo 0x174f78
 // is followed directly by townManager::Main 0x175160). Guessing a name
 // here would be inventing one.
-
-// VC6's <xutility> reference-returning min/max, spelled file-locally for
-// the reason findpath.cpp and army.cpp record: retail materialises BOTH
-// operands into stack temps and selects between their ADDRESSES with two
-// LEAs (0x5d6c4a..0x5d6c55 is this TU's instance), which is the
-// signature of a reference-returning template and not of a ternary.
-// Operands by value, the orientation the engine is byte-proven on.
-//
-// HOISTED to the top of the file 2026-08-14 (it used to sit just above
-// BuildObj): the three WindowHandler bodies need it too and two of them
-// are earlier in the compiland. The move is byte-inert - every score in
-// the unit, BuildObj's included, is unchanged across it.
-//
-// The OPERAND ORDER is load-bearing and it is `_cpp_max(floor, value)`,
-// not `(value, floor)`. By-value parameters home in declaration order,
-// so the argument that goes first takes the first stack temp and the
-// second becomes the ternary's default address; retail's animation tick
-// homes the ELAPSED time into the later slot and defaults to it
-// (`lea eax,[elapsed] / jg`). Written `_cpp_max(elapsed, 100L)` both
-// halves invert - 98.96 on the blacksmith's handler and 99.80 on the
-// fort page's, against 100 for the order below. The BY-VALUE parameters
-// are the other load-bearing half: an address-taken caller local is
-// homed at its definition, ahead of the sign test, where an inlined
-// by-value parameter is homed at the call site inside the branch.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // The selected entry of the town-locator row. Ten image-wide references,
 // every one inside townmgr's bracket, so this compiland owns it; only
@@ -528,6 +495,33 @@ void townObject::DrawHotspot()
 // constructor's own). Names are provisional; nothing attests them.
 DATA(0x0068a38c) extern const char* const gTownObjectNames[];
 DATA(0x0068a9bc) extern const short gTownObjectPositions[][3];
+
+// The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
+// to the adventure handler's TRADE path with the same `this` - a direct,
+// non-virtual base call, so the derivation is at offset 0 - and then
+// refreshes the resource bar it was constructed with. That refresh reads
+// the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
+// base, and the Dreamcast constructor's one parameter is that same bar.
+class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
+public:
+    TResourceDisplay* m_resourceDisplay;  // DC: pResourceDisplay, +0x0c
+
+    // The only retail construction site (townManager::Open) expands this
+    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
+    // call, followed by the derived vptr and resource-display stores.
+    // Original: CTownNetMsgHandler::CTownNetMsgHandler; townmgr.cpp:1830, dc 0x181418.
+    CTownNetMsgHandler(TResourceDisplay* display)
+    { m_resourceDisplay = display; }
+    // Four bytes on the Dreamcast and no retail row of its own, so it
+    // is a source-local one-liner every caller expands: DoHall 0x5d27b0
+    // emits the bare `mov [handler+0xc], bar` at both of its two
+    // hand-over sites.
+    // Original: CTownNetMsgHandler::SetResourceDisplay; townmgr.cpp:1836, dc 0x181468.
+    void setResourceDisplay(TResourceDisplay* display)
+    { m_resourceDisplay = display; }
+    void HandleGiftMsg(CNetMsg* pNetMsg);
+};
+SIZE(CTownNetMsgHandler, 0x10);
 
 // E:\gamedcs\townmgr.cpp:1855, retail 0x5c2ea0 - townmgr.obj's FIRST
 // carve row, sitting ahead of townManager's own constructor. Two
@@ -1422,7 +1416,7 @@ VA(0x005c66b0, 0x20)  // anchor-callee(CAdvMgrNetMsgHandler::HandleTradeRequestM
 void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 {
     CAdvMgrNetMsgHandler::HandleTradeRequestMsg(pNetMsg);
-    pResourceDisplay->Update(1, 1);
+    m_resourceDisplay->Update(1, 1);
 }
 
 // The town page's bottom info row: the hall icon, the fort icon and the
@@ -3382,11 +3376,7 @@ THallWindow::THallWindow(int which)
 // reproduced for the reader inside the carcass gate.
 #if 0  // @carcass: claim-only - the definition lives in textresource.h
 // E:\gamedcs\TextResource.h:66
-VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
-const char* TTextResource::GetText(int r) const
-{
-    return Text[r];
-}
+// Canonical body and VA: include/textresource.h.
 #endif  // @carcass
 
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
@@ -3779,7 +3769,7 @@ void townManager::handle_mage_guild_click()
     dialogResourceDisplay = new TResourceDisplay(guildPage, 1);
     dialogResourceDisplay->Update(1, 0);
     if (netMsgHandler)
-        netMsgHandler->SetResourceDisplay(dialogResourceDisplay);
+        netMsgHandler->setResourceDisplay(dialogResourceDisplay);
 
     hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
@@ -3787,7 +3777,7 @@ void townManager::handle_mage_guild_click()
     hallWindow->DoModal(0);
 
     if (netMsgHandler)
-        netMsgHandler->SetResourceDisplay(pResourceDisplay);
+        netMsgHandler->setResourceDisplay(pResourceDisplay);
     delete dialogResourceDisplay;
     dialogResourceDisplay = 0;
     delete hallWindow;
@@ -4406,10 +4396,9 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
 VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
 
 // E:\gamedcs\townmgr.cpp:5156
-VA(0x005d0d90, 0x6B)  // anchor-vtable 0x643854 slot 0 + ??_G call edge, dc 0x181638
-type_monster_join_window::~type_monster_join_window()
-{
-}
+// CodeView dc 0x181638: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
 
 // The constructor the previous lane predicted would free this class's
 // ??_G, and it does: it is the ONLY body that stores vftable 0x643890
@@ -4448,10 +4437,9 @@ TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrison_owner,
 VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
 
 // E:\gamedcs\townmgr.cpp:5177
-VA(0x005d10c0, 0x6B)  // anchor-vtable 0x643890 slot 0 + ??_G call edge, dc 0x181684
-TGarrisonWindow::~TGarrisonWindow()
-{
-}
+// CodeView dc 0x181684: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, TGarrisonWindow)
 
 // Three modal entry points that build one of the two garrison windows on
 // the stack, run it, and let the local's destructor - the empty derived
@@ -4985,7 +4973,7 @@ void townManager::DoHall()
     dialogResourceDisplay = new TResourceDisplay(page, 1);
     dialogResourceDisplay->Update(1, 0);
     if (netMsgHandler)
-        netMsgHandler->SetResourceDisplay(dialogResourceDisplay);
+        netMsgHandler->setResourceDisplay(dialogResourceDisplay);
 
 
     hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -4997,7 +4985,7 @@ void townManager::DoHall()
     delete dialogResourceDisplay;
     dialogResourceDisplay = 0;
     if (netMsgHandler)
-        netMsgHandler->SetResourceDisplay(pResourceDisplay);
+        netMsgHandler->setResourceDisplay(pResourceDisplay);
 
     RedrawTownScreen();
     if (field_1b8 != -1)
@@ -5518,7 +5506,7 @@ static int ExitTownManager(message& msg)
 // blocks below); ChangeTown's roster twin is the town-switch tail the
 // locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
-VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
+VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(serviceSounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::Main(message& msg)
 {
     int exitFlag = 0;
@@ -5526,7 +5514,7 @@ int townManager::Main(message& msg)
     playerData* player = gpGame->GetLocalPlayer();
     unsigned char netMsgSeen;
 
-    gpSoundManager->service_sounds();
+    gpSoundManager->serviceSounds();
     if (gTurnDuration69d630.IsExpired())
         return ExitTownManager(msg);
     if (gNetworkActive69954c) {
@@ -5683,11 +5671,11 @@ int townManager::Main(message& msg)
                                           WINDOW_ALL_WIDGETS_HIGH);
                     gCombatStamp698998 = GameTime::Get() + 100;
                     if (netMsgHandler)
-                        netMsgHandler->SetResourceDisplay(
+                        netMsgHandler->setResourceDisplay(
                             castleWin->CastleBank);
                     castleWin->DoModal(0);
                     if (netMsgHandler)
-                        netMsgHandler->SetResourceDisplay(pResourceDisplay);
+                        netMsgHandler->setResourceDisplay(pResourceDisplay);
                     if (castleWin->CastleBank)
                         delete castleWin->CastleBank;
                     delete castleWin;

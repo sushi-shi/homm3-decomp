@@ -78,20 +78,6 @@ void ShowTerritorySmacker(unsigned char bEvil2Post)
 
 #endif
 
-// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
-// ResetMapAndDescription as header-style inlines: neither has a retail
-// body, and Select carries both expanded - which is what makes
-// vector::size a NESTED candidate there, called out of line at both
-// loop tests (0x423110, the pointer-vector size COMDAT).
-DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::ClearSelected()
-{
-    for (int i = 0; i < static_cast<int>(campaign->scenarios.size()); i++) {
-        if (scenarios[i].available)
-            GetWidget(MAP_SELECTED_1_ID + i)->hide();
-    }
-}
-
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
@@ -105,6 +91,20 @@ inline void TCampaignBrief::ResetMapAndDescription(int which)
     msg.extraText = scenarios[which].mapName.c_str();
     BroadcastMessage(&msg);
     scroller->SetText(scenarios[which].mapDescription.c_str());
+}
+
+// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
+// ResetMapAndDescription as header-style inlines: neither has a retail
+// body, and Select carries both expanded - which is what makes
+// vector::size a NESTED candidate there, called out of line at both
+// loop tests (0x423110, the pointer-vector size COMDAT).
+DC_ONLY(0x589a4, 0x84)
+inline void TCampaignBrief::ClearSelected()
+{
+    for (int i = 0; i < static_cast<int>(campaign->scenarios.size()); i++) {
+        if (scenarios[i].available)
+            GetWidget(MAP_SELECTED_1_ID + i)->hide();
+    }
 }
 
 // E:\gamedcs\campaignbrief.cpp:392
@@ -815,7 +815,7 @@ std::string TCampaignBrief::CampaignHeaderStruct::GetCampaignDescription() const
 // The ctor's two local aggregate paths select these retained compiler-
 // generated members.  Their ownership is fixed by the called sub-object
 // offsets and by the matching constructor/destructor call streams.
-VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
+// Canonical body and VA: include/game.h.
 // The nested slot record's own default constructor, between
 // NewSMapHeader's and CMapHeaderData's in retail's COMDAT order where the
 // DC roster puts it first (dc 0x5ac3c, 68 B against 63). Its destructor is
@@ -823,7 +823,7 @@ VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
 // the vector must construct before the scalar stores, while hasMainTown and
 // mainTownType remain untouched. Initializing those fields and moving the
 // stores into the member-init list was the full 65.92% residual.
-VA_COMPGEN(0x0045a950, 0x3F, CLASS_CTOR, TPlayerSlotAttributes)
+// Canonical body and VA: include/game.h.
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // The owner token has to be the class the DEMANGLER produces from the
@@ -832,7 +832,7 @@ VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // prefix. Default construction, destruction, copy construction and copy
 // assignment each have their own admitted claim.
 VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
-VA_COMPGEN(0x0045ac20, 0xD2, CLASS_CTOR, SGameSetupOptions)
+// Canonical body and VA: include/game.h.
 
 // Dreamcast attributes this retained destructor to campaignbrief.cpp:192,
 // its use site rather than a Game.h definition. Retail independently proves
@@ -871,7 +871,7 @@ VA_COMPGEN(0x0045b140, 0x6E, IMPLICIT_DTOR, map)
 // +0x00, +0x22 and +0x23 - and campaignbrief.obj is where the COMDAT
 // lands because TCampaignBrief's preview vector constructs one per
 // scenario. The delinker already labelled the row from the class.
-VA_COMPGEN(0x0045bac0, 0xE, CLASS_CTOR, LossConditionStruct)
+// Canonical body and VA: include/victorylossconditions.h.
 
 // COMDAT pairing: vector<type_map_hero_identity>'s copy assignment, 661 B
 // against campaignbrief.obj's single 661-byte COMDAT.

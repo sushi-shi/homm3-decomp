@@ -30,23 +30,6 @@ unsigned char InitializeSpellTraitsTable();
 // only the public DC array name survives.
 extern SSpellTraits aSpellTraitsImp[81];
 
-namespace {
-
-// Source-private Dreamcast TAutoStrPtr. Its retail ctor/dtor are ICF-shared
-// inline representatives; spelldefs' lazy static arrays are its only storage.
-class TAutoStrPtr {
-public:
-    TAutoStrPtr() : pStr(0) {}
-    ~TAutoStrPtr() { delete[] pStr; }
-    void set(char* value) { pStr = value; }
-    char* get() const { return pStr; }
-
-private:
-    char* pStr;
-};
-
-}
-
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spelldefs.cpp:335, dc 0x14e39c) void InitializeSpellTraits(int id, const std::vector<char* resource);
 

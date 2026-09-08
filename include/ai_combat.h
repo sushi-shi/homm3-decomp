@@ -209,9 +209,35 @@ public:
     long get_attack(type_speed_catagory speed_limit,
                     unsigned char shooters_blocked) const;
     long get_final_melee_value() const;
-    long get_total() const;
-    armyGroup* get_army() { return my_army; }
-    hero* get_hero() { return my_hero; }
+    armyGroup* get_army() const { return my_army; }
+    // E:\gamedcs\ai_combat.h:255
+    // EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
+    // null test is a `?:` on the return expression, not an early-out `if`.
+    // The old `if (first == 0) return 0;` split makes our CL target eax
+    // directly for the divide; the ternary merges both arms into one
+    // pseudo, which VC6 homes in edx and copies out with the closing
+    // `mov eax,edx` retail has - and on the null path the merged pseudo
+    // is already the zero _M_start, so no `xor eax,eax` is emitted either.
+    // Both deltas were one cause.
+    //
+    // The payoff is in the ~12 INLINED copies, not here: get_area_value
+    // 86.6 -> 100, cast_area_effect 86.0 -> 97.4, do_general_melee
+    // 79.6 -> 94.8, adjust_army 89.8 -> 93.4 with no other edit.
+    //
+    // Tried and rejected: `monsters.size()` through begin()/end() (fixes
+    // this function and get_area_value, loses the _M_start CSE in the
+    // inlined copies and costs six other functions their exactness), a
+    // bare `_M_finish - _M_start` with no local, naming the _M_finish load
+    // (`last`), naming the difference (`count`, signed and unsigned), and
+    // dropping the unsigned cast - all four leave the split-if shape and
+    // score 83.57 unchanged.
+    VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
+    long get_total() const
+    {
+        type_monster_data* first = monsters._First;
+        return first == 0 ? 0 : (unsigned)(monsters._Last - first);
+    }
+    hero* get_hero() const { return my_hero; }
     void cast_chain_lightning(type_spell_choice& choice,
                               type_AI_combat_data& defender, long damage) const;
     void cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender,

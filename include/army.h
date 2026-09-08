@@ -27,20 +27,7 @@ class CSprite;
 // Complete's extended creature-id bound.
 inline const char* GetArmyName(int type, int count);
 
-// E:\gamedcs\includes.h:124/134. Army.h's GetMorale/GetLuck class-body
-// accessors see the shared reference-returning template and its ordinary
-// by-value wrapper through the original common-header include order.
-template<class T>
-inline const T& t_limit(const T& minimum, const T& value, const T& maximum)
-{
-    return value < minimum ? minimum
-                           : (maximum < value ? maximum : value);
-}
-
-inline int limit(int minimum, int value, int maximum)
-{
-    return t_limit(minimum, value, maximum);
-}
+#include "includes.h"
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -1947,6 +1934,7 @@ inline int army::GetLuck(unsigned char apply_limits) const
     }
 
     // E:\gamedcs\Army.h:736
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
 inline int army::OffsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
@@ -2014,6 +2002,7 @@ inline int army::get_owning_side() const
     }
 
     // E:\gamedcs\Army.h:800
+VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 inline int army::get_controlling_side() const
     {
         if (spellInfluence[60])
@@ -2059,6 +2048,7 @@ inline bool army::is_in_aura() const
     }
 
     // E:\gamedcs\Army.h:840
+VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
 inline bool army::IsIncapacitated() const
     {
         return spellInfluence[62] || spellInfluence[70]

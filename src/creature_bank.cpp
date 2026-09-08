@@ -70,6 +70,11 @@ inline TCreatureType creature_type_from_int(int value)
     return storage.creature;
 }
 
+// Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
+// The traits constructor below sees the original ordinary body and lets
+// VC6 expand the armyGroup construction for each of its four levels.
+type_creature_bank_level::type_creature_bank_level() {}
+
 // E:\gamedcs\creature_bank.cpp:25. Retail initializes the Dinkumware string
 // at +0 and then calls armyGroup::armyGroup four times at +0x10 with a 0x60
 // stride, exactly the implicit member construction this empty body requests.

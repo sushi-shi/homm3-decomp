@@ -152,9 +152,9 @@ VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
 void VideoSoundOnOff(int on)
 {
     if (gSmackVideo || gSmackVideo2)
-        gpSoundManager->service_sounds();
+        gpSoundManager->serviceSounds();
     else if (gBinkVideo || gBinkVideo2)
-        gpSoundManager->service_sounds();
+        gpSoundManager->serviceSounds();
 }
 
 // E:\gamedcs\smackmgr.cpp:105
@@ -357,7 +357,7 @@ void VideoClose()
 {
     while (gVideoPauseCount != 0)
         VideoResume();
-    gpSoundManager->service_sounds();
+    gpSoundManager->serviceSounds();
     SmackManager::CloseSmacker();
     CloseBinkVideo();
 }
@@ -844,7 +844,7 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
     if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
         for (i = 0; i < gVideoCount1; i++) {
             if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
                     FILE_BEGIN);
                 return SmackOpen(gVideoFile1,
@@ -855,7 +855,7 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
 
     for (i = 0; i < gVideoCount2; i++) {
         if (_strcmpi(gVideoHeader2[i].name, name) == 0) {
-            gpSoundManager->service_sounds();
+            gpSoundManager->serviceSounds();
             SetFilePointer(gVideoFile2, gVideoHeader2[i].offset, 0, FILE_BEGIN);
             return SmackOpen(gVideoFile2,
                 flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
@@ -865,7 +865,7 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
     if (gVideoFile3) {
         for (i = 0; i < gVideoCount3; i++) {
             if (_strcmpi(gVideoHeader3[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 SetFilePointer(gVideoFile3, gVideoHeader3[i].offset, 0,
                     FILE_BEGIN);
                 return SmackOpen(gVideoFile3,
@@ -877,7 +877,7 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
     if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         for (i = 0; i < gVideoCount1; i++) {
             if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
                     FILE_BEGIN);
                 return SmackOpen(gVideoFile1,
@@ -1080,7 +1080,7 @@ void NextSmackerFrame()
         if (gSmackVideo && gSmackVideo2) {
             if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
                 gpWindowManager->FadeScreen(1, 4, 0);
-            gpSoundManager->service_sounds();
+            gpSoundManager->serviceSounds();
             SmackClose(gSmackVideo);
             gSmackVideo = 0;
             if (gVideoDescriptors[gSmackVideoId].field_9) {

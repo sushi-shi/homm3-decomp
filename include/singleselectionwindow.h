@@ -156,6 +156,7 @@ struct GameSelectionHeadersStruct {
     // Dreamcast CodeView places this source-declared constructor in
     // SingleSelectionWindow.h:73. Complete's wider record keeps the same
     // boundary and adds the two PC text-band clears plus difficulty preset.
+    VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
     GameSelectionHeadersStruct()
     {
         memset(title, 0, sizeof(title));
@@ -198,12 +199,20 @@ public:
     signed char handicap;      // +0x78
     char pad_79[3];
 
-    void Clear()
+
+
+    // E:\gamedcs\SingleSelectionWindow.h:108
+    VA(0x0057C790, 0x40)  // anchor-global reads *gpVideoGameState (0x69923c) into +0x1c and presets the 0x7c record exactly as both CUpdatePlayerPosMsg expansions do; called per element by OnNewPlayerMsg's init loop + address-taken by its ??_L call
+    CNetPlayerHandlerPlayer()
     {
-        dpid = 0;
-        playerPos = -1;
-        townIndex = -1;
         heroIndex = -1;
+        townIndex = -1;
+        availableHeroesCount = 0;
+        startBonusIndex = 3;
+        playerPos = -1;
+        color = -1;
+        handicap = 0;
+        memset(availableHeroes, 0, sizeof(availableHeroes));
     }
 
     // E:\gamedcs\SingleSelectionWindow.h:122
@@ -214,14 +223,16 @@ public:
         return 0;
     }
 
-    // DC's seat-record ctor. Declared here, DEFINED OUT OF CLASS in the
-    // TU (retail 0x57c790): /Ob2 then reproduces retail's per-site
-    // split - SetCurrentMap's CUpdatePlayerPosMsg local expands both
-    // array-init loops in full, while OnNewPlayerMsg's keeps the CTOR
-    // out of line (one call-per-element loop, one ??_L vector-iterator
-    // call). Gated to the owning TU: a user ctor makes the record
-    // non-POD for every includer.
-    CNetPlayerHandlerPlayer();
+    // E:\gamedcs\SingleSelectionWindow.h:130
+    void Clear()
+    {
+        dpid = 0;
+        playerPos = -1;
+        townIndex = -1;
+        heroIndex = -1;
+    }
+
+
 
     // DC SingleSelectionWindow.h:138. Complete keeps the same source
     // helper but expands both calls in SetupAdvancedOptions.  Retail x86
@@ -250,34 +261,13 @@ public:
     // Dreamcast singleselectionwindow.cpp:1005 (dc 0x1303fc); retail
     // expands it into the window constructor's member initialisation.
     CNetPlayerHandler();
-    int GetNetPos(unsigned long dpid)
-    {
-        for (int i = 0; i < MAX_PLAYERS; ++i)
-            if (humanPlayers[i].dpid == dpid)
-                return i;
-        return -1;
-    }
+    int getNetPos(unsigned long dpid);
 
-    // DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
-    // on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
-    // load as the fall-through - the arm order UpdatePlayerPositions'
-    // retail expansion keeps (found path in line, -1 jumps to the join).
-    int GetGamePos(unsigned long dpid)
-    {
-        int netPos = GetNetPos(dpid);
-        if (netPos == -1)
-            return -1;
-        return humanPlayers[netPos].playerPos;
-    }
+    int getGamePos(unsigned long dpid);
 
     bool DeletePlayer(unsigned long dpid);
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
-    // DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
-    // fallback through it (lea into the computer bank).
-    CNetPlayerHandlerPlayer* GetCompPlayerInPos(int pos)
-    {
-        return &computerPlayers[pos];
-    }
+    CNetPlayerHandlerPlayer* getCompPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
     unsigned char IsFaceTaken(int face, int exclude);
     unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
@@ -289,14 +279,11 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // Dreamcast names this as the window's final shared-build member, and the
 // retail constructor independently proves the same composition at +0x1888:
 // CNetMsgHandler's ctor is followed by the derived vtable store and a clear
-// of m_wasCompressed at +0x0c. Keep the complete type behind the owning-TU
-// view so public-header includers retain their established include closure.
+// of m_wasCompressed at +0x0c. The class is embedded by value below;
+// its constructor body belongs to singleselectionwindow.cpp:8758.
 class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
 public:
-    CSingleSelectionNetMsgHandler()
-    {
-        m_wasCompressed = 0;
-    }
+    CSingleSelectionNetMsgHandler();
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1
     virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3

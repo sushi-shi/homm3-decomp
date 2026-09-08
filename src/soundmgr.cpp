@@ -611,7 +611,7 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
         sPtr->field_1c = handle;
         LeaveCriticalSection(&section_sound_call);
 
-        gpSoundManager->service_sounds();
+        gpSoundManager->serviceSounds();
         return handle;
     }
     return 0;
@@ -701,7 +701,7 @@ void launch_sample(const char* sample_name, int max_time, int channel)
     launched->sample2.resSample->field_28 = channel;
     launched->sample2.playSample =
         gpSoundManager->MemorySample(launched->sample2.resSample);
-    gpSoundManager->service_sounds();
+    gpSoundManager->serviceSounds();
     if (!bShutDownDone)
         _beginthread(WaitEndSampleThread, 0, launched);
 }
@@ -731,20 +731,7 @@ void __cdecl WaitEndSampleThread(void* arglist)
     _endthread();
 }
 
-// Dreamcast records this named SoundMgr.h member as an empty WinCE service in
-// kb.obj. Complete gives it the non-empty PC Miles body below: retail keeps an
-// exact out-of-line copy and exact /Ob2 expansions in MemorySample and
-// launch_sample. Those three copies jointly prove the shared member boundary.
-VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
-void soundManager::service_sounds()
-{
-    EnterCriticalSection(&section_sound_call);
-    AIL_serve();
-    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
-        AIL_service_stream(gMP3Stream, 1);
-    Sleep(1);
-    LeaveCriticalSection(&section_sound_call);
-}
+
 
 // E:\gamedcs\soundmgr.cpp:1068
 // Retail has five address-taken references to this 16-byte-aligned entry.

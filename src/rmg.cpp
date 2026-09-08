@@ -3,6 +3,7 @@
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
+#include "mapcell.h"
 #include <va.h>
 #include <algorithm>
 #include <bitset>
@@ -103,151 +104,6 @@ static bool IsRmgTemplateFieldSet(const char* value)
 }
 
 } // namespace
-
-namespace std {
-
-// WriteMapHeader's ordered retail call stream is the boundary oracle for the
-// TU-local Dinkumware definitions below. Temporary inline pins plus the MAX
-// ratchets those calls.  Negative control: removing both string constructor
-// definitions regresses WriteMapHeader from 95.70% to 94.10%, grows its frame
-// from 0x32c to 0x334, and adds three target-only calls.
-template <>
-inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
-    const std::allocator<char>& value)
-    : allocator(value)
-{
-    // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
-#pragma inline_depth(0)
-    _Tidy();
-#pragma inline_depth()
-}
-
-template <>
-inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
-    const char* source,
-    const std::allocator<char>& value)
-    : allocator(value)
-{
-    // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
-#pragma inline_depth(0)
-    _Tidy();
-#pragma inline_depth()
-    // WriteMapHeader -> basic_string::assign: retail retains this call.
-#pragma inline_depth(0)
-    assign(source, strlen(source));
-#pragma inline_depth()
-}
-
-} // namespace std
-
-template <>
-inline bool std::bitset<156>::test(size_t position) const
-{
-    if (156 <= position) {
-        // WriteMapHeader -> bitset<156>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline bool std::bitset<128>::test(size_t position) const
-{
-    if (128 <= position) {
-        // WriteMapHeader -> bitset<128>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline bool std::bitset<144>::test(size_t position) const
-{
-    if (144 <= position) {
-        // WriteMapHeader -> bitset<144>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline void std::bitset<144>::_Xran() const
-{
-    // WriteMapHeader -> string::_Tidy: retail keeps the nested ctor boundary.
-#pragma inline_depth(0)
-    string message("invalid bitset<N> position");
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<129>::_Xran() const
-{
-    string message("invalid bitset<N> position");
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<70>::_Xran() const
-{
-    const char* text = "invalid bitset<N> position";
-    string message;
-    // WriteMapHeader -> string::assign: retail retains this nested call.
-#pragma inline_depth(0)
-    message.assign(text, strlen(text));
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<28>::_Xran() const
-{
-    const char* text = "invalid bitset<N> position";
-    string message;
-    // WriteMapHeader -> string::assign: retail retains this nested call.
-#pragma inline_depth(0)
-    message.assign(text, strlen(text));
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline std::bitset<144>::reference::operator bool() const
-{
-    // WriteMapHeader -> bitset<144>::test: retail retains this nested call.
-#pragma inline_depth(0)
-    return _Pbs->test(_Off);
-#pragma inline_depth()
-}
-
-template <>
-inline std::bitset<129>::reference&
-std::bitset<129>::reference::operator=(bool value)
-{
-    // WriteMapHeader -> bitset<129>::set: retail retains this nested call.
-#pragma inline_depth(0)
-    _Pbs->set(_Off, value);
-#pragma inline_depth()
-    return *this;
-}
 
 static void __fastcall assign_rmg_teams(
     int teamCount,
@@ -1783,6 +1639,21 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 // naming all three iterators and default-constructing then assigning the first
 // each regress to 95.66%; making the iterator non-trivial regresses to 93.97%
 // and destroys the matching tail CFG.  Those source-false forms remain out.
+// Canonical library ownership: use the pinned VC6 XSTRING constructors and
+// BITSET test/_Xran/reference definitions. Eleven application-local explicit
+// specializations previously copied those bodies and pinned their nested
+// calls; they were not recovered RMG source and have been removed.
+// The earlier constructor-only negative control measured 95.70% -> 94.10%,
+// grew the frame from 0x32c to 0x334, and added three target-only calls. That
+// explains the old workaround, but does not establish those specializations
+// or the rewritten _Xran temporaries as original application definitions.
+// With all eleven replacements removed, the caller measures 76.5336% versus
+// the preceding 95.6987% (MAX retained). The verified source comparison shows
+// the remaining frontier in library call/expansion decisions and exception
+// paths: 176 candidate blocks versus 164 retail, with 93 versus 87 branches.
+// RMG's retained bitset<129>::set comparison also loses its emitted body
+// (MAX 100). Preserve the canonical library definitions through these dips;
+// no application specialization or inline pin is evidence for fixing them.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::WriteMapHeader(TAbstractFile* outfile)
 {

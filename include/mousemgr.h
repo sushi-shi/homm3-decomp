@@ -11,19 +11,7 @@
 
 struct IDirectDrawSurface4;
 
-// mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
-// Dreamcast build keeps ctor/dtor out of line, retail inlines both -
-// the fs:[0] frame in every user is the unwind scaffolding).
-class TCSLock {
-public:
-    TCSLock(CRITICAL_SECTION* lpCriticalSection)
-        : section(lpCriticalSection) {
-        EnterCriticalSection(section);
-    }
-    ~TCSLock() { LeaveCriticalSection(section); }
 
-    CRITICAL_SECTION* section;
-};
 
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
@@ -83,14 +71,13 @@ public:
     //   2 Main  0x4ec560 - the program-wide `xor eax,eax; ret 4` that
     //     /OPT:ICF folded, shared with inputManager::Main (which owns
     //     the claim) and heroWindow::handle_message; declared only.
-    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager INLINED into it
-    //     (the widget `inline dtor` idiom) - which is why the dtor is
-    //     defined in this header and has no out-of-line retail row of
-    //     its own, DC's separate 0xfea50 body notwithstanding.
+    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
+    // The written destructor belongs in mousemgr.cpp (CodeView line 344);
+    // its expansion inside a generated wrapper does not imply header ownership.
     virtual int Open(int newPriority);   // slot 0, retail 0x50cbf0
     virtual void Close();                // slot 1, retail 0x50cc40
     virtual int Main(message& msg);      // slot 2, folded onto 0x4ec560
-    virtual ~mouseManager() { DeleteCriticalSection(&section_mouse); }
+    virtual ~mouseManager();
     void MouseCoords(int* x, int* y);
     void SetPointer(int new_frame, EPointerSet new_set);
     void Update(unsigned char bForceIt);
@@ -101,16 +88,15 @@ public:
                            const RECT* dst_rect);
     void HidePointer();
     void ShowPointer(bool restore);
-    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
-    // +0x4c/+0x50 loads at their call sites.
-    EPointerSet GetSet() const
-    {
-        return field_4c;
-    }
+    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
     int GetFrame() const
     {
         return field_50;
+    }
+    EPointerSet GetSet() const
+    {
+        return field_4c;
     }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.

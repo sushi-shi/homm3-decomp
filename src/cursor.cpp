@@ -1123,11 +1123,7 @@ void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
 // The active definition remains in struct.h; this anchor records the retained
 // body selected by OnDeadHero without replacing its source-inline boundary.
 #if 0  // @carcass: active header-inline body emits this COMDAT
-VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
-bool type_point::operator!=(const type_point& arg) const
-{
-    // @stub - active definition is the struct.h class-body inline
-}
+// Canonical body and VA: include/struct.h.
 #endif
 
 VA(0x00482390, 0x21)  // exact gate-and-transmit body, dc 0x7c9f8

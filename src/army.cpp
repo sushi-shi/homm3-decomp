@@ -65,25 +65,8 @@
 #include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6 <xutility>'s reference-returning min/max, taken BY VALUE - the
-// orientation byte-proven engine-wide (findpath.cpp carries the
-// measurement; the `const _TYPE&` signature was refuted there). The
-// operand landing in the HIGHER stack slot is _Y: every army.obj site
-// below (get_total_hit_points, set_AI_expected_damage,
-// get_average_damage, ComputeBaseDamage) reproduces that placement
-// together with the branch polarity the retail body emits.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 #ifdef min
 #undef min
@@ -92,45 +75,13 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 #undef max
 #endif
 
-namespace dc_min_source {
-// E:\gamedcs\DC_precompiledheaders.h:41
-inline const int& _cpp_min(const int& _X, const int& _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-}
 
-// E:\gamedcs\includes.h:114
-// The Dreamcast body is the one-statement wrapper `return _cpp_min(a, b)`.
-// Keeping that source boundary matters even when retail VC6 folds both this
-// wrapper and _cpp_min into the caller.
-inline int min(int a, int b)
-{
-    return dc_min_source::_cpp_min(a, b);
-}
 
-namespace dc_max_source {
-// E:\\gamedcs\\DC_precompiledheaders.h:33
-inline const int& _cpp_max(const int& _X, const int& _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-}
 
-// E:\\gamedcs\\includes.h:97
-// The Dreamcast body is the one-statement wrapper `return _cpp_max(a, b)`.
-inline int max(int a, int b)
-{
-    return dc_max_source::_cpp_max(a, b);
-}
 
-// CheckLuck's Dreamcast source calls SRandom, while the retail call target is
-// the exact Random body at 0x50b230. Keep the source-visible boundary and let
-// VC6 fold this Complete-side adapter so the retail relocation remains Random.
-inline int SRandom(int lower, int upper)
-{
-    return Random(lower, upper);
-}
+
+
+
 
 // E:\gamedcs\army.cpp:52 (dc 0x436b8) - retail 0x43d250, the FIRST row of
 // army.obj's span: the compiland's cinit/atexit thunk opens at 0x43ce60 and
@@ -319,12 +270,22 @@ void army::InitClean()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:109
-DC_ONLY(0x438a8, 0x3E)
-void army::WaitSample(army::TSampleID which)
+// No retail out-of-line copy survives, but the Dreamcast call graph proves
+// this member boundary in range_attack. VC6 folds the inline definition into
+// that caller.
+inline void army::WaitSample(army::TSampleID which)
 {
-    // @stub
+    if (!static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat()
+        && armySample[which]) {
+        gpSoundManager->WaitSample(armySample[which]->field_1c, -1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:150
 // DECODED IN FULL 2026-08-20 AND BLOCKED ON ONE LAYOUT CHANGE, so that
@@ -1732,18 +1693,7 @@ void army::animate_missile(army* armyToAttack)
     gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
-// E:\gamedcs\army.cpp:109
-// No retail out-of-line copy survives, but the Dreamcast call graph proves
-// this member boundary in range_attack. VC6 folds the inline definition into
-// that caller.
-inline void army::WaitSample(army::TSampleID which)
-{
-    if (!static_cast<const combatManager*>(gpCombatManager)
-            ->IsQuickCombat()
-        && armySample[which]) {
-        gpSoundManager->WaitSample(armySample[which]->field_1c, -1);
-    }
-}
+
 
 // E:\gamedcs\army.cpp:1356
 // One landed volley. The luck preamble is do_attack's statement for
@@ -1976,28 +1926,14 @@ void army::range_attack(army* armyToAttack)
 
 #endif  // @carcass
 
-// CreatureType.h:296 proves this is a header inline. Keep its source body in
-// creaturetype.h and only give the surviving army.obj COMDAT its retail home
-// here; source-label extraction deliberately rejects executable VA claims in
-// headers because a header has no unique owning TU.
-#if 0  // @carcass: claim-only home for the CreatureType.h COMDAT
-VA(0x00440100, 0x3E)  // two-register /Gr ABI + singular/plural trait lookup
-const char* GetArmyName(int type, int count)
-{
-    // @stub
-}
-#endif
+
 
 // Army.h:800 proves this is a class-body inline. The active out-of-class
 // definition that stood here changed the source form to retain the current
 // local score. Keep only the retail-address claim; VC6 must decide where the
 // header COMDAT survives from the coherent class source.
 #if 0  // claim-only home for the Army.h COMDAT
-VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
-int army::get_controlling_side() const
-{
-    // @stub
-}
+// Canonical body and VA: include/army.h.
 #endif
 
 // One stack's whole shooting turn: resolve the target it was told to
@@ -2076,6 +2012,29 @@ void army::range_attack()
         Turn(1);
     }
     CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
+}
+
+// E:\gamedcs\army.cpp:1629 / 1643. DC has both out-of-line (0x45fc0,
+// 0x46008, 70 B each); retail has NEITHER, so they are `inline` here
+// and every use is an expansion. One hex step around the combat ring:
+// a one-hex stack walks its six neighbours with +-1 modulo 6, a
+// two-hex stack has eight and they are not in ring order, so it goes
+// through the index/order table pair. Only get_multi_head_directions
+// expands them so far, and it expands each exactly once.
+inline long army::get_clockwise(long direction) const
+{
+    if (Is(1u << 0))
+        return akWideDirectionRingOrder[
+            (akWideDirectionRingIndex[direction] + 1) % 8];
+    return (direction + 1) % COMBAT_DIRECTION_COUNT;
+}
+
+inline long army::get_counter_clockwise(long direction) const
+{
+    if (Is(1u << 0))
+        return akWideDirectionRingOrder[
+            (akWideDirectionRingIndex[direction] + 7) % 8];
+    return (direction + 5) % COMBAT_DIRECTION_COUNT;
 }
 
 // The hydra's sweep: one swing lands on every adjacent hex the caller's
@@ -3019,7 +2978,7 @@ inline void army::CheckLuck()
 {
     iLuckStatus = 0;
     if (get_controller() && luck > 0) {
-        if (SRandom(1, 24) <= min(luck, 3)) {
+        if (sRandom(1, 24) <= min(luck, 3)) {
             iLuckStatus = 1;
             if (!static_cast<const combatManager*>(gpCombatManager)
                      ->IsQuickCombat()) {
@@ -5295,11 +5254,7 @@ static TWallTargetId choose_wall_target(TWallTargetId wall,
 // The compiled body comes from army.h. This declaration-shaped carcass only
 // assigns its retail address to the same decorated member so the delinker can
 // enroll and name the COMDAT without introducing a second definition.
-VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
-int army::OffsetToFront(int direction) const
-{
-    // @stub
-}
+// Canonical body and VA: include/army.h.
 
 #endif  // @carcass
 
@@ -6964,29 +6919,6 @@ int army::get_mirror_effect() const
         return selected;
     }
     return effect;
-}
-
-// E:\gamedcs\army.cpp:1629 / 1643. DC has both out-of-line (0x45fc0,
-// 0x46008, 70 B each); retail has NEITHER, so they are `inline` here
-// and every use is an expansion. One hex step around the combat ring:
-// a one-hex stack walks its six neighbours with +-1 modulo 6, a
-// two-hex stack has eight and they are not in ring order, so it goes
-// through the index/order table pair. Only get_multi_head_directions
-// expands them so far, and it expands each exactly once.
-inline long army::get_clockwise(long direction) const
-{
-    if (Is(1u << 0))
-        return akWideDirectionRingOrder[
-            (akWideDirectionRingIndex[direction] + 1) % 8];
-    return (direction + 1) % COMBAT_DIRECTION_COUNT;
-}
-
-inline long army::get_counter_clockwise(long direction) const
-{
-    if (Is(1u << 0))
-        return akWideDirectionRingOrder[
-            (akWideDirectionRingIndex[direction] + 7) % 8];
-    return (direction + 5) % COMBAT_DIRECTION_COUNT;
 }
 
 // E:\gamedcs\army.cpp:5717

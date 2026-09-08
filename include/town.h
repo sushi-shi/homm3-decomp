@@ -242,6 +242,16 @@ SIZE(TownExtra, 0x88);
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
 class TTownEvent;
 
+// The 1i64 << n building-bit table every mask builder indexes (DC
+// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
+// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
+// every i < 48, so the four "mask" globals this header used to carry
+// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
+// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
+// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
+// - extern only, no DATA claim (the gpWindowManager pattern).
+extern __int64 bitNumber[];
+
 class town {
 public:
     enum { TOWN_DOCK_SITE_NONE = 0xff };
@@ -437,8 +447,8 @@ public:
     //   check_included != 0 -> `[ecx+0x158]` = active
     //   check_included == 0 -> `[ecx+0x150]` = built
     // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
-    // tree's readers had been spelling by hand. Body below, after
-    // bitNumber's declaration - UNGATED as of the view audit, see the
+    // tree's readers had been spelling by hand. The body is canonical
+    // and ungated, in CodeView source order; see the
     // correction at the end of this note.
     //
     // THE VISIBILITY IS SCOPED, and both halves of the scoping are
@@ -474,13 +484,29 @@ public:
     // complete source ABI: const member (QB), native-bool return and native-
     // bool second parameter (_N ... _N). Retail's thiscall lowering is the
     // same and its selected ai_player.obj COMDAT returns canonical 0/1.
-    bool HasBuilding(int buildingId, bool check_included) const;
+    VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    bool HasBuilding(int buildingId, bool check_included) const
+    {
+        if (check_included)
+            return (active & bitNumber[buildingId]) != 0;
+        return (built & bitNumber[buildingId]) != 0;
+    }
     // DC Town.h:337 / :342 header inlines, declaration-only here
     // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
     // out of line by the DC linker in game.obj). See the
     // get_building_mask note above for why they landed together.
-    unsigned char IsCastle() const;
-    unsigned char IsCapitol() const;
+    // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
+    unsigned char IsCastle() const
+    {
+        return HasBuilding(CASTLE_FORT_ID, 0)
+            || HasBuilding(CASTLE_CITADEL_ID, 0)
+            || HasBuilding(CASTLE_CASTLE_ID, 0);
+    }
+    // E:\gamedcs\Town.h:342.
+    unsigned char IsCapitol() const
+    {
+        return HasBuilding(HALL_CAPITOL_ID, 0);
+    }
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
@@ -709,25 +735,6 @@ SIZE(town, 360);
 // (exact, 2026-08-27): the body sits in philai's span between the
 // AI_resource_cost pair and the spellvalue constructor.
 void Unnamed526d20(int playerId, int* costs, int flag);
-
-// The 1i64 << n building-bit table every mask builder indexes (DC
-// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
-// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
-// every i < 48, so the four "mask" globals this header used to carry
-// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
-// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
-// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
-// - extern only, no DATA claim (the gpWindowManager pattern).
-extern __int64 bitNumber[];
-
-// The Town.h inline declared above. Placed here because it indexes
-// bitNumber, which the class definition precedes.
-inline bool town::HasBuilding(int buildingId, bool check_included) const
-{
-    if (check_included)
-        return (active & bitNumber[buildingId]) != 0;
-    return (built & bitNumber[buildingId]) != 0;
-}
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.

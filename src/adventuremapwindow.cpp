@@ -8,8 +8,7 @@
 #include "border.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
-#include "chatedit.h"
-#include "cheatcode.h"
+#include "remote.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
@@ -190,6 +189,19 @@ void TAdventureMapWindow::SetSleepImage(int image)
 }
 
 #endif  // @carcass
+
+// Dreamcast adventuremapwindow.cpp proves this final derived editor. Retail's
+// adventure-window constructor expands its forwarding constructor through
+// CGameChatEdit, then writes this class's vtable after the shared +0x70 clear.
+class CAdventurMapChatEdit : public CGameChatEdit {
+public:
+    CAdventurMapChatEdit(
+        int x, int y, int w, int h, int textSize, char* text,
+        char* fontName, font::TColor color, font::EJustify justification,
+        char* backgroundIcon, int backgroundFrame, int id, int style,
+        int readType, int insetX, int insetY);
+    virtual void SendChat(const char* text, int toWho);
+};
 
 inline CAdventurMapChatEdit::CAdventurMapChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
@@ -493,73 +505,11 @@ TAdventureMapWindow::TAdventureMapWindow()
 
 // widget.h's two accessor slots, emitted here because CAdventurMapChatEdit's
 // vtable is the reference that instantiates them.
-VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
-int widget::GetRealHeight()
-{
-    // @stub - active definition is the widget.h class-body inline
-}
+// Canonical body and VA: include/widget.h.
 
-VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
-int widget::GetRealWidth()
-{
-    // @stub - active definition is the widget.h class-body inline
-}
+// Canonical body and VA: include/widget.h.
 
 #endif  // @carcass
-
-// The CGameChatEdit half of the chat editor, dc 0x30c8 / 0x3110 / 0x3178 /
-// 0x31ac. All four pair by ARITY and by callee: OnKeyPress is `ret 4` and
-// calls CChatEdit::OnKeyPress, OnEscape is `ret 0x20` - a by-value `message`,
-// exactly the Dreamcast prototype - and tail-calls CChatEdit::OnEscape, and
-// every one of the four reads or writes the +0x70 activation byte that is
-// CGameChatEdit's only data member.
-//
-// Dreamcast has these four in remote.h, i.e. as header inlines; they are
-// defined HERE instead because chatedit.h forward-declares `message` only,
-// so the by-value OnEscape body cannot be parsed there without dragging
-// message.h and inputmgr.h into every one of that header's consumers.
-// CCombatChatEdit::OnKeyPress (0x472600, exact) open-codes the same
-// activation sequence and is the twin that proves the shape.
-VA(0x004021f0, 0x42)  // dc-arity + anchor-callee(CChatEdit::OnKeyPress), dc 0x30c8
-int CGameChatEdit::OnKeyPress(message* msg)
-{
-    if (field_70)
-        return CChatEdit::OnKeyPress(msg);
-
-    if (GetCharPressed(msg) == KEYCODE_TAB) {
-        Activate();
-        return 1;
-    }
-    return 0;
-}
-
-VA(0x00402240, 0x3C)  // dc-arity(ret 0x20) + anchor-callee(CChatEdit::OnEscape), dc 0x3110
-int CGameChatEdit::OnEscape(message msg)
-{
-    field_70 = 0;
-    parentWindow->SetFocus(-1);
-    SetFocus(0);
-    return CChatEdit::OnEscape(msg);
-}
-
-VA(0x00402280, 0x23)  // vtable slot 25 + +0x70 clear/SetFocus pair, dc 0x3178
-void CGameChatEdit::SendChatCleanup()
-{
-    parentWindow->SetFocus(-1);
-    SetFocus(0);
-    field_70 = 0;
-    Draw();
-}
-
-VA(0x004022b0, 0x2B)  // vtable slot 26 + +0x70 set/SetFocus pair, dc 0x31ac
-void CGameChatEdit::Activate()
-{
-    field_70 = 1;
-    SetFocus(1);
-    parentWindow->SetFocus(id);
-    Draw();
-    UpdateScreen();
-}
 
 // Defined at its retail address below; SendChat is its only caller and
 // precedes it in the retail link order.
@@ -778,33 +728,6 @@ void CheckAdvCheatCode(std::string& chatString)
         if (gbUnk69774c)
             gpGame->campaign.isCheater = 1;
     }
-}
-
-// Game.h:1439, dc 0x2fa0. Constructor calls from both cheat handlers expand
-// to this shared encoder. Retail's lowered min keeps the length and 199-byte
-// ceiling in two stack locals and selects one by address; retaining that
-// source-level selection reproduces all eight blocks and 161 bytes.
-// E:\gamedcs\Game.h:1439
-VA(0x00402a30, 0xA1)
-void TCheatCode::encode(const char* value)
-{
-    int i = 0;
-    const int maximum = 199;
-    for (;;) {
-        int length = static_cast<int>(strlen(value));
-        const int* limit = &maximum;
-        if (length <= maximum)
-            limit = &length;
-        if (i >= *limit)
-            break;
-
-        if (isalpha(value[i]))
-            code[i] = b[tolower(value[i]) - 'a'];
-        else
-            code[i] = value[i];
-        i++;
-    }
-    code[i] = 0;
 }
 
 // Retail emits the generated wrapper immediately before the destructor;

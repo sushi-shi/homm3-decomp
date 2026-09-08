@@ -12,14 +12,8 @@
 #include <va.h>
 #include <vector>
 #include "armygrp.h"
-// The value list's element. The Dreamcast puts it in its own
-// ai_creature_value.h; this tree models it in ai_player.h, which is where
-// the include comes from until someone splits it out. Its `type` is a
-// plain int because ai_player.cpp's calculate_reserve indexes the list BY
-// creature ordinal and stores the loop counter straight into it;
-// philai.cpp bridges the int/TCreatureType crossing at its one call site
-// with the bit-preserving inline it already uses for armyGroup's roster.
-#include "ai_player.h"
+// CodeView owns the value-list element and its inline comparisons here.
+#include "ai_creature_value.h"
 
 class hero;
 
@@ -73,29 +67,28 @@ enum ESpellValueClass {
 class type_spellvalue {
 public:
     type_spellvalue(const hero* new_hero);
-    // Non-trivial solely because of list. Keeping the empty body inline
-    // preserves the compiler-generated expansion at each use while giving
-    // ai.cpp a source spelling for retail's retained COMDAT copy.
-    ~type_spellvalue() {}
+    // CodeView LF_ONEMETHOD marks ~type_spellvalue compiler-generated
+    // (compgenx, attributes 0x103). Let the vector member generate it;
+    // ai.cpp enrolls the retained retail body.
+
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
     unsigned char can_cast_spells() const { return power > 0; }
+    // DC ai_spellvalue.h:99, dc 0x114bdc (philai.obj). AI_set_hero_bonuses
+    // (0x527760) reads this initial pool for the well/spring valuations.
+    long get_mana() const { return mana; }
     // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
     // type_school_artifact::get_value call sites in retail.
     void set_power(long arg) { power = arg; }
+    // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
+    // reseeds the valuer from hero::mana through this setter.
+    void set_mana(long arg) { mana = arg; }
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
     // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
-    // combatManager::do_combat_ai is a located caller: it writes the
-    // side's whole combat value here before asking for a spell value.
+    // combatManager::do_combat_ai writes the side's whole combat value
+    // here before asking for a spell value.
     void set_stack_value(long arg) { stack_value = arg; }
-    // DC ai_spellvalue.h:99/119 - the mana pair (dc 0x114bdc/0x114be0
-    // are philai.obj's 4-byte out-of-line copies).  Retail
-    // AI_set_hero_bonuses (0x527760) is the byte-proven consumer: it
-    // reseeds the valuer from hero::mana and reads the initial pool for
-    // the well/spring valuations.
-    long get_mana() const { return mana; }
-    void set_mana(long arg) { mana = arg; }
     // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
     // bump power/duration/mana, re-ask get_best_spell_value, restore,
     // return the delta against the caller's baseline.  DEFINED in

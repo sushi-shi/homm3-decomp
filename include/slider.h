@@ -47,8 +47,8 @@ public:
     virtual int Main(message* msg);                 // slot 2
     virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
     virtual void Draw();                            // slot 4
-    virtual int GetRealHeight();                    // slot 5
-    virtual int GetRealWidth();                     // slot 6
+    virtual int GetRealHeight() const;                    // slot 5
+    virtual int GetRealWidth() const;                     // slot 6
     virtual void enable(unsigned char on);          // slot 9
     virtual void OnSetFocus();                      // slot 10
     virtual void OnKillFocus();                     // slot 11

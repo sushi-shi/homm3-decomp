@@ -6,9 +6,8 @@
 // bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
 // the CDPlay/CDPlayLobby/CAutoArray vtables and the cinit tail all place the
-// whole gap in dxplay.  Retail's function EMISSION order is NOT the DC source
-// order (the dxplay.h header-inline virtuals emit first), so claims below are
-// ordered by retail RVA, not by dc offset.
+// whole gap in dxplay. Header-inline virtuals retain their canonical bodies
+// and VA annotations in dxplay.h; ordinary definitions here follow retail RVA.
 //
 // The CDPlay (0x63dc28, 62 slots), CDPlayLobby (0x63dd20, 73 slots) and
 // CAutoArray<CDPlayAddressElement> (0x63de44, 7 slots) vtables read out of the
@@ -47,43 +46,6 @@ int __stdcall EnumPlayersCallback(unsigned long, unsigned long, const DPNAME*, u
 // process the first time any DirectPlay object is built.
 static unsigned char s_coInitialized = 0;
 
-// --- reconstructed bodies (compiled) - the three retail-lowest RVAs ---
-
-// E:\gamedcs\dxplay.h:371
-VA(0x00496c70, 0x21)  // anchor-vtable CDPlay slot30 +0x78, dc 0x8bee8
-void CDPlay::SetGuid(GUID guid)
-{
-    m_guid = guid;
-}
-
-// E:\gamedcs\dxplay.h:372
-VA(0x00496ca0, 0x4)  // anchor-vtable CDPlay slot31 +0x7c, dc 0x8bf04
-GUID* CDPlay::GetGuid()
-{
-    return &m_guid;
-}
-
-// E:\gamedcs\dxplay.h:403
-VA(0x00496cb0, 0x4)  // anchor-vtable CDPlay slot36 +0x90, dc 0x8bf0c
-unsigned char CDPlay::IsHost()
-{
-    return m_isHost;
-}
-
-
-// E:\gamedcs\dxplay.h:434
-VA(0x00496cc0, 0x5)  // anchor-vtable CDPlay slot42 +0xa8 (ReceiveMsg), dc 0x8bf14
-unsigned char CDPlay::ReceiveMsg(unsigned long from, unsigned long to, CDPlayMsg* pMsg)
-{
-    return 1;
-}
-
-// E:\gamedcs\dxplay.h:440
-VA(0x00496cd0, 0x5)  // anchor-vtable CDPlay slots44-54 ICF-folded (SysMsg* stub rep), dc 0x8bf18
-unsigned char CDPlay::SysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* pSysMsg, unsigned long toID)
-{
-    return 1;
-}
 
 // E:\gamedcs\dxplay.cpp:89
 VA_COMPGEN(0x00496ce0, 0x2F, SCALAR_DELETING_DTOR, CDPlay)
@@ -447,32 +409,9 @@ unsigned char CDPlay::FlushReceiveQueue()
 }
 
 #if 0  // @carcass: the active header-inline body emits this COMDAT
-VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
-void CDPlayMsg::~CDPlayMsg()
-{
-    Destroy();
-}
+// Canonical body and VA: include/dxplay.h.
 #endif
 
-inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
-{
-    if (lpSession) {
-        dwFlags = lpSession->dwFlags;
-        guidInstance = lpSession->guidInstance;
-        guidApp = lpSession->guidApplication;
-        maxPlayers = lpSession->dwMaxPlayers;
-        playerCount = lpSession->dwCurrentPlayers;
-        dwUser1 = lpSession->dwUser1;
-        dwUser2 = lpSession->dwUser2;
-        dwUser3 = lpSession->dwUser3;
-        dwUser4 = lpSession->dwUser4;
-        strcpy(sessionName, lpSession->lpszSessionNameA);
-        if (lpSession->lpszPasswordA)
-            strcpy(password, lpSession->lpszPasswordA);
-        else
-            password[0] = 0;
-    }
-}
 
 // E:\gamedcs\dxplay.cpp:605
 VA(0x004977c0, 0x144)  // anchor-vtable CDPlay slot60 (AddSessionEnum); ret 8, dc 0x8a7e0

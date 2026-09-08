@@ -71,15 +71,6 @@ void CSprite::SetPalette(const unsigned short* pal)
     p = new TPalette16(pal);
 }
 
-// DC emits this CSprite.h wrapper at 0x744e4. Complete expands it into
-// ResetPalette, retaining the source palette constructor's returned `this`.
-inline void CSprite::SetPalette(TPalette16& pal)
-{
-    if (p)
-        delete p;
-    p = new TPalette16(&pal);
-}
-
 // E:\gamedcs\csprite.cpp:220
 VA(0x0047bc00, 0xb8)  // anchor-global, dc 0x72538
 void CSprite::ResetPalette()
@@ -171,7 +162,7 @@ void CSprite::ColorCycle(int begin, int end, int step)
 VA(0x0047bcf0, 0x52)  // frame/palette forwarding body, dc 0x72664
 void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
-                   int dpitch, unsigned char hflip, unsigned char tblit)
+                   int dpitch, unsigned char hflip, unsigned char tblit) const
 {
     s[seqnum]->f[framenum]->Draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, tblit);
@@ -188,7 +179,7 @@ VA(0x0047bd60, 0x54)  // frame/palette forwarding body, dc 0x726f4
 void CSprite::DrawCreature(int seqnum, int framenum, int sx, int sy,
                            int sw, int sh, unsigned short* dst,
                            int dx, int dy, int dw, int dh, int dpitch,
-                           unsigned char hflip, unsigned short outcolor)
+                           unsigned char hflip, unsigned short outcolor) const
 {
     s[seqnum]->f[framenum]->DrawCreatureImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
@@ -199,7 +190,7 @@ void CSprite::DrawCreature(int seqnum, int framenum, int sx, int sy,
 VA(0x0047bdc0, 0x4c)  // sequence zero + adv-object implementation
 void CSprite::DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
-                         int dpitch, unsigned char hflip)
+                         int dpitch, unsigned char hflip) const
 {
     s[0]->f[framenum]->DrawAdvObjImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 0);
@@ -211,7 +202,7 @@ void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  int sh, unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch,
                                  unsigned short outcolor,
-                                 unsigned char hflip)
+                                 unsigned char hflip) const
 {
     s[0]->f[framenum]->DrawAdvObjImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, outcolor);
@@ -221,7 +212,7 @@ void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
 VA(0x0047be60, 0x4a)  // sequence zero + shadow implementation
 void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
-                               int dh, int dpitch, unsigned char hflip)
+                               int dh, int dpitch, unsigned char hflip) const
 {
     s[0]->f[framenum]->DrawAdvObjShadowImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip);
@@ -230,7 +221,7 @@ void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
 // E:\gamedcs\csprite.cpp:314
 VA(0x0047beb0, 0x4a)  // full-frame pointer draw through sequence zero
 void CSprite::DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
-                          int dw, int dh, int dpitch, unsigned char hflip)
+                          int dw, int dh, int dpitch, unsigned char hflip) const
 {
     CSpriteFrame* frame = s[0]->f[framenum];
     frame->Draw(0, 0, frame->Width, frame->Height,
@@ -241,7 +232,7 @@ void CSprite::DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
 VA(0x0047bf00, 0x4c)  // sequence zero + transparent draw forwarding
 void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
-                            int dh, int dpitch, unsigned char hflip)
+                            int dh, int dpitch, unsigned char hflip) const
 {
     s[0]->f[framenum]->Draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 1);
@@ -251,7 +242,7 @@ void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh,
 VA(0x0047bf50, 0x4e)  // sequence zero + tile forwarding
 void CSprite::DrawTile(int framenum, int sx, int sy, int sw, int sh,
                        unsigned short* dst, int dx, int dy, int dw, int dh,
-                       int dpitch, unsigned char hflip, unsigned char vflip)
+                       int dpitch, unsigned char hflip, unsigned char vflip) const
 {
     s[0]->f[framenum]->DrawTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, vflip);
@@ -262,7 +253,7 @@ VA(0x0047bfa0, 0x4e)  // sequence zero + tile-shadow forwarding
 void CSprite::DrawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
-                             unsigned char vflip)
+                             unsigned char vflip) const
 {
     s[0]->f[framenum]->DrawTileShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, vflip);
@@ -273,7 +264,7 @@ VA(0x0047bff0, 0x8b)  // paired tile + shadow calls on one selected frame
 void CSprite::DrawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
-                             unsigned char vflip)
+                             unsigned char vflip) const
 {
     TPalette16* pal = p;
     CSpriteFrame* frame = s[0]->f[framenum];
@@ -287,7 +278,7 @@ void CSprite::DrawShroudTile(int framenum, int sx, int sy, int sw, int sh,
 VA(0x0047c080, 0x50)  // selected sequence + adv-object implementation
 void CSprite::DrawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
-                       int dh, int dpitch, unsigned char hflip)
+                       int dh, int dpitch, unsigned char hflip) const
 {
     s[seqnum]->f[framenum]->DrawAdvObjImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 0);
@@ -298,7 +289,7 @@ VA(0x0047c0d0, 0x4e)  // selected sequence + shadow implementation
 void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int sw, int sh, unsigned short* dst,
                              int dx, int dy, int dw, int dh, int dpitch,
-                             unsigned char hflip)
+                             unsigned char hflip) const
 {
     s[seqnum]->f[framenum]->DrawAdvObjShadowImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip);
@@ -309,7 +300,7 @@ VA(0x0047c120, 0x50)  // selected sequence + hero-alpha implementation
 void CSprite::DrawHeroAlpha(int seqnum, int framenum, int sx, int sy,
                             int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
-                            unsigned char hflip)
+                            unsigned char hflip) const
 {
     s[seqnum]->f[framenum]->DrawAdvObjWithFlagAlpha(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, 0, hflip);
@@ -320,7 +311,7 @@ VA(0x0047c170, 0x52)  // selected sequence + spell-effect implementation
 void CSprite::DrawSpellEffect(int seqnum, int framenum, int sx, int sy,
                               int sw, int sh, unsigned short* dst,
                               int dx, int dy, int dw, int dh, int dpitch,
-                              unsigned char hflip, unsigned char alpha)
+                              unsigned char hflip, unsigned char alpha) const
 {
     s[seqnum]->f[framenum]->DrawSpellEffect(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, alpha);

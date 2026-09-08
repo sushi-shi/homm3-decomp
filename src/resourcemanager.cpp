@@ -177,11 +177,7 @@ int ResourceManager::t_lod_file_adapter::Read(void* data, int size)
 // identical COMDAT. The linker also folds CHeroWindowEx's default
 // OnWidgetDeselect onto the same five retail bytes; the compiled definition
 // remains in resourcemanager_file_adapter.h.
-VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
-int ResourceManager::t_stdio_file_adapter::Write(const void*, int)
-{
-    return 0;
-}
+// Canonical body and VA: include/resourcemanager_file_adapter.h.
 
 #endif  // @carcass
 
@@ -675,7 +671,8 @@ void ResourceManager::SaturateGraphics()
 // inverse. Pinning pop_back is the negative control (80.6210%). Vector and
 // pathname expression variants were flat or worse, so this is a bounded
 // A8/A9 inliner wall rather than missing archive behavior.
-VA(0x0055a250, 0x2F1)  // sole retail caller + dc name/two flag parameters
+// The flags arrive in ECX/EDX; ret 4 removes the added error-code pointer.
+VA(0x0055a250, 0x2F1)  // sole retail caller + two flags/error output, dc 0x12173c
 bool ResourceManager::Open(bool open_sprites, bool open_bitmaps, int* errorCode)
 {
     try {
@@ -1093,7 +1090,9 @@ Bitmap16Bit* ResourceManager::LoadBitmap16(const char* name)
 // type differ. The scoped lookup locals let C1 reuse their frame slots for
 // AddToCache's insertion pair, exactly as in GetSpreadsheet below. Restoring
 // that helper's std::pair conversion closes every member of the family.
-VA(0x0055afd0, 0x8A)  // dc public GetBitmap16 + retail getter-family identity
+// Complete removes ignore_cache: ECX supplies the name and the body always
+// performs the shared cache lookup before loading, then returns with ret.
+VA(0x0055afd0, 0x8A)  // dc public GetBitmap16 + retail getter family, dc 0x121c5c
 Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
 {
     {
@@ -1256,7 +1255,9 @@ TPalette16* ResourceManager::LoadPalette(const char* name)
     }
 }
 
-VA(0x0055b3e0, 0x8A)  // dc public GetPalette + retail getter-family identity
+// Like GetBitmap16, Complete always consults the cache and removes the
+// Dreamcast ignore_cache argument; the retained body ends with plain ret.
+VA(0x0055b3e0, 0x8A)  // dc public GetPalette + retail getter family, dc 0x121d90
 TPalette16* ResourceManager::GetPalette(const char* name)
 {
     {
@@ -1808,12 +1809,13 @@ int ResourceManager::GetBitmapResourceSize(const char* name)
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2141
-DC_ONLY(0x122530, 0x90)
-void ResourceManager::Dispose(resource* kill)
-{
-    // @stub
-}
+#endif  // @carcass
+
+// E:\gamedcs\resourcemanager.cpp:2141, dc 0x122530.
+// Complete routes disposal through the resource virtual method.
+void ResourceManager::Dispose(resource* value) { value->Dispose(); }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2196
 DC_ONLY(0x1225c0, 0x1C)
@@ -1822,19 +1824,19 @@ void ResourceManager::Dispose(sample* sam)
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2204
-DC_ONLY(0x1225dc, 0xF6)
-void ResourceManager::Dispose(CSprite* kill)
-{
-    // @stub
-}
+#endif  // @carcass
 
-// E:\gamedcs\resourcemanager.cpp:2280
-DC_ONLY(0x1226d4, 0x1D6)
+// E:\gamedcs\resourcemanager.cpp:2204, dc 0x1225dc.
+// Complete routes disposal through the resource virtual method.
+void ResourceManager::Dispose(CSprite* value) { value->Dispose(); }
+
+// E:\gamedcs\resourcemanager.cpp:2280, dc 0x1226d4.
+// Complete retains no work at the cache-sweep call sites.
 void ResourceManager::del_Spr_from_Cache()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2359
 DC_ONLY(0x1228ac, 0x7C)
@@ -2436,7 +2438,9 @@ TSoundHeaderDescriptor gSoundHeaderDescriptors[3];
 // 41 blocks / 655 bytes: retail proves the active sound-archive list, 48-byte
 // header stride, and positioned Win32 read independently of the cross-build
 // name.
-VA(0x0055c130, 0x28F)  // dc GetSoundFile + sole retail caller/record layout
+// ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
+// Win32 file read replaces Dreamcast's separate data/header outputs.
+VA(0x0055c130, 0x28F)  // dc GetSoundFile + caller/record layout, dc 0x1221fc
 bool ResourceManager::GetSoundFile(const char* localName,
                                    std::auto_ptr<char>& data,
                                    int* size)
@@ -2893,7 +2897,7 @@ int ResourceManager::GetBitmapResourceSize(const char* name)
 // Complete's sprite and bitmap readers share this one body. ECX is the LOD
 // receiver, EDX is the destination, and the sole stack argument is the byte
 // count; campaignbrief and mapcell independently exercise the two DC roles.
-VA(0x0055d0d0, 0x11)  // hd-crossbuild + caller-family merge
+VA(0x0055d0d0, 0x11)  // caller-family merge + explicit LOD receiver/ret 4, dc 0x1224cc
 int ResourceManager::ReadFromBitmapResource(LODFile* resource, void* data,
                                              int numBytes)
 {
@@ -2943,8 +2947,10 @@ void resource::Dispose()
     }
 }
 
-// CSprite's vtable fixes this as slot 1. Dreamcast supplies the override and
-// frame-walk semantics; retail proves that GetNumSeqs consumes resType and
+// CSprite's retail vtable fixes this Complete-only override as slot 1.
+// DC CSprite type 0x17d3 / fields 0x17d4 has no Dispose virtual; its
+// ResourceManager disposal functions supply the older frame-walk semantics.
+// Retail proves that GetNumSeqs consumes resType and
 // that every live frame is released before the base cache-removal path. The
 // complete 25-block / 280-byte body is exact, including the map/tree iterator
 // return boundary retained inside the inlined base disposal.

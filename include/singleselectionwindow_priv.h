@@ -32,12 +32,11 @@ namespace ResourceManager {
     // GetSprite 0x55c2e0 and GetBitmap816 0x55a800, both fastcall.
     CSprite* GetSprite(const char* name);
     Bitmap816* GetBitmap816(const char* name);
-    // Dreamcast keeps these source helpers out of line. Complete expands the
-    // one-operation bodies into the selection-window destructor; explicit
+    // The source helpers are defined in resourcemanager.cpp. Explicit
     // nullability remains at the HeroPix call site where retail tests it.
-    inline void Dispose(resource* value) { value->Dispose(); }
-    inline void Dispose(CSprite* value) { value->Dispose(); }
-    inline void del_Spr_from_Cache() {}
+    void Dispose(resource* value);
+    void Dispose(CSprite* value);
+    void del_Spr_from_Cache();
 }
 
 // misc.cpp's free-space probe (retail 0x50c7a0), declared file-locally
@@ -66,22 +65,7 @@ int __cdecl _close(int handle);
 int __cdecl _access(const char* path, int mode);
 }
 
-// The chat/duration/file-menu slider. DC gives it a `slider` base and a
-// SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
-// Both bodies read the slider base fields retail's slider.obj proves
-// (numStates +0x48, currentState +0x3c, oldState +0x38, knobPos +0x40,
-// knobRange +0x44). CChatSlider introduces no field either body reaches.
-class CChatSlider : public slider {
-public:
-    CChatSlider(int x, int y, int w, int h, int id, int num,
-                TSliderFunction func, EGraphics graphics, int page)
-        : slider(x, y, w, h, id, num, func, graphics, page, 0)
-    {
-    }
 
-    virtual void SetResolution(int num);  // slot 13
-    virtual void SetState(int state);     // slot 14
-};
 
 // The free remote.obj poll wrapper (0x554400), fastcall under /Gr; one arg.
 CNetMsg* GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed);
@@ -105,86 +89,11 @@ enum EWaitDialogCreatures {
     WAIT_CREATURE_ARCH_DEVIL = 0x37
 };
 
-class CHostWaitDlg : public CAnimatedDlg {
-public:
-    CHostWaitDlg()
-    {
-        m_pMsg = 0;
-        m_forWho = 0;
-    }
-    virtual int handle_message(message& msg);  // slot 3
 
-    // DC Wait takes the dpid alone; retail's two expansions differ only
-    // in the general-text row, so the text rides as a parameter here
-    // (provisional widening). Inline - both HandleNetMsg arms expand it,
-    // and the virtual Setup/DoModal calls stay virtual because they go
-    // through the inlined body's `this`.
-    void Wait(unsigned long forWho, const char* cText)
-    {
-        m_forWho = forWho;
-        SRand(GameTime::Get());
-        int creature;
-        do {
-            creature = Random(0, 111);
-        } while (creature == WAIT_CREATURE_ARCH_DEVIL
-                 || creature == WAIT_CREATURE_DEVIL);
-        Setup(cText, gpMediumFont,
-              akCreatureTypeTraits[creature].m_sprite_name, 0);
-        DoModal(0);
-    }
 
-    CNetMsg* m_pMsg;         // +0x78
-    unsigned long m_forWho;  // +0x7c
-};
 
-// The chat text widget. It snapshots the screen region under itself into a
-// CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
-// so Draw restores the background before repainting. m_save at +0x50; vtable
-// 0x241bdc overrides slot 4 (Draw vs the textWidget base).
-class CChatWidget : public textWidget {
-public:
-    class CChatSave : public Bitmap16Bit {
-    public:
-        unsigned char bSaved;  // +0x38
-        CChatSave(int w, int h) : Bitmap16Bit(w, h), bSaved(0) {}
-        unsigned char IsSaved() const { return bSaved; }
-    };
 
-    CChatWidget(int x, int y, int w, int h, const char* text,
-                const char* fontName, font::TColor color, int id,
-                unsigned justify, int backColor, int style)
-        : textWidget(x, y, w, h, text, fontName, color, id,
-                     justify, backColor, style)
-    {
-        m_save = new CChatSave(w, h);
-    }
 
-    virtual ~CChatWidget();
-    virtual void Draw();  // slot 4
-
-    CChatSave* m_save;  // +0x50
-};
-
-// The lobby chat-entry subtype. Dreamcast proves the class and its IgnoreKey
-// override; retail's constructor call proves it has no additional fields.
-class CSingleSelectionChatEdit : public CChatEdit {
-public:
-    CSingleSelectionChatEdit(
-        int x, int y, int w, int h, int textSize, const char* text,
-        const char* fontName, font::TColor color,
-        font::EJustify justification,
-        const char* backgroundIcon, int backgroundFrame, int id, int style,
-        int readType, int insetX, int insetY)
-        : CChatEdit(x, y, w, h, textSize, const_cast<char*>(text),
-                    const_cast<char*>(fontName), color, justification,
-                    const_cast<char*>(backgroundIcon), backgroundFrame, id,
-                    style, readType, insetX, insetY)
-    {
-    }
-
-    virtual void SendChat(const char* text, int toWho);
-    virtual unsigned char IgnoreKey(message* msg);
-};
 
 
 // Update (0x584550) remaps a campaign scenario's version icon from the
@@ -237,20 +146,7 @@ public:
     CScrollMsg(int map, int index);
 };
 
-class CSortMapsMsg : public CNetMsg {
-public:
-    int m_how;        // +0x14
-    int m_direction;  // +0x18
 
-    // SortMaps expands this ctor at its host-broadcast site (the
-    // CRequestHeroFaceReplyMsg pattern).
-    CSortMapsMsg(int how, int direction)
-        : CNetMsg(RS_SORT_MAPS, sizeof(CSortMapsMsg))
-    {
-        m_how = how;
-        m_direction = direction;
-    }
-};
 
 // The sort columns SortMaps' jump table dispatches (`how`), in the file
 // list's column order. Values are the RS_SORT_MAPS payload rungs.
@@ -420,62 +316,15 @@ public:
     CSetFilterMsg(int size);
 };
 
-class CRequestHeroFaceMsg : public CNetMsg {
-public:
-    int m_which;  // +0x14
 
-    CRequestHeroFaceMsg(int which)
-        : CNetMsg(RS_REQUEST_HERO_FACE, sizeof(CRequestHeroFaceMsg))
-    {
-        m_which = which;
-    }
-};
 
-class CRequestHeroFaceReplyMsg : public CNetMsg {
-public:
-    int m_pos;   // +0x14
-    int m_face;  // +0x18
 
-    CRequestHeroFaceReplyMsg(int pos, int face)
-        : CNetMsg(RS_REQUEST_HERO_FACE_REPLY,
-                  sizeof(CRequestHeroFaceReplyMsg))
-    {
-        m_pos = pos;
-        m_face = face;
-    }
-};
 
-class CSetAGRMsg : public CNetMsg {
-public:
-    int m_gamePos;  // +0x14
-    int m_agr;      // +0x18
 
-    CSetAGRMsg(int gamePos, int agr)
-        : CNetMsg(RS_SETAGR, sizeof(CSetAGRMsg))
-    {
-        m_gamePos = gamePos;
-        m_agr = agr;
-    }
-};
 
-class CHeaderConfirmMsg : public CNetMsg {
-public:
-    CHeaderConfirmMsg()
-        : CNetMsg(RS_HEADER_CONFIRM, 0x14)
-    {
-    }
-};
 
-// DC names this source-level launch message and its constructor. Complete
-// expands the base-only constructor at BeginSavedGame: subtype 0x415, size
-// 0x14, and no payload beyond CNetMsg.
-class CLaunchingGameMsg : public CNetMsg {
-public:
-    CLaunchingGameMsg()
-        : CNetMsg(RS_LAUNCHING_GAME, sizeof(CLaunchingGameMsg))
-    {
-    }
-};
+
+
 
 class CGameHeaderInfoEndMsg : public CNetMsg {
 public:
@@ -488,18 +337,7 @@ public:
     CClickMsg(int widgetId);
 };
 
-class CTownUpdateMsg : public CNetMsg {
-public:
-    int m_gamePos;  // +0x14
-    TTownType m_town;  // +0x18
 
-    CTownUpdateMsg(int gamePos, TTownType town)
-        : CNetMsg(RS_TOWN_UPDATE, sizeof(CTownUpdateMsg))
-    {
-        m_gamePos = gamePos;
-        m_town = town;
-    }
-};
 
 class CNewSetupInfoMsg : public CNetMsg {
 public:
@@ -511,54 +349,11 @@ public:
     CNewSetupInfoMsg(SGameSetupOptions* setup);
 };
 
-class CBadVersionMsg : public CNetMsg {
-public:
-    char m_version[20];   // +0x14
-    // Extent 80 byte-proven by OnGameHeaderInfoInitMsg's reply: the
-    // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
-    char m_errText[80];   // +0x28, format string
 
-    CBadVersionMsg()
-        : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
-    {
-    }
-};
 
-// DC's original 1024 header-transfer opener. CodeView proves the base
-// CGameHeaderInfoInitMsg(numMaps, loadGameMode, msgSize) boundary and the
-// derived CGameHeaderInfoInitMsgEx(version, numMaps, loadGameMode) boundary;
-// Complete retail expands both into CNewPlayerUpdateProc::Go. The receiver
-// independently proves the resulting count/mode/version layout and 0x30
-// extent. Keep these source boundaries even though VC6 /Ob2 erases them.
-class CGameHeaderInfoInitMsg : public CNetMsg {
-public:
-    unsigned long m_numMaps;   // +0x14
-    unsigned char m_netGame;   // +0x18
-    char pad_19[3];
 
-    CGameHeaderInfoInitMsg(unsigned long numMaps,
-                           unsigned char loadGameMode,
-                           unsigned long msgSize)
-        : CNetMsg(RS_GAME_HEADER_INFO_INIT, msgSize)
-    {
-        m_numMaps = numMaps;
-        m_netGame = loadGameMode;
-    }
-};
 
-class CGameHeaderInfoInitMsgEx : public CGameHeaderInfoInitMsg {
-public:
-    char m_version[20];        // +0x1c
 
-    CGameHeaderInfoInitMsgEx(const char* version, unsigned long numMaps,
-                             unsigned char loadGameMode)
-        : CGameHeaderInfoInitMsg(numMaps, loadGameMode,
-                                 sizeof(CGameHeaderInfoInitMsgEx))
-    {
-        memset(m_version, 0, sizeof(m_version));
-        strncpy(m_version, version, sizeof(m_version) - 1);
-    }
-};
 
 // The join announcement: the joining player's full CNetPlayerInfo
 // record plus a version string tail. OnNewPlayerMsg reads the record
@@ -580,7 +375,6 @@ class CNewMapHeaderInfoMsg : public t_complex_net_message {
 public:
     NewSMapHeader m_header;  // +0x18
 
-    CNewMapHeaderInfoMsg() {}
     CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader);
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
@@ -607,28 +401,7 @@ public:
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
-// The full-roster broadcast (DC ctor takes both player arrays); the
-// receiver reads the human records at +0x14 and the computer block at
-// +0x3f4.
-class CUpdatePlayerPosMsg : public CNetMsg {
-public:
-    CNetPlayerHandlerPlayer m_netPlayer[8];   // +0x014
-    CNetPlayerHandlerPlayer m_compPlayer[8];  // +0x3f4
 
-    // OnNewPlayerMsg's broadcast site proves the pair: sizeof is the
-    // 0x7d4 size dword. Retail also runs the CNetPlayerHandlerPlayer
-    // ctor (0x57c790) over both arrays - one inline loop, one ??_L
-    // vector-iterator call - which our POD record model cannot emit;
-    // that delta is OnNewPlayerMsg's documented residual.
-    CUpdatePlayerPosMsg()
-        : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
-    {
-    }
-
-    // E:\gamedcs\singleselectionwindow.cpp:717
-    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers,
-                        CNetPlayerHandlerPlayer* pCompPlayers);
-};
 
 // Dreamcast names the selected row's difficulty mirror `lastDiff`;
 // Complete retains it at .data 0x683454 (initial 1).
@@ -637,68 +410,13 @@ extern int lastDiff;
 // exact `saveHeader` identity at UpdateGameVars' BackupGameHeaders call.
 extern game* saveHeader;
 
-// The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
-// retail's inline expansion fixes every field offset. DC's ctor takes
-// (nbr, fileName, townType, fileTime); retail reads them all from the
-// header row plus the list-select flag. The filename parameter is char*
-// in DC procedure 0x147c78; preserving that mutability is byte-flat in both Ticks.
-class CMapFileNameMsg : public CNetMsg {
-public:
-    unsigned char m_flag;         // +0x14
-    char pad_15[3];
-    int m_number;                 // +0x18
-    char m_fileName[0x40];        // +0x1c
-    int m_townTypes[8];           // +0x5c
-    FILETIME m_fileTime;          // +0x7c
 
-    CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FILETIME fileTime)
-        : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
-    {
-        m_flag = flag;
-        m_number = number;
-        strncpy(m_fileName, fileName, 0x3c);
-        m_fileTime = fileTime;
-        memcpy(m_townTypes, townTypes, sizeof(m_townTypes));
-    }
-};
 
-class CReqHeaderConfirmMsg : public CNetMsg {
-public:
-    CReqHeaderConfirmMsg()
-        : CNetMsg(RS_REQ_HEADER_CONFIRM, 0x14)
-    {
-    }
-};
 
-class CNewHostMsg : public CNetMsg {
-public:
-    unsigned long m_dpidNewHost;  // +0x14
 
-    CNewHostMsg(unsigned long dpidNewHost)
-        : CNetMsg(RS_NEW_HOST, sizeof(CNewHostMsg))
-    {
-        m_dpidNewHost = dpidNewHost;
-    }
-};
 
-class CMapHeaderRequestMsg : public CNetMsg {
-public:
-    unsigned char m_flag;  // +0x14
-    char pad_15[3];
-    int m_number;          // +0x18
 
-    // Retail widened the DC (nbr) ctor with the list-select flag; both
-    // CheckMissingHeaders expansions fix the field order - and the
-    // STORE order: number lands before flag on every expansion (the
-    // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
-    CMapHeaderRequestMsg(unsigned char flag, int number)
-        : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
-    {
-        m_number = number;
-        m_flag = flag;
-    }
-};
+
 
 // Complete's retail-only 1083 opener for TransferHeaders. It is the compact
 // count-only sibling of DC's original 1024 message above.
@@ -770,13 +488,7 @@ public:
 // 87.0155% respectively (Finish's rejected wrong-boundary peak is 89.5855%).
 class CNewPlayerUpdateProc : public CNewPlayerUpdateTask {
 public:
-    CNewPlayerUpdateProc(unsigned long dpid)
-    {
-        m_dpid = dpid;
-        m_nextHeader = 0;
-        m_finished = 0;
-        m_lastSendTime = 0;
-    }
+    CNewPlayerUpdateProc(unsigned long dpid);
     virtual void Go();       // slot 0, 0x5789f0
     virtual void Tick();     // slot 1, 0x578a90
     virtual void Finish();   // slot 2, 0x5795a0
@@ -809,32 +521,11 @@ public:
 
     CNewPlayerUpdateMan();
 
-    // DC IsSendingHeaders; Complete expands it into each sort-button arm.
-    unsigned char IsSendingHeaders() const
-    {
-        for (int i = 0; i < 8; ++i)
-            if (m_procs[i])
-                return 1;
-        return 0;
-    }
+    unsigned char isSendingHeaders();
 
-    // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
-    int GetFirstAvailable()
-    {
-        for (int i = 0; i < 8; ++i)
-            if (m_procs[i] == 0)
-                return i;
-        return -1;
-    }
+    int getFirstAvailable();
 
-    // DC GetProc (protected there); the HeaderConfirmed body expands it.
-    CNewPlayerUpdateProc* GetProc(unsigned long dpid)
-    {
-        for (int i = 0; i < 8; ++i)
-            if (m_procs[i] && m_procs[i]->m_dpid == dpid)
-                return m_procs[i];
-        return 0;
-    }
+    CNewPlayerUpdateProc* getProc(unsigned long dpid);
 
     void Tick();
     void PlayerDropped(unsigned long dpid);  // retail 0x589480
@@ -864,47 +555,9 @@ public:
     lobby_message();
 };
 
-// The lobby player-name editor (one per name row, widget ids 353..360).
-// vtable 0x241c14 overrides slot 11 (OnKillFocus) and slot 15 (OnKeyPress);
-// both bodies expand the shared commit helper OnEnter, which DC keeps out
-// of line (dc 0x149238) and retail fully inlines - no retail row exists
-// for it, so its definition must be `inline` (cpp-local, this TU only).
-class CEnterNameEdit : public textEntryWidget {
-public:
-    CEnterNameEdit(int x, int y, int w, int h, int textSize,
-                   const char* text, const char* fontName,
-                   font::TColor color, unsigned justification,
-                   const char* backgroundIcon, int backgroundFrame, int id,
-                   int style, int readType, int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-    }
 
-    virtual void OnKillFocus();            // slot 11
-    virtual int OnKeyPress(message* msg);  // slot 15
-    int OnEnter();
-};
 
-// The save-filename editor. vtable 0x241c60 overrides slot 15 (OnKeyPress)
-// and slot 16 (IgnoreKey).
-class CSaveGameEdit : public textEntryWidget {
-public:
-    CSaveGameEdit(int x, int y, int w, int h, int textSize,
-                  const char* text, const char* fontName,
-                  font::TColor color, unsigned justification,
-                  const char* backgroundIcon, int backgroundFrame, int id,
-                  int style, int readType, int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-    }
 
-    virtual int OnKeyPress(message* msg);           // slot 15
-    virtual unsigned char IgnoreKey(message* msg);  // slot 16
-};
 
 // The persisted multiplayer nickname (prefs "Network Name").
 // multiplayerwindow.cpp owns the DATA claim at 0x698817; the name editors

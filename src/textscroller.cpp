@@ -21,17 +21,8 @@
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning max, declared file-locally for
-// the same reason textwdgt.cpp declares _cpp_min: the slider's state count
-// stores BOTH operands to stack temps and selects between their ADDRESSES
-// with two LEAs, which no value-returning spelling produces, and the TU
-// needs no other <algorithm> surface.
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // Slot 16 of the scroller's private slider vtable 0x642cc8 - the only
 // slot it overrides. Thirteen bytes, no frame: it reads the slider's own

@@ -4,6 +4,7 @@
 #include <va.h>
 #include <string.h>
 #include "textntry.h"
+#include "bitmap16.h"
 #include "bitmap816.h"
 #include "inputmgr.h"
 #include "kb.h"
@@ -13,17 +14,35 @@
 #include "window.h"
 #include "winmgr.h"
 
-// E:\gamedcs\textntry.cpp:44 (dc 0x163750). Inlined into
-// textEntryWidget::SaveBackground 0x5bba70, its only caller; `inline`
-// so no out-of-line body is emitted, which is what retail shows.
-inline void CTextEntrySave::Save(int saveX, int saveY)
-{
-    bSaved = 1;
-    Grab(gpWindowManager->screenBitmap->map, saveX, saveY,
-        gpWindowManager->screenBitmap->Width,
-        gpWindowManager->screenBitmap->Height,
-        gpWindowManager->screenBitmap->Pitch);
-}
+// The background snapshot textEntryWidget hangs off saveBack@0x54.
+// Retail keeps NO out-of-line body for any of it - every method is
+// inlined into its single textntry.cpp call site (SetAutoDraw 0x5bbac0
+// opens with `push 0x3c` and closes with the vtable store + the
+// `[+0x38]=0` flag; SaveBackground 0x5bba70 carries Save's `[+0x38]=1`
+// and Grab verbatim; Draw 0x5bb400 reads the flag inline). Extent
+// PROVEN 0x3c by that allocation size against Bitmap16Bit's 0x38;
+// vtable 0x642d8c = {0x557310, 0x55d0f0, 0x44e240}, its own scalar
+// deleting destructor over Bitmap16Bit's two inherited slots.
+//
+class CTextEntrySave : public Bitmap16Bit {
+public:
+    unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
+
+    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
+    CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
+    // Original: CTextEntrySave::Save; textntry.cpp:44, dc 0x163750.
+    void save(int saveX, int saveY)
+    {
+        m_saved = 1;
+        Grab(gpWindowManager->screenBitmap->map, saveX, saveY,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch);
+    }
+    // Original: CTextEntrySave::IsSaved; textntry.cpp:50, dc 0x16377c.
+    unsigned char isSaved() { return m_saved; }
+};
+
 
 #if 0  // @carcass
 
@@ -478,7 +497,7 @@ void textEntryWidget::Draw()
             gpWindowManager->screenBitmap,
             x + parentWindow->x, y + parentWindow->y, 0);
     } else if (saveBack) {
-        if (!saveBack->IsSaved())
+        if (!saveBack->isSaved())
             SaveBackground();
         else
             saveBack->Draw(0, 0, boxWidth, boxHeight,
@@ -609,7 +628,7 @@ VA(0x005bba70, 0x44)  // anchor-vtable slot 18, dc 0x163650
 void textEntryWidget::SaveBackground() const
 {
     if (saveBack)
-        saveBack->Save(x + parentWindow->x, y + parentWindow->y);
+        saveBack->save(x + parentWindow->x, y + parentWindow->y);
 }
 
 // E:\gamedcs\textntry.cpp:666 - the fs:[0] frame is the new-expression's

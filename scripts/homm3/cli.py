@@ -222,6 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     # REMAINDER positional (notably ``homm3 dreamcast --help``).  Dreamcast is
     # a complete nested CLI, so hand it its argv before the umbrella parser
     # gets a chance to consume or reject any of those options.
+    if argv and argv[0] == "source-ownership":
+        return run_module("homm3.match.source_ownership", *argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
 
@@ -268,6 +270,11 @@ def main(argv: list[str] | None = None) -> int:
                        "synth PDB -> vostok -> normalized targets "
                        "(homm3.build.delink)")
     p.set_defaults(fn=cmd_delink)
+
+    p = sub.add_parser("source-ownership", add_help=False,
+                       help="validate CodeView definition ownership and order")
+    p.add_argument("ownership_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=lambda args: run_module("homm3.match.source_ownership", *args.ownership_args))
 
     p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
     p.add_argument("status_args", nargs=argparse.REMAINDER)

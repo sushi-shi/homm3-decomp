@@ -102,8 +102,8 @@ public:
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
     // own extent, not the widget rect.
-    virtual int GetRealHeight();  // slot 5, retail 0x4eab30
-    virtual int GetRealWidth();   // slot 6, retail 0x4eab20
+    virtual int GetRealHeight() const;  // slot 5, retail 0x4eab30
+    virtual int GetRealWidth() const;   // slot 6, retail 0x4eab20
     // Slot 13 of 0x63ec48, i.e. a virtual iconWidget ADDS on top of
     // widget's twelve-plus-_vslot12 - not an override. That is what the
     // vtable widths say: button and type_func_button stop at 13 slots

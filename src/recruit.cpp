@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <xutility>
 #include <va.h>
+#include "includes.h"
 #include "armygrp.h"
 #include "artifact.h"
 #include "recruit.h"
@@ -57,15 +58,6 @@
 #include "misc.h"
 #include "viewarmywindow.h"
 
-// VC6's source max helper takes its operands by value and returns one of
-// their stack homes by reference. The animation clock below exposes that
-// exact lowering (two homes followed by a selected-pointer load).
-template <class _TYPE>
-inline const _TYPE& recruit_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-
 // recruit.cpp-owned rollover text pointers. Each has exactly one retail
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent
 // TRecruitWindow constructor initializes the dialog family that owns them.
@@ -111,30 +103,7 @@ void GetMonsterCost(int monId, int* resCost)
                              + CREATURE_RECORD_COST_DWORD + resource];
 }
 
-// E:\gamedcs\recruit.cpp:1082
-// Dreamcast keeps this source-visible helper out of line; Complete's VC6
-// build expands it at every recruitUnit call site and emits no standalone
-// body.  Raw NB11 names the sole surviving local `resCost`, while the body
-// calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::UpdateCost()
-{
-    int resCost[7];
-    GetMonsterCost(monsterType, resCost);
-    goldPerTroop = resCost[6];
 
-    int i;
-    for (i = 0; i < 6; i++) {
-        if (resCost[i] != 0)
-            break;
-    }
-    if (i < 6) {
-        altResource = i;
-        resourcesPerTroop = resCost[i];
-    } else {
-        altResource = -1;
-        resourcesPerTroop = 0;
-    }
-}
 
 // ---------------------------------------------------------------------
 // recruit.obj order map, recomputed 2026-08-08 from the carve rows in
@@ -679,13 +648,13 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 // TTextResource::operator[], GetArmyName and sprintf; UpdateCost in turn
 // owns a sole `resCost` array and calls GetMonsterCost. Retail independently
 // corroborates all three helper boundaries by expanding their bodies. Keeping
-// those source facts raises the current candidate from 88.2360% to 96.5558%
+// those source facts raised the candidate from 88.2360% to 96.5558%
 // and makes every instruction through the GetArmyName join exact.
 //
 // DC line 533 is one statement containing HasArtifact and the `1 - result`
 // store. Spelling that assignment directly (with no synthetic `owned` local)
 // is byte-flat at the current peak but restores the positive source shape.
-// Residual (96.5558%): the first mismatch is VC6 parking the repeated
+// Earlier residual (96.5558%): the first mismatch was VC6 parking the repeated
 // WIDGET_SET_TEXT value in ESI, while retail stores immediate 3 and reserves
 // ESI for the creature-trait base used by the following siege test. That
 // register-colouring choice shifts the switch/table and later statement
@@ -696,6 +665,14 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 // The earlier struct-view cost fetch, late message declaration and reversed
 // alt-resource polarity remain lower plateaus; none may replace the recovered
 // constructor/helper/local facts.
+// CodeView-order correction: UpdateCost belongs at recruit.cpp:1082, after
+// Main, rather than before the DC473/666/693 helper stream. Moving that body
+// changes this caller from 96.5558% to 94.1574%; its banked MAX is retained.
+// Verified /Z7 still attributes the expanded head to the UpdateCost call.
+// The first differing statement is BroadcastMessage(&msg), followed by the
+// siege branch/switch; the named external-call sequence still agrees. The
+// call-diff's lone mismatch is an internal target (+0x58c versus +0x584).
+// Keep the proven source order and helper boundary through this collateral.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::Update(unsigned char new_monster, long slot)
 {
@@ -935,7 +912,7 @@ exit_dialog:
                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            recruit_max(100L, elapsed);
+            max(100, elapsed);
 
         const TCreatureType mon_type[4] = {
             MonType1, MonType2, MonType3, MonType4
@@ -1161,18 +1138,30 @@ exit_dialog:
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\recruit.cpp:1082 - no retail body of its own; the inline
-// definition lives above, after GetMonsterCost, and every call site expands
-// the nested helper chain. See the note there.
-DC_ONLY(0x11ac7c, 0x88)
-void recruitUnit::UpdateCost()
+// E:\gamedcs\recruit.cpp:1082
+// Dreamcast keeps this source-visible helper out of line; Complete's VC6
+// build expands it at every recruitUnit call site and emits no standalone
+// body.  Raw NB11 names the sole surviving local `resCost`, while the body
+// calls the exact GetMonsterCost helper above before deriving the two costs.
+inline void recruitUnit::UpdateCost()
 {
-    // @stub
-}
+    int resCost[7];
+    GetMonsterCost(monsterType, resCost);
+    goldPerTroop = resCost[6];
 
-#endif  // @carcass
+    int i;
+    for (i = 0; i < 6; i++) {
+        if (resCost[i] != 0)
+            break;
+    }
+    if (i < 6) {
+        altResource = i;
+        resourcesPerTroop = resCost[i];
+    } else {
+        altResource = -1;
+        resourcesPerTroop = 0;
+    }
+}
 
 // E:\gamedcs\recruit.cpp:1120
 // `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and

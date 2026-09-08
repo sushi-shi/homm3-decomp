@@ -8,11 +8,6 @@
 #include <va.h>
 #include "game.h"
 
-inline unsigned char type_point::operator==(const type_point* arg)
-{
-    return arg->x == x && arg->y == y && arg->z == z;
-}
-
 static int get_team(game* thisGame, int playerNum)
 {
     if (playerNum < 0)
@@ -467,7 +462,7 @@ bool VictoryConditionStruct::CheckForDefeatedMonsterWin(
                     NewmapCell* cell =
                         gpGame->worldMap.cell(pos.x, pos.y, pos.z);
                     if (cell->is_trigger && cell->type == MONSTER) {
-                        if (!pos.operator==(&monster_loc))
+                        if (!pos.operator==(monster_loc))
                             return 0;
                     }
                 }
@@ -480,7 +475,7 @@ bool VictoryConditionStruct::CheckForDefeatedMonsterWin(
         && gpCurrentPlayer
         && !gpGame->playerDisabled[gNetLocalGamePos]) {
         type_point pos(MonsterX, MonsterY, MonsterZ);
-        if (monster_loc.operator==(&pos)) {
+        if (monster_loc.operator==(pos)) {
             playerWinner = thisHero->owner;
             GameWon = 1;
             return 1;
@@ -607,7 +602,7 @@ unsigned char VictoryConditionStruct::CheckForArtifactTransportWin(
     if (AppliesToComputer) {
 eligible:
         type_point target(TownX, TownY, TownZ);
-        if (!target.operator==(&town_loc))
+        if (!target.operator==(town_loc))
             return 0;
 
         if (const_cast<hero*>(thisHero)->HasArtifact(ArtifactNum)) {
@@ -856,8 +851,9 @@ unsigned char LossConditionStruct::HeroKilled(const hero* loser)
 // the canonical four-byte type_point before comparing via the inline
 // operator==. The memberwise x/y/z spelling scored 99.84 with the two point
 // locals on swapped stack slots; routing the compare through
-// lost.operator==(&target) (the IsGrailTarget idiom) makes target
-// address-taken and swaps the aggregates' frame homes to retail's - exact.
+// the former pointer overload made target address-taken and recovered the
+// retail frame homes. The canonical header operator now takes that same
+// target by const reference.
 // E:\gamedcs\victorylossconditions.cpp:498
 VA(0x005f2e40, 0xD9)  // anchor-bracket, dc 0x19074c
 unsigned char LossConditionStruct::CheckForDefeatedTownLoss(
@@ -868,7 +864,7 @@ unsigned char LossConditionStruct::CheckForDefeatedTownLoss(
         type_point lost(lost_town->mapX, lost_town->mapY,
                         lost_town->mapZ);
 
-        if (lost.operator==(&target)) {
+        if (lost.operator==(target)) {
             playerLoser = static_cast<signed char>(old_owner);
             GameLost = 1;
             return 1;

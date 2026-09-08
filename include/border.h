@@ -15,18 +15,7 @@ public:
     // Retail's 0x44ff10 constructor consumes six stack arguments and
     // forwards them to widget; DC's trailing focusable byte is absent.
     border(int x, int y, int w, int h, int id, int style);
-    // The default ctor has NO retail row of its own, and it is DC-attested
-    // (dc 0x5433c) and byte-corroborated from the other side too:
-    // coloredBorderFrame's retail constructor (0x450130) builds its border
-    // base by calling ??0widget@@QAE@XZ DIRECTLY, which is what an empty
-    // inline border::border() collapses to. Every derived ctor
-    // (0x450130 / 0x4502d0 / 0x450690) opens with a direct
-    // ??0widget@@QAE@XZ call and a SINGLE derived vtable store, i.e. the
-    // base default ctor was expanded in place and its ??_7border@@6B@
-    // store dead-store-eliminated. Header-inline is what reproduces that;
-    // DC emitted it out of line (dc 0x5433c) because the port compiled
-    // border.cpp without /Ob2.
-    border() {}
+    border();
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();             // slot 4
@@ -61,7 +50,7 @@ public:
 
     coloredBorderFrame(int x, int y, int w, int h, int id,
                        int color_, int style);
-    virtual ~coloredBorderFrame();  // retail 0x4501d0
+    // Implicit destructor; CodeView dc 0x54dd8 compgenx.
     virtual int Main(message* msg);  // slot 2, retail 0x450240
     virtual void Draw();             // slot 4, retail 0x4501e0
 };
@@ -84,8 +73,8 @@ public:
                  const char* image_, int style);
     virtual ~bitmapBorder();
     virtual void Draw();          // slot 4, retail 0x450450
-    virtual int GetRealHeight();  // slot 5, retail 0x4504b0
-    virtual int GetRealWidth();   // slot 6, retail 0x4504a0
+    virtual int GetRealHeight() const;  // slot 5, retail 0x4504b0
+    virtual int GetRealWidth() const;   // slot 6, retail 0x4504a0
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
     void SetImage(const char* bitmap_name);
     void SetPlayerPaletteColors(int whichPlayer);

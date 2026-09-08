@@ -42,13 +42,7 @@ static const int kCombatActionAttackWall = 9;
 static const int kCombatActionCastCreatureSpell = 10;
 static const int kCombatActionFirstAid = 11;
 
-// Dreamcast calls the later SRandom helper. Complete's retail relocation
-// instead targets the exact Random body, so keep the original source-visible
-// boundary as an adapter that /Ob2 folds before relocation emission.
-inline int SRandom(int lower, int upper)
-{
-    return Random(lower, upper);
-}
+
 
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
@@ -120,7 +114,7 @@ unsigned char combatManager::automate_catapult()
             }
         }
 
-        long choice = SRandom(1, count);
+        long choice = sRandom(1, count);
         long index = 0;
         for (; index < 4; index++) {
             long strength = get_wall_strength(walls[index]);
@@ -422,11 +416,7 @@ ai_move:
 // E:\gamedcs\remote.h:548. The active definition remains in netmsg.h: its
 // original header-inline null guard and DestroyMsg tail call make command.obj
 // emit the exact retained COMDAT. This carcass row is its RVA-order owner.
-VA(0x00474680, 0xC)  // exact selected header COMDAT, dc 0x70ad0
-void CMessageKill::~CMessageKill()
-{
-    // @stub - active definition is the netmsg.h class-body inline
-}
+// Canonical body and VA: include/netmsg.h.
 
 #endif  // @carcass
 
@@ -700,9 +690,10 @@ not_directable:
     return 1;
 }
 
+// E:\gamedcs\command.cpp:928, dc 0x6bebc.
 // Complete keeps the DC nullary source method as a 74-byte adapter and moves
 // the actual policy into the following one-argument overload. Exact.
-VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc source signature
+VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::is_computer_action()
 {
     if (static_cast<const combatManager*>(this)->IsQuickCombat())
@@ -710,15 +701,12 @@ unsigned char combatManager::is_computer_action()
     return is_computer_action(get_current_army());
 }
 
-// E:\gamedcs\command.cpp:928
-// NINE PARAMETERS' WORTH OF EVIDENCE IN ONE BYTE: `ret 4`. The DC
-// roster prints is_computer_action as nullary (one parameter, `this`),
-// but retail pops a stack argument, and every use of it identifies the
-// argument as the acting stack - +0x34 against the five war-machine
-// creature ids, +0x288/+0xf4 as the hypnotize/side pair set_moat
-// already spells the same way, and `mov ecx, arg; call 0x442690`,
-// army::get_owner. The DC port hoisted it to a member; retail passes
-// it.
+// Complete adds this one-argument policy overload. CodeView's full class
+// field lists (method types 0x4354, 0x4ca2 and 0x6700) declare only the
+// nullary method above; that DC body obtains its stack through
+// get_current_army before applying the policy. Retail retains both entries:
+// the adapter calls this worker at 0x474bf0, whose `ret 4` and reads at
+// stack offsets +0x34, +0x288 and +0xf4 prove the explicit army argument.
 //
 // THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
 // dwords this body reads land inside SUnnamed698758 (retail .bss
@@ -767,7 +755,7 @@ unsigned char combatManager::is_computer_action()
 // also what the hypnotize ternary below re-derives. objdiff scores relocs at
 // function_reloc_diffs=none, so the wrong callee cost no fuzzy and hid here;
 // the census is now clean and the residual really is the merged-return family.
-VA(0x00474bf0, 0x188)  // anchor-global, dc 0x6bebc
+VA(0x00474bf0, 0x188)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::is_computer_action(const army* current_army)
 {
     if (static_cast<const combatManager*>(this)->IsQuickCombat())

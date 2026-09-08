@@ -229,20 +229,7 @@ public:
     unsigned char town_garrison; // +0x0e
 };
 
-class type_record_player_death : public type_event_record {
-public:
-    static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
-    type_record_player_death() {}
 
-    // Retail replay sign-extends this serialized byte for both the player-name
-    // lookup and the dialog payload; the role is still unknown, but its
-    // signedness is byte-proven.
-    signed char extra;  // +0x08 - second serialized byte (role TBD)
-};
 
 // show_hero extends hide_hero with the replay and undo map locations followed
 // by the corresponding aboard-boat flags. Retail replay reads the first pair;
@@ -263,6 +250,21 @@ public:
     type_point previous_location; // +0x14 - restored by undo
     unsigned char on_boat;        // +0x18 - replay state
     unsigned char previous_boat;  // +0x19 - restored by undo
+};
+
+class type_record_player_death : public type_event_record {
+public:
+    static type_event_record* create();
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    type_record_player_death() {}
+
+    // Retail replay sign-extends this serialized byte for both the player-name
+    // lookup and the dialog payload; the role is still unknown, but its
+    // signedness is byte-proven.
+    signed char extra;  // +0x08 - second serialized byte (role TBD)
 };
 
 class type_record_shroud : public type_event_record {

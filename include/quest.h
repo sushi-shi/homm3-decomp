@@ -16,10 +16,8 @@
 // quest-type enumeration - level, primary skills, defeat hero, defeat
 // monster, artifacts, creatures, resources, be hero, belong to player.
 //
-// This is deliberately NOT in seerhut.h: that header reaches game.h,
-// advmgr.h and mapcell.h and therefore most of the tree, and adding ten
-// class definitions to that include closure is exactly the perturbation the
-// include-set residual class warns about. seerhut.cpp is the only consumer.
+// SeerHut.h's canonical QuestActiveforPlayer body calls this interface, so
+// that header includes the complete quest type as well as its own layouts.
 #ifndef HOMM3_QUEST_H
 #define HOMM3_QUEST_H
 
@@ -31,6 +29,7 @@
 // closure: hero.h, which seerhut.cpp already includes ahead of this header,
 // includes armygrp.h itself.
 #include "armygrp.h"
+#include "artifact.h"  // TArtifact, used by the artifact-quest vector below
 
 class hero;
 

@@ -6,33 +6,12 @@
 #define HOMM3_TEXTNTRY_H
 
 #include "textwdgt.h"
-#include "bitmap16.h"
 
 class Bitmap816;
 
-// The background snapshot textEntryWidget hangs off saveBack@0x54.
-// Retail keeps NO out-of-line body for any of it - every method is
-// inlined into its single textntry.cpp call site (SetAutoDraw 0x5bbac0
-// opens with `push 0x3c` and closes with the vtable store + the
-// `[+0x38]=0` flag; SaveBackground 0x5bba70 carries Save's `[+0x38]=1`
-// and Grab verbatim; Draw 0x5bb400 reads the flag inline). Extent
-// PROVEN 0x3c by that allocation size against Bitmap16Bit's 0x38;
-// vtable 0x642d8c = {0x557310, 0x55d0f0, 0x44e240}, its own scalar
-// deleting destructor over Bitmap16Bit's two inherited slots.
-//
-// Save's body needs gpWindowManager, which this header must not pull
-// in, so it is defined `inline` at the top of textntry.cpp.
-class CTextEntrySave : public Bitmap16Bit {
-public:
-    unsigned char bSaved;  // +0x38
+// The snapshot implementation is local to textntry.cpp.
+class CTextEntrySave;
 
-    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
-    CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { bSaved = 0; }
-    // E:\gamedcs\textntry.cpp:44 (dc 0x163750)
-    void Save(int saveX, int saveY);
-    // E:\gamedcs\textntry.cpp:50 (dc 0x16377c)
-    unsigned char IsSaved() const { return bSaved; }
-};
 
 // textEntryWidget derives from textWidget in retail (the dtor calls
 // ~textWidget as its base) - Dreamcast agrees. Vtable 0x642d40, 19

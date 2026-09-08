@@ -1990,13 +1990,12 @@ void SCampaign::DoPreLoadCustomization()
 // its starting hero from the scenario's options record, and starts the
 // map out of a gzip-inflating view of the campaign stream. game::NewMap
 // receives this scenario as its campaign context.
-// The starting-hero option's own constructor. It is the ONE of the three
-// options retail keeps out of line: its vector's default constructor is
-// expanded here (three zero stores plus the allocator byte), which makes the
-// inherited base vptr store dead and lets it fall away - the two sibling
-// options keep theirs because the vector constructor is a call at their
-// (inlined) construction sites.
-VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm), retail-only
+// ScenarioStruct::Read's type-3 arm calls this 33-byte constructor in
+// retail. An implicit-constructor probe removed the standalone VC6 body
+// altogether and left the retained claim unpaired; the prior exact written
+// form preserves the call boundary. This Complete-only class has no DC
+// constructor to prove a different source form (config/win_only.tsv).
+VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm)
 TCampaignStartHeroOption::TCampaignStartHeroOption()
 {
 }
@@ -2558,23 +2557,7 @@ void TCampaignBrief::CampaignHeaderStruct::StartScenario(
     scenarios[which]->StartScenario(stream, option);
 }
 
-// E:\gamedcs\CustomCampaign.h:199 (dc 0xbcd90, a Dreamcast header inline
-// attributed to game.obj); retail keeps one out-of-line copy here, which
-// TCampaignWindow's constructor calls for its `SCampaign()` temporary.
-// The five containers default-construct; the body sets the scalar state
-// and clears the completion table.
-VA(0x00489500, 0x88)  // TCampaignWindow ctor callee + member stores, dc 0xbcd90
-SCampaign::SCampaign()
-{
-    isCheater = 0;
-    secretActive = 0;
-    currentMap = -1;
-    numMapRegions = -1;
-    briefingChoice = -1;
-    crossoverArrayIndex = -1;
-    currentCampaign = CAMPAIGN_NONE;
-    memset(campaignCompleted, 0, sizeof(campaignCompleted));
-}
+
 
 // Complete-only. The custom-campaign window's accept arm hands the chosen
 // ordinal and its .h3c name here: the running campaign is reset to the new
@@ -2600,17 +2583,7 @@ void SCampaign::select_campaign(int campaignIndex, const char* filename)
         mapScores.push_back(blank);
 }
 
-// E:\gamedcs\CustomCampaign.h:212 (dc 0xe6ef8, attributed to kb.obj in the
-// Dreamcast build); retail's copy sits here.
-VA(0x004897d0, 0x43)  // mapScores walk on the 0x14 stride, dc 0xe6ef8
-unsigned char SCampaign::CampaignComplete()
-{
-    for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (!mapScores[i].completed)
-            return 0;
-    }
-    return 1;
-}
+
 
 // The campaign and map ordinals retail's end-of-map bookkeeping compares
 // against literally; the same spelling kb.cpp uses for oldmain's own pair.
@@ -2763,7 +2736,7 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     field_4c[crossoverArrayIndex].clear();
 
-    if (CampaignComplete()) {
+    if (campaignComplete()) {
         campaignCompleted[currentCampaign] = 1;
         if (currentCampaign >= CAMPAIGN_ORDINAL_07
             && currentCampaign < CAMPAIGN_ORDINAL_13 && !isCheater) {
@@ -2888,12 +2861,12 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
             type_artifact artifact;
             int slot;
             for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-                artifact = *sourceHero.get_artifact(slot);
+                artifact = sourceHero.get_artifact(TArtifactSlot(slot));
                 if (artifact.artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }
             for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
-                artifact = *sourceHero.get_backpack(slot);
+                artifact = sourceHero.get_backpack(slot);
                 if (artifact.artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }

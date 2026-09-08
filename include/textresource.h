@@ -299,6 +299,36 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5 = 763
 };
 
+// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
+// the text pointer vector begins at +0x1c and its Dinkumware _First
+// member is loaded from +0x20. This is the same retail vector layout as
+// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
+// +0x2c position follows the adjacent vector/data members used by both
+// text-resource variants.
+class TTextResource : public resource {
+public:
+    typedef std::vector<char*> TTextArray;
+
+    TTextResource();
+    TTextResource(const char* name, int size, const char* data);
+    virtual ~TTextResource();
+
+    virtual unsigned int GetSize() const;
+    // E:\gamedcs\TextResource.h:66
+    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
+    const char* GetText(int r) const { return Text[r]; }
+    // E:\gamedcs\TextResource.h:73
+    const char* operator[](int i) const { return GetText(i); }
+
+public:
+    // Canonical backing vector. Public while the decompilation still has
+    // direct retail consumers; this replaces the former fake +0x20 view.
+    TTextArray Text;  // +0x1c (_First +0x20)
+private:
+    char* Data;       // +0x2c
+};
+SIZE(TTextResource, 48);
+
 // PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
 // Spreadsheet row vector sits at +0x1c on the resource base - VC6
 // Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
@@ -328,35 +358,6 @@ private:
     int DataSize;        // +0x30, retail constructor stores size here
 };
 SIZE(TSpreadsheetResource, 52);
-
-// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
-// the text pointer vector begins at +0x1c and its Dinkumware _First
-// member is loaded from +0x20. This is the same retail vector layout as
-// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
-// +0x2c position follows the adjacent vector/data members used by both
-// text-resource variants.
-class TTextResource : public resource {
-public:
-    typedef std::vector<char*> TTextArray;
-
-    TTextResource();
-    TTextResource(const char* name, int size, const char* data);
-    virtual ~TTextResource();
-
-    virtual unsigned int GetSize() const;
-    // E:\gamedcs\TextResource.h:66
-    const char* GetText(int r) const { return Text[r]; }
-    // E:\gamedcs\TextResource.h:73
-    const char* operator[](int i) const { return GetText(i); }
-
-public:
-    // Canonical backing vector. Public while the decompilation still has
-    // direct retail consumers; this replaces the former fake +0x20 view.
-    TTextArray Text;  // +0x1c (_First +0x20)
-private:
-    char* Data;       // +0x2c
-};
-SIZE(TTextResource, 48);
 
 extern TTextResource* gpGeneralText;  // retail .data 0x6a5d5c
 

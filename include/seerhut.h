@@ -5,8 +5,11 @@
 #include <string>
 #include <vector>
 #include <va.h>
+#include "quest.h"
 
-class type_quest;
+// Original: InitializeSeerHutText; seerhut.cpp:50, dc 0x12cd28.
+unsigned char initializeSeerHutText();
+
 class TAdventureMapWindow;
 class hero;
 class NewmapCell;
@@ -177,7 +180,38 @@ public:
     signed char NameIndex;
     unsigned char field_12;
 
-    TSeerHut();
+    // Original: TSeerHut::TSeerHut; SeerHut.h:108, dc 0xf4b38.
+    VA(0x00573580, 0x13)
+    TSeerHut()
+        : TQuestGuard(0), reward()
+    {
+        quest = 0;
+        visitedPlayers = 0;
+        NameIndex = 0;
+        field_12 = 0;
+    }
+
+    // Original: TSeerHut::QuestActiveforPlayer; SeerHut.h:112, dc 0x3250.
+    // Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
+    // helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
+    // Complete's virtual quest model replaces the latter byte with a live quest
+    // and a non-empty quest-log line, but retail keeps the same final visited-bit
+    // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
+    // forms a named quest_text_row pointer for SeerHutList, while the exact
+    // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
+    unsigned char QuestActiveforPlayer(
+        const unsigned char playerNum) const
+    {
+        type_quest* thisQuest = quest;
+        if (!thisQuest)
+            return 0;
+
+        const std::string* questTexts = thisQuest->quest_text_row()
+            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->quest_type();
+        return questTexts[type_quest::QUEST_TEXT_LOG].length()
+            && (visitedPlayers & (1 << playerNum))
+            && quest;
+    }
     // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
     const char* GetName() const
@@ -220,10 +254,7 @@ public:
     // same way from NewfullMap::Save. Declared separately because the
     // TQuestGuard base is private here.
     int save(TAbstractFile* outfile);
-    // Dreamcast names this source boundary on TSeerHut.  Complete's quest
-    // log applies the same predicate to both of its quest pools.
-    unsigned char QuestActiveforPlayer(
-        const unsigned char playerNum) const;
+
 };
 SIZE(TSeerHut, 0x13);
 

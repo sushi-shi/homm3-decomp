@@ -7,11 +7,14 @@
 
 #include <string>
 #include <vector>
+#include "includes.h"
 
 // Live prototypes (claimed misc.cpp bodies).
 int SafeRandom(int min, int max);   // 0x50b1d0
 int Random(int min, int max);       // 0x50b230
 void SRand(int iSeed);              // 0x50c5f0
+// Original SRandom, defined once in misc.cpp (DC source line 796).
+int sRandom(int lower, int upper);
 void CheckConfigFile();             // 0x50b260
 void SetGameDefaults();             // 0x50b4d0
 void SetDefaultSystemOptions();     // inlined away - no retail body
@@ -43,38 +46,6 @@ enum ECDDriveNumber {
 extern char gcRegAppPath[351];       // .bss 0x6985c4
 extern char gcRegCDRomPath[350];     // .bss 0x698838
 extern int giShowIntro;              // .bss 0x6993c0
-
-// The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
-// VC6 generic vector<unsigned char> representation at +8: allocator
-// byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
-// vector<bool>, a platform-library divergence rather than x86 evidence.
-class TPickANumber {
-public:
-    int low;
-    int count;
-    std::vector<unsigned char> marks;
-
-    TPickANumber(int lowBound, int high);
-    // The destructor remains implicit. Dreamcast records the owner boundary
-    // at includes.h:134, while Complete emits the named VC6 public selected
-    // by cmbtmgr.obj and folds the vector<unsigned char> teardown into it.
-    int Pick();
-};
-
-// Dreamcast's named game.cpp wrapper over TPickANumber. Complete keeps no
-// extra state: its compiler-generated default constructor passes [0, 15] to
-// the base and its Reset body is fully inlined into ProcessOnMapTowns.
-class TPickRandomTownName : public TPickANumber {
-public:
-    TPickRandomTownName() : TPickANumber(0, 15) {}
-
-    void Reset()
-    {
-        for (int i = 0; i < marks.size(); ++i)
-            marks[i] = 1;
-        count = marks.size();
-    }
-};
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:41, dc 0xfd81c) int SafeRandom(int min, int max);

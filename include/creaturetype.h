@@ -15,7 +15,10 @@ TCreatureType UpgradedCreatureType(TCreatureType type);
 // GetArmyName's retail range guard proves the inclusive upper bound.
 const int CREATURE_TYPE_LAST = 0x96;
 
-// E:\gamedcs\CreatureType.h:296
+// E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
+// events.cpp also expands this at monsters_flee/join/sell_out, passing a
+// literal count so each singular/plural selection folds at its call site.
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
 inline const char* GetArmyName(int type, int count)
 {
     if (type < 0 || type > CREATURE_TYPE_LAST) {

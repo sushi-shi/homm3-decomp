@@ -7,22 +7,6 @@
 
 #include "sskilltraits.h"
 
-namespace {
-
-// Source-private owner used by all three retail trait-table loaders.
-class TAutoStrPtr {
-public:
-    TAutoStrPtr() : pStr(0) {}
-    ~TAutoStrPtr() { delete[] pStr; }
-    void set(char* value) { pStr = value; }
-    char* get() const { return pStr; }
-
-private:
-    char* pStr;
-};
-
-}
-
 unsigned char InitializeHeroTraitsTable();
 unsigned char InitializeHeroClassTraitsTable();
 unsigned char InitializeSSkillTraitsTable();

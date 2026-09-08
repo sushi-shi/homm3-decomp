@@ -45,6 +45,7 @@
 #include <stdlib.h>
 
 #include <va.h>
+#include "DC_precompiledheaders.h"  // canonical reference selectors
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
@@ -1259,44 +1260,13 @@ inline unsigned char combatManager::IsQuickCombat()
     return gCombatQuickMode69877c != 0;
 }
 
-// ai_tactical.cpp's byte-proven three-operand selector, spelled locally
-// for the same reason MaxOf below is: retail homes the rating and BOTH
-// bounds and picks between their addresses, which only a const-
-// reference-in / const-reference-out select produces. The (_V, _Hi, _Lo)
-// argument order is byte-proven there and again here - both morale
-// bodies materialise the high bound before the low one.
-template <class _TYPE>
-inline const _TYPE& _cpp_clamp(_TYPE _V, _TYPE _Hi, _TYPE _Lo)
-{
-    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
-}
-
-// army::GetName (0x440100) as retail's cmbtmgr.cpp saw it - the DC
-// roster puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline
-// this TU could expand, and both morale bodies do expand it rather than
-// call 0x440100. Spelled file-locally so our CL has a body to expand
-// too; static with no surviving reference, so no slot is expected.
-static const char* CreatureName(int type, long count)
-{
-    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
-        if (count == 1)
-            return akCreatureTypeTraits[type].m_name;
-        return akCreatureTypeTraits[type].m_plural_name;
-    }
-    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
-    // literal; the linker folds our COMDAT onto it, so the only delta is
-    // a reloc NAME (masked).
-    return "";
-}
-
 // E:\gamedcs\cmbtmgr.cpp:2035
 // EXACT 2026-08-20. Three shapes are forced: the two attribute tests go
 // through army::Is (one CSE'd container load, `shr`+`test cl,1` per
 // bit) - an `& (1 << n)` spelling folds both into a single `test dword
 // ptr, imm` and loses seven bytes; the quick-combat gate is INLINE, so
 // this body has to sit after the inline IsQuickCombat definition above;
-// and army::GetName is expanded from the file-local CreatureName copy
-// because retail's Army.h carried that body where our army.cpp does not.
+// and the creature-name lookup uses CreatureType.h's canonical helper.
 VA(0x00464920, 0x211)  // anchor-global, dc 0x5f2b0
 void combatManager::CheckApplyGoodMorale(int group, int index)
 {
@@ -1321,7 +1291,7 @@ void combatManager::CheckApplyGoodMorale(int group, int index)
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         SpellEffect(20, stack, 100, 0);
         sprintf(gText, gpGeneralText->GetText(GENERAL_TEXT_GOOD_MORALE),
-            CreatureName(stack->creatureType, stack->numTroops));
+            GetArmyName(stack->creatureType, stack->numTroops));
         combatWindow->combat_message(gText, 1, 0);
         WaitEndSample(sample, -1);
     }
@@ -1340,7 +1310,7 @@ void combatManager::CheckApplyGoodMorale(int group, int index)
 // that reaches it (D6, retail-side duplication), and the shape is NOT
 // source-addressable here: retail itself emits our merged form in
 // CheckApplyGoodMorale above, where the selector wins a register instead
-// of a frame slot, from the identical _cpp_clamp call. Tried and
+// of a frame slot in the former local clamp experiment. Tried and
 // rejected: flipping the inner ternary to (_V < _Hi ? _V : _Hi), which
 // leaves this body at 97.72 and drops CheckApplyGoodMorale to 99.53;
 // early-return guards instead of the nested-if shape (72.80 - retail
@@ -1358,7 +1328,7 @@ int combatManager::CheckApplyBadMorale(int group, int index)
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(gText,
                         gpGeneralText->GetText(GENERAL_TEXT_BAD_MORALE),
-                        CreatureName(stack->creatureType, stack->numTroops));
+                        GetArmyName(stack->creatureType, stack->numTroops));
                     combatWindow->combat_message(gText, 1, 0);
                     SpellEffect(30, stack, 100, 1);
                     WaitEndSample(sample, -1);
@@ -1418,8 +1388,8 @@ unsigned char combatManager::Unnamed464d40(army* selected)
             0x0066ff88, fearSampleName, "Fear.wav"));
         sprintf(gText,
                 gpGeneralText->GetText(GENERAL_TEXT_COMBAT_FEAR),
-                CreatureName(CREATURE_AZURE_DRAGON, azureDragons),
-                CreatureName(selected->creatureType, selected->numTroops));
+                GetArmyName(CREATURE_AZURE_DRAGON, azureDragons),
+                GetArmyName(selected->creatureType, selected->numTroops));
         combatWindow->combat_message(gText, 1, 0);
         SpellEffect(15, selected, 100, 1);
         WaitEndSample(sample, -1);
@@ -2188,7 +2158,7 @@ unsigned char combatManager::place_obstacle(int obstacle_id)
     TPickANumber picker(0x12, 0xa8);
     int hex;
     while (1) {
-        hex = picker.Pick();
+        hex = picker.pick();
         if (hex < 0x12)
 #pragma inline_depth(0)
             return 0;
@@ -2600,12 +2570,12 @@ void combatManager::SetupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstacle_picker(0, 90);
     while (placed < budget) {
-        int obstacle_id = obstacle_picker.Pick();
+        int obstacle_id = obstacle_picker.pick();
         while (obstacle_id >= 0
                && !(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
                && !(ObstacleInfo[obstacle_id].special_terrain_mask
                     & special_terrain_mask))
-            obstacle_id = obstacle_picker.Pick();
+            obstacle_id = obstacle_picker.pick();
         if (obstacle_id < 0)
             break;
         if (place_obstacle(obstacle_id))
@@ -2625,13 +2595,13 @@ int combatManager::PlaceLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    int obstacleId = picker.Pick();
+    int obstacleId = picker.pick();
     while (obstacleId >= 0) {
         if ((terrainMask & gLargeObstacleTerrainMasks[obstacleId * 34])
                 || (magicTerrainMask
                     & gLargeObstacleMagicTerrainMasks[obstacleId * 34]))
             goto found;
-        obstacleId = picker.Pick();
+        obstacleId = picker.pick();
     }
     return 0;
 
@@ -2697,7 +2667,7 @@ void combatManager::PlaceAllObstacles()
     for (;;) {
         int obstacle_id;
         do {
-            obstacle_id = picker.Pick();
+            obstacle_id = picker.pick();
             if (obstacle_id < 0)
                 break;
         } while (!(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
@@ -2988,16 +2958,13 @@ void combatManager::RaiseDoor()
     WaitEndSample(sample, -1);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:3426
-DC_ONLY(0x610e0, 0x7E)
+// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
+// Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
+// TeleportTo and ProcessNextAction retain this forwarding source boundary.
 void combatManager::TestRaiseDoor()
 {
-    // @stub
+    RaiseDoor();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3459
 VA(0x00467460, 0x22)  // anchor-global, dc 0x61160
@@ -3773,22 +3740,9 @@ void combatManager::ViewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
-// homes both operands to the frame, selects an ADDRESS with lea/lea and
-// dereferences it - which is what a const-reference-in, const-reference-
-// out select inlines to and what neither a by-value helper nor an
-// inline ternary produces (both enregister; 93.3%). VC6's own
-// <algorithm> does not export `max` into namespace std, so the template
-// is written out here rather than included.
-//
-// MOVED AHEAD OF PowEffect 2026-08-20: that body performs seven of these
-// selects and a static has to be defined before its first use. get_distance,
-// the other consumer, is measured after every move.
-static const long& MaxOf(const long& x, const long& y)
-{
-    return x < y ? y : x;
-}
-
+// PowEffect's prior local selector probe homed both operands and selected
+// their addresses; a by-value helper or inline ternary measured 93.3%.
+// The canonical _cpp_max reference selector now owns that shared body.
 // E:\gamedcs\cmbtmgr.cpp:4158
 // The whole combat animation frame pump: one spell effect's worth of
 // attack, wince, death and defend sequences played across every stack
@@ -3802,7 +3756,7 @@ static const long& MaxOf(const long& x, const long& y)
 // samples, the third gates the wind-down loop.
 //
 // Shapes worth keeping:
-//   * the frame budget is four chained MaxOf selects ending on
+//   * the frame budget is four chained maximum selects ending on
 //     `wince + attack - 1`, which retail forms with one
 //     `lea eax,[esi+edi-1]`;
 //   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
@@ -3900,20 +3854,20 @@ void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
             for (slot = 0; slot < numArmies[side]; slot++) {
                 army& stack = armies[side][slot];
                 if (stack.bShowAttackFrames)
-                    attack_frames = MaxOf(attack_frames,
+                    attack_frames = _cpp_max<long>(attack_frames,
                         stack.stdIcon->GetNumFrames(
                             stack.iShowAttackFrameType));
                 else if (stack.bAllUnitsKilled)
-                    wince_frames = MaxOf(wince_frames,
+                    wince_frames = _cpp_max<long>(wince_frames,
                         stack.stdIcon->GetNumFrames(cs_death));
                 else if (stack.bSomeUnitsDamaged)
-                    wince_frames = MaxOf(wince_frames,
+                    wince_frames = _cpp_max<long>(wince_frames,
                         stack.stdIcon->GetNumFrames(cs_wince));
             }
         }
-        numFrames = MaxOf(numFrames, wince_frames);
-        numFrames = MaxOf(numFrames, attack_frames);
-        numFrames = MaxOf(numFrames, wince_frames + attack_frames - 1);
+        numFrames = _cpp_max<long>(numFrames, wince_frames);
+        numFrames = _cpp_max<long>(numFrames, attack_frames);
+        numFrames = _cpp_max<long>(numFrames, wince_frames + attack_frames - 1);
 
         if (bResetLimitCreature)
             ResetLimitCreature();
@@ -4181,7 +4135,7 @@ long combatManager::get_distance(long start, long stop)
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
-        return MaxOf(abs(a), abs(b));
+        return _cpp_max<long>(abs(a), abs(b));
     return abs(a) + abs(b);
 }
 
@@ -5516,7 +5470,7 @@ VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
 // of them) and guards the subtraction with `begin == 0`, which is the
 // header's own `begin == 0 ? 0 : end - begin` and nothing else in the image.
 // The 24-byte element stride of the reciprocal divide is TObstacle's.
-VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
+// Canonical body and VA: include/cmbtmgr.h.
 
 // COMDAT pairing: combatManager::TObstacleVector::_Ufill, the sibling of the
 // already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.

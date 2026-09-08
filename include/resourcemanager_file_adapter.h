@@ -18,6 +18,7 @@ public:
     explicit t_stdio_file_adapter(FILE* value) : file(value) {}
 
     virtual int Read(void* data, int size);
+    VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
     virtual int Write(const void*, int) { return 0; }
 
     FILE* file;

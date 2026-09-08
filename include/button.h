@@ -78,6 +78,11 @@ public:
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
     void SetText(const char* new_text) { Text = new_text; }
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    void set_disabled_frame(long frame) { disabled_frame = frame; }
     // The pointer local is load-bearing, and every caller's whole
     // register allocation hangs off it. Retail materialises the inlined
     // `this` for the insert BEFORE the const-ref argument temp - `lea
@@ -93,6 +98,7 @@ public:
     // ??0TPuzzleWindow 98.64% -> 100%, create_ok_widget 98.66% -> 100%,
     // ??0TAdventureOptionsWindow 89.57% -> 95.12%, create_dismiss_widget
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
+    VA(0x004e1370, 0x1AF)
     void set_hotkey(int code)
     {
         // Dreamcast button.h:105 is a single vector<int>::push_back call.
@@ -100,11 +106,6 @@ public:
         // in the exact SetSleepImage and marketplace-caller expansions.
         hotKeyCodes.push_back(code);
     }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
-    void set_disabled_frame(long frame) { disabled_frame = frame; }
     // Complete-only, like field_40 itself (the hover/highlight frame,
     // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
     // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion

@@ -8,6 +8,7 @@
 #include <string>
 #include <va.h>
 #include "armygrp.h"
+#include "mapcell.h"
 // TArtifact - the id domain hero::remove_artifact takes. It is the
 // artifact domain's own type and artifact.h is deliberately outside
 // initialize.cpp's include closure (see the placement note there), so
@@ -117,6 +118,117 @@ enum TArtifactSlot {
     const_first_artifact_slot = eArtifactSlotHead
 };
 
+
+// Shared packed prefix of heroes and boats. Dreamcast CodeView proves both
+// inheritance edges and supplies the member identities; retail proves the
+// 0x18-byte extent and every serialized offset. Retail packs type_point at
+// +0x07, one byte earlier than the naturally aligned Dreamcast build.
+struct type_obscuring_object {
+    short x;                              // +0x00 (DC mapX)
+    short y;                              // +0x02 (DC mapY)
+    short z;                              // +0x04 (DC mapZ)
+    unsigned char valid;                  // +0x06
+    type_point obscured_location;         // +0x07
+    char pad_0b;
+    TAdventureObjectType obscuredType;    // +0x0c (DC type)
+    unsigned char was_trigger;            // +0x10
+    char pad_11[3];
+    unsigned long extra_info;             // +0x14
+
+    type_obscuring_object();
+    void initialize();
+    // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
+    // accessor; retail expands it to the same +0x10 load at its callers.
+    bool obscured_is_trigger() const
+    {
+        return was_trigger;
+    }
+    // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
+    // retail folds it into unblock_lith before temporarily restoring the
+    // hero's underlying map cell.
+    bool is_on_map() const { return valid != 0; }
+    // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
+    // retail expands the validity test at every admitted Windows caller.
+    TAdventureObjectType get_obscured_object() const
+    {
+        if (valid)
+            return obscuredType;
+        return NOTHING;
+    }
+    // E:\gamedcs\Hero.h:157
+    // The DC header inline returns the packed location through the
+    // three-argument type_point constructor. Its ordinary inline body remains
+    // context-sensitive: the standalone terrain helper expands it, while the
+    // deeper Fly copy retains the retail constructor call. Retail also keeps
+    // ai_player.obj's selected copy at 0x42ec70.
+    VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
+    type_point get_location() const
+    {
+        return type_point(x, y, z);
+    }
+    class town* get_obscured_town();
+    void obscure_cell(TAdventureObjectType new_type, long id);
+    void restore_cell();
+    bool load(void* infile);
+    bool save(void* outfile);
+    // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
+    // folds it to the same three field tests; keep the call in source so
+    // an exact lowering cannot erase the attested source shape again.
+    __forceinline unsigned char obscures_town() const
+    {
+        return valid && was_trigger && obscuredType == TOWN;
+    }
+};
+SIZE(type_obscuring_object, 0x18);
+
+// Preserve the caller's packing for boat, as at its former location.
+#pragma pack(pop)
+
+// boat - the adventure-map vessel. It lives here for the same reason
+// type_obscuring_object does: the Dreamcast roster declares it in
+// E:\gamedcs\Hero.h (boat::boat, dc 0xbcc18, Hero.h:188), even though
+// its one reconstructed method sits in hero.cpp.
+// ONE field is retail-byte-proven - boat::GetStandSequence (0x4d9160)
+// reads the compass facing at +0x1b with `movsx eax, byte [this+0x1b]`
+// and feeds it the same eight-entry jump table hero's twin uses, which
+// is what fixes both the offset and the SIGNED type. The DC roster
+// lands `facing` on offset 27 too, and because its whole 24..28 band is
+// one-byte fields there is no packing ambiguity to resolve; the four
+// neighbours it names (allocated 24, id 25, type 26, playerOwner 28)
+// are therefore very likely at +0x18/+0x19/+0x1a/+0x1c.
+// SLICED AND CLOSED 2026-08-08 by game::GetHeroBoat (0x4ce900), which
+// walks the pool with a 0x28 stride and reads exactly three of those
+// DC slots at their unshifted DC offsets - `allocated` +0x18,
+// `occupying_hero` +0x20 (a dword compare) and `occupied` +0x24 (a byte
+// compare). With facing already proven at +0x1b that is four hits and
+// the stride, so the DC roster transfers to retail unrepacked and the
+// extent is now proven: sizeof is 0x28.
+class boat : public type_obscuring_object {
+public:
+    unsigned char allocated;        // +0x18
+    unsigned char id;               // +0x19
+    char type;                      // +0x1a
+    signed char facing;             // +0x1b
+    char playerOwner;               // +0x1c
+    char pad_01d[3];
+    int occupying_hero;             // +0x20 (THeroID)
+    unsigned char occupied;         // +0x24
+    char pad_025[3];
+
+    boat() : allocated(0) {}
+    hero_seqid GetStandSequence();
+    // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
+    // in MoveHero, CreateBoat and the event-record undo path; retaining the
+    // named boundary also preserves the byte-id zero extension at each site.
+    void obscure_cell()
+    {
+        type_obscuring_object::obscure_cell(BOAT, id);
+    }
+};
+SIZE(boat, 0x28);
+
+#pragma pack(push, 1)
+
 // The 8-byte artifact record - what an equipped slot or a backpack
 // slot actually holds. NAME CORRECTED 2026-08-08: this header used to
 // call it TArtifactSlot, but on the Dreamcast build TArtifactSlot is
@@ -133,12 +245,14 @@ struct type_artifact {
     TArtifact artifactId;
     int extra;
 
-    type_artifact() : artifactId(ARTIFACT_NONE), extra(-1) {}
     // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
     // its register allocation even though the eventual by-value pushes are
     // ordered by record layout.
-    explicit type_artifact(TArtifact id)
+    // The generated offering constructor at dc 0x128714 calls this
+    // constructor with -1. That proves the default argument: no separate
+    // zero-argument type_artifact constructor exists in the DC class API.
+    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
     {
         artifactId = id;
         extra = -1;
@@ -174,69 +288,8 @@ struct type_artifact {
 // type_artifact this pointer.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description() const;
-    void get_rollover_text(char* buffer);
+    void get_rollover_text(char* buffer) const;
 };
-
-// Shared packed prefix of heroes and boats. Dreamcast CodeView proves both
-// inheritance edges and supplies the member identities; retail proves the
-// 0x18-byte extent and every serialized offset. Retail packs type_point at
-// +0x07, one byte earlier than the naturally aligned Dreamcast build.
-struct type_obscuring_object {
-    short x;                              // +0x00 (DC mapX)
-    short y;                              // +0x02 (DC mapY)
-    short z;                              // +0x04 (DC mapZ)
-    unsigned char valid;                  // +0x06
-    type_point obscured_location;         // +0x07
-    char pad_0b;
-    TAdventureObjectType obscuredType;    // +0x0c (DC type)
-    unsigned char was_trigger;            // +0x10
-    char pad_11[3];
-    unsigned long extra_info;             // +0x14
-
-    type_obscuring_object();
-    void initialize();
-    // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
-    // retail expands the validity test at every admitted Windows caller.
-    TAdventureObjectType get_obscured_object() const
-    {
-        if (valid)
-            return obscuredType;
-        return NOTHING;
-    }
-    // E:\gamedcs\hero.h:117. The Dreamcast tiny helper is the direct byte
-    // accessor; retail expands it to the same +0x10 load at its callers.
-    bool obscured_is_trigger() const
-    {
-        return was_trigger;
-    }
-    // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
-    // retail folds it into unblock_lith before temporarily restoring the
-    // hero's underlying map cell.
-    bool is_on_map() const { return valid != 0; }
-    // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
-    // folds it to the same three field tests; keep the call in source so
-    // an exact lowering cannot erase the attested source shape again.
-    __forceinline unsigned char obscures_town() const
-    {
-        return valid && was_trigger && obscuredType == TOWN;
-    }
-    class town* get_obscured_town();
-    void obscure_cell(TAdventureObjectType new_type, long id);
-    void restore_cell();
-    bool load(void* infile);
-    bool save(void* outfile);
-    // E:\gamedcs\Hero.h:157
-    // The DC header inline returns the packed location through the
-    // three-argument type_point constructor. Its ordinary inline body remains
-    // context-sensitive: the standalone terrain helper expands it, while the
-    // deeper Fly copy retains the retail constructor call. Retail also keeps
-    // ai_player.obj's selected copy at 0x42ec70.
-    type_point get_location() const
-    {
-        return type_point(x, y, z);
-    }
-};
-SIZE(type_obscuring_object, 0x18);
 
 class boat;
 
@@ -325,9 +378,12 @@ public:
     // Dreamcast names this header inline; hide-hero undo proves its retail
     // expansion as the base operation with the hero object type and id.
     using type_obscuring_object::obscure_cell;
-    void obscure_cell()
+    // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
+    // twin call this header helper at each sprite draw; retail folds the
+    // branchless facing > 4 body into the caller.
+    unsigned char GetHflip()
     {
-        type_obscuring_object::obscure_cell(HERO, id);
+        return facing > kFacingS;
     }
 
     enum {
@@ -705,33 +761,64 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
-    // DC hero.h:1016, dc 0x37ddc. The const-bool mangling
-    // (?is_in_spellbook@hero@@QBA_NW4SpellID@@@Z) and CastSpell's direct
-    // retail byte load prove this is a source-visible header inline.
-    bool is_in_spellbook(SpellID spell) const
+    // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
+    // xrefs put direct calls in both hero-screen functions and the combat
+    // sub-window update; the retail sites expand it byte-for-byte under
+    // /Ob2. Keep the recovered header helper canonical for every consumer.
+    int GetMaxMana() const
     {
-        return in_spellbook[spell] != 0;
+        return static_cast<int>(
+            GetPrimarySkill(3) * 10 * GetIntelligenceFactor());
     }
-    // DC-attested inline helper; SetShrineHelpText proves the direct
-    // byte-indexed availability read in retail.
-    unsigned char SpellIsAvailable(SpellID spell) const
+
+    // Hero.h source helpers retained as calls by Dreamcast and expanded in
+    // Complete's AI_AttemptMove and cursor movement family. check_terrain is
+    // false at the recovered sites; the later build additionally treats
+    // Angel Wings and Boots of Levitation as persistent movement modes.
+    // These are real shared header bodies, not an ai_player.obj declaration
+    // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    __forceinline unsigned char IsFlying(unsigned char check_terrain) const
     {
-        return available_spells[spell];
+        return !(flags & 0x40000)
+            && (flightLevel != -1 || IsWieldingArtifact(0x48));
+    }
+    __forceinline unsigned char CanWalkOnWater(unsigned char check_terrain) const
+    {
+        return !(flags & 0x40000)
+            && (waterWalkLevel != -1 || IsWieldingArtifact(0x5a));
+    }
+
+    // E:\gamedcs\Hero.h:664. Dreamcast emits this header helper from
+    // overview.obj. Complete emits no standalone wrapper; ProcessIconSelect
+    // expands it and retains the underlying get_obscured_town call.
+    inline town* GetOccupiedTown()
+    {
+        return get_obscured_town();
+    }
+
+    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
+    // cast_spell and initialize_creatures fix the clamp and signed-byte
+    // source: attack/defense are confined to 0..99, while power/knowledge
+    // use 1 as their floor.
+    VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
+    int GetPrimarySkill(int skill) const
+    {
+        signed char value = stats[skill];
+        if (value > 99)
+            return 99;
+        if (value > 0)
+            return value;
+        return skill >= 2 ? 1 : 0;
     }
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     signed char stats[4];                       // +0x476
-    // DC-attested header inline (E:\gamedcs\hero.h:687, dc 0x70a1c, 16
-    // SH4 bytes, params `skill` and `amount` both T_INT4) - and its own
-    // command.obj attribution is the reason it is written out here:
-    // combatManager::DoVictory hands it three combatManager ints, and
-    // retail loads each of them with a full `mov r32, dword ptr [..]`
-    // before the byte store. A direct `stats[i] = field` narrows the
-    // load to `mov r8, byte ptr [..]` instead; the int PARAMETER is what
-    // keeps the dword.
-    void SetPrimarySkill(int skill, int amount) { stats[skill] = amount; }
+    void obscure_cell()
+    {
+        type_obscuring_object::obscure_cell(HERO, id);
+    }
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
     // widens it to double and uses it as the attacking side's combat
     // modifier. The role remains provisional, so keep the ordinal name.
@@ -747,117 +834,15 @@ public:
     long value_of_knowledge;
     long value_of_spring;
     long value_of_well;
-
-    // Dreamcast keeps these five source-visible setter boundaries. Retail
-    // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
-    // authoritative source shape rather than anonymous stores.
-    // E:\gamedcs\Hero.h:1021
-    __forceinline void set_value_of_duration(long arg)
-    {
-        value_of_duration = arg;
-    }
-    // E:\gamedcs\Hero.h:1026
-    __forceinline void set_value_of_knowledge(long arg)
-    {
-        value_of_knowledge = arg;
-    }
-    // E:\gamedcs\Hero.h:1031
-    __forceinline void set_value_of_power(long arg)
-    {
-        value_of_power = arg;
-    }
-    // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
-    // get_skill_value; retaining the source boundaries still emits the direct
-    // loads proved at +0x47e/+0x486.
-    __forceinline long get_value_of_power() const
-    {
-        return value_of_power;
-    }
-    __forceinline long get_value_of_knowledge() const
-    {
-        return value_of_knowledge;
-    }
-    // E:\gamedcs\Hero.h:1036
-    __forceinline void set_value_of_spring(long arg)
-    {
-        value_of_spring = arg;
-    }
-    // E:\gamedcs\Hero.h:1041
-    __forceinline void set_value_of_well(long arg)
-    {
-        value_of_well = arg;
-    }
-
-    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c690).
-    // Retail has no out-of-line row; AI_value_of_combat expands this
-    // one-field return and preserves its float temporary before widening.
-    float get_aggression() const { return field_47a; }
-
-    // 0x4d85f0, retail's own default constructor. The base and the four
-    // members that carry constructors run first (type_obscuring_object,
-    // army, TownSpecialGrantedMask, equipped/backpack, customName), then
-    // the body re-clears the identity band. The class ALREADY had a
-    // non-trivial implicit constructor - army, the bitset and the
-    // Dinkumware string each have one - so declaring this changes what
-    // that constructor does, not whether one exists.
-    hero();
-    void initialize(short index);
-
-    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
-    // cast_spell and initialize_creatures fix the clamp and signed-byte
-    // source: attack/defense are confined to 0..99, while power/knowledge
-    // use 1 as their floor.
-    int GetPrimarySkill(int skill) const
-    {
-        signed char value = stats[skill];
-        if (value > 99)
-            return 99;
-        if (value > 0)
-            return value;
-        return skill >= 2 ? 1 : 0;
-    }
-
-    unsigned char HasArtifact(int whichArtifact);
-    // Dreamcast hero.cpp:4689 proves the helper and its positive
-    // skillOrder test. Retail /Ob2 folds it into SetupHeroView.
-    __forceinline unsigned char HasSecondarySkill(int iWhich) const
-    {
-        return skillOrder[iWhich] > 0;
-    }
-    // 0x4d9330 - sets both per-spell byte tables for one spell.
-    void AddSpell(int whichSpell);
-    // 0x4d95d0 - rebuilds available_spells after artifact changes.
-    void update_spell_list();
-    // 0x4d9070 / 0x4d90c0, the two artifact tallies.
-    long get_equipped_artifacts(unsigned char countWarMachines);
-    long get_number_in_backpack(unsigned char countWarMachines);
-    // Dreamcast keeps these Hero.h accessors out of line; retail /Ob2 folds
-    // them into their callers. The DC TArtifactSlot parameter is an ordinal
-    // enum, whereas this reconstruction already uses that name for the slot
-    // record, so the byte-equivalent retail index is represented as long.
-    const type_artifact* get_artifact(long slot) const
-    {
-        return &equipped[slot];
-    }
-    type_artifact* get_artifact(long slot)
-    {
-        return &equipped[slot];
-    }
-    const type_artifact* get_backpack(long slot) const
-    {
-        return &backpack[slot];
-    }
-    type_artifact* get_backpack(long slot)
-    {
-        return &backpack[slot];
-    }
-    // E:\gamedcs\Hero.h:664. Dreamcast emits this header helper from
-    // overview.obj. Complete emits no standalone wrapper; ProcessIconSelect
-    // expands it and retains the underlying get_obscured_town call.
-    inline town* GetOccupiedTown()
-    {
-        return get_obscured_town();
-    }
+    // DC-attested header inline (E:\gamedcs\hero.h:687, dc 0x70a1c, 16
+    // SH4 bytes, params `skill` and `amount` both T_INT4) - and its own
+    // command.obj attribution is the reason it is written out here:
+    // combatManager::DoVictory hands it three combatManager ints, and
+    // retail loads each of them with a full `mov r32, dword ptr [..]`
+    // before the byte store. A direct `stats[i] = field` narrows the
+    // load to `mov r8, byte ptr [..]` instead; the int PARAMETER is what
+    // keeps the dword.
+    void SetPrimarySkill(int skill, int amount) { stats[skill] = amount; }
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
@@ -872,6 +857,116 @@ public:
     // an inlined int PARAMETER produces and not what a literal in an `+=`
     // does. No clamp - the byte read-modify-write is all there is.
     void AdjustPrimarySkill(int skill, int amount) { stats[skill] += amount; }
+
+
+    // Original: hero::HasArmy; Hero.h:702, dc 0xd58f8.
+    // The header helper used by GetManaCost's own-stack discount. Complete
+    // folds it back to the same armyGroup::IsMember bytes.
+    unsigned char hasArmy(TCreatureType type) const
+    {
+        return army.IsMember(type);
+    }
+
+    // Original: hero::GetManaCost; Hero.h:707, dc 0x23058.
+    int GetManaCost(int iWhichSpell) const
+    {
+        return GetManaCost(
+            iWhichSpell, 0,
+            get_special_terrain());
+    }
+    // Original: hero::get_spell_level; Hero.h:718, dc 0x2308c.
+    TSkillMastery get_spell_level(SpellID spell) const
+    {
+        return get_spell_level(spell, get_special_terrain());
+    }
+    // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
+    // standalone inline body. Complete stores the resolved sex on the live
+    // hero and expands this test at its spells.cpp caller.
+    unsigned char IsMale() const
+    {
+        return sex == 0;
+    }
+
+    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c690).
+    // Retail has no out-of-line row; AI_value_of_combat expands this
+    // one-field return and preserves its float temporary before widening.
+    float get_aggression() const { return field_47a; }
+    // Original: hero::get_artifact; Hero.h:965, dc 0x27e8c.
+    // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
+    // equipped-slot domain. UI-decoded indices convert to that domain at use.
+    const type_artifact& get_artifact(TArtifactSlot slot) const
+    {
+        return equipped[slot];
+    }
+    // Original: hero::get_backpack; Hero.h:970, dc 0x27e9c.
+    const type_artifact& get_backpack(long slot) const
+    {
+        return backpack[slot];
+    }
+    // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
+    // a separate public; Complete folds it at each use into the retail-proven
+    // static overload above.
+    __forceinline int GetExperienceIncrement() const
+    {
+        return GetExperienceIncrement(level);
+    }
+
+    // 0x4d85f0, retail's own default constructor. The base and the four
+    // members that carry constructors run first (type_obscuring_object,
+    // army, TownSpecialGrantedMask, equipped/backpack, customName), then
+    // the body re-clears the identity band. The class ALREADY had a
+    // non-trivial implicit constructor - army, the bitset and the
+    // Dinkumware string each have one - so declaring this changes what
+    // that constructor does, not whether one exists.
+    hero();
+    void initialize(short index);
+    // E:\gamedcs\Hero.h:981. Dreamcast records this exact typed boundary;
+    // the byte-backed skillLevel array is widened by the inline return.
+    TSkillMastery get_secondary_skill(TSecondarySkill skill) const
+    {
+        // skillLevel is the packed byte-backed persistence array.  The
+        // original typed facade necessarily widens that stored ordinal back
+        // into its CodeView-proven enum domain at this boundary.
+        return TSkillMastery(skillLevel[skill]);
+    }
+
+    unsigned char HasArtifact(int whichArtifact);
+    unsigned char HasSecondarySkill(int whichSkill);
+    // 0x4d9330 - sets both per-spell byte tables for one spell.
+    void AddSpell(int whichSpell);
+    // 0x4d95d0 - rebuilds available_spells after artifact changes.
+    void update_spell_list();
+    // 0x4d9070 / 0x4d90c0, the two artifact tallies.
+    long get_equipped_artifacts(unsigned char countWarMachines);
+    long get_number_in_backpack(unsigned char countWarMachines);
+    // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
+    // header-inline helper in source. Retail folds its packed-point
+    // construction into SetHeroContext and move_hero, so the canonical
+    // declaration belongs to hero rather than either TU's private view.
+    __forceinline type_point get_target() const
+    {
+        return type_point(pathTargetX, pathTargetY, pathTargetZ);
+    }
+
+    __forceinline long get_value_of_knowledge() const
+    {
+        return value_of_knowledge;
+    }
+
+    // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
+    // get_skill_value; retaining the source boundaries still emits the direct
+    // loads proved at +0x47e/+0x486.
+    __forceinline long get_value_of_power() const
+    {
+        return value_of_power;
+    }
+    // DC hero.h:1016, dc 0x37ddc. The const-bool mangling
+    // (?is_in_spellbook@hero@@QBA_NW4SpellID@@@Z) and CastSpell's direct
+    // retail byte load prove this is a source-visible header inline.
+    bool is_in_spellbook(SpellID spell) const
+    {
+        return in_spellbook[spell] != 0;
+    }
     // 0x4d9ec0, hero.cpp:1732. Retires the hero from the map: retail's
     // advManager::HeroLoses (0x4ac930) calls it THISCALL with both flags
     // on the stack, which is what fixes it as a member rather than a
@@ -890,11 +985,9 @@ public:
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
-    // and returns the dialog reply. The Dreamcast row that owns this
-    // slot is called ViewStat and takes three parameters; the retail
-    // body takes ONE and views an ARTIFACT, so the name here is an
-    // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
-    // the arity-divergence note in hero.cpp).
+    // and returns the dialog reply. This Complete-only combination-artifact
+    // prompt has no ViewStat identity; the old positional assignment was
+    // wrong. Its provisional name and one-argument ABI are retained.
     // 0x4d97f0, `ret 0` with no arguments and `this` a HERO. Its message
     // construction, seven-slot loop and widget branches are the retail
     // lowering of Dreamcast hero::UpdateArmies (dc 0xcc540).
@@ -989,12 +1082,14 @@ public:
     // 0x4da420 - STATIC for the same two reasons, and its whole body is
     // GetExperience inlined twice.
     static int GetExperienceIncrement(int level);
-    // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
-    // a separate public; Complete folds it at each use into the retail-proven
-    // static overload above.
-    __forceinline int GetExperienceIncrement() const
+
+    // Dreamcast keeps these five source-visible setter boundaries. Retail
+    // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
+    // authoritative source shape rather than anonymous stores.
+    // E:\gamedcs\Hero.h:1021
+    __forceinline void set_value_of_duration(long arg)
     {
-        return GetExperienceIncrement(level);
+        value_of_duration = arg;
     }
     // 0x4e4390 - Estates gold per day, the int twin of the five
     // specialty-factor getters.
@@ -1044,25 +1139,17 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void UseSpell(int cost);
-    // 0x004d9990 - retail takes two arguments despite the no-argument
-    // Dreamcast revision: primary-stat index and quick-view flag.
-    void HeroScreenUpdate(int whichStat, int isQuickView);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
-    // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
-    // twin call this header helper at each sprite draw; retail folds the
-    // branchless facing > 4 body into the caller.
-    unsigned char GetHflip()
+    // E:\gamedcs\Hero.h:1026
+    __forceinline void set_value_of_knowledge(long arg)
     {
-        return facing > kFacingS;
+        value_of_knowledge = arg;
     }
-    // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
-    // header-inline helper in source. Retail folds its packed-point
-    // construction into SetHeroContext and move_hero, so the canonical
-    // declaration belongs to hero rather than either TU's private view.
-    __forceinline type_point get_target() const
+    // E:\gamedcs\Hero.h:1031
+    __forceinline void set_value_of_power(long arg)
     {
-        return type_point(pathTargetX, pathTargetY, pathTargetZ);
+        value_of_power = arg;
     }
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
     // tail up when the requested slot is occupied. `slot` < 0 means
@@ -1101,22 +1188,7 @@ public:
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
     unsigned char IsMobile();
-    // Hero.h source helpers retained as calls by Dreamcast and expanded in
-    // Complete's AI_AttemptMove and cursor movement family. check_terrain is
-    // false at the recovered sites; the later build additionally treats
-    // Angel Wings and Boots of Levitation as persistent movement modes.
-    // These are real shared header bodies, not an ai_player.obj declaration
-    // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
-    __forceinline unsigned char IsFlying(unsigned char check_terrain)
-    {
-        return !(flags & 0x40000)
-            && (flightLevel != -1 || IsWieldingArtifact(0x48));
-    }
-    __forceinline unsigned char CanWalkOnWater(unsigned char check_terrain)
-    {
-        return !(flags & 0x40000)
-            && (waterWalkLevel != -1 || IsWieldingArtifact(0x5a));
-    }
+
     // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     // the bool.
@@ -1127,7 +1199,7 @@ public:
     // which an int-returning declaration can never produce. The
     // definition's own `xor eax,eax` / `sete al` does NOT contradict it -
     // that is just how VC6 lowers an `==` result, at either width.
-    unsigned char IsWieldingArtifact(int whichArtifact);
+    unsigned char IsWieldingArtifact(int whichArtifact) const;
     // Retail philai.obj uses a thiscall-shaped entry (this in ECX, spell on
     // the stack); the Dreamcast port exposes the same logic as a file-local
     // two-argument helper instead.
@@ -1160,14 +1232,10 @@ public:
     // dword domain value. philai.cpp crosses to its typed helpers without
     // changing this record's public header view.
     int SoD_get_seer_skill_value(int skill, int level);
-    // E:\gamedcs\Hero.h:981. Dreamcast records this exact typed boundary;
-    // the byte-backed skillLevel array is widened by the inline return.
-    TSkillMastery get_secondary_skill(TSecondarySkill skill) const
+    // E:\gamedcs\Hero.h:1036
+    __forceinline void set_value_of_spring(long arg)
     {
-        // skillLevel is the packed byte-backed persistence array.  The
-        // original typed facade necessarily widens that stored ordinal back
-        // into its CodeView-proven enum domain at this boundary.
-        return TSkillMastery(skillLevel[skill]);
+        value_of_spring = arg;
     }
     float GetMagicResistanceFactor();
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
@@ -1193,27 +1261,15 @@ public:
     // 0x4e4fa0. hero.cpp defines it `inline` below its earlier callers,
     // so Fly expands it while the out-of-line body those callers bind
     // stays emitted.
-    int get_special_terrain();
+    int get_special_terrain() const;
     long get_combat_speed_bonus();
     float GetSurrenderCostFactor();
     float GetOffenseFactor();
     float GetDefenseFactor();
-    float GetIntelligenceFactor();
-    // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
-    // xrefs put direct calls in both hero-screen functions and the combat
-    // sub-window update; the retail sites expand it byte-for-byte under
-    // /Ob2. Keep the recovered header helper canonical for every consumer.
-    int GetMaxMana()
-    {
-        return static_cast<int>(
-            GetPrimarySkill(3) * 10 * GetIntelligenceFactor());
-    }
-    // Dreamcast's swap screen calls this source helper. Complete's retail
-    // body is the two-argument HeroScreenUpdate entry at 0x4d9990.
-    void ViewStat(int whichStat, int isQuickView)
-    {
-        HeroScreenUpdate(whichStat, isQuickView);
-    }
+    float GetIntelligenceFactor() const;
+
+    // Original ViewStat is the ordinary hero.cpp:1709 body at 0x4d9990.
+    void viewStat(int whichStat, int isQuickView);
     float GetFirstAidFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
@@ -1242,50 +1298,25 @@ public:
     //     bool; retail's five-way form is the later one.
     // The Complete overload keeps Dreamcast's TSkillMastery return while
     // widening only the terrain argument to the later five-way domain.
-    TSkillMastery get_spell_level(SpellID spell, int magic_terrain);
+    TSkillMastery get_spell_level(SpellID spell, int magic_terrain) const;
     TSkillMastery GetSpellSchoolLevel(TSpellSchool school_mask,
                                       int magic_terrain) const;
     TSpellSchool GetHighestSchool(TSpellSchool school_mask) const;
     int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
-                    int magic_terrain);
-    // The one-argument Hero.h facades are positive Dreamcast source facts.
-    // Complete widens their terrain input, then expands each facade into the
-    // same get_special_terrain + out-of-line overload pair.
-    TSkillMastery get_spell_level(SpellID spell)
-    {
-        return get_spell_level(spell, get_special_terrain());
-    }
-    int GetManaCost(int iWhichSpell)
-    {
-        return GetManaCost(iWhichSpell, 0, get_special_terrain());
-    }
-    // E:\gamedcs\Hero.h:702
-    // The header helper used by GetManaCost's own-stack discount. Complete
-    // folds it back to the same armyGroup::IsMember bytes.
-    unsigned char HasArmy(TCreatureType type)
-    {
-        return army.IsMember(type);
-    }
-    // E:\gamedcs\Hero.h:707
-    // The two calls on Hero.h:708 are one statement in the Dreamcast line
-    // table. Complete's get_special_terrain returns the full terrain domain,
-    // which the widened three-argument overload consumes directly. Both DC
-    // publics are const; the Complete non-const out-of-line overload above
-    // remains a separate, independently byte-proven body.
-    int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
                     int magic_terrain) const;
-    int GetManaCost(int iWhichSpell) const
+
+
+
+    // E:\gamedcs\Hero.h:1041
+    __forceinline void set_value_of_well(long arg)
     {
-        return GetManaCost(
-            iWhichSpell, 0,
-            const_cast<hero*>(this)->get_special_terrain());
+        value_of_well = arg;
     }
-    // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
-    // standalone inline body. Complete stores the resolved sex on the live
-    // hero and expands this test at its spells.cpp caller.
-    unsigned char IsMale() const
+    // DC-attested inline helper; SetShrineHelpText proves the direct
+    // byte-indexed availability read in retail.
+    unsigned char SpellIsAvailable(SpellID spell) const
     {
-        return sex == 0;
+        return available_spells[spell];
     }
     float get_combat_value_modifier();
     // ai_combat's create_skeletons (0x426df0) calls both back to back:
@@ -1330,48 +1361,6 @@ SIZE(hero, 0x492);
 
 #pragma pack(pop)
 
-// boat - the adventure-map vessel. It lives here for the same reason
-// type_obscuring_object does: the Dreamcast roster declares it in
-// E:\gamedcs\Hero.h (boat::boat, dc 0xbcc18, Hero.h:188), even though
-// its one reconstructed method sits in hero.cpp.
-// ONE field is retail-byte-proven - boat::GetStandSequence (0x4d9160)
-// reads the compass facing at +0x1b with `movsx eax, byte [this+0x1b]`
-// and feeds it the same eight-entry jump table hero's twin uses, which
-// is what fixes both the offset and the SIGNED type. The DC roster
-// lands `facing` on offset 27 too, and because its whole 24..28 band is
-// one-byte fields there is no packing ambiguity to resolve; the four
-// neighbours it names (allocated 24, id 25, type 26, playerOwner 28)
-// are therefore very likely at +0x18/+0x19/+0x1a/+0x1c.
-// SLICED AND CLOSED 2026-08-08 by game::GetHeroBoat (0x4ce900), which
-// walks the pool with a 0x28 stride and reads exactly three of those
-// DC slots at their unshifted DC offsets - `allocated` +0x18,
-// `occupying_hero` +0x20 (a dword compare) and `occupied` +0x24 (a byte
-// compare). With facing already proven at +0x1b that is four hits and
-// the stride, so the DC roster transfers to retail unrepacked and the
-// extent is now proven: sizeof is 0x28.
-class boat : public type_obscuring_object {
-public:
-    unsigned char allocated;        // +0x18
-    unsigned char id;               // +0x19
-    char type;                      // +0x1a
-    signed char facing;             // +0x1b
-    char playerOwner;               // +0x1c
-    char pad_01d[3];
-    int occupying_hero;             // +0x20 (THeroID)
-    unsigned char occupied;         // +0x24
-    char pad_025[3];
-
-    boat() : allocated(0) {}
-    hero_seqid GetStandSequence();
-    // Hero.h:196 in Dreamcast. Complete expands this ordinary header helper
-    // in MoveHero, CreateBoat and the event-record undo path; retaining the
-    // named boundary also preserves the byte-id zero extension at each site.
-    void obscure_cell()
-    {
-        type_obscuring_object::obscure_cell(BOAT, id);
-    }
-};
-SIZE(boat, 0x28);
 
 // THeroTraits - the per-hero static-traits record, 92 B stride
 // byte-proven by strip::DrawOwner 0x5aa060/0x5aa230-adjacent bodies:

@@ -61,10 +61,16 @@ enum EResourceType {
 // strncpy + forced NUL at +0x10), resType@0x14, ReferenceCount@0x18 -
 // the Dreamcast roster verbatim, size 0x1c. Retail vtable 0x640ffc:
 //   slot 0  0x558770  scalar deleting destructor (uncarved entry)
-//   slot 1  0x55d0f0  Dispose - the base body (ICF-shared with
-//                     baseManager slot 4)
+//   slot 1  0x55d0f0  Dispose - the base cache-removal body
 //   slot 2  _purecall - the resource-size query; concrete derived bodies
 //                     return their fixed extent plus owned data bytes
+// Complete adds the Dispose/GetSize virtual interface. Pinned DC resource
+// types 0x1037/0x1dc9 (field lists 0x1860/0x1dca) have only destructor
+// virtuals at slot 0, and ordinary AddRef/Release; neither added method is
+// present. DC's full derived-class records also lack these overrides.
+// Bitmap816's zBufferDraw starts at DC slot 1, shifted to retail slot 3,
+// independently confirming the two inserted resource slots. The exact
+// Windows-only filters cite each retained body's retail vtable slot.
 class resource {
 public:
     char Name[13];

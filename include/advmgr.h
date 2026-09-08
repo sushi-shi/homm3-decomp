@@ -8,11 +8,13 @@
 #include "basemgr.h"
 #include "sskilltraits.h"
 #include "struct.h"
+#include "mapcell.h"
 // EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
 // `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
 // must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
+#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
 
 class BlackBoxData;
 class CNetMsgHandler;
@@ -30,404 +32,7 @@ class armyGroup;
 // through overview and town-screen readers of both columns.
 extern THelpText gAdventureWindowHelp[];
 
-// MapCell.h's artifact-price domain, published in full by Dreamcast.  It
-// lives beside MapArtifactInfo rather than in events.h: the enum is part of
-// the packed map-cell representation and is also the return type of
-// ExtraInfoUnion::GetArtifactPrice.
-enum ArtifactPrices {
-    const_free_artifact = 0,
-    const_artifact_costs_2000 = 1,
-    const_artifact_requires_wisdom = 2,
-    const_artifact_requires_leadership = 3,
-    const_artifact_costs_2500 = 4,
-    const_artifact_costs_3000 = 5,
-    const_artifact_defended = 6
-};
 
-// events.obj needs the plain packed dword arm plus the object views its
-// reconstructed handlers actually read. Keeping this narrow avoids
-// importing the remaining eighteen bitfield views into its TU.
-
-// do_event_water_wheel (0x4a7de0) loads bits 0..4 with `mov al,[cell] /
-// and eax,0x1f`, multiplies the result by 500 and clears the same bits
-// again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
-// 500-gold units.
-struct type_water_wheel_info {
-    unsigned long gold : 5;
-    unsigned long tail : 27;
-};
-SIZE(type_water_wheel_info, 4);
-
-// do_event_windmill (0x4a7fc0) reads a SIGNED four-bit resource id at
-// bits 0..3 (`shl eax,0x1c / sar eax,0x1c`) and an UNSIGNED four-bit
-// amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
-// clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
-struct type_windmill_info {
-    EGameResource resource : 4;
-    unsigned long unused : 9;
-    unsigned long amount : 4;
-    unsigned long tail : 15;
-};
-SIZE(type_windmill_info, 4);
-
-// DoEventLeanTo (0x4a31a0) reads a five-bit id at bits 0..4 (`mov al,
-// [cell] / and eax,0x1f`), an UNSIGNED four-bit amount at bits 6..9 and
-// an UNSIGNED four-bit resource id at bits 10..13 (`shr eax,N / and
-// eax,0xf` both times). Emptying the lean-to rewrites all three fields at
-// once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
-// nobody's and puts the tail at 14.
-struct type_lean_to_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    unsigned long amount : 4;
-    unsigned long resource : 4;
-    unsigned long tail : 18;
-};
-SIZE(type_lean_to_info, 4);
-
-// DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
-// "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
-// alone (`and dword ptr [cell], 0xffffffbf`).
-struct type_magic_spring_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    unsigned long full : 1;
-    unsigned long tail : 25;
-};
-SIZE(type_magic_spring_info, 4);
-
-// DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
-// four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
-// one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
-// emptying it clears that bit alone (`and ah,0xfb`).
-struct type_garden_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    EGameResource resource : 4;
-    unsigned long full : 1;
-    unsigned long tail : 21;
-};
-SIZE(type_garden_info, 4);
-
-// do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
-// (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
-// 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
-// alone (`and al,0xfe` over the whole dword), so the two lanes are
-// separate fields rather than one packed value.
-struct type_tomb_info {
-    unsigned long has_artifact : 1;
-    unsigned long unused : 12;
-    signed long artifact : 10;
-    unsigned long tail : 9;
-};
-SIZE(type_tomb_info, 4);
-
-// do_event_witch_hut (0x4a8080) reads a SIGNED seven-bit secondary-skill
-// id at bits 13..19 (`shl esi,0xc / sar esi,0x19`) and compares it with
-// -1 - the all-ones encoding this header already names
-// WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
-struct type_witch_hut_info {
-    unsigned long unused : 13;
-    signed long skill : 7;
-    unsigned long tail : 12;
-};
-SIZE(type_witch_hut_info, 4);
-
-// The Fountain of Fortune's luck tier, a SIGNED four-bit field at bits
-// 13..16. DoEventFountain (0x4a2480) proves both ends of it: the value
-// reads are `shl eax,0xf / sar eax,0x1c`, the signature of a signed
-// bitfield at bit 13, and the range check that guards the jump table is
-// `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
-struct type_fountain_info {
-    unsigned long unused : 13;
-    signed long luck : 4;
-    unsigned long tail : 15;
-};
-SIZE(type_fountain_info, 4);
-
-// The eight-bit team-visibility lane SetCellVisited writes. Proven from
-// the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
-// narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
-// which is only legal because the field is exactly eight bits wide.
-struct type_cell_visited_info {
-    unsigned long unused : 5;
-    unsigned long visited : 8;
-    unsigned long tail : 19;
-};
-SIZE(type_cell_visited_info, 4);
-
-// The Pyramid's guarded flag at bit 0 and signed eight-bit spell lane at
-// bits 13..20. Retail's out-of-line set_pyramid merges the two bitfield
-// assignments into one dword read-modify-write.
-struct type_pyramid_info {
-    unsigned long guarded : 1;
-    unsigned long unused : 12;
-    signed long spell : 8;
-    unsigned long tail : 11;
-};
-SIZE(type_pyramid_info, 4);
-
-// DoEventWagon (0x4a69b0) packs five lanes into the one dword and the
-// arm proves every width: an UNSIGNED five-bit resource amount at bits
-// 0..4, read with a BYTE load because the field ends inside the first
-// byte (`mov al,[cell] / and eax,0x1f`); a "still loaded" flag at bit 13
-// and a "carries an artifact" flag at bit 14, both `shr / test cl,1`
-// against the SAME cached dword; a SIGNED ten-bit artifact id at bits
-// 15..24 (`shl eax,7 / sar eax,0x16`); and a SIGNED four-bit resource id
-// at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
-// bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
-// read-modify-write SetGardenEmpty produces at bit 10.
-struct type_wagon_info {
-    unsigned long amount : 5;
-    unsigned long unused : 8;
-    unsigned long full : 1;
-    unsigned long has_artifact : 1;
-    signed long artifact : 10;
-    EGameResource resource : 4;
-    unsigned long tail : 3;
-};
-SIZE(type_wagon_info, 4);
-
-// DoEventSkeleton (0x4a5480) - the Corpse, adventure object 22, whose
-// per-player flag game.h already names DeadGuyFlags. Three lanes: a
-// five-bit UNSIGNED item id at bits 0..4, read with a BYTE load
-// (`mov cl,[cell] / and ecx,0x1f`); a SIGNED ten-bit artifact at bits
-// 6..15 (`shl eax,0x10 / sar eax,0x16`); and the "still holds something"
-// flag at bit 16 (`shr eax,0x10 / test al,1`). Bit 5 belongs to nobody,
-// and the emptying write is what proves it: SetSkeleton folds its three
-// stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
-// that spares bit 5 while clearing the id lane and bit 16, and an OR
-// rather than a masked insert because the artifact is set to -1.
-struct type_skeleton_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    signed long artifact : 10;
-    unsigned long has_treasure : 1;
-    unsigned long tail : 15;
-};
-SIZE(type_skeleton_info, 4);
-
-// Dreamcast CodeView publishes all five MapArtifactInfo fields and their
-// order. Complete retains that record but expands the guard lane from eight
-// to nine bits for its larger creature domain; AI_value_of_event proves the
-// resulting retail positions directly: signed price 0..3, signed guard
-// 4..12, signed resource 13..16, a 14-bit guard count, and custom at bit 31.
-struct MapArtifactInfo {
-    ArtifactPrices price : 4;
-    TCreatureType guard : 9;
-    EGameResource resource_price : 4;
-    unsigned long guard_qty : 14;
-    unsigned long custom : 1;
-};
-SIZE(MapArtifactInfo, 4);
-
-// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
-// it reads it through the same GetItemId, as the Dreamcast line table
-// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
-// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
-struct type_tree_info {
-    unsigned long unused : 13;
-    signed long price : 3;
-    unsigned long tail : 16;
-};
-SIZE(type_tree_info, 4);
-
-// Two more retail-used arms of the four-byte union. Both getters extract
-// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
-// The other DC arms remain unmodelled until a retail consumer needs them.
-struct type_creature_bank_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
-};
-SIZE(type_creature_bank_info, 4);
-
-struct type_university_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
-};
-SIZE(type_university_info, 4);
-
-union ExtraInfoUnion {
-    unsigned long value;
-    MapArtifactInfo artifact_info;
-    type_water_wheel_info water_wheel_info;
-    type_windmill_info windmill_info;
-    type_lean_to_info lean_to_info;
-    type_magic_spring_info magic_spring_info;
-    type_garden_info garden_info;
-    type_tomb_info tomb_info;
-    type_witch_hut_info witch_hut_info;
-    type_fountain_info fountain_info;
-    type_cell_visited_info cell_visited_info;
-    type_pyramid_info pyramid_info;
-    type_wagon_info wagon_info;
-    type_skeleton_info skeleton_info;
-    type_tree_info tree_info;
-    ShrineInfo shrine_info;
-    type_creature_bank_info creature_bank_info;
-    type_university_info university_info;
-
-    void SetCellVisited(short player);
-    void clear_visited_bits() { cell_visited_info.visited = 0; }
-    void set_pyramid(bool guards, int new_spell);
-    void SetWagon(enum EGameResource resource, short amount);
-    void SetWagon(int artifact);
-    void set_witch_skill(int skill);
-    // MapCell.h:923-945. These are source-real accessors, not convenience
-    // wrappers: Dreamcast publishes their decorated signatures and bodies,
-    // while Complete inlines them into the artifact event/appraisal paths.
-    bool IsCustomized() const { return artifact_info.custom != 0; }
-    TCreatureType GetArtifactDefender() const { return artifact_info.guard; }
-    ArtifactPrices GetArtifactPrice() const { return artifact_info.price; }
-    enum EGameResource GetArtifactResourceCost() const
-    {
-        return artifact_info.resource_price;
-    }
-    bool IsDefendedArtifact() const
-    {
-        return artifact_info.price == const_artifact_defended;
-    }
-
-    // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
-    // GetLeanToAmount is decorated `short` and that WIDTH is what makes
-    // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
-    // dialog argument a `movsx`. GetLeanToResource is decorated
-    // EGameResource; it is spelled `int` here because the field is read
-    // UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
-    // what the bytes constrain and an enum return is int-wide anyway, so
-    // no truncation barrier is lost. The id has no DC accessor and is
-    // read off the arm directly.
-    short GetLeanToAmount() const { return lean_to_info.amount; }
-    int GetLeanToResource() const { return lean_to_info.resource; }
-    void SetLeanTo(short id, short amount, int resource)
-    {
-        lean_to_info.id = id;
-        lean_to_info.amount = amount;
-        lean_to_info.resource = resource;
-    }
-
-    // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
-    // new state rather than clearing unconditionally, which is what the
-    // DC decoration `void (unsigned char)` says and what makes the
-    // drink-it write a plain bit clear at the one site that passes 0.
-    unsigned char MagicSpringIsFull() const { return magic_spring_info.full; }
-    void FillMagicSpring(unsigned char full) { magic_spring_info.full = full; }
-
-    // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
-    // is `unsigned char () const` and its `(value >> 10) & 1` shape is
-    // what retail inlines; a direct bitfield test would fold to a byte
-    // `test` on cell+1 instead.
-    unsigned char GardenIsFull() const { return garden_info.full; }
-    enum EGameResource GetGardenResource() const { return garden_info.resource; }
-    void SetGardenEmpty() { garden_info.full = 0; }
-
-    // The five MapCell.h accessors the two mill handlers inline. The
-    // Dreamcast publishes all five with their signatures - get_wheel_gold
-    // and get_windmill_amount return `short` (?...@@QBAFXZ),
-    // get_windmill_resource returns EGameResource, and both setters take
-    // the same pair - and the retail bytes fix the bodies:
-    //   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
-    //     do_event_water_wheel truncates the product with `movsx esi,ax`
-    //     even though 31*500 provably fits in a short;
-    //   * set_windmill writes BOTH fields, which is why the payout tail
-    //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
-    //     instead of two read-modify-writes.
-    short get_wheel_gold() const { return water_wheel_info.gold * 500; }
-    void set_wheel_gold(short amount) { water_wheel_info.gold = amount / 500; }
-    enum EGameResource get_windmill_resource() const { return windmill_info.resource; }
-    short get_windmill_amount() const { return windmill_info.amount; }
-    void set_windmill(enum EGameResource resource, short amount)
-    {
-        windmill_info.resource = resource;
-        windmill_info.amount = amount;
-    }
-
-    // The five further MapCell.h accessors the tomb and witch-hut
-    // handlers inline. Dreamcast decorations fix every signature:
-    // PlayerKnowsCell is `bool (short) const` (MapCell.h:914; the Dreamcast
-    // public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
-    // tomb_is_full `unsigned char () const` (1203), get_tomb_artifact
-    // `TArtifact () const` (1198), empty_tomb `void ()` (1193) and
-    // get_witch_skill `TSecondarySkill () const` (1246).
-    //
-    // The two enum-returning getters are spelled `int` because neither
-    // TArtifact nor TSecondarySkill has a modelled definition in this
-    // tree; the WIDTH is what the bytes constrain, and an enum return is
-    // int-wide under VC6, so no truncation barrier exists on either -
-    // which is what lets do_event_witch_hut compare the raw skill with
-    // `cmp esi,-1` and index the trait table without a `movsx`.
-    bool PlayerKnowsCell(short player) const
-    {
-        if (player < 0 || player >= 8)
-            return 0;
-        return (cell_visited_info.visited & (1 << player)) != 0;
-    }
-    unsigned char tomb_is_full() const { return tomb_info.has_artifact; }
-    int get_tomb_artifact() const { return tomb_info.artifact; }
-    void empty_tomb() { tomb_info.has_artifact = 0; }
-    int get_witch_skill() const { return witch_hut_info.skill; }
-
-    // The wagon's six MapCell.h accessors, all six named and decorated by
-    // the Dreamcast line table over DoEventWagon (dc 0x96784):
-    // WagonIsFull and WagonHasArtifact are `_N` - bool, not the unsigned
-    // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
-    // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
-    // which is what makes the payout argument a `movsx ecx,di`) and
-    // EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
-    // same reason get_tomb_artifact is: TArtifact has no modelled
-    // definition here and an enum return is int-wide under VC6 anyway.
-    bool WagonIsFull() const { return wagon_info.full; }
-    bool WagonHasArtifact() const { return wagon_info.has_artifact; }
-    int GetWagonArtifact() const { return wagon_info.artifact; }
-    enum EGameResource GetWagonResource() const { return wagon_info.resource; }
-    short GetWagonAmount() const { return wagon_info.amount; }
-    void EmptyWagon() { wagon_info.full = 0; }
-
-    // The corpse's four MapCell.h accessors, named and decorated by the
-    // Dreamcast line table over DoEventSkeleton (dc 0x95650):
-    // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
-    // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
-    // MapCell.h:1104, which this file's carcass already carried.
-    // GetSkeletonArtifact is spelled `int` for the reason get_tomb_artifact
-    // is: retail stores the sign-extended ten-bit field straight into the
-    // artifact record with NO `movsx`, which a short return would have
-    // forced.
-    //
-    // SetSkeleton's ID PARAMETER IS INT-WIDE and the Dreamcast's `F` is
-    // not: the three folded stores end in `and eax,0xfffeffe0 / xor edx,eax
-    // / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
-    // and the artifact constant last. A `short` parameter makes VC6
-    // reassociate the same value as `(id | 0xffc0) | masked` and emit the
-    // two ops the other way round. All four width combinations were
-    // measured against the retail bytes and exactly one is exact - short
-    // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
-    // so the width is byte-determined, not a guess.
-    bool SkeletonHasTreasure() const { return skeleton_info.has_treasure; }
-    int GetSkeletonArtifact() const { return skeleton_info.artifact; }
-    short GetItemId() const { return skeleton_info.id; }
-
-    // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
-    // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-    // and spelled `int` for get_tomb_artifact's reason.
-    int GetTreePrice() const { return tree_info.price; }
-    SpellID GetShrineSpell() const
-    {
-        return shrine_info.spell;
-    }
-    void SetSkeleton(int id, bool has_treasure, short artifact)
-    {
-        skeleton_info.id = id;
-        skeleton_info.artifact = artifact;
-        skeleton_info.has_treasure = has_treasure;
-    }
-
-    BlackBoxData* get_black_box() const;
-    type_creature_bank& get_creature_bank() const;
-    type_university* get_university() const;
-};
-SIZE(ExtraInfoUnion, 4);
 
 struct type_creature_bank;
 struct type_university;
@@ -1956,7 +1561,7 @@ public:
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
     int InMapArea(int x, int y);
-    type_point get_map_center();
+    type_point get_mouse_map_point() const;
     NewmapCell* GetCell(type_point point);
     int MoreTreesNear(type_point point);
     void UpdateRadar(type_point origin, unsigned char updateFlag,
@@ -2031,7 +1636,6 @@ public:
                     unsigned char is_replay);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
-    type_point get_map_center() const;
     // Wandering-monster mood modifiers, both STATIC. Its twin
     // get_like_modifier (0x4a75c0) settles the question for the pair:
     // that row is `ret` with the creature type in EDX, i.e. /Gr
@@ -2139,7 +1743,23 @@ public:
     // CodeView-proven; events.obj owns the body.
     void DoEventPrison(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
+
+    // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
+    // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    type_point get_map_center() const
+    {
+        return type_point(radarOrigin.x + HERO_VIEW_TILE_X,
+                          radarOrigin.y + HERO_VIEW_TILE_Y,
+                          radarOrigin.z);
+    }
+
 };
+
+// E:\gamedcs\AdvMgr.h:1254
+inline int GetMapExtra(type_point point)
+{
+    return ::GetMapExtra(point.x, point.y, point.z);
+}
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;

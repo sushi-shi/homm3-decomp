@@ -64,6 +64,26 @@ DATA(0x00641d94) static const char* const level_sprites[] = {
 // form attested for Dreamcast's gSecondarySkillLevels.
 DATA(0x006a5d48) const char* gSecondarySkillLevels[4];
 
+// E:\gamedcs\spellbookwindow.cpp:82
+DC_ONLY(0x14d3a4, 0x28)
+int TSpellbookWindow::GetPositionFromSchool(unsigned school_mask)
+{
+    if (school_mask == eSchoolAll)
+        return 4;
+    for (int position = 0; position < 4; ++position) {
+        if (school_mask & (1 << position))
+            return position;
+    }
+    return 0;
+}
+
+// E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc.
+inline TSpellSchool TSpellbookWindow::GetSchoolFromPosition(int position)
+{
+    return position < 4 ? (TSpellSchool)(1 << position)
+                        : eSchoolAll;
+}
+
 // Dreamcast retains this source-private helper out of line at dc 0x14bc80;
 // Complete /Ob2 folds it into get_spell_description.  The five adjacent
 // TextResource rows and the guarded pointer array are byte-proven by retail.
@@ -79,44 +99,6 @@ static const char* get_level_string(SpellID spell)
     return level_strings[akSpellTraits[spell].level - 1];
 }
 
-inline void TSpellbookWindow::SetSchool(TSpellSchool school)
-{
-    School = school;
-    LastSchool = school;
-}
-
-inline unsigned TSpellbookWindow::GetSchool()
-{
-    return School;
-}
-
-inline void TSpellbookWindow::SetContext(TSpellContext context)
-{
-    if (context == eContextAdventure)
-        ContextMask = eAdventureContextMask;
-    else
-        ContextMask = eCombatContextMask;
-    LastContext = context;
-}
-
-// The Dreamcast header line table proves these three source helpers, and its
-// WindowHandler xrefs prove four GetContextMask sites plus the widget-page
-// PreviousPage/NextPage sites. Complete has no corresponding retail function
-// entries: VC6 expands the same bodies into the handler.
-inline unsigned TSpellbookWindow::GetContextMask()
-{
-    return ContextMask;
-}
-
-inline void TSpellbookWindow::PreviousPage()
-{
-    GotoPage(Page - 1);
-}
-
-inline void TSpellbookWindow::NextPage()
-{
-    GotoPage(Page + 1);
-}
 
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:69
@@ -584,23 +566,9 @@ void TSpellbookWindow::DisplayNewSchool(int position)
     // @stub
 }
 
-// E:\gamedcs\spellbookwindow.cpp:702
-DC_ONLY(0x14ce68, 0x64)
-int TSpellbookWindow::convertID2HelpID(int id)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
-// The two DC helpers above survive out of line on SH4. Complete's /Ob2
-// build folds both into WindowHandler; keeping their bodies inline recreates
-// the retail switch tables without inventing x86 function boundaries.
-inline TSpellSchool TSpellbookWindow::GetSchoolFromPosition(int position)
-{
-    return position < 4 ? (TSpellSchool)(1 << position)
-                        : eSchoolAll;
-}
+
 
 inline void TSpellbookWindow::DisplayNewSchool(int position)
 {
@@ -615,7 +583,8 @@ inline void TSpellbookWindow::DisplayNewSchool(int position)
     DrawWindow(1, -65535, 65535);
 }
 
-inline int TSpellbookWindow::convertID2HelpID(int id)
+// E:\gamedcs\spellbookwindow.cpp:702, dc 0x14ce68.
+int TSpellbookWindow::convertID2HelpID(int id) const
 {
     if (id < 0 || id > DIALOG_RETURN_CANCEL)
         return -1;
@@ -875,18 +844,7 @@ int TSpellbookWindow::WindowHandler(message* msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-// E:\gamedcs\spellbookwindow.cpp:82
-DC_ONLY(0x14d3a4, 0x28)
-int TSpellbookWindow::GetPositionFromSchool(unsigned school_mask)
-{
-    if (school_mask == eSchoolAll)
-        return 4;
-    for (int position = 0; position < 4; ++position) {
-        if (school_mask & (1 << position))
-            return position;
-    }
-    return 0;
-}
+
 
 // E:\gamedcs\spellbookwindow.cpp:1049
 VA(0x0059dbe0, 0x84)  // dc 0x14d290

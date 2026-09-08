@@ -23,6 +23,7 @@ class NewmapCell;
 class searchArray;
 class town;
 struct type_AI_combat_parameters;
+struct tagPOINT;
 struct type_artifact;
 
 // Four inclusive drawing bounds copied as one value before a drawbridge
@@ -485,35 +486,6 @@ public:
     };
     static TWallTraits akWallTraits[9][18];
 
-    // Dreamcast CodeView records this exact nested type and the public static
-    // `combatManager::wallTargets` member. Retail independently proves the
-    // 0xc-byte row, all five fields, and the eight-row extent. Keeping the
-    // table on the class also lets get_wall_strength retain its original
-    // source-visible inline boundary instead of flattening it into callers.
-    struct TWallTarget {
-        short target_hex;             // +0x0
-        short blocked_row;            // +0x2
-        short hit_x;                  // +0x4
-        short hit_y;                  // +0x6
-        TWallSection wall;            // +0x8
-
-        int get_blocked_hex() const
-        {
-            if (blocked_row != -1)
-                return gCastleWallColumns[blocked_row];
-            return -1;
-        }
-    };
-    static const TWallTarget wallTargets[8];
-    enum {
-        // The moat row of a town's eighteen wall records: LoadIcons
-        // (0x463370) suppresses exactly this row's five icons for
-        // Stronghold under the pre-expansion ruleset, and the static
-        // table's row 2 is the SgCsMoat.pcx group. An include-set
-        // trigger: this enumerator moved command.obj's GetCommand when
-        // visible to that TU (measured; max/hist hold the peak).
-        WALL_TRAITS_ROW_MOAT = 2
-    };
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -555,6 +527,37 @@ public:
             return side == owner || is_visible;
         }
     };
+
+    // Dreamcast CodeView records this exact nested type and the public static
+    // `combatManager::wallTargets` member. Retail independently proves the
+    // 0xc-byte row, all five fields, and the eight-row extent. Keeping the
+    // table on the class also lets get_wall_strength retain its original
+    // source-visible inline boundary instead of flattening it into callers.
+    struct TWallTarget {
+        short target_hex;             // +0x0
+        short blocked_row;            // +0x2
+        short hit_x;                  // +0x4
+        short hit_y;                  // +0x6
+        TWallSection wall;            // +0x8
+
+        int get_blocked_hex() const
+        {
+            if (blocked_row != -1)
+                return gCastleWallColumns[blocked_row];
+            return -1;
+        }
+    };
+    static const TWallTarget wallTargets[8];
+    enum {
+        // The moat row of a town's eighteen wall records: LoadIcons
+        // (0x463370) suppresses exactly this row's five icons for
+        // Stronghold under the pre-expansion ruleset, and the static
+        // table's row 2 is the SgCsMoat.pcx group. An include-set
+        // trigger: this enumerator moved command.obj's GetCommand when
+        // visible to that TU (measured; max/hist hold the peak).
+        WALL_TRAITS_ROW_MOAT = 2
+    };
+
 
     // Dinkumware's four-word vector representation. FreeIcons exposes the
     // allocator word as well as first/last/end-capacity and inlines clear's
@@ -599,6 +602,7 @@ public:
         // Dinkumware's own null-guarded size(): place_obstacle folds the
         // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
         // divide by sizeof(TObstacle) inline right after the insert.
+        VA(0x00517750, 0x21)  // retained retail body; formerly enrolled by VECTOR_SIZE
         int size() const { return begin == 0 ? 0 : end - begin; }
         // The out-of-line worker push_back reduces to. Defined in
         // cmbtmgr.cpp so that SetupAndLoadObstacles can expand it the way
@@ -1252,12 +1256,7 @@ public:
     void MakeCreaturesVanish();
     void LowerDoor();
     void RaiseDoor();
-    // Dreamcast keeps TestRaiseDoor as an out-of-line occupancy guard which
-    // calls RaiseDoor.  Complete moved those guards into RaiseDoor itself:
-    // no separate x86 body survives, while WalkTo, FlyTo, TeleportTo and
-    // ProcessNextAction lower to direct RaiseDoor calls.  Keep the attested
-    // source boundary as the trivial header inline produced by that refactor.
-    void TestRaiseDoor() { RaiseDoor(); }
+    void TestRaiseDoor();
     bool IsQuickCombat() const;
     int ExperienceValueOfStack(int whichGroup);
     void CalculateGainedExperience(int side, int* experience_gained);
@@ -1421,7 +1420,46 @@ public:
     void DrawObstacleAt(int hexIndex);
     int DrawCreatureAndHeroSubwindows();
 
-    int GridY(int index) const { return index / COMBAT_GRID_ROW_STRIDE; }
+    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
+    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
+    // body; place_shooter (0x422060) carries two copies of it, one on
+    // the loop index (which VC6 strength-reduces onto the same 30-byte
+    // induction variable the cellData walk uses, so it reads as a
+    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    static bool ValidHex(int iHex)
+    {
+        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
+    }
+    // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
+    // lookup sites; no standalone body survives.
+    army* find_resurrection_target(SpellID spell, long group, long hex,
+                                   unsigned char creatureSpell)
+    {
+        if (spell == SPELL_ANIMATE_DEAD)
+            return find_animate_dead_target(group, hex);
+        return find_resurrection_target(group, hex, creatureSpell);
+    }
+
+    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
+    // typed target -> wallTargets[target].wall -> wallStrength chain.
+    // Retail has no body because /Ob2 folds the same chain into its callers.
+    long get_wall_strength(TWallTargetId target) const
+    {
+        return wallStrength[wallTargets[target].wall];
+    }
+    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
+    // lists it among DoCompAI's callees and retail carries no
+    // out-of-line copy, so it is the /Ob2 inline-away case.
+    army* get_current_army() { return &armies[actingSide][actingSlot]; }
+    // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
+    // helper and its four ordered bounds. Complete widens the window to the
+    // retail 800x556 combat area; ProcessCombatMsg retains the source call
+    // and VC6 expands it into the four retail comparisons.
+    unsigned char InCombatArea(int x, int y)
+    {
+        return x >= 0 && x < 800 && y >= 0 && y < 556;
+    }
+
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
@@ -1445,27 +1483,6 @@ public:
                               const char* const* file_names);
     void ShootMissile(int startX, int startY, int destX, int destY,
                       const float* angles, const CSprite* missile);
-    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
-    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
-    // body; place_shooter (0x422060) carries two copies of it, one on
-    // the loop index (which VC6 strength-reduces onto the same 30-byte
-    // induction variable the cellData walk uses, so it reads as a
-    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
-    static bool ValidHex(int iHex)
-    {
-        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
-    }
-    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
-    // typed target -> wallTargets[target].wall -> wallStrength chain.
-    // Retail has no body because /Ob2 folds the same chain into its callers.
-    long get_wall_strength(TWallTargetId target) const
-    {
-        return wallStrength[wallTargets[target].wall];
-    }
-    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
-    // lists it among DoCompAI's callees and retail carries no
-    // out-of-line copy, so it is the /Ob2 inline-away case.
-    army* get_current_army() { return &armies[actingSide][actingSlot]; }
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
@@ -1478,6 +1495,9 @@ public:
     {
         return (y & 1) != 0;
     }
+    // Original: combatManager::GridY; CmbtMgr.h:1513, dc 0x27f34.
+    // LF_MFUNCTION has no this type: this is a static header helper.
+    static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
     static int GridX(int index)
     {
         return index % COMBAT_GRID_ROW_STRIDE;
@@ -1488,27 +1508,7 @@ public:
     enum ESpellWallRowOffset {
         SPELL_WALL_SECOND_ROW = 2
     };
-    // ONE result variable, defaulted before the row test: retail's
-    // expansion in HandleCastWallSpell (0x5a3250) copies base_index into
-    // the result register ahead of the `row_offset == 1` branch and
-    // stores it once at the join, which three separate returns cannot
-    // give (they store per arm, measured 94.08 -> 100 on that body).
-    int GetSpellWallHex(int base_index, int row_offset, int side)
-    {
-        int hex = base_index;
-        if (row_offset == 1) {
-            hex = base_index - COMBAT_GRID_ROW_STRIDE;
-            if ((base_index / COMBAT_GRID_ROW_STRIDE) & 1) {
-                if (side == 1)
-                    --hex;
-            } else if (side == 0) {
-                ++hex;
-            }
-        } else if (row_offset == SPELL_WALL_SECOND_ROW) {
-            hex = base_index - 2 * COMBAT_GRID_ROW_STRIDE;
-        }
-        return hex;
-    }
+    int getSpellWallHex(int baseIndex, int rowOffset, int side);
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
     // invisible edge columns, 0 and 16 of each 17-cell row.
@@ -1519,14 +1519,7 @@ public:
         int column = GridX(index);
         return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
     }
-    // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
-    // helper and its four ordered bounds. Complete widens the window to the
-    // retail 800x556 combat area; ProcessCombatMsg retains the source call
-    // and VC6 expands it into the four retail comparisons.
-    unsigned char InCombatArea(int x, int y)
-    {
-        return x >= 0 && x < 800 && y >= 0 && y < 556;
-    }
+
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
@@ -2129,79 +2122,12 @@ public:
     // body of its own.
     void mark_wall_area_effect(long target_hex, TSkillMastery mastery,
                                std::vector<long>& result);
-    // THE BATTLEFIELD'S AXIAL COORDINATE AND ITS THREE HELPERS. The DC
-    // roster carries all three as combatManager members immediately in
-    // front of mark_area_effect - spells.cpp:3103 hex_to_point,
-    // 3121 point_to_hex, 3138 get_distance - and NONE of them has a
-    // retail body, which is the /Ob2 inline-away case: every call site
-    // expands them. mark_area_effect (0x5a4170) is the witness, and its
-    // frame is what identifies them: two ADJACENT x/y pairs at -0x2c/
-    // -0x28 and -0x24/-0x20, both memory-homed and both re-read on every
-    // pass, which is what a pair of by-value structs looks like and is
-    // also why VC6 never strength-reduces the inner loop's index.
-    //
-    // The DC prototypes spell the coordinate `tagPOINT` - the Win32
-    // POINT, two LONGs. This nested record is that same layout under a
-    // local name: spells.obj's include closure has no <windows.h> in it,
-    // and pulling one in to gain one two-field struct would move the
-    // whole TU's declarator count for no modelling gain. If a windows.h
-    // ever lands in this closure the typedef can be swapped in place.
-    struct hex_point {
-        long x;
-        long y;
-    };
-    // The grid is 17 columns by 11 rows with every other row offset half
-    // a hex, so a straight (row, column) box is the wrong shape for a
-    // radius; these two skew it into a space where the box is right.
-    hex_point hex_to_point(long hex) const
-    {
-        long col = hex % COMBAT_GRID_ROW_STRIDE;
-        long row = hex / COMBAT_GRID_ROW_STRIDE;
-        hex_point point;
-        point.x = col - (row + 1) / 2;
-        point.y = col + row / 2;
-        return point;
-    }
-    long point_to_hex(hex_point point) const
-    {
-        long col = (point.x + point.y + 1) / 2;
-        long row = point.y - point.x;
-        if (col > 0 && col < COMBAT_GRID_LAST_COLUMN && row >= 0
-                && row < COMBAT_GRID_CELLS / COMBAT_GRID_ROW_STRIDE)
-            return GetHexIndex(col, row);
-        return -1;
-    }
-    // THE TWO get_distance OVERLOADS. The DC records both as combatManager
-    // members - cmbtmgr.obj dc 0x62e4c (cmbtmgr.cpp:4519, the integer-hex
-    // metric, retail 0x469670) and spells.obj dc 0x1536d4 (spells.cpp:3138,
-    // the axial one) - each with `global` scope and exactly two parameters,
-    // no `this` slot.
-    //
-    // The integer form is a STATIC MEMBER. Under /Gr a static member keeps
-    // the free-function __fastcall ABI (it decorates `SIJJJ`, the `I`), so
-    // 0x469670's `start` in ECX / `stop` in EDX and its bare `ret` are
-    // exactly what a static member emits; only the decorated name moves,
-    // and the row re-pairs at 100.0000 over its full 210 B.
-    //
-    // The axial form is a CONST MEMBER, against the DC's `global` label:
-    // it has no retail body to check directly, but it is expanded into
-    // mark_berserk_area_effect (0x5a4590, 696 B) and that row is EXACT with
-    // the const-member spelling and 99.2085 with a static one. Retail bytes
-    // outrank a cross-architecture CodeView scope attribute.
-    //
-    // Modelling the integer form at FILE SCOPE was what put the two
-    // overloads in different scopes, so the axial member HID it and
-    // cmbtmgr.cpp's own calls became C2664 'cannot convert int to
-    // hex_point' - the compile clash a per-TU gate then had to hide. With
-    // both in the class there is one overload set, resolution is exact for
-    // each argument pair and nothing needs gating.
-    //
-    // The axial metric: when the two offsets share a sign the walk can move
-    // diagonally and the cost is the larger of them; when they differ it
-    // has to zig-zag and the cost is their sum. Defined in src/spells.cpp
-    // rather than here because it needs that file's by-value _cpp_max,
-    // whose signature retail's operand-address select proves.
-    long get_distance(hex_point start, hex_point stop) const;
+    // CodeView declares the axial helpers static and defines them in
+    // spells.cpp:3103/3121/3138 using the Win32 POINT record.
+    static tagPOINT hex_to_point(long hex);
+    static long point_to_hex(tagPOINT point);
+    static long get_distance(tagPOINT start, tagPOINT stop);
+    // The integer-hex overload belongs to cmbtmgr.cpp (retail 0x469670).
     static long get_distance(long start, long stop);
     // REFUTED 2026-08-20 - this comment used to open "the last parameter is
     // NOT a char", resting on get_damage_value materialising
@@ -2375,15 +2301,7 @@ public:
         eSpellEffectDeathBlow = 73
     };
     army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
-    // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
-    // lookup sites; no standalone body survives.
-    army* find_resurrection_target(SpellID spell, long group, long hex,
-                                   unsigned char creatureSpell)
-    {
-        if (spell == SPELL_ANIMATE_DEAD)
-            return find_animate_dead_target(group, hex);
-        return find_resurrection_target(group, hex, creatureSpell);
-    }
+
     // 0x5a4920 (66 B), the third spells.obj leaf. Collects every stack
     // an area spell centred on `hex` would touch into the caller's
     // vector; ai_tactical's get_area_effect_value (0x437040) is the

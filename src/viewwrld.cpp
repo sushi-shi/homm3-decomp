@@ -23,6 +23,7 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
 
 // Dreamcast publishes this source-private renderer state by name. Retail
 // independently fixes each address through the repeated view-world draw
@@ -69,24 +70,6 @@ DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
 DATA(0x006aac30)
 static unsigned char view_heroes;
 
-// VC6's own <xutility> reference-returning min/max, in the by-value form
-// this tree has byte-proven three times over (ai_combat.cpp, ai_tactical.cpp,
-// diff.cpp). update_radar needs exactly that signature and no other: it
-// clamps `origin.x` and `origin.y`, which are BITFIELDS, so no reference can
-// bind to the argument and retail's own shape - both operands copied into
-// stack temps, then the ADDRESS selected between them - is what a by-value
-// parameter returned by const reference emits.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
@@ -625,7 +608,7 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (!objType->drawCells[
-                        CObjectType::_getBitPos(objCell->CellX,
+                        CObjectType::getBitPos(objCell->CellX,
                                                 objCell->CellY)]
                     || objType->suppressDraw)
                     continue;
@@ -841,7 +824,7 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
             continue;
 
         if (!objType->drawCells[
-                CObjectType::_getBitPos(objCell->CellX, objCell->CellY)]
+                CObjectType::getBitPos(objCell->CellX, objCell->CellY)]
             || objType->suppressDraw)
             continue;
 

@@ -17,20 +17,8 @@
 #include "spellbookwindow.h"
 #include "towngatewindow.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning max, declared file-locally for
-// the reason ai_combat.cpp's copy records at length: retail materialises
-// BOTH operands into stack temps and selects between their ADDRESSES,
-// which is what a by-value parameter does and what the real `const _Ty&`
-// signature cannot. advManager::TownGate 0x41d564..0x41d57b is this TU's
-// witness - `mov [ebp+8],0` for one operand, a copy of the just-stored
-// movePoints into the dead cost slot for the other, then `lea`/`lea` and
-// a load through the winner.
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // E:\gamedcs\advspells.cpp:47
 VA(0x0041c2f0, 0x192)  // retail-expanded body, dc 0x2194c
@@ -322,11 +310,9 @@ void advManager::SkuttleBoat(int level)
 
     if (Random(1, 100)
         <= akSpellTraits[SPELL_SCUTTLE_BOAT].mastery_bonus[level]) {
-        // The CONST get_map_center overload is the one retail calls here
-        // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
-        // one row, so the receiver cast costs no bytes and buys the name.
+        // Retail calls the ordinary mouse-relative point helper here.
         boat& theBoat = gpGame->boats[
-            GetCell(static_cast<const advManager*>(this)->get_map_center())
+            GetCell(get_mouse_map_point())
                 ->extraInfo];
         theBoat.restore_cell();
 
@@ -405,7 +391,7 @@ void advManager::DimensionDoor(int level)
         window.DoModal(0);
     }
 
-    type_point destination = get_map_center();
+    type_point destination = get_mouse_map_point();
     if (destination.is_valid() && gpWindowManager->dialogReturn == 1) {
         NewmapCell* cell = GetCell(destination);
         if (((who->flags & 0x40000) != 0

@@ -760,19 +760,7 @@ unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
     return 1;
 }
 
-#if 0  // @carcass
 
-// E:\gamedcs\window.cpp:1122 - OnWidgetDeselect has NO window.obj row.
-// Vtable 0x243ce8 slot 12 points at 0x559140 (`xor eax,eax; ret 8`),
-// an /OPT:ICF-folded empty inline - so retail defined it in the header
-// and window.h carries it there.
-DC_ONLY(0x197f48, 0x4)
-int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* bExitFlag)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:1016 - vtable 0x243ce8 slot 11. Byte-proven:
 // GetWidget's tailWidget/prevWidget walk inlines, RightClick (+0x24)
@@ -827,6 +815,14 @@ int CHeroWindowEx::WindowHandler(message* msg)
         msg->codeX = widget::WIDGET_END_DIALOG;
         return 2;
     }
+    return 0;
+}
+
+// Original: CHeroWindowEx::OnWidgetDeselect; window.cpp:1122, dc 0x197f48.
+// Retail folds this ordinary empty virtual body onto 0x559140. The absence
+// of a separate window.obj address does not imply a header source owner.
+int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* exitFlag)
+{
     return 0;
 }
 

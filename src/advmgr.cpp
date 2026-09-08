@@ -50,7 +50,8 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
-#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
+#include "includes.h"
+#include "creaturetype.h"
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
@@ -98,38 +99,12 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "netgame.h"
 #include "systemoptionswindow.h"
 
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X > _Y ? _X : _Y);
-}
-
-template <class _TYPE>
-inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // E:\gamedcs\includes.h:124/134 - the reference-returning template and its
 // by-value wrapper, the same pair quicktownwindow and armygrp carry.
-template <class T>
-static inline const T& t_limit(const T& minimum, const T& value,
-                               const T& maximum)
-{
-    return value < minimum ? minimum
-                           : (maximum < value ? maximum : value);
-}
 
-static inline int limit(int minimum, int value, int maximum)
-{
-    return t_limit(minimum, value, maximum);
-}
+
+
 
 // The objectIndex short is the shared creature-id lane; the union bridge
 // (events.cpp precedent) keeps the TCreatureType conversion cast-free and
@@ -155,20 +130,6 @@ inline type_building_id building_id_from_int(int value)
     return storage.building;
 }
 
-// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
-// selector - army::GetName (0x440100) is its out-of-line twin. 150 is one
-// past the akCreatureTypeTraits extent, exactly the bound the retail guard
-// tests (army.h names it ARMY_CREATURE_LAST inside class army, whose
-// header this TU does not pull).
-static inline const char* GetArmyName(int type, int count)
-{
-    if (type >= 0 && type <= 150) {
-        if (count == 1)
-            return akCreatureTypeTraits[type].m_name;
-        return akCreatureTypeTraits[type].m_plural_name;
-    }
-    return "";
-}
 
 // The three text resources this compiland keeps alive for the rollover
 // tables below. Every reference to all three in the whole image is one of
@@ -1097,22 +1058,6 @@ int advManager::InMapArea(int x, int y)
         && y >= map_widget->y && y < map_widget->y + map_widget->height;
 }
 
-// A header-inline COMDAT that the retail link filed inside advmgr's
-// span (its four call sites all live in OTHER modules - 0x1cdf0,
-// 0x1d090, 0x91900, 0x91d00 - so nothing in advmgr.obj anchors it).
-// 111 B, `ret 4` with the single stack argument being the hidden UDT
-// return pointer, no calls: it folds origin+half-extent
-// ([ecx+0xe4]/[ecx+0xec] and [ecx+0xe6]/[ecx+0xf0]) into one packed
-// 10/10-bit type_point and stores it through [ebp+8]. Moved here from
-// the DC header block to keep the file in retail link order.
-// E:\gamedcs\AdvMgr.h:1245
-VA(0x00407b10, 0x6F)  // anchor-callee, dc 0x1f000
-type_point advManager::get_map_center() const
-{
-    return type_point(radarOrigin.x + lastHoverX,
-                      radarOrigin.y + lastHoverY,
-                      radarOrigin.z);
-}
 
 #if 0  // @carcass
 
@@ -1123,14 +1068,22 @@ void advManager::GetCursorSampleSet(int walkSpeed)
     // @stub
 }
 
-// E:\gamedcs\advmgr.cpp:1245
-DC_ONLY(0x7a04, 0x88)
-type_point advManager::get_mouse_map_point(__$ReturnUdt)
-{
-    // @stub
-}
+// The ordinary get_mouse_map_point body follows this reference block.
 
 #endif  // @carcass
+
+// E:\gamedcs\advmgr.cpp:1245. This is the mouse-relative point, not
+// get_map_center: DC 0x7a04 adds the mouse offsets, while header dc 0x1f000
+// adds fixed viewport offsets. Retail reads +0xec/+0xf0 and keeps this
+// ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
+// its four source calls. A header-inline spelling emitted no retained body.
+VA(0x00407b10, 0x6F)  // field loads + four cross-TU call sites, dc 0x7a04
+type_point advManager::get_mouse_map_point() const
+{
+    return type_point(radarOrigin.x + lastHoverX,
+                      radarOrigin.y + lastHoverY,
+                      radarOrigin.z);
+}
 
 // E:\gamedcs\advmgr.cpp:1253
 // RECONSTRUCTED from the decode the previous lane banked here. The body is
@@ -1162,11 +1115,10 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     with bUpdateScreen folded to 0, but that static is DEFINED LATER in
 //     this file, so VC6 cannot inline it here and calling it would emit a
 //     call retail does not have; writing it out is the only faithful form.
-//   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
-//     and const-qualified/defined at :1498, so calling it from a non-const
-//     member binds the undefined overload and would emit a call where
-//     retail inlines. The four `radarOrigin + lastHover` sites are
-//     therefore written out field by field.
+//   - DC separates the header get_map_center (fixed viewport offsets)
+//     from the ordinary get_mouse_map_point (mouse offsets). Both source
+//     call boundaries are restored below; the former overload workaround
+//     conflated two distinct methods.
 //   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
 //     zero-argument arm tail-merged onto the real one. No such function
 //     exists in the DC roster and NewfullMap::cell(type_point) already
@@ -1532,8 +1484,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         TrimLoopingSounds(0);
         HeroView(viewingPlayer->currHeroId, 0, 0, 0);
         if (gUnnamed699560) {
-            type_point centre(radarOrigin.x + 9, radarOrigin.y + 8,
-                              radarOrigin.z);
+            type_point centre = get_map_center();
             SetEnvironmentOrigin(centre, 1);
         }
         if (gNetworkActive69954c && pDPlay) {
@@ -1546,8 +1497,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     }
 
     case ADV_COMMAND_SELECT_HERO: {
-        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
-                            radarOrigin.z);
+        type_point mapPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.is_valid();
         NewfullMap* map = fullMap;
@@ -1562,8 +1512,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     }
 
     case ADV_COMMAND_SELECT_TOWN: {
-        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
-                            radarOrigin.z);
+        type_point mapPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.is_valid();
         NewfullMap* map = fullMap;
@@ -1580,10 +1529,8 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     case ADV_COMMAND_SHIPYARD: {
         gpMouseManager->ShowPointer(0);
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
-                            radarOrigin.z);
-        type_point dockPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
-                             radarOrigin.z);
+        type_point mapPoint = get_mouse_map_point();
+        type_point dockPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.is_valid();
         NewfullMap* map = fullMap;
@@ -1609,23 +1556,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 
 #if 0  // @carcass
 
-// The second MapCell.h COMDAT the retail link filed inside advmgr's
-// span; 21 call sites all over the image. 49 B, `ret 0xc` (3 stack
-// args + this), NO calls and no bounds test - which is what separates
-// it from the 82-byte NewfullMap::zCell overload of the same arity.
-// The index arithmetic ends `lea edx,[eax+eax*8]; lea eax,[eax+edx*2];
-// lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
-// Moved here from the DC header block to keep retail link order.
-// E:\gamedcs\MapCell.h:895
 #endif  // @carcass
-
-#pragma auto_inline(off)
-VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
-NewmapCell* NewfullMap::cell(int x, int y, int z)
-{
-    return &cellData[(z * Size + y) * Size + x];
-}
-#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:1497
 // SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
@@ -4115,13 +4046,6 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell,
     }
 }
 
-// The DC header overload survives here only through /Ob2 expansion. The
-// retail instruction stream independently proves its by-value forwarding
-// shape.
-inline int GetMapExtra(type_point point)
-{
-    return ::GetMapExtra(point.x, point.y, point.z);
-}
 
 // The DC header names this expression type_point::operator==. Keeping the
 // retail-proven inline body local avoids changing unrelated compilands while
@@ -9410,11 +9334,7 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 // ShowRoute alone; whatever refuses the expansion there is a property of
 // that one call site.
 #if 0  // @carcass -- canonical inline body is in struct.h
-VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-type_point::type_point(short new_x, short new_y, short new_z)
-{
-    // @stub
-}
+// Canonical body and VA: include/struct.h.
 #endif
 
 // E:\gamedcs\advmgr.cpp:10526
@@ -10385,9 +10305,9 @@ int advManager::MoreTreesNear(type_point point)
     int dead = 0;
     type_point pt;
 
-    rect.top = max_ref(point.y - RADIUS, 0);
+    rect.top = max(point.y - RADIUS, 0);
     rect.bottom = _cpp_min(point.y + RADIUS + 1, MAP_HEIGHT);
-    rect.left = max_ref(point.x - RADIUS, 0);
+    rect.left = max(point.x - RADIUS, 0);
     rect.right = _cpp_min(point.x + RADIUS + 1, MAP_WIDTH);
 
     pt.z = point.z;
@@ -10476,6 +10396,9 @@ VA_COMPGEN(0x0041b0e0, 0x21, SCALAR_DELETING_DTOR, CAdvPopup)
 // active implicit destructor remains source-truthful in window.h.
 VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
+// CodeView marks dc 0x34c8 compiler-generated (compgenx): only the
+// CHeroWindowEx base teardown runs there. The exact Windows-only source
+// exception is reviewed in config/win_only.tsv.
 // Dreamcast's shared destructor is otherwise empty before the CHeroWindowEx
 // base teardown. Complete adds the inverse of the constructor's popup-state
 // latch: retail tests the same 0x69954c flag, fetches the handler, and restores
@@ -10764,7 +10687,7 @@ void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw, i
 
 // E:\gamedcs\MapCell.h:565
 DC_ONLY(0x1f958, 0x1A)
-unsigned CObjectType::_getBitPos(unsigned x, unsigned y)
+unsigned CObjectType::getBitPos(unsigned x, unsigned y)
 {
     // @stub
 }
@@ -10981,7 +10904,7 @@ boat* game::GetBoat(int which)
 
 // E:\gamedcs\game.h:1375
 DC_ONLY(0x2000c, 0x58)
-TTownType game::get_alignment(int player_id)
+TTownType game::getAlignment(int player_id)
 {
     // @stub
 }

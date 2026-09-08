@@ -12,27 +12,12 @@
 #include "herospec.h"  // TSkillMastery, for the Dimension Door mastery test
 #include "kb.h"
 #include "path.h"
+#include "includes.h"
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
 long AI_get_ship_cost(const hero* our_hero, type_point point);
 
-// VC6's <xutility> reference-returning min, spelled file-locally for
-// the same reason ai_combat.cpp and ai_tactical.cpp spell it: retail
-// materialises BOTH operands into stack temps and then selects between
-// their ADDRESSES with two LEAs, which is the signature of a
-// reference-returning template and not of a ternary. CalcTerrainCost
-// 0x4b1818..0x4b1828 is this TU's instance - `mov [ebp+0x10], ecx;
-// mov [ebp+0x20], eax; cmp eax, ecx; lea eax, [ebp+0x20]; jl;
-// lea eax, [ebp+0x10]; mov ecx, [eax]`. The operands are taken BY
-// VALUE, the orientation the whole engine has been byte-proven on
-// (the `const _TYPE&` signature was measured and REFUTED in
-// ai_combat.cpp, six exact functions lost).
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
 
 // E:\gamedcs\findpath.cpp:36
 // CORRECTION 2026-08-09: the old withdrawal looked only at the cinit run
@@ -662,7 +647,7 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 
     long danger = 0;
     if (danger_zones != 0) {
-        danger = *get_danger_cell(danger_zones, point->point);
+        danger = *getDangerCell(danger_zones, point->point);
         if (cost > this_turns_movement) {
             danger = _cpp_min(old_cell->danger_value, danger);
             // The "unreachable" sentinel the danger map carries; every
@@ -740,18 +725,6 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
     *dest = *point;
 }
 
-// AdvMgr.h:1254 in the Dreamcast roster (dc 0x1f084): `int
-// GetMapExtra(type_point point)`, the BY-VALUE overload of kb.h's
-// three-argument reader.  TestPossibleDirections' SECOND fog test is the one
-// site in this TU that needs it - retail loads `source->point` there as one
-// dword (`mov eax,[edi]` plus a frame copy) and pulls all three coordinates
-// out of the register, where three separate member reads give two 16-bit
-// loads instead.  Spelled file-local because no retail body has been located
-// for it and the DC roster puts it in a header this TU does not need.
-static int GetMapExtra(type_point point)
-{
-    return GetMapExtra(point.x, point.y, point.z);
-}
 
 // E:\gamedcs\findpath.cpp:461
 // `ret 0x24` = nine stack arguments over `this`, the DC count exactly.

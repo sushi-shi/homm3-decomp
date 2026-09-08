@@ -303,7 +303,7 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     if (hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (triggerMask.test(CObjectType::_getBitPos(x, y))) {
+                if (triggerMask.test(CObjectType::getBitPos(x, y))) {
                     triggerCell.x = x;
                     triggerCell.y = y;
                     return *this;

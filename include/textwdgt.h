@@ -42,6 +42,7 @@ public:
     // operator= call; textEntryWidget::SetText(const char*) (dc 0x1635dc)
     // overrides exactly this slot at 0x5bb950. The claim-only retail VA home
     // lives in singleselectionwindow.cpp, whose object owns the DC COMDAT.
+    VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
     virtual void SetText(const char* new_text) { Text = new_text; }
 
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
@@ -103,7 +104,7 @@ public:
                            const char* fontName, const char* backName,
                            font::TColor color, int id, unsigned justify,
                            int style);
-    virtual ~bitmapBackedTextWidget();
+    // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void Draw();  // slot 4, retail 0x5bc7f0
 };
 

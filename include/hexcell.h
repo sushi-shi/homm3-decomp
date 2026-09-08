@@ -84,6 +84,12 @@ public:
     // const enemy_is_adjacent could not compile without it.
     army* get_army() const;
     army* get_dead_army(int i) const;
+    // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
+    // four-word rectangle and SLimitData::Include into one union loop.
+    SLimitData limits() const
+    {
+        return SLimitData(field_04, field_06, field_08, field_0c);
+    }
     // The DC roster's hexcell::HasArmy (HexCell.h:90, dc 0x4cc68) - a
     // class-body inline on that build too, and retail carries no
     // out-of-line copy anywhere - the /Ob2 inline-away case.
@@ -91,16 +97,11 @@ public:
     // folds to retail's sign test on armySide, and the call SITE is
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
-    unsigned char HasArmy()
+    unsigned char HasArmy() const
     {
         return armySide >= 0;
     }
-    // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
-    // four-word rectangle and SLimitData::Include into one union loop.
-    SLimitData limits() const
-    {
-        return SLimitData(field_04, field_06, field_08, field_0c);
-    }
+
 };
 SIZE(hexcell, 0x70);
 

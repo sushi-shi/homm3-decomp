@@ -85,26 +85,6 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
-// The base stores emit in CNetMsg(subType,size) order. PlaceInMap's 0x424,
-// 0x20-byte payload is the recruit record, with gNetLocalGamePos supplied as
-// Dreamcast's third constructor argument.
-inline CMCRecruitHero::CMCRecruitHero(int id, type_point location, int player)
-    : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
-      heroId(id),
-      point(location),
-      playerPos(player)
-{
-}
-
-// The dead-hero record expands inside hero::Deallocate. Retail's five base
-// stores use CNetMsg(subType,size) order, so preserve the real CMapChange
-// initializer instead of duplicating those assignments in the derived body.
-inline CMCDeadHero::CMCDeadHero(int id, type_point location)
-    : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero)),
-      heroId(id),
-      point(location)
-{
-}
 
 #include "mousemgr.h"
 #include "widget.h"
@@ -115,6 +95,7 @@ inline CMCDeadHero::CMCDeadHero(int id, type_point location)
 #include "button.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
+#include "includes.h"
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
@@ -147,20 +128,6 @@ DATA(0x00698b04) extern int gOceanGuidanceMovementBonus;
 DATA(0x00698b08) extern int gSeaCaptainsHatMovementBonus;
 DATA(0x00698b0c) extern int gLighthouseMovementBonus;
 
-// Retail's mana clamp materialises both operands in stack homes and selects
-// one by address. This by-value helper reproduces that Dinkumware-era shape;
-// VC6's installed reference-taking helper does not.
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
 
 // DECLARED, NOT DEFINED - viewarmywindow.cpp's precedent, and for the same
 // reason: retail's copy of this three-const-reference selector is a COMDAT
@@ -1441,7 +1408,6 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
 }
 
 
-
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
 // (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
 // the 64-byte-stride class record at 0x67dcec.
@@ -1603,7 +1569,7 @@ unsigned char hero::HasArtifact(int whichArtifact)
 // on the COMBINATION artifact this piece belongs to - so wearing an
 // assembled combo counts as wearing each of its components.
 VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
-unsigned char hero::IsWieldingArtifact(int whichArtifact)
+unsigned char hero::IsWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK)
         return equipped[17].artifactId == ARTIFACT_SPELLBOOK;
@@ -1993,8 +1959,12 @@ void hero::UpdateArmies()
 // E:\gamedcs\hero.cpp:1606
 #endif  // @carcass
 
-VA(0x004d9990, 0x65)  // dc-bracket forced, dc 0xcc4e0
-void hero::HeroScreenUpdate(int whichStat, int isQuickView)
+// Original: hero::ViewStat; hero.cpp:1709, dc 0xcc708.
+// Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
+// plus the quick/normal dialog type to NormalDialog. DC confirms the same
+// calls and arguments; the old HeroScreenUpdate association was positional.
+VA(0x004d9990, 0x65)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
+void hero::viewStat(int whichStat, int isQuickView)
 {
     unsigned short statValue = GetPrimarySkill(whichStat);
     NormalDialog(gStatDesc[whichStat],
@@ -2019,7 +1989,7 @@ void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 // independently identified retail callers now establish the public name and
 // the const artifact pointer as well as this body's ABI.
 // The `neg / sbb / and 3 / inc` chain is the quick-view flag turned into
-// the same dialog-type pair HeroScreenUpdate uses (4 quick, 1 normal),
+// the same dialog-type pair viewStat uses (4 quick, 1 normal),
 // and the two arms carry SEPARATE string locals - retail homes them at
 // [ebp-0x1c] and [ebp-0x2c], which is what fixes the duplicated
 // description call rather than one shared temporary.
@@ -2045,16 +2015,16 @@ void hero::ViewArtifact(const type_artifact* artifact, int isQuickView)
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:1709
-// ARITY SETTLED FROM THE BYTES (2026-08-20), against the DC prototype
-// the block note above flags: retail is `ret 4` with ONE stack argument
-// and never touches ECX, and that argument is an ARTIFACT id - it goes
-// straight into a stack type_artifact whose get_description() opens the
-// text. So the DC name ViewStat does not describe this body and the
-// name below is an ORDINAL PLACEHOLDER. General text 734 is the
-// question; 733 is HeroFn_004DC100's assemble prompt, and 0x4dc070 is
-// the disassemble action this reply gates.
-VA(0x004d9b30, 0x18D)  // dc-bracket forced + settled arity, dc 0xcc708
+// Complete-only combination-artifact prompt.
+// Retail is `ret 4` with one artifact-id argument and never reads ECX.
+// A stack type_artifact supplies the description before general text 734
+// asks for confirmation; the caller gates disassembly at 0x4dc070 on this
+// reply. DC ViewStat is independently identified at retail 0x4d9990 above;
+// its former association with this body was a positional-map error.
+// DC's 20-byte TArtifactTraits (type 0x3d9c) lacks the combination fields
+// used by this caller, and TArtifact's enum ends at 127 (type 0x1b5a).
+// The provisional address-based name remains until a PC source name is found.
+VA(0x004d9b30, 0x18D)  // combination-artifact caller + settled retail ABI
 int hero::HeroFn_004D9B30(int artifact)
 {
     type_artifact record(artifact, -1);
@@ -3000,7 +2970,7 @@ void UpdateBackpack()
 
 // E:\gamedcs\hero.cpp:2432
 VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c
-void type_artifact::get_rollover_text(char* buffer)
+void type_artifact::get_rollover_text(char* buffer) const
 {
     if (artifactId == ARTIFACT_NONE)
         strcpy(buffer, gEmptyArtifactRolloverText);
@@ -3651,23 +3621,23 @@ std::string hero::get_morale_description() const
         morale = 500;
     }
 
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+    if (IsWieldingArtifact(0x6c)) {
         result += gMoraleTexts[26];
         morale += 3;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+    if (IsWieldingArtifact(0x2d)) {
         result += gMoraleTexts[4];
         morale++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x31)) {
+    if (IsWieldingArtifact(0x31)) {
         result += gMoraleTexts[5];
         morale++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x32)) {
+    if (IsWieldingArtifact(0x32)) {
         result += gMoraleTexts[6];
         morale++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x33)) {
+    if (IsWieldingArtifact(0x33)) {
         result += gMoraleTexts[7];
         morale++;
     }
@@ -3827,23 +3797,23 @@ std::string hero::get_luck_description() const
         luck = 500;
     }
 
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+    if (IsWieldingArtifact(0x6c)) {
         result += gLuckTexts[21];
         luck += 3;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+    if (IsWieldingArtifact(0x2d)) {
         result += gLuckTexts[4];
         luck++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2e)) {
+    if (IsWieldingArtifact(0x2e)) {
         result += gLuckTexts[5];
         luck++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2f)) {
+    if (IsWieldingArtifact(0x2f)) {
         result += gLuckTexts[6];
         luck++;
     }
-    if (const_cast<hero*>(this)->IsWieldingArtifact(0x30)) {
+    if (IsWieldingArtifact(0x30)) {
         result += gLuckTexts[7];
         luck++;
     }
@@ -4460,7 +4430,7 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // NormalDialog / jmp <exit>` - behaviour-catalog D7, cross-jumping we perform
 // and retail does not, and the same class as the shared `je` in
 // game::ValidateVictoryLossConditions.  Retail also expands
-// hero::HeroScreenUpdate's two dialog sites inline (0x4de1da..0x4de320:
+// hero::viewStat's two dialog sites inline (0x4de1da..0x4de320:
 // `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
 // `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
 // Two independent frame facts, both unexplained: retail reserves 0x14c and
@@ -4613,7 +4583,7 @@ int THeroScreenWindow::WindowHandler(message* msg)
         case PRIMARY_SKILL_3_ID:
             if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
                 break;
-            gpCurrentHero->HeroScreenUpdate(msg->codeY - PRIMARY_SKILL_0_ID,
+            gpCurrentHero->viewStat(msg->codeY - PRIMARY_SKILL_0_ID,
                                             right_mouse);
             break;
 
@@ -5302,8 +5272,7 @@ THeroScreenWindow::THeroScreenWindow()
 // (0x57c2d2/0x5cc832/0x5dcae6/0x5e7b71). The public base-object symbol and
 // its vector<int> body prove the identity; the declarator only enrolls the
 // already-emitted COMDAT and does not manufacture a second definition.
-VA(0x004e1370, 0x1AF)
-void button::set_hotkey(int code);
+// Canonical body and VA: include/button.h.
 
 // E:\gamedcs\hero.cpp:4186
 // RETAIL_LOCATED(0x004e1520, 0x21): compiler-generated ??_G immediately
@@ -5857,19 +5826,14 @@ int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass
-
-
-
-
-// E:\gamedcs\hero.cpp:4689
-DC_ONLY(0xd38d8, 0x12)
-unsigned char hero::HasSecondarySkill(int iWhich)
+// Original: hero::HasSecondarySkill; hero.cpp:4689, dc 0xd38d8.
+// The DC formal type is non-const, and its source body tests skillOrder.
+// SetupHeroView calls this ordinary TU helper; no header force-inline view.
+unsigned char hero::HasSecondarySkill(int whichSkill)
 {
-    // @stub
+    return skillOrder[whichSkill] > 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:4653
 VA(0x004e2340, 0x2A)  // anchor-global, dc 0xd3830
@@ -6756,7 +6720,7 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
             return 0;
         if (IsWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR) ||
             (otherHero &&
-             const_cast<hero*>(otherHero)->IsWieldingArtifact(
+             otherHero->IsWieldingArtifact(
                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR)))
             return 0;
     }
@@ -7224,7 +7188,7 @@ float hero::GetSorceryFactor()
 
 // E:\gamedcs\hero.cpp:5783
 VA(0x004e48b0, 0x66)  // anchor-global, dc 0xd4a88
-float hero::GetIntelligenceFactor()
+float hero::GetIntelligenceFactor() const
 {
     float factor = kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
     if (skillLevel[eSecSkillIntelligence] > 0) {
@@ -7468,15 +7432,10 @@ TAdventureObjectType hero::HeroFn_004E4EC0()
     return cell->get_special_terrain();
 }
 
-inline NewmapCell* game::get_cell(type_point point)
-{
-    return &worldMap.cellData[(point.z * worldMap.Size + point.y)
-                              * worldMap.Size + point.x];
-}
 
 // E:\gamedcs\hero.cpp:5962
 VA(0x004e4fa0, 0xD7)  // exact packed-point/map-cell lookup, dc 0xd4df0
-inline int hero::get_special_terrain()
+inline int hero::get_special_terrain() const
 {
     type_point location = get_location();
     if (location == type_point(-1, -1, -1))
@@ -7494,7 +7453,7 @@ inline int hero::get_special_terrain()
 // scan, and leaves only the combination recursion as a call, which is
 // byte-for-byte what retail emits here and in GetManaCost below.
 VA(0x004e5080, 0x7D)  // anchor-bracket, dc 0xd4e4c
-TSkillMastery hero::get_spell_level(SpellID spell, int magic_terrain)
+TSkillMastery hero::get_spell_level(SpellID spell, int magic_terrain) const
 {
     if (spell == SPELL_ARMAGEDDON
         && IsWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
@@ -7599,15 +7558,24 @@ TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask) const
     return best_school;
 }
 
+// Canonical const-API checkpoint: IsWieldingArtifact, GetIntelligenceFactor,
+// get_special_terrain, get_spell_level, GetManaCost and artifact rollover
+// retain 100% after their six symbol migrations. Shared-header collateral:
+// CEnterNameEdit::OnKillFocus 100 -> 99.870964%, oldmain 77.025734 -> 77.023056%,
+// CampaignHeaderStruct::Load 53.971493 -> 53.986843%. All historical peaks
+// remain banked; Fly is unchanged at 32.623375% with the canonical overload.
+// The DC LF_MFUNCTION records prove const on this overload and the Hero.h
+// facade. The former second, const-adapter implementation represented this
+// same source function; retain one ordinary body and its canonical calls.
 // E:\gamedcs\hero.cpp:6071
-// The traits row carries a mana cost PER MASTERY, so the whole of
-// get_spell_level is inlined here just to index it. Titan's Lightning
+// DC6071 names GetSpellSchoolLevel and HasArmy as source calls. Complete
+// adds the Armageddon's Blade mastery override before indexing the mana row. Titan's Lightning
 // Bolt is free; Pegasi in the defending army tax the caster two points
 // and the caster's own Mages refund two, both gated on there being an
 // enemy group at all; the floor is 1.
 VA(0x004e5240, 0xEF)  // anchor-bracket, dc 0xd4f64
 int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
-    int magic_terrain)
+    int magic_terrain) const
 {
     if (iWhichSpell == SPELL_TITANS_LIGHTNING_BOLT)
         return 0;
@@ -7623,7 +7591,7 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
         if (enemy->IsMember(CREATURE_PEGASUS)
             || enemy->IsMember(CREATURE_SILVER_PEGASUS))
             cost += 2;
-        if (HasArmy(CREATURE_MAGE) || HasArmy(CREATURE_ARCH_MAGE))
+        if (hasArmy(CREATURE_MAGE) || hasArmy(CREATURE_ARCH_MAGE))
             cost -= 2;
     }
     if (cost < 1)
@@ -7631,31 +7599,7 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
     return cost;
 }
 
-// The Dreamcast header's const overload is the source body folded through
-// hero::Fly. It remains distinct from Complete's emitted non-const overload
-// above. The get_spell_level call carried an `inline_depth(0)` pin to hold
-// retail Fly's boundary; it is byte-flat and came out (2026-09-06, polish
-// lane 50).
-inline int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
-                             int magic_terrain) const
-{
-    if (iWhichSpell == SPELL_TITANS_LIGHTNING_BOLT)
-        return 0;
-    int cost = akSpellTraits[iWhichSpell].mana_cost[
-        const_cast<hero*>(this)->get_spell_level(
-            iWhichSpell, magic_terrain)];
-    if (enemy) {
-        if (enemy->IsMember(CREATURE_PEGASUS)
-            || enemy->IsMember(CREATURE_SILVER_PEGASUS))
-            cost += 2;
-        if (const_cast<hero*>(this)->army.IsMember(CREATURE_MAGE)
-            || const_cast<hero*>(this)->army.IsMember(CREATURE_ARCH_MAGE))
-            cost -= 2;
-    }
-    if (cost < 1)
-        cost = 1;
-    return cost;
-}
+
 
 #if 0  // @carcass
 
@@ -8437,7 +8381,7 @@ unsigned char type_obscuring_object::obscures_town()
 
 // E:\gamedcs\Hero.h:702
 DC_ONLY(0xd58f8, 0x1C)
-unsigned char hero::HasArmy(TCreatureType type)
+unsigned char hero::hasArmy(TCreatureType type)
 {
     // @stub
 }

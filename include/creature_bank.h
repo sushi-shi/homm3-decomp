@@ -64,7 +64,7 @@ struct type_creature_bank_level {
     signed char relic_artifacts;
     char pad_05f;
 
-    type_creature_bank_level() {}
+    type_creature_bank_level();
 };
 SIZE(type_creature_bank_level, 0x60);
 

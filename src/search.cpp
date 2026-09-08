@@ -11,6 +11,7 @@
 #include "kb.h"
 #include "quest.h"  // type_quest, the quest-guard arm of enter_trigger
 #include <stdlib.h>  // abs, check_town_portal's distance surcharge
+#include "includes.h"
 
 // CodeView proves that the original header supplied const-reference
 // operator==/operator!= methods.  TU-local inline spellings preserve that
@@ -102,24 +103,11 @@ int searchArray::BuildPath(const hero* current_hero, long limit)
 long AI_value_of_event(const hero* current_hero, type_point point);
 int AI_resource_cost(const playerData* player, const int* resources);
 
-// Dreamcast line 309 calls the source-private `int min(int, int)` from
-// includes.h:114 over the const-reference `_cpp_min` - the same two-layer
-// shape combatresultswindow.cpp keeps: retail stores both by-value
-// wrapper arguments to stack temps and selects between their addresses.
-// (<xutility>'s std::_cpp_min measured 76.46 against this pair's 94.50.)
-template <class _TYPE>
-inline const _TYPE& _cpp_min(const _TYPE& _X, const _TYPE& _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
 
 #ifdef min
 #undef min
 #endif
-inline int min(int a, int b)
-{
-    return _cpp_min(a, b);
-}
+
 
 // E:\gamedcs\search.cpp:113
 // A monster guarding the cell being entered: the pathCell's `monster`

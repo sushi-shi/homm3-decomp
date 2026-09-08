@@ -826,16 +826,7 @@ long FileSize(char* filename)
     return size;
 }
 
-#if 0  // @carcass
 
-// E:\gamedcs\misc.cpp:796
-DC_ONLY(0xfe0d0, 0x3C)
-int SRandom(int iLower, int iUpper)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Retail's only three references to this scratch are format_string's
 // vsprintf destination, strlen source and copy source.  Its 512-byte extent
@@ -863,6 +854,26 @@ void SRand(int iSeed)
 {
     gUnnamed67fb94 = iSeed;
     srand(iSeed);
+}
+
+// Original: SRandom; misc.cpp:796, dc 0xfe0d0.
+// CodeView proves both degenerate-range returns, then rand at line 805 and
+// the inclusive remainder at 806. Restore this ordinary source body instead
+// of three caller-local adapters to Random. Retail callers reach 0x50b230,
+// whose guards/rand/remainder also implement Random; the identical-body
+// comparison is checked separately from ownership. No second RVA is claimed.
+// VC6 verification: `sema compare 0x50b230 --unit misc --symbol
+// ?sRandom@@YIHHH@Z --no-build --why-bytes` agrees in every view, including
+// the rand relocation. The two source bodies can therefore share retail's
+// retained code without replacing SRandom's implementation with an adapter.
+int sRandom(int lower, int upper)
+{
+    if (lower == upper)
+        return upper;
+    if (upper < lower)
+        return lower;
+    int value = rand();
+    return lower + value % (upper - lower + 1);
 }
 
 // E:\gamedcs\misc.cpp:820
@@ -896,18 +907,18 @@ std::string format_string(const char* format, ...)
 // marks[idx] = 0 (so the ctor fills ONES = free), return low + idx.
 VA(0x0050c6e0, 0x55)  // anchor-global, dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
-    : low(lowBound),
-      count(high - lowBound + 1),
-      marks(count, 1)
+    : m_low(lowBound),
+      m_numbersLeft(high - lowBound + 1),
+      m_available(m_numbersLeft, 1)
 {
 }
 
-// E:\gamedcs\misc.cpp:849
+// E:\gamedcs\misc.cpp:849. Original: TPickANumber::Pick.
 VA(0x0050c740, 0x52)  // anchor-global, dc 0xfe190
-int TPickANumber::Pick()
+int TPickANumber::pick()
 {
-    if (count <= 0)
-        return low - 1;
+    if (m_numbersLeft <= 0)
+        return m_low - 1;
     // Retail tests the span TWICE off one `test edi,edi` - `jne` past
     // the zero arm, then `jge` into the rand arm - so the source is a
     // three-arm chain on `count - 1`, not the single `!= 0` guard this
@@ -915,7 +926,7 @@ int TPickANumber::Pick()
     // divisor is spelled `m + 1`, not `count`: retail recovers it with
     // `inc edi` on the span register rather than re-reading the
     // member.
-    int m = count - 1;
+    int m = m_numbersLeft - 1;
     int skip;
     if (m == 0)
         skip = 0;
@@ -925,16 +936,16 @@ int TPickANumber::Pick()
         skip = rand() % (m + 1);
     int idx = 0;
     for (;;) {
-        if (marks[idx]) {
+        if (m_available[idx]) {
             if (skip == 0)
                 break;
             skip--;
         }
         idx++;
     }
-    count--;
-    marks[idx] = 0;
-    return low + idx;
+    m_numbersLeft--;
+    m_available[idx] = 0;
+    return m_low + idx;
 }
 
 // E:\gamedcs\misc.cpp:893

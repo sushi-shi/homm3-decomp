@@ -37,7 +37,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
-#include "monsterdata.h"
+#include "mapcell.h"
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
@@ -49,20 +49,7 @@ static int get_team(game* thisGame, int playerNum)
     return thisGame->mapHeader.teamInfo[playerNum];
 }
 
-inline NewmapCell* game::get_cell(type_point point)
-{
-    return worldMap.cell(point);
-}
 
-// E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
-// out-of-line SH4 body; Complete expands it into every admitted retail use.
-inline type_point CObject::get_trigger() const
-{
-    int result_x;
-    int result_y;
-    FindTrigger(result_x, result_y);
-    return type_point(result_x, result_y, z);
-}
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -703,10 +690,9 @@ void NewfullMap::Close()
 // direct-symbol claim does not define a special member in C++.
 VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 
-VA(0x004fd4c0, 0x26)  // order-map: called + address-taken by Close 0xfd460, address-taken by Init 0xfd4f0; frees vector<TObjectCell> at +0x12, dc 0xf4bdc
-NewmapCell::~NewmapCell()
-{
-}
+// CodeView dc 0xf4bdc: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004fd4c0, 0x26, IMPLICIT_DTOR, NewmapCell)
 
 // E:\gamedcs\mapcell.cpp:550
 VA(0x004fd4f0, 0x160)  // order-map: `vector ctor/dtor iterator' + operator new; address-takes NewmapCell ctor 0xfd650 / dtor 0xfd4c0 (Close inlined), dc 0xec80c
@@ -735,27 +721,7 @@ void NewfullMap::Init(int size, unsigned char two_layers)
     memset(gMapExtra, 0, cellCount * sizeof(*gMapExtra));
 }
 
-// E:\gamedcs\MapCell.h:685 - moved here from DC tail position (dc 0xf49a4):
-// retail places this COMDAT right after Init, which passes it to the
-// `vector constructor iterator'.
 
-VA(0x004fd650, 0x3E)  // order-map: address-taken by Init 0xfd4f0 for `vector ctor iterator'; inits packed NewmapCell incl. vector<TObjectCell> at +0xe, dc 0xf49a4
-NewmapCell::NewmapCell()
-{
-    GroundSet = 0;
-    GroundIndex = 0;
-    RiverSet = 0;
-    RiverIndex = 0;
-    RoadSet = 0;
-    RoadIndex = 0;
-    flags_00_11 = 0;
-    is_trigger = 0;
-    flags_13_15 = 0;
-    type = NOTHING;
-    objectIndex = -1;
-    extraInfo = 0;
-    object_type_index = -1;
-}
 
 // E:\gamedcs\mapcell.cpp:614
 // The h3m entry point.  Init sizes the cell grid, the two terrain layers are
@@ -1145,6 +1111,16 @@ load_failure:
 }
 
 #undef HOMM3_MAPCELL_LOAD_RELEASE_VERIFY
+
+// E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
+// out-of-line SH4 body; Complete expands it into every admitted retail use.
+inline type_point CObject::get_trigger() const
+{
+    int result_x;
+    int result_y;
+    FindTrigger(result_x, result_y);
+    return type_point(result_x, result_y, z);
+}
 
 // E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
 // three are members of NewfullMap. Retail inlines each at its only call
@@ -2325,10 +2301,9 @@ int NewfullMap::saveBlackBoxList(void* outfile)
 // retail places this COMDAT between readBlackBoxData and saveBlackBox; it is
 // called from the vector<BlackBoxData> destroy/erase machinery (0x106350
 // destroy loop stride 0xe4, 0x107150 grow, 0x107480 erase).
-VA(0x004ffdf0, 0xB0)  // order-map: four operator-delete calls = string + 3 vector buffers, matching BlackBoxData members, dc 0xf4bfc
-BlackBoxData::~BlackBoxData()
-{
-}
+// CodeView dc 0xf4bfc: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004ffdf0, 0xB0, IMPLICIT_DTOR, BlackBoxData)
 
 // E:\gamedcs\mapcell.cpp:1751
 // The pandora's-box record, and the fullest statement of BlackBoxData's
@@ -5965,6 +5940,10 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
 // terrainMask stay with the editor template.
+// Complete-only conversion constructor: retail 0x506080 constructs the
+// string and five masks, then copies the editor template's runtime fields.
+// DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
+// default/copy constructors (attributes 0x103), with no TObjectType* overload.
 VA(0x00506080, 0x1D4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {
@@ -5974,7 +5953,7 @@ CObjectType::CObjectType(TObjectType* source)
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            unsigned pos = _getBitPos(x, y);
+            unsigned pos = getBitPos(x, y);
             drawCells[pos] = source->imageInfo.drawMask.test(pos);
             passableCells[pos] = source->passableMask.test(pos);
             shadowCells[pos] = source->imageInfo.shadowMask.test(pos);

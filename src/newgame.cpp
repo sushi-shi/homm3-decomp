@@ -49,22 +49,6 @@ TTownType pick_alignment(int legal_alignments, unsigned char getFirstAvail)
     return TOWN_CASTLE;
 }
 
-// E:\gamedcs\Town.h:337. GetLossConditionText's DC row calls this source
-// helper and retail expands its three HasBuilding tests in the same arm.
-inline unsigned char town::IsCastle() const
-{
-    if (HasBuilding(CASTLE_FORT_ID, 0))
-        return 1;
-
-    // SOURCE-SHAPE RATCHET: DC newgame.cpp:639 proves the IsCastle helper;
-    // Town.h:337 proves its three HasBuilding tests. Retail expands the fort
-    // test but calls HasBuilding for citadel/castle. Depth 2 over-inlines to
-    // one call (80.7987%); depth 1 leaves all three calls (87.4340%).
-    // The depth-0 pin that stood here is byte-flat - this unit is at 100%
-    // with or without it - so it came out (2026-09-06, polish lane 50).
-    return HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0);
-}
 
 // The three map formats InitNewGame accepts, in the order retail tests them.
 // File-scope constants rather than a game.h enum, the same shape game.cpp
@@ -176,6 +160,31 @@ void game::InitNewGame(int difficulty, int version,
 
     setup.fileInitialized = 1;
     setup.difficulty = static_cast<signed char>(difficulty);
+}
+
+// Complete uses the nine-town alignment mask for both helpers.
+// E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
+TTownType pick_prev_alignment(int legal_alignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type < -1)
+            type = TOWN_CONFLUX;
+        else if (type == -1)
+            break;
+    } while (!(legal_alignments & (1 << type)));
+    return type;
+}
+
+// E:\gamedcs\newgame.cpp:368, dc 0x10380c.
+TTownType pick_next_alignment(int legal_alignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type > TOWN_CONFLUX)
+            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    } while (type != -1 && !(legal_alignments & (1 << type)));
+    return type;
 }
 
 // E:\gamedcs\newgame.cpp:610
@@ -371,20 +380,6 @@ void game::GetVictoryConditionText(char* text)
 // E:\gamedcs\newgame.cpp:337
 DC_ONLY(0x1037f4, 0x4)
 void game::SetupNetPlayerNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\newgame.cpp:355
-DC_ONLY(0x1037f8, 0x14)
-TTownType pick_prev_alignment(unsigned char legal_alignments, TTownType type)
-{
-    // @stub
-}
-
-// E:\gamedcs\newgame.cpp:368
-DC_ONLY(0x10380c, 0x16)
-TTownType pick_next_alignment(unsigned char legal_alignments, TTownType type)
 {
     // @stub
 }

@@ -12,7 +12,7 @@
 #include "prefs.h"      // gUnnamed698758.soundVolume
 #include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects, VideoClose
 #include "wingraph.h"   // gpDDSBack
-#include "soundmgr.h"   // gpSoundManager->service_sounds
+#include "soundmgr.h"   // gpSoundManager->serviceSounds
 #include "winmgr.h"
 
 // Dreamcast publishes this exact name and the old 112-byte SDK type. Retail
@@ -62,7 +62,7 @@ BINK* BinkManager::GetBinkFilePtr(const char* filename, int binkOptions)
             if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
                 SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
                     FILE_BEGIN);
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 return _BinkOpen(gVideoFile1,
                     binkOptions | BINKOPEN_FROM_ARCHIVE);
             }
@@ -72,7 +72,7 @@ BINK* BinkManager::GetBinkFilePtr(const char* filename, int binkOptions)
     for (i = 0; i < gVideoCount2; i++) {
         if (_strcmpi(gVideoHeader2[i].name, name) == 0) {
             SetFilePointer(gVideoFile2, gVideoHeader2[i].offset, 0, FILE_BEGIN);
-            gpSoundManager->service_sounds();
+            gpSoundManager->serviceSounds();
             return _BinkOpen(gVideoFile2,
                 binkOptions | BINKOPEN_FROM_ARCHIVE);
         }
@@ -83,7 +83,7 @@ BINK* BinkManager::GetBinkFilePtr(const char* filename, int binkOptions)
             if (_strcmpi(gVideoHeader3[i].name, name) == 0) {
                 SetFilePointer(gVideoFile3, gVideoHeader3[i].offset, 0,
                     FILE_BEGIN);
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 return _BinkOpen(gVideoFile3,
                     binkOptions | BINKOPEN_FROM_ARCHIVE);
             }
@@ -95,7 +95,7 @@ BINK* BinkManager::GetBinkFilePtr(const char* filename, int binkOptions)
             if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
                 SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
                     FILE_BEGIN);
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 return _BinkOpen(gVideoFile1,
                     binkOptions | BINKOPEN_FROM_ARCHIVE);
             }
@@ -234,7 +234,7 @@ void NextBinkFrame()
             if (gBinkVideo && gBinkVideo2) {
                 if (gVideoDescriptors[gBinkVideoId].fadeOnAbort)
                     gpWindowManager->FadeScreen(1, 4, 0);
-                gpSoundManager->service_sounds();
+                gpSoundManager->serviceSounds();
                 _BinkClose(gBinkVideo);
                 gBinkVideo = 0;
                 video = gBinkVideo2;

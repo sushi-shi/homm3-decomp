@@ -57,7 +57,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 2
+PATCH_VERSION = 4
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -123,6 +123,23 @@ def _sstream(text: str) -> str:
     return text
 
 
+def _limits(text: str) -> str:
+    """VC6 accepts implicit explicit-specialization syntax for numeric_limits.
+
+    Adding template<> names the identical specialization; only the Clang
+    include mirror changes, never the headers passed to the retail compiler.
+    """
+    return re.sub(r"^class _CRTIMP numeric_limits<", "template<> class _CRTIMP numeric_limits<",
+                  text, flags=re.M)
+
+
+def _fstream(text: str) -> str:
+    """Remove repeated defaults and qualify dependent ios_base enumerators."""
+    text = _drop_redundant_traits_default(text)
+    return re.sub(r"(?<![\w:])(?:in|out|failbit|trunc)(?![\w:])",
+                  lambda m: "ios_base::" + m.group(0), text)
+
+
 def _qualify_ios_enumerators(names):
     """`flags() & unitbuf`, `_Bfl == oct`: <ios> gives ios_base both an
     ENUMERATOR and a same-named std:: manipulator function. cl's lookup
@@ -149,6 +166,8 @@ PATCHES = {
     "istream": lambda t: _qualify_ios_enumerators(
         ("skipws", "oct", "hex", "dec"))(_drop_redundant_traits_default(t)),
     "sstream": _sstream,
+    "fstream": _fstream,
+    "limits": _limits,
 }
 
 
@@ -173,8 +192,15 @@ def mirror() -> Path | None:
         return MIRROR
     MIRROR.parent.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(dir=str(MIRROR.parent)))
-    for entry in sorted(root.iterdir()):
-        (tmp / entry.name.lower()).symlink_to(entry)
+    def mirror_directory(source: Path, destination: Path) -> None:
+        for entry in sorted(source.iterdir()):
+            target = destination / entry.name.lower()
+            if entry.is_dir():
+                target.mkdir()
+                mirror_directory(entry, target)
+            else:
+                target.symlink_to(entry)
+    mirror_directory(root, tmp)
     for name, rewrite in PATCHES.items():
         link = tmp / name
         if not link.exists():

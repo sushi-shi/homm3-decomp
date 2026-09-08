@@ -67,6 +67,27 @@ unsigned char InitializeSpellTraitsTable()
     return 1;
 }
 
+namespace {
+
+// CodeView field pStr; each loader owns its own private string class.
+class TAutoStrPtr {
+public:
+    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; spelldefs.cpp:320, dc 0x14e78c.
+    TAutoStrPtr() : m_string(0) {}
+    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; spelldefs.cpp:321, dc 0x14e794.
+    ~TAutoStrPtr() { delete[] m_string; }
+    // Original: `anonymous namespace'::TAutoStrPtr::set; spelldefs.cpp:323, dc 0x14e7ac.
+    void set(char* value) { m_string = value; }
+    // Original: `anonymous namespace'::TAutoStrPtr::get; spelldefs.cpp:325, dc 0x14e7b0.
+    char* get() const { return m_string; }
+
+private:
+    char* m_string;
+};
+
+}
+
+
 // E:\gamedcs\spelldefs.cpp:335
 VA(0x0059e150, 0x35F)  // table stride + lazy string arrays, dc 0x14e39c
 static void InitializeSpellTraits(

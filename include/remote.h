@@ -7,19 +7,61 @@
 
 #include "dxplay.h"
 #include <deque>
-#include "chatedit.h"
+#include "textntry.h"
+#include "window.h"
+#include "inputmgr.h"
 
 class CNetMsg;
+class CNetMsgHandler;
 class textWidget;
 class sample;
 class ds_memsample;
+
+// DC's nested char[21][8] type gives this class its complete 0xac-byte
+// layout. Retail OnOK independently proves the same 21-byte stride and the
+// eight-player bound while inlining the constructor and AddPlayer.
+class CHotSeatMan {
+public:
+    enum {
+        MAX_PLAYERS = 8,
+        PLAYER_NAME_SIZE = 21
+    };
+
+    int playerCount;
+    char names[MAX_PLAYERS][PLAYER_NAME_SIZE];
+
+    CHotSeatMan() : playerCount(0) {}
+    void Clear() { playerCount = 0; }
+    void AddPlayer(const char* name)
+    {
+        if (playerCount < MAX_PLAYERS) {
+            strcpy(names[playerCount], name);
+            ++playerCount;
+        }
+    }
+    // E:\gamedcs\remote.h:207. The DC build retains this tiny accessor call;
+    // VC6 expands its bounds guard and 21-byte name stride in the hot-seat loop.
+    char* GetName(int player)
+    {
+        if (player >= playerCount)
+            return 0;
+        return names[player];
+    }
+};
+SIZE(CHotSeatMan, 0xac);
+
+DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
 // DC publishes this exact 351-byte record and the cdecl varargs Log
 // signature.  Retail's global at 0x69d648 and its pushed-this call sites
 // prove the PC identity independently.
 class CLogFile {
 public:
-    CLogFile(char* sLogFileName);
+    // E:\gamedcs\remote.h:224
+    CLogFile(char* sLogFileName)
+    {
+        strcpy(m_logFileName, sLogFileName);
+    }
     void InitLogFile();
     void Log(char* format, ...);
 
@@ -29,105 +71,6 @@ private:
 SIZE(CLogFile, 351);
 
 extern CLogFile logFile;
-
-// Retail inlines these accessors in the adventure-popup constructor and proves
-// m_inPopup at +4. Dreamcast supplies the names, the abort pointer at +8, and
-// the polymorphic class identity.
-class CNetMsgHandler {
-public:
-    CNetMsgHandler();
-    // CORRECTION 2026-08-14, from retail's own vtable 0x640f14: it is FOUR
-    // slots wide, not three, and the shape is not the Dreamcast's. DC's
-    // field list introduces CheckHandleNet at vfptr offset 0,
-    // GetAbortPopupMsg at 4 and HandleNetMsg (PURE INTRO) at 8, with no
-    // virtual destructor at all. Retail put a virtual destructor in front
-    // of all three - slot 0 is the scalar deleting destructor 0x557810 -
-    // and kept the rest in the same relative order: CheckHandleNet
-    // (0x557860), GetAbortPopupMsg (0x557900), and _purecall (0x617d9a) in
-    // slot 3, which is what makes HandleNetMsg pure here too.
-    // A CALL SITE corroborates slot 0 independently: townManager::Close
-    // (0x5c71b0) deletes its CTownNetMsgHandler through vtable slot 0, so
-    // CheckHandleNet cannot live there.
-    virtual ~CNetMsgHandler();                                    // slot 0
-    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
-    virtual CNetMsg* GetAbortPopupMsg();                          // slot 2
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg) = 0;          // slot 3
-
-    unsigned char IsInPopup() { return m_inPopup; }
-    void SetInPopup(unsigned char b) { m_inPopup = b; }
-    // Dreamcast remote.h:632-635 retains the IsInPopup call before the
-    // virtual abort-message read. Retail expands the first accessor and
-    // calls vtable slot 2; it also retains Copy's own body at 0x555150.
-    void Copy(CNetMsgHandler* pOther)
-    {
-        m_inPopup = pOther->IsInPopup();
-        m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
-    }
-    void SetAbortPopupMsg(CNetMsg* pNetMsg);
-
-    // A pure virtual may still have an out-of-line definition. Retail's
-    // vtable keeps _purecall in slot 3, while two direct base-qualified
-    // dispatcher calls land on that definition at 0x557920.
-
-protected:
-    // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
-    // HandleNetMsg's defer arms store the abort message DIRECTLY
-    // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
-    // is an out-of-line body - the derived dispatcher touches the raw
-    // members, so retail's access let it.
-    unsigned char m_inPopup;       // +0x04
-    char pad_05[3];
-    CNetMsg* m_pAbortPopupMsg;      // +0x08
-};
-SIZE(CNetMsgHandler, 0x0c);
-
-// CNetMsgHandlerPause - the scoped handler that parks whatever handler the
-// network singleton is carrying, installs itself for the life of a modal
-// dialog (remotedlg.h's three dialogs embed one) or a combat
-// (combatManager::field_38 owns one), and puts the old one back. Sixteen
-// bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
-// `mov [esi+0xc], eax` is that pointer.
-//
-// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
-// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
-// CheckHandleNet override at 0x555170, slot 2 the INHERITED
-// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
-// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
-// `xor eax,eax` and a sized return - the pause semantics are to swallow
-// everything - and both are header-origin COMDATs in retail too, which is
-// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
-// in the 0x557exx run with the rest of the class.
-class CNetMsgHandlerPause : public CNetMsgHandler {
-public:
-    CNetMsgHandlerPause();
-    virtual ~CNetMsgHandlerPause();
-    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
-
-protected:
-    CNetMsgHandler* m_pNetMsgHandlerSave;  // +0x0c
-};
-SIZE(CNetMsgHandlerPause, 0x10);
-
-// Adventure-map network dispatch. Retail's trade handler reads the inherited
-// m_inPopup byte through IsInPopup; the DC roster supplies the class and
-// method names but no additional data members.
-class CAdvMgrNetMsgHandler : public CNetMsgHandler {
-protected:
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
-    void HandleGiftRequestMsg(CNetMsg* pNetMsg);
-    void HandleGiftMsg(CNetMsg* pNetMsg);
-    // VIRTUAL (slot 4) 2026-08-20: HandleNetMsg's RS_GIFT arm calls it
-    // through the vtable (`call [edx+0x10]`), the only slot past the
-    // four CNetMsgHandler introduces - retail's class had exactly this
-    // one additional virtual. (Its NAME is still the crossed one the
-    // attribution note in src/advmgr.cpp records - the body credits a
-    // gift - and the rename stays with the netmsg owner.)
-    virtual void HandleTradeRequestMsg(CNetMsg* pNetMsg);
-};
-SIZE(CAdvMgrNetMsgHandler, 0x0c);
 
 // DC proves the CDPlayLobby base and names m_pNetMsgHandler. Retail proves the
 // pointer at +0xf0: its Dinkumware deque widens the derived state by eight
@@ -316,6 +259,107 @@ enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
 
+// Retail vtable 0x640e30. Slots 0..18 are textEntryWidget's exact prefix;
+// Dreamcast supplies the seven introduced method names at slots 19..24 and
+// proves that this class adds no data (its 0x70-byte extent equals retail's
+// textEntryWidget extent). The retail bodies independently confirm the base
+// tail offsets: IsOpen reads cursorIndex at +0x58 and the edit actions use
+// Text at +0x30.
+class CChatEdit : public textEntryWidget {
+public:
+    CChatEdit(int x, int y, int w, int h, int textSize, char* text,
+              char* fontName, font::TColor color,
+              font::EJustify justification,
+              char* backgroundIcon, int backgroundFrame, int id, int style,
+              int readType, int insetX, int insetY);
+    virtual ~CChatEdit();
+    virtual int OnKeyPress(message* msg);                       // slot 15
+    virtual unsigned char IgnoreKey(message* msg);              // slot 16
+    virtual void UpdateScreen();                                // slot 19
+    virtual int OnEnter(message msg);                            // slot 20
+    virtual int OnEscape(message msg);                           // slot 21
+    virtual int OnFunctionKey(message msg, int toWho);           // slot 22
+    virtual bool IsOpen();                                      // slot 23
+    virtual void SendChat(const char* text, int toWho) = 0;      // slot 24
+};
+
+// Dreamcast remote.h proves this intermediate class. Retail constructors for
+// both surviving derived editors expand its forwarding ctor into a direct
+// CChatEdit call followed by the +0x70 clear.
+class CGameChatEdit : public CChatEdit {
+public:
+    CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
+                  char* fontName, font::TColor color,
+                  font::EJustify justification, char* backgroundIcon,
+                  int backgroundFrame, int id, int style, int readType,
+                  int insetX, int insetY);
+    virtual int OnKeyPress(message* msg);
+    virtual int OnEscape(message msg);
+    virtual void SendChatCleanup();
+    virtual void Activate();
+
+    unsigned char field_70;
+    char pad_71[3];
+};
+
+// E:\gamedcs\remote.h:441
+inline CGameChatEdit::CGameChatEdit(
+    int x, int y, int w, int h, int textSize, char* text, char* fontName,
+    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int backgroundFrame, int id, int style, int readType, int insetX,
+    int insetY)
+    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                backgroundIcon, backgroundFrame, id, style, readType,
+                insetX, insetY)
+{
+    field_70 = 0;
+}
+
+// E:\gamedcs\remote.h:446
+VA(0x004021f0, 0x42)  // dc-arity + anchor-callee(CChatEdit::OnKeyPress), dc 0x30c8
+inline int CGameChatEdit::OnKeyPress(message* msg)
+{
+    if (field_70)
+        return CChatEdit::OnKeyPress(msg);
+
+    if (GetCharPressed(msg) == KEYCODE_TAB) {
+        Activate();
+        return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\remote.h:460
+VA(0x00402240, 0x3C)  // dc-arity(ret 0x20) + anchor-callee(CChatEdit::OnEscape), dc 0x3110
+inline int CGameChatEdit::OnEscape(message msg)
+{
+    field_70 = 0;
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+    return CChatEdit::OnEscape(msg);
+}
+
+// E:\gamedcs\remote.h:471
+VA(0x00402280, 0x23)  // vtable slot 25 + +0x70 clear/SetFocus pair, dc 0x3178
+inline void CGameChatEdit::SendChatCleanup()
+{
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+    field_70 = 0;
+    Draw();
+}
+
+// E:\gamedcs\remote.h:479
+VA(0x004022b0, 0x2B)  // vtable slot 26 + +0x70 set/SetFocus pair, dc 0x31ac
+inline void CGameChatEdit::Activate()
+{
+    field_70 = 1;
+    SetFocus(1);
+    parentWindow->SetFocus(id);
+    Draw();
+    UpdateScreen();
+}
+
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
 class CTurnDuration {
@@ -371,6 +415,152 @@ protected:
 };
 SIZE(CHourGlass, 1);
 
+void DestroyMsg(CNetMsg* pNetMsg);
+
+// remote.h:537 in DC. This four-byte owner exists solely to release a
+// dequeued message on every return arm of the owning dispatcher.
+// Its ctor and dtor are header inline in the original and retail expands
+// both into their command/remote callers.
+class CMessageKill {
+public:
+    CMessageKill(CNetMsg* pNetMsg) : m_pNetMsg(pNetMsg) {}
+    VA(0x00474680, 0xC)  // exact selected header COMDAT, dc 0x70ad0
+    ~CMessageKill()
+    {
+        if (m_pNetMsg)
+            DestroyMsg(m_pNetMsg);
+    }
+
+    void SetMessage(CNetMsg* pNetMsg) { m_pNetMsg = pNetMsg; }
+
+private:
+    CNetMsg* m_pNetMsg;
+};
+SIZE(CMessageKill, 0x4);
+
+// Retail inlines these accessors in the adventure-popup constructor and proves
+// m_inPopup at +4. Dreamcast supplies the names, the abort pointer at +8, and
+// the polymorphic class identity.
+class CNetMsgHandler {
+public:
+    CNetMsgHandler();
+    // CORRECTION 2026-08-14, from retail's own vtable 0x640f14: it is FOUR
+    // slots wide, not three, and the shape is not the Dreamcast's. DC's
+    // field list introduces CheckHandleNet at vfptr offset 0,
+    // GetAbortPopupMsg at 4 and HandleNetMsg (PURE INTRO) at 8, with no
+    // virtual destructor at all. Retail put a virtual destructor in front
+    // of all three - slot 0 is the scalar deleting destructor 0x557810 -
+    // and kept the rest in the same relative order: CheckHandleNet
+    // (0x557860), GetAbortPopupMsg (0x557900), and _purecall (0x617d9a) in
+    // slot 3, which is what makes HandleNetMsg pure here too.
+    // A CALL SITE corroborates slot 0 independently: townManager::Close
+    // (0x5c71b0) deletes its CTownNetMsgHandler through vtable slot 0, so
+    // CheckHandleNet cannot live there.
+    virtual ~CNetMsgHandler();                                    // slot 0
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);  // slot 1
+    unsigned char IsInPopup() { return m_inPopup; }
+    // E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
+    // INTRODUCING VIRTUAL in remote.h at vfptr offset 4; retail's virtual
+    // destructor in slot 0 pushes it to slot 2.
+    // E:\gamedcs\remote.h:629
+    VA(0x00557900, 0x4)  // anchor-vtable (slot 2 of 0x640f14), dc 0x201f8
+    virtual CNetMsg* GetAbortPopupMsg()
+    {
+        return m_pAbortPopupMsg;
+    }
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg) = 0;          // slot 3
+
+    // Dreamcast remote.h:632-635 retains the IsInPopup call before the
+    // virtual abort-message read. Retail expands the first accessor and
+    // calls vtable slot 2; it also retains Copy's own body at 0x555150.
+    VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
+    void Copy(CNetMsgHandler* pOther)
+    {
+        m_inPopup = pOther->IsInPopup();
+        m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
+    }
+    void SetInPopup(unsigned char b) { m_inPopup = b; }
+    void SetAbortPopupMsg(CNetMsg* pNetMsg);
+
+    // A pure virtual may still have an out-of-line definition. Retail's
+    // vtable keeps _purecall in slot 3, while two direct base-qualified
+    // dispatcher calls land on that definition at 0x557920.
+
+protected:
+    // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
+    // HandleNetMsg's defer arms store the abort message DIRECTLY
+    // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
+    // is an out-of-line body - the derived dispatcher touches the raw
+    // members, so retail's access let it.
+    unsigned char m_inPopup;       // +0x04
+    char pad_05[3];
+    CNetMsg* m_pAbortPopupMsg;      // +0x08
+};
+SIZE(CNetMsgHandler, 0x0c);
+
+// CNetMsgHandlerPause - the scoped handler that parks whatever handler the
+// network singleton is carrying, installs itself for the life of a modal
+// dialog (remotedlg.h's three dialogs embed one) or a combat
+// (combatManager::field_38 owns one), and puts the old one back. Sixteen
+// bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
+// `mov [esi+0xc], eax` is that pointer.
+//
+// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
+// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
+// CheckHandleNet override at 0x555170, slot 2 the INHERITED
+// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
+// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
+// `xor eax,eax` and a sized return - the pause semantics are to swallow
+// everything - and both are header-origin COMDATs in retail too, which is
+// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
+// in the 0x557exx run with the rest of the class.
+class CNetMsgHandlerPause : public CNetMsgHandler {
+public:
+    CNetMsgHandlerPause();
+    virtual ~CNetMsgHandlerPause();
+    // E:\gamedcs\remote.h:658 and :659 - CNetMsgHandlerPause's two overrides,
+    // slots 1 and 3 of vtable 0x640f04. Five bytes each: while a modal dialog
+    // holds the pause handler installed, the network is answered with nothing
+    // at all. Retail retains their header COMDATs beside Copy, separately
+    // from the class's ordinary remote.cpp definitions.
+    // E:\gamedcs\remote.h:658
+    VA(0x00555170, 0x5)  // anchor-vtable (slot 1 of 0x640f04), dc 0x11f80c
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                                 unsigned char* msgReceived)
+    {
+        return 0;
+    }
+    // E:\gamedcs\remote.h:659
+    VA(0x00555180, 0x5)  // anchor-vtable (slot 3 of 0x640f04), dc 0x11f810
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg)
+    {
+        return 0;
+    }
+
+protected:
+    CNetMsgHandler* m_pNetMsgHandlerSave;  // +0x0c
+};
+SIZE(CNetMsgHandlerPause, 0x10);
+
+// Adventure-map network dispatch. Retail's trade handler reads the inherited
+// m_inPopup byte through IsInPopup; the DC roster supplies the class and
+// method names but no additional data members.
+class CAdvMgrNetMsgHandler : public CNetMsgHandler {
+protected:
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+    void HandleGiftRequestMsg(CNetMsg* pNetMsg);
+    void HandleGiftMsg(CNetMsg* pNetMsg);
+    // VIRTUAL (slot 4) 2026-08-20: HandleNetMsg's RS_GIFT arm calls it
+    // through the vtable (`call [edx+0x10]`), the only slot past the
+    // four CNetMsgHandler introduces - retail's class had exactly this
+    // one additional virtual. (Its NAME is still the crossed one the
+    // attribution note in src/advmgr.cpp records - the body credits a
+    // gift - and the rename stays with the netmsg owner.)
+    virtual void HandleTradeRequestMsg(CNetMsg* pNetMsg);
+};
+SIZE(CAdvMgrNetMsgHandler, 0x0c);
+
 // The dispatcher's out-of-TU surface in the remote band. Named declarations
 // are retail/DC-correlated claims; RemoteFn entries stay address-ordinal.
 //   0x555910  DestroyMsg, the recycler every dispatch path ends in
@@ -378,7 +568,7 @@ SIZE(CHourGlass, 1);
 //   0x556430  HandlePlayerDrop          0x5565e0  player-drop update
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
-void DestroyMsg(CNetMsg* pNetMsg);
+
 void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
 void HandlePlayerDrop(unsigned long dpid);
 void OnPlayerDropUpdateMsg(unsigned long dpid);

@@ -709,7 +709,7 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
                 // that puts the constant conjunct second.
                 for (item = 0; item < 8 && item < lastBackpackIndex;
                      item++) {
-                    artifact = *currHero->get_backpack(
+                    artifact = currHero->get_backpack(
                         (gOverviewBackpackStart[heroNumber] + item)
                             % lastBackpackIndex);
                     iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
@@ -748,10 +748,10 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
             } else {
                 iOffsetToMon = 292;
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
-                    artifact = *currHero->get_artifact(
+                    artifact = currHero->get_artifact(TArtifactSlot(
                         (item + (kNumArtifactSlots / 2)
                             * gOverviewHeroArtifactPage[heroNumber])
-                            % kNumArtifactSlots);
+                            % kNumArtifactSlots));
                     iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
                         iOffsetToMon, row * 116 + 90,
                         44, 44, rowWidgetId + item + 119,
@@ -1167,6 +1167,34 @@ void game::Overview()
     textButtonDynamic = 0;
 }
 
+// Dreamcast proves these as two ordinary static source helpers, each with the
+// selected hero index, one backpack-bound query and one conditional refresh.
+// Complete emits no standalone copies: VC6 expands every call below, while
+// independently choosing whether to expand get_last_backpack_index within
+// each expansion.
+static void increment_backpack_start(long slot)
+{
+    long heroNumber = giOverviewTop[giOverviewType] + slot;
+    long lastBackpackIndex = get_last_backpack_index(heroNumber) + 1;
+    if (lastBackpackIndex > 8) {
+        gOverviewBackpackStart[heroNumber] =
+            (gOverviewBackpackStart[heroNumber] + 1) % lastBackpackIndex;
+        UpdateBackpack(slot);
+    }
+}
+
+static void decrement_backpack_start(long slot)
+{
+    long heroNumber = giOverviewTop[giOverviewType] + slot;
+    long lastBackpackIndex = get_last_backpack_index(heroNumber);
+    if (lastBackpackIndex > 8) {
+        gOverviewBackpackStart[heroNumber] =
+            (gOverviewBackpackStart[heroNumber] + lastBackpackIndex - 1)
+            % lastBackpackIndex;
+        UpdateBackpack(slot);
+    }
+}
+
 // E:\gamedcs\overview.cpp:1647. Dreamcast proves this helper boundary, its
 // const-reference artifact parameter and the block-scoped spellbook window.
 // Complete emits no standalone body: VC6 expands both calls below, preserving
@@ -1294,10 +1322,10 @@ int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
                 show_artifact(
                     currHero,
-                    *currHero->get_artifact(
+                    currHero->get_artifact(TArtifactSlot(
                         (codeY - 119
                          + 9 * gOverviewHeroArtifactPage[selectedIndex])
-                        % 18),
+                        % 18)),
                     bRightMouse);
                 break;
 
@@ -1315,7 +1343,7 @@ int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
                     break;
                 show_artifact(
                     currHero,
-                    *currHero->get_backpack(
+                    currHero->get_backpack(
                         (gOverviewBackpackStart[selectedIndex]
                          + codeY - 130) % lastBackpackIndex),
                     bRightMouse);
@@ -2113,11 +2141,11 @@ void TOverviewWindow::DoRollover(int codeY)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
-                currHero->get_artifact(
+                currHero->get_artifact(TArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * gOverviewHeroArtifactPage[
-                         giOverviewTop[giOverviewType] + iSlot]) % 18)
-                    ->get_rollover_text(gText);
+                         giOverviewTop[giOverviewType] + iSlot]) % 18))
+                    .get_rollover_text(gText);
                 break;
 
             case OVERVIEW_HERO_BACKPACK_FIRST_ID:
@@ -2139,7 +2167,7 @@ void TOverviewWindow::DoRollover(int codeY)
                     (gOverviewBackpackStart[
                          giOverviewTop[giOverviewType] + iSlot] + codeY
                      - OVERVIEW_HERO_BACKPACK_FIRST_ID)
-                    % lastBackpackIndex)->get_rollover_text(gText);
+                    % lastBackpackIndex).get_rollover_text(gText);
                 break;
             }
 
@@ -2489,33 +2517,7 @@ void game::Overview()
 
 #endif  // @carcass
 
-// Dreamcast proves these as two ordinary static source helpers, each with the
-// selected hero index, one backpack-bound query and one conditional refresh.
-// Complete emits no standalone copies: VC6 expands every call below, while
-// independently choosing whether to expand get_last_backpack_index within
-// each expansion.
-static void increment_backpack_start(long slot)
-{
-    long heroNumber = giOverviewTop[giOverviewType] + slot;
-    long lastBackpackIndex = get_last_backpack_index(heroNumber) + 1;
-    if (lastBackpackIndex > 8) {
-        gOverviewBackpackStart[heroNumber] =
-            (gOverviewBackpackStart[heroNumber] + 1) % lastBackpackIndex;
-        UpdateBackpack(slot);
-    }
-}
 
-static void decrement_backpack_start(long slot)
-{
-    long heroNumber = giOverviewTop[giOverviewType] + slot;
-    long lastBackpackIndex = get_last_backpack_index(heroNumber);
-    if (lastBackpackIndex > 8) {
-        gOverviewBackpackStart[heroNumber] =
-            (gOverviewBackpackStart[heroNumber] + lastBackpackIndex - 1)
-            % lastBackpackIndex;
-        UpdateBackpack(slot);
-    }
-}
 
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
@@ -2857,7 +2859,7 @@ void UpdateBackpack(int iSlot)
 
     for (; i < 8 && i < lastBackpackIndex; ++i) {
         msg.codeY = i + iSlotOff + 130;
-        artifact = *currHero->get_backpack(
+        artifact = currHero->get_backpack(
             (gOverviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
         msg.extra = artifact.artifactId;
         overWin->BroadcastMessage(&msg);

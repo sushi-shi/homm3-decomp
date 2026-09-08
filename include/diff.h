@@ -2,40 +2,16 @@
 #ifndef HOMM3_DIFF_H
 #define HOMM3_DIFF_H
 
-class CDiffHeader
-{
-public:
-    int m_numBytes;
-    int m_oldNumBytes;
-    unsigned char m_copy;
-    unsigned char _pad[3];
-
-    CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
-        : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
-    {
-    }
-
-    unsigned char* GetData()
-    {
-        return _pad + 3;
-    }
-};
-
 class CDiffFile
 {
 private:
-    CDiffFile()
-    {
-    }
+    CDiffFile();
 
 public:
     unsigned int m_numBytes;
     unsigned char m_data[1];
 
-    unsigned char* GetData()
-    {
-        return m_data;
-    }
+    unsigned char* GetData();
 
     unsigned char* GetBase()
     {
@@ -57,17 +33,7 @@ public:
                unsigned char* newData, int newSize);
 
 protected:
-    int CountSameBytes(int oldOffset, int newOffset)
-    {
-        int count = 0;
-        while (m_oldData[oldOffset + count] ==
-                   m_newData[newOffset + count] &&
-               oldOffset + count < m_oldSize &&
-               newOffset + count < m_newSize) {
-            ++count;
-        }
-        return count;
-    }
+    int CountSameBytes(int oldOffset, int newOffset);
     bool FindNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);
 

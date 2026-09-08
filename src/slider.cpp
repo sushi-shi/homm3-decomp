@@ -458,9 +458,9 @@ redraw:
 // units (vtable targets 0x4eab20/30 and 0x5bc7e0).
 #if 0  // @carcass -- ICF/header COMDAT, no slider.obj home
 DC_ONLY(0x14a67c, 0x16)
-int slider::GetRealWidth() { return width; }
+int slider::GetRealWidth() const { /* @stub: DC calls the sprite GetWidth. */ }
 DC_ONLY(0x14a694, 0x16)
-int slider::GetRealHeight() { return height; }
+int slider::GetRealHeight() const { /* @stub: DC calls the sprite GetHeight. */ }
 DC_ONLY(0x14a6ac, 0x4)
 void slider::zBufferDraw() {}
 #endif

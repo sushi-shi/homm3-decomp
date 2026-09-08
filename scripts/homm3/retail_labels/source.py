@@ -2388,6 +2388,23 @@ def _extract_one(path, functions: set, ir_names: dict | None,
     return rows
 
 
+def ast_names(path: Path, definitions, ir_names: dict | None,
+              problems: list[str]) -> dict:
+    """Recover annotations omitted by LLVM for source-local inline bodies."""
+    names = dict(ir_names or {})
+    relative = path.relative_to(common.HOMM3_DIR).as_posix()
+    for definition in definitions:
+        if definition.file != relative or definition.va is None or not definition.mangled:
+            continue
+        rva = definition.va - common.IMAGE_BASE
+        if rva in names and names[rva] != definition.mangled:
+            problems.append(f'{relative}: AST/IR identity conflict at {hex(definition.va)} '
+                            f'({definition.mangled!r} vs {names[rva]!r}) (FATAL)')
+        else:
+            names[rva] = definition.mangled
+    return names
+
+
 def run(only_units: list[str] | None = None,
         jobs: int | None = None) -> tuple[list[str], list[str], list[str]]:
     """Extract fragments; returns (changed units, pruned fragments,
@@ -2406,8 +2423,12 @@ def run(only_units: list[str] | None = None,
                 raise SystemExit(f"[labels] unknown unit {name!r} - units "
                                  f"are src/ file stems, e.g. 'advmgr'")
     functions = {r["rva"] for r in _census_functions()}
+    from homm3.retail_labels import headers
+    header_paths = headers.claim_files()
+    # A header body may be emitted by several TUs. Resolve its annotation
+    # tree-wide, even when the caller requested a single source fragment.
     todo = [p for p in paths
-            if only_units is None or p.stem in only_units]
+            if only_units is None or p.stem in only_units or header_paths]
     changed, pruned, problems = [], [], []
 
     if clang.clang_bin() is None:
@@ -2422,10 +2443,20 @@ def run(only_units: list[str] | None = None,
             ir_maps = list(pool.map(unit_ir_names, todo))
 
     no_ir = []
+    rows_by_unit = {}
+    from homm3.match.source_ownership import collect
+    definitions, errors, _reached = collect()
+    problems.extend(f'{error} (FATAL)' for error in errors)
     for path, ir_names in zip(todo, ir_maps):
         if ir_names is None:
             no_ir.append(path.stem)
-        rows = _extract_one(path, functions, ir_names, problems)
+        ir_names = ast_names(path, definitions, ir_names, problems)
+        rows_by_unit[path.stem] = _extract_one(path, functions, ir_names, problems)
+    headers.project(header_paths, functions,
+                    {p.stem: names for p, names in zip(todo, ir_maps)},
+                    rows_by_unit, problems)
+    for path in todo:
+        rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "
                   f"macros in src/{path.name} are the storage; do not edit."]
         if write_tsv(fragment_path(path.stem), banner, HEADER,
@@ -2577,14 +2608,12 @@ def completeness_problems(sites: dict, have: dict,
       2026-08-20: 101 header DATA() addresses, 101 already carried
       (99 reloc-target, 1 reloc-alias, 1 src-DATA_COMPGEN).
 
-      VA() in a header is NOT excused. A function address always gets a
-      row (the working-label pass covers the whole universe), so the
-      model cannot tell that the SOURCE NAME was dropped - only this
-      sweep can. The claim belongs in the owning TU's `#if 0 //
-      @carcass` block, where 160 claim-only stubs already put the retail
-      functions this build does not define; there it reaches a fragment
-      and keeps its declarator name. `floor` enumerates the sites this
-      sweep still reports as standing debt rather than a fatal loss.
+      VA() on a canonical header body must reach a comparison fragment.
+      Header projection obtains its annotated identity from Clang and selects
+      a VC6 emitter, or retains the banked comparison carrier when no object
+      emits the body. Missing output is measured; missing claims remain fatal.
+      The comparison carrier does not own the source definition. The legacy
+      empty `floor` argument is retained for completeness negative controls.
     """
     floor = HEADER_VA_FLOOR if floor is None else floor
     problems = []
@@ -2606,8 +2635,8 @@ def completeness_problems(sites: dict, have: dict,
             elif header_only:
                 problems.append(
                     f"{macro}(0x{va:08x}) at {wheres[0]} is in a HEADER, "
-                    f"which extraction does not read - move the claim to the "
-                    f"owning TU's @carcass block or it names nothing (FATAL)")
+                    f"but no annotated active definition reached a comparison "
+                    f"fragment (FATAL)")
             else:
                 problems.append(
                     f"{macro}(0x{va:08x}) at {wheres[0]} is in NO fragment - "

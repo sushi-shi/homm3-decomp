@@ -107,11 +107,6 @@ type_point AI_attempt_puzzle_guess(long player);
 DATA(0x00691684) int iCurHourGlassPhase;
 DATA(0x00698770) int gUnnamed698770;
 
-inline unsigned char type_point::operator==(const type_point* arg)
-{
-    return arg->x == x && arg->y == y && arg->z == z;
-}
-
 // The generator save format stores creature ids as bytes while the live
 // roster uses TCreatureType. Keep the representation bridge explicit without
 // introducing an enum cast; VC6 reduces this four-byte copy to a move.
@@ -857,7 +852,7 @@ inline void generator::remove_bonus()
 
     playerData* player = &gpGame->players[playerOwner];
 #pragma inline_depth(0)
-    int townType = gpGame->get_alignment(type[0]);
+    int townType = gpGame->getAlignment(type[0]);
 #pragma inline_depth()
     if (townType == -1)
         return;
@@ -3004,293 +2999,17 @@ int game::LoadRumours(TAbstractFile* infile)
     return 1;
 }
 
-// WALL (98.8764%): the nested map header and setup constructors, exact 0x5a4
-// layout, H3SVG identifier, and version 42 default are reconstructed. All four
-// blocks, 178 instructions, and 11 out-of-line calls agree. The only remaining
-// code-order delta is a `lea ecx,[esi+0x2f0]` scheduled on the opposite side of
-// the following `push 0` before the same member-constructor call. predict-inline
-// confirms an equal 11/11 call surface; both why-reg paths find no binding
-// divergence or applicable source mutation.
-// Re-tested 2026-08-14 against the /Ob2 budget DIVISOR lever that closed
-// TMainMenu (see src/mainmenu.cpp for the mechanism): the verdict HOLDS.
-// Titrating this constructor's inline-candidate site count with byte-inert
-// `xx_nop()` calls is monotonically worse - k=1 92.1234, k=2 90.6626, k=3 and
-// k=4 83.9869 - so the split is not reachable from the caller's site count the
-// way the vector<T*>::_Destroy family is. The candidacy axis is closed too:
-// the callee lives in the pinned toolchain's <map>, which this repo does not
-// edit.
-VA(0x004bc0e0, 0x251)  // retail SavedGameHeader constructor and H3SVG literal
-SavedGameHeader::SavedGameHeader()
-{
-    memset(id, 0, sizeof(id));
-    strcpy(id, "H3SVG");
-    version = 42;
-}
 
 #if 0  // @carcass - inline body lives in game.h
 // E:\gamedcs\VictoryLossConditions.h:77
 // EXACT 2026-08-22: game.h's three-member initializer emits all 14 bytes.
-VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
-VictoryConditionStruct::VictoryConditionStruct()
-{
-    // @stub - game.h emits the retail body
-}
+// Canonical body and VA: include/victorylossconditions.h.
 #endif  // @carcass
 
-// Reset's retail source saw the implicit SCampaign/NewSMapHeader assignment
-// surface that this TU deliberately hides to keep game::Load exact. One free
-// inline-candidate site restores that lost /Ob2 divisor without emitting code.
-static void reset_assignment_surface()
-{
-}
 
-// The Dreamcast header roster emits SavedGameHeader::Reset immediately
-// after the constructor (dc 0xbcf00). Retail's only call is saved.Reset()
-// in game::Save, and its stores cover the same 0x5a4-byte header layout.
-// EXACT 2026-08-22: the memberwise copies below reproduce the two implicit
-// assignment bodies without widening game.h's codegen-sensitive surface.
-// The final free inline site is load-bearing: k=0 leaves string::_Grow
-// expanded (79.54%), k=1 makes every instruction agree, and a semantic
-// IsHuman adapter is not free enough and remains at the k=0 phase. The
-// byte/dword union spells retail's last stack slot exactly: setne writes its
-// byte view, then the int store reloads and masks the dword view.
-VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
-void SavedGameHeader::Reset()
-{
-    if (gbUnk69774c)
-        strcpy(id, "H3SVC");
-    else
-        strcpy(id, "H3SVG");
 
-    version = 42;
-    gameVersion = gpGame->f_1f698;
 
-    SCampaign& savedCampaign = campaign;
-    const SCampaign& gameCampaign = gpGame->campaign;
-    savedCampaign.isCheater = gameCampaign.isCheater;
-    savedCampaign.secretActive = gameCampaign.secretActive;
-    savedCampaign.currentMap = gameCampaign.currentMap;
-    savedCampaign.currentCampaign = gameCampaign.currentCampaign;
-    savedCampaign.numMapRegions = gameCampaign.numMapRegions;
-    savedCampaign.crossoverArrayIndex = gameCampaign.crossoverArrayIndex;
-    savedCampaign.briefingChoice = gameCampaign.briefingChoice;
-#pragma inline_depth(0)
-    savedCampaign.campaignFilename.assign(gameCampaign.campaignFilename,
-                                          0, std::string::npos);
-#pragma inline_depth()
-    for (int campaignIndex = 0;
-         campaignIndex < sizeof(savedCampaign.campaignCompleted);
-         ++campaignIndex) {
-        savedCampaign.campaignCompleted[campaignIndex] =
-            gameCampaign.campaignCompleted[campaignIndex];
-    }
-#pragma inline_depth(0)
-    savedCampaign.carryOverHeroes = gameCampaign.carryOverHeroes;
-    savedCampaign.field_4c = gameCampaign.field_4c;
-    savedCampaign.mapScores = gameCampaign.mapScores;
-    savedCampaign.field_6c = gameCampaign.field_6c;
-#pragma inline_depth()
 
-    NewSMapHeader& savedMapHeader = mapHeader;
-    const NewSMapHeader& gameMapHeader = gpGame->mapHeader;
-#pragma inline_depth(0)
-    static_cast<CMapHeaderData&>(savedMapHeader) =
-        static_cast<const CMapHeaderData&>(gameMapHeader);
-    savedMapHeader.mapName.assign(gameMapHeader.mapName,
-                                  0, std::string::npos);
-    savedMapHeader.mapDescription.assign(gameMapHeader.mapDescription,
-                                         0, std::string::npos);
-#pragma inline_depth()
-    savedMapHeader.availableHeroes = gameMapHeader.availableHeroes;
-
-    currentPlayer = gNetLocalGamePos;
-    mapSetup = gpGame->setup;
-    campaignGame = gbUnk69774c;
-    fileName = gpGame->saveFileName;
-    difficultyRating = gpGame->difficultyRating;
-    numDeadPlayers = gpGame->field_1f635;
-    memcpy(deadPlayer, gpGame->playerDisabled, sizeof(deadPlayer));
-
-    int* human = humanPlayer;
-    union {
-        unsigned char byte;
-        unsigned int value;
-    } isHuman;
-    for (int i = 0; i < 8; ++i) {
-        isHuman.byte = gpGame->players[i].IsHuman();
-        *human++ = isHuman.value & 0xff;
-    }
-    reset_assignment_surface();
-}
-
-// Retail disproves the earlier order-only SaveBlackMarkets claim: every
-// member access is within the 0x5a4-byte SavedGameHeader, and the three
-// callees receive its map-header, setup, and campaign subobjects.  Keep the
-// scalar staging locals in disjoint scopes: VC6 then reuses the dead argument
-// home slots, which is the retail stack schedule.
-VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
-int SavedGameHeader::Save(TAbstractFile* outfile)
-{
-    char fileNameBuffer[0x15f];
-    char compatibilityBuffer[32];
-
-    outfile->Write(id, sizeof(id));
-
-    {
-        int buffer = version;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-    {
-        int buffer = gameVersion;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-
-    if (outfile->Write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
-        sizeof(compatibilityBuffer))
-        return -1;
-
-    if (mapHeader.Save(outfile) < 0)
-        return -1;
-    if (mapSetup.save(outfile) < 0)
-        return -1;
-
-    {
-        short buffer = campaignGame;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-    if (campaignGame)
-        campaign.Save(outfile);
-
-    strcpy(fileNameBuffer, fileName.c_str());
-    outfile->Write(fileNameBuffer, sizeof(fileNameBuffer));
-
-    {
-        short buffer = difficultyRating;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-    {
-        char buffer = numDeadPlayers;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-    outfile->Write(deadPlayer, sizeof(deadPlayer));
-    outfile->Write(humanPlayer, sizeof(humanPlayer));
-    {
-        int buffer = currentPlayer;
-        outfile->Write(&buffer, sizeof(buffer));
-    }
-
-    return 0;
-}
-
-// E:\gamedcs\Game.h:1344
-// Loads either from a caller-owned stream or from the remembered save name in
-// the games directory. Retail extends the Dreamcast's three nested loaders
-// with a save-version argument, independently proven by their `ret 8` bodies.
-// EXACT 2026-08-22: inputWasProvided must precede auto_ptr so its compare is
-// interleaved with the guard's two field stores. Four free candidates preserve
-// retail's out-of-line _Tidy on both failure exits and their merged tail; zero
-// through three over-inline the second destructor and split that tail.
-static void saved_header_load_surface()
-{
-}
-
-VA(0x004bc750, 0x3D5)  // adjacent SavedGameHeader Save/setup_shipyards + dc 0xbcfe4
-int SavedGameHeader::Load(TAbstractFile* infile)
-{
-    std::string openedName;
-    unsigned char inputWasProvided = infile != 0;
-    std::auto_ptr<TAbstractFile> ownedInput;
-
-    if (!inputWasProvided) {
-        openedName = gpGame->setup.filename;
-        _chdir("games");
-        try {
-            infile = new TGzFile(openedName.c_str(), "rb");
-            ownedInput = std::auto_ptr<TAbstractFile>(infile);
-        }
-        catch (TGzFile::TOpenFailure) {
-            return -1;
-        }
-        _chdir("..");
-        if (!infile)
-            return -1;
-    }
-
-    if (infile->Read(id, sizeof(id)) < sizeof(id))
-        return -1;
-
-    {
-        int buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        version = buffer;
-    }
-    if (version > 42)
-        return -1;
-
-    if (version >= 40) {
-        int buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        gameVersion = buffer;
-    } else {
-        if (version < 25 && (version < 16 || version > 18))
-            return -1;
-        if (version <= 18)
-            gameVersion = 0;
-        else if (version <= 30)
-            gameVersion = 1;
-        else
-            gameVersion = 2;
-    }
-
-    if (gameVersion == 1 &&
-        *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW)
-        return -1;
-
-    char compatibilityBuffer[32];
-    infile->Read(compatibilityBuffer, sizeof(compatibilityBuffer));
-    if (mapHeader.Load(infile, version) < 0)
-        return -1;
-    if (mapSetup.load(infile, version) < 0)
-        return -1;
-
-    {
-        short buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        campaignGame = buffer != 0;
-    }
-    if (campaignGame)
-        campaign.Load(infile, version);
-
-    char fileNameBuffer[0x15f];
-    infile->Read(fileNameBuffer, sizeof(fileNameBuffer));
-    fileName = fileNameBuffer;
-
-    {
-        short buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        difficultyRating = buffer;
-    }
-    {
-        char buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        numDeadPlayers = buffer;
-    }
-    infile->Read(deadPlayer, sizeof(deadPlayer));
-    infile->Read(humanPlayer, sizeof(humanPlayer));
-    {
-        int buffer;
-        infile->Read(&buffer, sizeof(buffer));
-        currentPlayer = buffer;
-    }
-
-    if (!inputWasProvided)
-        strcpy(mapSetup.filename, openedName.c_str());
-    saved_header_load_surface();
-    saved_header_load_surface();
-    saved_header_load_surface();
-    saved_header_load_surface();
-    return 0;
-}
 
 // E:\gamedcs\game.cpp:2975
 // Rebuilds the per-player shipyard indices after loading a map. Heroes and
@@ -3363,12 +3082,41 @@ int game::LoadBlackMarkets(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2774
-DC_ONLY(0xa7abc, 0xA4)
-unsigned char type_creature_bank::load(void* infile)
+// Retail inlines this record reader into load_object_vector. The fixed
+// bands are the 0x38-byte army, seven 4-byte resources, the creature id and
+// reward count; the trailing short sizes the four-byte artifact vector.
+inline unsigned char type_creature_bank::load(void* input)
 {
-    // @stub
+    TAbstractFile* infile = static_cast<TAbstractFile*>(input);
+    short artifactCount;
+
+    if (infile->Read(&guards, sizeof(guards)) != sizeof(guards))
+        return 0;
+    if (infile->Read(resources, sizeof(resources)) != sizeof(resources))
+        return 0;
+    if (infile->Read(&reward_creature, sizeof(reward_creature)) !=
+        sizeof(reward_creature))
+        return 0;
+    if (infile->Read(&reward_creatures, sizeof(reward_creatures)) !=
+        sizeof(reward_creatures))
+        return 0;
+    std::vector<TArtifact>& artifactVector = artifacts;
+    if (infile->Read(&artifactCount, sizeof(artifactCount)) <
+        sizeof(artifactCount))
+        return 0;
+
+    artifactVector.resize(artifactCount);
+    if (infile->Read(artifactVector.begin(),
+                     artifactCount * sizeof(TArtifact)) <
+        artifactCount * sizeof(TArtifact))
+        return 0;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2790
 DC_ONLY(0xa7b60, 0x64)
@@ -5031,7 +4779,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         victory.HeroID = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolhero_loc(heroes[i].x, heroes[i].y, heroes[i].z);
-            if (vchero_loc.operator==(&poolhero_loc)) {
+            if (vchero_loc.operator==(poolhero_loc)) {
                 int team = heroes[i].owner;
                 if (team >= 0)
                     team = mapHeader.teamInfo[team];
@@ -5076,7 +4824,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         loss.HeroID = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolhero_loc(heroes[i].x, heroes[i].y, heroes[i].z);
-            if (lchero_loc.operator==(&poolhero_loc)) {
+            if (lchero_loc.operator==(poolhero_loc)) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
                     if (validate_is_human_team(this, team))
@@ -5464,6 +5212,173 @@ static __forceinline type_university* university_skills_record(int* skills)
     return alias.university;
 }
 
+
+// E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
+// and spell stores fold away, leaving only the randomized primary lane.
+static void RandomizeScholar(NewmapCell* cell)
+{
+    int award = cell->GetScholarAward();
+    if (award != const_scholar_primary_skill) {
+        int primary = Random(0, 3);
+        int secondary = cell->GetScholarSecondarySkill();
+        int spell = cell->GetScholarSpell();
+        cell->scholar_info.award = award;
+        cell->scholar_info.primary = primary;
+        cell->scholar_info.secondary = secondary;
+        cell->scholar_info.spell = spell;
+    }
+}
+
+
+// Original: RandomizeArtifact; game.cpp:4524, dc 0xab9d4.
+// Complete's ARTIFACT arm at 0x4c0cc0 retains the customization test,
+// Random call and low-nibble clear; the DC guarded-artifact machinery is absent.
+static void randomizeArtifact(NewmapCell* cell)
+{
+    if (!cell->IsCustomized()) {
+        Random(0, 99);
+        cell->extraInfo &= 0xfffffff0;
+    }
+}
+
+
+// E:\gamedcs\game.cpp:4613.
+static void RandomizeSeaChest(NewmapCell* cell)
+{
+    int chance = Random(0, 99);
+    if (chance < 20) {
+        cell->sea_chest_info.reward = 0;
+    }
+    else if (chance < 90) {
+        cell->sea_chest_info.reward = 1;
+    }
+    else {
+        cell->sea_chest_info.reward = 2;
+        cell->sea_chest_info.artifact =
+            gpGame->GetRandomArtifactId(2);
+    }
+}
+
+// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
+// into RandomizeEvents, but keeps the Dinkumware bitset operations out of
+// line. The subscript/reference spelling is visible in the retail call pair:
+// bitset::operator[] followed by _Bit_reference::operator=.
+static void RandomizeShrine(NewmapCell* cell, const int level)
+{
+    if ((cell->extraInfo & SHRINE_RANDOM_SPELL) == SHRINE_RANDOM_SPELL) {
+#pragma inline_depth(0)
+        std::bitset<5> spellLevels(0);
+        spellLevels[level] = true;
+#pragma inline_depth()
+        int spell = gpGame->GetRandomSpell(spellLevels);
+        cell->extraInfo = (cell->extraInfo & 0xff801fff)
+            | ((spell & 0x3ff) << 13);
+    }
+    cell->extraInfo &= 0xffffe01f;
+}
+
+// E:\gamedcs\game.cpp:4654. These two helpers are expanded into
+// RandomizeEvents. Their packed writes remain calls because the corresponding
+// ExtraInfoUnion methods have retail rows immediately after RandomizeEvents.
+// Ownership probe: moving setWagon(resource, amount) to MapCell.h leaves
+// no retained VC6 body at 0x4c2360. Removing this helper's former
+// __forceinline did not recover the call. DC 0xabda8 is an ordinary static
+// helper; keep that boundary while recovering RandomizeEvents' inline state.
+static void randomize_wagon(NewmapCell* cell)
+{
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+    int chance = Random(0, 99);
+    short amount = static_cast<short>(Random(2, 5));
+    EGameResource resource = game_resource_from_int(Random(0, 5));
+    info->setWagon(resource, amount);
+    if (chance < 10)
+        info->EmptyWagon();
+    else if (chance < 50)
+#pragma inline_depth(0)
+        info->setWagon(gpGame->GetRandomArtifactId(6));
+#pragma inline_depth()
+}
+
+
+// Original: RandomizeWiseTree; game.cpp:4681, dc 0xabe30.
+// DC 4682..4684 writes the id, clears visit bits, then draws the price.
+// Complete's TREE_OF_KNOWLEDGE arm preserves those same packed lanes.
+static void randomizeWiseTree(short id, NewmapCell* cell)
+{
+    cell->extraInfo = (cell->extraInfo & 0xffffffe0) | (id & 0x1f);
+    cell->extraInfo &= 0xffffe01f;
+    int price = Random(0, 2);
+    cell->extraInfo = (cell->extraInfo & 0xffff1fff) | ((price & 7) << 13);
+}
+
+
+// E:\gamedcs\game.cpp:4691.
+static void RandomizeTreasure(NewmapCell* cell)
+{
+    int chance = Random(0, 99);
+    if (gpGame->field_1f69d)
+        chance = 60;
+    cell->treasure_info.has_artifact = 0;
+    if (chance < 32)
+        cell->treasure_info.gold = 2;
+    else if (chance < 64)
+        cell->treasure_info.gold = 3;
+    else if (chance < 95)
+        cell->treasure_info.gold = 4;
+    else {
+        cell->treasure_info.artifact =
+            gpGame->GetRandomArtifactId(2);
+        cell->treasure_info.has_artifact = 1;
+    }
+}
+
+
+// Original: randomize_tomb; game.cpp:4724, dc 0xabf78.
+// CodeView names separate i/level locals and the set_tomb boundary. Retail
+// 0x4c1b01 reloads gpGame for the artifact draw and expands the packed setter.
+static void randomizeTomb(NewmapCell* cell)
+{
+    int level;
+    int i = Random(0, 99);
+    if (i < 30)
+        level = 2;
+    else if (i < 80)
+        level = 4;
+    else if (i < 95)
+        level = 8;
+    else
+        level = 16;
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+    info->setTomb(artifact_from_int(gpGame->GetRandomArtifactId(level)));
+}
+
+
+// E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
+// inlined source helper; retail calls only the packed pyramid setter.
+// Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
+// expanded here. Replacing this helper's __forceinline with ordinary static
+// did not recover the retained call; the fatal header-emission gate remains.
+static void randomize_pyramid(NewmapCell* cell)
+{
+    std::vector<long> possibleSpells;
+    int i;
+    for (i = 0; i < 70; ++i) {
+        if (akSpellTraits[i].school != const_invalid_school
+            && akSpellTraits[i].level == PYRAMID_SPELL_LEVEL
+            && !gpGame->field_4e658[i])
+            possibleSpells.push_back(i);
+    }
+
+    int spell = possibleSpells[Random(0, possibleSpells.size() - 1)];
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+    info->setPyramid(true, spell);
+    info->clear_visited_bits();
+}
+
+
 // E:\gamedcs\game.cpp:4770
 // Retail builds one availability bit per secondary skill from the scenario's
 // disabled-skill row, draws four distinct set bits, and appends those four
@@ -5533,6 +5448,45 @@ void game::randomize_university(NewmapCell* cell)
     universityList->insert(universityTail, 1, *universityRecord);
 #pragma inline_depth()
 }
+
+
+// E:\gamedcs\game.cpp:4804. Like the shrine helper, this has no PC row:
+// /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
+// operations as calls. The Dreamcast local/xref roster and retail's helper
+// sequence both select operator[] rather than test/set for the filter.
+static void randomize_witch_hut(NewmapCell* cell)
+{
+#pragma inline_depth(0)
+    std::bitset<28> possibleSkills(cell->extraInfo);
+    cell->extraInfo = 0;
+    if (!possibleSkills.any())
+        possibleSkills = std::bitset<28>(0).flip();
+
+    int i;
+    for (i = 0; i < 28; ++i)
+        possibleSkills[i] = possibleSkills[i]
+            && !gpGame->field_4e658[i];
+
+    int skill;
+    int count = possibleSkills.count();
+    if (count < 1) {
+        skill = -1;
+    }
+    else {
+        int choice = Random(1, count);
+        for (skill = 0; skill < 28; ++skill) {
+            if (possibleSkills[skill] && --choice < 1)
+                break;
+        }
+    }
+#pragma inline_depth()
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+#pragma inline_depth(0)
+    info->setWitchSkill(skill);
+#pragma inline_depth()
+}
+
 
 // E:\gamedcs\game.cpp:4816
 // A radius-zero map marker is already fixed and only needs to be armed.  A
@@ -5696,152 +5650,6 @@ void game::match_underground_gates()
     }
 }
 
-// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
-// into RandomizeEvents, but keeps the Dinkumware bitset operations out of
-// line. The subscript/reference spelling is visible in the retail call pair:
-// bitset::operator[] followed by _Bit_reference::operator=.
-static __forceinline void RandomizeShrine(NewmapCell* cell, const int level)
-{
-    if ((cell->extraInfo & SHRINE_RANDOM_SPELL) == SHRINE_RANDOM_SPELL) {
-#pragma inline_depth(0)
-        std::bitset<5> spellLevels(0);
-        spellLevels[level] = true;
-#pragma inline_depth()
-        int spell = gpGame->GetRandomSpell(spellLevels);
-        cell->extraInfo = (cell->extraInfo & 0xff801fff)
-            | ((spell & 0x3ff) << 13);
-    }
-    cell->extraInfo &= 0xffffe01f;
-}
-
-// E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
-// and spell stores fold away, leaving only the randomized primary lane.
-static __forceinline void RandomizeScholar(NewmapCell* cell)
-{
-    int award = cell->GetScholarAward();
-    if (award != const_scholar_primary_skill) {
-        int primary = Random(0, 3);
-        int secondary = cell->GetScholarSecondarySkill();
-        int spell = cell->GetScholarSpell();
-        cell->scholar_info.award = award;
-        cell->scholar_info.primary = primary;
-        cell->scholar_info.secondary = secondary;
-        cell->scholar_info.spell = spell;
-    }
-}
-
-// E:\gamedcs\game.cpp:4613.
-static __forceinline void RandomizeSeaChest(NewmapCell* cell)
-{
-    int chance = Random(0, 99);
-    if (chance < 20) {
-        cell->sea_chest_info.reward = 0;
-    }
-    else if (chance < 90) {
-        cell->sea_chest_info.reward = 1;
-    }
-    else {
-        cell->sea_chest_info.reward = 2;
-        cell->sea_chest_info.artifact =
-            gpGame->GetRandomArtifactId(2);
-    }
-}
-
-// E:\gamedcs\game.cpp:4691.
-static __forceinline void RandomizeTreasure(NewmapCell* cell)
-{
-    int chance = Random(0, 99);
-    if (gpGame->field_1f69d)
-        chance = 60;
-    cell->treasure_info.has_artifact = 0;
-    if (chance < 32)
-        cell->treasure_info.gold = 2;
-    else if (chance < 64)
-        cell->treasure_info.gold = 3;
-    else if (chance < 95)
-        cell->treasure_info.gold = 4;
-    else {
-        cell->treasure_info.artifact =
-            gpGame->GetRandomArtifactId(2);
-        cell->treasure_info.has_artifact = 1;
-    }
-}
-
-// E:\gamedcs\game.cpp:4745. These two helpers are expanded into
-// RandomizeEvents. Their packed writes remain calls because the corresponding
-// ExtraInfoUnion methods have retail rows immediately after RandomizeEvents.
-static __forceinline void randomize_wagon(NewmapCell* cell)
-{
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->extraInfo));
-    int chance = Random(0, 99);
-    short amount = static_cast<short>(Random(2, 5));
-    EGameResource resource = game_resource_from_int(Random(0, 5));
-    info->SetWagon(resource, amount);
-    if (chance < 10)
-        info->EmptyWagon();
-    else if (chance < 50)
-#pragma inline_depth(0)
-        info->SetWagon(gpGame->GetRandomArtifactId(6));
-#pragma inline_depth()
-}
-
-// E:\gamedcs\game.cpp:4761. The vector local and its teardown belong to the
-// inlined source helper; retail calls only the packed pyramid setter.
-static __forceinline void randomize_pyramid(NewmapCell* cell)
-{
-    std::vector<long> possibleSpells;
-    int i;
-    for (i = 0; i < 70; ++i) {
-        if (akSpellTraits[i].school != const_invalid_school
-            && akSpellTraits[i].level == PYRAMID_SPELL_LEVEL
-            && !gpGame->field_4e658[i])
-            possibleSpells.push_back(i);
-    }
-
-    int spell = possibleSpells[Random(0, possibleSpells.size() - 1)];
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->extraInfo));
-    info->set_pyramid(true, spell);
-    info->clear_visited_bits();
-}
-
-// E:\gamedcs\game.cpp:4804. Like the shrine helper, this has no PC row:
-// /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
-// operations as calls. The Dreamcast local/xref roster and retail's helper
-// sequence both select operator[] rather than test/set for the filter.
-static __forceinline void randomize_witch_hut(NewmapCell* cell)
-{
-#pragma inline_depth(0)
-    std::bitset<28> possibleSkills(cell->extraInfo);
-    cell->extraInfo = 0;
-    if (!possibleSkills.any())
-        possibleSkills = std::bitset<28>(0).flip();
-
-    int i;
-    for (i = 0; i < 28; ++i)
-        possibleSkills[i] = possibleSkills[i]
-            && !gpGame->field_4e658[i];
-
-    int skill;
-    int count = possibleSkills.count();
-    if (count < 1) {
-        skill = -1;
-    }
-    else {
-        int choice = Random(1, count);
-        for (skill = 0; skill < 28; ++skill) {
-            if (possibleSkills[skill] && --choice < 1)
-                break;
-        }
-    }
-#pragma inline_depth()
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->extraInfo));
-#pragma inline_depth(0)
-    info->set_witch_skill(skill);
-#pragma inline_depth()
-}
 
 // E:\gamedcs\game.cpp:5003
 // Assign every stateful adventure-map object its new-game payload.  The
@@ -5959,10 +5767,7 @@ void game::RandomizeEvents()
                     break;
 
                 case ARTIFACT:
-                    if (!tempCell->IsCustomized()) {
-                        Random(0, 99);
-                        tempCell->extraInfo &= 0xfffffff0;
-                    }
+                    randomizeArtifact(tempCell);
                     break;
 
                 case BLACK_BOX:
@@ -6356,13 +6161,7 @@ void game::RandomizeEvents()
                     break;
 
                 case TREE_OF_KNOWLEDGE:
-                    tempCell->extraInfo =
-                        (tempCell->extraInfo & 0xffffe000)
-                        | (numTreeOfKnowledge++ & 0x1f);
-                    id = Random(0, 2);
-                    tempCell->extraInfo =
-                        (tempCell->extraInfo & 0xffff1fff)
-                        | ((id & 7) << 13);
+                    randomizeWiseTree(static_cast<short>(numTreeOfKnowledge++), tempCell);
                     break;
 
                 case UNIVERSITY:
@@ -6378,20 +6177,7 @@ void game::RandomizeEvents()
                     break;
 
                 case WARRIOR_TOMB:
-                    id = Random(0, 99);
-                    if (id < 30)
-                        id = 2;
-                    else if (id < 80)
-                        id = 4;
-                    else if (id < 95)
-                        id = 8;
-                    else
-                        id = 16;
-                    // 0x4c1b01 loads gpGame for this call where the
-                    // if-chain feeding `id` just above keeps `this`.
-                    tempCell->extraInfo =
-                        (tempCell->extraInfo & 0xff80001f) | 1
-                        | ((gpGame->GetRandomArtifactId(id) & 0x3ff) << 13);
+                    randomizeTomb(tempCell);
                     break;
 
                 case WATER_WHEEL:
@@ -6446,52 +6232,16 @@ void game::RandomizeEvents()
     }
 }
 
-// E:\gamedcs\MapCell.h:1056. Retail keeps these four packed-field methods
-// out of line directly after RandomizeEvents; the masks and widths below are
-// recovered from 0x4c2330..0x4c23dc.
-VA(0x004c2330, 0x27)
-void ExtraInfoUnion::set_pyramid(bool guards, int new_spell)
-{
-    pyramid_info.guarded = guards;
-    pyramid_info.spell = new_spell;
-}
 
-VA(0x004c2360, 0x27)
-void ExtraInfoUnion::SetWagon(EGameResource resource, short amount)
-{
-    value = (value & 0xe1ffa000)
-        | (amount & 0x1f) | 0x2000 | ((resource & 0xf) << 25);
-}
-
-VA(0x004c2390, 0x21)
-void ExtraInfoUnion::SetWagon(int artifact)
-{
-    value = (value & 0xfe00601f)
-        | ((artifact & 0x3ff) << 15) | 0x6000;
-}
-
-VA(0x004c23c0, 0x1c)
-void ExtraInfoUnion::set_witch_skill(int skill)
-{
-    value = (value & 0xfff0001f) | ((skill & 0x7f) << 13);
-}
-
-// E:\gamedcs\netmsg.h:619. RandomizeEvents exhausts VC6's inline budget
-// before this construction, leaving the constructor as the next retail row.
-VA(0x004c23e0, 0x31)
-CMCClaimGarrison::CMCClaimGarrison(int id, int player)
-    : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
-      garrisonId(id), playerPos(player)
-{
-}
+// The four packed-field COMDATs retained after RandomizeEvents at
+// 0x4c2330..0x4c23dc are annotated on their canonical mapcell.h bodies.
 
 // The implicit record destructor is materialized by the later
 // vector<type_creature_bank> teardown. Its only non-trivial member is the
 // artifact vector at +0x60, yielding retail's 38-byte body.
-VA(0x004c2420, 0x26)
-type_creature_bank::~type_creature_bank()
-{
-}
+// CodeView dc 0xbd58c: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 
 static __forceinline bool test_new_map_spell(
     const std::bitset<70>& spells, int spell)
@@ -7428,7 +7178,8 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 // EXACT 2026-08-26: all 16 blocks and 350 bytes agree. The top-scope time
 // limit plus arm-scoped coordinate/id buffers let VC6 overlap the int at the
 // stream argument with the saved-id short at its upper half, as retail does.
-VA(0x004c3d90, 0x15E)  // DC loadLossCondition + sole NewSMapHeader::Load caller
+// Complete adds saveVersion; every retained return pops three arguments.
+VA(0x004c3d90, 0x15E)  // DC loadLossCondition + sole Load caller + ret 0xc, dc 0xaf488
 int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
                                      int saveVersion)
 {
@@ -7623,7 +7374,8 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // 74.2348.  The DC block does name `count`, so retail's source very likely
 // has it; what this body cannot absorb is the change in the two placeholder
 // blocks' own block-scoped `count`, which the shared local subsumes.
-VA(0x004c4390, 0x92E)  // DC Read identity + LoadMap/Get callers + stream order
+// Complete adds the campaign-map ordinal to the stream reader (ret 8).
+VA(0x004c4390, 0x92E)  // DC Read + LoadMap/Get callers + stream order, dc 0xaf64c
 int NewSMapHeader::Read(TAbstractFile* infile, int campaignMap)
 {
     char padding[MAP_HEADER_PADDING_SIZE];
@@ -8108,7 +7860,8 @@ static __forceinline void set_saved_header_availability(
 // the depth this callee expands at moves the four surrounding
 // `_Tidy`/`assign`/`out_of_range`/`__CxxThrowException` sites with it and
 // costs more than the call is worth.
-VA(0x004c5630, 0x7CD)  // DC Load identity + saved-header callers + helper edges
+// Complete adds saveVersion to the stream reader; retail returns with ret 8.
+VA(0x004c5630, 0x7CD)  // DC Load + saved-header callers + helper edges, dc 0xb0754
 int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
 {
     char enum_buffer;
@@ -8306,7 +8059,8 @@ int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
 // NewMap, then the stream-based reader owns all format interpretation. The
 // try scope is retail-visible: it catches both TGzFile construction and Read,
 // producing the exact third EH state and shared -1 cleanup tail.
-VA(0x004c5e00, 0x210)  // DC Get identity + five PC callers + TGzFile/Read edges
+// The retained ret 0xc independently fixes the three explicit PC arguments.
+VA(0x004c5e00, 0x210)  // DC Get + five PC callers + TGzFile/Read edges, dc 0xb0ea8
 int NewSMapHeader::Get(const char* path, const char* filename,
                        int campaignMap)
 {
@@ -8684,22 +8438,6 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
     }
 }
 
-// The Dreamcast keeps this a header inline (game.h:1375); retail's
-// out-of-line copy therefore lands in game.obj, between ClaimTown and
-// ClaimMine. generator::remove_bonus is the only body in this TU that
-// calls it - update_bonus writes the same logic out longhand.
-VA(0x004c6690, 0x43)  // link-order (game span) + body identity, dc 0x2000c
-int game::get_alignment(int creature) const
-{
-    if (!f_1f698
-        && (creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))
-        return -1;
-    return akCreatureTypeTraits[creature].townType;
-}
-
 // E:\gamedcs\game.cpp:7379
 VA(0x004c66e0, 0xCB)  // anchor-global, dc 0xb1748
 void game::ClaimMine(int mineId, int newPlayerOwner, type_action_type action_type)
@@ -8752,9 +8490,7 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
     garrison* current_garrison = &garrisons[garrisonId];
     type_point location(current_garrison->mapX, current_garrison->mapY,
                         current_garrison->mapZ);
-    // This later, smaller caller inlines the same constructor. Spell the
-    // seven stores explicitly so the one out-of-line source definition above
-    // does not change its already-banked schedule.
+    // This later, smaller caller uses the same canonical constructor.
     // Residual (84.4059%): retail issues subType / field_00 / size /
     // garrisonId / playerPos INTO the gaps of the inlined type_point
     // construction and sinks only the two zero stores behind it; we emit all
@@ -8766,14 +8502,7 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
     // 81.0559.  The zeros are sunk on both sides because they share the
     // `xor ecx,ecx` the packing code already needs, so their source position
     // is not observable; what is left is scheduling, not statement order.
-    CMCClaimGarrison change;
-    change.field_04 = 0;
-    change.field_10 = 0;
-    change.subType = RS_CLAIM_GARRISON;
-    change.field_00 = -1;
-    change.size = sizeof(CMCClaimGarrison);
-    change.garrisonId = garrisonId;
-    change.playerPos = newPlayerOwner;
+    CMCClaimGarrison change(garrisonId, newPlayerOwner);
     SendMapChange(&change);
 
     current_garrison->playerOwner = newPlayerOwner;
@@ -8959,7 +8688,7 @@ void game::ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
     TCreatureType upgrade = CREATURE_NONE;
     unsigned char hasAngelicAlliance = 0;
 
-    if (this_town && get_alignment(creature) == this_town->type) {
+    if (this_town && getAlignment(creature) == this_town->type) {
         int building = DWELLING_0_ID;
         for (;;) {
             if (gTownDwellingCreatures[this_town->type * 2
@@ -9612,7 +9341,7 @@ void game::PerDay()
             int team = towns[i].owner;
             if (team >= 0)
                 team = mapHeader.teamInfo[team];
-            if (!is_human_ally(team) && towns[i].field_02) {
+            if (!isHumanAlly(team) && towns[i].field_02) {
                 --towns[i].field_02;
                 continue;
             }
@@ -9793,17 +9522,6 @@ void game::replace_recruit(int playerPos, long recruitSlot)
     }
 }
 
-// E:\gamedcs\Town.h:337
-// Keep this accessor source-visible: the Dreamcast line/xref
-// record proves three HasBuilding calls, while Complete's VC6 /Ob2 build
-// expands the helper into the neutral-town pass below. Defining it adjacent to
-// its recovered caller avoids perturbing earlier game.obj front-end state.
-inline unsigned char town::IsCastle() const
-{
-    return HasBuilding(CASTLE_FORT_ID, 0)
-        || HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0);
-}
 
 // E:\gamedcs\game.cpp:8398
 // Complete's weekly pass retains the Dreamcast phase order and call graph,
@@ -11189,27 +10907,32 @@ int game::GetBoatsBuilt()
 // Retail's vector-constructor iterator at 0x4ca9e0 proves nine 24-byte
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
 DATA(0x006971a0)
-static TPickRandomTownName gRandomTownNames[9];
+// Previous project spelling: gRandomTownNames.
+static TPickRandomTownName g_randomTownNames[9];
 
 // The Complete table has a 17-pointer faction stride. The picker intentionally
 // uses only indices 0..15; the seventeenth entry is outside its random domain.
 DATA(0x006a6048)
 const char* gTownNames[9][17];
 
+
+
+// E:\gamedcs\game.cpp:9803, dc 0xb6944.
+inline const char* GetRandomTownName(int townType)
+{
+    int name = g_randomTownNames[townType].pick();
+    while (name == -1) {
+        townType = Random(0, 8);
+        name = g_randomTownNames[townType].pick();
+    }
+    return gTownNames[townType][name];
+}
+
+// E:\gamedcs\game.cpp:9821, dc 0xb69b8.
 inline void ResetRandomTownNames()
 {
     for (int i = 0; i < 9; ++i)
-        gRandomTownNames[i].Reset();
-}
-
-inline const char* GetRandomTownName(int townType)
-{
-    int name = gRandomTownNames[townType].Pick();
-    while (name == -1) {
-        townType = Random(0, 8);
-        name = gRandomTownNames[townType].Pick();
-    }
-    return gTownNames[townType][name];
+        g_randomTownNames[i].reset();
 }
 
 // E:\gamedcs\game.cpp:9833
@@ -13004,17 +12727,16 @@ game::game()
 #endif  // @carcass
 
 // E:\gamedcs\game.cpp:11746
-VA(0x004ce4b0, 0x68)  // address-take (game::game +0x46) + layout, dc 0xbd5f4
-HeroExtra::HeroExtra()
-{
-}
+// CodeView dc 0xbd5f4 marks the default constructor compgenx. The
+// game::game array construction takes its address at +0x46; all work is
+// implicit member initialization, including the artifact arrays and string.
+VA_COMPGEN(0x004ce4b0, 0x68, CLASS_CTOR, HeroExtra)
 
 VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 
-VA(0x004ce570, 0x32)  // address-take + ctor-proven layout (+0x90 triple), dc 0xbd630
-playerData::~playerData()
-{
-}
+// CodeView dc 0xbd630: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData)
 
 // E:\gamedcs\game.cpp:11749
 // ONE user statement and the compiler-generated member teardown. Retail's
@@ -13405,37 +13127,7 @@ VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
 VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 
-// E:\gamedcs\game.cpp:2774
-// Retail inlines this record reader into load_object_vector below. The fixed
-// bands are the 0x38-byte army, seven 4-byte resources, the creature id and
-// reward count; the trailing short sizes the four-byte artifact vector.
-inline unsigned char type_creature_bank::load(void* input)
-{
-    TAbstractFile* infile = static_cast<TAbstractFile*>(input);
-    short artifactCount;
 
-    if (infile->Read(&guards, sizeof(guards)) != sizeof(guards))
-        return 0;
-    if (infile->Read(resources, sizeof(resources)) != sizeof(resources))
-        return 0;
-    if (infile->Read(&reward_creature, sizeof(reward_creature)) !=
-        sizeof(reward_creature))
-        return 0;
-    if (infile->Read(&reward_creatures, sizeof(reward_creatures)) !=
-        sizeof(reward_creatures))
-        return 0;
-    std::vector<TArtifact>& artifactVector = artifacts;
-    if (infile->Read(&artifactCount, sizeof(artifactCount)) <
-        sizeof(artifactCount))
-        return 0;
-
-    artifactVector.resize(artifactCount);
-    if (infile->Read(artifactVector.begin(),
-                     artifactCount * sizeof(TArtifact)) <
-        artifactCount * sizeof(TArtifact))
-        return 0;
-    return 1;
-}
 
 // E:\gamedcs\game.cpp:2733
 // The two-byte vector count and 0x6c element stride identify the creature-bank
@@ -13705,14 +13397,14 @@ void ExtraInfoUnion::SetScholar(ScholarAwards award, TPrimarySkill primary, TSec
 
 // E:\gamedcs\MapCell.h:1176
 DC_ONLY(0xbcac8, 0x74)
-void ExtraInfoUnion::SetWagon(EGameResource resource, short amount)
+void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1185
 DC_ONLY(0xbcb3c, 0x58)
-void ExtraInfoUnion::SetWagon(TArtifact artifact)
+void ExtraInfoUnion::setWagon(TArtifact artifact)
 {
     // @stub
 }
@@ -13726,7 +13418,7 @@ void ExtraInfoUnion::set_tomb(TArtifact artifact)
 
 // E:\gamedcs\MapCell.h:1251
 DC_ONLY(0xbcbdc, 0x3C)
-void ExtraInfoUnion::set_witch_skill(TSecondarySkill skill)
+void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 {
     // @stub
 }
@@ -18726,51 +18418,13 @@ void CObjectType::~CObjectType()
 // only their named out-of-line members without changing any runtime caller.
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
-// Retail's real game callers also retain five private `_Tidy` COMDATs after
-// exhausting their inline budgets. These narrow reset specializations keep
-// the real Dinkumware helper calls and constrain only those statements. The
-// measured negative controls reject direct expansion, member
-// pointers, volatile carriers, and a TU-wide auto_inline switch.
-template<> std::bitset<5>& std::bitset<5>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
-
-template<> std::bitset<8>& std::bitset<8>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
-
-template<> std::bitset<28>& std::bitset<28>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
-
-template<> std::bitset<70>& std::bitset<70>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
-
-template<> std::bitset<128>& std::bitset<128>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
-
+// The five bitset reset bodies belong to the pinned VC6 BITSET header.
+// Former application-local specializations only inserted inline_depth pins
+// around _Tidy; they supplied no recovered game behavior and are removed.
+// With canonical reset, the five retained _Tidy comparisons (5/8/28/70/128
+// bits) lose their game.obj emissions; their MAX 100 checkpoints remain banked.
+// No game function score changed in this control. Recover real caller/compiler
+// state rather than restoring these private library replacements.
 #pragma inline_depth(0)
 void h3_game_class_comdat_anchor(unsigned char sending)
 {

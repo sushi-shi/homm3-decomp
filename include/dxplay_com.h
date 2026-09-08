@@ -5,48 +5,6 @@
 #include "dxplay.h"
 #include "dplaycaps.h"
 
-// The group enum trampoline's backing record: a 0x100-byte name buffer
-// followed by the DPID at +0x100 (0x104 total). AddGroupEnum news one,
-// strcpys the enumerated short name in, and stores the id. CDPlayGroup is
-// only forward-declared in the shared header; completed here for this TU
-// (CDPlayPlayer, its twin, is complete in dxplay.h).
-class CDPlayGroup {
-public:
-    CDPlayGroup(char* sName, unsigned long dpid)
-    {
-        strcpy(m_sName, sName);
-        m_dpid = dpid;
-    }
-
-    char m_sName[0x100];      // +0x00
-    unsigned long m_dpid;     // +0x100
-};
-
-// The address-element records one DirectPlay SP address chunk EnumAddress splits
-// out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and
-// its size at +0x14. AddAddressEnum news one per enumerated chunk; the array's
-// inlined teardown frees the buffer, then the element. Completed here for this
-// TU (only forward-declared in the shared header).
-class CDPlayAddressElement {
-public:
-    CDPlayAddressElement(const GUID* lpGuid, const void* pData,
-        unsigned long dataSize)
-    {
-        m_guid = *lpGuid;
-        m_dataSize = dataSize;
-        m_pData = new char[dataSize];
-        memcpy(m_pData, pData, m_dataSize);
-    }
-
-    ~CDPlayAddressElement()
-    {
-        delete [] m_pData;
-    }
-
-    GUID m_guid;              // +0x00
-    char* m_pData;            // +0x10
-    unsigned long m_dataSize; // +0x14
-};
 
 // DirectPlay HRESULT macros used by the wrappers and CDPlay::GetErrorDesc.
 // Keep these as preprocessor constants, as they are in the VC6 DPLAY.H:

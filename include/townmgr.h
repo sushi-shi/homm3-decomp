@@ -182,30 +182,7 @@ extern const char* gTownBuildingSprites[9][44];
 // FortressTown, ElemTown.
 extern const char* gTownMusic[9];
 
-// The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
-// to the adventure handler's TRADE path with the same `this` - a direct,
-// non-virtual base call, so the derivation is at offset 0 - and then
-// refreshes the resource bar it was constructed with. That refresh reads
-// the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
-// base, and the Dreamcast constructor's one parameter is that same bar.
-class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
-public:
-    TResourceDisplay* pResourceDisplay;  // +0x0c
 
-    // The only retail construction site (townManager::Open) expands this
-    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
-    // call, followed by the derived vptr and resource-display stores.
-    CTownNetMsgHandler(TResourceDisplay* display)
-    { pResourceDisplay = display; }
-    // Four bytes on the Dreamcast and no retail row of its own, so it
-    // is a header one-liner every caller expands: DoHall 0x5d27b0
-    // emits the bare `mov [handler+0xc], bar` at both of its two
-    // hand-over sites.
-    void SetResourceDisplay(TResourceDisplay* display)
-    { pResourceDisplay = display; }
-    void HandleGiftMsg(CNetMsg* pNetMsg);
-};
-SIZE(CTownNetMsgHandler, 0x10);
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -547,13 +524,13 @@ public:
     // points push a third literal 0 behind the army pointer.
     type_monster_join_window(hero* inHero, armyGroup* monsters,
                              unsigned char flags);
-    virtual ~type_monster_join_window();
+    // Implicit destructor; CodeView dc 0x181638 compgenx.
 };
 
 class TGarrisonWindow : public type_garrison_base_window {
 public:
     TGarrisonWindow(hero* inHero, int garrison_owner, armyGroup* garrison_army);
-    virtual ~TGarrisonWindow();
+    // Implicit destructor; CodeView dc 0x181684 compgenx.
 };
 
 // The blacksmith, which sells one war machine per town type. Its

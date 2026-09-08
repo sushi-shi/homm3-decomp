@@ -188,14 +188,14 @@ void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int
 
 // E:\gamedcs\multiplayerwindow.cpp:269
 DC_ONLY(0x1020b4, 0x6)
-void CMPEdit::SetNextEdit(CMPEdit* pNextEdit)
+void CMPEdit::setNextEdit(CMPEdit* pNextEdit)
 {
     // @stub
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:274
 DC_ONLY(0x1020bc, 0x6)
-void CMPEdit::SetPrevEdit(CMPEdit* pPrevEdit)
+void CMPEdit::setPrevEdit(CMPEdit* pPrevEdit)
 {
     // @stub
 }
@@ -254,7 +254,7 @@ void CMPInputEdit::~CMPInputEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:521
 DC_ONLY(0x10286c, 0x24)
-void CMPInputDlg::DisableOK()
+void CMPInputDlg::disableOK()
 {
     // @stub
 }
@@ -264,7 +264,34 @@ void CMPInputDlg::DisableOK()
 // E:\gamedcs\multiplayerwindow.cpp:700
 #endif
 
+// CMultiPlayerWindowEdit - the text-entry widget the session-host name field
+// uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
+// its only addition is the slot-15 key-handler override that gives it a
+// distinct vtable (retail 0x640054, stored by the TMultiPlayerWindow
+// constructor).
+class CMultiPlayerWindowEdit : public textEntryWidget {
+public:
+    // Original: CMultiPlayerWindowEdit::CMultiPlayerWindowEdit; multiplayerwindow.cpp:141, dc 0x101e00.
+    CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
+                           const char* text, const char* fontName,
+                           font::TColor color, unsigned justification,
+                           const char* backgroundIcon, int backgroundFrame,
+                           int id, int style, int readType, int insetX,
+                           int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+    virtual int OnKeyPress(message* msg);  // slot 15, retail 0x50ed60
+};
+
 // E:\gamedcs\multiplayerwindow.cpp:174
+// CodeView Update:1112 and OnJoin:1767 both call dc 0x101f34 with the
+// unsigned-long index signature. The former int overload and its
+// IsJoinDisabledInline helper were reconstruction-only compiler steering;
+// both callers now share this body and the canonical CDPlaySession methods.
+// DC 0x101fd8 proves the IsPasswordProtected boundary as well.
 inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
                                           char* userName, int& numPlayers,
                                           eSessionStatus& status)
@@ -291,45 +318,12 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
     status = open;
     if (session->IsJoinDisabled())
         status = closed;
-    else if (session->dwFlags & 0x400)
+    else if (session->IsPasswordProtected())
         status = password;
     return true;
 }
 
-// Update and OnJoin inline the same source helper but make opposite nested
-// IsJoinDisabled decisions in retail. Keep a caller-specific int overload so
-// Update's int row expression selects the expanded status test while the
-// Dreamcast-proven unsigned-long overload remains OnJoin's exact lowering.
-inline bool CHeroSessions::GetSessionInfo(
-    int index, char* sessName, char* userName, int& numPlayers,
-    eSessionStatus& status)
-{
-    CDPlaySession* session = Get(index);
-    if (!session)
-        return false;
 
-    char separator[2];
-    separator[0] = static_cast<char>(0xfa);
-    separator[1] = 0;
-    char* split = strstr(session->sessionName, separator);
-    int nameLength = strlen(session->sessionName);
-    if (split)
-        nameLength = split - session->sessionName;
-    strncpy(sessName, session->sessionName, nameLength);
-    sessName[nameLength] = 0;
-    if (split)
-        strcpy(userName, &session->sessionName[nameLength + 1]);
-    else
-        userName[0] = 0;
-
-    numPlayers = session->playerCount;
-    status = open;
-    if (session->IsJoinDisabledInline())
-        status = closed;
-    else if (session->dwFlags & 0x400)
-        status = password;
-    return true;
-}
 
 // --- Retail-located TMultiPlayerWindow / CMPInputDlg / CHotSeatDlg cores ---
 // Located by class vtable slots (0x6400a0 TMultiPlayerWindow, 0x6400f4
@@ -381,11 +375,175 @@ DATA(0x006a7780) char* gUnnamed6a7780;
 // the shared pair above.
 DATA(0x006a7788) char* gSearchAddressHelp;
 
-// E:\gamedcs\multiplayerwindow.cpp:1005
-// Slider callback for the session list; scrolls the displayed window of games.
-void SliderGames(int state, heroWindow* parent_window)
+
+
+
+
+// The text-entry widgets the two multiplayer dialogs use. All three add the
+// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
+// dialog can chase focus around its field ring; the hierarchy is proven by
+// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
+// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
+//
+// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
+// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
+// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
+// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
+// constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
+// CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
+// OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
+// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
+// OnKeyPress(15). Only the constructors and the two inline setters are
+// reached from this TU; the override bodies live in their own carve rows.
+class CMPEdit : public textEntryWidget {
+public:
+    CMPEdit* m_nextEdit;   // +0x70
+    CMPEdit* m_prevEdit;   // +0x74
+
+    CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
+            const char* fontName, font::TColor color, unsigned justification,
+            const char* backgroundIcon, int backgroundFrame, int id,
+            int style, int readType, int insetX, int insetY);
+    // Original: CMPEdit::SetNextEdit; multiplayerwindow.cpp:269, dc 0x1020b4.
+    void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
+    // Original: CMPEdit::SetPrevEdit; multiplayerwindow.cpp:274, dc 0x1020bc.
+    void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
+    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
+    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
+    // DECLARATION ORDER CORRECTED 2026-09-06 (claim lane 31): retail's own
+    // table 0x640184 holds 0x510850 at slot 19 and 0x510870 at slot 20, and
+    // the two bodies are told apart by the member they read - 0x510850 reads
+    // nextEdit at +0x70, 0x510870 reads prevEdit at +0x74. DC lists
+    // OnNextEdit (dc 0x10215c) ahead of OnPrevEdit (dc 0x102184) for the same
+    // reason. The pair had been declared the other way round, which put the
+    // WRONG body in each vtable slot; the call sites below move with it, so
+    // no emitted instruction changes.
+    virtual void OnNextEdit();                   // slot 19, retail 0x510850
+    virtual void OnPrevEdit();                   // slot 20, retail 0x510870
+};
+
+class CMPInputEdit : public CMPEdit {
+public:
+    // Original: CMPInputEdit::CMPInputEdit; multiplayerwindow.cpp:383, dc 0x102210.
+    VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
+    CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                  backgroundIcon, backgroundFrame, id, style, readType, insetX,
+                  insetY)
+    {
+    }
+    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50de50
+};
+
+// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
+// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
+// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
+// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
+// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
+// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
+// The vtable 0x6400f4 is FIFTEEN slots, not fourteen: it runs 0x2400f4 to
+// 0x24012f and CMPInputEdit's own table starts at 0x240130, so slot 14 is
+// real and holds 0x510980 - UpdateOK. That is the one place this dialog
+// diverges from CHotSeatDlg's roster (whose table stops at slot 13), and
+// CMPInputEdit::OnKeyPress 0x50de50 calls it through `[edx+0x38]` rather
+// than inlining it, which is the other half of the same proof.
+// DisableOK/OnOK stay non-virtual. field1/field2 are DC CMPInputEdit* but
+// reached only as textWidget here.
+class CMPInputDlg : public CHeroWindowEx {
+public:
+    // CodeView CMPInputDlg field list 0x4493 owns this nested enum:
+    // type 0x4483 / enumerators 0x4482 preserve these widget IDs and values.
+    enum {
+        BACKGROUND_ID = 500,
+        FIELD1_ID = 501,
+        FIELD2_ID = 502,
+        HEADER1_ID = 503,
+        HEADER2_ID = 504,
+        OKAY_ID = 505,
+        BACK_ID = 506,
+        ROLLOVER_ID = 507
+    };
+
+    CMPInputEdit* field1;  // +0x50
+    CMPInputEdit* field2;  // +0x54
+    textWidget* header1;   // +0x58
+    textWidget* header2;   // +0x5c
+    textWidget* rollover;  // +0x60
+
+    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
+    virtual ~CMPInputDlg();
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    unsigned char OnOK();
+    virtual void UpdateOK();  // slot 14, retail 0x510980
+    __forceinline void disableOK();
+};
+SIZE(CMPInputDlg, 0x64);
+
+// E:\gamedcs\multiplayerwindow.cpp:418
+VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
+__forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+    : CHeroWindowEx(284, 194, 232, 212, 18)
 {
-    static_cast<TMultiPlayerWindow*>(parent_window)->currentIndex = state;
+    Widgets.reserve(6);
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
+                                       "MuDialog.pcx", 0x800));
+
+    field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
+                              font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
+    field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
+                              font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
+    field1->setNextEdit(field2);
+    field2->setNextEdit(field1);
+    field1->setPrevEdit(field2);
+    field2->setPrevEdit(field1);
+
+    header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
+                             -1, 1, 0, 8);
+    header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
+                             -1, 1, 0, 8);
+
+    Widgets.push_back(field1);
+    Widgets.push_back(field2);
+    Widgets.push_back(header1);
+    Widgets.push_back(header2);
+    Widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+                                 0, 28, 2));
+    Widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+                                 0, 1, 2));
+
+    rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
+                              ROLLOVER_ID, 1, 32, 8);
+    Widgets.push_back(rollover);
+
+    AddWidgetsToMessageStream();
+    SetFocus(field1->id);
+    field1->SetAutoDraw(1);
+    field2->SetAutoDraw(1);
+    GetWidget(OKAY_ID)->set_help_text(gDialogOkHelp, 0, 0);
+    GetWidget(BACK_ID)->set_help_text(gDialogBackHelp, 0, 0);
+}
+
+// DC keeps this source helper out of line and OnWidgetDeselect calls it.
+// Complete emits no standalone body, but the retail caller contains exactly
+// its active-field/empty-text guard, proving that VC6 inlined the boundary.
+inline unsigned char CMPInputDlg::OnOK()
+{
+    if (field1->status & widget::WIDGET_ACTIVE) {
+        if (!strlen(field1->Text.c_str()))
+            return 0;
+    }
+    return 1;
+}
+
+// Original: CMPInputDlg::DisableOK; multiplayerwindow.cpp:521, dc 0x10286c.
+__forceinline void CMPInputDlg::disableOK()
+{
+    GetWidget(OKAY_ID)->enable(0);
 }
 
 // The two CHotSeatDlg helpers the DC roster keeps out of line (GetPlayerCount
@@ -409,6 +567,13 @@ inline void CHotSeatDlg::UpdateOK()
 {
     GetWidget(OKAY_ID)->enable(GetPlayerCount() > 1);
     DrawWindow(1, 0xffff0001, 0xffff);
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// Slider callback for the session list; scrolls the displayed window of games.
+void SliderGames(int state, heroWindow* parent_window)
+{
+    static_cast<TMultiPlayerWindow*>(parent_window)->currentIndex = state;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:527 - promoted from DC_ONLY. Slot 15 of
@@ -461,14 +626,14 @@ void CHotSeatEdit::OnKillFocus()
 // derive CMPEdit.
 void CHotSeatEdit::OnNextEdit()
 {
-    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(nextEdit->id);
+    if (m_nextEdit && (m_nextEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(m_nextEdit->id);
 }
 
 void CHotSeatEdit::OnPrevEdit()
 {
-    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(prevEdit->id);
+    if (m_prevEdit && (m_prevEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(m_prevEdit->id);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:860 - promoted from DC_ONLY. Slot 15 of
@@ -620,13 +785,6 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     GoMainMenu();
 }
 
-// E:\gamedcs\MultiPlayerWindow.h:91
-VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
-textWidget* TMultiPlayerWindow::GetRolloverWidget()
-{
-    return RolloverWidget;
-}
-
 // Byte-exact. Slot 15 suppresses Enter in the player-name field. Other keys
 // use the base editor; a consumed key then redraws the multiplayer window so
 // the session list reflects the new local name. DC supplies the class/method
@@ -724,10 +882,14 @@ void TMultiPlayerWindow::GoMainMenu()
 // the local player has typed a name. Splash-visible and empty-list states take
 // the two short branches; the full list re-uses the same UpdateScreen tail.
 // CHeroSessions::GetSessionInfo and CDPlaySession::IsJoinDisabled inline here,
-// reproducing retail's session parsing and status CFG. Selecting the caller-
-// specific inline copy restores the banked 99.208% peak (from 98.048%). The
-// sole residual is a row-Y load/add/store schedule plus stack-slot assignments;
-// 51 of 52 blocks are exact and the last is size-only. why-reg measured a
+// reproducing retail's session parsing and status CFG. The former caller-
+// specific copy reached 99.208%; consolidating the proven source helper keeps
+// that MAX banked and returns this caller to 98.048%. Verified /Z7 now shows
+// 50/52 blocks exact: the player-count test materializes a byte bool before
+// branching, alongside the row-Y/stack-slot scheduling residual. OnJoin stays
+// 100%, including its named IsJoinDisabled call at +0x155, while this caller
+// still expands IsJoinDisabled. The difference is lowering, not a lost helper
+// boundary or the wrong call/inline decision. Earlier why-reg measured a
 // 40-instruction distance and none of its 25 catalog mutations improved it.
 // Hoisting/splitting nRow, swapping status/numPlayers, and moving split's
 // declaration were byte-flat negative controls; caller inline-depth 2 and 255
@@ -832,6 +994,31 @@ void TMultiPlayerWindow::Update()
     gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:1461
+// Complete inlines this body into OnHost. Keeping the source boundary is
+// material: VC6 leaves the nested member InitRemote call out of line, exactly
+// as retail does.
+unsigned char TMultiPlayerWindow::OnModemHost()
+{
+    if (!InitRemote(iMPNetProtocol, 0, 0)) {
+        NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
+    }
+
+    gUnnamed69927c = 1;
+    gUnnamed6994e4 = 1;
+    ShowCursor(1);
+    if (!HostSession(gpGeneralText->GetText(449), 0)) {
+        ShowCursor(0);
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        RemoteCleanup();
+        return 0;
+    }
+    ShowCursor(0);
+    return 1;
+}
+
 // DC retains these three member helpers and OnWidgetDeselect calls them.
 // Complete emits no standalone bodies; the corresponding retail case arms
 // contain the complete inlined bodies, including Complete's expanded IPX
@@ -884,21 +1071,7 @@ inline unsigned char TMultiPlayerWindow::OnModem()
     return 1;
 }
 
-inline unsigned char TMultiPlayerWindow::OnDirect()
-{
-    iMPNetProtocol = MP_SERIAL;
-    hostJoinScreen = 1;
-    splash->send_message(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (host)
-        host->send_message(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->enable(1);
-    Update();
-    return 1;
-}
+
 
 // DC proves the three member-helper boundaries retained above; Complete inlines
 // all of them into this caller. With those boundaries present the CFG remains
@@ -1135,28 +1308,22 @@ unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const cha
     return 1;
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1461
-// Complete inlines this body into OnHost. Keeping the source boundary is
-// material: VC6 leaves the nested member InitRemote call out of line, exactly
-// as retail does.
-unsigned char TMultiPlayerWindow::OnModemHost()
-{
-    if (!InitRemote(iMPNetProtocol, 0, 0)) {
-        NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
-                     -1, 0, -1, 0, -1, 0, -1, 0);
-        return 0;
-    }
 
-    gUnnamed69927c = 1;
-    gUnnamed6994e4 = 1;
-    ShowCursor(1);
-    if (!HostSession(gpGeneralText->GetText(449), 0)) {
-        ShowCursor(0);
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
-        RemoteCleanup();
-        return 0;
-    }
-    ShowCursor(0);
+
+// Original: TMultiPlayerWindow::OnDirect; multiplayerwindow.cpp:2043, dc 0x101ca4.
+inline unsigned char TMultiPlayerWindow::OnDirect()
+{
+    iMPNetProtocol = MP_SERIAL;
+    hostJoinScreen = 1;
+    splash->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->enable(1);
+    Update();
     return 1;
 }
 
@@ -1232,49 +1399,7 @@ unsigned char TMultiPlayerWindow::OnHost()
     return 1;
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:418
-VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
-__forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
-    : CHeroWindowEx(284, 194, 232, 212, 18)
-{
-    Widgets.reserve(6);
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
-                                       "MuDialog.pcx", 0x800));
 
-    field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
-                              font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
-    field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
-                              font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
-    field1->SetNextEdit(field2);
-    field2->SetNextEdit(field1);
-    field1->SetPrevEdit(field2);
-    field2->SetPrevEdit(field1);
-
-    header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
-                             -1, 1, 0, 8);
-    header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
-                             -1, 1, 0, 8);
-
-    Widgets.push_back(field1);
-    Widgets.push_back(field2);
-    Widgets.push_back(header1);
-    Widgets.push_back(header2);
-    Widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
-                                 0, 28, 2));
-    Widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
-                                 0, 1, 2));
-
-    rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
-                              ROLLOVER_ID, 1, 32, 8);
-    Widgets.push_back(rollover);
-
-    AddWidgetsToMessageStream();
-    SetFocus(field1->id);
-    field1->SetAutoDraw(1);
-    field2->SetAutoDraw(1);
-    GetWidget(OKAY_ID)->set_help_text(gDialogOkHelp, 0, 0);
-    GetWidget(BACK_ID)->set_help_text(gDialogBackHelp, 0, 0);
-}
 
 // E:\gamedcs\multiplayerwindow.cpp:263 - CMPEdit's out-of-line constructor,
 // forwarding all sixteen textEntryWidget arguments and zeroing the two edit
@@ -1289,8 +1414,8 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
                       backgroundIcon, backgroundFrame, id, style, readType,
                       insetX, insetY)
 {
-    nextEdit = 0;
-    prevEdit = 0;
+    m_nextEdit = 0;
+    m_prevEdit = 0;
 }
 
 // Slot 15 first rejects input while this edit lacks focus. The Win32 HIWORD
@@ -1327,19 +1452,19 @@ int CMPEdit::OnKeyPress(message* msg)
 // edit's retail-proven short id. DC supplies the virtual names and order;
 // retail fixes the shifted PC fields and identical four-block shape.
 // E:\gamedcs\multiplayerwindow.cpp:309
-VA(0x00510850, 0x1B)  // dc 0x10215c; nextEdit/status/id + parent SetFocus
+VA(0x00510850, 0x1B)  // dc 0x10215c; m_nextEdit/status/id + parent SetFocus
 void CMPEdit::OnNextEdit()
 {
-    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(nextEdit->id);
+    if (m_nextEdit && (m_nextEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(m_nextEdit->id);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:322
-VA(0x00510870, 0x1B)  // dc 0x102184; prevEdit/status/id + parent SetFocus
+VA(0x00510870, 0x1B)  // dc 0x102184; m_prevEdit/status/id + parent SetFocus
 void CMPEdit::OnPrevEdit()
 {
-    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(prevEdit->id);
+    if (m_prevEdit && (m_prevEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(m_prevEdit->id);
 }
 
 // Byte-exact one-call forwarder to the text-entry base implementation.
@@ -1357,17 +1482,7 @@ CMPInputDlg::~CMPInputDlg()
     delete_widgets();
 }
 
-// DC keeps this source helper out of line and OnWidgetDeselect calls it.
-// Complete emits no standalone body, but the retail caller contains exactly
-// its active-field/empty-text guard, proving that VC6 inlined the boundary.
-inline unsigned char CMPInputDlg::OnOK()
-{
-    if (field1->status & widget::WIDGET_ACTIVE) {
-        if (!strlen(field1->Text.c_str()))
-            return 0;
-    }
-    return 1;
-}
+
 
 // E:\gamedcs\multiplayerwindow.cpp:470
 VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
@@ -1584,11 +1699,7 @@ unsigned char TMultiPlayerWindow::OnJoin()
 // Retail tests the two disabled flag bits separately, then compares the
 // current and maximum player counts exactly as the header definition does.
 #if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
-VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
-unsigned char CDPlaySession::IsJoinDisabled()
-{
-    // @stub
-}
+// Canonical body and VA: include/dxplay.h.
 #endif  // @carcass
 
 // Byte-exact. Complete retains the PC Winsock implementation behind the
@@ -1727,7 +1838,7 @@ unsigned char TMultiPlayerWindow::OnSearch()
     searchDlg.header2->SetText((*gpGeneralText)[462]);
     searchDlg.field1->set_help_text(gSearchAddressHelp, 0, 0);
     searchDlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
-    searchDlg.DisableOK();
+    searchDlg.disableOK();
     searchDlg.DoModal(0);
 
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
@@ -1794,16 +1905,7 @@ unsigned char TMultiPlayerWindow::OnSearch()
 // inline constructor needs the same body for OnSearch; this claim-only
 // declarator owns the selected copy without changing that inlining decision.
 #if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
-VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
-void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
-                                const char* text, const char* fontName,
-                                font::TColor color, unsigned justification,
-                                const char* backgroundIcon,
-                                int backgroundFrame, int id, int style,
-                                int readType, int insetX, int insetY)
-{
-    // @stub
-}
+// Canonical body and VA: include/multiplayerwindow.h.
 #endif  // @carcass
 
 // E:\gamedcs\multiplayerwindow.cpp:2009
@@ -1845,11 +1947,11 @@ CHotSeatDlg::CHotSeatDlg()
 
     int j;
     for (j = 0; j < 7; j++)
-        edit[j]->SetNextEdit(edit[j + 1]);
+        edit[j]->setNextEdit(edit[j + 1]);
     for (j = 1; j < 8; j++)
-        edit[j]->SetPrevEdit(edit[j - 1]);
-    edit[0]->SetPrevEdit(edit[7]);
-    edit[7]->SetNextEdit(edit[0]);
+        edit[j]->setPrevEdit(edit[j - 1]);
+    edit[0]->setPrevEdit(edit[7]);
+    edit[7]->setNextEdit(edit[0]);
 
     Widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
                                  0, 28, 2));

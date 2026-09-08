@@ -18,7 +18,7 @@
 // value-type headers game.h used to forward here. A TU that wants
 // `game`/gpGame/playerData now says `#include "game.h"` itself
 // (armygrp.cpp, hero.cpp, town.cpp, ai_tactical.cpp all do).
-#include "mapcell.h"   // TTerrainType, for akNativeTerrains below
+#include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
 #include "struct.h"    // type_point, used through this header's consumers
 #include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
 

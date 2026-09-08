@@ -10,17 +10,8 @@
 #include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning min, declared file-locally for
-// the same reason ai_combat.cpp and combatresultswindow.cpp declare it: the
-// clamp in bitmapBackedTextWidget::Draw stores BOTH operands to stack temps
-// and selects between their ADDRESSES with two LEAs, which no
-// value-returning spelling produces, and the TU needs no other STL surface.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
 
 #if 0  // @carcass
 
@@ -385,10 +376,9 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
-VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
-bitmapBackedTextWidget::~bitmapBackedTextWidget()
-{
-}
+// CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:325
 // The eleven-parameter constructor. Its own argument slots identify it: ten

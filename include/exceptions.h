@@ -77,6 +77,7 @@ public:
     // store - while gzinflatebuf.obj keeps the 0x4d6b80 COMDAT and calls
     // it at all three of its throws. Same source, two /Ob2 verdicts; a
     // definition confined to gzinflatebuf.cpp can only produce the second.
+    VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
     TAllocationFailure() : TRuntimeError("Allocation failure.") {}
 };
 

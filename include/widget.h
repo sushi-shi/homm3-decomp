@@ -179,12 +179,38 @@ public:
     void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
+    // Keep the retail virtual slot order as one block. CodeView's header
+    // bodies at 144/147 and 186/187 precede the text/status helpers below.
+    virtual ~widget();                                      // slot 0
+    virtual int Open(int newPriority, heroWindow* parent);  // slot 1
+    virtual int Main(message* msg) = 0;                     // slot 2
+    // Complete widened the Dreamcast nil-argument draw hook. The shared
+    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) = 0; // slot 3
+    virtual void Draw() = 0;                                // slot 4
+    VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+    virtual int GetRealHeight() const { return height; }          // slot 5
+    VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+    virtual int GetRealWidth() const { return width; }            // slot 6
+    virtual void process_hover();                           // slot 7
+    virtual void Dim();                                     // slot 8
+    virtual void enable(unsigned char on);                  // slot 9
+    virtual void OnSetFocus() {}                            // slot 10
+    virtual void OnKillFocus() {}                           // slot 11
+    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
+    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
+    // no claimable home, and leaving it undefined here is also what
+    // keeps button's override (0x456a10) emitting a real call instead
+    // of an /Ob2-inlined nothing.
+    virtual void _vslot12(int on);                          // slot 12
+
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     const char* get_help_text() const { return RollOver; }
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
-    const char* get_rclick_text()
+    const char* get_rclick_text() const
     {
         return RightClick ? RightClick : RollOver;
     }
@@ -216,6 +242,7 @@ public:
     // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
     // callers fold this body into their owning function; the one COMDAT
     // copy the linker retained (0x5629b0) is claimed in sacrifice_window.cpp.
+    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
     void set_visible(unsigned char arg)
     {
         if (arg)
@@ -229,27 +256,7 @@ public:
     // no local definition, so calls stay extern.
     void Close();
 
-    virtual ~widget();                                      // slot 0
-    virtual int Open(int newPriority, heroWindow* parent);  // slot 1
-    virtual int Main(message* msg) = 0;                     // slot 2
-    // Complete widened the Dreamcast nil-argument draw hook. The shared
-    // vtable representative at 0x5bc7e0 is `ret 8`, and
-    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) = 0; // slot 3
-    virtual void Draw() = 0;                                // slot 4
-    virtual int GetRealHeight() { return height; }          // slot 5
-    virtual int GetRealWidth() { return width; }            // slot 6
-    virtual void process_hover();                           // slot 7
-    virtual void Dim();                                     // slot 8
-    virtual void enable(unsigned char on);                  // slot 9
-    virtual void OnSetFocus() {}                            // slot 10
-    virtual void OnKillFocus() {}                           // slot 11
-    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
-    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
-    // no claimable home, and leaving it undefined here is also what
-    // keeps button's override (0x456a10) emitting a real call instead
-    // of an /Ob2-inlined nothing.
-    virtual void _vslot12(int on);                          // slot 12
+
 };
 SIZE(widget, 48);
 

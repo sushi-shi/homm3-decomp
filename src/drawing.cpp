@@ -561,6 +561,22 @@ void combatManager::UpdateCombatArea()
     }
 }
 
+// E:\gamedcs\drawing.cpp:513, dc 0x83ec0.
+// Complete passes the rectangle by const reference; UpdateMouseGrid
+// and FlyTo share this drawing-module definition.
+void combatManager::UpdateCombatArea(const SLimitData& area)
+{
+    gpWindowManager->UpdateScreen(
+        area.iMinX, area.iMinY, area.Width(), area.Height());
+}
+
+// E:\gamedcs\drawing.cpp:598, dc 0x8405c.
+// The fixed PC combat viewport needs no scrolling.
+bool combatManager::ScrollTo(SLimitData, bool, bool, bool)
+{
+    return false;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\drawing.cpp:492
@@ -577,13 +593,6 @@ void combatManager::FullUpdate()
     // @stub
 }
 
-// E:\gamedcs\drawing.cpp:513
-DC_ONLY(0x83ec0, 0x26)
-void combatManager::UpdateCombatArea(SLimitData area)
-{
-    // @stub
-}
-
 // E:\gamedcs\drawing.cpp:520
 DC_ONLY(0x83ee8, 0x9C)
 void combatManager::UpdateCombatArea(int x, int y, int width, int height)
@@ -594,13 +603,6 @@ void combatManager::UpdateCombatArea(int x, int y, int width, int height)
 // E:\gamedcs\drawing.cpp:554
 DC_ONLY(0x83f84, 0xD6)
 unsigned char combatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
-{
-    // @stub
-}
-
-// E:\gamedcs\drawing.cpp:598
-DC_ONLY(0x8405c, 0x178)
-unsigned char combatManager::ScrollTo(SLimitData extent, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
 {
     // @stub
 }
@@ -743,21 +745,6 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int
 
 #endif  // @carcass
 
-// Dreamcast keeps both accessors in Army.h. This TU needs their inlined
-// comparison shape, while the shared army.h deliberately keeps the controlling
-// accessor out of line for already measured consumers.
-static inline int DrawingOwningSide(const army* stack)
-{
-    return stack->combatSide;
-}
-
-static inline int DrawingControllingSide(const army* stack)
-{
-    if (stack->hypnotizeFlag)
-        return 1 - stack->combatSide;
-    return stack->combatSide;
-}
-
 // EXACT. Dreamcast fixes the statement/lexical shape and retail adds the
 // arrow-tower exclusion plus the Complete combat-grid preference as an
 // alternate gate for the placement-phase latch. The output row marks the
@@ -794,8 +781,8 @@ void combatManager::SetupGridForArmy(const army* thisArmy)
             field_0107[i] = 1;
         } else if (cells[i].field_4a || cells[i].field_4b) {
             if (cells[i].HasArmy()) {
-                if (DrawingOwningSide(cells[i].get_army())
-                        != DrawingControllingSide(thisArmy))
+                if (cells[i].get_army()->get_owning_side()
+                        != thisArmy->get_controlling_side())
                     field_0107[i] = 1;
             } else
                 field_0107[i] = 3;
@@ -996,16 +983,6 @@ void combatManager::DrawBackground()
     field_53b0->Draw(0, 0, 800, 556,
                      gpWindowManager->screenBitmap, 0, 0, false);
     field_53b8 = 1;
-}
-
-// E:\gamedcs\drawing.cpp:513. DC records this edge as inline from the large
-// UpdateMouseGrid overload. Complete likewise carries only the expanded
-// UpdateScreen call; its exact register schedule and the later vector-clear
-// inline budget select a const reference instead of DC's by-value parameter.
-inline void combatManager::UpdateCombatArea(const SLimitData& area)
-{
-    gpWindowManager->UpdateScreen(
-        area.iMinX, area.iMinY, area.Width(), area.Height());
 }
 
 // Complete preserves the DC old-hex background-atlas algorithm and adds one
@@ -1400,15 +1377,15 @@ void combatManager::DrawWallAt(int hex_index, int dx)
         {
         if (hex_index
                 == wall_hex + dx * COMBAT_GRID_ROW_STRIDE
-                    - RowIsOdd(GridY(wall_hex))
-                || (hex_index == wall_hex && !GridY(wall_hex))) {
+                    - RowIsOdd(gridY(wall_hex))
+                || (hex_index == wall_hex && !gridY(wall_hex))) {
             const int sw = cells[wall_hex].field_04 - traits.x;
             if (sw > 0)
                 DrawWall(image, 0, 0, sw, image->GetHeight(),
                          traits.x, traits.y);
         } else if (hex_index
                 == wall_hex - dx * COMBAT_GRID_ROW_STRIDE
-                    - RowIsOdd(GridY(wall_hex)) + 1) {
+                    - RowIsOdd(gridY(wall_hex)) + 1) {
             const hexcell& cell = cells[wall_hex];
             const int sw = image->GetWidth() - cell.field_04 + traits.x
                            - COMBAT_WALL_HEX_WIDTH;
@@ -1516,7 +1493,7 @@ void combatManager::DrawOccupant(int index, int iDrawPriority,
         return;
 
     hexcell* hex = &cells[index];
-    int row = GridY(index);
+    int row = gridY(index);
     army* occupant = hex->get_army();
     if (iDrawPriority != COMBAT_DRAW_PRIORITY_ANY
             && iDrawPriority != occupant->iDrawPriority)

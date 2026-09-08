@@ -10,6 +10,7 @@ void PollSound();
 
 #include <windows.h>
 #include "basemgr.h"
+#include "kbwin.h"
 
 class sample;
 class ds_memsample;
@@ -191,8 +192,8 @@ public:
     CRITICAL_SECTION section_MP3_name_change;
 
     soundManager();
-    // Complete-only (no Dreamcast row): ShutDown (0x4f3690) deletes the
-    // manager with this body expanded - the vftable store and the three
+    // DC SoundMgr.h:124 (dc 0xe6ebc). Complete's ShutDown (0x4f3690)
+    // deletes the manager with this body expanded - the vftable store and the three
     // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
     // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
     // three slots.
@@ -225,7 +226,7 @@ public:
     void ResumeStream();          // 0x59ac00
     void ResumeSamples();         // 0x599b90, name provisional
     void PauseSamples();          // 0x599c40, name provisional
-    void service_sounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
+    void serviceSounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
                                   // inline there, emitted in kb.obj)
 
     // PC-expanded bodies promoted from the locate sweep. SetMusicVolume,
@@ -454,6 +455,33 @@ extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* gpSoundManager;
+
+// Dreamcast records this named SoundMgr.h member as an empty WinCE service in
+// kb.obj. Complete gives it the non-empty PC Miles body below: retail keeps an
+// exact out-of-line copy and exact /Ob2 expansions in MemorySample and
+// launch_sample. Those three copies jointly prove the shared member boundary.
+// Header-ownership checkpoint, 2026-09-06: the canonical header body makes
+// VC6 expand additional callers and omit the retained 0x59a7d0 COMDAT.
+// Whole-tree exact count 3669 -> 3660; fuzzy 95.81 -> 95.69. Measured callers:
+// BinkManager::GetBinkFilePtr 100 -> 65.67, NextBinkFrame 92.92 -> 0,
+// LostGame 100 -> 50.18, StartMouseThread 100 -> 38.33,
+// SmackManager::NextSmackerFrame 90.73 -> 73.42, OpenSmackerTrack 100 -> 69.28,
+// VideoClose 100 -> 7.69, VideoSoundOnOff 100 -> 0,
+// townManager::Main 90.21 -> 88.48. Historical MAX values remain banked.
+// The prior ordinary .cpp definition retained the call decisions, but
+// contradicted the CodeView header owner; recover the natural caller/TU
+// inlining state without moving this body back or forcing its emission.
+// Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
+VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
+inline void soundManager::serviceSounds()
+{
+    EnterCriticalSection(&section_sound_call);
+    AIL_serve();
+    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
+        AIL_service_stream(gMP3Stream, 1);
+    Sleep(1);
+    LeaveCriticalSection(&section_sound_call);
+}
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:877, dc 0x14b65c) void ClearMemSample(SAMPLE2 sample2);

@@ -53,6 +53,24 @@ DATA(0x0067ff38) const char* gPointerSetSprites[mouseManager::MAX_POINTER_SETS] 
 // closes exactly at the first pointer-name string at 0x6815d0.
 DATA(0x0067ff50) POINT gMouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 
+// E:\gamedcs\mousemgr.cpp:291
+// mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
+// original source owns both in-class bodies here at lines 291/298. Retail
+// expands or calls each retained body per site; the fs:[0] frame in users
+// is the unwind scaffolding).
+class TCSLock {
+public:
+    VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
+    TCSLock(CRITICAL_SECTION* lpCriticalSection)
+        : section(lpCriticalSection) {
+        EnterCriticalSection(section);
+    }
+    VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
+    ~TCSLock() { LeaveCriticalSection(section); }
+
+    CRITICAL_SECTION* section;
+};
+
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
 mouseManager::mouseManager()
@@ -73,13 +91,16 @@ mouseManager::mouseManager()
     InitializeCriticalSection(&section_mouse);
 }
 
-// E:\gamedcs\mousemgr.cpp:332 - mouseManager::`scalar deleting
-// destructor' (dc 0xff818), slot 3 of vtable 0x640028. Retail has NO
-// standalone ~mouseManager row: the 44-byte body here IS the dtor
-// (own-vptr store + DeleteCriticalSection on section_mouse at +0x78)
-// followed by the flags&1 operator delete tail, i.e. the header-inline
-// dtor idiom widget.obj uses. DC keeps the dtor out of line at 0xfea50
-// and appends the sdd at the compiland tail; retail does neither.
+// E:\gamedcs\mousemgr.cpp:344, dc 0xfea50
+// The written ordinary destructor precedes Open. Retail expands this body
+// into the scalar deleting destructor at 0x50cbc0.
+mouseManager::~mouseManager()
+{
+    DeleteCriticalSection(&section_mouse);
+}
+
+// Slot 3 of vtable 0x640028: own-vptr store, DeleteCriticalSection at
+// +0x78, then the flags&1 operator-delete tail. No standalone retail claim.
 VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 
 // E:\gamedcs\mousemgr.cpp:357
@@ -204,11 +225,7 @@ void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
 // DC tail position 0xff800; the ctor's copy lands later at 0x50d890 by
 // the same first-out-of-line-need rule. Our object already emits
 // ??1TCSLock@@QAE@XZ, so the claim only pairs it.
-VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
-void TCSLock::~TCSLock()
-{
-    // @stub - the definition lives inline in mousemgr.h
-}
+// Canonical TCSLock body and VA are at the class definition above.
 
 #endif  // @carcass
 
@@ -653,11 +670,9 @@ void mouseManager::CheckUpdate()
 // E:\gamedcs\mousemgr.cpp:298 - TCSLock::~TCSLock (dc 0xff800) lives
 // at 0x50cd80, the ten-byte row directly after SetPointer: `mov
 // eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`.
-// Retail files it HERE, between SetPointer and Update, not at the DC
-// tail position - and our build already emits the identical COMDAT
-// (the EH unwind funclets need a callable copy even though every use
-// site inlines it). The reviewed carcass declarator pairs that existing
-// COMDAT exactly; no header annotation or duplicate definition is needed.
+// The retail linker places its COMDAT between SetPointer and Update.
+// The canonical in-class body and VA stay above in CodeView source order;
+// EH unwind funclets still use its retained callable copy.
 
 #if 0  // @carcass
 
@@ -673,11 +688,7 @@ void mouseManager::CheckUpdate()
 // lock. The outer constructor and both destructors remain inlined. The
 // source-authority label pass then joins this already-reviewed claim to the
 // newly present ??0TCSLock public symbol.
-VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
-void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
-{
-    // @stub - the definition lives inline in mousemgr.h
-}
+// Canonical TCSLock body and VA are at the class definition above.
 
 #endif  // @carcass
 
@@ -786,12 +797,10 @@ unsigned RGBto16(int r, int g, int b)
 }
 
 // E:\gamedcs\mousemgr.cpp:291
-// (moved to retail link order between CheckUpdate and LoadFrame; the
-// out-of-line TCSLock ctor claim lives there)
+// Canonical constructor and VA are on the source-local class above.
 
 // E:\gamedcs\mousemgr.cpp:298
-// (moved to retail link order between SetPointer and Update; the
-// out-of-line TCSLock dtor claim lives there)
+// Canonical destructor and VA are on the source-local class above.
 
 // E:\gamedcs\mousemgr.cpp:332
 DC_ONLY(0xff818, 0x34)

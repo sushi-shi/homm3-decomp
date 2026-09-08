@@ -22,7 +22,7 @@ struct type_creature_bank {
     TCreatureType reward_creature;
     signed char reward_creatures;
     std::vector<TArtifact> artifacts;
-    ~type_creature_bank();
+    // Implicit destructor; CodeView dc 0xbd58c compgenx.
     unsigned char load(void* infile);
 };
 SIZE(type_creature_bank, 0x6c);

@@ -19,6 +19,7 @@
 // here. No other TU in the tree copies an `army`.
 #include "csprite.h"
 #include "sample.h"
+#include "includes.h"
 
 static int creature_base_hit_points(TCreatureType type)
 {
@@ -63,37 +64,6 @@ static int creature_base_hit_points(TCreatureType type)
 // every TU that takes both.
 const int ARTIFACT_RECANTERS_CLOAK = 0x53;
 
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
-
-// The luck/morale family's [-3, 3] rating clamp. Retail's
-// get_mirth_value 0x438170 homes THREE values - the rating, -3 and 3 -
-// and picks between their addresses with `cmp v,-3 / jge / &(-3) /
-// jmp out / cmp v,3 / &3 / jg out / &v`, i.e. ONE test of v against
-// each bound and no fourth slot for an intermediate. A nested
-// _cpp_min(_cpp_max(v,-3),3) cannot produce that with either
-// signature: by value it needs a fourth slot for *inner, by const
-// reference it binds v's own address and drops to two slots (both
-// measured 2026-08-08). A single three-operand selector reproduces the
-// branch shape exactly and takes get_mirth_value to 100.00; the
-// spelling is PROVISIONAL (behaviour-derived from the branch graph, no
-// roster name for it). The argument ORDER is byte-proven: retail
-// materialises the high bound before the low one, which is the
-// (_V, _Hi, _Lo) parameter list, not (_V, _Lo, _Hi).
-template <class _TYPE>
-inline const _TYPE& _cpp_clamp(_TYPE _V, _TYPE _Hi, _TYPE _Lo)
-{
-    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
-}
 
 // The AI's luck/morale weights. Retail LOADS all four from .rdata
 // instead of folding them into immediates, which is what pins them as
@@ -921,38 +891,7 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 
 #endif  // @carcass
 
-// E:\gamedcs\ai_tactical.cpp:3377 - OUT OF FILE ORDER ON PURPOSE.
-// check_simulation and the deputy constructor below are both INLINED
-// into the public constructor and carry no retail body of their own,
-// so they are `inline` here and defined ahead of their one caller
-// rather than at their Dreamcast line numbers.
-//
-// The scan itself: walk the OTHER side's stacks and answer "the fight
-// is already decided" in field_1c unless some enemy is still magic-
-// vulnerable (creature bit 21 clear), still alive, and still able to
-// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
-// pointer form, the same one consider_teleport carries.
-DC_ONLY(0x425a8, 0x68)
-inline void type_AI_spellcaster::check_simulation()
-{
-    const army* enemy = gpCombatManager->armies[enemy_side];
-    long count = gpCombatManager->numArmies[enemy_side];
-    for (; count-- > 0; ++enemy) {
-        unsigned char immune = static_cast<unsigned char>(
-            static_cast<unsigned>(enemy->sMonInfo.attributes) >> 21);
-        if (immune & 1)
-            continue;
-        if (enemy->get_total_hit_points(1) <= 0)
-            continue;
-        unsigned char idle = static_cast<unsigned char>(
-            static_cast<unsigned>(enemy->sMonInfo.attributes) >> 6);
-        if (idle & 1)
-            continue;
-        field_1c = 0;
-        return;
-    }
-    field_1c = 1;
-}
+
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
@@ -1692,8 +1631,9 @@ long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchan
 //
 // CLOSED 2026-08-08 (82.10 -> 100.00). The clamp is NOT a nested
 // _cpp_min/_cpp_max chain in either signature: it is the single
-// three-operand _cpp_clamp declared at the head of this file. See that
-// declaration for the byte argument. The two remaining edits were
+// three-operand selector used in the earlier flattened implementation.
+// The canonical AI_value_of_morale boundary now owns that work; its caller
+// retains the negative controls below, and the unused local selector is gone. The two remaining edits were
 // ordinary statement shape:
 //   - `change` is a named local evaluated BEFORE the clamp; retail
 //     interleaves the akSpellTraits row load with the clamp's slot
@@ -4524,6 +4464,34 @@ long type_AI_spellcaster::get_faerie_dragon_spell_value(
         return get_area_effect_value(spell, base_damage, mastery, hex);
     }
     return 0;
+}
+
+// E:\gamedcs\ai_tactical.cpp:3377, dc 0x425a8.
+// The scan itself: walk the OTHER side's stacks and answer "the fight
+// is already decided" in field_1c unless some enemy is still magic-
+// vulnerable (creature bit 21 clear), still alive, and still able to
+// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
+// pointer form, the same one consider_teleport carries.
+DC_ONLY(0x425a8, 0x68)
+inline void type_AI_spellcaster::check_simulation()
+{
+    const army* enemy = gpCombatManager->armies[enemy_side];
+    long count = gpCombatManager->numArmies[enemy_side];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->sMonInfo.attributes) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->get_total_hit_points(1) <= 0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->sMonInfo.attributes) >> 6);
+        if (idle & 1)
+            continue;
+        field_1c = 0;
+        return;
+    }
+    field_1c = 1;
 }
 
 #if 0  // @carcass

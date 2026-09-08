@@ -45,39 +45,8 @@
 #include "misc.h"
 #include "hero.h"
 #include "town.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning min/max (`_cpp_min` /
-// `_cpp_max`, which the <algorithm> min/max macros expand to). Retail
-// materialises BOTH operands into stack temps and then selects between
-// their addresses - the signature of these templates, not of a
-// by-value helper - e.g. get_fastest_speed 0x4249a3..0x4249b3 and
-// get_spell_damage 0x423e7c..0x423e86. Declared file-locally rather
-// than via <xutility>. NOTE (2026-08-07, P2.3 answered): <xutility> is
-// now available and its real signature is `const _Ty&` for BOTH
-// parameters, where these copies take them BY VALUE - swapping to the
-// header is a live experiment, not a blocked one.
-// EXPERIMENT RUN 2026-08-08, REFUTED: `const _TYPE&` costs SIX exact
-// functions in this TU alone - get_resurrection_value 100.00 -> 92.93,
-// get_spell_damage 100.00 -> 92.18, get_fastest_speed 100.00 -> 78.06,
-// get_next_chain_lightning_target 100.00 -> 89.82,
-// get_damage_spell_value 100.00 -> 87.25, get_mass_damage_value
-// 100.00 -> 85.67 - and raises nothing. get_fastest_speed 0x4249a1 is
-// the clean discriminator: retail COPIES `monsters[i].speed` into a
-// slot although its address is already live in eax, which only a
-// by-value parameter does. Whatever retail's helper was named, its
-// operands were passed by value; the <xutility> signature is not it.
-// See the head of ai_tactical.cpp for the full argument.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
@@ -567,14 +536,17 @@ void type_AI_combat_data::adjust_army(unsigned char dismiss_hero)
     }
 }
 
-// E:\gamedcs\ai_combat.cpp:437
+// E:\gamedcs\ai_combat.cpp:437. Line 444 explicitly calls includes.h's
+// max (dc 0x1ef28). That wrapper owns the operand copies; calling the
+// reference selector directly is the negative control (78.0638%, missing
+// retail's second operand home). Preserve the wrapper and canonical selector.
 VA(0x00424960, 0x65)  // anchor-global, dc 0x2a644
 long type_AI_combat_data::get_fastest_speed() const
 {
     long fastest = 0;
     for (long i = get_total(); i-- > 0; )
         if (monsters[i].count > 0)
-            fastest = _cpp_max(fastest, monsters[i].speed);
+            fastest = max(fastest, monsters[i].speed);
     return fastest;
 }
 
@@ -1850,33 +1822,7 @@ type_monster_vector::type_monster_vector(const type_monster_vector& other)
 {
 }
 
-// E:\gamedcs\ai_combat.h:255
-// EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
-// null test is a `?:` on the return expression, not an early-out `if`.
-// The old `if (first == 0) return 0;` split makes our CL target eax
-// directly for the divide; the ternary merges both arms into one
-// pseudo, which VC6 homes in edx and copies out with the closing
-// `mov eax,edx` retail has - and on the null path the merged pseudo
-// is already the zero _M_start, so no `xor eax,eax` is emitted either.
-// Both deltas were one cause.
-//
-// The payoff is in the ~12 INLINED copies, not here: get_area_value
-// 86.6 -> 100, cast_area_effect 86.0 -> 97.4, do_general_melee
-// 79.6 -> 94.8, adjust_army 89.8 -> 93.4 with no other edit.
-//
-// Tried and rejected: `monsters.size()` through begin()/end() (fixes
-// this function and get_area_value, loses the _M_start CSE in the
-// inlined copies and costs six other functions their exactness), a
-// bare `_M_finish - _M_start` with no local, naming the _M_finish load
-// (`last`), naming the difference (`count`, signed and unsigned), and
-// dropping the unsigned cast - all four leave the split-if shape and
-// score 83.57 unchanged.
-VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
-long type_AI_combat_data::get_total() const
-{
-    type_monster_data* first = monsters._First;
-    return first == 0 ? 0 : (unsigned)(monsters._Last - first);
-}
+// get_total (dc 0x2c6ac): canonical inline body and retail VA in ai_combat.h.
 
 #if 0  // @carcass
 

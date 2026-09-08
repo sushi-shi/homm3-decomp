@@ -9,7 +9,6 @@
 #include "combatcontrolsubwindow.h"
 #include "font.h"
 #include "game.h"
-#include "cheatcode.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"

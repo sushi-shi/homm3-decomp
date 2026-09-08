@@ -24,14 +24,8 @@
 #include "creaturetype.h"
 #include "soundmgr.h"
 #include "misc.h"
+#include "includes.h"
 
-// Dinkumware-era max source shape used by retail: arguments are copied into
-// homes and the selected home is returned by reference.
-template <class T>
-inline const T& _cpp_max(T left, T right)
-{
-    return left < right ? right : left;
-}
 
 // The [-3, 3] rating selector the one-army constructor CALLS at
 // 0x4e6750 (33 B, `ret 4`). Three CONST REFERENCES, not values: the

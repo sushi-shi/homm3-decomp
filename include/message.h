@@ -4,7 +4,7 @@
 #ifndef HOMM3_MESSAGE_H
 #define HOMM3_MESSAGE_H
 
-#include <va.h>
+#include "struct.h"
 
 class heroWindow;
 
@@ -78,55 +78,6 @@ enum EMessageModifiers {
     MESSAGE_MODIFIER_MASK = 0x300
 };
 
-// Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
-// extra, window, oldX@32, oldY@36 (40 B). The retail frames in
-// widget::send_message/enable are 0x20 B - retail dropped oldX/oldY.
-// The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
-// This is one class shape, not a per-TU optimizer view: the constructor is
-// canonical and VC6 may remove fields overwritten before their first read.
-class message {
-public:
-    int id;
-    int codeX;
-    int codeY;
-    int qualifier;
-    int mouseX;
-    int mouseY;
-    union {
-        int extra;
-        const char* extraText;
-    };
-    heroWindow* window;
-    // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
-    // declaration order. The attested consumer sites need the real
-    // constructor shape and VC6 removes fields overwritten before first read.
-    // Dreamcast type 0x1016 lists this eight-argument overload before the
-    // default constructor; both are header-inline source boundaries.
-    message(int id_, int codeX_, int codeY_, int qualifier_,
-            int mouseX_, int mouseY_, int extra_, heroWindow* window_)
-    {
-        id = id_;
-        codeX = codeX_;
-        codeY = codeY_;
-        qualifier = qualifier_;
-        mouseX = mouseX_;
-        mouseY = mouseY_;
-        extra = extra_;
-        window = window_;
-    }
-
-    message()
-    {
-        id = 0;
-        codeX = 0;
-        codeY = 0;
-        qualifier = 0;
-        mouseX = 0;
-        mouseY = 0;
-        extra = 0;
-        window = 0;
-    }
-};
-SIZE(message, 32);
+// The canonical record and inline constructors are defined in struct.h.
 
 #endif  /* HOMM3_MESSAGE_H */

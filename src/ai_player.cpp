@@ -44,6 +44,7 @@
 #include "town.h"
 #include "tradpost.h"
 #include "recruit.h"
+#include "includes.h"
 
 // VC6's retail min/max sites in this TU copy both operands into homes
 // and select one by address. These by-value wrappers reproduce that
@@ -59,17 +60,6 @@ inline void set_creature_type(TCreatureType& slot, int value)
     memcpy(&slot, &value, sizeof slot);
 }
 
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 #ifdef min
 #undef min
@@ -78,23 +68,6 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 #undef max
 #endif
 
-// E:\\gamedcs\\includes.h:97,114. Observatory keeps these source-visible
-// by-value wrappers; Complete expands them and the reference selectors.
-inline int min(int a, int b)
-{
-    return _cpp_min(a, b);
-}
-
-inline int max(int a, int b)
-{
-    return _cpp_max(a, b);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
-{
-    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
-}
 
 // events.h publishes the same seventh-day member for its adventure-event
 // readers. Keep this TU's narrow include set while naming the calendar value
@@ -154,6 +127,26 @@ const unsigned int CTA_SHOOTER = 0x4;
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
 std::vector<type_artifact_effect*> const_artifact_effects[144];
+// Retail and Dreamcast both make this an 8-byte strategy object: a
+// three-slot vptr followed by the current player id. start_turn inlines
+// both constructors and calls check_towns on one base and one derived
+// instance. The virtual roster/order comes from the three retail vtable
+// entries and the corresponding DC public names.
+class type_town_threat_checker {
+protected:
+    void mark_towns(hero* enemy_hero, searchArray* search_array);
+
+public:
+    int current_player_id;
+
+    // Original: type_town_threat_checker; ai_player.cpp:89, dc 0x2dd40.
+    type_town_threat_checker(int new_player) { current_player_id = new_player; }
+    void check_towns();
+    virtual void clear_marks();
+    virtual unsigned char is_marked(const town* our_town);
+    virtual void mark_town(town* our_town);
+};
+
 
 // E:\gamedcs\ai_player.cpp:97
 // The DC body calls this exact family (GetHero, GetMobility, SeedPosition and
@@ -432,6 +425,16 @@ void type_town_threat_checker::mark_town(town* our_town)
 {
     ++our_town->threatening_heroes;
 }
+class type_garrison_purchaser : public type_town_threat_checker {
+public:
+    // Original: type_garrison_purchaser; ai_player.cpp:195, dc 0x2dfb8.
+    type_garrison_purchaser(int new_player)
+        : type_town_threat_checker(new_player) {}
+    virtual void clear_marks();
+    virtual unsigned char is_marked(const town* our_town);
+    virtual void mark_town(town* our_town);
+};
+
 
 // The retail vtable at 0x63b67c puts 0x428580 in derived slot 2, the same
 // slot/name the DC vtable assigns type_garrison_purchaser::mark_town. Its
@@ -452,13 +455,7 @@ void type_garrison_purchaser::mark_town(town* our_town)
 // The original header owns the constructor; retain its selected retail
 // COMDAT claim here without a second source definition.
 #if 0  // @carcass
-VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
-type_creature_source::type_creature_source(TCreatureType new_type,
-                                           short* new_amount,
-                                           bool _is_free)
-{
-    // @stub
-}
+// Canonical body and VA: include/ai_player.h.
 #endif
 
 // The purchaser destructor remains implicit in C++. Its live vector member
@@ -591,7 +588,7 @@ void type_AI_player::calculate_demand()
         if (current_town->is_legal_building(MARKETPLACE_ID))
             markets++;
     }
-    markets = _cpp_limit(1, markets, 10);
+    markets = limit(1, markets, 10);
     double efficiency = fTradingPostEfficency[markets];
 
     union {
@@ -2000,36 +1997,13 @@ long value_of_hall(town* current_town, type_building_id building)
     }
 }
 
-// E:\gamedcs\game.h:1370
-// The retail COMDAT of the game.h inline member, selected into
-// ai_player.obj. The DC parameter name player_number is STALE - every
-// retail caller hands it a TEAM (buy_creatures expands GetTeam at the
-// call site first, ClaimTown negates the bool result) and the body is
-// the guarded IsHumanTeam scan with no teamInfo pre-read of its own.
-VA(0x0042b9e0, 0x45)  // anchor-bracket + body (guarded teamInfo/IsHuman scan), dc 0x37fd8
-bool game::is_human_ally(int player_number) const
-{
-    if (player_number >= 0) {
-        for (int player = 0; player < 8; ++player) {
-            if (mapHeader.teamInfo[player] == player_number
-                && gpGame->IsHuman(player))
-                return true;
-        }
-    }
-    return false;
-}
-
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
 
 // E:\gamedcs\Game.h:1016. The active header body and its -1/null arm are
 // independently fixed by the DC inline, the exact HD cross-build identity,
 // and retail's five callers. This declarator assigns ai_player.obj's selected
 // copy to its retail slot without creating a second definition.
-VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
-town* game::GetTown(int townId)
-{
-    // @stub
-}
+// Canonical body and VA: include/game.h.
 
 #endif  // @carcass
 
@@ -2106,7 +2080,7 @@ void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
     if (gpGame->TownAlreadyBuiltOn(current_town->id))
         return;
     if (!gpGame->setup.difficulty
-        && !gpGame->is_human_ally(
+        && !gpGame->isHumanAlly(
                gpGame->GetTeam(gNetLocalGamePos)))
         return;
     short amount;
@@ -2845,14 +2819,15 @@ unsigned char searchArray::limit_was_reached()
 
 // E:\gamedcs\findpath.h:257
 DC_ONLY(0x37e84, 0x12)
-void searchArray::set_rectangle(tagRECT* rect)
+void searchArray::setRectangle(tagRECT* rect)
 {
     // @stub
 }
 
+
 // E:\gamedcs\findpath.h:265
 DC_ONLY(0x37e98, 0x54)
-long* get_danger_cell(long* danger_zones, type_point point)
+long* getDangerCell(long* danger_zones, type_point point)
 {
     // @stub
 }
@@ -3000,6 +2975,26 @@ long type_AI_creature_swapper::do_best_swap(bool can_take_all)
 }
 
 static __forceinline void AI_consolidate_army_impl(armyGroup* current_army);
+
+// E:\gamedcs\ai_player.cpp:1808, dc 0x31030.
+static int __cdecl MaxBuyableCreatures(
+    const long* funds, TCreatureType type, int limit)
+{
+    int resources[7];
+    GetMonsterCost(type, resources);
+    for (int resource = 0; resource < 7; ++resource) {
+        if (resources[resource] > 0) {
+            int affordable;
+            if (funds[resource] > 0)
+                affordable = funds[resource] / resources[resource];
+            else
+                affordable = 0;
+            if (affordable < limit)
+                limit = affordable;
+        }
+    }
+    return limit;
+}
 
 // E:\gamedcs\ai_player.cpp:2171. Dreamcast retains this source helper;
 // Complete's /Ob2 folds it into both swap entry points. Retail independently
@@ -3437,29 +3432,11 @@ void type_AI_creature_purchaser::set(TCreatureType new_type,
         type_creature_source(new_type, new_amount, false));
 }
 
+
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
 // the three-quarter cap on the cost penalty used to choose the best source.
-static int __cdecl MaxBuyableCreatures(
-    const long* funds, TCreatureType type, int limit)
-{
-    int resources[7];
-    GetMonsterCost(type, resources);
-    for (int resource = 0; resource < 7; ++resource) {
-        if (resources[resource] > 0) {
-            int affordable;
-            if (funds[resource] > 0)
-                affordable = funds[resource] / resources[resource];
-            else
-                affordable = 0;
-            if (affordable < limit)
-                limit = affordable;
-        }
-    }
-    return limit;
-}
-
 // DC's parameter is an unsigned char, not C++ bool. Residual (97.27%): 217
 // of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
 // around the best-source state (`why-reg` distance 70), after equivalent
@@ -3885,9 +3862,9 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
                         const type_point& point = gpSearchArray
                             ->visited_points[visited_index]->point;
                         if (value >= -500000000) {
-                            *get_danger_cell(danger_zones, point) += value;
+                            *getDangerCell(danger_zones, point) += value;
                         } else {
-                            *get_danger_cell(danger_zones, point) =
+                            *getDangerCell(danger_zones, point) =
                                 -1000000000;
                         }
                     }
@@ -3901,12 +3878,72 @@ void mark_danger_zones(const hero* our_hero, long* danger_zones)
 // folded into AI_choose_destination by retail VC6.  Their boundaries are
 // reconstruction facts: keeping them here preserves the same helper calls
 // without manufacturing retail-only out-of-line slots.
-__forceinline void searchArray::set_rectangle(tagRECT& rect)
+
+
+// E:\gamedcs\ai_player.cpp:3164, dc 0x32e30. Dreamcast preserves this
+// static helper boundary and its one local `point`; Complete adds the
+// build-grail value change but expands the helper into its sole caller.
+static void check_holy_grail(
+    const hero* current_hero, const searchArray* search_array,
+    std::vector<HeroDestination>* destinations,
+    const unsigned short* friendly_distances)
 {
-    valid_left = rect.left;
-    valid_top = rect.top;
-    valid_right = rect.right;
-    valid_bottom = rect.bottom;
+    playerData* player = &gpGame->players[current_hero->owner];
+    if (player->puzzle_guess.x >= 0) {
+        HeroDestination destination;
+        destination.point.x = player->puzzle_guess.x;
+        destination.point.y = player->puzzle_guess.y;
+        destination.point.z = player->puzzle_guess.z;
+        destination.is_critical = 0;
+        pathCell* guess_cell = search_array->get_cell(destination.point, 0);
+        if (guess_cell->visited) {
+            // Dreamcast calls game::get_cell here, but Complete retail calls
+            // NewfullMap::cell directly; expanding this TU's retained
+            // game::get_cell body would instead calculate cellData in place.
+            // Site-pinned check_holy_grail -> NewfullMap::cell boundary:
+            // Complete retail keeps this call while the surrounding helper
+            // expands. Removing only this gate measures find_all_destinations
+            // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
+#pragma inline_depth(0)
+            NewmapCell* map_cell = gpGame->worldMap.cell(
+                destination.point.x, destination.point.y,
+                destination.point.z);
+#pragma inline_depth()
+            if (!(map_cell->type == HERO && map_cell->is_trigger)
+                || map_cell->extraInfo
+                    == static_cast<unsigned long>(current_hero->id)) {
+                if (const_cast<hero*>(current_hero)->is_in_patrol_radius(
+                        destination.point)) {
+                    destination.move_cost = guess_cell->cost;
+                    unsigned short friendly_cost = friendly_distances[
+                        (destination.point.z * MAP_HEIGHT
+                         + destination.point.y)
+                            * MAP_WIDTH
+                        + destination.point.x];
+                    if (destination.move_cost <= friendly_cost) {
+                        if (gpGame->mapHeader.victoryCondition.Type
+                            == VICTORY_CONDITION_BUILD_GRAIL) {
+                            destination.value = 1968;
+                        } else {
+                            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
+                            // Retail calls the helper here (it expands it in
+                            // consider_hiring's backpack loop).
+#pragma inline_depth(0)
+                            destination.value = AI_get_artifact_player_value(
+                                grail, current_hero->owner);
+#pragma inline_depth()
+                        }
+                        destination.move_cost = max(
+                            destination.move_cost,
+                            const_cast<hero*>(current_hero)->GetMobility()
+                                + current_hero->movePoints);
+                        if (destination.value > 0)
+                            destinations->push_back(destination);
+                    }
+                }
+            }
+        }
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:3390
@@ -3943,7 +3980,7 @@ static __forceinline void mark_strategic_map(
         rect.top = max(0L, static_cast<long>(point.point.y) - 5);
         rect.right = min(static_cast<long>(point.point.x) + 6, MAP_WIDTH);
         rect.bottom = min(static_cast<long>(point.point.y) + 6, MAP_HEIGHT);
-        search_array.set_rectangle(rect);
+        search_array.setRectangle(rect);
         gpAdvManager->advWindow->animate_bottom_view(0);
         // mark_strategic_map -> type_point::type_point(-1,-1,-1): both the
         // Dreamcast xref and Complete's retained constructor call prove this
@@ -4068,7 +4105,7 @@ static __forceinline void unblock_lith(hero* current_hero,
         // Complete both retain this predicate helper; flattening it erases
         // retail's only call and folds the following continue test.
 #pragma inline_depth(0)
-        if (gpSearchArray->get_danger_value(point) < 0)
+        if (gpSearchArray->getDangerValue(point) < 0)
 #pragma inline_depth()
             continue;
         closest = path_cell->cost;
@@ -4266,28 +4303,16 @@ int AI_choose_destination(hero* current_hero, long max_distance,
 // bool, const-reference, const-member ABI; its single expression and retail's
 // five-block body compare the same three packed coordinates. The sole retail
 // caller is the large route evaluator immediately above this COMDAT band.
-VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
-bool type_point::operator==(const type_point& arg) const
-{
-    // @stub
-}
+// Canonical body and VA: include/struct.h.
 
 // E:\gamedcs\Hero.h:157. The DC header statement constructs a type_point
 // from x/y/z; retail's two callers retain that same constructor expansion.
-VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
-type_point type_obscuring_object::get_location() const
-{
-    // @stub
-}
+// Canonical body and VA: include/hero.h.
 
 // E:\gamedcs\Findpath.h:202. The DC public symbol proves bool/const and its
 // five source rows prove the null guard plus one index expression. Retail and
 // the HD cross-build retain that same header body in ai_player.obj.
-VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
-pathCell* searchArray::get_cell(type_point point, bool flying) const
-{
-    // @stub
-}
+// Canonical body and VA: include/findpath.h.
 
 #endif  // @carcass
 
@@ -4302,44 +4327,7 @@ type_point (type_obscuring_object::* g_emit_get_location)() const =
 pathCell* (searchArray::* g_emit_get_cell)(type_point, bool) const =
     &searchArray::get_cell;
 
-// E:\gamedcs\findpath.h:270
-VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
-long searchArray::get_danger_value(type_point point) const
-{
-    if (!danger_zones)
-        return 0;
-    return *get_danger_cell(danger_zones, point);
-}
 
-// The Dreamcast roster marks both coordinate lookups static, and its
-// AI_build_ship xrefs mark both calls inlined. Retail retains those two
-// source-level passes: owned town docks first, then claimed map shipyards.
-static town* get_shipyard_town(const playerData* player, long x, long y,
-                               long z)
-{
-    for (long i = 0; i < player->numTowns; ++i) {
-        town* current_town = gpGame->GetTown(player->townIds[i]);
-        if (current_town->dockSite == x && current_town->dockSiteY == y
-            && current_town->mapZ == z)
-            return current_town;
-    }
-    return 0;
-}
-
-static unsigned char get_map_shipyard(const playerData* player, long x,
-                                      long y, long z)
-{
-    for (unsigned long i = 0; i < player->shipyards.size(); ++i) {
-        if (player->shipyards[i].z == z) {
-            NewmapCell* cell = gpGame->get_cell(player->shipyards[i]);
-            const ShipyardInfo* shipyard = static_cast<const ShipyardInfo*>(
-                static_cast<const void*>(&cell->extraInfo));
-            if (shipyard->boatX == x && shipyard->boatY == y)
-                return 1;
-        }
-    }
-    return 0;
-}
 
 #if 0  // @carcass
 
@@ -4370,12 +4358,6 @@ int game::GetTeam(int playerNum)
 
 #endif  // @carcass
 
-// E:\gamedcs\game.h:1380
-VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
-NewmapCell* game::get_cell(type_point point)
-{
-    return worldMap.cell(point.x, point.y, point.z);
-}
 
 // The nine functions below are located by the callee-fingerprint join against
 // evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved
@@ -4423,71 +4405,6 @@ long AI_value_of_event(const hero* current_hero, type_point point,
 long AI_get_artifact_player_value(const type_artifact& artifact,
                                   long player_id);
 
-// E:\gamedcs\ai_player.cpp:3164, dc 0x32e30. Dreamcast preserves this
-// static helper boundary and its one local `point`; Complete adds the
-// build-grail value change but expands the helper into its sole caller.
-static void check_holy_grail(
-    const hero* current_hero, const searchArray* search_array,
-    std::vector<HeroDestination>* destinations,
-    const unsigned short* friendly_distances)
-{
-    playerData* player = &gpGame->players[current_hero->owner];
-    if (player->puzzle_guess.x >= 0) {
-        HeroDestination destination;
-        destination.point.x = player->puzzle_guess.x;
-        destination.point.y = player->puzzle_guess.y;
-        destination.point.z = player->puzzle_guess.z;
-        destination.is_critical = 0;
-        pathCell* guess_cell = search_array->get_cell(destination.point, 0);
-        if (guess_cell->visited) {
-            // Dreamcast calls game::get_cell here, but Complete retail calls
-            // NewfullMap::cell directly; expanding this TU's retained
-            // game::get_cell body would instead calculate cellData in place.
-            // Site-pinned check_holy_grail -> NewfullMap::cell boundary:
-            // Complete retail keeps this call while the surrounding helper
-            // expands. Removing only this gate measures find_all_destinations
-            // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
-#pragma inline_depth(0)
-            NewmapCell* map_cell = gpGame->worldMap.cell(
-                destination.point.x, destination.point.y,
-                destination.point.z);
-#pragma inline_depth()
-            if (!(map_cell->type == HERO && map_cell->is_trigger)
-                || map_cell->extraInfo
-                    == static_cast<unsigned long>(current_hero->id)) {
-                if (const_cast<hero*>(current_hero)->is_in_patrol_radius(
-                        destination.point)) {
-                    destination.move_cost = guess_cell->cost;
-                    unsigned short friendly_cost = friendly_distances[
-                        (destination.point.z * MAP_HEIGHT
-                         + destination.point.y)
-                            * MAP_WIDTH
-                        + destination.point.x];
-                    if (destination.move_cost <= friendly_cost) {
-                        if (gpGame->mapHeader.victoryCondition.Type
-                            == VICTORY_CONDITION_BUILD_GRAIL) {
-                            destination.value = 1968;
-                        } else {
-                            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
-                            // Retail calls the helper here (it expands it in
-                            // consider_hiring's backpack loop).
-#pragma inline_depth(0)
-                            destination.value = AI_get_artifact_player_value(
-                                grail, current_hero->owner);
-#pragma inline_depth()
-                        }
-                        destination.move_cost = max(
-                            destination.move_cost,
-                            const_cast<hero*>(current_hero)->GetMobility()
-                                + current_hero->movePoints);
-                        if (destination.value > 0)
-                            destinations->push_back(destination);
-                    }
-                }
-            }
-        }
-    }
-}
 
 // Residual (96.3651%, polish-45): ONE target-only reference and nothing
 // structural - retail keeps a second `vector::size()` CALL inside the
@@ -4658,7 +4575,7 @@ long mark_destinations(hero* current_hero, long max_distance,
         if (danger_zones == 0)
             hero_danger = 0;
         else
-            hero_danger = *get_danger_cell(danger_zones, danger_point);
+            hero_danger = *getDangerCell(danger_zones, danger_point);
     }
     gpAdvManager->advWindow->animate_bottom_view(0);
     type_point start(current_hero->x, current_hero->y, current_hero->z);
@@ -4746,7 +4663,7 @@ int net_value_of_location(hero* current_hero, HeroDestination* destination,
         }
     }
 
-    long value = *get_danger_cell(strategic_map, point)
+    long value = *getDangerCell(strategic_map, point)
         + path_cell->barrier_value;
     if (path_cell->danger_value <= -500000000 && value >= 1968)
         path_cell->danger_value = -2500000;
@@ -4816,20 +4733,6 @@ static unsigned char attempt_teleport(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step);
 
-static __forceinline void check_gate_purchase(type_point point)
-{
-    int town_id = gpGame->GetTownId(point.x, point.y, point.z);
-    if (town_id >= 0) {
-        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
-        // Complete expansions retain this call. Flattening it removes the two
-        // retail calls and expands the lookup into AI_AttemptMove.
-#pragma inline_depth(0)
-        town* current_town = gpGame->GetTown(town_id);
-#pragma inline_depth()
-        if (!current_town->HasBuilding(EXTRA_1_ID, true))
-            current_town->buy_building(EXTRA_1_ID);
-    }
-}
 
 // Exact. Dreamcast's final line and retail's six-exit tail prove the single
 // `event_cell == 0 && !bNoMove && !bFoughtBattle` result. The retarget flag is
@@ -5149,6 +5052,22 @@ static unsigned char attempt_teleport(hero* current_hero,
     ++current_hero->dWalkSpellsCast;
     return 1;
 }
+// E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
+static __forceinline void check_gate_purchase(type_point point)
+{
+    int town_id = gpGame->GetTownId(point.x, point.y, point.z);
+    if (town_id >= 0) {
+        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
+        // Complete expansions retain this call. Flattening it removes the two
+        // retail calls and expands the lookup into AI_AttemptMove.
+#pragma inline_depth(0)
+        town* current_town = gpGame->GetTown(town_id);
+#pragma inline_depth()
+        if (!current_town->HasBuilding(EXTRA_1_ID, true))
+            current_town->buy_building(EXTRA_1_ID);
+    }
+}
+
 
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
 // decorated signature and the retail /Gr call at move_hero+0x219.  The body
@@ -5309,11 +5228,7 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
 // E:\gamedcs\Town.h:324. The DC public symbol proves bool/bool/const; its
 // statement groups and the retail blocks agree on active versus built and
 // the 64-bit bitNumber test. HD supplies an exact cross-build identity.
-VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
-bool town::HasBuilding(int buildingId, bool check_included) const
-{
-    // @stub
-}
+// Canonical body and VA: include/town.h.
 
 #endif  // @carcass
 
@@ -5350,6 +5265,65 @@ VA(0x00430ab0, 0x4c1)  // caller/callee/body bridge, dc 0x34630
 static unsigned char attempt_teleport(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step);
+
+// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
+// loops, with construction and valuation grouped in each statement, and the
+// source helper remains real even though Complete inlines both calls below.
+// The direct TArtifact construction preserves Dreamcast's proved field type.
+// Replacing it with the compatibility artifact_from_int helper is the negative
+// control: CFG stays 77/77 exact but the caller frame is four bytes short
+// (99.97449%). The caller gates both recruit ids, so this helper has no
+// source-false null guard.
+static long total_artifact_value(hero* candidate, long player_id)
+{
+    long total = 0;
+    long slot;
+    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+        type_artifact backpack_artifact(
+            candidate->get_backpack(slot).artifactId);
+        total += AI_get_artifact_player_value(backpack_artifact, player_id);
+    }
+    for (slot = 0; slot < 19; ++slot) {
+        type_artifact equipped_artifact(
+            candidate->get_artifact(TArtifactSlot(slot)).artifactId);
+        total += AI_get_artifact_player_value(equipped_artifact, player_id);
+    }
+    return total;
+}
+
+// E:\gamedcs\ai_player.cpp:4565, dc 0x357ec.
+
+
+// The Dreamcast roster marks both coordinate lookups static, and its
+// AI_build_ship xrefs mark both calls inlined. Retail retains those two
+// source-level passes: owned town docks first, then claimed map shipyards.
+static town* get_shipyard_town(const playerData* player, long x, long y,
+                               long z)
+{
+    for (long i = 0; i < player->numTowns; ++i) {
+        town* current_town = gpGame->GetTown(player->townIds[i]);
+        if (current_town->dockSite == x && current_town->dockSiteY == y
+            && current_town->mapZ == z)
+            return current_town;
+    }
+    return 0;
+}
+
+// E:\gamedcs\ai_player.cpp:4583, dc 0x35888.
+static unsigned char get_map_shipyard(const playerData* player, long x,
+                                      long y, long z)
+{
+    for (unsigned long i = 0; i < player->shipyards.size(); ++i) {
+        if (player->shipyards[i].z == z) {
+            NewmapCell* cell = gpGame->get_cell(player->shipyards[i]);
+            const ShipyardInfo* shipyard = static_cast<const ShipyardInfo*>(
+                static_cast<const void*>(&cell->extraInfo));
+            if (shipyard->boatX == x && shipyard->boatY == y)
+                return 1;
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
@@ -5406,30 +5380,8 @@ long AI_get_ship_cost(const hero* our_hero, type_point point)
     return -AI_resource_cost(player, cost);
 }
 
-// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
-// loops, with construction and valuation grouped in each statement, and the
-// source helper remains real even though Complete inlines both calls below.
-// The direct TArtifact construction preserves Dreamcast's proved field type.
-// Replacing it with the compatibility artifact_from_int helper is the negative
-// control: CFG stays 77/77 exact but the caller frame is four bytes short
-// (99.97449%). The caller gates both recruit ids, so this helper has no
-// source-false null guard.
-static long total_artifact_value(hero* candidate, long player_id)
-{
-    long total = 0;
-    long slot;
-    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact backpack_artifact(
-            candidate->get_backpack(slot)->artifactId);
-        total += AI_get_artifact_player_value(backpack_artifact, player_id);
-    }
-    for (slot = 0; slot < 19; ++slot) {
-        type_artifact equipped_artifact(
-            candidate->get_artifact(slot)->artifactId);
-        total += AI_get_artifact_player_value(equipped_artifact, player_id);
-    }
-    return total;
-}
+
+
 
 // E:\\gamedcs\\ai_player.cpp:4670. Dreamcast supplies the cap checks,
 // computer-player census, two recruit valuations and four source-level
@@ -5501,11 +5453,7 @@ bool type_AI_player::hire_heroes()
 // E:\gamedcs\Game.h:972. The DC header body, exact HD cross-build identity,
 // and retail's fifteen callers all preserve the -1/null arm and 1170-byte
 // hero stride. The compiled definition remains in game.h.
-VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
-hero* game::GetHero(int which)
-{
-    // @stub
-}
+// Canonical body and VA: include/game.h.
 
 #endif  // @carcass
 
@@ -6544,7 +6492,7 @@ void AI_equip_artifacts(hero* our_hero)
     type_artifact artifact;
     int backpack_slot = our_hero->get_last_backpack_index() + 1;
     while (backpack_slot-- > 0) {
-        artifact = *our_hero->get_backpack(backpack_slot);
+        artifact = our_hero->get_backpack(backpack_slot);
         if (artifact.artifactId != ARTIFACT_NONE
             && add_artifact(our_hero, artifact, &base_value, 0, 19, 0, 0)) {
             our_hero->remove_backpack_artifact(backpack_slot);
@@ -6619,7 +6567,7 @@ long get_full_value(const hero* our_hero)
     value += caster.get_best_spell_value(SPELL_VALUE_SPECIAL);
 
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = *our_hero->get_artifact(slot);
+        type_artifact artifact = our_hero->get_artifact(TArtifactSlot(slot));
         if (artifact.artifactId != -1)
             value += AI_get_value_of_artifact(artifact, our_hero, 1, 1);
     }
@@ -6797,25 +6745,6 @@ inline type_luck_artifact::type_luck_artifact(long new_bonus)
 {
 }
 
-inline type_antimorale_artifact::type_antimorale_artifact()
-{
-}
-
-inline type_antiluck_artifact::type_antiluck_artifact()
-{
-}
-
-inline type_creature_growth_artifact::type_creature_growth_artifact(
-    long new_level, long new_bonus)
-    : bonus(new_level), growthBonus(new_bonus)
-{
-}
-
-inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
-    : type_necromancy_artifact(30)
-{
-}
-
 inline type_duration_artifact::type_duration_artifact(long new_bonus)
     : type_power_artifact(new_bonus)
 {
@@ -6831,6 +6760,39 @@ inline type_antimagic_artifact::type_antimagic_artifact(long max_level)
     : bonus(max_level)
 {
 }
+
+inline type_antimorale_artifact::type_antimorale_artifact()
+{
+}
+
+inline type_antiluck_artifact::type_antiluck_artifact()
+{
+}
+
+inline type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
+    : type_combat_artifact(0), school(new_school)
+{
+}
+
+inline type_income_artifact::type_income_artifact(
+    long new_amount, EGameResource new_resource)
+    : amount(new_amount), resource(new_resource)
+{
+}
+
+inline type_creature_growth_artifact::type_creature_growth_artifact(
+    long new_level, long new_bonus)
+    : bonus(new_level), growthBonus(new_bonus)
+{
+}
+
+inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
+    : type_necromancy_artifact(30)
+{
+}
+
+
+
 
 inline type_spell_artifact::type_spell_artifact(SpellID new_spell)
     : spell(new_spell)
@@ -6855,16 +6817,7 @@ inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
 {
 }
 
-inline type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
-    : type_combat_artifact(0), school(new_school)
-{
-}
 
-inline type_income_artifact::type_income_artifact(
-    long new_amount, EGameResource new_resource)
-    : amount(new_amount), resource(new_resource)
-{
-}
 
 static void initialize_artifact_effects();
 

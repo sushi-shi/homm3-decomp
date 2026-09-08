@@ -11,17 +11,17 @@
 class CTimer
 {
 public:
-    CTimer(unsigned char _enabled)
-        : startTime(0), stopTime(0), elapsedTime(0),
-          _IsRunning(0), enabled(_enabled)
-    {
-    }
-
     // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
     // consumer that proves this trivial header boundary at GlobalTimer+13.
     void enable()
     {
         enabled = 1;
+    }
+
+    CTimer(unsigned char _enabled)
+        : startTime(0), stopTime(0), elapsedTime(0),
+          _IsRunning(0), enabled(_enabled)
+    {
     }
 
     void start()

@@ -23,30 +23,11 @@ long get_alignment_count(int legal_alignments);
 TTownType pick_alignment(int legal_alignments,
                          unsigned char getFirstAvail);
 
-// Dreamcast keeps these two tiny helpers out of line. Complete widens the
-// alignment mask for Conflux; VC6 expands both helpers into the advanced-
-// options click handler, where the complete nine-town loops are visible.
-inline TTownType pick_prev_alignment(int legal_alignments, TTownType type)
-{
-    do {
-        type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type < -1)
-            type = TOWN_CONFLUX;
-        else if (type == -1)
-            break;
-    } while (!(legal_alignments & (1 << type)));
-    return type;
-}
+// Definitions belong to newgame.cpp. Complete widens the alignment mask
+// for Conflux; the advanced-options click handler uses the nine-town loops.
+TTownType pick_prev_alignment(int legal_alignments, TTownType type);
 
-inline TTownType pick_next_alignment(int legal_alignments, TTownType type)
-{
-    do {
-        type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type > TOWN_CONFLUX)
-            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    } while (type != -1 && !(legal_alignments & (1 << type)));
-    return type;
-}
+TTownType pick_next_alignment(int legal_alignments, TTownType type);
 
 // The seven resource names (retail 0x6a5e64, DATA-claimed by seerhut.cpp);
 // GetVictoryConditionText's resource arm formats one. Consumer-side plain

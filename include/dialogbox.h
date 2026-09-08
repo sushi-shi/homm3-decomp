@@ -38,7 +38,7 @@ class CTextDialog : public TDialogBox {
 public:
     CTextDialog(const char* cText, font* pFont, unsigned winType);
     CTextDialog(unsigned winType);
-    virtual ~CTextDialog();
+    // Implicit destructor; CodeView dc 0x82068 compgenx.
 
     int ExitDialog(message& msg);
     virtual unsigned char Setup(const char* cText, font* pFont);

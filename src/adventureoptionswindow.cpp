@@ -136,17 +136,6 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
     }
 }
 
-// Retail emits CHeroWindowEx's header-inline slot-3 forwarder at 0x405680
-// before the class's generated deleting destructor. It is shared by 42
-// vtables and is not one of this source file's five Dreamcast roster rows;
-// ownership remains with the window-header emission until that ICF surface is
-// admitted deliberately.
-VA(0x00405680, 0x10)  // header-inline slot-3 forwarder, dc Window.h:210
-int CHeroWindowEx::handle_message(message& msg)
-{
-    return WindowHandler(&msg);
-}
-
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 
 // E:\gamedcs\adventureoptionswindow.cpp:105
