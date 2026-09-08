@@ -2347,9 +2347,61 @@ void TRmgTreasureGroup::reset()
 #if 0 // @carcass
 VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
-VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
-void TRmgTreasureGroup::traceOutline() {} // @stub
 #endif
+
+// Complete-only cached perimeter walk. Scan y/x for the first nontraversable
+// group cell, begin immediately above it, then walk cardinal directions.
+// The cell predicates match the two retail expansions at 0x535f39 and
+// 0x536000, including the byte-return entrance/gate queries. Like the
+// prototype's buildOutline, reverse direction after each accepted step and
+// stop before duplicating the first point.
+// Residual (95.1849%): all 32 blocks align; the perimeter walk agrees,
+// while the initial map scan differs in register homes and inner back-edge
+// polarity. Separate coordinate initialization is flat at 95.1644%; explicit
+// cached height/per-row width restores one addressing detail to 95.1849%.
+VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
+void TRmgTreasureGroup::traceOutline()
+{
+    if (m_outline.size() > 0)
+        return;
+    TPoint position;
+    position.m_x = 0;
+    int height = m_map.m_mapHeight;
+    for (position.m_y = 0; position.m_y < height; ++position.m_y) {
+        int width = m_map.m_mapWidth;
+        for (position.m_x = 0; position.m_x < width; ++position.m_x) {
+            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
+            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
+                || item->m_tile.m_landType == eTerrainRock || !item->hasSubterraneanGate())
+                break;
+        }
+        if (position.m_x < width)
+            break;
+    }
+    if (position.m_x == m_map.m_mapWidth)
+        return;
+    --position.m_y;
+    TPoint start = position;
+    int direction = 2;
+    do {
+        m_outline.push_back(position);
+        int attempts = 0;
+        do {
+            direction = (direction - 2) & 7;
+            TPoint offset = g_rmgDirections[direction];
+            TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
+            if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
+                || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
+                break;
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && item->hasSubterraneanGate())
+                break;
+        } while (++attempts < 4);
+        position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
+        direction = (direction - 4) & 7;
+    } while (start != position);
+}
 
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
