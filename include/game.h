@@ -3185,10 +3185,16 @@ public:
     // so the recovered source hierarchy is not flattened again.
     // Before normalization (function): game::GetGarrison.
     garrison* getGarrison(int which) { return &m_garrisons[which]; }
-    // Game.h:1380. DispatchEvent expands this cell accessor; the
-    // out-of-line copy is ai_player.obj's, 0x42ed80.
+    // Game.h:1380. DC 0x38000 passes all three coordinates to
+    // NewfullMap::cell(int,int,int). This canonical header inline replaces
+    // the separate ai_player/mapcell/events/philai/hero definitions.
+    // The retained ai_player.obj copy at 0x42ed80 remains exact, and
+    // pushPoint/DispatchEvent expand the accessor naturally.
     // Before normalization (function): game::get_cell.
-    NewmapCell* getCell(type_point point);
+    NewmapCell* getCell(type_point point)
+    {
+        return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    }
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header. Most retail readers
     // expand it in place; ai_player.obj also retains the selected COMDAT at

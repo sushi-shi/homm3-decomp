@@ -4441,12 +4441,15 @@ int game::getTeam(int playerNum)
 
 #endif  // @carcass
 
-// E:\gamedcs\game.h:1380
+#if 0  // @carcass: claim-only home for the game.h inline COMDAT
+// E:\gamedcs\game.h:1380. The header owns the single canonical body;
+// DC 0x38000 calls NewfullMap::cell(int,int,int), not cell(type_point).
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
 NewmapCell* game::getCell(type_point point)
 {
-    return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    // @stub
 }
+#endif  // @carcass
 
 // The nine functions below are located by the callee-fingerprint join against
 // evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved

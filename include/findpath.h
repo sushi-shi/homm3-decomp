@@ -232,16 +232,14 @@ public:
             return 0;
         return &m_cellData[x];
     }
-    // 0x4b1a70 / 0x4b2300, the adventure-map half of the search. The DC
-    // roster spells both first parameters const; they are spelled non-const
-    // here because every hero call the bodies make (get_creature_total,
-    // get_special_terrain, get_spell_level, IsWieldingArtifact) is non-const
-    // in this tree's hero.h and the retail bytes cannot distinguish the two.
+    // DC findpath.cpp:271 proves both pathCell reference parameters.
     // Before normalization (function): searchArray::PushPoint.
     // Before normalization (locals): old_cell, move_cost, barrier_value.
-    void pushPoint(const pathCell* oldCell, pathCell* point, int direction,
+    void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
                    int moveCost, int limit, long barrierValue,
                    type_point monster, int isTrigger);
+    // DC's first parameter here is const hero*. The current hero member
+    // declarations require a mutable pointer; retail cannot distinguish it.
     // Before normalization (function): searchArray::TestPossibleDirections.
     // Before normalization (locals): current_hero, turn_mobility, adjacent_monster,
     // monster_location, iPathfinding, search_type, native_terrain.

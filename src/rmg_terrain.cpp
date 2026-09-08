@@ -1827,6 +1827,14 @@ VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
 // The naturally emitted specialization agrees with all 53 retail bytes.
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
+// paintTransitions' edge-count vector constructor retains this byte fill
+// after the recovered neighbour scopes and coordinate translation. Retail's
+// zero-count guard, null destination guard and one-byte stride identify the
+// canonical unsigned-char specialization independently of the caller. All
+// 36 bytes agree on the first full checkpoint; the parked entry predated
+// the caller's recovered neighbour scopes.
+VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
+
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
