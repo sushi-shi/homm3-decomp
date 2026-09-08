@@ -1587,6 +1587,7 @@ struct TRmgZone {
     // its retained connection predicate compares center distance and size.
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
+    void chooseTerrain();
     ~TRmgZone();
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
@@ -1833,6 +1834,9 @@ public:
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
     void initializeZones(TRmgTemplate* mapTemplate);
+    void positionZone(TRmgZone* zone, int mapSize);
+    void appendZonePositions(TRmgZone* center, TRmgZone* zone,
+        std::vector<TRmgMapPosition>& candidates);
     void getInitialZoneBounds(int& minimumY, int& minimumX,
         int& maximumY, int& maximumX) const;
     void paintZoneTerrain();

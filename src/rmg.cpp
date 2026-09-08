@@ -197,16 +197,28 @@ static const int g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
+// Terrain-indexed town preferences consumed by initialization 0x53bf85.
+// Nine four-entry rows read from the SHA-256-pinned retail image. The
+// unusual sentinel/version scan is retained in the caller as retail code.
+DATA(0x00682450)
+int g_rmgTerrainTownChoices[9][4] = {
+    {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
+    {2, -1, 0, 0}, {7, 4, -1, 0}, {6, 8, -1, 0},
+    {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
+};
+
 // Thirty-two radial directions used by the placement and boundary passes.
+// Before normalization: gRmgDirectionCosines.
 DATA(0x00682500)
-double gRmgDirectionCosines[32] = {
+double g_rmgDirectionCosines[32] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
 };
+// Before normalization: gRmgDirectionSines.
 DATA(0x00682600)
-double gRmgDirectionSines[32] = {
+double g_rmgDirectionSines[32] = {
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
@@ -1254,6 +1266,14 @@ townSelected:
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
 
+
+// Initialization 0x53bf4e calls this to select allowed terrain, then
+// constrains underground zones to subterranean or lava. Provisional role
+// name; Complete-only thiscall, no arguments and no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x00532AB0, 0x96) // anchor-callee 0x53bf4e; retail-only
+void TRmgZone::chooseTerrain() {} // @stub
+#endif
 
 // Three trivial member vectors account for all 118 retained destructor
 // bytes, including the three independently resolved operator-delete calls.
@@ -3259,6 +3279,60 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
     return 1;
 }
 
+// Candidate selector 0x53b970 passes an existing center, the zone being
+// placed and its 12-byte position vector. Retail samples offsets around
+// the center and appends positions accepted by canPlaceZone. Provisional
+// role name; Complete-only, no Dreamcast counterpart.
+// Residual (83.4857%): scalar maximum selection restores the retail
+// second-ring radius branch (41.52 -> 79.02%); direct coordinate stores
+// restore its field addressing (83.49%). The first two push_back sites
+// retain count-insert, while the last expands it with extra size/cleanup
+// branches. Explicit count-insert at all three sites changes that frontier
+// substantially; retain the canonical vector calls and accessor copies.
+VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
+void type_random_map_generator::appendZonePositions(TRmgZone* center,
+    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
+{
+    int radius = center->m_slot->m_size + zone->m_slot->m_size;
+    TRmgMapPosition position = center->getLevelPosition();
+    for (int direction = 0; direction < 32; ++direction) {
+        TRmgMapPosition candidate;
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = position.m_z;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+    if (m_map.m_numberLevels == 1)
+        return;
+    int level = 1 - position.m_z;
+    TRmgMapPosition candidate;
+    candidate.m_x = position.m_x;
+    candidate.m_y = position.m_y;
+    candidate.m_z = level;
+    zone->m_levelPosition.m_x = candidate.m_x;
+    zone->m_levelPosition.m_y = candidate.m_y;
+    zone->m_levelPosition.m_z = candidate.m_z;
+    if (canPlaceZone(zone))
+        candidates.push_back(zone->getLevelPosition());
+    radius = center->m_slot->m_size;
+    if (radius < zone->m_slot->m_size)
+        radius = zone->m_slot->m_size;
+    for (direction = 0; direction < 32; ++direction) {
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = level;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+}
+
 // Both connection-count passes in FilterZonePositions retain the same
 // vector-size and CanConnect calls. Keep the shared operation as one
 // ordinary helper; its source name/boundary remain retail hypotheses.
@@ -3393,11 +3467,121 @@ void type_random_map_generator::filterZonePositions(
     }
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only zone-position selector. The first zone starts at the
+// origin on either eligible level; later zones sample template neighbors,
+// falling back to all placed zones before applying the shared filter.
+// Retail retains the candidate append/filter calls and chooses an unsigned
+// vector index with rand() % size(). Role-derived name, no DC counterpart.
+// Residual (96.8731%): preserving the destination slot pointer restores
+// the connection-loop CFG (89.72 -> 92.86%); separate count/index locals
+// restore the entire final random-selection sequence. The remaining real
+// delta is the two single-element vector insert calls: VC6 expands their
+// wrapper and calls count-insert, whereas retail retains the 540-byte
+// single-insert body at 0x54c3f0. Keep the original vector interface.
+VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
+void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
+{
+    std::vector<TRmgMapPosition> candidates;
+    if (m_zones.size() == 0) {
+        zone->m_levelPosition.m_y = 0;
+        zone->m_levelPosition.m_z = 0;
+        zone->m_levelPosition.m_x = 0;
+        candidates.insert(candidates.end(), zone->getLevelPosition());
+        if (m_map.m_numberLevels > 1) {
+            zone->m_levelPosition.m_x = 0;
+            zone->m_levelPosition.m_y = 0;
+            zone->m_levelPosition.m_z = 1;
+            if (canPlaceZone(zone))
+                candidates.insert(candidates.end(), zone->getLevelPosition());
+        }
+    } else {
+        TRmgTownSlot* slot = zone->m_slot;
+        for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
+            TRmgTownSlot* destination = slot->m_connections[connection].m_destination;
+            if (destination->m_zoneIndex < m_zones.size())
+                appendZonePositions(m_zones[destination->m_zoneIndex], zone, candidates);
+        }
+        if (candidates.size() == 0) {
+            for (int other = 0; other < m_zones.size(); ++other)
+                appendZonePositions(m_zones[other], zone, candidates);
+        }
+        filterZonePositions(zone, candidates, mapSize);
+    }
+    unsigned int count = candidates.size();
+    unsigned int selected = rand() % count;
+    zone->setLevelPosition(candidates[selected]);
+}
+
+// Complete-only initialization, called by generation coordinator 0x549930.
+// The two placement passes precede normalization to a centered square.
+// Names are role-derived; the Dreamcast build has no RMG counterpart.
+// Residual (90.6395%): direct table expressions preserve retail's unusual
+// sentinel/version loop; caching one town entry lets VC6 fold it away
+// (77.40%). Named scaled-width/height locals leave the score flat. Remaining
+// deltas: vector erase expands here but is retained in retail, and the
+// dimension products / bounds normalization exchange operand scheduling.
 VA(0x0053BCB0, 0x33B)
-void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate) {} // @stub
-#endif
+void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
+{
+    m_zones.erase(m_zones.begin(), m_zones.end());
+    int minimumSize = 32000;
+    for (int slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+        minimumSize = std::_cpp_min<long>(minimumSize, mapTemplate->m_zones[slotIndex]->m_size);
+    int mapSize = std::_cpp_min<long>(minimumSize * m_map.m_mapWidth,
+        minimumSize * m_map.m_mapHeight);
+    switch (m_waterContent) {
+    case RMG_WATER_NONE: mapSize /= 5; break;
+    case RMG_WATER_NORMAL: mapSize /= 6; break;
+    default: mapSize /= 7; break;
+    }
+    for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
+        TRmgTownSlot* slot = mapTemplate->m_zones[slotIndex];
+        TRmgZone* zone = new TRmgZone(slot);
+        if (slot->m_parameters0020[0] + slot->m_parameters0020[1] > 0
+            && slot->m_playerIndex >= 0
+            && m_playerIndexMap[slot->m_playerIndex + 1] >= 0
+            && m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]] != -1)
+            zone->m_alignment = m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]];
+        positionZone(zone, mapSize);
+        m_zones.push_back(zone);
+    }
+    for (int pass = 0; pass < 2; ++pass) {
+        for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+            positionZone(m_zones[slotIndex], mapSize);
+    }
+    int minimumY, minimumX, maximumY, maximumX;
+    getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
+    int span = std::_cpp_max<long>(maximumY - minimumY, maximumX - minimumX);
+    int size = std::_cpp_max<long>(m_map.m_mapWidth, m_map.m_mapHeight);
+    minimumY = (minimumY - span + maximumY) / 2;
+    minimumX = (minimumX - span + maximumX) / 2;
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgMapPosition position = m_zones[zoneIndex]->getLevelPosition();
+        position.m_x = (position.m_x - minimumX) * size / span;
+        position.m_y = (position.m_y - minimumY) * size / span;
+        m_zones[zoneIndex]->setLevelPosition(position);
+        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_slot->m_size * size / span;
+        m_zones[zoneIndex]->chooseTerrain();
+        unsigned char expanded = m_mapVersion >= 0;
+        TRmgZone* zone = m_zones[zoneIndex];
+        if (zone->m_alignment != -1) {
+            zone->m_townType2 = zone->m_alignment;
+        } else {
+            int count = 0;
+            // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
+            // expanded, then on != 8. Preserve this observed condition,
+            // even though no table entry can satisfy both equalities.
+            while (count < 4 &&
+                (g_rmgTerrainTownChoices[zone->m_terrain][count] != -1 || expanded ||
+                 g_rmgTerrainTownChoices[zone->m_terrain][count] != TOWN_CONFLUX))
+                ++count;
+            if (count == 0)
+                zone->m_townType2 = -1;
+            else
+                zone->m_townType2 = g_rmgTerrainTownChoices[zone->m_terrain][rand() % count];
+        }
+    }
+}
 
 // Retail keeps a vector of pending endpoints. Splitting pushes the old
 // endpoint followed by the perturbed midpoint; completed unit edges mark
@@ -3902,10 +4086,10 @@ void type_random_map_generator::buildZoneBoundaries(
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
                 TRmgMapPosition horizontalCenter = current->getLevelPosition();
-                double dx = radius * gRmgDirectionCosines[direction];
+                double dx = radius * g_rmgDirectionCosines[direction];
                 position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
                 TRmgMapPosition verticalCenter = current->getLevelPosition();
-                double dy = radius * gRmgDirectionSines[direction];
+                double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
                 if (position.m_x < 0 && position.m_x < dx)
                     continue;
