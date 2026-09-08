@@ -167,7 +167,7 @@ advmgr	?setTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	
 advmgr	?setWitchHutHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdcc0	89757e48978e
 advmgr	?showRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x18dd0	6d89652c1057
 advmgr	?startLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00	9846ce591b2e
-advmgr	?townQuickView@advManager@@QAEXHHHE@Z	93.0922	93.0922	93.0922	0x167a0	6e4a0decba9d
+advmgr	?townQuickView@advManager@@QAEXHHHE@Z	92.8927	93.0922	93.0922	0x167a0	6e4a0decba9d
 advmgr	?trimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0	fc94da4b7cef
 advmgr	?updBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0	e711115817fa
 advmgr	?updBottomViewEnemyTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15f20	0faf63d447b5
@@ -629,7 +629,7 @@ armygrp	?getCreatureTotal@armyGroup@@QBEHW4TCreatureType@@@Z	100.0000	100.0000	1
 armygrp	?getCreatureTotal@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4ada0	123d4f43f68f
 armygrp	?getLuck@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000	100.0000	100.0000	0x4b2d0	c2085f12cf93
 armygrp	?getLuckDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	92.3623	92.3623	92.3623	0x4c1c0	918f3c68155b
-armygrp	?getMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654	98.5654	98.5654	0x4ae60	01c6c9641731
+armygrp	?getMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654	98.5654	98.5654	0x4ae60	3fc86a5cad9f
 armygrp	?getMoraleDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.0566	93.0566	93.0566	0x4b960	54a53c7a36d8
 armygrp	?getNativeTerrain@armyGroup@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x4c590	25c22bcfa235
 armygrp	?getNumArmies@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4acc0	70f65260b483
@@ -924,7 +924,7 @@ cmbtmgr	??_F?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.000
 cmbtmgr	?_Erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x6ad80	-
 cmbtmgr	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x6ae00	-
 cmbtmgr	?calculateGainedExperience@combatManager@@QAEXHPAH@Z	100.0000	100.0000	100.0000	0x6a350	6d4850dc95a5
-cmbtmgr	?checkApplyBadMorale@combatManager@@QAEHHH@Z	97.7333	97.7333	97.7333	0x64b40	9495ab1bb239
+cmbtmgr	?checkApplyBadMorale@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x64b40	9495ab1bb239
 cmbtmgr	?checkApplyGoodMorale@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x64920	b08cb4040191
 cmbtmgr	?checkObstacleAttacks@combatManager@@QAEEPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x6a570	08f5143a85de
 cmbtmgr	?checkRebirth@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69440	176a9076c28e
@@ -2219,7 +2219,7 @@ hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	98.3750	98.3750	100.000
 hero	?getHitPointBonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80	2f8fe351b93e
 hero	?getIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0	23c18e324750
 hero	?getLastBackpackIndex@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	3fae2b62f98c
-hero	?getLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	1ec0c2ef6584
+hero	?getLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	49fcd4fcd860
 hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	95.4461	0xdcac0	a32057760d70
 hero	?getMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	d58556297163
 hero	?getManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	845fdc6eb5c8
@@ -2299,6 +2299,7 @@ hero	?setHotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	-
 hero	?setSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210	ebffcab80957
 hero	?setVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0	844bdadef345
 hero	?setupHeroView@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe1a50	b174a7334b9d
+hero	?tLimit@@YIABHABH00@Z	100.0000	100.0000	100.0000	0xe6750	-
 hero	?takeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250	df46b58d4da7
 hero	?test@?$bitset@$0JA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x4d4d0	-
 hero	?transferArtifacts@hero@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0xe23d0	320ac15cea82
@@ -2842,7 +2843,7 @@ overview	?getLastBackpackIndex@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	be9b9
 overview	?overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	2383de28af21
 overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	e095395cf3bd
 overview	?processIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	5866d9f853a9
-overview	?setupDynamicStuff@game@@QAEXHH@Z	91.7373	91.7373	91.7373	0x11bd50	138225b82095
+overview	?setupDynamicStuff@game@@QAEXHH@Z	91.8605	91.8605	91.8605	0x11bd50	138225b82095
 overview	?setupNewOverviewType@game@@QAEXHE@Z	96.4609	96.4609	100.0000	0x11e330	30c1e6e13441
 overview	?updateBackpack@@YIXH@Z	99.9074	99.9074	99.9074	0x122470	3e8c66ecbe47
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	7e48a373ed2f
@@ -4582,8 +4583,8 @@ victorylossconditions	?heroKilled@LossConditionStruct@@QAEEPBVhero@@@Z	100.0000	
 victorylossconditions	?isGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2160	c4cb23283fe4
 victorylossconditions	?isTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260	cdb1338c70cd
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210	89a4dfb3cd9c
-viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.9521	90.9521	90.9521	0x1f3b50	830610b3c036
-viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.1633	90.1633	90.8074	0x1f3360	615c3450919b
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	92.2569	92.2569	92.2569	0x1f3b50	830610b3c036
+viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	91.2989	91.2989	91.2989	0x1f3360	615c3450919b
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	fb12b8ac39cc
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-

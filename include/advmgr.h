@@ -2884,7 +2884,7 @@ extern int g_highMemBuffer;
 // CODEVIEW(E:\gamedcs\CreatureType.h:296, dc 0x1ef94) const char* GetArmyName(int type, int count);
 // CODEVIEW(E:\gamedcs\AdvMgr.h:1254, dc 0x1f084) int GetMapExtra(type_point point);
 // CODEVIEW(E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04) const int* _cpp_max(const int* _X, const int* _Y);
-// CODEVIEW(E:\gamedcs\includes.h:124, dc 0x20d2c) const int* t_limit(const int* min, const int* value, const int* max);
+// CODEVIEW(E:\gamedcs\includes.h:124, dc 0x20d2c) const int& t_limit(const int& min, const int& value, const int& max);
 
 // --- Bitmap16Bit ---
 // CODEVIEW(E:\gamedcs\Bitmap16.h:111, dc 0x1f100) int Bitmap16Bit::GetWidth();
