@@ -1278,10 +1278,43 @@ townSelected:
 // Initialization 0x53bf4e calls this to select allowed terrain, then
 // constrains underground zones to subterranean or lava. Provisional role
 // name; Complete-only thiscall, no arguments and no Dreamcast counterpart.
-#if 0 // @carcass
+// Retail 0x532ad2 indexes this Complete-only town-to-terrain table.
+// Role-derived name; values read from the pinned image at 0x6408c8.
+DATA(0x006408C8)
+static const TTerrainType g_rmgTownTerrains[9] = {
+    eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava,
+    eTerrainDirt, eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass
+};
 VA(0x00532AB0, 0x96) // anchor-callee 0x53bf4e; retail-only
-void TRmgZone::chooseTerrain() {} // @stub
-#endif
+void TRmgZone::chooseTerrain()
+{
+    if (m_slot->m_matchTownTerrain && m_alignment != -1) {
+        m_terrain = g_rmgTownTerrains[m_alignment];
+    } else {
+        int count = 0;
+        int terrain;
+        for (terrain = 0; terrain < eTerrainWater; ++terrain) {
+            if (m_slot->m_allowedTerrain[terrain]
+                && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1))
+                ++count;
+        }
+        if (!count) {
+            m_terrain = eTerrainDirt;
+        } else {
+            int selected = rand() % count;
+            for (terrain = 0; terrain < eTerrainWater; ++terrain) {
+                if (m_slot->m_allowedTerrain[terrain]
+                    && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1)) {
+                    if (selected-- <= 0)
+                        break;
+                }
+            }
+            m_terrain = terrainFromInt(terrain);
+        }
+    }
+    if (m_levelPosition.m_z == 1 && m_terrain != eTerrainLava)
+        m_terrain = eTerrainSubterranean;
+}
 
 // Three trivial member vectors account for all 118 retained destructor
 // bytes, including the three independently resolved operator-delete calls.
@@ -3267,7 +3300,7 @@ void readRmgTemplateZones(
                     slot->m_parameters004c[mine] = atoi(values[32 + mine]);
                 for (int resource = 0; resource < 7; ++resource)
                     slot->m_parameters0068[resource] = atoi(values[39 + resource]);
-                slot->m_flag0084 = isRmgTemplateFieldSet(values[46]);
+                slot->m_matchTownTerrain = isRmgTemplateFieldSet(values[46]);
                 unsigned char anyTerrain = 0;
                 for (int terrain = 0; terrain < 8; ++terrain) {
                     slot->m_allowedTerrain[terrain] =
