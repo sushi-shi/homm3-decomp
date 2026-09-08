@@ -431,6 +431,30 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
     return oldFrame;
 }
 
+// Vtable 0x642cb0 slot 5. Reuse the old frame only when the fixed record
+// matches the transition and both requested flips; otherwise choose from
+// the corresponding four-way range. Table entries already encode flips,
+// so the selected output flip is zero. Complete-only, no DC counterpart.
+// Exact on the first candidate (116 bytes). The four data references name
+// the fixed table at 0x6424a8, its +4/+5 flip fields, and ranges at 0x6a4158;
+// the delinked image still labels these external data declarations by RVA.
+VA(0x005B3AE0, 0x74)
+int TRmgTableTerrainRule::selectTransitionFrame(
+    int transition, TRmgTerrainFlip requestedFlip,
+    TRmgTerrainFlip& selectedFlip, int oldFrame)
+{
+    if (oldFrame == -1
+        || g_rmgTerrainPatterns[oldFrame].m_frame != transition
+        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipX != requestedFlip.m_flipX
+        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipY != requestedFlip.m_flipY) {
+        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges[
+            (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
+        oldFrame = rand() % range.m_count + range.m_firstIndex;
+    }
+    selectedFlip = TRmgTerrainFlip(0, 0);
+    return oldFrame;
+}
+
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.
