@@ -2338,6 +2338,21 @@ type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgWitchHutObject(properties);
 }
 
+// Creature-quest definition vtable 0x640c00 slot 1 applies the same
+// availability guards as the other seer-hut definitions, then scales the
+// base creature valuation. Retail expands the ordinary base helper and
+// applies the final arithmetic even when that helper returns -1.
+VA(0x00534AF0, 0x9E) // anchor-vtable + inherited creature valuation; retail-only
+int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
+{
+    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
+        return -1;
+    if (generator->m_questArtifactPoolLow)
+        return -1;
+    int value = type_black_box_creature_def::getValue(zone, generator);
+    return (2 * value - 4000) / 3;
+}
+
 // Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
 // Both classes exist independently and use the same availability checks:
 // current prototype at +0xf58, then the exhausted-artifact flag at +0x10b4.

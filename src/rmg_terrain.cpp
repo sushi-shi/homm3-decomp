@@ -310,6 +310,34 @@ TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)
     return *this;
 }
 
+// Constructor 0x5b3780 copies five caller arguments into the rule prefix,
+// initializes 58 range records, then groups entries by frame/special flag.
+// The base vptr survives through array initialization; the derived vptr is
+// installed before the scan. Complete-only, with no Dreamcast counterpart.
+// All 179 bytes match, including the shared range constructor's expansion.
+VA(0x005B3780, 0xB3)
+TRmgPatternTerrainRule::TRmgPatternTerrainRule(
+    unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
+    int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
+    : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
+      m_defaultFrame(defaultFrame), m_entryCount(entryCount), m_entries(entries)
+{
+    int frame = m_entries[0].m_frame;
+    unsigned char special = m_entries[0].m_special;
+    int range = frame * 2 + special;
+    ++m_ranges[range].m_count;
+    for (unsigned int index = 1; index < m_entryCount; ++index) {
+        const TRmgTerrainPatternEntry& entry = m_entries[index];
+        if (entry.m_frame != frame || entry.m_special != special) {
+            frame = entry.m_frame;
+            special = entry.m_special;
+            range = frame * 2 + special;
+            m_ranges[range].m_firstIndex = index;
+        }
+        ++m_ranges[range].m_count;
+    }
+}
+
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
@@ -322,6 +350,13 @@ unsigned char TRmgPatternTerrainRule::hasEntries()
 // boundary. Retail restores the six-slot pure base vtable at 0x642c80.
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
 TRmgTerrainRule::~TRmgTerrainRule()
+{
+}
+
+// Vtables 0x642c98 and 0x642cb0 share the deleting wrapper at 0x5b3a50,
+// which calls the base-only destructor at 0x5b3850. Neither derived rule
+// owns its source table or has any additional destruction work.
+TRmgPatternTerrainRule::~TRmgPatternTerrainRule()
 {
 }
 
@@ -386,6 +421,40 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
+DATA(0x006A4158)
+TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
+
+// Static initializer 0x5b3a10 passes the global at 0x6a4158. Retail clears
+// its 116 ranges, then groups the 48 fixed records by transition and flips.
+// No Dreamcast counterpart exists for this Complete-only table owner.
+// Partial 96.61%: unsigned indexing restores the retail branch signedness
+// (signed indexing: 95.76%). An explicit record-pointer loop gives 92.38%.
+// Residual: VC6 anchors the scan at the Y-flip byte instead of X-flip and
+// compares the record count rather than the fixed table's end address.
+// Flat flip fields and the nested flip pair emit the same constructor bytes.
+VA(0x005B3940, 0xC5)
+TRmgTerrainPatternTable::TRmgTerrainPatternTable()
+{
+    int frame = g_rmgTerrainPatterns[0].m_frame;
+    unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
+    unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
+    TRmgTerrainPatternRange* range =
+        &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+    ++range->m_count;
+    for (unsigned int index = 1; index < 48; ++index) {
+        const TRmgTerrainTransitionEntry* entry = &g_rmgTerrainPatterns[index];
+        if (entry->m_frame != frame || entry->m_flipX != flipX
+            || entry->m_flipY != flipY) {
+            frame = entry->m_frame;
+            flipX = entry->m_flipX;
+            flipY = entry->m_flipY;
+            range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+            range->m_firstIndex = index;
+        }
+        ++range->m_count;
+    }
+}
+
 // The sole caller is the static initializer at 0x5b3da0. Retail clears the
 // two inherited rule flags and installs vtable 0x642cb0.
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
@@ -425,8 +494,8 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges[0].m_count
-            + g_rmgTerrainPatternRanges[0].m_firstIndex;
+        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[0].m_count
+            + g_rmgTerrainPatternRanges.m_ranges[0].m_firstIndex;
     }
     return oldFrame;
 }
@@ -445,9 +514,9 @@ int TRmgTableTerrainRule::selectTransitionFrame(
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != transition
-        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipX != requestedFlip.m_flipX
-        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipY != requestedFlip.m_flipY) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges[
+        || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
+        || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
+        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
             (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
         oldFrame = rand() % range.m_count + range.m_firstIndex;
     }
@@ -1844,6 +1913,24 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // The four late point constructions in RepairTerrainPoint pass x and y by
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
+
+// The terrain work set's insertion at 0x5b7cd0 calls the admitted grid-point
+// comparator and the retained node insertion at 0x5b8720. Both node insertion
+// and initialization allocate 0x18-byte nodes and share nil at 0x6a52c4
+// (reference count 0x6a52c8). Existing set operations emit all three bodies.
+// Initialization and node insertion match all 168/766 bytes.
+// Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
+// copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
+// Public insert reaches 79.83%: its named call sequence agrees, but VC6 elides the lock
+// scope's EH frame and emits four returns where retail shares one tail.
+// Preserve the canonical Dinkumware implementation and real comparator.
+VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPoint)
+VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPoint)
+VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
+// Public insert's predecessor test calls this node walk; its color field
+// at +0x14 and nil references identify the same terrain point-set instance.
+// The naturally emitted body matches all 179 bytes.
+VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
 
 // PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
 // obtains upper/lower bounds, counts their iterator range, erases that

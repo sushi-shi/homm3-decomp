@@ -118,8 +118,10 @@ public:
     unsigned char m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
-    TRmgTerrainRule()
-        : m_blendsWithOtherTerrain(0), m_allowsSeparatedNeighbours(0) {}
+    TRmgTerrainRule(unsigned char blendsWithOtherTerrain = 0,
+        unsigned char allowsSeparatedNeighbours = 0)
+        : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
+          m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     virtual ~TRmgTerrainRule();
     // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
@@ -140,6 +142,9 @@ public:
 struct TRmgTerrainPatternRange {
     int m_firstIndex;
     unsigned int m_count;
+
+    // Both table owners initialize their range arrays before the body scan.
+    TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
 };
 
 struct TRmgTerrainPatternEntry {
@@ -153,15 +158,22 @@ struct TRmgTerrainPatternEntry {
 // transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
 struct TRmgTerrainTransitionEntry {
     int m_frame;
-    TRmgTerrainFlip m_flip;
+    unsigned char m_flipX;
+    unsigned char m_flipY;
 };
 DATA(0x006424A8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
 // The table constructor at 0x5b3940 builds 116 first/count pairs from the
 // fixed pattern records. The stateless table rule consumes the first pair.
+// The static initializer at 0x5b3a10 passes this complete global as `this`.
+// Complete-only owner spelling is provisional.
+struct TRmgTerrainPatternTable {
+    TRmgTerrainPatternRange m_ranges[116];
+    TRmgTerrainPatternTable();
+};
 DATA(0x006A4158)
-extern TRmgTerrainPatternRange g_rmgTerrainPatternRanges[116];
+extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
 // Constructor 0x5b3780 copies its entry array and builds 58 first/count
 // ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
@@ -169,9 +181,13 @@ extern TRmgTerrainPatternRange g_rmgTerrainPatternRanges[116];
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
     int m_defaultFrame;                         // +0x08
-    int m_entryCount;                           // +0x0c
+    unsigned int m_entryCount;                  // +0x0c
     const TRmgTerrainPatternEntry* m_entries;   // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
+
+    TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
+        unsigned char allowsSeparatedNeighbours, int defaultFrame,
+        unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
     virtual ~TRmgPatternTerrainRule();
     virtual unsigned char hasEntries();
