@@ -1587,6 +1587,7 @@ struct TRmgZone {
     // its retained connection predicate compares center distance and size.
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
+    void chooseTerrain();
     ~TRmgZone();
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);

@@ -197,6 +197,16 @@ static const int g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
+// Terrain-indexed town preferences consumed by initialization 0x53bf85.
+// Nine four-entry rows read from the SHA-256-pinned retail image. The
+// unusual sentinel/version scan is retained in the caller as retail code.
+DATA(0x00682450)
+int g_rmgTerrainTownChoices[9][4] = {
+    {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
+    {2, -1, 0, 0}, {7, 4, -1, 0}, {6, 8, -1, 0},
+    {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
+};
+
 // Thirty-two radial directions used by the placement and boundary passes.
 // Before normalization: gRmgDirectionCosines.
 DATA(0x00682500)
@@ -1256,6 +1266,14 @@ townSelected:
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
 
+
+// Initialization 0x53bf4e calls this to select allowed terrain, then
+// constrains underground zones to subterranean or lava. Provisional role
+// name; Complete-only thiscall, no arguments and no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x00532AB0, 0x96) // anchor-callee 0x53bf4e; retail-only
+void TRmgZone::chooseTerrain() {} // @stub
+#endif
 
 // Three trivial member vectors account for all 118 retained destructor
 // bytes, including the three independently resolved operator-delete calls.
@@ -3494,11 +3512,76 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     zone->setLevelPosition(candidates[selected]);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only initialization, called by generation coordinator 0x549930.
+// The two placement passes precede normalization to a centered square.
+// Names are role-derived; the Dreamcast build has no RMG counterpart.
+// Residual (90.6395%): direct table expressions preserve retail's unusual
+// sentinel/version loop; caching one town entry lets VC6 fold it away
+// (77.40%). Named scaled-width/height locals leave the score flat. Remaining
+// deltas: vector erase expands here but is retained in retail, and the
+// dimension products / bounds normalization exchange operand scheduling.
 VA(0x0053BCB0, 0x33B)
-void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate) {} // @stub
-#endif
+void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
+{
+    m_zones.erase(m_zones.begin(), m_zones.end());
+    int minimumSize = 32000;
+    for (int slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+        minimumSize = std::_cpp_min<long>(minimumSize, mapTemplate->m_zones[slotIndex]->m_size);
+    int mapSize = std::_cpp_min<long>(minimumSize * m_map.m_mapWidth,
+        minimumSize * m_map.m_mapHeight);
+    switch (m_waterContent) {
+    case RMG_WATER_NONE: mapSize /= 5; break;
+    case RMG_WATER_NORMAL: mapSize /= 6; break;
+    default: mapSize /= 7; break;
+    }
+    for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
+        TRmgTownSlot* slot = mapTemplate->m_zones[slotIndex];
+        TRmgZone* zone = new TRmgZone(slot);
+        if (slot->m_parameters0020[0] + slot->m_parameters0020[1] > 0
+            && slot->m_playerIndex >= 0
+            && m_playerIndexMap[slot->m_playerIndex + 1] >= 0
+            && m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]] != -1)
+            zone->m_alignment = m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]];
+        positionZone(zone, mapSize);
+        m_zones.push_back(zone);
+    }
+    for (int pass = 0; pass < 2; ++pass) {
+        for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+            positionZone(m_zones[slotIndex], mapSize);
+    }
+    int minimumY, minimumX, maximumY, maximumX;
+    getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
+    int span = std::_cpp_max<long>(maximumY - minimumY, maximumX - minimumX);
+    int size = std::_cpp_max<long>(m_map.m_mapWidth, m_map.m_mapHeight);
+    minimumY = (minimumY - span + maximumY) / 2;
+    minimumX = (minimumX - span + maximumX) / 2;
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgMapPosition position = m_zones[zoneIndex]->getLevelPosition();
+        position.m_x = (position.m_x - minimumX) * size / span;
+        position.m_y = (position.m_y - minimumY) * size / span;
+        m_zones[zoneIndex]->setLevelPosition(position);
+        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_slot->m_size * size / span;
+        m_zones[zoneIndex]->chooseTerrain();
+        unsigned char expanded = m_mapVersion >= 0;
+        TRmgZone* zone = m_zones[zoneIndex];
+        if (zone->m_alignment != -1) {
+            zone->m_townType2 = zone->m_alignment;
+        } else {
+            int count = 0;
+            // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
+            // expanded, then on != 8. Preserve this observed condition,
+            // even though no table entry can satisfy both equalities.
+            while (count < 4 &&
+                (g_rmgTerrainTownChoices[zone->m_terrain][count] != -1 || expanded ||
+                 g_rmgTerrainTownChoices[zone->m_terrain][count] != 8))
+                ++count;
+            if (count == 0)
+                zone->m_townType2 = -1;
+            else
+                zone->m_townType2 = g_rmgTerrainTownChoices[zone->m_terrain][rand() % count];
+        }
+    }
+}
 
 // Retail keeps a vector of pending endpoints. Splitting pushes the old
 // endpoint followed by the perturbed midpoint; completed unit edges mark
