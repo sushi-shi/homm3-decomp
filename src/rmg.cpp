@@ -7402,6 +7402,12 @@ TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
 // the best schedule. Retail calls vector erase at both stack pops and list
 // range erase during cleanup; VC6 still expands those boundaries, with the
 // latter COMDAT absent. No emission anchor or inline-depth pin is used.
+// Retail +0x10a..+0x127 constructs the vector then list after the seed
+// switch. Cleanup calls range erase at +0x478, frees the list head at
+// +0x481 and the vector at +0x497, before the level back edge at +0x4b1.
+// Hoisting either container outside the level loop contradicts that CFG.
+// The current emitted-object scan also finds no byte-identical range-erase
+// body under another template type, even before checking callee identities.
 VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 void type_random_map_generator::carveBranchingPaths()
 {
