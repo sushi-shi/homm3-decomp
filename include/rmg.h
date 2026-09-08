@@ -691,7 +691,11 @@ struct TRmgZoneCellState {
 // tested as a unit when river routing prices an already decorated tile.
 struct TRmgGroundTile {
     // Before normalization: landType.
-    TTerrainType m_landType : 6;
+    // All three painter adapters exchange integer kinds. The terrain setter
+    // 0x532190 writes that generic integer directly, and getter 0x5322c0
+    // sign-extends six bits. No Dreamcast enum declaration exists here;
+    // signed storage replaces the earlier terrain-enum inference.
+    signed m_landType : 6;
     // Retail terrain adapter 0x532190 stores an eight-bit frame at bit 6;
     // getter 0x532288 sign-extends it. River adapter 0x532520 writes the
     // four-bit type at 14 and eight-bit frame at 18; 0x5327c0 sign-extends
@@ -1052,7 +1056,7 @@ struct TRmgMapItem {
     TRmgMapItem();
     void clear();
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
-    void setTerrain(TTerrainType terrain, int frame,
+    void setTerrain(int terrain, int frame,
         unsigned char flipX, unsigned char flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
@@ -1782,7 +1786,7 @@ public:
     void placeGuard(TRmgMapPosition position, int value);
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(
-        TTerrainType terrain, int objectType, int subtype);
+        int terrain, int objectType, int subtype);
     void resetMovementCosts();
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
