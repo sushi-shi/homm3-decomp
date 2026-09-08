@@ -79,11 +79,6 @@ void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
     m_adapter->setOverlay(point, value);
 }
 
-// The shared getTile slot at 0x55f350 remains banked after five candidates.
-// Direct and named returns plus implicit/fieldwise copies all keep the slot-4
-// call, but best output saves EBX and loads the flip bytes separately; retail
-// uses one ECX load and stores CL/CH (81.74%).
-
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
 // overlay query and accepts exactly the two retained paintable values.
 VA(0x0055EE00, 0x28)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
@@ -148,6 +143,31 @@ VA(0x0055F330, 0x17)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-o
 void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
+}
+
+// Both painter hierarchies share this slot-4 body. The caller at 0x4f9fdd
+// passes an explicit destination after the point; the nested map-adapter call
+// returns a value through its separate hidden first argument. This is not a
+// painter value-return ABI. The original Complete-only spelling is unknown.
+// Exact with the recovered ABI: reference-bound, named-value, assigned-value,
+// and reversed first-two-store controls all reproduce the same 52 bytes.
+VA(0x0055F350, 0x34) // vtables 0x641174/0x641190/0x6411f0/0x64120c slot 4
+void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+{
+    const rmgTerrainTile& sourceTile = m_adapter->getTile(point);
+    tile.m_terrain = sourceTile.m_terrain;
+    tile.m_frame = sourceTile.m_frame;
+    tile.m_flipX = sourceTile.m_flipX;
+    tile.m_flipY = sourceTile.m_flipY;
+}
+
+void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+{
+    const rmgTerrainTile& sourceTile = m_adapter->getTile(point);
+    tile.m_terrain = sourceTile.m_terrain;
+    tile.m_frame = sourceTile.m_frame;
+    tile.m_flipX = sourceTile.m_flipX;
+    tile.m_flipY = sourceTile.m_flipY;
 }
 
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same

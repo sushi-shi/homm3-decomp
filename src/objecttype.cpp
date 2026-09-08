@@ -85,15 +85,21 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 // Retail 0x514220. The same gate and the same `count()`, with the opposite
 // arm and no terrain test - which is what makes the pair a partition of the
 // unplaced objects into terrain-specific and terrain-agnostic.
-// A full-width unsigned result local scores 70.42% and merges the exits;
-// the direct byte-return arms preserve the 99.38% CFG peak.
+// Exact: a full-width result assigned in both arms preserves retail's two
+// EAX-sized constant returns despite the byte-return interface. The earlier
+// 70.42% control initialized the result before the guard; that different
+// lifetime merges the exits. The 22-source batch separates these forms:
+// assigned int/unsigned/long results match, direct byte arms score 99.3750%.
 VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
 unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
+    int result;
     if (objectType->m_slotCategory == 0
         && objectType->m_recommendedTerrainMask.count() > 3)
-        return 1;
-    return 0;
+        result = 1;
+    else
+        result = 0;
+    return result;
 }
 
 // Retail 0x514260, one compare and a `sete`.

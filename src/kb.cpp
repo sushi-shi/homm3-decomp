@@ -4703,6 +4703,9 @@ int getNextHumanPlayer(int start)
     // `jns`; this CL hoists it ahead of the saved-register pushes.  Tried and
     // rejected: reversing the locals, splitting the modulo assignment, a
     // preserved initial-seat local, and both together (flat or 66.5476%).
+    // Thirty batched combinations of six initialization schedules, three
+    // loop forms, parameter const/register hints, and counter widths retain
+    // the same 95.1190% maximum; the prologue scheduling difference remains.
     int checked = 0;
     int player = (start + 1) % 8;
 

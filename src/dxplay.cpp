@@ -1157,6 +1157,10 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // residual as D6 plus D8/D13 branchless folding, and finds no catalog lever.
 // A named result initialized to zero and assigned in the success arm is a
 // negative control: it falls to 85.33% without recovering the extra exit.
+// A 24-source return-width/assignment/label batch stays at 88.4211%; a
+// further 17 nested-guard and scoped-return forms also fail to improve it.
+// The unchanged baseline is retained; scope/goto variants score at most
+// 77.5439% and do not reproduce retail's fourth return path.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
 unsigned char CDPlayLobby::testLobbied()
