@@ -12,7 +12,9 @@
 # proceeds. MFC is absent from the image (docs/exe-dna.md).
 rva	name
 0x40f0	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z
-0x4bd0	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z
+# 0x4bd0 RETIRED: adventuremapwindow's emitted basic_string<char>::_Copy
+# now owns the complete 264-byte body, including its catch and continuation.
+# See the retail-functions.tsv boundary proof and BASIC_STRING_COPY claim.
 # 0x6ae00 RETIRED 2026-09-06: the 163-byte Dinkumware set<int>
 # const_iterator increment COMDAT is cmbtmgr.obj's own - this map's note on
 # it already said LearnSpellFromEagleEye's base object supplies the
