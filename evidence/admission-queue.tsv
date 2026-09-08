@@ -18,12 +18,12 @@ carcass	396	0xd2e50	bracketed	game	game	__h3cg$game$std_copy$type_map_hero_ident
 unmapped	316	0x2043d0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	295	0x2042a0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	252	0x2039c0	unmapped				locate the owning TU, then add its VA claim and body
-unmapped	234	0x2038b0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	154	0x203810	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	132	0x204720	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	115	0x2047b0	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	97	0x1154a0	bracketed	newgame..overview	newgame,overview	game_114d80_sub02_1154a0	resolve the owner, then add its VA claim and body
 bracketed	69	0x14d0a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_143e20_sub05_14d0a0	resolve the owner, then add its VA claim and body
+carcass	63	0x1095e0	bracketed	mapcell	mapcell	__h3cg$mapcell$std_copy$type_university	enable the existing VA claim and reconstruct its body
 carcass	56	0x14d8b0	bracketed	rmg	rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	enable the existing VA claim and reconstruct its body
 bracketed	52	0x1166e0	bracketed	newgame..overview	newgame,overview	game_136bc0_sub00_1166e0	resolve the owner, then add its VA claim and body
 bracketed	51	0x1095a0	bracketed	mapcell..misc	mapcell,misc	game_fdbc0_sub10_1095a0	resolve the owner, then add its VA claim and body
@@ -33,7 +33,7 @@ carcass	37	0x1093c0	bracketed	mapcell	mapcell	__h3cg$mapcell$std_copy$Int	enable
 carcass	37	0x14df40	bracketed	mapcell	mapcell	__h3cg$mapcell$std_copy$const_int	enable the existing VA claim and reconstruct its body
 carcass	36	0x8db40	bracketed	customcampaign	customcampaign	__h3cg$customcampaign$vector_ucopy$unsigned_char	enable the existing VA claim and reconstruct its body
 carcass	36	0x8db70	bracketed	customcampaign	customcampaign	__h3cg$customcampaign$vector_ufill$unsigned_char	enable the existing VA claim and reconstruct its body
-carcass	35	0xcfec0	in-span	game	game	__h3cg$game$vector_destroy$type_map_hero_identity	enable the existing VA claim and reconstruct its body
 carcass	35	0x14c940	bracketed	rmg	rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	enable the existing VA claim and reconstruct its body
 carcass	33	0x183ec0	in-span	singleselectionwindow	singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	enable the existing VA claim and reconstruct its body
+carcass	17	0xd17b0	in-span	game	game	__h3cg$game$bitset_flip$Bitset28	enable the existing VA claim and reconstruct its body
 carcass	9	0x8e9d0	bracketed	customcampaign	customcampaign	__h3cg$customcampaign$std_construct$unsigned_char	enable the existing VA claim and reconstruct its body

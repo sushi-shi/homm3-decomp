@@ -14,6 +14,11 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
 int __stdcall victorValidateImage(imgdes* image);
 // Provisional semantic name for the validator's -26 status.
 enum { victorUnsupportedBitDepth = -26 };
+enum VictorPixelDepth {
+    victorMonochrome = 1,
+    victorIndexedColor = 8,
+    victorTrueColor = 24
+};
 int __stdcall victorValidateBitmap(imgdes* image);
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width);
