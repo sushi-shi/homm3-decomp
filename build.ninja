@@ -759,7 +759,7 @@ build build/objdiff/base/tiles.obj: cl src/tiles.cpp | $
 build tiles: phony build/objdiff/base/tiles.obj
 build build/objdiff/base/victor.obj: cl src/victor.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /ML /Gd /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
   unit = victor
 build victor: phony build/objdiff/base/victor.obj
 build build/objdiff/base/victor_pcx_kernels.obj: cl $

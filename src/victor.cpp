@@ -9,6 +9,7 @@
 // The allocation mode occupies zero-initialized storage in retail .data's
 // virtual tail; the worker receives its current value as argument five.
 DATA(0x006abaa4) unsigned int g_victorUseDibSection;
+DATA(0x006abaac) VictorSetDibColorTable g_victorSetDibColorTable;
 
 // Public API name corroborated by DC_precompiledheaders.cpp:544's PCX stub;
 // that four-byte Dreamcast stub supplies no Windows implementation evidence.
@@ -54,6 +55,33 @@ void __stdcall freeimage(imgdes* image)
             DeleteObject(image->m_bitmap);
         memset(image, 0, sizeof(*image));
     }
+}
+
+// Retail loadpcx calls this after filling an indexed palette. The optional
+// DIB receives the same RGBQUAD rows through the recovered callback ABI.
+// The DC stubs contain no implementation of this Windows-only operation.
+// Residual (70.3860%): VC6 duplicates ReleaseDC and the return on failure;
+// retail shares them and keeps status on the stack. Failure-first source
+// flips the branch and lowers the match to 65.91% without sharing cleanup.
+VA(0x00603810, 0x9a)  // anchor-caller loadpcx + GDI selection/cleanup + imgdes layout
+int __stdcall victorUploadPalette(imgdes* image)
+{
+    int status = 0;
+    if (image->m_bitmap && image->m_colors) {
+        HWND desktop = GetDesktopWindow();
+        HDC desktopDc = GetDC(desktop);
+        HDC memoryDc = CreateCompatibleDC(desktopDc);
+        if (memoryDc) {
+            HGDIOBJ previous = SelectObject(memoryDc, image->m_bitmap);
+            g_victorSetDibColorTable(memoryDc, 0, image->m_colors, image->m_palette);
+            SelectObject(memoryDc, previous);
+            DeleteDC(memoryDc);
+        } else {
+            status = -14;
+        }
+        ReleaseDC(desktop, desktopDc);
+    }
+    return status;
 }
 
 // Retail-only Victor validator: IsBadReadPtr on the pixel buffer, unsigned
@@ -113,6 +141,38 @@ int __stdcall victorValidateBitmap(imgdes* image)
         status = 0;
     return status;
 }
+// Both the allocation worker and loadpcx use this grayscale initialization.
+// Retail writes red, green, blue, reserved in that order and expands the
+// palette-upload helper, discarding its status but preserving GDI cleanup.
+// /Ob2 restores that ordinary-helper expansion (21.84 -> 69.72%); the
+// reserved-byte post-increment raises it to 88.85%. Remaining differences
+// include the duplicated depth check and EBX/EBP save placement. The loop
+// increment in the for-clause is a measured negative control (69.72%).
+VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
+void __stdcall victorInitializePalette(imgdes* image)
+{
+    int step = 255;
+    if (image->m_palette && image->m_bmh->biBitCount != victorTrueColor) {
+        int colors = image->m_bmh->biClrUsed;
+        if (!colors && image->m_bmh->biBitCount != victorTrueColor)
+            colors = 1 << image->m_bmh->biBitCount;
+        image->m_colors = colors;
+        if (colors > 2) {
+            image->m_imgtype = 1;
+            step = 256 / colors;
+        }
+        int shade = 0;
+        for (int i = 0; i < image->m_colors;) {
+            image->m_palette[i].rgbRed = shade;
+            image->m_palette[i].rgbGreen = shade;
+            image->m_palette[i].rgbBlue = shade;
+            image->m_palette[i++].rgbReserved = 0;
+            shade += step;
+        }
+        victorUploadPalette(image);
+    }
+}
+
 // Provisional helper name. flipimage calls this at 0x603b7e with output
 // height then width. The unsigned inclusive extents and ordered stores are
 // byte-proven. Its returned EAX is overwritten by the caller, so the source

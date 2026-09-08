@@ -12,6 +12,12 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
 // 0x6038b0: stdcall validator, ret 4. It checks the descriptor/buffer and
 // bitmap header, normalizes region endpoints, and returns a signed status.
 int __stdcall victorValidateImage(imgdes* image);
+int __stdcall victorUploadPalette(imgdes* image);
+void __stdcall victorInitializePalette(imgdes* image);
+// Provisional identity from the HDC/start/count/RGBQUAD call ABI at
+// 0x603871 and 0x603a93: dynamically supplied DIB color-table setter.
+typedef UINT (WINAPI *VictorSetDibColorTable)(HDC, UINT, UINT, const RGBQUAD*);
+extern VictorSetDibColorTable g_victorSetDibColorTable;
 // Provisional semantic name for the validator's -26 status.
 enum { victorUnsupportedBitDepth = -26 };
 enum VictorPixelDepth {

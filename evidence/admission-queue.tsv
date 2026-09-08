@@ -17,8 +17,6 @@ bracketed	408	0x115010	bracketed	newgame..overview	newgame,overview	game_214260_
 carcass	396	0xd2e50	bracketed	game	game	__h3cg$game$std_copy$type_map_hero_identity	enable the existing VA claim and reconstruct its body
 unmapped	316	0x2043d0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	295	0x2042a0	unmapped				locate the owning TU, then add its VA claim and body
-unmapped	252	0x2039c0	unmapped				locate the owning TU, then add its VA claim and body
-unmapped	154	0x203810	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	132	0x204720	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	115	0x2047b0	unmapped				locate the owning TU, then add its VA claim and body
 bracketed	97	0x1154a0	bracketed	newgame..overview	newgame,overview	game_114d80_sub02_1154a0	resolve the owner, then add its VA claim and body
