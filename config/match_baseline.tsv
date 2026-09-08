@@ -1632,6 +1632,7 @@ events	??1CWaitForRemoteBattleDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaea00	-
 events	??1town@@QAE@XZ	100.0000	100.0000	100.0000	0xad0e0	-
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40	-
 events	??Rspell_level_order@@QAEEHH@Z	100.0000	100.0000	100.0000	0xb0000	-
+events	?_Construct@std@@YIXPAUtype_dialog_resource@@ABU2@@Z	100.0000	100.0000	100.0000	0x1b8cc0	-
 events	?_Construct@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@ABV21@@Z	100.0000	100.0000	100.0000	0xafb40	-
 events	?_Destroy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@0@Z	100.0000	100.0000	100.0000	0xaf500	-
 events	?_Sort@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xb00b0	-
