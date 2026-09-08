@@ -3395,9 +3395,12 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 // centers with each template's size as radius. Bounds include the origin.
 // Retail copies the three-coordinate accessor result and uses long min/max
 // temporaries for the four int output references; there is no DC RMG TU.
-// Residual (99.8925%): all 13 CFG blocks agree; the final X maximum
-// uses lea [ebx+eax+1] instead of retail [eax+ebx+1]. Reversing the
-// source addition operands leaves the same encoding (negative control).
+// Exact: assigning the accessor result into the existing position value
+// reproduces all 254 retail bytes. Copy/direct initialization, a bound
+// temporary, a named zone receiver and named extents keep the final X sum's
+// reversed SIB operands (99.8925%); reversing the addition is also flat.
+// Three 60-state cross-function populations reproduce this form without
+// changing any of the other 319 tracked RMG scores.
 VA(0x0053B1F0, 0xFE) // anchor-callee 0x53be5c; thiscall, ret 0x10; retail-only
 void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
     int& maximumY, int& maximumX) const
@@ -3407,7 +3410,8 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
     maximumY = 0;
     maximumX = 0;
     for (int zone = 0; zone < m_zones.size(); ++zone) {
-        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        TRmgMapPosition position;
+        position = m_zones[zone]->getLevelPosition();
         int size = m_zones[zone]->m_slot->m_size;
         minimumY = std::_cpp_min<long>(minimumY, position.m_y - size);
         minimumX = std::_cpp_min<long>(minimumX, position.m_x - size);
@@ -3969,6 +3973,9 @@ static void insertRmgWorkItem(
 // addition operands scores 99.0923%. All subdivision/marking instructions
 // then agree. The initial single-element insert wrapper expands here into
 // count-insert (one extra push), while retail retains it. Preserve that call.
+// Naming the end iterator, binding the queued endpoint by reference, and
+// three real endpoint snapshots do not restore that wrapper. The joint
+// spatial family stays at 99.4615% here; copying can lower it to 96.2872%.
 VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
 void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     int zoneIndex, int level, int roughness)
@@ -6382,6 +6389,9 @@ void type_random_map_generator::carveBranchingPaths()
 // by memory; VC6 loads height and multiplies by the level register. The
 // value-coordinate overload and a separate cached level are byte-neutral.
 // Vector insertion relocation names are shared ICF aliases, not call changes.
+// Five scalar/constructed/reference-bound lookup lifetimes keep 99.5699%
+// as their peak. The point-value alternatives introduce a retained coordinate
+// constructor and can fall to 81.7957%; keep the canonical scalar query.
 VA(0x005443A0, 0x2F5)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     TRmgZone* zone)
