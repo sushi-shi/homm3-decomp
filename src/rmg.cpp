@@ -198,15 +198,17 @@ DATA(0x006409B0)
 static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
 // Thirty-two radial directions used by the placement and boundary passes.
+// Before normalization: gRmgDirectionCosines.
 DATA(0x00682500)
-double gRmgDirectionCosines[32] = {
+double g_rmgDirectionCosines[32] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
 };
+// Before normalization: gRmgDirectionSines.
 DATA(0x00682600)
-double gRmgDirectionSines[32] = {
+double g_rmgDirectionSines[32] = {
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
@@ -3263,11 +3265,55 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // placed and its 12-byte position vector. Retail samples offsets around
 // the center and appends positions accepted by canPlaceZone. Provisional
 // role name; Complete-only, no Dreamcast counterpart.
-#if 0 // @carcass
+// Residual (83.4857%): scalar maximum selection restores the retail
+// second-ring radius branch (41.52 -> 79.02%); direct coordinate stores
+// restore its field addressing (83.49%). The first two push_back sites
+// retain count-insert, while the last expands it with extra size/cleanup
+// branches. Explicit count-insert at all three sites changes that frontier
+// substantially; retain the canonical vector calls and accessor copies.
 VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 void type_random_map_generator::appendZonePositions(TRmgZone* center,
-    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates) {} // @stub
-#endif
+    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
+{
+    int radius = center->m_slot->m_size + zone->m_slot->m_size;
+    TRmgMapPosition position = center->getLevelPosition();
+    for (int direction = 0; direction < 32; ++direction) {
+        TRmgMapPosition candidate;
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = position.m_z;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+    if (m_map.m_numberLevels == 1)
+        return;
+    int level = 1 - position.m_z;
+    TRmgMapPosition candidate;
+    candidate.m_x = position.m_x;
+    candidate.m_y = position.m_y;
+    candidate.m_z = level;
+    zone->m_levelPosition.m_x = candidate.m_x;
+    zone->m_levelPosition.m_y = candidate.m_y;
+    zone->m_levelPosition.m_z = candidate.m_z;
+    if (canPlaceZone(zone))
+        candidates.push_back(zone->getLevelPosition());
+    radius = center->m_slot->m_size;
+    if (radius < zone->m_slot->m_size)
+        radius = zone->m_slot->m_size;
+    for (direction = 0; direction < 32; ++direction) {
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = level;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+}
 
 // Both connection-count passes in FilterZonePositions retain the same
 // vector-size and CanConnect calls. Keep the shared operation as one
@@ -3957,10 +4003,10 @@ void type_random_map_generator::buildZoneBoundaries(
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
                 TRmgMapPosition horizontalCenter = current->getLevelPosition();
-                double dx = radius * gRmgDirectionCosines[direction];
+                double dx = radius * g_rmgDirectionCosines[direction];
                 position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
                 TRmgMapPosition verticalCenter = current->getLevelPosition();
-                double dy = radius * gRmgDirectionSines[direction];
+                double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
                 if (position.m_x < 0 && position.m_x < dx)
                     continue;
