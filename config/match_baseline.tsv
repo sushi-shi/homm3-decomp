@@ -1632,6 +1632,7 @@ events	??1CWaitForRemoteBattleDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xaea00	-
 events	??1town@@QAE@XZ	100.0000	100.0000	100.0000	0xad0e0	-
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40	-
 events	??Rspell_level_order@@QAEEHH@Z	100.0000	100.0000	100.0000	0xb0000	-
+events	?_Construct@std@@YIXPAUtype_dialog_resource@@ABU2@@Z	100.0000	100.0000	100.0000	0x1b8cc0	-
 events	?_Construct@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@ABV21@@Z	100.0000	100.0000	100.0000	0xafb40	-
 events	?_Destroy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@0@Z	100.0000	100.0000	100.0000	0xaf500	-
 events	?_Sort@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0xb00b0	-
@@ -1639,6 +1640,7 @@ events	?_Sort_0@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0
 events	?_Ucopy@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0xaf800	-
 events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0350	-
 events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0400	-
+events	?clear@?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x14c120	-
 events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	3d0ae8c0539e
 events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0xaf9d0	-
 events	?creatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	91.5889	91.5889	91.5889	0xabdc0	0fbb0a8acb6b
@@ -2560,7 +2562,7 @@ mapcell	?insert@?$vector@VTownExtra@@V?$allocator@VTownExtra@@@std@@@std@@QAEXPA
 mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106980	-
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0	-
 mapcell	?isDiggable@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfccf0	973d5cf3e164
-mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	93.4037	93.4037	93.4037	0xfdbc0	59eee8376f67
+mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	77.2691	77.2691	93.4037	0xfdbc0	23516a92352f
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	e3e60e5e338d
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.0000	95.0000	95.0000	0x100430	a8090ec32a28
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	12814bb91dd0
@@ -2604,7 +2606,6 @@ mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	10
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000	5be95ca8858e
 mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	95.1600	95.1600	95.1600	0x1019f0	3f76cbd8150d
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50	3ed7d3b563ef
-mapcell	?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEXIABVTSeerHut@@@Z	100.0000	100.0000	100.0000	0x106390	-
 mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	93.7123	93.7123	93.7123	0xfdf40	afa31c5914c6
 mapcell	?save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	7e7ffa9d8c72
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0	ca9a07590867
@@ -2625,6 +2626,7 @@ mapcell	?soDTransformRandomDwellings@NewfullMap@@QAEXXZ	100.0000	100.0000	100.00
 mapcell	?stampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	90.4313	90.4313	90.4313	0x105230	23a320ddca2e
 mapcell	?upgradeCellExtraInfo@@YIXPAVNewmapCell@@H@Z	96.2635	96.2635	96.2635	0xfe6c0	7b45f45e3885
 mapcell	__h3cg$mapcell$static_dtor$g_invalidPlacementList	100.0000	100.0000	100.0000	0x104290	-
+mapcell	__h3cg$mapcell$vector_resize$TSeerHut	0.0000	100.0000	100.0000	0x106390	-
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0	09f3ff320545
 misc	?checkConfigFile@@YIXXZ	99.1018	99.1018	99.1018	0x10b260	1c397f040b93
 misc	?fileSize@@YIJPAD@Z	100.0000	100.0000	100.0000	0x10c5a0	3a59e492aacc
@@ -3932,7 +3934,8 @@ singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator
 singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	c9e041516cee
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x18adf0	fe1a1d4efec7
 singleselectionwindow	?isVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	920f67a9ce18
-singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	88.9857	88.9857	88.9857	0x183890	f3c5d7c85965
+singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
+singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	88.9714	88.9714	88.9857	0x183890	28e970ed2835
 singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	ae51dd96f258
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	177b9fa9b9c5
 singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	78.9055	78.9055	78.9055	0x18bce0	295028ee9732
@@ -3943,7 +3946,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
@@ -4008,7 +4011,6 @@ singleselectionwindow	?windowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	
 singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177950	84d12e0b8d8b
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	34e6c0a3e99b
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-
-singleselectionwindow	__h3cg$singleselectionwindow$tree_lower_bound$type_map_hero_info	0.0000	0.0000	100.0000	0x18f0f0	-
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0	1f7c0267c843
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180	f5b0615af202
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020	-
