@@ -197,16 +197,28 @@ static const int g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 DATA(0x006409B0)
 static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
+// Terrain-indexed town preferences consumed by initialization 0x53bf85.
+// Nine four-entry rows read from the SHA-256-pinned retail image. The
+// unusual sentinel/version scan is retained in the caller as retail code.
+DATA(0x00682450)
+int g_rmgTerrainTownChoices[9][4] = {
+    {0, 1, 4, -1}, {6, -1, 0, 0}, {0, 1, -1, 0},
+    {2, -1, 0, 0}, {7, 4, -1, 0}, {6, 8, -1, 0},
+    {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
+};
+
 // Thirty-two radial directions used by the placement and boundary passes.
+// Before normalization: gRmgDirectionCosines.
 DATA(0x00682500)
-double gRmgDirectionCosines[32] = {
+double g_rmgDirectionCosines[32] = {
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
     -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
 };
+// Before normalization: gRmgDirectionSines.
 DATA(0x00682600)
-double gRmgDirectionSines[32] = {
+double g_rmgDirectionSines[32] = {
     0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
     1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
     0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
@@ -1255,6 +1267,14 @@ townSelected:
 }
 
 
+// Initialization 0x53bf4e calls this to select allowed terrain, then
+// constrains underground zones to subterranean or lava. Provisional role
+// name; Complete-only thiscall, no arguments and no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x00532AB0, 0x96) // anchor-callee 0x53bf4e; retail-only
+void TRmgZone::chooseTerrain() {} // @stub
+#endif
+
 // Three trivial member vectors account for all 118 retained destructor
 // bytes, including the three independently resolved operator-delete calls.
 VA(0x00532B50, 0x76)
@@ -2295,6 +2315,42 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgKeyTentObject(properties, generator, m_value);
 }
 
+// The treasure-group constructor calls reset after its map and vectors
+// are constructed. This clears container entries without deleting objects,
+// clears map-cell state, then sets every surface cell to dirt/frame zero.
+// Complete-only role and ownership proven by 0x547360 and 0x5466e0.
+// Residual (71.5122%): all 11 CFG blocks align. Explicit range erasures
+// improve the clear-wrapper spelling (71.4634%), but VC6 still expands
+// both trivial _Destroy calls that retail retains. The resulting register
+// pressure adds an EBP frame; the cell-clear and terrain-reset loops agree
+// in control flow. Preserve the map and vector ownership boundaries.
+VA(0x00535040, 0xC6) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
+void TRmgTreasureGroup::reset()
+{
+    m_objects.erase(m_objects.begin(), m_objects.end());
+    m_outline.erase(m_outline.begin(), m_outline.end());
+    m_map.clear();
+    m_flag0048 = 0;
+    m_ready = 0;
+    TRmgMapItem* item = m_map.getMapItem(0, 0, 0);
+    int count = m_map.m_mapWidth * m_map.m_mapHeight;
+    while (count--) {
+        item->setTerrain(eTerrainDirt, 0, 0, 0);
+        ++item;
+    }
+}
+
+// Complete-only group helpers: assembly passes the guard pointer in one
+// stack dword to 0x535110 (AL result); its first and last calls trace the
+// group's closed outline. 0x535ee0 appends points at +0x38 until closure.
+// Provisional names describe these retail roles.
+#if 0 // @carcass
+VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
+unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
+VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
+void TRmgTreasureGroup::traceOutline() {} // @stub
+#endif
+
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
 // and 232 property vectors before the progress total and seed are installed.
@@ -2412,28 +2468,28 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // type and preferred terrain. The final reverse scan gives later rows
 // precedence for the same subtype. Names are provisional; RMG is absent
 // from the Dreamcast build. Retail fixes the record stride at 0x4c.
-// Residual (97.58%): push_back still expands the two-argument rule-vector
-// insert that retail calls at 0x536701, and bitset<10>::_Xran expands its
-// string constructor where retail calls 0x48b370 at 0x536b26. The int/pointer
-// vector destructor, size, erase and pointer-insert name differences are
-// ICF aliases. The emitted int-vector allocator constructor is 0x5157d0.
-// Source controls: initialize row before the vectors, increment it before
-// rule destruction, and pass an explicit zero to both resize calls (84.89%
-// versus 83.93%). A post-decrement reverse scan gives retail's old-count
-// tests (89.99%); a signed size()-1 / >=0 loop does not. Reusing objectType,
-// subtype and terrain across parsing/binding preserves their escaped homes
-// and restores the binding pass (97.58%). Separate locals strength-reduce
-// the type stride and lose the terrain/subtype homes.
-// An index-taking rule constructor moves the completed-construction EH
-// state past the id assignment (97.31%); retain default-then-assign. Direct
-// insert(end(),rule) still expands its two-argument overload and costs
-// additional scheduling differences (95.87%). Signed/unsigned prototype
+// Residual (99.7862%): the rule push_back expands single-value insertion
+// into the count overload, adding one push of 1 where retail calls the
+// retained single-value wrapper at 0x536701. The checked bitset subscript
+// recovers the exception string constructor and the rule's stack homes;
+// direct .test is the 97.5804% negative control.
+// A 48-case append/mask/row-scope/scalar-lifetime matrix and a 32-case
+// independent scalar-append follow-up retain all five exact rule-vector
+// bodies below. Two scalar insert(end(),value) calls with the remaining
+// push_back yield reader 99.5723%; all three direct insertions give 97.3075%.
+// These ordinary public calls recover the parent and child boundaries
+// without changing a library definition. Bank those unchanged-source MAXs
+// separately, then retain this higher reader peak. A 54-case count-one
+// insertion follow-up does not improve either reader form. No pin remains.
+// Earlier source controls: initialize row before the vectors, increment it
+// before rule destruction, and explicitly zero both resize calls. Reuse
+// objectType/subtype/terrain across parsing and binding to preserve escaped
+// homes; the old-count reverse scan matches retail. An index-taking rule
+// constructor instead shifts the EH state past the id assignment, so keep
+// default construction followed by assignment. Signed/unsigned prototype
 // indices and combined/nested reverse-loop conditions are byte-neutral.
-// Temporary depth 1 at push_back and depth 2 at test, intended to stop the
-// named nested callees, are byte-neutral at 97.58%; both were removed.
-// Removing the old TU-local string constructor specializations and their
-// three pins is also neutral here. Canonical library constructors remain;
-// WriteMapHeader's 95.71% MAX is preserved with that collateral measured.
+// Removed inline-depth diagnostics (1 at push_back, 2 at .test) were also
+// byte-neutral at 97.5804%; the canonical library definitions stay in use.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -2492,7 +2548,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             TObjectType* prototype = properties->m_prototype;
             properties->m_placementRule = 0;
             for (terrain = 0; terrain < eTerrainRock; ++terrain) {
-                if (prototype->m_recommendedTerrainMask.test(terrain))
+                if (prototype->m_recommendedTerrainMask[terrain])
                     break;
             }
             properties->m_preferredTerrain = terrain;
@@ -3259,6 +3315,60 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
     return 1;
 }
 
+// Candidate selector 0x53b970 passes an existing center, the zone being
+// placed and its 12-byte position vector. Retail samples offsets around
+// the center and appends positions accepted by canPlaceZone. Provisional
+// role name; Complete-only, no Dreamcast counterpart.
+// Residual (83.4857%): scalar maximum selection restores the retail
+// second-ring radius branch (41.52 -> 79.02%); direct coordinate stores
+// restore its field addressing (83.49%). The first two push_back sites
+// retain count-insert, while the last expands it with extra size/cleanup
+// branches. Explicit count-insert at all three sites changes that frontier
+// substantially; retain the canonical vector calls and accessor copies.
+VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
+void type_random_map_generator::appendZonePositions(TRmgZone* center,
+    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
+{
+    int radius = center->m_slot->m_size + zone->m_slot->m_size;
+    TRmgMapPosition position = center->getLevelPosition();
+    for (int direction = 0; direction < 32; ++direction) {
+        TRmgMapPosition candidate;
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = position.m_z;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+    if (m_map.m_numberLevels == 1)
+        return;
+    int level = 1 - position.m_z;
+    TRmgMapPosition candidate;
+    candidate.m_x = position.m_x;
+    candidate.m_y = position.m_y;
+    candidate.m_z = level;
+    zone->m_levelPosition.m_x = candidate.m_x;
+    zone->m_levelPosition.m_y = candidate.m_y;
+    zone->m_levelPosition.m_z = candidate.m_z;
+    if (canPlaceZone(zone))
+        candidates.push_back(zone->getLevelPosition());
+    radius = center->m_slot->m_size;
+    if (radius < zone->m_slot->m_size)
+        radius = zone->m_slot->m_size;
+    for (direction = 0; direction < 32; ++direction) {
+        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
+        candidate.m_z = level;
+        zone->m_levelPosition.m_x = candidate.m_x;
+        zone->m_levelPosition.m_y = candidate.m_y;
+        zone->m_levelPosition.m_z = candidate.m_z;
+        if (canPlaceZone(zone))
+            candidates.push_back(zone->getLevelPosition());
+    }
+}
+
 // Both connection-count passes in FilterZonePositions retain the same
 // vector-size and CanConnect calls. Keep the shared operation as one
 // ordinary helper; its source name/boundary remain retail hypotheses.
@@ -3279,6 +3389,31 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
             ++result;
     }
     return result;
+}
+
+// Role-derived name: initialization 0x53bcb0 measures the unscaled zone
+// centers with each template's size as radius. Bounds include the origin.
+// Retail copies the three-coordinate accessor result and uses long min/max
+// temporaries for the four int output references; there is no DC RMG TU.
+// Residual (99.8925%): all 13 CFG blocks agree; the final X maximum
+// uses lea [ebx+eax+1] instead of retail [eax+ebx+1]. Reversing the
+// source addition operands leaves the same encoding (negative control).
+VA(0x0053B1F0, 0xFE) // anchor-callee 0x53be5c; thiscall, ret 0x10; retail-only
+void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
+    int& maximumY, int& maximumX) const
+{
+    minimumY = 0;
+    minimumX = 0;
+    maximumY = 0;
+    maximumX = 0;
+    for (int zone = 0; zone < m_zones.size(); ++zone) {
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        int size = m_zones[zone]->m_slot->m_size;
+        minimumY = std::_cpp_min<long>(minimumY, position.m_y - size);
+        minimumX = std::_cpp_min<long>(minimumX, position.m_x - size);
+        maximumY = std::_cpp_max<long>(maximumY, position.m_y + size + 1);
+        maximumX = std::_cpp_max<long>(maximumX, position.m_x + size + 1);
+    }
 }
 
 // Called by the zone-position selector at 0x53bb38 with a generated zone,
@@ -3368,11 +3503,146 @@ void type_random_map_generator::filterZonePositions(
     }
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only zone-position selector. The first zone starts at the
+// origin on either eligible level; later zones sample template neighbors,
+// falling back to all placed zones before applying the shared filter.
+// Retail retains the candidate append/filter calls and chooses an unsigned
+// vector index with rand() % size(). Role-derived name, no DC counterpart.
+// Residual (96.8731%): preserving the destination slot pointer restores
+// the connection-loop CFG (89.72 -> 92.86%); separate count/index locals
+// restore the entire final random-selection sequence. The remaining real
+// delta is the two single-element vector insert calls: VC6 expands their
+// wrapper and calls count-insert, whereas retail retains the 540-byte
+// single-insert body at 0x54c3f0. Keep the original vector interface.
+VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
+void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
+{
+    std::vector<TRmgMapPosition> candidates;
+    if (m_zones.size() == 0) {
+        zone->m_levelPosition.m_y = 0;
+        zone->m_levelPosition.m_z = 0;
+        zone->m_levelPosition.m_x = 0;
+        candidates.insert(candidates.end(), zone->getLevelPosition());
+        if (m_map.m_numberLevels > 1) {
+            zone->m_levelPosition.m_x = 0;
+            zone->m_levelPosition.m_y = 0;
+            zone->m_levelPosition.m_z = 1;
+            if (canPlaceZone(zone))
+                candidates.insert(candidates.end(), zone->getLevelPosition());
+        }
+    } else {
+        TRmgTownSlot* slot = zone->m_slot;
+        for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
+            TRmgTownSlot* destination = slot->m_connections[connection].m_destination;
+            if (destination->m_zoneIndex < m_zones.size())
+                appendZonePositions(m_zones[destination->m_zoneIndex], zone, candidates);
+        }
+        if (candidates.size() == 0) {
+            for (int other = 0; other < m_zones.size(); ++other)
+                appendZonePositions(m_zones[other], zone, candidates);
+        }
+        filterZonePositions(zone, candidates, mapSize);
+    }
+    unsigned int count = candidates.size();
+    unsigned int selected = rand() % count;
+    zone->setLevelPosition(candidates[selected]);
+}
+
+// Terrain painting first accumulates each zone's half-open cell bounds.
+// Role-derived name; Complete-only thiscall with no stack arguments.
+// Exact: the scan coordinate is one TRmgMapPosition, preserving retail's
+// 0x18-byte frame and level home. Independent scalar coordinates were
+// 99.7802%; reversed min arguments were 99.5824%.
+VA(0x0053BBB0, 0xFD) // anchor-callee 0x53e6c0; retail-only
+void type_random_map_generator::calculateZoneBounds()
+{
+    TRmgMapItem* item = m_map.m_mapItems;
+    TRmgMapPosition position;
+    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
+                if (item->m_zoneState.m_zone >= 0) {
+                    TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
+                    zone->m_bounds.m_minimumX = std::_cpp_min<long>(zone->m_bounds.m_minimumX, position.m_x);
+                    zone->m_bounds.m_minimumY = std::_cpp_min<long>(zone->m_bounds.m_minimumY, position.m_y);
+                    zone->m_bounds.m_maximumX = std::_cpp_max<long>(zone->m_bounds.m_maximumX, position.m_x + 1);
+                    zone->m_bounds.m_maximumY = std::_cpp_max<long>(zone->m_bounds.m_maximumY, position.m_y + 1);
+                }
+            }
+        }
+    }
+}
+
+// Complete-only initialization, called by generation coordinator 0x549930.
+// The two placement passes precede normalization to a centered square.
+// Names are role-derived; the Dreamcast build has no RMG counterpart.
+// Residual (90.6395%): direct table expressions preserve retail's unusual
+// sentinel/version loop; caching one town entry lets VC6 fold it away
+// (77.40%). Named scaled-width/height locals leave the score flat. Remaining
+// deltas: vector erase expands here but is retained in retail, and the
+// dimension products / bounds normalization exchange operand scheduling.
 VA(0x0053BCB0, 0x33B)
-void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate) {} // @stub
-#endif
+void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
+{
+    m_zones.erase(m_zones.begin(), m_zones.end());
+    int minimumSize = 32000;
+    for (int slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+        minimumSize = std::_cpp_min<long>(minimumSize, mapTemplate->m_zones[slotIndex]->m_size);
+    int mapSize = std::_cpp_min<long>(minimumSize * m_map.m_mapWidth,
+        minimumSize * m_map.m_mapHeight);
+    switch (m_waterContent) {
+    case RMG_WATER_NONE: mapSize /= 5; break;
+    case RMG_WATER_NORMAL: mapSize /= 6; break;
+    default: mapSize /= 7; break;
+    }
+    for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex) {
+        TRmgTownSlot* slot = mapTemplate->m_zones[slotIndex];
+        TRmgZone* zone = new TRmgZone(slot);
+        if (slot->m_parameters0020[0] + slot->m_parameters0020[1] > 0
+            && slot->m_playerIndex >= 0
+            && m_playerIndexMap[slot->m_playerIndex + 1] >= 0
+            && m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]] != -1)
+            zone->m_alignment = m_townChoices[m_playerIndexMap[slot->m_playerIndex + 1]];
+        positionZone(zone, mapSize);
+        m_zones.push_back(zone);
+    }
+    for (int pass = 0; pass < 2; ++pass) {
+        for (slotIndex = 0; slotIndex < mapTemplate->m_zones.size(); ++slotIndex)
+            positionZone(m_zones[slotIndex], mapSize);
+    }
+    int minimumY, minimumX, maximumY, maximumX;
+    getInitialZoneBounds(minimumY, minimumX, maximumY, maximumX);
+    int span = std::_cpp_max<long>(maximumY - minimumY, maximumX - minimumX);
+    int size = std::_cpp_max<long>(m_map.m_mapWidth, m_map.m_mapHeight);
+    minimumY = (minimumY - span + maximumY) / 2;
+    minimumX = (minimumX - span + maximumX) / 2;
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgMapPosition position = m_zones[zoneIndex]->getLevelPosition();
+        position.m_x = (position.m_x - minimumX) * size / span;
+        position.m_y = (position.m_y - minimumY) * size / span;
+        m_zones[zoneIndex]->setLevelPosition(position);
+        m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_slot->m_size * size / span;
+        m_zones[zoneIndex]->chooseTerrain();
+        unsigned char expanded = m_mapVersion >= 0;
+        TRmgZone* zone = m_zones[zoneIndex];
+        if (zone->m_alignment != -1) {
+            zone->m_townType2 = zone->m_alignment;
+        } else {
+            int count = 0;
+            // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
+            // expanded, then on != 8. Preserve this observed condition,
+            // even though no table entry can satisfy both equalities.
+            while (count < 4 &&
+                (g_rmgTerrainTownChoices[zone->m_terrain][count] != -1 || expanded ||
+                 g_rmgTerrainTownChoices[zone->m_terrain][count] != TOWN_CONFLUX))
+                ++count;
+            if (count == 0)
+                zone->m_townType2 = -1;
+            else
+                zone->m_townType2 = g_rmgTerrainTownChoices[zone->m_terrain][rand() % count];
+        }
+    }
+}
 
 // Retail keeps a vector of pending endpoints. Splitting pushes the old
 // endpoint followed by the perturbed midpoint; completed unit edges mark
@@ -3691,6 +3961,120 @@ static void insertRmgWorkItem(
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
+// Island insetting passes two points, zone/level and half-roughness.
+// Retail subdivides these edges with a pending-point vector. Provisional
+// Complete-only role name; the stack ABI carries seven dwords.
+// Residual (99.4615%): X-before-Y midpoint assignments restore endpoint
+// registers; constructing the point scores 99.1436%, and reversing its
+// addition operands scores 99.0923%. All subdivision/marking instructions
+// then agree. The initial single-element insert wrapper expands here into
+// count-insert (one extra push), while retail retains it. Preserve that call.
+VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
+void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
+    int zoneIndex, int level, int roughness)
+{
+    std::vector<TPoint> pending;
+    pending.insert(pending.end(), to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint;
+        midpoint.m_x = (from.m_x + to.m_x + 1) / 2;
+        midpoint.m_y = (from.m_y + to.m_y + 1) / 2;
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length / 2, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex)
+                item->m_tileData.m_zoneBoundary = 1;
+            from = to;
+        }
+    }
+}
+
+// Terrain painting replaces the zone center with the average coordinates
+// of its assigned cells, retaining its level. Provisional Complete-only role.
+// Residual (88.9891%): paired TPoint sums improve the independent scalar
+// accumulator (88.5761%). The scan and division branches agree; position
+// copy scheduling and accumulator/map-pointer stack homes still differ.
+VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
+void type_random_map_generator::recenterZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int count = 0;
+    TPoint total(0, 0);
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            if (m_map.getMapItem(x, y, position.m_z)->m_zoneState.m_zone == zoneIndex) {
+                ++count;
+                total.m_x += x;
+                total.m_y += y;
+            }
+        }
+    }
+    if (count) {
+        position.m_x = total.m_x / count;
+        position.m_y = total.m_y / count;
+        zone->setLevelPosition(position);
+    }
+}
+
+// Island mode redraws an inset polygon toward the zone's center, with
+// displacement clamped from one quarter to one half of each radius.
+// Residual (75.3450%): clamp argument order improves 63.63 -> 66.42%;
+// direct displacement-vector construction avoids the temporary point
+// subtraction (73.46%); retaining the long clamp result reaches 75.35%.
+// Length and edge calls remain intact. Clamp temporary homes, vector
+// multiply/divide scheduling and the reverse-loop register roles differ.
+VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
+void type_random_map_generator::insetIslandZone(TRmgZone* zone)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition center = zone->getLevelPosition();
+    int count = zone->m_boundary.size();
+    TPoint point = zone->m_boundary[0];
+    TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
+    int length = delta.length();
+    if (length > 0) {
+        long displacement = std::_cpp_max<long>(4, length / 4);
+        displacement = std::_cpp_min<long>(displacement, length / 2);
+        delta = delta * displacement / length;
+        point += delta;
+    }
+    while (count--) {
+        TPoint previous = point;
+        point = zone->m_boundary[count];
+        delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
+        length = delta.length();
+        if (length > 0) {
+            long displacement = std::_cpp_max<long>(4, length / 4);
+            displacement = std::_cpp_min<long>(displacement, length / 2);
+            delta = delta * displacement / length;
+            point += delta;
+        }
+        drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
+    }
+}
+
 // JoinExtraZones initializes the short distance columns to 32000, zeros
 // each original zone's own column, and calls this relaxation after adding
 // graph edges. Parallel vectors keep pending zones sorted by distance;
@@ -3877,10 +4261,10 @@ void type_random_map_generator::buildZoneBoundaries(
             TRmgMapPosition position = current->getLevelPosition();
             for (int direction = 0; direction < 32; direction += 4) {
                 TRmgMapPosition horizontalCenter = current->getLevelPosition();
-                double dx = radius * gRmgDirectionCosines[direction];
+                double dx = radius * g_rmgDirectionCosines[direction];
                 position.m_x = static_cast<int>(horizontalCenter.m_x + dx * 2);
                 TRmgMapPosition verticalCenter = current->getLevelPosition();
-                double dy = radius * gRmgDirectionSines[direction];
+                double dy = radius * g_rmgDirectionSines[direction];
                 position.m_y = static_cast<int>(verticalCenter.m_y + dy * 2);
                 if (position.m_x < 0 && position.m_x < dx)
                     continue;
@@ -3952,11 +4336,57 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only terrain coordinator. Borrowed level maps and their brushes
+// have separate lexical lifetimes: underground rock, surface water, then
+// one brush per non-water zone. Progress advances before those destructors.
+// Residual (94.0933%): all 36 CFG blocks align. The byte-valued boundary
+// query restores the retail shr/test dl sequence (direct field: 93.01%).
+// The underground map cleanup expands vector deletion where retail calls
+// it; the per-zone cleanup expands in both. Borrowed-map construction and
+// brush-call operands retain scheduling differences. Keep the RAII scopes.
 VA(0x0053E6A0, 0x337)
-void type_random_map_generator::paintZoneTerrain() {} // @stub
-#endif
+void type_random_map_generator::paintZoneTerrain()
+{
+    calculateZoneBounds();
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        recenterZone(zone);
+        if (m_waterContent == RMG_WATER_ISLANDS && zone->getLevelPosition().m_z == 0)
+            insetIslandZone(zone);
+    }
+    if (m_map.m_numberLevels > 1) {
+        type_random_map levelMap(m_map.getMapItem(0, 0, 1),
+            m_map.m_mapWidth, m_map.m_mapHeight);
+        TRmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+        if (m_progress)
+            m_progress->advance(12500);
+    }
+    {
+        TRmgTerrainBrush brush(&m_map, eTerrainWater, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+    }
+    int progressSteps = 15800 / m_zones.size();
+    for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        TRmgZoneBounds bounds = zone->m_bounds;
+        TRmgMapPosition position = zone->getLevelPosition();
+        if (zone->m_terrain != eTerrainWater) {
+            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+                m_map.m_mapWidth, m_map.m_mapHeight);
+            TRmgTerrainBrush brush(&levelMap, zone->m_terrain, 4);
+            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                    TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+                    if (item->m_zoneState.m_zone == zoneIndex && item->isZoneBoundary())
+                        brush.paintRectangle(x, y, 1, 1);
+                }
+            }
+            if (m_progress)
+                m_progress->advance(progressSteps);
+        }
+    }
+}
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by
@@ -5700,11 +6130,58 @@ void type_random_map_generator::connectZones()
         m_progress->advance(0x1900);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Underground-only terrain pass retained by generation at 0x549c82.
+// One borrowed level-one map and one brush span both scans. The first scan
+// closes unused floor with rock; the second restores each zone's terrain at
+// its occupied or gate-marked rock cells. Both progress updates precede cleanup.
+// Residual 96.0963%: all 36 block sizes and ten calls agree; scheduling and
+// local homes remain. Keeping the scan pointer across brush construction
+// removes six extra initial-block instructions (reloading it scored 89.8028%).
 VA(0x005439E0, 0x283)
-void type_random_map_generator::decorateUnderground() {} // @stub
-#endif
+void type_random_map_generator::decorateUnderground()
+{
+    TRmgMapItem* item = m_map.getMapItem(0, 0, 1);
+    type_random_map map(item,
+        m_map.m_mapWidth, m_map.m_mapHeight);
+    TRmgTerrainBrush brush(&map, eTerrainRock, 4);
+    for (int y = 0; y < m_map.m_mapHeight; ++y) {
+        for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
+            if (!item->hasSubterraneanGate() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && !item->isRoadEntrance())
+                brush.paintRectangle(x, y, 1, 1);
+        }
+    }
+    if (m_progress)
+        m_progress->advance(1200);
+    int currentTerrain = eTerrainRock;
+    for (unsigned int zone = 0; zone < m_zones.size(); ++zone) {
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        if (position.m_z != 1)
+            continue;
+        int terrain = m_zones[zone]->m_terrain;
+        TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
+        if (currentTerrain == eTerrainRock) {
+            brush.changeTerrain(terrain, 4);
+            currentTerrain = terrain;
+        }
+        for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+            for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, 1);
+                if (item->m_tile.m_landType == eTerrainRock
+                    && item->m_zoneState.m_zone == zone
+                    && (item->hasSubterraneanGate() || item->m_objects.size())) {
+                    if (terrain != currentTerrain) {
+                        brush.changeTerrain(terrain, 4);
+                        currentTerrain = terrain;
+                    }
+                    brush.paintRectangle(x, y, 1, 1);
+                }
+            }
+        }
+    }
+    if (m_progress)
+        m_progress->advance(1200);
+}
 
 // The queued side branch supplies two points by value and a level. This
 // integer ray continues beyond 'toward' until the map edge or an existing
@@ -5800,25 +6277,25 @@ void type_random_map_generator::carveBranchingPaths()
         TPoint first;
         TPoint last;
         switch (rand() % 4) {
-        case 0:
+        case RMG_BRANCH_SEED_MAIN_DIAGONAL:
             first.m_x = 0;
             first.m_y = 0;
             last.m_x = m_map.m_mapWidth - 1;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 1:
+        case RMG_BRANCH_SEED_VERTICAL:
             first.m_x = m_map.m_mapWidth / 2;
             first.m_y = 0;
             last.m_x = first.m_x;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 2:
+        case RMG_BRANCH_SEED_ANTI_DIAGONAL:
             first.m_x = m_map.m_mapWidth - 1;
             first.m_y = 0;
             last.m_x = 0;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 3:
+        case RMG_BRANCH_SEED_HORIZONTAL:
             first.m_x = 0;
             first.m_y = m_map.m_mapHeight / 2;
             last.m_x = m_map.m_mapWidth - 1;
@@ -5895,11 +6372,132 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Retail 0x5448eb passes two points by value followed by the zone. The
+// eight-byte vector elements and midpoint operations prove the point ABI.
+// This Complete-only path uses the same retained point/vector arithmetic
+// as boundary drawing, but marks only matching-zone cells and neighbours.
+// First reconstruction: 99.5699%. All 40 CFG blocks match in size and
+// flow. The only masked instruction difference is the neighbour lookup's
+// level*height multiply: retail copies the level register before multiplying
+// by memory; VC6 loads height and multiplies by the level register. The
+// value-coordinate overload and a separate cached level are byte-neutral.
+// Vector insertion relocation names are shared ICF aliases, not call changes.
+VA(0x005443A0, 0x2F5)
+void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
+    TRmgZone* zone)
+{
+    std::vector<TPoint> pending;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int roughness = zone->m_boundaryRoughness;
+    pending.push_back(to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+            if (item->m_zoneState.m_zone == zoneIndex) {
+                if (!item->m_connection.m_present) {
+                    item->m_tileData.m_borderObject = 0;
+                    item->m_tileData.m_subterraneanGate = 1;
+                }
+                TRmgZoneBounds bounds;
+                bounds.m_minimumX = std::_cpp_max<long>(x - 1, 0);
+                bounds.m_minimumY = std::_cpp_max<long>(y - 1, 0);
+                bounds.m_maximumX = std::_cpp_min<long>(x + 2, m_map.m_mapWidth);
+                bounds.m_maximumY = std::_cpp_min<long>(y + 2, m_map.m_mapHeight);
+                for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
+                    for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
+                        TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
+                        if (nearby->m_zoneState.m_zone == zoneIndex
+                            && !nearby->m_connection.m_present)
+                            nearby->m_tileData.m_borderObject = 0;
+                    }
+                }
+            }
+            from = to;
+        }
+    }
+}
+
+// Junction zones reset their dry cells, seed the first entrance, then trace
+// each reachable entrance back to a zero-cost cell before carving its path.
+// Retail retains both floodConnectionCosts calls and the separate point-pair
+// helper. Complete-only names describe the roles rather than source symbols.
+// Residual 66.4512% after explicit (-1,-1,-1) predecessor initialization.
+// The default position constructor is empty; using it as a sentinel left
+// coordinates uninitialized and scored 60.3628%. A guarded do-loop control
+// was byte-neutral. Preserve the reset helper while resolving local homes.
 VA(0x005446A0, 0x27E)
-void type_random_map_generator::prepareJunctionZone(TRmgZone* zone) {} // @stub
-#endif
+void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int level = position.m_z;
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex
+                && item->m_tile.m_landType != eTerrainWater) {
+                TRmgMapPosition previous;
+                previous.m_x = -1;
+                previous.m_y = -1;
+                previous.m_z = -1;
+                item->resetMovement(previous);
+                if (static_cast<int>(item->m_objects.size()) <= 0
+                    && !item->m_connection.m_present) {
+                    item->m_tileData.m_subterraneanGate = 0;
+                    item->m_tileData.m_borderObject = 1;
+                }
+            }
+        }
+    }
+    if (!zone->m_entrances.size())
+        return;
+    TRmgMapPosition first(zone->m_entrances[0].m_x,
+        zone->m_entrances[0].m_y, level);
+    TRmgMapItem* item = m_map.getMapItem(first.m_x, first.m_y, first.m_z);
+    item->m_movement.m_cost = 0;
+    item->m_previousTile.m_x = -1;
+    item->m_previousTile.m_y = -1;
+    item->m_previousTile.m_z = -1;
+    m_map.floodConnectionCosts(first, 0);
+    for (int entrance = 1; entrance < static_cast<int>(zone->m_entrances.size()); ++entrance) {
+        TPoint from = zone->m_entrances[entrance];
+        item = m_map.getMapItem(from.m_x, from.m_y, level);
+        unsigned int cost = item->m_movement.m_cost;
+        if (!cost || cost > 30000)
+            continue;
+        TRmgMapPosition previous(from.m_x, from.m_y, level);
+        while (item->m_movement.m_cost > 0) {
+            previous = item->m_previousTile;
+            item = m_map.getMapItem(previous.m_x, previous.m_y, previous.m_z);
+        }
+        connectJunctionEntrance(from, TPoint(previous.m_x, previous.m_y), zone);
+        m_map.floodConnectionCosts(TRmgMapPosition(from.m_x, from.m_y, level), 0);
+    }
+}
 
 // Retail-only generation coordinator, called at 0x549b65. After the layout
 // passes it marks unassigned dry cells without objects or entrances, then
@@ -5955,11 +6553,190 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
         tryPlacePrimaryTown(zone, alignment, -1, 0);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Retail generation places its primary town before this pass. The first
+// nonempty fixed-count category therefore skips one placement. Density
+// placement balances four weighted counters until every category fails.
+// Complete-only role names; count/density offsets and call order are retail facts.
+// First reconstruction: 93.0076%. The fixed-count loop layout differs first;
+// candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
+// call sites and the category-specific failure flags while resolving that layout.
 VA(0x00544AE0, 0x2B0)
-void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone) {} // @stub
-#endif
+void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    int alignment = zone->m_alignment;
+    int player = m_playerIndexMap[slot->m_playerIndex + 1];
+    unsigned char skipPrimary = 1;
+    if (slot->m_parameters0020[1] > 0) {
+        for (int i = 1; i < slot->m_parameters0020[1]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[0] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[0]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[5] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[5]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[4] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[4]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
+    }
+    int densities[4] = { slot->m_parameters0020[3], slot->m_parameters0020[2],
+        slot->m_parameters0020[7], slot->m_parameters0020[6] };
+    int counts[4] = { slot->m_parameters0020[1], slot->m_parameters0020[0],
+        slot->m_parameters0020[5], slot->m_parameters0020[4] };
+    int steps[4];
+    unsigned char finished[4];
+    int totalDensity = 0;
+    int product = 1;
+    for (int category = 0; category < 4; ++category) {
+        if (densities[category] <= 0) {
+            finished[category] = 1;
+        } else {
+            totalDensity += densities[category];
+            product *= densities[category];
+            finished[category] = 0;
+        }
+    }
+    if (!totalDensity)
+        return;
+    int spacing = static_cast<int>(sqrt(static_cast<double>(82944 / totalDensity)));
+    for (category = 0; category < 4; ++category) {
+        if (densities[category] > 0) {
+            steps[category] = product / densities[category];
+            counts[category] *= steps[category];
+        }
+    }
+    while (1) {
+        int selected = -1;
+        int lowest = 0;
+        for (category = 0; category < 4; ++category) {
+            if (!finished[category] && (selected == -1 || counts[category] < lowest)) {
+                lowest = counts[category];
+                selected = category;
+            }
+        }
+        if (selected == -1)
+            break;
+        counts[selected] += steps[selected];
+        switch (selected) {
+        case RMG_TOWN_PLAYER_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 1, spacing))
+                finished[RMG_TOWN_PLAYER_OPTION] = 1;
+            break;
+        case RMG_TOWN_PLAYER_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 0, spacing))
+                finished[RMG_TOWN_PLAYER_BASIC] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 1, spacing))
+                finished[RMG_TOWN_NEUTRAL_OPTION] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 0, spacing))
+                finished[RMG_TOWN_NEUTRAL_BASIC] = 1;
+            break;
+        }
+    }
+}
+
+// Additional-town placement picks an allowed alignment when needed, then
+// ranks valid sites by spacing score. The trigger's clipped 3x3 neighbourhood
+// must remain inside the zone. Retail delegates inactive zones to primary
+// placement and retains the normal town constructor and virtual addObject.
+// First reconstruction: 76.6787%. Both CFGs have 61 blocks; remaining
+// differences include candidate-loop layout and compiler-generated cleanup.
+// Preserve the alignment fallback, full neighbourhood scan and tied-site list.
+VA(0x00544D90, 0x4B7)
+unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
+    int alignment, int player, unsigned char townOption, int spacing)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    if ((player == -1 && !slot->m_flag0040) || alignment == -1) {
+        int count = 0;
+        for (int town = 0; town < 9; ++town)
+            if (slot->m_allowedTowns[town])
+                ++count;
+        alignment = -1;
+        if (count) {
+            int selected = rand() % count;
+            for (town = 0; town < 9; ++town) {
+                if (slot->m_allowedTowns[town] && --selected < 0) {
+                    alignment = town;
+                    break;
+                }
+            }
+        }
+        if (alignment == -1)
+            alignment = rand() % (8 + (m_mapVersion >= 1));
+    }
+    if (!zone->m_active)
+        return tryPlacePrimaryTown(zone, alignment, player, townOption);
+
+    std::vector<TRmgMapPosition> candidates;
+    int zoneIndex = slot->m_zoneIndex;
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
+    TObjectType* prototype = properties->m_prototype;
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgZoneBounds bounds = zone->m_bounds;
+    bounds.m_minimumY += prototype->getHeight();
+    bounds.m_minimumX += prototype->getWidth();
+    for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
+            TRmgMapPosition entrance = position;
+            entrance.m_x -= trigger.m_x;
+            entrance.m_y -= trigger.m_y;
+            TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+            if (item->m_zoneState.m_zone != zoneIndex)
+                continue;
+            int score = item->m_zoneState.m_score;
+            if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
+                continue;
+            TRmgZoneBounds nearby;
+            nearby.m_minimumY = std::_cpp_max<long>(entrance.m_y - 1, 0);
+            nearby.m_minimumX = std::_cpp_max<long>(entrance.m_x - 1, 0);
+            nearby.m_maximumY = std::_cpp_min<long>(entrance.m_y + 2, m_map.m_mapHeight);
+            nearby.m_maximumX = std::_cpp_min<long>(entrance.m_x + 2, m_map.m_mapWidth);
+            unsigned char valid = 1;
+            for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
+                for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
+                    int otherZone = m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone;
+                    if (otherZone < 0 || otherZone != zoneIndex)
+                        valid = 0;
+                }
+            }
+            if (!valid)
+                continue;
+            if (score > spacing) {
+                spacing = score;
+                candidates.clear();
+            }
+            candidates.push_back(position);
+        }
+    }
+    if (!candidates.size())
+        return 0;
+    rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
+    position = candidates[rand() % candidates.size()];
+    addObject(object, position);
+    TRmgMapPosition entrance = position;
+    entrance.m_x -= trigger.m_x;
+    entrance.m_y -= trigger.m_y;
+    m_roadTargets.push_back(entrance);
+    ++entrance.m_y;
+    TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+    if (!item->m_connection.m_present) {
+        item->m_tileData.m_borderObject = 0;
+        item->m_tileData.m_subterraneanGate = 1;
+    }
+    return 1;
+}
 
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
@@ -6325,6 +7102,62 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
+// The assembly caller passes zone, group, alternate flag and target value;
+// retail accumulates a value in ESI and returns it after group finalization.
+// Complete-only provisional role; no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
+int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
+    TRmgTreasureGroup* group, unsigned char alternate, int value) { return 0; } // @stub
+#endif
+
+// Complete-only assembly: reset the reusable group, generate a value in the
+// requested half-open range, then add its scaled guard. A failed guard fit
+// destroys both the group's existing objects and the unaccepted guard.
+// Success traces and marks the outline before the placement caller uses it.
+// Names are provisional retail roles; no Dreamcast RMG counterpart survives.
+// Residual (72.3188%): the first divergent statement is reset(). Retail
+// retains its vector erasures and expands the first map clear; VC6 expands
+// the object erasure through copy/_Destroy and retains both map clears.
+// The two-coordinate outline accessor raises 69.96% to 72.3188%; using
+// separate requested/actual value locals is byte-flat. Keep the canonical
+// reset and guard-value helpers while recovering their natural inline state.
+VA(0x005466E0, 0x253) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
+unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
+    TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum)
+{
+    group->reset();
+    int value = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
+    int totalValue = fillTreasureGroup(zone, group, alternate, value);
+    if (!totalValue)
+        return 0;
+    if (zone->m_slot->m_monsterStrength) {
+        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
+        if (strength > 5) strength = 5;
+        else if (strength < 0) strength = 0;
+        int guardValue = getRmgGuardValue(totalValue, strength);
+        if (guardValue > 0) {
+            type_object* guard = createGuard(guardValue, zone);
+            if (guard && !group->addGuard(guard)) {
+                for (unsigned i = 0; i < group->m_objects.size(); ++i) {
+                    group->m_objects[i]->unknownOperation();
+                    delete group->m_objects[i];
+                }
+                group->reset();
+                delete guard;
+                return 0;
+            }
+        }
+    }
+    group->traceOutline();
+    group->m_ready = 1;
+    for (unsigned i = 0; i < group->m_outline.size(); ++i) {
+        group->m_map.getMapItem(group->m_outline[i].m_x,
+            group->m_outline[i].m_y)->m_tileData.m_placementOutline = 1;
+    }
+    return 1;
+}
+
 // The reset loops at 0x546758/0x5468ca and 0x547647/0x547739 pass a
 // TRmgMapItem in ECX and four scalar values. Retail writes land/frame in
 // +0x24 and the two terrain flips in +0x28. setTerrain is a Complete-only
@@ -6351,12 +7184,20 @@ VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 // ICF-identical; this TU naturally emits the TRmgMapPosition specialization.
 VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
 
-// Retail vector<TRmgObjectPlacementRule>::insert at 0x54c730 retains its
-// 41-byte _Ufill loop at 0x54d8f0 and the 260-byte _Construct body at
-// 0x54dd80.  The current insert expands that loop while still calling
-// _Construct at each site; its much larger caller body confirms this is an
-// unresolved nested-inliner boundary.  Recover the insert before claiming
-// _Ufill rather than manufacturing an unrelated ODR use.
+// Retail 0x54c730 is the single-value insertion overload (ret 8), with
+// count insertion expanded for one 0x4c-byte placement rule. It retains
+// the three loops below and the implicit deep-copy construction helper.
+// All five bodies match exactly when the checked-subscript reader uses
+// direct single-value insertion for at least two scalar vectors. The all-push_back reader
+// expands the wrapper and loops but raises the reader's own peak; these
+// canonical library definitions and their banked MAXs remain unchanged.
+// Retail's size call is ICF-shared with vector<TObjectType> (same stride);
+// the fill and copy_backward calls have matching 0x4c-value ownership.
+VA_COMPGEN(0x0054C730, 0x1DD, VECTOR_INSERT_SINGLE, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
@@ -6399,11 +7240,148 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
+// Group placement transfers its contents at a chosen three-coordinate
+// offset. The retained routine updates object positions and map-cell state.
 #if 0 // @carcass
-VA(0x00547360, 0x460)
-void type_random_map_generator::placeZoneTreasures(TRmgZone* zone) {} // @stub
+VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
+void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
+    TRmgMapPosition position) {} // @stub
 #endif
+
+// Complete-only fit test: group, three-coordinate offset, owning zone.
+// Returns AL; its cell and object filters are retained independently.
+#if 0 // @carcass
+VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
+unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
+    TRmgMapPosition position, TRmgZone* zone) { return 0; } // @stub
+#endif
+
+// Candidate placement consumes the group and zone plus its spacing limit.
+// Retail returns AL, retaining a candidate-position vector and random choice.
+// Residual (77.1261%): initializing scan Y before the bound adjustments
+// and assigning center X before Y improves 72.9790%. A separate candidate
+// count before random selection is flat. Remaining differences are local
+// homes and candidate-clear copy/destruction expansion; retain the vector,
+// position copies, and separate fit/commit helpers.
+VA(0x005470D0, 0x286) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
+unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
+    TRmgZone* zone, int spacing)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    std::vector<TRmgMapPosition> candidates;
+    TRmgZoneBounds bounds = zone->m_bounds;
+    TRmgZoneBounds groupBounds = group->m_bounds;
+    bounds.m_minimumY -= groupBounds.m_minimumY;
+    TRmgMapPosition position = zone->getLevelPosition();
+    position.m_y = bounds.m_minimumY;
+    bounds.m_maximumX += 1 - groupBounds.m_maximumX;
+    bounds.m_maximumY += 1 - groupBounds.m_maximumY;
+    bounds.m_minimumX -= groupBounds.m_minimumX;
+    TPoint center;
+    center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
+    center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
+    for (; position.m_y < bounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
+            TRmgMapItem* item = m_map.getMapItem(position.m_x + center.m_x,
+                position.m_y + center.m_y, position.m_z);
+            if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
+                && canPlaceTreasureGroup(group, position, zone)) {
+                if (item->m_zoneState.m_score > spacing) {
+                    spacing = item->m_zoneState.m_score;
+                    candidates.clear();
+                }
+                candidates.push_back(position);
+            }
+        }
+    }
+    if (candidates.size() == 0)
+        return 0;
+    position = candidates[rand() % candidates.size()];
+    commitTreasureGroup(group, position);
+    return 1;
+}
+
+// Complete-only coordinator: weighted rounds select the least-used active
+// value band. Each gets three ordinary attempts, then three alternate
+// attempts before retiring that band. Failed placements release each object
+// through its retained virtual operation before deleting it and resetting.
+// Residual (67.0569%): weighted selection/retry branches agree; reset and
+// vector cleanup expansion add nine CFG blocks. Direct band indexing in
+// place of the range reference regresses to 63.5881%. Preserve the group
+// constructor/reset boundary, object virtual cleanup, and ordinary helper
+// calls while recovering the remaining assembly/placement implementations.
+VA(0x00547360, 0x460)
+void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTreasureGroup group(16, 16);
+    unsigned char finished[3];
+    int density = 0;
+    int product = 1;
+    for (int band = 0; band < 3; ++band) {
+        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0) {
+            density += slot->m_treasure[band].m_density;
+            product *= slot->m_treasure[band].m_density;
+            finished[band] = 0;
+        } else {
+            finished[band] = 1;
+        }
+    }
+    if (density == 0)
+        return;
+    int spacing;
+    if (zone->m_terrain == eTerrainWater)
+        spacing = static_cast<int>(sqrt(static_cast<double>(1600 / density)));
+    else
+        spacing = static_cast<int>(sqrt(static_cast<double>(800 / density)));
+    int count[3] = {0, 0, 0};
+    int step[3];
+    for (band = 0; band < 3; ++band) {
+        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0)
+            step[band] = product / slot->m_treasure[band].m_density;
+    }
+    for (;;) {
+        int selected = -1;
+        int minimumCount = 0;
+        for (band = 0; band < 3; ++band) {
+            if (!finished[band] && (selected == -1 || count[band] < minimumCount)) {
+                minimumCount = count[band];
+                selected = band;
+            }
+        }
+        if (selected == -1)
+            break;
+        count[selected] += step[selected];
+        TRmgTreasureRange& range = slot->m_treasure[selected];
+        int attempt;
+        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
+            if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
+                if (placeTreasureGroup(&group, zone, spacing))
+                    break;
+                for (int object = 0; object < group.m_objects.size(); ++object) {
+                    group.m_objects[object]->unknownOperation();
+                    delete group.m_objects[object];
+                }
+                group.reset();
+            }
+        }
+        if (attempt < RMG_TREASURE_ATTEMPTS)
+            continue;
+        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
+            if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
+                if (placeTreasureGroup(&group, zone, spacing))
+                    break;
+                for (int object = 0; object < group.m_objects.size(); ++object) {
+                    group.m_objects[object]->unknownOperation();
+                    delete group.m_objects[object];
+                }
+                group.reset();
+            }
+        }
+        if (attempt == RMG_TREASURE_ATTEMPTS)
+            finished[selected] = 1;
+    }
+}
 
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source.  Retail proves the source-level worklist shape: two

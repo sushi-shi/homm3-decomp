@@ -1264,6 +1264,10 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
 // raise 55.04 -> 70.55%; no separate retail helper body is claimed.
 // After the caller's pointer/lifetime corrections, default zero construction
 // reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
+// Direct proxy assignment plus an explicit prerequisite-loop body scope
+// raises the caller to 84.92324%. Either change alone is byte-flat at 83.29%.
+// A named reference keeps the same public bitset operation but changes VC6's
+// nested decisions; neither form retains all four retail proxy assignments.
 template <size_t N>
 // Before normalization (function): ReadPackedCampaignBits.
 std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
@@ -1272,8 +1276,7 @@ std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
     unsigned char packed[(N + 7) / 8];
     infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
-        typename std::bitset<N>::reference bit = result[index];
-        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
+        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
     }
     return result;
 }
@@ -1963,8 +1966,9 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
     // Before normalization (locals): iPrereq.
-    for (int prereq = 0; prereq < numScenarios; ++prereq)
+    for (int prereq = 0; prereq < numScenarios; ++prereq) {
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
+    }
 
     {
         unsigned char value;
@@ -3796,25 +3800,22 @@ VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
 VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
 VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 
-// ScenarioStruct::Read's prerequisite push_back. Retail keeps this insert's
-// own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
-// where this CL expands all three into it, so the pairing is identity, not a
-// score.
-// 2026-09-06, an arity screen over every sub-100 row (base `ret N` multiset
-// against the delinked body's) says the OVERLOAD is wrong too, which is most
-// of the 34.74%: retail's body ends `ret 8` and takes (iterator, const E&) -
-// the single-element `insert` - while this object emits only the three-
-// argument fill `insert(iterator, size_type, const E&)` (`ret 0xc`), because
-// our CL expands the single-element forwarder into `push_back` at every call
-// site and retail keeps it out of line. The explicit single-element claim
-// now stays unpaired instead of borrowing the emitted count overload's
-// name. Making the two-argument insert emit naturally is an inline-shape
-// fix in its caller, ScenarioStruct::Read; its prior MAX remains banked.
-// Main's independent call-site check confirms ret 8, returned iterator,
-// byte-sized element copies, and the expanded fill overload inside this
-// forwarder. Changing prerequisites.push_back(x) to two-argument insert
-// did not emit it and lowered ScenarioStruct::Read from 83.29 to 81.4819.
+// ScenarioStruct::read's prerequisite append retains single-element insert
+// in retail: ret 8, returned iterator and byte-sized copies distinguish it
+// from count insert (ret 12). The old 34.74% compared the wrong overload;
+// the single-element claim remains unpaired while VC6 expands that wrapper.
+// A 72-candidate batch compares push_back/single/count-one insertion, three
+// actual Boolean lifetimes, scoped/function-scope size buffers, and four
+// bitset constructor/proxy forms. Direct single insertion still does not
+// retain the parent; count-one insertion expands it into the reader and
+// naturally emits all three children below. Their 36/36/9-byte bodies match
+// retail exactly with no other TU score loss (reader 51.56930%). Restoring
+// push_back and direct bitset proxy assignment gives the best reader,
+// 84.92324%, and inlines these unchanged library bodies; their MAX stays 100%.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
+VA_COMPGEN(0x0048db40, 0x24, VECTOR_UCOPY, unsigned_char)
+VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
+VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
 //
