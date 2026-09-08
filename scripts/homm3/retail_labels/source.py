@@ -421,6 +421,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_INSERT_COUNT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
+                 "LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
+                 "LIST_ERASE_RANGE", "LIST_BUYNODE",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_ITERATOR_DEREF",
@@ -1063,6 +1065,29 @@ def _demangle_key(mangled: str):
         r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
     if local_static_dtor:
         return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+    # RMG's branch queue retains ordinary Dinkumware list<TPoint> members.
+    # Public erase overloads have the same owner and iterator result: the
+    # argument suffix, not size or emission order, distinguishes the range.
+    # Keep this admission bounded to class/struct values with their matching
+    # default allocator; nested and non-default allocator lists need evidence.
+    list_member = re.match(
+        r"^(?P<member>\?\?1|\?(?:insert|erase|_Buynode)@)\?\$list@"
+        r"(?P<element>[UV](?P<owner>[A-Za-z_]\w*)@@)"
+        r"V\?\$allocator@(?P=element)@std@@@std@@(?P<signature>.+)$",
+        mangled)
+    if list_member:
+        member = list_member.group("member")
+        signature = list_member.group("signature")
+        kind = {
+            ("??1", "QAE@XZ"): "list_dtor",
+            ("?_Buynode@", "IAEPAU_Node@12@PAU312@0@Z"): "list_buynode",
+            ("?erase@", "QAE?AViterator@12@V312@@Z"): "list_erase_iterator",
+            ("?erase@", "QAE?AViterator@12@V312@0@Z"): "list_erase_range",
+            ("?insert@", "QAE?AViterator@12@V312@AB"
+             + list_member.group("element") + "@Z"): "list_insert_single",
+        }.get((member, signature))
+        if kind:
+            return f"{list_member.group('owner').lower()}@{kind}"
 
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
@@ -2251,6 +2276,15 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if algorithm is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
+            continue
+        list_member = next(
+            (kind for kind in ("list_dtor", "list_insert_single",
+                               "list_erase_iterator", "list_erase_range",
+                               "list_buynode")
+             if f"${kind}$" in row["name"]), None)
+        if list_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{list_member}", []).append(row)
             continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
