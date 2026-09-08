@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "source": "include/rmg.h",
+  "units": ["rmg", "rmg_support", "rmg_terrain"],
+  "evidence": "Complete-only: no Dreamcast RMG compiland. Retail 0x5b76b0 fixes the reference-argument grid constructor; 0x55ee50 proves the explicit copy boundary; paintPoint 0x5b4e38..0x5b4e55 expands translation. Current sema summary/structure/source shows retained translation calls instead. Preserve canonical operator+= and constructor signatures. These are implementation candidates, not same-source-hash MAX observations.",
+  "axes": [
+    {
+      "name": "copy_constructor",
+      "find": "    TRmgGridPoint(const TRmgGridPoint& other)\n        : m_x(other.m_x), m_y(other.m_y) {}",
+      "options": [
+        {"name": "member_initializers"},
+        {"name": "field_stores", "replace": "    TRmgGridPoint(const TRmgGridPoint& other)\n    {\n        m_x = other.m_x;\n        m_y = other.m_y;\n    }"}
+      ]
+    },
+    {
+      "name": "coordinate_constructor",
+      "find": "    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)\n        : m_x(newX), m_y(newY) {}",
+      "options": [
+        {"name": "member_initializers"},
+        {"name": "field_stores", "replace": "    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)\n    {\n        m_x = newX;\n        m_y = newY;\n    }"}
+      ]
+    },
+    {
+      "name": "assignment",
+      "find": "    TRmgGridPoint& operator+=(const TPoint& offset)",
+      "options": [
+        {"name": "implicit"},
+        {"name": "field_stores_xy", "replace": "    TRmgGridPoint& operator=(const TRmgGridPoint& other)\n    {\n        m_x = other.m_x;\n        m_y = other.m_y;\n        return *this;\n    }\n\n    TRmgGridPoint& operator+=(const TPoint& offset)"},
+        {"name": "field_stores_yx", "replace": "    TRmgGridPoint& operator=(const TRmgGridPoint& other)\n    {\n        m_y = other.m_y;\n        m_x = other.m_x;\n        return *this;\n    }\n\n    TRmgGridPoint& operator+=(const TPoint& offset)"}
+      ]
+    },
+    {
+      "name": "translation_return",
+      "find": "        TRmgGridPoint result;\n        result = *this;\n        result += offset;\n        return result;",
+      "options": [
+        {"name": "assigned_named"},
+        {"name": "direct_named", "replace": "        TRmgGridPoint result(m_x, m_y);\n        result += offset;\n        return result;"},
+        {"name": "copy_compound", "replace": "        TRmgGridPoint result = *this;\n        return result += offset;"},
+        {"name": "direct_compound", "replace": "        TRmgGridPoint result(m_x, m_y);\n        return result += offset;"},
+        {"name": "copy_named", "replace": "        TRmgGridPoint result = *this;\n        result += offset;\n        return result;"},
+        {"name": "constructed_compound", "replace": "        TRmgGridPoint result = TRmgGridPoint(m_x, m_y);\n        return result += offset;"}
+      ]
+    }
+  ]
+}

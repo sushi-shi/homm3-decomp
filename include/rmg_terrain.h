@@ -17,11 +17,26 @@ struct rmgTerrainTile {
     int m_frame; // prior role: frame
     unsigned char m_flipX; // prior role: flipX
     unsigned char m_flipY; // prior role: flipY
-    char m_tailPadding[2]; // prior role: pad000a
+    // +0x0a..0x0b are natural alignment padding, not source members.
+    // Painter copies at 0x55edc0 and 0x55f350 transfer the two dwords and
+    // only these two flip bytes; an explicit padding array makes copies
+    // transfer data that neither retail operation owns. Prior role: pad000a.
 
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+    // 0x55edc0 constructs its snapshot separately from adapter return values.
+    // Those returns keep an implicit copy boundary: a custom copy constructor
+    // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
+    // The output-reference wrapper 0x55f350 assigns the same four fields.
+    rmgTerrainTile& operator=(const rmgTerrainTile& other)
+    {
+        m_terrain = other.m_terrain;
+        m_frame = other.m_frame;
+        m_flipX = other.m_flipX;
+        m_flipY = other.m_flipY;
+        return *this;
+    }
 };
 
 struct TRmgTerrainFlip {

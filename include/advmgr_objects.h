@@ -254,6 +254,18 @@ SIZE(CObject, 0xc);
 // the HD structural bridge; retail independently fixes the 0x4c stride and
 // every offset read by that constructor.
 struct TObjectType {
+    // Numeric slot identities shared with the Complete-only editor filter
+    // table (0x640288). The RMG selector at 0x546040 admits categories 4/5
+    // on non-water terrain without consulting the recommended mask. Their
+    // original semantic labels have not been recovered.
+    enum {
+        // RMG footprint checker 0x5318b0 treats zero specially when the
+        // recommended-terrain mask admits water; original role unresolved.
+        SLOT_CATEGORY_0 = 0,
+        SLOT_CATEGORY_4 = 4,
+        SLOT_CATEGORY_5 = 5
+    };
+
     struct TPoint {
         // Before normalization: x.
         int m_x;

@@ -6,6 +6,12 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# ADMITTED pattern-table cleanup entries 0x15ed90/0x15f310: the retained
+# init bodies at 0x15ed70/0x15f2f0 pass their exact addresses to _atexit.
+# Each callback is ten bytes: mov ecx,0x69e5d0/0x69e650 followed by a tail
+# jump to the shared destructor at 0x4f9ca0. Six 0x90 bytes separate each
+# callback from the following independent function. Source definitions and
+# owner-specific compiler-generated claims are in src/rmg.cpp.
 # 11943 functions; size INCLUDES jump tables
 # BOUNDARY CORRECTION 2026-09-06 (b): the EH try-block census over the
 # image's FuncInfo records (every `_s_FuncInfo` with nTryBlocks > 0, its
@@ -4479,6 +4485,7 @@ rva	size
 0x15ecf0	24
 0x15ed10	92
 0x15ed70	29
+0x15ed90	10
 0x15eda0	7
 0x15edb0	8
 0x15edc0	54
@@ -4498,6 +4505,7 @@ rva	size
 0x15f230	95
 0x15f290	95
 0x15f2f0	29
+0x15f310	10
 0x15f320	8
 0x15f330	23
 0x15f350	52
