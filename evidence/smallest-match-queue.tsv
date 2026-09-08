@@ -317,7 +317,6 @@ compiled	742	0x0043c040	87.7343	87.7343	87.7343	ai_tactical	ai_tactical	?findEne
 compiled	742	0x00531ea0	85.7977	85.7977	85.7977	rmg	rmg	?addObject@type_random_map@@QAEXPAVtype_object@@UTRmgMapPosition@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	744	0x004e36c0	88.0650	88.0650	88.0650	hero	hero	?getLuck@hero@@QAEHPBV1@EE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	747	0x00417830	93.8054	93.8054	93.8054	advmgr	advmgr	?setTownContext@advManager@@QAEXHEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	747	0x004c6c50	83.8710	83.8710	96.9556	game	game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	748	0x004e2550	92.9185	92.9185	92.9185	hero	hero	?heroFn004E2550@hero@@QAEEJJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	749	0x004264d0	94.7945	94.7945	94.7945	ai_combat	ai_combat	?doGeneralMelee@type_AI_combat_data@@QAEXAAV1@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	753	0x0055a250	84.1089	84.1089	84.1089	resourcemanager	resourcemanager	?open@ResourceManager@@YI_N_N0PAH@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -400,7 +399,7 @@ compiled	930	0x00562da0	99.9744	99.9744	99.9744	sacrifice_window	sacrifice_windo
 compiled	930	0x005ae750	91.6583	91.6583	96.3237	swapmgr	swapmgr	?open@swapManager@@UAEHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	933	0x004b5b90	87.9484	87.9484	87.9484	font	font	?fillLinesVector@font@@QAEXPBDHAAV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	935	0x004ac580	99.2966	99.2966	99.2966	events	events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	936	0x004c2ce0	86.0884	86.0884	86.0884	game	game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	936	0x004c2ce0	51.7287	86.0884	86.0884	game	game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	943	0x00467a00	90.5938	90.5938	90.5938	cmbtmgr	cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	952	0x0044e940	98.8301	98.8301	98.8301	bitmap16	bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	965	0x0044c1c0	92.3623	92.3623	92.3623	armygrp	armygrp	?getLuckDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -463,7 +462,7 @@ compiled	1167	0x00468220	93.9760	93.9760	93.9760	cmbtmgr	cmbtmgr	?shootMissile@c
 compiled	1168	0x00434100	95.1622	95.1622	95.1622	ai_player	ai_player	?initializeArtifactEffects@@YIXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1169	0x004f0b20	99.9761	99.9761	99.9761	kb	kb	?handleClick@type_normal_dialog_frame@@UAEEEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 unmapped	1172	0x00603e00	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-compiled	1176	0x004c3ef0	67.5587	67.5587	95.7136	game	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1176	0x004c3ef0	57.8991	57.8991	95.7136	game	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1180	0x005ea130	94.6104	94.6104	94.6104	tradpost	tradpost	?doMarket@@YIXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1195	0x00535110	89.9329	89.9329	89.9329	rmg	rmg	?addGuard@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1196	0x005a67c0	96.3708	96.3708	96.3708	spells	spells	?showMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -500,7 +499,7 @@ compiled	1414	0x00487e40	84.9232	84.9232	84.9232	customcampaign	customcampaign	?
 compiled	1414	0x005bcd60	98.0017	98.0017	98.0017	town	town	?load@town@@QAEHPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1418	0x004d6050	92.6749	92.6749	92.6749	gzinflatebuf	gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1427	0x00425bd0	88.5898	88.5898	88.5898	ai_combat	ai_combat	?castSpell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1428	0x005503a0	94.1574	96.5558	96.5558	recruit	recruit	?update@recruitUnit@@QAEXEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1428	0x005503a0	96.5558	96.5558	96.5558	recruit	recruit	?update@recruitUnit@@QAEXEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1439	0x005c6870	98.1050	98.1050	98.1050	townmgr	townmgr	?setupTown@townManager@@QAEXE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1451	0x004740d0	97.6611	97.6611	97.6611	command	command	?main@combatManager@@UAEHAAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1453	0x0040ec90	96.1549	96.1549	96.1549	advmgr	advmgr	?processSearch@advManager@@QAEHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates

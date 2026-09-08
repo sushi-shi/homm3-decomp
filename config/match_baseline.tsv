@@ -2136,7 +2136,7 @@ game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	625a7679008
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	f0e7111f306d
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	8d681438b9b4
 game	?validateVictoryLossConditions@game@@QAEXE@Z	90.0315	90.0315	90.0315	0xbf780	6233ce8c9732
-game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	83.8710	96.9556	0xc6c50	eefefa02dd11
+game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.0000	100.0000	0xc6c50	5201b38e4d12
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	e819aa75453b
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	0.0000	100.0000	0xbdc70	-
 game	__h3cg$game$static_dtor$immMouse	100.0000	100.0000	100.0000	0xb6910	-
@@ -2937,7 +2937,7 @@ philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	b09f6a955
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	e3eeb799dc09
 philai	?soDGetSeerSkillValue@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630	b66ef27471fd
 philai	?unnamed526d20@@YIXHPAHH@Z	100.0000	100.0000	100.0000	0x126d20	5b6933d8719c
-philai	?upgradedCreatureType@game@@QBE?AW4TCreatureType@@W42@@Z	100.0000	100.0000	100.0000	0x129710	04521ef29105
+philai	?upgradedCreatureType@game@@QBE?AW4TCreatureType@@W42@@Z	100.0000	100.0000	100.0000	0x129710	08838bd6da0f
 philai	?valueOfBank@@YIJPBVhero@@PAVNewmapCell@@@Z	92.2043	92.2043	100.0000	0x129920	3d4fb48d5d9d
 philai	?valueOfCustomItem@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890	028487704084
 philai	?valueOfEnemyTown@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129cb0	b844dd4e43e5
@@ -3024,7 +3024,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	d
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	9fd90a3edb9a
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	c3d547c3581c
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	33e3eee578c8
-recruit	?update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	75fd1ca020f9
+recruit	?update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	75fd1ca020f9
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	c8b9d011fc93
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0x1541a0	d4594021d1c8
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720	90c10f45e08d
@@ -4006,7 +4006,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
