@@ -2246,13 +2246,6 @@ bool initializeRandomSignText()
     return true;
 }
 
-// game.h's map-cell accessor is inline in the original source; retail
-// expands its 38-byte cell-stride calculation at the shipyard use site.
-inline NewmapCell* game::getCell(type_point point)
-{
-    return m_worldMap.cell(point);
-}
-
 // E:\gamedcs\events.cpp:300.  Removes a picked-up adventure object and
 // plays the vanish flash over the map centre. Both the adventure-map
 // animation pause and the .data byte at 0x67f574 are SAVED, forced, and

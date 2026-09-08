@@ -352,7 +352,7 @@ ai_player	?findAllDestinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDes
 ai_player	?findMagusHutValue@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910	1537dbf5f051
 ai_player	?getAlignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060	1ef85cf4b290
 ai_player	?getAttackBonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710	2e7507177f48
-ai_player	?getCell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x2ed80	17728c7d7852
+ai_player	?getCell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x2ed80	01d8605669f7
 ai_player	?getCell@searchArray@@QBEPAUpathCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x2ecc0	110b06c61f32
 ai_player	?getDangerValue@searchArray@@QBEJUtype_point@@@Z	100.0000	100.0000	100.0000	0x2ed30	88ddfdb202da
 ai_player	?getFullValue@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x33c60	810e464312a1
@@ -1642,7 +1642,7 @@ events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	100.0000	100.
 events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	3d0ae8c0539e
 events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0xaf9d0	-
 events	?creatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	91.5889	91.5889	91.5889	0xabdc0	0fbb0a8acb6b
-events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3727	99.3727	99.9911	0xa84f0	01d0baaa0fac
+events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3757	99.3757	99.9911	0xa84f0	01d0baaa0fac
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	1ed928d8e665
 events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	98.5379	99.1139	0xad470	17546f59628a
 events	?doCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	264555464136
@@ -1756,6 +1756,7 @@ exec	?removeManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000
 exec	?shutDownSystem@executive@@QAEXXZ	100.0000	100.0000	100.0000	0xb0990	3dee338411f9
 findpath	??0searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb1370	baf4ae789aa9
 findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	5f2febfe4a4d
+findpath	?_Construct@std@@YIXPAUpathCell@@ABU2@@Z	100.0000	100.0000	100.0000	0xb42b0	-
 findpath	?_Ufill@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEXPAUpathCell@@IABU3@@Z	100.0000	100.0000	100.0000	0x34c30	-
 findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	20a6048ebb4e
 findpath	?clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	833656f7d951
@@ -1772,10 +1773,10 @@ findpath	?lowerDoor@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb3f10	5bbbe
 findpath	?markTeleport@searchArray@@QAEXPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb2ff0	5e97b0060df9
 findpath	?minimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880	5174335f564f
 findpath	?pushCombatPoint@searchArray@@QAEXHHHHH@Z	98.9844	98.9844	98.9844	0xb3bb0	c94851604dc5
-findpath	?pushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70	0aaacbaac5af
+findpath	?pushPoint@searchArray@@QAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	98.2622	98.2622	98.2622	0xb1a70	0913930b4936
 findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0	54d09b96dc35
 findpath	?setMoat@searchArray@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	56a5ff422e44
-findpath	?testPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	9a2d97529a9a
+findpath	?testPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	22fe9922405b
 fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	bc38ecc96955
 fly	?flyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	2603329d0caa
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	0c3ae8e3cc53
@@ -3490,6 +3491,7 @@ rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAIUbidirectional_iterator_tag@1@@Z	100.0000	100.0000	100.0000	0x1b8cd0	-
 rmg_terrain	?_Lbound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a40	-
 rmg_terrain	?_Ubound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8b60	-
+rmg_terrain	?_Ufill@?$vector@EV?$allocator@E@std@@@std@@IAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x1b8060	-
 rmg_terrain	?at@TRmgLinePainterInterface@@QAE?AUTRmgLinePainterTile@@ABUTRmgGridPoint@@@Z	67.5294	67.5294	67.5294	0xfa050	51ad534437c1
 rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	605f0e10d3ea
 rmg_terrain	?buildNeighbourKinds@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAH@Z	94.9255	94.9255	94.9255	0x1b68a0	eae4cbbee0f6
@@ -3598,14 +3600,14 @@ scenarioinfo	?processRightSelect@CScenarioInfoDlg@@UAEEH@Z	100.0000	100.0000	100
 scenarioinfo	?updateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0	b234cab622df
 search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	81.4143	81.4143	86.3333	0x16a0d0	7acce3143021
 search	?checkAdjacentMonster@@YIEPBVhero@@PAUpathCell@@W4type_search_type@@@Z	93.2615	93.2615	93.2615	0x16a360	619c5a33d7f6
-search	?checkTownPortal@searchArray@@QAEXPBVhero@@PBUpathCell@@J@Z	100.0000	100.0000	100.0000	0x16b050	945fe7a3a9ba
-search	?enterGate@searchArray@@QAEXPBUpathCell@@PBVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x16a730	723b59ac6829
+search	?checkTownPortal@searchArray@@QAEXPBVhero@@PBUpathCell@@J@Z	100.0000	100.0000	100.0000	0x16b050	b5a51e1a6457
+search	?enterGate@searchArray@@QAEXPBUpathCell@@PBVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x16a730	d2506cc8dc02
 search	?enterHostileTrigger@searchArray@@QAEEPBVhero@@AAUpathCell@@@Z	100.0000	100.0000	100.0000	0x16aad0	94cfcdbeb4f8
-search	?enterLith@searchArray@@QAEXPBVhero@@PBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@JJPAUpathCell@@JW4type_search_type@@@Z	97.6539	97.6539	97.6539	0x16a400	b83bf5f72933
-search	?enterTown@searchArray@@QAEXPBVhero@@JPBUpathCell@@JW4type_search_type@@@Z	94.5049	94.5049	94.5049	0x16a850	ba05be186b3a
+search	?enterLith@searchArray@@QAEXPBVhero@@PBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@JJPAUpathCell@@JW4type_search_type@@@Z	97.6539	97.6539	97.6539	0x16a400	b6fce3d41672
+search	?enterTown@searchArray@@QAEXPBVhero@@JPBUpathCell@@JW4type_search_type@@@Z	94.5049	94.5049	94.5049	0x16a850	71af65668e33
 search	?enterTrigger@searchArray@@QAEEPBVhero@@PAUpathCell@@JW4type_search_type@@@Z	97.9349	97.9349	97.9349	0x16ab40	f5a929009b6b
 search	?erase@?$vector@PAUpathCell@@V?$allocator@PAUpathCell@@@std@@@std@@QAEPAPAUpathCell@@PAPAU3@0@Z	100.0000	100.0000	100.0000	0x16bd30	-
-search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	94.8152	94.8152	94.8152	0x16b440	ba7e9f0f79a6
+search	?seedPosition@searchArray@@QAEXPAVhero@@Utype_point@@1HEW4type_search_type@@HE@Z	94.8152	94.8152	94.8152	0x16b440	7e43d1ea1fa1
 seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50	ad82aad52f76
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580	48e572910a10
 seerhut	??0type_quest@@QAE@E@Z	100.0000	100.0000	100.0000	0x16cb80	cebfeec1ed46

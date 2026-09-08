@@ -179,12 +179,6 @@ DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 // is its sole retail code reference, so this TU owns the public definition.
 DATA(0x006983f8) int g_specialHideCursor;
 
-inline NewmapCell* game::getCell(type_point point)
-{
-    return &m_worldMap.m_cellData[(point.m_z * m_worldMap.m_size + point.m_y)
-                              * m_worldMap.m_size + point.m_x];
-}
-
 template <class T>
 inline const T& cppMin(T left, T right)
 {

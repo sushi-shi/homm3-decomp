@@ -50,11 +50,6 @@ static int getTeam(game* thisGame, int playerNum)
     return thisGame->m_mapHeader.m_teamInfo[playerNum];
 }
 
-inline NewmapCell* game::getCell(type_point point)
-{
-    return m_worldMap.cell(point);
-}
-
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Complete expands it into every admitted retail use.
 inline type_point CObject::getTrigger() const
