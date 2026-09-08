@@ -1195,7 +1195,9 @@ void generator::grow(int unusedArg)
 #endif  // @carcass
 
 // Before normalization (function): get_day_bonus.
-static long getDayBonus(int resource, long weekBonus, long day)
+// Before normalization (parameter): week_bonus.
+// DC game.cpp:627 fixes the resource parameter as EGameResource.
+static long getDayBonus(EGameResource resource, long weekBonus, long day)
 {
     long result = weekBonus / 7;
     long remainder = weekBonus % 7;
@@ -1205,59 +1207,53 @@ static long getDayBonus(int resource, long weekBonus, long day)
 }
 
 // E:\gamedcs\game.cpp:643
-// 88.7511 -> 92.0874, 2026-08-20, and the whole route was the BRANCH-KIND
-// sequence rather than a score: 44 branches on retail's side against 42 on
-// ours, and after the two edits below the two sequences agree kind for
-// kind at 44/44 with exactly two disagreements left.
-//   * THE DIFFICULTY LOOP READS `isHuman` THROUGH A RANGE-CLAMPED INDEX,
-//     and that is the pair of missing branches. Retail emits `mov ecx,eax
-//     / cmp eax,8 / jge L / test eax,eax / jge M / L: xor ecx,ecx / M:
-//     lea ecx,[ecx+4*ecx] / lea ecx,[ecx+8*ecx] / mov dl,[ebx+8*ecx+
-//     0x20bb2]` - i.e. `players[(i >= 8 || i < 0) ? 0 : i].isHuman`, with
-//     the `>= 8` test FIRST - while the `playerDisabled[i]` beside it and
-//     the `production` walk both use the raw index. No other players[]
-//     access in this body carries the guard, so it is one accessor at one
-//     site, not a global rule. +2.24.
-//   * `town::field_34` IS UNSIGNED. Retail's special-building arm is `mov
-//     al,[esi+0x34] / test al,al / jbe` and widens with `and eax,0xff`; a
-//     signed `char` gives `jle` and `movsx`. Retyped IN PLACE in town.h
-//     (no new declarator, no include-set cost, townmgr unmoved). +1.09.
-//
-// 92.0874 -> 94.4126, 2026-08-21: the difficulty loop's supposed
-// register-homing residual was a missing SOURCE operation. Dreamcast
-// get_day_bonus line 633 subtracts its `resource` parameter from `day`
-// before adding 6 and taking `% 7`; the SH4 sequence is `sub r1,r3 / add
-// #6,r3`. The old body discarded `resource`. Restoring
-// `(day - resource + 6) % 7` keeps the resource induction live and removes
-// the sole branch-kind mismatch (`jne` -> retail's `jl`) without a codegen
-// device.
-//
-// Residual (94.4126%): both sides now have 42 conditional branches and one
-// return with identical branch mnemonics. The only flow delta is two
-// identical early tests landing on block 15 here versus block 17 in retail
-// (cross-jumping / block placement); the special-building store also remains
-// a memory read-modify-write in retail (`lea edi,[edi+4*ecx] / add
-// [edi],eax`) versus a load/add/store here. Tried and rejected for the fixed
-// resource loop: a volatile counter (83.8587), an address-carried counter
-// (byte-flat), a separately advancing production pointer (byte-flat), and
-// the earlier function-scope/shared counter (byte-flat).
-VA(0x004b8af0, 0x573)
+// Before normalization (function): calculate_production.
+// Before normalization (locals): town_id, mine_id, player_id, current_mine,
+// current_town, current_player, silo_income, player_handicap, currHero.
+// DC proves references for the mine, town, player and const hero records,
+// scoped references to seven-element production arrays (but a pointer in the
+// town arm), shared long i/player_id loops, and the EGameResource resource
+// local. IsHuman at line 784 is the canonical range-clamped query. Restoring
+// these interfaces is byte-flat at 95.0560%; the array references and original
+// handicap/index lifetimes then restore retail's 0x20 frame and reach 97.58%.
+// DC lines 699..709 enclose BOTH treasury and pond income in the Rampart,
+// day-one guard. Retail's two branches skip both contributions too; the former
+// pond-outside spelling was a behavior mismatch, not block cross-jumping.
+// Restoring that guard makes the branches agree (97.47%). DC line 753 tests
+// the hero specialty type before line 756 reads its resource. Removing the
+// premature cached resource and retaining that guard raises the score to 98.79%.
+// The shared resource enum and get_day_bonus's enum parameter are byte-flat.
+// Residual (98.79%): only the two constant active-building mask expansions
+// schedule their loads differently. All 71 blocks, 42 branches and named calls
+// agree. The handicap high-word relocation is an addend alias.
+// Earlier controls: omitting IsHuman's bounds clamp lost two retail branches;
+// treating pondAmount as signed emitted jle/movsx rather than jbe/zero-extension.
+// The day-bonus remainder uses (day - resource + 6) % 7 in both builds;
+// discarding resource broke its signed loop branch. Volatile counters lost
+// heavily, and extra counter-address/production-pointer carriers were flat.
+VA(0x004b8af0, 0x573)  // mine/town/player production consumers, dc 0xa3474
 void game::calculateProduction()
 {
-    int playerId;
+    long playerId;
+    long i;
+    EGameResource resource;
+    double playerHandicap;
     for (playerId = 0; playerId < 8; ++playerId) {
-        if (!m_playerDisabled[playerId])
-            memset(m_players[playerId].m_ai.m_turnProductionResource, 0,
-                   sizeof(m_players[playerId].m_ai.m_turnProductionResource));
+        if (!m_playerDisabled[playerId]) {
+            long (&production)[NUM_RESOURCES] =
+                m_players[playerId].m_ai.m_turnProductionResource;
+            for (i = 0; i < NUM_RESOURCES; ++i)
+                production[i] = 0;
+        }
     }
 
-    unsigned int mineId;
+    long mineId;
     for (mineId = 0; mineId < m_mines.size(); ++mineId) {
-        mine* currentMine = &m_mines[mineId];
-        if (currentMine->m_playerOwner >= 0 && currentMine->m_type < GOLD) {
-            m_players[currentMine->m_playerOwner]
-                .m_ai.m_turnProductionResource[currentMine->m_type] +=
-                    g_mineProduction[currentMine->m_type];
+        mine& currentMine = m_mines[mineId];
+        if (currentMine.m_playerOwner >= 0 && currentMine.m_type < GOLD) {
+            m_players[currentMine.m_playerOwner]
+                .m_ai.m_turnProductionResource[currentMine.m_type] +=
+                    g_mineProduction[currentMine.m_type];
         }
     }
 
@@ -1267,72 +1263,72 @@ void game::calculateProduction()
     // `= {0,0,0,0,0,0,0,0}` is worse again (91.26).
     unsigned char crystalDragonIncome[8];
     memset(crystalDragonIncome, 0, sizeof(crystalDragonIncome));
-    unsigned int townId;
+    long townId;
     for (townId = 0; townId < m_towns.size(); ++townId) {
-        town* currentTown = &m_towns[townId];
-        if (currentTown->m_owner < 0)
+        town& currentTown = m_towns[townId];
+        if (currentTown.m_owner < 0)
             continue;
 
-        playerData* currentPlayer = &m_players[currentTown->m_owner];
-        long* production = currentPlayer->m_ai.m_turnProductionResource;
-        if (currentTown->hasBuilding(MARKETPLACE_SILO_ID, 0)) {
-            int* siloIncome = currentTown->getSiloIncome();
-            for (int i = 0; i < NUM_RESOURCES; ++i)
+        playerData& currentPlayer = m_players[currentTown.m_owner];
+        long* production = currentPlayer.m_ai.m_turnProductionResource;
+        if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, 0)) {
+            int* siloIncome = currentTown.getSiloIncome();
+            for (i = 0; i < NUM_RESOURCES; ++i)
                 production[i] += siloIncome[i];
         }
 
-        // `currentTown` is `town*`; the static_cast selects retail's
+        // `currentTown` is `town&`; the static_cast selects retail's
         // const get_army overload, and the Dreamcast-public QB query then
         // consumes its const armyGroup directly.
-        if (static_cast<const town*>(currentTown)->getArmy()
+        if (static_cast<const town&>(currentTown).getArmy()
                 .getCreatureTotal(
                 creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currentTown->m_owner] = 1;
+            crystalDragonIncome[currentTown.m_owner] = 1;
 
-        if (currentTown->m_type == TOWN_RAMPART && m_day == 1
-            && currentTown->hasBuilding(EXTRA_1_ID, 1)) {
-            production[GOLD] += currentPlayer->m_resources[GOLD] / 10;
-        }
-        if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1)
-            && currentTown->m_pondAmount > 0) {
-            production[currentTown->m_pondResource] += currentTown->m_pondAmount;
+        if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
+            if (currentTown.hasBuilding(EXTRA_1_ID, true))
+                production[GOLD] += currentPlayer.m_resources[GOLD] / 10;
+            if (currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)
+                && currentTown.m_pondAmount > 0)
+                production[currentTown.m_pondResource] += currentTown.m_pondAmount;
         }
     }
 
     for (playerId = 0; playerId < 8; ++playerId) {
         if (m_playerDisabled[playerId])
             continue;
-        playerData* currentPlayer = &m_players[playerId];
-        long* production = currentPlayer->m_ai.m_turnProductionResource;
-        int cornucopias = currentPlayer->numOfGivenArtifact(
+        playerData& currentPlayer = m_players[playerId];
+        long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
+        int cornucopias = currentPlayer.numOfGivenArtifact(
             g_productionArtifactCornucopia) * 5;
-        production[SULFUR] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[SULFUR] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactSulfur);
-        production[MERCURY] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[MERCURY] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactMercury);
-        production[GEMS] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[GEMS] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactGems);
-        production[WOOD] += currentPlayer->numOfGivenArtifact(
+        production[WOOD] += currentPlayer.numOfGivenArtifact(
             g_productionArtifactWood);
-        production[ORE] += currentPlayer->numOfGivenArtifact(
+        production[ORE] += currentPlayer.numOfGivenArtifact(
             g_productionArtifactOre);
-        production[CRYSTAL] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[CRYSTAL] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactCrystal);
         production[GOLD] += computeDailyGold(playerId, 0);
     }
 
-    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
-        hero* currentHero = &m_heroes[heroId];
-        if (currentHero->m_owner == -1)
+    for (i = 0; i < HERO_COUNT; ++i) {
+        const hero& currHero = m_heroes[i];
+        if (currHero.m_owner == -1)
             continue;
-        if (currentHero->m_army.getCreatureTotal(
+        if (currHero.m_army.getCreatureTotal(
                 creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currentHero->m_owner] = 1;
-        const THeroSpecificAbility& ability = g_heroSpecificAbilities[heroId];
-        int resource = ability.m_skill;
-        if (ability.m_type == eHeroAbilityResource
-            && resource >= WOOD && resource <= GEMS) {
-            ++m_players[currentHero->m_owner].m_ai.m_turnProductionResource[resource];
+            crystalDragonIncome[currHero.m_owner] = 1;
+        long (&production)[NUM_RESOURCES] =
+            m_players[currHero.m_owner].m_ai.m_turnProductionResource;
+        if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
+            if (g_heroSpecificAbilities[i].m_skill >= WOOD
+                && g_heroSpecificAbilities[i].m_skill <= GEMS)
+                ++production[g_heroSpecificAbilities[i].m_skill];
         }
     }
 
@@ -1343,18 +1339,16 @@ void game::calculateProduction()
 
     if (m_setup.m_difficulty > 2) {
         for (playerId = 0; playerId < 8; ++playerId) {
-            playerData* currentPlayer = &m_players[playerId];
-            int humanId = playerId;
-            if (humanId >= 8 || humanId < 0)
-                humanId = 0;
-            if (m_players[humanId].m_isHuman || m_playerDisabled[playerId])
+            if (isHuman(playerId) || m_playerDisabled[playerId])
                 continue;
-            long* production = currentPlayer->m_ai.m_turnProductionResource;
+            playerData& currentPlayer = m_players[playerId];
+            long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
             production[WOOD] += getDayBonus(
                 WOOD, production[WOOD] * 7 / 4, m_day);
             production[ORE] += getDayBonus(
                 ORE, production[ORE] * 7 / 4, m_day);
-            for (int resource = WOOD; resource < GOLD; ++resource) {
+            for (resource = WOOD; resource < GOLD;
+                 resource = gameResourceFromInt(resource + 1)) {
                 long weeklyBonus = (m_setup.m_difficulty - 2) * production[resource];
                 production[resource] += getDayBonus(
                     resource, weeklyBonus, m_day);
@@ -1365,12 +1359,12 @@ void game::calculateProduction()
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!m_setup.m_handicap[playerId] || m_playerDisabled[playerId])
             continue;
-        double handicap = g_productionHandicap[m_setup.m_handicap[playerId]];
-        for (int resource = WOOD; resource < GOLD; ++resource) {
-            long original = m_players[playerId].m_ai.m_turnProductionResource[resource];
-            m_players[playerId].m_ai.m_turnProductionResource[resource] =
-                original - original * handicap;
-        }
+        playerData& currentPlayer = m_players[playerId];
+        playerHandicap = g_productionHandicap[m_setup.m_handicap[playerId]];
+        long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
+        for (resource = WOOD; resource < GOLD;
+                 resource = gameResourceFromInt(resource + 1))
+            production[resource] -= production[resource] * playerHandicap;
     }
 }
 

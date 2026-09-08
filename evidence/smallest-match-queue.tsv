@@ -490,7 +490,7 @@ compiled	1357	0x0041c8a0	91.1018	91.1018	91.4864	advspells	advspells	?summonBoat
 compiled	1361	0x0053d380	90.0984	90.0984	90.0984	rmg	rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgBoundaryVertex@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1364	0x00542ce0	86.7357	86.7357	86.7357	rmg	rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1371	0x0052c9b0	97.1621	97.1621	97.1621	puzzlewindow	puzzlewindow	?aiAttemptPuzzleGuess@@YI?AUtype_point@@J@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1395	0x004b8af0	95.0560	95.0560	95.0560	game	game	?calculateProduction@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1395	0x004b8af0	98.7892	98.7892	98.7892	game	game	?calculateProduction@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1396	0x00543e20	73.0200	73.0200	73.0200	rmg	rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1404	0x0056ef20	93.0020	93.0020	98.3426	seerhut	seerhut	?setDefaultText@type_monster_quest@@UAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1407	0x0053dad0	68.8871	68.8871	68.8871	rmg	rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
