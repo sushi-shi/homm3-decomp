@@ -1,66 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-bracketed	59	0x0054d960	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_13e9e0_sub02_14d960	bracketed	resolve the owner, then add its VA claim and body
-bracketed	60	0x00532200	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132200	bracketed	resolve the owner, then add its VA claim and body
-bracketed	60	0x005323d0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1323d0	bracketed	resolve the owner, then add its VA claim and body
-compiled	61	0x00514220	99.3750	99.3750	100.0000	objecttype	objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	61	0x00536b60	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1363b0_sub00_136b60	bracketed	resolve the owner, then add its VA claim and body
-bracketed	65	0x005b38f0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b38f0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	67	0x0054c120	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_9fa90_sub03_14c120	bracketed	resolve the owner, then add its VA claim and body
-bracketed	69	0x0054d0a0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_143e20_sub05_14d0a0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	71	0x0052f440	-	0.0000	0.0000	quickherowindow..quickinfowindow	quickherowindow,quickinfowindow	game_12ead0_sub00_12f440	bracketed	resolve the owner, then add its VA claim and body
-bracketed	73	0x00515510	-	0.0000	0.0000	newgame..overview	newgame,overview	game_114b80_sub04_115510	bracketed	resolve the owner, then add its VA claim and body
-bracketed	73	0x00546940	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1466e0_sub03_146940	bracketed	resolve the owner, then add its VA claim and body
-bracketed	74	0x00530e90	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_130fb0_sub00_130e90	bracketed	resolve the owner, then add its VA claim and body
-bracketed	77	0x005341a0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1341a0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	77	0x0054c6a0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_22fdb8_sub00_14c6a0	bracketed	resolve the owner, then add its VA claim and body
-unmapped	77	0x00603ac0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-bracketed	83	0x005341f0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1341f0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x00534790	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134790	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x00534870	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134870	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x00534970	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134970	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x00534a00	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134a00	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x00534a90	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134a90	bracketed	resolve the owner, then add its VA claim and body
-bracketed	83	0x0054c610	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_131460_sub00_14c610	bracketed	resolve the owner, then add its VA claim and body
-unmapped	83	0x00604510	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-bracketed	87	0x00532730	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132730	bracketed	resolve the owner, then add its VA claim and body
-bracketed	87	0x0054bf00	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1860e0_sub00_14bf00	bracketed	resolve the owner, then add its VA claim and body
-bracketed	87	0x005b7fc0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub08_1b7fc0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	88	0x00531050	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_13e6a0_sub00_131050	bracketed	resolve the owner, then add its VA claim and body
-bracketed	88	0x005339f0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1339c0_sub00_1339f0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	88	0x005b3890	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b3890	bracketed	resolve the owner, then add its VA claim and body
-bracketed	89	0x005b7f60	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub07_1b7f60	bracketed	resolve the owner, then add its VA claim and body
-bracketed	89	0x005b8a40	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7f60_sub00_1b8a40	bracketed	resolve the owner, then add its VA claim and body
-bracketed	89	0x005b8b60	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7f60_sub01_1b8b60	bracketed	resolve the owner, then add its VA claim and body
-bracketed	90	0x0055ebd0	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15d0f0_sub01_15ebd0	bracketed	resolve the owner, then add its VA claim and body
-compiled	92	0x0055d070	96.7742	96.7742	96.7742	resourcemanager	resourcemanager	?getBitmapResourceSize@ResourceManager@@YIHPBD@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	93	0x0044e250	94.7568	94.7568	94.7568	bitmap16	bitmap16	?reference@Bitmap16Bit@@QAEXHHHPAG@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	94	0x0054d000	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_143e20_sub03_14d000	bracketed	resolve the owner, then add its VA claim and body
-compiled	95	0x004f4ba0	95.1191	95.1191	95.1191	kb	kb	?getNextHumanPlayer@@YIHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	96	0x0044d380	-	0.0000	0.0000	artifact..basemgr	artifact,basemgr	game_4cd50_sub00_4d380	bracketed	resolve the owner, then add its VA claim and body
-bracketed	96	0x004ecde0	-	0.0000	0.0000	inputmgr..kb	inputmgr,kb	game_ecd00_sub00_ecde0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	96	0x00532260	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132260	bracketed	resolve the owner, then add its VA claim and body
-bracketed	97	0x005154a0	-	0.0000	0.0000	newgame..overview	newgame,overview	game_114d80_sub02_1154a0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	97	0x005fcfa0	-	0.0000	0.0000	viewwrld..widget	viewwrld,widget	game_1fd790_sub00_1fcfa0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	98	0x00532410	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132410	bracketed	resolve the owner, then add its VA claim and body
-bracketed	99	0x005327c0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1327c0	bracketed	resolve the owner, then add its VA claim and body
-unmapped	99	0x00604570	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-bracketed	100	0x00534310	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134310	bracketed	resolve the owner, then add its VA claim and body
-bracketed	100	0x00534fd0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134fd0	bracketed	resolve the owner, then add its VA claim and body
-compiled	104	0x004d9260	96.5278	96.5278	96.5278	hero	hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	104	0x0056aad0	91.5385	91.5385	91.5385	search	search	?enterHostileTrigger@searchArray@@QAEEPBVhero@@PAUpathCell@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	105	0x004491c0	93.9535	93.9535	93.9535	army	army	??Yiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	108	0x005fcef0	-	0.0000	0.0000	viewwrld..widget	viewwrld,widget	game_1fd010_sub00_1fcef0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	109	0x0043cdf0	-	0.0000	0.0000	ai_tactical..army	ai_tactical,army	game_3cb20_sub00_3cdf0	bracketed	resolve the owner, then add its VA claim and body
-bracketed	109	0x0047b220	-	0.0000	0.0000	creaturetype..csequence	creaturetype,csequence	game_a75c0_sub00_7b220	bracketed	resolve the owner, then add its VA claim and body
-bracketed	109	0x00532190	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132190	bracketed	resolve the owner, then add its VA claim and body
-compiled	110	0x004854c0	96.0714	96.0714	96.0714	customcampaign	customcampaign	?getIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	110	0x00498b70	88.4210	88.4210	88.4210	dxplay	dxplay	?testLobbied@CDPlayLobby@@QAEEXZ	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	110	0x00532360	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132360	bracketed	resolve the owner, then add its VA claim and body
-bracketed	110	0x005b4860	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_234980_sub00_1b4860	bracketed	resolve the owner, then add its VA claim and body
-unmapped	110	0x006037a0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-compiled	111	0x004ec460	73.3333	73.3333	100.0000	inputmgr	inputmgr	??0inputManager@@QAE@XZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	111	0x00530f10	76.9474	76.9474	76.9474	rmg	rmg	?clear@TRmgMapItem@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	113	0x0054b100	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1348d0_sub00_14b100	bracketed	resolve the owner, then add its VA claim and body
 compiled	115	0x004e51c0	98.3750	98.3750	100.0000	hero	hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -633,7 +573,7 @@ bracketed	1295	0x005b8090	-	0.0000	0.0000	systemoptionswindow..text	systemoption
 compiled	1308	0x004f5d80	92.1688	92.1688	92.1688	kb	kb	?calculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1318	0x00445fd0	90.8184	90.8184	91.4600	army	army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1320	0x00488fb0	83.8848	83.8848	83.8848	customcampaign	customcampaign	?play@MapTextStruct@TCampaignBrief@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1322	0x00476490	92.5714	92.5714	92.5714	command	command	?getCommand@combatManager@@QAEHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1322	0x00476490	92.5357	92.5714	92.5714	command	command	?getCommand@combatManager@@QAEHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1326	0x0044a4d0	88.5071	88.5071	88.5071	armygrp	armygrp	?getSpellWorkChance@@YIMHW4TCreatureType@@PBVhero@@1@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	1331	0x00548500	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_149870_sub00_148500	bracketed	resolve the owner, then add its VA claim and body
 compiled	1333	0x004ff6b0	95.3605	95.3605	95.3605	mapcell	mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates

@@ -529,6 +529,10 @@ unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
 // COMDAT pairing: bitset<19>::_Xran - `cmp <reg>, 0x13` guards the call at
 // 0x4d380 and at hero's HeroFn_004E2550, and artifact.obj is the only object
 // that emits `?_Xran@?$bitset@$0BD@@`. The nineteen artifact slots.
+// Artifact's slot-mask setup naturally emits this checked bit setter. The
+// 19-bit bound and its retained _Xran call identify all 96 retail bytes.
+VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)
+
 // COMDAT pairing: bitset<19>'s default `_Tidy`, the one out-of-line copy in
 // this object. Its sole caller is the aArtifactSlotMasks cinit's class-0
 // entry (`push 0 / lea ecx,[ebp-4] / call`); every other default
