@@ -1183,6 +1183,12 @@ rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properti
 {
 }
 
+rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, int value)
+    : type_object(properties), m_generator(generator), m_value(value)
+{
+}
+
 // The artifact record is the ordinary object record followed by the empty
 // custom-treasure flag consumed by NewfullMap::readArtifactData. Retail
 // 0x533500 retains the same five base writes before
@@ -1315,6 +1321,29 @@ VA(0x005338D0, 0x0D) // anchor-callee 0x533596; retail-only, thiscall, ret 0
 type_object::~type_object()
 {
     --m_properties->m_refCount;
+}
+
+// Key-tent vtable 0x640ae4 slot 2 first tries to place a same-color guard.
+// Failure removes this tent from the map and requests replacement treasure
+// in the original zone and position. Keep the generator/value/position
+// snapshots across removeObject: retail preserves all three before that call.
+VA(0x005338E0, 0xD4) // anchor-vtable + retained placement/removal calls; retail-only
+unsigned char rmgKeyTentObject::isWritable()
+{
+    if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
+        return 1;
+    type_random_map_generator* generator = m_generator;
+    int value = m_value;
+    TRmgMapPosition position = m_position;
+    generator->removeObject(this);
+    TRmgZone* zone = generator->m_zones[
+        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
+    int actualValue;
+    type_object* object = generator->generateTreasure(
+        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
+    if (object)
+        generator->addObject(object, position);
+    return 0;
 }
 
 // Vtable 0x640af4 owns a pending polymorphic seer-hut object. The retained
@@ -1722,6 +1751,16 @@ int type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
     if (generator->m_nextKeyTentColor != m_subtype)
         return -1;
     return m_value;
+}
+
+// Definition vtable 0x640c30 slot 0 constructs the concrete 0x24-byte tent.
+// The generator is the second factory argument; +0x20 receives m_value,
+// not the definition subtype/color (that is already in its properties).
+VA(0x00534FD0, 0x64) // anchor-definition table + object vtable 0x640ae4; retail-only
+type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    return new rmgKeyTentObject(properties, generator, m_value);
 }
 
 // The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
