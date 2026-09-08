@@ -1108,7 +1108,7 @@ public:
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     // Before normalization (function): hero::get_primary_skill_total.
-    short getPrimarySkillTotal();
+    short getPrimarySkillTotal() const;
     // 0x4e59a0 - enables overland flight and charges its terrain-adjusted
     // per-mastery mana cost.
     // Before normalization (function): hero::Fly.

@@ -16,12 +16,14 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from homm3 import manifest
 from homm3.core import common
 from homm3.match import status
-from homm3.vc6._unit import compile_text, source_for_unit
+from homm3.vc6._unit import compile_text
 from homm3.vc6 import tu_state_sweep as scoring
 
 REPO = common.HOMM3_DIR
+
 
 @dataclass(frozen=True)
 class Edit:
@@ -90,11 +92,10 @@ def parse_manifest(path: Path, *, root: Path = REPO):
         raise ValueError("manifest unit must be a non-empty string")
     if not isinstance(function_name, str) or not function_name:
         raise ValueError("manifest function must be a non-empty string")
-    unit = unit_name
-    configured = source_for_unit(unit)
-    if configured is None:
-        raise ValueError(f"unknown unit {unit!r}")
-    source = root / configured.relative_to(REPO)
+    unit = manifest.by_unit().get(unit_name)
+    if unit is None:
+        raise ValueError(f"unknown unit {unit_name!r}")
+    source = root / unit["source"]
     original = source.read_bytes()
     raw_axes = payload.get("axes")
     if not isinstance(raw_axes, list) or not raw_axes:
@@ -183,6 +184,7 @@ def run(args) -> int:
     if min(args.jobs, args.limit, args.keep_top) < 1:
         raise ValueError("--jobs, --limit, and --keep-top must be positive")
     payload, unit, selector, source, original, axes = parse_manifest(Path(args.manifest))
+    unit = unit["unit"]
     count = 1
     for axis in axes:
         count *= len(axis.options)

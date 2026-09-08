@@ -251,10 +251,10 @@ public:
                                 type_point monsterLocation, long pathfinding,
                                 type_search_type searchType,
                                 long nativeTerrain);
-    // DC search.cpp:367 proves pathCell& (dc 0x12bbc8). Retail passes its
-    // address and never tests it for null, preserving the reference ABI.
-    // Before normalization: enter_hostile_trigger, current_hero.
-    unsigned char enterHostileTrigger(const hero* currentHero, pathCell& cell);
+    // DC search.cpp:367 proves a pathCell reference; retail passes its
+    // address as the second stack argument. Original: enter_hostile_trigger.
+    unsigned char enterHostileTrigger(const hero* currentHero,
+                                     pathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's
     // (search.cpp:155 and :244).

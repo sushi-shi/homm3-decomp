@@ -457,7 +457,7 @@ def run_predict(args) -> int:
             trace = inline_trace.capture(trace_source, flags, base_sym, base_obj)
         except ValueError as exc:
             _common.die(str(exc))
-    ref_text, ref_label = reg_model._reference_side(args)
+    ref_text, ref_label = reg_model._reference_side(args, reg_model.SCRATCH)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)
     comparison = ordered_divergence(base_text, ref_text)

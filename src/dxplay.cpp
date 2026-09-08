@@ -1155,6 +1155,8 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // CL folds either polarity to `setge al`. `why-branch` measures 57/3/4
 // instructions/branches/returns in retail versus 51/2/3 here, classifies the
 // residual as D6 plus D8/D13 branchless folding, and finds no catalog lever.
+// A 24-state batch of early/nested/single-pass exits, byte-result forms,
+// and separate GlobalAlloc/GlobalLock lifetimes also leaves 88.4211% best.
 // A named result initialized to zero and assigned in the success arm is a
 // negative control: it falls to 85.33% without recovering the extra exit.
 // A 24-source return-width/assignment/label batch stays at 88.4211%; a
