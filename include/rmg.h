@@ -1881,6 +1881,9 @@ public:
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        unsigned char alternate, int minimum, int maximum);
+    unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
     void decorateUnderground();
     unsigned char generate();
     unsigned char writeMap(TAbstractFile* outfile);
