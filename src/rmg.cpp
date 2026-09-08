@@ -1568,6 +1568,11 @@ rmgShrineObject::rmgShrineObject(TRmgObjectPropertiesRef* properties)
 {
 }
 
+rmgSpellScrollObject::rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell)
+    : type_object(properties), m_spell(spell)
+{
+}
+
 rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -2121,6 +2126,31 @@ void rmgShrineObject::write(TAbstractFile* outfile, int parameter)
     }
 }
 
+// Spell-scroll vtable 0x640b44 slot 3. After the shared object header,
+// retail writes the default message flag, selected spell and reserved word/byte.
+// Exact: each narrow write uses its own buffer lifetime, as in the adjacent shrine.
+VA(0x00533FF0, 0xC2) // anchor-vtable 0x640b44 + factory 0x534ed0; retail-only
+void rmgSpellScrollObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    {
+        char message = 0;
+        outfile->write(&message, sizeof(message));
+    }
+    {
+        char spell = m_spell;
+        outfile->write(&spell, sizeof(spell));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(short));
+    }
+    {
+        char reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
+}
+
 // Witch-hut vtable 0x640b54 appends the default skill mask only in AB and
 // later map versions. Retail uses a signed comparison against version 1.
 // Exact with the shared base writer expanded and the conditional mask local.
@@ -2427,6 +2457,37 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     : type_treasure_def(0x5d, 0, newValue, 30)
 {
     m_spellLevel = newSpellLevel;
+}
+
+// Definition vtable 0x640c24 slot 0. Retail scans the first 70 spell rows,
+// excluding flag 0x2000 and school-less entries, then chooses uniformly among
+// rows matching this definition's spell level. Both passes use the same filter.
+// Exact: signed spell/count locals and a nested selected-- test reproduce
+// both scans and the ordinary derived/base constructor expansion. The four
+// data refs are the normalized spell-table alias (0x687f58) and the verified
+// base/scroll vtables at 0x640a74/0x640b44.
+VA(0x00534ED0, 0xC3) // anchor-definition vtable + object vtable 0x640b44; retail-only
+type_object* type_spell_scroll_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    int count = 0;
+    int spell;
+    for (spell = 0; spell < 70; ++spell) {
+        if (!(g_spellTraits[spell].m_flags & 0x2000)
+            && g_spellTraits[spell].m_schoolBits
+            && g_spellTraits[spell].m_level == m_spellLevel)
+            ++count;
+    }
+    int selected = rand() % count;
+    for (spell = 0; spell < 70; ++spell) {
+        if (!(g_spellTraits[spell].m_flags & 0x2000)
+            && g_spellTraits[spell].m_schoolBits
+            && g_spellTraits[spell].m_level == m_spellLevel) {
+            if (selected-- <= 0)
+                break;
+        }
+    }
+    return new rmgSpellScrollObject(properties, spell);
 }
 
 // Vtable 0x640c30 slot 1 belongs to type_key_tent_def. The key-tent

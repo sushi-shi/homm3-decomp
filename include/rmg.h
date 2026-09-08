@@ -1085,6 +1085,19 @@ public:
 };
 SIZE(rmgShrineObject, 0x1c);
 
+// Complete-only spell-scroll object. Factory 0x534ed0 allocates 0x20
+// bytes, stores its selected spell at +0x1c and installs vtable 0x640b44.
+// Writer 0x533ff0 emits that spell as one byte. Original class name unknown.
+// Full-build collateral on admission: unchanged CEnterNameEdit::onKillFocus
+// CUR 100 -> 99.8710 (two loads exchange order); MAX/HIST retain 100.
+class rmgSpellScrollObject : public type_object {
+public:
+    int m_spell; // +0x1c, role-derived name
+    rmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgSpellScrollObject, 0x20);
+
 // Retail vtable 0x640b54.
 class rmgWitchHutObject : public type_object {
 public:
