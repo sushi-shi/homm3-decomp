@@ -2357,13 +2357,76 @@ VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
 #endif
 
-// The fill loop retains this one-object fit operation. It derives a
-// placement rectangle from the prototype and group map, returns AL, and
-// owns the successful insertion. Provisional Complete-only role.
+// The adjacent guard/object placement callers pass properties and a
+// three-dword position. The predicate checks neighboring entrance flags,
+// then calls the contained map's isPlacementBlocked with zone -1.
+// Complete-only provisional group helper; ret 0x10 and AL result are proven.
 #if 0 // @carcass
-VA(0x00535970, 0x240) // anchor-callee 0x546680; thiscall, ret 4
-unsigned char TRmgTreasureGroup::tryAddObject(type_object* object) { return 0; } // @stub
+VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
+unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
+    TRmgMapPosition position) { return 0; } // @stub
 #endif
+
+// Collect positions next to existing object entrances. Objects whose land
+// traits permit full approach consider all eight directions; others use
+// directions 3..1. Candidate bounds leave a margin around the group map.
+// A successful random choice transfers the object to the group and stamps
+// its footprint on surface level zero. Names describe Complete-only roles.
+// Residual (79.3429%): all 21 CFG blocks and branch destinations align;
+// remaining differences are local/register homes, coordinate copies and
+// vector cleanup scheduling. Reusing the candidate variable for the final
+// choice loses to separate scopes (75.5095% versus 79.3143%). The RMG trigger
+// point is flat; two canonical += translations reach 79.3429%, and naming
+// the candidate count is flat. Preserve both map and group helper calls.
+VA(0x00535970, 0x240) // anchor-callee 0x546680; thiscall, ret 4
+unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
+{
+    TRmgObjectPropertiesRef* properties = object->m_properties;
+    TObjectType* prototype = properties->m_prototype;
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = prototype->getWidth() + 2;
+    bounds.m_minimumY = prototype->getHeight() + 2;
+    bounds.m_maximumX = m_map.m_mapWidth - 3;
+    bounds.m_maximumY = m_map.m_mapHeight - 3;
+    TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    std::vector<TRmgMapPosition> candidates;
+    for (unsigned index = 0; index < m_objects.size(); ++index) {
+        type_object* existing = m_objects[index];
+        TObjectType* existingPrototype = existing->m_properties->m_prototype;
+        TRmgMapPosition entrance = existing->getPosition();
+        entrance.m_x -= existingPrototype->m_triggerCell.m_x;
+        entrance.m_y -= existingPrototype->m_triggerCell.m_y;
+        int end;
+        int first;
+        if (g_adventureObjectLandBlocked[existingPrototype->m_objectType][1]) {
+            end = 8;
+            first = 0;
+        } else {
+            end = 4;
+            first = 1;
+        }
+        for (int direction = end; direction-- > first; ) {
+            TRmgMapPosition position = entrance;
+            position += g_rmgDirections[direction];
+            position += trigger;
+            if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
+                && position.m_y >= bounds.m_minimumY && position.m_y < bounds.m_maximumY
+                && canFitObject(properties, position))
+                candidates.push_back(position);
+        }
+    }
+    unsigned count = candidates.size();
+    if (!count)
+        return 0;
+    TRmgMapPosition selected = candidates[rand() % count];
+    m_objects.push_back(object);
+    TRmgMapPosition position;
+    position.m_x = selected.m_x;
+    position.m_y = selected.m_y;
+    position.m_z = 0;
+    m_map.addObject(object, position);
+    return 1;
+}
 
 // Complete-only group bounds. A flat map-cell scan encloses cells that
 // fail the group's traversal predicate. The two reference-based extrema
