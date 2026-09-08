@@ -5884,20 +5884,24 @@ static void randomizeShrine(NewmapCell* cell, const int level)
     info->m_cellVisitedInfo.m_visited = 0;
 }
 
-// E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
-// and spell stores fold away, leaving only the randomized primary lane.
+// E:\gamedcs\game.cpp:4509, dc 0xab96c. Line 4515 is one SetScholar
+// call with nested getters and Random; it has no award/primary/secondary/
+// spell locals. MapCell.h:1084 supplies the setter's four ordered stores.
+// Retail expands both ordinary RandomizeScholar and SetScholar, folding
+// unchanged award, secondary and spell stores into the primary update.
+// Restoring the call raises RandomizeEvents 86.7458 -> 86.8205. The full
+// shared-header checkpoint keeps DoEventScholar exact and restores
+// CEnterNameEdit::onKeyPress / town::initializeSpells to exact; unchanged
+// recruitUnit::update moves 96.5558 -> 94.1574 (its MAX/HIST are retained).
 // Before normalization (function): RandomizeScholar.
-static __forceinline void randomizeScholar(NewmapCell* cell)
+static void randomizeScholar(NewmapCell* cell)
 {
-    int award = cell->getScholarAward();
-    if (award != const_scholar_primary_skill) {
-        int primary = random(0, 3);
-        int secondary = cell->getScholarSecondarySkill();
-        int spell = cell->getScholarSpell();
-        cell->m_scholarInfo.m_award = award;
-        cell->m_scholarInfo.m_primary = primary;
-        cell->m_scholarInfo.m_secondary = secondary;
-        cell->m_scholarInfo.m_spell = spell;
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    if (info->getScholarAward() != const_scholar_primary_skill) {
+        info->setScholar(info->getScholarAward(),
+            primarySkillFromInt(random(0, 3)),
+            info->getScholarSecondarySkill(), info->getScholarSpell());
     }
 }
 
@@ -13714,7 +13718,7 @@ void ExtraInfoUnion::SetMagicSpring(short id, unsigned char full)
 
 // E:\gamedcs\MapCell.h:1084
 DC_ONLY(0xbca4c, 0x7C)
-void ExtraInfoUnion::SetScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
+void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
 {
     // @stub
 }

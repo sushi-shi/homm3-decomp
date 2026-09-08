@@ -148,7 +148,7 @@ not diagnosed	143	86.9559	86.9559	0.0000	86.9559	1096	resourcemanager	@game_spri
 not diagnosed	139	86.9809	86.9809	0.0000	86.9809	1065	rmg	?expandObstacleClearance@type_random_map_generator@@QAEXXZ	diagnose	-
 not diagnosed	46	86.9922	86.9922	0.0000	86.9922	350	hero	?canSummonBoat@hero@@QBEEXZ	diagnose	-
 not diagnosed	237	87.0015	87.0015	0.0000	87.0015	1821	game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	diagnose	-
-not diagnosed	745	87.0102	87.0102	0.0000	86.7458	5736	game	?randomizeEvents@game@@QAEXXZ	diagnose	-
+not diagnosed	745	87.0102	87.0102	0.0000	86.8205	5736	game	?randomizeEvents@game@@QAEXXZ	diagnose	-
 not diagnosed	93	87.0155	89.5855	2.5700	87.0155	714	singleselectionwindow	?finish@CNewPlayerUpdateProc@@UAEXXZ	diagnose	-
 not diagnosed	108	87.0700	87.0700	0.0000	87.0700	837	singleselectionwindow	?getHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	diagnose	-
 not diagnosed	65	87.1099	87.1099	0.0000	87.1099	507	ai	?findAttackHexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	diagnose	-
@@ -458,7 +458,7 @@ not diagnosed	80	96.4955	96.4955	0.0000	96.4955	2289	viewwrld	?vwDrawAdvObj@advM
 not diagnosed	8	96.5185	96.5185	0.0000	96.5185	224	philai	?valueOfWarFactory@@YIJPBVhero@@W4TArtifact@@J@Z	diagnose	-
 not diagnosed	4	96.5278	96.5278	0.0000	96.5278	104	hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	diagnose	-
 not diagnosed	13	96.5299	96.5299	0.0000	96.5299	361	seerhut	?setDefaultText@type_skill_quest@@UAEXXZ	diagnose	-
-not diagnosed	49	96.5558	96.5558	0.0000	96.5558	1428	recruit	?update@recruitUnit@@QAEXEJ@Z	diagnose	-
+not diagnosed	49	96.5558	96.5558	0.0000	94.1574	1428	recruit	?update@recruitUnit@@QAEXEJ@Z	diagnose	-
 not diagnosed	16	96.5625	96.5625	0.0000	96.5625	460	armygrp	?getArmyMorale@armyGroup@@QBEHHPBVhero@@PBVtown@@HEE@Z	diagnose	-
 not diagnosed	290	96.5654	96.5654	0.0000	96.5654	8457	scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	diagnose	-
 not diagnosed	35	96.5871	96.5871	0.0000	96.5871	1040	army	?getUnitCombatValue@army@@QBENJJEPBV1@@Z	diagnose	-
