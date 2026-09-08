@@ -3307,6 +3307,7 @@ rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRm
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	82.1005	82.1005	82.1005	0x142080	b0bd0cb2060b
 rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	93.5790	93.5790	93.5790	0x13efa0	049d9f1d80da
 rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	91.1321	91.1321	91.1321	0x137970	ef8d60ed01f4
+rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	96.0963	96.0963	96.0963	0x1439e0	34d79f79b52b
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	fe6f09922735
 rmg	?drawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	0fe372b1d6ef
 rmg	?erase@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x14d060	-
@@ -3434,7 +3435,6 @@ rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0
 rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
 rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
-rmg	type_random_map_generator_decorateUnderground	0.0000	0.0000	0.0000	0x1439e0	a557805353c2
 rmg	type_random_map_generator_initializeZones	0.0000	0.0000	0.0000	0x13bcb0	d88aa8e3e5b6
 rmg	type_random_map_generator_paintZoneTerrain	0.0000	0.0000	0.0000	0x13e6a0	058951b1a3e3
 rmg	type_random_map_generator_placeAdditionalTowns	0.0000	0.0000	0.0000	0x144ae0	8eb1f85b9816
