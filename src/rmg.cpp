@@ -6739,6 +6739,144 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
     return 1;
 }
 
+// Monolith placement calls this for either endpoint. The five stack offsets
+// cover the entrance's lower and side neighbors. A reachable positive-cost
+// cell uses its path predecessor; a zero-cost cell selects a same-zone open
+// neighbor, falling back to the cell directly below. All names are provisional.
+// Residual (68.4070%): both retained calls and all nine branch tests agree;
+// coordinate/register lifetimes grow the frame from 0x3c to 0x40 and spill
+// the zone index. The offset array's initialization instructions agree.
+// A named unsigned movement cost and all eight value/scalar map-access
+// combinations are byte-flat; a signed cost scores 66.0465%. Keep the
+// canonical map-position calls and the array-derived neighbor count.
+VA(0x00542B00, 0x1D2) // anchor-callers 0x542ec5/0x54304f; Complete-only, ret 0x10
+unsigned char type_random_map_generator::placeMonolithBorder(
+    TRmgMapPosition position, TRmgZone* zone)
+{
+    TPoint offsets[5] = {
+        TPoint(0, 1), TPoint(1, 0), TPoint(-1, 0), TPoint(1, 1), TPoint(-1, 1)
+    };
+    const int directionCount = sizeof(offsets) / sizeof(offsets[0]);
+    buildZoneConnectionPaths();
+    TRmgMapItem* item = m_map.getMapItem(position);
+    int zoneIndex = item->m_zoneState.m_zone;
+    if (item->m_movement.m_cost >= 30000)
+        return 0;
+    TRmgMapPosition borderPosition;
+    if (item->m_movement.m_cost > 0) {
+        borderPosition = item->m_previousTile;
+    } else {
+        int direction;
+        for (direction = 0; direction < directionCount; ++direction) {
+            borderPosition = position;
+            borderPosition += offsets[direction];
+            TRmgMapItem* nearby = m_map.getMapItem(borderPosition);
+            if (nearby->m_zoneState.m_zone == zoneIndex
+                && nearby->m_tileData.m_subterraneanGate)
+                break;
+        }
+        if (direction == directionCount) {
+            borderPosition = position;
+            ++borderPosition.m_y;
+        }
+    }
+    int border = placeBorderObject(borderPosition, 1, zone);
+    if (border >= 0) {
+        for (int direction = 0; direction < directionCount; ++direction) {
+            TRmgMapPosition nearby = position;
+            nearby += offsets[direction];
+            TRmgMapItem* neighbor = m_map.getMapItem(nearby);
+            if (!neighbor->m_connection.m_present) {
+                neighbor->m_tileData.m_subterraneanGate = 0;
+                neighbor->m_tileData.m_borderObject = 1;
+            }
+            neighbor->m_connection.m_direction = border;
+            neighbor->m_connection.m_present = 1;
+        }
+    }
+    return border >= 0;
+}
+
+// The final fallback in connectZones pairs monolith prototypes by index.
+// Two-way prototypes need one object in each zone. One-way prototypes use
+// the matched exit prototype as well, producing entrance/exit pairs in both
+// zones. Placement failures delete only the failed object and continue.
+// Residual (86.7357%): the retained border calls, four base-object allocations,
+// property choices and placement sequence agree. VC6 retains two translated-
+// position constructors and calls the scalar map accessor inside placeGuard;
+// retail retains its map-position overload. A size call and second registry
+// insertion boundary also differ, with a 0x30 frame versus retail's 0x1c.
+// Copying the guard coordinate then incrementing y, or using compound +=,
+// gives 86.6448%. Preserve the ordinary position, guard and value helpers;
+// their bodies are shared with the ground, shipyard and gate connections.
+VA(0x00542CE0, 0x554) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
+void type_random_map_generator::createMonolithConnection(
+    TRmgZone* source, TRmgZoneConnection* connection, int prototypeIndex)
+{
+    TRmgObjectPropertiesRef* exitProperties = 0;
+    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
+    if (source->m_terrain == eTerrainWater || destination->m_terrain == eTerrainWater)
+        return;
+    TRmgObjectPropertiesRef* properties;
+    if (prototypeIndex < m_objectPrototypes[LITH_TWOWAY].size()) {
+        properties = m_objectPrototypes[LITH_TWOWAY][prototypeIndex];
+    } else {
+        prototypeIndex -= m_objectPrototypes[LITH_TWOWAY].size();
+        properties = m_objectPrototypes[LITH_ONEWAY_ENTRANCE][prototypeIndex];
+        exitProperties = m_objectPrototypes[LITH_ONEWAY_EXIT][prototypeIndex];
+    }
+    int guardValue;
+    if (connection->m_unguarded)
+        guardValue = 0;
+    else
+        guardValue = getRmgGuardValue(connection->m_value, m_monsterStrength);
+
+    type_object* object = new type_object(properties);
+    if (!placeObjectInZone(object, source)) {
+        delete object;
+    } else {
+        (exitProperties ? m_monolithsOneWay : m_monolithsTwoWay).push_back(object);
+        source->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        if (connection->m_placeBorderObjects
+            && placeMonolithBorder(object->getPosition(), destination)) {
+            guardValue = 0;
+        } else if (guardValue > 0) {
+            placeGuard(object->getPosition() + TPoint(0, 1), guardValue);
+        }
+    }
+    object = new type_object(properties);
+    if (!placeObjectInZone(object, destination)) {
+        delete object;
+    } else {
+        if (!exitProperties)
+            m_monolithsTwoWay.push_back(object);
+        else
+            m_monolithsOneWay.push_back(object);
+        destination->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        if (!connection->m_placeBorderObjects
+            || !placeMonolithBorder(object->getPosition(), source)) {
+            if (guardValue > 0)
+                placeGuard(object->getPosition() + TPoint(0, 1), guardValue);
+        }
+    }
+    if (exitProperties) {
+        object = new type_object(exitProperties);
+        if (!placeObjectInZone(object, source)) {
+            delete object;
+        } else {
+            m_monolithsOneWay.push_back(object);
+            source->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        }
+        object = new type_object(exitProperties);
+        if (!placeObjectInZone(object, destination)) {
+            delete object;
+        } else {
+            m_monolithsOneWay.push_back(object);
+            destination->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        }
+    }
+}
+
 // Complete's connection coordinator has no Dreamcast counterpart.  Retail
 // proves the three-stage source shape: collect cross-zone boundary squares,
 // try each template connection through the ordinary ground/border/gate
