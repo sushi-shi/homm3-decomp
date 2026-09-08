@@ -5954,10 +5954,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
 // each reachable entrance back to a zero-cost cell before carving its path.
 // Retail retains both floodConnectionCosts calls and the separate point-pair
 // helper. Complete-only names describe the roles rather than source symbols.
-// First reconstruction: 60.3628%. The candidate has 28 blocks versus
-// retail's 26; the first difference is the inner reset-loop entry test.
-// Preserve the reset helper and predecessor walk while resolving loop and
-// local lifetimes against the retained retail call sequence.
+// Residual 66.4512% after explicit (-1,-1,-1) predecessor initialization.
+// The default position constructor is empty; using it as a sentinel left
+// coordinates uninitialized and scored 60.3628%. A guarded do-loop control
+// was byte-neutral. Preserve the reset helper while resolving local homes.
 VA(0x005446A0, 0x27E)
 void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
 {
@@ -5971,6 +5971,9 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
             if (item->m_zoneState.m_zone == zoneIndex
                 && item->m_tile.m_landType != eTerrainWater) {
                 TRmgMapPosition previous;
+                previous.m_x = -1;
+                previous.m_y = -1;
+                previous.m_z = -1;
                 item->resetMovement(previous);
                 if (static_cast<int>(item->m_objects.size()) <= 0
                     && !item->m_connection.m_present) {
@@ -5986,7 +5989,9 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
         zone->m_entrances[0].m_y, level);
     TRmgMapItem* item = m_map.getMapItem(first.m_x, first.m_y, first.m_z);
     item->m_movement.m_cost = 0;
-    item->m_previousTile = TRmgMapPosition();
+    item->m_previousTile.m_x = -1;
+    item->m_previousTile.m_y = -1;
+    item->m_previousTile.m_z = -1;
     m_map.floodConnectionCosts(first, 0);
     for (int entrance = 1; entrance < static_cast<int>(zone->m_entrances.size()); ++entrance) {
         TPoint from = zone->m_entrances[entrance];
