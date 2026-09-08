@@ -501,6 +501,12 @@ void readRmgTemplateZones(
 // Retained fastcall helper at 0x545e00, also expanded by zone connections.
 int getRmgGuardValue(int value, int strength);
 
+// The eight clockwise neighbors are initialized at 0x530da0; group fit
+// 0x5355e0 scans the whole domain when testing for an open neighbor.
+enum ERmgDirectionLimits {
+    RMG_DIRECTION_COUNT = 8
+};
+
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
 // are free calls. All carry two signed dwords; names remain provisional.
