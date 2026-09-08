@@ -1743,6 +1743,7 @@ public:
     // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
     TRmgBoundaryVertex* createEdge(TPoint first, TRmgZone* firstZone,
         TPoint second, TRmgZone* secondZone);
+    void removeEdge(TRmgBoundaryVertex* edge);
     void addSite(TPoint point, TRmgZone* zone);
     TRmgBoundaryVertex* locate(TPoint point);
     void buildVertices();
