@@ -416,3 +416,31 @@ TRmgVoronoi::~TRmgVoronoi()
     for (int edge = 0; edge < m_edges.size(); ++edge)
         delete m_edges[edge];
 }
+
+// addSite tests the orientation of the current site, predecessor's opposite
+// site and opposite site, then reuses the same operation in the circumcircle
+// determinant. All six stack dwords originate in canonical TPoint fields;
+// the body returns the signed cross product, not a normalized predicate.
+// The ordinary externally visible helper emits naturally and matches all
+// 43 bytes; the previous RMG probe's absent body was not an ABI limitation.
+VA(0x005FDAE0, 0x2B) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
+int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
+{
+    return (second.m_x - first.m_x) * (third.m_y - first.m_y)
+        - (second.m_y - first.m_y) * (third.m_x - first.m_x);
+}
+
+// The three calls at 0x5fd7e4/0x5fd7f6/0x5fd80d compare the new site's
+// squared distance to both edge endpoints against the edge's squared length.
+// Two whole site positions, signed subtraction and two integer products
+// establish the operation and its aggregate-by-value calling boundary.
+// Exact: Y then X local capture reproduces retail's register roles.
+// The 24-form arithmetic batch found three exact forms; X-first capture
+// keeps the same 33-byte CFG but scores 99.7143%. No TU score falls here.
+VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
+int getRmgSquaredDistance(TPoint first, TPoint second)
+{
+    int dy = first.m_y - second.m_y;
+    int dx = first.m_x - second.m_x;
+    return dx * dx + dy * dy;
+}
