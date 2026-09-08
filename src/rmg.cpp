@@ -7840,10 +7840,19 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 
 // Retail +0x388 selects the MINE prototype vector. The caller supplies
 // zone/resource/starting flag/spacing; names are role-derived.
-// First reconstruction: 69.3906%. Keep prototype as the last scanned
+// Current match: 71.5746%. Keep prototype as the last scanned
 // prototype: retail stores it at 0x5459f5/0x545a5d and reloads that same
 // local at 0x545b7e/0x545ca9 without replacing it after random selection.
 // This includes the retained trigger/width quirk in the resource strip.
+// push_back in the first scan restores the later type_object constructor
+// call at retail +0x140; explicit insert(end(), properties) expands that
+// constructor and scores 69.3906%. Both forms still expand the first single
+// insert and bitset<10>::test. Subscript access moves only _Xran out of line
+// (70.9776%); combining it with const prototype access and push_back is flat.
+// A named reference to the mine-prototype vector gives 69.9453% and still
+// emits no test specialization. Keep the append API and direct test while
+// recovering the remaining per-site boundaries, including getRmgGuardValue
+// and the second getMapItem call.
 VA(0x00545990, 0x466)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
@@ -7856,7 +7865,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         properties = m_objectPrototypes[MINE][i];
         prototype = properties->m_prototype;
         if (prototype->m_subtype == resource && prototype->m_recommendedTerrainMask.test(terrain))
-            candidates.insert(candidates.end(), properties);
+            candidates.push_back(properties);
     }
     if (!candidates.size()) {
         for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {

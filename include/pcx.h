@@ -31,9 +31,10 @@
 // public wrappers use stdcall (ret N), while the allocation worker and
 // dimension helper use cdecl. The compiled wrappers omit EBP frames.
 //
-// Recovered external-library code is grouped in src/victor.cpp; the original
-// library's source/object filenames are unavailable. Its separate VC6 profile
-// reproduces the allocation/validation wrappers and two assembly kernels.
+// Recovered external-library code is grouped in src/victor.cpp and
+// src/victor_pcx_kernels.cpp; original source/object filenames are unavailable.
+// Separate VC6 profiles reproduce the allocation/validation wrappers and
+// all three assembly kernels, including the RLE decoder's register saves.
 // The remaining library band is only partly reconstructed; vendor/ is pristine.
 #ifndef HOMM3_PCX_H
 #define HOMM3_PCX_H

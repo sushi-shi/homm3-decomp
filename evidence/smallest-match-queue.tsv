@@ -461,7 +461,7 @@ compiled	1106	0x00546c70	90.8130	90.8130	90.8130	rmg	rmg	?canPlaceTreasureGroup@
 compiled	1112	0x0050f4e0	97.4932	97.4932	98.1199	multiplayerwindow	multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1120	0x00547360	68.8293	68.8293	68.8293	rmg	rmg	?placeZoneTreasures@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1121	0x00441fa0	93.3162	93.3162	93.3162	army	army	?walkTo@army@@QAEEHE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1126	0x00545990	69.3906	69.3906	69.3906	rmg	rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1126	0x00545990	71.5746	71.5746	71.5746	rmg	rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1135	0x005d6a80	98.8365	98.8365	98.8365	townmgr	townmgr	?buildObj@townManager@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1144	0x00500430	91.7100	91.7100	95.0000	mapcell	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1152	0x00574610	94.2388	94.2388	94.2388	seerhut	seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
