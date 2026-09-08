@@ -58,6 +58,7 @@ model cannot rot.
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
+| `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |

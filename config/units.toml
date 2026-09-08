@@ -14,6 +14,19 @@ zlib_o2_ml_gr_c_windows = [
   "/TC",
   "/D_WINDOWS",
 ]
+# Minimal profile for reconstructed Victor library functions. The public
+# stdcall entry points and internal cdecl calls are explicit in the source.
+# /O2's omitted frames reproduce both admitted wrappers; /Oy- does not.
+# The assembly kernels request their own EBP frames through parameter access.
+# These functions do not distinguish CRT mode or compiler generation.
+victor_o2_ml_gd_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/ML",
+  "/Gd",
+  "/D_WINDOWS",
+]
 # Game C++ profile (2026-08-04, proven on the first three matches):
 # /Gr from retail's fastcall free functions (Random takes ecx/edx);
 # /Oy- from IsMember - retail keeps EBP frames wherever stack access
@@ -872,3 +885,9 @@ flags = "game_o2_ml_gr_windows"
 unit = "tiles"
 source = "src/tiles.cpp"
 flags = "game_o2_ml_gr_windows"
+
+# Reconstructed external Victor library; grouping filename is provisional.
+[[unit]]
+unit = "victor"
+source = "src/victor.cpp"
+flags = "victor_o2_ml_gd_windows"

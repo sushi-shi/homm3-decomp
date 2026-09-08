@@ -28,10 +28,9 @@
 #   0x114d80 TObjectTypeTable::load 627 -> 644 (0x284), absorbing the
 #     0x114ff3 funclet (17 B: virtual Dispose through [ebp+8] then the
 #     same rethrow); twelve nops to 0x115010.
-# Two remaining out-of-row funclets are the continuation-returning kind
-# (`mov eax,<continuation>; ret`) on rows nothing claims yet and are left
-# alone: 0x004c29 under basic_string::_Copy at 0x4bd0 and 0x212600 whose
-# parent the handler-stub walk cannot resolve.
+# The continuation-returning funclet at 0x212600 remains separate because
+# the handler-stub walk cannot resolve its parent. The former 0x004c29
+# row is covered by the exact basic_string::_Copy parent described below.
 # BOUNDARY CORRECTION 2026-09-08: basic_string<char>::_Copy at 0x4bd0
 # is one 264-byte function through 0x4cd8. Its main path jumps from 0x4c27
 # to 0x4c50, preserving the parent EBP/EBX/ESI frame. FuncInfo 0x248070
