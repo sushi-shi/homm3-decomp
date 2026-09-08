@@ -426,6 +426,54 @@ TRmgVoronoi::~TRmgVoronoi()
         delete m_edges[edge];
 }
 
+// The zone-building callers pass an eight-byte TPoint and receive an edge.
+// Retail first recognizes either site endpoint, then follows the twin,
+// successor or twin-predecessor-twin according to integer orientation.
+// This is a Complete-only subdivision lookup; the role name is provisional.
+// Residual (91.0460%): all 13 blocks and seven branches align, with no calls
+// or relocations. Only the first orientation calculation differs; its extra
+// spill grows scratch space from retail's 8 bytes to 16 and moves the later
+// coordinate home. Scoped endpoint snapshots raise 75.2529% to 83.7127%;
+// the successor pointer/scope below reaches the current peak. Naming the
+// twin too scores 90.3563%. Other cyclic orientation orders are lower;
+// temporary rather than named point copies, an early-continue first arm,
+// and a named first orientation result are byte-neutral. Twenty-one scored
+// forms preserve the canonical point comparison and orientation helper;
+// all other rmg_support scores hold. Keep the three ordinary helper calls.
+VA(0x005FD6B0, 0xD7) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
+TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
+{
+    TRmgBoundaryVertex* edge = m_root;
+    for (;;) {
+        {
+            TPoint origin = edge->m_sitePosition;
+            if (point == origin)
+                break;
+        }
+        {
+            TPoint destination = edge->m_twin->m_sitePosition;
+            if (point == destination) {
+                edge = edge->m_twin;
+                break;
+            }
+        }
+        if (getRmgPointOrientation(edge->m_sitePosition, point, edge->m_twin->m_sitePosition) > 0) {
+            edge = edge->m_twin;
+        } else {
+            TRmgBoundaryVertex* next = edge->m_next;
+            if (getRmgPointOrientation(next->m_sitePosition, point, next->m_twin->m_sitePosition) <= 0) {
+                edge = next;
+                continue;
+            }
+            TRmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
+            if (getRmgPointOrientation(previous->m_sitePosition, point, previous->m_twin->m_sitePosition) > 0)
+                break;
+            edge = previous;
+        }
+    }
+    return edge;
+}
+
 // addSite tests the orientation of the current site, predecessor's opposite
 // site and opposite site, then reuses the same operation in the circumcircle
 // determinant. All six stack dwords originate in canonical TPoint fields;
