@@ -2040,6 +2040,17 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
 // The hero-object factory marks the selected index in disabledHeroes before
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
+rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, int objectId, int heroIndex,
+    int experience)
+    : type_object(properties)
+{
+    m_generator = generator;
+    m_objectId = objectId;
+    m_heroIndex = heroIndex;
+    m_experience = experience;
+}
+
 VA(0x00533C70, 0x0F)  // factory 0x5348d0; Complete-only RMG object
 void rmgHeroObject::unknownOperation()
 {
@@ -2268,6 +2279,27 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
     type_random_map_generator*, TRmgZone*)
 {
     return new rmgResourceObject(properties);
+}
+
+// Prison-definition table 0x640bd0 selects this factory. Retail reserves
+// a hero, returns null on exhaustion, and expands the 0x2c-byte object's
+// constructor with the definition's experience and the next generator id.
+// Complete-only: no Dreamcast counterpart; constructor spelling provisional.
+// Partial 9.0702%: VC6 expands the exact selectPrisonHero body, while
+// retail retains its call at 0x5348dc. A temporary inline_depth(0) control
+// restores all five retail blocks and both calls (63.72%), leaving the
+// constructor's store scheduling; the control is removed. Constructor
+// member initializers give 8.96%; predecrement while scans in the selector
+// are byte-neutral for both this caller and its exact standalone body.
+VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
+type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    int heroIndex = generator->selectPrisonHero();
+    if (heroIndex == -1)
+        return 0;
+    return new rmgHeroObject(properties, generator,
+        generator->m_nextObjectId++, heroIndex, m_experience);
 }
 
 // Scholar-definition table 0x640bdc selects object vtable 0x640b24.
