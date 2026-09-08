@@ -73,7 +73,6 @@ UNSAFE_RANDOM_INCLUDE_HEADERS = frozenset({
 # each pairing: keep the header available to every other TU.
 UNSAFE_RANDOM_INCLUDE_HEADERS_BY_UNIT = {
     "diff": frozenset({"kbwin.h"}),
-    "singleselectionwindow": frozenset({"resourcemanager_cache_result.h"}),
     "spells": frozenset({"autostrptr.h"}),
 }
 

@@ -456,7 +456,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
                  "TREE_CONST_END",
-                 "TREE_EQUAL_RANGE", "MAP_INSERT",
+                 "TREE_EQUAL_RANGE", "MAP_INSERT", "MAP_FIND",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -1156,6 +1156,27 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_equal_range"
     if mangled.startswith("?insert@?$map@V?$basic_string@D"):
         return "string@map_insert"
+    # The resource cache retains both map::find and _Tree::find. Key the
+    # public layer on its named key as well; its const overload and the
+    # hinted/range insert overloads have different machine interfaces.
+    named_map = re.match(r"^\?(find|insert)@\?\$map@(?:V|U)([A-Za-z_]\w*)@",
+                         mangled)
+    if named_map:
+        member, owner = named_map.groups()
+        if (member == "find"
+                and "@@QAE?AViterator@?$_Tree@" in mangled):
+            return f"{owner.lower()}@map_find"
+        if (member == "insert"
+                and "@@QAE?AU?$pair@Viterator@?$_Tree@" in mangled):
+            return f"{owner.lower()}@map_insert"
+    # A cache insertion also retains pair<const char*, resource*>'s
+    # two-reference constructor. A generic CLASS_CTOR(pair) becomes
+    # ambiguous when the map's iterator/bool result constructor is emitted.
+    cstr_pointer_pair = re.fullmatch(
+        r"\?\?0\?\$pair@PBDPA(?P<tag>V|U)(?P<owner>[A-Za-z_]\w*)"
+        r"@@@std@@QAE@ABQBDABQA(?P=tag)(?P=owner)@@@Z", mangled)
+    if cstr_pointer_pair:
+        return f"cstr_{cstr_pointer_pair.group('owner').lower()}_pair@pair_ctor"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -2318,9 +2339,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
             continue
-        if "$map_insert$" in row["name"]:
+        map_member = next((kind for kind in ("map_insert", "map_find")
+                           if f"${kind}$" in row["name"]), None)
+        if map_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
-            claim_keys.setdefault(f"{owner}@map_insert", []).append(row)
+            claim_keys.setdefault(f"{owner}@{map_member}", []).append(row)
             continue
         char_member = next(
             (member for _p, _s, member in CHAR_STREAM_MEMBERS
