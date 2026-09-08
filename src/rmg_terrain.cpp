@@ -1853,6 +1853,24 @@ VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 // which matches all 89 bytes under the correct TREE_ERASE_KEY claim.
 VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
 
+// The retained erase(key) calls 0x5b7e30 with two iterators and a hidden
+// result pointer. Its whole-range branch recursively clears nodes through
+// 0x5b85f0; its partial-range branch increments then calls 0x5b8090.
+// All three share the point tree's nil sentinel at 0x6a52c4. These ordinary
+// Dinkumware bodies are naturally emitted by the existing set operations.
+// All 289/1295/126 bytes match respectively. The retained _Lockit destructor
+// at 0x60b634 releases the CRT lock through LeaveCriticalSection.
+VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgGridPoint)
+VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgGridPoint)
+VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPoint)
+
+// Both erase overloads and the admitted distance loop retain this successor
+// walk. Its 0x6a52c4 nil references prove the terrain point-set ownership;
+// the naturally emitted TRmgGridPoint specialization matches all 163 bytes.
+// This replaces the provisional TPoint claim and its artificial emission
+// wrapper in rmg.cpp. The two specializations have distinct nil symbols.
+VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPoint)
+
 // The one-point lookup calls _Lbound and tests y/x before returning an
 // iterator through the hidden result pointer (ret 8). Residual 99.4634%:
 // ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
