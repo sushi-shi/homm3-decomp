@@ -1981,7 +1981,7 @@ game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	c50825e3ecb6
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	6e2a64f740d1
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	f441f022aa5f
 game	?getPuzzleOrigin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70	847befb3f630
-game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0	be080d828af2
+game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	100.0000	100.0000	100.0000	0xc94d0	a34d78ce3ba1
 game	?getRandomLith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0	6a2ed3933f89
 game	?getRandomLith@game@@QAEEPBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@PAUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0xcdb80	8dc4e11eba73
 game	?getRandomLithExit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	eafe59797664

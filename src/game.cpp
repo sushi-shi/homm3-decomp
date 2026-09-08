@@ -10407,13 +10407,17 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 // The two 144-byte pools are the used and scenario-disabled flags. When a
 // requested class is exhausted, retail restores used from disabled; if that
 // class has no allocatable member at all, it retries against the four normal
-// artifact classes. Residual (94.7260%): all 15 branches and operations
-// agree; VC6 rotates the traits pointer and the two non-overlapping counter
-// lifetimes through ESI/EDI/EDX differently from retail. The Dreamcast local
-// roster order (UnallocatedInClass, TotalInClass, curCount, x, i) is restored
-// below and is byte-flat. why-reg v2 classifies the permutation as C1
-// front-end handle state: aliasing ArtifactClass and swapping i/x or
-// x/curCount fail to move its distance-27 binding divergence.
+// artifact classes. DC lines 8751/8752 initialize TotalInClass and
+// UnallocatedInClass separately; line 8769 initializes curCount before the
+// branch, and both selection and reset scans use that same local. TotalInClass
+// counts eligible members but has no consumer and VC6 eliminates it.
+// DC line 8812 retries recursively; retail's back edges are VC6 tail recursion.
+// Restoring these roles and recursive source reaches 100%. The former loop
+// with separate branch counters was 94.7260%; sharing the counters while
+// retaining that loop gave 88.84%. This was a source-lifetime mismatch,
+// not the previously claimed front-end handle-state wall.
+// DC line 8801 clears the used flag before copying the disabled flag. Retail
+// omits that older store; retaining it emits an extra store and gives 85.0000%.
 // Before normalization (locals): ArtifactClass, UnallocatedInClass, TotalInClass.
 VA(0x004c94d0, 0xCD)  // anchor-global, dc 0xb4c84
 TArtifact game::getRandomArtifactId(int artifactClass)
@@ -10424,34 +10428,20 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     int x;
     int i;
 
-    for (;;) {
-        totalInClass = 0;
-        for (i = 0; i < 144; ++i) {
-            if (!g_artifactTraits[i].m_disabled
-                && (g_artifactTraits[i].m_artifactClass & artifactClass)
-                && !m_artifactUsed[i]) {
-                ++totalInClass;
-            }
+    totalInClass = 0;
+    unallocatedInClass = 0;
+    for (i = 0; i < 144; ++i) {
+        if (!g_artifactTraits[i].m_disabled
+            && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+            ++totalInClass;
+            if (!m_artifactUsed[i])
+                ++unallocatedInClass;
         }
+    }
 
-        unallocatedInClass = 0;
-        if (!totalInClass) {
-            for (i = 0; i < 144; ++i) {
-                if (!g_artifactTraits[i].m_disabled
-                    && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
-                    m_artifactUsed[i] = m_artifactDisabled[i];
-                    if (!m_artifactUsed[i])
-                        ++unallocatedInClass;
-                }
-            }
-            if (unallocatedInClass > 0)
-                continue;
-            artifactClass = g_allRandomArtifactClasses;
-            continue;
-        }
-
-        x = random(0, totalInClass - 1);
-        curCount = 0;
+    curCount = 0;
+    if (unallocatedInClass) {
+        x = random(0, unallocatedInClass - 1);
         for (i = 0; i < 144; ++i) {
             if (!g_artifactTraits[i].m_disabled
                 && (g_artifactTraits[i].m_artifactClass & artifactClass)
@@ -10463,6 +10453,19 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         }
         m_artifactUsed[i] = 1;
         return artifactFromInt(i);
+    } else {
+        curCount = 0;
+        for (i = 0; i < 144; ++i) {
+            if (!g_artifactTraits[i].m_disabled
+                && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+                m_artifactUsed[i] = m_artifactDisabled[i];
+                if (!m_artifactUsed[i])
+                    ++curCount;
+            }
+        }
+        if (curCount > 0)
+            return getRandomArtifactId(artifactClass);
+        return getRandomArtifactId(g_allRandomArtifactClasses);
     }
 }
 
