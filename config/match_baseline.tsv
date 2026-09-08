@@ -3357,7 +3357,7 @@ rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPro
 rmg	?generate@type_black_box_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134490	e77972609613
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	a4863c60ac59
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	64ccd4bf338d
-rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	9.0702	9.0702	9.0702	0x1348d0	89e3be34b370
+rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	95.1754	95.1754	95.1754	0x1348d0	89e3be34b370
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	eb1bf6a35a59
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	09167083d057
 rmg	?generate@type_random_map_generator@@QAEEXZ	96.8971	96.8971	96.8971	0x149930	6e4cccd152be
@@ -3435,7 +3435,7 @@ rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	71.5122	71.5122	71.5122	0x135040	7bfb27e097c8
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	99.6581	99.6581	99.6581	0x146040	b7f108f4c39a
-rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	016693b63aaf
+rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	e80dea9b0594
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	11dcda4772f3
 rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
@@ -4299,8 +4299,8 @@ textscroller	?main@type_text_scroller@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.
 textscroller	?open@type_text_scroller@@UAEHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1ba2e0	51e8ed37853d
 textscroller	?refresh@type_text_scroller@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ba600	d07be1a7ba12
 textscroller	?setText@type_text_scroller@@QAEXPBD@Z	99.4444	99.4444	99.4444	0x1ba6e0	fb0333def7a2
-textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	0.0000	0.0000	100.0000	0x1bc760	4213c218f623
-textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	99.9130	99.9130	99.9130	0x1bc280	17980d5f3d4d
+textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	100.0000	100.0000	100.0000	0x1bc760	4213c218f623
+textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	99.9130	99.9130	99.9130	0x1bc280	264c11f5f282
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0	cc83e8635640
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0	5d3054b5141f
 textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc6a0	-

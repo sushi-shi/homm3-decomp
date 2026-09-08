@@ -1728,3 +1728,24 @@ local alone and an unnamed min expression both score 86.8523%; compound-adding
 power scores 93.7045%. The order with the earlier damage read reaches 100%.
 The DC guard also assigns zero to the healed amount instead of returning;
 retail merges that assignment into its common destructor path.
+
+Equivalent control-flow spellings can change a helper's inline decision
+without changing its retained machine code. In RMG's `selectPrisonHero`,
+splitting `!disabled && --selected < 0` into a nested availability test,
+decrement statement and negative test preserves its exact 113-byte body.
+It also makes `type_prison_def::generate` retain the call at `0x5348dc`,
+recovering 9.0702% to 63.7193% before constructor refinement. A `continue`
+form has the same result; postdecrement and a shared-return form change
+the standalone body. Diagnose source control-flow boundaries even when
+the callee is already exact; emitted byte size alone does not fix the
+compiler's inline cost.
+
+A lexical scope without locals can also change the inline decision.
+Dreamcast records the braced conditional assignment in `textWidget`'s
+constructor at textwdgt.cpp:64..65. Restoring those braces preserves the
+base constructor's 99.9130% bytes but makes `bitmapBackedTextWidget` retain
+the base call at `0x5bc7ab`, taking the derived constructor from 0% to 100%.
+A four-state control separates braces from assignment syntax: scoped
+`m_text = text` and scoped `m_text.operator=(text)` both match; both bare-if
+forms expand the base. Explicit default construction of the string is
+flat. Preserve evidenced scopes even when they own no source locals.
