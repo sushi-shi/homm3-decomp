@@ -69,20 +69,6 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 TCreatureType siegeArtifactToCreature(TArtifact engine);
 TCreatureType upgradedCreatureType(TCreatureType type);
 
-// Complete-only game.h inline retained by AI_value_of_event. The later
-// claim-only declaration records the selected philai.obj COMDAT in retail
-// RVA order while this source definition stays beside its free helper.
-inline TCreatureType game::upgradedCreatureType(TCreatureType creature) const
-{
-    if (m_f1f698 == 0
-        && (creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))
-        return CREATURE_NONE;
-    return ::upgradedCreatureType(creature);
-}
-
 // These remain the canonical inline bodies used by all real callers. Retail
 // selected one out-of-line COMDAT copy of each into philai.obj in this order;
 // typed address-takes materialize those copies without replacing any
@@ -3951,12 +3937,12 @@ bool game::onSameTeam(int player1, int player2) const
 
 // Complete-only game member: reject the four base-set elementals when
 // f_1f698 is zero, otherwise tail into the free helper. Its canonical inline
-// and typed emission anchor remain together above; this claim records the
+// body lives in game.h; the typed emission anchor above and this claim record the
 // selected copy's strict retail VA order.
 VA(0x00529710, 0x34)  // retail-only + sole AI_value_of_event caller
 TCreatureType game::upgradedCreatureType(TCreatureType creature) const
 {
-    // @stub - active inline definition remains in source order above
+    // @stub - active inline definition is in game.h
 }
 
 #endif  // @carcass

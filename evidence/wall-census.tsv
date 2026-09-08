@@ -11,6 +11,7 @@ not diagnosed	588	42.5710	46.3642	3.7932	42.5710	1024	seerhut	?doSeerEvent@TSeer
 not diagnosed	459	45.3869	45.3869	0.0000	45.3869	840	rmg_support	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	diagnose	-
 not diagnosed	687	53.9868	80.9474	26.9606	53.9868	1494	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	diagnose	-
 not diagnosed	381	56.7217	93.4037	36.6820	56.7217	881	mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	diagnose	-
+not diagnosed	495	57.8991	95.7136	37.8145	57.8991	1176	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
 not diagnosed	1490	60.5547	92.4127	31.8580	60.5547	3778	game	?load@game@@QAEHPAVTAbstractFile@@@Z	diagnose	-
 not diagnosed	182	61.0788	62.3455	1.2667	61.0788	468	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	diagnose	-
 not diagnosed	409	62.4753	62.4753	0.0000	62.4753	1089	rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	diagnose	-
@@ -22,7 +23,6 @@ not diagnosed	244	65.6485	65.6485	0.0000	65.6485	710	rmg	?floodWaterZoneDistance
 not diagnosed	214	66.4512	66.4512	0.0000	66.4512	638	rmg	?prepareJunctionZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	diagnose	-
 not diagnosed	297	67.0694	67.0694	0.0000	67.0694	901	rmg	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	diagnose	-
 not diagnosed	11	67.5294	67.5294	0.0000	67.5294	34	rmg_terrain	?at@TRmgLinePainterInterface@@QAE?AUTRmgLinePainterTile@@ABUTRmgGridPoint@@@Z	diagnose	-
-not diagnosed	382	67.5587	95.7136	28.1549	67.5587	1176	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
 not diagnosed	147	68.4070	68.4070	0.0000	68.4070	466	rmg	?placeMonolithBorder@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	diagnose	-
 not diagnosed	349	68.8293	68.8293	0.0000	68.8293	1120	rmg	?placeZoneTreasures@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	diagnose	-
 not diagnosed	438	68.8871	68.8871	0.0000	68.8871	1407	rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	diagnose	-
@@ -92,7 +92,6 @@ not diagnosed	144	83.4857	83.4857	0.0000	83.4857	874	rmg	?appendZonePositions@ty
 not diagnosed	51	83.5794	83.5794	0.0000	83.5794	313	bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	diagnose	-
 not diagnosed	321	83.7153	83.7153	0.0000	83.7153	1972	rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	542	83.8044	85.0958	1.2914	83.8044	3348	game	?transmitSaveGame@game@@QAEHHHEE@Z	diagnose	-
-not diagnosed	120	83.8710	96.9556	13.0846	83.8710	747	game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	diagnose	-
 not diagnosed	213	83.8848	83.8848	0.0000	83.8848	1320	customcampaign	?play@MapTextStruct@TCampaignBrief@@QAEXXZ	diagnose	-
 not diagnosed	72	83.9244	83.9477	0.0233	83.9244	447	diff	?makeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	diagnose	-
 not diagnosed	438	84.0502	84.8412	0.7910	84.0502	2748	swapmgr	?main@swapManager@@UAEHAAVmessage@@@Z	diagnose	-
@@ -127,7 +126,7 @@ not diagnosed	242	85.9228	85.9228	0.0000	84.6930	1720	ai_player	?aiAttemptMove@@
 not diagnosed	346	85.9575	85.9575	0.0000	85.9575	2463	rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	114	85.9771	85.9771	0.0000	85.9771	816	town	?createBuilding@town@@QAE?AW4type_building_id@@W42@@Z	diagnose	-
 not diagnosed	85	85.9839	85.9839	0.0000	85.9839	608	customcampaign	?getText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	diagnose	-
-not diagnosed	130	86.0884	86.0884	0.0000	86.0884	936	game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
+not diagnosed	130	86.0884	86.0884	0.0000	51.7287	936	game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
 not diagnosed	110	86.1308	86.1308	0.0000	86.1308	794	sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	diagnose	-
 not diagnosed	64	86.2571	86.2571	0.0000	86.2571	465	remote	?getRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	diagnose	-
 not diagnosed	27	86.3333	90.9167	4.5834	86.3333	201	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	diagnose	-
@@ -384,6 +383,7 @@ not diagnosed	41	94.5399	94.5399	0.0000	94.5399	758	ai	?markMultiheadedEnemy@com
 not diagnosed	18	94.5833	94.5833	0.0000	94.5833	324	event_record	?replay@type_record_move_hero@@UAEXE@Z	diagnose	-
 not diagnosed	43	94.5840	94.5840	0.0000	94.5840	796	wingraph	?ddSetFullScreenStatus@@YIEH@Z	diagnose	-
 not diagnosed	64	94.6104	94.6104	0.0000	94.6104	1180	tradpost	?doMarket@@YIXXZ	diagnose	-
+not diagnosed	19	94.6726	98.3451	3.6725	94.6726	352	game	?matchUndergroundGates@game@@QAEXXZ	diagnose	-
 not diagnosed	159	94.7322	94.7322	0.0000	94.7322	3019	overview	?processIconSelect@game@@QAEHHE@Z	diagnose	-
 not diagnosed	76	94.7490	94.8591	0.1101	92.4189	1456	rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	diagnose	-
 not diagnosed	28	94.7553	94.7553	0.0000	94.7553	541	university_window	?purchaseClick@type_university_window@@KIHAAVmessage@@@Z	diagnose	-
@@ -459,7 +459,7 @@ not diagnosed	80	96.4955	96.4955	0.0000	96.4955	2289	viewwrld	?vwDrawAdvObj@advM
 not diagnosed	8	96.5185	96.5185	0.0000	96.5185	224	philai	?valueOfWarFactory@@YIJPBVhero@@W4TArtifact@@J@Z	diagnose	-
 not diagnosed	4	96.5278	96.5278	0.0000	96.5278	104	hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	diagnose	-
 not diagnosed	13	96.5299	96.5299	0.0000	96.5299	361	seerhut	?setDefaultText@type_skill_quest@@UAEXXZ	diagnose	-
-not diagnosed	49	96.5558	96.5558	0.0000	94.1574	1428	recruit	?update@recruitUnit@@QAEXEJ@Z	diagnose	-
+not diagnosed	49	96.5558	96.5558	0.0000	96.5558	1428	recruit	?update@recruitUnit@@QAEXEJ@Z	diagnose	-
 not diagnosed	16	96.5625	96.5625	0.0000	96.5625	460	armygrp	?getArmyMorale@armyGroup@@QBEHHPBVhero@@PBVtown@@HEE@Z	diagnose	-
 not diagnosed	290	96.5654	96.5654	0.0000	96.5654	8457	scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	diagnose	-
 not diagnosed	35	96.5871	96.5871	0.0000	96.5871	1040	army	?getUnitCombatValue@army@@QBENJJEPBV1@@Z	diagnose	-
@@ -552,7 +552,6 @@ not diagnosed	33	98.2381	99.1492	0.9111	98.2381	1893	events	?doCustomArtifact@ad
 not diagnosed	16	98.2455	99.5374	1.2919	98.2455	907	viewwrld	?vwDrawRoad@advManager@@QAEXHHHHH@Z	diagnose	-
 not diagnosed	38	98.2622	98.2622	0.0000	98.2622	2189	findpath	?pushPoint@searchArray@@QAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	diagnose	-
 not diagnosed	25	98.2830	98.2830	0.0000	98.2830	1461	command	?getControl@combatManager@@QAEXXZ	diagnose	-
-not diagnosed	6	98.3451	98.3451	0.0000	98.3451	352	game	?matchUndergroundGates@game@@QAEXXZ	diagnose	-
 not diagnosed	2	98.3750	100.0000	1.6250	98.3750	115	hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	diagnose	-
 not diagnosed	10	98.4651	98.4651	0.0000	98.4651	669	advspells	?skuttleBoat@advManager@@QAEXH@Z	diagnose	-
 not diagnosed	3	98.4697	98.4697	0.0000	98.4697	208	ai	?doCompAI@combatManager@@QAEXH@Z	diagnose	-
