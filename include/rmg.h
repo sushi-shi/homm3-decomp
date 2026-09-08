@@ -1787,6 +1787,9 @@ public:
 
     unsigned char canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
+    // Complete-only 0x53d8e0 propagates each signed-short distance column
+    // from one zone through the template connection graph.
+    void propagateZoneDistances(TRmgZone* zone);
     void fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first);
     void joinExtraZones(int originalZones, TRmgVoronoi* diagram);
     int countPlacedZoneConnections(TRmgZone* zone) const;
