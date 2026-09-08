@@ -6696,10 +6696,6 @@ static inline void readMapPlayerName(char* destination,
     strcpy(destination, name.c_str());
 }
 
-// The retail player-slot reader expands vector::erase/resize themselves but
-// retains the algorithms each operation reaches.  One wrapper level lets the
-// local depth cap reproduce that two-level boundary without changing either
-// container operation's semantics.
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
 // artifact/spell masks into the Complete-width live rows, then reads the
@@ -7706,6 +7702,17 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     // 67.5422) at the price of retyping the member - see game.h's field_34
     // note for the two retail rows that refute it. The residual is the
     // OVER-inline class on hand-unreachable Dinkumware children.
+    // Further lifetime controls (2026-09-08) also emit no _Destroy:
+    // direct read-result c_str() plus string assignment gives 55.3920;
+    // direct assign(result, 0, npos) gives 49.3803; branch/loop-scoped
+    // named strings give 54.6854. DC NewSMapHeader::Read (0xaf64c,
+    // game.cpp:6584,6668-6669) names strTemp, but its lifetime spans the
+    // older player loop; Complete cleans up at the custom-name branch.
+    // These controls do not settle the later nested copy/_Destroy calls.
+    // Removing the obsolete dummy clear/erase uses from the emission
+    // scaffold below leaves every game.obj comparison row unchanged,
+    // including this reader at 67.5587; only real callers now use the
+    // hero-identity vector in this TU.
     m_heroes.clear();
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
@@ -18883,7 +18890,6 @@ void h3GameStlComdatAnchor(std::bitset<70>& spells,
                                std::bitset<128>& objectTypes,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
-                               std::vector<type_map_hero_identity>& heroIdentities,
                                std::vector<type_creature_bank>& creatureBanks,
                                THeroSetupMapMinComdatAnchor& heroSetupMap,
                                const THeroSetupMapMinComdatAnchor::Value& heroSetupValue)
@@ -18892,8 +18898,6 @@ void h3GameStlComdatAnchor(std::bitset<70>& spells,
     heroPool.reset();
     availableSkills.reset();
     spells.reset();
-    heroIdentities.clear();
-    heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
     creatureBanks.erase(creatureBanks.begin(), creatureBanks.end());
     heroSetupMap.retainMin();
     heroSetupMap.retainInsert(heroSetupValue);
