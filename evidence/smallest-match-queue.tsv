@@ -512,7 +512,7 @@ compiled	1460	0x0052cf10	92.4089	92.4089	92.4725	puzzlewindow	puzzlewindow	?matc
 compiled	1461	0x004782d0	98.2830	98.2830	98.2830	command	command	?getControl@combatManager@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1466	0x004f2ce0	90.6191	90.6191	90.6191	kb	kb	?checkEndGame@@YIXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1466	0x005261f0	86.3549	86.3549	86.6362	philai	philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1470	0x0042a580	76.6573	85.0282	85.0282	ai_player	ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1470	0x0042a580	82.6064	82.6064	85.0282	ai_player	ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1480	0x0041d360	99.0386	99.0386	99.0386	advspells	advspells	?townGate@advManager@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1481	0x00504470	97.4012	97.4012	97.4012	mapcell	mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1483	0x005b4b20	90.9656	90.9656	100.0000	rmg_terrain	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted	run the evidence pass and iterate up to five scored candidates

@@ -333,7 +333,7 @@ ai_player	?buyMageGuild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.00
 ai_player	?calculateDemand@type_AI_player@@QAEXXZ	93.7222	97.4340	97.4340	0x28740	c526e9165204
 ai_player	?calculateReserve@type_AI_player@@QAEXXZ	91.2557	91.2557	96.4566	0x29ad0	f5b940ddfcfb
 ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	f71cfc8db6f6
-ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	76.6573	85.0282	85.0282	0x2a580	b25ccbd2b755
+ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	82.6064	82.6064	85.0282	0x2a580	a800c9dc46d8
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	69362f607581
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	8b62812f4928
 ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	06958639ee9e
