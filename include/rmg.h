@@ -1552,6 +1552,18 @@ struct TRmgBoundaryVertex {
     unsigned char m_positionComputed;  // +0x18
     // Before normalization: position.
     TPoint m_position;                  // +0x1c
+
+    // The 0x5fcef0 retained constructor takes two by-value point/zone
+    // pairs (ret 0x18), allocating the opposite half-edge at +0x0c.
+    // Its expanded twin constructor takes the existing edge pointer.
+    TRmgBoundaryVertex(TPoint sitePosition, TRmgZone* zone,
+        TPoint twinSitePosition, TRmgZone* twinZone);
+    TRmgBoundaryVertex(TPoint sitePosition, TRmgZone* zone,
+        TRmgBoundaryVertex* twin);
+    // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
+    // 0x5fcfa0 applies it to each half-edge and its predecessor.
+    void splice(TRmgBoundaryVertex* other);
+    void detach();
 };
 SIZE(TRmgBoundaryVertex, 0x24);
 
