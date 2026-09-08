@@ -231,8 +231,8 @@ VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 // vector<TImageInfo>::insert(iterator, const TImageInfo&) with the
 // three-argument overload expanded inside: ret 8, /24 reciprocal
 // 0x2aaaaaab, and add [ebx+8],0x18. The nested registry lookup also makes
-// that two-argument insert emit naturally here. Its address remains
-// unclaimed; the three-argument overload is already claimed at 0x46aeb0.
+// that two-argument insert emit naturally here. Its separate claim appears
+// below; the three-argument overload is claimed at 0x46aeb0.
 // The two zeroed dwords and two bitset<48>::_Tidy calls establish the
 // 24-byte TImageInfo temporary; the row cursor uses oldCount * 24.
 //
@@ -1097,6 +1097,16 @@ VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 // count claim stays unpaired then: that other body's ret 8 cannot name
 // this retail ret-12 body or inherit its exact-match identity.
 VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
+
+// SetImageName's insertion at 0x514760 retains the single-value overload.
+// Its six-dword elements, returned insertion position and ret 8 distinguish
+// it from the separate count overload above. The current source naturally
+// emits this specialization through the canonical image-cache push_back.
+// Exact after refreshing the retail target. Independent comparisons prove
+// the six differently named nested calls are ICF: _Ucopy/_Ufill/size agree
+// with TObstacleVector at 0x46b1a0/0x46b1e0/0x517750, and _Destroy agrees
+// with type_artifact at 0x404140. All four comparisons agree in every view.
+VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
