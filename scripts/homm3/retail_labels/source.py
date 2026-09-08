@@ -1272,6 +1272,18 @@ def _demangle_key(mangled: str):
     if deque_pointer:
         member = deque_pointer.group(1).lstrip("_").lower()
         return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
+    deque_primitive_push = re.match(
+        r"^\?push_back@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@QAEXAB\1@Z$", mangled)
+    if deque_primitive_push:
+        owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_push.group(1)]
+        return f"{owner}@deque_push_back"
+    deque_primitive_grow = re.match(
+        r"^\?_Growmap@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@IAEPAPA\1I@Z$", mangled)
+    if deque_primitive_grow:
+        owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_grow.group(1)]
+        return f"{owner}@deque_growmap"
     # deque's nested `const_iterator`'s default constructor, over the same
     # POINTER element the two members above key on. The generic `??0` arm
     # reduces it to `const_iterator_const_iterator`, which _Tree's own
