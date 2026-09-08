@@ -2401,7 +2401,7 @@ void TRmgTreasureGroup::reset()
     m_objects.erase(m_objects.begin(), m_objects.end());
     m_outline.erase(m_outline.begin(), m_outline.end());
     m_map.clear();
-    m_flag0048 = 0;
+    m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0, 0);
     int count = m_map.m_mapWidth * m_map.m_mapHeight;
@@ -7658,11 +7658,112 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 
 // Complete-only fit test: group, three-coordinate offset, owning zone.
 // Returns AL; its cell and object filters are retained independently.
-#if 0 // @carcass
+// Partial 90.81%: all 45 branches, three returns and three calls remain;
+// direction-range selection has one fewer block and register homes differ.
+// Initial post-loop size recheck and explicit row pointer gave 74.86%;
+// short-circuit trait policy and per-cell lookup reach 87.02%, the guard
+// constructor-result copy 88.41%, shared policy rejection 90.50%, and
+// position-before-properties ordering 90.81%. An explicit if/else selecting
+// a separate direction variable instead removes a retail branch (83.17%
+// with the position/copy probes). Keep the range, snapshots and helper calls.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
-    TRmgMapPosition position, TRmgZone* zone) { return 0; } // @stub
-#endif
+    TRmgMapPosition position, TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = group->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
+        type_object* object = group->m_objects[i];
+        TRmgMapPosition objectPosition = object->getPosition();
+        TRmgObjectPropertiesRef* properties = object->m_properties;
+        objectPosition.m_x += position.m_x;
+        objectPosition.m_y += position.m_y;
+        objectPosition.m_z = position.m_z;
+        if (m_map.isPlacementBlocked(properties, objectPosition, zoneIndex, 1))
+            return 0;
+    }
+    if (group->m_hasGuard) {
+        TRmgMapPosition guardPosition;
+        guardPosition = TRmgMapPosition(group->m_guardPosition.m_x + position.m_x,
+            group->m_guardPosition.m_y + position.m_y, position.m_z);
+        if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_mapWidth
+            || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_mapHeight)
+            return 0;
+        for (int x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
+            for (int y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, guardPosition.m_z);
+                if (item->isRoadEntrance()
+                    && item->m_objects[0]->m_properties->m_prototype->m_objectType == MONSTER)
+                    return 0;
+            }
+        }
+    }
+    int lastDirection = RMG_DIRECTION_COUNT;
+    int firstDirection = 0;
+    unsigned char waterZone = zone->m_terrain == eTerrainWater;
+    type_object* lastObject = group->m_objects.back();
+    TObjectType* prototype = lastObject->m_properties->m_prototype;
+    TRmgMapPosition entrance = lastObject->getPosition();
+    entrance.m_x -= prototype->m_triggerCell.m_x;
+    entrance.m_y -= prototype->m_triggerCell.m_y;
+    if (!g_adventureObjectLandBlocked[prototype->m_objectType][1]) {
+        firstDirection = 1;
+        lastDirection = 4;
+    }
+    int direction;
+    for (direction = firstDirection; direction < lastDirection; ++direction) {
+        TPoint point;
+        point.m_x = entrance.m_x + g_rmgDirections[direction].m_x;
+        point.m_y = entrance.m_y + g_rmgDirections[direction].m_y;
+        TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
+            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
+            || !source->isPlacementOutline())
+            continue;
+        point.m_x += position.m_x;
+        point.m_y += position.m_y;
+        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+            continue;
+        TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
+        if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
+            && destination->m_tileData.m_roadPassable
+            && destination->m_tile.m_landType != eTerrainRock
+            && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
+            break;
+    }
+    if (direction == lastDirection)
+        return 0;
+    int allowEntrances;
+    for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex) {
+        int objectType = group->m_objects[objectIndex]->m_properties->m_prototype->m_objectType;
+        if (!g_adventureObjectLandBlocked[objectType][2])
+            goto disallowEntrances;
+    }
+    if (group->m_hasGuard)
+        goto disallowEntrances;
+    allowEntrances = 1;
+    goto checkOutline;
+disallowEntrances:
+    allowEntrances = 0;
+checkOutline:
+    if (!m_map.hasConnectedOutline(group->m_outline, position, allowEntrances, zone, 1))
+        return 0;
+    TPoint point;
+    for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
+        for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            if (!source->hasSubterraneanGate()) {
+                int x = point.m_x + position.m_x;
+                int y = point.m_y + position.m_y;
+                if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
+                    && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
+                    return 0;
+            }
+        }
+    }
+    return 1;
+}
 
 // Candidate placement consumes the group and zone plus its spacing limit.
 // Retail returns AL, retaining a candidate-position vector and random choice.
