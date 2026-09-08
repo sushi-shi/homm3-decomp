@@ -1749,11 +1749,13 @@ VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
 // The one-point lookup calls _Lbound and tests y/x before returning an
 // iterator through the hidden result pointer (ret 8). Residual 99.4634%:
 // ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
-// Two comparator batches (24 branch/binding forms, then 108 capture/operand
-// forms) found 28 exact find observations, all with the standalone operator<
-// reduced from 100% to 98.75%. Preserve the matching comparator: no candidate
-// closes both boundaries. Right-Y-first capture is the failed tradeoff;
-// left-Y-first and direct lexical comparison retain the present scores.
+// Banked MAX 100%: two comparator batches (24 branch/binding forms, then
+// 108 capture/operand forms) found 28 exact observations. A full build with
+// `unsigned int ry = right.m_y; unsigned int ly = left.m_y;` before the
+// lexical comparison verified and banked find's exact body. That form lowers
+// standalone operator< to 98.75%; restoring its direct expression recovers
+// its 100% while find's unchanged-source MAX retains the exact observation.
+// Simultaneous CUR exactness remains unresolved; no candidate closes both.
 VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
 
 // The terrain painter constructor erases a range of packed two-byte cells.
