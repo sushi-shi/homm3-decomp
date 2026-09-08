@@ -3420,6 +3420,7 @@ rmg	?paintZoneTerrain@type_random_map_generator@@QAEXXZ	94.0933	94.0933	94.0933	
 rmg	?placeAdditionalTowns@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	93.0076	93.0076	93.0076	0x144ae0	73a0810c7fc1
 rmg	?placeBorderObject@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140d60	d15d1657d5ba
 rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x145e60	155c221bb434
+rmg	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	67.0694	67.0694	67.0694	0x14b8c0	b3ac6079e1f5
 rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	84.2575	84.2575	84.2575	0x145580	7d9c46c0ca7e
 rmg	?placeMines@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x145f60	364b5b0c60aa
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	93.5774	93.5774	93.5774	0x142930	563a5853e293
@@ -3436,6 +3437,7 @@ rmg	?propagateZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.13
 rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.7862	99.7862	99.7862	0x136560	713b0702a838
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	f318aefa859f
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	88.9891	88.9891	88.9891	0x13d0d0	17fbf8a0a58f
+rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	88.4667	88.4667	88.4667	0x14bc50	3c3aef56472a
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	46e584623115
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	71.5122	71.5122	71.5122	0x135040	7bfb27e097c8
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
