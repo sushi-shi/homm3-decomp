@@ -2415,10 +2415,119 @@ void TRmgTreasureGroup::reset()
 // stack dword to 0x535110 (AL result); its first and last calls trace the
 // group's closed outline. 0x535ee0 appends points at +0x38 until closure.
 // Provisional names describe these retail roles.
-#if 0 // @carcass
+// Partial 89.93%: all 73 blocks align, with 64 matching sizes; branches
+// and both returns agree. Retail retains vector<TPoint>::_Destroy during
+// outline erasure and the single-element object insertion wrapper; VC6
+// expands those to no destructor call and the count insertion call.
+// Explicit insert(end, guard) gives 88.88%; one-element range erase gives
+// 87.74%. An outline-size local across rand is byte-neutral. Coordinate
+// homes and nested container expansion remain; keep the helper boundaries.
 VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
-unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
-#endif
+unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
+{
+    traceOutline();
+    // Retail 0x535150 saves the existing object's prototype; 0x535405
+    // still reads that last prototype's trigger after inserting the guard.
+    TObjectType* prototype;
+    for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
+        type_object* object = m_objects[objectIndex];
+        prototype = object->m_properties->m_prototype;
+        TRmgMapPosition entrance = object->getPosition();
+        entrance.m_y -= prototype->m_triggerCell.m_y;
+        entrance.m_x -= prototype->m_triggerCell.m_x;
+        unsigned int direction = g_adventureObjectLandBlocked[prototype->m_objectType][1]
+            ? RMG_DIRECTION_COUNT : 5;
+        while (direction--) {
+            TRmgMapPosition position = entrance + g_rmgDirections[direction];
+            TRmgMapItem* item = m_map.getMapItem(position);
+            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
+                || item->m_tile.m_landType == eTerrainRock)
+                continue;
+            if (!item->m_connection.m_present) {
+                item->m_tileData.m_subterraneanGate = 0;
+                item->m_tileData.m_borderObject = 1;
+            }
+            for (int x = position.m_x - 1; x <= position.m_x + 1; ++x) {
+                for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
+                    TRmgMapItem* nearby = m_map.getMapItem(x, y, 0);
+                    if (nearby->m_tileData.m_roadPassable
+                        && nearby->m_tile.m_landType != eTerrainRock
+                        && !nearby->isRoadEntrance() && !nearby->m_connection.m_present)
+                        nearby->m_tileData.m_subterraneanGate = 0;
+                }
+            }
+        }
+    }
+    TRmgObjectPropertiesRef* guardProperties = guard->m_properties;
+    for (unsigned int index = m_outline.size(); index--;) {
+        TPoint point = m_outline[index];
+        TRmgMapPosition position;
+        position.m_x = point.m_x;
+        position.m_y = point.m_y;
+        position.m_z = 0;
+        if (!m_map.getMapItem(point.m_x, point.m_y, 0)->hasBorderObject()
+            || !canFitObject(guardProperties, position))
+            m_outline.erase(m_outline.begin() + index);
+    }
+    if (!m_outline.size())
+        return 0;
+    unsigned int outlineCount = m_outline.size();
+    TPoint guardPosition = m_outline[rand() % outlineCount];
+    m_objects.push_back(guard);
+    TRmgMapPosition position;
+    position.m_x = guardPosition.m_x;
+    position.m_y = guardPosition.m_y;
+    position.m_z = 0;
+    m_map.addObject(guard, position);
+    guardPosition.m_x -= prototype->m_triggerCell.m_x;
+    guardPosition.m_y -= prototype->m_triggerCell.m_y;
+    int guardType = guardProperties->m_prototype->m_objectType;
+    for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+        TPoint point;
+        point.m_x = guardPosition.m_x + g_rmgDirections[direction].m_x;
+        point.m_y = guardPosition.m_y + g_rmgDirections[direction].m_y;
+        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, 0);
+        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+            continue;
+        if (guardType == BORDER_GUARD && item->hasBorderObject())
+            continue;
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+        int fanDirection;
+        unsigned int count;
+        if (direction & 1) {
+            fanDirection = (direction - 1) & 7;
+            count = 3;
+        } else {
+            fanDirection = direction;
+            count = 1;
+        }
+        while (count--) {
+            TPoint nearby;
+            nearby.m_x = point.m_x + g_rmgDirections[fanDirection].m_x;
+            nearby.m_y = point.m_y + g_rmgDirections[fanDirection].m_y;
+            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
+                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+                TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+                if (!next->hasBorderObject() && !next->hasSubterraneanGate()
+                    && next->m_tileData.m_roadPassable
+                    && next->m_tile.m_landType != eTerrainRock && !next->m_connection.m_present) {
+                    next->m_tileData.m_borderObject = 0;
+                    next->m_tileData.m_subterraneanGate = 1;
+                }
+            }
+            fanDirection = (fanDirection + 1) & 7;
+        }
+    }
+    m_guardPosition = guardPosition;
+    m_hasGuard = 1;
+    m_outline.clear();
+    updateBounds();
+    traceOutline();
+    return 1;
+}
 
 // Complete-only group fit predicate. Restricted approach types reject
 // entrances behind them; the other five neighbors reject incompatible
@@ -7383,13 +7492,82 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 // isTerrainDependent definitions through +0x1c, and enables value-per-cell
 // filtering through +0x20. The final three dwords are an optional position.
 // Complete-only provisional role names; ret 0x28 proves the full argument ABI.
-#if 0 // @carcass
+// Partial 81.69%: retail retains the passability bitset::test and both
+// vector::erase bodies; VC6 expands test to _Xran and erase to copy/_Destroy.
+// Mask subscripts preserve the range-error helper boundary; two direct test
+// calls expand exception construction (66.40%). Explicit erase ranges give
+// 76.56%; keeping only passability as .test gives 70.53%. Reusing objectValue
+// for its compact value-per-cell quotient is byte-neutral. Keep the two
+// candidate vectors, canonical operations and virtual value/factory calls.
 VA(0x00546190, 0x385) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     int minimum, int maximum, int* value, unsigned char primary,
     unsigned char allowTerrainDependent, unsigned char compact,
-    TRmgMapPosition position) { return 0; } // @stub
-#endif
+    TRmgMapPosition position)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int totalWeight = 0;
+    std::vector<type_treasure_def*> candidates;
+    std::vector<TRmgObjectPropertiesRef*> properties;
+    int bestValuePerCell = 0;
+    for (unsigned int index = 0; index < m_objectGenerators.size(); ++index) {
+        type_treasure_def* definition = m_objectGenerators[index];
+        int objectType = definition->m_objectType;
+        if (!primary && g_adventureObjectLandBlocked[objectType][0]
+            && !g_adventureObjectLandBlocked[objectType][2])
+            continue;
+        if (!allowTerrainDependent && definition->isTerrainDependent())
+            continue;
+        if (m_objectCountByType[objectType] >= g_rmgMapObjectLimits[objectType])
+            continue;
+        if (zone->m_objectCountByType[objectType] >= g_rmgZoneObjectLimits[objectType])
+            continue;
+        int objectValue = definition->getValue(zone, this);
+        if (objectValue < 0 || objectValue < minimum || objectValue > maximum)
+            continue;
+        TRmgObjectPropertiesRef* candidate = selectObjectPrototype(
+            zone->m_terrain, definition->m_objectType, definition->m_subtype);
+        if (!candidate)
+            continue;
+        if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
+            continue;
+        if (compact) {
+            TObjectType* prototype = candidate->m_prototype;
+            int occupied = 0;
+            for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
+                for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
+                    if (!prototype->m_passableMask[CObjectType::getBitPos(x, y)]
+                        || prototype->m_triggerMask[CObjectType::getBitPos(x, y)])
+                        ++occupied;
+                }
+            }
+            objectValue /= occupied;
+            if (objectValue < 3 * bestValuePerCell / 4)
+                continue;
+            if (bestValuePerCell < 3 * objectValue / 4) {
+                totalWeight = 0;
+                candidates.clear();
+                properties.clear();
+                bestValuePerCell = objectValue;
+            }
+        }
+        totalWeight += definition->m_density;
+        candidates.push_back(definition);
+        properties.push_back(candidate);
+    }
+    if (!candidates.size())
+        return 0;
+    int selected = rand() % totalWeight;
+    unsigned int selectedIndex;
+    for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
+        selected -= candidates[selectedIndex]->m_density;
+        if (selected < 0)
+            break;
+    }
+    type_treasure_def* definition = candidates[selectedIndex];
+    *value = definition->getValue(zone, this);
+    return definition->generate(properties[selectedIndex], this, zone);
+}
 
 // Complete-only group fill. The first object is centered in the temporary
 // map; later objects use the fit helper. Generation and fit have independent
