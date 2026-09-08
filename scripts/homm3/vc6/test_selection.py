@@ -200,6 +200,42 @@ class SelectionTest(unittest.TestCase):
             self.assertEqual(args.src, str(src))
             self.assertEqual(getattr(args, flag[2:].replace("-", "_")), value)
 
+    def test_predict_loads_retail_and_compiled_references_with_scratch(self):
+        # Exercise the real shared reference loader: stopping at the base-object
+        # read misses signature changes between that loader and its callers.
+        from homm3.vc6 import _solver
+        scratch = self.root / "inline-scratch"
+        self.patch(reg_model, "SCRATCH", scratch)
+        self.patch(_unit, "base_obj", return_value=Path("base.obj"))
+        self.patch(reg_model, "_fn_text", return_value=("", FN))
+        self.patch(_asm, "_text_symbols", return_value={FN})
+        self.patch(inline_model, "_current_report_score", return_value=None)
+        refresh = self.patch(_asm, "refresh_unit")
+        retail = self.patch(_selection, "reference_text", return_value=("", "retail"))
+        compile_tu = self.patch(_solver, "_compile_tu", return_value=(Path("ref.obj"), ""))
+        self.patch(_solver, "_wine_dir", return_value=None)
+        # reg_model imported these functions by value; mocking only _solver
+        # otherwise leaves the candidate side invoking real Wine/VC6.
+        compile_base = self.patch(reg_model, "_compile_tu", return_value=(Path("base.obj"), ""))
+        self.patch(reg_model, "_wine_dir", return_value=None)
+        fn_text = self.patch(_solver, "_fn_text", return_value=("", "other symbol"))
+
+        args = self.parser.parse_args(["predict-inline", "GetTeam", "--no-build", "--json"])
+        self.assertEqual(inline_model.run_predict(args), 0)
+        retail.assert_called_once_with("game:0x1000")
+        compile_tu.assert_not_called()
+        compile_base.assert_not_called()
+
+        args = self.parser.parse_args([
+            "predict-inline", str(self.sources["game"]), "--fn", "GetTeam",
+            "--against-src", str(self.sources["other"]), "--no-build", "--json"])
+        self.assertEqual(inline_model.run_predict(args), 0)
+        compile_tu.assert_called_once_with(self.sources["other"], scratch / "ref", None)
+        compile_base.assert_called_once_with(self.sources["game"], scratch / "base", None)
+        fn_text.assert_called_once_with(Path("ref.obj"), "GetTeam")
+        self.assertEqual(retail.call_count, 1)
+        refresh.assert_not_called()
+
     def test_candidate_profile_comes_from_explicit_source(self):
         args = self.parser.parse_args(["why-reg", str(self.sources["game"]),
                                       "--fn", FN, "--against", "widget:Open"])

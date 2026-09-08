@@ -4,11 +4,287 @@
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
 #include <va.h>
+#include <stdlib.h>
 #include "rmg_terrain.h"
 #include "exceptions.h"
 #include "tiles.h"
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
+
+TRmgLinePainterTile::TRmgLinePainterTile(
+    TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+    : m_painter(painter)
+{
+    m_point = point;
+}
+
+// The 168-case query family tested receiver/coordinate reference bindings,
+// their order, named results and real proxy construction (80 code results).
+// No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
+int TRmgLinePainterTile::getLand()
+{
+    return m_painter->getLand(m_point);
+}
+
+void TRmgLinePainterTile::getTile(rmgTerrainTile& tile)
+{
+    m_painter->getTile(m_point, tile);
+}
+
+void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
+{
+    m_painter->setTile(m_point, tile);
+}
+
+// The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
+// low-byte gate while preserving the retained virtual's integer-return ABI.
+// Its provisional canPaint name is inverted here: nonzero prevents painting.
+unsigned char TRmgLinePainterTile::isBlocked()
+{
+    return m_painter->canPaint(m_point);
+}
+
+void TRmgLinePainterTile::setOverlay(int value)
+{
+    m_painter->setOverlay(m_point, value);
+}
+
+TRmgGridRectangle::TRmgGridRectangle(
+    const TRmgGridPoint& origin, unsigned int width, unsigned int height)
+    : m_origin(origin), m_size(width, height)
+{
+}
+
+// Retail 0x4f9f00: preserve the original tile proxy across neighbour queries,
+// select an id/flip pair, and draw a random frame only if its pattern or flips
+// differ. The eight-direction table starts at north, unlike g_rmgDirections.
+// The current tile's terrain field survives; the adapter owns layer updates.
+// Initial source retains extra grid-copy calls while expanding the neighbour's
+// compound add and proxy call. Its value-return tile getter also makes a
+// three-dword copy after the virtual output-reference call; retail has none.
+// Explicit tile output, assigned proxy coordinates and assignment-built grid
+// translation raise 51.0615% to 63.9923%, preserving every existing exact RMG
+// row and improving terrain paintPoint too. All 384 construction/return/query
+// combinations were tested; the remaining proxy and arithmetic calls still
+// need recovery. Keep their canonical boundaries rather than flattening them.
+VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
+void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+{
+    TRmgLinePainterTile tile = painter->at(point);
+    int oldType = tile.getLand();
+    unsigned char available[TILE_DIR_COUNT];
+    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
+                           point.m_x, point.m_y, available);
+    unsigned char matches[TILE_DIR_COUNT];
+    for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        if (available[direction])
+            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == oldType;
+        else
+            matches[direction] = 0;
+    }
+    TRmgLinePatternTable* table = painter->getPattern(oldType);
+    int pattern;
+    unsigned char flipX, flipY;
+    selectRmgLinePattern(matches, table, pattern, flipX, flipY);
+    rmgTerrainTile current;
+    tile.getTile(current);
+    if (table->m_patterns[current.m_frame] != pattern
+        || current.m_flipX != flipX || current.m_flipY != flipY) {
+        unsigned int frame = table->m_ranges[pattern].m_firstIndex
+            + rand() % table->m_ranges[pattern].m_valueCount;
+        current.m_flipY = flipY;
+        current.m_frame = frame;
+        current.m_flipX = flipX;
+        tile.setTile(current);
+    }
+}
+
+// Retail 0x4fa050: thiscall with a hidden twelve-byte return and point
+// reference on the stack (ret 8). The retained call at 0x4f9f86 uses this
+// same proxy that the refresh's entry expands; keep one ordinary helper.
+// A separate VC6 ABI control with this real grid class passes a by-value
+// point as eight stack bytes, not an indirect pointer. With a hidden result
+// that would require ret 0xc, contradicting this body; retain the reference.
+// A separate 112-case explicit proxy-copy/return family produced 18 distinct
+// objects but no gain in this retained body. Its best refresh score (67.3461%)
+// traded this helper down to 63.7647%; no independent copy-constructor evidence
+// justifies adopting that tradeoff. Keep those sources as experimental parents.
+// All 192 constructor-binding variants (27 distinct objects) were also tested.
+// A copied coordinate parameter retains the ordinary proxy ctor plus a result
+// copy in at(); retail expands both. It does not improve either retained body.
+VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
+TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
+{
+    return TRmgLinePainterTile(this, point);
+}
+
+// Retail clears the rectangle row-major, then refreshes left, right, top and
+// bottom borders in that order. The shared point local survives each call.
+// Keep the asymmetric right-border lower reach: 0x4fa18c decrements height
+// before comparing the bottom extent; the left border at 0x4fa125 does not.
+// These bounds are unsigned and end-exclusive, including empty rectangles.
+// Direct construction through the ordinary proxy ctor removes the extra
+// factory-result copy: 86.0093% -> 92.6465%, with all ten retail calls retained.
+// The selected entry-family source preserves all other RMG peaks. Moving
+// the lower-y expression into the for clause instead falls to 82.9395%; its
+// value is computed before the upper bound in retail but stored afterward.
+// A named lower bound followed by for-clause assignment restores that order
+// (94.5070%). All 300 neighbour-family combinations compiled, producing 105
+// distinct code results; no point-painting variant improved its prior peak.
+// Named/direct border proxies add no gain over the existing factory temporary.
+VA(0x004FA080, 0x1FB) // anchor-callee 0x4fa42c; fastcall, no stack args
+void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
+{
+    TRmgGridPoint point;
+    for (point.m_y = rectangle.m_origin.m_y;
+         point.m_y < rectangle.m_origin.m_y + rectangle.m_size.m_y; ++point.m_y) {
+        for (point.m_x = rectangle.m_origin.m_x;
+             point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
+            TRmgLinePainterTile tile(painter, point);
+            if (tile.getLand())
+                tile.setTile(rmgTerrainTile(0, 0));
+        }
+    }
+    if (rectangle.m_origin.m_x > 0) {
+        point.m_x = rectangle.m_origin.m_x - 1;
+        unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
+        unsigned int end = rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y
+            ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
+            : rectangle.m_origin.m_y + rectangle.m_size.m_y;
+        for (point.m_y = first; point.m_y < end; ++point.m_y) {
+            if (painter->at(point).getLand())
+                refreshRmgLinePoint(painter, point);
+        }
+    }
+    if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
+        point.m_x = rectangle.m_origin.m_x + rectangle.m_size.m_x;
+        unsigned int first = rectangle.m_origin.m_y > 0 ? rectangle.m_origin.m_y - 1 : 0;
+        unsigned int end = rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y - 1
+            ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
+            : rectangle.m_origin.m_y + rectangle.m_size.m_y;
+        for (point.m_y = first; point.m_y < end; ++point.m_y) {
+            if (painter->at(point).getLand())
+                refreshRmgLinePoint(painter, point);
+        }
+    }
+    if (rectangle.m_origin.m_y > 0) {
+        point.m_y = rectangle.m_origin.m_y - 1;
+        for (point.m_x = rectangle.m_origin.m_x;
+             point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
+            if (painter->at(point).getLand())
+                refreshRmgLinePoint(painter, point);
+        }
+    }
+    if (rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y) {
+        point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
+        for (point.m_x = rectangle.m_origin.m_x;
+             point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
+            if (painter->at(point).getLand())
+                refreshRmgLinePoint(painter, point);
+        }
+    }
+}
+
+// Both final painters call this ordinary constructor with their second-base
+// address. Retail initializes the type/painter pair, copies the start point,
+// then paints that member (not the caller's input) through 0x4fa3c0.
+// Keep the shared walker on this side of the painting-library boundary:
+// defining it even after the final constructors in rmg_support.cpp expands
+// it into both 0x55ee50/0x55f3b0, lowering their exact bodies to 69.83%.
+// This source partition preserves the calls; it is not a recovered TU name.
+VA(0x004FA280, 0x30) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
+TRmgLineWalker::TRmgLineWalker(
+    TRmgLinePainterInterface* newPainter,
+    int newRiverType,
+    const TRmgGridPoint& start)
+    : m_painter(newPainter), m_riverType(newRiverType), m_position(start)
+{
+    paintPoint(m_position);
+}
+
+// Retail uses two axis records, not independent x/y induction variables.
+// It visits destination first, stepping back toward m_position; a minor-axis
+// advance emits a second point before the major-axis advance. The final
+// error test also applies when the distance is zero. Keep this ordering and
+// the canonical point-painting calls; those calls can update neighbouring tiles.
+// Exact: reference-bound axis arguments and a cached unsigned count-up bound
+// reproduce all 272 bytes, including VC6's resulting countdown loop. The
+// initial value-argument/countdown form was 79.13%; a reference-bound countdown
+// reaches 99.45% but uses JE rather than retail's initial JBE. Reversing the
+// major/minor arms preserves semantics but leaves their polarity at 99.41%.
+VA(0x004FA2B0, 0x110) // anchor-caller 0x548040 and createRiver; thiscall ret 4
+void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
+{
+    TRmgLineWalkAxis x(destination.m_x, m_position.m_x);
+    TRmgLineWalkAxis y(destination.m_y, m_position.m_y);
+    TRmgLineWalkAxis* major;
+    TRmgLineWalkAxis* minor;
+    if (x.m_distance >= y.m_distance) {
+        major = &x;
+        minor = &y;
+    } else {
+        major = &y;
+        minor = &x;
+    }
+    unsigned int error = 0;
+    unsigned int distance = major->m_distance;
+    for (unsigned int index = 0; index < distance; ++index) {
+        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        error += minor->m_distance;
+        if (error >= major->m_distance) {
+            error -= major->m_distance;
+            minor->m_position += minor->m_step;
+            paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        }
+        major->m_position += major->m_step;
+    }
+    if (error + minor->m_distance >= major->m_distance)
+        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+    m_position = destination;
+}
+
+// The line walk's shared point operation first removes an old line, assigns
+// the new type and refreshes this tile. It snapshots every neighbouring type
+// before refreshing any neighbour. Both passes use north-first tile directions;
+// the first retains compound addition at 0x4fa489, the second expands it.
+// Direct entry construction removes a retained implicit proxy copy and raises
+// 70.1938% -> 79.9380%, without changing the factory's proven neighbour calls.
+// The first neighbour pass still expands += where retail retains it; the
+// rectangle and translated-point lifetimes also leave different stack slots.
+// The 300-case neighbour family varied sum value/reference bindings and
+// copy/assignment/coordinate construction with real compound-add calls, both
+// separate and in the query operand. None exceeded 79.9380%; the low was
+// 72.8295%. Keep the existing source chain while recovering the helper boundary.
+VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
+void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
+{
+    TRmgLinePainterTile tile(m_painter, point);
+    int oldType = tile.getLand();
+    if (oldType == m_riverType || tile.isBlocked())
+        return;
+    if (oldType)
+        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, 1, 1));
+    tile.setOverlay(m_riverType);
+    refreshRmgLinePoint(m_painter, point);
+
+    int riverType = m_riverType;
+    TRmgLinePainterInterface* painter = m_painter;
+    unsigned char available[TILE_DIR_COUNT];
+    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
+                           point.m_x, point.m_y, available);
+    unsigned char matches[TILE_DIR_COUNT];
+    unsigned int direction;
+    for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        if (available[direction])
+            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == riverType;
+        else
+            matches[direction] = 0;
+    }
+    for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+        if (matches[direction])
+            refreshRmgLinePoint(m_painter, point + g_tileDirections[direction]);
+    }
+}
 
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
@@ -114,6 +390,22 @@ void rmgTerrainPainter::initializePackedCell(
     packed.m_flipX = tile.m_flipX;
     packed.m_flipY = tile.m_flipY;
     packed.m_initialized = 1;
+}
+
+// Provisional role spelling. BuildNeighbourKinds expands this ordinary
+// classifier seven times and retains the final southeast call at 0x5b6b8e.
+// ECX/EDX hold the two terrain indices; both rule flags are read at +4.
+// Retail returns no edge for equal terrain or a sand center, hard edge if
+// either rule forbids blending, otherwise the center's non-dirt predicate.
+VA(0x005B3E40, 0x38)  // anchor-callee 0x5b6b8e; fastcall; retail-only
+int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
+{
+    if (terrain == neighbourTerrain || terrain == eTerrainSand)
+        return RMG_NEIGHBOUR_NO_EDGE;
+    if (g_rmgTerrainRules[terrain]->m_blendsWithOtherTerrain
+        && g_rmgTerrainRules[neighbourTerrain]->m_blendsWithOtherTerrain)
+        return terrain != eTerrainDirt;
+    return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
 VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f4e; retail-only
@@ -1126,34 +1418,195 @@ noSeparation:
     return 1;
 }
 
-#if 0  // @carcass - direct retained callees of PaintTransitions
+// Retail reads the center, clamps north/south/west/east, then classifies
+// N/S/W/E/NW/NE/SW/SE in that order. Every cache query is retained. The final
+// classifier call is the source boundary shared with seven earlier expansions.
+// Source-family result: scoped reference-bound point temporaries and named
+// terrain results recover all ten call boundaries and all 61 retail blocks
+// (87.5851 -> 94.9255). Direct temporaries expand the last classifier too.
+// Residual: register scheduling begins to differ at +0xb4; bounds-accessor
+// spelling and independent MapItem::clear snapshot order do not improve it.
 VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f45; retail-only
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, int* neighbours)
 {
-}  // @stub
+    int terrain = getTerrain(point);
+    unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
+    unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
+    unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
+    unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
 
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(point.m_x, north);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_NORTH] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(point.m_x, south);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_SOUTH] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(west, point.m_y);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_WEST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(east, point.m_y);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_EAST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(west, north);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_NORTHWEST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(east, north);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_NORTHEAST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(west, south);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_SOUTHWEST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+    {
+        const TRmgGridPoint& nearby = TRmgGridPoint(east, south);
+        int nearbyTerrain = getTerrain(nearby);
+        neighbours[TILE_DIR_SOUTHEAST] = getRmgTerrainNeighbourKind(
+            terrain, nearbyTerrain);
+    }
+}
+
+// Provisional name for the common reference-returning signed clamp. Retail
+// checkFirstDiagonal +0xfe/+0x126/+0x17b/+0x1a8 and checkSecondDiagonal
+// +0xb1/+0x105 select one of three operand addresses before loading it.
+// Keep this source boundary: a value-return clamp discards those lifetimes.
+static const int& clampRmgTerrainCoordinate(
+    const int& value, const int& minimum, const int& maximum)
+{
+    if (value < minimum)
+        return minimum;
+    if (value > maximum)
+        return maximum;
+    return value;
+}
+
+// Retail's guarded table at 0x6a5260 has two signed offsets per reflection.
+// The first query clamps y then x; the second assigns x before clamping y.
+// TPoint supplies the canonical signed two-dword construction. As with the
+// selector's flips array, VC6 owns the local-static guard and cleanup thunk.
+// Source-family result: real dimension accessors, staged point fields and
+// the early-return reference clamp reach 89.7363 (direct member extents and
+// a constructed/reused point start at 78.2388). The signed offset initializer
+// already agrees byte-for-byte. Cache-call expansion and stack homes remain.
 VA(0x005B6BA0, 0x24C)  // transition 2/8 tests; retail-only
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    return 0;  // @stub
+    DATA(0x006A5260)
+    static TPoint offsets[4][2] = {
+        { TPoint(-1, 1), TPoint(1, -1) },
+        { TPoint(1, 1), TPoint(-1, -1) },
+        { TPoint(-1, -1), TPoint(1, 1) },
+        { TPoint(1, -1), TPoint(-1, 1) }
+    };
+    int terrain = getTerrain(point);
+    const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    TRmgGridPoint nearby;
+    nearby.m_x = clampRmgTerrainCoordinate(
+        static_cast<int>(point.m_x) + pair[0].m_x, 0, static_cast<int>(getWidth()) - 1);
+    nearby.m_y = clampRmgTerrainCoordinate(
+        static_cast<int>(point.m_y) + pair[0].m_y, 0, static_cast<int>(getHeight()) - 1);
+    if (getTerrain(nearby) == terrain)
+        return 1;
+    nearby.m_x = clampRmgTerrainCoordinate(
+        static_cast<int>(point.m_x) + pair[1].m_x, 0, static_cast<int>(getWidth()) - 1);
+    nearby.m_y = clampRmgTerrainCoordinate(
+        static_cast<int>(point.m_y) + pair[1].m_y, 0, static_cast<int>(getHeight()) - 1);
+    return getTerrain(nearby) == terrain;
 }
 
+// Four signed two-cell offsets at 0x6a3d68 use the same flip index. The
+// first query changes only x; the second changes only y. Either terrain
+// mismatch succeeds. The final cache query expands in the retail body.
+// Copy-initializing the first point and naming a separate second point
+// raises its checkpoint from 70.7500 to 71.9615. The shared clamp's early-return
+// form gives CUR 70.3141 without changing this body: MAX stays 71.9615.
+// Residual: the center cache query expands where retail retains its call.
 VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
-    return 0;  // @stub
+    DATA(0x006A3D68)
+    static TPoint offsets[4] = {
+        TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2)
+    };
+    int terrain = getTerrain(point);
+    const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    TRmgGridPoint nearby = TRmgGridPoint(
+        clampRmgTerrainCoordinate(static_cast<int>(point.m_x) + offset.m_x,
+            0, static_cast<int>(m_width) - 1), point.m_y);
+    if (getTerrain(nearby) != terrain)
+        return 1;
+    TRmgGridPoint nextPoint;
+    nextPoint.m_x = point.m_x;
+    nextPoint.m_y = clampRmgTerrainCoordinate(
+        static_cast<int>(point.m_y) + offset.m_y, 0, static_cast<int>(m_height) - 1);
+    return getTerrain(nextPoint) != terrain;
 }
 
+// Complete-only retail 0x5b6fd0: inspect west, north, east, then south.
+// Each in-bounds neighbour of the requested terrain halves the unsigned
+// strength only when the rule's slot-2 frame predicate succeeds. The two
+// separate cache queries and the scoped point value are visible in retail;
+// the later queries expand further than the first four retained calls.
+// SHR at +0x6a/+0xb6/+0x121/+0x25c proves logical, not signed division.
+// Generated source families: preserve dimension accessor calls (63.4074 ->
+// 70.1029). A separate frame accessor, reference-bound rule or point, and
+// copy-initialized point values do not recover the missing cache boundaries.
+// Residual: the first frame query expands getPackedCell where retail calls
+// it; later source call/expansion decisions are also displaced. No pins.
 VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
 {
-    return 0;  // @stub
+    unsigned int strength = m_transitionStrength;
+    TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+    if (point.m_x > 0) {
+        TRmgGridPoint nearby(point.m_x - 1, point.m_y);
+        if (getTerrain(nearby) == terrain
+            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            strength >>= 1;
+    }
+    if (point.m_y > 0) {
+        TRmgGridPoint nearby(point.m_x, point.m_y - 1);
+        if (getTerrain(nearby) == terrain
+            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            strength >>= 1;
+    }
+    if (point.m_x < getWidth() - 1) {
+        TRmgGridPoint nearby(point.m_x + 1, point.m_y);
+        if (getTerrain(nearby) == terrain
+            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            strength >>= 1;
+    }
+    if (point.m_y < getHeight() - 1) {
+        TRmgGridPoint nearby(point.m_x, point.m_y + 1);
+        if (getTerrain(nearby) == terrain
+            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            strength >>= 1;
+    }
+    return strength;
 }
-#endif
 
 // The same primary/secondary worklist appears in the brush's terrain change
 // and destructor. Preserve one ordinary completion helper and the canonical
