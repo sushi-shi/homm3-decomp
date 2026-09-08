@@ -18,14 +18,14 @@ from pathlib import Path
 from homm3.core.common import HOMM3_DIR
 from homm3.vc6 import _source, hypotheses
 
-FUNCTION = "?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@W4TTerrainType@@HH@Z"
-SIGNATURE = "TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(\n    TTerrainType terrain, int objectType, int subtype)"
+FUNCTION = "?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z"
+SIGNATURE = "TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(\n    int terrain, int objectType, int subtype)"
 
 
 def lifetime_bodies():
     for binding, capture, counter in itertools.product(
             ("member", "before", "after"),
-            ("parameter", "enum_before", "enum_after", "mask_index"),
+            ("parameter", "kind_before", "kind_after", "mask_index"),
             ("for", "initialized_before", "initialized_after", "declared_before", "declared_after")):
         before, after = [], []
         index = "unsigned int index = 0"
@@ -40,8 +40,8 @@ def lifetime_bodies():
                 "std::vector<TRmgObjectPropertiesRef*>& prototypes = " + vector + ";")
             vector = "prototypes"
         terrain, bit_index = "terrain", "terrain"
-        if capture.startswith("enum"):
-            (before if capture.endswith("before") else after).append("TTerrainType allowedTerrain = terrain;")
+        if capture.startswith("kind"):
+            (before if capture.endswith("before") else after).append("int allowedTerrain = terrain;")
             terrain = bit_index = "allowedTerrain"
         elif capture == "mask_index":
             after.append("unsigned int terrainIndex = terrain;")

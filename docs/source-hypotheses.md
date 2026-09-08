@@ -114,6 +114,9 @@ The selector's `--branches` follow-up adds a separate 60-case matrix of conditio
 split-insertion and boolean-result filters, receiver bindings and public insertion
 APIs. It also leaves the original 99.6581% implementation best. The generator
 preserves an unchanged control when rebasing between the two reviewed phases.
+After the terrain adapter's signed-integer domain was recovered, the selector
+generator and its oracle were rebased to integer kinds too; no candidate restores
+the earlier enum inference. The recorded sweeps above predate that domain correction.
 
 The transition-strength matrix instead varies real point ownership and query
 lifetimes around its mismatched cache-call boundaries. It retains west/north/

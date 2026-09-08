@@ -24,6 +24,8 @@ class PrototypePolishTests(unittest.TestCase):
             for row in axis["options"]:
                 body = row["replace"]
                 self.assertNotIn("#pragma", body)
+                self.assertNotIn("TTerrainType", body)
+                self.assertIn("int terrain, int objectType, int subtype", body)
                 self.assertEqual(body.count("rand()"), 1)
                 self.assertIn("return candidates[rand() % candidates.size()];", body)
                 changed = self.source.replace(axis["find"], body)
@@ -50,7 +52,7 @@ struct TObjectType {
 struct TRmgObjectPropertiesRef { TObjectType* m_prototype; };
 struct type_random_map_generator {
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232];
-    TRmgObjectPropertiesRef* selectObjectPrototype(TTerrainType, int, int);
+    TRmgObjectPropertiesRef* selectObjectPrototype(int, int, int);
 };
 int g_draw, g_calls;
 int rand() { ++g_calls; return g_draw; }
@@ -98,7 +100,7 @@ int check() {
                 bool caught = false;
                 TRmgObjectPropertiesRef* actual = 0;
                 try {
-                    actual = generator.selectObjectPrototype(static_cast<TTerrainType>(terrains[terrain]), groups[group], subtype);
+                    actual = generator.selectObjectPrototype(terrains[terrain], groups[group], subtype);
                 } catch (const std::out_of_range&) { caught = true; }
                 if (caught != throws) return 1;
                 int expectedCalls = !throws && !expected.empty() ? 1 : 0;
