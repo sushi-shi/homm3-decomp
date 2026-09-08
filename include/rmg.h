@@ -1833,6 +1833,9 @@ public:
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
     void initializeZones(TRmgTemplate* mapTemplate);
+    void positionZone(TRmgZone* zone, int mapSize);
+    void appendZonePositions(TRmgZone* center, TRmgZone* zone,
+        std::vector<TRmgMapPosition>& candidates);
     void getInitialZoneBounds(int& minimumY, int& minimumX,
         int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
