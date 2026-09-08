@@ -21,6 +21,11 @@
 // Adding <iostream> is a negative control: it introduces unmatched narrow and
 // wide stream initialization, while <bitset> alone already emits the retail
 // 32-byte locale-id guard. No extra stream include or emission caller is needed.
+// Unsuffixed integer literals are byte-flat. An implicit scalar initializer
+// list constructs directly into the array and loses retail's stack temporary,
+// so explicit bitset temporaries are retained. The adjacent selector still
+// needs its own source recovery: binding a const int reference directly to 3
+// adds a ten-byte runtime backing-value store absent from its retail thunk.
 DATA(0x00699240)
 std::bitset<4> g_gameContextFeatures[4] = {
     std::bitset<4>(1ul), std::bitset<4>(3ul),
