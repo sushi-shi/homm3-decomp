@@ -6215,15 +6215,98 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
     }
 }
 
-// The retained placement boundary consumes zone, alignment, player, option,
-// and spacing (ret 0x14), returning success in AL to the density loop.
-#if 0 // @carcass
+// Additional-town placement picks an allowed alignment when needed, then
+// ranks valid sites by spacing score. The trigger's clipped 3x3 neighbourhood
+// must remain inside the zone. Retail delegates inactive zones to primary
+// placement and retains the normal town constructor and virtual addObject.
+// First reconstruction: 76.6787%. Both CFGs have 61 blocks; remaining
+// differences include candidate-loop layout and compiler-generated cleanup.
+// Preserve the alignment fallback, full neighbourhood scan and tied-site list.
 VA(0x00544D90, 0x4B7)
 unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
-    int alignment, int player, unsigned char townOption, int spacing) { return 0; } // @stub
-#endif
+    int alignment, int player, unsigned char townOption, int spacing)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    if ((player == -1 && !slot->m_flag0040) || alignment == -1) {
+        int count = 0;
+        for (int town = 0; town < 9; ++town)
+            if (slot->m_allowedTowns[town])
+                ++count;
+        alignment = -1;
+        if (count) {
+            int selected = rand() % count;
+            for (town = 0; town < 9; ++town) {
+                if (slot->m_allowedTowns[town] && --selected < 0) {
+                    alignment = town;
+                    break;
+                }
+            }
+        }
+        if (alignment == -1)
+            alignment = rand() % (8 + (m_mapVersion >= 1));
+    }
+    if (!zone->m_active)
+        return tryPlacePrimaryTown(zone, alignment, player, townOption);
 
-
+    std::vector<TRmgMapPosition> candidates;
+    int zoneIndex = slot->m_zoneIndex;
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
+    TObjectType* prototype = properties->m_prototype;
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgZoneBounds bounds = zone->m_bounds;
+    bounds.m_minimumY += prototype->getHeight();
+    bounds.m_minimumX += prototype->getWidth();
+    for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
+            TRmgMapPosition entrance = position;
+            entrance.m_x -= trigger.m_x;
+            entrance.m_y -= trigger.m_y;
+            TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+            if (item->m_zoneState.m_zone != zoneIndex)
+                continue;
+            int score = item->m_zoneState.m_score;
+            if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
+                continue;
+            TRmgZoneBounds nearby;
+            nearby.m_minimumY = std::_cpp_max<long>(entrance.m_y - 1, 0);
+            nearby.m_minimumX = std::_cpp_max<long>(entrance.m_x - 1, 0);
+            nearby.m_maximumY = std::_cpp_min<long>(entrance.m_y + 2, m_map.m_mapHeight);
+            nearby.m_maximumX = std::_cpp_min<long>(entrance.m_x + 2, m_map.m_mapWidth);
+            unsigned char valid = 1;
+            for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
+                for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
+                    int otherZone = m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone;
+                    if (otherZone < 0 || otherZone != zoneIndex)
+                        valid = 0;
+                }
+            }
+            if (!valid)
+                continue;
+            if (score > spacing) {
+                spacing = score;
+                candidates.clear();
+            }
+            candidates.push_back(position);
+        }
+    }
+    if (!candidates.size())
+        return 0;
+    rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
+    position = candidates[rand() % candidates.size()];
+    addObject(object, position);
+    TRmgMapPosition entrance = position;
+    entrance.m_x -= trigger.m_x;
+    entrance.m_y -= trigger.m_y;
+    m_roadTargets.push_back(entrance);
+    ++entrance.m_y;
+    TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+    if (!item->m_connection.m_present) {
+        item->m_tileData.m_borderObject = 0;
+        item->m_tileData.m_subterraneanGate = 1;
+    }
+    return 1;
+}
 
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
