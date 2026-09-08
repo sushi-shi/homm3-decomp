@@ -45,6 +45,7 @@
 #include <math.h>
 #include <memory>
 #include "game.h"
+#include "gamecontext.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
 // game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
@@ -378,14 +379,6 @@ const int g_campaignVictoryOverrideSecond = 11;
 const int g_campaignVictoryOverrideThird = 12;
 // Before normalization: CAMPAIGN_VICTORY_OVERRIDE_DAYS.
 const int g_campaignVictoryOverrideDays = 112;
-
-// Four resource/game-format contexts, each carrying the feature bits exposed
-// by that install.  The player-slot reader tests bit one before admitting the
-// ninth (Conflux) alignment.  The address and [*gpVideoGameState] indexing are
-// independently repeated by the hero-window and resource consumers; no
-// surviving symbol provides a semantic spelling.
-// Before normalization: gGameContextFeatures.
-DATA(0x00699240) extern std::bitset<4> g_gameContextFeatures[4];
 
 // Source-inline map counterpart of ReadHeroId.  Retail expands this shape at
 // both fixed-hero fields in the player-slot reader; the retained /Gr helper at

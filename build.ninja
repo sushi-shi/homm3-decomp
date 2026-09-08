@@ -179,6 +179,11 @@ build build/objdiff/base/inputmgr.obj: cl src/inputmgr.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = inputmgr
 build inputmgr: phony build/objdiff/base/inputmgr.obj
+build build/objdiff/base/gamecontext.obj: cl src/gamecontext.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = gamecontext
+build gamecontext: phony build/objdiff/base/gamecontext.obj
 build build/objdiff/base/findpath.obj: cl src/findpath.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -768,12 +773,12 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -853,12 +858,12 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -939,12 +944,12 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $

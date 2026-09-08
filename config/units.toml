@@ -291,6 +291,13 @@ unit = "inputmgr"
 source = "src/inputmgr.cpp"
 flags = "game_o2_ml_gr_windows"
 
+# Retail-only context data and its retained bitset setter, 0x4eccf0..0x4ece60.
+# The original source filename is unavailable; gamecontext is provisional.
+[[unit]]
+unit = "gamecontext"
+source = "src/gamecontext.cpp"
+flags = "game_o2_ml_gr_windows"
+
 [[unit]]
 unit = "findpath"
 source = "src/findpath.cpp"

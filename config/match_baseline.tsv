@@ -2140,6 +2140,7 @@ game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	0.0000	100.0000	0xbdc70	-
 game	__h3cg$game$static_dtor$immMouse	100.0000	100.0000	100.0000	0xb6910	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_destroy$type_map_hero_identity	0.0000	0.0000	100.0000	0xcfec0	-
+gamecontext	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xecde0	-
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0	fbca8435ae09
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890	79c57ef6ee47
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860	-

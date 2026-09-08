@@ -10,6 +10,7 @@
 #include <bitset>
 #include <vector>
 
+#include "gamecontext.h"
 #include "inputmgr.h"
 #include "slider.h"
 #include "textresource.h"
@@ -48,12 +49,8 @@ namespace ResourceManager {
 unsigned long getAvailableDiskSpace();
 std::string formatString(const char* format, ...);
 
-// The game-context feature bits and their index cell (game.cpp/
-// resourcemanager.cpp own the claims); OnSetAsHostMsg gates the
-// game-type widget (0x82) on bit one - the same test(1) game.cpp's
-// player-slot reader spells. Declared file-locally, the
-// get_available_disk_space precedent.
-extern std::bitset<4> g_gameContextFeatures[4];
+// Context selector used to index gamecontext.h's feature masks. The
+// game-type widget and the player-slot reader both test feature bit one.
 extern int* g_videoGameState;
 
 // The CRT entries SaveValid/OnMapFileNameMsg touch, declared
