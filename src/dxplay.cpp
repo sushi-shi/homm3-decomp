@@ -1163,9 +1163,11 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // further 17 nested-guard and scoped-return forms also fail to improve it.
 // The unchanged baseline is retained; scope/goto variants score at most
 // 77.5439% and do not reproduce retail's fourth return path.
+// Restoring the DC-public bool return type is byte-flat at 88.4211%,
+// including both remote.cpp callers; it preserves the branch-folding residual.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
-unsigned char CDPlayLobby::testLobbied()
+bool CDPlayLobby::testLobbied()
 {
     // Before normalization (locals): dwSize.
     unsigned long size;
