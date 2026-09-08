@@ -251,14 +251,10 @@ public:
                                 type_point monsterLocation, long pathfinding,
                                 type_search_type searchType,
                                 long nativeTerrain);
-    // 0x56aad0, search.obj's, still @stub there. Declared here because
-    // TestPossibleDirections calls it with `this` in ECX; the pairing is the
-    // DC roster's search.cpp:367 row (searchArray member, two arguments,
-    // 116 DC bytes against retail's 104) and the retail call site's shape.
-    // Before normalization (function): searchArray::enter_hostile_trigger.
-    // Before normalization (locals): current_hero.
+    // DC search.cpp:367 proves a pathCell reference; retail passes its
+    // address as the second stack argument. Original: enter_hostile_trigger.
     unsigned char enterHostileTrigger(const hero* currentHero,
-                                        pathCell* cell);
+                                     pathCell& cell);
     // search.obj 0x56a400 / 0x56a730, the lith-family and underground
     // gate seeders; both parameter lists are the DC roster's
     // (search.cpp:155 and :244).
