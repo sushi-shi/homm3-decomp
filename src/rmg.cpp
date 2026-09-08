@@ -5700,11 +5700,58 @@ void type_random_map_generator::connectZones()
         m_progress->advance(0x1900);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Underground-only terrain pass retained by generation at 0x549c82.
+// One borrowed level-one map and one brush span both scans. The first scan
+// closes unused floor with rock; the second restores each zone's terrain at
+// its occupied or gate-marked rock cells. Both progress updates precede cleanup.
+// Residual 96.0963%: all 36 block sizes and ten calls agree; scheduling and
+// local homes remain. Keeping the scan pointer across brush construction
+// removes six extra initial-block instructions (reloading it scored 89.8028%).
 VA(0x005439E0, 0x283)
-void type_random_map_generator::decorateUnderground() {} // @stub
-#endif
+void type_random_map_generator::decorateUnderground()
+{
+    TRmgMapItem* item = m_map.getMapItem(0, 0, 1);
+    type_random_map map(item,
+        m_map.m_mapWidth, m_map.m_mapHeight);
+    TRmgTerrainBrush brush(&map, eTerrainRock, 4);
+    for (int y = 0; y < m_map.m_mapHeight; ++y) {
+        for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
+            if (!item->hasSubterraneanGate() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && !item->isRoadEntrance())
+                brush.paintRectangle(x, y, 1, 1);
+        }
+    }
+    if (m_progress)
+        m_progress->advance(1200);
+    int currentTerrain = eTerrainRock;
+    for (unsigned int zone = 0; zone < m_zones.size(); ++zone) {
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        if (position.m_z != 1)
+            continue;
+        int terrain = m_zones[zone]->m_terrain;
+        TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
+        if (currentTerrain == eTerrainRock) {
+            brush.changeTerrain(terrain, 4);
+            currentTerrain = terrain;
+        }
+        for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+            for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, 1);
+                if (item->m_tile.m_landType == eTerrainRock
+                    && item->m_zoneState.m_zone == zone
+                    && (item->hasSubterraneanGate() || item->m_objects.size())) {
+                    if (terrain != currentTerrain) {
+                        brush.changeTerrain(terrain, 4);
+                        currentTerrain = terrain;
+                    }
+                    brush.paintRectangle(x, y, 1, 1);
+                }
+            }
+        }
+    }
+    if (m_progress)
+        m_progress->advance(1200);
+}
 
 // The queued side branch supplies two points by value and a level. This
 // integer ray continues beyond 'toward' until the map edge or an existing
