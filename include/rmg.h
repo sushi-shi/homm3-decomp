@@ -1818,6 +1818,7 @@ public:
     void paintZoneTerrain();
     void placeAdditionalTowns(TRmgZone* zone);
     void prepareJunctionZone(TRmgZone* zone);
+    void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
     void decorateUnderground();
     unsigned char generate();
