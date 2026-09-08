@@ -2795,6 +2795,16 @@ resource* ResourceManager::getFromCache(const char* name)
     return value;
 }
 
+// Cache initialization 0x559400 passes comparator/allocator references to
+// this retained map constructor with this=0x69e528. Its 0x24-byte nodes,
+// shared nil at 0x69e5b4 and reference count at 0x69e5b8 identify TCacheMap.
+// Dreamcast dc 0x122c2c proves the same map owner and construction boundary;
+// retail's Dinkumware specialization is already emitted by g_resourceCache.
+// Exact: all 190 instruction bytes and three CFG blocks agree. Unnamed
+// references are its FuncInfo, those nil globals and the verified _Lockit
+// destructor at 0x60b634; both allocation calls and lock construction agree.
+VA_COMPGEN(0x0055D2C0, 0xBE, CLASS_CTOR, map)
+
 // The real map owns the two exact lookup layers and insertion wrapper.
 // GetBitmap816 retains map::insert in retail; the current canonical source
 // expands it and retains the iterator/bool result constructor instead.

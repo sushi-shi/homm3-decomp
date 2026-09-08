@@ -3168,6 +3168,7 @@ resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159
 resourcedisplay	?update@TResourceDisplay@@QAEXEE@Z	100.0000	100.0000	100.0000	0x158f20	6caa3531e553
 resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15d410	-
 resourcemanager	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15e440	-
+resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	100.0000	100.0000	100.0000	0x15d2c0	-
 resourcemanager	??0?$pair@PBDPAVresource@@@std@@QAE@ABQBDABQAVresource@@@Z	100.0000	100.0000	100.0000	0x15ecf0	-
 resourcemanager	??0TCacheMapKey@ResourceManager@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x15ac20	54d198c586ca
 resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591e0	ffc0b65f2d4d
@@ -3263,6 +3264,7 @@ rmg	??1TRmgObjectPlacementRule@@QAE@XZ	100.0000	100.0000	100.0000	0x136b60	-
 rmg	??1TRmgRoadMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132350	c9a0dc309797
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	75f39f6636cf
 rmg	??1TRmgTownSlot@@QAE@XZ	100.0000	100.0000	100.0000	0x1329a0	-
+rmg	??1TRmgTreasureGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x1477c0	-
 rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	443032e6b8c1
 rmg	??1rmgBlackBoxObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
 rmg	??1rmgQuestArtifactObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1339f0	6fff44d8e0d1
