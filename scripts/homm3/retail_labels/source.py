@@ -411,6 +411,18 @@ CHAR_STREAM_MEMBERS = (
 )
 
 
+# Signatures that need a complete match rather than an overload-family prefix.
+# The retained quickherowindow body takes (streambuf<char>*, bool), unlike
+# the one-argument stream constructors and ios_base::_Init it can resemble.
+CHAR_STREAM_EXACT_MEMBERS = {
+    "?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV"
+    "?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z": "basic_ios_init",
+}
+CHAR_STREAM_MEMBER_KINDS = (
+    {member for _p, _s, member in CHAR_STREAM_MEMBERS}
+    | set(CHAR_STREAM_EXACT_MEMBERS.values()))
+
+
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
@@ -465,7 +477,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
-COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
+COMPGEN_KINDS |= {member.upper() for member in CHAR_STREAM_MEMBER_KINDS}
 #: The kinds that name NO pre-existing COFF symbol - MSVC's anonymous
 #: static-initialization thunks, which the canonicalizer RENAMES rather
 #: than joins. Every other kind claims a symbol cl already emitted, so
@@ -1458,6 +1470,9 @@ def _demangle_key(mangled: str):
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
+    exact_stream_member = CHAR_STREAM_EXACT_MEMBERS.get(mangled)
+    if exact_stream_member:
+        return f"char@{exact_stream_member}"
     for prefix, suffix, member in CHAR_STREAM_MEMBERS:
         if mangled.startswith(prefix) and (suffix is None
                                            or mangled.endswith(suffix)):
@@ -2346,7 +2361,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@{map_member}", []).append(row)
             continue
         char_member = next(
-            (member for _p, _s, member in CHAR_STREAM_MEMBERS
+            (member for member in CHAR_STREAM_MEMBER_KINDS
              if f"${member}$" in row["name"]), None)
         if char_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
