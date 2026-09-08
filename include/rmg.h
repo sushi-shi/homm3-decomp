@@ -1334,6 +1334,7 @@ struct TRmgTreasureGroup {
     }
     void reset();
     unsigned char addGuard(type_object* guard);
+    void updateBounds();
     void traceOutline();
 };
 SIZE(TRmgTreasureGroup, 0x64);
