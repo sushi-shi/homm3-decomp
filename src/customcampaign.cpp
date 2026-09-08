@@ -1015,6 +1015,9 @@ int TCampaignStartCrossoverOption::getCount() const
 // pool the choice names; an empty pool falls back to the blank locator
 // frame. The pool is reached through the campaign's own scenario table -
 // mapScores[choice.scenario].index is the crossover slot.
+// Two direct guard controls do not recover retail's shared fallback: a
+// size guard followed by begin scores 88.93%, while begin followed by one
+// combined size/null guard scores 75.95%. Keep the 96.07% conditional peak.
 VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
