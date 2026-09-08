@@ -3406,6 +3406,7 @@ rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.7862	99.7862	99.7862	
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	c92ec28cb951
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	88.9891	88.9891	88.9891	0x13d0d0	17fbf8a0a58f
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	46e584623115
+rmg	?reset@TRmgTreasureGroup@@QAEXXZ	71.5122	71.5122	71.5122	0x135040	b64068f9c47e
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	99.6581	99.6581	99.6581	0x146040	b7f108f4c39a
 rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	016693b63aaf
@@ -3441,7 +3442,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	TRmgGeneratorBase_decorateMapCell	0.0000	0.0000	0.0000	0x1373a0	b61b573f5494
 rmg	TRmgZone_chooseTerrain	0.0000	0.0000	0.0000	0x132ab0	9c889de3a9a1
@@ -3936,9 +3937,9 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
