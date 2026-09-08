@@ -65,7 +65,8 @@ class RmgGroupCommitTests(unittest.TestCase):
         helper = self.module.helpers()
         value_helpers = [helper.definition(support, "TRmgMapPosition::TRmgMapPosition"),
                          helper.definition(self.source, "type_object::getPosition"),
-                         helper.definition(self.source, "type_random_map::getMapItem")]
+                         helper.definition(self.source, "type_random_map::getMapItem",
+                                           parameters="TRmgMapPosition point")]
         original = helper.definition(self.source, self.module.FUNCTION)
         programs, checks = [], []
 

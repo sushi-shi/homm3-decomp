@@ -67,8 +67,10 @@ class RmgSpatialFrontierTests(unittest.TestCase):
         value_helpers = [helper.definition(support, name) for name in (
             "TRmgMapPosition::TRmgMapPosition", "TRmgVector::length")]
         value_helpers += [helper.definition(self.source, name) for name in (
-            "TRmgZone::getLevelPosition", "type_random_map::getMapItem",
+            "TRmgZone::getLevelPosition",
             "TRmgVector::operator*", "TRmgVector::operator/", "operator-")]
+        value_helpers.append(helper.definition(self.source, "type_random_map::getMapItem",
+                                               parameters="TRmgMapPosition point"))
         start = header.index("    inline TRmgMapItem* getMapItem(int x, int y, int z)")
         scalar = header[start:header.index("\n    }", start) + 6]
         scalar = scalar.replace("    {\n", "    {\n        record(x, y, z);\n", 1)

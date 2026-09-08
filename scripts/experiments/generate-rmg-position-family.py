@@ -18,8 +18,12 @@ from homm3.vc6 import _source
 from homm3.vc6.source_families import load_manifest
 
 
-def definition(source, name):
+def definition(source, name, *, parameters=None):
     found = _source.find_definitions(source, name)
+    if parameters is not None:
+        expected = " ".join(parameters.split())
+        found = [item for item in found
+                 if " ".join(source[item.par_open + 1:item.par_close].split()) == expected]
     if len(found) != 1:
         raise ValueError(f"expected one definition of {name}")
     item = found[0]

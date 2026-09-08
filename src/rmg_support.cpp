@@ -175,14 +175,6 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 {
 }
 
-// The two-dimensional accessor is retained by the RMG search initializers.
-// The 0x30 scale independently proves TRmgMapItem's stride.
-VA(0x00546990, 0x1E)  // retail RMG caller cluster; Complete-only helper
-TRmgMapItem* type_random_map::getMapItem(int x, int y)
-{
-    return m_mapItems + y * m_mapWidth + x;
-}
-
 // The river painter deliberately inherits the generic line walker as its
 // second base.  Retail's calls use `this + 0x10`, which is the natural VC6
 // adjustment for that source relationship.  Its otherwise-empty destructor
