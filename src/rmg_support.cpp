@@ -417,6 +417,35 @@ void TRmgBoundaryVertex::detach()
     m_twin->splice(twinPrevious);
 }
 
+// Complete starts with a rectangular outer subdivision spanning -200..400.
+// Four paired edges form its perimeter; a fifth connects opposite corners.
+// Each pair is owned through createEdge and joined through the shared splice.
+// Residual (80.5217%): retail retains the fifth createEdge call while VC6
+// expands all five. The first four paired constructors remain calls in both.
+// The factory's named twin restores pointer-copy ownership and improves this
+// caller from 73.1706%; explicit vector insert overloads reach at most 77.4950%.
+VA(0x005FD010, 0x316) // anchor-caller 0x53e050 and five createEdge expansions/calls
+TRmgVoronoi::TRmgVoronoi()
+{
+    TPoint first(-200, -200);
+    TPoint second(400, -200);
+    TPoint third(400, 400);
+    TPoint fourth(-200, 400);
+    TRmgBoundaryVertex* firstEdge = createEdge(first, 0, second, 0);
+    TRmgBoundaryVertex* secondEdge = createEdge(second, 0, third, 0);
+    TRmgBoundaryVertex* thirdEdge = createEdge(third, 0, fourth, 0);
+    TRmgBoundaryVertex* fourthEdge = createEdge(fourth, 0, first, 0);
+    firstEdge->m_twin->splice(secondEdge);
+    secondEdge->m_twin->splice(thirdEdge);
+    thirdEdge->m_twin->splice(fourthEdge);
+    fourthEdge->m_twin->splice(firstEdge);
+    TRmgBoundaryVertex* diagonal = createEdge(fourthEdge->m_twin->m_sitePosition,
+        fourthEdge->m_twin->m_zone, thirdEdge->m_sitePosition, thirdEdge->m_zone);
+    diagonal->splice(fourthEdge->m_twin->m_previous);
+    diagonal->m_twin->splice(thirdEdge);
+    m_root = firstEdge;
+}
+
 // The subdivision owns every allocated half-edge and its pointer vector.
 // Its retained destructor proves the +0x04 vector and trivial edge cleanup.
 VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
@@ -424,6 +453,25 @@ TRmgVoronoi::~TRmgVoronoi()
 {
     for (int edge = 0; edge < m_edges.size(); ++edge)
         delete m_edges[edge];
+}
+
+// Constructor and site insertion share this retained factory. Retail expands
+// the ordinary paired constructor, then inserts each half into the owning
+// vector. The two source insertions have different nested inline decisions.
+// Residual (90.9600%): allocation and paired initialization agree; the second
+// expanded insertion retains three vector::size calls versus retail's four.
+// Naming twin before push_back reproduces retail's pointer snapshot and raises
+// 84.2650%. Eighteen push_back/single/count insertion forms favor the two
+// push_back calls below; the nearest explicit-insert form scores 90.9550%.
+VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
+TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
+    TPoint second, TRmgZone* secondZone)
+{
+    TRmgBoundaryVertex* edge = new TRmgBoundaryVertex(first, firstZone, second, secondZone);
+    m_edges.push_back(edge);
+    TRmgBoundaryVertex* twin = edge->m_twin;
+    m_edges.push_back(twin);
+    return edge;
 }
 
 // The zone-building callers pass an eight-byte TPoint and receive an edge.
@@ -501,3 +549,9 @@ int getRmgSquaredDistance(TPoint first, TPoint second)
     int dx = first.m_x - second.m_x;
     return dx * dx + dy * dy;
 }
+
+// The subdivision constructor retains seven single-edge insertions at
+// 0x5fd091/0x5fd0f6/0x5fd10e/0x5fd15a/0x5fd172/0x5fd1bb/0x5fd1d3.
+// Four-byte elements, ret 8 and the owning m_edges vector identify this
+// ordinary Dinkumware specialization independently of its ICF helper names.
+VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgBoundaryVertex)

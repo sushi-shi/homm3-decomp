@@ -10295,6 +10295,45 @@ VA_COMPGEN(0x0054DED0, 0x63, BITSET_SET, Bitset129)
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
 // recovery of the canonical site/point ownership and retained helper surface.
 
+// Each uncomputed interior half-edge identifies an incident triangle. Retail
+// computes its integer circumcenter through the canonical point/vector
+// operations, then shares the result with the other two incident half-edges.
+// The first point subtraction expands; the two later subtractions are calls.
+// Residual (31.6268%): the triangle walk and all eight CFG blocks agree,
+// but VC6 expands seven arithmetic calls retained by retail. Direct dot
+// products and ordinary by-value/by-reference dot helpers are byte-neutral.
+// An isolated inline_depth(0) diagnostic covering secondSide through position
+// raises 72.2254%; flattening that region restores 31.6268%, with scratch
+// space 0x44 rather than retail's 0x78. The diagnostic is not retained:
+// canonical operators remain ordinary and visible to their RMG callers.
+VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
+void TRmgVoronoi::buildVertices()
+{
+    for (unsigned int index = 0; index < m_edges.size(); ++index) {
+        TRmgBoundaryVertex* edge = m_edges[index];
+        if (edge->m_zone && !edge->m_positionComputed) {
+            TPoint origin = edge->m_sitePosition;
+            TPoint third = edge->m_next->m_twin->m_sitePosition;
+            TRmgVector axis = edge->m_twin->m_sitePosition - origin;
+            TRmgVector perpendicular(-axis.m_y, axis.m_x);
+            TRmgVector secondSide = edge->m_next->m_twin->m_sitePosition
+                - edge->m_twin->m_sitePosition;
+            TRmgVector thirdSide = origin - third;
+            int numerator = secondSide.m_x * thirdSide.m_x + secondSide.m_y * thirdSide.m_y;
+            int denominator = perpendicular.m_x * thirdSide.m_x + perpendicular.m_y * thirdSide.m_y;
+            TPoint position = origin + (axis + perpendicular * numerator / denominator) / 2;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+            edge = edge->m_next->m_twin;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+            edge = edge->m_next->m_twin;
+            edge->m_position = position;
+            edge->m_positionComputed = 1;
+        }
+    }
+}
+
 // BuildVertices at 0x5fdb40 distinguishes displacement arithmetic from point
 // translation. It calls these five bodies while forming the circumcenter:
 // origin + (edge + perpendicular * numerator / denominator) / 2.
