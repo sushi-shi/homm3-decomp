@@ -118,8 +118,10 @@ public:
     unsigned char m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
-    TRmgTerrainRule()
-        : m_blendsWithOtherTerrain(0), m_allowsSeparatedNeighbours(0) {}
+    TRmgTerrainRule(unsigned char blendsWithOtherTerrain = 0,
+        unsigned char allowsSeparatedNeighbours = 0)
+        : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
+          m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     virtual ~TRmgTerrainRule();
     // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
@@ -140,6 +142,9 @@ public:
 struct TRmgTerrainPatternRange {
     int m_firstIndex;
     unsigned int m_count;
+
+    // Both table owners initialize their range arrays before the body scan.
+    TRmgTerrainPatternRange() : m_firstIndex(0), m_count(0) {}
 };
 
 struct TRmgTerrainPatternEntry {
@@ -176,9 +181,13 @@ extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
     int m_defaultFrame;                         // +0x08
-    int m_entryCount;                           // +0x0c
+    unsigned int m_entryCount;                  // +0x0c
     const TRmgTerrainPatternEntry* m_entries;   // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
+
+    TRmgPatternTerrainRule(unsigned char blendsWithOtherTerrain,
+        unsigned char allowsSeparatedNeighbours, int defaultFrame,
+        unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
     virtual ~TRmgPatternTerrainRule();
     virtual unsigned char hasEntries();
