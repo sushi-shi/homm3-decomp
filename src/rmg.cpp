@@ -317,6 +317,16 @@ static void setAvailableRmgHeroes(
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
 VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
 
+// The array constructor first builds m_objects, then calls clear for the
+// remaining packed cell state. Dreamcast has no RMG compiland, but retail's
+// EH edge, zero-initialized vector triplet, and direct call to 0x530f10 prove
+// this ordinary constructor boundary.
+VA(0x00530E90, 0x4A)
+TRmgMapItem::TRmgMapItem()
+{
+    clear();
+}
+
 // The array construction at 0x530fb0 passes this body to VC6's vector
 // destructor iterator with a 0x30-byte stride. It destroys TRmgMapItem's
 // vector<type_object*> at offset zero; rmg.obj emits the implicit destructor
@@ -375,6 +385,10 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
+// The array-delete helper for TRmgMapItem uses the recovered 0x30-byte stride
+// and delegates every element to the implicit destructor above.
+VA_COMPGEN(0x00531050, 0x58, VECTOR_DELETING_DTOR, TRmgMapItem)
+
 // Retail's generation retry path invokes this on its temporary map before
 // reinitializing every cell. The post-decrement count produces the zero guard
 // and single 0x30-stride loop seen in all 42 bytes at 0x531140.
@@ -398,6 +412,20 @@ unsigned char type_random_map::canPlaceObject(
 }
 #endif
 
+// Slot 2 updates only the packed eight-bit terrain frame.
+VA(0x00532200, 0x3C)
+void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
+{
+    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    item.m_tile.m_terrainFrame = value;
+}
+
+// The neighboring setTile slot is banked after five scored controls. Direct
+// bitfield writes score 39.38%; packed snapshots and retail-order input
+// snapshots score 52.10%; capturing the inputs before direct writes and an
+// equivalent pointer spelling both peak at 69.21%. All preserve retail's
+// branch/call shape, leaving a VC6 register-scheduling boundary.
+
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
 // The proven grid copy constructor moves the width load before the result
@@ -407,6 +435,20 @@ VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
 TRmgGridPoint type_random_map::getSize()
 {
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
+}
+
+// Slot 4 expands the packed terrain fields into the adapter's three-dword
+// value, including the two independent flip bytes.
+VA(0x00532260, 0x60)
+rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
+{
+    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    rmgTerrainTile tile;
+    tile.m_terrain = item.m_tile.m_landType;
+    tile.m_frame = item.m_tile.m_terrainFrame;
+    tile.m_flipX = item.m_tileData.m_terrainFlipX;
+    tile.m_flipY = item.m_tileData.m_terrainFlipY;
+    return tile;
 }
 
 // Vtable 0x6409cc slots 5 and 6 index the 0x30-byte cell array with the
@@ -3008,6 +3050,10 @@ VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
 VA_COMPGEN(0x005157D0, 0x1B, CLASS_CTOR, vector)
 VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 
+// TRmgObjectPlacementRule owns the two int vectors at +0x2c and +0x3c.
+// Their reverse destruction order accounts for all 61 retail bytes.
+VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
+
 // FilterZonePositions retains this size calculation four times. Retail
 // divides the template connection pointer span by its proven 0x1c stride.
 VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
@@ -3015,6 +3061,10 @@ VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
 // DrawIrregularZoneBoundary retains this single-element erase. Its
 // eight-byte copy loop and ret 4 agree in all 61 raw retail bytes.
 VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
+
+// The neighboring 12-byte position worklist retains the same single-element
+// erase specialization with TRmgMapPosition's three-dword copy loop.
+VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
 
 // The reader's two resize shrink arms retain this int-vector erase.
 // All 51 raw bytes agree; no calls or data relocations remain unresolved.

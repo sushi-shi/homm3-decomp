@@ -867,6 +867,7 @@ struct TRmgMapItem {
     // Before normalization: connection.
     TRmgConnectionDecoration m_connection;  // +0x2c
 
+    TRmgMapItem();
     void clear();
 
     // CreateRiver's predicate reads shift the high tile bits and test a
