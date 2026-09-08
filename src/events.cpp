@@ -2494,7 +2494,7 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
     NewmapCell* cell = getCell(point);
 
     type_artifact artifact(ARTIFACT_NONE);
-    artifact.m_artifactId = static_cast<TArtifact>(cell->getArtifactIndex());
+    artifact.m_artifactId = cell->getArtifactIndex();
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2888,6 +2888,10 @@ static void addReward(std::string& text, const std::string& alternate,
 // Controls: moving show_rewards before add_reward, using a shared signed
 // loop index, and spelling the pending-message temporary explicitly are
 // byte-flat. Caching the secondary-skill byte loses retail's repeated test.
+// Restoring game.h's DC skill/artifact element types removes the consumer
+// casts and reaches 94.7895% (2026-09-08). addReward keeps its DC enum ABI;
+// resource-index arithmetic crosses through town.h's shared representation
+// bridge. File-byte widening belongs to readBlackBox/loadBlackBox.
 // Before normalization (locals): current_hero, human_player, BlackBox.
 VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
@@ -2915,7 +2919,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(message, alternate, rewards,
-                          static_cast<EGameResource>(RES_PRIMARY_SKILL_ATTACK + i),
+                          gameResourceFromInt(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
             }
             gave = 1;
@@ -2924,8 +2928,8 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     }
 
     for (unsigned int j = 0; j < blackBox->m_secondarySkills.size(); j++) {
-        TSecondarySkill skill = static_cast<TSecondarySkill>(blackBox->m_secondarySkills[j].m_type);
-        TSkillMastery level = static_cast<TSkillMastery>(blackBox->m_secondarySkills[j].m_level);
+        TSecondarySkill skill = blackBox->m_secondarySkills[j].m_type;
+        TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->m_skillLevel[skill] == 0 && currentHero->m_skillCount < 8) {
             currentHero->giveSS(skill, level);
@@ -3006,12 +3010,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(message, formatString(
                         g_adventureEventText->getText(183),
-                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
+                        currentHero->m_name), rewards, gameResourceFromInt(k),
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(message, formatString(
                         g_adventureEventText->getText(182),
-                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
+                        currentHero->m_name), rewards, gameResourceFromInt(k),
                                blackBox->m_resQty[k] - 100000);
                 }
             }
@@ -3030,7 +3034,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
             }
-            artifact.m_artifactId = static_cast<TArtifact>(blackBox->m_artifacts[m]);
+            artifact.m_artifactId = blackBox->m_artifacts[m];
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -3043,7 +3047,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
             if (g_spellTraits[blackBox->m_spells[n]].m_level
                     <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-                && !currentHero->isInSpellbook(static_cast<SpellID>(blackBox->m_spells[n]))) {
+                && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(

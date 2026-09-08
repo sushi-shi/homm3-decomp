@@ -290,22 +290,6 @@ static const int g_heroScreenWinText = 6;
 // attribute bit is NH3API's CF_DRAGON; and hero 155 is the one hero whose
 // universal-creature specialty also grants +1 speed - NH3API names him
 // Xeron, and only that spelling is borrowed.
-// hero::get_backpack_error takes a TArtifact and WindowHandler has the
-// dragged artifact's id as a plain int. Overlay, not a cast: the
-// casts-to-enum-types floor is at zero, and this is game.cpp:75's idiom
-// verbatim (its own copy is .cpp-local for the same reason).
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // WindowHandler re-evaluates the rollover whenever either SHIFT changes.
 // These are PS/2 scan codes in message::codeX; inputmgr.h's own note
 // measures what adding ungated enumerators there costs, so they stay here.

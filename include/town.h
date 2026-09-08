@@ -152,6 +152,23 @@ enum EGameResource {
     RES_SMALL_GOLD = 36
 };
 
+// Integer resource ordinals cross into the DC-proven EGameResource ABI
+// at helpers such as add_reward (dc 0x91308). Retail GiveBlackBoxReward
+// (0x49fa90) uses both the 0..6 resource loop and primary-skill base +
+// index directly. This shared bridge preserves that four-byte value.
+// Before normalization (function): game_resource_from_int.
+inline EGameResource gameResourceFromInt(int value)
+{
+    union {
+        // Before normalization: integer.
+        int m_integer;
+        // Before normalization: resource.
+        EGameResource m_resource;
+    } converted;
+    converted.m_integer = value;
+    return converted.m_resource;
+}
+
 // DC names this shared table townBuildingSpriteNames. Retail extends its
 // RoE eight-town run with Conflux and places the definition in townmgr.obj;
 // kb.obj's dialog-icon switch is the first proven cross-TU consumer.

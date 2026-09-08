@@ -90,6 +90,41 @@ class SourceMapTest(unittest.TestCase):
         self.assertIn("; src/unit.cpp:10 | {", source.render_disassembly(
             _asm("nop", "ret"), mapping, verbose=False))
 
+    def test_recorded_compiler_header_uses_wine_filename_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            compiler = root / "compiler"
+            header = compiler / "include" / "XTREE"
+            header.parent.mkdir(parents=True)
+            header.write_text("\n" * 10 + "first();\nsecond();\nlast();\n")
+            src = root / "unit.cpp"
+            src.write_text("#include <xtree>\n")
+            obj = root / "unit.obj"
+            recorded = "Z:" + str(header.with_name("xtree")).replace("/", "\\")
+            obj.write_bytes(_fixture(files=(recorded,)))
+            with patch.object(source, "_debug_obj", return_value=(
+                    obj, src, "unit.cpp")), patch.object(source.cc_wrap, "msvc_dir", return_value=compiler):
+                mapping = source.load("unit", "func", 0, obj)
+            self.assertEqual(mapping.source, str(header))
+            self.assertEqual(mapping.heads_at(1)[0].text, "last();")
+
+    def test_header_case_resolution_rejects_ambiguity_and_unowned_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            compiler = root / "compiler"
+            include = compiler / "include"
+            include.mkdir(parents=True)
+            for name in ("XTREE", "Xtree"):
+                (include / name).write_text("template source\n")
+            (root / "HEADER.H").write_text("unrelated source\n")
+            src = root / "unit.cpp"
+            src.write_text("int value;\n")
+            for recorded in (include / "xtree", root / "header.h"):
+                with self.subTest(recorded=recorded):
+                    with patch.object(source.cc_wrap, "msvc_dir", return_value=compiler):
+                        with self.assertRaisesRegex(source.SourceError, "not a current TU dependency"):
+                            source._recorded_source(str(recorded), src, "unit.cpp")
+
     def test_load_still_rejects_other_out_of_range_lines(self):
         with tempfile.TemporaryDirectory() as directory:
             obj = Path(directory) / "unit.obj"

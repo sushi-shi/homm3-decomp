@@ -232,8 +232,10 @@ int widget::sendMessage(widget::ECommands command, int extra)
 }
 
 // E:\gamedcs\widget.cpp:494
+// Dreamcast's signature and const this type prove Dim is const; retail
+// only reads this widget while darkening the window manager's bitmap.
 VA(0x005fe800, 0x32)  // linkorder, dc 0x196fc8
-void widget::dim()
+void widget::dim() const
 {
     g_windowManager->m_screenBitmap->darken(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);

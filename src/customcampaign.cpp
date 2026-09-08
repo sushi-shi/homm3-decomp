@@ -3093,12 +3093,15 @@ static short readCampaignWord(TAbstractFile* infile)
 // with retail, while spelling erase(begin(), end()) expands those workers.
 //
 // Retail's count loads mask to 8/16 bits and keep signed int loop bounds.
-// The artifact fields sign-extend two-byte reads; a direct TArtifact cast
-// expresses that conversion without the old memcpy carrier. The legacy
+// The artifact fields sign-extend two-byte reads through artifact.h's shared
+// representation bridge into TArtifact. The legacy
 // secret flag is reset after the filename assignment (retail +0xd0).
 // Widened counts plus the cast score 67.8382%; correcting the flag order
 // gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
 // Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
+// Sharing artifactFromInt through artifact.h replaces that cast without
+// changing the signed word boundary; the typed-header checkpoint is
+// 70.3423%, with 79.2531% retained in HIST (2026-09-08).
 //
 // Residual: the array-constructor iterator and nested vector size/resize
 // helpers still expand where retail retains calls. The 69.5768% trace
@@ -3272,7 +3275,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
             artifactPool[whichArtifact].m_artifactId =
-                static_cast<TArtifact>(readCampaignWord(infile));
+                artifactFromInt(readCampaignWord(infile));
             artifactPool[whichArtifact].m_extra = readCampaignWord(infile);
         }
     }

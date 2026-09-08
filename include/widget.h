@@ -257,10 +257,10 @@ public:
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Before normalization (function): widget::Main.
     virtual int main(message* msg) = 0;                     // slot 2
-    // Complete widened the Dreamcast nil-argument draw hook. The shared
-    // vtable representative at 0x5bc7e0 is `ret 8`, and
-    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) = 0; // slot 3
+    // Dreamcast records this const two-argument interface, including the
+    // textWidget and bitmapBorder overrides. Retail corroborates it with
+    // TCampaignBrief's dispatch and the shared `ret 8` at 0x5bc7e0.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
     // Before normalization (function): widget::Draw.
     virtual void draw() = 0;                                // slot 4
     // Before normalization (function): widget::GetRealHeight.
@@ -270,7 +270,7 @@ public:
     // Before normalization (function): widget::process_hover.
     virtual void processHover();                           // slot 7
     // Before normalization (function): widget::Dim.
-    virtual void dim();                                     // slot 8
+    virtual void dim() const;                               // slot 8
     virtual void enable(unsigned char on);                  // slot 9
     // Before normalization (function): widget::OnSetFocus.
     virtual void onSetFocus() {}                            // slot 10
