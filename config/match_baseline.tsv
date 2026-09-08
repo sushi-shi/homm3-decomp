@@ -3275,6 +3275,7 @@ rmg	??_Gtype_random_map@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130f80	-
 rmg	??_Gtype_random_map_generator@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x137dc0	-
 rmg	?_Buynode@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x14d0f0	-
 rmg	?_Construct@std@@YIXPAUTRmgMapPosition@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd60	-
+rmg	?_Construct@std@@YIXPAUTRmgObjectPlacementRule@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd80	-
 rmg	?_Construct@std@@YIXPAUTRmgZoneConnection@@ABU2@@Z	100.0000	100.0000	100.0000	0x14de90	-
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?_Ucopy@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEPAUTRmgNoiseRegion@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d960	-
@@ -3289,7 +3290,7 @@ rmg	?canConnect@TRmgZone@@QBEEPBU1@@Z	96.4286	96.4286	96.4286	0x132bd0	bea039f48
 rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@PAUTRmgZone@@@Z	86.6848	86.6848	86.6848	0x131cf0	8645631febc0
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	90.7594	90.7594	90.7594	0x141960	06f4777db579
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374	98.0374	0x13ad60	a726380b0ba3
-rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	73.0200	73.0200	73.0200	0x143e20	a1e7189b213d
+rmg	?carveBranchingPaths@type_random_map_generator@@QAEXXZ	73.0200	73.0200	73.0200	0x143e20	a143c265e4d9
 rmg	?clear@TRmgMapItem@@QAEXXZ	91.0263	91.0263	91.0263	0x130f10	5159625cc405
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	e059e164a096
 rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150	9f4ec684d983
@@ -3387,7 +3388,7 @@ rmg	?prepareJunctionZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	60.3628	
 rmg	?prepareWaterZoneConnections@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	93.4037	93.4037	93.4037	0x13f470	b7097a3620a4
 rmg	?prepareZoneConnections@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x144920	90b9e7cee918
 rmg	?propagateZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.1353	77.1353	77.1353	0x13d8e0	b52f34245923
-rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	97.5804	97.5804	97.5804	0x136560	d25d28f95d79
+rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	99.7862	99.7862	99.7862	0x136560	713b0702a838
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	c92ec28cb951
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	46e584623115
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
@@ -3432,6 +3433,10 @@ rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f310	-
 rmg	type_random_map_generator_connectJunctionEntrance	0.0000	0.0000	0.0000	0x1443a0	f18d242abd6d
+rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c940	-
+rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
+rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
+rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
 rmg	type_random_map_generator_initializeZones	0.0000	0.0000	0.0000	0x13bcb0	d88aa8e3e5b6
 rmg	type_random_map_generator_paintZoneTerrain	0.0000	0.0000	0.0000	0x13e6a0	058951b1a3e3
 rmg	type_random_map_generator_placeAdditionalTowns	0.0000	0.0000	0.0000	0x144ae0	8eb1f85b9816

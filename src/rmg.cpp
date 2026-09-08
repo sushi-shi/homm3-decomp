@@ -2412,28 +2412,28 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // type and preferred terrain. The final reverse scan gives later rows
 // precedence for the same subtype. Names are provisional; RMG is absent
 // from the Dreamcast build. Retail fixes the record stride at 0x4c.
-// Residual (97.58%): push_back still expands the two-argument rule-vector
-// insert that retail calls at 0x536701, and bitset<10>::_Xran expands its
-// string constructor where retail calls 0x48b370 at 0x536b26. The int/pointer
-// vector destructor, size, erase and pointer-insert name differences are
-// ICF aliases. The emitted int-vector allocator constructor is 0x5157d0.
-// Source controls: initialize row before the vectors, increment it before
-// rule destruction, and pass an explicit zero to both resize calls (84.89%
-// versus 83.93%). A post-decrement reverse scan gives retail's old-count
-// tests (89.99%); a signed size()-1 / >=0 loop does not. Reusing objectType,
-// subtype and terrain across parsing/binding preserves their escaped homes
-// and restores the binding pass (97.58%). Separate locals strength-reduce
-// the type stride and lose the terrain/subtype homes.
-// An index-taking rule constructor moves the completed-construction EH
-// state past the id assignment (97.31%); retain default-then-assign. Direct
-// insert(end(),rule) still expands its two-argument overload and costs
-// additional scheduling differences (95.87%). Signed/unsigned prototype
+// Residual (99.7862%): the rule push_back expands single-value insertion
+// into the count overload, adding one push of 1 where retail calls the
+// retained single-value wrapper at 0x536701. The checked bitset subscript
+// recovers the exception string constructor and the rule's stack homes;
+// direct .test is the 97.5804% negative control.
+// A 48-case append/mask/row-scope/scalar-lifetime matrix and a 32-case
+// independent scalar-append follow-up retain all five exact rule-vector
+// bodies below. Two scalar insert(end(),value) calls with the remaining
+// push_back yield reader 99.5723%; all three direct insertions give 97.3075%.
+// These ordinary public calls recover the parent and child boundaries
+// without changing a library definition. Bank those unchanged-source MAXs
+// separately, then retain this higher reader peak. A 54-case count-one
+// insertion follow-up does not improve either reader form. No pin remains.
+// Earlier source controls: initialize row before the vectors, increment it
+// before rule destruction, and explicitly zero both resize calls. Reuse
+// objectType/subtype/terrain across parsing and binding to preserve escaped
+// homes; the old-count reverse scan matches retail. An index-taking rule
+// constructor instead shifts the EH state past the id assignment, so keep
+// default construction followed by assignment. Signed/unsigned prototype
 // indices and combined/nested reverse-loop conditions are byte-neutral.
-// Temporary depth 1 at push_back and depth 2 at test, intended to stop the
-// named nested callees, are byte-neutral at 97.58%; both were removed.
-// Removing the old TU-local string constructor specializations and their
-// three pins is also neutral here. Canonical library constructors remain;
-// WriteMapHeader's 95.71% MAX is preserved with that collateral measured.
+// Removed inline-depth diagnostics (1 at push_back, 2 at .test) were also
+// byte-neutral at 97.5804%; the canonical library definitions stay in use.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -2492,7 +2492,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             TObjectType* prototype = properties->m_prototype;
             properties->m_placementRule = 0;
             for (terrain = 0; terrain < eTerrainRock; ++terrain) {
-                if (prototype->m_recommendedTerrainMask.test(terrain))
+                if (prototype->m_recommendedTerrainMask[terrain])
                     break;
             }
             properties->m_preferredTerrain = terrain;
@@ -5847,25 +5847,25 @@ void type_random_map_generator::carveBranchingPaths()
         TPoint first;
         TPoint last;
         switch (rand() % 4) {
-        case 0:
+        case RMG_BRANCH_SEED_MAIN_DIAGONAL:
             first.m_x = 0;
             first.m_y = 0;
             last.m_x = m_map.m_mapWidth - 1;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 1:
+        case RMG_BRANCH_SEED_VERTICAL:
             first.m_x = m_map.m_mapWidth / 2;
             first.m_y = 0;
             last.m_x = first.m_x;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 2:
+        case RMG_BRANCH_SEED_ANTI_DIAGONAL:
             first.m_x = m_map.m_mapWidth - 1;
             first.m_y = 0;
             last.m_x = 0;
             last.m_y = m_map.m_mapHeight - 1;
             break;
-        case 3:
+        case RMG_BRANCH_SEED_HORIZONTAL:
             first.m_x = 0;
             first.m_y = m_map.m_mapHeight / 2;
             last.m_x = m_map.m_mapWidth - 1;
@@ -6454,12 +6454,20 @@ VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 // ICF-identical; this TU naturally emits the TRmgMapPosition specialization.
 VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
 
-// Retail vector<TRmgObjectPlacementRule>::insert at 0x54c730 retains its
-// 41-byte _Ufill loop at 0x54d8f0 and the 260-byte _Construct body at
-// 0x54dd80.  The current insert expands that loop while still calling
-// _Construct at each site; its much larger caller body confirms this is an
-// unresolved nested-inliner boundary.  Recover the insert before claiming
-// _Ufill rather than manufacturing an unrelated ODR use.
+// Retail 0x54c730 is the single-value insertion overload (ret 8), with
+// count insertion expanded for one 0x4c-byte placement rule. It retains
+// the three loops below and the implicit deep-copy construction helper.
+// All five bodies match exactly when the checked-subscript reader uses
+// direct single-value insertion for at least two scalar vectors. The all-push_back reader
+// expands the wrapper and loops but raises the reader's own peak; these
+// canonical library definitions and their banked MAXs remain unchanged.
+// Retail's size call is ICF-shared with vector<TObjectType> (same stride);
+// the fill and copy_backward calls have matching 0x4c-value ownership.
+VA_COMPGEN(0x0054C730, 0x1DD, VECTOR_INSERT_SINGLE, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
