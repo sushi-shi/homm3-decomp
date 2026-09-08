@@ -408,7 +408,8 @@ enum ERmgTemplateZoneKind {
 };
 
 enum ERmgTreasurePlacementLimits {
-    RMG_TREASURE_ATTEMPTS = 3
+    RMG_TREASURE_ATTEMPTS = 3,
+    RMG_TREASURE_MINIMUM_REMAINDER = 1500
 };
 
 struct TRmgTreasureRange {
@@ -1280,6 +1281,7 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point);
 
     void clear();
+    void addObject(type_object* object, TRmgMapPosition position);
     void markCoastalTiles();
     void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
 
@@ -1334,6 +1336,8 @@ struct TRmgTreasureGroup {
     }
     void reset();
     unsigned char addGuard(type_object* guard);
+    unsigned char tryAddObject(type_object* object);
+    void updateBounds();
     void traceOutline();
 };
 SIZE(TRmgTreasureGroup, 0x64);
@@ -1891,6 +1895,9 @@ public:
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    type_object* createTreasureObject(TRmgZone* zone, int minimum, int maximum,
+        int* value, unsigned char primary, unsigned char allowTerrainDependent,
+        unsigned char compact, TRmgMapPosition position);
     int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         unsigned char alternate, int value);
     unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
