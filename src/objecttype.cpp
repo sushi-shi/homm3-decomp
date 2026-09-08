@@ -85,6 +85,8 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 // Retail 0x514220. The same gate and the same `count()`, with the opposite
 // arm and no terrain test - which is what makes the pair a partition of the
 // unplaced objects into terrain-specific and terrain-agnostic.
+// A full-width unsigned result local scores 70.42% and merges the exits;
+// the direct byte-return arms preserve the 99.38% CFG peak.
 VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
 unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
@@ -1029,6 +1031,10 @@ VA_COMPGEN(0x0051b910, 0x6A, BASIC_STRING_COMPARE_SUBSTR, char)
 // specializations were already byte-right; only the extents were wrong, and
 // both are EXACT at the corrected sizes. See config/retail-functions.tsv.
 VA_COMPGEN(0x00515560, 0x24D, ISTREAM_EXTRACT_BITSET, Bitset48)
+// The default TObjectType expression combines its two 48-cell masks through
+// this naturally emitted free operator. Its two-dword copy and OR loop match
+// the retained Complete helper.
+VA_COMPGEN(0x00515510, 0x49, BITSET_OR, Bitset48)
 VA_COMPGEN(0x005157f0, 0x247, ISTREAM_EXTRACT_BITSET, Bitset9)
 VA_COMPGEN(0x00516e40, 0xCB, BITSET_XINV, Bitset48)
 VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)

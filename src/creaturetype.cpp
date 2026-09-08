@@ -105,6 +105,33 @@ TCreatureType upgradedCreatureType(TCreatureType type)
         g_creatureTypeTraits[type].m_townType * 14 + creatureIndex + 7];
 }
 
+// Complete's adjacent reverse lookup mirrors upgradedCreatureType: it finds
+// the creature in the same dwelling pair, requires the upgraded half, and
+// returns the entry seven slots earlier. The function has no Dreamcast row;
+// the role name and boundary come from the two table walks in retail.
+VA(0x0047B220, 0x6D)
+TCreatureType downgradedCreatureType(TCreatureType type)
+{
+    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    int townType = traits.m_townType;
+    int creatureIndex;
+    if (townType == -1)
+        goto noCreature;
+
+    creatureIndex = traits.m_level;
+    if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
+        creatureIndex += 7;
+        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
+            goto noCreature;
+    }
+    if (creatureIndex < 7)
+        goto noCreature;
+    return g_townDwellingCreatures[
+        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
+noCreature:
+    return CREATURE_NONE;
+}
+
 // E:\gamedcs\creaturetype.cpp:259
 // The crtraits.txt loader, order-mapped onto the DC roster: it is the row
 // directly after UpgradedCreatureType in creaturetype.obj (dc 0x71968,

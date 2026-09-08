@@ -955,16 +955,17 @@ TCampaignBonus::~TCampaignBonus()
 {
 }
 
-// Residual (97.79%): retail keeps the briefing choice in EDX and the
-// vector's _First in ECX, our CL the other way round. Tried and
-// rejected: the choice read inline at both uses (-63.8),
-// `m_bonuses.size() > chosen` (-3.42).
+// Exact: naming the vector reference before reading the briefing choice gives
+// VC6 retail's EDX choice / ECX _First allocation. Direct member access used
+// the opposite register pair (97.79%); reading the choice at both uses and
+// reversing the comparison regressed further.
 VA(0x00485380, 0x32)  // anchor-vtable (0x63d98c+0x28), retail-only
 void TCampaignStartBonusOption::apply(void* scenario)
 {
+    std::vector<TCampaignBonus*>& bonuses = m_bonuses;
     unsigned int chosen = g_game->m_campaign.m_briefingChoice;
-    if (chosen < m_bonuses.size())
-        m_bonuses[chosen]->apply(m_player);
+    if (chosen < bonuses.size())
+        bonuses[chosen]->apply(m_player);
 }
 
 // The town every building bonus is bound to is the map header's own main
@@ -1014,6 +1015,9 @@ int TCampaignStartCrossoverOption::getCount() const
 // pool the choice names; an empty pool falls back to the blank locator
 // frame. The pool is reached through the campaign's own scenario table -
 // mapScores[choice.scenario].index is the crossover slot.
+// Two direct guard controls do not recover retail's shared fallback: a
+// size guard followed by begin scores 88.93%, while begin followed by one
+// combined size/null guard scores 75.95%. Keep the 96.07% conditional peak.
 VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
@@ -3840,6 +3844,19 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // non-const source overloads compile to the same bytes and /OPT:ICF folded
 // them, so one claim names the row and the other spelling is its alias.
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
+
+// ScenarioStruct::Read tests its 129 campaign-completion flags through this
+// retained specialization.  The bounds check, _Xran edge and five-word bit
+// selection agree with retail in the emitted 55-byte body.
+VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
+
+// The same reader naturally emits bitset<129>::_Tidy.  Its five-word fill
+// and one-bit high-word mask agree with all 37 retail bytes.
+VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
+
+// Artifact-vector callers retain the range erase for the eight-byte element.
+// The naturally emitted COMDAT agrees with all 57 retail bytes.
+VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
 
 // The facet's installation and teardown. _Addfac copies the locale, adds
 // the codecvt to its facet vector and hands the locale back; _Tidyfac's

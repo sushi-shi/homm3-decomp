@@ -301,6 +301,7 @@ ai_player	?_Sort@std@@YIXPAUtype_creature_value@@00@Z	100.0000	100.0000	100.0000
 ai_player	?_Sort@std@@YIXPAUtype_creature_value@@0U?$greater@Utype_creature_value@@@1@0@Z	100.0000	100.0000	100.0000	0x34ce0	-
 ai_player	?_Ucopy@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEPAUpathCell@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34bf0	-
 ai_player	?_Ucopy@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@IAEPAUtype_creature_source@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34ba0	-
+ai_player	?_Ufill@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@IAEXPAUtype_creature_source@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d580	-
 ai_player	?_Unguarded_insert@std@@YIXPAJJ@Z	100.0000	100.0000	100.0000	0x35140	-
 ai_player	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@@Z	100.0000	100.0000	100.0000	0x35020	-
 ai_player	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x35290	-
@@ -651,6 +652,7 @@ artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x4d400	-
 artifact	?initializeArtifactTraitsTable@@YIEXZ	81.3762	81.3762	81.3762	0x4cd50	cbea397abf1f
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	100.0000	100.0000	100.0000	0x4c830	c2d4204bb619
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	100.0000	100.0000	100.0000	0x4c720	5b3823d02cac
+artifact	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x4d380	-
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340	-
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360	-
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	86ef1e8a0778
@@ -1101,6 +1103,7 @@ crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
 creature_bank	?initializeCreatureBank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	100.0000	100.0000	100.0000	0x7ad90	a64d6d95c5f1
 creature_bank	?initializeCreatureBankTraits@@YIEXZ	89.4550	89.4550	89.4550	0x7ab30	80496acb3a98
+creaturetype	?downgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b220	1e1d0f30ab99
 creaturetype	?initializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b480	fdd8af05c148
 creaturetype	?initializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	e1ed0d3f58be
 creaturetype	?isBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	1ce90f219493
@@ -1215,6 +1218,7 @@ customcampaign	?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100
 customcampaign	?_Sort_0@std@@YIXPAUHeroPlaceholderData@@0UHeroPlaceholderStronger@@0@Z	100.0000	100.0000	100.0000	0x8eec0	-
 customcampaign	?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	100.0000	100.0000	100.0000	0x8f2b0	-
 customcampaign	?_Tidy@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x8ed50	-
+customcampaign	?_Tidy@?$bitset@$0IB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8ed20	-
 customcampaign	?_Ucopy@?$vector@UTCampaignCrossoverChoice@@V?$allocator@UTCampaignCrossoverChoice@@@std@@@std@@IAEPAUTCampaignCrossoverChoice@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x8dba0	-
 customcampaign	?_Ucopy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEPAUtype_artifact@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x8dc10	-
 customcampaign	?_Ucopy@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PBV32@0PAV32@@Z	100.0000	100.0000	100.0000	0x8d8d0	-
@@ -1237,7 +1241,7 @@ customcampaign	?apply@TCampaignResourceBonus@@UBEXH@Z	100.0000	100.0000	100.0000
 customcampaign	?apply@TCampaignSecondarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84ca0	cce5e58b5ffd
 customcampaign	?apply@TCampaignSpellBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x840a0	bf08afda08cf
 customcampaign	?apply@TCampaignSpellScrollBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x842d0	3d155dd91405
-customcampaign	?apply@TCampaignStartBonusOption@@UAEXPAX@Z	97.7895	97.7895	97.7895	0x85380	92ec018b1c9d
+customcampaign	?apply@TCampaignStartBonusOption@@UAEXPAX@Z	100.0000	100.0000	100.0000	0x85380	ccd431a0adff
 customcampaign	?applyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	29d196ea5175
 customcampaign	?campaignComplete@SCampaign@@QAEEXZ	100.0000	100.0000	100.0000	0x897d0	e0fc69ff5a43
 customcampaign	?capacity@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8ce20	-
@@ -1252,6 +1256,7 @@ customcampaign	?do_in@?$codecvt@DDH@std@@MBEHAAHPBD1AAPBDPAD3AAPAD@Z	100.0000	10
 customcampaign	?do_length@?$codecvt@DDH@std@@MBEHAAHPBD1I@Z	100.0000	100.0000	100.0000	0x8ec10	-
 customcampaign	?do_max_length@codecvt_base@std@@MBEHXZ	100.0000	100.0000	100.0000	0x8ebe0	-
 customcampaign	?erase@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEPAUCampaignScenarioInfo@@PAU3@0@Z	100.0000	100.0000	100.0000	0x8cdd0	-
+customcampaign	?erase@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEPAUtype_artifact@@PAU3@0@Z	100.0000	100.0000	100.0000	0x14c6f0	-
 customcampaign	?erase@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8ca30	-
 customcampaign	?erase@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@QAEPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0x8c500	-
 customcampaign	?erase@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEPAVhero@@PAV3@0@Z	100.0000	100.0000	100.0000	0x8d3a0	-
@@ -1360,6 +1365,7 @@ customcampaign	?startMusic@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	
 customcampaign	?startScenario@CampaignHeaderStruct@TCampaignBrief@@QAEXHH@Z	100.0000	100.0000	100.0000	0x894e0	b89a011069a1
 customcampaign	?startScenario@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x884c0	57f77639d366
 customcampaign	?sync@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8bd00	-
+customcampaign	?test@?$bitset@$0IB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x8ece0	-
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
 customcampaign	?write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	f33fce8729ae
@@ -1890,6 +1896,7 @@ game	?_Tidy@?$bitset@$0IA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd4e90	-
 game	?_Tidy@?$bitset@$0JA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8c0b0	-
 game	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8d480	-
 game	?_Ubound@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IBEPAU_Node@12@ABQAVCImmEnclosure@@@Z	100.0000	100.0000	100.0000	0xb7e70	-
+game	?_Ucopy@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEPAUTBlackMarket@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d920	-
 game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210	-
 game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80	-
@@ -2119,7 +2126,6 @@ game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	8d681438b
 game	?validateVictoryLossConditions@game@@QAEXE@Z	90.0315	90.0315	90.0315	0xbf780	6233ce8c9732
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	83.8710	96.9556	0xc6c50	eefefa02dd11
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	e819aa75453b
-game	__h3cg$game$bitset_tidy$Bitset129	0.0000	0.0000	100.0000	0x8ed20	-
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	0.0000	100.0000	0xbdc70	-
 game	__h3cg$game$static_dtor$immMouse	100.0000	100.0000	100.0000	0xb6910	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
@@ -2232,7 +2238,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	bc0f970a0bd4
 hero	?getSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580	eb14ae66b5b8
 hero	?getVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	d7659fc39705
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	73.5951	76.3360	76.3360	0xe3070	beb49e359cd2
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	76.3360	76.3360	76.3360	0xe3070	beb49e359cd2
 hero	?giveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	692641051879
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	05daaa5f9673
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	b4a2efe1f0e8
@@ -2366,7 +2372,7 @@ initialize	?addToIncludedMask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10	c
 initialize	?createIncludedMask@@YIXPBHPA_J@Z	93.8667	93.8667	93.8667	0xebb70	61b22a8042c5
 initialize	?createRequirementMasks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0xebc50	8ae14d0436a4
 initialize	?initializeGameData@@YIXXZ	100.0000	100.0000	100.0000	0xeb730	30f875db8fe8
-inputmgr	??0inputManager@@QAE@XZ	73.3333	73.3333	100.0000	0xec460	babaff54d0f2
+inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460	babaff54d0f2
 inputmgr	?asciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	6e9bb45b500f
 inputmgr	?close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540	09500ff1fe17
 inputmgr	?flush@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec570	28b6747595cd
@@ -2740,6 +2746,7 @@ objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bits
 objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	100.0000	100.0000	100.0000	0x117830	-
 objecttype	??A?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEABDI@Z	100.0000	100.0000	100.0000	0x116e20	-
 objecttype	??D?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@QBEABDXZ	100.0000	100.0000	100.0000	0x11a730	-
+objecttype	??U@YI?AV?$bitset@$0DA@@std@@ABV01@0@Z	100.0000	100.0000	100.0000	0x115510	-
 objecttype	??_Distrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x116750	-
 objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x115a40	-
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
@@ -3216,6 +3223,7 @@ resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	8e254a7e61
 resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	d198be5c7e9e
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
 rmg	??0TProgressSink@@QAE@H@Z	100.0000	100.0000	100.0000	0x130e20	2f16a6d32876
+rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130e90	edb4b65aac52
 rmg	??0TRmgZone@@QAE@PAUTRmgTownSlot@@@Z	100.0000	100.0000	100.0000	0x1329e0	43c69784e0da
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	20e010faae4c
 rmg	??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z	100.0000	100.0000	100.0000	0x1330e0	34e5f00dfd63
@@ -3227,6 +3235,7 @@ rmg	??1TProgressSink@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	bcaf4bd86ff6
 rmg	??1TRmgMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132510	da5961006db4
 rmg	??1TRmgMapInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x1361a0	6576d5852847
 rmg	??1TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130ee0	-
+rmg	??1TRmgObjectPlacementRule@@QAE@XZ	100.0000	100.0000	100.0000	0x136b60	-
 rmg	??1TRmgRoadMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132350	c9a0dc309797
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	75f39f6636cf
 rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	443032e6b8c1
@@ -3236,6 +3245,7 @@ rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	b2718b
 rmg	??H@YI?AUTPoint@@U0@UTRmgVector@@@Z	100.0000	100.0000	100.0000	0x1fdd20	c95ef38ef830
 rmg	??HTRmgVector@@QBE?AU0@U0@@Z	100.0000	100.0000	100.0000	0x1fdcb0	c004a932d3f8
 rmg	??KTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcf0	1e9d7d35bbe5
+rmg	??_ETRmgMapItem@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x131050	-
 rmg	??_F?$vector@HV?$allocator@H@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x136ba0	-
 rmg	??_GTProgressSink@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130e40	-
 rmg	??_GTRmgMapAdapter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1324e0	-
@@ -3269,8 +3279,10 @@ rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRm
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	82.1005	82.1005	82.1005	0x142080	b0bd0cb2060b
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	fe6f09922735
 rmg	?drawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	0fe372b1d6ef
+rmg	?erase@?$vector@EV?$allocator@E@std@@@std@@QAEPAEPAE0@Z	100.0000	100.0000	100.0000	0x14cfd0	-
 rmg	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	100.0000	100.0000	100.0000	0x14cdb0	-
 rmg	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0x14cd70	-
+rmg	?erase@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@@Z	100.0000	100.0000	100.0000	0x14c610	-
 rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	94.4493	94.4493	94.4493	0x13b2f0	1402733f8da9
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.7786	84.8000	84.8000	0x141780	5cf7083c6a52
@@ -3281,6 +3293,7 @@ rmg	?getOverlay@TRmgMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0
 rmg	?getOverlay@type_random_map@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1322f0	196fa5fc4193
 rmg	?getRmgGuardValue@@YIHHH@Z	100.0000	100.0000	100.0000	0x145e00	d88a58e28d17
 rmg	?getSize@type_random_map@@UAE?AUTRmgGridPoint@@XZ	97.5556	97.5556	100.0000	0x132240	505c3a1069ef
+rmg	?getTile@type_random_map@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132260	8014560cbb01
 rmg	?getValue@type_key_tent_def@@UAEHPAX0@Z	100.0000	100.0000	100.0000	0x134fa0	434cfc16f2f8
 rmg	?getValue@type_treasure_def@@UAEHPAX0@Z	100.0000	100.0000	100.0000	0x134190	ee5cc0f97d30
 rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@UTRmgMapPosition@@EPAUTRmgZone@@E@Z	100.0000	100.0000	100.0000	0x131170	2b94a415ae67
@@ -3299,6 +3312,7 @@ rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	
 rmg	?scoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	4c927d8360f4
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@W4TTerrainType@@HH@Z	99.6581	99.6581	99.6581	0x146040	13a1816fda39
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
+rmg	?setOverlay@type_random_map@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132200	0a641c95744c
 rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	1a97545cc047
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
@@ -3306,7 +3320,7 @@ rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	
 rmg	?write@rmgMonsterObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1331f0	d6e36466fdab
 rmg	?write@rmgOwnableObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133460	e8476ac4278c
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	d9e51f6131ce
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
@@ -3338,6 +3352,7 @@ rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	e132b05a16e9
 rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	97.9205	97.9205	97.9205	0x1b45f0	6594bbc64db0
 rmg_terrain	??1?$auto_ptr@VrmgTerrainPainter@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76d0	-
+rmg_terrain	??1?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1b4860	-
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	78.6021	78.6021	100.0000	0x1b72f0	53c27631ac05
 rmg_terrain	??1TRmgTerrainRule@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3850	fafc06fe48dc
 rmg_terrain	??1rmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	b322c9533860
@@ -3345,6 +3360,8 @@ rmg_terrain	??M@YI_NABUTRmgGridPoint@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	b8
 rmg_terrain	??_GTRmgTableTerrainRule@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3a50	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAI@Z	100.0000	100.0000	100.0000	0x1b8c70	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAIUbidirectional_iterator_tag@1@@Z	100.0000	100.0000	100.0000	0x1b8cd0	-
+rmg_terrain	?_Lbound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a40	-
+rmg_terrain	?_Ubound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8b60	-
 rmg_terrain	?at@TRmgLinePainterInterface@@QAE?AUTRmgLinePainterTile@@ABUTRmgGridPoint@@@Z	67.5294	67.5294	67.5294	0xfa050	51ad534437c1
 rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	605f0e10d3ea
 rmg_terrain	?buildNeighbourKinds@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAH@Z	94.9255	94.9255	94.9255	0x1b68a0	eae4cbbee0f6
@@ -3354,6 +3371,7 @@ rmg_terrain	?checkSecondDiagonal@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@ABUTRm
 rmg_terrain	?clearRmgLineRectangle@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridRectangle@@@Z	94.5070	94.5070	94.5070	0xfa080	fe4165a8593a
 rmg_terrain	?drawTo@TRmgLineWalker@@QAEXABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0xfa2b0	c5698b179467
 rmg_terrain	?equal_range@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@V123@@2@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b85c0	-
+rmg_terrain	?erase@?$vector@UTRmgPackedTerrainCell@@V?$allocator@UTRmgPackedTerrainCell@@@std@@@std@@QAEPAUTRmgPackedTerrainCell@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1b8020	-
 rmg_terrain	?getEntry@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3880	9e2bec9ed263
 rmg_terrain	?getEntry@TRmgTableTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	a2af54cf7bfe
 rmg_terrain	?getPackedCell@rmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	fe243c14bfe0
@@ -3375,7 +3393,10 @@ rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	63.9923	63.9923	63.9923	0xf9f00	ab30f992e664
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	89.9680	89.9680	89.9680	0x1b5440	2c693c3b66d3
+rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	d2fa6bcbbe7b
+rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	f937b618fa48
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
+rmg_terrain	?selectTransitionFrame@TRmgPatternTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b38f0	79c7b71f7d3c
 rmg_terrain	?upper_bound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AViterator@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	0593cffb6cd5
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	e0930ab7b11e
