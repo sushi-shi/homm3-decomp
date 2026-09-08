@@ -2311,9 +2311,9 @@ hero	?updateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x
 hero	?updateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660	b4b9e086bd65
 hero	?updateSlot@THeroScreenWindow@@QAEXW4TArtifactSlot@@@Z	100.0000	100.0000	100.0000	0xdaf90	345cd28d2a06
 hero	?updateSpellList@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xd95d0	724da9b5b1d7
-hero	?updateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0	0cd5ff6cc529
+hero	?updateStats@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xe16d0	4387ceb5914d
 hero	?upgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370	77ce1d032d26
-hero	?useSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0	4a038153f3c4
+hero	?useSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0	963569cdcb44
 hero	?viewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00	e30cf4014cd2
 hero	?visitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0	9b5325d63de6
 hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	72e6e34f1d51

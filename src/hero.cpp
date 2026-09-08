@@ -17,6 +17,7 @@
 #include <functional>
 #include <algorithm>
 #include "bitset_iterator.h"
+#include "homm3_limit.h"
 #include <vector>
 #include <stdio.h>
 #include <string.h>
@@ -87,6 +88,9 @@
 #include "soundmgr.h"
 #include "resourcemanager.h"
 #include "textresource.h"
+// After Windows headers: undefine their min/max macros before using the
+// includes.h integer wrappers recovered from Dreamcast.
+#include "homm3_minmax.h"
 
 // The base stores emit in CNetMsg(subType,size) order. PlaceInMap's 0x424,
 // 0x20-byte payload is the recruit record, with gNetLocalGamePos supplied as
@@ -161,23 +165,6 @@ DATA(0x00698b04) extern int g_oceanGuidanceMovementBonus;
 // Before normalization: gLighthouseMovementBonus.
 DATA(0x00698b08) extern int g_seaCaptainsHatMovementBonus;
 DATA(0x00698b0c) extern int g_lighthouseMovementBonus;
-
-// Retail's mana clamp materialises both operands in stack homes and selects
-// one by address. This by-value helper reproduces that Dinkumware-era shape;
-// VC6's installed reference-taking helper does not.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
@@ -1725,11 +1712,12 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
     }
 }
 
-// E:\gamedcs\hero.cpp:1504
+// E:\gamedcs\hero.cpp:1504. DC 0xcc300 line 1505 calls max(int,int);
+// its by-value wrapper owns the two operand homes selected by std::_cpp_max.
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::useSpell(int cost)
 {
-    int remainingMana = cppMax<int>(m_mana - cost, 0);
+    int remainingMana = max(m_mana - cost, 0);
     m_mana = remainingMana;
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE &&
         g_currentPlayer->isLocalHuman())
@@ -5233,45 +5221,18 @@ void THeroScreenWindow::updateHeroLocators()
         updateHeroLocator(locator);
 }
 
-// E:\gamedcs\hero.cpp:4240
-// UpdateHeroLocators (dc 0xd2d24, 50 B) has NO retail row - inlined -
-// so this is the next DC row in the bracket, and 304 B against DC's 296
-// is a 1.03x fit. Body rebuilds the four primary-stat widgets from the
-// current hero's +0x476 band, the same band get_primary_skill_total
-// walks.
-// The four-way clamp chain in the stat loop is GetPrimarySkill inlined
-// on gpCurrentHero, not on `this` - retail reloads the global inside the
-// loop while the luck and morale calls below go through ECX. The two
-// tail clamps are the by-value _cpp_min/_cpp_max pair: three stack homes
-// (the value, +3 and -3) selected BY ADDRESS, which is the same
-// Dinkumware-era shape the mana clamp in can_summon_boat carries.
-//
-// Residual (86.1%): the two _cpp_max expansions, and only those - the
-// message frame, the four-stat loop, both sprintf sites, both _cpp_min
-// expansions and every field store are byte-identical. Retail SPLITS the
-// max: `cmp value,-3 / jge` into the min's block, with the taken arm
-// loading the -3 home and jumping straight to the shared load - i.e. the
-// min is duplicated into the max's fall-through only and folded away on
-// the other arm. Our CL SINKS it into one `lea / jl / lea` select and
-// then runs the min once. `why-branch` reports the residual as exactly
-// two `jl->jge` flips and finds NO catalog mutation that moves it (D6,
-// retail-side duplication - an open class).
-// Tried and rejected, one compile each: VC6's own reference-taking
-// std::_cpp_min/_cpp_max (82.97 - it drops the intermediate load but
-// turns the min into a `cmp [eax],3` memory compare); binding the raw
-// GetLuck result to a named local before the clamp (75.16); leaving the
-// clamp inline in the msg.extra store instead of a hoisted local (83.44
-// - retail stores codeX and codeY AFTER the clamp, and only the local
-// reproduces that); and swapping _cpp_max's arms to `_Y < _X ? _X : _Y`
-// (86.07 here, and it costs hero::Fly 3.1 points - the helper is shared).
-// Re-tested 2026-08-20 against the fresh `why-branch` read, one compile
-// each, BOTH worse: writing the low clamp as a statement `if (luck < -3)
-// luck = -3;` (77.29) and swapping the call-site argument order to
-// `_cpp_max(-3, GetLuck(...))` (80.83). The `jge` is retail's SPLIT max,
-// not a comparison the source can respell - the branch-kind report names
-// the symptom here, not the lever.
-// The message frame's field order IS byte-proven: every `= 0` store
-// first, then id / codeX / extraText - the strip::DrawNumber idiom.
+// E:\gamedcs\hero.cpp:4240, DC 0xd2d58.
+// DC lines 4255/4262 call limit(-3, GetLuck/GetMorale(...), 3).
+// Retail's lower-bound-first reference selection is tLimit expanded through
+// that canonical by-value wrapper. The former nested cppMin/cppMax helpers
+// materialized an intermediate result and stopped at 86.0859%; those helpers
+// returned references to their own by-value parameters and had no source proof.
+// Failed controls on that old reconstruction included direct STL selectors
+// (82.97%), named getter results (75.16/86.0859%), inline message-field clamps
+// (83.44%), reversed selector operands (82.7716%) and min-before-max (77.2727%).
+// Those controls do not disprove the named limit calls in the DC source.
+// The four-stat loop expands GetPrimarySkill on g_currentHero; luck and morale
+// use this. Retail initializes zero message fields before id/codeX/extraText.
 VA(0x004e16d0, 0x130)  // order-map + stats-band, dc 0xd2d58
 void hero::updateStats()
 {
@@ -5291,23 +5252,13 @@ void hero::updateStats()
         g_heroScreenWindow->broadcastMessage(&msg);
     }
 
-    // Residual (86.0859%): retail fuses the two reference-returning
-    // templates into ONE selection chain - `cmp v,-3 / jge / &(-3)` then
-    // `cmp v,3 / &3 / &v` with a single `mov eax,[eax]` - because it
-    // jump-threads through the max's constant arm; we materialise the max's
-    // result (`mov eax,[eax]` then a re-store into a fresh temp) and compare
-    // that, which costs one load, one store and the whole slot assignment
-    // ([ebp-0xc]=v, -0x8=3 in retail against our -0x8=v, -0xc=3).  Tried and
-    // rejected, each measured against 86.0859: naming the GetLuck/GetMorale
-    // results in locals first - byte-flat 86.0859; `_cpp_min(3,
-    // _cpp_max(-3, v))` - 82.7716; `_cpp_max(-3, _cpp_min(3, v))` - 77.2727.
-    int luckFrame = cppMin(cppMax(getLuck(0, 0, 1), -3), 3) + 3;
+    int luckFrame = limit(-3, getLuck(0, 0, 1), 3) + 3;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x75;
     msg.m_extra = luckFrame;
     g_heroScreenWindow->broadcastMessage(&msg);
 
-    int moraleFrame = cppMin(cppMax(getMorale(0, 0, 1), -3), 3) + 3;
+    int moraleFrame = limit(-3, getMorale(0, 0, 1), 3) + 3;
     msg.m_codeY = 0x74;
     msg.m_extra = moraleFrame;
     g_heroScreenWindow->broadcastMessage(&msg);

@@ -1,7 +1,7 @@
 #ifndef HOMM3_LIMIT_H
 #define HOMM3_LIMIT_H
 
-// E:\gamedcs\includes.h:124-134, DC 0x20d2c/0x1ef5c. The public name
+// E:\gamedcs\includes.h:124-134, DC 0x20d2c/0x1ef5c.
 // The integer instance is published as ?t_limit@@YAABHABH00@Z.
 // Before normalization: t_limit; parameters min, value, max.
 // Retail 0x4e6750 has the same three-reference ABI, lower-bound-first
