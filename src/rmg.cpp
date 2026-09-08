@@ -4814,6 +4814,45 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     }
 }
 
+// InsetIslandZone calls this after drawing its inset boundary. Retail uses
+// a LIFO position vector, removes its last element, and visits
+// every second entry in the eight-direction table (four cardinal neighbors).
+// Only unmarked cells in the same zone are marked and queued; the seed is
+// queued without a separate mark. Complete-only, with a provisional name.
+// Residual (79.2015%): pop_back retains the nested _Destroy call but still
+// expands std::copy, adding two branch tests and keeping the zone index in
+// a separate stack home. VC6's own pop_back delegates to erase(end()-1).
+// Direct erase with compound coordinates gives 77.5672%; range erase gives
+// 77.5522%. Named iterators are flat, indexed access is lower. Operator+
+// retains a non-retail coordinate constructor (72.3358% with pop_back),
+// direct construction gives 67.1119%, scalar assignment 75.6269%, and an
+// inner current-position scope 77.7836%. Hoisting the neighbor is byte-flat.
+// Keep the canonical coordinate addition, flag accessor and worklist calls.
+VA(0x0053CF50, 0x177) // anchor-callee 0x53d36b + map/zone/position fields; ret 4
+void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
+{
+    std::vector<TRmgMapPosition> pending;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    pending.push_back(position);
+    while (pending.size() > 0) {
+        position = pending.back();
+        pending.pop_back();
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
+            TRmgMapPosition nearby = position;
+            nearby += g_rmgDirections[direction];
+            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
+                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+                TRmgMapItem* item = m_map.getMapItem(nearby);
+                if (!item->isZoneBoundary() && item->m_zoneState.m_zone == zoneIndex) {
+                    item->m_tileData.m_zoneBoundary = 1;
+                    pending.push_back(nearby);
+                }
+            }
+        }
+    }
+}
+
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
 // Residual (88.9891%): paired TPoint sums improve the independent scalar
@@ -4845,7 +4884,8 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
-// Residual (75.3450%): clamp argument order improves 63.63 -> 66.42%;
+// Residual (78.77%): the recovered interior-fill call restores the complete
+// retail call sequence (previously 75.3450%). Clamp argument order improves 63.63 -> 66.42%;
 // direct displacement-vector construction avoids the temporary point
 // subtraction (73.46%); retaining the long clamp result reaches 75.35%.
 // Length and edge calls remain intact. Clamp temporary homes, vector
@@ -4878,6 +4918,7 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         }
         drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
     }
+    fillIslandInterior(zone);
 }
 
 // The zone coordinator passes its zone and a closed Voronoi edge ring.

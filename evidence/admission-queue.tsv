@@ -16,7 +16,6 @@ bracketed	416	0x14dbc0	bracketed	quicktownwindow..recruit	quicktownwindow,recrui
 bracketed	415	0x14da20	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_14c730_sub03_14da20	resolve the owner, then add its VA claim and body
 bracketed	408	0x115010	bracketed	newgame..overview	newgame,overview	game_214260_sub00_115010	resolve the owner, then add its VA claim and body
 carcass	396	0xd2e50	bracketed	game	game	__h3cg$game$std_copy$type_map_hero_identity	enable the existing VA claim and reconstruct its body
-bracketed	375	0x13cf50	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13d1c0_sub01_13cf50	resolve the owner, then add its VA claim and body
 unmapped	316	0x2043d0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	295	0x2042a0	unmapped				locate the owning TU, then add its VA claim and body
 unmapped	252	0x2039c0	unmapped				locate the owning TU, then add its VA claim and body
