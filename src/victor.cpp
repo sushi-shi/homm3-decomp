@@ -34,6 +34,7 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // /G3, /G4 and an explicit HGLOBAL local for both release calls are flat.
 // An explicit read-error goto to the final return also preserves 90.0976%;
 // spelling a shared exit does not move the conditional ESI save/restore.
+// Compiling this body alone with the same headers and flags is byte-identical.
 // Dreamcast's PCX stub independently confirms the public void result;
 // the incidental EAX value does not justify changing that interface.
 VA(0x006037a0, 0x6e)  // anchor-caller PCX importers + Win32 ownership calls; external Victor library
@@ -81,6 +82,7 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // Inverting the final height test into an early return or goto exit retains
 // 85.8333%; assigning a conditional minimum instead lowers it to 80.2778%.
 // These exit spellings do not recover retail's memory compare and epilogue.
+// Compiling this body alone with the same headers and flags is byte-identical.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)
