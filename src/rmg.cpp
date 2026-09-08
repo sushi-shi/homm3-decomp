@@ -3573,7 +3573,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
             // even though no table entry can satisfy both equalities.
             while (count < 4 &&
                 (g_rmgTerrainTownChoices[zone->m_terrain][count] != -1 || expanded ||
-                 g_rmgTerrainTownChoices[zone->m_terrain][count] != 8))
+                 g_rmgTerrainTownChoices[zone->m_terrain][count] != TOWN_CONFLUX))
                 ++count;
             if (count == 0)
                 zone->m_townType2 = -1;
