@@ -1641,9 +1641,12 @@ struct TRmgZone {
     TRmgMapPosition m_position;        // +0x30: main town
     // Before normalization: active.
     unsigned char m_active;            // +0x3c
-    // Before normalization: opaque003d. The +0x40 word remains unresolved;
-    // retain its surrounding storage rather than calling it padding.
-    char m_opaque003d[7];              // +0x3d..+0x43
+    // Before normalization: opaque003d.
+    char m_opaque003d[3];              // +0x3d..+0x3f
+    // Previously the tail of opaque003d. Retail 0x54b180 relaxes graph
+    // distances here; 0x54b300 converts them into randomized quest-zone
+    // priorities, penalizing immediately adjacent zones. Role-derived name.
+    int m_questPlacementScore;         // +0x40
     // Retail ctor 0x5329e0 clears 232 dwords beginning at +0x44.
     // Placement 0x54039a increments by object type, removal 0x54bd30
     // decrements it, and 0x546270 checks the per-zone object-type limit.
@@ -2029,8 +2032,13 @@ public:
     // Retail 0x54b490, called by the quest-artifact writable override.
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
-    // boundary with one mutable artifact argument; larger body not recovered.
+    // boundary with one mutable artifact argument.
     unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
+    // artifact caller supplies its origin zone and the prepared hut group.
+    // Original names are unavailable; the graph and placement roles are proven.
+    void calculateQuestZoneDistances(TRmgZone* origin);
+    unsigned char placeQuestGroup(TRmgTreasureGroup* group, TRmgZone* origin);
     // Retained helpers used by the key-tent override at 0x5338e0.
     // 0x54b8c0 finds objectPrototypes[9] of the same color and tries a
     // guarded treasure group; 0x54bc50 removes the old object's map marks,

@@ -1749,3 +1749,12 @@ A four-state control separates braces from assignment syntax: scoped
 `m_text = text` and scoped `m_text.operator=(text)` both match; both bare-if
 forms expand the base. Explicit default construction of the string is
 flat. Preserve evidenced scopes even when they own no source locals.
+
+A retained vector count-insert call does not identify the source overload.
+RMG's `placeQuestGroup` at `0x54b300` needs a single-element source insert:
+VC6 expands that wrapper and leaves the count insertion called, restoring
+retail's boundary and reaching 93.5302%. Calling the count
+overload directly expands it into allocation/copy/fill operations and gives
+0%. Guard scopes and signed/unsigned index controls are flat. Inspect the
+named nested call sequence before treating an emitted overload as the
+source-level call.
