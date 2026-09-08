@@ -3307,7 +3307,9 @@ rmg	?getSize@type_random_map@@UAE?AUTRmgGridPoint@@XZ	97.5556	97.5556	100.0000	0
 rmg	?getTile@TRmgMapAdapter@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1327c0	6258dc343da0
 rmg	?getTile@TRmgRoadMapAdapter@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132410	1476ea8c4866
 rmg	?getTile@type_random_map@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132260	8014560cbb01
+rmg	?getValue@type_black_box_creature_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134310	5557e97c67d1
 rmg	?getValue@type_key_tent_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134fa0	aab5f01f5123
+rmg	?getValue@type_quest_experience_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134c80	3983c518b002
 rmg	?getValue@type_treasure_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x134190	cff23a10f777
 rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@UTRmgMapPosition@@EPAUTRmgZone@@E@Z	100.0000	100.0000	100.0000	0x131170	2b94a415ae67
 rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4646	97.4676	0x138b10	3d8815234772
@@ -3343,7 +3345,7 @@ rmg	?write@rmgScholarObject@@UAEXPAVTAbstractFile@@H@Z	99.4146	99.4146	99.4146	0
 rmg	?write@rmgShrineObject@@UAEXPAVTAbstractFile@@H@Z	99.4933	99.4933	99.4933	0x133f40	f01190a24e62
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	d9e51f6131ce
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-

@@ -1313,6 +1313,26 @@ type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
         m_adjustedValue = ((m_adjustedValue + 1) / 2) * 2;
 }
 
+// Creature-definition vtable 0x640b7c slot 1. The zone test reads +8
+// (townType2), and the alignment weighting uses the generator's active-zone
+// counts. These offsets distinguish both arguments from the old placeholders.
+VA(0x00534310, 0x64) // anchor-vtable + creature traits 0x6747b0; retail-only
+int type_black_box_creature_def::getValue(
+    TRmgZone* zone, type_random_map_generator* generator)
+{
+    int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    if (alignment != zone->m_townType2)
+        return -1;
+    int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_adjustedValue;
+    int alignmentCount = 0;
+    if (alignment != -1)
+        alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
+    int zoneCount = generator->m_activeZoneCount;
+    if (zoneCount > 0)
+        value += alignmentCount * value / zoneCount;
+    return value;
+}
+
 // Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.
 // Its allocation and base initialization match the ordinary factory, followed
 // by the proven ownable-object vptr 0x640aa4. All 83 bytes match while
@@ -1368,6 +1388,28 @@ type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)
 {
     return new rmgWitchHutObject(properties);
+}
+
+// Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
+// Both classes exist independently and use the same availability checks:
+// current prototype at +0xf58, then the exhausted-artifact flag at +0x10b4.
+VA(0x00534C80, 0x34) // anchor-vtables + generator fields; retail-only
+int type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
+{
+    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
+        return -1;
+    if (generator->m_questArtifactPoolLow)
+        return -1;
+    return m_value;
+}
+
+int type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generator)
+{
+    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
+        return -1;
+    if (generator->m_questArtifactPoolLow)
+        return -1;
+    return m_value;
 }
 
 VA(0x00534EA0, 0x30)
