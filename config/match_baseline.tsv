@@ -3167,6 +3167,7 @@ resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159
 resourcedisplay	?update@TResourceDisplay@@QAEXEE@Z	100.0000	100.0000	100.0000	0x158f20	6caa3531e553
 resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15d410	-
 resourcemanager	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x15e440	-
+resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	100.0000	100.0000	100.0000	0x15d2c0	-
 resourcemanager	??0?$pair@PBDPAVresource@@@std@@QAE@ABQBDABQAVresource@@@Z	100.0000	100.0000	100.0000	0x15ecf0	-
 resourcemanager	??0TCacheMapKey@ResourceManager@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x15ac20	54d198c586ca
 resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591e0	ffc0b65f2d4d
