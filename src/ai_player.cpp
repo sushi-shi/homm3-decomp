@@ -768,65 +768,39 @@ void type_AI_player::endTurn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (84.5868%; older measurements 79.8885, 80.5192): the 0x7c frame,
-// local offsets, player-id lifetime, threshold block, network payloads,
-// dialog flow and timeout tail agree. More importantly, all 55 branches,
-// both returns and all 28 out-of-line calls now agree; `diagnose` reports
-// flow-distance zero and only a callee-saved/register-homing permutation.
+// Dreamcast names player as playerData& and calls the by-value min/max
+// wrappers in the surplus calculation (lines 519, 522/526, 541). Retail
+// independently copies both inputs to each selector into temporary homes.
+// Those recovered boundaries move the current 79.71% implementation to
+// 84.82%. The recipient-demand selector also copies both inputs in retail
+// (0x4292d6 / 0x4292db), unlike DC's direct-reference std::min; the ordinary
+// min wrapper reproduces those copies and reaches 85.05%.
 //
-// The missing source boundary was narrower than a lexical inline-depth
-// region. The tiny one-body helper below is inlined into both format sites,
-// but pins only the three-argument string::append call inside itself. Thus
-// GetText and each format temporary's destructor compile in the caller at
-// normal depth, exactly reproducing retail. This measured 80.5192 -> 82.58
-// for the single-request site and 82.58 -> 83.89 when shared by the gift
-// site. Spelling `list.clear()` as its direct Dinkumware operation,
-// `erase(begin(), end())`, removes the last wrapper depth and lets the trivial
-// vector `_Destroy` disappear, reaching 84.5868 and the exact call ledger.
+// Both dialog-resource records are initialized BEFORE IsLocalHuman, then
+// shared by the local display and remote-message arms. DC lines 591-600 and
+// 622-631 prove the scope; retail stores the first pair at 0x4293c9/0x4293d1
+// before the call and reloads it for CGiftMsg. Recovering these lifetimes
+// reaches 87.31% and fixes the entry register roles previously described as
+// an unreachable compiler-state wall.
 //
-// Naming the temporary, direct assign, depth-one and broader override probes
-// regress or are byte-inert and remain rejected. Other residuals are register
-// permutations in the transfer loops and one deliberately retained retail
-// gate after the human transfer.
-// Release-elided diagnostic carriers at one, two, four and eight entry sites
-// are byte-flat at 80.5192 with the same 52-vs-55 branch count (2026-08-21).
-// The recovered branch/call threshold was governed by source scope, not by
-// this caller-mass family.
-
-//
-// IT ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc census).
-// Retail's calls at make_gift fn+0x38b and fn+0x4cc are
-// basic_string::assign(const basic_string&, uint, uint) where ours were
-// append(...); the surrounding instruction stream is identical on both sides,
-// so only the relocation target differed and objdiff does not score it. The
-// third message site in the same body already spelled `message = ...`, which
-// lowers to that same assign, so all three agree now and the call view drops
-// to the two vector-insert ICF twins.
-// The wrapper's own `inline_depth(0)` pin came out with the reloc census
-// above: byte-flat once all three sites agree on assign (2026-09-06).
-// Before normalization (function): assign_formatted_ai_message.
-static inline void assignFormattedAiMessage(
-    std::string& message, const std::string& formatted)
-{
-    message.assign(formatted, 0, std::string::npos);
-}
-
-// Residual (84.5868%, polish-45): the B1 whole-body role swap and nothing
-// else.  Blocks (100/100), branches (55/55) and the report-level call view
-// all AGREE; `vc6 diagnose` reads "callee-saved role swap, schedule aligned:
-// edx->eax x24, eax->edx x19".  The transposed pair is `this` against the
-// gpGame load - retail takes `mov edx,ecx` / `mov ecx,[gpGame]`, this compile
-// takes `mov eax,ecx` / `mov edx,[gpGame]` - and docs/vc6/regalloc.md section
-// 5 records that when one side of the pair is a parameter or `this` the alias
-// is copy-propagated and NO statement-local spelling reaches it.  This is the
-// C1 handle-state class; do not spend builds on operand or naming variants
-// here.
+// DC's list.clear() boundary is retained. Expanding it to erase(begin,end)
+// measured 87.31%, but loses the evidenced wrapper; clear() currently keeps
+// an extra nested _Destroy call and measures 86.52%. The two formatted
+// string sites likewise use DC's operator= directly. The artificial
+// assignFormattedAiMessage wrapper (formerly assign_formatted_ai_message)
+// was removed byte-flat; all three assignment calls select retail's assign,
+// never append. Older named-format-temporary and broader inline-depth probes
+// did not recover the allocation, and release-elided entry carriers were
+// byte-flat. No such probes are retained.
+// Residual (86.52%): resource/recipient address scheduling and register
+// allocation, plus the nested _Destroy call inside clear. The two insertion
+// call names differ through the type_artifact/type_dialog_resource ICF pair.
 // Before normalization (locals): player_id, recipient_amount, has_surplus, recipient_ai,
 // displayed_resource, requested_resource.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::makeGift(long playerId)
 {
-    playerData* player = &g_game->m_players[m_team];
+    playerData& player = g_game->m_players[m_team];
     long surplus[7];
     int resource;
 
@@ -835,15 +809,15 @@ void type_AI_player::makeGift(long playerId)
             - m_resourceDemand[resource];
         if (surplus[resource] > 0) {
             long recipientAmount = g_game->m_players[playerId].m_resources[resource];
-            surplus[resource] = cppMin(
+            surplus[resource] = min(
                 surplus[resource],
-                (player->m_resources[resource] - recipientAmount) / 2L);
+                (player.m_resources[resource] - recipientAmount) / 2L);
             if (resource == GOLD)
-                surplus[resource] = cppMin(
-                    surplus[resource], player->m_resources[resource] - 10000L);
+                surplus[resource] = min(
+                    surplus[resource], player.m_resources[resource] - 10000L);
             else
-                surplus[resource] = cppMin(
-                    surplus[resource], player->m_resources[resource] - 20L);
+                surplus[resource] = min(
+                    surplus[resource], player.m_resources[resource] - 20L);
 
             surplus[resource] -= m_reservedFunds[resource];
             if (resource == GOLD) {
@@ -854,7 +828,7 @@ void type_AI_player::makeGift(long playerId)
             }
             if (surplus[resource] < 5 * recipientAmount)
                 surplus[resource] = 0;
-            surplus[resource] = cppMax(surplus[resource], 0L);
+            surplus[resource] = max(surplus[resource], 0L);
         }
     }
 
@@ -870,13 +844,13 @@ void type_AI_player::makeGift(long playerId)
         type_AI_player* recipientAi = &g_aiPlayers[playerId];
         recipientAi->calculateDemand();
         for (resource = 0; resource < 7; resource++) {
-            surplus[resource] = cppMin(
+            surplus[resource] = min(
                 surplus[resource],
                 recipientAi->m_resourceDemand[resource]
                     - recipientAi->m_resourceSupply[resource]);
             if (surplus[resource] > 0) {
                 g_game->m_players[playerId].m_resources[resource] += surplus[resource];
-                player->m_resources[resource] -= surplus[resource];
+                player.m_resources[resource] -= surplus[resource];
             }
         }
         return;
@@ -885,7 +859,7 @@ void type_AI_player::makeGift(long playerId)
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] > 0) {
             g_game->m_players[playerId].m_resources[resource] += surplus[resource];
-            player->m_resources[resource] -= surplus[resource];
+            player.m_resources[resource] -= surplus[resource];
         }
     }
 
@@ -895,13 +869,14 @@ void type_AI_player::makeGift(long playerId)
     std::vector<type_dialog_resource> list;
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] > 0) {
+            type_dialog_resource displayedResource;
+            displayedResource.m_resource = resource;
+            displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
-                type_dialog_resource displayedResource;
-                displayedResource.m_resource = resource;
-                displayedResource.m_qualifier = surplus[resource];
                 list.push_back(displayedResource);
             } else if (g_networkActive69954c) {
-                CGiftMsg msg(g_netLocalGamePos, resource, surplus[resource]);
+                CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
+                             displayedResource.m_qualifier);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
         }
@@ -909,24 +884,22 @@ void type_AI_player::makeGift(long playerId)
 
     std::string message;
     if (g_game->m_players[playerId].isLocalHuman()) {
-        assignFormattedAiMessage(
-            message,
-            formatString(
-                g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-                g_playerColorNames[m_team]));
+        message = formatString(
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_playerColorNames[m_team]);
         extendedDialog(message.c_str(), list, -1, -1, 0);
     }
 
-    list.erase(list.begin(), list.end());
+    list.clear();
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] < 0) {
+            type_dialog_resource requestedResource;
+            requestedResource.m_resource = resource;
+            requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
-                type_dialog_resource requestedResource;
-                requestedResource.m_resource = resource;
-                requestedResource.m_qualifier = 0;
                 list.push_back(requestedResource);
             } else if (g_networkActive69954c) {
-                CGiftRequestMsg msg(g_netLocalGamePos, resource);
+                CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
         }
@@ -934,13 +907,11 @@ void type_AI_player::makeGift(long playerId)
 
     if (g_game->m_players[playerId].isLocalHuman() && list.size()) {
         if (list.size() == 1) {
-            assignFormattedAiMessage(
-                message,
-                formatString(
-                    g_generalText->getText(
-                        GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
-                    g_playerColorNames[m_team],
-                    g_resourceNames[list[0].m_resource]));
+            message = formatString(
+                g_generalText->getText(
+                    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+                g_playerColorNames[m_team],
+                g_resourceNames[list[0].m_resource]);
         } else {
             message = formatString(
                 g_generalText->getText(
