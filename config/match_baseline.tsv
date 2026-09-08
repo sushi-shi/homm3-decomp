@@ -3325,6 +3325,7 @@ rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createTreasureObject@type_random_map_generator@@QAEPAVtype_object@@PAUTRmgZone@@HHPAHEEEUTRmgMapPosition@@@Z	81.6894	81.6894	81.6894	0x146190	645189964904
 rmg	?createWaterZoneIsland@type_random_map_generator@@QAEXABUTRmgZoneBounds@@H@Z	93.5790	93.5790	93.5790	0x13efa0	049d9f1d80da
 rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	91.1321	91.1321	91.1321	0x137970	ef8d60ed01f4
+rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	82.1859	82.1859	82.1859	0x1373a0	5ce51b21e3e4
 rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	96.0963	96.0963	96.0963	0x1439e0	34d79f79b52b
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	fe6f09922735
 rmg	?drawIslandBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	99.4615	99.4615	99.4615	0x13cd30	0df4fa6f5ca1
@@ -3383,6 +3384,7 @@ rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	90.6395	
 rmg	?insert@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAE?AViterator@12@V312@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0x14d000	-
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x22f50	-
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x4200	-
+rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEPAUTRmgMapPosition@@PAU3@ABU3@@Z	100.0000	100.0000	100.0000	0x14c3f0	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
 rmg	?insert@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@QAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d5c0	-
 rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	75.3450	75.3450	75.3450	0x13d1c0	c1fcb1916f73
@@ -3461,7 +3463,6 @@ rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
 rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
-rmg	TRmgGeneratorBase_decorateMapCell	0.0000	0.0000	0.0000	0x1373a0	b61b573f5494
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
