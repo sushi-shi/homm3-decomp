@@ -3,9 +3,10 @@
 The former PCX exclusion conflated missing vendor source with inability to
 reconstruct its identified functions. `imgdes`, the public PCX API and the
 Win32 ownership calls establish Victor Image Processing Library ownership.
-The reconstructed functions now live in `src/victor.cpp`, with an explicitly
-provisional grouping filename and a separate profile. Original library source
-and object filenames remain unknown; the vendor directory is unchanged.
+The reconstructed C++ functions live in `src/victor.cpp`, and the assembly
+kernels in `src/victor_pcx_kernels.cpp`, with explicitly provisional grouping
+filenames and separate profiles. Original library source and object filenames
+remain unknown; the vendor directory is unchanged.
 
 The public allocation and validation wrappers use `stdcall`; the allocation
 worker and dimension helper use `cdecl`. The 37-byte `allocimage` wrapper
@@ -31,11 +32,22 @@ packs its bit index/mask in CL/CH and source bytes in four byte registers;
 the ordinary inline-assembly definition matches all 99 bytes. Neither needs
 a naked function, raw byte directives, or hand-written outer prologue.
 
-The adjacent RLE decoder is different: the same approach reproduces its loop
-and consumed-byte local, but VC6 omits retail's unused EBX save and restore.
-That two-byte discrepancy remains explicit. `freeimage` and the dimension
-helper also retain register-save/comparison scheduling residuals. Their
-function-specific controls are recorded beside their definitions.
+The adjacent RLE decoder distinguishes the assembly compilation profile:
+ordinary `/O2` removes its unused EBX save and restore, producing 81 bytes.
+Disabling global optimization with `/O2 /Og-` reproduces all 83 bytes without
+changing any source operation. Both neighboring assembly kernels remain
+exact, giving 234 directly compared bytes with no relocations. `/Od` also
+matches all three bodies, so these results do not determine the other original
+optimization switches. `/O2 /Os` and `/O1 /Oi` instead shorten the RLE body to
+79 bytes and change the ordinary allocation wrapper from 37 to 33 bytes.
+
+The three consecutive kernels now share `src/victor_pcx_kernels.cpp` and the
+profile with global optimization disabled. This is a provisional semantic
+grouping, not a claim that the original library's object boundaries or source
+filename have been recovered. The ordinary C++ wrappers retain their `/O2`
+profile: applying `/Og-` to those functions breaks both exact wrappers and
+lengthens the release/dimension helpers. `freeimage` and the dimension helper
+retain their documented register-save/comparison scheduling residuals.
 
 The shared PCX descriptor now imports the real Windows `RGBQUAD`,
 `BITMAPINFOHEADER` and `HBITMAP` types. Its layout remains eleven dwords.
