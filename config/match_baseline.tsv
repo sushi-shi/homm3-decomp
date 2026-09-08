@@ -3365,9 +3365,11 @@ rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@
 rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134380	03c960846c3a
 rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134410	0e7e1e9770bd
 rmg	?generate@type_black_box_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134490	e77972609613
+rmg	?generate@type_black_box_spells_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134520	ca70876f37f8
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	a4863c60ac59
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	64ccd4bf338d
 rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	95.1754	95.1754	95.1754	0x1348d0	89e3be34b370
+rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134b90	187602baefdf
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	eb1bf6a35a59
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	09167083d057
 rmg	?generate@type_random_map_generator@@QAEEXZ	96.8971	96.8971	96.8971	0x149930	6e4cccd152be
@@ -3477,6 +3479,7 @@ rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	
 rmg	?write@TRmgMapItem@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x132890	693f935807a5
 rmg	?write@rmgArtifactObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133500	af70fb7423ba
 rmg	?write@rmgBlackBoxObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1336f0	ea1c6a22dc19
+rmg	?write@rmgHeroObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133c80	6075af5ccf34
 rmg	?write@rmgMonsterObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1331f0	d6e36466fdab
 rmg	?write@rmgOwnableObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133460	e8476ac4278c
 rmg	?write@rmgResourceObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1335c0	b91d5910f6d9

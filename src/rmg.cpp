@@ -2076,6 +2076,98 @@ void rmgHeroObject::unknownOperation()
     m_generator->m_disabledHeroes[m_heroIndex] = 0;
 }
 
+// Hero-object vtable 0x640b14 slot 3 writes an unowned prison hero with its
+// selected identity and experience. The ordered fields are corroborated by
+// NewfullMap::readHeroData: AB introduces the object ID and biography/sex/
+// spell defaults; SoD makes experience optional and adds primary-skill defaults.
+// All remaining customizations are absent. Complete-only, with no DC RMG body.
+// Exact: the canonical base write expands here, and separate narrow-buffer
+// scopes recover the retail argument-slot reuse and 0x18-byte frame.
+VA(0x00533C80, 0x1E4) // anchor-vtable + ordered versioned H3M writes; ret 8
+void rmgHeroObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        int objectId = m_objectId;
+        outfile->write(&objectId, sizeof(objectId));
+    }
+    {
+        char owner = -1;
+        outfile->write(&owner, sizeof(owner));
+    }
+    {
+        char heroIndex = m_heroIndex;
+        outfile->write(&heroIndex, sizeof(heroIndex));
+    }
+    {
+        char customName = 0;
+        outfile->write(&customName, sizeof(customName));
+    }
+    if (version >= RMG_MAP_SHADOW_OF_DEATH) {
+        {
+            char customExperience = m_experience != 0;
+            outfile->write(&customExperience, sizeof(customExperience));
+        }
+        if (m_experience != 0) {
+            int experience = m_experience;
+            outfile->write(&experience, sizeof(experience));
+        }
+    } else {
+        int experience = m_experience;
+        outfile->write(&experience, sizeof(experience));
+    }
+    {
+        char customPortrait = 0;
+        outfile->write(&customPortrait, sizeof(customPortrait));
+    }
+    {
+        char customSecondarySkills = 0;
+        outfile->write(&customSecondarySkills, sizeof(customSecondarySkills));
+    }
+    {
+        char customArmies = 0;
+        outfile->write(&customArmies, sizeof(customArmies));
+    }
+    {
+        char groupFormation = 0;
+        outfile->write(&groupFormation, sizeof(groupFormation));
+    }
+    {
+        char customArtifacts = 0;
+        outfile->write(&customArtifacts, sizeof(customArtifacts));
+    }
+    {
+        char patrolRadius = -1;
+        outfile->write(&patrolRadius, sizeof(patrolRadius));
+    }
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        {
+            char customBiography = 0;
+            outfile->write(&customBiography, sizeof(customBiography));
+        }
+        {
+            char sex = -1;
+            outfile->write(&sex, sizeof(sex));
+        }
+        if (version >= RMG_MAP_SHADOW_OF_DEATH) {
+            {
+                char customSpells = 0;
+                outfile->write(&customSpells, sizeof(customSpells));
+            }
+            {
+                char customPrimarySkills = 0;
+                outfile->write(&customPrimarySkills, sizeof(customPrimarySkills));
+            }
+        } else {
+            char spell = -2;
+            outfile->write(&spell, sizeof(spell));
+        }
+    }
+    char reserved[16];
+    memset(reserved, 0, sizeof(reserved));
+    outfile->write(reserved, sizeof(reserved));
+}
+
 // Scholar vtable 0x640b24 writes the default reward tag/value, then six
 // reserved bytes as a dword and word. Retail zeroes a full dword temporary
 // before the final two-byte write; preserve that scalar width and call size.
@@ -2283,6 +2375,31 @@ type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properti
     return object;
 }
 
+// The spell-reward definition table selects the same Pandora's Box object.
+// Retail scans the 70 ordinary spells in ascending ID order for each level,
+// descending from maximumLevel through minimumLevel. Like the scroll factory,
+// flag 0x2000 excludes spells and the school mask must intersect the definition.
+// Complete-only: no Dreamcast RMG procedure exists.
+// Exact: a long spell index converts to the vector's int payload, preserving
+// retail's copied temporary and strength-reduced 136-byte trait-row stride.
+// An explicit int payload copy is also exact; passing an int loop index by
+// reference (including int(spell), which VC6 elides) reaches only 85.8423%.
+VA(0x00534520, 0x267) // anchor-vtable 0x640ba0 slot 0; object vptr 0x640ad4; ret 0xc
+type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    for (int level = m_maximumLevel; level >= m_minimumLevel; --level) {
+        for (long spell = 0; spell < 70; ++spell) {
+            if (!(g_spellTraits[spell].m_flags & 0x2000)
+                && g_spellTraits[spell].m_level == level
+                && (g_spellTraits[spell].m_school & m_schoolMask))
+                object->m_spells.push_back(spell);
+        }
+    }
+    return object;
+}
+
 // Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.
 // Its allocation and base initialization match the ordinary factory, followed
 // by the proven ownable-object vptr 0x640aa4. All 83 bytes match while
@@ -2398,6 +2515,26 @@ int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
         return -1;
     int value = type_black_box_creature_def::getValue(zone, generator);
     return (2 * value - 4000) / 3;
+}
+
+// Creature-reward counterpart of the experience/gold factories below.
+// Retail allocates the pending hut, selects the artifact prototype, and
+// constructs its wrapper before loading both creature payload fields.
+// Complete-only: the definition's 0x640c00 table proves this override.
+// Exact: naming only the count recovers the final load/store scheduling.
+// Naming both payloads or just the type gives 99.9518%; direct stores give
+// 97.2048%. Keep both ordinary constructors shared with the sibling factories.
+VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
+type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    int count = m_adjustedValue;
+    seerHut->m_creatureType = m_creatureType;
+    seerHut->m_creatureCount = count;
+    return object;
 }
 
 // Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
