@@ -1930,7 +1930,7 @@ game	?addGarrisonHero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?applyMapHeaderAvailability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	9f361ea475b5
 game	?assignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130	69adc2e8ef6e
-game	?calculateProduction@game@@QAEXXZ	95.0560	95.0560	95.0560	0xb8af0	77d1c75f6c15
+game	?calculateProduction@game@@QAEXXZ	98.7892	98.7892	98.7892	0xb8af0	aa403e76bd2d
 game	?cancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530	3f74b40f1cf4
 game	?capacity@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
 game	?checkForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910	5c7c921c91d7
