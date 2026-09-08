@@ -757,6 +757,11 @@ build build/objdiff/base/tiles.obj: cl src/tiles.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = tiles
 build tiles: phony build/objdiff/base/tiles.obj
+build build/objdiff/base/victor.obj: cl src/victor.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /ML /Gd /D_WINDOWS
+  unit = victor
+build victor: phony build/objdiff/base/victor.obj
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -841,7 +846,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -926,7 +932,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -1012,6 +1019,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
