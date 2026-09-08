@@ -3925,6 +3925,15 @@ static void insertRmgWorkItem(
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
+// Island insetting passes two points, zone/level and half-roughness.
+// Retail subdivides these edges with a pending-point vector. Provisional
+// Complete-only role name; the stack ABI carries seven dwords.
+#if 0 // @carcass
+VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
+void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
+    int zoneIndex, int level, int roughness) {} // @stub
+#endif
+
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
 // Residual (88.9891%): paired TPoint sums improve the independent scalar
@@ -3956,10 +3965,40 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
-#if 0 // @carcass
+// Residual (75.3450%): clamp argument order improves 63.63 -> 66.42%;
+// direct displacement-vector construction avoids the temporary point
+// subtraction (73.46%); retaining the long clamp result reaches 75.35%.
+// Length and edge calls remain intact. Clamp temporary homes, vector
+// multiply/divide scheduling and the reverse-loop register roles differ.
 VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
-void type_random_map_generator::insetIslandZone(TRmgZone* zone) {} // @stub
-#endif
+void type_random_map_generator::insetIslandZone(TRmgZone* zone)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition center = zone->getLevelPosition();
+    int count = zone->m_boundary.size();
+    TPoint point = zone->m_boundary[0];
+    TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
+    int length = delta.length();
+    if (length > 0) {
+        long displacement = std::_cpp_max<long>(4, length / 4);
+        displacement = std::_cpp_min<long>(displacement, length / 2);
+        delta = delta * displacement / length;
+        point += delta;
+    }
+    while (count--) {
+        TPoint previous = point;
+        point = zone->m_boundary[count];
+        delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
+        length = delta.length();
+        if (length > 0) {
+            long displacement = std::_cpp_max<long>(4, length / 4);
+            displacement = std::_cpp_min<long>(displacement, length / 2);
+            delta = delta * displacement / length;
+            point += delta;
+        }
+        drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
+    }
+}
 
 // JoinExtraZones initializes the short distance columns to 32000, zeros
 // each original zone's own column, and calls this relaxation after adding
