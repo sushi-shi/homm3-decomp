@@ -2349,6 +2349,34 @@ VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
 #endif
 
+// Complete-only group bounds. A flat map-cell scan encloses cells that
+// fail the group's traversal predicate. The two reference-based extrema
+// pairs preserve retail's int-to-long temporary argument homes; bounds
+// use an exclusive upper edge, and empty groups retain the sentinels.
+// Exact: 234 bytes. Minimum arguments in bound/coordinate order and
+// coordinate-before-pointer loop increments restore the last three deltas
+// from the initial 97.4545% candidate; all 20 CFG blocks already aligned.
+VA(0x00535DF0, 0xEA) // anchor-callee 0x5466c6/0x5355a4; thiscall, ret 0
+void TRmgTreasureGroup::updateBounds()
+{
+    m_bounds.m_minimumX = 32000;
+    m_bounds.m_minimumY = 32000;
+    m_bounds.m_maximumX = -32000;
+    m_bounds.m_maximumY = -32000;
+    TRmgMapItem* item = m_map.m_mapItems;
+    for (int y = 0; y < m_map.m_mapHeight; ++y) {
+        for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
+            if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                || item->isRoadEntrance() || !item->hasSubterraneanGate()) {
+                m_bounds.m_minimumX = std::_cpp_min<long>(m_bounds.m_minimumX, x);
+                m_bounds.m_maximumX = std::_cpp_max<long>(m_bounds.m_maximumX, x + 1);
+                m_bounds.m_minimumY = std::_cpp_min<long>(m_bounds.m_minimumY, y);
+                m_bounds.m_maximumY = std::_cpp_max<long>(m_bounds.m_maximumY, y + 1);
+            }
+        }
+    }
+}
+
 // Complete-only cached perimeter walk. Scan y/x for the first nontraversable
 // group cell, begin immediately above it, then walk cardinal directions.
 // The cell predicates match the two retail expansions at 0x535f39 and
