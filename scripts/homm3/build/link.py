@@ -148,8 +148,8 @@ def main(argv: list[str] | None = None) -> int:
     ensure_wineserver()
 
     rsp_lines = [
-        f"/OUT:{winepath_w(out)}",
-        f"/MAP:{winepath_w(mapf)}",
+        f'/OUT:"{winepath_w(out)}"',
+        f'/MAP:"{winepath_w(mapf)}"',
         "/NOLOGO", "/FORCE", "/NODEFAULTLIB", "/SUBSYSTEM:WINDOWS",
         f"/BASE:{args.base}", "/INCREMENTAL:NO", f"/ENTRY:{args.entry}",
     ]
@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         rsp_lines += ["/OPT:NOREF", "/OPT:NOICF"]
     extra = args.flags[1:] if args.flags and args.flags[0] == "--" else args.flags
     rsp_lines += list(extra)
-    rsp_lines += [winepath_w(Path(lib)) if os.path.exists(lib) else lib
+    rsp_lines += [f'"{winepath_w(Path(lib)) if os.path.exists(lib) else lib}"'
                   for lib in args.lib]
     rsp_lines += [f'"{winepath_w(o)}"' for o in objs]
 

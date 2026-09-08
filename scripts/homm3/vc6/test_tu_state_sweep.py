@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import unittest
 import tempfile
+import shutil
+import subprocess
 from pathlib import Path
 
 from homm3.match.status import MatchRow
@@ -84,6 +86,36 @@ class TuStateSweepTests(unittest.TestCase):
             flags.write_text('/Od')
             self.assertNotEqual(original, _files_digest([header, flags]))
             self.assertNotEqual(original, _files_digest([header]))
+
+    def test_include_insertion_is_outside_conditionals_comments_and_continuations(self):
+        prefixes = (
+            '#if 0\n#include "existing.h"\n#endif\n',
+            '#if 0\n#if 1\n#include "existing.h"\n#endif\n#else\n#endif\n',
+            '/*\n#include "existing.h"\n*/\n',
+            '#define UNUSED \\\n  ignored\n',
+            '// continued comment \\\n#if 0\n',
+            '#if 0\nint hidden;\n#endif\n',
+            '#define VA(a,b)\n#if 0\n#include "existing.h"\n#endif\n',
+        )
+        compiler = shutil.which("clang++") or shutil.which("g++")
+        if compiler is None:
+            self.skipTest("C++ preprocessor unavailable")
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "existing.h").write_text("")
+            for i in range(10):
+                (root / f"new{i}.h").write_text(f"int injected{i};\n")
+            variant = make_variants(1, 1, "test", tuple(f"new{i}.h" for i in range(10)))[0]
+            for prefix in prefixes:
+                with self.subTest(prefix=prefix):
+                    original = prefix + "int realBody() { return 0; }\n"
+                    offset, line = _initial_include_insertion(original)
+                    candidate = insert_variant(original, ((offset, line, 0),), variant)
+                    result = subprocess.run(
+                        [compiler, "-E", "-P", "-x", "c++", "-I", raw, "-"],
+                        input=candidate, text=True, capture_output=True, check=True)
+                    self.assertEqual(result.stdout.count("int injected"), len(variant.body.splitlines()))
+                    self.assertIn("realBody", result.stdout)
 
     def test_tu_specific_invalid_header_pairings_are_excluded(self):
         self.assertNotIn(
