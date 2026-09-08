@@ -179,19 +179,6 @@ inline const _TYPE& cppMin(_TYPE x, _TYPE y)
     return (y < x ? y : x);
 }
 
-// DECLARED, NOT DEFINED - viewarmywindow.cpp's precedent, and for the same
-// reason: retail's copy of this three-const-reference selector is a COMDAT
-// the linker parked at 0x4e6750, so the TU that emits the CALL never saw a
-// body to expand. hero::GetLuck's `apply_limits` clamp is that call
-// (fn+0x29e: `lea ecx,[ebp+8] / lea edx,[ebp+0x10] / push &[ebp+0xc] /
-// call 0x4e6750 / mov eax,[eax]`), with the two bounds materialised into
-// the DEAD otherHero and on_cursed_ground parameter homes. Giving our CL a
-// definition would make it inline the selector and lose the call - and
-// GetMorale's twin clamp IS inline in retail, so that one stays by value.
-// Before normalization (function): _cpp_clamp.
-// Before normalization (locals): _Lo, _V, _Hi.
-const int& cppClamp(const int& lo, const int& v, const int& hi);
-
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -6547,50 +6534,18 @@ void hero::giveResource(int whichRes, int howMuch)
 // `push 0x30 / call IsWieldingArtifact` - /Ob2 runs out of budget after
 // four expansions.
 //
-// 75.0433 -> 87.7439 (2026-08-20) ON THE FINAL CLAMP, which is an
-// OUT-OF-LINE CALL in retail. The standing note (below, kept because its
-// decode is what fixed the argument order) identified the callee exactly
-// and then declined to spell it, on the grounds that it needed "a helper
-// declared in a header, a VA claim on 0x004e6750 and a site pin". It
-// needs none of those three: viewarmywindow.cpp had already established
-// the pattern - DECLARE the selector and give it no definition, and VC6
-// emits the call because this TU never sees a body to expand. The
-// declaration sits with _cpp_min/_cpp_max at the top of this file; no
-// header moved, no claim was added, and no pragma is involved.
+// Dreamcast game-source line 5241 calls limit(-3, luck, 3). Its
+// includes.h:134 by-value wrapper calls the reference-returning t_limit
+// at includes.h:124-131. Restoring that complete chain naturally retains
+// tLimit at 0x4e6750 and preserves 88.0650%; the former declared-only
+// cppClamp had hidden the wrapper and prompted a false long local.
+// A direct tLimit(-3, luck, 3) negative control scores 87.7439: its
+// reference binds luck itself instead of the by-value wrapper copy.
 //
-// Residual (87.7%): register HOMING, the twin's residual one step
-// further. Retail keeps `luck` in MEMORY throughout - the four artifact
-// bonuses are `inc dword ptr [ebp+0xc]` against the dead
-// on_cursed_ground slot - and saves EBX only once it needs a town-loop
-// index; our CL promotes the accumulator into EBX and pushes it in the
-// prologue, so both early-return epilogues name the other register.
-// Tried and rejected: two separate `if (...) return 0;` early-outs for
-// the two Hourglass tests (71.67) - the `||` spelling is what gives
-// retail's ONE shared return-0 block, which is the D-lever the match
-// doctrine predicts for a sunk shared exit.
-//
-// THE CLAMP CALL, as decoded 2026-08-20. The call-sequence alignment says
-// retail emits TEN calls in this body and we emitted nine; the extra one
-// is at fn+0x2b9 and its target is 0x004e6750, a 33-byte function the
-// delinker labels `THeroScreenWindow_scalar_deleting_destructor` off a
-// vtable sample. It is not a destructor. Decoded:
-//     f(ecx = const int& lo, edx = const int& value,
-//       [ebp+8] = const int& hi)
-//     eax = *lo; esi = *value;
-//     if (esi < eax)            return lo;
-//     eax = hi; if (*hi < esi)  return hi;
-//     return value;                                    // ret 4
-// which is `_cpp_min(_cpp_max(value, lo), hi)` with the arguments in
-// (lo, value, hi) order, returning a REFERENCE - retail derefs the result
-// with `mov eax,[eax]`. It materialises the two bounds into the DEAD
-// PARAMETER SLOTS (`mov [ebp+8],-3`, `mov [ebp+0xc],3` - the otherHero and
-// on_cursed_ground homes) and `luck` into [ebp+0x10]; our compile now
-// picks exactly those three homes.
-//
-// 0x004e6750 sits IMMEDIATELY AFTER std::bitset<70>::set (0x004e66f0,
-// 0x60) in this compiland's STL-COMDAT run, so it is a header inline
-// emitted as a COMDAT rather than a member. It stays UNCLAIMED - no
-// evidence names it, and the call resolves without a claim.
+// Residual (88.0650%): retail keeps luck in the dead onCursedGround
+// parameter home and saves EBX only when the town loop needs it. VC6
+// promotes luck to EBX and saves it in the prologue. Separate Hourglass
+// early-outs gave 71.67%; keep the combined condition and shared return.
 // Before normalization (locals): on_cursed_ground, apply_limits.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
 int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
@@ -6606,14 +6561,10 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
             return 0;
     }
 
-    // `long`, not `int`, and it is byte-proven: `_cpp_clamp` takes
-    // `const int&`, so a `long` lvalue needs a CONVERSION and therefore a
-    // third temporary.  Retail materialises three (-3 at [ebp+8], 3 at
-    // [ebp+0xc] and the value at [ebp+0x10]) where an `int` binds the
-    // variable's own home directly and only needs two; the `int` spelling
-    // also left two dead `mov [ebp+0xc], eax` write-backs of `luck` that
-    // retail does not have.  87.7439 -> 88.0662.
-    long luck = g_luckBonuses[m_skillLevel[eSecSkillLuck]];
+    // DC 0xd4070 records int luck. limit() supplies three parameter
+    // copies, reproducing retail's addressable bounds/value without a
+    // long-to-int conversion at an invented direct selector call.
+    int luck = g_luckBonuses[m_skillLevel[eSecSkillLuck]];
     if (m_skillLevel[eSecSkillLuck] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
@@ -6664,7 +6615,7 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
     if (m_flags & 0x400000)
         luck += 500;
     if (applyLimits)
-        return cppClamp(-3, luck, 3);
+        return limit(-3, luck, 3);
     return luck;
 }
 
@@ -8193,11 +8144,11 @@ void hero::heroFn004E6120(int creatureType,
 //        `cmp edi,0x46` then _Xran, then |= / &= ~, returns this.
 //        Its three in-hero call sites are inside mark_spells - 70 is the
 //        spell count.  Claimed as a 24-byte `ret 0` ctor closure.
-//   0x004e6750  33 B  ret 4   UNIDENTIFIED 3-arg /Gr free helper
-//        `f(a,b,c) = (*b < *a) ? a : ((*c < *b) ? c : b)` on a signed
-//        4-byte type - a clamp/bound over const refs.  It contains no
-//        delete, no vcall and no vtable load, so it cannot be
-//        THeroScreenWindow's scalar deleting destructor.
+//   0x004e6750  33 B  ret 4   tLimit(const int&,const int&,const int&)
+//        DC includes.h:124, public ?t_limit@@YAABHABH00@Z, proves the
+//        name and integer overload. Both the selected-reference ABI and
+//        the lower-bound-first comparisons match retail. The old
+//        THeroScreenWindow deleting-destructor label was incorrect.
 //
 // Corroborating global evidence for the whole run: the image carries
 // "invalid bitset<N> position" (0x0065f450) and "invalid string position"
@@ -8215,11 +8166,6 @@ void hero::heroFn004E6120(int creatureType,
 //     std::bitset<48>;` drags ~70 unrelated COMDATs in AND emits a
 //     second `bitset<48>::set(size_t,bool)` that collides with the
 //     bitset<70> claim below.  Needs a user decision - see the report.
-//   0x004e6750  the 3-arg /Gr clamp `(*b<*a) ? a : ((*c<*b) ? c : b)`,
-//     i.e. `clamp(lo, v, hi)` over const refs to a signed 4-byte type.
-//     It is NOT Dinkumware `_Median` (that takes three values, not
-//     pointers, and spends three comparisons); no evidence names it, so
-//     it stays unclaimed rather than take an invented name.
 //
 // The five claims below sit in the carcass block: their DEFINITIONS are
 // the standard headers', so there is no body to write - only the
@@ -8265,6 +8211,12 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 {
     // @stub - <bitset>'s own definition; see h3_stl_comdat_anchor
 }
+
+// includes.h:124-131, DC 0x20d2c. The real limit() calls from GetLuck
+// and the army-window widget helpers naturally retain this shared body.
+// homm3_limit.h owns the canonical definition; all 33 retail bytes agree.
+VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
+inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
 
 // E:\gamedcs\hero.cpp:6493
 DC_ONLY(0xd5800, 0xCC)

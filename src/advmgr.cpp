@@ -51,6 +51,7 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
+#include "homm3_limit.h"
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
@@ -119,21 +120,7 @@ inline const _TYPE& maxRef(_TYPE x, _TYPE y)
     return (x < y ? y : x);
 }
 
-// E:\gamedcs\includes.h:124/134 - the reference-returning template and its
-// by-value wrapper, the same pair quicktownwindow and armygrp carry.
-template <class T>
-// Before normalization (function): t_limit.
-static inline const T& tLimit(const T& minimum, const T& value,
-                               const T& maximum)
-{
-    return value < minimum ? minimum
-                           : (maximum < value ? maximum : value);
-}
-
-static inline int limit(int minimum, int value, int maximum)
-{
-    return tLimit(minimum, value, maximum);
-}
+// includes.h:134 supplies the shared limit calls below.
 
 // The objectIndex short is the shared creature-id lane; the union bridge
 // (events.cpp precedent) keeps the TCreatureType conversion cast-free and
@@ -11510,7 +11497,7 @@ const int* cppMax(const int* _X, const int* _Y)
 
 // E:\gamedcs\includes.h:124
 DC_ONLY(0x20d2c, 0x38)
-const int* tLimit(const int* min, const int* value, const int* max)
+const int& tLimit(const int& minimum, const int& value, const int& maximum)
 {
     // @stub
 }

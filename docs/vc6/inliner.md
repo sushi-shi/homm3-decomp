@@ -1749,3 +1749,34 @@ A four-state control separates braces from assignment syntax: scoped
 `m_text = text` and scoped `m_text.operator=(text)` both match; both bare-if
 forms expand the base. Explicit default construction of the string is
 flat. Preserve evidenced scopes even when they own no source locals.
+
+
+### A declared-only selector can hide its proven value wrapper
+
+The parked 33-byte clamp at `0x4e6750` is `t_limit` from Dreamcast
+`includes.h:124-131` (`dc:0x20d2c`). Its public symbol
+`?t_limit@@YAABHABH00@Z` proves an ordinary integer overload returning one
+of three incoming references. The old local template copies and provisional
+`cppClamp` declarations had obscured that identity. Retail corroborates the
+parameter order, signed comparisons, returned pointer and `ret 4`.
+
+Dreamcast `limit` at `includes.h:134` (`dc:0x1ef5c`) takes three integers
+by value and passes their addresses to `t_limit`. `hero::GetLuck` and both
+army-window rating widget helpers call that wrapper. Restoring the canonical
+pair in `homm3_limit.h` naturally emits an exact `tLimit` from real callers.
+The lower-bound-first if/else scopes agree with the DC source rows; writing
+`maximum < value` reproduces retail's upper comparison. The equivalent
+`value > maximum` control changes two instruction encodings.
+
+The wrapper also explains `GetLuck`'s three temporary homes. Its DC local is
+`int luck`; the previous reconstruction used `long` solely to induce an extra
+conversion at the invented direct selector call. The recovered `int` and
+`limit` call preserve 88.0650%. Calling `tLimit` directly lowers it to
+87.7439%. The one-army and group constructors improve from 90.1633/90.9521%
+to 91.2989/92.2569%; bypassing the wrapper gives 88.5008/90.1918%.
+
+Across the affected include closure, `checkApplyBadMorale` reaches 100% and
+`setupDynamicStuff` improves to 91.8605%. `townQuickView`'s unchanged body
+moves from 93.0922 to 92.8927%; its MAX/HIST remain 93.0922. Keep the shared
+source declarations and measure that collateral rather than restoring local
+variants to recover compiler state.
