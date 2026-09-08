@@ -2076,6 +2076,98 @@ void rmgHeroObject::unknownOperation()
     m_generator->m_disabledHeroes[m_heroIndex] = 0;
 }
 
+// Hero-object vtable 0x640b14 slot 3 writes an unowned prison hero with its
+// selected identity and experience. The ordered fields are corroborated by
+// NewfullMap::readHeroData: AB introduces the object ID and biography/sex/
+// spell defaults; SoD makes experience optional and adds primary-skill defaults.
+// All remaining customizations are absent. Complete-only, with no DC RMG body.
+// Exact: the canonical base write expands here, and separate narrow-buffer
+// scopes recover the retail argument-slot reuse and 0x18-byte frame.
+VA(0x00533C80, 0x1E4) // anchor-vtable + ordered versioned H3M writes; ret 8
+void rmgHeroObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        int objectId = m_objectId;
+        outfile->write(&objectId, sizeof(objectId));
+    }
+    {
+        char owner = -1;
+        outfile->write(&owner, sizeof(owner));
+    }
+    {
+        char heroIndex = m_heroIndex;
+        outfile->write(&heroIndex, sizeof(heroIndex));
+    }
+    {
+        char customName = 0;
+        outfile->write(&customName, sizeof(customName));
+    }
+    if (version >= RMG_MAP_SHADOW_OF_DEATH) {
+        {
+            char customExperience = m_experience != 0;
+            outfile->write(&customExperience, sizeof(customExperience));
+        }
+        if (m_experience != 0) {
+            int experience = m_experience;
+            outfile->write(&experience, sizeof(experience));
+        }
+    } else {
+        int experience = m_experience;
+        outfile->write(&experience, sizeof(experience));
+    }
+    {
+        char customPortrait = 0;
+        outfile->write(&customPortrait, sizeof(customPortrait));
+    }
+    {
+        char customSecondarySkills = 0;
+        outfile->write(&customSecondarySkills, sizeof(customSecondarySkills));
+    }
+    {
+        char customArmies = 0;
+        outfile->write(&customArmies, sizeof(customArmies));
+    }
+    {
+        char groupFormation = 0;
+        outfile->write(&groupFormation, sizeof(groupFormation));
+    }
+    {
+        char customArtifacts = 0;
+        outfile->write(&customArtifacts, sizeof(customArtifacts));
+    }
+    {
+        char patrolRadius = -1;
+        outfile->write(&patrolRadius, sizeof(patrolRadius));
+    }
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        {
+            char customBiography = 0;
+            outfile->write(&customBiography, sizeof(customBiography));
+        }
+        {
+            char sex = -1;
+            outfile->write(&sex, sizeof(sex));
+        }
+        if (version >= RMG_MAP_SHADOW_OF_DEATH) {
+            {
+                char customSpells = 0;
+                outfile->write(&customSpells, sizeof(customSpells));
+            }
+            {
+                char customPrimarySkills = 0;
+                outfile->write(&customPrimarySkills, sizeof(customPrimarySkills));
+            }
+        } else {
+            char spell = -2;
+            outfile->write(&spell, sizeof(spell));
+        }
+    }
+    char reserved[16];
+    memset(reserved, 0, sizeof(reserved));
+    outfile->write(reserved, sizeof(reserved));
+}
+
 // Scholar vtable 0x640b24 writes the default reward tag/value, then six
 // reserved bytes as a dword and word. Retail zeroes a full dword temporary
 // before the final two-byte write; preserve that scalar width and call size.
@@ -2283,6 +2375,31 @@ type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properti
     return object;
 }
 
+// The spell-reward definition table selects the same Pandora's Box object.
+// Retail scans the 70 ordinary spells in ascending ID order for each level,
+// descending from maximumLevel through minimumLevel. Like the scroll factory,
+// flag 0x2000 excludes spells and the school mask must intersect the definition.
+// Complete-only: no Dreamcast RMG procedure exists.
+// Exact: a long spell index converts to the vector's int payload, preserving
+// retail's copied temporary and strength-reduced 136-byte trait-row stride.
+// An explicit int payload copy is also exact; passing an int loop index by
+// reference (including int(spell), which VC6 elides) reaches only 85.8423%.
+VA(0x00534520, 0x267) // anchor-vtable 0x640ba0 slot 0; object vptr 0x640ad4; ret 0xc
+type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    for (int level = m_maximumLevel; level >= m_minimumLevel; --level) {
+        for (long spell = 0; spell < 70; ++spell) {
+            if (!(g_spellTraits[spell].m_flags & 0x2000)
+                && g_spellTraits[spell].m_level == level
+                && (g_spellTraits[spell].m_school & m_schoolMask))
+                object->m_spells.push_back(spell);
+        }
+    }
+    return object;
+}
+
 // Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.
 // Its allocation and base initialization match the ordinary factory, followed
 // by the proven ownable-object vptr 0x640aa4. All 83 bytes match while
@@ -2398,6 +2515,26 @@ int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
         return -1;
     int value = type_black_box_creature_def::getValue(zone, generator);
     return (2 * value - 4000) / 3;
+}
+
+// Creature-reward counterpart of the experience/gold factories below.
+// Retail allocates the pending hut, selects the artifact prototype, and
+// constructs its wrapper before loading both creature payload fields.
+// Complete-only: the definition's 0x640c00 table proves this override.
+// Exact: naming only the count recovers the final load/store scheduling.
+// Naming both payloads or just the type gives 99.9518%; direct stores give
+// 97.2048%. Keep both ordinary constructors shared with the sibling factories.
+VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
+type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    int count = m_adjustedValue;
+    seerHut->m_creatureType = m_creatureType;
+    seerHut->m_creatureCount = count;
+    return object;
 }
 
 // Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
@@ -3566,11 +3703,17 @@ static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
 // Retail-only rmg.txt coordinator. The normalized map volume uses 36*36
 // cells per size unit; islands halve it with a minimum of one. Rows 76..84
 // describe bidirectional connections after the canonical zone reader.
-// Partial: 78.63%. Flattened parsing/validation passes score 22.20%,
-// expanding findZone and vector operations that retail retains. Ordinary
-// helpers restore those boundaries (78.33% before row/assignment/order edits).
-// Remaining differences include string assignment expansion, rejection
-// cleanup, and frame/register homes. No inlining controls are retained.
+// Residual (80.8462%): the shared rejection arm restores retail's single
+// destructor/delete pair. Keeping rejection before acceptance matters:
+// acceptance first gives 76.5897%, acceptance plus continue 77.6795%, and
+// two independent delete sites 78.6256%. String assign still expands into
+// _Grow/_Eos instead of retail's retained assign; frame/register homes and
+// field-pointer reloads also differ. Assignment operator/named name pointer
+// are byte-flat; explicit strlen reaches 78.6872% on the old cleanup form
+// but retains the same wrong string boundary. Volume-product order and
+// separate island division are byte-flat. Flattened parsing/validation
+// passes score 22.20%, expanding findZone and vector calls retail retains.
+// Preserve the ordinary helpers and the single cleanup; no inline controls.
 VA(0x00537FF0, 0x482)
 void type_random_map_generator::loadTemplates()
 {
@@ -3594,22 +3737,22 @@ void type_random_map_generator::loadTemplates()
         while (endRow < sheet->getNumberOfRows()
             && (!sheet->getRow(endRow)[0][0] || sheet->getRow(endRow)[0][0] == ' '))
             ++endRow;
-        if (mapSize < mapTemplate->m_minimumSize
-            || mapSize > mapTemplate->m_maximumSize) {
-            delete mapTemplate;
-        } else {
+        bool accepted = mapSize >= mapTemplate->m_minimumSize
+            && mapSize <= mapTemplate->m_maximumSize;
+        if (accepted) {
             readRmgTemplateZones(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount, m_mapVersion);
             readRmgTemplateConnections(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount);
-            if (!hasRmgTemplatePlayerSlots(mapTemplate,
-                m_humanPlayerCount, m_computerPlayerCount)) {
-                delete mapTemplate;
-            } else {
-                for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone)
-                    mapTemplate->m_zones[zone]->m_zoneIndex = zone;
-                m_templates.push_back(mapTemplate);
-            }
+            accepted = hasRmgTemplatePlayerSlots(mapTemplate,
+                m_humanPlayerCount, m_computerPlayerCount);
+        }
+        if (!accepted) {
+            delete mapTemplate;
+        } else {
+            for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone)
+                mapTemplate->m_zones[zone]->m_zoneIndex = zone;
+            m_templates.push_back(mapTemplate);
         }
         row = endRow;
     }
@@ -4671,6 +4814,45 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     }
 }
 
+// InsetIslandZone calls this after drawing its inset boundary. Retail uses
+// a LIFO position vector, removes its last element, and visits
+// every second entry in the eight-direction table (four cardinal neighbors).
+// Only unmarked cells in the same zone are marked and queued; the seed is
+// queued without a separate mark. Complete-only, with a provisional name.
+// Residual (79.2015%): pop_back retains the nested _Destroy call but still
+// expands std::copy, adding two branch tests and keeping the zone index in
+// a separate stack home. VC6's own pop_back delegates to erase(end()-1).
+// Direct erase with compound coordinates gives 77.5672%; range erase gives
+// 77.5522%. Named iterators are flat, indexed access is lower. Operator+
+// retains a non-retail coordinate constructor (72.3358% with pop_back),
+// direct construction gives 67.1119%, scalar assignment 75.6269%, and an
+// inner current-position scope 77.7836%. Hoisting the neighbor is byte-flat.
+// Keep the canonical coordinate addition, flag accessor and worklist calls.
+VA(0x0053CF50, 0x177) // anchor-callee 0x53d36b + map/zone/position fields; ret 4
+void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
+{
+    std::vector<TRmgMapPosition> pending;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    pending.push_back(position);
+    while (pending.size() > 0) {
+        position = pending.back();
+        pending.pop_back();
+        for (int direction = 0; direction < RMG_DIRECTION_COUNT; direction += 2) {
+            TRmgMapPosition nearby = position;
+            nearby += g_rmgDirections[direction];
+            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
+                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+                TRmgMapItem* item = m_map.getMapItem(nearby);
+                if (!item->isZoneBoundary() && item->m_zoneState.m_zone == zoneIndex) {
+                    item->m_tileData.m_zoneBoundary = 1;
+                    pending.push_back(nearby);
+                }
+            }
+        }
+    }
+}
+
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
 // Residual (88.9891%): paired TPoint sums improve the independent scalar
@@ -4702,7 +4884,8 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
-// Residual (75.3450%): clamp argument order improves 63.63 -> 66.42%;
+// Residual (78.77%): the recovered interior-fill call restores the complete
+// retail call sequence (previously 75.3450%). Clamp argument order improves 63.63 -> 66.42%;
 // direct displacement-vector construction avoids the temporary point
 // subtraction (73.46%); retaining the long clamp result reaches 75.35%.
 // Length and edge calls remain intact. Clamp temporary homes, vector
@@ -4735,6 +4918,7 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         }
         drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
     }
+    fillIslandInterior(zone);
 }
 
 // The zone coordinator passes its zone and a closed Voronoi edge ring.
@@ -8326,6 +8510,16 @@ VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
+// LoadTemplates calls this single-value insertion at 0x53833e/0x538354
+// for the two directions of a parsed connection. Retail's seven-dword
+// copies, 0x1c stride, returned insertion position and ret 8 distinguish
+// the ordinary vector<TRmgZoneConnection> overload from count insertion.
+// Exact: all 559 instruction bytes match. The three nested helpers are
+// byte-identical ICF representatives: TBlackMarket _Ucopy at 0x54d920 and
+// _Ufill at 0x4d2160, plus type_artifact _Destroy at 0x404140. Exploratory
+// comparisons of this TU's canonical specializations agree in all views.
+VA_COMPGEN(0x0054C970, 0x22F, VECTOR_INSERT_SINGLE, TRmgZoneConnection)
+
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
 // address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
@@ -8357,6 +8551,12 @@ VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
 // The reader's two resize shrink arms retain this int-vector erase.
 // All 51 raw bytes agree; no calls or data relocations remain unresolved.
 VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
+
+// InitializeObjectGenerators expands disabled-key-tent resizing but retains
+// byte-vector count insertion at 0x539240. The three stack arguments,
+// byte copies and capacity-growth sequence identify this specialization.
+// The naturally emitted body agrees with all 467 retail instruction bytes.
+VA_COMPGEN(0x0054CDF0, 0x1D3, VECTOR_INSERT, unsigned_char)
 
 // InitializeObjectGenerators removes a byte range from its temporary work
 // vector through this specialization.  The emitted COMDAT has the same five
