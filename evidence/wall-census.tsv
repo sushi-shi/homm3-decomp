@@ -61,6 +61,7 @@ not diagnosed	119	79.3429	79.3429	0.0000	79.3429	576	rmg	?tryAddObject@TRmgTreas
 not diagnosed	111	79.7557	79.7557	0.0000	79.7557	546	rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	diagnose	-
 not diagnosed	69	79.8254	79.8254	0.0000	79.8254	342	rmg_terrain	?insert@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@_N@2@ABUTRmgGridPoint@@@Z	diagnose	-
 not diagnosed	69	79.9380	79.9380	0.0000	79.9380	342	rmg_terrain	?paintPoint@TRmgLineWalker@@QAEXABUTRmgGridPoint@@@Z	diagnose	-
+not diagnosed	47	79.9457	79.9457	0.0000	79.9457	234	victor	?victorValidateImage@@YGHPAUimgdes@@@Z	diagnose	-
 not diagnosed	115	79.9698	79.9698	0.0000	79.9698	575	rmg	?openConnectionPath@type_random_map_generator@@QAEXUTRmgMapPosition@@E@Z	diagnose	-
 not diagnosed	561	80.0996	80.0996	0.0000	80.0996	2819	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	diagnose	-
 not diagnosed	154	80.5217	80.5217	0.0000	80.5217	790	rmg_support	??0TRmgVoronoi@@QAE@XZ	diagnose	-

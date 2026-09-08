@@ -1252,6 +1252,9 @@ The other two label differences are the claimed direction table at 0x69cdc0
 and its end at +0x40. These are not divergent instruction sequences.
 The four focused island/centroid tests pass, followed by both island tests
 with the explicitly adopted winner included.
+Integration with the current main headers and recovered RMG neighbors keeps
+the helper at 100.0000%. The full merged build passes all gates, and all 15
+focused island, centroid, river and treasure-group integration tests pass.
 
 Real global ownership can also expose an ordinary helper boundary. The river
 and road pattern globals call the shared pattern-table constructor and register

@@ -34,7 +34,7 @@ compiled	224	0x00525120	96.5185	96.5185	96.5185	philai	philai	?valueOfWarFactory
 compiled	227	0x0053d0d0	95.5000	95.5000	95.5000	rmg	rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	228	0x004da420	98.1013	98.1013	98.1013	hero	hero	?getExperienceIncrement@hero@@SIHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	230	0x0056fbc0	89.8471	89.8471	89.8471	seerhut	seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-unmapped	234	0x006038b0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
+compiled	234	0x006038b0	79.9457	79.9457	79.9457	victor	victor	?victorValidateImage@@YGHPAUimgdes@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	237	0x00491050	84.1667	84.1667	84.1667	diff	diff	?findNextSame@CDiffMaker@@IAE_NHHAAH0@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	237	0x004eb250	89.4667	89.4667	89.4667	iconwdgt	iconwdgt	?nextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	239	0x0042d780	97.3256	97.3256	97.3256	ai_player	ai_player	?getPurchaseValue@type_AI_creature_purchaser@@QAEJPBVarmyGroup@@F0PBJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
