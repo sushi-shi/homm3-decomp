@@ -3356,7 +3356,7 @@ rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPro
 rmg	?generate@type_black_box_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134490	e77972609613
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	a4863c60ac59
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	64ccd4bf338d
-rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	9.0702	9.0702	9.0702	0x1348d0	89e3be34b370
+rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	95.1754	95.1754	95.1754	0x1348d0	89e3be34b370
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	eb1bf6a35a59
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	09167083d057
 rmg	?generate@type_random_map_generator@@QAEEXZ	96.8971	96.8971	96.8971	0x149930	6e4cccd152be
@@ -3434,7 +3434,7 @@ rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	71.5122	71.5122	71.5122	0x135040	7bfb27e097c8
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	99.6581	99.6581	99.6581	0x146040	b7f108f4c39a
-rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	016693b63aaf
+rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	e80dea9b0594
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	11dcda4772f3
 rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
