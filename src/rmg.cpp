@@ -9789,21 +9789,6 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // The legacy artifact-mask conversion calls Dinkumware's 129-bit setter.
 VA_COMPGEN(0x0054DED0, 0x63, BITSET_SET, Bitset129)
 
-// Retail 0x5b8bc0 is the nine-block Dinkumware tree-successor walk. Its
-// sentinel at 0x6a52c4 is shared only by the RMG set cluster, while the
-// enclosing callers lead back to GenerateRandomMap. Dreamcast's STLport
-// _M_increment at dc 0x64214 corroborates the helper boundary and CFG shape;
-// the RMG type itself is retail-only.
-VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TPoint)
-
-// Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. This
-// wrapper is not a retail claim and adds no target/report row.
-// Before normalization (function): EmitRmgPointSetIncrement.
-void __fastcall emitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
-{
-    ++*it;
-}
-
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
 // recovery of the canonical site/point ownership and retained helper surface.
