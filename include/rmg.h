@@ -2016,6 +2016,8 @@ public:
     // Before normalization (function): type_random_map_generator::CreateSubterraneanGate.
     unsigned char createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
+    // Complete-only 0x542b00 places and marks a monolith entrance border.
+    unsigned char placeMonolithBorder(TRmgMapPosition position, TRmgZone* zone);
     // Before normalization (function): type_random_map_generator::CreateMonolithConnection.
     void createMonolithConnection(
         TRmgZone* source,
