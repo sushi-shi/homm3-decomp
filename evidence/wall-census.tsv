@@ -399,7 +399,6 @@ not diagnosed	249	94.9521	94.9521	0.0000	94.9521	4936	kb	?displayVCWinLoss@@YI_N
 not diagnosed	36	94.9532	94.9532	0.0000	94.9532	709	rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	diagnose	-
 not diagnosed	54	95.0344	95.0344	0.0000	95.0344	1091	cmbtmgr	?keepAttack@combatManager@@QAEXH@Z	diagnose	-
 not diagnosed	33	95.0450	99.3919	4.3469	95.0450	673	resourcedisplay	??0TResourceDisplay@@QAE@PAVheroWindow@@E@Z	diagnose	-
-not diagnosed	69	95.0560	95.0560	0.0000	95.0560	1395	game	?calculateProduction@game@@QAEXXZ	diagnose	-
 not diagnosed	44	95.0862	95.0862	0.0000	95.0862	898	ai_combat	?getEnchantmentValue@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	diagnose	-
 not diagnosed	5	95.1191	95.1191	0.0000	95.1191	95	kb	?getNextHumanPlayer@@YIHH@Z	diagnose	-
 not diagnosed	97	95.1600	95.1600	0.0000	95.1600	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	diagnose	-
@@ -571,6 +570,7 @@ not diagnosed	22	98.6504	98.6504	0.0000	98.6504	1648	singleselectionpopups	?crea
 not diagnosed	5	98.7064	98.7064	0.0000	98.7064	414	remote	?onPlayerDropUpdateMsg@@YIXK@Z	diagnose	-
 not diagnosed	25	98.7522	98.7947	0.0425	98.7522	1978	tradpost	?update@TSellCreatureWindow@@QAEX_N@Z	diagnose	-
 not diagnosed	30	98.7602	100.0000	1.2398	98.7602	2460	spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	diagnose	-
+not diagnosed	17	98.7892	98.7892	0.0000	98.7892	1395	game	?calculateProduction@game@@QAEXXZ	diagnose	-
 not diagnosed	6	98.8042	98.8042	0.0000	98.8042	505	rmg	?canFitObject@TRmgTreasureGroup@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	8	98.8073	98.8073	0.0000	98.8073	643	hero	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	diagnose	-
 not diagnosed	11	98.8301	98.8301	0.0000	98.8301	952	bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	diagnose	-
