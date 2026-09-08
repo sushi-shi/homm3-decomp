@@ -310,6 +310,34 @@ TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)
     return *this;
 }
 
+// Constructor 0x5b3780 copies five caller arguments into the rule prefix,
+// initializes 58 range records, then groups entries by frame/special flag.
+// The base vptr survives through array initialization; the derived vptr is
+// installed before the scan. Complete-only, with no Dreamcast counterpart.
+// All 179 bytes match, including the shared range constructor's expansion.
+VA(0x005B3780, 0xB3)
+TRmgPatternTerrainRule::TRmgPatternTerrainRule(
+    unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
+    int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
+    : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
+      m_defaultFrame(defaultFrame), m_entryCount(entryCount), m_entries(entries)
+{
+    int frame = m_entries[0].m_frame;
+    unsigned char special = m_entries[0].m_special;
+    int range = frame * 2 + special;
+    ++m_ranges[range].m_count;
+    for (unsigned int index = 1; index < m_entryCount; ++index) {
+        const TRmgTerrainPatternEntry& entry = m_entries[index];
+        if (entry.m_frame != frame || entry.m_special != special) {
+            frame = entry.m_frame;
+            special = entry.m_special;
+            range = frame * 2 + special;
+            m_ranges[range].m_firstIndex = index;
+        }
+        ++m_ranges[range].m_count;
+    }
+}
+
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
@@ -322,6 +350,13 @@ unsigned char TRmgPatternTerrainRule::hasEntries()
 // boundary. Retail restores the six-slot pure base vtable at 0x642c80.
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
 TRmgTerrainRule::~TRmgTerrainRule()
+{
+}
+
+// Vtables 0x642c98 and 0x642cb0 share the deleting wrapper at 0x5b3a50,
+// which calls the base-only destructor at 0x5b3850. Neither derived rule
+// owns its source table or has any additional destruction work.
+TRmgPatternTerrainRule::~TRmgPatternTerrainRule()
 {
 }
 
@@ -400,17 +435,13 @@ TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 VA(0x005B3940, 0xC5)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
-    for (unsigned int index = 0; index < 116; ++index) {
-        m_ranges[index].m_firstIndex = 0;
-        m_ranges[index].m_count = 0;
-    }
     int frame = g_rmgTerrainPatterns[0].m_frame;
     unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
     unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
     TRmgTerrainPatternRange* range =
         &m_ranges[(frame * 2 + flipX) * 2 + flipY];
     ++range->m_count;
-    for (index = 1; index < 48; ++index) {
+    for (unsigned int index = 1; index < 48; ++index) {
         const TRmgTerrainTransitionEntry* entry = &g_rmgTerrainPatterns[index];
         if (entry->m_frame != frame || entry->m_flipX != flipX
             || entry->m_flipY != flipY) {
