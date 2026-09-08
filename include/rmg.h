@@ -453,8 +453,10 @@ struct TRmgTownSlot {
     int m_parameters004c[7];
     // Before normalization: parameters0068.
     int m_parameters0068[7];
-    // Before normalization: flag0084.
-    unsigned char m_flag0084;
+    // Before normalization: flag0084. chooseTerrain 0x532ab0 uses this
+    // template byte to prefer the aligned town's native terrain table.
+    // Complete-only provisional role name.
+    unsigned char m_useNativeTerrain;
     // Before normalization: allowedTerrain.
     unsigned char m_allowedTerrain[8];  // +0x85
     // Before normalization: monsterStrength.
@@ -500,6 +502,12 @@ void readRmgTemplateZones(
 
 // Retained fastcall helper at 0x545e00, also expanded by zone connections.
 int getRmgGuardValue(int value, int strength);
+
+// The eight clockwise neighbors are initialized at 0x530da0; group fit
+// 0x5355e0 scans the whole domain when testing for an open neighbor.
+enum ERmgDirectionLimits {
+    RMG_DIRECTION_COUNT = 8
+};
 
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
@@ -1162,6 +1170,12 @@ struct TRmgMapItem {
         return m_tileData.m_borderObject;
     }
 
+    // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
+    unsigned char isPlacementOutline() const
+    {
+        return m_tileData.m_placementOutline;
+    }
+
     // Retail road/river relaxation copies the predecessor to a separate
     // parameter home before storing cost and coordinates. The by-value
     // boundary is inferred from those repeated x86 copies; the name is
@@ -1324,13 +1338,21 @@ struct TRmgTreasureGroup {
     TRmgZoneBounds m_bounds;                // +0x18
     std::vector<type_object*> m_objects;    // +0x28
     std::vector<TPoint> m_outline;           // +0x38
-    unsigned char m_flag0048;               // +0x48, cleared by reset
-    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    // Before normalization: flag0048. addGuard 0x535575 sets this flag
+    // with the guard's local coordinates; canPlaceTreasureGroup checks them.
+    unsigned char m_hasGuard;               // +0x48, cleared by reset
+    char m_padding0049[3];
+    // Previously part of opaque0049; canPlaceTreasureGroup reads x/y
+    // from +0x4c/+0x50 before translating the guard's neighborhood.
+    TPoint m_guardPosition;                 // +0x4c
+    // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
+    // Role-derived name; previously part of opaque0049.
+    TRmgMapPosition m_position;             // +0x54
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
     TRmgTreasureGroup(int width, int height)
-        : m_map(width, height, 1), m_flag0048(0), m_ready(0)
+        : m_map(width, height, 1), m_hasGuard(0), m_ready(0)
     {
         reset();
     }
@@ -1598,7 +1620,12 @@ struct TRmgZone {
     // Before normalization: opaque0008.
     int m_townType2;
     // Before normalization: terrain.
-    TTerrainType m_terrain;             // +0x0c, mine prototype terrain domain
+    // chooseTerrain 0x532ab0 stores the integer ordinal from its 0..7
+    // selection loop; tryPlaceMine uses the same ordinal as a bitset index.
+    // There is no DC enum ABI for this Complete-only field. Keep the field
+    // and its local consumer consistent instead of casting into an inferred
+    // enum after every selection. Named terrain constants share the encoding.
+    int m_terrain;                      // +0x0c
     // Before normalization: levelPosition.
     TRmgMapPosition m_levelPosition;   // +0x10
     // Before normalization: boundaryRoughness.

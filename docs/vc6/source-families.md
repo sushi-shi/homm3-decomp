@@ -457,11 +457,203 @@ add no peak: island drawing stays at 99.4615% and the junction at 99.5699%.
 Only the bounds assignment is adopted. This separates a proven local
 improvement from neutral or regressive alternatives in the same population.
 
+`generate-rmg-treasure-outline-family.py` addresses the cached group perimeter
+at `0x535ee0`, separately from the exact prototype-outline builder. Retail's
+initial row-major scan has a forward inner-loop exit and a backward jump;
+the current C++ emits the opposite branch polarity. Five scan structures,
+six point initialization forms and two dimension-read lifetimes make 60
+states. A follow-up carries the ten reproduced scan parents into six actual
+perimeter-start construction/assignment lifetimes:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-treasure-outline-family.py \
+  build/rmg-treasure-outline.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-treasure-outline.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-treasure-outline-family.py \
+  build/rmg-treasure-outline-parents.json --parents-from build/source-families/SCAN_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-treasure-outline-parents.json --width 60 --keep 10 --jobs 6
+```
+
+The parent loader requires the completed input, matching source/header
+snapshot, source hashes and reproduced scores/code identities; old scores
+are never imported as observations for the new population. The two batches
+produced 38 and 40 distinct object-code results without exceeding 95.1849%,
+so neither changes the game body. Native controls compile all 360 scan/start
+combinations against independently constructed rectangular perimeters and
+ordered map queries. They cover all four blocking reasons, zero dimensions,
+and cached outlines. In particular, retail tests `x == width` after the scan:
+a positive-width, zero-height map traces four outside points. A seemingly
+safer `y == height` return fails the control, as do changed start coordinates,
+entrance predicates and levels. Fixture instrumentation never enters VC6.
+
+`generate-rmg-zone-terrain-family.py` supplies another 60-state population for
+the newly recovered `TRmgZone::chooseTerrain` at `0x532ab0`. Three template
+bindings, four count-loop structures and five rank-selection forms preserve
+the native-town preference, eight-terrain eligible set, conditional random
+draw and exact `z == 1` underground restriction. Native checks use the actual
+field declarations, coordinate type, terrain enum and owned table. An
+independent explicit eligible list checks all 256 masks, alignments -1..8,
+levels -1..2, zero/nonzero byte flags and six random results; wrong levels,
+rank tests, native preference guards and empty-set defaults must fail.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-terrain-family.py \
+  build/rmg-zone-terrain.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-zone-terrain.json --width 60 --keep 10 --jobs 6
+```
+
+The first selector reconstruction matches the 150-byte retail body. The
+60-state control produces 18 distinct objects and eight exact forms, with
+ten reproduced finalists. Naming the template pointer/reference suppresses
+retail's reload after `rand`, while changing the decrement test changes the
+old-value register lifetime. Neither the higher-level loop alternatives nor
+their combinations improve another RMG function, so the first exact body
+is retained. Its new table at `0x6408c8` is read from the pinned image, not
+aliased to the different army native-terrain table. The inferred RMG terrain
+field and mine-selection local consistently carry integer ordinals, with
+named terrain constants and no artificial enum conversion. The canonical
+checkpoint also observes `placeZoneTreasures` at 68.8293% (previously 67.0569%)
+with unchanged function source; no existing score or banked peak falls.
+
 For finite single-TU source matrices, the newer
 [`homm3 hypotheses` runner](../source-hypotheses.md) also records every scored
 function in that TU. The river sprite/presence generators use this path, while
 the multi-TU family runner remains useful for shared declarations and population
 search. Both require semantic review and a canonical checkpoint before adoption.
+
+`generate-rmg-group-fit-family.py` reconstructs and refines Complete's
+`TRmgTreasureGroup::canFitObject` at `0x5355e0`. There is no Dreamcast
+counterpart. The scalar first body scores 87.8889%; retail's three ordered
+surface-neighbor scans, first entrance-object traits, original by-value
+placement, and two retained `isPlacementBlocked` calls constrain the search.
+Six origin lifetimes, five neighbor constructions and two failure-exit forms
+make the first 60 states. Explicit scan scopes account for VC6's pre-standard
+for-initializer lifetime in the shared-failure variants.
+
+The next population retains all ten reproduced parents plus the current-source
+control and 49 fresh states. These test point-valued direction operands,
+returned-value assignment, compound translation, scan scope and the first
+placement-failure join. A third population carries its ten reproduced parents
+into position/trigger snapshots and prototype-reference binding. Parent input,
+source/header snapshots, source hashes, scores and code/relocation identities
+must reproduce before the next population is generated; a changed source
+requires a new checkpoint, not reused scores.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fit-family.py \
+  build/rmg-group-fit.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-fit.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fit-family.py \
+  build/rmg-group-fit-parents.json --parents-from build/source-families/FIT_CONTEXT/checkpoint.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-fit-parents.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fit-family.py \
+  build/rmg-group-fit-entry.json --entry-parents-from build/source-families/PARENT_CONTEXT/checkpoint.json
+HOMM3_GROUP_FIT_MANIFEST=build/rmg-group-fit-entry.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_fit
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-fit-entry.json --width 60 --keep 10 --jobs 6
+```
+
+The independent mask oracle compiles all 198 first/second-stage forms and,
+when selected, every exact method from a later-stage manifest. It checks all
+256 entrance masks, both guard types, all four neighboring-object trait
+combinations, individual incompatible front entrances, nonzero byte flags,
+two placement levels, every open-neighbor subset and each blocking reason.
+Results, ordered surface-coordinate queries, input preservation and helper
+arguments/call count must agree. Deliberately wrong ranges, traits, border
+policy, neighbor level, rock checks and closed-neighbor acceptance must fail
+the same oracle. The fixture projects actual field declarations and reuses
+the actual value types, bitfields, predicates, lookup and point addition; it
+makes no host-to-x86 layout claim and adds no instrumentation to VC6 inputs.
+
+The first two batches produce 50 and 39 distinct object-code results, reaching
+96.2381% and 98.8042%. The existing point-plus-vector operation restores
+retail's 0x18 frame and otherwise-eliminated neighbor-y stores. Taking the
+direction as the point operand removes the four-byte table-base bias, and
+the first-failure join restores the three early branch destinations. Entry
+loads remain a separate source-lifetime question rather than an inline-call
+disagreement. The entry population produces 42 distinct objects and ten
+reproduced finalists without exceeding 98.8042%, so the second-generation
+body is retained. Its only collateral competitor movement is a lower
+`writeMapHeader` observation in some variants; the adopted body preserves
+that row. The trigger snapshots use `TObjectType::TPoint`, a distinct nested
+POD type, not the RMG point class; the native fixture preserves that lexical
+ownership too. No conversion constructor is invented for either class.
+Across the three batches, the 180 scored states contain 108 unique code and
+relocation identities after excluding repeated parents. The canonical build
+banks 98.8042%, with all 25 CFG blocks, all branch destinations and both
+placement-helper calls aligned; the other 324 tracked RMG scores are unchanged.
+Full repository gates and the 54 related regressions plus three group-fit
+tests pass. These checks validate this reconstruction, not whole-TU closure.
+
+`generate-rmg-group-commit-family.py` explores Complete's
+`type_random_map_generator::commitTreasureGroup` at `0x5469b0`. Retail proves
+the group's saved position at +0x54, the object-position transfer, clipped
+row-major traversal, pre-write destination flag snapshots and final mutable
+virtual queries. No Dreamcast counterpart is currently mapped. The first
+60 states cross three scan-coordinate lifetimes, five destination-position
+construction forms and four snapshot/source-query orders. All preserve the
+canonical accessors and the retained three-coordinate constructor.
+
+The first population scores all 60 states with 60 distinct code/relocation
+identities and ten reproduced elites, improving 99.8047% to 99.9141%. Reading
+the border snapshot before the gate snapshot restores the outer-loop reload
+order without changing the generated bit-query sequence. The raw remaining
+delta is four operand bytes at +0x16b/+0x16c/+0x16f/+0x170: loading y and
+multiplying width rather than loading width and multiplying y. The body is
+692 bytes, with the same constructor relocation at +0x133 and no other raw
+differences. All other 324 tracked RMG scores are unchanged in this batch.
+
+The next population retains all ten reproduced parents and an unchanged
+control, then rotates six local source-map/coordinate-binding refinements
+across parents until there are 60 distinct source states. It verifies the
+input manifest, all three TU snapshots, complete header population and bytes,
+source hashes and repeated scores/code identities before reusing a parent.
+The second population produces 43 distinct objects and ten reproduced elites
+but no score above 99.9141%; no other tracked RMG score moves. Across the two
+populations, 120 scored states cover 109 distinct sources and 92 distinct
+code/relocation identities after repeated parents are removed. The minimal
+first-generation snapshot reordering is retained; the additional bindings
+are controls, not adopted source. The four-byte multiply difference remains
+open rather than being hidden by a helper rewrite or false inline boundary.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
+  build/rmg-group-commit.json
+PYTHONPATH=scripts python -m unittest homm3.vc6.test_rmg_group_commit
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-commit.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-commit-family.py \
+  build/rmg-group-commit-parents.json --parents-from build/source-families/COMMIT_CONTEXT/checkpoint.json
+HOMM3_GROUP_COMMIT_MANIFEST=build/rmg-group-commit-parents.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_commit
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-commit-parents.json --width 60 --keep 10 --jobs 6
+```
+
+The independent native oracle checks all 420 permitted initial/refined bodies
+and every body in an optional selected manifest. It reuses actual value types,
+bitfields, byte predicates, accessors, position constructor and object-position
+getter, projecting field declarations without asserting host/x86 layout identity.
+An independent flat-cell model enumerates local coordinates and filters the
+overlap rather than repeating the candidate's min/max expressions. It checks
+all 1,024 source/destination flag pairs, dirt/water/rock combinations, both
+levels, negative offsets, empty dimensions and shared map storage. It verifies
+object positions, both live vector traversals, exact call order and unmodified
+map fields; virtual calls deliberately append objects to expose illegal cached
+loop bounds. Wrong clipping, level, connection policy, snapshot copying, water
+policy, omitted virtual calls and cached vector length must fail the same
+checks. No fixture instrumentation enters the VC6 inputs.
+The canonical full build banks 99.9141% under the adopted source hash, with
+all 45 CFG blocks, 27 branches and three calls aligned and the other 324 RMG
+scores unchanged. The 57 related regression tests and three group-commit
+tests pass, as do all repository gates. This completes the current population
+checkpoint, not the remaining multiply match or whole-TU coverage.
 
 Real global ownership can also expose an ordinary helper boundary. The river
 and road pattern globals call the shared pattern-table constructor and register

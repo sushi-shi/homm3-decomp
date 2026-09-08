@@ -207,6 +207,16 @@ int g_rmgTerrainTownChoices[9][4] = {
     {5, 3, 4, -1}, {3, -1, 0, 0}, {-1, 0, 0, 0}
 };
 
+// Town-alignment preference used by chooseTerrain 0x532ace..0x532ad5.
+// Nine dwords from the SHA-256-pinned Complete image; this is a distinct
+// RMG table, not armygrp's native-terrain table at 0x643698. Role-derived
+// name: no Dreamcast RMG compiland or original global spelling exists.
+DATA(0x006408C8)
+static const int g_rmgTownNativeTerrains[9] = {
+    eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava, eTerrainDirt,
+    eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass
+};
+
 // Thirty-two radial directions used by the placement and boundary passes.
 // Before normalization: gRmgDirectionCosines.
 DATA(0x00682500)
@@ -1276,12 +1286,49 @@ townSelected:
 
 
 // Initialization 0x53bf4e calls this to select allowed terrain, then
-// constrains underground zones to subterranean or lava. Provisional role
-// name; Complete-only thiscall, no arguments and no Dreamcast counterpart.
-#if 0 // @carcass
+// constrains underground zones to subterranean or lava. The native-terrain
+// preference bypasses the allowed mask and consumes no random draw; an
+// empty eligible set defaults to dirt before the underground restriction.
+// Both scans exclude subterranean terrain unless z is exactly one. The
+// selected-- <= 0 condition tests the old value before decrementing it.
+// Provisional role name; Complete-only thiscall, no Dreamcast counterpart.
+// Exact: 150 retail bytes, with the rand and owned-table relocations
+// resolved. A 60-state template-binding/count-loop/rank-selection control
+// produces 18 distinct objects and eight exact forms. Caching the slot
+// pointer/reference caps at 88.5424%; --selected < 0 gives 95.5932%,
+// selected-- == 0 gives 98.9831%, and a separate zero test/decrement
+// gives 93.8983%. All 60 preserve mask/native/level/RNG semantics; none
+// improves the original body or another RMG function.
 VA(0x00532AB0, 0x96) // anchor-callee 0x53bf4e; retail-only
-void TRmgZone::chooseTerrain() {} // @stub
-#endif
+void TRmgZone::chooseTerrain()
+{
+    if (m_slot->m_useNativeTerrain && m_alignment != -1) {
+        m_terrain = g_rmgTownNativeTerrains[m_alignment];
+    } else {
+        int count = 0;
+        for (int terrain = 0; terrain < eTerrainWater; ++terrain) {
+            if (m_slot->m_allowedTerrain[terrain]
+                && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1))
+                ++count;
+        }
+        if (!count) {
+            m_terrain = eTerrainDirt;
+        } else {
+            int selected = rand() % count;
+            int terrain;
+            for (terrain = 0; terrain < eTerrainWater; ++terrain) {
+                if (m_slot->m_allowedTerrain[terrain]
+                    && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1)) {
+                    if (selected-- <= 0)
+                        break;
+                }
+            }
+            m_terrain = terrain;
+        }
+    }
+    if (m_levelPosition.m_z == 1 && m_terrain != eTerrainLava)
+        m_terrain = eTerrainSubterranean;
+}
 
 // Three trivial member vectors account for all 118 retained destructor
 // bytes, including the three independently resolved operator-delete calls.
@@ -2338,7 +2385,7 @@ void TRmgTreasureGroup::reset()
     m_objects.erase(m_objects.begin(), m_objects.end());
     m_outline.erase(m_outline.begin(), m_outline.end());
     m_map.clear();
-    m_flag0048 = 0;
+    m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0, 0);
     int count = m_map.m_mapWidth * m_map.m_mapHeight;
@@ -2357,15 +2404,75 @@ VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
 #endif
 
-// The adjacent guard/object placement callers pass properties and a
-// three-dword position. The predicate checks neighboring entrance flags,
-// then calls the contained map's isPlacementBlocked with zone -1.
-// Complete-only provisional group helper; ret 0x10 and AL result are proven.
-#if 0 // @carcass
+// Complete-only group fit predicate, recovered on decomp-complete-4.0 in
+// 7b8b1978 and checked against the 509-byte retail body for this population.
+// Restricted approach types reject entrances behind them; the other five
+// neighbors reject incompatible entrance objects. Monsters and border guards
+// ignore the border veto but must leave one traversable non-border neighbor.
+// Neighbor queries use the surface plane; the original by-value position
+// reaches the canonical placement-blocking helper unchanged.
+// Three 60-state populations preserve these rules and all canonical helpers.
+// Scalar neighbor fields score 87.8889%; point+vector translation restores
+// retail's 0x18 frame and the first two neighbor-y stores (96.2381%). Taking
+// the direction as the point operand removes the four-byte table-base bias;
+// the first-failure join below restores retail's three early branch targets
+// (98.8042%). A shared final failure is lower, not an equivalent CFG match.
+// Residual: entry loads/register homes and the first map-dimension load order.
+// Position/trigger copies (using TObjectType's own nested TPoint), trigger
+// references and prototype references do not improve the second-generation
+// peak. Full map-position queries previously reached only 86.3757%. Native
+// controls check scan order and helper arguments; no helper is flattened or
+// given a false inline declaration to obtain these source-lifetime results.
 VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
-    TRmgMapPosition position) { return 0; } // @stub
-#endif
+    TRmgMapPosition position)
+{
+    TObjectType* prototype = properties->m_prototype;
+    int objectType = prototype->m_objectType;
+    int x = position.m_x;
+    int y = position.m_y;
+    x -= prototype->m_triggerCell.m_x;
+    y -= prototype->m_triggerCell.m_y;
+    if (!g_adventureObjectLandBlocked[objectType][1]) {
+        for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
+            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            if (m_map.getMapItem(nearby.m_x, nearby.m_y, 0)->isRoadEntrance())
+                goto placementFailure;
+        }
+    }
+    {
+        for (int direction = 0; direction < 5; ++direction) {
+            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (item->isRoadEntrance()) {
+                int neighborType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
+                if (!g_adventureObjectLandBlocked[neighborType][2]
+                    || !g_adventureObjectLandBlocked[neighborType][1])
+                    goto placementFailure;
+            }
+        }
+    }
+    if (objectType != MONSTER && objectType != BORDER_GUARD) {
+        if (m_map.isPlacementBlocked(properties, position, -1, 1)) {
+placementFailure:
+            return 0;
+        }
+    } else {
+        if (m_map.isPlacementBlocked(properties, position, -1, 0))
+            return 0;
+        int direction;
+        for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && !item->hasBorderObject())
+                break;
+        }
+        if (direction == RMG_DIRECTION_COUNT)
+            return 0;
+    }
+    return 1;
+}
 
 // Collect positions next to existing object entrances. Objects whose land
 // traits permit full approach consider all eight directions; others use
@@ -2466,6 +2573,12 @@ void TRmgTreasureGroup::updateBounds()
 // while the initial map scan differs in register homes and inner back-edge
 // polarity. Separate coordinate initialization is flat at 95.1644%; explicit
 // cached height/per-row width restores one addressing detail to 95.1849%.
+// Two generated 60-state populations preserve that peak (38/40 distinct
+// code+relocation results). Five scan loops x six point initializations x
+// two dimension lifetimes reach 89.2123..95.1849%; the ten reproduced
+// parents x six perimeter-start lifetimes reach 95.0137..95.1849%.
+// No variant is adopted. Native rectangle/flag/query/cache controls cover
+// all 360 scan/start combinations, including retail's zero-height quirk.
 VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
 {
@@ -3213,7 +3326,7 @@ void readRmgTemplateZones(
                     slot->m_parameters004c[mine] = atoi(values[32 + mine]);
                 for (int resource = 0; resource < 7; ++resource)
                     slot->m_parameters0068[resource] = atoi(values[39 + resource]);
-                slot->m_flag0084 = isRmgTemplateFieldSet(values[46]);
+                slot->m_useNativeTerrain = isRmgTemplateFieldSet(values[46]);
                 unsigned char anyTerrain = 0;
                 for (int terrain = 0; terrain < 8; ++terrain) {
                     slot->m_allowedTerrain[terrain] =
@@ -7054,7 +7167,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
-    TTerrainType terrain = zone->m_terrain;
+    int terrain = zone->m_terrain;
     TRmgObjectPropertiesRef* properties;
     TObjectType* prototype;
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
@@ -7489,19 +7602,181 @@ VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
 // Group placement transfers its contents at a chosen three-coordinate
 // offset. The retained routine updates object positions and map-cell state.
-#if 0 // @carcass
+// Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked
+// against retail's 692 bytes before the local source-family population.
+// Residual (99.9141%): all 45 blocks, branches and three calls agree. Of 120
+// scored states, border-before-gate snapshots restore the outer-loop reload;
+// only width/y operands at +0x16a/+0x16d differ (four raw operand bytes).
+// Tried: point/scalar/per-row scans, five destination-position construction
+// forms, four snapshot/query orders, source-map pointer/reference bindings
+// and coordinate copies. None exceeds this body; all 324 other RMG scores
+// hold. The 420-form native oracle checks clipped/aliased maps, old snapshots,
+// live object-vector bounds and mutable virtual queries; wrong policies fail.
+// Preserve the canonical lookups and retained position constructor. The
+// multiply alone does not justify flattening or moving either helper.
 VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
-    TRmgMapPosition position) {} // @stub
-#endif
+    TRmgMapPosition position)
+{
+    group->m_position = position;
+    for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
+        type_object* object = group->m_objects[i];
+        TRmgMapPosition objectPosition = object->getPosition();
+        objectPosition.m_x += position.m_x;
+        objectPosition.m_y += position.m_y;
+        objectPosition.m_z = position.m_z;
+        addObject(object, objectPosition);
+    }
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = std::_cpp_max<long>(0, -position.m_x);
+    bounds.m_minimumY = std::_cpp_max<long>(0, -position.m_y);
+    bounds.m_maximumX = std::_cpp_min<long>(group->m_map.m_mapWidth, m_map.m_mapWidth - position.m_x);
+    bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_mapHeight, m_map.m_mapHeight - position.m_y);
+    TPoint point;
+    for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
+        for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
+            TRmgMapItem* destination = m_map.getMapItem(
+                TRmgMapPosition(point.m_x + position.m_x, point.m_y + position.m_y, position.m_z));
+            unsigned char border = destination->hasBorderObject();
+            unsigned char gate = destination->hasSubterraneanGate();
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            if (destination->m_tile.m_landType != eTerrainWater
+                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
+                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
+                && destination->m_tileData.m_roadPassable
+                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
+                if (!destination->m_connection.m_present)
+                    destination->m_tileData.m_subterraneanGate = 0;
+                if (source->hasBorderObject() && !destination->m_connection.m_present) {
+                    destination->m_tileData.m_subterraneanGate = 0;
+                    destination->m_tileData.m_borderObject = 1;
+                }
+            }
+            if (!source->m_connection.m_present) {
+                source->m_tileData.m_borderObject = border;
+                if (border)
+                    source->m_tileData.m_subterraneanGate = 0;
+            }
+            if (!source->m_connection.m_present) {
+                source->m_tileData.m_subterraneanGate = gate;
+                if (gate)
+                    source->m_tileData.m_borderObject = 0;
+            }
+        }
+    }
+    for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
+        group->m_objects[objectIndex]->isWritable();
+}
 
 // Complete-only fit test: group, three-coordinate offset, owning zone.
 // Returns AL; its cell and object filters are retained independently.
-#if 0 // @carcass
+// Starting body reconstructed on decomp-complete-4.0 in 44315390; checked
+// against retail's 1106 bytes before the local source-family population.
+// Prior context (90.81%): all 45 branches, three returns and three calls
+// remain; direction-range selection has one fewer block and register homes
+// differ. Initial post-loop size recheck and explicit row pointer: 74.86%;
+// short-circuit trait policy/per-cell lookup: 87.02%; guard constructor-result
+// copy: 88.41%; shared policy rejection: 90.50%; position-before-properties:
+// 90.81%. Explicit if/else assigning a separate direction removes a branch
+// (83.17% with the copy probes). Preserve real bounds, snapshots and calls.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
-    TRmgMapPosition position, TRmgZone* zone) { return 0; } // @stub
-#endif
+    TRmgMapPosition position, TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = group->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
+        type_object* object = group->m_objects[i];
+        TRmgMapPosition objectPosition = object->getPosition();
+        TRmgObjectPropertiesRef* properties = object->m_properties;
+        objectPosition.m_x += position.m_x;
+        objectPosition.m_y += position.m_y;
+        objectPosition.m_z = position.m_z;
+        if (m_map.isPlacementBlocked(properties, objectPosition, zoneIndex, 1))
+            return 0;
+    }
+    if (group->m_hasGuard) {
+        TRmgMapPosition guardPosition;
+        guardPosition = TRmgMapPosition(group->m_guardPosition.m_x + position.m_x,
+            group->m_guardPosition.m_y + position.m_y, position.m_z);
+        if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_mapWidth
+            || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_mapHeight)
+            return 0;
+        for (int x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
+            for (int y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
+                TRmgMapItem* item = m_map.getMapItem(x, y, guardPosition.m_z);
+                if (item->isRoadEntrance()
+                    && item->m_objects[0]->m_properties->m_prototype->m_objectType == MONSTER)
+                    return 0;
+            }
+        }
+    }
+    int lastDirection = RMG_DIRECTION_COUNT;
+    int firstDirection = 0;
+    unsigned char waterZone = zone->m_terrain == eTerrainWater;
+    type_object* lastObject = group->m_objects.back();
+    TObjectType* prototype = lastObject->m_properties->m_prototype;
+    TRmgMapPosition entrance = lastObject->getPosition();
+    entrance.m_x -= prototype->m_triggerCell.m_x;
+    entrance.m_y -= prototype->m_triggerCell.m_y;
+    if (!g_adventureObjectLandBlocked[prototype->m_objectType][1]) {
+        firstDirection = 1;
+        lastDirection = 4;
+    }
+    int direction;
+    for (direction = firstDirection; direction < lastDirection; ++direction) {
+        TPoint point;
+        point.m_x = entrance.m_x + g_rmgDirections[direction].m_x;
+        point.m_y = entrance.m_y + g_rmgDirections[direction].m_y;
+        TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
+            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
+            || !source->isPlacementOutline())
+            continue;
+        point.m_x += position.m_x;
+        point.m_y += position.m_y;
+        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+            continue;
+        TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
+        if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
+            && destination->m_tileData.m_roadPassable
+            && destination->m_tile.m_landType != eTerrainRock
+            && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
+            break;
+    }
+    if (direction == lastDirection)
+        return 0;
+    int allowEntrances;
+    for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex) {
+        int objectType = group->m_objects[objectIndex]->m_properties->m_prototype->m_objectType;
+        if (!g_adventureObjectLandBlocked[objectType][2])
+            goto disallowEntrances;
+    }
+    if (group->m_hasGuard)
+        goto disallowEntrances;
+    allowEntrances = 1;
+    goto checkOutline;
+disallowEntrances:
+    allowEntrances = 0;
+checkOutline:
+    if (!m_map.hasConnectedOutline(group->m_outline, position, allowEntrances, zone, 1))
+        return 0;
+    TPoint point;
+    for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
+        for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            if (!source->hasSubterraneanGate()) {
+                int x = point.m_x + position.m_x;
+                int y = point.m_y + position.m_y;
+                if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
+                    && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
+                    return 0;
+            }
+        }
+    }
+    return 1;
+}
 
 // Candidate placement consumes the group and zone plus its spacing limit.
 // Retail returns AL, retaining a candidate-position vector and random choice.

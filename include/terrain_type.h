@@ -10,7 +10,11 @@ enum TTerrainType {
     TERRAIN_NONE = -1,
     eTerrainDirt = 0,
     eTerrainSand = 1,
+    eTerrainGrass = 2,
     eTerrainSnow = 3,
+    eTerrainSwamp = 4,
+    eTerrainRough = 5,
+    eTerrainSubterranean = 6,
     eTerrainLava = 7,
     eTerrainWater = 8,
     eTerrainRock = 9
