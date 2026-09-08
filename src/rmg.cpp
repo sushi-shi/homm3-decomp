@@ -3514,10 +3514,28 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
 
 // Terrain painting first accumulates each zone's half-open cell bounds.
 // Role-derived name; Complete-only thiscall with no stack arguments.
-#if 0 // @carcass
+// Exact: the scan coordinate is one TRmgMapPosition, preserving retail's
+// 0x18-byte frame and level home. Independent scalar coordinates were
+// 99.7802%; reversed min arguments were 99.5824%.
 VA(0x0053BBB0, 0xFD) // anchor-callee 0x53e6c0; retail-only
-void type_random_map_generator::calculateZoneBounds() {} // @stub
-#endif
+void type_random_map_generator::calculateZoneBounds()
+{
+    TRmgMapItem* item = m_map.m_mapItems;
+    TRmgMapPosition position;
+    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
+                if (item->m_zoneState.m_zone >= 0) {
+                    TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
+                    zone->m_bounds.m_minimumX = std::_cpp_min<long>(zone->m_bounds.m_minimumX, position.m_x);
+                    zone->m_bounds.m_minimumY = std::_cpp_min<long>(zone->m_bounds.m_minimumY, position.m_y);
+                    zone->m_bounds.m_maximumX = std::_cpp_max<long>(zone->m_bounds.m_maximumX, position.m_x + 1);
+                    zone->m_bounds.m_maximumY = std::_cpp_max<long>(zone->m_bounds.m_maximumY, position.m_y + 1);
+                }
+            }
+        }
+    }
+}
 
 // Complete-only initialization, called by generation coordinator 0x549930.
 // The two placement passes precede normalization to a centered square.
@@ -3909,10 +3927,32 @@ static void insertRmgWorkItem(
 
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
-#if 0 // @carcass
+// Residual (88.9891%): paired TPoint sums improve the independent scalar
+// accumulator (88.5761%). The scan and division branches agree; position
+// copy scheduling and accumulator/map-pointer stack homes still differ.
 VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
-void type_random_map_generator::recenterZone(TRmgZone* zone) {} // @stub
-#endif
+void type_random_map_generator::recenterZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int count = 0;
+    TPoint total(0, 0);
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            if (m_map.getMapItem(x, y, position.m_z)->m_zoneState.m_zone == zoneIndex) {
+                ++count;
+                total.m_x += x;
+                total.m_y += y;
+            }
+        }
+    }
+    if (count) {
+        position.m_x = total.m_x / count;
+        position.m_y = total.m_y / count;
+        zone->setLevelPosition(position);
+    }
+}
 
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
