@@ -7091,6 +7091,15 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
+// Treasure placement passes zone, temporary group, alternate-generation
+// flag and value range. Retail returns AL and pops five argument dwords.
+// Provisional Complete-only role; no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x005466E0, 0x253) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
+unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
+    TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum) { return 0; } // @stub
+#endif
+
 // The reset loops at 0x546758/0x5468ca and 0x547647/0x547739 pass a
 // TRmgMapItem in ECX and four scalar values. Retail writes land/frame in
 // +0x24 and the two terrain flips in +0x28. setTerrain is a Complete-only
@@ -7173,11 +7182,95 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
+// Candidate placement consumes the group and zone plus its spacing limit.
+// Retail returns AL, retaining a candidate-position vector and random choice.
 #if 0 // @carcass
-VA(0x00547360, 0x460)
-void type_random_map_generator::placeZoneTreasures(TRmgZone* zone) {} // @stub
+VA(0x005470D0, 0x286) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
+unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
+    TRmgZone* zone, int spacing) { return 0; } // @stub
 #endif
+
+// Complete-only coordinator: weighted rounds select the least-used active
+// value band. Each gets three ordinary attempts, then three alternate
+// attempts before retiring that band. Failed placements release each object
+// through its retained virtual operation before deleting it and resetting.
+// Residual (67.0569%): weighted selection/retry branches agree; reset and
+// vector cleanup expansion add nine CFG blocks. Direct band indexing in
+// place of the range reference regresses to 63.5881%. Preserve the group
+// constructor/reset boundary, object virtual cleanup, and ordinary helper
+// calls while recovering the remaining assembly/placement implementations.
+VA(0x00547360, 0x460)
+void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    TRmgTreasureGroup group(16, 16);
+    unsigned char finished[3];
+    int density = 0;
+    int product = 1;
+    for (int band = 0; band < 3; ++band) {
+        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0) {
+            density += slot->m_treasure[band].m_density;
+            product *= slot->m_treasure[band].m_density;
+            finished[band] = 0;
+        } else {
+            finished[band] = 1;
+        }
+    }
+    if (density == 0)
+        return;
+    int spacing;
+    if (zone->m_terrain == eTerrainWater)
+        spacing = static_cast<int>(sqrt(static_cast<double>(1600 / density)));
+    else
+        spacing = static_cast<int>(sqrt(static_cast<double>(800 / density)));
+    int count[3] = {0, 0, 0};
+    int step[3];
+    for (band = 0; band < 3; ++band) {
+        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0)
+            step[band] = product / slot->m_treasure[band].m_density;
+    }
+    for (;;) {
+        int selected = -1;
+        int minimumCount = 0;
+        for (band = 0; band < 3; ++band) {
+            if (!finished[band] && (selected == -1 || count[band] < minimumCount)) {
+                minimumCount = count[band];
+                selected = band;
+            }
+        }
+        if (selected == -1)
+            break;
+        count[selected] += step[selected];
+        TRmgTreasureRange& range = slot->m_treasure[selected];
+        int attempt;
+        for (attempt = 0; attempt < 3; ++attempt) {
+            if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
+                if (placeTreasureGroup(&group, zone, spacing))
+                    break;
+                for (int object = 0; object < group.m_objects.size(); ++object) {
+                    group.m_objects[object]->unknownOperation();
+                    delete group.m_objects[object];
+                }
+                group.reset();
+            }
+        }
+        if (attempt < 3)
+            continue;
+        for (attempt = 0; attempt < 3; ++attempt) {
+            if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
+                if (placeTreasureGroup(&group, zone, spacing))
+                    break;
+                for (int object = 0; object < group.m_objects.size(); ++object) {
+                    group.m_objects[object]->unknownOperation();
+                    delete group.m_objects[object];
+                }
+                group.reset();
+            }
+        }
+        if (attempt == 3)
+            finished[selected] = 1;
+    }
+}
 
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source.  Retail proves the source-level worklist shape: two
