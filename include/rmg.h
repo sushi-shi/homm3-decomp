@@ -1336,6 +1336,7 @@ struct TRmgTreasureGroup {
     }
     void reset();
     unsigned char addGuard(type_object* guard);
+    unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char tryAddObject(type_object* object);
     void updateBounds();
     void traceOutline();
