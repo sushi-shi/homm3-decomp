@@ -3379,6 +3379,7 @@ rmg	?markRiverTargets@type_random_map_generator@@QAEXXZ	80.9379	80.9379	80.9379	
 rmg	?openConnectionPath@type_random_map_generator@@QAEXUTRmgMapPosition@@E@Z	79.9698	79.9698	79.9698	0x1408e0	563b48d3c2c2
 rmg	?openPathPatch@type_random_map@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x131ad0	8b9fb68bfdf5
 rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	70.4101	70.4101	70.4101	0x148040	3627024fcec5
+rmg	?placeAdditionalTowns@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	93.0076	93.0076	93.0076	0x144ae0	73a0810c7fc1
 rmg	?placeBorderObject@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140d60	d15d1657d5ba
 rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x145e60	155c221bb434
 rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	84.2575	84.2575	84.2575	0x145580	7d9c46c0ca7e
@@ -3439,8 +3440,8 @@ rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x1
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
 rmg	type_random_map_generator_initializeZones	0.0000	0.0000	0.0000	0x13bcb0	d88aa8e3e5b6
 rmg	type_random_map_generator_paintZoneTerrain	0.0000	0.0000	0.0000	0x13e6a0	058951b1a3e3
-rmg	type_random_map_generator_placeAdditionalTowns	0.0000	0.0000	0.0000	0x144ae0	8eb1f85b9816
 rmg	type_random_map_generator_placeZoneTreasures	0.0000	0.0000	0.0000	0x147360	d6930cf6415f
+rmg	type_random_map_generator_tryPlaceAdditionalTown	0.0000	0.0000	0.0000	0x144d90	205903406f26
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	cf2bb081468e
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	0265024cf345
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7d51c45007f5
