@@ -179,6 +179,11 @@ build build/objdiff/base/inputmgr.obj: cl src/inputmgr.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = inputmgr
 build inputmgr: phony build/objdiff/base/inputmgr.obj
+build build/objdiff/base/gamecontext.obj: cl src/gamecontext.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = gamecontext
+build gamecontext: phony build/objdiff/base/gamecontext.obj
 build build/objdiff/base/findpath.obj: cl src/findpath.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -752,6 +757,16 @@ build build/objdiff/base/tiles.obj: cl src/tiles.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = tiles
 build tiles: phony build/objdiff/base/tiles.obj
+build build/objdiff/base/victor.obj: cl src/victor.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /ML /Gd /D_WINDOWS
+  unit = victor
+build victor: phony build/objdiff/base/victor.obj
+build build/objdiff/base/victor_pcx_kernels.obj: cl $
+    src/victor_pcx_kernels.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Og- /ML /Gd /D_WINDOWS
+  unit = victor_pcx_kernels
+build victor_pcx_kernels: phony build/objdiff/base/victor_pcx_kernels.obj
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -768,12 +783,12 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -836,7 +851,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -853,12 +869,12 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -921,7 +937,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -939,12 +956,12 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
     build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
     build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/findpath.obj $
-    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
-    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
-    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
-    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
-    build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -1007,6 +1024,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj $
+    | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

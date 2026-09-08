@@ -14,6 +14,31 @@ zlib_o2_ml_gr_c_windows = [
   "/TC",
   "/D_WINDOWS",
 ]
+# Minimal profile for reconstructed Victor library functions. The public
+# stdcall entry points and internal cdecl calls are explicit in the source.
+# /O2's omitted frames reproduce both admitted wrappers; /Oy- does not.
+# These functions do not distinguish CRT mode or compiler generation.
+victor_o2_ml_gd_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/ML",
+  "/Gd",
+  "/D_WINDOWS",
+]
+# External Victor assembly kernels: global optimization would remove the
+# unused EBX save/restore in the RLE decoder. /Og- preserves the retail frame;
+# all three kernels match byte-for-byte. /Od is an equivalent byte control,
+# so the other original optimization switches remain undetermined.
+victor_kernels_o2_ogoff_ml_gd_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Og-",
+  "/ML",
+  "/Gd",
+  "/D_WINDOWS",
+]
 # Game C++ profile (2026-08-04, proven on the first three matches):
 # /Gr from retail's fastcall free functions (Random takes ecx/edx);
 # /Oy- from IsMember - retail keeps EBP frames wherever stack access
@@ -289,6 +314,13 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "inputmgr"
 source = "src/inputmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+# Retail-only context data and its retained bitset setter, 0x4eccf0..0x4ece60.
+# The original source filename is unavailable; gamecontext is provisional.
+[[unit]]
+unit = "gamecontext"
+source = "src/gamecontext.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
@@ -865,3 +897,15 @@ flags = "game_o2_ml_gr_windows"
 unit = "tiles"
 source = "src/tiles.cpp"
 flags = "game_o2_ml_gr_windows"
+
+# Reconstructed external Victor library; grouping filename is provisional.
+[[unit]]
+unit = "victor"
+source = "src/victor.cpp"
+flags = "victor_o2_ml_gd_windows"
+
+# Semantic grouping of external assembly kernels; original filename unknown.
+[[unit]]
+unit = "victor_pcx_kernels"
+source = "src/victor_pcx_kernels.cpp"
+flags = "victor_kernels_o2_ogoff_ml_gd_windows"

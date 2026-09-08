@@ -508,6 +508,16 @@ winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
 per-site fact about which level retail's budget ran out on, and MEASURE both
 spellings; the flat rows are the ones where the leaf was never marginal.
 
+An API change can instead restore a later, unrelated helper boundary.
+In `tryPlaceMine` (`0x545990`), changing the first candidate append from
+`insert(end(), properties)` to `push_back(properties)` leaves that insertion
+expanded but restores retail's subsequent `type_object` constructor call.
+The caller rises from 69.3906% to 71.5746%; every other banked function is
+unchanged. Changing its terrain read from `test` to subscript moves only
+`_Xran` out of line and still emits no standalone `bitset<10>::test`.
+Inspect the named calls before attributing an API-control gain to the helper
+being probed.
+
 The same ladder runs through the sequence containers and `basic_string`, and
 two more rows moved on it:
 
@@ -1749,3 +1759,110 @@ A four-state control separates braces from assignment syntax: scoped
 `m_text = text` and scoped `m_text.operator=(text)` both match; both bare-if
 forms expand the base. Explicit default construction of the string is
 flat. Preserve evidenced scopes even when they own no source locals.
+
+A retained vector count-insert call does not identify the source overload.
+RMG's `placeQuestGroup` at `0x54b300` needs a single-element source insert:
+VC6 expands that wrapper and leaves the count insertion called, restoring
+retail's boundary and reaching 93.5302%. Calling the count
+overload directly expands it into allocation/copy/fill operations and gives
+0%. Guard scopes and signed/unsigned index controls are flat. Inspect the
+named nested call sequence before treating an emitted overload as the
+source-level call.
+
+
+### A declared-only selector can hide its proven value wrapper
+
+The parked 33-byte clamp at `0x4e6750` is `t_limit` from Dreamcast
+`includes.h:124-131` (`dc:0x20d2c`). Its public symbol
+`?t_limit@@YAABHABH00@Z` identifies the integer instance returning one
+of three incoming references. The scattered local copies and provisional
+`cppClamp` declarations had obscured that identity. Retail corroborates the
+parameter order, signed comparisons, returned pointer and `ret 4`.
+
+Keep the template declaration. Neither the SH4 nor VC6 public spelling above
+distinguishes a function template from a non-template integer overload:
+Dreamcast's `std::copy` instances also have ordinary-looking names. A VC6
+control gives the same public name, raw helper bytes and hero/viewarmywindow
+scores for both forms. The mangled signature proves the instantiated ABI,
+not whether the source declared a template.
+
+Dreamcast `limit` at `includes.h:134` (`dc:0x1ef5c`) takes three integers
+by value and passes their addresses to `t_limit`. `hero::GetLuck` and both
+army-window rating widget helpers call that wrapper. Restoring the canonical
+pair in `homm3_limit.h` naturally emits an exact `tLimit` from real callers.
+The lower-bound-first if/else scopes agree with the DC source rows; writing
+`maximum < value` reproduces retail's upper comparison. The equivalent
+`value > maximum` control changes two instruction encodings.
+
+The wrapper also explains `GetLuck`'s three temporary homes. Its DC local is
+`int luck`; the previous reconstruction used `long` solely to induce an extra
+conversion at the invented direct selector call. The recovered `int` and
+`limit` call preserve 88.0650%. Calling `tLimit` directly lowers it to
+87.7439%. The one-army and group constructors improve from 90.1633/90.9521%
+to 91.2989/92.2569%; bypassing the wrapper gives 88.5008/90.1918%.
+
+Across the affected include closure, `checkApplyBadMorale` reaches 100% and
+`setupDynamicStuff` improves to 91.8605%. `townQuickView`'s unchanged body
+moves from 93.0922 to 92.8927%; its MAX/HIST remain 93.0922. Keep the shared
+source declarations and measure that collateral rather than restoring local
+variants to recover compiler state.
+
+
+The same recovered wrapper resolves `hero::updateStats` at `0x4e16d0`.
+Dreamcast `hero.cpp:4255/4262` explicitly calls `limit` after `GetLuck` and
+`GetMorale`. Replacing the former nested `cppMin(cppMax(...))` calls reaches
+100% from 86.0900%. The old reconstruction's extra intermediate load and
+store were evidence of a wrong source helper chain, rather than an
+unexplained branch-threading limitation.
+
+`hero::useSpell` also calls a by-value wrapper: Dreamcast line 1505 names
+`max`, which calls the reference selector `_cpp_max`. Using the canonical
+`homm3_minmax.h` wrapper preserves its 100% match while removing a local
+helper that returned a reference to one of its own by-value parameters.
+Include the wrapper header after Windows headers so its macro cleanup is
+still effective at the caller. Placing it before those headers lets the
+Windows `max` macro replace the source call: `useSpell` falls to 77.0690%,
+and its expansion in `fly` falls from 32.6234% to 29.7013%. Correct ordering
+restores both previous scores. Every other hero function is byte-flat,
+including the two parked hero register-allocation cases.
+
+### Check overload resolution before changing inline budgets
+
+`hero::fly` (0x4e59a0) had fallen from 100% to 32.6234% even though its
+two-statement source still agreed with Dreamcast. A non-const one-argument
+`getManaCost` facade shadowed the const facade proven by `Hero.h:707`.
+The tree also carried separate ordinary non-const and inline const bodies
+for the three-argument operation. Retail x86 does not establish that
+constness distinction; Dreamcast proves one const interface.
+
+Consolidating those into one ordinary const body restores 96.6753%, keeps
+the retained mana-cost body at 100%, and restores the point-constructor and
+map-cell calls in `fly`. The remaining call was `getSpellSchoolLevel` where
+retail retains `getSpellLevel`. Dreamcast lines 6074 and 6076 put mastery
+resolution and cost lookup in separate statements. Restoring that local
+recovers all 248 bytes of `fly` while the 239-byte mana-cost body stays exact.
+Both `int` and `TSkillMastery` locals work; nesting the call in the array
+subscript is the 96.6753% negative control. Other hero scores are unchanged.
+
+Preserve the shared interface, source statement boundaries, and ordinary
+helper body. A second overload can silently select a different expansion;
+an inline keyword or a flattened caller can conceal that modelling error.
+
+### An earlier pin can suppress a later retained container helper
+
+`readMapPlayerSlot` (0x4c3ef0) expanded the nested hero-identity vector
+`_Destroy`, despite its retained retail body at 0x4cfec0. Removing only the
+inline-depth pin around the earlier feature-bit test naturally emits all
+35 bytes and changes the caller from 67.55869% to 71.60329%. Removing only
+the custom-name reader's pin is flat; removing only the shared assignment
+pin does not emit `_Destroy`. Removing all three still emits the exact
+helper. The caller and shared assignment-caller collateral are recorded
+beside their source operations in game.cpp.
+
+The relevant boundary can precede the container operation. Inspect earlier
+pragma controls and the named call sequence before attributing non-emission
+to the container declaration or adding an emission caller. Here the retained
+loop calls a destructor whose retail ICF name is `Sign::~Sign`; its code and
+operator-delete relocation are identical to the hero-identity destructor.
+That callee identity must be checked before treating the call-name mismatch
+as different behavior.

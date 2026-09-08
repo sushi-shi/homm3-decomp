@@ -95,6 +95,23 @@ and the later home reuse. Merely seeing two values share a stack offset is
 insufficient: unrelated locals can also share a slot. Keep the actual source
 operations and references; do not add dummy address escapes or volatile.
 
+## Integral conversion can separate a loop index from a vector argument
+
+The Pandora's Box spell factory (`0x534520`) scans spell traits with a
+136-byte induction stride and copies the integer spell ID to a temporary
+before the expanded `vector<int>::push_back`. Passing an `int` loop variable
+directly exposes its address to the insertion and leaves a multiply-derived
+trait address in each iteration (85.8423%). A `long` loop variable converts
+to the vector's `int` element type, restoring both the copied argument and
+retail's induction stride; the entire 615-byte function matches exactly.
+
+A separate `int spellId = spell` passed to `push_back` is also exact. Writing
+`int(spell)` with an already-`int` index is byte-identical to the direct
+reference form under VC6 and does not create the required boundary. Inspect
+the actual caller's argument copy and loop addressing before choosing a
+conversion or a separately scoped payload; neither form proves the original
+source spelling by itself.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are

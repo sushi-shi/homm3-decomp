@@ -440,7 +440,9 @@ public:
     CDPlayConnection* createSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     // Before normalization (function): CDPlayLobby::TestLobbied.
-    unsigned char testLobbied();
+    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
+    // procedure record renders its storage as unsigned char. Retail uses AL.
+    bool testLobbied();
     // Before normalization (function): CDPlayLobby::GetConnectionSettings.
     DPLCONNECTION* getConnectionSettings(
         unsigned long appId, unsigned long* size);
