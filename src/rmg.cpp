@@ -10021,6 +10021,113 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     return 1;
 }
 
+// Complete-only helper called by rmgKeyTentObject::isWritable at 0x5338e0.
+// Retail reserves the color before filling the group and releases it on failure.
+// Failed placement rolls back each group object's reservation before deletion.
+// Residual (67.0694%): retail retains reset and the map destructor during
+// cleanup; VC6 expands reset on failure and the map destructor on both exits.
+// The named constructor/fill/addGuard/outline/placeQuestGroup calls agree.
+// A narrower guard lifetime is byte-neutral; an explicit copied position
+// with the scalar accessor scores 65.3438%, with or without that scope.
+// Preserve the ordinary reset call and automatic group ownership.
+VA(0x0054B8C0, 0x385) // anchor-callee 0x5338e0; retail-only
+unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
+{
+    int color = object->m_properties->m_prototype->m_subtype;
+    unsigned int index = 0;
+    while (index < m_objectPrototypes[BORDER_GUARD].size()
+        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->m_subtype != color)
+        ++index;
+    if (index == m_objectPrototypes[BORDER_GUARD].size())
+        return 0;
+    TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
+    TRmgTreasureGroup group(16, 16);
+    type_object* guard = new type_object(properties);
+    m_disabledKeyTents[color] = 1;
+    m_nextKeyTentColor = 0;
+    while (m_nextKeyTentColor < m_disabledKeyTents.size()
+        && m_disabledKeyTents[m_nextKeyTentColor])
+        ++m_nextKeyTentColor;
+    if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
+        group.updateBounds();
+        group.traceOutline();
+        group.m_ready = 1;
+        for (unsigned int i = 0; i < group.m_outline.size(); ++i)
+            group.m_map.getMapItem(group.m_outline[i].m_x,
+                group.m_outline[i].m_y)->m_tileData.m_placementOutline = 1;
+        if (placeQuestGroup(&group, origin))
+            return 1;
+    } else {
+        delete guard;
+    }
+    for (unsigned int i = 0; i < group.m_objects.size(); ++i) {
+        group.m_objects[i]->unknownOperation();
+        delete group.m_objects[i];
+    }
+    group.reset();
+    m_disabledKeyTents[color] = 0;
+    m_nextKeyTentColor = 0;
+    while (m_nextKeyTentColor < m_disabledKeyTents.size()
+        && m_disabledKeyTents[m_nextKeyTentColor])
+        ++m_nextKeyTentColor;
+    return 0;
+}
+
+// Complete-only removal helper; callers retain ownership of the object.
+// Both retail find loops test the returned iterator against null, including
+// the end-iterator path (0x54bc95 and 0x54be6d). Preserve that observed test.
+// Residual (88.4667%): retail reserves 0x2c scratch bytes versus our 0x28;
+// coordinate homes and the mask-loop register allocation differ. Positive
+// bounds blocks and narrowing the first iterator's scope are byte-neutral.
+// Sharing a named mask index scores 77.3911%; constructing an entrance value
+// and using the position accessor scores 85.0578%, independent of that scope.
+VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
+void type_random_map_generator::removeObject(type_object* object)
+{
+    TObjectType* prototype = object->m_properties->m_prototype;
+    TRmgMapPosition position = object->m_position;
+    std::vector<type_object*>::iterator found = std::find(m_positions.begin(), m_positions.end(), object);
+    if (found) {
+        m_positions.erase(found);
+        --m_objectCountByType[prototype->m_objectType];
+        int zone = m_map.getMapItem(position.m_x - prototype->m_triggerCell.m_x,
+            position.m_y - prototype->m_triggerCell.m_y, position.m_z)->m_zoneState.m_zone;
+        if (zone >= 0)
+            --m_zones[zone]->m_objectCountByType[prototype->m_objectType];
+    }
+    if (prototype->m_objectType == BORDER_GUARD) {
+        m_disabledKeyTents[prototype->m_subtype] = 0;
+        m_nextKeyTentColor = 0;
+        while (m_nextKeyTentColor < m_disabledKeyTents.size()
+            && m_disabledKeyTents[m_nextKeyTentColor])
+            ++m_nextKeyTentColor;
+    }
+    for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
+        int mapY = position.m_y - y;
+        if (mapY < 0 || mapY >= m_map.m_mapHeight)
+            continue;
+        for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
+            int mapX = position.m_x - x;
+            if (mapX < 0 || mapX >= m_map.m_mapWidth)
+                continue;
+            if (!prototype->m_passableMask.test(CObjectType::getBitPos(x, y))
+                || prototype->m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                TRmgMapItem* item = m_map.getMapItem(mapX, mapY, position.m_z);
+                std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
+                if (entry) {
+                    item->m_objects.erase(entry);
+                    if (item->m_objects.empty()) {
+                        item->m_tileData.m_roadEntrance = 0;
+                        item->m_tileData.m_roadPassable = 1;
+                    }
+                    item->m_zoneState.m_score = 32700;
+                }
+            }
+        }
+    }
+}
+
 // GenerateRandomMap's call at 0x5862e8 passes width, height and level count.
 // The request worker 0x54bf60 independently reads each scalar and copies the
 // human-seat and town-choice arrays into the generator. The shared request
