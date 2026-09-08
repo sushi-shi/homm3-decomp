@@ -431,6 +431,8 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
 // The proven grid copy constructor moves the width load before the result
 // pointer load (97.56%, with 100% banked). Named constructed and assigned
 // results keep that scheduling difference and leave createRiver unchanged.
+// A 16-state batch of member assignment, signed/unsigned input locals, both
+// input orders, and named/temporary returns also remains at 97.5556%.
 VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
 TRmgGridPoint type_random_map::getSize()
 {
@@ -479,6 +481,72 @@ TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
 // places this generated COMDAT later than the ordinary destructor.
 VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
 
+// The concrete road adapter is built at 0x548120 with a type_random_map
+// view at +4. Vtable 0x640a04 slots 1/2/4/5/6 name the following bodies;
+// the class and method names describe retail roles (no Dreamcast RMG TU).
+// Exact: capture flipY, frame, flipX, then terrain before writing the cell.
+// Retail 0x53237d..0x532399 establishes these input lifetimes. Direct reads
+// during the stores score 38.36%; a whole-tile or packed-word copy changes
+// the load/store schedule. The 13-state batch isolates this scalar form.
+VA(0x00532360, 0x6E) // anchor-vtable 0x640a04+4; retail-only
+void TRmgRoadMapAdapter::setTile(
+    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    TRmgMapItem& item = m_map->m_mapItems[
+        point.m_y * m_map->m_mapWidth + point.m_x];
+    unsigned char flipY = tile.m_flipY;
+    int frame = tile.m_frame;
+    unsigned char flipX = tile.m_flipX;
+    int terrain = tile.m_terrain;
+    item.m_tile.m_roadType = terrain;
+    item.m_tileData.m_roadFrame = frame;
+    item.m_tileData.m_roadFlipX = flipX;
+    item.m_tileData.m_roadFlipY = flipY;
+}
+
+// Naming the cell keeps its base address live and is exact. Addressing only
+// the nested bitfield produces a field-address LEA and scores 84.5652%.
+VA(0x005323D0, 0x3C) // anchor-vtable 0x640a04+8; retail-only
+void TRmgRoadMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
+{
+    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    item.m_tile.m_roadType = value;
+}
+
+VA(0x00532410, 0x62) // anchor-vtable 0x640a04+0x10; retail-only
+rmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
+{
+    TRmgMapItem& item = m_map->m_mapItems[
+        point.m_y * m_map->m_mapWidth + point.m_x];
+    rmgTerrainTile tile;
+    tile.m_terrain = item.m_tile.m_roadType;
+    tile.m_frame = item.m_tileData.m_roadFrame;
+    tile.m_flipX = item.m_tileData.m_roadFlipX;
+    tile.m_flipY = item.m_tileData.m_roadFlipY;
+    return tile;
+}
+
+VA(0x00532480, 0x2D) // anchor-vtable 0x640a04+0x14; retail-only
+int TRmgRoadMapAdapter::getLand(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_roadType;
+}
+
+VA(0x005324B0, 0x2D) // anchor-vtable 0x640a04+0x18; retail-only
+int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_landType;
+}
+
+// The two concrete adapter vtables share retail 0x532790. Keep both source
+// methods; their joint ICF representative is not assigned to either alone.
+TRmgGridPoint TRmgRoadMapAdapter::getSize()
+{
+    return m_map->getSize();
+}
+
 // Complete-only base of the river adapter, exact on the first scored candidate.
 // The derived deleting destructor at 0x5324e0 and two CreateRiver cleanup paths
 // call this retained vptr restoration; Dreamcast has no RMG compiland.
@@ -516,12 +584,9 @@ int TRmgMapAdapter::getOverlay(const TRmgGridPoint& point)
 // 0x640a04 and 0x640a3c. Five compiled forms of
 // `TRmgMapAdapter::getSize() { return m_map->getSize(); }` preserve the call,
 // relocation, CFG, and ABI but allocate the returned temporary through the
-// opposite register pair (best 85.18%). The other table belongs to the still
-// unrecovered concrete road adapter at 0x532320..0x5324b0, so the shared ICF
-// representative stays banked with that class cluster.
-// Its 45-byte slots at 0x532480/0x5324b0 index the wrapped map identically
-// and extract road type / land type, but neither can be emitted until that
-// concrete road-adapter declaration and vtable are recovered.
+// opposite register pair (best 85.18%). The other table belongs to the
+// reconstructed concrete road adapter above; the shared ICF representative
+// remains unclaimed until the natural forwarding copy agrees.
 
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are

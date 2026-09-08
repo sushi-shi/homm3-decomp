@@ -338,24 +338,24 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
 // `monster` slot doubles as the "already charged" mark), refused outright
 // below -500000000, and otherwise folded into the barrier value.
 //
-// Residual (91.54%): five masked rows, all in the two stores. Retail
-// schedules `mov edx,[esi]` before the `add` and writes monster (+0xc)
-// ahead of barrier_value (+0x10); we load the point after the add and
-// write the two in the opposite order. MEASURED NEGATIVE (polish 49):
-// swapping the two source statements is 91.5385 -> 89.8461 - the store
-// order here follows the scheduler, not the statement order.
+// Retail loads the by-value event point into EAX and schedules the later
+// monster copy ahead of the barrier store. A named point copy reproduces
+// both choices exactly; passing cell->m_point directly scores 91.5385%.
+// DC search.cpp:372 proves the by-value event call; the local spelling is
+// retail-codegen evidence (the optimized DC dossier records no locals).
 // Before normalization (locals): current_hero.
 VA(0x0056aad0, 0x68)  // exhaustive search.obj order-map, dc 0x12bbc8
 unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
-                                                 pathCell* cell)
+                                                 pathCell& cell)
 {
-    if (pointsNotEqual(cell->m_point, cell->m_monster)) {
-        long value = aiValueOfEvent(currentHero, cell->m_point);
+    if (cell.m_point != cell.m_monster) {
+        type_point point = cell.m_point;
+        long value = aiValueOfEvent(currentHero, point);
         if (value <= -500000000)
             return 0;
         if (value < 0) {
-            cell->m_barrierValue += value;
-            cell->m_monster = cell->m_point;
+            cell.m_barrierValue += value;
+            cell.m_monster = cell.m_point;
         }
     }
     return 1;

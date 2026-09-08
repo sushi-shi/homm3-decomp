@@ -1027,6 +1027,23 @@ public:
         TRmgZone* zone);
 };
 
+// Complete-only road adapter, provisional role name. Vtable 0x640a04 has
+// the seven-slot road interface; 0x548120 constructs the eight-byte object
+// with the address of a type_random_map view at +4. Its methods independently
+// index that map's 0x30-byte cells and read/write the road packed fields.
+class TRmgRoadMapAdapter : public TRmgRoadMapAdapterInterface {
+public:
+    type_random_map* m_map;
+
+    TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
+    virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint getSize();
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getOverlay(const TRmgGridPoint& point);
+};
+
 // Retail retains these support bodies outside CreateRiver while the adapter
 // and map-view construction remains expanded at the call site.  Keeping the
 // class definitions shared but the retained bodies in rmg_support.cpp
