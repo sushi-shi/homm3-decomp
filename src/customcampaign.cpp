@@ -1015,10 +1015,9 @@ int TCampaignStartCrossoverOption::getCount() const
 // pool the choice names; an empty pool falls back to the blank locator
 // frame. The pool is reached through the campaign's own scenario table -
 // mapScores[choice.scenario].index is the crossover slot.
-// Exact: initialize first to null before the conditional assignment. VC6
-// merges the empty-size paths directly into retail's fallback. A ten-source
-// batch kept the ternary at 96.0714%; declaring first without initialization
-// and nesting the portrait return scores 88.9286%.
+// Retail retains the shared fallback and tests the indexed first element.
+// The size-guarded &pool[0] expression is exact; replacing it with begin()
+// adds a zeroing block (96.07%). Guard/begin controls scored 88.93/75.95%.
 VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
@@ -1026,10 +1025,8 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
     SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
     std::vector<hero>& pool = campaign->m_carryOverHeroes
         [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
-    hero* first = 0;
-    if (pool.size() != 0)
-        first = pool.begin();
-    if (!first)
+    hero* first = pool.size() != 0 ? &pool[0] : 0;
+    if (first == 0)
         return "hpl000kn.pcx";
     return g_heroTraits[first->m_portrait].m_largePortraitName;
 }

@@ -17,8 +17,8 @@ class ManifestTests(unittest.TestCase):
             manifest = root / "matrix.json"
             manifest.write_text(json.dumps(dict(
                 schema=1, unit="example", function="foo", axes=axes)))
-            with patch.object(h, "REPO", root), patch.object(
-                    h, "source_for_unit", return_value=source):
+            with patch.object(h.manifest, "by_unit", return_value={
+                    "example": {"unit": "example", "source": "example.cpp"}}):
                 return h.parse_manifest(manifest, root=root)
 
     def test_cartesian_and_atomic_extra_edits(self):

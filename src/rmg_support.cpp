@@ -5,14 +5,54 @@
 // this companion translation unit reproduces the natural body-visibility
 // boundary without source-false inline controls.
 #include <va.h>
+#include <algorithm>
 #include <math.h>
+#include "exceptions.h"
 #include "rmg.h"
 #include "rmg_terrain.h"
+#include "tiles.h"
 
-// The Complete-only painter pattern tables are built by cinit 0x55ed70 and
-// 0x55f2f0 from the constant pattern-id arrays at 0x641140 and 0x6411ac.
-DATA(0x0069E5D0) extern TRmgLinePatternTable g_rmgRiverPatternTable;
-DATA(0x0069E650) extern TRmgLinePatternTable g_rmgRoadPatternTable;
+// The common painter prefix owns only the two dimensions and virtual API.
+// Both retained final constructors obtain the adapter size before building
+// this base, then store their own adapter at +0xc. Keep one ordinary helper.
+TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
+    : m_size(size)
+{
+}
+
+// Both cinit callers pass a nonempty table (13 river entries, 17 road
+// entries). Retail copies it, clears nine interleaved index/count pairs,
+// then counts each pattern id and records the start of each new run.
+// It reads the first entry without an empty guard and does not validate
+// the pattern ids: both are source-data preconditions, not new runtime checks.
+// The allocation failure retains the canonical exception constructor.
+// Exact: keeping the allocation result in a local gives std::copy retail's
+// single source walk plus a destination displacement. Assigning/checking
+// only the member keeps two pointer walks (93.5294%). Changing the standard
+// copy operation to uninitialized_copy instead gives 92.5000%.
+VA(0x004F9BE0, 0xB7) // anchor-callee 0x55ed7c/0x55f2fc; thiscall, ret 8; retail-only
+TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int* patterns)
+    : m_patternCount(patternCount), m_patterns(0)
+{
+    int* allocated = new int[m_patternCount];
+    m_patterns = allocated;
+    if (!allocated)
+        throw TAllocationFailure();
+    std::copy(patterns, patterns + m_patternCount, m_patterns);
+    for (unsigned int value = 0; value < 9; ++value) {
+        m_ranges[value].m_firstIndex = 0;
+        m_ranges[value].m_valueCount = 0;
+    }
+    int previous = m_patterns[0];
+    ++m_ranges[previous].m_valueCount;
+    for (unsigned int index = 1; index < m_patternCount; ++index) {
+        if (m_patterns[index] != previous) {
+            previous = m_patterns[index];
+            m_ranges[previous].m_firstIndex = index;
+        }
+        ++m_ranges[previous].m_valueCount;
+    }
+}
 
 // Both table cleanup thunks tail-call this body. The paired constructor owns
 // only the copied pattern-id array at +4; the nine index/count pairs are plain
@@ -21,6 +61,109 @@ VA(0x004F9CA0, 0x0B)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
 TRmgLinePatternTable::~TRmgLinePatternTable()
 {
     delete[] m_patterns;
+}
+
+// This library-side copy is retained separately from the terrain selector's
+// 0x642c00 table. Retail 0x4f9df0 indexes it with the two bytes from 0x63ff1c.
+// Values and row order are read from the pinned image, not inferred rotations.
+DATA(0x0063FE9C)
+static const int g_rmgLineReflectedNeighbours[2][2][8] = {
+    {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
+    {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
+};
+
+DATA(0x0063FF1C)
+static const unsigned char g_rmgLineReflections[4][2] = {
+    {0, 0}, {0, 1}, {1, 0}, {1, 1}
+};
+
+// The retained shared selector first handles crosses/opposite cardinals,
+// then reflected corners, then ends or straight fallback patterns. The table
+// advertises optional ids 5 and 0 through their occurrence counts. It consumes
+// a byte mask, not the terrain selector's three-way neighbour classifications.
+// Only caller 0x4f9f00 supplies three distinct outputs (id, X flip, Y flip).
+// Exact: each cardinal group shares its constant flip store, while the end
+// case tests south before the complete pattern/X/Y stores in each arm.
+// Moving the common pattern/X stores above that test lets VC6 replace even
+// explicit early returns with SETE (92.3290%). Reversing pattern/X order in
+// the full arms gives 99.9474%; changing the unsigned count test to != 0
+// gives SETNE rather than retail's SETA (99.7368%). Byte and bool availability
+// locals both match. All 590 bytes agree with the five table addresses resolved.
+VA(0x004F9CB0, 0x24E) // anchor-callee 0x4f9fd8; fastcall, ret 0xc; retail-only
+void selectRmgLinePattern(
+    const unsigned char* neighbours, const TRmgLinePatternTable* table,
+    int& pattern, unsigned char& flipX, unsigned char& flipY)
+{
+    if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
+        && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
+        pattern = 8;
+        flipX = 0;
+        flipY = 0;
+        return;
+    }
+    if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_SOUTH]) {
+        if (neighbours[TILE_DIR_EAST]) {
+            pattern = 6;
+            flipX = 0;
+        } else if (neighbours[TILE_DIR_WEST]) {
+            pattern = 6;
+            flipX = 1;
+        } else {
+            pattern = 2;
+            flipX = 0;
+        }
+        flipY = 0;
+        return;
+    }
+    if (neighbours[TILE_DIR_EAST] && neighbours[TILE_DIR_WEST]) {
+        if (neighbours[TILE_DIR_SOUTH]) {
+            pattern = 7;
+            flipY = 0;
+        } else if (neighbours[TILE_DIR_NORTH]) {
+            pattern = 7;
+            flipY = 1;
+        } else {
+            pattern = 3;
+            flipY = 0;
+        }
+        flipX = 0;
+        return;
+    }
+    unsigned char hasCornerVariant = table->m_ranges[5].m_valueCount > 0;
+    for (unsigned int reflection = 0; reflection < 4; ++reflection) {
+        const int* order = g_rmgLineReflectedNeighbours
+            [g_rmgLineReflections[reflection][0]][g_rmgLineReflections[reflection][1]];
+        if (neighbours[order[2]] && neighbours[order[4]]) {
+            if (hasCornerVariant && (neighbours[order[1]] || neighbours[order[5]]))
+                pattern = 5;
+            else
+                pattern = 4;
+            flipX = g_rmgLineReflections[reflection][0];
+            flipY = g_rmgLineReflections[reflection][1];
+            return;
+        }
+    }
+    if (table->m_ranges[0].m_valueCount > 0) {
+        if (neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST]) {
+            pattern = 1;
+            flipX = neighbours[TILE_DIR_WEST];
+            flipY = 0;
+        } else {
+            if (neighbours[TILE_DIR_SOUTH]) {
+                pattern = 0;
+                flipX = 0;
+                flipY = 0;
+            } else {
+                pattern = 0;
+                flipX = 0;
+                flipY = 1;
+            }
+        }
+    } else {
+        pattern = neighbours[TILE_DIR_WEST] || neighbours[TILE_DIR_EAST] ? 3 : 2;
+        flipX = 0;
+        flipY = 0;
+    }
 }
 
 // Retail retains this tiny value constructor throughout the RMG pathfinding
@@ -53,30 +196,36 @@ TRmgRiverPainter::~TRmgRiverPainter()
 // selects within that table at later painting sites and is intentionally not
 // consumed by this accessor.
 VA(0x0055EDB0, 0x08)  // vtables 0x641174/0x641190; Complete-only
-void* TRmgLinePainter::getPattern(int)
+TRmgLinePatternTable* TRmgLinePainter::getPattern(int)
 {
     return &g_rmgRiverPatternTable;
 }
 
-// Slot 1 makes a fieldwise tile copy before forwarding its address to the
-// adapter. That copy deliberately omits the two tail-padding bytes and the
-// indirect call agrees with all 54 retail bytes; all four painter vtables
-// share this ICF representative.
-VA(0x0055EDC0, 0x36)  // vtables 0x641174/0x641190/0x6411f0/0x64120c slot 1
-void TRmgLinePainter::setTile(
-    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+// All four line-painter tables use this setter. It takes a snapshot of the
+// ten meaningful tile bytes before dispatching adapter slot 1. The copied
+// value, not the original caller-owned tile, is the forwarded argument.
+// Exact with value construction and X-before-Y flip stores. A custom tile
+// copy constructor also matched this body but changed the adapter-return
+// handling in terrain users. Implicit-copy snapshot initialization is 87.23%;
+// reversing these independent flip stores gives 99.82%, not retail order.
+VA(0x0055EDC0, 0x36) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
+void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile copiedTile;
-    copiedTile.m_terrain = tile.m_terrain;
-    copiedTile.m_frame = tile.m_frame;
-    copiedTile.m_flipX = tile.m_flipX;
-    copiedTile.m_flipY = tile.m_flipY;
-    m_adapter->setTile(point, copiedTile);
+    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
+    snapshot.m_flipX = tile.m_flipX;
+    snapshot.m_flipY = tile.m_flipY;
+    m_adapter->setTile(point, snapshot);
 }
 
 void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
+}
+
+void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
+{
+    rmgTerrainTile snapshot = m_adapter->getTile(point);
+    tile = snapshot;
 }
 
 // Slot 3 of all four river/road painter vtables forwards to the adapter's
@@ -120,20 +269,25 @@ VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
 // at 0x6411ac. The road painter's first virtual slot returns that table.
 VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
-void* TRmgRoadLinePainter::getPattern(int)
+TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
 {
     return &g_rmgRoadPatternTable;
 }
 
-void TRmgRoadLinePainter::setTile(
-    const TRmgGridPoint& point, const rmgTerrainTile& tile)
+void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile copiedTile;
-    copiedTile.m_terrain = tile.m_terrain;
-    copiedTile.m_frame = tile.m_frame;
-    copiedTile.m_flipX = tile.m_flipX;
-    copiedTile.m_flipY = tile.m_flipY;
-    m_adapter->setTile(point, copiedTile);
+    rmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
+    snapshot.m_flipX = tile.m_flipX;
+    snapshot.m_flipY = tile.m_flipY;
+    m_adapter->setTile(point, snapshot);
+}
+
+int TRmgRoadLinePainter::canPaint(const TRmgGridPoint& point)
+{
+    int overlay = m_adapter->getOverlay(point);
+    if (overlay == eTerrainWater || overlay == eTerrainRock)
+        return 1;
+    return 0;
 }
 
 // The river and road line-painter vtables all share this ICF representative.
@@ -145,29 +299,18 @@ void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
     m_adapter->setOverlay(point, value);
 }
 
-// Both painter hierarchies share this slot-4 body. The caller at 0x4f9fdd
-// passes an explicit destination after the point; the nested map-adapter call
-// returns a value through its separate hidden first argument. This is not a
-// painter value-return ABI. The original Complete-only spelling is unknown.
-// Exact with the recovered ABI: reference-bound, named-value, assigned-value,
-// and reversed first-two-store controls all reproduce the same 52 bytes.
-VA(0x0055F350, 0x34) // vtables 0x641174/0x641190/0x6411f0/0x64120c slot 4
-void TRmgLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
-{
-    const rmgTerrainTile& sourceTile = m_adapter->getTile(point);
-    tile.m_terrain = sourceTile.m_terrain;
-    tile.m_frame = sourceTile.m_frame;
-    tile.m_flipX = sourceTile.m_flipX;
-    tile.m_flipY = sourceTile.m_flipY;
-}
-
+// The painter API writes to an explicit output reference, while its adapter
+// returns a tile by value. Retail therefore uses a 12-byte return temporary
+// and copies its four fields to the caller's output. Both painter classes
+// share the road COMDAT at this vtable slot.
+// Exact with a named returned value followed by canonical assignment. Keep
+// the implicit copy constructor: a custom four-field copy gave 62.96% here
+// and introduced extra returned-value copies in the terrain fill path.
+VA(0x0055F350, 0x34) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
-    const rmgTerrainTile& sourceTile = m_adapter->getTile(point);
-    tile.m_terrain = sourceTile.m_terrain;
-    tile.m_frame = sourceTile.m_frame;
-    tile.m_flipX = sourceTile.m_flipX;
-    tile.m_flipY = sourceTile.m_flipY;
+    rmgTerrainTile snapshot = m_adapter->getTile(point);
+    tile = snapshot;
 }
 
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
@@ -177,6 +320,24 @@ int TRmgRoadLinePainter::getLand(const TRmgGridPoint& point)
 {
     return m_adapter->getLand(point);
 }
+
+// The road builder constructs adapter vtable 0x640a04 at 0x548120 and passes
+// it here at 0x548143. As in the river constructor, the common painter prefix
+// is passed unchanged to walker 0x4fa280, whose subobject begins at +0x10.
+VA(0x0055F3B0, 0x76) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
+TRmgRoadPainter::TRmgRoadPainter(
+    TRmgRoadMapAdapterInterface* newAdapter,
+    int newRoadType,
+    const TRmgGridPoint& newStart)
+    : TRmgRoadLinePainter(newAdapter),
+      TRmgLineWalker(this, newRoadType, newStart)
+{
+}
+
+// Recovering the real constructor emits the final vtable and this wrapper
+// naturally. Its 33 bytes call the retained destructor, test the deleting
+// flag, conditionally release this, and return the original object pointer.
+VA_COMPGEN(0x0055F430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
 
 // The road painter's empty derived destructor restores its distinct base
 // vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel

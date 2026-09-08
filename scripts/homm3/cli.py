@@ -181,6 +181,10 @@ def cmd_vc6(args) -> int:
     return run_module("homm3.vc6", *args.vc6_args)
 
 
+def cmd_hypotheses(args) -> int:
+    return run_module("homm3.hypotheses", *args.hypotheses_args)
+
+
 def cmd_link(args) -> int:
     if run_module("homm3.build.configure"):
         return 1
@@ -289,6 +293,10 @@ def _dispatch(argv: list[str]) -> int:
                        "predict-inline / why-reg / oracle / check (homm3.vc6)")
     p.add_argument("vc6_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_vc6)
+
+    p = sub.add_parser("hypotheses", help="compile and rank JSON source-hypothesis batches")
+    p.add_argument("hypotheses_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_hypotheses)
 
     p = sub.add_parser("link", help="candidate link (layout study)")
     p.add_argument("link_args", nargs=argparse.REMAINDER)

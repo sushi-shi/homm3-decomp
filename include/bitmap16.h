@@ -65,6 +65,7 @@ public:
     // background through [vptr]+flag 1. Slot 2 reports the resource's
     // total in-memory extent: the 0x38-byte object plus DataSize.
     virtual ~Bitmap16Bit();
+    void clear();
     // Before normalization (function): Bitmap16Bit::GetSize.
     virtual unsigned int getSize() const;
 
@@ -105,8 +106,6 @@ public:
     // Before normalization (locals): old_green_bits.
     void remap(int oldGreenBits);
     void reference(int w, int h, int pitch, unsigned short* data);
-    // DC bitmap16.cpp:358, dc 0x51198; ordinary helper expanded by retail reference.
-    void clear();
     // Before normalization (function): Bitmap16Bit::Darken.
     void darken(int x, int y, int w, int h);
     // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target

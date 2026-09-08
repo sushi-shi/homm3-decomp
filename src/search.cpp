@@ -16,6 +16,9 @@
 // definitions now live in struct.h; use them directly instead of TU-local
 // duplicate free helpers. The direct != body preserves retail's three tests.
 
+// Using the canonical comparisons changes buildPath from 82.5524% to
+// 81.4143%; its 86.3333% historical peak remains recorded below and in HIST.
+
 // E:\gamedcs\search.cpp:32
 // Residual (86.3333%): two enregistration choices, both measured unreachable
 // on 2026-08-14. (1) retail materialises `this + 0x48` (the `result` vector)

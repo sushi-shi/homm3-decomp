@@ -8,6 +8,8 @@
 // retail-proven consumers are admitted here so far.
 enum TTerrainType {
     TERRAIN_NONE = -1,
+    eTerrainDirt = 0,
+    eTerrainSand = 1,
     eTerrainSnow = 3,
     eTerrainLava = 7,
     eTerrainWater = 8,

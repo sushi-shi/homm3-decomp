@@ -194,11 +194,10 @@ unsigned int Bitmap16Bit::getSize() const
 // E:\gamedcs\bitmap16.cpp:335. Re-point the bitmap at memory somebody else
 // owns: drop whatever this object allocated, then take the caller's extent,
 // stride and pointer and mark the map borrowed.
-// Exact: DC lines 342..346 store width, height, pitch, image size, data size.
-// Keeping that order, with ImageSize read back for DataSize, lets VC6 schedule
-// retail's pitch load between the multiply and height store. A 28-source
-// batch found four equivalent exact products; retaining an explicit size
-// local or moving pitch after the size stores loses the match (best 94.7568%).
+// DC lines 342..346 assign width, height, pitch, image size, then data size.
+// Keeping that order and the ordinary clear() call is byte-exact in retail.
+// Moving pitch after the size stores scores 85.95%; an early product local
+// with that late pitch store reaches only 94.7568%.
 VA(0x0044e250, 0x5D)  // order-map(DC bitmap16.obj, between Remap and Draw), dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 {
@@ -212,10 +211,10 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
     m_referenced = 1;
 }
 
-// DC bitmap16.cpp:358 (clear, dc 0x51198). reference calls this ordinary
-// helper at line 338; retail 0x44e250 expands its zero stores and conditional
-// delete. The DC surface-release arm is absent from the PC object layout.
-// Preserve the original source order: reference immediately precedes clear.
+// DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
+// Complete inlines its scalar resets and borrowed-buffer release; the DC-only
+// surface-release arm has no corresponding field or operation in retail.
+DC_ONLY(0x51198, 0x90)
 void Bitmap16Bit::clear()
 {
     m_width = 0;
@@ -229,6 +228,7 @@ void Bitmap16Bit::clear()
         m_referenced = 0;
     }
 }
+
 
 // E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
 // destination origin by walking the source in, clip the far edge against
@@ -665,11 +665,7 @@ void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
 // E:\gamedcs\bitmap16.cpp:335
 
 // E:\gamedcs\bitmap16.cpp:358
-DC_ONLY(0x51198, 0x90)
-void Bitmap16Bit::clear()
-{
-    // @stub
-}
+
 
 // E:\gamedcs\bitmap16.cpp:472
 DC_ONLY(0x51228, 0x150)

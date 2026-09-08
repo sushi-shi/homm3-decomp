@@ -1723,6 +1723,8 @@ unsigned char hero::isWieldingArtifact(int whichArtifact)
 // Twenty further parameter-const/register, artifact-width, and named-selector
 // combinations also stop at 96.5278%; none recovers the default-arm reload.
 // Before normalization (locals): creature_type.
+// A 16-state parameter-reuse, for/while, return/break, and slot-lifetime
+// batch also leaves 96.5278% best; mutating the parameter changes the CFG.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {
@@ -7793,8 +7795,11 @@ long hero::modifySpellDamage(SpellID spell, int damage,
 // A 16-source batch also tests named pointer/reference receivers born before
 // or after the loop locals with int/short/long accumulators: all byte-flat
 // at 99.5833%. The canonical getPrimarySkill accessor remains intact.
+// DC hero.cpp:6296 also proves the const receiver. A 36-state accumulator,
+// declaration-order and loop-form batch preserves the 99.5833% peak; short
+// accumulators/for-loop forms can drop to 98.75% without fixing the SIB byte.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
-short hero::getPrimarySkillTotal()
+short hero::getPrimarySkillTotal() const
 {
     int total = 0;
     int skill = 0;
