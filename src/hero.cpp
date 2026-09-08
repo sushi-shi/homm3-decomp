@@ -8146,7 +8146,7 @@ void hero::heroFn004E6120(int creatureType,
 //        spell count.  Claimed as a 24-byte `ret 0` ctor closure.
 //   0x004e6750  33 B  ret 4   tLimit(const int&,const int&,const int&)
 //        DC includes.h:124, public ?t_limit@@YAABHABH00@Z, proves the
-//        name and integer overload. Both the selected-reference ABI and
+//        name and integer instance. Both the selected-reference ABI and
 //        the lower-bound-first comparisons match retail. The old
 //        THeroScreenWindow deleting-destructor label was incorrect.
 //
@@ -8214,7 +8214,8 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 
 // includes.h:124-131, DC 0x20d2c. The real limit() calls from GetLuck
 // and the army-window widget helpers naturally retain this shared body.
-// homm3_limit.h owns the canonical definition; all 33 retail bytes agree.
+// homm3_limit.h owns the template definition; this integer instance
+// agrees with all 33 retail bytes.
 VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
 inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
 
