@@ -1691,7 +1691,7 @@ events	?doEventPyramid@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z
 events	?doEventRallyFlag@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa44c0	17b2e9ac781f
 events	?doEventRefugeeCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa4600	9f7ef46e20f2
 events	?doEventResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4be0	e96b1b04c2ea
-events	?doEventScholar@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0	91e096791d17
+events	?doEventScholar@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0	0df6cfa47473
 events	?doEventSeaChest@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5030	b0e81cf13f8c
 events	?doEventShipyard@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	91.9303	91.9303	91.9303	0x9e2e0	0f49d1ac3896
 events	?doEventShrine@advManager@@QAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	89.6701	89.6701	89.6701	0xa5610	17a9f9196434
@@ -2061,7 +2061,7 @@ game	?perWeek@game@@QAEXXZ	98.8948	98.8948	99.8370	0xc8780	1078057cac97
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	e3db55808148
 game	?processOnMapTowns@game@@QAEXXZ	94.3642	94.3642	94.3642	0xcaa70	e6c2e01c2d76
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	bb0a93e2417d
-game	?randomizeEvents@game@@QAEXXZ	86.7458	87.0102	87.0102	0xc0cc0	475406c1f55c
+game	?randomizeEvents@game@@QAEXXZ	86.8205	87.0102	87.0102	0xc0cc0	475406c1f55c
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	d92f472f2523
 game	?randomizeUniversity@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0	e63a467abefa
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	9cbc7f5bc66e
@@ -3025,7 +3025,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	d
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	9fd90a3edb9a
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	c3d547c3581c
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	33e3eee578c8
-recruit	?update@recruitUnit@@QAEXEJ@Z	96.5558	96.5558	96.5558	0x1503a0	75fd1ca020f9
+recruit	?update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	75fd1ca020f9
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	c8b9d011fc93
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0x1541a0	d4594021d1c8
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720	90c10f45e08d
@@ -4006,7 +4006,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
@@ -4380,7 +4380,7 @@ town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670	
 town	?initializeBuildingCostsTables@town@@SIEXZ	91.0465	91.0465	91.0465	0x1c14c0	e5434b031752
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	44f51394c04d
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	5e7d3d74ec2d
-town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	99.9356	100.0000	100.0000	0x1be600	d6f06289d758
+town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1be600	d6f06289d758
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	4841080eb51d
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	df406bb52217
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	035999459683

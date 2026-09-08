@@ -499,7 +499,7 @@ compiled	1414	0x00487e40	84.9232	84.9232	84.9232	customcampaign	customcampaign	?
 compiled	1414	0x005bcd60	98.0017	98.0017	98.0017	town	town	?load@town@@QAEHPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1418	0x004d6050	92.6749	92.6749	92.6749	gzinflatebuf	gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1427	0x00425bd0	88.5898	88.5898	88.5898	ai_combat	ai_combat	?castSpell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1428	0x005503a0	96.5558	96.5558	96.5558	recruit	recruit	?update@recruitUnit@@QAEXEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1428	0x005503a0	94.1574	96.5558	96.5558	recruit	recruit	?update@recruitUnit@@QAEXEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1439	0x005c6870	98.1050	98.1050	98.1050	townmgr	townmgr	?setupTown@townManager@@QAEXE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1451	0x004740d0	97.6611	97.6611	97.6611	command	command	?main@combatManager@@UAEHAAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1453	0x0040ec90	96.1549	96.1549	96.1549	advmgr	advmgr	?processSearch@advManager@@QAEHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -662,7 +662,7 @@ compiled	5182	0x004dd2d0	78.6458	78.6458	78.6458	hero	hero	?windowHandler@THeroS
 compiled	5215	0x005dda10	95.5153	95.5153	95.5153	townmgr	townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	5425	0x004ad470	98.5379	98.5379	99.1139	events	events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	5704	0x00528040	98.0336	98.0336	98.0336	philai	philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@AAJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	5736	0x004c0cc0	86.7458	87.0102	87.0102	game	game	?randomizeEvents@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	5736	0x004c0cc0	86.8205	87.0102	87.0102	game	game	?randomizeEvents@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	5926	0x005fa600	97.1358	97.1358	97.1358	viewwrld	viewwrld	??0TViewWorldWindow@@QAE@XZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	5997	0x004702d0	99.8607	99.8607	99.8607	combatresultswindow	combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	6268	0x005b1790	96.3370	96.3370	98.1326	systemoptionswindow	systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	admitted	run the evidence pass and iterate up to five scored candidates

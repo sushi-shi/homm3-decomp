@@ -1145,28 +1145,28 @@ void ExtraInfoUnion::setPyramid(unsigned char guards, SpellID new_spell)
 
 // E:\gamedcs\MapCell.h:1063
 DC_ONLY(0x9c898, 0xC)
-ScholarAwards ExtraInfoUnion::getScholarAward()
+ScholarAwards ExtraInfoUnion::getScholarAward() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1068
 DC_ONLY(0x9c8a4, 0xC)
-TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill()
+TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1073
 DC_ONLY(0x9c8b0, 0xC)
-TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill()
+TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1078
 DC_ONLY(0x9c8bc, 0xC)
-SpellID ExtraInfoUnion::getScholarSpell()
+SpellID ExtraInfoUnion::getScholarSpell() const
 {
     // @stub
 }
@@ -5056,9 +5056,11 @@ VA(0x004a4dc0, 0x263)  // jump-table arm 0x51 + advevent.txt 115, dc 0x951f4
 void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
-    int award = cell->getScholarAward();
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    int award = info->getScholarAward();
     if (award == const_scholar_spell) {
-        int spell = cell->getScholarSpell();
+        int spell = info->getScholarSpell();
         if (!currentHero->m_inSpellbook[spell]
             && g_spellTraits[spell].m_level <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
             && currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
@@ -5070,7 +5072,7 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
             goto pick_up;
         }
     } else if (award == const_scholar_secondary_skill) {
-        int skill = cell->getScholarSecondarySkill();
+        int skill = info->getScholarSecondarySkill();
         if (currentHero->giveSS(skill, 1)) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
@@ -5085,7 +5087,7 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     }
 
     {
-        int primary = cell->getScholarPrimarySkill();
+        int primary = info->getScholarPrimarySkill();
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_SCHOLAR),
