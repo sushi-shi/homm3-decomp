@@ -1739,3 +1739,13 @@ form has the same result; postdecrement and a shared-return form change
 the standalone body. Diagnose source control-flow boundaries even when
 the callee is already exact; emitted byte size alone does not fix the
 compiler's inline cost.
+
+A lexical scope without locals can also change the inline decision.
+Dreamcast records the braced conditional assignment in `textWidget`'s
+constructor at textwdgt.cpp:64..65. Restoring those braces preserves the
+base constructor's 99.9130% bytes but makes `bitmapBackedTextWidget` retain
+the base call at `0x5bc7ab`, taking the derived constructor from 0% to 100%.
+A four-state control separates braces from assignment syntax: scoped
+`m_text = text` and scoped `m_text.operator=(text)` both match; both bare-if
+forms expand the base. Explicit default construction of the string is
+flat. Preserve evidenced scopes even when they own no source locals.
