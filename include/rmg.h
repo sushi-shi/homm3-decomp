@@ -1404,7 +1404,8 @@ struct TRmgZone {
     // H3API H3RmgZoneGenerator::townType2, INT32 at +08, commit
     // 92255ab18da784a5842ecc2b8bc0ce00e19a0c56. The surrounding town/terrain,
     // coordinates, object-count array and three vectors match this layout.
-    // Reference-backed spelling/type; no retail semantic consumer located.
+    // Retail creature reward value 0x534324 compares this with the creature's
+    // town alignment before weighting the reward by active-zone counts.
     // Before normalization: opaque0008.
     int m_townType2;
     // Before normalization: terrain.
