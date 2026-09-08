@@ -1766,6 +1766,19 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 
+// PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
+// obtains upper/lower bounds, counts their iterator range, erases that
+// range, and returns size_type (ret 4). This is public erase(key), not
+// private _Erase(node): the old TREE_ERASE probe paired the wrong body
+// and scored 36.62%. The existing set calls naturally emit this overload,
+// which matches all 89 bytes under the correct TREE_ERASE_KEY claim.
+VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
+
+// The one-point lookup calls _Lbound and tests y/x before returning an
+// iterator through the hidden result pointer (ret 8). Residual 99.4634%:
+// ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
+VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
+
 // The terrain painter constructor erases a range of packed two-byte cells.
 // The naturally emitted specialization agrees with all 53 retail bytes.
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
