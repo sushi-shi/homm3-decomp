@@ -1722,6 +1722,15 @@ public:
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
+// Four fixed-count/density groups consumed by 0x544ae0; the option byte's
+// gameplay meaning remains provisional, while ownership and ordering are proven.
+enum ERmgTownPlacementCategory {
+    RMG_TOWN_PLAYER_OPTION,
+    RMG_TOWN_PLAYER_BASIC,
+    RMG_TOWN_NEUTRAL_OPTION,
+    RMG_TOWN_NEUTRAL_BASIC
+};
+
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
     // Before normalization: fixedHumanPlayers.
@@ -1826,6 +1835,8 @@ public:
     void initializeZones(TRmgTemplate* mapTemplate);
     void paintZoneTerrain();
     void placeAdditionalTowns(TRmgZone* zone);
+    unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
+        int player, unsigned char townOption, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);

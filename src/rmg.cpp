@@ -5944,11 +5944,71 @@ void type_random_map_generator::carveBranchingPaths()
 
 // Retail 0x5448eb passes two points by value followed by the zone. The
 // eight-byte vector elements and midpoint operations prove the point ABI.
-#if 0 // @carcass
+// This Complete-only path uses the same retained point/vector arithmetic
+// as boundary drawing, but marks only matching-zone cells and neighbours.
+// First reconstruction: 99.5699%. All 40 CFG blocks match in size and
+// flow. The only masked instruction difference is the neighbour lookup's
+// level*height multiply: retail copies the level register before multiplying
+// by memory; VC6 loads height and multiplies by the level register. The
+// value-coordinate overload and a separate cached level are byte-neutral.
+// Vector insertion relocation names are shared ICF aliases, not call changes.
 VA(0x005443A0, 0x2F5)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
-    TRmgZone* zone) {} // @stub
-#endif
+    TRmgZone* zone)
+{
+    std::vector<TPoint> pending;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int roughness = zone->m_boundaryRoughness;
+    pending.push_back(to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+            if (item->m_zoneState.m_zone == zoneIndex) {
+                if (!item->m_connection.m_present) {
+                    item->m_tileData.m_borderObject = 0;
+                    item->m_tileData.m_subterraneanGate = 1;
+                }
+                TRmgZoneBounds bounds;
+                bounds.m_minimumX = std::_cpp_max<long>(x - 1, 0);
+                bounds.m_minimumY = std::_cpp_max<long>(y - 1, 0);
+                bounds.m_maximumX = std::_cpp_min<long>(x + 2, m_map.m_mapWidth);
+                bounds.m_maximumY = std::_cpp_min<long>(y + 2, m_map.m_mapHeight);
+                for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
+                    for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
+                        TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
+                        if (nearby->m_zoneState.m_zone == zoneIndex
+                            && !nearby->m_connection.m_present)
+                            nearby->m_tileData.m_borderObject = 0;
+                    }
+                }
+            }
+            from = to;
+        }
+    }
+}
 
 // Junction zones reset their dry cells, seed the first entrance, then trace
 // each reachable entrance back to a zero-cost cell before carving its path.
@@ -6063,11 +6123,190 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
         tryPlacePrimaryTown(zone, alignment, -1, 0);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Retail generation places its primary town before this pass. The first
+// nonempty fixed-count category therefore skips one placement. Density
+// placement balances four weighted counters until every category fails.
+// Complete-only role names; count/density offsets and call order are retail facts.
+// First reconstruction: 93.0076%. The fixed-count loop layout differs first;
+// candidate CFG has 45 blocks versus retail's 49. Preserve all eight placement
+// call sites and the category-specific failure flags while resolving that layout.
 VA(0x00544AE0, 0x2B0)
-void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone) {} // @stub
-#endif
+void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    int alignment = zone->m_alignment;
+    int player = m_playerIndexMap[slot->m_playerIndex + 1];
+    unsigned char skipPrimary = 1;
+    if (slot->m_parameters0020[1] > 0) {
+        for (int i = 1; i < slot->m_parameters0020[1]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[0] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[0]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, player, 0, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[5] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[5]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 1, 0);
+        skipPrimary = 0;
+    }
+    if (slot->m_parameters0020[4] > 0) {
+        for (int i = skipPrimary ? 1 : 0; i < slot->m_parameters0020[4]; ++i)
+            tryPlaceAdditionalTown(zone, alignment, -1, 0, 0);
+    }
+    int densities[4] = { slot->m_parameters0020[3], slot->m_parameters0020[2],
+        slot->m_parameters0020[7], slot->m_parameters0020[6] };
+    int counts[4] = { slot->m_parameters0020[1], slot->m_parameters0020[0],
+        slot->m_parameters0020[5], slot->m_parameters0020[4] };
+    int steps[4];
+    unsigned char finished[4];
+    int totalDensity = 0;
+    int product = 1;
+    for (int category = 0; category < 4; ++category) {
+        if (densities[category] <= 0) {
+            finished[category] = 1;
+        } else {
+            totalDensity += densities[category];
+            product *= densities[category];
+            finished[category] = 0;
+        }
+    }
+    if (!totalDensity)
+        return;
+    int spacing = static_cast<int>(sqrt(static_cast<double>(82944 / totalDensity)));
+    for (category = 0; category < 4; ++category) {
+        if (densities[category] > 0) {
+            steps[category] = product / densities[category];
+            counts[category] *= steps[category];
+        }
+    }
+    while (1) {
+        int selected = -1;
+        int lowest = 0;
+        for (category = 0; category < 4; ++category) {
+            if (!finished[category] && (selected == -1 || counts[category] < lowest)) {
+                lowest = counts[category];
+                selected = category;
+            }
+        }
+        if (selected == -1)
+            break;
+        counts[selected] += steps[selected];
+        switch (selected) {
+        case RMG_TOWN_PLAYER_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 1, spacing))
+                finished[RMG_TOWN_PLAYER_OPTION] = 1;
+            break;
+        case RMG_TOWN_PLAYER_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, player, 0, spacing))
+                finished[RMG_TOWN_PLAYER_BASIC] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_OPTION:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 1, spacing))
+                finished[RMG_TOWN_NEUTRAL_OPTION] = 1;
+            break;
+        case RMG_TOWN_NEUTRAL_BASIC:
+            if (!tryPlaceAdditionalTown(zone, alignment, -1, 0, spacing))
+                finished[RMG_TOWN_NEUTRAL_BASIC] = 1;
+            break;
+        }
+    }
+}
+
+// Additional-town placement picks an allowed alignment when needed, then
+// ranks valid sites by spacing score. The trigger's clipped 3x3 neighbourhood
+// must remain inside the zone. Retail delegates inactive zones to primary
+// placement and retains the normal town constructor and virtual addObject.
+// First reconstruction: 76.6787%. Both CFGs have 61 blocks; remaining
+// differences include candidate-loop layout and compiler-generated cleanup.
+// Preserve the alignment fallback, full neighbourhood scan and tied-site list.
+VA(0x00544D90, 0x4B7)
+unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
+    int alignment, int player, unsigned char townOption, int spacing)
+{
+    TRmgTownSlot* slot = zone->m_slot;
+    if ((player == -1 && !slot->m_flag0040) || alignment == -1) {
+        int count = 0;
+        for (int town = 0; town < 9; ++town)
+            if (slot->m_allowedTowns[town])
+                ++count;
+        alignment = -1;
+        if (count) {
+            int selected = rand() % count;
+            for (town = 0; town < 9; ++town) {
+                if (slot->m_allowedTowns[town] && --selected < 0) {
+                    alignment = town;
+                    break;
+                }
+            }
+        }
+        if (alignment == -1)
+            alignment = rand() % (8 + (m_mapVersion >= 1));
+    }
+    if (!zone->m_active)
+        return tryPlacePrimaryTown(zone, alignment, player, townOption);
+
+    std::vector<TRmgMapPosition> candidates;
+    int zoneIndex = slot->m_zoneIndex;
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
+    TObjectType* prototype = properties->m_prototype;
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TRmgMapPosition position = zone->getLevelPosition();
+    TRmgZoneBounds bounds = zone->m_bounds;
+    bounds.m_minimumY += prototype->getHeight();
+    bounds.m_minimumX += prototype->getWidth();
+    for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
+            TRmgMapPosition entrance = position;
+            entrance.m_x -= trigger.m_x;
+            entrance.m_y -= trigger.m_y;
+            TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+            if (item->m_zoneState.m_zone != zoneIndex)
+                continue;
+            int score = item->m_zoneState.m_score;
+            if (score < spacing || !m_map.canPlaceObject(properties, position, zone))
+                continue;
+            TRmgZoneBounds nearby;
+            nearby.m_minimumY = std::_cpp_max<long>(entrance.m_y - 1, 0);
+            nearby.m_minimumX = std::_cpp_max<long>(entrance.m_x - 1, 0);
+            nearby.m_maximumY = std::_cpp_min<long>(entrance.m_y + 2, m_map.m_mapHeight);
+            nearby.m_maximumX = std::_cpp_min<long>(entrance.m_x + 2, m_map.m_mapWidth);
+            unsigned char valid = 1;
+            for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
+                for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
+                    int otherZone = m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone;
+                    if (otherZone < 0 || otherZone != zoneIndex)
+                        valid = 0;
+                }
+            }
+            if (!valid)
+                continue;
+            if (score > spacing) {
+                spacing = score;
+                candidates.clear();
+            }
+            candidates.push_back(position);
+        }
+    }
+    if (!candidates.size())
+        return 0;
+    rmgTownObject* object = new rmgTownObject(properties, m_nextObjectId++, player, townOption);
+    position = candidates[rand() % candidates.size()];
+    addObject(object, position);
+    TRmgMapPosition entrance = position;
+    entrance.m_x -= trigger.m_x;
+    entrance.m_y -= trigger.m_y;
+    m_roadTargets.push_back(entrance);
+    ++entrance.m_y;
+    TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+    if (!item->m_connection.m_present) {
+        item->m_tileData.m_borderObject = 0;
+        item->m_tileData.m_subterraneanGate = 1;
+    }
+    return 1;
+}
 
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
