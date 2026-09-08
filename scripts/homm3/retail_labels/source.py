@@ -143,14 +143,14 @@ OPERATOR_NOT_EQUAL_RE = re.compile(
 # owners still require the IR channel or a dedicated template key.
 VALUE_OPERATOR_RE = re.compile(
     r"(?<![\w:])(?:(?P<owner>[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)::)?"
-    r"operator\s*(?P<token>[+*/<-])\s*\(")
+    r"operator\s*(?P<token>\+=|[+*/<-])\s*\(")
 VALUE_OPERATOR_NAMES = {
     "+": "plus", "-": "minus", "*": "multiply", "/": "divide",
-    "<": "less",
+    "<": "less", "+=": "plus_assign",
 }
 VALUE_OPERATOR_CODES = {
     "H": "plus", "G": "minus", "D": "multiply", "K": "divide",
-    "M": "less",
+    "M": "less", "Y": "plus_assign",
 }
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
@@ -1534,7 +1534,7 @@ def _demangle_key(mangled: str):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_operator_not_equal".lower() if cls else None
     value_operator = re.match(
-        r"^\?\?([DGHKM])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
+        r"^\?\?([DGHKMY])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
     if value_operator:
         owner = "_".join(reversed(value_operator.group(2).strip("@").split("@")))
         operation = VALUE_OPERATOR_CODES[value_operator.group(1)]

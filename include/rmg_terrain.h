@@ -153,15 +153,22 @@ struct TRmgTerrainPatternEntry {
 // transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
 struct TRmgTerrainTransitionEntry {
     int m_frame;
-    TRmgTerrainFlip m_flip;
+    unsigned char m_flipX;
+    unsigned char m_flipY;
 };
 DATA(0x006424A8)
 extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
 // The table constructor at 0x5b3940 builds 116 first/count pairs from the
 // fixed pattern records. The stateless table rule consumes the first pair.
+// The static initializer at 0x5b3a10 passes this complete global as `this`.
+// Complete-only owner spelling is provisional.
+struct TRmgTerrainPatternTable {
+    TRmgTerrainPatternRange m_ranges[116];
+    TRmgTerrainPatternTable();
+};
 DATA(0x006A4158)
-extern TRmgTerrainPatternRange g_rmgTerrainPatternRanges[116];
+extern TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
 // Constructor 0x5b3780 copies its entry array and builds 58 first/count
 // ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its

@@ -386,6 +386,44 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
+DATA(0x006A4158)
+TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
+
+// Static initializer 0x5b3a10 passes the global at 0x6a4158. Retail clears
+// its 116 ranges, then groups the 48 fixed records by transition and flips.
+// No Dreamcast counterpart exists for this Complete-only table owner.
+// Partial 96.61%: unsigned indexing restores the retail branch signedness
+// (signed indexing: 95.76%). An explicit record-pointer loop gives 92.38%.
+// Residual: VC6 anchors the scan at the Y-flip byte instead of X-flip and
+// compares the record count rather than the fixed table's end address.
+// Flat flip fields and the nested flip pair emit the same constructor bytes.
+VA(0x005B3940, 0xC5)
+TRmgTerrainPatternTable::TRmgTerrainPatternTable()
+{
+    for (unsigned int index = 0; index < 116; ++index) {
+        m_ranges[index].m_firstIndex = 0;
+        m_ranges[index].m_count = 0;
+    }
+    int frame = g_rmgTerrainPatterns[0].m_frame;
+    unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
+    unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
+    TRmgTerrainPatternRange* range =
+        &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+    ++range->m_count;
+    for (index = 1; index < 48; ++index) {
+        const TRmgTerrainTransitionEntry* entry = &g_rmgTerrainPatterns[index];
+        if (entry->m_frame != frame || entry->m_flipX != flipX
+            || entry->m_flipY != flipY) {
+            frame = entry->m_frame;
+            flipX = entry->m_flipX;
+            flipY = entry->m_flipY;
+            range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+            range->m_firstIndex = index;
+        }
+        ++range->m_count;
+    }
+}
+
 // The sole caller is the static initializer at 0x5b3da0. Retail clears the
 // two inherited rule flags and installs vtable 0x642cb0.
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
@@ -425,8 +463,8 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges[0].m_count
-            + g_rmgTerrainPatternRanges[0].m_firstIndex;
+        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[0].m_count
+            + g_rmgTerrainPatternRanges.m_ranges[0].m_firstIndex;
     }
     return oldFrame;
 }
@@ -445,9 +483,9 @@ int TRmgTableTerrainRule::selectTransitionFrame(
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != transition
-        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipX != requestedFlip.m_flipX
-        || g_rmgTerrainPatterns[oldFrame].m_flip.m_flipY != requestedFlip.m_flipY) {
-        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges[
+        || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
+        || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
+        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
             (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
         oldFrame = rand() % range.m_count + range.m_firstIndex;
     }

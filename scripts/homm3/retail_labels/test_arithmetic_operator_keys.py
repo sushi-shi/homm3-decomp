@@ -21,6 +21,8 @@ OPERATORS = (
      "??G@YI?AUTRmgVector@@UTPoint@@0@Z", "operator_minus"),
     ("bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)",
      "??M@YI_NABUTRmgGridPoint@@0@Z", "operator_less"),
+    ("TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)",
+     "??YTRmgGridPoint@@QAEAAU0@ABUTPoint@@@Z", "trmggridpoint_operator_plus_assign"),
 )
 
 
@@ -63,7 +65,7 @@ class ArithmeticOperatorKeysTest(unittest.TestCase):
 
     def test_other_operators_and_template_owners_are_not_swallowed(self):
         for decl in (
-            "Vector& Vector::operator+=(Vector right)",
+            "Vector& Vector::operator-=(Vector right)",
             "Vector& Vector::operator++()",
             "bool Vector::operator<=(const Vector& right) const",
             "Vector operator<<(Vector left, int shift)",
@@ -73,7 +75,7 @@ class ArithmeticOperatorKeysTest(unittest.TestCase):
         ):
             self.assertIsNone(source.VALUE_OPERATOR_RE.search(decl), decl)
         for symbol in (
-            "??YVector@@QAEAAV0@ABV0@@Z",  # +=
+            "??ZVector@@QAEAAV0@ABV0@@Z",  # -=
             "??EVector@@QAEAAV0@XZ",      # ++
             "??NVector@@QBE_NABV0@@Z",    # <=
             "??6@YI?AVVector@@V0@H@Z",    # <<
