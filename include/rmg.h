@@ -16,6 +16,8 @@ struct TRmgZone;
 struct rmgTerrainTile;
 struct TPoint;
 struct TObjectType;
+struct TRmgObjectPropertiesRef;
+class type_object;
 
 // The abstract progress sink driven by Complete's random-map generator.
 // Retail constructor 0x530e20 stores vtable 0x6409c0, the step total at +4,
@@ -57,9 +59,13 @@ public:
     type_treasure_def(int objectType, int subtype, int value, int density);
 
     // Before normalization (function): type_treasure_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    // Shared caller 0x5464cd..0x5464de passes the selected property reference,
+    // generator and zone, then consumes the result as a type_object pointer.
+    // This replaces the earlier placeholder void*/int/int factory signature.
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_treasure_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     // Before normalization (function): type_treasure_def::IsTerrainDependent.
     virtual unsigned char isTerrainDependent();
 };
@@ -72,14 +78,16 @@ class type_shrine_def : public type_treasure_def {
 public:
     type_shrine_def(int objectType, int value);
     // Before normalization (function): type_shrine_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_witch_hut_def : public type_treasure_def {
 public:
     type_witch_hut_def();
     // Before normalization (function): type_witch_hut_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_spell_scroll_def : public type_treasure_def {
@@ -89,7 +97,8 @@ public:
 
     type_spell_scroll_def(int spellLevel, int value);
     // Before normalization (function): type_spell_scroll_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_black_box_creature_def : public type_treasure_def {
@@ -101,9 +110,10 @@ public:
 
     type_black_box_creature_def(int creatureType);
     // Before normalization (function): type_black_box_creature_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_black_box_creature_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
 };
 
 // The initializer at 0x538b10 expands these small constructors at their
@@ -119,7 +129,8 @@ public:
     }
 
     // Before normalization (function): type_artifact_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_black_box_experience_def : public type_treasure_def {
@@ -134,7 +145,8 @@ public:
     }
 
     // Before normalization (function): type_black_box_experience_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_black_box_gold_def : public type_treasure_def {
@@ -149,7 +161,8 @@ public:
     }
 
     // Before normalization (function): type_black_box_gold_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_black_box_spells_def : public type_treasure_def {
@@ -171,7 +184,8 @@ public:
     }
 
     // Before normalization (function): type_black_box_spells_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_key_tent_def : public type_treasure_def {
@@ -182,9 +196,10 @@ public:
     }
 
     // Before normalization (function): type_key_tent_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_key_tent_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     // Before normalization (function): type_key_tent_def::IsTerrainDependent.
     virtual unsigned char isTerrainDependent();
 };
@@ -201,7 +216,8 @@ public:
     }
 
     // Before normalization (function): type_dwelling_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_map_dwelling_def : public type_dwelling_def {
@@ -212,7 +228,7 @@ public:
     }
 
     // Before normalization (function): type_map_dwelling_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
 };
 
 class type_resource_lump_def : public type_treasure_def {
@@ -224,7 +240,8 @@ public:
     }
 
     // Before normalization (function): type_resource_lump_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_prison_def : public type_treasure_def {
@@ -239,7 +256,8 @@ public:
     }
 
     // Before normalization (function): type_prison_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_scholar_def : public type_treasure_def {
@@ -250,7 +268,8 @@ public:
     }
 
     // Before normalization (function): type_scholar_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
 };
 
 class type_quest_creature_def : public type_black_box_creature_def {
@@ -263,9 +282,10 @@ public:
     }
 
     // Before normalization (function): type_quest_creature_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_quest_creature_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     // Before normalization (function): type_quest_creature_def::IsTerrainDependent.
     virtual unsigned char isTerrainDependent();
 };
@@ -283,9 +303,10 @@ public:
     }
 
     // Before normalization (function): type_quest_experience_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_quest_experience_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     // Before normalization (function): type_quest_experience_def::IsTerrainDependent.
     virtual unsigned char isTerrainDependent();
 };
@@ -302,9 +323,10 @@ public:
     }
 
     // Before normalization (function): type_quest_gold_def::Generate.
-    virtual void* generate(void* owner, int x, int y);
+    virtual type_object* generate(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, TRmgZone* zone);
     // Before normalization (function): type_quest_gold_def::GetValue.
-    virtual int getValue(void* object, void* map);
+    virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
     // Before normalization (function): type_quest_gold_def::IsTerrainDependent.
     virtual unsigned char isTerrainDependent();
 };
@@ -879,6 +901,69 @@ public:
     virtual void write(TAbstractFile* outfile, int parameter);
 };
 
+// Artifact factory 0x5341f0 allocates the base 0x1c extent and installs
+// vtable 0x640ab4. Its writer adds one zero byte after type_object's record;
+// no additional instance fields are present. Complete-only role spelling.
+class rmgArtifactObject : public type_object {
+public:
+    rmgArtifactObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgArtifactObject, 0x1c);
+
+// These four factories allocate the same 0x1c base extent and change only
+// the writer vptr. Their distinct default H3M payloads prove separate classes;
+// the Complete-only class spellings below describe those roles.
+// Retail vtable 0x640ac4.
+class rmgResourceObject : public type_object {
+public:
+    rmgResourceObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgResourceObject, 0x1c);
+
+// Pandora's Box factories 0x534380/0x534410/0x534490 allocate 0x54 bytes
+// and install vtable 0x640ad4. Writer 0x5336f0 identifies each payload field;
+// the spell factory 0x534520 appends integer spell indices to the vector.
+// The vector begins at +0x44 (its allocator byte), with _First at +0x48.
+// These are provisional Complete-only role names, not Dreamcast identities.
+class rmgBlackBoxObject : public type_object {
+public:
+    int m_experience;                  // +0x1c
+    int m_resources[7];                // +0x20, gold at +0x38
+    int m_creatureType;                // +0x3c, -1 means no creature reward
+    int m_creatureCount;               // +0x40
+    std::vector<int> m_spells;         // +0x44
+
+    rmgBlackBoxObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgBlackBoxObject, 0x54);
+
+// Retail vtable 0x640b24.
+class rmgScholarObject : public type_object {
+public:
+    rmgScholarObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgScholarObject, 0x1c);
+
+// Retail vtable 0x640b34.
+class rmgShrineObject : public type_object {
+public:
+    rmgShrineObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgShrineObject, 0x1c);
+
+// Retail vtable 0x640b54.
+class rmgWitchHutObject : public type_object {
+public:
+    rmgWitchHutObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgWitchHutObject, 0x1c);
+
 // Factory 0x5348d0 allocates this 0x2c-byte derived object after reserving a
 // hero. Vtable 0x640b14 slot 1 releases that reservation through the generator
 // at +0x1c; the original Complete-only class spelling is unavailable.
@@ -912,6 +997,9 @@ struct TRmgMapItem {
 
     TRmgMapItem();
     void clear();
+    // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
+    void setTerrain(TTerrainType terrain, int frame,
+        unsigned char flipX, unsigned char flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -1334,7 +1422,8 @@ struct TRmgZone {
     // H3API H3RmgZoneGenerator::townType2, INT32 at +08, commit
     // 92255ab18da784a5842ecc2b8bc0ce00e19a0c56. The surrounding town/terrain,
     // coordinates, object-count array and three vectors match this layout.
-    // Reference-backed spelling/type; no retail semantic consumer located.
+    // Retail creature reward value 0x534324 compares this with the creature's
+    // town alignment before weighting the reward by active-zone counts.
     // Before normalization: opaque0008.
     int m_townType2;
     // Before normalization: terrain.
@@ -1628,6 +1717,9 @@ public:
     // the sole direct caller, and the body builds the road traversal costs.
     // Before normalization (function): type_random_map_generator::BuildRoadCostMap.
     void buildRoadCostMap(TRmgMapPosition position);
+    // Retail 0x548040 walks predecessor runs for the caller at 0x548408.
+    // The Complete-only name is provisional; the by-value ABI is proven.
+    unsigned char paintRoad(TRmgMapPosition position, int roadType);
     // Provisional spelling: retail's water-wheel caller and the river-delta
     // object selection prove the role; the Dreamcast build has no RMG TU.
     // Before normalization (function): type_random_map_generator::CreateRiver.
