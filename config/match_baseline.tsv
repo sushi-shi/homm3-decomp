@@ -913,6 +913,7 @@ castle	?canBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	17a1d22e5f2a
 castle	?getBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	3269d539393c
 castle	?setupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	b63fe396b69a
 castle	?windowHandler@THallWindow@@UAEHPAVmessage@@@Z	93.6672	93.6672	93.6672	0x61ab0	1fd9468f9012
+cmbtmgr	??0?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAE@ABU?$less@H@1@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x6a680	-
 cmbtmgr	??0TArcher@combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62920	3d81a1019a8b
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760	fb9ef00228e7
 cmbtmgr	??1?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x628b0	-
