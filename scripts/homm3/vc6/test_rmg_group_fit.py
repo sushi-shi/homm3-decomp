@@ -142,7 +142,7 @@ class RmgGroupFitTests(unittest.TestCase):
                 ("PROPERTY_FIELDS", fields(block(header, "struct TRmgObjectPropertiesRef {"), ("m_prototype",))),
                 ("OBJECT_FIELDS", fields(block(header, "class type_object {"), ("m_properties",))),
                 ("PREDICATES", "\n".join(predicates)), ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", addition),
-                ("DIRECTIONS", block(self.source, "TPoint g_rmgDirections[8] = {")),
+                ("DIRECTIONS", block(self.source, "TPoint g_rmgDirections[")),
                 ("CANDIDATES", "\n".join(programs)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)
         self.assertNotIn("// @", program)
