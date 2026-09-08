@@ -2532,7 +2532,6 @@ mapcell	?cellIsTrigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80	2d7
 mapcell	?clear@?$vector@PAVCMapObjectData@@V?$allocator@PAVCMapObjectData@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x8b4a0	-
 mapcell	?copy@std@@YIPAUSecondarySkillData@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x10adb0	-
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620	-
-mapcell	?copy@std@@YIPAUtype_university@@PAU2@00@Z	100.0000	100.0000	100.0000	0x1095e0	-
 mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	100.0000	100.0000	100.0000	0x1093f0	-
 mapcell	?erase@?$vector@UHeroPlaceholderData@@V?$allocator@UHeroPlaceholderData@@@std@@@std@@QAEPAUHeroPlaceholderData@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1086d0	-
 mapcell	?erase@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEPAVBlackBoxData@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107480	-
@@ -2567,7 +2566,7 @@ mapcell	?insert@?$vector@VTownExtra@@V?$allocator@VTownExtra@@@std@@@std@@QAEXPA
 mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106980	-
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0	-
 mapcell	?isDiggable@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfccf0	973d5cf3e164
-mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	77.2691	77.2691	93.4037	0xfdbc0	23516a92352f
+mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	56.7217	56.7217	93.4037	0xfdbc0	e8da076cc9f3
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	e3e60e5e338d
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	91.7100	91.7100	95.0000	0x100430	169251a8a2c2
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	12814bb91dd0
@@ -2633,6 +2632,7 @@ mapcell	?upgradeCellExtraInfo@@YIXPAVNewmapCell@@H@Z	96.2635	96.2635	96.2635	0xf
 mapcell	__h3cg$mapcell$static_dtor$g_invalidPlacementList	100.0000	100.0000	100.0000	0x104290	-
 mapcell	__h3cg$mapcell$std_copy$Int	0.0000	100.0000	100.0000	0x1093c0	-
 mapcell	__h3cg$mapcell$std_copy$const_int	0.0000	100.0000	100.0000	0x14df40	-
+mapcell	__h3cg$mapcell$std_copy$type_university	0.0000	100.0000	100.0000	0x1095e0	-
 mapcell	__h3cg$mapcell$vector_resize$TSeerHut	0.0000	100.0000	100.0000	0x106390	-
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0	09f3ff320545
 misc	?checkConfigFile@@YIXXZ	99.1018	99.1018	99.1018	0x10b260	1c397f040b93

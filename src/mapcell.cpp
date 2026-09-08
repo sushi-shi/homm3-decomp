@@ -868,12 +868,17 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // hoisting the quest pointer was 82.2605%. The guarded do/while below is the
 // best source-faithful spelling measured.
 //
-// `auto_inline(off)` is load-bearing at the callee declaration: without it,
-// /Ob2 copies this entire 616-byte body into NewfullMap::Load and drops that
-// caller from 92.201836% to 64.12%. Pinning only the call site with
-// inline_depth(0) reaches 84.27%, so the scoped no-inline attribute preserves
-// the established caller wall while leaving this function independently
-// matchable.
+// Retail retains this helper as a call from NewfullMap::load at +0x328.
+// The former auto_inline(off) forced that decision but did not recover its
+// source cause. Removing it with the current caller expands this helper,
+// changes load from 77.26911% to 56.67278%, and stops emitting the previously
+// exact std::copy<type_university>; no other claimed body's score changes.
+// The parked std::copy<garrison> still does not emit. The retained helper's
+// own body stays at its prior score. Ordinary resize(count) then recovers
+// load to 56.72171%. Keep this source call while recovering its boundary;
+// the university-copy MAX/HIST and load's all-time HIST remain preserved.
+// An older caller's call-site inline_depth(0) control reached only 84.27%
+// versus that caller's pinned-helper 92.201836%; neither pin is source proof.
 //
 // [polish-45] The first `!!` names the remaining shape precisely: retail
 // SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
@@ -905,7 +910,6 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 //     more than the slot it buys.
 // So the residual is the handle NUMBERING with the same local set, not a
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
-#pragma auto_inline(off)
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::newfullMapFn004FD950(
     TAbstractFile* infile, int saveVersion)
@@ -926,7 +930,6 @@ void NewfullMap::newfullMapFn004FD950(
         } while (--count);
     }
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\mapcell.cpp:679, dc 0xecb94. Original names: two_layers,
 // sprite_num. The clear calls retain their Dreamcast-proven public APIs.
@@ -944,7 +947,12 @@ void NewfullMap::newfullMapFn004FD950(
 // and 32 failure-scope/quest-scope/loop forms reach 77.26911%; 27 additional
 // for-initializer forms are rejected by VC6 because load_failure skips the
 // initializer. The selected scoped default value improves the direct-call
-// baseline (74.24159%). No valid candidate emits std::copy<garrison> at
+// baseline (74.24159%); these controls still used the legacy quest-helper
+// pin described above. Its removal leaves the named default at 56.67278%;
+// ordinary resize(count) and an explicit temporary both reach 56.72171%.
+// A const named default is flat; none of these emits either copy helper.
+// Use the ordinary default-argument form in this unpinned context.
+// No valid candidate emits std::copy<garrison> at
 // 0x5095a0. Retail expands garrison clear through erase/copy, then retains
 // seer resize and its size queries; our remaining nested decisions differ.
 // The former 93.4037% peak depended on the removed synthetic boundaries and
@@ -997,10 +1005,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
         if (infile->read(&count, sizeof(count)) < sizeof(count))
             goto load_failure;
 
-        {
-            TSeerHut empty;
-            m_seerHutList.resize(count, empty);
-        }
+        m_seerHutList.resize(count);
         int spriteNum;
         for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
         {
