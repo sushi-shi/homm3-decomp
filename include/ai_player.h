@@ -175,11 +175,11 @@ protected:
     void dumpExtraCreature();
     // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
     // Before normalization (locals): is_shooter, check_alignments.
-    long chooseWeakestArmy(bool isShooter, bool checkAlignments);
+    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::value_of_adding_army.
     long valueOfAddingArmy(TCreatureType type, short count,
                               // Before normalization (locals): must_replace_creature.
-                              short& slot, bool mustReplaceCreature);
+                              short& slot, unsigned char mustReplaceCreature);
 
 public:
     type_AI_creature_swapper();

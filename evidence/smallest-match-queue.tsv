@@ -110,7 +110,7 @@ compiled	395	0x0054b300	93.5302	93.5302	93.5302	rmg	rmg	?placeQuestGroup@type_ra
 carcass	396	0x004d2e50	-	0.0000	0.0000	game	game	__h3cg$game$std_copy$type_map_hero_identity	bracketed	enable the existing VA claim and reconstruct its body
 compiled	397	0x00541780	84.8000	84.8000	84.8000	rmg	rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	399	0x00535ee0	95.1849	95.1849	95.1849	rmg	rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	402	0x0042c690	88.3357	88.3357	88.3357	ai_player	ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	402	0x0042c690	88.3357	88.3357	88.3357	ai_player	ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	402	0x0059f700	95.5113	95.5113	95.5113	spells	spells	?updateSpellTarget@@YIHJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	403	0x00456a50	88.4400	88.4400	88.4400	button	button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	403	0x00598eb0	90.7265	90.7265	90.7265	smackmgr	smackmgr	?nextSmackerFrame@SmackManager@@YIXXZ	admitted	run the evidence pass and iterate up to five scored candidates
@@ -363,7 +363,7 @@ compiled	825	0x004e3070	76.3360	76.3360	76.3360	hero	hero	?giveArtifact@hero@@QA
 compiled	826	0x0051e330	96.4609	96.4609	100.0000	overview	overview	?setupNewOverviewType@game@@QAEXHE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	827	0x0053bcb0	90.6395	90.6395	90.6395	rmg	rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	830	0x00428dd0	89.5263	89.5263	89.5263	ai_player	ai_player	?endTurn@type_AI_player@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	831	0x0042c830	86.1781	89.0856	89.0856	ai_player	ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	831	0x0042c830	89.0856	89.0856	89.0856	ai_player	ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	833	0x0059baa0	96.8000	96.8000	96.8000	spellbookwindow	spellbookwindow	?getSpellDescription@TSpellbookWindow@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBVhero@@E@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	837	0x00582b40	87.0700	87.0700	87.0700	singleselectionwindow	singleselectionwindow	?getHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	838	0x004a5610	89.6701	89.6701	89.6701	events	events	?doEventShrine@advManager@@QAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -383,7 +383,7 @@ compiled	874	0x0053ae80	83.4857	83.4857	83.4857	rmg	rmg	?appendZonePositions@typ
 compiled	875	0x00474690	90.8771	90.8771	90.8771	command	command	?setCombatDirections@combatManager@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	880	0x0048ae90	99.9858	99.9858	99.9858	customcampaign	customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	880	0x00578a90	86.6723	86.6723	86.6723	singleselectionwindow	singleselectionwindow	?tick@CNewPlayerUpdateProc@@UAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	881	0x004fdbc0	77.2691	77.2691	93.4037	mapcell	mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	881	0x004fdbc0	56.7217	56.7217	93.4037	mapcell	mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	887	0x0055b060	95.6920	95.6920	95.6920	resourcemanager	resourcemanager	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	891	0x00549930	96.8971	96.8971	96.8971	rmg	rmg	?generate@type_random_map_generator@@QAEEXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	893	0x0040abe0	93.2089	93.2089	93.2089	advmgr	advmgr	?getArmyHelpText@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	admitted	run the evidence pass and iterate up to five scored candidates

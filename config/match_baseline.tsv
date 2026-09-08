@@ -337,7 +337,7 @@ ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocato
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	69362f607581
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	8b62812f4928
 ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	06958639ee9e
-ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690	6a8bd4402e8b
+ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJEE@Z	88.3357	88.3357	88.3357	0x2c690	2f8bb8940fca
 ai_player	?clearMarks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260	1072ee740594
 ai_player	?considerHiring@@YI_NJPAVhero@@@Z	100.0000	100.0000	100.0000	0x31800	45ef5c08b1a7
 ai_player	?doBestPurchase@type_AI_creature_purchaser@@IAEJE@Z	97.2740	97.2740	97.2740	0x2d420	a3ed451129b2
@@ -408,7 +408,7 @@ ai_player	?splitArmies@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	97.7143	97.7143	97.714
 ai_player	?splitArmy@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70	4483dd0c210e
 ai_player	?startTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0	00a7676ab24e
 ai_player	?tradeResources@type_AI_player@@QAEXPBHJ@Z	100.0000	100.0000	100.0000	0x2a470	c9ae27fd3e36
-ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	86.1781	89.0856	89.0856	0x2c830	98e5b9ce59fb
+ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	89.0856	89.0856	89.0856	0x2c830	22ce73e46cdd
 ai_player	?valueOfCastleUpgrade@@YIHPAVtown@@PAH@Z	100.0000	100.0000	100.0000	0x2b670	ef43a848bdc2
 ai_player	?valueOfDwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520	a950ab02fd22
 ai_player	?valueOfDwellingUpgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0	cee013ac5fd0
