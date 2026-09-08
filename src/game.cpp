@@ -2853,6 +2853,9 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     // (`counts[hero_class] == 0`, `total_count == 0`, and the preferred-class
     // test); all three were byte-flat at distance six, classifying the residual
     // as C1 front-end handle order rather than a missing source value.
+    // DC line 2335 resets total_count for the later class-weight sum; reuse
+    // that original local rather than introducing a separate totalWeight.
+    // This lifetime correction is byte-flat at 98.9815%.
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2888,12 +2891,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
         heroClass = preferredClass;
     } else {
-        long totalWeight = 0;
+        totalCount = 0;
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
-            totalWeight += weights[heroClass];
+            totalCount += weights[heroClass];
         }
-        choice = random(1, totalWeight);
+        choice = random(1, totalCount);
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             choice -= weights[heroClass];
@@ -5808,21 +5811,20 @@ void game::initRandomArtifacts()
 // Pair each still-unmatched underground gate with the nearest unmatched gate
 // on the other map level.  The pairing vector stores reciprocal signed
 // indices; distance is the truncated Euclidean x/y distance used by retail.
-// WALL 98.34513%: all 18 blocks, all 10 branches, every block size, and the
-// complete instruction count agree.  The residual is a register rotation in
-// the inlined packed-coordinate comparison/distance expression: retail keeps
-// exit_point's packed y/z word in EDX while this compile keeps current_gate's
-// in ECX, then reloads the other word.  `i + 1 < size()` is essential (the
-// algebraic `i < size()-1` form falls to 72.87%), as is the square-symmetric
-// exit.y-current.y spelling (94.67% otherwise).  Exhausted byte-inert or lower
-// levers: nested != versus equality/continue, reversed z operands (98.14),
-// reversed x delta (94.76), and direct versus force-inlined distance helpers
-// with or without named deltas (98.35/97.86).  The former `_sqrt` relocation
-// delta was a false runtime boundary, now byte-proven and corrected in the
-// hand-owned inventories from the pinned VC6 SP3 LIBCMT sqrt.obj.
-// A 2026-09-01 why-reg v2 negative control also tested the two adjacent local
-// orders and the current_gate/closest store order: two were byte-flat at
-// distance 18 and the third worsened to 20, leaving the DC-proven order intact.
+// DC lines 4977/4978 skip equal-level candidates, and 4985/4986 skip
+// non-improving distances before the assignments at 4988/4989. Preserve those
+// early-continue scopes. DC line 4984 subtracts exit_point from current_gate
+// for both coordinates; retail likewise subtracts their unpacked components.
+// Residual (94.67%): all 18 blocks, 10 branches and both calls agree, but the
+// packed y/z words and coordinate deltas receive different scratch registers.
+// Reversing both y subtractions is algebraically equivalent and reaches the
+// historical 98.3451%, but is not the recovered expression. Nested positive
+// guards versus these early continues do not resolve that register allocation.
+// Other controls: i < size()-1 loses the retail bound lowering (72.87%);
+// reversed z operands gave 98.14%, reversed x deltas 94.76%, and named-delta
+// helper variants 97.86% against the earlier reversed-y source. Adjacent local
+// orders and current_gate/closest assignment order were flat or worse.
+// The sqrt boundary is verified against the pinned VC6 SP3 LIBCMT sqrt.obj.
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
 {
@@ -5846,17 +5848,17 @@ void game::matchUndergroundGates()
                 continue;
 
             exitPoint = m_undergroundGateExits[j];
-            if (currentGate.m_z != exitPoint.m_z) {
-                distance = static_cast<long>(sqrt(static_cast<double>(
-                    (currentGate.m_x - exitPoint.m_x)
-                        * (currentGate.m_x - exitPoint.m_x)
-                    + (exitPoint.m_y - currentGate.m_y)
-                        * (exitPoint.m_y - currentGate.m_y))));
-                if (closest < 0 || distance < bestDistance) {
-                    closest = j;
-                    bestDistance = distance;
-                }
-            }
+            if (currentGate.m_z == exitPoint.m_z)
+                continue;
+            distance = static_cast<long>(sqrt(static_cast<double>(
+                (currentGate.m_x - exitPoint.m_x)
+                    * (currentGate.m_x - exitPoint.m_x)
+                + (currentGate.m_y - exitPoint.m_y)
+                    * (currentGate.m_y - exitPoint.m_y))));
+            if (closest >= 0 && distance >= bestDistance)
+                continue;
+            closest = j;
+            bestDistance = distance;
         }
 
         if (closest >= 0) {

@@ -1977,7 +1977,7 @@ game	?getLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9
 game	?getLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20	18b5915734d9
 game	?getName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0	5575b805f2d2
 game	?getNewBoatId@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170	d765c5e54ac5
-game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	b071122f41d0
+game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	401967fc5d10
 game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	c50825e3ecb6
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	6e2a64f740d1
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	f441f022aa5f
@@ -2047,7 +2047,7 @@ game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@
 game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	99.8359	99.8359	99.8359	0xc3890	1c63581df9b5
 game	?lower_bound@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@ABQAVCImmEnclosure@@@Z	100.0000	100.0000	100.0000	0xb79b0	-
 game	?makeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	df7ed1d9e94d
-game	?matchUndergroundGates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60	0e059b10c288
+game	?matchUndergroundGates@game@@QAEXXZ	94.6726	94.6726	98.3451	0xc0b60	a5e4b4a5874f
 game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	5db8393de869
 game	?newMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	012d224f0ebc
 game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70	352208cf21fd

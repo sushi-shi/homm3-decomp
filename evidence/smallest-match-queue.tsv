@@ -87,7 +87,7 @@ compiled	342	0x005c0f20	99.8839	99.8839	99.8839	town	town	?getBuildableMask@town
 compiled	343	0x005ece80	97.5961	97.5961	97.5961	tradpost	tradpost	?computeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	350	0x004e5550	86.9922	86.9922	86.9922	hero	hero	?canSummonBoat@hero@@QBEEXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	350	0x00522470	99.9074	99.9074	99.9074	overview	overview	?updateBackpack@@YIXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	352	0x004c0b60	98.3451	98.3451	98.3451	game	game	?matchUndergroundGates@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	352	0x004c0b60	94.6726	94.6726	98.3451	game	game	?matchUndergroundGates@game@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	354	0x005ff240	92.8767	92.8767	92.8767	window	window	?centerWindow@heroWindow@@QAEXHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	355	0x005a61f0	91.1017	91.1017	91.1017	spells	spells	?getNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	358	0x0043d5c0	92.6261	92.6261	92.6261	army	army	?initClean@army@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
