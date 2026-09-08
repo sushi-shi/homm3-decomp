@@ -149,7 +149,14 @@ struct TRmgTerrainPatternEntry {
 };
 
 // Fixed table at retail 0x6424a8; the Complete-only source name is unknown.
-extern const TRmgTerrainPatternEntry g_rmgTerrainPatterns[];
+// Unlike the pattern rule's special-frame flag, +4/+5 here are the two
+// transition flips (selector 0x5b3ae0 and range constructor 0x5b3940).
+struct TRmgTerrainTransitionEntry {
+    int m_frame;
+    TRmgTerrainFlip m_flip;
+};
+DATA(0x006424A8)
+extern const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[];
 
 // The table constructor at 0x5b3940 builds 116 first/count pairs from the
 // fixed pattern records. The stateless table rule consumes the first pair.
