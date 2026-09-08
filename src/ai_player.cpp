@@ -124,13 +124,6 @@ const std::bitset<9>& armyGrpFn0044A460();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
-inline EGameResource gameResourceFromInt(int value)
-{
-    EGameResource resource;
-    memcpy(&resource, &value, sizeof resource);
-    return resource;
-}
-
 inline SpellID spellIdFromInt(int value)
 {
     SpellID spell;
@@ -151,13 +144,6 @@ inline type_building_id buildingIdFromInt(int value)
     type_building_id building;
     memcpy(&building, &value, sizeof building);
     return building;
-}
-
-inline TArtifact artifactFromInt(int value)
-{
-    TArtifact artifact;
-    memcpy(&artifact, &value, sizeof artifact);
-    return artifact;
 }
 
 // Before normalization: CTA_SHOOTER.

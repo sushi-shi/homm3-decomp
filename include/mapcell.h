@@ -6,6 +6,7 @@
 #define HOMM3_MAPCELL_H
 
 #include <vector>
+#include "artifact.h"
 #include "terrain_type.h"
 
 class CObject;
@@ -816,14 +817,12 @@ public:
     // Before normalization (function): NewmapCell::IsCustomized.
     bool isCustomized() const { return m_monsterInfo.m_custom != 0; }
 
-    // MapCell.h:1260. Dreamcast returns TArtifact; this foundational header
-    // cannot name artifact.h's enum without creating a circular include, so
-    // the ABI-equivalent int spelling is used at the declaration and callers
-    // cross into the enum domain explicitly. Dreamcast masks the older
-    // seven-bit object index; Complete's inlined artifact readers load the
+    // MapCell.h:1260. Dreamcast returns TArtifact; artifact.h owns the enum
+    // and the representation bridge from this generic object-index field.
+    // Dreamcast masks the older seven-bit object index; Complete's readers load the
     // full signed word, proving that the later accessor no longer masks it.
     // Before normalization (function): NewmapCell::GetArtifactIndex.
-    int getArtifactIndex() const { return m_objectIndex; }
+    TArtifact getArtifactIndex() const { return artifactFromInt(m_objectIndex); }
 
     // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
     // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
