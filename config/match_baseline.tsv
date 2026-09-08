@@ -1948,7 +1948,7 @@ game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-
 game	?createBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250	7421d03c3033
-game	?createTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	99.6203	0xca040	3035a4b79d7c
+game	?createTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	99.6203	0xca040	717166a2c668
 game	?doNewTurn@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcc7d0	7e10308e66a4
 game	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x5c200	-
 game	?erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0xb7200	-
