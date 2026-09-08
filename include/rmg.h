@@ -1637,6 +1637,15 @@ enum ERmgMapVersion {
     RMG_MAP_SHADOW_OF_DEATH = 2
 };
 
+// Complete-only 0x543e20 chooses one of these four initial branch segments.
+// Names describe the endpoint stores; the original source spelling is unknown.
+enum ERmgBranchSeedPattern {
+    RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
+    RMG_BRANCH_SEED_VERTICAL = 1,
+    RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
+    RMG_BRANCH_SEED_HORIZONTAL = 3
+};
+
 // The Complete-only map-header writer extends the object-factory evidence
 // into the late generator state.  Each named field below is read or written
 // at its annotated offset by retail 0x549cb0; opaque spans preserve all
