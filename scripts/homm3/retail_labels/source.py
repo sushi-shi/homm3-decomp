@@ -461,6 +461,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
+                 "DEQUE_CONST_ITERATOR_ADD",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
                  "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
                  "DEQUE_CONST_ITERATOR_CTOR",
@@ -1277,6 +1278,12 @@ def _demangle_key(mangled: str):
     if deque_primitive_push:
         owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_push.group(1)]
         return f"{owner}@deque_push_back"
+    deque_primitive_grow = re.match(
+        r"^\?_Growmap@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@IAEPAPA\1I@Z$", mangled)
+    if deque_primitive_grow:
+        owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_grow.group(1)]
+        return f"{owner}@deque_growmap"
     # deque's nested `const_iterator`'s default constructor, over the same
     # POINTER element the two members above key on. The generic `??0` arm
     # reduces it to `const_iterator_const_iterator`, which _Tree's own
@@ -1302,6 +1309,15 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    # The protected void _Add retains no iterator-reference return. Retail
+    # 0x4491c0 is this body, not the enclosing public operator+=; both use
+    # identical arithmetic but have different return-value obligations.
+    deque_const_add = re.match(
+        r"^\?_Add@const_iterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@IAEXH@Z$", mangled)
+    if deque_const_add:
+        element = DEQUE_PRIMITIVE_ELEMENT[deque_const_add.group(1)]
+        return f"{element}@deque_const_iterator_add"
     deque_iterator = re.match(
         r"^\?\?Yiterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
     if deque_iterator:
@@ -2186,7 +2202,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         simple = next(
             (kind for kind in ("vector_clear", "exception_doraise",
-                               "functor_call", "deque_iterator_add_assign")
+                               "functor_call", "deque_iterator_add_assign",
+                               "deque_const_iterator_add")
              if f"${kind}$" in row["name"]), None)
         if simple is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()

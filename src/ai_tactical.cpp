@@ -238,8 +238,8 @@ double aiValueOfLuck(long luck, long change)
 // this compile takes a fresh slot.
 // The member is army.h's std::deque<int> spell-influence queue at +0x420.
 // Current source naturally emits push_back at 0x43cb20; its claim is below.
-// The earlier no-emission observation is obsolete. The retained append's
-// map-growth callee at 0x43cdf0 remains outside this unparked admission pass.
+// The earlier no-emission observation is obsolete. Its retained map-growth
+// callee at 0x43cdf0 is also claimed below.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
@@ -5002,3 +5002,11 @@ VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
 // the emitted int iterator has identical raw bytes. Both map-growth calls
 // reach 0x43cdf0, whose 109-byte body also agrees after call relocation.
 VA_COMPGEN(0x0043CB20, 0x2CF, DEQUE_PUSH_BACK, int)
+
+// Dinkumware _Growmap, retained by the preceding append. This is the deque's
+// pointer-map allocation, not vector reserve: +0x10/+0x20 are the two
+// iterators' _Map members, +0x24 is the owned map and +0x28 is its capacity.
+// Retail copies [_First._Map, _Last._Map + 1) to the new map's quarter point,
+// frees the old map, and returns that quarter point. The existing int
+// specialization matches all 109 bytes after its new/delete relocations.
+VA_COMPGEN(0x0043cdf0, 0x6D, DEQUE_GROWMAP, int)

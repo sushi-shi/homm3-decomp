@@ -115,14 +115,20 @@ class LinePaintingTests(unittest.TestCase):
 
     def test_grid_add_boundary_keeps_one_definition_and_rebases_atomically(self):
         module, originals, axes = self.boundary_family()
-        self.assertEqual([len(axis.options) for axis in axes], [3, 8, 7])
+        # A newly claimed ordinary definition can occupy a third TU position,
+        # separate from the two original cluster anchors. Keep that baseline
+        # as well as the in-class/before/after controls.
+        expected = 3 if (module.CLASS_BODY in self.header or any(
+            module.TU_BODY + "\n\n" + anchor in self.source
+            for anchor in (module.BEFORE, module.AFTER))) else 4
+        self.assertEqual([len(axis.options) for axis in axes], [expected, 8, 7])
         for choices in itertools.product(*(range(len(axis.options)) for axis in axes)):
             texts = source_families.render(originals, axes, choices)
             header, source = texts[module.HEADER], texts[module.SOURCE]
             self.assertEqual(header.count(module.CLASS_BODY) + source.count(module.TU_BODY), 1)
             self.assertEqual(header.count(module.DECLARATION), source.count(module.TU_BODY))
             rebased = module.make_axes(header, source)
-            self.assertEqual(len(rebased[0]["options"]), 3)
+            self.assertIn(len(rebased[0]["options"]), (3, 4))
             for axis in rebased:
                 self.assertEqual(axis["find"], axis["options"][0]["replace"])
             # No pragma or declaration noise is introduced at either boundary.
@@ -134,11 +140,12 @@ class LinePaintingTests(unittest.TestCase):
         module, originals, axes = self.boundary_family()
         # Each placement crossed with every translation and every caller form,
         # plus both nontrivial placements at the opposite lifetime corner.
+        placements = range(len(axes[0].options))
         choices = {(placement, translation, 0)
-                   for placement in range(3) for translation in range(8)}
+                   for placement in placements for translation in range(8)}
         choices.update((placement, 0, neighbour)
-                       for placement in range(3) for neighbour in range(7))
-        choices.update((placement, 7, 6) for placement in range(3))
+                       for placement in placements for neighbour in range(7))
+        choices.update((placement, 7, 6) for placement in placements)
         cases = []
         for choice in sorted(choices):
             texts = source_families.render(originals, axes, choice)
