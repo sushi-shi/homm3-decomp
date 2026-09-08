@@ -7383,13 +7383,82 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 // isTerrainDependent definitions through +0x1c, and enables value-per-cell
 // filtering through +0x20. The final three dwords are an optional position.
 // Complete-only provisional role names; ret 0x28 proves the full argument ABI.
-#if 0 // @carcass
+// Partial 81.69%: retail retains the passability bitset::test and both
+// vector::erase bodies; VC6 expands test to _Xran and erase to copy/_Destroy.
+// Mask subscripts preserve the range-error helper boundary; two direct test
+// calls expand exception construction (66.40%). Explicit erase ranges give
+// 76.56%; keeping only passability as .test gives 70.53%. Reusing objectValue
+// for its compact value-per-cell quotient is byte-neutral. Keep the two
+// candidate vectors, canonical operations and virtual value/factory calls.
 VA(0x00546190, 0x385) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
 type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     int minimum, int maximum, int* value, unsigned char primary,
     unsigned char allowTerrainDependent, unsigned char compact,
-    TRmgMapPosition position) { return 0; } // @stub
-#endif
+    TRmgMapPosition position)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int totalWeight = 0;
+    std::vector<type_treasure_def*> candidates;
+    std::vector<TRmgObjectPropertiesRef*> properties;
+    int bestValuePerCell = 0;
+    for (unsigned int index = 0; index < m_objectGenerators.size(); ++index) {
+        type_treasure_def* definition = m_objectGenerators[index];
+        int objectType = definition->m_objectType;
+        if (!primary && g_adventureObjectLandBlocked[objectType][0]
+            && !g_adventureObjectLandBlocked[objectType][2])
+            continue;
+        if (!allowTerrainDependent && definition->isTerrainDependent())
+            continue;
+        if (m_objectCountByType[objectType] >= g_rmgMapObjectLimits[objectType])
+            continue;
+        if (zone->m_objectCountByType[objectType] >= g_rmgZoneObjectLimits[objectType])
+            continue;
+        int objectValue = definition->getValue(zone, this);
+        if (objectValue < 0 || objectValue < minimum || objectValue > maximum)
+            continue;
+        TRmgObjectPropertiesRef* candidate = selectObjectPrototype(
+            zone->m_terrain, definition->m_objectType, definition->m_subtype);
+        if (!candidate)
+            continue;
+        if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
+            continue;
+        if (compact) {
+            TObjectType* prototype = candidate->m_prototype;
+            int occupied = 0;
+            for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
+                for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
+                    if (!prototype->m_passableMask[CObjectType::getBitPos(x, y)]
+                        || prototype->m_triggerMask[CObjectType::getBitPos(x, y)])
+                        ++occupied;
+                }
+            }
+            objectValue /= occupied;
+            if (objectValue < 3 * bestValuePerCell / 4)
+                continue;
+            if (bestValuePerCell < 3 * objectValue / 4) {
+                totalWeight = 0;
+                candidates.clear();
+                properties.clear();
+                bestValuePerCell = objectValue;
+            }
+        }
+        totalWeight += definition->m_density;
+        candidates.push_back(definition);
+        properties.push_back(candidate);
+    }
+    if (!candidates.size())
+        return 0;
+    int selected = rand() % totalWeight;
+    unsigned int selectedIndex;
+    for (selectedIndex = 0; selectedIndex < candidates.size(); ++selectedIndex) {
+        selected -= candidates[selectedIndex]->m_density;
+        if (selected < 0)
+            break;
+    }
+    type_treasure_def* definition = candidates[selectedIndex];
+    *value = definition->getValue(zone, this);
+    return definition->generate(properties[selectedIndex], this, zone);
+}
 
 // Complete-only group fill. The first object is centered in the temporary
 // map; later objects use the fit helper. Generation and fit have independent
