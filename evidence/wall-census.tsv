@@ -10,6 +10,7 @@ not diagnosed	514	34.0405	67.9099	33.8694	34.0405	780	singleselectionwindow	?upd
 not diagnosed	588	42.5710	46.3642	3.7932	42.5710	1024	seerhut	?doSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	diagnose	-
 not diagnosed	459	45.3869	45.3869	0.0000	45.3869	840	rmg_support	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	diagnose	-
 not diagnosed	687	53.9868	80.9474	26.9606	53.9868	1494	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	diagnose	-
+not diagnosed	381	56.7217	93.4037	36.6820	56.7217	881	mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	diagnose	-
 not diagnosed	1490	60.5547	92.4127	31.8580	60.5547	3778	game	?load@game@@QAEHPAVTAbstractFile@@@Z	diagnose	-
 not diagnosed	182	61.0788	62.3455	1.2667	61.0788	468	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	diagnose	-
 not diagnosed	409	62.4753	62.4753	0.0000	62.4753	1089	rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	diagnose	-
@@ -49,7 +50,6 @@ not diagnosed	629	76.9208	96.4044	19.4836	76.9208	2725	game	?save@game@@QAEHPAVT
 not diagnosed	148	77.1261	77.1261	0.0000	77.1261	646	rmg	?placeTreasureGroup@type_random_map_generator@@QAEEPAUTRmgTreasureGroup@@PAUTRmgZone@@H@Z	diagnose	-
 not diagnosed	112	77.1353	77.1353	0.0000	77.1353	492	rmg	?propagateZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	diagnose	-
 not diagnosed	162	77.2609	77.2609	0.0000	77.2609	714	rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	diagnose	-
-not diagnosed	200	77.2691	93.4037	16.1346	77.2691	881	mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	diagnose	-
 not diagnosed	81	77.4872	77.4872	0.0000	77.4872	359	adventuremapwindow	?sendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	diagnose	-
 not diagnosed	83	77.7594	77.7594	0.0000	77.7594	372	rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	diagnose	-
 not diagnosed	364	78.1958	78.1958	0.0000	78.1958	1668	philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	diagnose	-
@@ -102,7 +102,6 @@ not diagnosed	121	84.1098	84.1098	0.0000	84.1098	759	winmgr	?fizzleForwardX@hero
 not diagnosed	38	84.1667	84.1667	0.0000	84.1667	237	diff	?findNextSame@CDiffMaker@@IAE_NHHAAH0@Z	diagnose	-
 not diagnosed	161	84.2575	84.2575	0.0000	84.2575	1025	rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	diagnose	-
 not diagnosed	59	84.3750	84.3750	0.0000	84.3750	378	ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	diagnose	-
-not diagnosed	31	84.4118	84.4118	0.0000	84.4118	201	game	?claimGarrison@game@@QAEXHH@Z	diagnose	-
 not diagnosed	96	84.4576	84.4576	0.0000	84.4576	620	campaignwindow	?campaignWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	169	84.5139	100.0000	15.4861	84.5139	1091	remote	?handleMPlayerLaunch@@YIEXZ	diagnose	-
 not diagnosed	109	84.5280	84.5280	0.0000	84.5280	703	soundmgr	?open@soundManager@@UAEHH@Z	diagnose	-
@@ -175,7 +174,7 @@ not diagnosed	208	88.1009	88.1009	0.0000	88.1009	1744	button	?main@button@@UAEHP
 not diagnosed	58	88.1358	88.1358	0.0000	88.1358	485	winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	diagnose	-
 not diagnosed	556	88.1533	88.1533	0.0000	88.1533	4690	university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	diagnose	-
 not diagnosed	65	88.1802	88.1802	0.0000	88.1802	551	binkmanager	?playBinkVideo@@YIHHHHHH@Z	diagnose	-
-not diagnosed	47	88.3357	88.3357	0.0000	88.3357	402	ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	diagnose	-
+not diagnosed	47	88.3357	88.3357	0.0000	88.3357	402	ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJEE@Z	diagnose	-
 not diagnosed	73	88.4025	88.4025	0.0000	88.4025	631	hero	?getDescription@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	diagnose	-
 not diagnosed	13	88.4210	88.4210	0.0000	88.4210	110	dxplay	?testLobbied@CDPlayLobby@@QAEEXZ	diagnose	-
 not diagnosed	47	88.4400	88.4400	0.0000	88.4400	403	button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	diagnose	-
@@ -197,7 +196,7 @@ not diagnosed	239	88.9040	88.9695	0.0655	88.9040	2152	singleselectionwindow	?pro
 not diagnosed	49	88.9253	88.9253	0.0000	88.9253	440	event_record	?recordHideBoat@game@@QAEXPAVboat@@EH@Z	diagnose	-
 not diagnosed	24	88.9254	88.9254	0.0000	88.9254	217	smackmgr	?videoRealignBuffers@@YIXXZ	diagnose	-
 not diagnosed	25	88.9891	88.9891	0.0000	88.9891	227	rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	diagnose	-
-not diagnosed	91	89.0856	89.0856	0.0000	86.1781	831	ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	diagnose	-
+not diagnosed	91	89.0856	89.0856	0.0000	89.0856	831	ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	diagnose	-
 not diagnosed	70	89.0901	89.0901	0.0000	89.0901	644	ai_tactical	?considerSacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	diagnose	-
 not diagnosed	32	89.2796	89.2796	0.0000	89.2796	302	hero	??0hero@@QAE@XZ	diagnose	-
 not diagnosed	172	89.3165	94.9073	5.5908	89.3165	1612	spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	diagnose	-
@@ -385,7 +384,6 @@ not diagnosed	41	94.5399	94.5399	0.0000	94.5399	758	ai	?markMultiheadedEnemy@com
 not diagnosed	18	94.5833	94.5833	0.0000	94.5833	324	event_record	?replay@type_record_move_hero@@UAEXE@Z	diagnose	-
 not diagnosed	43	94.5840	94.5840	0.0000	94.5840	796	wingraph	?ddSetFullScreenStatus@@YIEH@Z	diagnose	-
 not diagnosed	64	94.6104	94.6104	0.0000	94.6104	1180	tradpost	?doMarket@@YIXXZ	diagnose	-
-not diagnosed	11	94.7260	94.7260	0.0000	94.7260	205	game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	diagnose	-
 not diagnosed	159	94.7322	94.7322	0.0000	94.7322	3019	overview	?processIconSelect@game@@QAEHHE@Z	diagnose	-
 not diagnosed	76	94.7490	94.8591	0.1101	92.4189	1456	rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	diagnose	-
 not diagnosed	28	94.7553	94.7553	0.0000	94.7553	541	university_window	?purchaseClick@type_university_window@@KIHAAVmessage@@@Z	diagnose	-

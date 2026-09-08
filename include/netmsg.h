@@ -630,11 +630,9 @@ public:
     // Before normalization: playerPos.
     int m_playerPos;
 
-    // Dreamcast defines the two-argument constructor in this header
-    // (netmsg.h:619, dc 0xbd290); Complete's body is game.obj's own
-    // (game.cpp defines it, and game::ClaimGarrison builds the message
-    // through the default constructor - see the note there).
-    CMCClaimGarrison() {}
+    // Dreamcast attributes the constructor to netmsg.h:619 (dc 0xbd290).
+    // The canonical body in game.cpp is retained by randomizeEvents and
+    // expanded into claimGarrison's full-expression temporary in retail.
     CMCClaimGarrison(int id, int player);
 };
 
