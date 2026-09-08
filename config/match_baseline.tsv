@@ -391,7 +391,7 @@ ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	04da1
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	a8b3e173f124
 ai_player	?initializeArtifactEffects@@YIXXZ	95.1622	95.1622	95.1622	0x34100	bfc0c2c50930
 ai_player	?isHumanAlly@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	f71b8e985074
-ai_player	?makeGift@type_AI_player@@QAEXJ@Z	86.5174	86.5174	86.5174	0x29110	8bba5390294e
+ai_player	?makeGift@type_AI_player@@QAEXJ@Z	86.5174	86.5174	86.5174	0x29110	927f0fe0deff
 ai_player	?markDangerZones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50	df5dadb1f377
 ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	91.6997	91.6997	91.6997	0x2f570	4d091d170965
 ai_player	?markTown@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	203da6de06e8
