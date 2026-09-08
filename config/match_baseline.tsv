@@ -3239,6 +3239,7 @@ rmg	??1TRmgObjectPlacementRule@@QAE@XZ	100.0000	100.0000	100.0000	0x136b60	-
 rmg	??1TRmgRoadMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132350	c9a0dc309797
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	75f39f6636cf
 rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	443032e6b8c1
+rmg	??1rmgBlackBoxObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
 rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	3456f3994041
 rmg	??DTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcd0	f507d47c1a08
 rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	b2718bbe2d90
@@ -3253,6 +3254,7 @@ rmg	??_GTRmgMapAdapterInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x137910	-
 rmg	??_GTRmgMapInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1361b0	-
 rmg	??_GTRmgRoadMapAdapter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x132320	-
 rmg	??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x137940	-
+rmg	??_GrmgBlackBoxObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133680	-
 rmg	??_GrmgOwnableObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133590	-
 rmg	??_Gtype_object@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133120	-
 rmg	??_Gtype_random_map@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130f80	-
@@ -3288,6 +3290,9 @@ rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.7786	84.8000	84.8000	0x141780	5cf7083c6a52
 rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1341f0	d4b7c7591c29
+rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134380	03c960846c3a
+rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134410	0e7e1e9770bd
+rmg	?generate@type_black_box_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134490	e77972609613
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	a4863c60ac59
 rmg	?generate@type_resource_lump_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134870	fdb40e62cfdb
 rmg	?generate@type_scholar_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134970	3d336a522202
@@ -3338,6 +3343,7 @@ rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	12671cc1c8ff
 rmg	?write@rmgArtifactObject@@UAEXPAVTAbstractFile@@H@Z	99.8033	99.8033	99.8033	0x133500	989e49a3ff67
+rmg	?write@rmgBlackBoxObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1336f0	ea1c6a22dc19
 rmg	?write@rmgMonsterObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1331f0	d6e36466fdab
 rmg	?write@rmgOwnableObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133460	e8476ac4278c
 rmg	?write@rmgResourceObject@@UAEXPAVTAbstractFile@@H@Z	99.4933	99.4933	99.4933	0x1335c0	355369b4593c
@@ -3822,9 +3828,9 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
