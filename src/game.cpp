@@ -5994,18 +5994,28 @@ static void randomizePyramid(NewmapCell* cell)
     info->clearVisitedBits();
 }
 
-// E:\gamedcs\game.cpp:4804. Like the shrine helper, this has no PC row:
-// /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
-// operations as calls. The Dreamcast local/xref roster and retail's helper
-// sequence both select operator[] rather than test/set for the filter.
+// E:\gamedcs\game.cpp:4804, dc 0xac168: ordinary static helper with
+// TSecondarySkill skill. Dreamcast retries random draws excluding skills
+// 6 and 12; Complete uses the map's allowed-skill bitset and scenario mask.
+// Retail RandomizeEvents +0x13bd..+0x14aa proves the bitset operations;
+// these are Complete additions, not Dreamcast local/xref evidence.
+// Retail +0x13da..+0x13fa copies the zero bitset before calling flip,
+// matching Dinkumware operator~'s copy-then-flip body. Direct .flip()
+// omits that copy. The existing depth pin keeps operator~ out of line;
+// removing it instead expands the filtering helpers (225 vs 211 blocks,
+// 15 missing retail calls, 72.24%). Keep that failed control distinct from
+// the recovered complement operation; its inline frontier remains open.
+// Full checkpoint: 86.7458%; flip's standalone retail row at 0x4d17b0
+// is no longer emitted because our retained operator~ expands flip inside
+// its own body. Retail requires the opposite outer/inner inline decision.
 // Before normalization (function): randomize_witch_hut.
-static __forceinline void randomizeWitchHut(NewmapCell* cell)
+static void randomizeWitchHut(NewmapCell* cell)
 {
 #pragma inline_depth(0)
     std::bitset<28> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
     if (!possibleSkills.any())
-        possibleSkills = std::bitset<28>(0).flip();
+        possibleSkills = ~std::bitset<28>(0);
 
     int i;
     for (i = 0; i < 28; ++i)
