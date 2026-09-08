@@ -407,6 +407,10 @@ enum ERmgTemplateZoneKind {
     RMG_TEMPLATE_JUNCTION = 3
 };
 
+enum ERmgTreasurePlacementLimits {
+    RMG_TREASURE_ATTEMPTS = 3
+};
+
 struct TRmgTreasureRange {
     // Before normalization: minimum.
     int m_minimum;
