@@ -632,6 +632,33 @@ struct TRmgZoneBounds {
 TPoint clipRmgBoundaryPoint(
     const TRmgZoneBounds& bounds, TPoint point, TPoint toward);
 
+// The terrain noise generator 0x53ed00 keeps a vector of nine-dword regions.
+// Its subdivision helper 0x53e9e0 copies each complete region, halves both
+// coordinate intervals, and replaces three corner samples for each quadrant.
+// Offsets +0..0xc are bounds; +0x10/+0x14/+0x18/+0x1c correspond to
+// (minX,minY)/(minX,maxY)/(maxX,minY)/(maxX,maxY); +0x20 controls the random
+// displacement range. These Complete-only role names have no DC counterpart.
+struct TRmgNoiseRegion {
+    TRmgZoneBounds m_bounds;
+    int m_corners[4];
+    int m_variation;
+};
+SIZE(TRmgNoiseRegion, 0x24);
+
+// Passed as a four-dword value immediately after the region. 0x53ed00
+// averages corners 0/2, 0/1, 1/3 and 2/3 in this order, then adds a random
+// displacement to each before passing it to the subdivision helper.
+struct TRmgNoiseMidpoints {
+    int m_minYValue;
+    int m_minXValue;
+    int m_maxYValue;
+    int m_maxXValue;
+};
+SIZE(TRmgNoiseMidpoints, 0x10);
+
+void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
+    int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints);
+
 enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
     RMG_WATER_NONE = 0,
