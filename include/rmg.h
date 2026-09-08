@@ -1082,7 +1082,10 @@ public:
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    // Painter slot 4 has an explicit output reference: 0x4f9fdd pushes
+    // the destination then the point, and 0x55f350 reads them at +0xc/+8.
+    // The map-adapter slot instead returns a value through its hidden buffer.
+    virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
 
@@ -1130,7 +1133,7 @@ public:
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
     virtual int getLand(const TRmgGridPoint& point);
 };
 

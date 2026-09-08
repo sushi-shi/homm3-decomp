@@ -412,6 +412,11 @@ unsigned char type_random_map::canPlaceObject(
 }
 #endif
 
+// The neighboring setTile slot remains parked. Its generic tile input carries
+// land, river, and road kinds, whereas m_landType is currently an enum bitfield.
+// Recover that storage/interface boundary before assigning the integer input
+// through an enum cast. Earlier capture/scheduling probes peaked at 69.21%.
+
 // Slot 2 updates only the packed eight-bit terrain frame.
 VA(0x00532200, 0x3C)
 void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
@@ -419,12 +424,6 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
     TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
     item.m_tile.m_terrainFrame = value;
 }
-
-// The neighboring setTile slot is banked after five scored controls. Direct
-// bitfield writes score 39.38%; packed snapshots and retail-order input
-// snapshots score 52.10%; capturing the inputs before direct writes and an
-// equivalent pointer spelling both peak at 69.21%. All preserve retail's
-// branch/call shape, leaving a VC6 register-scheduling boundary.
 
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
@@ -496,6 +495,38 @@ VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
 // destructor at 0x532510 before conditionally releasing the object.
 VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
 
+// Concrete river vtable 0x640a3c slot 2. The four-bit field at +0x24 bit 14
+// is the river kind, and +0x28 bit 29 marks a river target when it is nonzero.
+VA(0x00532730, 0x57) // anchor-vtable + packed-field evidence; Complete-only
+void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
+{
+    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    item.m_tile.m_riverType = value;
+    item.m_tileData.m_riverTarget = value != 0;
+}
+
+// Both concrete adapter vtables share this size forwarding body. The river
+// adapter's existing construction path independently establishes its owner.
+VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
+TRmgGridPoint TRmgMapAdapter::getSize()
+{
+    return m_map->getSize();
+}
+
+// Concrete river vtable 0x640a3c slot 4 returns the river sprite. The signed
+// shifts in retail prove riverType and riverFrame, and bits 17/18 supply flips.
+VA(0x005327C0, 0x63) // anchor-vtable + packed-field evidence; Complete-only
+rmgTerrainTile TRmgMapAdapter::getTile(const TRmgGridPoint& point)
+{
+    const TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    rmgTerrainTile tile;
+    tile.m_terrain = item.m_tile.m_riverType;
+    tile.m_frame = item.m_tile.m_riverFrame;
+    tile.m_flipX = item.m_tileData.m_riverFlipX;
+    tile.m_flipY = item.m_tileData.m_riverFlipY;
+    return tile;
+}
+
 // Concrete river-adapter vtable 0x640a3c slots 5 and 6 read the packed river
 // kind and underlying land kind from the wrapped map's 0x30-byte cell array.
 VA(0x00532830, 0x2D)
@@ -512,13 +543,8 @@ int TRmgMapAdapter::getOverlay(const TRmgGridPoint& point)
         .m_tile.m_landType;
 }
 
-// Unclaimed retail 0x532790 is slot 3 of both concrete adapter vtables at
-// 0x640a04 and 0x640a3c. Five compiled forms of
-// `TRmgMapAdapter::getSize() { return m_map->getSize(); }` preserve the call,
-// relocation, CFG, and ABI but allocate the returned temporary through the
-// opposite register pair (best 85.18%). The other table belongs to the still
-// unrecovered concrete road adapter at 0x532320..0x5324b0, so the shared ICF
-// representative stays banked with that class cluster.
+// The other adapter table belongs to the still unrecovered concrete road
+// adapter at 0x532320..0x5324b0.
 // Its 45-byte slots at 0x532480/0x5324b0 index the wrapped map identically
 // and extract road type / land type, but neither can be emitted until that
 // concrete road-adapter declaration and vtable are recovered.

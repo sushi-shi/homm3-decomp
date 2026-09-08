@@ -1717,6 +1717,11 @@ unsigned char hero::isWieldingArtifact(int whichArtifact)
 // switch expression and a named discriminator followed by
 // `-= CREATURE_CATAPULT` are also byte-flat: VC6 canonicalizes both back to
 // the same EDX-preserving LEA. why-reg found no applicable catalog mutation.
+// A 40-source batch moving the empty CATAPULT/default arms through every
+// position, with signed and unsigned switch selectors, is also flat at
+// 96.5278%. The nonempty arm order remains retail's ballista/tent/cart.
+// Twenty further parameter-const/register, artifact-width, and named-selector
+// combinations also stop at 96.5278%; none recovers the default-arm reload.
 // Before normalization (locals): creature_type.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
@@ -7785,6 +7790,9 @@ long hero::modifySpellDamage(SpellID spell, int damage,
 // and a dead duplicate read. Three rows still carry this residual
 // (ai_player::fill_prohibited_array 99.9678, seerhuttext
 // LoadSeerHutTextColumn 99.9621, diff CDiffFile::Apply 99.6429, 3 swaps).
+// A 16-source batch also tests named pointer/reference receivers born before
+// or after the loop locals with int/short/long accumulators: all byte-flat
+// at 99.5833%. The canonical getPrimarySkill accessor remains intact.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::getPrimarySkillTotal()
 {

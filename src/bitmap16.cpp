@@ -194,16 +194,29 @@ unsigned int Bitmap16Bit::getSize() const
 // E:\gamedcs\bitmap16.cpp:335. Re-point the bitmap at memory somebody else
 // owns: drop whatever this object allocated, then take the caller's extent,
 // stride and pointer and mark the map borrowed.
-// Residual (94.8%): one scheduled load. Retail pulls `pitch` into EDX
-// between the extent product and the two size stores; ours loads it after
-// them. Naming the product in an `int size` local ahead of the run is worth
-// 8.81 (85.95 -> 94.76) - the two size stores then share one register and
-// free EDX early - but no further arrangement closes it: the local placed
-// after the Width store (85.95), a second local for the stride (94.76,
-// byte-flat), DataSize before ImageSize (85.95) and both chained-assignment
-// forms (85.95) were all measured.
+// Exact: DC lines 342..346 store width, height, pitch, image size, data size.
+// Keeping that order, with ImageSize read back for DataSize, lets VC6 schedule
+// retail's pitch load between the multiply and height store. A 28-source
+// batch found four equivalent exact products; retaining an explicit size
+// local or moving pitch after the size stores loses the match (best 94.7568%).
 VA(0x0044e250, 0x5D)  // order-map(DC bitmap16.obj, between Remap and Draw), dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
+{
+    clear();
+    m_width = w;
+    m_height = h;
+    m_pitch = pitch;
+    m_imageSize = w * h * 2;
+    m_dataSize = m_imageSize;
+    m_map = data;
+    m_referenced = 1;
+}
+
+// DC bitmap16.cpp:358 (clear, dc 0x51198). reference calls this ordinary
+// helper at line 338; retail 0x44e250 expands its zero stores and conditional
+// delete. The DC surface-release arm is absent from the PC object layout.
+// Preserve the original source order: reference immediately precedes clear.
+void Bitmap16Bit::clear()
 {
     m_width = 0;
     m_height = 0;
@@ -215,14 +228,6 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
         m_map = 0;
         m_referenced = 0;
     }
-    int size = w * h * 2;
-    m_width = w;
-    m_height = h;
-    m_imageSize = size;
-    m_dataSize = size;
-    m_pitch = pitch;
-    m_map = data;
-    m_referenced = 1;
 }
 
 // E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
