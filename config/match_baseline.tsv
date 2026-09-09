@@ -4124,7 +4124,7 @@ soundmgr	?adjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1
 soundmgr	?adjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0	84567b688861
 soundmgr	?clearMemSample@@YIXUSAMPLE2@@@Z	100.0000	100.0000	100.0000	0x19a410	941a874994a6
 soundmgr	?close@soundManager@@UAEXXZ	100.0000	100.0000	100.0000	0x199a90	f91d61a8c18f
-soundmgr	?convertVolume@soundManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1996c0	45ec046ebc28
+soundmgr	?convertVolume@soundManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1996c0	96bfb6be74c0
 soundmgr	?getSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z	100.0000	100.0000	100.0000	0x19a030	111acecd88e5
 soundmgr	?launchSample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590	706b6092bd33
 soundmgr	?loadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470	000a7ff4f3ef

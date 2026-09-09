@@ -124,11 +124,21 @@ void soundManager::setMusicVolume()
 // EXACT 2026-08-09. Retail duplicates the range check, scale and
 // minimum-one clamp in the two arms, then joins before the negative and
 // 127 clamps. That shared tail lengthens `result`'s lifetime, selects EDX
-// as its carrier and enables the retail cross-jumps. The scoped
-// auto_inline pin is separately load-bearing: the exact smaller body falls
-// under this compile's /Ob2 budget, but retail calls it from SetMusicVolume,
-// ModifySample and MemorySample rather than expanding it.
-#pragma auto_inline(off)
+// as its carrier and enables the retail cross-jumps.
+//
+// The selected setting is now a const reference, not a value snapshot.
+// This is a lifetime hypothesis: DC rows 125/136 read gConfig's selected
+// setting, but no local inventory proves a particular C++ binding. There
+// is no intervening call or store between the range check and scaling.
+// With this ordinary read-only binding, all four retail convertVolume
+// calls survive naturally: setMusicVolume +0x1f, modifySample +0x9a,
+// memorySample +0x15a, processStopAndPlayMP3 +0x25. The entire 110-section
+// object and all 699 relocation destinations are identical to the former
+// fenced implementation. No assertion or dummy expression replaces it.
+// Negative control: unfenced int snapshots expand the helper at all four
+// sites (caller scores 0/57.3125/81.0864/83.8794%). The 12-state lifetime/
+// guard family is exhausted; nested value guards also keep those calls,
+// but the reference retains the whole original object without new guards.
 // E:\gamedcs\soundmgr.cpp:121
 // Before normalization (locals): iVolumeValue, iVolumeType.
 VA(0x005996c0, 0x97)  // anchor-callee, dc 0x14b170
@@ -136,14 +146,14 @@ int soundManager::convertVolume(int volumeValue, int volumeType)
 {
     int result = 0;
     if (volumeType == VOLUME_TYPE_101) {
-        int setting = g_unk698760;
+        const int& setting = g_unk698760;
         if (setting >= 1 && setting <= 10) {
             result = (setting + 1) * volumeValue / 10;
             if (result < 1)
                 result = 1;
         }
     } else {
-        int setting = g_unk698764;
+        const int& setting = g_unk698764;
         if (setting >= 1 && setting <= 10) {
             result = (setting + 1) * volumeValue / 10;
             if (result < 1)
@@ -156,8 +166,6 @@ int soundManager::convertVolume(int volumeValue, int volumeType)
         result = 127;
     return result;
 }
-#pragma auto_inline(on)
-
 // E:\gamedcs\soundmgr.cpp:165
 // EXACT 2026-08-09: MP3Playing belongs in the member-initializer list.
 // That construction-phase distinction makes VC6 emit its byte clear before
