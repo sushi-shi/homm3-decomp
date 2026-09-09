@@ -7,6 +7,7 @@
 
 #include <string>
 #include "advmgr_popup.h"
+#include "armygrp.h"
 
 class army;
 class armyGroup;
@@ -71,8 +72,9 @@ public:
     };
     enum { NWIDGETS = 28, VIEW_ARMY_DELAY = 100, NSPELLS = 3 };
 
-    // Before normalization: ArmyType.
-    int m_armyType;
+    // Before normalization: ArmyType. DC CodeView proves TCreatureType;
+    // retail keeps this four-byte field at +0x60. Upgrade below is int.
+    TCreatureType m_armyType;
     // Before normalization: ArmySize.
     int m_armySize;
     // Before normalization: morale.

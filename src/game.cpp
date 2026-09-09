@@ -3188,28 +3188,21 @@ VictoryConditionStruct::VictoryConditionStruct()
 }
 #endif  // @carcass
 
-// Reset's retail source saw the implicit SCampaign/NewSMapHeader assignment
-// surface that this TU deliberately hides to keep game::Load exact. One free
-// inline-candidate site restores that lost /Ob2 divisor without emitting code.
-// Before normalization (function): reset_assignment_surface.
-static void resetAssignmentSurface()
-{
-}
-
 // The Dreamcast header roster emits SavedGameHeader::Reset immediately
 // after the constructor (dc 0xbcf00). Retail's only call is saved.Reset()
 // in game::Save, and its stores cover the same 0x5a4-byte header layout.
-// EXACT 2026-08-22: the memberwise copies below reproduce the two implicit
-// assignment bodies without widening game.h's codegen-sensitive surface.
-// The final free inline site is load-bearing: k=0 leaves string::_Grow
-// expanded (79.54%), k=1 makes every instruction agree, and a semantic
-// IsHuman adapter is not free enough and remains at the k=0 phase. The
-// byte/dword union spells retail's last stack slot exactly: setne writes its
-// byte view, then the int store reloads and masks the dword view.
-// 2026-09-09 removal control: unsigned-char, bool, int and unsigned-int
-// scalar temporaries all emit the same alternative (98.2888% vs 100%).
-// Keep this as matching debt, not proof of an original union declaration;
-// the older DC Reset has no counterpart of Complete's IsHuman loop.
+// Complete adds the campaign/map copies and human-player loop. Their
+// canonical implicit assignments are now visible in game.h; pasting their
+// member walks, three inline-depth fences and the empty
+// resetAssignmentSurface call are unnecessary. The 54-state assignment /
+// flag-lifetime / empty-helper family preserves every other game-TU score.
+// With the former byte/dword flag union, both ordinary assignments and
+// removal of the empty helper also preserve this body's 100% instruction
+// score. Using the actual bool result directly gives 98.2888%: retail spills
+// its low byte then reloads/masks a dword, while VC6 widens the byte result
+// normally. Both store exactly 0 or 1. Bool/byte/int local controls do not
+// recover that spill. Keep the small measured residual, not artificial
+// overlapping storage solely to reproduce a stack-allocation choice.
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 void SavedGameHeader::reset()
 {
@@ -3221,43 +3214,9 @@ void SavedGameHeader::reset()
     m_version = 42;
     m_gameVersion = g_game->m_f1f698;
 
-    SCampaign& savedCampaign = m_campaign;
-    const SCampaign& gameCampaign = g_game->m_campaign;
-    savedCampaign.m_isCheater = gameCampaign.m_isCheater;
-    savedCampaign.m_secretActive = gameCampaign.m_secretActive;
-    savedCampaign.m_currentMap = gameCampaign.m_currentMap;
-    savedCampaign.m_currentCampaign = gameCampaign.m_currentCampaign;
-    savedCampaign.m_numMapRegions = gameCampaign.m_numMapRegions;
-    savedCampaign.m_crossoverArrayIndex = gameCampaign.m_crossoverArrayIndex;
-    savedCampaign.m_briefingChoice = gameCampaign.m_briefingChoice;
-#pragma inline_depth(0)
-    savedCampaign.m_campaignFilename.assign(gameCampaign.m_campaignFilename,
-                                          0, std::string::npos);
-#pragma inline_depth()
-    for (int campaignIndex = 0;
-         campaignIndex < sizeof(savedCampaign.m_campaignCompleted);
-         ++campaignIndex) {
-        savedCampaign.m_campaignCompleted[campaignIndex] =
-            gameCampaign.m_campaignCompleted[campaignIndex];
-    }
-#pragma inline_depth(0)
-    savedCampaign.m_carryOverHeroes = gameCampaign.m_carryOverHeroes;
-    savedCampaign.m_carryoverArtifact = gameCampaign.m_carryoverArtifact;
-    savedCampaign.m_mapScores = gameCampaign.m_mapScores;
-    savedCampaign.m_assignedCarryover = gameCampaign.m_assignedCarryover;
-#pragma inline_depth()
+    m_campaign = g_game->m_campaign;
 
-    NewSMapHeader& savedMapHeader = m_mapHeader;
-    const NewSMapHeader& gameMapHeader = g_game->m_mapHeader;
-#pragma inline_depth(0)
-    static_cast<CMapHeaderData&>(savedMapHeader) =
-        static_cast<const CMapHeaderData&>(gameMapHeader);
-    savedMapHeader.m_mapName.assign(gameMapHeader.m_mapName,
-                                  0, std::string::npos);
-    savedMapHeader.m_mapDescription.assign(gameMapHeader.m_mapDescription,
-                                         0, std::string::npos);
-#pragma inline_depth()
-    savedMapHeader.m_availableHeroes = gameMapHeader.m_availableHeroes;
+    m_mapHeader = g_game->m_mapHeader;
 
     m_currentPlayer = g_netLocalGamePos;
     m_mapSetup = g_game->m_setup;
@@ -3268,17 +3227,8 @@ void SavedGameHeader::reset()
     memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
 
     int* human = m_humanPlayer;
-    union {
-        // Before normalization: byte.
-        unsigned char m_byte;
-        // Before normalization: value.
-        unsigned int m_value;
-    } isHuman;
-    for (int i = 0; i < 8; ++i) {
-        isHuman.m_byte = g_game->m_players[i].isHuman();
-        *human++ = isHuman.m_value & 0xff;
-    }
-    resetAssignmentSurface();
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
 }
 
 // Retail disproves the earlier order-only SaveBlackMarkets claim: every
