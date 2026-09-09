@@ -762,6 +762,16 @@ build build/objdiff/base/victor.obj: cl src/victor.cpp | $
   flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
   unit = victor
 build victor: phony build/objdiff/base/victor.obj
+build build/objdiff/base/victor_flip.obj: cl src/victor_flip.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
+  unit = victor_flip
+build victor_flip: phony build/objdiff/base/victor_flip.obj
+build build/objdiff/base/victor_loadpcx.obj: cl src/victor_loadpcx.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
+  unit = victor_loadpcx
+build victor_loadpcx: phony build/objdiff/base/victor_loadpcx.obj
 build build/objdiff/base/victor_pcx_kernels.obj: cl $
     src/victor_pcx_kernels.cpp | scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Og- /ML /Gd /D_WINDOWS
@@ -852,7 +862,9 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj
+    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_pcx_kernels.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -938,7 +950,9 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj
+    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_pcx_kernels.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -1025,6 +1039,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcx_kernels.obj $
-    | scripts/homm3/build/link.py
+    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_pcx_kernels.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

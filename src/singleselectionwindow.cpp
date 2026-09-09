@@ -10278,6 +10278,12 @@ VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
 VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
+// SCampaign assignment's retained copy of its artifact-vector range.
+// This TU naturally emits the canonical std::copy specialization. Retail
+// 0x4d2c90 advances 16-byte vector objects and expands their assignments;
+// all 41 blocks align with this emission. Its _Construct<type_artifact>
+// call is folded with the identical type_dialog_resource construction.
+VA_COMPGEN(0x004d2c90, 0x1B3, STD_COPY, type_artifact_vector)
 
 VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)
