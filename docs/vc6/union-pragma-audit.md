@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 217 | 72 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 212 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 216 | 73 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 211 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 456 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 454 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 66 active inline overrides were removed; counting
-all 72 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 67 active inline overrides were removed; counting
+all 73 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1089,6 +1089,25 @@ The final tactical checkpoint passes full retail delinking and all gates at
 no source edit lowers MAX and no banked RVA is lost. This is a verified stopping
 checkpoint requested by the user, not evidence that further improvements have
 been exhausted.
+
+The resumed AI turn-close recovery removes the append fence from `endTurn`
+(0x428dd0). DC's ordinary protected `purchaseBuildings()` boundary, direct
+`msg += formatString(...)`, signed-short warning index and retail's positive
+length test raise the function **89.5263% → 100%** without changing any of the
+other 436 scores across five header consumers. The 60-state family and native
+oracle are documented in the [turn-close controls](source-families.md#ai-turn-close-purchase-and-warning-boundaries).
+All four other consumer objects are strictly unchanged; the AI player object
+adds one unreferenced ordinary purchase-helper body and preserves the raw
+bytes of its other 246 emitted functions. Its changed cleanup offsets and
+reordered COMDATs are not represented as whole-object identity.
+
+Full retail delinking and all gates pass at **4083/4764 exact**, **96.43% linked**
+and **96.42% whole-image** (rounded). One checkpoint rises; no source edit lowers
+MAX and no banked RVA is lost. The current inventory is **216 overrides across
+29 TUs**: **211 depth-zero and five auto-inline-off**, with **432 source pragma
+directives** plus the 22 header packing directives. The **63 unions** and their
+classifications are unchanged. Against the user's 253/72 checkpoint, this is
+**37 overrides and nine unions removed**; two overrides remain in ai_player.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

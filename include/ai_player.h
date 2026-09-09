@@ -395,9 +395,12 @@ public:
     // Before normalization (function): type_AI_player::buy_mage_guild.
     // Before normalization (locals): current_hero, current_town.
     void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
+protected:
+    // DC public ?purchase_buildings@type_AI_player@@IAAXXZ proves protected
+    // access and a void/no-argument ordinary member.
     // Before normalization (function): type_AI_player::purchase_buildings.
-    // Before normalization (locals): prohibited_creatures.
-    unsigned char purchaseBuildings(unsigned char* prohibitedCreatures);
+    void purchaseBuildings();
+public:
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     // Before normalization (function): type_AI_player::purchase_building.

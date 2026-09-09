@@ -3572,6 +3572,80 @@ and pasted summon implementation. The global census is **217 overrides**
 This finishes the current dispatch matching pass, not the remaining interface,
 min/max or whole-TU source-reconstruction debt.
 
+### AI turn-close purchase and warning boundaries
+
+`type_AI_player::endTurn` (0x428dd0) stood at 89.5263% behind a string-append
+fence. DC ai_player.cpp:439 positively calls the ordinary `purchase_buildings`
+member, whose body at 0x31094 owns `prohibited_creatures` and calls
+`fill_prohibited_array` followed by the `purchase_building` loop. Complete
+expands this boundary with its 145-entry flag table. The previous declaration
+was an unused byte-returning, pointer-argument interface; the actual member
+is void/no-argument, and its decorated `...@@IAAXXZ` public proves protected
+access. No external caller uses the superseded declaration.
+
+DC line 493 calls `format_string`, then `string::operator+=`, then destroys the
+temporary. Its warning-loop backedge at 0x2e992 increments and sign-extends a
+short. Retail independently passes the formatter's return pointer straight to
+the retained `append(string, pos, count)` at 0x41b250 and exits on an unsigned
+positive length check. The old source used an explicit append and named copy,
+pasted the purchase helper, and expressed the warning walk as two pointers.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-ai-endturn-boundary-family.py build/ai-endturn-boundary.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/ai-endturn-boundary.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/test-ai-endturn-boundaries.py
+```
+
+Run the generator against the pre-adoption source (`3be2cd52`); its anchors
+intentionally reject changed source. The complete manifest and snapshots are
+preserved under context **`6d71af72491811a3bd28`**. All **60/60 states** compile,
+producing **60 distinct objects** and **ten reproduced elites**. All **437
+tracked scores across five current header consumers** are checked; only
+endTurn changes in the entire family. The reproduced opposite corner and
+winner **`[14,1,1]` / `eb3fa06f257171a880de80b2`** reaches **100%** with the
+ordinary purchase member, temporary `+=`, short index and positive length.
+
+The deletion-only control falls to **61.2669%**. Against the exact candidate,
+pasting the purchase loop back falls to **77.0226%**, using an int warning
+index to **90.6917%**, using a named format copy to **98.5038%**, and changing
+the length guard to a truth test to **99.7744%**. These controls explain why
+an isolated fence deletion was previously loss-only. No helper is marked
+inline and no dummy operation or replacement suppression is introduced.
+
+The final source restores the DC local names `purchaser`, `checker`, and `msg`.
+Its entire raw object reproduces the winning recompile: **421 sections and
+1967 relocation destinations**, permitting only the independently proved
+public-to-protected helper-symbol correction. Against the old object, the
+other **246 emitted function bodies** retain their raw bytes, no function
+disappears, and one unreferenced 96-byte padded ordinary helper is added.
+The caller's cleanup offsets and STL COMDAT order change, so this is not a
+claim of whole-object identity against the old source. The four other
+consumers do preserve their complete raw objects: advmgr **308/4091**, ai
+**101/542**, ai_combat **77/462**, and philai **229/1440** sections/relocations.
+
+Retail verification agrees on all **54 CFG blocks, 32 branches, two returns,
+and seventeen named call targets/addends**, with no differing instruction
+row. The existing 100% metric still ignores thirteen data-name differences:
+five `g_game`/`gpGame` name aliases, six unclaimed data/vtable references, one
+source-claimed resource-name table and one generated empty-string label.
+No data-name normalization or retail target is changed to obtain this result.
+
+The native actual-body oracle tests **8192 cases per form at -O0 and -O2**,
+crossing all seven-resource sign masks with 64 player/town/alliance/purchase
+states. It checks reserve clamps, strategy and purchase order, the mutable
+145-entry flag array across repeated calls, Marketplace lookup, AI-before-
+human gifts, formatting arguments, and warning order/content. Five deliberately
+wrong controls are rejected. All sixty source forms pass before adoption;
+the default test subsequently checks the actual adopted bodies, and `--source`
+can check any reproduced candidate. Mocked services and bounded host integers
+do not claim retail ABI, EH or inlining verification.
+
+Full delinking/build passes at **4083/4764 exact**, **96.43% linked** and
+**96.42% whole-image** (rounded), with one checkpoint raised, no MAX reset and
+no lost banked RVA. The census is **216 overrides** (211 depth-zero / five
+auto-inline-off) and **63 unions**. This removes one override and restores
+one exact caller; it does not close ai_player or exhaust the remaining debt.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
