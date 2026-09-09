@@ -4618,7 +4618,7 @@ victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NP
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40	07cb6c50ebee
 victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	e5f22c4922ab
 victorylossconditions	?checkForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720	b2c73503088c
-victorylossconditions	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	99.2820	99.2820	99.2820	0x1f1ef0	84a08a50b7f2
+victorylossconditions	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1ef0	72aba842f853
 victorylossconditions	?checkForHeroDefeatWin@VictoryConditionStruct@@QAE_NHPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2100	95ba2dba7864
 victorylossconditions	?checkForTimeLimitExpired@LossConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2f20	0d4aeef8dee4
 victorylossconditions	?checkForTimeSurvival@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2810	eaddebd7c8c9
