@@ -930,6 +930,18 @@ MAX reset or lost banked RVA. Production independently matches the complete
 game control object. The current census is **224 inline overrides** and
 **64 unions**; the depth-zero cleanliness bound is ratcheted to **218**.
 
+The text-dialog special-member correction recovers the DC-proven implicit
+destructor and resolves CAnimatedDlg's previously wrong named base-cleanup
+target without changing any of the twelve header consumers' 1129 scores.
+The full checkpoint remains **4073/4764 exact, 96.38% linked and whole-image**,
+with no MAX reset, migration or new row. The four-state declaration/fence
+control and twelve-state nullable-sprite follow-up show that this correction
+alone does not remove the animated-destructor override: the unfenced options
+still lose the retained network-copy body and lower the readiness caller.
+The census stays **224 overrides and 64 unions**. See the
+[source-family controls](source-families.md#compiler-generated-text-dialog-teardown)
+for the positive compiler-generated-member evidence and precise residual.
+
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
 what must be recovered; they are not permissions to add new suppression pins.
