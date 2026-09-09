@@ -43,7 +43,7 @@ enum type_speed_catagory {
 
 // type_monster_data - PROVEN 72-byte record (0x48 stride: every
 // consumer divides the vector's pointer difference by 72 through the
-// 0x38e38e39 magic, e.g. get_total 0x42775d, and steps the element
+// 0x38e38e39 magic, e.g. vector::size at 0x42775d, and steps the element
 // pointer by 0x48). Field offsets are byte-proven:
 //   +0x00 slot        - armyGroup index: adjust_army (0x42492c) feeds
 //                       it to Dismiss and indexes numTroops with it;
@@ -147,17 +147,22 @@ SIZE(type_monster_data, 0x48);
 // and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
 // such member. The vector therefore starts at type_AI_combat_data+0x00
 // and is 16 bytes, rather than being a 12-byte pointer head at +0x04.
+// DC members.csv calls this member `creatures`, with the actual std::vector
+// type. The former type_monster_vector derived shim was not an original
+// container: its mutable const subscript bypassed the vendor's begin().
+// Use the real owner, including the native const-reference interface.
+
 // type_AI_combat_data - the quick-combat simulation side. Offsets are
 // byte-proven from the ctor's store sequence (0x423ee0) plus each
 // accessor:
-//   +0x00 monsters  - allocator byte copied at 0x4276c4; the three
+//   +0x00 creatures - allocator byte copied at 0x4276c4; the three
 //                     pointers at +0x04/+0x08/+0x0c are zeroed by the
 //                     primary ctor at 0x423f08.
 //   +0x10 terrain   - -1 default, overwritten by the special-terrain
 //                     jump table (0x423f74/0x423f9d).
 //   +0x14 mana      - (short)hero[+0x18] widened (0x423f3d).
 //   +0x18 can_cast  - set 1 then cleared by artifact tests (0x423f47).
-//   +0x1c total_hit_points - kill() zeroes it (0x4262b8), adjust_army
+//   +0x1c total_combat_value - kill() zeroes it (0x4262b8), adjust_army
 //                     dismisses the whole group when it is 0
 //                     (0x42488b), inflict_damage subtracts into it
 //                     (0x42630a).
@@ -171,17 +176,18 @@ SIZE(type_monster_data, 0x48);
 //                     check_wall_archery_penalty's only outputs.
 class type_AI_combat_data {
 public:
-    // Before normalization: monsters.
-    // Original: creatures, std::vector<type_monster_data>, DC class 0x5a07.
-    std::vector<type_monster_data> m_monsters;  // +0x00
+    // DC original: creatures (previous reconstruction: monsters).
+    std::vector<type_monster_data> m_creatures; // +0x00
     // Before normalization: terrain.
     long m_terrain;                    // +0x10
     // Before normalization: mana.
     long m_mana;                       // +0x14
-    // Before normalization: can_cast.
-    unsigned char m_canCast;          // +0x18, natural padding to +0x1c
-    // Before normalization: total_hit_points.
-    long m_totalHitPoints;           // +0x1c
+    // DC original: can_cast_spells (previous reconstruction: can_cast).
+    unsigned char m_canCastSpells;          // +0x18, natural padding to +0x1c
+    // DC original: total_combat_value (previous reconstruction:
+    // total_hit_points). initializeCreatures adds each unit's combat value,
+    // not its raw hit points (retail 0x424120; DC 0x29f58).
+    long m_totalCombatValue;           // +0x1c
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
     // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
@@ -190,21 +196,21 @@ public:
     // the SIGNED long width byte-proven; 0x4267c0 reads it back.
     // The name is the DC's own (members.csv type_AI_combat_data,28 -
     // DC offset 28 == retail 0x20, the constant +4 shift this class
-    // carries after `monsters` because VC6's std::vector is 16 B where
+    // carries after `creatures` because VC6's std::vector is 16 B where
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
     // Before normalization: tactics_advantage.
     long m_tacticsAdvantage;          // +0x20
-    // Before normalization: my_hero.
-    hero* m_myHero;                   // +0x24
-    // Before normalization: my_army.
-    armyGroup* m_myArmy;              // +0x28
+    // DC original: current_hero (previous reconstruction: my_hero).
+    hero* m_currentHero;                   // +0x24
+    // DC original: current_army (previous reconstruction: my_army).
+    armyGroup* m_currentArmy;              // +0x28
     // Before normalization: enemy_hero.
     hero* m_enemyHero;                // +0x2c
-    // Before normalization: wall_penalty.
-    unsigned char m_wallPenalty;      // +0x30, natural padding at +0x31
-    // Before normalization: penalty_distance.
-    short m_penaltyDistance;          // +0x32
+    // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
+    unsigned char m_wallArcheryPenalty;      // +0x30, natural padding at +0x31
+    // DC original: wall_speed_limit (previous reconstruction: penalty_distance).
+    short m_wallSpeedLimit;          // +0x32
 
     // Before normalization (locals): new_hero, new_army, base_modifier, _enemy_hero, enemy_town,
     // map_cell.
@@ -241,6 +247,8 @@ public:
     // Before normalization (function): type_AI_combat_data::get_damage_spell_value.
     void getDamageSpellValue(type_spell_choice& choice,
                                 const type_AI_combat_data& defender) const;
+    // DC original: has_creature.
+    unsigned char hasCreature(TCreatureType creature) const;
     // Before normalization (function): type_AI_combat_data::get_mass_damage_value.
     long getMassDamageValue(type_spell_choice& choice,
                                // Before normalization (locals): casting_hero.
@@ -265,18 +273,16 @@ public:
                     unsigned char shootersBlocked) const;
     // Before normalization (function): type_AI_combat_data::get_final_melee_value.
     long getFinalMeleeValue() const;
-    armyGroup* getArmy() const { return m_myArmy; }
-    // E:\gamedcs\ai_combat.h:255
-    // Complete counts the 0x48-byte vector elements, unlike the older
-    // Dreamcast leaf. Keep the standard-library size() operation canonical.
-    // Earlier raw-pointer probes found an early return changed the merged
-    // null/subtraction path; Dinkumware's own size() uses the same ternary.
-    VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
-    long getTotal() const
-    {
-        return m_monsters.size();
-    }
-    hero* getHero() const { return m_myHero; }
+    // Before normalization (function): type_AI_combat_data::get_army.
+    armyGroup* getArmy() const { return m_currentArmy; }
+    // Before normalization (function): type_AI_combat_data::get_total.
+    // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
+    // expands the corresponding this+0x1c load in chooseMelee. Vector
+    // cardinality is creatures.size(), not this game accessor.
+    long getTotal() const { return m_totalCombatValue; }
+    // Before normalization (function): type_AI_combat_data::get_hero.
+    hero* getHero() const { return m_currentHero; }
+    // Before normalization (function): type_AI_combat_data::cast_chain_lightning.
     void castChainLightning(type_spell_choice& choice,
                               type_AI_combat_data& defender, long damage) const;
     // Before normalization (function): type_AI_combat_data::cast_area_effect.

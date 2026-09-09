@@ -102,8 +102,16 @@ def make_manifest(source):
     end = function.index(END, start)
     original = function[start:end]
     options = list(scans())
-    if original not in {body for inner in INNER_LOOPS for _, body in scans(inner)}:
+    known = {body for inner in INNER_LOOPS for _, body in scans(inner)}
+    # Main's verified outer-cycle break replaces only the outer goto. Keep
+    # the inner multi-level exit and all historical source controls intact.
+    outer_break = "\n            if (direction == first)\n                break;"
+    outer_goto = "\n            if (direction == first)\n                goto gapsBuilt;"
+    legacy = original.replace(outer_break, outer_goto, 1)
+    if original not in known and legacy not in known:
         raise ValueError("review the gap enumeration before rebasing the family")
+    if original not in known:
+        options = [(name, original if body == legacy else body) for name, body in options]
     options.sort(key=lambda row: row[1] != original)
     return dict(schema=1, unit="rmg_terrain", function=FUNCTION, evidence=__doc__, axes=[dict(
         name="gap_scan", find=original,

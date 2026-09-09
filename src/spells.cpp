@@ -3981,6 +3981,15 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // bComplete, iDrawsPerSeg, iSplitChanceTimes100, iSwap, psBolts, iHalfThickness, iDelayTil,
 // iMaxBolt, iUpdTLY, iUpdTLX, iUpdBRY, iUpdBRX, iMaxBoltForThisCycle, iAbsDist, fOffset, fAngle,
 // iDrawLength, iSplitX, iSplitY, iSplitThickness, pArmy, iFrames, iFrameDelay.
+// Goto audit: DC's bComplete belongs to the draw pass. Breaking that inner
+// pass and testing it before either breaking or guarding the outer split
+// pass scores 96.4526%, versus 100%. Both keep the single delete[] and reset
+// tail, but change the loop/cleanup CFG. Retain this multi-level completion
+// exit and the canonical AddBolt, DrawBolt and NextFrameTime boundaries.
+// Inner break followed by outer continue still scores 96.4526%. Moving
+// the single cleanup/reset/return into the positive completed arm scores
+// 97.6170%; neither preserves 100%. Both families were reproduced after
+// the mirrorImage scope change, with all original helpers retained.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                            int destX, int destY, int splitFrequency,
@@ -4691,8 +4700,12 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
 // the two initial ValidHex failure branches change destination, selecting
 // the final +0x3fc
 // epilogue instead of retail's earlier +0x1b7. Positive placement and extra
-// else scopes do not recover those destinations. DC 4650 also records a
-// distinct search-to-placement transfer; keep the exact remaining join.
+// else scopes after search do not recover those destinations. DC 4650
+// records the successful transfer that the owned placement arm now retains.
+// The successful valid/visible/fit arm owns the one placement and animation
+// action followed by return. Search exhaustion still owns the failure dialog.
+// This removes placeMirror while preserving all 1032 compiled bytes and 15
+// references/addends at 100%; initial guard destinations now agree too.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::mirrorImage(int targetIndex, int level)
 {
@@ -4746,7 +4759,37 @@ void combatManager::mirrorImage(int targetIndex, int level)
                                     hex = getAdjacentCellIndexNoArmy(hex, dir);
                                     if (validHex(hex) && !inInvisibleColumn(hex) &&
                                         source->canFit(hex, 0, 0)) {
-                                        goto placeMirror;
+                                        addArmy(m_currentSide, source->m_creatureType,
+                                                source->m_numTroops, hex, 0x800000, 0);
+                                        army* mirror = m_cells[hex].getArmy();
+                                        mirror->m_monInfo.m_attributes |= 0x400000;
+                                        mirror->m_roundsLeftBeforeVanish =
+                                            m_heroes[m_currentSide]->getSpellDurationBonus()
+                                            + m_spellPower[m_currentSide];
+                                        source->m_mirrorDestIndex = mirror->m_bitIndex;
+                                        mirror->m_mirrorSourceIndex = source->m_bitIndex;
+                                        long dx = m_cells[source->m_gridIndex].m_refX
+                                            - m_cells[mirror->m_gridIndex].m_refX;
+                                        long dy = m_cells[source->m_gridIndex].m_refY
+                                            - m_cells[mirror->m_gridIndex].m_refY;
+                                        resetLimitCreature();
+                                        markCreatureEffect(m_cells[hex].m_armySide,
+                                                           m_cells[hex].m_armySlot);
+                                        markCreatureEffect(m_cells[targetIndex].m_armySide,
+                                                           m_cells[targetIndex].m_armySlot);
+                                        computeMaxExtent();
+                                        {
+                                            for (int frame = 0; frame < 16; frame++) {
+                                                mirror->m_xSpecialMod = dx * (16 - frame) / 16;
+                                                mirror->m_ySpecialMod = dy * (16 - frame) / 16;
+                                                drawFrame(1, 1, 0, 50, 1, 1);
+                                            }
+                                        }
+                                        mirror->m_xSpecialMod = 0;
+                                        mirror->m_ySpecialMod = 0;
+                                        updateGrid(0, 1);
+                                        drawFrame(1, 0, 0, 0, 1, 0);
+                                        return;
                                     }
                                 }
                             }
@@ -4757,35 +4800,6 @@ void combatManager::mirrorImage(int targetIndex, int level)
         }
     }
     normalDialog(g_generalText->getText(189), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    return;
-
-placeMirror:
-    addArmy(m_currentSide, source->m_creatureType, source->m_numTroops, hex, 0x800000,
-            0);
-    army* mirror = m_cells[hex].getArmy();
-    mirror->m_monInfo.m_attributes |= 0x400000;
-    mirror->m_roundsLeftBeforeVanish =
-        m_heroes[m_currentSide]->getSpellDurationBonus() + m_spellPower[m_currentSide];
-    source->m_mirrorDestIndex = mirror->m_bitIndex;
-    mirror->m_mirrorSourceIndex = source->m_bitIndex;
-    long dx = m_cells[source->m_gridIndex].m_refX - m_cells[mirror->m_gridIndex].m_refX;
-    long dy = m_cells[source->m_gridIndex].m_refY - m_cells[mirror->m_gridIndex].m_refY;
-    resetLimitCreature();
-    markCreatureEffect(m_cells[hex].m_armySide, m_cells[hex].m_armySlot);
-    markCreatureEffect(m_cells[targetIndex].m_armySide,
-                       m_cells[targetIndex].m_armySlot);
-    computeMaxExtent();
-    {
-        for (int frame = 0; frame < 16; frame++) {
-            mirror->m_xSpecialMod = dx * (16 - frame) / 16;
-            mirror->m_ySpecialMod = dy * (16 - frame) / 16;
-            drawFrame(1, 1, 0, 50, 1, 1);
-        }
-    }
-    mirror->m_xSpecialMod = 0;
-    mirror->m_ySpecialMod = 0;
-    updateGrid(0, 1);
-    drawFrame(1, 0, 0, 0, 1, 0);
     return;
 }
 

@@ -1300,12 +1300,17 @@ public:
     // pair stores width early; a separate plane local keeps the wrong multiply
     // operand. Field assignments stay in the body: an all-member initializer
     // list moves the vptr store past them. Other view callers remain partial.
+    // Store-order control: items before width/height makes createWaterZoneIsland
+    // (0x53efa0) exact and preserves repairWaterZoneBorders at 100%. The six
+    // orders were scored across all seven header consumers. Restoring the old
+    // width/height/items order loses the island's constructor scheduling
+    // (95.8947%); the separate caller-only control does not recover it.
 
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
+        m_mapItems = items;
         m_mapWidth = width;
         m_mapHeight = height;
-        m_mapItems = items;
         m_numberLevels = 1;
         m_ownsMapItems = 0;
     }
@@ -2073,6 +2078,8 @@ public:
     // guarded treasure group; 0x54bc50 removes the old object's map marks,
     // counts and list entry without deleting the object itself.
     unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    void setHumanPlayer(int seat);
+    void setTownChoice(int seat, int town);
     void removeObject(type_object* object);
     // Retail 0x546190: zone, value range, output value, three byte flags,
     // then a by-value position (ret 0x28). Flags bypass the object-trait

@@ -416,6 +416,11 @@ void TRmgBoundaryVertex::detach()
 // expands all five. The first four paired constructors remain calls in both.
 // The factory's named twin restores pointer-copy ownership and improves this
 // caller from 73.1706%; explicit vector insert overloads reach at most 77.4950%.
+// Construction/connector/factory families: 60 corner/lifetime forms reach
+// 80.7057%; a shared ordinary connection member reaches 90.6722%, but calls
+// both diagonal splices where retail expands the first. Its fan expansion
+// has the opposite mismatch. 121 result-lifetime forms and 121 combined
+// factory/connector forms do not improve that frontier; none is adopted.
 VA(0x005FD010, 0x316) // anchor-caller 0x53e050 and five createEdge expansions/calls
 TRmgVoronoi::TRmgVoronoi()
 {
@@ -455,6 +460,9 @@ TRmgVoronoi::~TRmgVoronoi()
 // Naming twin before push_back reproduces retail's pointer snapshot and raises
 // 84.2650%. Eighteen push_back/single/count insertion forms favor the two
 // push_back calls below; the nearest explicit-insert form scores 90.9550%.
+// A 72-state result/twin/vector-binding family leaves this body at 90.9600%.
+// A const-reference-bound returned pointer raises only the diagram constructor
+// to 82.6120%; its combinations with the shared connector add no new peak.
 VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
 TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
@@ -474,6 +482,9 @@ TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
 // detach expansion differs structurally: VC6 expands both splice calls;
 // retail retains the second one. Reversing predecessor capture order in the
 // canonical detach helper lowers this caller to 73.1250%; keep its exact body.
+// All 64 unsigned-loop/shared-index/erase-iterator combinations produce the
+// same tracked scores (eighteen distinct whole-TU objects). The second splice
+// remains expanded in every form; changing search lifetime is not the cause.
 VA(0x005FD5B0, 0xFF) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
 void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 {
@@ -491,20 +502,31 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
     delete twin;
 }
 
+// Provisional shared edge-side predicate, used by locate and legalization.
+// Graphics Gems IV delaunay/quadedge.C's RightOf supplies a source-boundary
+// hypothesis, not HoMM3 identity: Complete uses integer by-value TPoint and
+// the canonical orientation below. No original helper name/inline is proven.
+// Retail locate's first expanded orientation has no spilled endpoint; an
+// ordinary helper with a named twin restores all 215 bytes. Flattening the
+// call boundary returns 91.0460%. Six of 61 tested states reach exactness;
+// all use this cyclic order and by-value point. No inline pin is required.
+static int isRmgPointRightOfEdge(TPoint point, TRmgBoundaryVertex* edge)
+{
+    TRmgBoundaryVertex* twin = edge->m_twin;
+    return getRmgPointOrientation(edge->m_sitePosition, point, twin->m_sitePosition) > 0;
+}
+
 // The zone-building callers pass an eight-byte TPoint and receive an edge.
 // Retail first recognizes either site endpoint, then follows the twin,
 // successor or twin-predecessor-twin according to integer orientation.
 // This is a Complete-only subdivision lookup; the role name is provisional.
-// Residual (91.0460%): all 13 blocks and seven branches align, with no calls
-// or relocations. Only the first orientation calculation differs; its extra
-// spill grows scratch space from retail's 8 bytes to 16 and moves the later
-// coordinate home. Scoped endpoint snapshots raise 75.2529% to 83.7127%;
-// the successor pointer/scope below reaches the current peak. Naming the
-// twin too scores 90.3563%. Other cyclic orientation orders are lower;
-// temporary rather than named point copies, an early-continue first arm,
-// and a named first orientation result are byte-neutral. Twenty-one scored
-// forms preserve the canonical point comparison and orientation helper;
-// all other rmg_support scores hold. Keep the three ordinary helper calls.
+// Exact: the shared edge-side predicate restores the eight-byte scratch
+// frame and eliminates the first orientation's endpoint spill. All thirteen
+// blocks, seven branches and 215 unmasked bytes agree, with no relocations.
+// Earlier direct-call forms reached 91.0460%: endpoint scopes improved
+// 75.2529% to 83.7127%, then the successor binding reached that plateau.
+// Named scalar results and early-continue forms were neutral. Keep both
+// canonical helper boundaries rather than pasting orientation arithmetic.
 VA(0x005FD6B0, 0xD7) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
 TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 {
@@ -522,16 +544,16 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
                 break;
             }
         }
-        if (getRmgPointOrientation(edge->m_sitePosition, point, edge->m_twin->m_sitePosition) > 0) {
+        if (isRmgPointRightOfEdge(point, edge)) {
             edge = edge->m_twin;
         } else {
             TRmgBoundaryVertex* next = edge->m_next;
-            if (getRmgPointOrientation(next->m_sitePosition, point, next->m_twin->m_sitePosition) <= 0) {
+            if (!isRmgPointRightOfEdge(point, next)) {
                 edge = next;
                 continue;
             }
             TRmgBoundaryVertex* previous = edge->m_twin->m_previous->m_twin;
-            if (getRmgPointOrientation(previous->m_sitePosition, point, previous->m_twin->m_sitePosition) > 0)
+            if (isRmgPointRightOfEdge(point, previous))
                 break;
             edge = previous;
         }
@@ -558,7 +580,8 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 // orientation, splice and detach definitions remain ordinary and shared.
 // The provisional flip/segment/circle groupings had no independent source
 // evidence. Keep their operations here; the historical scores above do not
-// establish helper boundaries. This ownership edit has not been recompiled.
+// establish helper boundaries. Mainline's shared edge-side predicate is
+// retained at the lookup/legalization sites; these three operations stay local.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
@@ -591,8 +614,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 
     for (;;) {
         TRmgBoundaryVertex* previous = edge->m_previous;
-        if (getRmgPointOrientation(edge->m_sitePosition,
-                previous->m_twin->m_sitePosition, edge->m_twin->m_sitePosition) > 0) {
+        if (isRmgPointRightOfEdge(previous->m_twin->m_sitePosition, edge)) {
             TPoint first = edge->m_sitePosition;
             TPoint second = previous->m_twin->m_sitePosition;
             TPoint third = edge->m_twin->m_sitePosition;

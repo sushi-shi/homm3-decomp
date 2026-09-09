@@ -3541,9 +3541,10 @@ int game::load(TAbstractFile* infile)
     loadVector(infile, m_undergroundGateExits);
     loadVector(infile, m_undergroundGatePairs);
     loadVector(infile, m_universities);
-#pragma inline_depth(0)
+    // The creature-bank call and final return no longer need depth fences.
+    // The post-integration 226-site audit and joint four-state control
+    // preserve the entire game object, including every cleanup/call site.
     loadObjectVector(infile, &m_creatureBanks);
-#pragma inline_depth()
 
     if (!loadRecordedEvents(infile, saved.m_version))
         return -1;
@@ -3563,9 +3564,7 @@ int game::load(TAbstractFile* infile)
     setupAdjacentMons();
     aiExamineMap();
 
-#pragma inline_depth(0)
     return 0;
-#pragma inline_depth()
 }
 
 // Retail retains SCampaign's compiler-generated memberwise assignment
@@ -4470,8 +4469,12 @@ void game::giveTroopsToNeutralTown(int townId)
 // vchero_loc, poolhero_loc, this_town, lchero_loc.
 // The final valid-town path can return directly at unchanged 90.0315%.
 // Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
-// result flag gives 89.2426%, so the two invalid-town joins remain.
+// result flag gives 89.2426%; these used break as the failure-scope exit.
 // These are limits of the tested scopes, not proof of original gotos.
+// The town-loss scope uses continue for either failed team check and a
+// return for valid ownership. This removes both remaining joins at 90.0315%
+// with the full contribution and all relocation names/addends unchanged.
+// The earlier failure scopes used break and do not predict this lowering.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
 void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
@@ -4646,21 +4649,22 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             if (isHumanTeam(teamCheck))
                 ++numHumanTeams;
         }
-        if (numHumanTeams > 1)
-            goto invalid_loss_town;
-        owner = thisTown->m_owner;
-        townTeam = owner;
-        if (townTeam >= 0)
-            townTeam = m_mapHeader.m_teamInfo[townTeam];
-        if (townTeam >= 0) {
-            unsigned char humanTeam =
-                isHumanTeam(townTeam);
-            if (!humanTeam)
-                goto invalid_loss_town;
-        }
-        if (owner != -1)
-            return;
-invalid_loss_town:
+        do {
+            if (numHumanTeams > 1)
+                continue;
+            owner = thisTown->m_owner;
+            townTeam = owner;
+            if (townTeam >= 0)
+                townTeam = m_mapHeader.m_teamInfo[townTeam];
+            if (townTeam >= 0) {
+                unsigned char humanTeam =
+                    isHumanTeam(townTeam);
+                if (!humanTeam)
+                    continue;
+            }
+            if (owner != -1)
+                return;
+        } while (0);
         loss.m_type = -1;
     }
 }

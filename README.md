@@ -12,17 +12,17 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 95.17%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 95.49%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 3,954 / 4,764 functions exact (83.0%) across the full engine (4751 in linked units).
+**Match score** — 3,982 / 4,764 functions exact (83.6%) across the full engine (4763 in linked units).
 
-**Function exact MAX** — 4,042 / 4,764 current implementations (84.8%) have reached 100%.
+**Function exact MAX** — 4,061 / 4,764 current implementations (85.2%) have reached 100%.
 
 | Module        | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`        |   135 | 3885 / 4682 (83.0%) | 3973 / 4682 (84.9%) |  95.37% |    96.02% |
+| `game`        |   138 | 3913 / 4694 (83.4%) | 3992 / 4694 (85.0%) |  95.43% |    96.07% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |       0 / 13 (0.0%) |       0 / 13 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |        0 / 1 (0.0%) |        0 / 1 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
@@ -41,6 +41,42 @@ HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
 Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
 MAX to its new CUR; a lower MAX is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
+
+## Reconstruction debt
+
+Manually maintained cleanup checklist:
+
+- [ ] Review casts and remove avoidable conversions: **3,047 named casts**
+  (**2,830 `static_cast`**, **217 `const_cast`**).
+- [ ] Review unions and simplify avoidable alternate views: **63 union definitions**.
+- [ ] Review gotos: **31 statements** in **12 functions across 10 files**.
+- [ ] Review artificial address arithmetic.
+- [ ] Review owner recovery from member pointers.
+- [ ] Review out-of-object pointers.
+- [ ] Review manual varargs.
+- [ ] Review unrelated variable reuse.
+- [ ] Review stack aggregates and unused members.
+- [ ] Review unresolved buffer bounds.
+- [ ] Review [compiler warnings](docs/compiler-warnings.md).
+- [ ] Investigate potentially uninitialized locals and missing-return warnings.
+- [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
+- [ ] Review pragma debt in `src/`: **434 `#pragma` directives**, all for inlining
+  (**212 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Search for inline functions.
+- [ ] Search for macros for common code.
+
+Unless scoped otherwise, counts cover tracked project C/C++ in `src/` and
+`include/`, excluding comments, literals, disabled `#if 0` bodies, generated build
+copies and vendor code. Casts
+count written named conversions; the cleanliness gates separately report zero
+C-style and `reinterpret_cast` conversions. Items without counts still need a
+tree-wide census; an unchecked item is a review category, not proof of a defect.
+
+All remaining gotos have individual dispositions in the [goto audit](docs/vc6/goto-audit.md).
+The [union and pragma audit](docs/vc6/union-pragma-audit.md) distinguishes real
+shared-storage representations from reconstruction adapters and inlining debt.
+Recover helpers, macros, types and lifetimes from source and retail evidence;
+validate changes with VC6, measure collateral matches and preserve MAX/HIST.
 
 ## Pinned target
 

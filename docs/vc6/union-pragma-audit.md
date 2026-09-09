@@ -12,17 +12,17 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 65 (39 source, 26 header) | Thirteen removed; classify the remainder below |
-| Inline override regions | 289 | 227 | 62 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 220 | Remaining overrides are matching debt |
+| Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
+| Inline override regions | 289 | 217 | 72 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 212 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
-| `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
+| `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 476 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 456 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 56 active inline overrides were removed; counting
-all 62 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 66 active inline overrides were removed; counting
+all 72 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -46,6 +46,8 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | `game::load` / `game::save` | `TGatePairVectorPointerAlias` and its forced wrapper | Restore the common `loadVector` / `saveVector` templates with bool results and native vector references. The long-vector resize restores retail's zero-filled new elements; the point/long retained writers have identical bytes. Six Load fences disappear, both callers improve, and both claimed writers remain exact. |
 | `game::randomizeUniversity` | `TUniversitySkillsPointerAlias` and its forced wrapper | Restore the DC-proven native aggregate. Retail's elemental-school initializer is Conflux-specific, not a generic record constructor. The map local remains 99.7464%, Load improves to 81.2284%, and explicit Conflux initialization preserves the retained body and all four call/expansion sites. Shared-header collateral is measured below. |
 | Marketplace artifact state | `TMarketArtifactList` byte/enum/integer pointer views | DC `DoBlackMarket` takes `TArtifact*`; both actual producers already own seven-element `TArtifact` arrays. Correct the entry signature, pass `TBlackMarket::m_artifacts`, and use one native pointer throughout. All five header consumers preserve their whole raw COFF section bytes, function locations and relocation destinations under the evidenced signature rename. |
+| `NewfullMap::readObjectType` | Full-width integer/enum `convertedType` | Read the four-byte wire value into its native enum local and commit only after the short-read guard. This is a Complete ownership hypothesis, not the DC `int_buffer` spelling. The diagnostic queries the committed record, positively supported by DC row 3619. Only 18 stack-displacement bytes change; the function retains 99.9633% and all other mapcell functions are byte-identical. |
+| `initializeCreatureBankTraits` | Reward-table `creatureTypeFromInt` | DC proves both tables are mutable function-static `TCreatureType` arrays owned by this loader. Restore those owners, the enum's consumed names and the direct enum assignment. All 66 emitted dwords match writable retail data; the reader's canonical static helper also lifts the loader from 89.4550% to 97.5355%. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -58,14 +60,14 @@ pins, alternate declarations or dummy operations were introduced.
 
 | Role | Count | Disposition |
 |---|---:|---|
-| Scalar integer/enum adapters | 32 | Encoding/type-boundary debt; not established as necessary compiler interventions |
+| Scalar integer/enum adapters | 30 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
 | Pointer adapters/views | 8 | Two intentional ABI views; six adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **65** | **24 intentional representations; 41 reconstruction adapters/workarounds** |
+| **Total** | **63** | **24 intentional representations; 39 reconstruction adapters/workarounds** |
 
-The 32 scalar adapters are accounted for below. A local definition with two
+The 30 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
 an integer, loop ordinal, serialized value or packed field to a recovered enum
 consumer. They should not be advertised as original union declarations.
@@ -79,11 +81,10 @@ consumer. They should not be advertised as original union declarations.
 | `src/advmgr.cpp` | 4 | Creature/building helpers and two creature-bank extra-info reads |
 | `src/ai_player.cpp` | 4 | Building/resource enumeration and selected-building values |
 | `src/army.cpp` | 1 | Wall-target ordinal |
-| `src/creature_bank.cpp` | 1 | Reward-creature input |
 | `src/events.cpp` | 1 | Creature event/input adapter |
 | `src/game.cpp` | 4 | Creature, hero-class, creature-bank and secondary-skill adapters |
 | `src/hero.cpp` | 1 | Drawn secondary-skill index |
-| `src/mapcell.cpp` | 2 | Serialized adventure-object type reads |
+| `src/mapcell.cpp` | 1 | Narrow serialized adventure-object type read |
 | `src/objecttype.cpp` | 1 | Stream object-type input |
 | `src/philai.cpp` | 3 | Two secondary-skill values and one creature value |
 | `src/seerhut.cpp` | 1 | Serialized quest creature value |
@@ -365,7 +366,7 @@ Map-access checkpoint census: 253 overrides (246 depth-zero, seven auto-inline-o
 This does not reclassify them as necessary. The assertion controls directly
 demonstrate why a pragma-deletion-only census cannot establish necessity.
 
-The seven remaining auto-inline regions have bounded next actions:
+At that checkpoint the seven remaining auto-inline regions had bounded next actions:
 `convertVolume`, `checkDimNextHeroBut`, and `~CAnimatedDlg` have no leading
 DC gap supporting an assertion; the destructor's sprite is explicitly
 optional. `AppCommand` is a four-byte DC platform stub and `stopMouseThread`
@@ -374,8 +375,11 @@ is mostly PC-only teardown, so missing PC statements are not assertion proof.
 call and Complete's changed queue payload; its remaining caller dependency
 is measured below.
 The empty `CNewPlayerUpdateTask` destructor has the previously measured
-untracked derived-destructor expansion. These remain reconstruction debt,
+untracked derived-destructor expansion, reviewed and removed below. These remain reconstruction debt,
 not candidates for invented checks or declarations merely to alter inlining.
+The later volume lifetime recovery below retires `convertVolume` without an
+assertion or additional operation; the later task-destructor review leaves
+five auto-inline regions.
 
 ### Further reduction from `ab315284`
 
@@ -722,6 +726,50 @@ all rejected, in addition to the six stream-contract negative controls. Host
 value-initialization during native vector tests does not assert the unspecified
 bytes of VC6's retail-proven uninitialized fill.
 
+### Ordinary volume helper with read-only setting bindings
+
+`soundManager::convertVolume` at 0x5996c0 keeps its ordinary declaration,
+original source order, duplicated setting/range/scale arms, and shared clamps.
+Each arm now binds the selected setting as a `const int&` rather than copying
+it. This is a supported lifetime hypothesis, not a claimed DC reference local:
+the debug inventory records none, while rows 125/136 read the selected
+configuration field. No call or write occurs between those reads. No leading
+gap or positive inline clue supports manufacturing an assertion.
+
+The 12-state lifetime/guard family exhausts all options, gives five emitted
+identities and reproduces all five elites. The selected unfenced-reference
+form has the entire old object's section layout, bytes, function positions
+and 699 relocation destinations unchanged (110 sections). All four callers
+still call the retained exact body: `setMusicVolume`, `modifySample`,
+`memorySample`, and the PC `processStopAndPlayMP3` worker. In contrast, simple
+deletion with the old value locals expands it at all four named sites; their
+scores become 0%, 57.3125%, 81.0864%, and 83.8794%. Nested value guards also
+preserve the calls, but do not preserve the whole raw object as the reference
+form does. The actual production object independently reproduces the selected
+candidate. The arithmetic oracle checks 461,700 valid-input combinations per
+optimization level and rejects five faulty selection/range/scale/clamp controls.
+
+This retires soundmgr's last intervention. The current census is **226 inline
+overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, with **64 unions**.
+
+### Post-integration deletion recheck
+
+The fresh `d7f7be28` audit exhausts every single-region deletion and each
+whole-TU removal across 226 regions in 32 units. Individual results are
+219 loss-only, four mixed, two code-identical and one score-identical with
+different emitted code. The last is the already known untracked derived
+destructor consequence of removing the `CNewPlayerUpdateTask` fence; score
+identity alone does not validate its removal.
+
+Both newly byte-identical regions belong to `game::load`: the creature-bank
+`loadObjectVector` call and the final successful return. A separate four-state
+family tests unchanged, each individual deletion and their combination; all
+four produce one identical game object. Strict comparison confirms all 822
+sections, 5287 relocation destinations and function locations unchanged.
+Both directives are removed without changing any helper call, C++ statement
+or cleanup scope. The intervening `isLocalHuman` fence remains. The new census
+is **224 inline overrides** (218 depth-zero, six auto-inline-off) in **32 TUs**.
+
 ## Reproduction and verification
 
 The audit scripts generate analysis only; they do not adopt source, adjust the
@@ -839,9 +887,208 @@ flatten the helper again. The ordinary `countMarkets` and its recovered
 `HasBuilding` query are whole-object byte-neutral. See the
 [source families](source-families.md#marketplace-ratio-accessor-and-setup-boundaries)
 for complete controls and native contract tests. The full build passes at
-4063/4752 exact, 96.39% linked and 96.12% whole-image. The current census is
+4063/4752 exact, 96.39% linked and 96.12% whole-image. That checkpoint's census is
 **227 inline overrides** (220 depth-zero, seven auto-inline-off) in 33 TUs and
 **65 unions**.
+
+The native full-width object-type read removes one more local union. The
+8-state ownership/query family and 9-state field-lifetime follow-up are
+exhausted; a separate enum local with the original generic integer buffer
+otherwise preserved is adopted. Reading directly into the record is rejected:
+it would partially commit a short read. The actual block passes native tests
+for reports 0..4 across six valid type values at `-O0` and `-O2`, with five
+deliberate faults rejected. The adopted VC6 object reproduces its selected
+candidate; all 419 section layouts, 318 function-symbol locations and 2077
+relocation destinations agree with the old implementation. Only the target's
+18 stack-displacement bytes differ; all other 259 emitted functions are
+byte-identical. Full retail delinking and all gates pass at **4062/4752 exact,
+96.39% linked and 96.12% whole-image**. The one MAX reset is 100% to 99.9633%,
+with HIST held at 100%. That checkpoint's census is **227 inline overrides** and
+**64 unions** (38 source, 26 header). The neighboring narrow wire fields are
+not candidates for this four-byte read without changing their format contract.
+
+Integration with main's `06f2f4f7` widget, spell-immunity and control-flow
+recovery passes the full build at **4063/4752 exact, 96.40% linked and 96.13%
+whole-image**, with no further MAX reset or lost banked RVA. The 22 focused
+tests cover the native enum/market contracts and the newly integrated spell,
+source-family and CodeView behavior. Census and the native read's local
+99.9633% residual are unchanged.
+
+The volume reference-binding checkpoint preserves **4063/4752 exact, 96.40%
+linked and 96.13% whole-image**. Full retail delinking and all gates pass;
+no score changes or MAX resets occur. That checkpoint's census is **226 inline
+overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, and **64 unions**.
+
+The later integration with main's `7e4a9aa8` preserves its Victor, victory
+condition and support-TU recovery. Full delinking and all gates pass at
+**4073/4764 exact, 96.38% linked and whole-image**, with all 4764 functions
+now in 152 linked units and no additional MAX reset. This expanded denominator
+is not the older 149-unit linked score. The pragma/union census is unchanged.
+
+The joint Load fence removal preserves **4073/4764 exact and 96.38% linked
+and whole-image**. Full delinking and all gates pass, with no changed score,
+MAX reset or lost banked RVA. Production independently matches the complete
+game control object. The current census is **224 inline overrides** and
+**64 unions**; the depth-zero cleanliness bound is ratcheted to **218**.
+
+The text-dialog special-member correction recovers the DC-proven implicit
+destructor and resolves CAnimatedDlg's previously wrong named base-cleanup
+target without changing any of the twelve header consumers' 1129 scores.
+The full checkpoint remains **4073/4764 exact, 96.38% linked and whole-image**,
+with no MAX reset, migration or new row. The four-state declaration/fence
+control and twelve-state nullable-sprite follow-up show that this correction
+alone does not remove the animated-destructor override: the unfenced options
+still lose the retained network-copy body and lower the readiness caller.
+The census stays **224 overrides and 64 unions**. See the
+[source-family controls](source-families.md#compiler-generated-text-dialog-teardown)
+for the positive compiler-generated-member evidence and precise residual.
+
+The bank-resource checkpoint retires one further depth override and restores
+two canonical source calls: the ordinary player-ID resource-cost overload
+forwards to the pointer overload, and valueOfBank calls the ID overload as
+Dreamcast proves. The coupled boundary recovery itself preserves the complete
+philai object. Removing the shared size fence makes the retained bank exact;
+only the first dispatcher expansion now expands size where retail calls it.
+The second expansion and final bank call retain their proper boundaries.
+The caller's CUR moves 98.0336% to 97.4610%; MAX and HIST stay at 98.0336%.
+All other 125 emitted philai bodies remain byte-identical to the control.
+Sixty lifetime states and eight boundary controls are exhausted, and the
+actual-body native oracle passes both optimization levels and seven deliberate
+faults. Full delinking and all gates pass at **4074/4764 exact, 96.38% linked
+and whole-image**, with one raised checkpoint, no MAX reset and no lost banked
+RVA. The current census is **223 overrides** (217 depth-zero, six auto-inline-off)
+and **64 unions**. See the
+[bank controls](source-families.md#creature-bank-and-resource-cost-boundaries).
+
+The task-destructor follow-up removes another auto-inline region without
+changing any tracked score. Its two reproduced states are not whole-object
+identical: the generated Proc destructor grows from a jump thunk to the exact
+retained Task teardown, adding 32 padded bytes. All other 395 emitted bodies
+and relocation destinations stay fixed; all 737 non-debug sections preserve
+their order/attributes and all other bytes. Genuine VC6 linker controls refute
+the tempting ICF explanation: the ordinary non-COMDAT Task body remains
+separate. No source interface or declaration is changed to force a fold.
+The independent 36-state mouse-handle family finds no safe removal and keeps
+that override. Full delinking and all gates preserve **4074/4764 exact and
+96.38% linked/whole-image**, with no score or history changes. The current
+census is **222 overrides** (217 depth-zero, five auto-inline-off) and
+**64 unions**. See the
+[task and mouse controls](source-families.md#mouse-thread-lifetimes-and-inherited-task-teardown)
+for the explicit untracked-code and linker limitations.
+
+The fresh full deletion audit at `c78bb3c8` exhausts all **222 regions across
+32 TUs**: 219 loss-only and three mixed. There are no code-neutral, score-neutral
+or gain-only deletions. The mixed cases are the already bounded animated-dialog
+and mouse-thread helpers, and `readObject`'s seer insertion (a small caller gain
+but four exact retained STL bodies disappear). This bounds simple deletion at
+that source state, not further source recovery.
+
+That distinction matters in `type_sacrifice_window::updateSlot`: restoring
+Dreamcast's `getArtifact` accessor and first ordinary `updateArtifactWidget`
+call removes the override embedded in a pasted helper copy. All 55 scores stay
+fixed, and the **entire raw object** stays identical: 200 sections, 1678
+relocation destinations and every function position. The copied-body deletion
+control loses 100% to 99.1368%; the canonical boundary restores retail's nested
+`setVisible` call naturally. The six-state family and production both reproduce
+the byte-neutral result. That checkpoint has **221 overrides** (216 depth-zero,
+five auto-inline-off) and **64 unions**. See the
+[sacrifice-slot controls](source-families.md#sacrifice-slot-helper-boundaries).
+Full delinking and all gates preserve **4074/4764 exact and 96.38%
+linked/whole-image**, with no matching-score or history changes.
+
+The bank-table owner recovery removes the reward-creature adapter: NB11
+proves both loader-local tables are mutable `TCreatureType` arrays, and all
+66 emitted dwords match retail's writable data. All 95 consumers of the
+corrected creature enum are measured. Three RMG rows move slightly while
+retaining their unchanged-source MAX/HIST; the other 4114 scores do not move.
+Restoring the loader's canonical static reference-taking level reader then
+raises it from **89.4550% to 97.5355%**, with all fifteen named calls and
+twelve branches matching retail. Production reproduces the chosen object's
+28 raw sections and 100 relocation destinations; the native two-body oracle
+and table-owner verifier pass with their negative controls. See the
+[bank ownership and reader controls](source-families.md#creature-bank-table-owners-and-ordinary-level-reader).
+Full build passes at **4073/4764 exact, 96.39% linked fuzzy and 96.38%
+whole-image**, with no MAX reset or lost banked RVA. The current census is
+**221 overrides** (216 depth-zero, five auto-inline-off) and **63 unions**
+(37 source, 26 header): 24 intentional representations and 39 reconstruction
+adapters.
+
+The fresh deletion audit at `3423ece1` checks all **221 regions across 31 TUs**
+after the bank-header and sacrifice-slot recoveries. Every isolated compile
+finishes: **218 loss-only and three mixed**, with no neutral or gain-only
+deletion. The mixed cases are `readObject`'s seer insertion (97.4369% →
+97.5099%, but four exact retained STL bodies disappear), animated-dialog
+teardown (network copy 100% → missing and wait caller 90.6522% → 75.0683%,
+while its implicit destructor rises 86.3333% → 100%), and the mouse helper
+(setup 100% → 90.1470%, generation 92.6386% → 97.9759%). This audit bounds
+simple deletion at that snapshot, not subsequent source recovery.
+
+The skill-quest proposal's **36-state input family, exhaustive 64-subset fence
+family and 48-state string-lifetime follow-up** also find no removable fence.
+All nonempty deletion subsets lower the caller while leaving its 118 siblings
+fixed. The native signed-byte binding and real const-reference string lifetimes
+do not recover a deletion. See the
+[proposal controls](source-families.md#skill-quest-proposal-lifetimes-and-six-fence-boundary)
+for the signed-loop residual and shared-COMDAT qualification.
+
+Native AI combat ownership retires all **three ai_combat overrides**: the
+general-melee call replaces a fenced pasted copy, and one correct ordinary
+mass-damage helper replaces two fenced caller-specific versions. The native
+vector copy/size claims now have their actual STL owners; `getTotal` returns
+combat value instead of a falsely identified vector length. The ordinary
+Familiar predicate, const valuation interfaces and canonical value-returning
+min/max are restored too. See the
+[container/melee controls](source-families.md#ai-combat-container-ownership-and-canonical-melee)
+and [mass/value controls](source-families.md#ai-mass-damage-familiar-predicate-and-value-wrapper-boundaries).
+
+chooseMelee, doGeneralMelee and two-side getEnchantmentValue become exact.
+getResurrectionValue's initial min-wrapper dip is recovered to 100% with a
+named capped value. Real residuals remain: initializeCreatures is 83.4275%
+against its old 91.9548% HIST, its retained `_Unguarded_partition` body is
+currently absent, and corrected/unpinned castSpell is 86.7910% against the
+incorrect-dataflow version's 93.0273% HIST. No body/claim disappearance is
+hidden by the banked-RVA gate. The seer signed-loop correction costs one
+additional small MAX reset, 83.2252% → 82.9730%; its old HIST is retained.
+
+Full delinking/build passes at **4075/4764 exact and 96.38% linked/whole-image**.
+The updated inventory has **218 overrides across 30 TUs** (213 depth-zero,
+five auto-inline-off), **63 unions**, and no inline override left in ai_combat.
+Relative to the user's 253/72 checkpoint, this removes **35 overrides and
+nine unions**. The remaining union classifications are unchanged.
+
+The post-AI deletion audit at `a6ac8f7e` exhausts all **218 regions across
+30 TUs**, plus each TU's all-removed control. Individual deletions yield
+**215 loss-only and three mixed** results; none is code-neutral, score-neutral
+or gain-only. The three mixed cases remain seer insertion, animated-dialog
+teardown and the mouse helper, with the same affected scores described above.
+The all-removed controls are 28 loss-only and two mixed. These isolated,
+reproduced controls describe the pre-RMG snapshot, not a rerun after integration.
+
+Integrating main's `b4de5f57` RMG recovery passes full retail delinking and all
+build gates at **4081/4764 exact and 96.42% linked/whole-image**, with no new
+MAX reset, checkpoint change or lost banked RVA. The sole merge conflict was
+the generated README score table, regenerated by this combined build. Census
+remains **218 inline overrides and 63 unions**; the RMG gains are preserved
+concurrent work, not attributed to this override reduction.
+
+The tactical mass/summon recovery removes the final ai_tactical depth override
+and its forced-inline mass declaration. Restoring the summon mastery accessor
+preserves all 347 scores across five consumers without that fence. Naming the
+group loop's target then raises **considerSpell from 98.1927% to 100%**, with
+all other 91 tactical scores fixed. The 24-state boundary and 16-state lifetime
+families, strict raw-object comparisons and actual-body native tests are
+documented in the [tactical controls](source-families.md#tactical-masssummon-boundaries-and-exact-spell-dispatch).
+The current census is **217 overrides across 29 TUs** (212 depth-zero, five
+auto-inline-off), **63 unions**, and **434 source inline-pragma directives**.
+The 22 header packing directives remain separate layout contracts.
+Against the user's **253 overrides / 72 unions**, this removes **36 overrides
+and nine unions**; auto-inline-off regions fall from seven to five.
+
+The final tactical checkpoint passes full retail delinking and all gates at
+**4082/4764 exact and 96.42% linked/whole-image**. One checkpoint rises to 100%;
+no source edit lowers MAX and no banked RVA is lost. This is a verified stopping
+checkpoint requested by the user, not evidence that further improvements have
+been exhausted.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

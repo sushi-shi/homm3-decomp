@@ -5985,9 +5985,12 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 // A zero cloud lookup shares the full-draw star tail; it does not skip the
 // cell. Keeping that tail after the cloud path gives VC6 retail's two
 // forward branches and one common star draw.
-// Goto audit: Combining the cloud lookup guard and draw-stars fallback
-// into an if/else removes both jumps but scores 47.7198% versus 100%;
-// retain the separate guards and shared draw-stars arm.
+// A single cloud-attempt scope preserves both separate failure guards and
+// all 584 retail bytes. Both do/while(0) and for/break controls remove the
+// two jumps with identical code and relocation addends. Positive lookup or
+// full-draw scopes and their combined nesting still lose code agreement;
+// the earlier nested-cloud form scored 47.7198%. Neither result proves a
+// source-goto requirement.
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -6031,28 +6034,29 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
         && (getMapExtra(srcX, srcY, z) & g_mapVisibilityBit))
         return;
 
-    int lookup;
-    if (g_completeDrawAllCells)
-        goto draw_stars;
+    do {
+        int lookup;
+        if (g_completeDrawAllCells)
+            break;
 
-    lookup = getCloudLookup(srcX, srcY, z);
-    if (!lookup)
-        goto draw_stars;
-    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
-        hflip = true;
-        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
-    }
-    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-        && (srcX & 1))
-        ++lookup;
-    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
-        lookup = CLOUD_DRAW_FRAME_4;
-    m_cloudIcons->drawShroudTile(
-        lookup - 1, tilex, tiley, tilew, tileh,
-        g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
-    return;
+        lookup = getCloudLookup(srcX, srcY, z);
+        if (!lookup)
+            break;
+        if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+            hflip = true;
+            lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+        }
+        if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+            && (srcX & 1))
+            ++lookup;
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+            lookup = CLOUD_DRAW_FRAME_4;
+        m_cloudIcons->drawShroudTile(
+            lookup - 1, tilex, tiley, tilew, tileh,
+            g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
+        return;
+    } while (0);
 
-draw_stars:
     int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
     m_starTileset->drawShroudTile(
         frame, tilex, tiley, tilew, tileh,
@@ -8742,9 +8746,17 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
 // predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
 // because the fold does not care which way the compare runs; making the miss
-// a `goto` to the function's own trailing INVALID return is what breaks it,
-// because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
+// an exit to the function's trailing INVALID return breaks that fold.
+// The original goto probe raised 94.5074 -> 96.9031, and our
 // shared block now carries the same six predecessors retail has.
+// An enclosing do/while(0) with switch continue preserves the invalid-index
+// skip over the terrain switch, but scores 24.7668% around dispatch and
+// 23.8079% around the whole calculation, versus 96.9031%. These scopes do
+// not preserve the retail lowering, even with all sound/helper results kept.
+// The trigger test owns the object switch and its else owns the terrain
+// switch. With that partition, both invalid-index arms use switch break;
+// the shared INVALID return preserves all 1504 compiled bytes and 101
+// relocations/addends at 96.9031%. Break without the else loses agreement.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -8789,7 +8801,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
                 return LOOPING_SOUND_41;
             if (thisCell->m_objectIndex == GET_SOUND_GARRISON_1)
                 return LOOPING_SOUND_25;
-            goto invalid;
+            break;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8902,7 +8914,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
                 return LOOPING_SOUND_43;
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
-            goto invalid;
+            break;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -8934,21 +8946,20 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
         default:
             return LOOPING_SOUND_INVALID;
         }
-    }
-
-    switch (thisCell->m_type) {
-    case NOTHING:
-        switch (thisCell->getSpecialTerrain()) {
-        case CURSED_GROUND:
-            return LOOPING_SOUND_48;
-        case MAGIC_PLAINS:
-            return LOOPING_SOUND_25;
+    } else {
+        switch (thisCell->m_type) {
+        case NOTHING:
+            switch (thisCell->getSpecialTerrain()) {
+            case CURSED_GROUND:
+                return LOOPING_SOUND_48;
+            case MAGIC_PLAINS:
+                return LOOPING_SOUND_25;
+            }
+            break;
+        case TERRAIN_VOLCANO:
+            return LOOPING_SOUND_45;
         }
-        break;
-    case TERRAIN_VOLCANO:
-        return LOOPING_SOUND_45;
     }
-invalid:
     return LOOPING_SOUND_INVALID;
 }
 

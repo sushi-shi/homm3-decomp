@@ -42,7 +42,11 @@ public:
     // Before normalization (locals): cText, pFont.
     CTextDialog(const char* text, font* currentFont, unsigned winType);
     CTextDialog(unsigned winType);
-    // Implicit destructor; CodeView dc 0x82068 compgenx.
+    // The destructor is implicit: Dreamcast's CTextDialog field list gives
+    // ~CTextDialog attributes 0x107 (public virtual, compgenx), just like
+    // ~CWaitForReadyPlayersDlg; explicit ~TDialogBox/~CAnimatedDlg have 0x007.
+    // Retail retains its generated body at 0x490770, while CAnimatedDlg's
+    // cleanup expands this empty layer and calls ~TDialogBox directly.
 
     // Before normalization (function): CTextDialog::ExitDialog.
     int exitDialog(message& msg);

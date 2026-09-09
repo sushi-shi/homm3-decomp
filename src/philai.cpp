@@ -666,15 +666,12 @@ int aiResourceCost(const playerData* player, const int* resources)
 }
 
 // E:\\gamedcs\\philai.cpp:1330. The player-id overload prices the row for
-// gpGame->players[player_id]; retail keeps the players-array walk inline
-// rather than routing through the playerData overload.
+// gpGame->players[player_id]. DC row 1331 positively calls the playerData
+// overload; retail expands that ordinary call into the exact retained walk.
+// The old duplicated loop confused an inline expansion with a source body.
 int aiResourceCost(long playerId, const int* resources)
 {
-    int value = 0;
-    for (int resource = 0; resource < NUM_RESOURCES; resource++)
-        value += resources[resource]
-            * g_game->m_players[playerId].m_ai.m_resourceValue[resource];
-    return value;
+    return aiResourceCost(&g_game->m_players[playerId], resources);
 }
 
 // E:\\gamedcs\\philai.cpp:1610. Dreamcast preserves this helper boundary,
@@ -907,20 +904,27 @@ inline long valueOfBank(const hero* currentHero, NewmapCell* cell)
     if (value <= -500000000)
         return value;
 
-    value += aiResourceCost(
-        &g_game->m_players[currentHero->m_owner], bank.m_resources);
+    // DC names the owner-id overload; its ordinary wrapper expands here.
+    // Retail retains the nested player-pointer overload in both early
+    // dispatcher expansions, but expands its loop in the retained bank body.
+    value += aiResourceCost(currentHero->m_owner, bank.m_resources);
 
     if (bank.m_rewardCreatures > 0)
         value += bank.m_rewardCreatures
             * g_creatureTypeTraits[bank.m_rewardCreature].m_aiValue;
 
-    // Dreamcast names vector<TArtifact>::size here, and Complete retains the
-    // same call even when value_of_bank itself expands into AI_value_of_event.
-    // Pin that source-real nested boundary, not the surrounding appraisal.
-#pragma inline_depth(0)
+    // DC names vector<TArtifact>::size. Retail expands it in this retained
+    // body but calls it in the two early dispatcher expansions. Removing the
+    // former shared fence makes this body exact and leaves aiValueOfEvent
+    // at 97.4610% (HIST 98.0336%); its first size expands while its second
+    // still calls. That first nested decision is the natural-inlining residual.
+    // Sixty bank/size/value lifetime states and
+    // eight resource-wrapper/caller controls do not resolve that split.
+    // The ordinary resource wrapper and owner-id call preserve the other
+    // helper boundaries; changing the caller alone with the duplicated
+    // wrapper loop costs a further 1.0735 points. Keep the canonical calls.
     value = bank.m_artifacts.size()
         * g_currentPlayer->m_ai.m_turnValueOfAvgArtifact + value;
-#pragma inline_depth()
     return value;
 }
 

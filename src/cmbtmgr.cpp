@@ -2278,7 +2278,12 @@ void combatManager::setupAndLoadObstacles()
 // and its named calls, but move the search/placement join. A guarded redraw
 // loop plus positive placement improves that probe to 97.7528%; moving the
 // first pick into do/while gives 88.8764% with an early failure return, and
-// sharing the count result gives at most 85.5955%. Keep the exact join.
+// sharing the count result gives at most 85.5955%. Those post-search
+// placement scopes differ from the successful-arm scope retained below.
+// Moving the one placement action and return into the matching-mask arm
+// removes the join at 100% (264 compiled bytes, nine references/addends).
+// Picker exhaustion still returns zero. This differs from breaking out and
+// then guarding the placement action, which gives 97.7528%.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
@@ -2288,22 +2293,20 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
     while (obstacleId >= 0) {
         if ((terrainMask & g_largeObstacleTerrainMasks[obstacleId * 34])
                 || (magicTerrainMask
-                    & g_largeObstacleMagicTerrainMasks[obstacleId * 34]))
-            goto found;
+                    & g_largeObstacleMagicTerrainMasks[obstacleId * 34])) {
+            int count = 0;
+            int i = 0;
+            const short* hex = &g_largeObstacleHexes[obstacleId * 34];
+            for (; i < 25 && *hex != -1; ++i, ++hex) {
+                m_cells[*hex].m_attributes |= 2;
+                ++count;
+            }
+            m_largeObstacleId = obstacleId;
+            return count;
+        }
         obstacleId = picker.pick();
     }
     return 0;
-
-found:
-    int count = 0;
-    int i = 0;
-    const short* hex = &g_largeObstacleHexes[obstacleId * 34];
-    for (; i < 25 && *hex != -1; ++i, ++hex) {
-        m_cells[*hex].m_attributes |= 2;
-        ++count;
-    }
-    m_largeObstacleId = obstacleId;
-    return count;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3105
@@ -3491,9 +3494,11 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // likewise measured +0 or worse.
 // Before normalization (locals): bResetLimitCreature, bShowSomePowEffect, attack_frames,
 // wince_frames, wince_start_offset, bFramesChanged.
-// Goto audit: replacing play_frame with the inverted frameCount continue
-// guard changes 96.2927% to 96.2378%. Keep the existing join pending a source
-// boundary/lifetime explanation for that instruction-layout difference.
+// The positive frameCount if/else removes play_frame while preserving all
+// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
+// Its true arm permits the common frame body; only the false arm skips it.
+// The inverted continue guard still scores 96.2378%, so guard polarity and
+// scope matter here even though the source operations are otherwise equal.
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -3612,9 +3617,11 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                             && winceStartOffset
                                 > stack.m_remainingFramesToPlay) {
                         if (attackFrames) {
-                            if (frameCount >= attackFrames - 1)
-                                goto play_frame;
-                            continue;
+                            if (frameCount >= attackFrames - 1) {
+                                // The attack threshold permits this frame.
+                            } else {
+                                continue;
+                            }
                         } else if (stack.m_currFrameType == cs_wince
                                 && stack.m_currFrameIndex
                                     >= stack.m_stdIcon->getNumFrames(
@@ -3623,7 +3630,6 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                         }
                     }
 
-play_frame:
                     if (stack.m_currFrameType != stack.m_nextFrameType) {
                         if (!isQuickCombat()) {
                             if (stack.m_showAttackFrames)

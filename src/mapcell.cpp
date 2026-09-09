@@ -4376,6 +4376,19 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // Four of the record's fields are read and thrown away - two 2-byte
 // landscape masks into one slot, and the object-group byte before the
 // overlay flag - and the record ends with sixteen discarded bytes.
+//
+// The full-width type read uses the native enum, then commits only after
+// the short-read guard. This is a Complete I/O-owner reconstruction, not
+// a recovered DC local: DC rows 3610..3614 reuse int_buffer (our value),
+// whose filename-length and extra-field uses remain. Row 3619 positively
+// reads the diagnostic type from the committed record. Direct field I/O
+// is not equivalent: a short read would partially change the destination.
+// Residual (99.9633%): native enum ownership changes 18 stack displacement
+// bytes, with unchanged instruction order, size and relocation targets. The 8-state
+// owner/query family and 9-state field-lifetime follow-up are exhausted;
+// the latter's best 99.9673% requires splitting the proven generic buffer
+// and adding phase scopes, so retain the simpler native local. No dummy
+// lifetime operations or substitute representation casts are introduced.
 VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
@@ -4447,22 +4460,16 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
         return -1;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    TAdventureObjectType objectTypeRead;
+    if (infile->read(&objectTypeRead, sizeof(objectTypeRead)) < sizeof(objectTypeRead))
         return -1;
-    union {
-        // Before normalization: raw.
-        unsigned long m_raw;
-        // Before normalization: typed.
-        TAdventureObjectType m_typed;
-    } convertedType;
-    convertedType.m_raw = value;
-    tempObjectType->m_objectType = convertedType.m_typed;
+    tempObjectType->m_objectType = objectTypeRead;
     if (usedDefaultMask) {
         sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
                 tempObjectType->m_imageName.c_str(),
-                g_adventureObjectNames[value]);
+                g_adventureObjectNames[tempObjectType->m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
