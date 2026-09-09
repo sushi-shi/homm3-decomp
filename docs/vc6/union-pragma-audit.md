@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
-| Inline override regions | 289 | 226 | 63 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 220 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 224 | 65 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 218 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 6 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 474 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 470 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 57 active inline overrides were removed; counting
-all 63 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 59 active inline overrides were removed; counting
+all 65 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -751,6 +751,24 @@ optimization level and rejects five faulty selection/range/scale/clamp controls.
 This retires soundmgr's last intervention. The current census is **226 inline
 overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, with **64 unions**.
 
+### Post-integration deletion recheck
+
+The fresh `d7f7be28` audit exhausts every single-region deletion and each
+whole-TU removal across 226 regions in 32 units. Individual results are
+219 loss-only, four mixed, two code-identical and one score-identical with
+different emitted code. The last is the already known untracked derived
+destructor consequence of removing the `CNewPlayerUpdateTask` fence; score
+identity alone does not validate its removal.
+
+Both newly byte-identical regions belong to `game::load`: the creature-bank
+`loadObjectVector` call and the final successful return. A separate four-state
+family tests unchanged, each individual deletion and their combination; all
+four produce one identical game object. Strict comparison confirms all 822
+sections, 5287 relocation destinations and function locations unchanged.
+Both directives are removed without changing any helper call, C++ statement
+or cleanup scope. The intervening `isLocalHuman` fence remains. The new census
+is **224 inline overrides** (218 depth-zero, six auto-inline-off) in **32 TUs**.
+
 ## Reproduction and verification
 
 The audit scripts generate analysis only; they do not adopt source, adjust the
@@ -897,7 +915,7 @@ source-family and CodeView behavior. Census and the native read's local
 
 The volume reference-binding checkpoint preserves **4063/4752 exact, 96.40%
 linked and 96.13% whole-image**. Full retail delinking and all gates pass;
-no score changes or MAX resets occur. The current census is **226 inline
+no score changes or MAX resets occur. That checkpoint's census is **226 inline
 overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, and **64 unions**.
 
 The later integration with main's `7e4a9aa8` preserves its Victor, victory
@@ -905,6 +923,12 @@ condition and support-TU recovery. Full delinking and all gates pass at
 **4073/4764 exact, 96.38% linked and whole-image**, with all 4764 functions
 now in 152 linked units and no additional MAX reset. This expanded denominator
 is not the older 149-unit linked score. The pragma/union census is unchanged.
+
+The joint Load fence removal preserves **4073/4764 exact and 96.38% linked
+and whole-image**. Full delinking and all gates pass, with no changed score,
+MAX reset or lost banked RVA. Production independently matches the complete
+game control object. The current census is **224 inline overrides** and
+**64 unions**; the depth-zero cleanliness bound is ratcheted to **218**.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

@@ -2030,7 +2030,7 @@ game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	448cf03c70c
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	685b08da3000
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	2ff7c6c12d06
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	93dcbdbb2edf
-game	?load@game@@QAEHPAVTAbstractFile@@@Z	81.2284	81.2284	92.4127	0xbcda0	859628cf006e
+game	?load@game@@QAEHPAVTAbstractFile@@@Z	81.2284	81.2284	92.4127	0xbcda0	9a817ea6bf4f
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	72bc38da6dfe
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	ec4d7df9d53a
 game	?loadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	9b61dbd40921

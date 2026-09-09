@@ -4009,9 +4009,10 @@ int game::load(TAbstractFile* infile)
     loadVector(infile, m_undergroundGateExits);
     loadVector(infile, m_undergroundGatePairs);
     loadVector(infile, m_universities);
-#pragma inline_depth(0)
+    // The creature-bank call and final return no longer need depth fences.
+    // The post-integration 226-site audit and joint four-state control
+    // preserve the entire game object, including every cleanup/call site.
     loadObjectVector(infile, &m_creatureBanks);
-#pragma inline_depth()
 
     if (!loadRecordedEvents(infile, saved.m_version))
         return -1;
@@ -4031,9 +4032,7 @@ int game::load(TAbstractFile* infile)
     setupAdjacentMons();
     aiExamineMap();
 
-#pragma inline_depth(0)
     return 0;
-#pragma inline_depth()
 }
 
 // Retail retains SCampaign's compiler-generated memberwise assignment

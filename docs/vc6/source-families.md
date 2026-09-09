@@ -1490,6 +1490,23 @@ negative controls change the selected setting, range, divisor, minimum or
 maximum and are all rejected. The host test does not assert Miles behavior,
 VC6 inlining or overflowing multiplication semantics.
 
+### Joint recheck of byte-neutral Load fences
+
+The complete post-integration deletion audit at `d7f7be28` finds two
+individually byte-neutral `game::load` fences. Before adopting them,
+`generate-redundant-load-fence-family.py` exhausts the four combinations in
+context `c37c4b8bdc6f290cfc35`: four scored states, one emitted object identity,
+one reproduced elite. This separate joint control prevents assuming that two
+individually inert directives are also inert together.
+
+The combined `87c339c85bd6535c153b4761` removes only the creature-bank
+`loadObjectVector` fence and the normal-return fence. Against the unchanged
+`3c3d0c896d77feef57c45b36`, strict raw comparison passes all 822 sections,
+5287 relocation destinations and function positions. Every game score stays
+fixed. Source statements, helper interfaces, return scopes and the remaining
+`isLocalHuman` directive are unchanged. The source generator records the
+pre-adoption anchors; the complete audit snapshots remain separate controls.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
