@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
-| Inline override regions | 289 | 224 | 65 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 218 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 223 | 66 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 217 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 6 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 470 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 468 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 59 active inline overrides were removed; counting
-all 65 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 60 active inline overrides were removed; counting
+all 66 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -941,6 +941,23 @@ still lose the retained network-copy body and lower the readiness caller.
 The census stays **224 overrides and 64 unions**. See the
 [source-family controls](source-families.md#compiler-generated-text-dialog-teardown)
 for the positive compiler-generated-member evidence and precise residual.
+
+The bank-resource checkpoint retires one further depth override and restores
+two canonical source calls: the ordinary player-ID resource-cost overload
+forwards to the pointer overload, and valueOfBank calls the ID overload as
+Dreamcast proves. The coupled boundary recovery itself preserves the complete
+philai object. Removing the shared size fence makes the retained bank exact;
+only the first dispatcher expansion now expands size where retail calls it.
+The second expansion and final bank call retain their proper boundaries.
+The caller's CUR moves 98.0336% to 97.4610%; MAX and HIST stay at 98.0336%.
+All other 125 emitted philai bodies remain byte-identical to the control.
+Sixty lifetime states and eight boundary controls are exhausted, and the
+actual-body native oracle passes both optimization levels and seven deliberate
+faults. Full delinking and all gates pass at **4074/4764 exact, 96.38% linked
+and whole-image**, with one raised checkpoint, no MAX reset and no lost banked
+RVA. The current census is **223 overrides** (217 depth-zero, six auto-inline-off)
+and **64 unions**. See the
+[bank controls](source-families.md#creature-bank-and-resource-cost-boundaries).
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

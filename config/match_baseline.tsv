@@ -2904,7 +2904,7 @@ philai	?aiResourceCost@@YIHJPBH@Z	100.0000	100.0000	100.0000	0x126cc0	8cea72fd35
 philai	?aiResourceCost@@YIHPBVplayerData@@PBH@Z	100.0000	100.0000	100.0000	0x126c70	0c059083c765
 philai	?aiSetHeroBonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760	52754eda6588
 philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd10	6ff6433de829
-philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@AAJ@Z	98.0336	98.0336	98.0336	0x128040	1e24942c08d4
+philai	?aiValueOfEvent@@YIJPBVhero@@Utype_point@@AAJ@Z	97.4610	98.0336	98.0336	0x128040	1e24942c08d4
 philai	?aiVisitBlackMarket@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	fd9d56f61b97
 philai	?aiVisitHillFort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	10d042793ba6
 philai	?aiVisitSirens@@YIHPBVhero@@AAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127ec0	06575943ebd8
@@ -2939,7 +2939,7 @@ philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x12
 philai	?soDGetSeerSkillValue@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630	b66ef27471fd
 philai	?unnamed526d20@@YIXHPAHH@Z	100.0000	100.0000	100.0000	0x126d20	5b6933d8719c
 philai	?upgradedCreatureType@game@@QBE?AW4TCreatureType@@W42@@Z	100.0000	100.0000	100.0000	0x129710	08838bd6da0f
-philai	?valueOfBank@@YIJPBVhero@@PAVNewmapCell@@@Z	92.2043	92.2043	100.0000	0x129920	3d4fb48d5d9d
+philai	?valueOfBank@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129920	84c4f7f43308
 philai	?valueOfCustomItem@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890	028487704084
 philai	?valueOfEnemyTown@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129cb0	b844dd4e43e5
 philai	?valueOfExperience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710	f85e5b13df7b
