@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
-| Inline override regions | 289 | 222 | 67 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 217 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 221 | 68 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 216 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 466 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 464 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 61 active inline overrides were removed; counting
-all 67 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 62 active inline overrides were removed; counting
+all 68 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -975,6 +975,26 @@ census is **222 overrides** (217 depth-zero, five auto-inline-off) and
 **64 unions**. See the
 [task and mouse controls](source-families.md#mouse-thread-lifetimes-and-inherited-task-teardown)
 for the explicit untracked-code and linker limitations.
+
+The fresh full deletion audit at `c78bb3c8` exhausts all **222 regions across
+32 TUs**: 219 loss-only and three mixed. There are no code-neutral, score-neutral
+or gain-only deletions. The mixed cases are the already bounded animated-dialog
+and mouse-thread helpers, and `readObject`'s seer insertion (a small caller gain
+but four exact retained STL bodies disappear). This bounds simple deletion at
+that source state, not further source recovery.
+
+That distinction matters in `type_sacrifice_window::updateSlot`: restoring
+Dreamcast's `getArtifact` accessor and first ordinary `updateArtifactWidget`
+call removes the override embedded in a pasted helper copy. All 55 scores stay
+fixed, and the **entire raw object** stays identical: 200 sections, 1678
+relocation destinations and every function position. The copied-body deletion
+control loses 100% to 99.1368%; the canonical boundary restores retail's nested
+`setVisible` call naturally. The six-state family and production both reproduce
+the byte-neutral result. The census is now **221 overrides** (216 depth-zero,
+five auto-inline-off) and **64 unions**. See the
+[sacrifice-slot controls](source-families.md#sacrifice-slot-helper-boundaries).
+Full delinking and all gates preserve **4074/4764 exact and 96.38%
+linked/whole-image**, with no matching-score or history changes.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
