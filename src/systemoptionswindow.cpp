@@ -533,9 +533,11 @@ __forceinline void TSystemOptionsWindow::updateSystemOptions(
 // Goto audit: Replacing consume jumps with direct returns scores
 // 92.3189% versus 94.3957%; retain the shared dispatch epilogue.
 // DC's nested right-click/ordinary-widget groups remove three consume gotos
-// without changing 94.3957%. A fuller exit/prefs-flag restoration reaches
-// 85.1339% with either flag-assignment form; its command-tail layout still
-// needs refinement, so the inner command joins are retained.
+// without changing 94.3957%. A separate prefsChanged result and positive
+// accepted-command scope remove two more joins at the same score. The
+// translated command label still admits commands that need no confirmation.
+// Combining this with an outer widget-code if dispatch falls to 85.1339%;
+// both byte and bool preference flags preserve the retained switch form.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message* msg)
 {
@@ -586,6 +588,7 @@ int TSystemOptionsWindow::windowHandler(message* msg)
                     || id == DIALOG_RETURN_SPLIT_ACCEPT)
                 goto translate_command;
 
+            bool prefsChanged = 1;
             switch (id) {
             case VIDEO_QUALITY_LOW:
             case VIDEO_QUALITY_HIGH: {
@@ -732,10 +735,12 @@ int TSystemOptionsWindow::windowHandler(message* msg)
                 break;
 
             default:
-                goto consume;
+                prefsChanged = 0;
+                break;
             }
 
-            updateSystemOptions(0);
+            if (prefsChanged)
+                updateSystemOptions(0);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
@@ -743,17 +748,16 @@ int TSystemOptionsWindow::windowHandler(message* msg)
         normalDialog(g_generalText->getText(
                          GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM),
             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
-            goto consume;
-
-    translate_command:
-        {
-            int command = msg->m_codeY;
-            msg->m_id = MESSAGE_WIDGET;
-            g_windowManager->m_dialogReturn = command;
-            msg->m_codeY = widget::WIDGET_END_DIALOG;
-            msg->m_codeX = widget::WIDGET_END_DIALOG;
-            return MESSAGE_DISPATCH_FORWARD;
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
+        translate_command:
+            {
+                int command = msg->m_codeY;
+                msg->m_id = MESSAGE_WIDGET;
+                g_windowManager->m_dialogReturn = command;
+                msg->m_codeY = widget::WIDGET_END_DIALOG;
+                msg->m_codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
         }
     }
 consume:

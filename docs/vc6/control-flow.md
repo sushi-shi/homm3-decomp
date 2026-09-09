@@ -39,6 +39,22 @@ partial switch rewrite need not remove every remaining exit at once: default
 and bonus arms can become structured while neutral cases still preserve a
 separate compressed-table destination. Record that narrower limit explicitly.
 
+A positive release scope resolves another apparent return-merging limit.
+`border::main` becomes exact and loses all three gotos when the mouse-hit and
+selected bodies are positive scopes and inactive handling retains its negative
+arm. `iconWidget::main` uses the corresponding positive scopes and canonical
+ordinary `setPalette`, removes five gotos, and reaches 99.9639%; only two
+scratch-register operands remain. Direct-return probes against the old negative
+release guard had missed both results. Keep the guard scopes in the family,
+not just the spelling of their exits.
+
+Switch labels also require independent semantic verification. The spell-work
+audit found wrongly grouped immunity destinations and hero resistance confined
+to one creature arm. Raw retail selector tables and DC calls establish the
+correct routes; behavioral negative controls catch those mistakes independently
+of the score. Restoring those routes and the original `IsMindSpell` header
+accessor removes seven jumps and raises 88.5071% to 96.6018%.
+
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /
 branch-shape** residual (not a register binding) and runs a guided oracle

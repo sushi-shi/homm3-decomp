@@ -35,7 +35,11 @@ retained slots favor aggregate score/exactness, with the rest covering specialis
 gains above the original baseline. Failed candidates are replaced by new
 combinations; a high failure count stops for inspection. Distinctness uses
 emitted code and named relocations, excluding timestamps, paths and VC6
-anonymous-namespace nonces. Report successful source candidates and distinct
+anonymous-namespace nonces. These scopes can originate in `.cpp` or `.h`;
+normalization retains the defining basename, type and full signature. The
+`TAutoStrPtr` header control reproduces with different compiler nonces, while
+changing its basename, type or constructor signature remains distinct.
+Report successful source candidates and distinct
 code results separately: several real C++ alternatives can compile identically.
 This identity is a search/reproduction metric, not an extra score normalization.
 The retained candidates must reproduce both their scores and that code identity.
@@ -1318,7 +1322,9 @@ in those two TUs is unchanged. The initial seven-unit context `4b5443e33ddcd7da2
 was rejected at opposite-corner reproduction: executable section bytes and
 scores reproduce, but five table/data units vary anonymous header identities
 or symbol placement. It is not counted as a successful search. The driver
-continues to reject those variations; no scoring/identity rule was weakened.
+rejected those variations in that context. Header path/nonce identity is now
+handled as described above; symbol-placement or code differences still fail
+reproduction. That historical failed context remains excluded from the totals.
 
 The shared native stream fixture imports the real record and initializer,
 also checking untouched generic default-initialization bytes, the four Conflux

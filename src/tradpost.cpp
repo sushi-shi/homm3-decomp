@@ -1920,25 +1920,24 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // else arm. Generated AST/flow/register searches found no source-backed
 // improvement; word decl-order swap measured byte-flat (2026-08-27). The
 // why-reg volatile proposal is intentionally rejected as a compiler hack.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - MEASURED AND
-// REJECTED, and the sweep's own signal is a false positive here.  The DC
-// block's three "Temp" locals (iTempMaxUnitsToTrade sp+0x34,
-// bTempLeftDenominated sp+0x30, iTempTradeRatio sp+0x20) are DECLARED AND
-// NEVER READ in the Dreamcast body - no instruction touches those slots -
-// so there is nothing for x86 to keep.  What the DC block DOES prove is the
-// word-ternary placement, and it loses: :1008..:1015 set only the two
-// quantities in the if/else and BOTH `(qty > 1) ? text[161] : text[162]`
-// lookups run after it at :1026 (wordLeft, into the temp at sp+0x2c) and
-// :1026 again (wordRight, sp+0x28).  Hoisting both ternaries out of the
-// arms exactly that way scores 85.8420 against 86.8746; adding the DC's
-// in-arm assignment order (qtyRight before qtyLeft in the true arm,
-// qtyLeft before qtyRight in the false arm) on top scores 84.3290.
-// Before normalization (locals): bUpdate.
-// Duplicating the decimal-format call into the reciprocal/unit branches
-// removes ratioDone but lowers 88.5391% to 86.8941%; the join remains.
+// DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
+// helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
+// using its outputs. Restore those function-scope Temp locals and the
+// canonical call. The ratio and denomination are read; only the maximum
+// is unused in this caller and disappears when VC6 expands the helper.
+// This removes ratioDone at unchanged 88.5391%, including all five TUs
+// that include tradpost.h. Branch-local output lifetimes are also neutral.
+// Earlier duplicated decimal-format calls scored 86.8941%; a do/while(0)
+// formatting scope scores 86.9674%. Keep the proven helper and its full
+// three-output contract instead of copied arithmetic in this caller.
+// Before normalization: bUpdate, iTempMaxUnitsToTrade,
+// bTempLeftDenominated, iTempTradeRatio.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::update(unsigned char update)
 {
+    int tempMaxUnitsToTrade;
+    int tempLeftDenominated;
+    int tempTradeRatio;
     message msg;
     msg.m_id = MESSAGE_WIDGET;
 
@@ -2114,36 +2113,13 @@ void TTradeResourceWindow::update(unsigned char update)
                     if (g_selectedArtifact == i) {
                         sprintf(g_text, (*g_generalText)[165]);
                     } else {
-                        float ratio = static_cast<float>(g_marketValues[i])
-                            / (static_cast<float>(g_marketValues[g_selectedArtifact])
-                               * g_tradingPostEfficency[g_marketCount]);
-                        // The two `sprintf(gText, "%d", n)` arms are ONE
-                        // source statement, reached from the n == 1 fall-
-                        // through and from the sub-unity ftol arm.  Written
-                        // as two separate statements (the shape this
-                        // replaces) VC6 folds n to the literal 1 in the
-                        // equal arm before C2 tail-merges them, so the merge
-                        // lands one instruction late - our `push 1` at
-                        // fn+0x795 with the ftol arm jumping to fn+0x797,
-                        // against retail's single `push eax` at fn+0x7d8
-                        // that the `je` and the ftol fall-through share.
-                        // One statement blocks the fold and reproduces
-                        // retail's block order (1/%d arm, ftol arm, shared
-                        // %d arm): 86.8746 -> 88.4300, call view DIFFERS ->
-                        // AGREE at 54/54 (2026-09-06, reloc census).
-                        long n;
-                        if (ratio >= 1.0f) {
-                            n = static_cast<long>(ratio + 0.5);
-                            if (n != 1) {
-                                sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), n);
-                                goto ratioDone;
-                            }
-                        } else {
-                            n = static_cast<long>(1.0f / ratio + 0.5);
-                        }
-                        sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
-                    ratioDone:
-                        ;
+                        computeTradeRatios(g_selectedArtifact, i,
+                            &tempTradeRatio, &tempLeftDenominated,
+                            &tempMaxUnitsToTrade);
+                        if (tempLeftDenominated || tempTradeRatio == 1)
+                            sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), tempTradeRatio);
+                        else
+                            sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), tempTradeRatio);
                     }
                 } else {
                     sprintf(g_text, g_emptyRolloverText);
@@ -3010,12 +2986,34 @@ void TSellCreatureWindow::update(bool update)
 // DC_ONLY. Only TSellArtifactWindow's and TSellCreatureWindow's
 // ComputeTradeRatios survive out of line (claimed below get_market_value).
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:2181
-DC_ONLY(0x18ad48, 0x140)  // inlined away on x86 (no carve slot)
-void TTradeResourceWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+// Before normalization: ComputeTradeRatios, iInTradeRatio,
+// bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
+// rounded ratios and the resource-limited maximum. Complete expands this
+// ordinary helper in Update; the discarded maximum then disappears.
+DC_ONLY(0x18ad48, 0x140)
+void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
+    int inRightResource, int* inTradeRatio, int* inLeftDenominated,
+    int* inMaxUnitsToTrade)
 {
-    // @stub
+    float ratio = static_cast<float>(g_marketValues[inRightResource])
+        / (static_cast<float>(g_marketValues[inLeftResource])
+           * g_tradingPostEfficency[g_marketCount]);
+    if (ratio >= 1.0f) {
+        *inLeftDenominated = 0;
+        *inTradeRatio = static_cast<long>(ratio + 0.5);
+        *inMaxUnitsToTrade =
+            g_currentPlayer->m_resources[inLeftResource] / *inTradeRatio;
+    } else {
+        *inLeftDenominated = 1;
+        *inTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
+        *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource];
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\tradpost.cpp:2202
 DC_ONLY(0x18ae88, 0x6C)  // inlined away on x86 (no carve slot)

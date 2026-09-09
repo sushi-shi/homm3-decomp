@@ -860,6 +860,13 @@ with HIST held at 100%. The current census is **227 inline overrides** and
 **64 unions** (38 source, 26 header). The neighboring narrow wire fields are
 not candidates for this four-byte read without changing their format contract.
 
+Integration with main's `06f2f4f7` widget, spell-immunity and control-flow
+recovery passes the full build at **4063/4752 exact, 96.40% linked and 96.13%
+whole-image**, with no further MAX reset or lost banked RVA. The 22 focused
+tests cover the native enum/market contracts and the newly integrated spell,
+source-family and CodeView behavior. Census and the native read's local
+99.9633% residual are unchanged.
+
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
 what must be recovered; they are not permissions to add new suppression pins.

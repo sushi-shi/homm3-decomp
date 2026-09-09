@@ -4946,9 +4946,10 @@ inline unsigned char validateIsHumanTeam(game* thisGame, int teamNum)
 // no arm spelling reaches it without paying the slot swap.
 // Before normalization (locals): check_map_locations, num_living_players, campaign_number,
 // vchero_loc, poolhero_loc, this_town, lchero_loc.
-// The validLossTown join remains: a town-validation result flag scores
-// 89.2426%, and explicit invalid-town arms score 87.7111%, against 90.0315%.
-// These are limits of the tested scopes, not proof of an original goto.
+// The final valid-town path can return directly at unchanged 90.0315%.
+// Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
+// result flag gives 89.2426%, so the two invalid-town joins remain.
+// These are limits of the tested scopes, not proof of original gotos.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
 void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
@@ -5130,10 +5131,9 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 goto invalid_loss_town;
         }
         if (owner != -1)
-            goto valid_loss_town;
+            return;
 invalid_loss_town:
         loss.m_type = -1;
-valid_loss_town:;
     }
 }
 

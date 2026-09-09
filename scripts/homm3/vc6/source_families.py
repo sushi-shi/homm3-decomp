@@ -36,7 +36,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 4
+VERSION = 5
 
 
 @dataclass(frozen=True)
@@ -65,10 +65,11 @@ def digest(data):
 
 def identity_symbol(name):
     # VC6 anonymous-namespace scope contains the absolute input path AND a
-    # fresh numeric nonce on each invocation. Preserve the TU basename,
+    # fresh numeric nonce on each invocation. The defining file may be a
+    # header (TAutoStrPtr in creaturetype). Preserve that file's basename,
     # semantic name and full suffix; omit only that non-code identity salt.
     # This is a diversity/reproduction metric, never a scoring normalization.
-    return re.sub(r'@\?%[^@]*[\\/]([^\\/@]+\.cpp)\d+@', r'@?%\1@', name)
+    return re.sub(r'@\?%[^@]*[\\/]([^\\/@]+\.(?:cpp|h))\d+@', r'@?%\1@', name)
 
 
 def code_identity(payload):
