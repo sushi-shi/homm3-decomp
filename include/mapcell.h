@@ -1007,7 +1007,6 @@ extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 // CODEVIEW(E:\gamedcs\mapcell.cpp:2951, dc 0xf0df4) int NewfullMap::readHeroData(void* infile, CObject* heroObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3229, dc 0xf151c) int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3290, dc 0xf16c8) int NewfullMap::readObject(void* infile, CObject* tempObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3443, dc 0xf1b1c) int NewfullMap::saveObject(void* outfile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3476, dc 0xf1bf8) int NewfullMap::loadObject(void* infile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3514, dc 0xf1cd8) int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3658, dc 0xf22cc) int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType);

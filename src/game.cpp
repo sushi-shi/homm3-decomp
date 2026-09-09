@@ -1375,7 +1375,7 @@ int game::loadSignPool(TAbstractFile* infile)
 
     m_signs.resize(count);
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (loadString(infile, &m_signs[i].m_signText) < 0)
+        if (loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -1398,7 +1398,7 @@ int game::saveSignPool(TAbstractFile* outfile)
         return -1;
 
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (saveAbstractString(outfile, &m_signs[i].m_signText) < 0)
+        if (saveString(outfile, m_signs[i].m_signText) < 0)
             return -1;
 
         count = m_signs[i].m_hasText;
@@ -2966,29 +2966,35 @@ int game::getGeneratorId(int x, int y, int z)
 }
 
 // E:\gamedcs\game.cpp:2492
-#pragma auto_inline(off)
+// DC a7414 records count and separate read/result-test statements at
+// 2496/2497 and 2505/2506. Restoring that local removes the old auto-inline
+// fence while preserving the complete game object. Removal without count
+// instead expands loadString into loadSignPool/loadRumours and loses both
+// exact callers; no assertion is needed for this reader.
 VA(0x004bb990, 0x1CF)
-int __fastcall loadString(TAbstractFile* infile, std::string* value)
+int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     short length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        *value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -3002,20 +3008,6 @@ int game::GetGarrisonId(int x, int y, int z)
 // E:\gamedcs\game.cpp:2448
 DC_ONLY(0xa7320, 0xF2)
 void GenerateStandardFileName(char* cLongName, char* cRetName)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2492
-DC_ONLY(0xa7414, 0xF8)
-int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2531
-DC_ONLY(0xa750c, 0xC2)
-int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
 {
     // @stub
 }
@@ -3047,34 +3039,42 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 #endif  // @carcass
 
 // The Dreamcast roster calls this game::saveString (dc 0xa750c), paired
-// with game::loadString above. Retail lowers both helpers as free /Gr
-// functions. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
+// with game::loadString above: both static methods take string references.
+// Retail's /Gr ABI is compatible with that declaration, not evidence of
+// free-function ownership. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
 // map-cell serializers independently corroborate the writer at 0x4bbb60.
 // EXACT 2026-08-22: the direct transcription matches all code bytes;
 // only the allocation and pooled-empty-string relocation names differ.
-// The fence is part of the match: without it VC6 expands this exact body
-// into SaveSignPool and SaveRumours, while retail calls it out of line.
-#pragma auto_inline(off)
+// DC a750c records count and separate write/result-test statements at
+// 2535/2536 and 2545/2546. Its leading gap 2532 permits the meaningful
+// outfile precondition below, not proof of the original ASSERT spelling.
+// Negative controls: either count alone or verification alone still expands
+// saveString into saveSignPool/saveRumours (100 -> 6.5/18.895).
+// Together they remove the fence and preserve all game-object bytes and
+// relocation destinations, including NewSMapHeader::save's retained call.
 VA(0x004bbb60, 0xBB)  // caller tree + dc 0xa750c
-int __fastcall saveAbstractString(TAbstractFile* outfile, std::string* text)
+int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
-    short length = text->length();
+    HOMM3_RELEASE_VERIFY(outfile != 0);
+    int count;
+    short length = s.length();
 
-    if (outfile->write(&length, sizeof(length)) < sizeof(length))
+    count = outfile->write(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        strcpy(buffer, text->c_str());
-        if (outfile->write(buffer, length) < length)
+        strcpy(buffer, s.c_str());
+        count = outfile->write(buffer, length);
+        if (count < length)
             return -1;
         delete[] buffer;
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 // anchor-caller game::Save (0x4be3f0) + the string helper: this body
 // calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
@@ -3095,7 +3095,7 @@ int game::saveRumours(TAbstractFile* outfile)
     unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
-    int saveResult = saveAbstractString(outfile, &currentRumour);
+    int saveResult = saveString(outfile, currentRumour);
     if (0 > saveResult)
         return -1;
 
@@ -3108,7 +3108,7 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
-        if (saveAbstractString(outfile, &rit->m_text) < 0)
+        if (saveString(outfile, rit->m_text) < 0)
             return -1;
         boolBuffer = rit->m_unavailable;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -3133,7 +3133,7 @@ int game::loadRumours(TAbstractFile* infile)
     unsigned char value;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         current;
-    if (loadString(infile, &current) < 0)
+    if (loadString(infile, current) < 0)
         return -1;
 
     strcpy(m_currentRumour, current.c_str());
@@ -3146,7 +3146,7 @@ int game::loadRumours(TAbstractFile* infile)
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
-        if (loadString(infile, &it->m_text) < 0)
+        if (loadString(infile, it->m_text) < 0)
             return -1;
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
@@ -6888,10 +6888,10 @@ bool game::loadMap(TAbstractFile* mapFile)
     for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
          ++rumour) {
         std::string throwAway;
-        int result = readMapString(mapFile, &throwAway);
+        int result = NewSMapHeader::readString(mapFile, throwAway);
         if (result < 0)
             return false;
-        result = readMapString(mapFile, &rumour->m_text);
+        result = NewSMapHeader::readString(mapFile, rumour->m_text);
         if (result < 0)
             return false;
         rumour->m_unavailable = 0;
@@ -7801,9 +7801,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (readMapString(infile, &m_mapName) < 0)
+    if (readString(infile, m_mapName) < 0)
         return -1;
-    if (readMapString(infile, &m_mapDescription) < 0)
+    if (readString(infile, m_mapDescription) < 0)
         return -1;
 
     unsigned char ucharBuffer;
@@ -8078,9 +8078,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(boolBuffer))
         return -1;
 
-    if (saveAbstractString(outfile, &m_mapName) < 0)
+    if (game::saveString(outfile, m_mapName) < 0)
         return -1;
-    if (saveAbstractString(outfile, &m_mapDescription) < 0)
+    if (game::saveString(outfile, m_mapDescription) < 0)
         return -1;
 
     ucharBuffer = m_difficulty;
@@ -8150,7 +8150,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
             std::string s;
             s = player->m_nonRandomHeroCustomName;
-            if (saveAbstractString(outfile, &s) < 0)
+            if (game::saveString(outfile, s) < 0)
                 return -1;
         }
     }
@@ -8284,9 +8284,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (loadString(infile, &m_mapName) < 0)
+    if (game::loadString(infile, m_mapName) < 0)
         return -1;
-    if (loadString(infile, &m_mapDescription) < 0)
+    if (game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
     if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
@@ -8369,7 +8369,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
                 loadSavedHeroId(infile, saveVersion);
-            loadString(infile, &strTemp);
+            game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
             player->m_nonRandomHeroCustomPortrait = -1;
@@ -8478,29 +8478,35 @@ int NewSMapHeader::get(const char* path, const char* filename,
 // Map-format strings use a dword length, unlike saved-game strings. Retail
 // treats nonpositive and sentinel-sized values as empty and otherwise keeps
 // the temporary allocation alive on a short payload read.
-#pragma auto_inline(off)
-VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit length protocol
-int __fastcall readMapString(TAbstractFile* infile, std::string* value)
+// DC NewSMapHeader::readString, b1110, records count at 7236/7237 and
+// 7245/7246. Restoring that local removes the auto-inline fence with the
+// entire game object unchanged. Flattening the reads loses the retained
+// readString calls in NewSMapHeader::read and game::loadMap. The boundary
+// row 7232 is borrowed from the preceding function, so no ASSERT is inferred.
+VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit protocol, dc 0xb1110
+int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     int length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0 && length < 0xffff) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        *value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 

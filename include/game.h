@@ -42,16 +42,12 @@ enum EDayOfWeek {
 
 #include "seerhut.h"
 
-int __fastcall loadString(TAbstractFile* infile, std::string* value);
-// Map-format strings use a 32-bit length and live in the later game.cpp
-// helper at 0x4c6010 (distinct from saved-game loadString's short length).
-int __fastcall readMapString(TAbstractFile* infile, std::string* value);
 // 0x4ba1c0, 80 B, in a compiland this tree has not admitted. One stream byte
 // masked to 0xff, -1 for the 0xff sentinel, and on the oldest map format two
 // campaign ids remapped (0x80 -> 0x92, 0x81 -> 0x9c) - which is what makes
 // the second argument the map version rather than anything of the file's.
 // Reached from readHeroData; the NAME is invented from that role, on
-// readMapString's own precedent.
+// the former role-derived string-reader name's precedent.
 // Before normalization (function): ReadHeroId.
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 // 0x4ba210, 80 B. The save-record twin uses the Complete-roster version
@@ -319,61 +315,42 @@ public:
     // Before normalization (function): NewfullMap::GetNumLevels.
     int getNumLevels() { return m_hasTwoLevels + 1; }
 
-    // THE TWO MAP-SQUARE ACCESSORS (DC MapCell.h:895/906).
-    //
-    // cell(type_point) has NO retail body - the DC row at dc 0x1f9f4 is the
-    // WinCE build's out-of-line copy of a header inline - so it is a header
-    // inline for EVERY compiland and its expansion leaves behind the call
-    // to the three-scalar form.
-    //
-    // cell(int,int,int) is a header inline too, and MEASURED so: modelling
-    // it as a declaration-only member with one out-of-line definition -
-    // which its real 49-byte retail body at 0x408770 invites - costs the
-    // tree 3091 -> 3058 exact functions and 95.12% -> 94.77% fuzzy, because
-    // sixteen compilands expand the `(z*Size + y)*Size + x` lookup on a
-    // 38-byte stride in place. The retail COMDAT is what an inline's
-    // out-of-line copy looks like when one TU's call sites decline it.
-    //
-    // COMPILE-REQUIRED FORK, and the only surviving one. advmgr.cpp is that
-    // TU: it defines the 0x408770 COMDAT itself under `auto_inline(off)`,
-    // which is a redefinition (C2084) unless the body is hidden there. That
-    // pin is load-bearing, not cosmetic - letting advmgr take the header
-    // inline and pair the COMDAT the compiler then still emits costs
-    // thirteen rows in that unit, DoAdvCommand 94.2359 -> 78.3433,
-    // ProcessHover 91.6263 -> 88.1523, DrawAdvObjShadow 85.2335 -> 82.1711,
-    // DrawUnderlay 92.7034 -> 89.6562, and DrawBoatPart/DrawBoatPartShadow
-    // off 100.0000 (measured 2026-09-05).
-    //
-    // The SECOND arm of this fork is RETIRED: philai.cpp and seerhut.cpp
-    // used to take the same declaration-only spelling for cell(int,int,int)
-    // while keeping the packed-point wrapper. It was buying nothing in
-    // philai - get_value_of_spring 76.6104 -> 100.0000 and get_value_of_well
-    // 75.2436 -> 100.0000 without it - and in seerhut it bought one row,
-    // SetDefaultText 98.3426 -> 93.0020, by imposing an inline decision the
-    // source cannot express. Net +2 exact functions; max/hist keep the peak.
-#ifdef HOMM3_NEWFULLMAP_CELL_OUTOFLINE
-    NewmapCell* cell(int x, int y, int z);
-#else
-    NewmapCell* cell(int x, int y, int z)
-    {
-        return &m_cellData[(z * m_size + y) * m_size + x];
-    }
-#endif
 private:
-    // DC MapCell.h:847, dc 0xbc8dc: canonical const map-index helper.
+    // DC MapCell.h:847/850: const zCell precedes mutable zCell. Both are
+    // private header helpers. The mutable helper's 82 SH4 bytes are not a
+    // second x86 size: its arithmetic emits the same 49 bytes as 0x408770.
     const NewmapCell* zCell(int x, int y, int z) const
     {
         return m_cellData + x + y * m_size + z * m_size * m_size;
     }
+    NewmapCell* zCell(int x, int y, int z)
+    {
+        return m_cellData + x + y * m_size + z * m_size * m_size;
+    }
 public:
-    // DC MapCell.h:889, dc 0xbc930: forwards to the private zCell helper.
+    // DC MapCell.h:889/895/906: const, mutable, packed-point wrappers.
+    // All TUs see these canonical inline definitions; no per-TU body fork.
     const NewmapCell* cell(int x, int y, int z) const
     {
         return zCell(x, y, z);
     }
+    NewmapCell* cell(int x, int y, int z)
+    {
+        // DC 896 has no row before zCell at 897. This real storage
+        // precondition is a release-verification hypothesis, not ASSERT text.
+        // It retains cell's exact 0x408770 copy for advmgr callers without
+        // the old auto-inline pin. Negative control: remove it and only
+        // zCell emits the 49-byte body; the claimed cell copy disappears.
+        // Wider coordinate/initialized-map checks also retain the copy but
+        // change more caller expansions. Caller collateral is tracked at
+        // the 0x408770 claim; the helper and source calls stay canonical.
+        HOMM3_RELEASE_VERIFY(m_cellData != 0);
+        return zCell(x, y, z);
+    }
     NewmapCell* cell(type_point point)
     {
-        return cell(point.m_x, point.m_y, point.m_z);
+        // DC 907 calls zCell directly, not the scalar cell wrapper.
+        return zCell(point.m_x, point.m_y, point.m_z);
     }
     // Before normalization (function): NewfullMap::Load.
     int load(TAbstractFile* infile, int size, unsigned char twoLayers,
@@ -421,7 +398,8 @@ public:
     // Before normalization (function): NewfullMap::Init.
     void init(int size, unsigned char twoLayers);
     int loadObject(TAbstractFile* infile, CObject* object);
-    int saveObject(TAbstractFile* outfile, CObject* object);
+    // DC mapcell.cpp:3449, f1b1c: the serialized object is a reference.
+    int saveObject(TAbstractFile* outfile, CObject& tempObject);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
     int readObjectType(TAbstractFile* infile, CObjectType* objectType);
     int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
@@ -1378,6 +1356,10 @@ public:
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
     // Before normalization (function): NewSMapHeader::Read.
     int read(TAbstractFile* infile, int campaignMap);
+    // DC game.cpp:7236, b1110: readString has two parameters, no this,
+    // and a string reference. Retail 0x4c6010 uses the compatible /Gr
+    // two-register ABI and a dword length, unlike game's short protocol.
+    static int __fastcall readString(TAbstractFile* infile, std::string& s);
     // Complete's map-condition reader keeps the Dreamcast method identity;
     // its payload width depends on the map format stored in this header.
     int readVictoryCondition(char type, TAbstractFile* infile);
@@ -1772,22 +1754,6 @@ struct TBlackMarket {
     TArtifact m_artifacts[7];
 };
 SIZE(TBlackMarket, 0x1c);
-
-// THIS CLAIM NAMES NOTHING, and that is enumerated debt, not an
-// NAME FINDING. `SaveAbstractString` looks like an invention. The
-// Dreamcast CodeView dump names this pair game::loadString /
-// game::saveString (dc 0xa7414 / 0xa750c); retail makes both free /Gr
-// functions, which is why the reconstructed reader in game.cpp is
-// spelled `loadString` and not `game::loadString`; and every comment in
-// this tree that mentions 0x4bbb60 - in game.cpp and four times in
-// mapcell.cpp - already calls it saveString. Renaming this declaration
-// and its three call sites rewrites a mangled symbol in two base
-// objects, so it is a separately measurable change and is deliberately
-// not bundled into the implementation claim in game.cpp.
-// Before normalization (function): SaveAbstractString.
-int __fastcall saveAbstractString(
-    TAbstractFile* outfile,
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >* text);
 
 // `mine` and `generator`, two of the four object-pool element types.
 // The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
@@ -2863,6 +2829,12 @@ public:
     int loadSignPool(TAbstractFile* infile);      // 0x4b9070
     // Before normalization (function): game::SaveSignPool.
     int saveSignPool(TAbstractFile* outfile);     // 0x4b9270
+    // DC game.cpp:2492/2531, a7414/a750c: loadString/saveString are
+    // static game methods taking a string reference, not invented free
+    // helpers. Complete replaces the void* gz stream with TAbstractFile*;
+    // its two-register /Gr ABI does not contradict the static membership.
+    static int __fastcall loadString(TAbstractFile* infile, std::string& s);
+    static int __fastcall saveString(TAbstractFile* outfile, std::string& s);
 private:
     // Before normalization (function): game::SaveRumours.
     int saveRumours(TAbstractFile* outfile);      // 0x4bbc20
@@ -3806,8 +3778,6 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 // CODEVIEW(E:\gamedcs\game.cpp:2405, dc 0xa710c) int game::GetMineId(int x, int y, int z);
 // CODEVIEW(E:\gamedcs\game.cpp:2419, dc 0xa71b4) int game::GetGeneratorId(int x, int y, int z);
 // CODEVIEW(E:\gamedcs\game.cpp:2433, dc 0xa7278) int game::GetGarrisonId(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\game.cpp:2492, dc 0xa7414) int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s);
-// CODEVIEW(E:\gamedcs\game.cpp:2531, dc 0xa750c) int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s);
 // CODEVIEW(E:\gamedcs\game.cpp:2564, dc 0xa75d0) int game::SaveRumours(void* outfile);
 // CODEVIEW(E:\gamedcs\game.cpp:2607, dc 0xa77c8) int game::LoadRumours(void* infile);
 // CODEVIEW(E:\gamedcs\game.cpp:2654, dc 0xa795c) int game::SaveBlackMarkets(void* outfile);

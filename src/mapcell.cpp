@@ -130,8 +130,8 @@ VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (
 int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
     std::string ignored;
-    readMapString(infile, &ignored);
-    readMapString(infile, &m_message);
+    NewSMapHeader::readString(infile, ignored);
+    NewSMapHeader::readString(infile, m_message);
 
     if (infile->read(m_resQty, sizeof(m_resQty)) < sizeof(m_resQty))
         return -1;
@@ -255,7 +255,7 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 VA(0x004fc6a0, 0xC8)  // order-map: callers loadTimedEventList + loadTownEventList (inlined TTownEvent::Load), calls loadString 0x4bb990, dc 0xebbbc
 int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 {
-    if (loadString(infile, &m_message) < 0)
+    if (game::loadString(infile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -1683,7 +1683,7 @@ int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
 VA(0x004fee50, 0xBC)  // order-map: calls readString 0x4c6010; callers exactly readArtifact/readSpellScroll/readResource/readBlackBox (DC-isomorphic), dc 0xede58
 int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 {
-    readMapString(infile, &treasure->m_message);
+    NewSMapHeader::readString(infile, treasure->m_message);
 
     // Before normalization (locals): char_buffer.
     unsigned char charBuffer;
@@ -1754,7 +1754,7 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
     m_customTreasure.resize(count);
     for (int i = 0; i < m_customTreasure.size(); ++i) {
         TreasureData& treasure = m_customTreasure[i];
-        loadString(infile, &treasure.m_message);
+        game::loadString(infile, treasure.m_message);
 
         unsigned char hasGuardians;
         if (static_cast<unsigned>(infile->read(&hasGuardians, 1)) < 1)
@@ -2390,7 +2390,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // file-local static for the same reason loadMonsterData is.
 static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
 {
-    loadString(infile, &thisTreasure->m_message);
+    game::loadString(infile, thisTreasure->m_message);
 
     unsigned char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2917,7 +2917,7 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
     Sign tempSign;
     char padding[4];
 
-    if (readMapString(infile, &tempSign.m_signText) > 0)
+    if (NewSMapHeader::readString(infile, tempSign.m_signText) > 0)
         tempSign.m_hasText = 1;
 
     g_game->m_signs.push_back(tempSign);
@@ -3041,7 +3041,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (charBuffer) {
         // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
-        readMapString(infile, &tempMonster.m_message);
+        NewSMapHeader::readString(infile, tempMonster.m_message);
 
         // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
         // predict-inline says retail CALLS basic_string::_Tidy once here and
@@ -3130,7 +3130,7 @@ int NewfullMap::saveMonsterList(void* outfile)
 // sign-extended.  That final read carries no short-read gate in retail.
 static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
-    loadString(infile, &thisMonster->m_message);
+    game::loadString(infile, thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value;
@@ -3351,7 +3351,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
-        readMapString(infile, &tempTown.m_name);
+        NewSMapHeader::readString(infile, tempTown.m_name);
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -4450,28 +4450,39 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 }
 
 // E:\gamedcs\mapcell.cpp:3443
-#pragma auto_inline(off)
+// DC f1b1c records int count, char char_buffer, unsigned short ushort_buffer,
+// and a CObject reference. The four writes and result tests are distinct
+// statements at 3450/3451, 3456/3457, 3462/3463, 3468/3469. Preserve the
+// plain-char conversion and count local: together they remove the former
+// auto-inline fence with all mapcell-object bytes/relocations unchanged.
+// Negative controls: deleting the fence, count alone, or char alone expands
+// saveObject into saveMapObjects, taking its exact caller to 55.4453%.
+// The 3443 boundary is borrowed; no release assertion is inferred from it.
 VA(0x00503640, 0x8D)  // order-map: leaf twin of loadObject 0x5036d0; sole caller saveMapObjects 0x504a40 (DC-isomorphic), dc 0xf1b1c
-int NewfullMap::saveObject(TAbstractFile* outfile, CObject* tempObject)
+int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
-    unsigned char value = tempObject->m_x;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    int count;
+    char value = tempObject.m_x;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    value = tempObject->m_y;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject.m_y;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    value = tempObject->m_z;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject.m_z;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    unsigned short typeIndex = tempObject->m_typeIndex;
-    if (outfile->write(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    unsigned short typeIndex = tempObject.m_typeIndex;
+    count = outfile->write(&typeIndex, sizeof(typeIndex));
+    if (count < sizeof(typeIndex))
         return -1;
     return 0;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\mapcell.cpp:3476
 VA(0x005036d0, 0xA4)  // order-map: leaf twin of saveObject 0x503640; sole caller loadMapObjects 0x504b70 (DC-isomorphic), dc 0xf1bf8
@@ -4740,7 +4751,7 @@ VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> help
 int NewfullMap::loadObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
 {
-    loadString(infile, &tempObjectType->m_imageName);
+    game::loadString(infile, tempObjectType->m_imageName);
 
     char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -5076,7 +5087,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
         return -1;
 
     for (i = 0; i < m_objects.size(); ++i) {
-        if (saveObject(outfile, &m_objects[i]) < 0)
+        if (saveObject(outfile, m_objects[i]) < 0)
             return -1;
     }
     return 1;
