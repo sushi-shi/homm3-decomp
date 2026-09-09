@@ -1670,6 +1670,80 @@ linked/whole-image**. Only updateSlot's source hash changes in the matching
 ledger; no score, MAX or HIST changes. The cleanliness bound drops to 216
 depth-zero overrides.
 
+### Creature-bank table owners and ordinary level reader
+
+`generate-bank-table-owner-family.py` replaces two incorrectly file-scoped
+`const int` tables and the reward enum adapter with the source-owned tables.
+NB11's `guard_types` (type `0x5601`) and `reward_types` (`0x5602`) are mutable
+`TCreatureType[11][5]` and `[11]` statics belonging to loader procedure
+`0x7112c`. This is positive storage/type evidence, not a line-gap inference.
+The hash-verified retail image puts their 55 and 11 dwords in writable `.data`
+at `0x6702a0` and `0x67037c`. Preserve zero-initialized padding after guard
+sentinels rather than inventing extra creature entries.
+
+Six consumed creature names come from DC's actual enum: four added members
+and two moved atomically from AI's separate enum into canonical TCreatureType.
+The initial unscored opposite corner exposed the two duplicate names; that
+manifest was repaired before continuing. Corrected context
+`7db5f64e100e77ef33ce` reproduces both states across all **95 header consumers**
+and **4117 scored functions**. Control `ed35dc233ed5555e0bfbe8a9` and native
+candidate `24e6bf9987f4beff9cd1a45f` change only three tracked RMG scores:
+quest-creature generation 100% → 99.7349%, loadTemplates 80.8461% → 80.8308%,
+and writeMapHeader 77.8952% → 77.9030%. Their bodies' source hashes are
+unchanged, so MAX/HIST retain all prior peaks. All three bank scores stay flat.
+
+The stricter raw-object comparison passes **90 of 95 entire objects**.
+Creature-bank moves the tables from `.rdata` into `.data`; all fourteen
+emitted function bodies remain byte-identical. Three TUs (creaturetype,
+spelldefs, herodefs) retain identical function bytes/named references but
+shuffle anonymous-namespace BSS; **same-source reproduction also shuffles
+those BSS layouts**, so do not attribute that variation to the enum edit.
+RMG preserves all 441 function positions and section extents, with actual
+body-byte changes confined to the same three scored functions. No object
+rewriter or new scoring normalization is involved.
+
+`verify-bank-table-owners.py` independently checks NB11 procedure ownership,
+exact enum dimensions, emitted local-static mangled owners, writable section
+placement and **all 66 dwords**. It passes on the selected object and production,
+rejects the old file-static control, and rejects six non-mutating byte/order/
+extent negative controls. Before the reader recovery, candidate/production
+also match all 29 raw sections and 101 relocation destinations exactly.
+
+DC's ordinary static `initialize_creature_bank_level` (`0x70fe0`, source
+line 32) takes `type_creature_bank_level&` and `const vector<char*>&`; the
+loader calls it at line 136 after installing the guard/reward types. Restore
+that real body before its caller, not a false inline declaration or pasted
+reader. `generate-bank-level-boundary-family.py` crosses four meaningful
+column-cursor lifetimes plus the pasted control with unsigned/signed guard
+indices. Retail's guard-copy `jl` positively supports the signed index.
+Context `c601a370d5246188c67a` exhausts and reproduces all ten states/objects.
+Selected `f9671c7898dc10b79eeb7727` uses the DC cursor from column two and
+advances past each guard count before its zero test: **89.4550% → 97.5355%**.
+Both other tracked bank functions remain 100%. The signed-index-only
+negative control gives 88.8910%, demonstrating why an isolated score dip
+does not reject a source fact. Production reproduces all 28 raw sections,
+100 relocation destinations and function positions of the chosen object.
+
+All fifteen named calls now agree with retail, including the recovered
+string `_Eos` expansion, and all twelve branches agree. The remaining two
+CFG size differences are the guard-copy inductions: VC6 forms a destination
+minus source bias where retail keeps two cursors and a counter. A string
+byte-store address also exchanges commutative operands. This is a measured
+residual, not bank-TU closure or a request for a new suppression pragma.
+
+`homm3.vc6.test_bank_level_boundary` imports both actual bodies, with only a
+fixture entry counter added. At `-O0` and `-O2`, eleven numeric patterns across
+four resource conditions check null/short input disposal, the retail threshold
+of thirteen rows, all 44 level records, exact row and parsed-cell order, guard
+sentinels, seven resources, artifacts and the reward count's signed-byte zero
+test. Seven negative controls are rejected. The mock is a bounded behavioral
+oracle, not proof of retail ABI or compiler inlining.
+
+Full delinking/build passes at **4073/4764 exact, 96.39% linked fuzzy and
+96.38% whole-image**. One bank checkpoint rises; no MAX resets or banked
+RVA losses occur. The audit now has **63 unions** (37 source, 26 header),
+including 39 remaining reconstruction adapters, and **221 inline overrides**.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
