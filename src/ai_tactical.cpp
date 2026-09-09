@@ -364,48 +364,23 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, c
 }
 
 // E:\gamedcs\ai_tactical.cpp:342
-// EXACT 2026-08-08 (75.5 -> 95.9 -> 100.0) by two shapes already in
-// the ledger, applied one after the other:
-//   1. DUP-EXIT. The three disabled-counter guards are separate ifs
-//      that GOTO INTO THE THIRD ONE'S BODY. Written as a single `||`
-//      chain our CL sinks the value/10 block past the whole war-machine
-//      chain and inverts the last test; retail lays it out immediately
-//      after the third `test`, with its own epilogue, which is what the
-//      goto form emits (75.5 -> 95.9).
-//   2. THREE-OPERAND SELECTOR. The war-machine tail is one `?:`, not an
-//      if plus a trailing return: only the merged pseudo puts the /5
-//      quotient in edx with a closing `mov eax,edx`, exactly as retail
-//      has it, while the /10 quotient stays in eax. An if/return pair
-//      cannot produce two different homes for two magic divides in the
-//      same body (95.9 -> 100.0).
-// Tried and rejected: the `!= 0` spelling of the || chain, an if/else
-// with the remainder in the else arm, hoisting `value` into a named
-// local, three plain ifs each returning value/10 (84.0), inverting the
-// guard so the rest nests positively (75.5), `value /= 10; return
-// value;` (75.5), and on the tail `value /= 5; return value;`, a named
-// quotient and a braced if/else (all 95.9).
+// DC 0x3cae4 lines 343, 347-350 and 354 call get_simple_attack_effect,
+// IsIncapacitated and cannot_attack. Their canonical bodies all expand here
+// under VC6 /Ob2; restoring all three preserves 100% and removes both gotos.
+// The old direct return/10 probe scored 88.1132% with the copied helper prefix;
+// the eight helper-boundary combinations all reproduce the current TU scores.
+// Keep the final ?: selector: the /5 quotient uses EDX while /10 uses EAX;
+// the historical if/return tail control only reached 95.9%.
 // Before normalization (locals): current_army, our_total, enemy_total, enemy_flags.
-// Goto audit: Replacing both disabled jumps with return value / 10 scores
-// 88.1132% versus 100%; retain the shared quotient-return block.
 VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
 long type_AI_combat_parameters::getRangedAttackValue(const army* currentArmy, const army* enemy)
 {
-    long ourTotal = currentArmy->getTotalHitPoints(0);
-    long enemyTotal = enemy->getTotalHitPoints(0);
-    long value = getSimpleAttackEffect(currentArmy, ourTotal, enemy, enemyTotal, 1, 0);
+    long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
     if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
         return value;
-    if (enemy->m_spellInfluence[62])
-        goto disabled;
-    if (enemy->m_spellInfluence[70])
-        goto disabled;
-    if (enemy->m_spellInfluence[74]) {
-disabled:
+    if (enemy->isIncapacitated())
         return value / 10;
-    }
-    unsigned char enemyFlags = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 21);
-    return ((enemyFlags & 1) == 0 && enemy->m_creatureType != CREATURE_FIRST_AID_TENT
-                    && enemy->m_creatureType != CREATURE_AMMO_CART
+    return (!enemy->cannotAttack()
                     && enemy->getAITarget() != 0
                     && enemy->getAITargetTime(enemy->getSpeed()) <= 5)
             ? value / enemy->getAITargetTime(enemy->getSpeed())

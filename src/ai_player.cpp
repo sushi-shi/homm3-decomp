@@ -3793,15 +3793,16 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // Recovering that order and exit reaches 86.50% from the old 83.62%.
 //
 // Retail adds army arrangement to DC's early exits, sharing one exit block
-// for the guards and retaining a separate ordinary completion call. The
-// scoped body and common arrange label reproduce those two call sites and
-// reach 97.71%. Individual arrange/return pairs at every DC guard produced
-// five epilogues (76.55%); the former nested positive guards retained an
-// unnecessary slots test and could not reproduce the shared exit topology.
-// Residual (97.71%): two consolidation reloads schedule in reverse order,
-// and the final split loop retains currentArmy in ECX where retail reloads
-// it at the call. Separate empty-stack/shooter continue guards in that loop
-// are byte-flat. Earlier census-counter naming probes did not fix allocation.
+// for the guards and retaining a separate ordinary completion call. A scoped
+// do/while(0) calculation removes all six gotos and improves 97.7143% to
+// 98.8238%. Each split loop breaks on exhausted slots, then propagates that
+// real result to the enclosing calculation. Keeping the ordinary completion
+// call separate preserves retail's two arrangement paths.
+// Negative controls: one unconditional arrangement after the calculation
+// scores 94.3714%; nested positive guards remove four gotos but stay at
+// 97.7143%. Per-guard arrange/return copies previously scored 76.55%.
+// Residual: consolidation reload scheduling and final split-loop homing;
+// keep the canonical aiConsolidateArmy boundary and reference local.
 // Before normalization (locals): current_hero, enemy_hero, open_slots, enemy_shooter_count,
 // enemy_shooter_value, enemy_max_value, hero_shooter_value, hero_nonshooter_count,
 // splits_needed.
@@ -3813,10 +3814,10 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
     armyGroup& currentArmy = currentHero->m_army;
     aiConsolidateArmy(&currentArmy);
 
-    {
+    do {
         int openSlots = 7 - currentArmy.getNumArmies();
         if (openSlots <= 0) {
-            goto arrange;
+            break;
         }
         int enemyShooterCount = 0;
         int enemyShooterValue = 0;
@@ -3853,13 +3854,15 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
                 openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                          openSlots);
                 if (openSlots == 0) {
-                    goto arrange;
+                    break;
                 }
             }
         }
 
+        if (openSlots == 0)
+            break;
         if (enemyShooterCount == 0) {
-            goto arrange;
+            break;
         }
         long heroShooterValue = 0;
         long walkerCount = 0;
@@ -3876,14 +3879,14 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         }
 
         if (heroShooterValue >= enemyShooterValue) {
-            goto arrange;
+            break;
         }
         int splitsNeeded = (enemyShooterCount
             - heroShooterValue * enemyShooterCount
                 / enemyShooterValue
             + 1) / 2 - walkerCount;
         if (splitsNeeded <= 0) {
-            goto arrange;
+            break;
         }
         if (splitsNeeded < openSlots)
             openSlots = splitsNeeded;
@@ -3896,12 +3899,13 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
             openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
                                    openSlots);
             if (openSlots == 0)
-                goto arrange;
+                break;
         }
+        if (openSlots == 0)
+            break;
         aiArrangeArmy(&currentArmy);
         return;
-    }
-arrange:
+    } while (0);
     aiArrangeArmy(&currentArmy);
 }
 

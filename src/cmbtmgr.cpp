@@ -4272,8 +4272,9 @@ not_blocked:
 //     is nested inside `if (defender)` rather than hoisted;
 //   * the one-death and many-death arms are SHARED between the
 //     defender and no-defender paths (one EH state each, 5 and 6, not
-//     two), which is what puts the goto in - writing them inside both
-//     arms of the `if (defender)` duplicates them.
+//     two). A stackWipedOut flag keeps one shared formatting scope and
+//     removes the former goto at 100%; copying the formatting into both
+//     defender arms would duplicate its EH states.
 // The `deaths == 1` test is written twice in source and retail only
 // emits it once on the no-defender path: VC6 jump-threads the second
 // copy from 0x469c34 straight into the singular arm because it already
@@ -4306,13 +4307,14 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     if (deaths > 0) {
         std::string deathText;
         const char* name;
+        bool stackWipedOut = false;
         if (defender) {
             name = defender->getName(deaths);
             if (defender->is(1u << 6)) {
                 deathText = formatString(
                     g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
                     name);
-                goto have_death_text;
+                stackWipedOut = true;
             }
         } else {
             if (deaths == 1)
@@ -4320,14 +4322,15 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
             else
                 name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
         }
-        if (deaths == 1)
-            deathText = formatString(
-                g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
-        else
-            deathText = formatString(
-                g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
-                deaths, name);
-have_death_text:
+        if (!stackWipedOut) {
+            if (deaths == 1)
+                deathText = formatString(
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+            else
+                deathText = formatString(
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                    deaths, name);
+        }
         message += deathText;
     }
 

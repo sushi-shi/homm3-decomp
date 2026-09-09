@@ -3685,21 +3685,14 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
 // it, so the appraisal is what declines - and that is why retail's `jle`
 // target and the human DECLINE's `je` target are the same epilogue.
 //
-// THE `goto` IS LOAD-BEARING AND THE MEASUREMENT IS WORTH KEEPING. The
-// obvious spelling - write CreatureBankEvent out longhand in both arms and
-// let VC6 cross-jump them, the lean-to lever - produces the RIGHT CONTROL
-// FLOW and the wrong registers: 84.4943%, every instruction paired, with
-// `cell` and `current_hero` transposed across EBX/EDI for the whole body
-// and one extra `mov eax,[cell]` because the freed EBX went to
-// `human_player`. The second call site is an extra reference to each
-// argument, and that flips C2's pseudo CREATION order, which is what the
-// ESI/EDI/EBX first-fit walk consumes (docs/vc6/regalloc.md). One call
-// site reached by `goto` restores retail's order - 84.49 -> 100 - and the
-// Dreamcast agrees from the other side: its line table puts
-// CreatureBankEvent on ONE line (events.cpp:1699, dc 0x92ee4) reached from
-// both arms. So: when retail's merged tail is entered by an unconditional
-// `jmp` that SKIPS an intervening test, that is a source `goto`, not a
-// cross-jump - a cross-jump would have had to re-test.
+// The canonical CreatureBankEvent call stays at the common tail. Guarding
+// AI_value_of_event with !humanPlayer removes the goto and keeps all 232
+// bytes exact, with either a compound test or nested scope. DC lines
+// 1685/1696/1699 support the human/AI branch and common event call.
+// Negative controls: moving the whole human branch outside the bank-state
+// test scores 86.1954%; duplicated event calls previously scored 84.4943%
+// by swapping cell/currentHero register roles. Those failures do not prove
+// an original source goto; the single-call guarded form is exact.
 // Before normalization (locals): current_hero, human_player.
 VA(0x004a2140, 0xE8)  // jump-table arm 0x19 + CreatureBankEvent, dc 0x92dec
 void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
@@ -3721,12 +3714,10 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                      2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
-        goto fight;
     }
 
-    if (aiValueOfEvent(currentHero, point) <= 0)
+    if (!humanPlayer && aiValueOfEvent(currentHero, point) <= 0)
         return;
-fight:
     creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
                       humanPlayer);
 }
@@ -5048,9 +5039,10 @@ void advManager::doEventResource(NewmapCell* cell, hero* currentHero,
 // wrong shape (hero and payload locals hoisted, the award test inlined,
 // the guard reordered, nested ifs) and the best of them reached 89.01.
 //
-// The three `goto`s are retail's own: each is an unconditional jump that
-// SKIPS the remaining award tests, which is the merged-tail-by-goto
-// signature this file already records for the dragon city.
+// DC 2877/2894 assigns the primary-skill fallback to the named award;
+// 2886/2902 then tests that value in independent ifs. This source model,
+// including is_in_spellbook, is exact with either guard polarity. VC6
+// threads the known award values into the former three unconditional jumps.
 // Before normalization (locals): current_hero, human_player.
 VA(0x004a4dc0, 0x263)  // jump-table arm 0x51 + advevent.txt 115, dc 0x951f4
 void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
@@ -5058,35 +5050,36 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
 {
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
-    int award = info->getScholarAward();
+    ScholarAwards award = info->getScholarAward();
     if (award == const_scholar_spell) {
-        int spell = info->getScholarSpell();
-        if (!currentHero->m_inSpellbook[spell]
-            && g_spellTraits[spell].m_level <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-            && currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        SpellID spell = info->getScholarSpell();
+        if (currentHero->isInSpellbook(spell)
+            || g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
+            || !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            award = const_scholar_primary_skill;
+        } else {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_SCHOLAR),
                              1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
             currentHero->addSpell(spell);
-            goto pick_up;
         }
-    } else if (award == const_scholar_secondary_skill) {
+    }
+    if (award == const_scholar_secondary_skill) {
         int skill = info->getScholarSecondarySkill();
-        if (currentHero->giveSS(skill, 1)) {
+        if (!currentHero->giveSS(skill, 1)) {
+            award = const_scholar_primary_skill;
+        } else {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_SCHOLAR),
                              1, -1, -1, 0x14,
                              currentHero->m_skillLevel[skill] + skill * 3 + 2,
                              -1, 0, -1, 0, -1, 0);
-            goto pick_up;
         }
-    } else if (award != const_scholar_primary_skill) {
-        goto pick_up;
     }
 
-    {
+    if (award == const_scholar_primary_skill) {
         int primary = info->getScholarPrimarySkill();
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -5095,7 +5088,6 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
         currentHero->adjustPrimarySkill(primary, 1);
     }
 
-pick_up:
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
@@ -5693,6 +5685,8 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 // accept-path goto to the shared resource label is byte-flat at 83.0357%,
 // and the guided catalog finds no legal mutation, so the natural form stays.
 // Before normalization (locals): current_hero, human_player.
+// Goto audit: two direct GiveExperience/return arms lose 2.3095 points;
+// the common experience join remains closer in this compiler context.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
@@ -6809,6 +6803,8 @@ void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
 // rather than emitting it twice; writing them out longhand is what lets
 // our CL find the same merge.
 // Before normalization (locals): current_hero, human_player.
+// Goto audit: copying the common refusal dialog into the known-skill arm
+// loses 47.2917 points; retain the join pending a better source model.
 VA(0x004a8080, 0x1A5)  // linkorder + GlobalInfoFlags[WitchHutInfo], dc 0x97dc8
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
@@ -7889,6 +7885,8 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
 // outcomes: the town is already friendly and is simply entered, the town
 // is hostile but undefended and changes hands without a fight, or it is
 // defended and a combat decides it.
+// The two artifact-transport wins can own checkEndGame(0) and return;
+// VC6 merges them with the common end-game tail exactly as retail does.
 VA(0x004aafd0, 0x431)  // linkorder + GetTownId/DoCombat pair, dc 0x99eb0
 void advManager::townEvent(NewmapCell* cell, type_point point,
                            // Before normalization (locals): human_player.
@@ -7905,7 +7903,10 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
         if (thisTown->m_owner == g_netLocalGamePos
                 && g_game->m_mapHeader.m_victoryCondition
                        .checkForArtifactTransportWin(currentHero, point))
-            goto end_game;
+        {
+            checkEndGame(0);
+            return;
+        }
         if (humanPlayer)
             thisTown->view(0);
         else
@@ -7929,7 +7930,10 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
         m_advWindow->updateTownLocators(-1, 1, 1);
         if (g_game->m_mapHeader.m_victoryCondition
                 .checkForArtifactTransportWin(currentHero, point))
-            goto end_game;
+        {
+            checkEndGame(0);
+            return;
+        }
         if (humanPlayer)
             thisTown->view(0);
         else
@@ -7980,7 +7984,6 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     currentHero->checkLevel();
     g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
     g_game->m_mapHeader.m_victoryCondition.checkForTotalResources();
-end_game:
     checkEndGame(0);
 }
 

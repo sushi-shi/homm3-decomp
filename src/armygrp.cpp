@@ -606,60 +606,21 @@ const std::bitset<9>& armyGrpFn0044A460()
 // hero bypasses resistance; artifact 0x31 in the field_c bit-10 family
 // when creature trait 0x400 is absent; base
 // chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
-// DC-CENSUS VERDICT (2026-08-14), and it is a NEGATIVE worth recording because
-// the row looked like a certainty. The census gives this body
-// `hero::IsWieldingArtifact` x11 against the EIGHT sites spelled here, and the
-// residual note below already said retail duplicates four sites we merge - so
-// the shared `check_protection_artifact` label was the obvious missing supply
-// (7 + 4 = 11 exactly). It is not: un-sharing all six pendant arms into their
-// own `IsWieldingArtifact(...) -> return 0.0f` costs 88.5071 -> 84.9089, and
-// un-sharing the three simple arms (berserk / lightning+chain / hypnotize)
-// costs 83.1929. The shared label is strictly closer, so the DC count is a
-// port difference, not a missing site.
-// The census's other row, `IsMindSpell` x1 (E:\gamedcs\SpellDefs.h:345,
-// dc 0x4fd34) against the `field_c >> 10 & 1` test below, also costs: 88.0464
-// as a folded expression AND 88.0464 with the local shift preserved inside the
-// helper, so the 0.46 is the call SITE, not the helper's internals.
-// CURRENT RESIDUAL (88.5071%): retail pushes each shared pendant id before
-// jumping to the common artifact call, while this compile keeps the id in
-// EAX and pushes it at the tail; four zero-return sites merge here but are
-// duplicated in retail. The 0.8 path also jumps to the shared resistance
-// tail where retail falls through, and the otherwise equivalent prologue
-// differs only in instruction scheduling. All selector semantics and the
-// 104-block retail action ordering are recovered.
-// Selector-source audit (2026-08-21): `int` in place of EArtifactId is
-// byte-flat, including when declared at the top of the function; `volatile
-// int` forces a stack home but regresses to 83.2375%. A file-static inline
-// artifact-check helper at all six arms is normalized to the already-tested
-// unshared spelling and reproduces its 84.9089% score. The type, declaration
-// placement and a source helper therefore cannot select retail's earlier
-// `push imm` cross-jump boundary.
-// Register/source-carrier audit (2026-08-21): the DC body has no named locals,
-// and why-reg's two apparent homing wins do not survive the byte verdict:
-// `volatile spellFlags` scores 87.26071% and `volatile chance` 87.685715%.
-// A conventional release VERIFY of the natural `target_hero != 0` invariant
-// is byte-flat at 88.50714%, both once at the common artifact label and once
-// in each of the six source arms. VERIFY remains possible source history, but
-// it cannot select retail's early pushes or its four additional return bodies.
-// Residual (88.5071%): a TAIL-MERGE DEGREE difference, measured both ways.
-// Retail emits 19 `ret 8` exits against our 15 and 63 branches against our
-// 57, and every surplus retail exit is a full inline `fld <0.0f> / pop edi /
-// pop esi / pop ebx / mov esp,ebp / pop ebp / ret 8` where this compile
-// cross-jumps to one shared copy. Both sides share the same jump table
-// (byte selector + `cmp eax,0x36 / ja`), the same arm layout, and the same
-// per-arm tests; the only structural difference is how many of the
-// `return 0.0f;` epilogues C2 chose to merge.
-// The six protection-artifact arms show the second half of the same fact:
-// retail ends each with `push <artifact> / jmp <shared call>` while the
-// shared `protectionArtifact` variable used here ends them with
-// `mov eax,<artifact> / jmp` and pushes the register once at the join.
-// TRIED AND REJECTED (2026-08-21): rewriting all six arms as their own
-// `if (target_hero && ...IsWieldingArtifact(<literal>)) return 0.0f;` -
-// which does produce retail's per-arm `push <literal>` - costs 3.60
-// (88.5071 -> 84.9089), because VC6 then declines to cross-jump ANY of the
-// six call+test tails and duplicates the whole return path six times, and
-// it moves target_hero out of EBX into EDI for the rest of the body. The
-// shared-variable form is the closer of the two.
+// Residual (88.5071%): the canonical IsWieldingArtifact sites retain the
+// shared pendant call, but retail pushes each constant before joining while
+// VC6 keeps the selector in a register and pushes at the join. Several zero
+// return epilogues also merge here where retail duplicates them.
+// Goto audit: Dispel can return 1.0f directly at the same score. The
+// proposed post-switch artifact selector cannot keep the old Dispel jump
+// across its initialization (VC6 C2362). Splitting declaration/assignment
+// compiles, but with the separate Dwarf resistance expression it scores
+// 83.1607%, so those seven joins remain. Failed compiles are not scores.
+// Historical controls: six separate pendant tests scored 84.9089%, and
+// duplicating only the Berserk/Lightning/Hypnotize tests scored 83.1929%.
+// A synthesized inline artifact-check helper reproduced the lower result;
+// no such helper is retained. Integer selector type/declaration placement
+// alone was neutral. The IsMindSpell wrapper's earlier 88.0464% result is a
+// remaining canonical-boundary lead, not evidence against the DC call.
 // Before normalization (locals): target_army_type, casting_hero, target_hero.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* castingHero, const hero* targetHero)
@@ -675,7 +636,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (targetHero
             && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
-        goto certain;
+        return 1.0f;
     }
     if (attrs & g_ctaSiegeWeapon) {
         if (spellRec->m_flags & 0x1000)
@@ -843,7 +804,6 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             }
         }
         if (spellRec->m_karma > 0) {
-certain:
             return 1.0f;
         }
         if (chance < 0.0f)
