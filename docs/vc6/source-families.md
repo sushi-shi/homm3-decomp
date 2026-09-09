@@ -1696,3 +1696,69 @@ rows and all historical peaks survive; no unchanged-source MAX is lowered.
 The existing 200 inline-depth pins are unchanged. These results preserve
 source structure through measured header collateral and leave the wider
 map/campaign recovery queue open.
+
+### Campaign read buffers and map-save result lifetimes
+
+The follow-up starts at `028e1b09` with a clean, full-build checkpoint.
+`SCampaign::load` is Complete-only: the full Dreamcast roster has no matching
+procedure. Retail's six unsigned counts/identifiers use dword loads followed
+by masks after one- or two-byte reads. That is not proof of an int source
+buffer. `generate-campaign-load-buffer-family.py` exhausts 64 independent
+width combinations in `906a2aed32d636cfd8eb`: two distinct emitted identities,
+both reproduced, and **no score changes in any tracked function**. Keep the
+narrow buffers; replay this historical-width control at `028e1b09`.
+
+The useful alternative is lexical lifetime. Retail gives the modern scenario
+fields distinct scratch homes, and the previously removed synthetic scalar
+helpers left isolated read/assignment blocks. The generator
+`generate-campaign-load-lifetime-family.py` tests named locals in their real
+enclosing prefix/loop scopes for four groups, plus separate days/score scopes.
+All 32 states compile, nine objects reproduce in `20be28ec9c6caccae8c7`.
+Candidate `3937da971249f1010a4be6b1` (`scopes-11010`) raises the loader from
+50.8734% to **52.7064%**, with every sibling unchanged. It names the leading,
+scenario and artifact buffers; count buffers keep their existing scopes and
+days/score remain in the loop scope. It preserves the complete legacy arm.
+
+The emitted modern artifact-pool and hero-pool shrinking paths now retain
+additional vector size calls. The first two clear/erase workers, implicit
+legacy array iterator, legacy string assignment and most nested size calls
+still disagree with retail. The result is partial recovery; the historical
+79.2531% remains a lead. No constructor body, scalar helper or pragma is added.
+The native oracle imports the actual modern arm and every generated arm,
+checks versions 28/35/36 for all 256 leading byte values, empty and populated
+vectors, exact read-size order, campaign remapping, signed artifact/assigned
+words and completion-flag widening. Five incorrect controls fail. It does
+not claim host layout or legacy-construction coverage.
+
+`NewfullMap::Save` has stronger source evidence: dc:0xecdf8 names function-scope
+`int count` and assigns each ordinary helper result before its negative test.
+The Complete seer/quest loops still belong in the caller. DC's static
+`TSeerHut::SaveSeerList` (0x12d7e8) uses the global list and checks per-record
+save results; retail uses the current map and ignores those results. This
+semantic contradiction rules out restoring that older helper interface.
+
+`generate-map-save-lifetime-family.py` exhausts 24 combinations of result
+assignment, list-count sharing, unsigned loop-index scope and final failure
+check in `a58ef16d0c060ff7bba4`. Sixteen objects are distinct; ten retained
+candidates reproduce. The adopted `d929d6f793d422be39225cf3` restores the DC
+result local and spells the final negative-result check explicitly, reaching
+**35.5206% from 32.1267%**, with every sibling unchanged. Count assignment
+alone is neutral; the explicit tail supplies the gain. Sharing the two
+Complete list-count buffers is worse, and a shared loop index adds no gain.
+The early list size queries and both event-list helper expansions remain
+unresolved. The native oracle imports the actual driver and all 24 variants,
+checks each helper failure, both layers, short/negative write results, ignored
+quest-write and seer-save results, serialized counts, and list growth during
+saving. Four incorrect controls fail. Both adopted-state generators require
+an exact round trip through their finite family before admitting the body.
+
+The combined full checkpoint passes all 149 units, fresh retail delinking and
+every gate. Exactly the two intended CUR rows improve; all 4,752 ledger rows,
+all historical peaks and every unchanged-source MAX survive. Executable
+matching remains 95.04% at the displayed precision, with 3,940/4,751 exact
+functions, 4,788 canonical definitions and the same 200 existing pins.
+All 73 relevant tests pass. Production customcampaign and mapcell objects
+match their reproduced candidates in executable section bytes, relocation
+destinations and function-symbol locations: respectively 391/312 sections,
+1,930/1,862 relocations and 344/274 function locations. The broader recovery
+queue remains open.

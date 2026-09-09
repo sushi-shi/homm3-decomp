@@ -1037,23 +1037,44 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 // helper boundaries; the two loops and their asymmetric error checks now
 // live here without pins. Retail retains the seer size calls at
 // Save+0x224/+0x246 and the quest size calls at +0x254/+0x26e/+0x297.
+// DC names the function-scope result `count` and assigns every helper's
+// return before testing it; retain that source local and the final explicit
+// negative-result check. The 24-state result/count/index/tail family gives
+// 16 emitted objects and raises 32.1267% to 35.5206% with no sibling change.
+// Sharing the two Complete count buffers with the result is worse (33.6747%);
+// a shared unsigned loop index is score-neutral. Count assignment itself is
+// neutral, but is positive DC source evidence, so keep it.
+// DC's TSeerHut::SaveSeerList (0x12d7e8) is a static one-argument method
+// using the global list and checking per-seer save results. Retail instead
+// uses this+0x60 and discards each save result, contradicting that interface.
+// Do not restore the old global helper or invent a replacement boundary.
+// Residual: early list size queries remain calls and both event-list helpers
+// expand where retail retains calls. The explicit final check only improves
+// the resulting tail; it does not close those named inline boundaries.
 VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
 int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 {
-    if (saveMapLayer(outfile, size, 0) < 0)
+    int count;
+    count = saveMapLayer(outfile, size, 0);
+    if (count < 0)
         return -1;
     if (twoLayers) {
-        if (saveMapLayer(outfile, size, 1) < 0)
+        count = saveMapLayer(outfile, size, 1);
+        if (count < 0)
             return -1;
     }
-    if (saveMapObjects(outfile) < 0)
+    count = saveMapObjects(outfile);
+    if (count < 0)
         return -1;
 
-    if (saveBlackBoxList(outfile) < 0)
+    count = saveBlackBoxList(outfile);
+    if (count < 0)
         return -1;
-    if (saveTreasureList(outfile) < 0)
+    count = saveTreasureList(outfile);
+    if (count < 0)
         return -1;
-    if (saveMonsterList(outfile) < 0)
+    count = saveMonsterList(outfile);
+    if (count < 0)
         return -1;
 
     {
@@ -1070,9 +1091,13 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
             m_questGuardList[i].save(outfile);
     }
 
-    if (saveTimedEventList(outfile) < 0)
+    count = saveTimedEventList(outfile);
+    if (count < 0)
         return -1;
-    return saveTownEventList(outfile) >= 0 ? 0 : -1;
+    count = saveTownEventList(outfile);
+    if (count < 0)
+        return -1;
+    return 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies

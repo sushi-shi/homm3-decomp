@@ -1321,7 +1321,7 @@ customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	0652a4942adf
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	0dccac502696
 customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9868	53.9868	80.9474	0x88880	49d69307bc8d
-customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	50.8734	50.8734	79.2531	0x8a310	f49ccdd67590
+customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	52.7064	52.7064	79.2531	0x8a310	b4f666eb0d76
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	1be04c1bd184
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	c3dd1f3789da
 customcampaign	?markCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	a9e18c59e852
@@ -2608,7 +2608,7 @@ mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	10
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000	5be95ca8858e
 mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	79.8193	79.8193	95.1600	0x1019f0	608f32af63d8
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50	0edee2a0e567
-mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	32.1267	32.1267	93.7123	0xfdf40	e066c92b5c00
+mapcell	?save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	35.5206	35.5206	93.7123	0xfdf40	c875d2b3b932
 mapcell	?save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440	63ef37c3d2db
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0	ca9a07590867
 mapcell	?saveMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490	7aeb1f991933

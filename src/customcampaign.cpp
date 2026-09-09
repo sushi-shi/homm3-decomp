@@ -2997,8 +2997,9 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // helpers still expand where retail retains calls. The 69.5768% trace
 // has caller cb 1816, budget 3632: the legacy iterator costs 49 with budget
 // 63, and modern leading size() costs 42 with budgets 78..125.
-// String assignment already stops at the correct by-length worker; the
-// old diagnosis of an expanded _Grow there was stale.
+// That older trace retained the string by-length worker. In the current
+// source model the legacy assignment expands _Grow and calls _Eos again;
+// the earlier trace does not describe this residual boundary.
 // Earlier probes that extracted arbitrary portions of legacy promotion
 // into new helpers changed the budget but did not prove source boundaries.
 // Keep field promotion, real STL helpers, std::fill for the seven missing
@@ -3006,7 +3007,20 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // The former readCampaignByte/readCampaignWord wrappers had no DC or retained
 // retail body. Their sole caller owns the virtual reads: 0x48a310's modern
 // arm reads into narrow locals and then promotes each value into its field.
-// Restore those scoped operations here instead of claiming invented helpers.
+// Restore the read/assign operations here instead of claiming invented helpers.
+//
+// Controlled recovery (2026-09-09): the 64 combinations of six widened,
+// masked read buffers produce two emitted identities but no score change.
+// Thus retail's dword-and-mask instructions do not prove an int source
+// buffer. Keep narrow buffers. A 32-state lexical-lifetime family gives
+// nine objects; named leading/scenario/artifact buffers in their enclosing
+// scopes raise 50.8734% to 52.7064%, with every sibling score unchanged.
+// Separately scoping days/score and flattening the count-buffer scopes do
+// not improve that retained state. Native wire-format checks exercise all
+// 32 states, versions 28/35/36, byte conversions, signed artifact/assigned
+// words, remapping, vector contents and the exact read-size sequence.
+// Residual: both leading erase workers and the legacy array iterator still
+// expand; most nested vector size calls and legacy string boundaries remain.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
@@ -3109,11 +3123,9 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         return;
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_isCheater = value != 0;
-    }
+    unsigned char cheaterByte;
+    infile->read(&cheaterByte, sizeof(cheaterByte));
+    m_isCheater = cheaterByte != 0;
     if (saveVersion >= 26) {
         unsigned char value;
         infile->read(&value, sizeof(value));
@@ -3121,34 +3133,24 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     } else {
         m_secretActive = false;
     }
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_currentMap = value;
-    }
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_currentCampaign = value;
-    }
+    unsigned char currentMapByte;
+    infile->read(&currentMapByte, sizeof(currentMapByte));
+    m_currentMap = currentMapByte;
+    unsigned char campaignByte;
+    infile->read(&campaignByte, sizeof(campaignByte));
+    m_currentCampaign = campaignByte;
     if (saveVersion < 36
             && m_currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
         m_currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_numMapRegions = static_cast<signed char>(value);
-    }
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_crossoverArrayIndex = value;
-    }
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_briefingChoice = static_cast<signed char>(value);
-    }
+    unsigned char regionByte;
+    infile->read(&regionByte, sizeof(regionByte));
+    m_numMapRegions = static_cast<signed char>(regionByte);
+    unsigned char crossoverByte;
+    infile->read(&crossoverByte, sizeof(crossoverByte));
+    m_crossoverArrayIndex = crossoverByte;
+    unsigned char briefingByte;
+    infile->read(&briefingByte, sizeof(briefingByte));
+    m_briefingChoice = static_cast<signed char>(briefingByte);
 
     m_campaignFilename = readLengthPrefixedString(infile);
     if (saveVersion >= 36) {
@@ -3168,11 +3170,9 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     rMapScores.resize(count);
     for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            scenario.m_completed = value != 0;
-        }
+        unsigned char completedByte;
+        infile->read(&completedByte, sizeof(completedByte));
+        scenario.m_completed = completedByte != 0;
         int days;
         infile->read(&days, sizeof(days));
         scenario.m_days = days;
@@ -3180,16 +3180,12 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         infile->read(&score, sizeof(score));
         scenario.m_score = score;
 
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            scenario.m_completeOrder = static_cast<signed char>(value);
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            scenario.m_index = static_cast<signed char>(value);
-        }
+        unsigned char completeOrderByte;
+        infile->read(&completeOrderByte, sizeof(completeOrderByte));
+        scenario.m_completeOrder = static_cast<signed char>(completeOrderByte);
+        unsigned char scenarioIndexByte;
+        infile->read(&scenarioIndexByte, sizeof(scenarioIndexByte));
+        scenario.m_index = static_cast<signed char>(scenarioIndexByte);
     }
 
     {
@@ -3223,17 +3219,13 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
             union { int m_integer; TArtifact m_artifact; } artifactValue;
-            {
-                short value;
-                infile->read(&value, sizeof(value));
-                artifactValue.m_integer = value;
-            }
+            short artifactIdWord;
+            infile->read(&artifactIdWord, sizeof(artifactIdWord));
+            artifactValue.m_integer = artifactIdWord;
             artifactPool[whichArtifact].m_artifactId = artifactValue.m_artifact;
-            {
-                short value;
-                infile->read(&value, sizeof(value));
-                artifactPool[whichArtifact].m_extra = value;
-            }
+            short artifactExtraWord;
+            infile->read(&artifactExtraWord, sizeof(artifactExtraWord));
+            artifactPool[whichArtifact].m_extra = artifactExtraWord;
         }
     }
 
