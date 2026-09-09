@@ -1,5 +1,6 @@
 """Behavioral controls for the near-exact RMG selector's lifetime matrix."""
 from pathlib import Path
+import os
 import shutil
 import subprocess
 import tempfile
@@ -40,6 +41,23 @@ class PrototypePolishTests(unittest.TestCase):
         program = ["#include <vector>\n#include <bitset>\n#include <stdexcept>\n",
                    (self.root / "include/terrain_type.h").read_text(), "\n"]
         bodies = list(dict.fromkeys(body for branches in (False, True) for _, body in self.module.bodies(branches)))
+        bodies += [option["replace"] for option in generator(
+            "generate-rmg-prototype-receiver-family.py").variants(self.source)]
+        if os.environ.get("HOMM3_PROTOTYPE_SELECTOR_MANIFEST"):
+            from homm3.vc6 import source_families
+            payload, originals, axes = source_families.load_manifest(
+                Path(os.environ["HOMM3_PROTOTYPE_SELECTOR_MANIFEST"]), self.root)
+            helper = generator("generate-rmg-position-family.py")
+            bodies += [helper.definition(source_families.render(originals, axes, (index,))["src/rmg.cpp"],
+                       "type_random_map_generator::selectObjectPrototype") for index in range(len(axes[0].options))]
+        seed = bodies[0]
+        positive_count = len(bodies)
+        bodies += [seed.replace("m_subtype != subtype", "m_subtype == subtype"),
+                   seed.replace("terrain == eTerrainWater", "terrain != eTerrainWater"),
+                   seed.replace(".test(terrain)", ".test(0)"),
+                   seed.replace("rand() % candidates.size()", "0"),
+                   seed.replace("candidates.push_back(properties);", "candidates.insert(candidates.begin(), properties);")]
+        self.assertTrue(all(body != seed for body in bodies[positive_count:]))
         for index, body in enumerate(bodies):
             # The native fixture supplies public-container behavior only. It
             # never changes project declarations or enters the VC6 snapshot.
@@ -114,7 +132,8 @@ int check() {
 }
 """]
         program += ["int main() {\n"]
-        program += [f"if (Case{index}::check()) return {index + 1};\n" for index in range(len(bodies))]
+        program += [f"if (Case{index}::check()) return 1;\n" for index in range(positive_count)]
+        program += [f"if (!Case{index}::check()) return 2;\n" for index in range(positive_count, len(bodies))]
         program += ["return 0;\n}\n"]
         with tempfile.TemporaryDirectory(prefix="rmg-prototype-polish-test-") as raw:
             path = Path(raw)

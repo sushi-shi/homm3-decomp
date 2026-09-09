@@ -181,11 +181,14 @@ class RmgGroupPlaceTests(unittest.TestCase):
         prototype_point = prototype[at:prototype.index("\n    };", at) + 7]
         methods = dict(self.module.forms())
         methods["current"] = helper.definition(self.source, self.module.FUNCTION)
-        if os.environ.get("HOMM3_GROUP_PLACE_MANIFEST"):
-            _, originals, axes = source_families.load_manifest(Path(os.environ["HOMM3_GROUP_PLACE_MANIFEST"]), self.root)
-            for i in range(60):
+        for manifest_index, selected in enumerate(filter(None, os.environ.get("HOMM3_GROUP_PLACE_MANIFEST", "").split(":"))):
+            path = Path(selected)
+            if not path.is_absolute():
+                path = self.root / path
+            _, originals, axes = source_families.load_manifest(path, self.root)
+            for i in range(len(axes[0].options)):
                 source = source_families.render(originals, axes, (i,))[self.module.SOURCE]
-                methods["manifest_" + str(i)] = helper.definition(source, self.module.FUNCTION)
+                methods["manifest_" + str(manifest_index) + "_" + str(i)] = helper.definition(source, self.module.FUNCTION)
         programs, checks = [], []
 
         def candidate(label, body):

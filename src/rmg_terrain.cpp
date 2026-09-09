@@ -794,6 +794,10 @@ int __fastcall selectTerrainTransition(
 // Copy-initializing the empty size temporary retains the wrong size call (92.04%).
 // A focused 60-case matrix of dimension snapshots, member/local area operands,
 // assignment-result references and named products is also flat at 97.9205%.
+// A further 60-state family uses the ordinary getWidth/getHeight boundaries
+// from paintTransitions, with five dimension bindings and three area-result
+// lifetimes. Its 24 distinct objects and ten reproduced finalists add no
+// tracked peak; the direct dimension stores remain the closest reconstruction.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
