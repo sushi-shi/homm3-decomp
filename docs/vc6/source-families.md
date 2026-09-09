@@ -1589,6 +1589,49 @@ are rejected, including a numerically equivalent bypass of the owner wrapper.
 The fixture does not claim retail ABI/layout, arbitrary floating-point edge
 behavior or VC6 inlining.
 
+### Mouse-thread lifetimes and inherited task teardown
+
+`generate-stop-mouse-lifetime-family.py` tests mutable/const references to
+the actual global thread and event storage, plus guarded-block/early-return
+exits, crossed with the existing fence. References retain every global reload
+across Windows calls; they are not snapshots of potentially changed handles.
+DC's older helper retains only the final pointer restore, so its PC line gap
+is not used as assertion evidence. Context `34cdd1cea3463120d055` exhausts all
+36 states: six emitted-object identities and six reproduced elites. Every
+unfenced option raises generateRandomMap from 92.6386% to 97.9759% but drops
+setupScenarioOptions from 100% to 90.1470%. None is adopted. The caller's
+proven request/progress/path scope and the shared ordinary helper stay intact.
+
+The score-flat task-destructor deletion needs a separate untracked-body review.
+`generate-update-task-fence-family.py`, context `0b5874006d53a33b2e6b`, reproduces
+both source states and both emitted-object identities. All 223 tracked scores
+agree. `verify-update-task-bodies.py` proves that all 396 emitted functions
+remain present, with 395 bodies and their relocation destinations unchanged.
+After excluding only `.debug` metadata, all 737 remaining sections preserve
+order and attributes; all bytes/relocations outside the generated Proc body
+stay fixed. That body changes from a five-byte jump to Task into the same
+38-byte teardown as Task, with identical instructions and delete relocation.
+Padding changes its section from 16 to 48 bytes. The retained Task body
+continues to match every retail instruction and named call at `0x583ef0`.
+
+The initial ICF hypothesis is **refuted**, not reported as a repair. Three
+genuine hash-verified VC6 LINK controls use the unchanged/unfenced real objects
+with `/OPT:ICF`, plus unfenced `/OPT:NOICF`. Each keeps Task and Proc at
+distinct addresses: the ordinary Task body is non-COMDAT. These partial
+diagnostic images have 45 unresolved symbols and are not executed. The normal
+source model is preserved; no false inline, explicit derived destructor or
+unproven implicit Task declaration is introduced to force a fold. The dead
+scalar-wrapper claim and final ownership/link-layout questions remain separate
+debt. Removing the override therefore buys a cleaner source at unchanged
+tracked scores, with an explicitly bounded 32-byte untracked code increase.
+
+Production exactly reproduces selected `f0e98f39dea432f23d145379`: all 824 raw
+sections, 7211 relocation destinations and function locations agree. The
+body verifier also passes directly against production and rejects unchanged,
+reversed and unrelated mouse-helper candidates as three negative controls.
+The final full build preserves 4074/4764 exact and 96.38% linked/whole-image,
+with no score change, MAX reset, migration or lost banked RVA.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
