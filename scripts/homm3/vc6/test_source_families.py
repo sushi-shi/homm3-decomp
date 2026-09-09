@@ -27,6 +27,15 @@ class SourceFamiliesTests(unittest.TestCase):
         self.assertNotEqual(identity_symbol(first), identity_symbol(repeat.replace('rmg.cpp', 'terrain.cpp')))
         self.assertEqual(identity_symbol('?ordinary@@YAXXZ'), '?ordinary@@YAXXZ')
 
+    def test_header_anonymous_scope_identity_preserves_type_and_signature(self):
+        first = r'??0TAutoStrPtr@?%Z:\tmp\first\include\autostrptr.h3081621612@@QAE@XZ'
+        repeat = r'??0TAutoStrPtr@?%Z:\tmp\repeat\include\autostrptr.h8275597@@QAE@XZ'
+        self.assertEqual(identity_symbol(first), identity_symbol(repeat))
+        for changed in (repeat.replace('TAutoStrPtr', 'OtherType'),
+                        repeat.replace('autostrptr.h', 'other.h'),
+                        repeat.replace('QAE@XZ', 'QAE@H@Z')):
+            self.assertNotEqual(identity_symbol(first), identity_symbol(changed))
+
     def manifest(self, root, payload):
         path = root / "family.json"
         path.write_text(json.dumps(payload))

@@ -87,52 +87,30 @@ iconWidget::~iconWidget()
 }
 
 // E:\gamedcs\iconwdgt.cpp:119
-// Retail independently fixes the complete message protocol and six live
-// widget-command arms. The reconstructed body has all 28 branches and is
-// measured at 95.70397%; this C2 invocation duplicates one shared zero
-// epilogue after source-order, helper-boundary, register-hint, and
-// label-placement probes. Restoring Dreamcast's MESSAGE_WIDGET/default-first
-// source order is byte-flat, but restoring its SetIconSequence call and that
-// helper's proven seqId-then-Frame statement order makes the sequence and
-// following color arms byte-exact (B36/B37).
-// Located precisely 2026-08-13 with `sema diff --branches` (base 28/17 rets
-// against retail 28/16, one POLARITY flip at +0x294): retail merges EVERY
-// return-0 exit into the block that sits at the LEFT_BUTTON_UP disabled gate
-// and reaches it with backward rel8 jumps, while this C2 emits a SECOND
-// copy after the RIGHT_BUTTON_UP selected gate, cross-jumps the other five
-// exits to that late copy, and pays rel32 for them - which is the whole
-// 4.7%. Rejected 2026-08-13: deleting the `returnZero:` label and spelling
-// all five sites as plain `return 0;` (89.1336%). This is the tail-merge
-// generation family; the placement is not source-reachable here.
-// Rejected 2026-08-14, all byte-identical at 95.2708: MOVING the
-// `returnZero:` label body out of the `field_2C > 0` gate and into each
-// of the three gates retail could be merging at - the LEFT_BUTTON_DOWN
-// disabled gate, the LEFT_BUTTON_UP disabled gate (retail's own merge
-// point) and the RIGHT_BUTTON_UP selected gate - with `isDisabled` split
-// into declaration + assignment so the leading `goto` may legally cross
-// it (that split is itself byte-inert). VC6 normalises the label
-// position away before layout, so the merge point is a C2 choice and not
-// a source one. TWO MORE LABEL SPELLINGS MEASURED AND REJECTED
-// 2026-09-06, both directions of the same merge: routing the `default:`
-// arm's disabled exit through `goto returnZero` (so one block serves
-// every zero exit) scores 94.3682, and dropping the label entirely for a
-// plain `return 0;` at all seven sites scores 89.5668, against 95.7040
-// for the spelling kept here. Every block is already byte-equal; only the
-// branch DISPLACEMENTS differ, because retail back-jumps its zero exits
-// into the `default:` arm's own `pop/ret` while our CL emits a second
-// identical copy at the tail (50 blocks against retail's 49). The /Ob2 two-axis probe (byte-inert statement mass 0..32
-// crossed with 0..8 tail `xx_nop()` candidate sites) is flat here too.
+// Retail fixes the message protocol and six widget-command arms. DC 151
+// calls SetIconSequence; its 447..448 stores are seqId then Frame. DC 159
+// calls the ordinary SetPalette helper; restore that canonical call rather
+// than its copied load/dispose body. Both helpers expand naturally here.
+//
+// DC 190..217 and 229..245 retain nested mouse-hit and selected scopes.
+// The positive selected scope lets VC6 merge the zero epilogues. Together
+// with positive hit testing, all five old goto returns become direct exits
+// and Main improves 95.7040% to 99.9639%. The whole 756-byte body and all
+// relocation references agree except two scratch-register operands:
+// +0x113 movsx and +0x117 mov use EDX where retail uses ECX for widget id.
+// All-direct returns with the old negative selected guard lose score;
+// moving default/base delegation into separate switch arms gives at most
+// 91.8050%. Neither failed form establishes an unavoidable source goto.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::main(message* msg)
 {
     if (m_sleepCount > 0) {
-returnZero:
         return 0;
     }
 
     if (!(m_status & WIDGET_ACTIVE)) {
         if (msg->m_id != MESSAGE_WIDGET)
-            goto returnZero;
+            return 0;
         return widget::main(msg);
     }
 
@@ -157,14 +135,9 @@ returnZero:
         case WIDGET_SET_ICON_COLOR:
             m_backColor = static_cast<unsigned short>(msg->m_extra);
             return 1;
-        case WIDGET_SET_PALETTE: {
-            TPalette16* newPalette = ResourceManager::getPalette(msg->m_extraText);
-            if (newPalette) {
-                m_sprite->setPalette(newPalette->m_data);
-                newPalette->dispose();
-            }
+        case WIDGET_SET_PALETTE:
+            setPalette(msg->m_extraText);
             return 1;
-        }
         case WIDGET_SET_PLAYER_PALETTE_COLORS:
             setPlayerPaletteColors(msg->m_extra);
             return 1;
@@ -178,46 +151,48 @@ returnZero:
 
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
-            goto returnZero;
+            return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_DOWN: {
         short mouseX = msg->m_codeX - m_parentWindow->m_x;
         short mouseY = msg->m_codeY - m_parentWindow->m_y;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
-            goto returnZero;
-        if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
-            return 1;
-        if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg->m_codeX = WIDGET_RIGHT_SELECT;
+        if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
+            && mouseY < m_y + m_height) {
+            if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+                return 1;
+            if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                msg->m_codeX = WIDGET_RIGHT_SELECT;
+                msg->m_id = MESSAGE_WIDGET;
+                msg->m_codeY = m_id;
+                return 2;
+            }
+            m_status |= WIDGET_SELECTED;
+            msg->m_codeX = WIDGET_SELECT;
             msg->m_id = MESSAGE_WIDGET;
             msg->m_codeY = m_id;
             return 2;
         }
-        m_status |= WIDGET_SELECTED;
-        msg->m_codeX = WIDGET_SELECT;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeY = m_id;
-        return 2;
+        return 0;
     }
 
     case MESSAGE_LEFT_BUTTON_UP:
         if (isDisabled)
-            goto returnZero;
+            return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(m_status & WIDGET_SELECTED))
-            goto returnZero;
-        m_status &= ~WIDGET_SELECTED;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = WIDGET_DESELECT;
-        msg->m_codeY = m_id;
-        if (handleClick(0, 0))
-            return 1;
-        if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
-            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-        return 2;
+        if (m_status & WIDGET_SELECTED) {
+            m_status &= ~WIDGET_SELECTED;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeX = WIDGET_DESELECT;
+            msg->m_codeY = m_id;
+            if (handleClick(0, 0))
+                return 1;
+            if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
+                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            return 2;
+        }
+        return 0;
     }
 
     return widget::main(msg);

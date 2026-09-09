@@ -47,6 +47,10 @@ class TTradeResourceWindow : public CAdvPopup {
     slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
     // Before normalization: lastHoverId.
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
+    // Dreamcast tradpost.cpp:2181, original ComputeTradeRatios (private).
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
 public:
     TTradeResourceWindow(int x2, int y2);
     // Before normalization (function): TTradeResourceWindow::Update.

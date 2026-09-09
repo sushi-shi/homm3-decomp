@@ -79,21 +79,14 @@ border::~border()
 // point at FOUR distinct labels 8 and 4 bytes apart, which is exactly a
 // disabled-guard falling through into its right-button twin.
 //
-// Disabled DOWN/UP arms `break` to widget::Main, they do not return zero -
-// that is what the `jne` to the shared base-call block says. All five
-// zero exits merge into the block the field_2C guard owns and are reached
-// with backward jumps, so the `returnZero:` label idiom carries over from
-// iconWidget::Main verbatim.
-//
-// Residual (94.95%): retail shares the field_2C return-0 epilogue with the
-// four later zero exits. Duplicating that epilogue in source keeps the first
-// copy at retail's exact +0x0f position, but this C2 leaves one second copy at
-// the LEFT_BUTTON_UP selected gate: `--branches` reports 16 branches/8 rets
-// against retail's 15/7. Tried and rejected: all exits as plain returns
-// (92.38% in this structure; 91.78% measured 2026-08-14), a single labelled
-// epilogue (91.98%), a negated goto-over guard (92.52%), and an indirect
-// trampoline back to the early label (91.98%). The remaining duplicate is
-// the merged-return compiler-generation class.
+// Disabled left-button arms delegate to widget::Main; failed hit/selection
+// tests return zero. DC 104..126 and 134..145 supply the nested mouse-hit
+// and selected scopes. A positive release scope lets VC6 merge the zero
+// epilogues and improves 94.9505% to 100%. Keeping inactive-widget handling
+// in its negative arm and the dispatch in its else removes the last goto
+// while retaining all 461 retail bytes. Reversing that outer polarity gives
+// 76.7079%; a direct inactive return gives 96.0396%. Earlier all-direct
+// zero returns (91.7822%) missed the coupled scope, not a compiler limit.
 VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
 int border::main(message* msg)
 {
@@ -102,60 +95,60 @@ int border::main(message* msg)
 
     {
         if (!(m_status & WIDGET_ACTIVE)) {
-            if (msg->m_id != MESSAGE_WIDGET)
-                goto returnZero;
-            return widget::main(msg);
-        }
+            if (msg->m_id == MESSAGE_WIDGET)
+                return widget::main(msg);
+        } else {
+            unsigned char isDisabled = 0;
+            if (m_status & WIDGET_DISABLED)
+                isDisabled = 1;
 
-        unsigned char isDisabled = 0;
-        if (m_status & WIDGET_DISABLED)
-            isDisabled = 1;
-
-        switch (msg->m_id) {
-        case MESSAGE_LEFT_BUTTON_DOWN:
-            if (isDisabled)
+            switch (msg->m_id) {
+            case MESSAGE_LEFT_BUTTON_DOWN:
+                if (isDisabled)
+                    return widget::main(msg);
+                // fall through
+            case MESSAGE_RIGHT_BUTTON_DOWN: {
+                short mouseX = msg->m_codeX - m_parentWindow->m_x;
+                short mouseY = msg->m_codeY - m_parentWindow->m_y;
+                if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
+                    && mouseY < m_y + m_height) {
+                    if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                        msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                        msg->m_codeX = WIDGET_RIGHT_SELECT;
+                    } else {
+                        m_status |= WIDGET_SELECTED;
+                        msg->m_codeX = WIDGET_SELECT;
+                    }
+                    if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+                        return 1;
+                    msg->m_id = MESSAGE_WIDGET;
+                    msg->m_codeY = m_id;
+                    return 2;
+                }
                 break;
-            // fall through
-        case MESSAGE_RIGHT_BUTTON_DOWN: {
-            short mouseX = msg->m_codeX - m_parentWindow->m_x;
-            short mouseY = msg->m_codeY - m_parentWindow->m_y;
-            if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-                || mouseY >= m_y + m_height)
-                goto returnZero;
-            if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                msg->m_codeX = WIDGET_RIGHT_SELECT;
-            } else {
-                m_status |= WIDGET_SELECTED;
-                msg->m_codeX = WIDGET_SELECT;
             }
-            if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
-                return 1;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeY = m_id;
-            return 2;
-        }
 
-        case MESSAGE_LEFT_BUTTON_UP:
-            if (isDisabled)
+            case MESSAGE_LEFT_BUTTON_UP:
+                if (isDisabled)
+                    return widget::main(msg);
+                // fall through
+            case MESSAGE_RIGHT_BUTTON_UP:
+                if (m_status & WIDGET_SELECTED) {
+                    m_status &= ~WIDGET_SELECTED;
+                    if (handleClick(0, msg->m_id == MESSAGE_RIGHT_BUTTON_UP))
+                        return 1;
+                    msg->m_id = MESSAGE_WIDGET;
+                    msg->m_codeX = WIDGET_DESELECT;
+                    msg->m_codeY = m_id;
+                    return 2;
+                }
                 break;
-            // fall through
-        case MESSAGE_RIGHT_BUTTON_UP:
-            if (!(m_status & WIDGET_SELECTED))
-                goto returnZero;
-            m_status &= ~WIDGET_SELECTED;
-            if (handleClick(0, msg->m_id == MESSAGE_RIGHT_BUTTON_UP))
-                return 1;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeX = WIDGET_DESELECT;
-            msg->m_codeY = m_id;
-            return 2;
+            default:
+                return widget::main(msg);
+            }
         }
-
-        return widget::main(msg);
     }
 
-returnZero:
     return 0;
 }
 
