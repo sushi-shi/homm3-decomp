@@ -22,7 +22,6 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
 | `game`        |   135 | 3995 / 4683 (85.3%) | 4019 / 4683 (85.8%) |  96.35% |    96.56% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |        0 / 1 (0.0%) |        0 / 1 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
