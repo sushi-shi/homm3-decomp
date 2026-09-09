@@ -68,7 +68,16 @@ bitmap-header pointer is the sole improving source fact: it preserves retail's
 otherwise redundant depth reload and raises the body from 88.8478% to 94.6087%.
 All guard and loop-local alternatives collapse to the same object once that
 snapshot exists; the remaining delta is the helper expansion's EBX/EBP save
-placement.
+placement. Four further register-hint variants also emit one unchanged object.
+
+The upload helper retains its natural stack-resident status and failure-only
+`-14` assignment at 77.1403%. A 97-state family crossed declaration position,
+initialization and failure flow; its 77 retained states emit only two objects,
+and no alternative improves the nested form. A nine-state storage diagnostic
+likewise finds no natural register recovery: a volatile preinitialized status
+reaches only 78.0702% and simultaneously drops the inlined initializer from
+94.6087% to 82.8261%. Applying `/Og-` to the Victor profile breaks several
+neighboring rows and is therefore not evidence for changing this unit.
 
 For `pcxinfo`, a 60-state family crossed extent construction, metadata store
 order, and the final depth-normalization CFG. Four named PCX extrema restore
@@ -117,8 +126,14 @@ calls the bitmap validator twice, the dimension helper once, and the two
 bit-range helpers twice each. Making all those bodies visible in the current
 `victor.cpp` `/Ob2` context expands them and produces a 0% comparison. Keeping
 their canonical declarations in the flip caller's unit restores all nine
-named calls (including allocation and free) and reaches 77.50% after status
-scope reconstruction. This is a body-visibility hypothesis, not proof of an
+named calls (including allocation and free). Status-scope reconstruction first
+reaches 77.5040%; named source/destination depth snapshots then reproduce the
+four-instruction retail comparison, and a real destination-stride snapshot
+improves allocation setup, reaching 77.8629%. Thirty-two pointer register-hint
+states, six declaration-lifetime states, eight source-row intermediates and
+eight declaration orders are flat or worse. Six destination-stride forms emit
+two objects and favor the retained snapshot; six row-distance forms emit three
+objects and are worse. This is a body-visibility hypothesis, not proof of an
 original library object name or boundary. The palette initializer and its
 ordinary upload helper remain together because retail expands that helper.
 
