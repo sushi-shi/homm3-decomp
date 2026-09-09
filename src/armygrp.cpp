@@ -1767,6 +1767,10 @@ void armyGroup::mergeArmies(armyGroup* source)
 // one additional goto; both supported alternatives reproduce in the 16-state
 // family. The greater structured reduction still improves the starting score.
 // Before normalization (function): apply_morale_magic_terrain.
+// Replacing only holy_ground_good with switch break also scores 91.4420%
+// in GetMoraleDescription, versus 93.1409%; adding an explicit good default
+// produces the same loss. Keeping the adjustment below the switch therefore
+// does not recover a neutral structured exit in this helper context.
 static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
                                        int townType, int& currentMorale,
                                        std::string& result)
