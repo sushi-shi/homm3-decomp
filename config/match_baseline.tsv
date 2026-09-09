@@ -4105,8 +4105,8 @@ smackmgr	?loadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	a93b175e53
 smackmgr	?nextSmackerFrame@SmackManager@@YIXXZ	73.4188	90.7265	90.7265	0x198eb0	d8eae95fdf40
 smackmgr	?openSmackerTrack@@YIPAUSmack@@PBDKK@Z	69.2816	100.0000	100.0000	0x198790	46480a2f94c1
 smackmgr	?setPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	ca517dcdfae7
-smackmgr	?showVideo@@YIXHHHHHHHH@Z	39.1274	100.0000	100.0000	0x198af0	07fc44d92240
-smackmgr	?videoClose@@YIXXZ	7.6923	100.0000	100.0000	0x1975f0	c5ddfa5430aa
+smackmgr	?showVideo@@YIXHHHHHHHH@Z	67.8147	100.0000	100.0000	0x198af0	07fc44d92240
+smackmgr	?videoClose@@YIXXZ	38.1538	100.0000	100.0000	0x1975f0	c5ddfa5430aa
 smackmgr	?videoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	0e6191e939f2
 smackmgr	?videoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0	066b14c93c46
 smackmgr	?videoNeedsUpdate@@YIEXZ	100.0000	100.0000	100.0000	0x197930	a8f620f4dfdd
@@ -4117,9 +4117,9 @@ smackmgr	?videoPlay@@YIHHHHHH@Z	87.1912	87.1912	87.1912	0x1972d0	9aae3d16dc57
 smackmgr	?videoPlaying@@YIEXZ	100.0000	100.0000	100.0000	0x197990	d03f5eeb4f27
 smackmgr	?videoRealignBuffers@@YIXXZ	88.9254	88.9254	88.9254	0x1971f0	46a0f83ce638
 smackmgr	?videoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900	bd089521ecf0
-smackmgr	?videoResume@@YIXXZ	0.0000	100.0000	100.0000	0x197850	9126cccf45b4
+smackmgr	?videoResume@@YIXXZ	0.0000	0.0000	100.0000	0x197850	ecce84242af9
 smackmgr	?videoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	ee40ac21bd38
-smackmgr	?videoSoundOnOff@@YIXH@Z	0.0000	100.0000	100.0000	0x1971b0	36b3d824fee7
+smackmgr	?videoSoundOnOff@@YIXH@Z	0.0000	0.0000	100.0000	0x1971b0	db40c915c3d7
 soundmgr	??0soundManager@@QAE@XZ	100.0000	100.0000	100.0000	0x199760	43772ead8a5e
 soundmgr	?adjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a1b0	f68a4261dc39
 soundmgr	?adjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0	734a1b432d87

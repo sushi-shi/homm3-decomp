@@ -3888,6 +3888,11 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // Canonical BlackMarkets, TownPool and generator-vector writers remove the
 // remaining shared failure labels. Together with the readers, they raise Save
 // from 80.2448% to 96.5761%; older flattened/pinned observations above are historical.
+// Recovery bound: a 48-state local-type/lifetime family (six emitted objects)
+// leaves SavedGameHeader::reset/save expanded: Save spans 59.2838--59.6005%.
+// Reusing or scoping the byte buffer, the DC unsigned word/int size types,
+// early i and the native-bool writer result do not recover the retained calls.
+// The tiny peak does not fix the 0x750 versus 0x5c0 frame; source is unchanged.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {

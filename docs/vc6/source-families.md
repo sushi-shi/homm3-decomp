@@ -1414,3 +1414,85 @@ normal checkpoint and README. This preserves `CUR <= MAX <= HIST` and keeps
 historical peaks separate from the current implementation's MAX. Completing a
 family or getting every currently tracked row exact does not prove whole-TU
 source completeness.
+
+### Recovering video callers with canonical header helpers
+
+`generate-video-recovery-family.py` compares the sound guard, resume guard
+and pause-draining loop while retaining the ordinary `videoSoundOnOff`,
+`videoResume` and `videoClose` calls. The shared `serviceSounds` body stays
+inline in its proven `soundmgr.h` owner. The PC retail bodies prove the
+four-handle sound predicate, zero-count protection, decrement-before-resume
+transition and sound/Smacker/Bink close order; Dreamcast's port stubs provide
+only declarations and source order for these video functions.
+
+Against PR #3's `03a62eeb`, context `b675e964de23c1bd96c6` exhausts 48 source
+candidates, produces 33 distinct emitted objects and reproduces ten retained
+candidates. The adopted `1ca50e84d3aa84df22bc70b1` combines the sound guards
+into one service call and the resume early-outs into one short-circuit guard.
+Its production object reproduces the normalized candidate's complete code
+and named relocation identity. The stricter raw COFF comparison also agrees
+on all 125 sections, 936 relocation destinations and function locations.
+All 30 tracked rows are compared:
+
+| Function | Before CUR | Recovered CUR |
+| --- | ---: | ---: |
+| `videoClose` | 7.6923% | 38.1538% |
+| `showVideo` | 39.1274% | 67.8147% |
+
+Every other tracked score holds, including the two edited helpers. Neither
+caller body changes. The sound-guard-only control recovers `videoClose` but
+leaves `showVideo` unchanged. The resume-guard-only control gives `showVideo`
+73.5019% but leaves `videoClose` at 7.6923%; the combined candidate recovers
+more fuzzy-weighted retail bytes across the two functions. No new exact
+function is claimed. The historical 100% peaks remain recovery leads.
+
+The named sequence still shows two expanded `serviceSounds` operations in
+`videoClose` where retail calls them; the final `closeBinkVideo` tail call
+and the four indirect video-library calls agree. The current source-labelled
+`showVideo` comparison first diverges at its first `videoClose` site. These
+are remaining inlining/context differences, not grounds to move the sound
+helper back into a `.cpp`, flatten the ordinary video helpers, or add a pin.
+The finite guard/loop family bounds this PR's recovery; it does not close
+`smackmgr` or recover every peak lost through header ownership.
+
+`homm3.vc6.test_video_recovery` imports the actual three helper bodies and all
+48 generated combinations. An independent transition/effect oracle covers
+all 16 handle-presence masks, pause depths 0–5, both initial pause states and
+all three entry points. Five negative controls reject missing sound service,
+a wrong Bink pause argument, a missing pause-state clear, a missing Smacker
+close and reversed close order. The host fixture validates these state and
+call-order contracts; VC6 remains the byte verdict. The generator accepts
+the reviewed adopted body as its unchanged control and retains the original
+alternatives, rather than silently applying stale anchors.
+
+The final full build, including fresh retail delinking, passes all gates and
+raises executable matching from 94.81% to 94.83%. Exactly two CUR rows rise;
+none fall. The 4,784 canonical definitions retain zero ownership violations,
+and the existing 200 inline-depth pins are unchanged. Both edited helper
+bodies remain at CUR 0%; their new source hashes reset MAX from 100% to 0%,
+while HIST remains 100%. All 4,752 ledger rows and every historical peak
+survive; the unchanged caller bodies retain their own MAX 100% peaks.
+
+### Save recovery bounds after header ownership
+
+`generate-save-local-recovery-family.py` uses the `game::Save` Dreamcast
+local roster and retail narrow writes to test byte-buffer reuse/scope,
+unsigned-word staging, the signed map-extra size, loop-index declaration
+lifetime and the native-bool vector writer result. Context
+`0db47607a4972b3ef94c` exhausts 48 states, emits six distinct objects and
+reproduces ten candidates. `game::save` ranges from 59.2838% to 59.6005%
+against 59.5944% unchanged; every other game row holds. The tiny gain does
+not recover the `SavedGameHeader::reset`/`save` calls or the retail frame,
+so none of these alternatives is adopted.
+
+`generate-save-header-placement-family.py` separately compares the existing
+class location, moving it beside the late inline definitions, and embedding
+those same bodies inside the class there. Field order, signatures, body
+operations and `game.h` ownership stay fixed. Compiler dependency records
+select all 64 affected TUs. Moving the class alone is score-neutral; embedding
+the methods does not improve `game::save` and slightly lowers two unrelated
+rows. The existing class structure is retained. Context
+`183778ec3eb1bc6b45bb` scores all three states, produces two distinct objects
+and reproduces both retained candidates against a fixed snapshot. A prior
+run rejected its final checkpoint after concurrent source edits and is not
+counted as a completed search.
