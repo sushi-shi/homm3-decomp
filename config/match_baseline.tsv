@@ -4602,12 +4602,12 @@ victor	?victorExtractBits@@YGXPAEPBEHH@Z	74.2400	74.2400	74.2400	0x2047b0	e14362
 victor	?victorInitializePalette@@YGXPAUimgdes@@@Z	95.1630	95.1630	95.1630	0x2039c0	f8e02ac2ef4a
 victor	?victorInsertBits@@YGXPAEPBEHH@Z	94.4444	94.4444	94.4444	0x204720	c79c15e6dc26
 victor	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	85.8333	85.8333	85.8333	0x203ac0	d67245179a0d
-victor	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	92.5688	92.5688	92.5688	0x2043d0	f120f60f74ad
+victor	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	92.5688	92.5688	92.5688	0x2043d0	11d99eb75a26
 victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	77.1403	77.1403	77.1403	0x203810	898e3923281d
 victor	?victorValidateBitmap@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x2039a0	276a1e5cf49b
 victor	?victorValidateImage@@YGHPAUimgdes@@@Z	79.9457	79.9457	79.9457	0x2038b0	1cdb0bc1e97e
 victor_flip	?flipimage@@YGHPAUimgdes@@0@Z	77.8629	77.8629	77.8629	0x203b20	04e753aa4311
-victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	78.4456	78.4456	78.4456	0x203e00	e7fbc967f070
+victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	78.4456	78.4456	78.4456	0x203e00	8c7e7c95e838
 victor_pcx_kernels	?victorDecodeRleBytes@@YAHPAE0H@Z	100.0000	100.0000	100.0000	0x204510	f54dcb8250c9
 victor_pcx_kernels	?victorInterleaveRgbPlanes@@YAXPAEPBEH@Z	100.0000	100.0000	100.0000	0x2045e0	b4d2b2693c3c
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x204570	ee4ddb1456b3
