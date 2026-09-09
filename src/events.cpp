@@ -6792,7 +6792,11 @@ void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
 // our CL find the same merge.
 // Before normalization (locals): current_hero, human_player.
 // Goto audit: copying the common refusal dialog into the known-skill arm
-// loses 47.2917 points; retain the join pending a better source model.
+// loses 47.2917 points. Keeping the skill cases nested and returning after
+// GiveSS instead permits one ordinary refusal tail: all 424 compiled bytes
+// and 20 relocation names/addends remain unchanged at 100%. Hoisting the
+// no-skill case into an early return also matches this function, but lowers
+// MonstersSellOut to 99.9517%; preserve the nested scope and that sibling.
 // A shared refusal result (bool or unsigned char) scores 52.2569%; an
 // explicit refusal-text selector scores 44.1875%, against the exact body.
 // The visit/info writes and human-only dialogs were preserved in each
@@ -6810,36 +6814,38 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else if (currentHero->m_skillLevel[skill]) {
-        if (humanPlayer) {
-            sprintf(g_text,
-                    g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_WITCH_HUT_KNOWN),
-                    g_sSkillTraits[skill].m_name);
-            goto refuse;
-        }
-    } else if (currentHero->m_skillCount >= 8) {
-        if (humanPlayer) {
-            sprintf(g_text,
-                    g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_WITCH_HUT_FULL),
-                    g_sSkillTraits[skill].m_name);
-refuse:
-            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
     } else {
-        if (humanPlayer) {
-            sprintf(g_text,
-                    g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_WITCH_HUT_LEARN),
-                    g_sSkillTraits[skill].m_name);
-            // iResType1 20 is the secondary-skill picture class and the
-            // extra is the icon slot: three mastery frames per skill, the
-            // basic one being 3*skill + 3.
-            normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
-                         -1, 0, -1, 0, -1, 0);
+        if (currentHero->m_skillLevel[skill]) {
+            if (humanPlayer) {
+                sprintf(g_text,
+                        g_adventureEventText->getText(
+                            ADV_EVENT_TEXT_WITCH_HUT_KNOWN),
+                        g_sSkillTraits[skill].m_name);
+            }
+        } else if (currentHero->m_skillCount >= 8) {
+            if (humanPlayer) {
+                sprintf(g_text,
+                        g_adventureEventText->getText(
+                            ADV_EVENT_TEXT_WITCH_HUT_FULL),
+                        g_sSkillTraits[skill].m_name);
+            }
+        } else {
+            if (humanPlayer) {
+                sprintf(g_text,
+                        g_adventureEventText->getText(
+                            ADV_EVENT_TEXT_WITCH_HUT_LEARN),
+                        g_sSkillTraits[skill].m_name);
+                // iResType1 20 is the secondary-skill picture class and the
+                // extra is the icon slot: three mastery frames per skill, the
+                // basic one being 3*skill + 3.
+                normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
+                             -1, 0, -1, 0, -1, 0);
+            }
+            currentHero->giveSS(skill, 1);
+            return;
         }
-        currentHero->giveSS(skill, 1);
+        if (humanPlayer)
+            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
