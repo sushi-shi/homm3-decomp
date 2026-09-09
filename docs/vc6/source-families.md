@@ -1496,3 +1496,91 @@ rows. The existing class structure is retained. Context
 and reproduces both retained candidates against a fixed snapshot. A prior
 run rejected its final checkpoint after concurrent source edits and is not
 counted as a completed search.
+
+### Spell obstacle appends, filter widgets and sound service recovery
+
+These searches start from PR #4's `ecca3a3d` full-build checkpoint and retain
+canonical source ownership. The spell and initial filter generators require
+that source checkpoint; replay them in a checkout of it with these experiment
+scripts available. Their exact anchors deliberately reject a changed body.
+The filter refinement also checks the parent snapshot and reproduced objects.
+Sound variants accept either reviewed body as the unchanged control.
+
+| Family | Scored source states | Distinct emitted objects | Reproduced retained candidates |
+| --- | ---: | ---: | ---: |
+| Four obstacle append boundaries | 16 | 16 | 10 |
+| Filter allocation/loop lifetimes | 54 | 36 | 10 |
+| Filter pointer conversion/refinement | 61 | 61 | 10 per generation |
+| Sound service locals and guards, 51 dependent TUs | 30 | 14 | 10 |
+
+`generate-spell-obstacle-append-family.py` tests the four source-proven
+`push_back` sites in `combatManager::castSpell`. DC spells.cpp lines
+849/925/962/996 supply positive call evidence. Three SH4 sites load the named
+callee before the line block containing the indirect `jsr`: inspect
+0x14feaa, 0x1500be and 0x1502c0 as well as Force Field's direct attribution
+at 0x150212. The dossier's local call attribution alone misses those names.
+Retail keeps count-insert bodies at +0x64e/+0x86c/+0x9a2/+0xae4; the native
+vector's `push_back` supplies this nested call boundary. All four restored
+calls reproduce 93.9814%, up from 72.8210% and above HIST 93.3687%, in context
+`034c7ecf3f258f5bbaef`, candidate `eb22de398dcc8adf2e3cd0bf`. The complete
+obstacle locals, append-before-slot order, and original-record arguments to
+`placeObstacle` are unchanged. No container replacement or new helper is used.
+
+`generate-filter-widget-recovery-family.py` exhausts 54 allocation-result,
+button-binding, public append API and loop-scope choices in context
+`3916b52e69a9a5b42b8c`. `generate-filter-widget-refinement-family.py` then
+adds real widget-pointer conversions and a vector reference to ten reproduced
+parents, deduplicating to 61 choices in `88fa5370dc9a8dba6348`. Candidate
+`b6b839d0becb8fff58c7d6ce` reaches 92.9883% from 84.8995%. It retains all
+constructors, the direct highlight field store and the proven disabled-frame
+helper. The retired highlight setter is not restored. The only sibling
+movement is `CEnterNameEdit::onKeyPress` 100% -> 99.8868%, one matching byte;
+its source is unchanged, so MAX and HIST remain 100%. The best alternative
+with no sibling movement reaches 92.7301%; the selected source recovers more
+retail bytes overall. These are retail-only filter controls, so no Dreamcast
+local roster is claimed for the inferred pointer lifetimes.
+
+The independent native filter oracle checks all 56 widget identities,
+constructor arguments, defaults, display fields, order and array identity,
+with both fresh and reserved vectors and three preexisting-widget counts.
+All initial and refined candidates passed before adoption. The permanent
+`test_filter_widget_recovery` imports the current builder and canonical
+`setDisabledFrame` body; five negative controls reject wrong highlight,
+disabled frame, defaults, missing append and widget ID. This validates UI
+construction behavior; it is not an x86 ABI model.
+
+`generate-sound-service-recovery-family.py` takes all 51 header-dependent TUs
+from compiler dependency records. Context `bf4bbe51a427f361ce69`, reproduced
+candidate `7173bdb9b7e2604dc1808b27`, captures the stream after `AIL_serve` and
+nests the three real state guards. `serviceSounds` stays inline in SoundMgr.h
+and its retained body stays exact. DC 0xe6ef4 is a WinCE stub proving source
+ownership; the nonempty PC behavior comes from retail 0x59a7d0. `showVideo`
+rises from 67.8147% to 94.1120%, with every other tracked score holding across
+the 51 units. The unchanged combined guard is the negative byte control.
+The native test imports the current body and all 30 variants. It checks lock
+receiver identity separately from the global manager, stream changes during
+Miles service, state guards and call order; six negative controls fail.
+
+The generators preserve real helper boundaries and operations. No inline
+pins, release VERIFYs, synthetic caller weight, or duplicated helper bodies
+are introduced. Remaining mismatches require further evidence; these finite
+families do not establish TU closure or exhaustion of the wider recovery queue.
+
+The adopted production objects match the reproduced candidates in section
+bytes, relocation destinations and function locations: spells 170 sections /
+1,979 relocations, singleselectionwindow 836 / 7,378, smackmgr 125 / 939.
+The final full build and fresh delink raise executable matching from 94.83%
+to 94.98%, with 3,937/4,751 current exact functions. Exactly three CUR rows
+rise and only the keyboard-handler byte falls. All 4,752 ledger rows and all
+historical peaks survive. Ownership remains 4,784 definitions with zero
+violations, and the existing 200 inline-depth pins are unchanged.
+
+Post-adoption source/call inspection confirms the four obstacle count-insert
+calls. `castSpell` still has a 0x80 frame against retail's 0x94 and different
+shared spell-effect tails. The filter's first remaining difference is the
+vector-base load before its first allocation and the append argument's stack
+slot (-0x24 versus -0x20). `showVideo` now retains both early sound-service
+calls, as retail does; its later expanded `videoSoundOnOff` still leaves a
+`serviceSounds` call where retail calls that ordinary helper. Source-labelled
+comparison first differs at the Smacker-handle guard. These specific residuals
+remain recovery leads; equal call totals are not evidence of equal boundaries.

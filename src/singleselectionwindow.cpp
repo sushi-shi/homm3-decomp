@@ -3072,9 +3072,19 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // One setter per loop measured 84.90; two gave every one of the 366 blocks.
 // Keep the proven disabled-frame helper and direct highlight-field stores;
 // matching the inline budget does not establish a second source helper.
+// Recovery, 2026-09-09: named allocation results, a real vector reference,
+// and loop-local button/widget pointers recover 84.8995 -> 92.9883 without
+// the unproven highlight helper. The six loops use public single insert;
+// standalone widgets keep push_back. Retail keeps the append call and its
+// pointer argument on the frame. The 54-state initial family plus 61-state
+// refinement preserve all 56 constructors, defaults, field stores and order.
+// Direct loop push_back and unnamed conversion controls remain below this
+// result. CEnterNameEdit::onKeyPress changes 100 -> 99.8868 with its source
+// unchanged; its MAX/HIST stay 100. See docs/vc6/source-families.md.
 VA(0x0057D170, 0x1DF7)
 void TSingleSelectionWindow::createFilterWidgets()
 {
+    std::vector<widget*>& widgets = m_widgets;
     m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
     m_randomMapOptions[1] = 2;
     m_randomMapOptions[2] = -1;
@@ -3084,24 +3094,45 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_randomMapOptions[6] = SCENARIO_FILTER_CATEGORY_ANY;
     m_randomMapOptions[7] = -1;
 
-    m_widgets.push_back(new textWidget(
-        58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
-        font::PRIMARY, 0x118,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new button(
-        161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2));
+    {
+        widget* created = new textWidget(
+            58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
+            font::PRIMARY, 0x118,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
 
-    m_widgets.push_back(new textWidget(
-        71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
-        font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
+            font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountAButtons[0] = new button(
         70, 153, 30, 32, 0x11f, "RanNum1.def", 0, 1, 0, 0, 2);
     m_filterCountAButtons[1] = new button(
@@ -3122,14 +3153,19 @@ void TSingleSelectionWindow::createFilterWidgets()
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        m_filterCountAButtons[i]->m_highlightedFrame = 2;
-        m_filterCountAButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountAButtons[i]);
+        button* current = m_filterCountAButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
-        font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
+            font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountBButtons[0] = new button(
         70, 219, 30, 32, 0x129, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountBButtons[1] = new button(
@@ -3149,14 +3185,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        m_filterCountBButtons[i]->m_highlightedFrame = 2;
-        m_filterCountBButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountBButtons[i]);
+        button* current = m_filterCountBButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
-        font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
+            font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountCButtons[0] = new button(
         70, 285, 30, 32, 0x133, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountCButtons[1] = new button(
@@ -3176,14 +3217,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        m_filterCountCButtons[i]->m_highlightedFrame = 2;
-        m_filterCountCButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountCButtons[i]);
+        button* current = m_filterCountCButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
-        font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
+            font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountDButtons[0] = new button(
         70, 351, 30, 32, 0x13d, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountDButtons[1] = new button(
@@ -3201,14 +3247,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        m_filterCountDButtons[i]->m_highlightedFrame = 2;
-        m_filterCountDButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountDButtons[i]);
+        button* current = m_filterCountDButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
-        font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
+            font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterWaterButtons[0] = new button(
         70, 419, 83, 32, 0x146, "RanNone.def", 0, 1, 0, 0, 2);
     m_filterWaterButtons[1] = new button(
@@ -3218,14 +3269,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        m_filterWaterButtons[i]->m_highlightedFrame = 2;
-        m_filterWaterButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterWaterButtons[i]);
+        button* current = m_filterWaterButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
-        font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
+            font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterStrengthButtons[0] = new button(
         70, 485, 83, 32, 0x14b, "RanWeak.def", 0, 1, 0, 0, 2);
     m_filterStrengthButtons[1] = new button(
@@ -3235,13 +3291,18 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        m_filterStrengthButtons[i]->m_highlightedFrame = 2;
-        m_filterStrengthButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterStrengthButtons[i]);
+        button* current = m_filterStrengthButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new button(
-        57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
+    {
+        widget* created = new button(
+            57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
 }
 
 // Retail-only (no DC roster row - the DC lobby has no filter panel).

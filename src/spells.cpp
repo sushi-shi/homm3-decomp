@@ -730,6 +730,16 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
     }
 }
 
+// Source-ownership recovery, 2026-09-09: CastSpell's four obstacle appends
+// are push_back in DC spells.cpp:849/925/962/996. The Quicksand, Land Mine
+// and Fire Wall jsr targets are loaded in the preceding line group at
+// dc 0x14feaa/0x1500be/0x1502c0; Force Field names it at dc 0x150212.
+// Native vector push_back restores retail's retained count-insert calls
+// (+0x64e/+0x86c/+0x9a2/+0xae4), preserving the original record passed to
+// placeObstacle after the append. All 16 per-arm choices were measured:
+// four push_back calls recover 72.8210 -> 93.9814 (HIST was 93.3687).
+// Direct count-insert expands those bodies and loses the caller boundaries.
+// The older per-arm notes below describe their dated checkpoints.
 // Residual (92.78%, 2026-09-05, opened at 91.47): the per-arm size census
 // below is the map. Decode retail's 38-entry jump table at fn+0x2970 and
 // its 71-byte index table at fn+0x2a08, invert them onto SpellID, and
@@ -971,7 +981,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newQuicksand.m_spellDamage = 0;
             newQuicksand.m_duration = 0;
             newQuicksand.m_dispelEffect = 0x3a;
-            m_obstacles.insert(m_obstacles.end(), 1, newQuicksand);
+            m_obstacles.push_back(newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newQuicksand, obstacleSlot, hex, 4);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1024,7 +1034,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newLandmine.m_spellDamage = damage;
             newLandmine.m_duration = 0;
             newLandmine.m_dispelEffect = 0x3b;
-            m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
+            m_obstacles.push_back(newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newLandmine, obstacleSlot, hex, 8);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1054,7 +1064,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         newWall.m_spellDamage = 0;
         newWall.m_duration = 2;
         newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
-        m_obstacles.insert(m_obstacles.end(), 1, newWall);
+        m_obstacles.push_back(newWall);
         int obstacleSlot = m_obstacles.size() - 1;
         placeObstacle(&newWall, obstacleSlot, targetIndex, 0x22);
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1079,7 +1089,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newWall.m_spellDamage = damage;
             newWall.m_duration = 2;
             newWall.m_dispelEffect = 0x42;
-            m_obstacles.insert(m_obstacles.end(), 1, newWall);
+            m_obstacles.push_back(newWall);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newWall, obstacleSlot, hex, 0x10);
             drawFrame(1, 0, 0, 0, 1, 0);
