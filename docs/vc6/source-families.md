@@ -1401,6 +1401,53 @@ The baseline and selected raw COFF layouts, bytes and all 4061 relocation
 destinations are identical; all three entries remain exact. The explicit
 inline keyword was unnecessary, not evidence of an original annotation.
 
+### Full-width object-type input ownership
+
+`generate-object-type-read-owner-family.py` starts at `ba9d07f2` and exhausts
+eight owner/query alternatives in context `f19ddfdcac44d6eb1e45`: eight scored
+states, three emitted identities, all three elites reproduced. It preserves
+the existing integer buffer's filename-length and extra-field uses, crossing
+the old union and three native enum lifetimes with a buffer/record diagnostic
+query. DC rows 3610..3614 positively use `int_buffer`; the enum local is a
+Complete I/O-boundary hypothesis, not a purported recovered DC declaration.
+Row 3619 does positively query the committed record for the diagnostic.
+
+Selected `3edff3daea1caee731a5ae58` reads into an enum local adjacent to its
+guard, then assigns the record, and uses that committed field in the diagnostic.
+Both unscoped lifetimes produce the same 99.9633% function. Merely changing
+the union control's diagnostic is byte-neutral and stays exact. The scoped
+native value gives 99.9163%. All other mapcell scores stay fixed.
+
+The `--phase-scopes` follow-up tests actual independent field-value lifetimes,
+not unused compiler mass: filename length, native object type and extra field,
+each optionally scoped through its commit. Context `e8265cfda7e5bc50aa1e`
+exhausts nine states (including the unchanged union parent), nine object
+identities and nine reproduced elites. The best native phase variant is
+99.9673%, but requires splitting the positively evidenced generic integer
+buffer and adding scopes. That tiny improvement does not justify choosing
+the more speculative source model over the simpler native parent.
+
+The adopted object reproduces the selected candidate's complete sections.
+Against the old object, all 419 section layouts, 318 function-symbol positions
+and 2077 relocation sites/kinds/destinations agree. Only `readObjectType`'s
+1216-byte body changes: 18 stack-slot displacement bytes, with the same
+instructions otherwise. All other 259 emitted function bodies are unchanged.
+This is an explicit raw comparison, not a relaxation of retail normalization
+or the strict byte-neutral comparison tool.
+
+`homm3.vc6.test_object_type_read_owner` compiles the actual read/commit block,
+enum and abstract-file interface at native `-O0` and `-O2`. Six valid enum
+values and read reports 0..4 verify width, return value, one read call,
+neighboring sentinels and commit timing. Five negative controls reject direct
+field reads, a two-byte width, rejection of a full read, a wrong value and a
+missing assignment. No malformed-input or x86 ABI claim is made by this host
+fixture. The neighboring 16-bit readers cannot use the four-byte enum's
+`sizeof` without changing their actual wire contract.
+
+The full retail build passes at 4062/4752 exact, 96.39% linked fuzzy and
+96.12% whole-image. Only this function resets MAX (100% to 99.9633%); HIST
+retains 100%. The census becomes 227 inline overrides and 64 unions.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
