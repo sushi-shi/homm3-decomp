@@ -3036,7 +3036,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // type and preferred terrain. The final reverse scan gives later rows
 // precedence for the same subtype. Names are provisional; RMG is absent
 // from the Dreamcast build. Retail fixes the record stride at 0x4c.
-// Residual (99.7862%): the rule push_back expands single-value insertion
+// Residual (99.5723%): the rule push_back expands single-value insertion
 // into the count overload, adding one push of 1 where retail calls the
 // retained single-value wrapper at 0x536701. The checked bitset subscript
 // recovers the exception string constructor and the rule's stack homes;
@@ -3047,7 +3047,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // push_back yield reader 99.5723%; all three direct insertions give 97.3075%.
 // These ordinary public calls recover the parent and child boundaries
 // without changing a library definition. Bank those unchanged-source MAXs
-// separately, then retain this higher reader peak. A 54-case count-one
+// separately. A 54-case count-one
 // insertion follow-up does not improve either reader form. No pin remains.
 // Earlier source controls: initialize row before the vectors, increment it
 // before rule destruction, and explicitly zero both resize calls. Reuse
@@ -3058,6 +3058,11 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // indices and combined/nested reverse-loop conditions are byte-neutral.
 // Removed inline-depth diagnostics (1 at push_back, 2 at .test) were also
 // byte-neutral at 97.5804%; the canonical library definitions stay in use.
+// The current eight-state JSON batch confirms that any two scalar insert
+// calls retain both uncovered rule fill/copy_backward bodies at 100%.
+// All push_back scores 99.7862% here but emits neither helper; one insert
+// scores 96.2627% and also omits them. Keep two insertions (99.5723%) and
+// the proven helper boundaries, with the former caller peak in history.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -3079,8 +3084,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         objectType = atoi(values[3]);
         subtype = atoi(values[4]);
         terrain = atoi(values[6]);
-        objectTypes.push_back(objectType);
-        terrains.push_back(terrain);
+        objectTypes.insert(objectTypes.end(), objectType);
+        terrains.insert(terrains.end(), terrain);
         subtypes.push_back(subtype);
         for (terrain = 0; terrain <= eTerrainWater; ++terrain)
             rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
@@ -4996,6 +5001,9 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // Reusing one connection per function or outer loop remains lower. Short
 // vector resizing and the third connection insertion still expand differently
 // from retail; preserve the real operations and their canonical helpers.
+// A sixteen-state connection push_back/insert batch emits no short-vector
+// resize specialization in any object. Its caller peak of 72.7823% does
+// not recover the missing 0x54c1e0 boundary, so no caller edit is retained.
 VA(0x0053DAD0, 0x57F) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
 {
@@ -8476,6 +8484,10 @@ VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
+// The retained insertion calls these value-assignment loops. Both traverse
+// 0x4c-byte rules with the two owned vectors at +0x2c and +0x3c.
+VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
 
 // LoadTemplates calls this single-value insertion at 0x53833e/0x538354
 // for the two directions of a parsed connection. Retail's seven-dword

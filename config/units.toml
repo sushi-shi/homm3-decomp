@@ -908,6 +908,19 @@ unit = "victor"
 source = "src/victor.cpp"
 flags = "victor_o2_ml_gd_windows"
 
+# Retail flip retains helpers expanded by the palette compilation context.
+# Original library object name unknown; keep ordinary declarations/calls.
+[[unit]]
+unit = "victor_flip"
+source = "src/victor_flip.cpp"
+flags = "victor_o2_ml_gd_windows"
+
+# PCX loader retains its ordinary library helper calls in retail.
+[[unit]]
+unit = "victor_loadpcx"
+source = "src/victor_loadpcx.cpp"
+flags = "victor_o2_ml_gd_windows"
+
 # Semantic grouping of external assembly kernels; original filename unknown.
 [[unit]]
 unit = "victor_pcx_kernels"
