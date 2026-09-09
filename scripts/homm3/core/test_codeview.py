@@ -15,9 +15,11 @@ def _symbol(name: str, value: int, section: int, typ: int,
                        section, typ, storage, aux)
 
 
-def _fixture(functions: int = 1, files: tuple[str, ...] | None = None) -> bytes:
+def _fixture(functions: int = 1, files: tuple[str, ...] | None = None,
+             bss_size: int = 0) -> bytes:
     """Minimal i386 COFF with one /Z7-style contribution per function."""
-    header_size = 20 + functions * 40
+    section_count = functions + bool(bss_size)
+    header_size = 20 + section_count * 40
     chunks = []
     sections = []
     cursor = header_size
@@ -53,6 +55,11 @@ def _fixture(functions: int = 1, files: tuple[str, ...] | None = None) -> bytes:
             "<8sIIIIIIHHI", b".text\0\0\0", 0, 0, len(code), raw_offset,
             0, line_offset, 0, 4, 0x60000020))
 
+    if bss_size:
+        sections.append(struct.pack(
+            "<8sIIIIIIHHI", b".bss\0\0\0\0", 0, 0, bss_size, 0,
+            0, 0, 0, 0, 0xC0000080))
+
     sym_offset = cursor
     symbols = []
     for index, symbol_index in enumerate(symbol_indices):
@@ -66,7 +73,7 @@ def _fixture(functions: int = 1, files: tuple[str, ...] | None = None) -> bytes:
         bf_aux = bytearray(18)
         struct.pack_into("<H", bf_aux, 4, begin)
         symbols.append(bytes(bf_aux))
-    header = struct.pack("<HHIIIHH", 0x14C, functions, 0, sym_offset,
+    header = struct.pack("<HHIIIHH", 0x14C, section_count, 0, sym_offset,
                          symbol_cursor, 0, 0)
     return header + b"".join(sections) + b"".join(chunks) \
         + b"".join(symbols) + struct.pack("<I", 4)
@@ -87,6 +94,24 @@ class CodeViewLinesTest(unittest.TestCase):
                          [(0, 11), (0, 12), (1, 13)])
         self.assertEqual(result.code, b"\x90\xc3")
         self.assertIsNone(result.source_file)
+
+    def test_large_uninitialized_section_has_no_file_payload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(_fixture(bss_size=0x10000), directory)
+            result = codeview.parse_lines(path)[("func", 0)]
+            code = codeview.function_bytes(path, "func")
+        self.assertEqual(result.code, b"\x90\xc3")
+        self.assertEqual(code, result.code)
+        self.assertEqual(result.begin_line, 10)
+
+    def test_truncated_initialized_section_is_still_rejected(self):
+        payload = bytearray(_fixture(bss_size=0x10000))
+        struct.pack_into("<I", payload, 60 + 36, 0xC0000040)
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(bytes(payload), directory)
+            with self.assertRaisesRegex(codeview.CodeViewError,
+                                        "truncated COFF section 2 data"):
+                codeview.parse_lines(path)
 
     def test_long_file_records_switch_between_tu_and_header(self):
         files = (r"Z:\repo\src\unit.cpp", r"Z:\repo\include\retained_header.h",
