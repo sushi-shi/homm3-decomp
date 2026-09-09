@@ -28,6 +28,7 @@ not diagnosed	438	68.8871	68.8871	0.0000	68.8871	1407	rmg	?joinExtraZones@type_r
 not diagnosed	246	69.5855	69.5855	0.0000	69.5855	810	rmg	?addObject@type_random_map_generator@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	187	70.1029	70.1029	0.0000	70.1029	625	rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	diagnose	-
 not diagnosed	844	70.3423	79.2531	8.9108	70.3423	2846	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
+not diagnosed	46	70.3860	70.3860	0.0000	70.3860	154	victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	diagnose	-
 not diagnosed	172	70.4101	70.4101	0.0000	70.4101	580	rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	diagnose	-
 not diagnosed	394	70.4307	95.3605	24.9298	70.4307	1333	mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	diagnose	-
 not diagnosed	320	71.5746	71.5746	0.0000	71.5746	1126	rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	diagnose	-
@@ -187,6 +188,7 @@ not diagnosed	163	88.5898	88.5898	0.0000	88.5898	1427	ai_combat	?castSpell@type_
 not diagnosed	51	88.6223	88.6223	0.0000	88.6223	449	singleselectionwindow	?headerRequested@CNewPlayerUpdateMan@@QAEXKEH@Z	diagnose	-
 not diagnosed	228	88.6580	88.8247	0.1667	88.6580	2009	tradpost	?update@TBuyArtifactWindow@@QAEXE@Z	diagnose	-
 not diagnosed	51	88.7023	88.7023	0.0000	88.7023	450	event_record	?recordEraseObject@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	diagnose	-
+not diagnosed	28	88.8478	88.8478	0.0000	88.8478	252	victor	?victorInitializePalette@@YGXPAUimgdes@@@Z	diagnose	-
 not diagnosed	48	88.8550	88.8550	0.0000	88.8550	427	remote	?sendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	diagnose	-
 not diagnosed	207	88.8564	88.8564	0.0000	84.2097	1859	resourcemanager	?getSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	diagnose	-
 not diagnosed	157	88.8584	88.8584	0.0000	88.8584	1413	game	??0game@@QAE@XZ	diagnose	-
