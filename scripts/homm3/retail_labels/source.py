@@ -262,6 +262,7 @@ CHAR_STREAM_MEMBERS = (
      "basic_string_assign_str"),
     ("?append@?$basic_string@D", "@ID@Z", "basic_string_append_count"),
     ("?assign@?$basic_string@D", "@ID@Z", "basic_string_assign_count"),
+    ("?resize@?$basic_string@D", "QAEXI@Z", "basic_string_resize"),
     ("??A?$basic_string@D", None, "basic_string_subscript"),
     ("?_Split@?$basic_string@D", None, "basic_string_split"),
     ("?erase@?$basic_string@D", None, "basic_string_erase"),
@@ -1469,6 +1470,12 @@ def _demangle_key(mangled: str):
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
         return f"{construct_owner.group(1).lower()}@std_construct"
+    # std::copy over vector<T> values uses the same nested-element owner
+    # spelling as _Construct<vector<T>> and vector<vector<T>> members.
+    copy_vector = re.match(
+        r"^\?copy@std@@YIPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    if copy_vector:
+        return f"{copy_vector.group(1).lower()}_vector@std_copy"
     copy_owner = re.match(
         r"^\?copy@std@@YI(?:PA|PB)(?:V|U)([A-Za-z_]\w*)@", mangled)
     if copy_owner:

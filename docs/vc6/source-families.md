@@ -1407,6 +1407,139 @@ The baseline and selected raw COFF layouts, bytes and all 4061 relocation
 destinations are identical; all three entries remain exact. The explicit
 inline keyword was unnecessary, not evidence of an original annotation.
 
+### Full-width object-type input ownership
+
+`generate-object-type-read-owner-family.py` starts at `ba9d07f2` and exhausts
+eight owner/query alternatives in context `f19ddfdcac44d6eb1e45`: eight scored
+states, three emitted identities, all three elites reproduced. It preserves
+the existing integer buffer's filename-length and extra-field uses, crossing
+the old union and three native enum lifetimes with a buffer/record diagnostic
+query. DC rows 3610..3614 positively use `int_buffer`; the enum local is a
+Complete I/O-boundary hypothesis, not a purported recovered DC declaration.
+Row 3619 does positively query the committed record for the diagnostic.
+
+Selected `3edff3daea1caee731a5ae58` reads into an enum local adjacent to its
+guard, then assigns the record, and uses that committed field in the diagnostic.
+Both unscoped lifetimes produce the same 99.9633% function. Merely changing
+the union control's diagnostic is byte-neutral and stays exact. The scoped
+native value gives 99.9163%. All other mapcell scores stay fixed.
+
+The `--phase-scopes` follow-up tests actual independent field-value lifetimes,
+not unused compiler mass: filename length, native object type and extra field,
+each optionally scoped through its commit. Context `e8265cfda7e5bc50aa1e`
+exhausts nine states (including the unchanged union parent), nine object
+identities and nine reproduced elites. The best native phase variant is
+99.9673%, but requires splitting the positively evidenced generic integer
+buffer and adding scopes. That tiny improvement does not justify choosing
+the more speculative source model over the simpler native parent.
+
+The adopted object reproduces the selected candidate's complete sections.
+Against the old object, all 419 section layouts, 318 function-symbol positions
+and 2077 relocation sites/kinds/destinations agree. Only `readObjectType`'s
+1216-byte body changes: 18 stack-slot displacement bytes, with the same
+instructions otherwise. All other 259 emitted function bodies are unchanged.
+This is an explicit raw comparison, not a relaxation of retail normalization
+or the strict byte-neutral comparison tool.
+
+`homm3.vc6.test_object_type_read_owner` compiles the actual read/commit block,
+enum and abstract-file interface at native `-O0` and `-O2`. Six valid enum
+values and read reports 0..4 verify width, return value, one read call,
+neighboring sentinels and commit timing. Five negative controls reject direct
+field reads, a two-byte width, rejection of a full read, a wrong value and a
+missing assignment. No malformed-input or x86 ABI claim is made by this host
+fixture. The neighboring 16-bit readers cannot use the four-byte enum's
+`sizeof` without changing their actual wire contract.
+
+The full retail build passes at 4062/4752 exact, 96.39% linked fuzzy and
+96.12% whole-image. Only this function resets MAX (100% to 99.9633%); HIST
+retains 100%. The census becomes 227 inline overrides and 64 unions.
+
+### Ordinary volume conversion and selected-setting lifetimes
+
+`generate-volume-boundary-family.py` starts from `a7a83c6e` and exhausts
+twelve combinations in context `c682cc6559d87a47dbef`: twelve scored states,
+five object identities and five reproduced elites. Three actual setting
+bindings (value snapshot, const reference, direct reads) cross equivalent
+short-circuit/nested bounds and the old/removed auto-inline fence. The source
+keeps both duplicated scale arms and the shared lower/upper clamp; Complete's
+0..127 return must not acquire Dreamcast's final 0..100 platform conversion.
+
+Selected `7bb1334725faaa2026c1258b` uses branch-local const references and
+removes the fence. Strict `compare-coff-layout.py` passes for all 110 raw
+sections, 699 relocation destinations and function positions against the old
+`c441b9aa0f03520c7206d8aa` control. Production passes the same comparison.
+Every scored soundmgr function remains unchanged, including all four exact
+callers. These references are source-lifetime hypotheses, not declarations
+proved by DC's empty optimized-local inventory.
+
+The unfenced value control `338a47b3bd2bded6fbade5ae` retains the same helper
+body but removes the named calls at setMusicVolume +0x1f, modifySample +0x9a,
+memorySample +0x15a and processStopAndPlayMP3 +0x25. The four bodies grow,
+and their scores drop to 0%, 57.3125%, 81.0864%, and 83.8794%. Direct reads
+also expand the helper, with either guard form. Nested value/reference forms
+keep all four calls, but only the short-circuit reference form preserves the
+original whole object without changing the guards. This is a natural binding
+decision, not a new pragma, helper copy or release-elided dummy operation.
+
+`homm3.vc6.test_volume_boundary` imports the actual body and enum, checking
+15 music settings, 15 effects settings, four selector values and 513 bounded
+volume values at native `-O0` and `-O2`. The 461,700 cases per optimization
+verify selection, scale, minimum-one/maximum-127 limits, disabled settings
+and unchanged setting storage. Five
+negative controls change the selected setting, range, divisor, minimum or
+maximum and are all rejected. The host test does not assert Miles behavior,
+VC6 inlining or overflowing multiplication semantics.
+
+### Joint recheck of byte-neutral Load fences
+
+The complete post-integration deletion audit at `d7f7be28` finds two
+individually byte-neutral `game::load` fences. Before adopting them,
+`generate-redundant-load-fence-family.py` exhausts the four combinations in
+context `c37c4b8bdc6f290cfc35`: four scored states, one emitted object identity,
+one reproduced elite. This separate joint control prevents assuming that two
+individually inert directives are also inert together.
+
+The combined `87c339c85bd6535c153b4761` removes only the creature-bank
+`loadObjectVector` fence and the normal-return fence. Against the unchanged
+`3c3d0c896d77feef57c45b36`, strict raw comparison passes all 822 sections,
+5287 relocation destinations and function positions. Every game score stays
+fixed. Source statements, helper interfaces, return scopes and the remaining
+`isLocalHuman` directive are unchanged. The source generator records the
+pre-adoption anchors; the complete audit snapshots remain separate controls.
+
+### Compiler-generated text-dialog teardown
+
+`generate-text-dialog-dtor-family.py` uses positive Dreamcast member attributes:
+the CTextDialog field list (class `0x2c52`, fields `0x2c53`) gives its destructor
+`0x107`, including `compgenx`, as for CWaitForReadyPlayersDlg. Explicit
+CAnimatedDlg and TDialogBox destructor controls give `0x007`. This is not an
+absence-of-lines or absence-of-locals argument. The canonical correction removes
+the false explicit empty declaration/body and keeps the retained retail body
+at `0x490770` as an `IMPLICIT_DTOR` claim; the deleting wrapper stays claimed.
+
+Context `921c64eda6cd9b36c940` exhausts four states across all twelve actual
+header consumers: four combined emitted-object identities and four reproduced
+elites, each scoring 1129 functions. Implicit-with-existing-fence candidate
+`62c9f3297fad1750e2c2db22` preserves every score. CAnimatedDlg's instruction
+bytes stay fixed, while its base-cleanup relocation now correctly names
+TDialogBox instead of CTextDialog. The readiness caller and the separately
+emitted wait-dialog destructor keep their named calls and body bytes.
+
+Removing the animated-destructor fence makes the implicit wait-dialog
+destructor exact (86.3333% to 100%), but drops waitForReadyToPlayMsg from
+90.6522% to 75.0683% and removes the retained CNetMsgHandler::copy body.
+The correction therefore does not itself justify deleting that override.
+`generate-animated-dtor-lifetime-family.py` follows the corrected parent with
+six real nullable-sprite bindings crossed with that fence. Context
+`5ebe0ea56c6aed44ee2a` exhausts all twelve states, five emitted-object identities
+and five reproduced elites. Every unfenced state still loses the copy body;
+the guarded object reference raises the readiness caller to 83.0186%, while
+the remaining forms stay at 75.0683%. None is adopted. The ordinary destructor,
+virtual Complete sprite disposal and implicit base cleanup remain canonical;
+no dummy work, alternate declaration or explicit derived-destructor router is
+introduced. These finite results bound those lifetime alternatives, not all
+possible caller reconstruction.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
