@@ -619,20 +619,20 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell =
                     &thisCell->m_objects[numObj];
-                if (objCell->m_height != row)
+                if (objCell->m_layer != row)
                     continue;
 
                 CObjectType* objType =
                     &m_fullMap->m_objectTypes[
-                        m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                        m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
                 // Before normalization (locals): SprPtr.
                 CSprite* sprPtr = m_fullMap->m_sprites[
-                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
                 // Dreamcast line 620 performs this third CObject lookup as a
                 // standalone source statement. Its value is optimized out of
                 // Complete, but the statement is part of the original shape.
                 unsigned short objectTypeIndex =
-                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex;
+                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex;
 
                 if (!playerBit
                     && (!g_vwTerrains
@@ -650,14 +650,14 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 if (hasFlag(objType->m_objectType)) {
                     int triggerX;
                     int triggerY;
-                    m_fullMap->m_objects[objCell->m_objectIndexAlias].findTrigger(
+                    m_fullMap->m_objects[objCell->m_objectIndex].findTrigger(
                         triggerX, triggerY);
                     int owner = getFlaggedObjectOwner(
                         getCell(type_point(triggerX, triggerY, z)));
 
                     sprPtr->drawAdvObjWithFlag(
                         (m_animCtr
-                         + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                         + m_fullMap->m_objects[objCell->m_objectIndex]
                                .m_animationOffset)
                             % sprPtr->getNumFrames(0),
                         (objType->m_width - objCell->m_cellX - 1) * 32,
@@ -667,7 +667,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 } else {
                     sprPtr->drawAdvObj(
                         (m_animCtr
-                         + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                         + m_fullMap->m_objects[objCell->m_objectIndex]
                                .m_animationOffset)
                             % sprPtr->getNumFrames(0),
                         (objType->m_width - objCell->m_cellX - 1) * 32,
@@ -847,10 +847,10 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
         CObjectType* objType =
             &m_fullMap->m_objectTypes[
-                m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
         // Before normalization (locals): SprPtr.
         CSprite* sprPtr = m_fullMap->m_sprites[
-            m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+            m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
 
         if (!playerBit
             && (!g_vwTerrains
@@ -865,7 +865,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         drewSomething = 1;
         sprPtr->drawAdvObjShadow(
             (m_animCtr
-             + m_fullMap->m_objects[objCell->m_objectIndexAlias].m_animationOffset)
+             + m_fullMap->m_objects[objCell->m_objectIndex].m_animationOffset)
                 % sprPtr->getNumFrames(0),
             (objType->m_width - objCell->m_cellX - 1) * 32,
             (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -1021,6 +1021,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
+    // Keep the two shroud-selection scopes and their common draw checks.
+    // An else arm removes the reconstructed join label at unchanged 97.9205%.
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
         return;
     if (srcY >= g_mapHeight && !g_completeDrawAllCells)
@@ -1045,33 +1047,31 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
             || g_unnamed6989f4)) {
         drawShroud = false;
-        goto draw_shroud;
+    } else {
+        drawShroud = true;
+        if (!g_completeDrawAllCells)
+            lookup = getCloudLookup(srcX, srcY, z);
+        if (!lookup) {
+            memset(g_memoryBuffer->getMap(0, 0), 0,
+                   g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+            m_starTileset->drawShroudTile(
+                ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
+                0, 0, false, false);
+            vwScaleToScreenBuffer(baseX, baseY + 8);
+            return;
+        }
+
+        if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+            hflip = true;
+            lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+        }
+        if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+            && (srcX & 1))
+            ++lookup;
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+            lookup = CLOUD_DRAW_FRAME_4;
     }
 
-    drawShroud = true;
-    if (!g_completeDrawAllCells)
-        lookup = getCloudLookup(srcX, srcY, z);
-    if (!lookup) {
-        memset(g_memoryBuffer->getMap(0, 0), 0,
-               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
-        m_starTileset->drawShroudTile(
-            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
-            0, 0, false, false);
-        vwScaleToScreenBuffer(baseX, baseY + 8);
-        return;
-    }
-
-    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
-        hflip = true;
-        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
-    }
-    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-        && (srcX & 1))
-        ++lookup;
-    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
-        lookup = CLOUD_DRAW_FRAME_4;
-
-draw_shroud:
     if (g_unnamed6989f4)
         return;
     if (!drawShroud)
@@ -1129,17 +1129,17 @@ void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 
             CObjectType* objType =
                 &m_fullMap->m_objectTypes[
-                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                    m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
             // Before normalization (locals): SprPtr.
             CSprite* sprPtr = m_fullMap->m_sprites[
-                m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
 
             if (objType->m_suppressDraw) {
                 drewSomething = 1;
 
                 sprPtr->drawAdvObj(
                     (m_animCtr
-                     + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                     + m_fullMap->m_objects[objCell->m_objectIndex]
                            .m_animationOffset)
                         % sprPtr->getNumFrames(0),
                     (objType->m_width - objCell->m_cellX - 1) * 32,
@@ -1365,16 +1365,14 @@ TViewWorldWindow::TViewWorldWindow()
 
     m_widgets.push_back(new bitmapBorder(
         611, 537, 68, 34, -1, "box66x32.pcx", 0x800));
-    // INLINE BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
+    // RETAIL BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
     // vector<widget*>::insert. Dreamcast 0x1952b8 proves the ordered widget
     // append family; Complete adds this puzzle row and retail retains its
-    // insert call at ctor+0xfd0. Negative control: ordinary depth expands the
-    // insert and its nested STL helpers, producing the 88.42% / 247-block
-    // constructor instead of retail's 215-block shape.
-#pragma inline_depth(0)
+    // insert call at ctor+0xfd0. The old 88.42% flattening control belonged
+    // to an earlier source state: removing this pin now improves the ctor
+    // from 97.1358% to 97.3652% with no tracked-TU losses (2026-09-09).
     m_widgets.push_back(new button(
         612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
-#pragma inline_depth()
 
     m_undergroundButton = new type_func_button(
         686, 538, 32, 32, -1, "iam010.def",

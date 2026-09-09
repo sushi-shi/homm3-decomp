@@ -50,7 +50,6 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
-#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
 #include "homm3_limit.h"
 #include <va.h>
 #include <stdio.h>
@@ -1168,12 +1167,11 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // domain enum, and the four .bss cells 0x6968e0 / 0x69777c / 0x698774 /
 // 0x699560. HeroView's existing gate was widened rather than duplicated.
 //
-// Findings kept from the decode, all still true of the bytes:
-//   - The two route-teardown blocks are LONGHAND, not calls. Retail leaves
-//     no call relocation at either. The second one is clear_adventure_route
-//     with bUpdateScreen folded to 0, but that static is DEFINED LATER in
-//     this file, so VC6 cannot inline it here and calling it would emit a
-//     call retail does not have; writing it out is the only faithful form.
+// Decode findings and source corrections:
+//   - DC lines 1310/1369 call HideRoute(1,0,1) and HideRoute(0,1,1).
+//     The canonical ordinary body is defined later in this TU and expands
+//     naturally at both sites. The former claim that later definitions
+//     cannot inline was false; pasted teardown bodies were unnecessary.
 //   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
 //     and const-qualified/defined at :1498, so calling it from a non-const
 //     member binds the undefined overload and would emit a call where
@@ -1268,27 +1266,26 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // branches against retail's 80, with both polarity flips unchanged. The
 // narrower per-iteration output-flag scope below is the retail-byte winner;
 // DC local scopes are name/type evidence, not x86 allocation evidence.
-// The route walk is a GOTO LOOP, not a `for` (88.5537 -> 90.2547). Retail's
-// back edge is `dec / mov [ebp-0x10],edi / js <done>` followed by an
-// UNCONDITIONAL jump to the head; a `for (i = n-1; i >= 0; i--)` gives the
-// rotated single `jns <head>` instead, and the two `continue` arms become
-// `goto route_walk_next`. Left at that spelling: VC6 still PEELS the head
-// into the back edge (29 instructions duplicated where retail emits
-// `mov eax,[gpSearchArray] / jmp <head>`), which is why the block count is
-// 122 against retail's 121. Dropping the `if (i < 0)` guard removes that
-// surplus block and takes the skeleton to 121/121 with 96 exact blocks, but
-// the ratchet number falls to 89.9938 - measured both ways, the guard
-// stays.
-// 2026-09-05: 90.2547 -> 94.2359 by UNPEELING that head. `route_walk_step:`
-// had both a fall-in predecessor (the `if (i < 0)` guard falling through)
-// and a backward `goto route_walk_step`, which is exactly the shape VC6
-// peels; wrapping the body in `while (1)` and leaving `route_walk_next:` at
-// the END of the loop as a forward-only continue point keeps the guard AND
-// gives 121/121 blocks with retail's unconditional back edge. calls now
-// AGREE 81 = 81 and only ONE polarity flip is left tree-wide in this body
-// (#15, the BuildPath budget select below). Same lever as wingraph's DDBlit
-// and cmbtmgr's place_obstacle.
+// Earlier loop controls measured 88.5537 -> 90.2547 with an explicit
+// decrement and unconditional back edge instead of a conventional for-test.
+// The earlier goto-only model still peeled 29 instructions into the back
+// edge; an enclosing while(1) removed that duplication (90.2547 -> 94.2359
+// in that older implementation). These observations support the explicit
+// decrement and loop scope, not a requirement for goto. The current audit
+// below removes all remaining exits and forward-continue labels, retaining
+// the initial empty-path guard and the same body decrement.
+// Restoring both HideRoute sites plus the IsFlying/CanWalkOnWater mode
+// helpers improves the current caller from 83.3621% to 84.9679%, without TU
+// collateral. Complete's explicit CanLand checks remain after the mode
+// queries. Restoring just one mode site can lose 0.0288 points; the complete
+// source-boundary combination is the reproduced winner.
 // Before normalization (locals): trigger_point, bNoMove, bFoughtBattle.
+// Goto audit: a positive initial guard and nested breaks remove seven route
+// jumps without changing any TU score. DC 1349..1357 sets bBreak, exits the
+// event loop, then tests it to exit the route loop; interrupted carries it.
+// Rotating the decrement into a guarded do/while loses 3.3322 points, so the
+// decrement stays in the body. Positive landing scopes remove the other two
+// jumps, preserving the same bytes with either nested or compound guards.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 {
@@ -1332,15 +1329,9 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
             else
                 standingOn = map->cell(cellPoint.m_x, cellPoint.m_y,
                                        cellPoint.m_z);
-            // Artifact ids 0x48 and 0x5a are spelled as literals for the
-            // reason findpath's GetTerrainCost records: armygrp.h's
-            // EArtifactId rides in initialize.cpp's measured include
-            // closure. heroSamples[10] is the row past the nine terrain
-            // walk samples - the flight/water-walk sample.
+            // The row past the nine terrain samples is the flight sample.
             sample* walkSample = m_heroSamples[standingOn->m_groundSet];
-            if (!(currHero->m_flags & 0x40000)
-                && (currHero->m_flightLevel != -1
-                    || currHero->isWieldingArtifact(0x48)))
+            if (currHero->isFlying(0))
                 walkSample = m_heroSamples[10];
             walkSample->m_memSample.m_memLooping = 0;
             g_unnamed6968e0 = g_soundManager->memorySample(walkSample);
@@ -1353,12 +1344,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         }
 
         int moveBudget;
-        if ((!(currHero->m_flags & 0x40000)
-             && (currHero->m_flightLevel != -1
-                 || currHero->isWieldingArtifact(0x48)))
-            || (!(currHero->m_flags & 0x40000)
-                && (currHero->m_waterWalkLevel != -1
-                    || currHero->isWieldingArtifact(0x5a))))
+        if ((currHero->isFlying(0))
+            || (currHero->canWalkOnWater(0)))
             moveBudget = currHero->m_movePoints;
         else
             moveBudget = 0xea5f;
@@ -1375,18 +1362,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         if (g_unnamed698774 || savedShowRoute) {
             showRoute(1, 0, 1);
         } else if (m_showRoute && m_advCommand != ADV_COMMAND_WALK_ROUTE) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_unnamed6989c8 && g_unnamed69ccd4)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(0);
-                    this->updateScreen(0, 0);
-                }
-            }
+            hideRoute(1, 0, 1);
         }
 
         g_mouseManager->hidePointer();
@@ -1394,78 +1370,55 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
         unsigned char interrupted = 0;
         int i = g_searchArray->m_result.size() - 1;
-        if (i < 0)
-            goto route_walk_done;
-        while (1) {
-            {
-                int noMove;
-                int foughtBattle;
-                eventCell = moveHero(g_searchArray->m_result[i]->m_direction,
-                                     i == 0, triggerPoint, &noMove, 0,
-                                     &foughtBattle, 0);
-                m_advWindow->updateHeroLocator(-1, 1, 1);
-                if (eventCell)
-                    goto route_walk_done;
-                if (noMove)
-                    goto route_walk_done;
-                if (foughtBattle)
-                    goto route_walk_done;
-                if (g_unnamed69777c)
-                    goto route_walk_done;
+        if (i >= 0) {
+            while (1) {
+                {
+                    int noMove;
+                    int foughtBattle;
+                    eventCell = moveHero(g_searchArray->m_result[i]->m_direction,
+                                         i == 0, triggerPoint, &noMove, 0,
+                                         &foughtBattle, 0);
+                    m_advWindow->updateHeroLocator(-1, 1, 1);
+                    if (eventCell)
+                        break;
+                    if (noMove)
+                        break;
+                    if (foughtBattle)
+                        break;
+                    if (g_unnamed69777c)
+                        break;
 
-                if (!(currHero->m_flags & 0x40000)
-                    && (currHero->m_flightLevel != -1
-                        || currHero->isWieldingArtifact(0x48))
-                    && !currHero->canLand())
-                    goto route_walk_next;
-                if (!(currHero->m_flags & 0x40000)
-                    && (currHero->m_waterWalkLevel != -1
-                        || currHero->isWieldingArtifact(0x5a))
-                    && !currHero->canLand())
-                    goto route_walk_next;
-
-                process1WindowsMessage();
-                message msg = g_inputManager->getEvent();
-                while (msg.m_id) {
-                    if (msg.m_id == MESSAGE_KEY_DOWN
-                        || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
-                        || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
-                        || msg.m_id == MESSAGE_WIDGET) {
-                        interrupted = 1;
-                        stopCursor(1);
-                        goto route_walk_done;
+                    if (!(currHero->isFlying(0)
+                        && !currHero->canLand())
+                        && !(currHero->canWalkOnWater(0)
+                        && !currHero->canLand())) {
+                        process1WindowsMessage();
+                        message msg = g_inputManager->getEvent();
+                        while (msg.m_id) {
+                            if (msg.m_id == MESSAGE_KEY_DOWN
+                                || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                                || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
+                                || msg.m_id == MESSAGE_WIDGET) {
+                                interrupted = 1;
+                                stopCursor(1);
+                                break;
+                            }
+                            process1WindowsMessage();
+                            msg = g_inputManager->getEvent();
+                        }
+                        if (interrupted)
+                            break;
                     }
-                    process1WindowsMessage();
-                    msg = g_inputManager->getEvent();
                 }
+                if (--i < 0)
+                    break;
             }
-        route_walk_next:
-            if (--i < 0)
-                goto route_walk_done;
         }
-
-    route_walk_done:
         m_seedingValid = 0;
         if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
              && currHero->m_y == currHero->m_pathTargetY)
             || (interrupted && !g_unnamed698774) || eventCell) {
-            // clear_adventure_route(this, 0), written out: that static is
-            // defined further down this file, so VC6 cannot inline it here.
-            if (g_currentPlayer->isLocalHuman()
-                || (g_unnamed6989c8 && g_unnamed69ccd4)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                int heroId = g_currentPlayer->m_currHeroId;
-                if (heroId != -1) {
-                    hero* pathHero = &g_game->m_heroes[heroId];
-                    pathHero->m_pathTargetX = -1;
-                    pathHero->m_pathTargetY = -1;
-                }
-                if (m_showRoute)
-                    m_showRoute = 0;
-            }
+            hideRoute(0, 1, 1);
         } else if (m_advCommand == ADV_COMMAND_WALK_ROUTE || g_unnamed698774) {
             showRoute(0, 1, 1);
         }
@@ -1624,21 +1577,31 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
 // The second MapCell.h COMDAT the retail link filed inside advmgr's
 // span; 21 call sites all over the image. 49 B, `ret 0xc` (3 stack
-// args + this), NO calls and no bounds test - which is what separates
-// it from the 82-byte NewfullMap::zCell overload of the same arity.
+// args + this), no calls and no bounds test. The old claim that an
+// 82-byte zCell was a different x86 body confused SH4 and x86 sizes:
+// DC's private zCell arithmetic itself emits the exact 49 retail bytes.
 // The index arithmetic ends `lea edx,[eax+eax*8]; lea eax,[eax+edx*2];
 // lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
 // Moved here from the DC header block to keep retail link order.
 // E:\gamedcs\MapCell.h:895
-#endif  // @carcass
-
-#pragma auto_inline(off)
+// The canonical header now owns this body and its private zCell helper.
+// Its mutable storage verification preserves this exact cell copy; without
+// it VC6 emits the same arithmetic only as zCell. No claim rename is needed.
+// The removed fork/pin had imposed different caller expansion choices:
+// doAdvCommand 83.3621 -> 77.1728, processHover 91.6263 -> 88.1523,
+// drawBoatPart/Shadow 100 -> 98.2619, drawHeroPart 100 -> 99.75 and its
+// shadow 100 -> 99.7524. Other caller changes are in the audit; their
+// MAX/HIST retain the peaks. The canonical boundary recovers
+// processOnMapTowns 94.3642 -> 98.6258 and monster quest text 93.002 -> 98.3426.
+// These score dips do not refute the DC-proven helper calls or method order.
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    return &m_cellData[(z * m_size + y) * m_size + x];
+    // Claim-only mirror; the compiled definition is in game.h.
+    HOMM3_RELEASE_VERIFY(m_cellData != 0);
+    return zCell(x, y, z);
 }
-#pragma auto_inline(on)
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
 // SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
@@ -4291,10 +4254,15 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 // The ninth GetMapExtra bit is the monster-occupancy plane. On a trigger
 // square, the first byte of the canonical 16-byte object-traits row says
 // whether the underlying object blocks landing.
-#pragma auto_inline(off)
+// DC 4531..4532 has no line rows before the cell use. A non-null input
+// verification is a source hypothesis, not recovered ASSERT text. It removes
+// the auto-inline override while preserving all TU section bytes and 4105
+// relocation destinations. Negative control: omit it and getNormalCursor
+// expands in processHover (91.6263 -> 63.9466); its own body stays exact.
 VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
+    HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
             || !g_adventureObjectLandBlocked[currCell->m_type][0])) {
@@ -4315,7 +4283,6 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     }
     return ADV_WALK_POINTER;
 }
-#pragma auto_inline(on)
 
 // DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
 // (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
@@ -5204,26 +5171,6 @@ static inline NewmapCell* drawHeroCell(advManager* manager, type_point point)
     return map->cell(point.m_x, point.m_y, point.m_z);
 }
 
-// Before normalization (function): DrawBoatCell.
-static inline NewmapCell* drawBoatCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->cell(0, 0, 0);
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
-// Before normalization (function): DrawGroundCell.
-static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->m_cellData;
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
 // E:\gamedcs\advmgr.cpp:5688
 // Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
 // call and a single conditional return expression. Its former two-return
@@ -5235,9 +5182,16 @@ static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
 // and naming the divisor; naming the remainder scored 98.1571%.
 //
 // Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
-// DrawHeroCell keeps Complete's invalid-point arm: retail calls
-// NewfullMap::cell(0, 0, 0), while the older DC GetCell returns cellData.
-// Substituting that older GetCell semantic scored 93.18%. The register
+// DrawHeroCell keeps Complete's invalid-point call to
+// NewfullMap::cell(0, 0, 0). DC GetCell at 0x14b90 also calls that scalar
+// wrapper at line 7028, then the packed-point wrapper at 7029; the prior
+// claim that DC returned cellData directly mistook flattened code for source.
+// DrawHeroCell remains canonical-helper recovery debt. The boat and ground
+// copies have been retired in favor of the ordinary GetCell below. Restoring
+// all three hero/underlay calls too scores 96.6095/96.6415/86.9011 and stops
+// emitting scalar cell; neither const-byte nor const-bool isValid changes
+// those choices. This does not refute the canonical helper or its callers.
+// The earlier flattened GetCell substitution scored 93.18%. The register
 // model's lack of binding divergence did not establish correct helper
 // expression shape; see docs/vc6/regalloc.md 6f.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
@@ -5380,12 +5334,12 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5413,12 +5367,12 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -6207,6 +6161,12 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 // A zero cloud lookup shares the full-draw star tail; it does not skip the
 // cell. Keeping that tail after the cloud path gives VC6 retail's two
 // forward branches and one common star draw.
+// A single cloud-attempt scope preserves both separate failure guards and
+// all 584 retail bytes. Both do/while(0) and for/break controls remove the
+// two jumps with identical code and relocation addends. Positive lookup or
+// full-draw scopes and their combined nesting still lose code agreement;
+// the earlier nested-cloud form scored 47.7198%. Neither result proves a
+// source-goto requirement.
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -6250,28 +6210,29 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
         && (getMapExtra(srcX, srcY, z) & g_mapVisibilityBit))
         return;
 
-    int lookup;
-    if (g_completeDrawAllCells)
-        goto draw_stars;
+    do {
+        int lookup;
+        if (g_completeDrawAllCells)
+            break;
 
-    lookup = getCloudLookup(srcX, srcY, z);
-    if (!lookup)
-        goto draw_stars;
-    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
-        hflip = true;
-        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
-    }
-    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-        && (srcX & 1))
-        ++lookup;
-    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
-        lookup = CLOUD_DRAW_FRAME_4;
-    m_cloudIcons->drawShroudTile(
-        lookup - 1, tilex, tiley, tilew, tileh,
-        g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
-    return;
+        lookup = getCloudLookup(srcX, srcY, z);
+        if (!lookup)
+            break;
+        if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+            hflip = true;
+            lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+        }
+        if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+            && (srcX & 1))
+            ++lookup;
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+            lookup = CLOUD_DRAW_FRAME_4;
+        m_cloudIcons->drawShroudTile(
+            lookup - 1, tilex, tiley, tilew, tileh,
+            g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
+        return;
+    } while (0);
 
-draw_stars:
     int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
     m_starTileset->drawShroudTile(
         frame, tilex, tiley, tilew, tileh,
@@ -6429,8 +6390,8 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    NewmapCell* thisCell = drawGroundCell(
-        this, type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(
+        type_point(srcX, srcY, z));
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -6517,13 +6478,19 @@ NewmapCell* advManager::getCell(int x, int y, int z)
 // DemobilizeCurrHero.
 DATA(0x006aac3c) extern int g_unnamed6aac3c;
 
+// DC 7027..7029 proves the validity test and both public map-wrapper calls.
+// This ordinary definition stays exact and now also serves the boat twins
+// and ground drawing. In the boat calls, retaining getLocation as a value
+// return is material: reconstructing its coordinates at the site is 90.8714%
+// instead of 100%. The getBoat accessor alone is byte-flat. No helper body
+// is pasted into those callers, and their old DrawBoat/DrawGroundCell copies
+// are gone. Hero/underlay's remaining copy is documented at drawHeroPart.
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::getCell(type_point point)
 {
     if (!point.isValid())
-        return m_fullMap->m_cellData;
-    return &m_fullMap->m_cellData[(point.m_z * m_fullMap->m_size + point.m_y)
-                              * m_fullMap->m_size + point.m_x];
+        return m_fullMap->cell(0, 0, 0);
+    return m_fullMap->cell(point);
 }
 
 // E:\gamedcs\advmgr.cpp:7037
@@ -7754,6 +7721,8 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
 VA(0x00415de0, 0x140)  // exact dispatcher/deadline/draw flow, dc 0x18d38
 void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
 {
+    // DC's override/default scopes join before drawing the bottom view.
+    // The structured else arm preserves the exact retail body.
     if (m_bottomViewOverride == BOTTOM_VIEW_8)
         return;
 
@@ -7785,10 +7754,7 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
             changed = updBottomViewTown(forceUpdate);
             break;
         }
-        goto update_bottom_view;
-    }
-
-    if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
+    } else if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
         if (g_currentPlayer->m_currHeroId != -1)
             changed = updBottomViewHero(forceUpdate);
         else if (g_currentPlayer->m_currTownId != -1)
@@ -7799,7 +7765,6 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         changed = updBottomViewEnemyTurn(forceUpdate);
     }
 
-update_bottom_view:
     if (changed && drawWindow)
         m_advWindow->drawBottomView(update != 0);
 }
@@ -8258,8 +8223,10 @@ long aiApproximateStrength(const hero* currentHero);
 // INSIDE its scope. Closing the point's block around the IsInIdentifyRange
 // call - landing the answer in `inIdentifyRange` - makes the two blocks
 // siblings, the slot is reused, and the frame becomes retail's exactly.
-// (The earlier note's rejected goto restructure at 77.47 was collapsing the
-// flow shape; the scope close alone keeps the flow and pays the whole delta.)
+// A showDetails flag now records which constructor arm was selected; it
+// removes the goto while preserving all 713 bytes and these sibling scopes.
+// Do not use a null window pointer as that flag: allocation failure would
+// then spuriously attempt the second construction.
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
@@ -8270,6 +8237,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     g_game->getLocalPlayerGamePos();
 
     TQuickCreatureWindow* window;
+    bool showDetails = false;
     hero* currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
         unsigned char inIdentifyRange;
@@ -8307,13 +8275,14 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             int cost = g_creatureTypeTraits[type].m_cost[6] * count;
             window = new TQuickCreatureWindow(
                 TQuickCreatureWindow::ViewAll, type, count, mood, cost);
-            goto wait_and_close;
+            showDetails = true;
         }
     }
-    window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
-                                      count, TQuickCreatureWindow::Flee, 0);
+    if (!showDetails) {
+        window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
+                                          count, TQuickCreatureWindow::Flee, 0);
 
-wait_and_close:
+    }
     window->m_x = limit(window->m_width / 2, cellx * 32,
                       WINDOW_SCREEN_WIDTH - 1 - window->m_width / 2)
                 - window->m_width / 2;
@@ -8953,6 +8922,10 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // a `goto` to the function's own trailing INVALID return is what breaks it,
 // because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
 // shared block now carries the same six predecessors retail has.
+// An enclosing do/while(0) with switch continue preserves the invalid-index
+// skip over the terrain switch, but scores 24.7668% around dispatch and
+// 23.8079% around the whole calculation, versus 96.9031%. These scopes do
+// not preserve the retail lowering, even with all sound/helper results kept.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -9855,6 +9828,8 @@ void advManager::loadRemote(unsigned char makeOrig)
 VA(0x0041a1e0, 0xF1)  // anchor-global, dc 0x1d804
 void advManager::trimLoopingSounds(int maxSoundsAllowed)
 {
+    // DC line 11063 exits the slot scan. A plain break reaches the same
+    // disposal pass and preserves the exact retail body.
     if (g_highMemBuffer > 0)
         maxSoundsAllowed += g_highMemBuffer / 100;
 
@@ -9886,12 +9861,11 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
                 ++soundsFound;
                 ++saveSounds[i];
                 if (soundsFound >= maxSoundsAllowed)
-                    goto disposeSamples;
+                    break;
             }
         }
     }
 
-disposeSamples:
     for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
         if (m_loopedSample[i] && !saveSounds[i]) {
             m_loopedSample[i]->dispose();
@@ -11806,4 +11780,3 @@ VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 // are identical, so /OPT:ICF left one row for both names; advmgr.obj emits
 // the logic_error spelling, which is the one claimed here.
 VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)
-

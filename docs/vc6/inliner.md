@@ -91,6 +91,14 @@ Matcher guidance:
 * A15 ("leaf spelling is a global variable") now has a mechanism: a leaf's
   `cb` enters every caller's sequential budget arithmetic, so respelling a
   leaf re-decides inline structure at every call site in the image.
+* Recover real accessor calls together with helper ownership. In the
+  2026-09-09 combat-path family, removing a duplicate mark helper/pragma and
+  three budget-only preamble extractions initially changed 87.9780% to
+  60.0911%. Restoring the DC-attested flag, geometry, validity and cell
+  accessor boundaries recovered 90.2669%, leaving every tracked sibling
+  unchanged. The isolated dip was not evidence for inventing helper copies
+  or abandoning the ordinary private methods. See the joint controls in
+  [the union/pragma audit](union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
 
 ## 1. Where the inliner lives (and why the atlas pointed one region over)
 
@@ -1866,3 +1874,62 @@ loop calls a destructor whose retail ICF name is `Sign::~Sign`; its code and
 operator-delete relocation are identical to the hero-identity destructor.
 That callee identity must be checked before treating the call-name mismatch
 as different behavior.
+
+### Release-elided preconditions can retire small-helper overrides
+
+The `giveSS`, `getNormalCursor`, `doPurchase`, `compressMsg` and
+`getHeroSpellBonus` controls in [the union/pragma audit](union-pragma-audit.md#small-helpers-release-verification-recovery)
+replace five `auto_inline(off)` regions with meaningful
+`HOMM3_RELEASE_VERIFY` input/array preconditions. Each has a possible leading
+CodeView gap and a deletion-only negative control. Their bodies remain exact;
+every raw section byte, relocation destination and function location in the
+affected TUs also agrees with the pinned controls. The gaps do not recover
+assertion text, and these results do not license inserting arbitrary void
+expressions or asserting optional inputs.
+
+Do not conflate release-elided code with preprocessing it out entirely.
+`HOMM3_RELEASE_VERIFY` retains the real expression as a void evaluation for
+VC6, whose optimization emits no code here. A macro that discards its argument
+before compilation cannot supply the same compiler input. Nor does a successful
+codegen control identify the historical macro spelling.
+
+The live byte-gated `checkLevel` traces under the old pin and the `giveSS`
+verification both report caller CB 1452, budget 2904 and the same seven budget
+tests. Their `giveSS` candidate entries never reach a budget test. That rules
+out explaining this pair merely by a larger caller budget; it does not yet
+identify the complete upstream eligibility decision. Inspect named candidate
+sites and saved-body state before turning this observation into a general
+inliner rule.
+
+Byte-elided predicates can still perturb unrelated allocation: splitting
+`giveSS`'s combined range check, or combining `getHeroSpellBonus`'s separate
+bounds, changes an unrelated `giveArtifact` section without changing the
+desired call boundary. Measure the full TU, preserve proven source scopes,
+and keep checks tied to actual invariants. Assertion spelling is a hypothesis
+constrained by source and retail evidence, not a generic substitute for a pin.
+
+### I/O result locals and signed byte conversions preserve saved helper bodies
+
+The three string serializers at 0x4bb990, 0x4bbb60 and 0x4c6010 each record
+an `int count` in Dreamcast, with the I/O assignment and result test on separate
+source lines. The reconstructed inline-in-condition spellings omitted that
+compiler input. Restoring count removes both reader auto-inline fences with
+the entire game object unchanged. The writer additionally needs its meaningful
+stream verification; either change alone fails to preserve the out-of-line
+calls in `saveSignPool` and `saveRumours`.
+
+The object writer at 0x503640 is a useful negative control against the idea
+that adding count always solves this boundary. Count alone fails, and the
+Dreamcast-proven plain-char buffer alone fails. Both together preserve all
+mapcell-object bytes and retain `saveMapObjects`'s call without a pragma.
+The signed conversion is meaningful source typing even though its final byte
+store is identical. No assertion is inferred from either reader/writer's
+borrowed boundary row.
+
+Static membership and reference arguments also survived the retail check:
+`game::loadString`, `game::saveString`, `NewSMapHeader::readString`, and
+`NewfullMap::saveObject` retain all raw section bytes, function locations and
+relocation destinations after explicit source-backed symbol migrations.
+Two-register `/Gr` is not proof of a free function or a pointer parameter.
+The finite families and negative controls are documented in the
+[audit](union-pragma-audit.md#serialization-locals-and-interface-recovery).

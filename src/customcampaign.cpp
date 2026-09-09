@@ -2420,6 +2420,9 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
+    // The subtitle completion flag can also end playback after input.
+    // Retaining the event switch and testing finished removes three jumps
+    // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
     if (m_video < 0)
         return;
 
@@ -2604,17 +2607,17 @@ void TCampaignBrief::MapTextStruct::play()
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX != g_campaignSkipKey)
-                goto stop;
+                finished = 1;
             break;
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_DOWN:
-            goto stop;
+            finished = 1;
+            break;
         }
         if (finished)
-            goto stop;
+            break;
     }
 
-stop:
     if (speech) {
         g_soundManager->stopSample(speech->m_memSample.m_memSampleHandle);
         speech->dispose();

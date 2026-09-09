@@ -144,10 +144,11 @@ unsigned char TDialogBox::setup(int winX, int winY,
 VA_COMPGEN(0x00490740, 0x21, SCALAR_DELETING_DTOR, CTextDialog)
 
 // E:\gamedcs\dialogbox.cpp:143
-VA(0x00490770, 0x6B)  // deleting-dtor callee + inlined base dtor, dc 0x82068
-CTextDialog::~CTextDialog()
-{
-}
+// The DC member attribute is compgenx, not an explicit empty source body.
+// Removing the false declaration/definition preserves all 1129 tracked
+// scores across the twelve header consumers and fixes CAnimatedDlg's
+// retained base-cleanup target. Keep the generated retained body claimed.
+VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
 
 // E:\gamedcs\dialogbox.cpp:146
 VA(0x004907e0, 0x31)  // vtable + pTextWidget zero, dc 0x81e00

@@ -1564,6 +1564,10 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // construction raises the isolated score from 84.05% to 84.84%, but reverses
 // DC's positive ctor/helper order at line 1243. Keep the recovered order; the
 // residual retail store scheduling is optimizer state, not source evidence.
+// Combining the sixteen left/right skill case labels and selecting hero
+// plus skill index in one scope removes the shared-skill jump, but scores
+// 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
+// preserve the named skill and dialog calls; the dispatch layout remains open.
 VA(0x005afdf0, 0xABB)  // full retail dispatcher + dc 0x15d4ac dossier
 int swapManager::main(message& msg)
 {

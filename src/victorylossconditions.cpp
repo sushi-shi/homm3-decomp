@@ -82,24 +82,35 @@ static const int g_angelicAllianceSecondMap = 9;
 // 98.2057 -> 98.49 (2026-09-07): put the direct-artifact winner store before
 // the gameWon store, matching both Dreamcast's line order and this function's
 // combination-win arm; retail's whole direct-win block is now exact.
-// Residual: register-visible slots across the Complete-only campaign
-// prologue, one commutative hero-array SIB, and the final exception-cleanup
-// state initialization. Keeping currMap as
-// a reference is the whole-body optimum: direct member reads now fall to
-// 92.69% and add a 78th block. The fresh eight-cell why-reg catalog is flat
-// or worse (unnamed comboIdx is flat; volatile team/comboIdx/remaining/j and
-// a named completion flag are worse). Earlier negative controls remain:
-// erase(it,it+1), inline_depth(1), and the pre-helper direct-member spelling.
+// 98.49 -> 99.7368 (2026-09-09): retail loads currentMap directly in the
+// Complete-only campaign guards and forms the retained reference only on the
+// two paths entering their body. The five-state scope family
+// (fb9eccef69cfa41ddb7c; five objects) restores those three entry blocks and
+// makes the inlined range-failure tail the sole size mismatch.
+// 99.7368 -> EXACT (2026-09-09): the 50-state Complete-only result family
+// (89c47e8af4b5571d0885; eight objects) found eight spellings of the same
+// retail object. The selected int bitset result fixes the commutative
+// campaign hero-array SIB; the following bool HasArtifact result changes
+// /Ob2 state enough to expand out_of_range's derived constructor and emit its
+// final vftable store. Negative controls: 30 hero-id value/reference/pointer
+// lifetimes made six objects without a gain (8b02455ec261aa663089); seven
+// vector exhaustion spellings made six objects without a gain
+// (55c47942207fb45df3a4); the canonical game::getTeam spelling was byte-flat
+// (2fc9185b24879d14aece). Earlier erase(it,it+1), inline_depth(1), volatile
+// loop locals, and named completion-result probes remain rejected.
 // E:\gamedcs\victorylossconditions.cpp:31
 VA(0x005f1610, 0x4FE)  // anchor-global, dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
     int& currCampaign = g_game->m_campaign.m_currentCampaign;
-    signed char& currMap = g_game->m_campaign.m_currentMap;
-    if ((currCampaign == g_armorOfTheDamnedCampaign && currMap == 1)
+    if ((currCampaign == g_armorOfTheDamnedCampaign
+            && g_game->m_campaign.m_currentMap == 1)
         || (currCampaign == g_angelicAllianceCampaign
-            && (currMap == g_angelicAllianceFirstMap
-                || currMap == g_angelicAllianceSecondMap))) {
+            && (g_game->m_campaign.m_currentMap
+                    == g_angelicAllianceFirstMap
+                || g_game->m_campaign.m_currentMap
+                    == g_angelicAllianceSecondMap))) {
+        signed char& currMap = g_game->m_campaign.m_currentMap;
         if (!g_currentPlayer->isHuman())
             return 0;
 
@@ -163,8 +174,10 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
             int remaining = components.count();
             hero* h = g_game->getHero(g_currentPlayer->m_heroes[j]);
             for (int i = 0;; ++i) {
-                if (components.test(i)) {
-                    if (!h->hasArtifact(i))
+                int hasComponent = components.test(i);
+                if (hasComponent) {
+                    bool carriesComponent = h->hasArtifact(i);
+                    if (!carriesComponent)
                         break;
                     if (--remaining == 0) {
                         m_playerWinner =
@@ -186,6 +199,10 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
 // GetHero/GetTown -1 arms reach the armyGroup accessor unguarded,
 // exactly as the inline accessors expand.
 // E:\gamedcs\victorylossconditions.cpp:61
+// This and the five eligibility checks below call game::IsHumanTeam in DC
+// (source lines 71, 108, 327, 384, 413 and 442). Retail expands its eight-player
+// scan; the former goto eligible edges were returns from that inline.
+// Restoring the canonical calls preserves all six exact retail bodies.
 VA(0x005f1b10, 0x169)  // anchor-global, dc 0x18fe98
 unsigned char VictoryConditionStruct::checkForTotalCreatures()
 {
@@ -194,16 +211,7 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
         if (g_currentPlayer
             && !g_game->m_playerDisabled[g_netLocalGamePos]) {
             int team = getTeam(g_game, g_netLocalGamePos);
-            if (team >= 0) {
-                int player = 0;
-                signed char* teams = g_game->m_mapHeader.m_teamInfo;
-                for (; player < 8; ++player) {
-                    if (teams[player] == team && g_game->isHuman(player))
-                        goto eligible;
-                }
-            }
-            if (m_appliesToComputer) {
-eligible:
+            if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
@@ -232,16 +240,7 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         int team = getTeam(g_game, g_netLocalGamePos);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team && g_game->isHuman(player))
-                    goto eligible;
-            }
-        }
-        if (m_appliesToComputer) {
-eligible:
+        if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
             if (g_currentPlayer->m_resources[m_resourceType] >= m_resourceAmount) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
@@ -325,22 +324,13 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
 // emits jl-top where retail has jge-exit/jmp-top.
 // 99.2692 -> 99.2821 (2026-08-30): restoring OnSameTeam and HasBuilding
 // lets /Ob2 inline both to retail while retiring two source-shape omissions.
-// The const-reference equality spelling and all three recovered local names
-// are byte-flat. Residual: one extra mov in the this_town_loc/grail_town_loc
-// y compare plus a grail_town_loc/any_town_loc stack-home exchange. All four
-// receiver/argument combinations and both operand orders inside the inline
-// equality measured identically; this is a C1 packed-point register rotation.
-// A fresh why-reg pass leaves nine masked slots: zero-hoisting is flat, the
-// winner-store swap adds six, and volatile player adds 120. The allocator
-// model confirms identical first-definition bindings and places the
-// divergence after allocation, outside the B1 lever.
+// Sixteen const-reference/pointer binding forms leave the packed-point
+// comparison residual unchanged. Dreamcast supplies the missing source fact:
+// line 211 zeros a result before the comparisons, line 215 assigns HasBuilding,
+// and line 218 tests it. A named bool with that lifetime rotates the x86 packed
+// y-field loads into place; the bool-initializer and byte forms reproduce all
+// 515 retail bytes, while nested/combined conditions remain at 99.2820%.
 // E:\gamedcs\victorylossconditions.cpp:184
-// Residual (99.2820%) is THREE instructions in the first type_point::operator==
-// expansion's second field test: retail loads the operand into the destination
-// (`mov edx,[ebp-0x16]` / `xor edx,edi`) where this compile lands it in ESI and
-// copies EDI into EDX first. Swapping that comparison's operands
-// (grail_town_loc == this_town_loc) is byte-flat - VC6 canonicalises the
-// bitfield xor's operand order, so the choice is not source-reachable here.
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
 unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 {
@@ -361,13 +351,14 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
                     g_game->m_players[player].m_townIds[j]);
                 type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
                                          thisTown->m_mapZ);
+                bool hasGrail = false;
                 if (thisTownLoc == grailTownLoc
-                    || grailTownLoc == anyTownLoc) {
-                    if (thisTown->hasBuilding(HOLY_GRAIL_ID, 1)) {
-                        m_playerWinner = thisTown->m_owner;
-                        m_gameWon = 1;
-                        return 1;
-                    }
+                    || grailTownLoc == anyTownLoc)
+                    hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, 1);
+                if (hasGrail) {
+                    m_playerWinner = thisTown->m_owner;
+                    m_gameWon = 1;
+                    return 1;
                 }
             }
         }
@@ -437,18 +428,9 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     int townId = g_game->getTownId(m_townX, m_townY, m_townZ);
     if (townId < 0)
         return 0;
@@ -517,18 +499,9 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
         int owner = g_game->m_generators[i].m_playerOwner;
         if (!sameTeam(g_game, owner, g_netLocalGamePos))
@@ -549,19 +522,9 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team
-                && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
         int owner = g_game->m_mines[i].m_playerOwner;
         if (!sameTeam(g_game, owner, g_netLocalGamePos))
@@ -610,16 +573,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (m_appliesToComputer) {
-eligible:
+    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
         if (!target.operator==(&townLoc))
             return 0;

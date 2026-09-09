@@ -538,129 +538,34 @@ const std::bitset<9>& armyGrpFn0044A460()
 }
 
 // E:\gamedcs\armygrp.cpp:341
-// DECODE START 2026-08-06 (head to +0x95): 1326 bytes. STRUCTURAL
-// FINDS: the spell table is reached via a stored-pointer global with
-// a 136-BYTE RECORD STRIDE (spell*17*8 - the akSpellTraits analog of
-// akCreatureTypeTraits; record fields read: +0x10 into a local,
-// +0x18 compared > 4, likely school-mask and level); the creature
-// traits row (29 dwords) is indexed alongside. Artifact gates:
-// target_hero->IsWielding?(0x86 = Orb of Vulnerability) -> jump to a
-// certain-work path (+0x201); spell 0x23 special-cases with another
-// artifact check (0x5c). CHUNK 2 (+0x95..+0x201): float results are
-// .rdata literals via fld (0.0/1.0); spell-record flag bit 0x40
-// (+0x10) crossed with creature traits byte +0xd bit 0x10 = the
-// MIND-IMMUNITY check (creature 0x95 special-cased alongside); then
-// a SPELL switch over 0x11..0x47 (byte table ~+0x45c, jump table
-// ~+0x418 - extract both) with per-spell cases: protection-artifact
-// checks on target_hero (0x64, 0x65, 0x6a seen - the pendant
-// family), spells 0x46/0x47 plus CTA_UNDEAD -> fld 0.0
-// (bless-family dead on undead). CHUNK 3: more pendants (0x66, 0x69,
-// 0x6b), spell-record flag bit 4 gating one family, and the
-// resurrect/animate distinctions reading traits +0x60 crossed with
-// CTA_UNDEAD (living-only vs undead-only; several fld-0.0 returns).
-// CHUNK 4: pendants 0x67/0x68; trait bit 0x20000 ALSO blocks a spell
-// family (so the CTA_NO_MORALE name undersells it - non-living/
-// mindless semantics; consider renaming when this lands); creature
-// pairs 0x46/0x47 and 0x1e/0x1f special-cased; trait flag 0x10
-// gates one family. CHUNK 5 (+0x276..+0x33x): artifact 0x5d on
-// either hero -> +0x3de shared path; spell-record field +0xc bit 10
-// crossed with creature-trait bit 0x400 and target-hero artifact 0x31; trait bit
-// 0x4000 with spell-record byte +0x1c bit 2 -> 0.0. Then the SECOND
-// spell switch (0x10..0x85, tables ~0x4b8/0x494) sets the BASE
-// CHANCE as float literals - 1.0 / 0.8f (0x3f4ccccd) / 0.6f
-// (0x3f19999a) seen - each reduced by a hero-method result via
-// fsubr chains (the Resistance-skill math). CHUNK 6: the second
-// switch is PER-CREATURE immunity keyed on creature-0x10 - cases
-// re-check the SPELL: fire family {0x17,0x3e}, lightning family
-// {0x1a,0x11,0x13,0x39}, ice {0x10,0x14} (elemental immunities from
-// the creature side), and the DRAGON magic immunity as spell-record
-// LEVEL gates (+0x18 <= 3 and <= 4 cases) - each with its own fld
-// literal return. TABLES EXTRACTED: switch1 (spell-0x11, jt 0x4a8e8,
-// bt 0x4a92c, 55 entries, cases 0..15 + default 16): case0={0x11,
-// 0x13}, 1=0x18, 2=0x19, 3=0x26, 4=0x27, 5=0x29, 6=0x2a, 7=0x2c,
-// 8={0x31,0x32}, 9={0x33,0x34,0x37}, 10..13=0x3b..0x3e, 14=0x46,
-// 15=0x47. switch2 (creature-0x10, jt 0x4a964, bt 0x4a988, 118
-// entries, cases 0..7 + default 8): 0={0x10,0x85}, 1=0x11,
-// 2={0x1a,0x52,0x84,0x84?,0x1a..}, 3=0x1b, 4={0x53,0x75,0x79?},
-// 5={0x70,0x7f?}, 6={0x71,0x7d?}, 7={0x73,0x7b?} - write the exact
-// case lists from the raw arrays at implementation time (the byte
-// tables are recorded in the decision log's decode notes if needed:
-// creature upgrades share their base's case, mirroring
-// modify_spell_damage). CLOSING MATH (+0x3de..+0x40c): spell-record
-// field 0 <= 0 -> certain (fld literal); final `if (chance < 0)
-// chance = 0` floor via fcomp; code ends ~+0x40c, the rest of the
-// claim is the four dispatch tables as data-in-text. TRANSCRIPTION
-// COMPLETE; every prerequisite landed (SSpellTraits view in
-// armygrp.h; hero::GetMagicResistanceFactor is the fsubr callee; all
-// fld literals resolved - every immunity returns 0.0, certain-work
-// 1.0, so 0x86 = Power of the Dragon Father and 0x5d = Orb of Vulnerability).
-// FINAL CASE MAP (spell -> pendant/action): 0x3e -> 0x65 + creatures
-// 0x46/0x47 + undead; 0x26 plus the bless/precision family ->
-// undead/[traits +0x60] gates; 0x27 requires undead; 0x3b -> pendant
-// 0x64; {0x11,0x13} -> pendant 0x6a; 0x3c -> 0x69;
-// 0x3d -> 0x6b; 0x2a -> 0x66; 0x29 falls into the {0x33,0x34,0x37}
-// bless-family body; 0x18 -> 0x67 (Death Ripple); 0x19 -> 0x68 +
-// 0x20000 (Destroy Undead needs undead); {0x31,0x32} -> trait
-// 0x20000 (mind on mindless); {0x46,0x47} -> trait-flag 0x10 /
-// creatures 0x1e,0x1f. Chance math: Orb of Vulnerability on either
-// hero bypasses resistance; artifact 0x31 in the field_c bit-10 family
-// when creature trait 0x400 is absent; base
-// chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
-// DC-CENSUS VERDICT (2026-08-14), and it is a NEGATIVE worth recording because
-// the row looked like a certainty. The census gives this body
-// `hero::IsWieldingArtifact` x11 against the EIGHT sites spelled here, and the
-// residual note below already said retail duplicates four sites we merge - so
-// the shared `check_protection_artifact` label was the obvious missing supply
-// (7 + 4 = 11 exactly). It is not: un-sharing all six pendant arms into their
-// own `IsWieldingArtifact(...) -> return 0.0f` costs 88.5071 -> 84.9089, and
-// un-sharing the three simple arms (berserk / lightning+chain / hypnotize)
-// costs 83.1929. The shared label is strictly closer, so the DC count is a
-// port difference, not a missing site.
-// The census's other row, `IsMindSpell` x1 (E:\gamedcs\SpellDefs.h:345,
-// dc 0x4fd34) against the `field_c >> 10 & 1` test below, also costs: 88.0464
-// as a folded expression AND 88.0464 with the local shift preserved inside the
-// helper, so the 0.46 is the call SITE, not the helper's internals.
-// CURRENT RESIDUAL (88.5071%): retail pushes each shared pendant id before
-// jumping to the common artifact call, while this compile keeps the id in
-// EAX and pushes it at the tail; four zero-return sites merge here but are
-// duplicated in retail. The 0.8 path also jumps to the shared resistance
-// tail where retail falls through, and the otherwise equivalent prologue
-// differs only in instruction scheduling. All selector semantics and the
-// 104-block retail action ordering are recovered.
-// Selector-source audit (2026-08-21): `int` in place of EArtifactId is
-// byte-flat, including when declared at the top of the function; `volatile
-// int` forces a stack home but regresses to 83.2375%. A file-static inline
-// artifact-check helper at all six arms is normalized to the already-tested
-// unshared spelling and reproduces its 84.9089% score. The type, declaration
-// placement and a source helper therefore cannot select retail's earlier
-// `push imm` cross-jump boundary.
-// Register/source-carrier audit (2026-08-21): the DC body has no named locals,
-// and why-reg's two apparent homing wins do not survive the byte verdict:
-// `volatile spellFlags` scores 87.26071% and `volatile chance` 87.685715%.
-// A conventional release VERIFY of the natural `target_hero != 0` invariant
-// is byte-flat at 88.50714%, both once at the common artifact label and once
-// in each of the six source arms. VERIFY remains possible source history, but
-// it cannot select retail's early pushes or its four additional return bodies.
-// Residual (88.5071%): a TAIL-MERGE DEGREE difference, measured both ways.
-// Retail emits 19 `ret 8` exits against our 15 and 63 branches against our
-// 57, and every surplus retail exit is a full inline `fld <0.0f> / pop edi /
-// pop esi / pop ebx / mov esp,ebp / pop ebp / ret 8` where this compile
-// cross-jumps to one shared copy. Both sides share the same jump table
-// (byte selector + `cmp eax,0x36 / ja`), the same arm layout, and the same
-// per-arm tests; the only structural difference is how many of the
-// `return 0.0f;` epilogues C2 chose to merge.
-// The six protection-artifact arms show the second half of the same fact:
-// retail ends each with `push <artifact> / jmp <shared call>` while the
-// shared `protectionArtifact` variable used here ends them with
-// `mov eax,<artifact> / jmp` and pushes the register once at the join.
-// TRIED AND REJECTED (2026-08-21): rewriting all six arms as their own
-// `if (target_hero && ...IsWieldingArtifact(<literal>)) return 0.0f;` -
-// which does produce retail's per-arm `push <literal>` - costs 3.60
-// (88.5071 -> 84.9089), because VC6 then declines to cross-jump ANY of the
-// six call+test tails and duplicates the whole return path six times, and
-// it moves target_hero out of EBX into EDI for the rest of the body. The
-// shared-variable form is the closer of the two.
-// Before normalization (locals): target_army_type, casting_hero, target_hero.
+// Retail's two compressed switch tables are at +0x418/+0x45c (spells)
+// and +0x494/+0x4b8 (creatures). Their shared branch destinations matter:
+// Resurrection only tests undead; Bless adds the damage-high test used by
+// Fortune/Misfortune/Slayer; Precision shares Forgetfulness's shooter test.
+// Stone tests the Troglodyte pair; Poison tests living and the Gargoyle pair.
+// The old transcription grouped these entries by apparent similarity and
+// also treated Diamond Golems as universally immune. The retail table puts
+// them on the normal path, Green/Red/Azure Dragons on level <= 3, Gold on
+// level <= 4, and Black/Magic Elemental on the unconditional zero path.
+//
+// DC lines 505..507 and retail +0x2bd..+0x2d5 make mind immunity a creature
+// trait OR a hero's Badge of Courage. DC 564..565 and retail +0x325 apply
+// GetMagicResistanceFactor after the entire creature switch, including its
+// default arm; it is not confined to Dwarves. The arrow-tower rejection at
+// retail +0xa7 is independent of the siege-weapon trait. These are behavior
+// corrections, verified separately from the byte similarity score.
+//
+// Restore the separate IsWieldingArtifact calls attested by DC 379..486;
+// VC6 merges the shared pendant tail itself. Together with the corrected
+// scopes this removes all seven gotos and improves 88.5071% to 95.8839%.
+// Restoring the header IsMindSpell accessor called at DC 505 raises this
+// further to 96.6018%. Mask and shift accessor expressions emit the same
+// code, and all 95 header consumers were measured without collateral loss.
+// The same corrected behavior with the old pendant join scores 76.8554%;
+// a post-switch artifact selector scores 75.4607%. Initializing chance at
+// function entry gives 95.0429%; keep its assignment after the spell gates.
+// Before normalization: get_spell_work_chance, target_army_type,
+// casting_hero, target_hero.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* castingHero, const hero* targetHero)
 {
@@ -675,15 +580,14 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (targetHero
             && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
-        goto certain;
+        return 1.0f;
     }
     if (attrs & g_ctaSiegeWeapon) {
         if (spellRec->m_flags & 0x1000)
             return 0.0f;
-        if (targetArmyType == CREATURE_ARROW_TOWER)
-            return 0.0f;
     }
-    EArtifactId protectionArtifact;
+    if (targetArmyType == CREATURE_ARROW_TOWER)
+        return 0.0f;
     switch (spell) {
     case SPELL_BLIND:
         if (targetHero
@@ -695,28 +599,26 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_BERSERK:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_DISPASSION;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DISPASSION))
+            return 0.0f;
         break;
     case SPELL_LIGHTNING_BOLT:
     case SPELL_CHAIN_LIGHTNING:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_NEGATIVITY;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_NEGATIVITY))
+            return 0.0f;
         break;
     case SPELL_HYPNOTIZE:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_FREE_WILL;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_FREE_WILL))
+            return 0.0f;
         break;
     case SPELL_FORGETFULNESS:
         if (targetHero
             && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_TOTAL_RECALL))
             return 0.0f;
+    case SPELL_PRECISION:
         if (!(attrs & 0x4))
             return 0.0f;
         break;
@@ -725,19 +627,20 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_HOLINESS;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
+            return 0.0f;
         break;
     case SPELL_RESURRECTION:
+        if (attrs & g_ctaUndead)
+            return 0.0f;
+        break;
     case SPELL_BLESS:
+        if (attrs & g_ctaUndead)
+            return 0.0f;
     case SPELL_FORTUNE:
     case SPELL_MISFORTUNE:
     case SPELL_SLAYER:
-    case SPELL_PRECISION:
-        if (attrs & g_ctaUndead)
-            return 0.0f;
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
         break;
@@ -748,21 +651,15 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     case SPELL_DEATH_RIPPLE:
         if (attrs & g_ctaUndead)
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_LIFE;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
+            return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
         if (!(attrs & g_ctaUndead))
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_DEATH;
-        goto check_protection_artifact;
-        break;
-    check_protection_artifact:
-        if (const_cast<hero*>(targetHero)->isWieldingArtifact(protectionArtifact))
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
             return 0.0f;
         break;
     case SPELL_MIRTH:
@@ -770,11 +667,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (attrs & g_ctaNoMorale)
             return 0.0f;
         break;
-    case SPELL_POISON:
-        if (targetArmyType == CREATURE_STONE_GARGOYLE || targetArmyType == CREATURE_OBSIDIAN_GARGOYLE)
+    case SPELL_STONE:
+        if (targetArmyType == CREATURE_TROGLODYTE || targetArmyType == CREATURE_INFERNAL_TROGLODYTE)
             return 0.0f;
         break;
-    case SPELL_STONE:
+    case SPELL_POISON:
         if (!(attrs & 0x10))
             return 0.0f;
         if (targetArmyType == CREATURE_STONE_GARGOYLE || targetArmyType == CREATURE_OBSIDIAN_GARGOYLE)
@@ -787,12 +684,10 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 && const_cast<hero*>(castingHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
             && !(targetHero
                 && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
-            unsigned int spellFlags = g_spellTraits[spell].m_flags;
-            spellFlags >>= 10;
-            if (spellFlags & 1) {
-                if (!(attrs & 0x400)
-                    && targetHero
-                    && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE))
+            if (isMindSpell(spell)) {
+                if ((attrs & 0x400)
+                    || (targetHero
+                        && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
                     return 0.0f;
             }
             if ((attrs & 0x4000) && (spellRec->m_school & 0x2))
@@ -801,14 +696,10 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             case CREATURE_DWARF:
             case CREATURE_CRYSTAL_DRAGON:
                 chance = 0.8f;
-            apply_magic_resistance:
-                if (targetHero)
-                    chance -= 1.0f - const_cast<hero*>(targetHero)
-                                         ->getMagicResistanceFactor();
                 break;
             case CREATURE_BATTLE_DWARF:
                 chance = 0.6f;
-                goto apply_magic_resistance;
+                break;
             case CREATURE_AIR_ELEMENTAL:
             case CREATURE_STORM_ELEMENTAL:
                 if (spell == SPELL_METEOR_SHOWER || spell == SPELL_BLIND)
@@ -826,24 +717,25 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
                     return 0.0f;
                 break;
+            case CREATURE_GREEN_DRAGON:
+            case CREATURE_RED_DRAGON:
             case CREATURE_AZURE_DRAGON:
                 if (spellRec->m_level <= 3)
                     return 0.0f;
                 break;
-            case CREATURE_GREEN_DRAGON:
             case CREATURE_GOLD_DRAGON:
-            case CREATURE_RED_DRAGON:
-            case CREATURE_BLACK_DRAGON:
                 if (spellRec->m_level <= 4)
                     return 0.0f;
                 break;
-            case CREATURE_DIAMOND_GOLEM:
+            case CREATURE_BLACK_DRAGON:
             case CREATURE_MAGIC_ELEMENTAL:
                 return 0.0f;
             }
+            if (targetHero)
+                chance -= 1.0f - const_cast<hero*>(targetHero)
+                                         ->getMagicResistanceFactor();
         }
         if (spellRec->m_karma > 0) {
-certain:
             return 1.0f;
         }
         if (chance < 0.0f)
@@ -1329,6 +1221,12 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // allocation mirror (retail homes `this` in EDI and shrink-wraps ESI for
 // morale after the early returns). `register` hints on either value are inert.
 // Before normalization (locals): apply_limits.
+// Fresh partial-scope controls confirm 80.5625% for plain no-op breaks.
+// Wrapping the terrain switches in do/while(0) scopes and using continue
+// is lower still (67.0170%); keep the two neutral selector destinations.
+// Independent neutral-arm break controls: Holy Ground 85.7784%, Evil Fog
+// 89.2727%, both 80.5625%, versus 96.5625%. Each changes its selector table;
+// keep both exits while preserving the canonical morale and artifact calls.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1439,9 +1337,15 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 // index reuse and shrink-wrapped EBX save around the game-state test; the
 // explicit no-bonus/+2 labels preserve its compressed town selector.
 // Before normalization (locals): apply_limits.
+// The remaining neutral-arm break scores 78.6737% versus 100%, collapsing
+// the compressed selector. The Clover bonus and default already use break.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
 {
+    // Put the Clover bonus in its case arm; this removes one jump at 100%.
+    // Replacing the neutral/default exits with break collapses the selector
+    // table and scores 78.6737%. The default alone can use break at 100%;
+    // the six neutral town cases retain their common exit.
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
@@ -1459,12 +1363,11 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
-                goto add_town_luck_bonus;
+                luck += 2;
+                break;
             default:
-                goto no_town_luck_bonus;
+                break;
             }
-        add_town_luck_bonus:
-            luck += 2;
         no_town_luck_bonus:;
         }
     }
@@ -1679,8 +1582,9 @@ unsigned char armyGroup::merge(armyGroup* ag)
 // weakest slot's value (the two je's at +0x8f/+0x94 skip only the
 // subtraction). Every action restarts the whole selection.
 // EXACT 2026-08-09: retail stops the weakest scan at the first empty
-// slot. Both fit searches jump directly to their success continuations,
-// avoiding a redundant post-loop bound test. The two reversed-argument
+// slot. Dreamcast lines 1311/1322 call CanJoin and line 1325 calls Dismiss;
+// the canonical ordinary helpers expand here to the same exact retail
+// body, including the success exits of both fit searches. The reversed-argument
 // std::swap calls are load-bearing: they reproduce retail's frame layout,
 // register allocation and source-before-destination exchange order.
 VA(0x0044b820, 0x140)  // anchor-global, dc 0x4f5ec
@@ -1706,14 +1610,8 @@ void armyGroup::mergeArmies(armyGroup* source)
                 continue;
             long gain = g_creatureTypeTraits[source->m_armies[j]].m_aiValue
                         * source->m_numTroops[j];
-            int slot;
-            for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
-                if (m_armies[slot] == source->m_armies[j]
-                    || m_armies[slot] == CREATURE_NONE)
-                    goto source_stack_fits;
-            }
-            gain -= weakestValue;
-source_stack_fits:
+            if (!canJoin(source->m_armies[j]))
+                gain -= weakestValue;
             if (gain > bestGain) {
                 bestGain = gain;
                 bestIndex = j;
@@ -1721,21 +1619,13 @@ source_stack_fits:
         }
         if (bestIndex < 0)
             return;
-        int slot;
-        for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
-            if (m_armies[slot] == source->m_armies[bestIndex]
-                || m_armies[slot] == CREATURE_NONE)
-                goto source_stack_merges;
-        }
-        {
+        if (canJoin(source->m_armies[bestIndex])) {
+            add(source->m_armies[bestIndex], source->m_numTroops[bestIndex], -1);
+            source->dismiss(bestIndex);
+        } else {
             std::swap(source->m_armies[bestIndex], m_armies[weakestIndex]);
             std::swap(source->m_numTroops[bestIndex], m_numTroops[weakestIndex]);
         }
-        continue;
-source_stack_merges:
-        add(source->m_armies[bestIndex], source->m_numTroops[bestIndex], -1);
-        source->m_armies[bestIndex] = CREATURE_NONE;
-        source->m_numTroops[bestIndex] = 0;
     }
 }
 
@@ -1868,7 +1758,19 @@ source_stack_merges:
 // [ebp+0x28] for GetMorale's result) where we recycle one and give the
 // offset a stack slot of its own, and the empty-allocator scratch byte again
 // sits at [ebp+0xf] against retail's [ebp+0x13].
+// Structured terrain controls: the Holy Ground evil arm and both Evil Fog
+// arms can own their adjustment/append/return bodies. This removes three
+// joins and raises GetMoraleDescription 93.0566% -> 93.1409%, with every
+// sibling unchanged. Keep default in Evil Fog's good arm: retail's out-of-
+// range town behavior falls into that adjustment. All four direct arms lose
+// score. Keeping the Evil Fog good join instead reaches 93.9282% but retains
+// one additional goto; both supported alternatives reproduce in the 16-state
+// family. The greater structured reduction still improves the starting score.
 // Before normalization (function): apply_morale_magic_terrain.
+// Replacing only holy_ground_good with switch break also scores 91.4420%
+// in GetMoraleDescription, versus 93.1409%; adding an explicit good default
+// produces the same loss. Keeping the adjustment below the switch therefore
+// does not recover a neutral structured exit in this helper context.
 static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
                                        int townType, int& currentMorale,
                                        std::string& result)
@@ -1883,7 +1785,9 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto holy_ground_evil;
+            --currentMorale;
+            result.append(g_holyGroundEvilMoraleText);
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
@@ -1893,10 +1797,6 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         ++currentMorale;
         result.append(g_holyGroundGoodMoraleText);
         return;
-    holy_ground_evil:
-        --currentMorale;
-        result.append(g_holyGroundEvilMoraleText);
-        return;
     }
 
     if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
@@ -1905,23 +1805,21 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
-            goto evil_fog_good;
+        default:
+            --currentMorale;
+            result.append(g_evilFogGoodMoraleText);
+            return;
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto evil_fog_evil;
+            ++currentMorale;
+            result.append(g_evilFogEvilMoraleText);
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
             return;
         }
-    evil_fog_good:
-        --currentMorale;
-        result.append(g_evilFogGoodMoraleText);
-        return;
-    evil_fog_evil:
-        ++currentMorale;
-        result.append(g_evilFogEvilMoraleText);
     }
 }
 
@@ -2190,14 +2088,12 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
 {
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        // Nine town values routed to NAMED exits, the recipe GetArmyMorale
-        // (0x44b100) already carries: retail lowers this arm through a
-        // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
-        // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
-        // survives if every arm names its own exit. Spelled with `return`
-        // in the no-op arms VC6 sees two outcomes, collapses the whole
-        // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
-        // instead of the tables.
+        // Retail uses a compressed nine-town selector. After restoring the
+        // bonus/default arms, an ordinary neutral return preserves all 957
+        // caller bytes and 53 relocation names/addends at 92.3623%. The older
+        // comment rejecting return no longer applies to this helper body.
+        // A neutral break still collapses the selector and scores 85.3503%;
+        // all 48 combinations with the other terrain joins were checked.
         switch (g_creatureTypeTraits[creature].m_townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -2205,19 +2101,16 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto clover_done;
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            goto clover_apply;
+            currentLuck -= 2;
+            result.append(g_cloverFieldLuckText);
+            break;
         default:
-            goto clover_done;
+            break;
         }
-    clover_apply:
-        currentLuck -= 2;
-        result.append(g_cloverFieldLuckText);
-    clover_done:
-        ;
     }
 }
 
@@ -2304,13 +2197,6 @@ TTerrainType armyGroup::getNativeTerrain() const
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\SpellDefs.h:345
-DC_ONLY(0x4fd34, 0x20)
-unsigned char IsMindSpell(int spell)
-{
-    // @stub
-}
 
 // E:\gamedcs\armygrp.cpp:131
 DC_ONLY(0x4fd54, 0x34)

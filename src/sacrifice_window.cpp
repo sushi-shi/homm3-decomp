@@ -2277,32 +2277,21 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 // access. A held artifact that is legal in this slot moves the real icon to
 // the back layer and shows frame 0x90 on the drop target; otherwise the front
 // layer shows the equipped artifact or the slot's ARTSLOTS.TXT name.
+// DC :842 calls hero::get_artifact; :847 and :855 both call the ordinary
+// update_artifact_widget above. Keep those boundaries: VC6 expands both
+// widget calls and naturally retains the nested setVisible edge at +0x6d.
+// The six-state boundary family restores the complete raw TU object without
+// an override. Negative control: removing only the fence from the formerly
+// pasted first helper body expands that edge and costs 100 -> 99.1368%.
 VA(0x00562840, 0x166)  // caller/callee graph + dc name/ABI, dc 0x125b3c
 void type_sacrifice_window::updateSlot(long slot)
 {
-    type_artifact artifact = m_currentHero->m_equipped[slot];
+    type_artifact artifact = m_currentHero->getArtifact(slot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
         && m_currentHero->heroFn004E2840(
                m_holdingArtifact.m_artifactId, slot)) {
-        // Before normalization (locals): slot_widget.
-        iconWidget* slotWidget = m_slotBackWidgets[slot];
-        if (artifact.m_artifactId == ARTIFACT_NONE) {
-            slotWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
-            slotWidget->setHelpText(0, 0, 1);
-        } else {
-            slotWidget->setIconFrame(artifact.m_artifactId);
-            // In retail this is nested inside the helper expansion above,
-            // after its first set_visible site spent the available depth.
-            // The reduced live TU lacks that earlier inline context, so pin
-            // this one nested edge at the same out-of-line boundary.
-#pragma inline_depth(0)
-            slotWidget->setVisible(1);
-#pragma inline_depth()
-            slotWidget->setHelpText(
-                g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
-        }
+        updateArtifactWidget(m_slotBackWidgets[slot], artifact);
 
         m_slotWidgets[slot]->setVisible(1);
         m_slotWidgets[slot]->setIconFrame(SACRIFICE_ARTIFACT_SLOT_DROP_FRAME);
@@ -3400,6 +3389,8 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 // artifact to its original equipped slot where possible, then tries an
 // arbitrary equipped slot, the backpack, and finally the arbitrary equipped
 // path once more before closing the modal dialog.
+// DC line 1866 calls return_artifact. The existing ordinary returnArtifact
+// expands naturally here and preserves 100% while removing three failure joins.
 VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
 int type_sacrifice_window::exitDialog(message* msg)
 {
@@ -3410,17 +3401,7 @@ int type_sacrifice_window::exitDialog(message* msg)
     msg->m_codeX = widget::WIDGET_END_DIALOG;
 
     if (artifact->m_artifactId != -1) {
-        if (artifact->m_source < 19) {
-            if (m_currentHero->equipArtifact(artifact, artifact->m_source))
-                goto artifact_returned;
-            if (m_currentHero->equipArtifact(artifact, -1))
-                goto artifact_returned;
-        }
-        if (m_currentHero->addToBackpack(artifact, -1))
-            goto artifact_returned;
-        m_currentHero->equipArtifact(artifact, -1);
-
-artifact_returned:
+        returnArtifact(*artifact);
         artifact->m_artifactId = ARTIFACT_NONE;
     }
     return MESSAGE_DISPATCH_FORWARD;

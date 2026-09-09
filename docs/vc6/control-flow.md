@@ -1,5 +1,60 @@
 # `why-branch` — the control-flow solver (v1)
 
+For the project-wide inventory and controlled reductions, see the
+[goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
+show why a matching assembly join alone does not establish an original goto.
+The follow-up also recovers dialog exit flags and switch-arm copies: shared
+source tails can inhibit the compiler merge that ordinary per-arm statements
+produce. Serializer helper boundaries can remove both gotos and old inliner
+pins by preserving each caller's cleanup scope. The Windows message pump
+also disproves a blanket goto-loop rule: an outer event loop with `continue`
+is exact, while a nested `while (PeekMessageA(...))` rotates/hoists the import
+and lowers both retained and expanded bodies. Creature-spell error handling
+requires the combined positive outer scope, direct target rejections and
+switch breaks; testing only the direct returns misses the exact form.
+Map stamping similarly needs the complete DC local/reference model and its
+canonical map accessor: together they remove the cover-search jump, remove an
+unattested release-VERIFY and reach 100%. The artifact slot search is exact
+when exhaustion returns inside the loop and explicit-slot validation occupies
+an `else`; a loop-only rewrite had left that coupled scope unresolved.
+
+The ordinary player-position helper gives another caller/retained-body control.
+A selected-result flag in its reverse fallback scan preserves the exact helper
+and both exact callers, while direct scan returns lower first-player setup.
+Restoring that canonical call eliminates a separate forced-inline copy. Always
+measure shared-header consumers when removing the obsolete declaration; even
+an unused declaration can affect VC6 register allocation elsewhere.
+
+The drawbridge example reaches the same conclusion from an exact starting
+body: restoring ordinary `DoorCanBeLowered` and const `hexcell::hasArmy`
+allows a positive gate guard and `else` to remove two jumps at 100%.
+`isWinner` restores its `army::is` calls and first-scan result, eliminating
+three jumps while retaining all 188 bytes. A failed direct-return probe alone
+had missed both forms.
+
+A common failure action can also have an ordinary breakable scope.
+`NewfullMap::load` keeps 56.7217% with two `break`s from one `do/while(0)`
+loading scope; direct returns at either site score 53.5994%. A successful
+partial switch rewrite need not remove every remaining exit at once: default
+and bonus arms can become structured while neutral cases still preserve a
+separate compressed-table destination. Record that narrower limit explicitly.
+
+A positive release scope resolves another apparent return-merging limit.
+`border::main` becomes exact and loses all three gotos when the mouse-hit and
+selected bodies are positive scopes and inactive handling retains its negative
+arm. `iconWidget::main` uses the corresponding positive scopes and canonical
+ordinary `setPalette`, removes five gotos, and reaches 99.9639%; only two
+scratch-register operands remain. Direct-return probes against the old negative
+release guard had missed both results. Keep the guard scopes in the family,
+not just the spelling of their exits.
+
+Switch labels also require independent semantic verification. The spell-work
+audit found wrongly grouped immunity destinations and hero resistance confined
+to one creature arm. Raw retail selector tables and DC calls establish the
+correct routes; behavioral negative controls catch those mistakes independently
+of the score. Restoring those routes and the original `IsMindSpell` header
+accessor removes seven jumps and raises 88.5071% to 96.6018%.
+
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /
 branch-shape** residual (not a register binding) and runs a guided oracle

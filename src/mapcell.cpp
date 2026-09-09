@@ -130,8 +130,8 @@ VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (
 int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
     std::string ignored;
-    readMapString(infile, &ignored);
-    readMapString(infile, &m_message);
+    NewSMapHeader::readString(infile, ignored);
+    NewSMapHeader::readString(infile, m_message);
 
     if (infile->read(m_resQty, sizeof(m_resQty)) < sizeof(m_resQty))
         return -1;
@@ -255,7 +255,7 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 VA(0x004fc6a0, 0xC8)  // order-map: callers loadTimedEventList + loadTownEventList (inlined TTownEvent::Load), calls loadString 0x4bb990, dc 0xebbbc
 int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 {
-    if (loadString(infile, &m_message) < 0)
+    if (game::loadString(infile, m_message) < 0)
         return -1;
     if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
         < sizeof(m_resQty))
@@ -957,6 +957,11 @@ void NewfullMap::newfullMapFn004FD950(
 // seer resize and its size queries; our remaining nested decisions differ.
 // The former 93.4037% peak depended on the removed synthetic boundaries and
 // stays in HIST. Keep the real clear/resize/append calls through this dip.
+// The seer/event phase uses a single failure scope: short-read and town-
+// event failures break to one -1 return. Both do/while(0) and for(;;) forms
+// remove two gotos at 56.7217%, with all sibling scores unchanged. Direct
+// returns at either site instead score 53.5994%; keep the common boundary
+// and the original seer-object lifetime inside this scope.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
@@ -1000,34 +1005,35 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     if (loadMonsterList(infile) < 0)
         return -1;
 
-    {
-        short count;
-        if (infile->read(&count, sizeof(count)) < sizeof(count))
-            goto load_failure;
-
-        m_seerHutList.resize(count);
-        int spriteNum;
-        for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+    do {
         {
-            m_seerHutList[spriteNum].load(infile, saveVersion);
-            if (m_seerHutList[spriteNum].m_quest)
-                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                    static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+            short count;
+            if (infile->read(&count, sizeof(count)) < sizeof(count))
+                break;
+
+            m_seerHutList.resize(count);
+            int spriteNum;
+            for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+            {
+                m_seerHutList[spriteNum].load(infile, saveVersion);
+                if (m_seerHutList[spriteNum].m_quest)
+                    m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                        static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+            }
         }
-    }
 
-    if (saveVersion >= 25)
-        newfullMapFn004FD950(infile, saveVersion);
+        if (saveVersion >= 25)
+            newfullMapFn004FD950(infile, saveVersion);
 
-    if (loadTimedEventList(infile, saveVersion) < 0)
-        return -1;
-    if (loadTownEventList(infile, saveVersion) < 0)
-        goto load_failure;
+        if (loadTimedEventList(infile, saveVersion) < 0)
+            return -1;
+        if (loadTownEventList(infile, saveVersion) < 0)
+            break;
 
-    incProgressBar(1);
-    return 0;
+        incProgressBar(1);
+        return 0;
+    } while (0);
 
-load_failure:
     return -1;
 }
 
@@ -1681,7 +1687,7 @@ int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
 VA(0x004fee50, 0xBC)  // order-map: calls readString 0x4c6010; callers exactly readArtifact/readSpellScroll/readResource/readBlackBox (DC-isomorphic), dc 0xede58
 int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 {
-    readMapString(infile, &treasure->m_message);
+    NewSMapHeader::readString(infile, treasure->m_message);
 
     // Before normalization (locals): char_buffer.
     unsigned char charBuffer;
@@ -1752,7 +1758,7 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
     m_customTreasure.resize(count);
     for (int i = 0; i < m_customTreasure.size(); ++i) {
         TreasureData& treasure = m_customTreasure[i];
-        loadString(infile, &treasure.m_message);
+        game::loadString(infile, treasure.m_message);
 
         unsigned char hasGuardians;
         if (static_cast<unsigned>(infile->read(&hasGuardians, 1)) < 1)
@@ -2388,7 +2394,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // file-local static for the same reason loadMonsterData is.
 static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
 {
-    loadString(infile, &thisTreasure->m_message);
+    game::loadString(infile, thisTreasure->m_message);
 
     unsigned char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2915,7 +2921,7 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
     Sign tempSign;
     char padding[4];
 
-    if (readMapString(infile, &tempSign.m_signText) > 0)
+    if (NewSMapHeader::readString(infile, tempSign.m_signText) > 0)
         tempSign.m_hasText = 1;
 
     g_game->m_signs.push_back(tempSign);
@@ -3039,7 +3045,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (charBuffer) {
         // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
-        readMapString(infile, &tempMonster.m_message);
+        NewSMapHeader::readString(infile, tempMonster.m_message);
 
         // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
         // predict-inline says retail CALLS basic_string::_Tidy once here and
@@ -3128,7 +3134,7 @@ int NewfullMap::saveMonsterList(void* outfile)
 // sign-extended.  That final read carries no short-read gate in retail.
 static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
-    loadString(infile, &thisMonster->m_message);
+    game::loadString(infile, thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value;
@@ -3349,7 +3355,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
-        readMapString(infile, &tempTown.m_name);
+        NewSMapHeader::readString(infile, tempTown.m_name);
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -4448,28 +4454,39 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 }
 
 // E:\gamedcs\mapcell.cpp:3443
-#pragma auto_inline(off)
+// DC f1b1c records int count, char char_buffer, unsigned short ushort_buffer,
+// and a CObject reference. The four writes and result tests are distinct
+// statements at 3450/3451, 3456/3457, 3462/3463, 3468/3469. Preserve the
+// plain-char conversion and count local: together they remove the former
+// auto-inline fence with all mapcell-object bytes/relocations unchanged.
+// Negative controls: deleting the fence, count alone, or char alone expands
+// saveObject into saveMapObjects, taking its exact caller to 55.4453%.
+// The 3443 boundary is borrowed; no release assertion is inferred from it.
 VA(0x00503640, 0x8D)  // order-map: leaf twin of loadObject 0x5036d0; sole caller saveMapObjects 0x504a40 (DC-isomorphic), dc 0xf1b1c
-int NewfullMap::saveObject(TAbstractFile* outfile, CObject* tempObject)
+int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
-    unsigned char value = tempObject->m_x;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    int count;
+    char value = tempObject.m_x;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    value = tempObject->m_y;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject.m_y;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    value = tempObject->m_z;
-    if (outfile->write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject.m_z;
+    count = outfile->write(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    unsigned short typeIndex = tempObject->m_typeIndex;
-    if (outfile->write(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    unsigned short typeIndex = tempObject.m_typeIndex;
+    count = outfile->write(&typeIndex, sizeof(typeIndex));
+    if (count < sizeof(typeIndex))
         return -1;
     return 0;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\mapcell.cpp:3476
 VA(0x005036d0, 0xA4)  // order-map: leaf twin of saveObject 0x503640; sole caller loadMapObjects 0x504b70 (DC-isomorphic), dc 0xf1bf8
@@ -4535,6 +4552,19 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // Four of the record's fields are read and thrown away - two 2-byte
 // landscape masks into one slot, and the object-group byte before the
 // overlay flag - and the record ends with sixteen discarded bytes.
+//
+// The full-width type read uses the native enum, then commits only after
+// the short-read guard. This is a Complete I/O-owner reconstruction, not
+// a recovered DC local: DC rows 3610..3614 reuse int_buffer (our value),
+// whose filename-length and extra-field uses remain. Row 3619 positively
+// reads the diagnostic type from the committed record. Direct field I/O
+// is not equivalent: a short read would partially change the destination.
+// Residual (99.9633%): native enum ownership changes 18 stack displacement
+// bytes, with unchanged instruction order, size and relocation targets. The 8-state
+// owner/query family and 9-state field-lifetime follow-up are exhausted;
+// the latter's best 99.9673% requires splitting the proven generic buffer
+// and adding phase scopes, so retain the simpler native local. No dummy
+// lifetime operations or substitute representation casts are introduced.
 VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
@@ -4606,22 +4636,16 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
         return -1;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    TAdventureObjectType objectTypeRead;
+    if (infile->read(&objectTypeRead, sizeof(objectTypeRead)) < sizeof(objectTypeRead))
         return -1;
-    union {
-        // Before normalization: raw.
-        unsigned long m_raw;
-        // Before normalization: typed.
-        TAdventureObjectType m_typed;
-    } convertedType;
-    convertedType.m_raw = value;
-    tempObjectType->m_objectType = convertedType.m_typed;
+    tempObjectType->m_objectType = objectTypeRead;
     if (usedDefaultMask) {
         sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
                 tempObjectType->m_imageName.c_str(),
-                g_adventureObjectNames[value]);
+                g_adventureObjectNames[tempObjectType->m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
@@ -4738,7 +4762,7 @@ VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> help
 int NewfullMap::loadObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
 {
-    loadString(infile, &tempObjectType->m_imageName);
+    game::loadString(infile, tempObjectType->m_imageName);
 
     char value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -5074,7 +5098,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
         return -1;
 
     for (i = 0; i < m_objects.size(); ++i) {
-        if (saveObject(outfile, &m_objects[i]) < 0)
+        if (saveObject(outfile, m_objects[i]) < 0)
             return -1;
     }
     return 1;
@@ -5224,200 +5248,34 @@ void NewfullMap::generateHeightMap(const CObject* object,
     }
 }
 
-// E:\gamedcs\mapcell.cpp:4053
-// Files one object cell into a map cell's draw list at its correct depth.
-// The list is kept sorted by layer and the search runs BACKWARDS from the
-// end, so a new cell sinks only as far as it has to.
-//
-// The comparison has two levels.  Layers that differ settle it outright - a
-// higher one wins the position, a lower one sinks past.  Equal layers go to a
-// footprint test: both objects' extents become RECTs anchored at their
-// bottom-right tile (left = x - width + 1, right = x + 1, likewise for y),
-// intersected with IntersectRect and clamped to the world with
-// MAP_WIDTH/MAP_HEIGHT.  Every cell of that overlap is then looked up in its
-// OWN draw list - by a linear scan bounded by nothing but the match, which is
-// retail's and not a transcription slip - and if the cell already sitting
-// there is above this object's height map at the corresponding grid position,
-// the new cell sinks past.  The height map is indexed
-// [newObject->x - x][newObject->y - y], the orientation GenerateHeightMap
-// fills.
-//
-// Everything from the insertion point on is one INLINED
-// vector<TObjectCell>::insert(iterator, const T&) - all three Dinkumware
-// paths: the reallocating one with its operator new/delete pair, the
-// room-at-the-end one, and the shift-up one.  There is no source knob there.
-//
-// windows.h joins this TU's include closure for RECT and IntersectRect, and
-// was measured include-set NEUTRAL first: adding it alone moved no function
-// in this unit (41/67 exact, 60.1933 fuzzy before and after, zero per-row
-// deltas).  That measurement is the reason this row is reachable at all, and
-// it is worth keeping: the same experiment on csprite.h a function earlier
-// was also flat, so mapcell.obj tolerates both.
-//
-// THE 65.18 PLATEAU WAS A FRAME DELTA, AND THE FRAME NAMED THE MISSING
-// SOURCE (2026-08-20).  Retail's `sub esp,0x7c` against this compile's 0x78
-// said retail had one dword local we did not, and the head says which:
-// retail's FIRST act is `mov eax,[ebp+8] / add eax,0xe / mov [ebp+8],eax`,
-// biasing the thisCell parameter home to `&thisCell->objects` and reading
-// end() as `[eax+8]`, begin() as `[eax+4]` and the insert's `_Last`/`_End`
-// pair as `[ecx+8]`/`[ecx+0xc]` through the SAME pointer at the tail.  That
-// is a named reference to the member vector, not a folded member offset:
-//
-//   std::vector<TObjectCell>& objectList = thisCell->objects;   +5.48
-//        (65.2507 -> 70.7305; the frame becomes 0x7c, exact)
-//
-// The second edit is the same rule from the other side.  Retail materialises
-// `newType` into a temp slot and reads width/height off it, but recomputes
-// `objectTypes[belowObject->typeIndex]` with FULL addressing at both of the
-// belowRect sites - `movsx esi,[edx + 4*esi + 0x10]` and `+0x11` - so the
-// source names `newType` and does NOT name `belowType`:
-//
-//   belowRect.left = belowObject->x
-//       - objectTypes[belowObject->typeIndex].width + 1;    +6.10
-//        (70.7305 -> 76.8302)
-//
-// don't-cache-what-retail-reloads, asymmetric within one statement pair.
-//
-// Third, retail's x-loop preheader keeps `(newObject->x - x) * 6` in
-// [ebp-0x8] and the y loop walks the row with `dec edi`, so the row is a
-// source value: `signed char* heights = heightMap[newObject->x - x];` and
-// `heights[newObject->y - y]` inside.  Worth +0.07 before the two edits above
-// and +0.70 after them (76.1294 without it) - re-measure a low-mass knob at
-// each new plateau.
-//
-// Fourth, and it is what actually makes the walk happen: `newObject->y` IS
-// NAMED IN THE X-LOOP BODY (2026-08-20).  With the subscript written
-// `heights[newObject->y - y]` VC6 re-loads the member on every inner
-// iteration, and a memory re-read inside the loop blocks the strength
-// reduction, so the index is rebuilt as `sub edx,ecx / cmp al,[edx+ebx]`
-// every pass.  Naming it once per x-iteration -
-// `int objectY = newObject->y;` - gives retail's shape exactly:
-// `lea edi,[ebp+ebx-0x74]` in the preheader, `dec edi` on the back edge and
-// `movsx eax,byte ptr [edi]` at the test, with the byte compare widening to
-// retail's `movsx/movsx/cmp` pair for free.  76.8302 -> 84.0539, and
-// declaring it BEFORE `heights` rather than after is worth 0.17 more.
-// SCOPE IS LOAD-BEARING: hoisted one level further out, above the x loop, it
-// makes the frame EXACT at 0x7c and costs 12.6 (84.2237 -> 71.6604).  The
-// frame is not the objective.
-//
-// Residual (84.2237%): the tail's `vector<TObjectCell>::size()`, plus the
-// register permutation below.  Retail EXPANDS that size() inside the inlined
-// insert's capacity path - `mov ecx,[edi+4] / test ecx,ecx / jne` with the
-// null arm folded - where we keep the call; that one under-inline is both of
-// the two branches we are short (base 30 against retail's 32) and the whole
-// of the remaining flow distance.  It is the A8 direction that wants a BIGGER
-// caller, and nothing is missing from this body's source, so the lever is
-// either mass from somewhere else or an early-site pin to enlarge the
-// remaining budget.  The frame is now 0x78 against retail's 0x7c, i.e. one
-// named local short - and note that the one edit which DID make it exact
-// (hoisting objectY above the x loop) cost 12.6 points, so do not chase the
-// frame here.
-//
-// Under that: ONE register permutation and everything downstream of
-// it.  Retail binds this->ESI, newObject->EDI, position->EBX; this compile
-// binds position->ESI, this->EDI, newObject->EBX, i.e. retail's earliest
-// call-crossing pseudo is `this` and ours is `position`.  Every later
-// difference in the body follows from it - retail can then hold Size in ESI
-// and z*Size in ECX across the inner loop while we spill both to [ebp-0x10]
-// and [ebp-0xc], and retail memory-homes `y` where we keep it in EDI.
-// why-reg v2 CAPS it as front-end handle state (C1): the transposed pair is
-// `this` against an expression value, which no statement-level knob names.
-// Three declaration orders were measured against that verdict anyway and all
-// three are worse - newObject first 73.8517, objectList/newObject/position
-// 74.8517, position moved after GenerateHeightMap 76.7305 - which is the
-// evidence for the CAP rather than against it.
-//
-// Superseded by the above, kept because the measurements are still true of
-// the structure they were made in: the `worldMap` reference must be declared
-// inside the INNERMOST loop (lifting it one level out cost 3.6 then), and two
-// negatives aimed at the old under-inline reading -
-// `insert(position, 1, *objectCell)` 65.1777 -> 61.3531 (the two-argument
-// form is retail's) and `short y` for the inner induction variable, which was
-// why-branch's own top D10 pick, 65.1777 -> 63.3235.
-//
-// The one unpaired relocation, a `vector<TObjectCell>::size()` at fn+0x2d2
-// from inside the inlined insert's capacity path, is unchanged by all of
-// this; the rest of the insert expansion - operator new, three `_Construct`s,
-// both `_Ucopy`s and the `_Ufill` - still lines up one for one.
-//
-// TITRATED 2026-08-20, and it QUANTIFIES the A8 direction the paragraph above
-// only named. An `if (0)` carrier of N statements (dead loads/adds/stores over
-// heightMap - no call sites, so it carries full caller_cb byte-inertly) gives:
-//
-//   N   0      1        2        3       4       5       6..8    10      20+
-//   %   84.22  90.1105  90.1105  84.43   84.43   84.43   82.96   79.65  <=72.9
-//
-// So the dose is a NARROW PEAK at ONE TO TWO STATEMENTS, +5.89, and monotone
-// DOWN from three statements on. That refutes the reading that the lever is
-// "mass from somewhere else": a helper split, an early-site pin or any of the
-// usual bulk knobs OVERSHOOT this peak by an order of magnitude. At N=1 the
-// branch count goes 30 -> 31 against retail's 32 and the fourth `ret`
-// appears, so the mass does buy part of the size() expansion.
-//
-// LANDED 2026-08-21: a conventional release VERIFY over the two pointer
-// arguments reaches a slightly better 90.4313. In release it evaluates the
-// invariant but VC6 proves the pure comparison dead, so it contributes the
-// missing front-end statement without adding an instruction. Four natural
-// spellings were measured - thisCell alone, objectCell alone, two separate
-// VERIFYs, and the combined invariant retained below - and all four score
-// 90.43127 exactly. The macro name and original invariant are unattested;
-// the combined form is the minimum one-statement carrier that covers both
-// pointer preconditions.
-//
-// THREE UNRELATED REAL ONE-STATEMENT CONSTRUCTS reach the older synthetic
-// 90.1105 to the digit - an index local split out of
-// `&objects[objectCell->objectIndex]`, a named `int` for IntersectRect's
-// return, and hoisting `objectList.begin()` into a local for the while
-// condition - which says that plateau is pure mass and none of the three is
-// evidence for itself. None makes the frame exact (0x78 against retail's
-// 0x7c) and none buys the 32nd branch. On top of the landed VERIFY,
-// why-branch's explicit unrotation of the outer while reduces its abstract
-// flow distance 48 -> 35 but regresses the byte score 90.4313 -> 88.7466, so
-// the original while spelling stays.
-// What retail does with its extra dword is SPILL `newObject`
-// (`push edi / mov [ebp-0x14], edi` at the GenerateHeightMap call) while also
-// keeping it in EDI - a higher-pressure allocation than ours, consistent with
-// the same missing mass.
-//
-// Measured and rejected while titrating, do not retry:
-//   * re-spelling the inner subscript AT THE NEW PLATEAU (the low-mass
-//     inversion check) - `heights[objectY - y]` 90.1105 is the best of the
-//     four; dropping objectY 80.1698, dropping heights 76.8517, dropping both
-//     for the plain 2-D subscript 73.7386. The two named locals are real, and
-//     the DC line table agrees: dc 0xf36b0's pairs put EXACTLY TWO statements
-//     (4119, 4120) between the x `for` at 4117 and the y `for` at 4123.
-//   * `NewmapCell::TObjectCell value = *objectCell;` before the insert -
-//     84.6631, and it does not move the frame either.
-//   * `if (!IntersectRect(...)) break;` - this DOES close the branch count
-//     (32 against 32) and costs 5.46 (78.7655), so the missing branch is not
-//     an intersection test.
-#define HOMM3_MAPCELL_RELEASE_VERIFY(expression) \
-    static_cast<void>(expression)
-
-// [polish-45] The missing frame dword is now located: retail's 0x7c frame
-// carries `mov dword ptr [ebp-0x14], edi` in the GenerateHeightMap argument
-// build - it HOMES `newObject` there and reloads it - where this compile's
-// 0x78 frame keeps that pointer only in EDI.  Every slot from -0x10 down is
-// then shifted by the same 4 bytes.  So the "missing mass" the note above
-// infers is one more live value at that point, not one more statement: any
-// candidate spelling has to make `newObject` (or something with its live
-// range) need a home across GenerateHeightMap.
-//
-// [polish-47] And it is NOT a missing statement. dc 0xf36b0's line table
-// runs 4053 (open) / 4054 (the object-list reference) / 4055 (end()) /
-// 4057 (`&objects[objCell.objectIndex]`) / 4058 (GenerateHeightMap) /
-// 4063 (the `while`) with NO breakpoint between 4058 and 4063 and none
-// between 4055 and 4057 either, so the prologue carries exactly the four
-// statements this candidate already has. Whatever gives retail its extra
-// live value at the call is an allocation artifact of the same source, not
-// a fifth element - which puts this row with NewfullMapFn_004FD950's
-// handle-numbering residual, not with a reconstruction gap.
+// E:\gamedcs\mapcell.cpp:4053, dc 0xf36b0.
+// Exact after restoring DC's bMustCover, nextCellObjInfo, int height locals,
+// pOnMapList/const pOnMapCellInfo and the canonical cell accessor. The cover
+// flag breaks both footprint scans before deciding whether to sink the
+// insertion position. This removes the goto and raises 90.4313% to 100%.
+// The strict call-name view labels the three POD template helpers as
+// widget*/int aliases. Raw-byte comparison confirms TObjectCell _Construct
+// equals retail 0x404dc0 (9 B), _Ucopy equals 0x574ce0 (47 B), and _Ufill
+// equals 0x48d940 (38 B); these are folded helpers, not different operations.
+// DC 4119/4120 are objBeingPlacedX/objOnMapX, not the previously inferred
+// objectY/row-pointer pair. Lines 4125/4126 derive their Y coordinates;
+// 4128/4142 store both heights as int, matching retail's widened compare.
+// Intersects and the on-map coordinates are real DC locals/calculations
+// (4099, 4120, 4126) that VC6 elides; they are not invented padding.
+// The previous unattested VERIFY carrier is removed. Its macro and pointer
+// invariant had explicitly been introduced only to perturb the inliner.
+// Negative controls: flag+cell alone scores 82.2156%; adding named heights
+// without the object references reaches 93.6307%. With the references and
+// height locals together, several source-supported variants are exact.
+// Removing VERIFY from the older partial 25/29 parents scores 93.79/93.47;
+// the complete recovered form remains exact without it. Earlier claims
+// of an unavoidable frame/optimizer-state wall were incomplete source models.
+// Before normalization: bMustCover, Intersects, pOnMapList, pOnMapCellInfo,
+// HeightMap, IX, IY, Obj, list, pos. Other recovered local names are retained.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::stampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
 {
-    HOMM3_MAPCELL_RELEASE_VERIFY(thisCell != 0 && objectCell != 0);
-
     std::vector<NewmapCell::TObjectCell>& objectList = thisCell->m_objects;
     std::vector<NewmapCell::TObjectCell>::iterator position
         = objectList.end();
@@ -5427,16 +5285,17 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
     generateHeightMap(newObject, heightMap);
 
     while (position != objectList.begin()) {
-        if (objectCell->m_layer > (position - 1)->m_layer)
+        NewmapCell::TObjectCell& nextCellObjInfo = *(position - 1);
+        if (objectCell->m_layer > nextCellObjInfo.m_layer)
             break;
 
-        if (objectCell->m_layer == (position - 1)->m_layer) {
-            CObject* belowObject = &m_objects[(position - 1)->m_objectIndex];
-            CObjectType* newType = &m_objectTypes[newObject->m_typeIndex];
+        if (objectCell->m_layer == nextCellObjInfo.m_layer) {
+            unsigned char mustCover = 0;
+            CObject* belowObject = &m_objects[nextCellObjInfo.m_objectIndex];
 
             RECT newRect;
-            newRect.left = newObject->m_x - newType->m_width + 1;
-            newRect.top = newObject->m_y - newType->m_height + 1;
+            newRect.left = newObject->m_x - m_objectTypes[newObject->m_typeIndex].m_width + 1;
+            newRect.top = newObject->m_y - m_objectTypes[newObject->m_typeIndex].m_height + 1;
             newRect.right = newObject->m_x + 1;
             newRect.bottom = newObject->m_y + 1;
 
@@ -5449,7 +5308,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
             belowRect.bottom = belowObject->m_y + 1;
 
             RECT overlap;
-            IntersectRect(&overlap, &newRect, &belowRect);
+            unsigned char intersects = IntersectRect(&overlap, &newRect, &belowRect) != 0;
             if (overlap.left < 0)
                 overlap.left = 0;
             if (overlap.top < 0)
@@ -5460,39 +5319,37 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
                 overlap.bottom = g_mapHeight;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
-                int objectY = newObject->m_y;
-                signed char* heights = heightMap[newObject->m_x - x];
+                int objBeingPlacedX = newObject->m_x - x;
+                int objOnMapX = belowObject->m_x - x;
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
-                    // The ACCESSOR SPELLING LOSES HERE, and by a lot:
-                    // `gpGame->worldMap.cell(x, y, newObject->z)` costs
-                    // 84.2237 -> 77.6442 (2026-08-20).  It is the right
-                    // spelling in findpath (+10.58 on GetTerrainCost, +5.62
-                    // on TestPossibleDirections) because those bodies
-                    // OVER-inline and the accessor shrinks caller_cb; this
-                    // one UNDER-inlines and wants the mass.
-                    NewfullMap& worldMap = g_game->m_worldMap;
-                    NewmapCell* cell = &worldMap.m_cellData[
-                        (newObject->m_z * worldMap.m_size + y) * worldMap.m_size
-                        + x];
-                    std::vector<NewmapCell::TObjectCell>::iterator scan
-                        = cell->m_objects.begin();
-                    while (scan->m_objectIndex != (position - 1)->m_objectIndex)
+                    int objBeingPlacedY = newObject->m_y - y;
+                    int objOnMapY = belowObject->m_y - y;
+                    int objBeingPlacedHeight = heightMap[objBeingPlacedX][objBeingPlacedY];
+                    NewmapCell* cell = g_game->m_worldMap.cell(
+                        x, y, newObject->m_z);
+                    std::vector<NewmapCell::TObjectCell>& onMapList = cell->m_objects;
+                    const NewmapCell::TObjectCell* scan = onMapList.begin();
+                    while (scan->m_objectIndex != nextCellObjInfo.m_objectIndex)
                         ++scan;
-                    if (scan->m_layer > heights[objectY - y])
-                        goto sinkPast;
+                    int objOnMapHeight = scan->m_layer;
+                    if (objOnMapHeight > objBeingPlacedHeight) {
+                        mustCover = 1;
+                        break;
+                    }
                 }
+                if (mustCover)
+                    break;
             }
-            break;
+            if (!mustCover)
+                break;
         }
 
-    sinkPast:
         --position;
     }
 
     objectList.insert(position, *objectCell);
 }
 
-#undef HOMM3_MAPCELL_RELEASE_VERIFY
 
 // E:\gamedcs\mapcell.cpp:4167
 // Recomputes everything a cell derives from the objects standing on it.  The

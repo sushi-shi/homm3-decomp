@@ -76,6 +76,7 @@ _SECTION_HEADER = 40
 _SYMBOL_SIZE = 18
 _LINE_SIZE = 6
 _CNT_CODE = 0x20
+_CNT_UNINITIALIZED_DATA = 0x80
 _TYPE_FUNCTION = 0x20
 
 
@@ -108,7 +109,10 @@ class _Coff:
             line_offset = struct.unpack_from("<I", data, off + 28)[0]
             line_count = struct.unpack_from("<H", data, off + 34)[0]
             characteristics = struct.unpack_from("<I", data, off + 36)[0]
-            if raw_size:
+            # VC6 .bss records its allocated size but has no file payload.
+            # In small objects (creaturetype, for example) that size can
+            # exceed the complete object, without making it truncated.
+            if raw_size and not characteristics & _CNT_UNINITIALIZED_DATA:
                 _need(data, raw_offset, raw_size,
                       f"section {index + 1} data")
             if line_count:

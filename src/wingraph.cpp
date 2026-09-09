@@ -356,6 +356,8 @@ void robAppBlit(tagRECT* combRect)
 // cross-jumps all three epilogues onto the single `ret 0xc`. 63.77 -> 100.
 // Same lever, same day: kb::oldmain's two campaign-continue arms, 73.35 ->
 // 75.97.
+// Direct returns from all three Blt loops also share the retail epilogue
+// and remain exact; no forward done label is needed.
 // E:\gamedcs\wingraph.cpp:931
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
@@ -376,7 +378,7 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
                         static_cast<void*>(srcSurface)),
                     const_cast<RECT*>(srcRect), flags, 0)
                 != DDERR_SURFACELOST) {
-                goto done;
+                return;
             }
             if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
                 HRESULT result = g_ddsPrimary->Restore();
@@ -406,7 +408,7 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
                         static_cast<void*>(g_ddsPrimary)),
                     &region, flags, 0)
                 != DDERR_SURFACELOST) {
-                goto done;
+                return;
             }
             if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
                 HRESULT result = g_ddsPrimary->Restore();
@@ -430,7 +432,7 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
         if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
                 const_cast<RECT*>(srcRect), flags, 0)
             != DDERR_SURFACELOST) {
-            goto done;
+            return;
         }
         {
             HRESULT result = ddRestoreSurfaces();
@@ -439,9 +441,6 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
         }
     }
-
-done:
-    ;
 }
 
 // The DDERR_WRONGMODE recovery DDBlit's two primary-surface loops call when

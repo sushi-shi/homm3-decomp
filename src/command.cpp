@@ -76,6 +76,11 @@ inline int sRandom(int lower, int upper)
 // count/skill declaration order are byte-flat; moving the wall lifetime
 // earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
 // DC-shaped access rather than forcing a register with synthetic state.
+// A chosen-target result guards the fallback wall/tower selection and
+// removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
+// forms are neutral, as are two single-pass selection scopes. Copying the
+// final order stores and return into the keep arm scores 95.9569%. Preserve
+// the four named calls and their conditional random draw.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
@@ -107,68 +112,70 @@ unsigned char combatManager::automateCatapult()
     long count;
     long skill = currentArmy->getController()->getSecondarySkill(
         eSecSkillSiegeBallistics);
+    bool targetChosen = 0;
     if (static_cast<const combatManager*>(this)->isQuickCombat()
             || isComputerAction(getCurrentArmy())) {
         if (skill > 0
                 && m_wallStrength[s_wallTargets[WALL_TARGET_3].m_wall] > 0) {
             target = WALL_TARGET_3;
-            goto target_chosen;
+            targetChosen = 1;
         }
     } else if (skill > 0) {
         return 0;
     }
 
-    count = 0;
-    { for (long i = 0; i < 4; i++) {
-            if (getWallStrength(walls[i]) > 0)
-                count++;
-        }
-    }
-
-    if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
-        long weakest = 100;
+    if (!targetChosen) {
         count = 0;
         { for (long i = 0; i < 4; i++) {
-                long strength = getWallStrength(walls[i]);
-                if (strength <= 0 || strength > weakest)
-                    continue;
-                if (strength < weakest)
-                    count = 0;
-                count++;
-                weakest = strength;
+                if (getWallStrength(walls[i]) > 0)
+                    count++;
             }
         }
 
-        long choice = sRandom(1, count);
-        long index = 0;
-        for (; index < 4; index++) {
-            long strength = getWallStrength(walls[index]);
-            if (strength == weakest && --choice == 0)
-                break;
-        }
-        target = walls[index];
-    } else {
-        DATA(0x00670198) static TWallTargetId towers[4] = {
-            WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
-        };
+        if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
+            long weakest = 100;
+            count = 0;
+            { for (long i = 0; i < 4; i++) {
+                    long strength = getWallStrength(walls[i]);
+                    if (strength <= 0 || strength > weakest)
+                        continue;
+                    if (strength < weakest)
+                        count = 0;
+                    count++;
+                    weakest = strength;
+                }
+            }
 
-        long index;
-        for (index = 0; index < 4; index++) {
-            if (validWallTarget(towers[index]))
-                break;
-        }
-        if (index < 4) {
-            target = towers[index];
-        } else {
-            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-                    target = TWallTargetId(target + 1)) {
-                if (validWallTarget(target))
+            long choice = sRandom(1, count);
+            long index = 0;
+            for (; index < 4; index++) {
+                long strength = getWallStrength(walls[index]);
+                if (strength == weakest && --choice == 0)
                     break;
+            }
+            target = walls[index];
+        } else {
+            DATA(0x00670198) static TWallTargetId towers[4] = {
+                WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
+            };
+
+            long index;
+            for (index = 0; index < 4; index++) {
+                if (validWallTarget(towers[index]))
+                    break;
+            }
+            if (index < 4) {
+                target = towers[index];
+            } else {
+                for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+                        target = TWallTargetId(target + 1)) {
+                    if (validWallTarget(target))
+                        break;
+                }
             }
         }
     }
 
-target_chosen:
     m_nextAction = 9;
     m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
     m_nextActionExtra = -1;
@@ -275,6 +282,14 @@ void combatManager::doAnimations()
 // mismatch.  What is left is 24 instruction rows of scratch-register naming
 // (eax/ecx and ecx/edx transposed around get_current_army's index chain and
 // the ProcessNextAction argument push).
+// DC line 448 calls the ordinary nullary IsComputerAction adapter. Its
+// canonical call removes ai_move while preserving 97.6611%; copying its
+// quick-combat OR policy condition into this caller measures 96.2267%.
+// The remaining process_action exit follows sRand in RS_COMBAT_MAIN and
+// leaves CMessageKill's scope before processing the received action. DC's
+// remote-message arm has that same ownership boundary. Guarding the skipped
+// local-action checks with a bool/byte received-action result preserves the
+// destructor but lowers 97.6611% to 81.5489%; retain this shared action join.
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
 {
@@ -421,10 +436,7 @@ int combatManager::main(message& msg)
 
 process_action:
     if (m_nextAction == 0) {
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            goto ai_move;
-        if (isComputerAction(getCurrentArmy())) {
-ai_move:
+        if (isComputerAction()) {
             checkGetAIMove();
         } else {
             result = processCombatMsg(msg);
@@ -648,78 +660,72 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
 // only when the frame changes.
-// The former note banked 85.8951% as "C1 front-end state": this compile bound
-// `this` to EDI and the hex to ESI where retail transposes them, and why-reg
-// found identical definition slots.  The transpose was a CONSEQUENCE of block
-// layout, not the wall.  Retail keeps the `return 0` block INLINE - reached by
-// fall-through when is_computer_action is true and by `jne 0xe34` from the
-// IsQuickCombat test - and jumps forward to the body (`je 0xe3c`).  Written as
-// one merged `!A && !B` guard with a `goto` past the early return, VC6 sinks
-// the `return 0` instead and emits two `jne`s at it, one branch polarity wrong
-// at each end and one exit short (2 returns against retail's 3).  Splitting the
-// guard and jumping INTO the early-return arm reproduces retail exactly - the
-// same lever that moved combatManager::Main in this TU.
-// Residual (97.6377%): all 25 blocks agree EXACTLY and branches are clean at
-// 13/13 with three returns; what is left is only the ESI/EDI pair the old note
-// described, now the whole delta rather than a symptom.
+// Preserve the separate quick-combat and computer-action checks in one
+// failure scope. Both do/while(0) and for(;;) remove the early join at
+// unchanged 97.6434%; the full cursor body remains after those checks.
+// Positive/negative nested-body guards instead score 85.8951%, and the
+// earlier direct zero return loses 3.9161 points. The canonical nullary
+// isComputerAction wrapper does not recover the required separate checks.
+// Remaining differences are the ESI/EDI register binding, with the same
+// retail CFG and calls; this is not a claim of complete byte equality.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int direction;
     float slope;
 
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
-        goto not_directable;
-    if (isComputerAction(getCurrentArmy())) {
-not_directable:
-        return 0;
-    }
-
-    int xDifference = x - (hex % 17) * 44 - 14;
-    int row = hex / 17;
-    if (!(row & 1))
+    do {
+        if (static_cast<const combatManager*>(this)->isQuickCombat())
+            break;
+        if (isComputerAction(getCurrentArmy()))
+            break;
+        int xDifference = x - (hex % 17) * 44 - 14;
+        int row = hex / 17;
+        if (!(row & 1))
+            xDifference -= 22;
         xDifference -= 22;
-    xDifference -= 22;
-    int yDifference = y - row * 42 - 112;
+        int yDifference = y - row * 42 - 112;
 
-    direction = 0;
-    if (xDifference < 0) {
-        if (yDifference < 0)
-            direction = 9;
-        else
-            direction = 6;
-    } else if (yDifference >= 0) {
-        direction = 3;
-    }
+        direction = 0;
+        if (xDifference < 0) {
+            if (yDifference < 0)
+                direction = 9;
+            else
+                direction = 6;
+        } else if (yDifference >= 0) {
+            direction = 3;
+        }
 
-    if (abs(yDifference) == 0)
-        slope = 100.0f;
-    else {
-        slope = static_cast<float>(abs(xDifference));
-        slope = slope / abs(yDifference);
-    }
+        if (abs(yDifference) == 0)
+            slope = 100.0f;
+        else {
+            slope = static_cast<float>(abs(xDifference));
+            slope = slope / abs(yDifference);
+        }
 
-    if (direction != COMBAT_ATTACK_ANGLE_0
-            && direction != COMBAT_ATTACK_ANGLE_6) {
-        if (slope < 0.58)
-            direction += 2;
-        else if (slope < 1.73)
-            direction++;
-    } else {
-        if (slope > 1.73)
-            direction += 2;
-        else if (slope > 0.58)
-            direction++;
-    }
+        if (direction != COMBAT_ATTACK_ANGLE_0
+                && direction != COMBAT_ATTACK_ANGLE_6) {
+            if (slope < 0.58)
+                direction += 2;
+            else if (slope < 1.73)
+                direction++;
+        } else {
+            if (slope > 1.73)
+                direction += 2;
+            else if (slope > 0.58)
+                direction++;
+        }
 
-    m_lastMoveToIndex = m_combatDirections[1][direction];
-    if (m_combatDirections[0][direction] == m_lastAttackCursor)
-        return 0;
+        m_lastMoveToIndex = m_combatDirections[1][direction];
+        if (m_combatDirections[0][direction] == m_lastAttackCursor)
+            return 0;
 
-    m_lastAttackCursor = m_combatDirections[0][direction];
-    g_mouseManager->setPointer(m_combatDirections[0][direction],
-                               mouseManager::COMBAT_SET);
-    return 1;
+        m_lastAttackCursor = m_combatDirections[0][direction];
+        g_mouseManager->setPointer(m_combatDirections[0][direction],
+                                   mouseManager::COMBAT_SET);
+        return 1;
+    } while (0);
+    return 0;
 }
 
 // Complete keeps the DC nullary source method as a 74-byte adapter and moves
@@ -2607,6 +2613,10 @@ void combatManager::checkGetAIMove()
 // button updates stay nested under the non-placement arm, and duplicating
 // the final tail (69.56%) and named player/hero locals (79.98%/86.46%)
 // remain rejected.
+// DC line 3171 calls the nullary is_computer_action. Complete's
+// retained adapter includes the quick-combat test. Calling it here
+// removes both control labels with unchanged 98.2830%; spelling its
+// condition in this caller instead changes expansion and gives 87.7747%.
 VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
 void combatManager::getControl()
 {
@@ -2639,24 +2649,17 @@ void combatManager::getControl()
         m_thisNetHasControl = 1;
 
     if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
-        if (m_autoCombatOn != zero || g_unk691209) {
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                goto automated_control;
-            if (isComputerAction(getCurrentArmy())) {
-automated_control:
-                static_cast<type_combat_sub_window*>(
-                    m_combatWindow->m_controlSubWindow)->disableAllButtons();
-                if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
-                    m_combatWindow->widgetClearStatus(
-                        0x7d4, 0x1000);
-                    m_combatWindow->widgetSetStatus(
-                        0x7d4, 0x10);
-                }
-                goto control_done;
+        if ((m_autoCombatOn != zero || g_unk691209)
+                && isComputerAction()) {
+            static_cast<type_combat_sub_window*>(
+                m_combatWindow->m_controlSubWindow)->disableAllButtons();
+            if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
+                m_combatWindow->widgetClearStatus(
+                    0x7d4, 0x1000);
+                m_combatWindow->widgetSetStatus(
+                    0x7d4, 0x10);
             }
-        }
-
-        if (m_playerIds[m_currentSide] >= zero
+        } else if (m_playerIds[m_currentSide] >= zero
                 && g_game->isLocalHuman(m_playerIds[m_currentSide])) {
             m_combatWindow->broadcastMessage(
                 MESSAGE_WIDGET, 0x0d,
@@ -2736,7 +2739,6 @@ automated_control:
             static_cast<type_combat_sub_window*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();
         }
-control_done:;
     }
 
     resetMouse();

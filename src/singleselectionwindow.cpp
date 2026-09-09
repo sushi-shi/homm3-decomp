@@ -268,6 +268,11 @@ void startMouseThread()
 // StartMouseThread immediately above expands there.  Marking this body
 // non-inlinable preserves the Dreamcast-proven helper boundary and that
 // asymmetric retail lowering without changing either function's source order.
+// A 36-state global-handle-reference/early-return family preserves every
+// reload and zero store but cannot reproduce the split without this fence:
+// GenerateRandomMap rises 92.6386% -> 97.9759%, while SetupScenarioOptions
+// falls 100% -> 90.1470%. Mutable/const references and both guard forms
+// share that score tradeoff; no source alternative is retained.
 #pragma auto_inline(off)
 // Before normalization (function): StopMouseThread.
 VA(0x00577810, 0x61)  // event/handle teardown and pointer restore, dc 0x12fdd4
@@ -912,6 +917,26 @@ void t_map_list_update::go()
     CTransferHeaderInfoInitMsg msg(
         win->m_transferHeaders.size());
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
+}
+
+// DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
+// Complete's expanded copy at 0x5892b0 queues flag/number by value instead
+// of the older port's allocated integer. This is the same ordinary helper,
+// visible in its owning TU; the manager calls it at DC line 1496.
+void CNewPlayerUpdateProc::headerRequested(unsigned char flag, int number)
+{
+    SHeaderRequest req;
+    req.m_flag = flag;
+    req.m_number = number;
+    m_requests.push_back(req);
+}
+
+// DC HeaderConfirmed (0x148384), lines 1360/1362; retail 0x589270
+// expands the finished store followed by Complete's virtual Finish call.
+void CNewPlayerUpdateProc::headerConfirmed()
+{
+    m_finished = 1;
+    finish();
 }
 
 // DC keeps this source helper out of Tick. Complete VC6 /Ob2 expands its
@@ -2109,48 +2134,33 @@ unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
-// NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
-// restored OnKeyPress once; since then BOTH rows of the pair OSCILLATE
-// between 100.0000 and 99.89/99.87 per delink generation on a pure
-// data-name pairing deadlock (max accepted downward as needed, hist
-// keeps the peaks): the bytes are exact and the deltas are reloc names
-// only -
-// (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
-// the delinker names the merged retail cell 0x63a608 after
-// adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
-// two legitimate names - whichever the synth PDB picks, the other TU's
-// row shows the mismatch); (b) gLocalPlayerName's 0x698817 cell is not
-// carried by the delink data manifest, so the target side keeps the
-// flat data_298817. Closes only via a data-manifest change (a pipeline
-// contract, not a lane edit).
-// The shared name-commit helper both CEnterNameEdit overrides expand. DC
-// keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
-// two overrides carry its whole body - so the definition is `inline`.
-// The committed name lands in three places: the lobby slot record, the
-// persisted prefs nickname, and the row's read-only name text widget
-// (id pos+345). player->sName on the not-found path is address arithmetic
-// only, exactly as retail compiles it.
+// E:\gamedcs\singleselectionwindow.cpp:1820
+// DC lines 1823/1824 call hide, GetText and ordinary OnNameChange. Keep
+// all three boundaries; OnNameChange owns the player/prefs/widget work.
+// The merged header/helper state keeps OnKeyPress exact with GetText as the
+// direct argument. Capturing a separate text pointer scored 100% before the
+// integration but now swaps two stack-slot operands (99.8868%). A 12-state
+// family covering text/receiver evaluation and return scopes reproduces the
+// direct-argument winner with every other function unchanged. Retain the
+// canonical helper chain; no declaration or inlining override is needed.
+// OnEnter's existing inline declaration remains unchanged.
 inline int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
-    sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    const char* text = m_text.c_str();
-    TSingleSelectionWindow* win = g_unnamed69fbe8;
-    CNetPlayerHandlerPlayer* player = win->m_players.getPlayerInPos(pos);
-    win->setFocus(-1);
-    if (player) {
-        strcpy(player->m_name, text);
-        strcpy(g_localPlayerName, text);
-        writePrefs();
-    }
-    static_cast<textWidget*>(win->getWidget(pos + 345))
-        ->setText(player->m_name);
-    win->drawHeroAdvancedOption(pos, 1, -1);
+    hide();
+    g_unnamed69fbe8->onNameChange(pos, getText());
     return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
-// Canonical map-type header collateral: 100 -> 99.8868; recovery pending.
+// The canonical OnEnter/OnNameChange chain now keeps this body exact with
+// either two direct returns or an explicit else. Earlier wrapper-only key
+// and else controls were sensitive to the missing helper/header state.
+// The subsequent generic-university correction in game.h exchanges the two
+// spill slots in the OnEnter expansion (99.8868%); branches and calls agree.
+// A reproduced header-only old-constructor control recovers 100%, proving
+// shared-header collateral, not a defect in this canonical helper chain.
+// Preserve the correct university model and this body's 100% MAX/HIST.
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
 int CEnterNameEdit::onKeyPress(message* msg)
 {
@@ -3976,12 +3986,19 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // A `??_G<C>` needs C's own vtable to be emitted, and an abstract novtable
 // interface never emits one. Leave the claim; do not spend a lane on it.
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateTask)  // wrapper calls the task dtor below; DC concrete-proc wrapper at 0x1489f0
-#pragma auto_inline(off)
+// No auto-inline override: the two-state control preserves every tracked
+// score and 395 of 396 emitted bodies. Only the untracked implicit Proc
+// destructor changes, from a jump to this body into the same 38-byte teardown
+// (identical instructions and delete relocation; 32 additional padded bytes).
+// Do not call this an ICF fix: genuine VC6 links with /OPT:ICF still keep the
+// ordinary non-COMDAT Task body separate from the generated Proc COMDAT.
+// Both remain emitted; callers keep their original symbols and source calls.
+// The separate dead scalar-wrapper claim and ownership/link-layout questions
+// above are not solved by removing an unnecessary code-generation override.
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
 {
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\singleselectionwindow.cpp:4074
 VA(0x00583f20, 0xEF)  // anchor-callee DrawBasicMapInfo 0x5840f0 selects it over GetMapName on m_flag64/m_flag65; body owns the header +0x33d fileName / +0x58c title reads and the general-text 508/509 fallbacks, size 1.03x dc 0xE6, dc 0x139a20
@@ -5051,15 +5068,16 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // progress bar advances one step; the generator's result code selects one of
 // three general-text failure dialogs.
 //
-// Residual (91.9718%): one construct, and it is a shared-helper conflict
+// Residual (92.6386%): the main delta is a shared-helper conflict
 // rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
 // WaitForSingleObject, the two CloseHandles and the pointer restore all
 // inline, one extra branch) while keeping it OUT of line at
 // SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
 // around its definition above buys. Measured both ways in one build:
-// dropping the pragma takes this row 91.9718 -> 96.9735 and
-// SetupScenarioOptions 100.0000 -> 90.1470, a net loss of about 100 bytes
-// and a ratchet break, so the pragma stays and this call stays a call.
+// dropping the pragma takes this row 92.6386 -> 97.9759 and
+// SetupScenarioOptions 100.0000 -> 90.1470. The 36-state real-handle-lifetime
+// follow-up reproduces that same tradeoff throughout its unfenced options;
+// it does not recover the split, so the pragma stays and this call stays a call.
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
@@ -6619,37 +6637,32 @@ t_map_list_update::t_map_list_update(unsigned long dpid)
 VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm calls it with the sender dpid before its 'Header confirmed' log line, dc 0x148838
 void CNewPlayerUpdateMan::headerConfirmed(unsigned long dpid)
 {
-    CNewPlayerUpdateTask* proc = getProc(dpid);
-    if (proc) {
-        proc->m_finished = 1;
-        proc->finish();
-    }
+    CNewPlayerUpdateProc* proc = getProc(dpid);
+    if (proc)
+        proc->headerConfirmed();
 }
 
 // Queue one header re-request on the sender's transfer job: GetProc's
-// scan expands in place (the HeaderConfirmed shape) and the push_back
-// expands with its grow logic.
-// Residual (88.6): retail's push_back expansion keeps the Dinkumware
-// helpers OUT of line (_Ucopy 0x58dc10 x2, the fill 0x58dc50, a
-// destroy stub and a far COMDAT 0x5af330) where our CL loops them in
-// place, and the GetProc scan's bound 8 lives in ebx there vs our
-// immediate - the same /Ob2 collector class as the map::find pair.
+// scan and Proc::HeaderRequested both expand here. Keeping the canonical
+// source helper (DC line 1496), rather than pasting its insertion body here,
+// recovers the nested _Ucopy/_Ufill calls and the shared eight-byte bound.
+// The 449-byte body's instruction view now agrees; folded STL relocation labels remain
+// independently named for their owning element types. The old flattened
+// control scores 88.6223%. A 16-state family also restores the adjacent
+// confirmation helper and moves GetProc to its DC-proven cpp definition;
+// neither changes any other tracked score.
 // auto_inline(off): retail CALLS this from HandleNetMsg's request arm;
-// with a body visible /Ob2 expanded it there (and the budget shift
-// dragged the neighboring HeaderConfirmed call in with it), costing
-// HandleNetMsg 90.16 -> 86.33. The pin restores both calls.
+// removal still expands it and the adjacent HeaderConfirmed call there,
+// lowering HandleNetMsg 89.7408 -> 85.9113 even with all three helpers
+// restored. This remaining override is debt, not original-source evidence.
 #pragma auto_inline(off)
 // E:\gamedcs\singleselectionwindow.cpp:1492
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
 void CNewPlayerUpdateMan::headerRequested(unsigned long dpid, unsigned char flag, int number)
 {
-    CNewPlayerUpdateTask* proc = getProc(dpid);
-    if (proc) {
-        SHeaderRequest req;
-        req.m_flag = flag;
-        req.m_number = number;
-        proc->m_requests.push_back(req);
-    }
+    CNewPlayerUpdateProc* proc = getProc(dpid);
+    if (proc)
+        proc->headerRequested(flag, number);
 }
 #pragma auto_inline(on)
 
@@ -6663,6 +6676,17 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
             m_procs[i] = 0;
         }
     }
+}
+
+// DC GetProc is an ordinary cpp helper at 0x148998, source line 1544.
+CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
+            return m_procs[i];
+        }
+    }
+    return 0;
 }
 
 // Bounce the setup ping straight back at its sender, echoing the
@@ -7007,12 +7031,32 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:8230
+// Before normalization (function/locals): OnNameChange, gamePos, newName, player, w.
+// Both CEnterNameEdit overrides expand this ordinary member; there is no
+// retained retail body to claim. DC line 8231 overrides gamePos from a
+// platform-specific field and line 8252 reads a stored icon position. Retail
+// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
+// so those two Complete semantics remain explicit below. The original w
+// local and all eight named/virtual source calls retain their order.
 DC_ONLY(0x143810, 0xA8)
-void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
+void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 {
-    // @stub
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    setFocus(-1);
+    if (player) {
+        strcpy(player->m_name, newName);
+        strcpy(g_localPlayerName, newName);
+        writePrefs();
+    }
+    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
+    w->setText(player->m_name);
+    drawHeroAdvancedOption(gamePos, 1, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8256
 DC_ONLY(0x1438b8, 0x9A)
@@ -9288,20 +9332,6 @@ unsigned char CNewPlayerUpdateProc::isFinished()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1346
-DC_ONLY(0x148348, 0x3C)
-void CNewPlayerUpdateProc::headerRequested(int headerNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1355
-DC_ONLY(0x148384, 0x24)
-void CNewPlayerUpdateProc::headerConfirmed()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1369
 DC_ONLY(0x1483a8, 0x50)
 void CNewPlayerUpdateProc::requestConfirmation()
@@ -9368,13 +9398,6 @@ unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 // E:\gamedcs\singleselectionwindow.cpp:1533
 DC_ONLY(0x148960, 0x38)
 int CNewPlayerUpdateMan::getFirstAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1544
-DC_ONLY(0x148998, 0x56)
-CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
     // @stub
 }
@@ -10278,6 +10301,12 @@ VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
 VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
+// SCampaign assignment's retained copy of its artifact-vector range.
+// This TU naturally emits the canonical std::copy specialization. Retail
+// 0x4d2c90 advances 16-byte vector objects and expands their assignments;
+// all 41 blocks align with this emission. Its _Construct<type_artifact>
+// call is folded with the identical type_dialog_resource construction.
+VA_COMPGEN(0x004d2c90, 0x1B3, STD_COPY, type_artifact_vector)
 
 VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)

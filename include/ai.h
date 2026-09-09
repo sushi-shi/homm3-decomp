@@ -76,7 +76,8 @@ enum EAreaAttackCreature {
     CREATURE_MASTER_GREMLIN = 0x1d,
     CREATURE_TITAN = 0x29,
     CREATURE_GOG = 0x2c,
-    CREATURE_VAMPIRE = 0x3e,
+    // CREATURE_VAMPIRE now belongs to TCreatureType: the bank's
+    // native guard table and this sample gate share the same domain.
     CREATURE_VAMPIRE_LORD = 0x3f,
     CREATURE_BEHOLDER = 0x4a,
     CREATURE_EVIL_EYE = 0x4b,
@@ -105,8 +106,9 @@ enum EAreaAttackCreature {
     // each id bracketed by the proven runs around it.
     CREATURE_THUNDERBIRD = 0x5d,
     CREATURE_MIGHTY_GORGON = 0x67,
-    CREATURE_SERPENT_FLY = 0x68,
-    CREATURE_DRAGON_FLY = 0x69
+    // CREATURE_DRAGON_FLY likewise moved to TCreatureType for the
+    // native bank guard table; the on-attack evidence above still holds.
+    CREATURE_SERPENT_FLY = 0x68
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort

@@ -702,17 +702,17 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // DC line 533 is one statement containing HasArtifact and the `1 - result`
 // store. Spelling that assignment directly (with no synthetic `owned` local)
 // is byte-flat at the current peak but restores the positive source shape.
-// Residual (96.5558%): the first mismatch is VC6 parking the repeated
-// WIDGET_SET_TEXT value in ESI, while retail stores immediate 3 and reserves
-// ESI for the creature-trait base used by the following siege test. That
-// register-colouring choice shifts the switch/table and later statement
-// alignment. why-reg v2 confirms all first callee-saved definitions agree and
-// classifies the divergence as later scheduling/CFG. A named trait-table
-// pointer falls to 96.0228%; making the artifact result volatile improves the
-// masked register distance but invents source-false storage and is rejected.
-// The earlier struct-view cost fetch, late message declaration and reversed
-// alt-resource polarity remain lower plateaus; none may replace the recovered
-// constructor/helper/local facts.
+// DC lines 538 and 542 format the available count separately in the siege
+// and ordinary arms. Restoring those calls after the obsolete game helper
+// declaration was removed raises 94.1574% to 99.9898%, above the previous
+// 96.5558% peak. Sharing the sprintf let VC6 park WIDGET_SET_TEXT in ESI
+// and changed the siege selector. Both canonical helper chains stay intact.
+// Residual: only the gold/resource multiplication operand loads are swapped;
+// all 55 blocks, 24 branches and 29 calls agree. Reversing either or both
+// source products emits the same object in a four-state controlled family.
+// Negative controls: also assigning/clamping the member availability in the
+// gold-limit arm scores 99.1523%; an explicit maxGold/resource choice scores
+// 99.3299%. Neither replaces the existing min expression and DC locals.
 // Before normalization (locals): new_monster.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
@@ -739,8 +739,10 @@ void recruitUnit::update(unsigned char newMonster, long slot)
             siegeMonsterToSiegeArtifact(m_monsterType));
         if (*m_numAvail < 0)
             *m_numAvail = 0;
+        sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
+    } else {
+        sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
     }
-    sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x209;
@@ -932,26 +934,34 @@ inline int exitRecruitUnit(message& msg)
 // non-include Gruntz state families; every candidate remained at 99.0924%.
 // Those sampled states did not recover the 99.1111% HIST island; no
 // synthetic declaration or unsupported local is kept.
+// Timeout and remote-popup rejection share one abortDialog result and the
+// existing dialog-routing tail. An unsigned-char result preserves 99.0924%
+// and removes the jump; bool/int forms score 98.6908/98.7979%. Duplicating
+// the tail, including a copy using exitRecruitUnit, scores 95.0161%.
+// DC lines 707/723 call ExitRecruitUnit, but its older four-store body also
+// sets the dialog result and codeY: retail's other three helper expansions
+// write only id/codeX, so those PC routing differences remain explicit.
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    if (g_turnDuration69d630.isExpired()) {
-exit_dialog:
-        g_windowManager->m_dialogReturn = 0x7800;
-        msg.m_id = MESSAGE_EXECUTIVE;
-        msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        return MESSAGE_DISPATCH_FORWARD;
-    }
+    unsigned char abortDialog = g_turnDuration69d630.isExpired();
 
-    if (g_videoPaused) {
+    if (!abortDialog && g_videoPaused) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
             if (msgReceived && handler->getAbortPopupMsg())
-                goto exit_dialog;
+                abortDialog = 1;
         }
+    }
+
+    if (abortDialog) {
+        g_windowManager->m_dialogReturn = 0x7800;
+        msg.m_id = MESSAGE_EXECUTIVE;
+        msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
     }
 
     long elapsed = GameTime::get()

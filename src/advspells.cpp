@@ -166,12 +166,12 @@ void advManager::castSpell(int whichSpell)
 //    extracted origin in ECX across `movsx edx,dx` and stores it back,
 //    where we spill and re-read - one extra instruction in each of two
 //    blocks. Register pressure, not a spelling.
-// Also measured: `break` out of the search loop plus a post-loop
-// `direction == MAP_DIRECTION_COUNT` test scores 91.4864 - HIGHER - but it
-// emits a compare retail does not have (32 branches against retail's 31)
-// and leaves 12 exact blocks against this version's 14. The `goto` is the
-// faithful shape: retail's loop simply falls out into the message.
-// Byte-flat: `radarOrigin.z == theBoat->z` operand order (91.09).
+// A foundWater flag removes the search goto and improves the current
+// 91.1018% to 91.5769%; putting the refusal inside an infinite loop's
+// exhaustion arm reaches 91.3281%. The older direction==COUNT post-loop
+// test scored 91.4864% with an extra comparison. The flag records the
+// actual successful cell test while preserving search order and refusal
+// side effects; no new helper is inferred from that flag.
 VA(0x0041c8a0, 0x54D)  // anchor-callee hero::find_summonable_boat + game::CreateBoat, dc 0x21b84
 void advManager::summonBoat(int level)
 {
@@ -195,6 +195,7 @@ void advManager::summonBoat(int level)
     int destX;
     int destY;
     int direction;
+    bool foundWater = false;
     for (direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
         destX = who->m_x + g_normalDirTable[direction].m_x;
         destY = who->m_y + g_normalDirTable[direction].m_y;
@@ -202,17 +203,21 @@ void advManager::summonBoat(int level)
             && destY < g_mapHeight) {
             NewmapCell* cell = getCell(type_point(destX, destY, who->m_z));
             if (cell->m_typeValue == 0 && cell->m_groundSet == eTerrainWater)
-                goto found;
+                {
+                    foundWater = true;
+                    break;
+                }
         }
     }
-    if (g_game->isLocalHuman(who->m_owner)) {
-        normalDialog(
-            g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_NO_WATER),
-            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    }
-    return;
+    if (!foundWater) {
+        if (g_game->isLocalHuman(who->m_owner)) {
+            normalDialog(
+                g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_NO_WATER),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
 
-found:
+    }
     if (random(1, 100) <= traits->m_masteryBonus[level]) {
         boat* theBoat = who->findSummonableBoat();
         if (theBoat != 0) {

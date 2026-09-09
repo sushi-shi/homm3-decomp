@@ -996,6 +996,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             launchSample(traits->m_sample, -1, 3);
 
         switch (spellId) {
+    // DC 814/819/823 and 890/895/899 record the picker assignment,
+    // guarded repeat, then a separate exhaustion test. Retain those two
+    // source stages: both multi-level exits become ordinary loop breaks
+    // at unchanged 93.3658%. Merely breaking the old infinite inner loop
+    // and retesting afterward lowers the pair to 92.4546%.
     case SPELL_QUICKSAND: {
         const int nhexes = g_quicksandCountByMastery[mastery];
         sample* sample2b;
@@ -1007,16 +1012,15 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
-            for (;;) {
+            do {
                 hex = picker.pick();
-                if (hex < 0)
-                    goto quicksand_done;
-                if (!inInvisibleColumn(hex)
-                    && !(m_cells[hex].m_attributes & 0x3f)
-                    && !m_cells[hex].hasArmy()
-                    && m_cells[hex].m_bodiesInHex <= 0)
-                    break;
-            }
+            } while (hex >= 0
+                     && (inInvisibleColumn(hex)
+                         || (m_cells[hex].m_attributes & 0x3f)
+                         || m_cells[hex].hasArmy()
+                         || m_cells[hex].m_bodiesInHex > 0));
+            if (hex < 0)
+                break;
 
             ds_memsample* placeSample;
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -1045,7 +1049,6 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
-quicksand_done:
         showSpellMessage(isMonsterSpell, spellId, 0);
         if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
             sample2b->dispose();
@@ -1065,16 +1068,15 @@ quicksand_done:
         TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
-            for (;;) {
+            do {
                 hex = picker.pick();
-                if (hex < 0)
-                    goto landmine_done;
-                if (!inInvisibleColumn(hex)
-                    && !(m_cells[hex].m_attributes & 0x3f)
-                    && !m_cells[hex].hasArmy()
-                    && m_cells[hex].m_bodiesInHex <= 0)
-                    break;
-            }
+            } while (hex >= 0
+                     && (inInvisibleColumn(hex)
+                         || (m_cells[hex].m_attributes & 0x3f)
+                         || m_cells[hex].hasArmy()
+                         || m_cells[hex].m_bodiesInHex > 0));
+            if (hex < 0)
+                break;
 
             ds_memsample* placeSample;
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -1100,7 +1102,6 @@ quicksand_done:
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
-landmine_done:
         showSpellMessage(isMonsterSpell, spellId, 0);
         if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
             sample2b->dispose();
@@ -2734,6 +2735,11 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
 // well as its width. The two tests are sequential ifs, not an
 // else-if: retail runs the `== 0` block and then falls into the `== 1`
 // compare rather than jumping over it.
+// The resurrection/animate-dead corpse loops use a guarded do/while with
+// continue for rejected corpses. DC spells.cpp:2815..2847 and :2962..2997
+// preserve the reverse scan and per-corpse rejection scopes; retail's signed
+// decrement/exit and separate back edge are reproduced exactly. The previous
+// labels described those continue edges, not a required source goto.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
 army* combatManager::findResurrectionTarget(int side, int hex,
                                               // Before normalization (locals): creature_spell.
@@ -2760,33 +2766,30 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
         return 0;
-    for (;;) {
+    do {
         army* corpse = &m_armies[cell->m_deadArmySide[i]]
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
-            goto next;
+            continue;
         if (!(corpse->is(1u << 4)))
-            goto next;
+            continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex + 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex - 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
                                 creatureSpell) > 0.0)
             return corpse;
-    next:
-        i--;
-        if (i < 0)
-            return 0;
-    }
+    } while (--i >= 0);
+    return 0;
 }
 
 // The Vampire Lord's drain, and the one of the three that rolls NO
@@ -2852,33 +2855,30 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
         return 0;
-    for (;;) {
+    do {
         army* corpse = &m_armies[cell->m_deadArmySide[i]]
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
-            goto next;
+            continue;
         if (!(corpse->is(1u << 18)))
-            goto next;
+            continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex + 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex - 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
                 > 0.0)
             return corpse;
-    next:
-        i--;
-        if (i < 0)
-            return 0;
-    }
+    } while (--i >= 0);
+    return 0;
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
@@ -4038,6 +4038,11 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // bComplete, iDrawsPerSeg, iSplitChanceTimes100, iSwap, psBolts, iHalfThickness, iDelayTil,
 // iMaxBolt, iUpdTLY, iUpdTLX, iUpdBRY, iUpdBRX, iMaxBoltForThisCycle, iAbsDist, fOffset, fAngle,
 // iDrawLength, iSplitX, iSplitY, iSplitThickness, pArmy, iFrames, iFrameDelay.
+// Goto audit: DC's bComplete belongs to the draw pass. Breaking that inner
+// pass and testing it before either breaking or guarding the outer split
+// pass scores 96.4526%, versus 100%. Both keep the single delete[] and reset
+// tail, but change the loop/cleanup CFG. Retain this multi-level completion
+// exit and the canonical AddBolt, DrawBolt and NextFrameTime boundaries.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                            int destX, int destY, int splitFrequency,
@@ -4755,6 +4760,13 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
 // Before normalization (locals): iSourceHexCount, iDirCount, iSourceHexIndex,
 // iHexCount; distance is the unnamed DC outer-loop value. The old source
 // incorrectly shifted those four names onto other induction variables.
+// Explicit outer-loop search results (bool/byte/int) reach 99.9696%, below
+// the exact label form. Both COFF contributions contain 1032 bytes. Only
+// the two initial ValidHex failure branches change destination, selecting
+// the final +0x3fc
+// epilogue instead of retail's earlier +0x1b7. Positive placement and extra
+// else scopes do not recover those destinations. DC 4650 also records a
+// distinct search-to-placement transfer; keep the exact remaining join.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::mirrorImage(int targetIndex, int level)
 {
@@ -4867,50 +4879,28 @@ placeMirror:
 // picker-exhausted break falls through to the column step, which is why
 // retail carries TWO copies of the picker's inlined destructor.
 //
-// THE TRAITS COPY IS SPELLED memcpy AND THAT IS A MODELLING SHORTCUT.
-// Retail's `rep movsd` of 29 dwords into `summoned + 0x74` is the
-// embedded TCreatureTypeTraits row army.h's own note calls sMonInfo,
-// i.e. the source said `summoned.sMonInfo = akCreatureTypeTraits[type]`.
-// Modelling it as a member means adopting the DC TCreatureTypeTraits
-// aggregate for army +0x74..+0xe7 tree-wide (its slices have consumers in
-// sixteen TUs), so that is a layout change for the whole army run and not
-// this lane's to make. The memcpy emits the identical
-// `mov ecx,0x1d / rep movsd`.
-//
-// BOTH LOOPS ARE GOTO LOOPS, AND THAT IS WORTH TWELVE POINTS (81.26 ->
-// 93.38). Retail's outer back edge is `cmp / jle <exit> / jmp <head>` -
-// two jumps where a `for(;;)` with a trailing `break` gives VC6 the one
-// inverted `jg <head>` - and its inner back edge is a bare `jmp <head>`
-// off a shared merge point. Spelling both with explicit labels and
-// `goto` reproduces the pair, and the same edit splits the picker's
-// inlined destructor into retail's TWO copies, because the found exit
-// leaves the picker's scope from INSIDE the inner loop while the
-// exhausted exit leaves it at the scope's end. A do/while inner loop
-// was measured against this and is much worse (85.69): VC6 emits the
-// bottom test as `je <head>` with no merge point and the two destructor
-// copies collapse back into one.
+// The traits copy uses the canonical m_monInfo aggregate assignment.
+// DC's col/row_picker/hex scopes and lines 4729..4739 support the nested
+// search with a found test inside the picker's lifetime. Both loops can be
+// ordinary while(1) loops: after inner exhaustion, the outer loop advances
+// the column; after success, the second hex test exits the picker scope.
+// This removes all four gotos and improves 93.4375% to 99.0144%. Either a
+// negative exhausted-pick guard or positive pick scope has the same score.
+// The outer-loop-only edit is neutral; the inner loop is what removes
+// VC6's duplicated picker header. The old goto-only/peeling-limit claim
+// was disproved by these scopes, including both destructor exit paths.
 //
 // The message is built on the TEMPORARY, not through a named local
 // (93.38 -> 93.44): retail reads `[eax + 4]` straight off
 // format_string's returned object, where `std::string message = ...;
 // message.c_str()` reads the local's own _Ptr slot instead.
 //
-// Residual (93.44%): VC6 ROTATES the inner loop where retail does not -
-// it peels a second copy of `Pick()` plus the row arithmetic onto the
-// CanFit-false path and jumps back into the middle, and having done so
-// it can prove `hex == -1` there, so it tests ESI before the store
-// where retail re-reads `[ebp-0x10]` after it. Both halves are the one
-// decision and no spelling tried moved it; the rest is scratch-register
-// renaming around the 0-in-EDI the loop exits leave behind.
-// Residual (93.44%, re-read 2026-08-21): two clusters plus the EH push
-// addend. (1) Our compile DUPLICATES the try_next_row header (Pick +
-// candidate arithmetic, 10 instructions) into the goto edge where
-// retail jumps back to one shared copy - the same duplicated-header
-// class place_obstacle measured unreachable through every loop
-// spelling (goto form already in use here). (2) Ours caches `hex` in
-// ESI at the exit test where retail re-reads its frame slot; the
-// homing rides on the duplication. Not re-ground on the place_obstacle
-// precedent.
+// Residual (99.0144%): inspect the current structured-loop object; the
+// historical 93.44% duplicated-header diagnosis no longer describes it.
+// The canonical GetHexIndex call at DC 4729 is neutral at 99.0144%; making
+// the DC col/candidate locals const with a column ternary scores 98.7164%.
+// The remaining mismatch starts at the exhausted-picker guard/destructor
+// edge; all sixteen named calls agree.
 // Before normalization (locals): iMonType, iSpellPower.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::summonElemental(SpellID spell, TCreatureType monType,
@@ -4925,33 +4915,30 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     summoned.m_bitIndex = -1;
     summoned.m_facing = 1 - m_currentSide;
     int hex = -1;
-try_next_column:
-    {
+    while (1) {
         int column = leftColumn;
         if (m_currentSide)
             column = rightColumn;
         {
             TPickANumber picker(0, 10);
-        try_next_row:
-            {
+            while (1) {
                 int pick = picker.pick();
-                int candidate = column + pick * COMBAT_GRID_ROW_STRIDE;
-                if (pick >= 0) {
-                    if (summoned.canFit(candidate, 0, 0))
-                        hex = candidate;
-                    if (hex != -1)
-                        goto hex_chosen;
-                    goto try_next_row;
-                }
+                int candidate = getHexIndex(column, pick);
+                if (pick < 0)
+                    break;
+                if (summoned.canFit(candidate, 0, 0))
+                    hex = candidate;
+                if (hex != -1)
+                    break;
             }
+            if (hex != -1)
+                break;
         }
         leftColumn++;
         rightColumn--;
         if (rightColumn <= 0)
-            goto hex_chosen;
-        goto try_next_column;
+            break;
     }
-hex_chosen:
     m_summonedElemental[m_currentSide] = monType;
     if (shouldLowerDoor(&summoned, hex)) {
         drawFrame(1, 0, 0, 0, 1, 0);

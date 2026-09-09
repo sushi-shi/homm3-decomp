@@ -211,6 +211,9 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 // contradiction of the older helper location, not a score-based skew claim.
 // Retail also selects the rollover field for right-click help where Dreamcast
 // loads the other THelpText field; both are direct byte-level Complete changes.
+// DC's nested help/widget scopes preserve the common dispatch epilogue.
+// Restoring them removes all three gotos at 100%; duplicating returns instead
+// falls to 87.4684%. All four independent scope combinations are exact.
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
 int TAdventureOptionsWindow::windowHandler(message* msg)
 {
@@ -225,21 +228,15 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
         if (msg->m_codeX == widget::WIDGET_SELECT
             || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
             int helpID = convertID2HelpID(msg->m_codeY);
-            if (helpID == -1)
-                goto consume;
-            normalDialog(g_adventureOptionsHelp[helpID].m_text,
-                4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (helpID != -1)
+                normalDialog(g_adventureOptionsHelp[helpID].m_text,
+                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        goto consume;
-    }
-
-    if (msg->m_id == MESSAGE_WIDGET) {
+    } else if (msg->m_id == MESSAGE_WIDGET) {
         if (msg->m_codeX == widget::WIDGET_DESELECT
             && (msg->m_codeY == ADVENTURE_OPTION_ACCEPT_ID
                 || (msg->m_codeY > 0 && msg->m_codeY <= 5))) {
             closeDialog = true;
-        } else {
-            goto consume;
         }
     } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
@@ -267,6 +264,5 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
         return MESSAGE_DISPATCH_FORWARD;
     }
 
-consume:
     return MESSAGE_DISPATCH_CONSUME;
 }
