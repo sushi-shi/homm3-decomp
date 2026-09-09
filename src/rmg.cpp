@@ -1208,14 +1208,18 @@ VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
 // Exact: 207/207 raw bytes, including rand. Assigning slot in the body
 // preserves vector construction first; retaining the parameter avoids
-// reloading slot across rand. The shared town-selection exit is required:
+// reloading slot across rand. Earlier selection-result controls failed:
 // a result initialized to -1 and assigned before break adds a stack home
 // (91.47%), while a post-loop selectedTown == 9 test adds a comparison.
-// The townSelected join remains exact. A bounded selected-town break with
+// The former townSelected join was exact. A bounded selected-town break with
 // an available-count else scores 98.5294%; an unbounded selection loop using
 // the proven positive availability count scores 97.6471%. Neither preserves
 // retail's constructor CFG, and this Complete-only constructor has no DC
 // helper boundary that would justify extracting the shared assignment.
+// A chosen result, initialized before the original bounded scan and set
+// before its break, gates only the selectedTown = -1 fallback. Bool/byte/int
+// with either if or do scope preserve the full 208-byte compiled constructor and all
+// relocations/addends at 100%; no extracted helper is needed.
 VA(0x005329E0, 0xCF) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
 TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
 {
@@ -1226,15 +1230,18 @@ TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
             ++available;
     }
     int selectedTown;
+    bool chosen = 0;
     if (available) {
         int selected = rand() % available;
         for (selectedTown = 0; selectedTown < 9; ++selectedTown) {
-            if (newSlot->m_allowedTowns[selectedTown] && --selected < 0)
-                goto townSelected;
+            if (newSlot->m_allowedTowns[selectedTown] && --selected < 0) {
+                chosen = 1;
+                break;
+            }
         }
     }
-    selectedTown = -1;
-townSelected:
+    if (!chosen)
+        selectedTown = -1;
     m_alignment = selectedTown;
     m_boundaryRoughness = newSlot->m_size;
     m_bounds.m_minimumX = 32000;
@@ -2760,6 +2767,9 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
 // Individual direct-failure returns score 98.7778% (first scan) and
 // 98.1693% (second); both score 98.1429%, below 98.8042%. These partial
 // controls do not preserve the first-failure branch destinations.
+// A positive fits result guarding the second scan and the placement tail
+// scores 90.7619% for bool/byte/int; negative blocked results reach only
+// 89.0476%. Both preserve scan order but remain below 98.8042%.
 VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
@@ -8875,6 +8885,9 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // Separate entrance-policy result controls remain lower: int 96.1471%,
 // unsigned char 96.7905%, against 99.9850%. Both preserve the source's
 // object/guard policy but change the emitted branch structure.
+// A separate blocked-entrance result reaches 98.2893%; head-tested scans
+// whose exhaustion arm owns the guard-policy assignment reach 99.2993%
+// with for/while/do headers. Both remain below 99.9850%.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)

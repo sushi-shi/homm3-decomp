@@ -780,7 +780,10 @@ void army::freeResources()
 // and removes the three reconstructed jumps to that store.
 // The remaining neutral Clover arm cannot use plain break in the current
 // selector context: it scores 80.6782% versus 100%. Keep its separate exit;
-// no_clover_bonus still precedes the common Halfling minimum and final store.
+// the exit still precedes the common Halfling minimum and final store.
+// A single do/while(0) around the Clover switch with neutral-town continue
+// preserves all 224 compiled bytes and the original selector at 100%.
+// Plain break is the failing control; no extra helper or operation is needed.
 VA(0x0043df20, 0xDD)  // anchor-global + complete body, dc 0x44318
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
@@ -802,22 +805,22 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-            switch (m_monInfo.m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto no_clover_bonus;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                value += 2;
-                break;
-            }
-    no_clover_bonus:
-            ;
+            do {
+                switch (m_monInfo.m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    continue;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    value += 2;
+                    break;
+                }
+            } while (0);
         }
 
         if (m_creatureType == CREATURE_HALFLING && value < 1)
@@ -848,7 +851,12 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 // keeps the exact bytes without a reconstructed jump to the final store.
 // Neutral terrain exits were tested independently: holy_done as break scores
 // 88.2326%, evil_done 91.2093%, both 82.3178%, versus 100%. Each collapses the
-// corresponding retail selector partition; retain both explicit destinations.
+// corresponding retail selector partition; the continue scopes below keep it.
+// Neutral-town continue removes both joins at 100%: Holy Ground's do scope
+// contains the switch, while Evil Fog's includes its terrain condition.
+// Putting both scopes inside their terrain tests or adding a neutral default
+// changes selector lowering. The asymmetric scopes preserve 316 compiled
+// bytes and all 13 relocation names/addends.
 VA(0x0043e000, 0x139)  // dc-bracket forced + body/caller proof, dc 0x443b4
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
@@ -868,45 +876,45 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            switch (m_monInfo.m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                ++value;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                --value;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto holy_done;
-            }
-    holy_done:
-            ;
+            do {
+                switch (m_monInfo.m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                    ++value;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    --value;
+                    break;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    continue;
+                }
+            } while (0);
         }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-            switch (m_monInfo.m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                --value;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                ++value;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto evil_done;
+        do {
+            if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+                switch (m_monInfo.m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                    --value;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    ++value;
+                    break;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    continue;
+                }
             }
-    evil_done:
-            ;
-        }
+        } while (0);
 
         if ((m_creatureType == CREATURE_MINOTAUR
              || m_creatureType == CREATURE_MINOTAUR_KING)

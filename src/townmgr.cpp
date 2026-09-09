@@ -5631,6 +5631,11 @@ static int exitTownManager(message& msg)
 // Silo 88.6132%, Blacksmith 88.6379%, Extra 1 88.5200%, Extra 2 88.6987%,
 // Special 88.4172%, versus 90.2738%. Each was scored separately; retain
 // these joins and the original string, popup and exit-helper boundaries.
+// A positive popup-handled result with plain/do/for dispatch scopes also
+// scores 87.0077% for bool/byte/int, covering all eleven exits. A post-switch
+// normal-return scope scores 76.1869% or 78.7779%. These tested scopes do
+// not recover the current 90.2738%; absence of a named DC helper is not
+// proof against an inline expansion.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {

@@ -290,6 +290,9 @@ void combatManager::doAnimations()
 // remote-message arm has that same ownership boundary. Guarding the skipped
 // local-action checks with a bool/byte received-action result preserves the
 // destructor but lowers 97.6611% to 81.5489%; retain this shared action join.
+// A single do/while(0) scope with continue from RS_COMBAT_MAIN also runs
+// CMessageKill's destructor before the shared action, but scores 86.8449%
+// versus 97.6611%. Keep the canonical owner and the received-action join.
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
 {

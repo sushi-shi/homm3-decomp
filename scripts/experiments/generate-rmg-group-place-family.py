@@ -411,6 +411,13 @@ def admitted_bodies():
 
 @functools.lru_cache(maxsize=None)
 def is_admitted(text):
+    # Main removed the unused join label after this already-enumerated
+    # if/else policy. Recognize only that exact verified source refinement.
+    policy = ("    if (!group->m_hasGuard) {\n"
+              "        allowEntrances = 1;\n    } else {\n"
+              "disallowEntrances:\n        allowEntrances = 0;\n    }\n")
+    if text.count(policy) == 1 and "checkOutline:" not in text:
+        text = text.replace(policy, policy + "checkOutline:\n")
     if text in admitted_bodies():
         return True
     # Sharing is the final grammar layer. Search it lazily rather than
