@@ -30,6 +30,11 @@ Subcommands
         and stop after the %% line.
         Run a full `homm3 build` for the final checkpoint.
 
+  warnings [--compiler both|clang|msvc] [--unit TU] [--jobs N]
+        Generate a fresh compiler-diagnostic report with Clang -Weverything
+        and pinned VC6 /W4. Full logs and isolated objects go under build/;
+        source, matching objects, the ledger and README stay unchanged.
+
   labels [--unit U ...|--all]
         Source-claim extraction (homm3.retail_labels.source): the lexical
         VA/VA_COMPGEN/DATA/DATA_COMPGEN scan over src/*.c* + the base-obj
@@ -229,6 +234,8 @@ def _dispatch(argv: list[str]) -> int:
     # gets a chance to consume or reject any of those options.
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
+    if argv and argv[0] == "warnings":
+        return run_module("homm3.analysis.compiler_warnings", *argv[1:])
 
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
@@ -246,6 +253,9 @@ def _dispatch(argv: list[str]) -> int:
 
     p = sub.add_parser("configure", help="regenerate build.ninja + objdiff.json")
     p.set_defaults(fn=cmd_configure)
+
+    sub.add_parser("warnings", add_help=False,
+                   help="fresh Clang/VC6 warning report (homm3 warnings --help)")
 
     p = sub.add_parser(
         "build", help="compile + delink + report + evidence/source gates")
