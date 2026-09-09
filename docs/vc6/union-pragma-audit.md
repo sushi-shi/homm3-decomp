@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 221 | 68 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 216 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 218 | 71 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 213 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 464 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 458 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 62 active inline overrides were removed; counting
-all 68 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 65 active inline overrides were removed; counting
+all 71 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1011,7 +1011,50 @@ Full build passes at **4073/4764 exact, 96.39% linked fuzzy and 96.38%
 whole-image**, with no MAX reset or lost banked RVA. The current census is
 **221 overrides** (216 depth-zero, five auto-inline-off) and **63 unions**
 (37 source, 26 header): 24 intentional representations and 39 reconstruction
-adapters. The post-header-change deletion audit must use a fresh snapshot.
+adapters.
+
+The fresh deletion audit at `3423ece1` checks all **221 regions across 31 TUs**
+after the bank-header and sacrifice-slot recoveries. Every isolated compile
+finishes: **218 loss-only and three mixed**, with no neutral or gain-only
+deletion. The mixed cases are `readObject`'s seer insertion (97.4369% →
+97.5099%, but four exact retained STL bodies disappear), animated-dialog
+teardown (network copy 100% → missing and wait caller 90.6522% → 75.0683%,
+while its implicit destructor rises 86.3333% → 100%), and the mouse helper
+(setup 100% → 90.1470%, generation 92.6386% → 97.9759%). This audit bounds
+simple deletion at that snapshot, not subsequent source recovery.
+
+The skill-quest proposal's **36-state input family, exhaustive 64-subset fence
+family and 48-state string-lifetime follow-up** also find no removable fence.
+All nonempty deletion subsets lower the caller while leaving its 118 siblings
+fixed. The native signed-byte binding and real const-reference string lifetimes
+do not recover a deletion. See the
+[proposal controls](source-families.md#skill-quest-proposal-lifetimes-and-six-fence-boundary)
+for the signed-loop residual and shared-COMDAT qualification.
+
+Native AI combat ownership retires all **three ai_combat overrides**: the
+general-melee call replaces a fenced pasted copy, and one correct ordinary
+mass-damage helper replaces two fenced caller-specific versions. The native
+vector copy/size claims now have their actual STL owners; `getTotal` returns
+combat value instead of a falsely identified vector length. The ordinary
+Familiar predicate, const valuation interfaces and canonical value-returning
+min/max are restored too. See the
+[container/melee controls](source-families.md#ai-combat-container-ownership-and-canonical-melee)
+and [mass/value controls](source-families.md#ai-mass-damage-familiar-predicate-and-value-wrapper-boundaries).
+
+chooseMelee, doGeneralMelee and two-side getEnchantmentValue become exact.
+getResurrectionValue's initial min-wrapper dip is recovered to 100% with a
+named capped value. Real residuals remain: initializeCreatures is 83.4275%
+against its old 91.9548% HIST, its retained `_Unguarded_partition` body is
+currently absent, and corrected/unpinned castSpell is 86.7910% against the
+incorrect-dataflow version's 93.0273% HIST. No body/claim disappearance is
+hidden by the banked-RVA gate. The seer signed-loop correction costs one
+additional small MAX reset, 83.2252% → 82.9730%; its old HIST is retained.
+
+Full delinking/build passes at **4075/4764 exact and 96.38% linked/whole-image**.
+The updated inventory has **218 overrides across 30 TUs** (213 depth-zero,
+five auto-inline-off), **63 unions**, and no inline override left in ai_combat.
+Relative to the user's 253/72 checkpoint, this removes **35 overrides and
+nine unions**. The remaining union classifications are unchanged.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

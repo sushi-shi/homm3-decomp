@@ -720,11 +720,11 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // formats the missing-skill list into the table's progress column and appends
 // the common deadline suffix before showing the same pictures.
 //
-// Residual (75.4324%; experimental peak 90.8649%): the retained source restores the
-// Dreamcast-attested hero::GetPrimarySkill accessor, and retail corroborates
-// its fully expanded clamp body. Writing that body out by hand reaches the
-// peak but removes the positive helper boundary, so the ratchet banks the
-// retained accessor state while the experiment remains documented. Both states have retail's exact 30 blocks,
+// Residual (82.9730%; historical 83.2252% before the signed-loop correction):
+// The retained source restores the Dreamcast-attested hero::GetPrimarySkill
+// accessor, and retail corroborates its fully expanded clamp body. Pasting
+// that body reached 90.8649% but removed the positive helper boundary; retain
+// the accessor and keep that experiment documented. This state has retail's 30 blocks,
 // 13 branches and one return. Temporary statement-scoped pins reproduce the
 // two out-of-line vector constructors/destructors, direct two-argument insert
 // calls (with end() evaluated outside the pin), and the deadline temporary's
@@ -736,6 +736,11 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // natural cleanup; a shared invented dialog helper measured 57.9685% and was
 // removed. Do not replace the accessor with its manual expansion or add raw
 // storage.
+// The 36-state input-binding, exhaustive 64-subset fence and 48-state returned-
+// string lifetime families found no removable fence. All other 118 scores stay
+// fixed. A native const-byte reference is score-flat; the first dialog loop's
+// signed index matches retail's jl and costs 83.2252 -> 82.9730. Do not reject
+// that source fact because the old unsigned back edge scored slightly higher.
 // E:\gamedcs\seerhut.cpp
 // Before normalization (locals): current_hero.
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
@@ -744,10 +749,9 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
-        // BOUND BY `const int&`: retail re-reads the requirement at both
-        // the compare and the store rather than keeping a copy live.
-        // 75.4324 -> 80.8108.
-        const int& required = m_requiredSkills[i];
+        // The actual requirement is a signed byte. The old const int& bound
+        // a converted temporary; it never referred back to the byte field.
+        const signed char& required = m_requiredSkills[i];
         missing[i] = required > have ? required : 0;
     }
 
@@ -759,7 +763,7 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
         std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
-        for (unsigned int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.m_resource = 0x1f + i;
                 resource.m_qualifier = 0x10000
