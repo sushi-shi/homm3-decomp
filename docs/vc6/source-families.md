@@ -3554,6 +3554,10 @@ independently recompiled and adopted. The accumulator also recovers its DC name
 of that repeat, while the other four consumers preserve their complete objects.
 The final retail CFG, instructions and named call stream are checked again;
 the former group-walk and later Dispel register differences are resolved.
+The 100% verdict uses the existing matching metric: the ten remaining data-
+name differences are four spell-table alias references and six unclaimed
+global references. All sixteen actual calls and the jump-table dispatch
+relocation agree by named target/addend; no data-name normalization is changed.
 
 `test-tactical-mass-boundaries.py` extracts the four actual helper bodies. At
 native `-O0` and `-O2`, **3025 effect cases, 6144 group/mass cases and 1024 summon

@@ -59,8 +59,8 @@ Manually maintained cleanup checklist:
 - [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
-- [ ] Review pragma debt in `src/`: **436 `#pragma` directives**, all for inlining
-  (**213 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Review pragma debt in `src/`: **434 `#pragma` directives**, all for inlining
+  (**212 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 
