@@ -1289,6 +1289,9 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // allocation mirror (retail homes `this` in EDI and shrink-wraps ESI for
 // morale after the early returns). `register` hints on either value are inert.
 // Before normalization (locals): apply_limits.
+// Fresh partial-scope controls confirm 80.5625% for plain no-op breaks.
+// Wrapping the terrain switches in do/while(0) scopes and using continue
+// is lower still (67.0170%); keep the two neutral selector destinations.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1404,7 +1407,8 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
 {
     // Put the Clover bonus in its case arm; this removes one jump at 100%.
     // Replacing the neutral/default exits with break collapses the selector
-    // table and scores 78.6737%, so those two exits remain shared.
+    // table and scores 78.6737%. The default alone can use break at 100%;
+    // the six neutral town cases retain their common exit.
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
@@ -1425,7 +1429,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
                 luck += 2;
                 break;
             default:
-                goto no_town_luck_bonus;
+                break;
             }
         no_town_luck_bonus:;
         }
@@ -1817,6 +1821,14 @@ void armyGroup::mergeArmies(armyGroup* source)
 // [ebp+0x28] for GetMorale's result) where we recycle one and give the
 // offset a stack slot of its own, and the empty-allocator scratch byte again
 // sits at [ebp+0xf] against retail's [ebp+0x13].
+// Structured terrain controls: the Holy Ground evil arm and both Evil Fog
+// arms can own their adjustment/append/return bodies. This removes three
+// joins and raises GetMoraleDescription 93.0566% -> 93.1409%, with every
+// sibling unchanged. Keep default in Evil Fog's good arm: retail's out-of-
+// range town behavior falls into that adjustment. All four direct arms lose
+// score. Keeping the Evil Fog good join instead reaches 93.9282% but retains
+// one additional goto; both supported alternatives reproduce in the 16-state
+// family. The greater structured reduction still improves the starting score.
 // Before normalization (function): apply_morale_magic_terrain.
 static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
                                        int townType, int& currentMorale,
@@ -1832,7 +1844,9 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto holy_ground_evil;
+            --currentMorale;
+            result.append(g_holyGroundEvilMoraleText);
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
@@ -1842,10 +1856,6 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         ++currentMorale;
         result.append(g_holyGroundGoodMoraleText);
         return;
-    holy_ground_evil:
-        --currentMorale;
-        result.append(g_holyGroundEvilMoraleText);
-        return;
     }
 
     if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
@@ -1854,23 +1864,21 @@ static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
-            goto evil_fog_good;
+        default:
+            --currentMorale;
+            result.append(g_evilFogGoodMoraleText);
+            return;
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto evil_fog_evil;
+            ++currentMorale;
+            result.append(g_evilFogEvilMoraleText);
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
             return;
         }
-    evil_fog_good:
-        --currentMorale;
-        result.append(g_evilFogGoodMoraleText);
-        return;
-    evil_fog_evil:
-        ++currentMorale;
-        result.append(g_evilFogEvilMoraleText);
     }
 }
 
@@ -2143,7 +2151,9 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
         // (0x44b100) already carries: retail lowers this arm through a
         // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
         // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
-        // survives if every arm names its own exit. Spelled with `return`
+        // survives with the neutral cases naming their exit. The bonus can
+        // live in its own arm and default can break, removing two gotos
+        // without changing any score in the 36-state family. Spelled with `return`
         // in the no-op arms VC6 sees two outcomes, collapses the whole
         // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
         // instead of the tables.
@@ -2158,13 +2168,12 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            goto clover_apply;
+            currentLuck -= 2;
+            result.append(g_cloverFieldLuckText);
+            break;
         default:
-            goto clover_done;
+            break;
         }
-    clover_apply:
-        currentLuck -= 2;
-        result.append(g_cloverFieldLuckText);
     clover_done:
         ;
     }

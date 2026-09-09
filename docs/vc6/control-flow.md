@@ -25,6 +25,20 @@ Restoring that canonical call eliminates a separate forced-inline copy. Always
 measure shared-header consumers when removing the obsolete declaration; even
 an unused declaration can affect VC6 register allocation elsewhere.
 
+The drawbridge example reaches the same conclusion from an exact starting
+body: restoring ordinary `DoorCanBeLowered` and const `hexcell::hasArmy`
+allows a positive gate guard and `else` to remove two jumps at 100%.
+`isWinner` restores its `army::is` calls and first-scan result, eliminating
+three jumps while retaining all 188 bytes. A failed direct-return probe alone
+had missed both forms.
+
+A common failure action can also have an ordinary breakable scope.
+`NewfullMap::load` keeps 56.7217% with two `break`s from one `do/while(0)`
+loading scope; direct returns at either site score 53.5994%. A successful
+partial switch rewrite need not remove every remaining exit at once: default
+and bonus arms can become structured while neutral cases still preserve a
+separate compressed-table destination. Record that narrower limit explicitly.
+
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /
 branch-shape** residual (not a register binding) and runs a guided oracle

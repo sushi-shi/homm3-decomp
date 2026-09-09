@@ -957,8 +957,11 @@ void NewfullMap::newfullMapFn004FD950(
 // seer resize and its size queries; our remaining nested decisions differ.
 // The former 93.4037% peak depended on the removed synthetic boundaries and
 // stays in HIST. Keep the real clear/resize/append calls through this dip.
-// Goto audit: Replacing the two load_failure jumps with direct returns
-// scores 53.5994% versus 56.7217%; retain this failure boundary.
+// The seer/event phase uses a single failure scope: short-read and town-
+// event failures break to one -1 return. Both do/while(0) and for(;;) forms
+// remove two gotos at 56.7217%, with all sibling scores unchanged. Direct
+// returns at either site instead score 53.5994%; keep the common boundary
+// and the original seer-object lifetime inside this scope.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
@@ -1002,34 +1005,35 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     if (loadMonsterList(infile) < 0)
         return -1;
 
-    {
-        short count;
-        if (infile->read(&count, sizeof(count)) < sizeof(count))
-            goto load_failure;
-
-        m_seerHutList.resize(count);
-        int spriteNum;
-        for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+    do {
         {
-            m_seerHutList[spriteNum].load(infile, saveVersion);
-            if (m_seerHutList[spriteNum].m_quest)
-                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                    static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+            short count;
+            if (infile->read(&count, sizeof(count)) < sizeof(count))
+                break;
+
+            m_seerHutList.resize(count);
+            int spriteNum;
+            for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+            {
+                m_seerHutList[spriteNum].load(infile, saveVersion);
+                if (m_seerHutList[spriteNum].m_quest)
+                    m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                        static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+            }
         }
-    }
 
-    if (saveVersion >= 25)
-        newfullMapFn004FD950(infile, saveVersion);
+        if (saveVersion >= 25)
+            newfullMapFn004FD950(infile, saveVersion);
 
-    if (loadTimedEventList(infile, saveVersion) < 0)
-        return -1;
-    if (loadTownEventList(infile, saveVersion) < 0)
-        goto load_failure;
+        if (loadTimedEventList(infile, saveVersion) < 0)
+            return -1;
+        if (loadTownEventList(infile, saveVersion) < 0)
+            break;
 
-    incProgressBar(1);
-    return 0;
+        incProgressBar(1);
+        return 0;
+    } while (0);
 
-load_failure:
     return -1;
 }
 

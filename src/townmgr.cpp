@@ -5628,6 +5628,9 @@ static int exitTownManager(message& msg)
 // but both score 87.0077% against 90.2738%; eleven copied popup bodies score
 // 73.3704%. DC's arms reach one common popup action, and no distinct helper
 // boundary is evidenced here. Retain the common action pending better scopes.
+// Eight result/lifetime controls include a byte-sized flag and declaration
+// before code selection or at function scope. Every structured flag form
+// emits the same 87.0077% object; changing its width/lifetime does not help.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {
