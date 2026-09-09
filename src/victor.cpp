@@ -366,6 +366,11 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
 // cursors and earlier source-pointer initialization are also measured worse.
 // The nested success scope preserves the shared exit; separate early returns
 // score 74.23%. A separate exit label crosses initialized locals in VC6.
+// Goto audit: read the extended palette first, then conditionally read the
+// header fallback. This removes copyPalette with all 315 compiled bytes and
+// every relocation name/addend unchanged at 92.5688%. Six structured read-
+// scope/result alternatives reproduce the same object, including do/for
+// scopes and bool/byte/int fallback results. Preserve the one conversion tail.
 VA(0x006043d0, 0x13c)  // anchor-caller loadpcx + PCX palette marker/seek offsets
 int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 {
@@ -387,15 +392,14 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
             if (colors == victorPcxExtendedColors) {
                 _llseek(file, -769, 2);
                 _lread(file, buffer, 769);
-                if (*buffer == victorPcxExtendedPaletteMarker)
-                    goto copyPalette;
-                colors = victorPcxHeaderColors;
-            } else if (colors > victorPcxHeaderColors) {
-                colors = victorPcxHeaderColors;
             }
-            _llseek(file, 16, 0);
-            _lread(file, buffer + 1, colors * 3);
-        copyPalette:
+            if (colors != victorPcxExtendedColors
+                    || *buffer != victorPcxExtendedPaletteMarker) {
+                if (colors > victorPcxHeaderColors)
+                    colors = victorPcxHeaderColors;
+                _llseek(file, 16, 0);
+                _lread(file, buffer + 1, colors * 3);
+            }
             unsigned char* source = buffer + 1;
             memset(palette, 0, colors * sizeof(RGBQUAD));
             for (int index = 0; index < colors; ++index) {
