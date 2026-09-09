@@ -3136,12 +3136,9 @@ DATA(0x006a5704) extern const char* g_unnamed6a5704;
 // byte-significant here, giving VC6 the same shared format blocks as retail.
 // Naming `creature` / `selected` values instead changes that merge set.
 //
-// PINNED: the one caller is WindowHandler, and /Ob2 expands a
-// single-call-site extern regardless of size, where retail keeps a real
-// call. auto_inline(off) marks THIS body non-inlinable without stopping
-// its own callees expanding - which is why GetArmyName is defined above
-// the pinned region, not inside it.
-#pragma auto_inline(off)
+// WindowHandler retains this call. The 2026-09-09 whole-TU control is
+// code-identical without auto_inline(off); the earlier single-call-site
+// expansion diagnosis no longer applies to the current source state.
 VA(0x004db660, 0x728)  // anchor-bracket + body, dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 {
@@ -3340,7 +3337,6 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     broadcastMessage(&update);
     drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
 }
-#pragma auto_inline()
 
 #if 0  // @carcass
 
@@ -6360,9 +6356,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                         missing.set(artifactId, false);
 #pragma inline_depth()
                 }
-#pragma inline_depth(0)
                 if (!missing.any()) {
-#pragma inline_depth()
                     playerData& player = g_game->m_players[m_owner];
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&

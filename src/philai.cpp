@@ -1760,8 +1760,9 @@ void aiVisitWarFactory(hero* currentHero)
     visitWarFactory(currentHero, ARTIFACT_AMMO_CART);
 }
 
-// MATCHING_DEBT: retail keeps this helper out of all three expansions of
-// visit_war_factory; preserve that decision explicitly until understood.
+// Retail keeps this helper out of all three expansions of visit_war_factory.
+// The 2026-09-09 whole-TU control reproduces that decision without the
+// former auto_inline(off) override.
 // CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
 // creature-cost row before the accumulator. Retail additionally proves a
 // cached ai.resource_value row. All blocks, branches and bytes through the funds
@@ -1770,7 +1771,6 @@ void aiVisitWarFactory(hero* currentHero)
 // Swapping the resource_values / costs declarations is byte-flat; the tail's
 // only remaining delta is EAX-vs-EDX for the reloaded costs pointer, which
 // forces the __ftol result to move out of EAX one instruction earlier.
-#pragma auto_inline(off)
 VA(0x00525120, 0xE0)
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
@@ -1796,7 +1796,6 @@ static long valueOfWarFactory(const hero* currentHero,
     }
     return 0;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\philai.cpp:687.  The unique DC callee set
 // {GetHero, type_AI_creature_swapper::{ctor,do_swap},
