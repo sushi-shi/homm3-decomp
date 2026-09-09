@@ -4611,8 +4611,8 @@ victor_pcx_kernels	?victorInterleaveRgbPlanes@@YAXPAEPBEH@Z	100.0000	100.0000	10
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x204570	ee4ddb1456b3
 victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x8b370	-
 victorylossconditions	?appliesToPlayer@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	d46074573b63
-victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	e159d22ca8ca
-victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.4928	98.4928	98.4928	0x1f1610	665d2f7754d8
+victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	1f95601e85cd
+victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1610	3d645aad029f
 victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	ad170bd91420
 victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390	8627723629f7
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40	07cb6c50ebee
