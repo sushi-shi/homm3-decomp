@@ -166,15 +166,10 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 //  * The pointer set is ADVENTURE_SET, not DEFAULT_SET - both SetPointer
 //    calls push 1. The frames are type_adventure_cursor values, so the
 //    adventure set is also the only one they index.
-//  * THE WIDGET_SELECT ARM WRITES THE END-DIALOG TAIL OUT LONGHAND rather
-//    than jumping to the shared label (95.04 -> 100.00). With `goto
-//    endDialog` as the arm's last statement VC6 threads the branch - the
-//    guard becomes `je endDialog` and the shared consume epilogue is
-//    DUPLICATED inline behind it. Retail has `jne <consume> / jmp
-//    <endDialog>`, i.e. no threading, which is what an arm ending in real
-//    statements produces: the tail is emitted, then tail-merged onto the
-//    label's copy. The other three arms keep the goto because each has a
-//    store before it, so their blocks already end in code.
+//  * The selection arm writes its end-dialog result directly. The other exits
+//    set a flag and break, as DC 0x829a0 lines 113, 121, 141 and 197-201 show.
+//    That structure removes three gotos while preserving 100%; copying the
+//    end-dialog tail into every exit falls to 83.32%.
 //
 // The passability test is the mapcell bitfields, NOT town.cpp's whole-word
 // view: retail reads `mov ax,word ptr [cell+0xc] / test ah,0x11`, and it is
@@ -200,11 +195,12 @@ int TDimensionDoorWindow::windowHandler(message* msg)
     int mouseX = msg->m_mouseX;
     int mouseY = msg->m_mouseY;
 
+    bool exitFlag = false;
     switch (msg->m_id) {
     case MESSAGE_KEY_DOWN:
         if (msg->m_codeX == DIALOG_CLOSE_KEY) {
             g_windowManager->m_dialogReturn = 0;
-            goto m_endDialog;
+            exitFlag = true;
         }
         break;
 
@@ -248,24 +244,24 @@ int TDimensionDoorWindow::windowHandler(message* msg)
         case widget::WIDGET_DESELECT:
             if (msg->m_codeY == DIALOG_RETURN_CANCEL) {
                 g_windowManager->m_dialogReturn = 0;
-                goto m_endDialog;
+                exitFlag = true;
             }
             break;
         case widget::WIDGET_RIGHT_SELECT:
             if (msg->m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
-                goto m_endDialog;
+                exitFlag = true;
             }
             break;
         }
         break;
     }
+    if (exitFlag) {
+        msg->m_id = MESSAGE_WIDGET;
+        msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
     return MESSAGE_DISPATCH_CONSUME;
-
-m_endDialog:
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // The twin of the claim at 0x491eb0, to the byte: the two classes share
@@ -315,6 +311,8 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
+// DC 0x82d14 uses the same exit-flag/common message tail. Restoring it removes
+// two gotos at 100%; duplicated direct exits score 81.9421%.
 VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
 int TSkuttleBoatWindow::windowHandler(message* msg)
 {
@@ -331,11 +329,12 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
     int mouseX = msg->m_mouseX;
     int mouseY = msg->m_mouseY;
 
+    bool exitFlag = false;
     switch (msg->m_id) {
     case MESSAGE_KEY_DOWN:
         if (msg->m_codeX == DIALOG_CLOSE_KEY) {
             g_windowManager->m_dialogReturn = 0;
-            goto m_endDialog;
+            exitFlag = true;
         }
         break;
 
@@ -379,18 +378,18 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
         case widget::WIDGET_RIGHT_SELECT:
             if (msg->m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
-                goto m_endDialog;
+                exitFlag = true;
             }
             break;
         }
         break;
     }
+    if (exitFlag) {
+        msg->m_id = MESSAGE_WIDGET;
+        msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
     return MESSAGE_DISPATCH_CONSUME;
-
-m_endDialog:
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395

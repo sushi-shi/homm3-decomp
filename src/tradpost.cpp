@@ -1353,31 +1353,26 @@ DATA(0x006a7da8) static THelpText g_buyArtHelpText[5];
 DATA(0x006a7e98) static THelpText g_sellCreaHelpText[5];
 
 // Before normalization: gBackpackStart.
-// The marketplace artifact list. The entry points seed it with a raw byte
-// buffer (gpGame->field_1f664, or DoBlackMarket's char*), and the buy/sell
-// panels then read it as artifact ids. The retail source aliases a char*
-// against artifact-id reads; the two views are paired here in a union so the
-// id read stays a plain member access rather than a pointer cast.
 DATA(0x006aaa70) static unsigned char g_backpackStart;
-union TMarketArtifactList {
-    // Before normalization: asBytes.
-    char* m_asBytes;
-    // Before normalization: asArtifacts.
-    TArtifact* m_asArtifacts;
-    // Before normalization: asIds.
-    int* m_asIds;   // the buy/sell panels write -1 back into an emptied slot
-};
+
+// The marketplace artifact list borrows either game::m_marketArtifacts or a
+// TBlackMarket::m_artifacts array. DC DoBlackMarket's TArtifact* parameter and
+// Complete's seven dword slots agree with those recovered producer types.
+// Replacing the bootstrap char*/enum*/int* union with this canonical pointer
+// preserves every section and relocation destination across all five header
+// consumers under the evidenced DoBlackMarket signature rename. No copied
+// list, cast adapter, or alternate declaration replaces the old union.
 // Before normalization: gpMarketArtifacts.
+DATA(0x006aaa74) static TArtifact* g_marketArtifacts;
 // Before normalization: gpMarketHero.
-DATA(0x006aaa74) static TMarketArtifactList g_marketArtifacts;
-// Before normalization: gSelectedArtifact.
 DATA(0x006aaa78) static hero* g_marketHero;
-// Before normalization: gMarketCount.
+// Before normalization: gSelectedArtifact.
 DATA(0x006aaa90) static int g_selectedArtifact;
-// Before normalization: gMarketWindow.
+// Before normalization: gMarketCount.
 DATA(0x006aaa98) static int g_marketCount;
-// Before normalization: gMarketSource.
+// Before normalization: gMarketWindow.
 DATA(0x006aaaa4) static int g_marketWindow;
+// Before normalization: gMarketSource.
 DATA(0x006aaac4) static int g_marketSource;
 
 // The remaining two constructed dialog objects (their trade/give/creature
@@ -1454,13 +1449,17 @@ DATA(0x006a7d40) static char* g_marketSource3Name;
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
+// DC row 621 calls GetTown then HasBuilding(14, true). Keep both canonical
+// calls and let VC6 expand this ordinary helper at its original source position.
+// The four declaration/query controls preserve the entire object section bytes
+// and relocation destinations; an explicit inline keyword is unnecessary.
 // Before normalization (function): CountMarkets.
-static inline void countMarkets()
+static void countMarkets()
 {
     g_marketCount = 0;
     for (int i = 0; i < g_currentPlayer->m_numTowns; ++i) {
         town* currentTown = g_game->getTown(g_currentPlayer->m_townIds[i]);
-        if (currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true))
             ++g_marketCount;
     }
     if (g_marketCount > 10)
@@ -1483,7 +1482,7 @@ void doArtifactMerchants()
         return;
     }
 
-    g_marketArtifacts.m_asArtifacts = g_game->m_marketArtifacts;
+    g_marketArtifacts = g_game->m_marketArtifacts;
     countMarkets();
     g_marketHero = g_game->getHero(
         g_townManager->m_townToView->m_visitingHeroId);
@@ -1501,7 +1500,7 @@ void doFreelancersGuild(hero* inHero)
 {
     g_marketCount = 5;
     g_marketHero = inHero;
-    g_marketArtifacts.m_asArtifacts = g_game->m_marketArtifacts;
+    g_marketArtifacts = g_game->m_marketArtifacts;
     g_marketWindow = 4;
     g_marketSource = 3;
     doMarket();
@@ -1525,7 +1524,7 @@ void doFreelancersGuild(town* currentTown)
         return;
     }
 
-    g_marketArtifacts.m_asArtifacts = g_game->m_marketArtifacts;
+    g_marketArtifacts = g_game->m_marketArtifacts;
     countMarkets();
     g_marketHero = g_game->getHero(currentTown->m_visitingHeroId);
     g_marketWindow = 4;
@@ -1540,7 +1539,7 @@ void doFreelancersGuild(town* currentTown)
 VA(0x005e9fe0, 0xdc)  // townManager caller + market-state body, dc 0x188640
 void doMarketplace()
 {
-    g_marketArtifacts.m_asArtifacts = g_game->m_marketArtifacts;
+    g_marketArtifacts = g_game->m_marketArtifacts;
     countMarkets();
     g_marketHero = g_game->getHero(
         g_townManager->m_townToView->m_visitingHeroId);
@@ -1554,7 +1553,7 @@ VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c
 void doTradingPost()
 {
     g_marketCount = 5;
-    g_marketArtifacts.m_asArtifacts = g_game->m_marketArtifacts;
+    g_marketArtifacts = g_game->m_marketArtifacts;
     g_marketWindow = 0;
     g_marketSource = 1;
     doMarket();
@@ -1562,10 +1561,10 @@ void doTradingPost()
 
 // E:\gamedcs\tradpost.cpp:693
 VA(0x005ea100, 0x2A)  // anchor-callee (DoMarket) + arity screen, dc 0x1886d4
-void doBlackMarket(hero* inHero, char* blackArtifacts)
+void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 {
     g_marketHero = inHero;
-    g_marketArtifacts.m_asBytes = blackArtifacts;
+    g_marketArtifacts = blackArtifacts;
     g_marketCount = 5;
     g_marketWindow = 2;
     g_marketSource = 2;
@@ -1928,6 +1927,8 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // in-arm assignment order (qtyRight before qtyLeft in the true arm,
 // qtyLeft before qtyRight in the false arm) on top scores 84.3290.
 // Before normalization (locals): bUpdate.
+// Duplicating the decimal-format call into the reciprocal/unit branches
+// removes ratioDone but lowers 88.5391% to 86.8941%; the join remains.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::update(unsigned char update)
 {
@@ -2378,6 +2379,8 @@ void TGiveResourceWindow::update(bool update)
 // order contradicts retail. Repeating msg.id at the retail store site is also a
 // measured loss (-0.39 raw), so both are intentionally left unbanked.
 // Before normalization (locals): bUpdate.
+// Keeping the singular/plural assignment inside its quantity arm removes
+// have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2389,17 +2392,17 @@ void TBuyArtifactWindow::update(unsigned char update)
         const char* word;
         if (g_ratioInverted) {
             qty = 1;
+            word = (*g_generalText)[162];
         } else {
             qty = g_giveQuantity;
             if (qty > 1) {
                 word = (*g_generalText)[161];
-                goto have_word;
+            } else {
+                word = (*g_generalText)[162];
             }
         }
-        word = (*g_generalText)[162];
-have_word:
         sprintf(g_text, (*g_generalText)[268],
-                g_artifactTraits[g_marketArtifacts.m_asIds[g_leftResource]].m_name,
+                g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
         sprintf(g_text, g_leftDenominated ? (*g_generalText)[163]
@@ -2490,7 +2493,7 @@ have_word:
             } else {
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 8;
-                msg.m_extra = g_marketArtifacts.m_asIds[g_leftResource];
+                msg.m_extra = g_marketArtifacts[g_leftResource];
                 broadcastMessage(&msg);
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_rightAmount);
@@ -2527,7 +2530,7 @@ have_word:
                 broadcastMessage(&msg);
             } else {
                 msg.m_extra = 6;
-                if (g_marketArtifacts.m_asIds[i] != -1) {
+                if (g_marketArtifacts[i] != ARTIFACT_NONE) {
                     msg.m_codeX = widget::WIDGET_SET_STATUS;
                     msg.m_codeY = 0x38 + i;
                     broadcastMessage(&msg);
@@ -2540,7 +2543,7 @@ have_word:
                         float valEff = static_cast<float>(g_artifactMarketValues[g_selectedArtifact])
                                      * g_artifactPurchaseEfficency[g_marketCount];
                         float cost = static_cast<float>(
-                            g_artifactTraits[g_marketArtifacts.m_asIds[i]].m_cost);
+                            g_artifactTraits[g_marketArtifacts[i]].m_cost);
                         long q;
                         if (valEff == 0.0f || cost == 0.0f)
                             q = 0;
@@ -2558,7 +2561,7 @@ have_word:
                     broadcastMessage(&msg);
                     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                     msg.m_codeY = 0x38 + i;
-                    msg.m_extra = g_marketArtifacts.m_asIds[i];
+                    msg.m_extra = g_marketArtifacts[i];
                     broadcastMessage(&msg);
                 } else {
                     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
@@ -3090,15 +3093,21 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
 // The left column is the hero's artifact list (18 equipped slots then the
 // backpack); the exchange divides the artifact's gold cost, scaled by the
 // marketplace-count efficiency, by the resource's market value, floored to 1.
+// DC rows 2235/2237 call hero::get_artifact/get_backpack. Restore the canonical
+// accessors; flattening them produces identical whole-object bytes but is not
+// the evidenced source boundary. The retained ratio body remains byte-exact.
 // Before normalization (locals): iInTradeRatio, bInLeftDenominated, iInMaxUnitsToTrade.
 VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
 void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
-    if (inLeftResource < 18)
-        artifact = g_marketHero->m_equipped[inLeftResource];
+    if (inLeftResource < 18) {
+        union { int m_value; TArtifactSlot m_slot; } converted;
+        converted.m_value = inLeftResource;
+        artifact = g_marketHero->getArtifact(converted.m_slot);
+    }
     else
-        artifact = g_marketHero->m_backpack[inLeftResource - 18];
+        artifact = g_marketHero->getBackpack(inLeftResource - 18);
 
     float leftValue =
         static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
@@ -3586,9 +3595,10 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                 } else {
                     g_currentPlayer->m_resources[g_selectedArtifact] -=
                         g_giveQuantity * g_rightAmount;
-                    type_artifact artifact(g_marketArtifacts.m_asArtifacts[g_leftResource]);
+                    type_artifact artifact(
+                        g_marketArtifacts[g_leftResource]);
                     g_marketHero->giveArtifact(&artifact, 1, 1);
-                    g_marketArtifacts.m_asArtifacts[g_leftResource] =
+                    g_marketArtifacts[g_leftResource] =
                         ARTIFACT_NONE;
                 }
                 g_leftDenominated = 1;
@@ -3629,7 +3639,7 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                         * g_artifactPurchaseEfficency[g_marketCount];
                     float artifactValue = static_cast<float>(
                         g_artifactTraits[
-                            g_marketArtifacts.m_asArtifacts[
+                            g_marketArtifacts[
                                 g_leftResource]].m_cost);
                     if (leftValue == 0.0f || artifactValue == 0.0f) {
                         g_giveQuantity = 0;
@@ -3663,7 +3673,7 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                         * g_artifactPurchaseEfficency[g_marketCount];
                     float artifactValue = static_cast<float>(
                         g_artifactTraits[
-                            g_marketArtifacts.m_asArtifacts[destination]].m_cost);
+                            g_marketArtifacts[destination]].m_cost);
                     if (leftValue == 0.0f || artifactValue == 0.0f) {
                         g_giveQuantity = 0;
                         g_maxTradeUnits = 0;
@@ -3689,7 +3699,8 @@ int TBuyArtifactWindow::windowHandler(message* msg)
             if (msg->m_codeY < BUY_ARTIFACT_SLOT_0_ID
                 || msg->m_codeY > BUY_ARTIFACT_SLOT_6_ID)
                 return MESSAGE_DISPATCH_CONSUME;
-            type_artifact artifact(g_marketArtifacts.m_asArtifacts[
+            type_artifact artifact(
+                g_marketArtifacts[
                     msg->m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
             g_marketHero->viewArtifact(&artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
@@ -3734,7 +3745,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
     case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
     case BUY_ARTIFACT_SLOT_6_ID: {
         TArtifact art =
-            g_marketArtifacts.m_asArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
+            g_marketArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
         if (art == ARTIFACT_NONE)
             strcpy(g_text, g_emptyRolloverText);
         else
@@ -3777,12 +3788,26 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // produce that pair.  Writing the call and the return inside each arm:
 //   66/65 blocks -> 63/63, four returns -> five, the one-sided ViewArtifact
 //   reference gone (20 calls agreeing, none one-sided), 89.7288 -> 90.6801.
-// Residual (90.6801%): 484 instruction rows still differ across the two
+// Historical fenced residual (90.6792%): 484 instruction rows differed across the two
 // nested jump-table switches, and `--branches` reports the arm pairing as
 // meaningless, so the remaining debt is arm LAYOUT in those tables rather
 // than any further statement.  The slots 13..17 NormalDialog skew is
 // retail-corroborated and stays; it is what beat the discarded 87.20%
 // parent whose 13..15 contradicted retail.
+//
+// DC rows 2961/2990 share SetupNewTrade from both resource/artifact selection
+// arms. Keep that canonical source call here, like the existing arrow arms;
+// the former flattened ComputeTradeRatios + gRightAmount store needed the
+// TU's last inline_depth fence. The twelve-state accessor/value/setup family
+// removes it with no other scored row changed, at 81.9322% here. Retail's
+// resource arm retains ComputeTradeRatios (function +0x509), whereas this
+// natural source expands it and then shares a selection tail. C2's verified
+// trace admits the 153-byte-cost nested callee against budgets 189 and 188
+// at the first two setup sites. The caller-budget/source-state gap remains;
+// it does not disprove SetupNewTrade. A direct unfenced flattened control
+// falls to 80.5105%; named right-value lifetime and accessor flattening do
+// not restore the missing call. No artificial assertion or compiler mass
+// replaces the retired fence. Preserve the fenced peak in HIST.
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::windowHandler(message* msg)
 {
@@ -3807,11 +3832,7 @@ int TSellArtifactWindow::windowHandler(message* msg)
                 g_leftResource = destination;
                 updateFlag = 1;
                 if (g_selectedArtifact != -1) {
-#pragma inline_depth(0)
-                    computeTradeRatios(g_selectedArtifact, g_leftResource,
-                        &g_giveQuantity, &g_ratioInverted, &g_maxTradeUnits);
-#pragma inline_depth()
-                    g_rightAmount = 1;
+                    setupNewTrade();
                 }
                 break;
             }
@@ -4156,28 +4177,27 @@ int TSellCreatureWindow::windowHandler(message* msg)
 VA(0x005eebd0, 0x1a1)  // anchor-callee (TSellCreatureWindow::WindowHandler), dc 0x18c7b0
 void TSellCreatureWindow::setRolloverText(int codeY)
 {
-    const char* rolloverText;
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:
-        rolloverText = g_sellCreaHelpText[0].m_text;
+        strcpy(g_text, g_sellCreaHelpText[0].m_text);
         break;
     case MARKET_RIGHT_PANEL_ID:
         strcpy(g_text, g_sellCreaHelpText[1].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_LEFT_COUNT_ID:
-        rolloverText = g_sellCreaHelpText[2].m_text;
+        strcpy(g_text, g_sellCreaHelpText[2].m_text);
         break;
     case MARKET_LEFT_LABEL_ID:
         strcpy(g_text, g_sellCreaHelpText[3].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_COMMAND_ID:
         strcpy(g_text, g_sellCreaHelpText[4].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
     case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
     case MARKET_BUY_GOLD_ID:
-        rolloverText = g_resourceNames[codeY - MARKET_BUY_WOOD_ID];
+        strcpy(g_text, g_resourceNames[codeY - MARKET_BUY_WOOD_ID]);
         break;
     case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
     case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
@@ -4186,26 +4206,20 @@ void TSellCreatureWindow::setRolloverText(int codeY)
         int creatureType =
             g_marketHero->m_army.m_armies[codeY - MARKET_CREATURE_SLOT_0_ID];
         sprintf(g_text, getArmyName(creatureType, 2));
-        goto rollover_text_ready;
+        break;
     }
     default:
         strcpy(g_text, g_emptyRolloverText);
-        goto rollover_text_ready;
+        break;
     }
-    strcpy(g_text, rolloverText);
-rollover_text_ready:
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
-    // Residual (90.26%, banked MAX 97.05%): all 24 blocks and edges agree;
-    // twenty blocks are exact and three more differ by one instruction.
-    // Dreamcast positively attests GetArmyName(creature, 2), which Complete
-    // folds to the range test and plural trait load. Keeping that helper while
-    // joining the resource arm to the shared strcpy raises 78.69 -> 90.26.
-    // Negative controls: sharing every DC strcpy arm falls to 68.96, forcing
-    // the left-panel copy direct falls to 77.87, and `register` is byte-flat.
-    // Omitting GetArmyName reaches the older 97.05 peak but violates the
-    // positive helper gate; a volatile creature local is likewise source-false.
+    // Every switch arm now owns its strcpy or sprintf and ends with break.
+    // DC 0x18c7b0 lines 3338-3373 prove the copies and GetArmyName call;
+    // VC6 merges the plain copies naturally. This removes five gotos and
+    // restores 100% from 90.2612%, retaining the canonical name helper.
+    // The old shared-copy source split prevented that natural merge.
 }

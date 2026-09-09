@@ -5817,30 +5817,40 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
 }
 
 // E:\gamedcs\hero.cpp:4627
-// PINNED against /Ob2. Retail keeps GiveSS a real CALL at both of
-// CheckLevel's surviving sites (the three dialogReturn arms cross-jump
-// onto one shared `mov ecx,ebx / call`), where our CL expanded it at all
-// six - `predict-inline` reported it as the sole OVER-inline there,
-// worth 23 extra conditional branches. auto_inline(off) suppresses the
-// expansion without touching this body's own emission.
-#pragma auto_inline(off)
+// Retail keeps GiveSS out of line in initialize, HeroFn_004D8B30, SetSS
+// and CheckLevel. DC lines 4628..4631 have no line rows before the indexed
+// skill read at 4632; a release-form bounds verification is a supported
+// hypothesis, not recovered assertion text. The actual index invariant
+// below retires the former auto_inline override: all raw COFF section bytes
+// and all 3439 relocation targets agree with the pinned control (only local
+// label identifiers change). No assertion branch or runtime call remains.
+// Negative control: delete only this verification with the pin absent, and
+// VC6 expands GiveSS: SetSS 100 -> 3.8, CheckLevel 87.1338 -> 49.8180,
+// initialize 91.0235 -> 75.0201, HeroFn_004D8B30 97.5831 -> 89.9819.
+// Split lower/upper verifications also retain the calls but perturb
+// GiveArtifact 79.8138 -> 79.7247; a combined predicate preserves the TU.
+// DC 4637/4639 retains an outer else and an inner capacity test; flattening
+// that scope is byte-neutral, unlike dropping the range verification.
 // Before normalization (locals): iWhichSS, iNumLevelsToGive, iOldLevel.
 VA(0x004e22d0, 0x61)  // anchor-caller (SetSS, CheckLevel), dc 0xd37c0
 int hero::giveSS(int whichSS, int numLevelsToGive)
 {
+    HOMM3_RELEASE_VERIFY(whichSS >= 0
+        && whichSS < sizeof(m_skillLevel) / sizeof(m_skillLevel[0]));
     int oldLevel = m_skillLevel[whichSS];
     if (m_skillLevel[whichSS] > 0) {
         m_skillLevel[whichSS] += numLevelsToGive;
-    } else if (m_skillCount < 8) {
-        m_skillLevel[whichSS] = numLevelsToGive;
-        m_skillOrder[whichSS] = m_skillCount + 1;
-        m_skillCount++;
+    } else {
+        if (m_skillCount < 8) {
+            m_skillLevel[whichSS] = numLevelsToGive;
+            m_skillOrder[whichSS] = m_skillCount + 1;
+            m_skillCount++;
+        }
     }
     if (m_skillLevel[whichSS] > 3)
         m_skillLevel[whichSS] = 3;
     return m_skillLevel[whichSS] - oldLevel;
 }
-#pragma auto_inline(on)
 
 // Original: hero::HasSecondarySkill; hero.cpp:4689, dc 0xd38d8.
 // The DC formal type is non-const, and its source body tests skillOrder.
@@ -5998,6 +6008,12 @@ void hero::transferArtifacts(hero* src)
 // equip_artifact, remove_artifact) changes nothing - VC6 already rotates
 // those, so their guards were never folded. This lever only pays where
 // the loop came out top-tested.
+// The two component-capacity failures set a slotFits result and break the
+// component scan; a false result continues the enclosing slot scan. This
+// removes both next_slot jumps with the predicate unchanged at 92.9185%.
+// Testing the exhausted component index instead loses 1.2018 points. This
+// predicate is Complete-only; the retail capacity checks and one spared
+// component establish the result, without inventing a source helper.
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -6046,6 +6062,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 g_combinationArtifacts[combination].m_components;
             // Before normalization (locals): kept_slot.
             bool keptSlot = false;
+            bool slotFits = true;
             int component = 0;
             do {
                 if (!components.test(component))
@@ -6061,8 +6078,10 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 std::bitset<19> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
-                if (counts[componentClass] >= capacity)
-                    goto next_slot;
+                if (counts[componentClass] >= capacity) {
+                    slotFits = false;
+                    break;
+                }
                 {
                     int occupied =
                         (g_artifactTraits[artifact].m_allowableSlotMask
@@ -6072,14 +6091,17 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
-                    if (counts[componentClass] >= capacity - occupied)
-                        goto next_slot;
+                    if (counts[componentClass] >= capacity - occupied) {
+                        slotFits = false;
+                        break;
+                    }
                 }
                 counts[componentClass]++;
             } while (++component < 144);
+            if (!slotFits)
+                continue;
         }
         return 1;
-    next_slot:;
     }
     return 0;
 }
@@ -6185,12 +6207,15 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // has no spellbook silently equips one into slot 17 first, through a
 // RECURSIVE call to this same body (retail's `call 0x4e2a00` is a
 // self-reference, not a sibling).
+// The strict call-name view misses that self-reference label: the raw
+// instruction at 0x4e2a8a is E8 71 FF FF FF, targeting 0x4e2a00 exactly.
 //
-// Residual (93.2%): the empty-slot SEARCH loop shape. Retail tests
-// `cmp slot,0x13` at the TOP and jumps back to it; our CL proves the
-// first iteration runs, drops the entry test and rotates the compare to
-// the bottom, which duplicates the return-0 epilogue (3 rets against
-// retail's 2).
+// The slot search is exact with a head-tested while loop whose exhaustion
+// return stays inside the loop, followed by an explicit-slot else scope.
+// Together these remove slot_chosen and reproduce all 455 retail bytes.
+// DC lines 4886..4895 attest the search, post-search rejection and separate
+// explicit-slot validation; Complete replaces artifactAllowedInSlot with its
+// component-aware predicate below. The predicate is called once per attempt.
 //
 // The 144-row component sweep is CLOSED (2026-08-20, 85.25 -> 93.21):
 // both it AND its inner four-byte loop had to become signed-INDEX loops
@@ -6203,31 +6228,28 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // that a pointer relational compare (unsigned, `jb`) can never produce.
 // See remove_artifact's note for the general rule.
 //
-// Tried and rejected since, one compile each: routing both failure paths
-// through one shared merged `return 0` block (93.21, byte-flat - VC6
-// re-threads it); `slot < 0` instead of `slot == -1` for the entry test,
-// chasing retail's `jge` at branch #1 (87.78, WORSE - the equality
-// spelling is right despite the branch-kind report). A literal `while`,
-// an explicit top `slot >= 19` guard, and an inverse helper test with an
-// explicit `continue` are all byte-flat at 93.2051: VC6 rotates each one.
-// A `break` followed by `if (slot == 19) return 0`, with the explicit-slot
-// failure in an `else if`, is strictly worse at 90.83. Earlier: the search
-// as an explicit goto loop (85.25 baseline, byte-flat - VC6 rotates it
-// anyway); both failure paths through a shared `reject:` label (80.31).
+// Negative controls: break followed by a slot==19 rejection and an else-if
+// explicit-slot check scores 90.83%; an explicit acceptance flag scores
+// 91.9231%. The former goto caller was 93.2051%. Earlier loop-only rewrites
+// kept its separate validation scope and stayed at that score; they do not
+// establish a VC6 limitation on structured searches.
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 {
     if (slot == -1) {
-        for (slot = 0; slot < 19; slot++) {
+        slot = 0;
+        while (1) {
+            if (slot >= 19)
+                return 0;
             if (heroFn004E2550(artifact->m_artifactId, slot))
-                goto slot_chosen;
+                break;
+            ++slot;
         }
-        return 0;
+    } else {
+        if (!heroFn004E2550(artifact->m_artifactId, slot))
+            return 0;
     }
-    if (!heroFn004E2550(artifact->m_artifactId, slot))
-        return 0;
 
-slot_chosen:
     m_equipped[slot].m_artifactId = artifact->m_artifactId;
     m_equipped[slot].m_extra = artifact->m_extra;
 
@@ -8019,14 +8041,21 @@ unsigned char hero::isMobile() const
 }
 
 // E:\gamedcs\hero.cpp:6428
-// The scoped inline pin is required while this TU has only one reconstructed
-// caller: VC6 otherwise expands the body into modify_spell_damage, whereas
-// retail calls it there. Cross-TU retail callers prove the external body.
-#pragma auto_inline(off)
+// Retail calls this from modifySpellDamage; cross-TU calls prove the retained
+// body. DC 6429..6430 leaves two lines before bonus initialization. The real
+// hero-array bounds below are a release-verification hypothesis, not recovered
+// ASSERT text. They retire the auto-inline override with every TU section byte
+// and all 3439 relocation destinations unchanged. Negative control: omit both
+// checks and getHeroSpellBonus expands in modifySpellDamage (100 -> 32.6226).
+// One combined predicate retains that call but perturbs giveArtifact
+// 79.8138 -> 79.7247; separate bounds preserve the entire TU.
 // Before normalization (locals): spell_id, target_level.
 VA(0x004e5ff0, 0x123)  // anchor-global, dc 0xd5710
 int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 {
+    HOMM3_RELEASE_VERIFY(m_id >= 0);
+    HOMM3_RELEASE_VERIFY(m_id < sizeof(g_heroSpecificAbilities)
+        / sizeof(g_heroSpecificAbilities[0]));
     int bonus = 0;
     const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
     if (ability.m_type == eHeroAbilitySpell
@@ -8055,7 +8084,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
     }
     return bonus;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\hero.cpp:6493
 // IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right

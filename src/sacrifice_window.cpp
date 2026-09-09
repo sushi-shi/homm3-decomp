@@ -3365,6 +3365,8 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 // artifact to its original equipped slot where possible, then tries an
 // arbitrary equipped slot, the backpack, and finally the arbitrary equipped
 // path once more before closing the modal dialog.
+// DC line 1866 calls return_artifact. The existing ordinary returnArtifact
+// expands naturally here and preserves 100% while removing three failure joins.
 VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
 int type_sacrifice_window::exitDialog(message* msg)
 {
@@ -3375,17 +3377,7 @@ int type_sacrifice_window::exitDialog(message* msg)
     msg->m_codeX = widget::WIDGET_END_DIALOG;
 
     if (artifact->m_artifactId != -1) {
-        if (artifact->m_source < 19) {
-            if (m_currentHero->equipArtifact(artifact, artifact->m_source))
-                goto artifact_returned;
-            if (m_currentHero->equipArtifact(artifact, -1))
-                goto artifact_returned;
-        }
-        if (m_currentHero->addToBackpack(artifact, -1))
-            goto artifact_returned;
-        m_currentHero->equipArtifact(artifact, -1);
-
-artifact_returned:
+        returnArtifact(*artifact);
         artifact->m_artifactId = ARTIFACT_NONE;
     }
     return MESSAGE_DISPATCH_FORWARD;

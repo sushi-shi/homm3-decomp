@@ -469,6 +469,9 @@ void TCombatResultsWindow::doModal()
 }
 
 // E:\gamedcs\combatresultswindow.cpp:417
+// The deadline sets the existing DC bExitFlag (lines 448/449) and reaches
+// the same exit scope as widget deselection. This removes the goto while
+// preserving the exact 132-byte caller; no duplicate dialog tail is needed.
 VA(0x00471b90, 0x84)  // DoModal address-take + full CFG, dc 0x692cc
 int combatResultsWindowHandler(message& msg)
 {
@@ -488,11 +491,10 @@ int combatResultsWindowHandler(message& msg)
     if (deadline > 0
         && static_cast<long>(GameTime::get() - deadline) >= 0) {
         msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
-        goto exit_dialog;
+        exitFlag = 1;
     }
 
     if (exitFlag) {
-exit_dialog:
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
         msg.m_codeY = widget::WIDGET_END_DIALOG;

@@ -49,7 +49,7 @@ enum EDayOfWeek {
 // campaign ids remapped (0x80 -> 0x92, 0x81 -> 0x9c) - which is what makes
 // the second argument the map version rather than anything of the file's.
 // Reached from readHeroData; the NAME is invented from that role, on
-// the readString reader's former provisional-name precedent.
+// the former role-derived string-reader name's precedent.
 // Before normalization (function): ReadHeroId.
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 // 0x4ba210, 80 B. The save-record twin uses the Complete-roster version
@@ -278,29 +278,24 @@ public:
 #pragma pack(pop)
 SIZE(HeroExtra, 0x334);
 
-// The four secondary skills a university offers, in slot order. Retail's
-// own default constructor 0x5d2d80 - `mov eax,ecx` plus four dword stores
-// of 14, 15, 16, 17 and a bare `ret`, no frame - proves the shape and the
-// element width: the record IS four ints, and the four values are the
-// elemental magic schools (Fire, Air, Water, Earth), which is exactly the
-// set the Conflux town building teaches. townManager::DoUniversity
-// 0x5d2da0 expands that constructor inline over its own stack record and
-// hands its address to the university window; the map object's copy comes
-// out of ExtraInfoUnion::get_university instead. Sixteen bytes either way,
-// unchanged.
+// The four secondary skills a university offers, in slot order. Dreamcast
+// type 0x1adf / field list 0x3521 proves the sixteen-byte aggregate with one
+// skills array and no constructor. Complete's game::Load likewise passes an
+// uninitialized fill record to opaque vector::resize, and RandomizeUniversity
+// fills this native local with four selected skills. Neither path initializes
+// the elemental schools: that operation belongs to the Conflux callers.
 struct type_university {
     // Before normalization: skills.
     TSecondarySkill m_skills[4];
 
-    // DEFINED in townmgr.cpp, not here, and the retail image is what says
-    // so: the out-of-line copy at 0x5d2d80 sits inside townmgr.obj's link
-    // bracket, immediately ahead of townManager::DoUniversity, while the
-    // only three callers of it in the image are AI bodies at 0x5253d0 and
-    // 0x52b1e0 - objects that link EARLIER. A header-inline constructor
-    // would have had its COMDAT kept from the first object that used it,
-    // i.e. over there; a plain out-of-line member emitted by its own
-    // compiland lands exactly where this one does.
-    type_university();
+    // Provisional behavioral name for retail 0x5d2d80, not a recovered DC
+    // symbol. ECX is the record; EAX returns its address. The ordinary body
+    // lives immediately before DoUniversity in townmgr.cpp: retail calls it
+    // from three Conflux AI sites and expands it in the town window. This
+    // role model preserves those bytes without imposing magic-school default
+    // construction on generic map records. The original helper name/kind is
+    // not independently known; a void-return control does not match its body.
+    type_university* initializeMagicSkills();
 };
 SIZE(type_university, 0x10);
 
@@ -1957,8 +1952,12 @@ public:
     void recordMonsterIdentifier(int identifier, type_point point);
     // Before normalization (function): game::LoadGarrisonPool.
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
+    // Before normalization (function): game::LoadTownPool.
+    int loadTownPool(TAbstractFile* infile, int saveVersion);
     // Before normalization (function): game::SaveMinePool.
     int saveMinePool(TAbstractFile* outfile);     // 0x4b9580
+    // Before normalization (function): game::SaveTownPool.
+    int saveTownPool(TAbstractFile* outfile);
     // Before normalization (function): game::SaveGarrisonPool.
     int saveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
     // Before normalization (function): game::LoadBoatPool.
@@ -1967,8 +1966,12 @@ public:
     int saveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     // Before normalization (function): game::LoadObeliskPool.
     int loadObeliskPool(TAbstractFile* infile);
+    // Before normalization (function): game::LoadBlackMarkets.
+    int loadBlackMarkets(TAbstractFile* infile);
     // Before normalization (function): game::SaveObeliskPool.
     int saveObeliskPool(TAbstractFile* outfile);
+    // Before normalization (function): game::SaveBlackMarkets.
+    int saveBlackMarkets(TAbstractFile* outfile);
     // Before normalization (function): game::Load.
     int load(TAbstractFile* infile);              // 0x4bcda0
     // Before normalization (function): game::LoadGame.
@@ -2004,7 +2007,6 @@ public:
     // dataflow prove the PC build made it a member.
     // Before normalization (function): game::SetupFirstPlayer.
     void setupFirstPlayer();
-    // Before normalization (function): game::setup_first_player_position.
     // Before normalization (function): game::LoadMap.
     bool loadMap(TAbstractFile* mapFile);
     // Before normalization (function): game::apply_map_header_availability.
@@ -2610,11 +2612,13 @@ inline SavedGameHeader::SavedGameHeader()
 }
 
 // Original: SavedGameHeader::Reset; Game.h:1312, dc 0xbcf00.
-// Complete fills the expanded save snapshot from the live game. The former
-// empty reset_assignment_surface call only steered the inline budget; it has
-// no recovered operation and is removed. Its old control was 79.54% without
-// the dummy versus 100% with it. Retain the source owner and measure the
-// real assignment/caller state instead of recreating that artificial site.
+// Complete fills the expanded save snapshot with the implicit campaign and
+// map-header assignments, then the bool IsHuman results. The upstream
+// 54-state assignment/flag family removed copied member walks, three pins
+// and the empty resetAssignmentSurface helper. The actual bool result leaves
+// a measured spill-width residual (98.2888% in that state); the former byte/
+// dword union matched it artificially. Keep these operations in the proven
+// header owner and retain older peaks in HIST.
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 inline void SavedGameHeader::reset()
 {
@@ -2626,43 +2630,9 @@ inline void SavedGameHeader::reset()
     m_version = 42;
     m_gameVersion = g_game->m_f1f698;
 
-    SCampaign& savedCampaign = m_campaign;
-    const SCampaign& gameCampaign = g_game->m_campaign;
-    savedCampaign.m_isCheater = gameCampaign.m_isCheater;
-    savedCampaign.m_secretActive = gameCampaign.m_secretActive;
-    savedCampaign.m_currentMap = gameCampaign.m_currentMap;
-    savedCampaign.m_currentCampaign = gameCampaign.m_currentCampaign;
-    savedCampaign.m_numMapRegions = gameCampaign.m_numMapRegions;
-    savedCampaign.m_crossoverArrayIndex = gameCampaign.m_crossoverArrayIndex;
-    savedCampaign.m_briefingChoice = gameCampaign.m_briefingChoice;
-#pragma inline_depth(0)
-    savedCampaign.m_campaignFilename.assign(gameCampaign.m_campaignFilename,
-                                          0, std::string::npos);
-#pragma inline_depth()
-    for (int campaignIndex = 0;
-         campaignIndex < sizeof(savedCampaign.m_campaignCompleted);
-         ++campaignIndex) {
-        savedCampaign.m_campaignCompleted[campaignIndex] =
-            gameCampaign.m_campaignCompleted[campaignIndex];
-    }
-#pragma inline_depth(0)
-    savedCampaign.m_carryOverHeroes = gameCampaign.m_carryOverHeroes;
-    savedCampaign.m_carryoverArtifact = gameCampaign.m_carryoverArtifact;
-    savedCampaign.m_mapScores = gameCampaign.m_mapScores;
-    savedCampaign.m_assignedCarryover = gameCampaign.m_assignedCarryover;
-#pragma inline_depth()
+    m_campaign = g_game->m_campaign;
 
-    NewSMapHeader& savedMapHeader = m_mapHeader;
-    const NewSMapHeader& gameMapHeader = g_game->m_mapHeader;
-#pragma inline_depth(0)
-    static_cast<CMapHeaderData&>(savedMapHeader) =
-        static_cast<const CMapHeaderData&>(gameMapHeader);
-    savedMapHeader.m_mapName.assign(gameMapHeader.m_mapName,
-                                  0, std::string::npos);
-    savedMapHeader.m_mapDescription.assign(gameMapHeader.m_mapDescription,
-                                         0, std::string::npos);
-#pragma inline_depth()
-    savedMapHeader.m_availableHeroes = gameMapHeader.m_availableHeroes;
+    m_mapHeader = g_game->m_mapHeader;
 
     m_currentPlayer = g_netLocalGamePos;
     m_mapSetup = g_game->m_setup;
@@ -2673,14 +2643,8 @@ inline void SavedGameHeader::reset()
     memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
 
     int* human = m_humanPlayer;
-    union {
-        unsigned char m_byte;
-        unsigned int m_value;
-    } isHuman;
-    for (int i = 0; i < 8; ++i) {
-        isHuman.m_byte = g_game->m_players[i].isHuman();
-        *human++ = isHuman.m_value & 0xff;
-    }
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
 }
 
 // Original: SavedGameHeader::Save; Game.h:1325, dc 0xbcf6c.
@@ -3098,8 +3062,6 @@ inline bool game::townAlreadyBuiltOn(int townId) const
 // CODEVIEW(E:\gamedcs\game.cpp:2405, dc 0xa710c) int game::GetMineId(int x, int y, int z);
 // CODEVIEW(E:\gamedcs\game.cpp:2419, dc 0xa71b4) int game::GetGeneratorId(int x, int y, int z);
 // CODEVIEW(E:\gamedcs\game.cpp:2433, dc 0xa7278) int game::GetGarrisonId(int x, int y, int z);
-// CODEVIEW(E:\gamedcs\game.cpp:2492, dc 0xa7414) int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s);
-// CODEVIEW(E:\gamedcs\game.cpp:2531, dc 0xa750c) int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s);
 // CODEVIEW(E:\gamedcs\game.cpp:2564, dc 0xa75d0) int game::SaveRumours(void* outfile);
 // CODEVIEW(E:\gamedcs\game.cpp:2607, dc 0xa77c8) int game::LoadRumours(void* infile);
 // CODEVIEW(E:\gamedcs\game.cpp:2654, dc 0xa795c) int game::SaveBlackMarkets(void* outfile);

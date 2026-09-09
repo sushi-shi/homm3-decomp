@@ -1159,24 +1159,12 @@ DPLCONNECTION* CDPlayLobby::getGroupConnectionSettings(unsigned long dpidGroup)
     return buf;
 }
 // E:\gamedcs\dxplay.cpp:1441
+// DC line 1443 calls GetConnectionSettings(0, 0). Its ordinary canonical
+// body expands here naturally and reproduces the former copied scan exactly.
 VA(0x00498cd0, 0xAB)  // anchor-callee IDirectPlayLobby GetConnectionSettings([ecx+0x20])+Release([ecx+8]); ret 0 (0 params, unique among remaining lobby non-virtuals), dc 0x8b780
 unsigned char CDPlayLobby::connect()
 {
-    // Before normalization (locals): dwSize, pConn.
-    unsigned long size = 0;
-    DPLCONNECTION* conn;
-    if (m_lobby) {
-        m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->GetConnectionSettings(0, 0, &size);
-        if (size != 0) {
-            conn = static_cast<DPLCONNECTION*>(::operator new(size));
-            m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->GetConnectionSettings(0, conn, &size);
-            if (m_res >= 0)
-                goto have_conn;
-            ::operator delete(conn);
-        }
-    }
-    conn = 0;
-have_conn:
+    DPLCONNECTION* conn = getConnectionSettings(0, 0);
     if (conn->m_flags & DPLAY_CONNECTION_CREATE_SESSION)
         m_isHost = 1;
     else

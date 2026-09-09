@@ -330,6 +330,8 @@ public:
     CNewPlayerUpdateProc(unsigned long dpid);
     ~CNewPlayerUpdateProc();
     unsigned char isFinished();
+    void headerRequested(unsigned char flag, int number);
+    void headerConfirmed();
     virtual void go();       // slot 0, 0x5789f0
     // Before normalization (function): CNewPlayerUpdateProc::Tick.
     virtual void tick();     // slot 1, 0x578a90
@@ -1618,6 +1620,26 @@ inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 // Original: CNewPlayerUpdateProc::IsFinished; singleselectionwindow.cpp:1341, dc 0x148338.
 inline unsigned char CNewPlayerUpdateProc::isFinished() { return m_finished; }
 
+// DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
+// Complete's expanded copy at 0x5892b0 queues flag/number by value instead
+// of the older port's allocated integer. This is the same ordinary helper,
+// visible in its owning TU; the manager calls it at DC line 1496.
+void CNewPlayerUpdateProc::headerRequested(unsigned char flag, int number)
+{
+    SHeaderRequest req;
+    req.m_flag = flag;
+    req.m_number = number;
+    m_requests.push_back(req);
+}
+
+// DC HeaderConfirmed (0x148384), lines 1360/1362; retail 0x589270
+// expands the finished store followed by Complete's virtual Finish call.
+void CNewPlayerUpdateProc::headerConfirmed()
+{
+    m_finished = 1;
+    finish();
+}
+
 // DC keeps this source helper out of Tick. Complete VC6 /Ob2 expands its
 // base-Tick call sites; the separate 0x578010 HandleRequests body and derived
 // Tick consume the same boundary.
@@ -2029,19 +2051,8 @@ public:
 inline int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
-    sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    const char* text = m_text.c_str();
-    TSingleSelectionWindow* win = g_unnamed69fbe8;
-    CNetPlayerHandlerPlayer* player = win->m_players.getPlayerInPos(pos);
-    win->setFocus(-1);
-    if (player) {
-        strcpy(player->m_name, text);
-        strcpy(g_localPlayerName, text);
-        writePrefs();
-    }
-    static_cast<textWidget*>(win->getWidget(pos + 345))
-        ->setText(player->m_name);
-    win->drawHeroAdvancedOption(pos, 1, -1);
+    hide();
+    g_unnamed69fbe8->onNameChange(pos, getText());
     return 1;
 }
 
@@ -7342,36 +7353,31 @@ VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm call
 void CNewPlayerUpdateMan::headerConfirmed(unsigned long dpid)
 {
     CNewPlayerUpdateProc* proc = getProc(dpid);
-    if (proc) {
-        proc->m_finished = 1;
-        proc->finish();
-    }
+    if (proc)
+        proc->headerConfirmed();
 }
 
 // Queue one header re-request on the sender's transfer job: GetProc's
-// scan expands in place (the HeaderConfirmed shape) and the push_back
-// expands with its grow logic.
-// Residual (88.6): retail's push_back expansion keeps the Dinkumware
-// helpers OUT of line (_Ucopy 0x58dc10 x2, the fill 0x58dc50, a
-// destroy stub and a far COMDAT 0x5af330) where our CL loops them in
-// place, and the GetProc scan's bound 8 lives in ebx there vs our
-// immediate - the same /Ob2 collector class as the map::find pair.
+// scan and Proc::HeaderRequested both expand here. Keeping the canonical
+// source helper (DC line 1496), rather than pasting its insertion body here,
+// recovers the nested _Ucopy/_Ufill calls and the shared eight-byte bound.
+// The 449-byte body's instruction view now agrees; folded STL relocation labels remain
+// independently named for their owning element types. The old flattened
+// control scores 88.6223%. A 16-state family also restores the adjacent
+// confirmation helper and moves GetProc to its DC-proven cpp definition;
+// neither changes any other tracked score.
 // auto_inline(off): retail CALLS this from HandleNetMsg's request arm;
-// with a body visible /Ob2 expanded it there (and the budget shift
-// dragged the neighboring HeaderConfirmed call in with it), costing
-// HandleNetMsg 90.16 -> 86.33. The pin restores both calls.
+// removal still expands it and the adjacent HeaderConfirmed call there,
+// lowering HandleNetMsg 89.7408 -> 85.9113 even with all three helpers
+// restored. This remaining override is debt, not original-source evidence.
 #pragma auto_inline(off)
 // E:\gamedcs\singleselectionwindow.cpp:1492
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
 void CNewPlayerUpdateMan::headerRequested(unsigned long dpid, unsigned char flag, int number)
 {
     CNewPlayerUpdateProc* proc = getProc(dpid);
-    if (proc) {
-        SHeaderRequest req;
-        req.m_flag = flag;
-        req.m_number = number;
-        proc->m_requests.push_back(req);
-    }
+    if (proc)
+        proc->headerRequested(flag, number);
 }
 #pragma auto_inline(on)
 
@@ -7729,12 +7735,9 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:8230
-DC_ONLY(0x143810, 0xA8)
-void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
-{
-    // @stub
-}
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8256
 DC_ONLY(0x1438b8, 0x9A)
@@ -9275,6 +9278,29 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
     return g_game->m_heroes[heroId].m_name;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:8230
+// Before normalization (function/locals): OnNameChange, gamePos, newName, player, w.
+// Both CEnterNameEdit overrides expand this ordinary member; there is no
+// retained retail body to claim. DC line 8231 overrides gamePos from a
+// platform-specific field and line 8252 reads a stored icon position. Retail
+// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
+// so those two Complete semantics remain explicit below. The original w
+// local and all eight named/virtual source calls retain their order.
+DC_ONLY(0x143810, 0xA8)
+void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
+{
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    setFocus(-1);
+    if (player) {
+        strcpy(player->m_name, newName);
+        strcpy(g_localPlayerName, newName);
+        writePrefs();
+    }
+    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
+    w->setText(player->m_name);
+    drawHeroAdvancedOption(gamePos, 1, -1);
+}
+
 // Case-blind prefix search over the filtered list; on a hit the row
 // becomes both the selection and the top row, clamped so a full page
 // stays visible, and the slider follows.
@@ -10133,20 +10159,6 @@ unsigned char CNewPlayerUpdateProc::isFinished()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1346
-DC_ONLY(0x148348, 0x3C)
-void CNewPlayerUpdateProc::headerRequested(int headerNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1355
-DC_ONLY(0x148384, 0x24)
-void CNewPlayerUpdateProc::headerConfirmed()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1369
 DC_ONLY(0x1483a8, 0x50)
 void CNewPlayerUpdateProc::requestConfirmation()
@@ -10213,13 +10225,6 @@ unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 // E:\gamedcs\singleselectionwindow.cpp:1533
 DC_ONLY(0x148960, 0x38)
 int CNewPlayerUpdateMan::getFirstAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1544
-DC_ONLY(0x148998, 0x56)
-CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
     // @stub
 }

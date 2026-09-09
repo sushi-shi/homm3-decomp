@@ -264,10 +264,11 @@ __forceinline void incrementHourGlass()
 }
 
 // E:\gamedcs\philai.cpp:150
-// Complete expands the helper at MoveHero's sole retail call site.
+// DC 0x10d57c is an ordinary static helper. Complete naturally expands it
+// at MoveHero's sole retail call site; no forced-inline declaration is needed.
 // Before normalization (function): RestoreMouse.
 // Before normalization (locals): mouse_was_visible, save_show_it.
-static __forceinline void restoreMouse(unsigned char mouseWasVisible)
+static void restoreMouse(unsigned char mouseWasVisible)
 {
     if (mouseWasVisible && !g_mouseManager->isVis()) {
         int saveShowIt = g_completeDrawEnabled;
@@ -278,15 +279,17 @@ static __forceinline void restoreMouse(unsigned char mouseWasVisible)
 }
 
 // E:\gamedcs\philai.cpp:165
-// Complete expands the helper at MoveHero's sole retail call site.
+// DC 0x10d5b4 is an ordinary static helper. The 170/171 negative-ID return
+// closes before GetTown/AI_enter_town; Complete naturally expands this body.
 // Before normalization (function): check_for_town.
 // Before normalization (locals): current_hero, town_id.
-static __forceinline void checkForTown(hero* currentHero)
+static void checkForTown(hero* currentHero)
 {
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                     currentHero->m_z);
-    if (townId >= 0)
-        aiEnterTown(currentHero, g_game->getTown(townId));
+    if (townId < 0)
+        return;
+    aiEnterTown(currentHero, g_game->getTown(townId));
 }
 
 #if 0  // @carcass
@@ -491,98 +494,100 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
 // Complete expands this helper into MoveHero. The source-real loops and
 // `cost` local are fixed by the Dreamcast line/scope table; the extra dock
 // cost and Dinkumware vector layout are retail facts.
+// DC 0x10e6e8: the resource return (839/840), absent dock (851/852), and
+// absent boat (882/883) all end before the following work. Keep those scopes
+// and the ordinary static declaration, not the old __forceinline substitute.
+// With all four MoveHero helpers ordinary, seven deleted shipyard fences
+// restore 86.6362% (from 86.3549%) without changing any other tracked TU row.
+// Controls: the 256-state fence/boundary family, 97-state scope/value family,
+// and 33-state four-helper family. Retaining a forced checkForTown peaks at
+// 89.6719%; the old forced shipyard enclosure reaches 93.3304%. Neither is
+// source evidence for a forced declaration. Direct/reference point arguments
+// in the fully ordinary family score 86.2031%; keep the real copied value.
 // Before normalization (function): mark_shipyards.
-static __forceinline void markShipyards(playerData* player)
+static void markShipyards(playerData* player)
 {
     int cost[7];
 
-    if (player->m_resources[WOOD] >= 10
-        && player->m_resources[GOLD] >= 1000) {
-        // Before normalization (locals): town_index, current_town, can_build_ship,
-        // shipyard_index, shipyard_point.
-        for (int townIndex = 0; townIndex < player->m_numTowns;
-             ++townIndex) {
-            town* currentTown = g_game->getTown(
-                player->m_townIds[townIndex]);
-            if (currentTown->m_dockSite != town::TOWN_DOCK_SITE_NONE) {
-#pragma inline_depth(0)
-                NewmapCell* cell = g_game->m_worldMap.cell(
-                    currentTown->m_dockSite, currentTown->m_dockSiteY,
-                    currentTown->m_mapZ);
-#pragma inline_depth()
-                unsigned char canBuildShip = 0;
-#pragma inline_depth(0)
-                if (currentTown->hasBuilding(DOCK_ID, true)) {
-#pragma inline_depth()
-                    canBuildShip = 1;
-                } else if (currentTown->canBuild(DOCK_ID)) {
-                    canBuildShip = 1;
-                    currentTown->getBuildCost(DOCK_ID, cost);
-                    cost[WOOD] += 10;
-                    cost[GOLD] += 1000;
-                    for (int resource = 0; resource < 7; ++resource) {
-                        if (player->m_resources[resource] < cost[resource])
-                            canBuildShip = 0;
-                    }
-                }
-                cell->m_canBuildShip = canBuildShip;
-            }
-        }
+    if (player->m_resources[WOOD] < 10
+        || player->m_resources[GOLD] < 1000)
+        return;
 
-#pragma inline_depth(0)
-        for (unsigned int shipyardIndex = 0;
-             shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-#pragma inline_depth()
-            type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-#pragma inline_depth(0)
-            NewmapCell* shipyard = g_game->getCell(shipyardPoint);
-#pragma inline_depth()
-            const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-                static_cast<const void*>(&shipyard->m_extraInfo));
-            if (info->m_boatX != ShipyardInfo::NO_BOAT) {
-                g_game->m_worldMap.cell(
-                    info->m_boatX, info->m_boatY,
-                    player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 1;
+    // Before normalization (locals): town_index, current_town, can_build_ship,
+    // shipyard_index, shipyard_point.
+    for (int townIndex = 0; townIndex < player->m_numTowns;
+         ++townIndex) {
+        town* currentTown = g_game->getTown(
+            player->m_townIds[townIndex]);
+        if (currentTown->m_dockSite == town::TOWN_DOCK_SITE_NONE)
+            continue;
+
+        NewmapCell* cell = g_game->m_worldMap.cell(
+            currentTown->m_dockSite, currentTown->m_dockSiteY,
+            currentTown->m_mapZ);
+        unsigned char canBuildShip = 0;
+        if (currentTown->hasBuilding(DOCK_ID, true)) {
+            canBuildShip = 1;
+        } else if (currentTown->canBuild(DOCK_ID)) {
+            canBuildShip = 1;
+            currentTown->getBuildCost(DOCK_ID, cost);
+            cost[WOOD] += 10;
+            cost[GOLD] += 1000;
+            for (int resource = 0; resource < 7; ++resource) {
+                if (player->m_resources[resource] < cost[resource])
+                    canBuildShip = 0;
             }
         }
+        cell->m_canBuildShip = canBuildShip;
+    }
+
+    for (unsigned int shipyardIndex = 0;
+         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
+        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
+        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
+        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
+            static_cast<const void*>(&shipyard->m_extraInfo));
+        if (info->m_boatX == ShipyardInfo::NO_BOAT)
+            continue;
+
+        g_game->m_worldMap.cell(
+            info->m_boatX, info->m_boatY,
+            player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 1;
     }
 }
 
 // E:\gamedcs\philai.cpp:896
 // Complete expands this helper into MoveHero immediately after the second
 // set_danger_zones statement.
+// DC 0x10e894: the 920/921 absent-boat continue closes before the 925/926
+// cell update. Its size/getCell/cell calls need no inline-depth overrides.
 // Before normalization (function): clear_shipyards.
-static __forceinline void clearShipyards(playerData* player)
+static void clearShipyards(playerData* player)
 {
     // Before normalization (locals): town_index, current_town, shipyard_index, shipyard_point.
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         if (currentTown->m_dockSite < town::TOWN_DOCK_SITE_NONE
             && currentTown->m_dockSiteY < town::TOWN_DOCK_SITE_NONE) {
-#pragma inline_depth(0)
             NewmapCell* cell = g_game->m_worldMap.cell(
                 currentTown->m_dockSite, currentTown->m_dockSiteY,
                 currentTown->m_mapZ);
-#pragma inline_depth()
             cell->m_canBuildShip = 0;
         }
     }
 
-#pragma inline_depth(0)
     for (unsigned int shipyardIndex = 0;
          shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-#pragma inline_depth()
         type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-#pragma inline_depth(0)
         NewmapCell* shipyard = g_game->getCell(shipyardPoint);
-#pragma inline_depth()
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&shipyard->m_extraInfo));
-        if (info->m_boatX != ShipyardInfo::NO_BOAT) {
-            g_game->m_worldMap.cell(
-                info->m_boatX, info->m_boatY,
-                player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 0;
-        }
+        if (info->m_boatX == ShipyardInfo::NO_BOAT)
+            continue;
+
+        g_game->m_worldMap.cell(
+            info->m_boatX, info->m_boatY,
+            player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 0;
     }
 }
 
@@ -2037,6 +2042,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                 if (!currentTown->canBuild(EXTRA_0_ID))
                     break;
                 type_university university;
+                university.initializeMagicSkills();
 #pragma inline_depth(0)
                 long value = valueOfUniversity(
                     currentHero, &university, 0);
@@ -2073,6 +2079,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     if (currentTown->m_type == TOWN_CONFLUX
         && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
         type_university university;
+        university.initializeMagicSkills();
         aiVisitUniversity(currentHero, &university);
     }
 
@@ -2410,13 +2417,12 @@ void philAI::doAI(int whichPlayer)
 }
 
 // E:\gamedcs\philai.cpp:1056
-// Residual (86.6432%): CENSUS-IDENTICAL - `--branches` agrees at 49/49 with
-// two returns, `--calls` at 28 same with nothing one-sided, and the reloc
-// multisets match: the only reference row that differs is ONE gpGame load
-// retail forms at +3cb and this compile at +3e9, the same symbol at a shifted
-// offset.  What is left is 27 flow-kind block placements and the scratch
-// renames behind them, with no missing or extra statement to find.  Do not
-// spend a lane re-deriving that - re-check the census first and move on.
+// Residual (86.6362%): all four DC static helpers expand naturally after
+// removing their forced declarations and all seven shipyard fences. Source
+// scope/call evidence and complete negative-control families are recorded at
+// markShipyards above. The historical census-only note missed these helper
+// boundaries; compare ordered named call sites and local CFGs before treating
+// the remaining shipyard register homes as a compiler-only residual.
 VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
 void moveHero(hero* currentHero, long* dangerZones, unsigned char isLastHero, unsigned char* exploreMode)
 {
@@ -4695,6 +4701,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     if (currentTown->m_type == TOWN_CONFLUX
         && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
         type_university university;
+        university.initializeMagicSkills();
         // Retail CALLS the university appraisal here (the arm in
         // AI_value_of_event does too); our /Ob2 otherwise expands it.
 #pragma inline_depth(0)

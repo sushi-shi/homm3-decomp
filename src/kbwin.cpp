@@ -248,33 +248,36 @@ void appExit()
 }
 
 // E:\gamedcs\kbwin.cpp:585
-// The peek loop is a GOTO loop: retail keeps it top-tested with a
-// plain back edge and calls PeekMessageA through memory - a while (or
-// for+break) spelling gets rotated into a duplicated call, and a
-// recognized loop would win PeekMessageA an import-load hoist. Only
-// the do-while pump is a structural loop, so its three imports
-// (GetMessageA/TranslateMessage/DispatchMessageA) take ebx/esi/edi
-// and IsIconic stays a memory call. Branch targets 0x4f7ff4/0x4f8045
-// prove the pump re-enters the peek loop, not the exit.
+// One outer event loop, with continue after PeekMessageA dispatch and
+// the iconic do/while pump as its other arm, reproduces all 170 bytes.
+// Retail targets 0x4f7ff4/0x4f8045 re-enter the peek check after the iconic
+// pump. The previous unconditional-back-edge argument did not prove
+// source goto: this structured form preserves the same import decisions.
+// Negative control: a nested while(PeekMessageA(...)) rotates/hoists its
+// import, scoring 83.2308%; its expansions also lower GameTime::delay
+// to 77.0395% and delayTil to 80.9859%. The outer-loop form keeps all
+// three functions exact without changing helper declarations or pins.
 VA(0x004f7fb0, 0xAA)  // anchor-bracket, dc 0xe7fd0
 void process1WindowsMessage()
 {
     MSG message;
     g_inMessageLoop = 1;
-top:
-    if (PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&message);
-        DispatchMessageA(&message);
-        goto top;
-    }
-    if (IsIconic(g_hwndApp) && !g_videoPaused) {
-        do {
-            if (GetMessageA(&message, 0, 0, 0)) {
-                TranslateMessage(&message);
-                DispatchMessageA(&message);
-            }
-        } while (IsIconic(g_hwndApp) && !g_videoPaused);
-        goto top;
+    while (1) {
+        if (PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&message);
+            DispatchMessageA(&message);
+            continue;
+        }
+        if (IsIconic(g_hwndApp) && !g_videoPaused) {
+            do {
+                if (GetMessageA(&message, 0, 0, 0)) {
+                    TranslateMessage(&message);
+                    DispatchMessageA(&message);
+                }
+            } while (IsIconic(g_hwndApp) && !g_videoPaused);
+        } else {
+            break;
+        }
     }
     videoNextFrame();
     g_inMessageLoop = 0;
@@ -447,7 +450,7 @@ unsigned long GameTime::get()
 }
 
 // E:\gamedcs\kbwin.cpp:830
-// The wait loop inlines Process1WindowsMessage whole (its goto-loop
+// The wait loop inlines Process1WindowsMessage whole (its event-loop
 // pump included); the guard/bottom timeGetTime pair is the rotated
 // while condition. Signed wrap-safe compare, DC prototype's unsigned
 // arg.

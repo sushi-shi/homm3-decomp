@@ -101,7 +101,10 @@ struct type_point {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
     // Before normalization (function): type_point::is_valid.
-    unsigned char isValid() const;
+    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
+    // Its ordinary body remains in findpath.cpp:36; do not move it here
+    // to force expansions in adventure drawing.
+    bool isValid() const;
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS

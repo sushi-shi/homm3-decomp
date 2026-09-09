@@ -1534,6 +1534,8 @@ public:
     void freeIcons();
     // Before normalization (function): combatManager::Close.
     void close();
+    // Before normalization (function): combatManager::DoorCanBeLowered.
+    unsigned char doorCanBeLowered() const;
     // Before normalization (function): combatManager::HexIsBlocked.
     unsigned char hexIsBlocked(int index) const;
     // Before normalization (function): combatManager::IsInMoat.

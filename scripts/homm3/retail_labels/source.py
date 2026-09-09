@@ -839,6 +839,21 @@ def scan_file(path, functions: set[int],
                          # class_class label; the tilde in the
                          # declarator is the only discriminator left
                          "dtor": "~" in raw})
+            # Claim-only declarations can describe an instantiated ordinary
+            # function template which clang cannot see inside #if 0. Keep
+            # the actual vector-reference type for that narrow overload
+            # family: equal body lengths or COFF order cannot distinguish
+            # point/long ICF twins from the university writer beside them.
+            declaration_lines = []
+            for line in lines[lineno - 1:]:
+                stop = re.search(r"[;{]", line)
+                declaration_lines.append(line[:stop.start()] if stop else line)
+                if stop:
+                    break
+            declaration = " ".join(declaration_lines)
+            signature = _vector_helper_signature(declaration, source=True)
+            if signature is not None:
+                rows[-1]["vector_helper_signature"] = signature
         elif macro == "VA_COMPGEN":
             kind = _arg(args[2], IDENT_ARG_RE, "kind", where)
             owner = _arg(args[3], IDENT_ARG_RE, "owner", where)
@@ -2107,6 +2122,59 @@ def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
 VECTOR_INSERT_SIGNATURE_KINDS = ("vector_insert_single", "vector_insert_count")
 
 
+def _vector_helper_signature(declaration: str, *, source=False) -> tuple | None:
+    """A bounded ordinary ``bool helper(Stream*, vector<Element>&)`` ABI.
+
+    Source parameters may carry names and omit the default allocator.
+    Authority declarations come from llvm-undname and must be fastcall.
+    Element and stream types are simple (possibly qualified) names. This
+    is not a general C++ parser; pointer/const vectors, other return types,
+    custom allocators and unrecognised signatures deliberately do not join.
+    """
+    declaration = re.sub(r"\b(?:class|struct)\s+", "", declaration)
+    atom = r"[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*"
+    parameter_name = r"\s*(?:[A-Za-z_]\w*)?\s*" if source else r"\s*"
+    convention = "" if source else r"__fastcall\s+"
+    allocator = (r"(?:\s*,\s*std::allocator\s*<\s*(?P=element)\s*>\s*)?"
+                 if source else r"\s*,\s*std::allocator\s*<\s*(?P=element)\s*>\s*")
+    pattern = (r"\s*bool\s+" + convention + r"(?P<function>[A-Za-z_]\w*)\s*\(\s*"
+               + r"(?P<stream>" + atom + r")\s*\*" + parameter_name
+               + r",\s*std::vector\s*<\s*(?P<element>" + atom + r")"
+               + allocator + r"\s*>\s*&" + parameter_name + r"\)\s*")
+    match = re.fullmatch(pattern, declaration)
+    if match is None:
+        return None
+    return (match["function"], match["stream"], match["element"])
+
+
+def _bind_vector_helper_signatures(candidates: list[dict],
+                                   mangled_group: list) -> tuple[list, list]:
+    """Bind source-owned vector helper types before any size/order fallback.
+
+    Missing/ambiguous requested instances stay unjoined. An unclaimed ICF
+    twin may remain in the authority group, but cannot take the declared
+    instance's identity merely because its bytes or size happen to agree.
+    """
+    from homm3.core import undname
+
+    requested = {}
+    for row in candidates:
+        if "vector_helper_signature" in row:
+            requested.setdefault(row["vector_helper_signature"], []).append(row)
+    if not requested:
+        return candidates, mangled_group
+    signatures = {
+        name: _vector_helper_signature(declaration)
+        for name, declaration in undname.demangle(n for n, _ in mangled_group).items()}
+    for signature, rows in requested.items():
+        names = [n for n, _ in mangled_group if signatures.get(n) == signature]
+        if len(rows) == 1 and len(names) == 1:
+            rows[0]["joined"] = names[0]
+            rows[0]["channel"] = "src-VA+base"
+    return ([r for r in candidates if "vector_helper_signature" not in r],
+            [(n, c) for n, c in mangled_group if signatures.get(n) not in requested])
+
+
 def _vector_insert_signature(declaration: str) -> str | None:
     """Identify VC6 vector's single-element or count overload after demangling.
 
@@ -2495,6 +2563,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         candidates = claim_keys.get(key)
         if not candidates:
             continue  # unimplemented group: leave labeled
+        candidates, mangled_group = _bind_vector_helper_signatures(
+            candidates, mangled_group)
+        if not candidates or not mangled_group:
+            continue
         if key.endswith("@vector_insert"):
             candidates, mangled_group = _bind_vector_insert_signatures(
                 candidates, mangled_group)

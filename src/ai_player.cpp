@@ -3526,15 +3526,18 @@ long type_AI_creature_purchaser::doBestPurchase(
 // do_best_purchase. DC line 2633 proves that stack merging is the separate
 // AI_consolidate_army call; restoring that boundary closes this body from
 // 99.87% to exact. It also proves do_best_purchase takes a byte. The scoped
-// auto-inline pin preserves retail's calls to this now-smaller routine:
+// auto-inline pin formerly preserved retail's calls to this smaller routine:
 // without it mark_town falls from exact to zero, buy_creatures from 73.66%
 // to 53.78%, and value_of_hiring from 99.95% to 79.22%. The helper itself
-// and all three callers retain their prior scores with the pin. Rechecked
-// after the buy_creatures source recovery (2026-09-06): removing it expands
-// the purchase loop, lowering that caller 97.77 -> 52.44 and mark_town
-// 100 -> 0 while this standalone body stays exact. This pin remains debt.
+// and all three callers retain their prior scores with the pin.
+// The override is now retired: DC 2627..2628 leaves two lines before the
+// input stores, permitting the real non-null army/funds preconditions below
+// (not recovered ASSERT spelling). All TU section bytes and 1962 relocation
+// destinations match the pinned control. Negative control: omit both checks
+// and doPurchase expands, buyCreatures 97.7723 -> 52.4409, markTown 100 -> 0,
+// valueOfHiring 99.9522 -> 79.2183; the standalone body stays exact. A single
+// army check or a combined predicate also matches. newAdjacentArmy is optional.
 VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
-#pragma auto_inline(off)
 void type_AI_creature_purchaser::doPurchase(
     // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
     // allow_trade, new_has_angelic_alliance.
@@ -3542,6 +3545,8 @@ void type_AI_creature_purchaser::doPurchase(
     long* newFunds, unsigned char allowTrade,
     unsigned char newHasAngelicAlliance)
 {
+    HOMM3_RELEASE_VERIFY(newArmy != 0);
+    HOMM3_RELEASE_VERIFY(newFunds != 0);
     m_army = newArmy;
     m_adjacentArmy = newAdjacentArmy;
     m_morale = newMorale;
@@ -3557,7 +3562,6 @@ void type_AI_creature_purchaser::doPurchase(
     for (short source = 0; source < m_creatures.size(); ++source)
         *m_creatures[source].m_ptr = m_creatures[source].m_number;
 }
-#pragma auto_inline(on)
 
 // Complete adds the final Angelic-Alliance byte to the DC signature. Retail
 // copies both armies and all seven resources, so the valuation can run the
@@ -3701,15 +3705,16 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
 // Recovering that order and exit reaches 86.50% from the old 83.62%.
 //
 // Retail adds army arrangement to DC's early exits, sharing one exit block
-// for the guards and retaining a separate ordinary completion call. The
-// scoped body and common arrange label reproduce those two call sites and
-// reach 97.71%. Individual arrange/return pairs at every DC guard produced
-// five epilogues (76.55%); the former nested positive guards retained an
-// unnecessary slots test and could not reproduce the shared exit topology.
-// Residual (97.71%): two consolidation reloads schedule in reverse order,
-// and the final split loop retains currentArmy in ECX where retail reloads
-// it at the call. Separate empty-stack/shooter continue guards in that loop
-// are byte-flat. Earlier census-counter naming probes did not fix allocation.
+// for the guards and retaining a separate ordinary completion call. A scoped
+// do/while(0) calculation removes all six gotos and improves 97.7143% to
+// 98.8238%. Each split loop breaks on exhausted slots, then propagates that
+// real result to the enclosing calculation. Keeping the ordinary completion
+// call separate preserves retail's two arrangement paths.
+// Negative controls: one unconditional arrangement after the calculation
+// scores 94.3714%; nested positive guards remove four gotos but stay at
+// 97.7143%. Per-guard arrange/return copies previously scored 76.55%.
+// Residual: consolidation reload scheduling and final split-loop homing;
+// keep the canonical aiConsolidateArmy boundary and reference local.
 // Before normalization (locals): current_hero, enemy_hero, open_slots, enemy_shooter_count,
 // enemy_shooter_value, enemy_max_value, hero_shooter_value, hero_nonshooter_count,
 // splits_needed.
@@ -3721,10 +3726,10 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
     armyGroup& currentArmy = currentHero->m_army;
     aiConsolidateArmy(&currentArmy);
 
-    {
+    do {
         int openSlots = 7 - currentArmy.getNumArmies();
         if (openSlots <= 0) {
-            goto arrange;
+            break;
         }
         int enemyShooterCount = 0;
         int enemyShooterValue = 0;
@@ -3761,13 +3766,15 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
                 openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                          openSlots);
                 if (openSlots == 0) {
-                    goto arrange;
+                    break;
                 }
             }
         }
 
+        if (openSlots == 0)
+            break;
         if (enemyShooterCount == 0) {
-            goto arrange;
+            break;
         }
         long heroShooterValue = 0;
         long walkerCount = 0;
@@ -3784,14 +3791,14 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         }
 
         if (heroShooterValue >= enemyShooterValue) {
-            goto arrange;
+            break;
         }
         int splitsNeeded = (enemyShooterCount
             - heroShooterValue * enemyShooterCount
                 / enemyShooterValue
             + 1) / 2 - walkerCount;
         if (splitsNeeded <= 0) {
-            goto arrange;
+            break;
         }
         if (splitsNeeded < openSlots)
             openSlots = splitsNeeded;
@@ -3804,12 +3811,13 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
             openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
                                    openSlots);
             if (openSlots == 0)
-                goto arrange;
+                break;
         }
+        if (openSlots == 0)
+            break;
         aiArrangeArmy(&currentArmy);
         return;
-    }
-arrange:
+    } while (0);
     aiArrangeArmy(&currentArmy);
 }
 

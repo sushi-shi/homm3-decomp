@@ -596,6 +596,9 @@ void TMainMenu::doModal()
 // register delta is one consequence of that cleanup choice. Tried and
 // rejected: two named string values (90.0704), two const-reference bindings
 // (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
+// A -1 help id and positive help guard remove the default-arm goto at the
+// unchanged 93.1746%. Moving updatePlease before the quit confirmation and
+// clearing it on cancellation falls to 92.2451%; that remaining join stays.
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 int mainMenuHandler(message& msg)
 {
@@ -653,9 +656,9 @@ int mainMenuHandler(message& msg)
             case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
             case TMainMenu::CREDITS_ID: helpID = 3; break;
             case TMainMenu::QUIT_ID: helpID = 4; break;
-            default: goto draw_update;
+            default: helpID = -1; break;
             }
-            if (!g_dPlayReady)
+            if (helpID >= 0 && !g_dPlayReady)
                 normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }

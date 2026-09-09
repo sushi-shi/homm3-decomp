@@ -6,6 +6,7 @@
 #define HOMM3_TRADPOST_H
 
 #include "town.h"
+#include "artifact.h"
 #include "advmgr_popup.h"
 
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
@@ -319,12 +320,12 @@ void doFreelancersGuild(hero* inHero);
 // The town-screen Stronghold arm separately passes townToView in ECX.
 // Before normalization (function): DoFreelancersGuild.
 void doFreelancersGuild(town* currentTown);
-// DC types the second parameter TArtifact*. The game-side buffer this is
-// aliased against - gpGame's char[0x1c] at +0x1f664, which DoTradingPost
-// passes here - is not admitted as an artifact array yet, so the pointer
-// stays untyped rather than fabricating the element type.
+// DC's public and parameter record prove TArtifact*. Both producer arrays are
+// now recovered: game::m_marketArtifacts and TBlackMarket::m_artifacts. Retail
+// stores the passed address unchanged and indexes seven dword IDs. The old
+// char* boundary was bootstrap debt, not a Complete signature divergence.
 // Before normalization (function): DoBlackMarket.
-void doBlackMarket(hero* inHero, char* blackArtifacts);
+void doBlackMarket(hero* inHero, TArtifact* blackArtifacts);
 
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of

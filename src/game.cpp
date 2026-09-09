@@ -117,27 +117,15 @@ DATA(0x00698770) int g_unnamed698770;
 // do not own them. The per-TU /MT profile supplies the external _Lockit
 // calls used by the native tree scopes (0x60b598/0x60b634).
 
-// Defined at the foot of this file, where retail emits it (0x4d2ac0):
-// declared here so game::Save's pool writes call it out of line.
-// Before normalization (function): save_vector.
-unsigned char saveVector(TAbstractFile* outfile,
-                          // Before normalization (locals): src_vector.
-                          std::vector<type_point>* srcVector);
-
-// The other two instantiations game::Save's tail reaches, both also
-// defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
-// one is a plain block write like the type_point overload; the creature
-// bank one serialises each element, hence the different name.
-// Before normalization (function): save_vector.
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_university>* srcVector);
 // Before normalization (function): save_object_vector.
+unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector);
 unsigned char saveObjectVector(TAbstractFile* outfile,
                                  // Before normalization (locals): src_vector.
                                  std::vector<type_creature_bank>* srcVector);
 // The Load mirror of save_object_vector (retail 0x4d2870), reached only
 // by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
 // Before normalization (function): load_object_vector.
+unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector);
 unsigned char loadObjectVector(TAbstractFile* infile,
                                  // Before normalization (locals): dest_vector.
                                  std::vector<type_creature_bank>* destVector);
@@ -1066,7 +1054,7 @@ int game::loadSignPool(TAbstractFile* infile)
 
     m_signs.resize(count);
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (game::loadString(infile, m_signs[i].m_signText) < 0)
+        if (loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -1089,7 +1077,7 @@ int game::saveSignPool(TAbstractFile* outfile)
         return -1;
 
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (game::saveString(outfile, m_signs[i].m_signText) < 0)
+        if (saveString(outfile, m_signs[i].m_signText) < 0)
             return -1;
 
         count = m_signs[i].m_hasText;
@@ -1967,18 +1955,48 @@ int game::SavePlayerData(void* outfile)
 }
 
 // E:\gamedcs\game.cpp:1698
+#endif  // @carcass
+
+// Original LoadTownPool; uchar_buffer -> townCount. Complete passes the save
+// version to town::load. DC returns the element error unchanged, while the
+// game::load caller maps any negative result to -1.
 DC_ONLY(0xa5a40, 0xB6)
-int game::LoadTownPool(void* infile)
+int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    unsigned char townCount;
+    int count = infile->read(&townCount, sizeof(townCount));
+    if (count < sizeof(townCount))
+        return -1;
+    m_towns.resize(townCount);
+    for (int x = 0; x < m_towns.size(); ++x) {
+        int err = m_towns[x].load(infile, saveVersion);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:1722
+
+// Original SaveTownPool; uchar_buffer -> townCount. Keep the DC vector-size
+// loop and element error return; ordinary inlining replaces the copied loop
+// and its pinned condition in game::save.
 DC_ONLY(0xa5af8, 0xA4)
-int game::SaveTownPool(void* outfile)
+int game::saveTownPool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char townCount = m_towns.size();
+    int count = outfile->write(&townCount, sizeof(townCount));
+    if (count < sizeof(townCount))
+        return -1;
+    for (int x = 0; x < m_towns.size(); ++x) {
+        int err = m_towns[x].save(outfile);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1745
 DC_ONLY(0xa5b9c, 0x56)
@@ -2660,31 +2678,35 @@ int game::getGeneratorId(int x, int y, int z)
 }
 
 // E:\gamedcs\game.cpp:2492
-// DC static game member (0xa7414); retail ECX is the stream, EDX the
-// string reference. A missing this operand does not imply free ownership.
-#pragma auto_inline(off)
+// DC a7414 records count and separate read/result-test statements at
+// 2496/2497 and 2505/2506. Restoring that local removes the old auto-inline
+// fence while preserving the complete game object. Removal without count
+// instead expands loadString into loadSignPool/loadRumours and loses both
+// exact callers; no assertion is needed for this reader.
 VA(0x004bb990, 0x1CF)
-int __fastcall game::loadString(TAbstractFile* infile, std::string& value)
+int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     short length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value.erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -2729,36 +2751,42 @@ void GenerateStandardFileName(char* cLongName, char* cRetName)
 #endif  // @carcass
 
 // The Dreamcast roster calls this game::saveString (dc 0xa750c), paired
-// with game::loadString above. DC marks both static, with a string-reference
-// formal; their two-register retail /Gr ABI preserves that interface.
-// Former reconstruction names: loadString / SaveAbstractString.
-// SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
+// with game::loadString above: both static methods take string references.
+// Retail's /Gr ABI is compatible with that declaration, not evidence of
+// free-function ownership. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
 // map-cell serializers independently corroborate the writer at 0x4bbb60.
 // EXACT 2026-08-22: the direct transcription matches all code bytes;
 // only the allocation and pooled-empty-string relocation names differ.
-// The fence is part of the match: without it VC6 expands this exact body
-// into SaveSignPool and SaveRumours, while retail calls it out of line.
-#pragma auto_inline(off)
+// DC a750c records count and separate write/result-test statements at
+// 2535/2536 and 2545/2546. Its leading gap 2532 permits the meaningful
+// outfile precondition below, not proof of the original ASSERT spelling.
+// Negative controls: either count alone or verification alone still expands
+// saveString into saveSignPool/saveRumours (100 -> 6.5/18.895).
+// Together they remove the fence and preserve all game-object bytes and
+// relocation destinations, including NewSMapHeader::save's retained call.
 VA(0x004bbb60, 0xBB)  // caller tree + dc 0xa750c
-int __fastcall game::saveString(TAbstractFile* outfile, std::string& text)
+int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
-    short length = text.length();
+    HOMM3_RELEASE_VERIFY(outfile != 0);
+    int count;
+    short length = s.length();
 
-    if (outfile->write(&length, sizeof(length)) < sizeof(length))
+    count = outfile->write(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        strcpy(buffer, text.c_str());
-        if (outfile->write(buffer, length) < length)
+        strcpy(buffer, s.c_str());
+        count = outfile->write(buffer, length);
+        if (count < length)
             return -1;
         delete[] buffer;
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 // anchor-caller game::Save (0x4be3f0) + the string helper: this body
 // calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
@@ -2779,7 +2807,7 @@ int game::saveRumours(TAbstractFile* outfile)
     unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
-    int saveResult = game::saveString(outfile, currentRumour);
+    int saveResult = saveString(outfile, currentRumour);
     if (0 > saveResult)
         return -1;
 
@@ -2792,7 +2820,7 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
-        if (game::saveString(outfile, rit->m_text) < 0)
+        if (saveString(outfile, rit->m_text) < 0)
             return -1;
         boolBuffer = rit->m_unavailable;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -2817,7 +2845,7 @@ int game::loadRumours(TAbstractFile* infile)
     unsigned char value;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         current;
-    if (game::loadString(infile, current) < 0)
+    if (loadString(infile, current) < 0)
         return -1;
 
     strcpy(m_currentRumour, current.c_str());
@@ -2830,7 +2858,7 @@ int game::loadRumours(TAbstractFile* infile)
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
-        if (game::loadString(infile, it->m_text) < 0)
+        if (loadString(infile, it->m_text) < 0)
             return -1;
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
@@ -2915,14 +2943,122 @@ void game::setupShipyards()
 
 #if 0  // @carcass
 
-// E:\gamedcs\game.cpp:2672
-DC_ONLY(0xa7a24, 0x98)
-int game::LoadBlackMarkets(void* infile)
+#endif  // @carcass
+
+// E:\gamedcs\game.cpp:2654; original name SaveBlackMarkets.
+DC_ONLY(0xa795c, 0xC6)
+int game::saveBlackMarkets(TAbstractFile* outfile)
 {
-    // @stub
+    char blackMarketListSize = m_blackMarkets.size();
+    int count = outfile->write(&blackMarketListSize, sizeof(blackMarketListSize));
+    if (count < sizeof(blackMarketListSize))
+        return -1;
+    count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    if (count < blackMarketListSize * sizeof(TBlackMarket))
+        return -1;
+    return 0;
 }
 
-#endif  // @carcass
+// E:\gamedcs\game.cpp:2672
+
+// Original LoadBlackMarkets; black_market_list_size -> blackMarketListSize.
+// DC calls clear, resize and operator[]. The ordinary helper restores one
+// caller cleanup boundary; its natural expansion needs no inline-depth pin.
+DC_ONLY(0xa7a24, 0x98)
+int game::loadBlackMarkets(TAbstractFile* infile)
+{
+    m_blackMarkets.clear();
+    char blackMarketListSize;
+    int count = infile->read(&blackMarketListSize, sizeof(blackMarketListSize));
+    if (count < sizeof(blackMarketListSize))
+        return -1;
+    m_blackMarkets.resize(blackMarketListSize);
+    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    if (count < blackMarketListSize * sizeof(TBlackMarket))
+        return -1;
+    return 0;
+}
+
+// E:\gamedcs\game.cpp:2698; original load_vector / dest_vector.
+// The point, long and university instances share this source template.
+// DC 0xc19e8/0xc1a68/0xc1ae8 has one source boundary, a short count,
+// resize(count), subscript(0), and two guarded reads. The S_PUB32 names
+// prove a bool result and vector reference; Complete uses TAbstractFile.
+// Retail Load's gate-pair arm zeroes its fill before resize:
+// that is the native long default, not the old point-vector pointer union.
+// All six source calls expand naturally, removing six resize fences and
+// raising Load 78.2645 -> 80.1570. The 33-state helper family and 97-state
+// return/fence follow-up also test explicit T() locals and direct boolean
+// returns (up to 82.2663); retain the DC default-argument and guard scopes.
+// Restoring the generic university aggregate removes an extra constructor
+// call from its default fill and raises Load to 81.2284. The elemental-school
+// initializer belongs only to the Conflux consumers (see type_university).
+template <class T>
+bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
+{
+    short count;
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
+        return false;
+    destVector.resize(count);
+    if (infile->read(&destVector[0], count * sizeof(T)) < count * sizeof(T))
+        return false;
+    return true;
+}
+
+// E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
+// Complete writes two bytes of an int slot, then uses its signed-short value.
+// The guarded return reproduces both retained 96-byte writers exactly,
+// including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
+// that spelling difference does not refute the DC bool/reference signature.
+// The point/long writer, resize, size, _Ucopy and _Ufill instances emit
+// identical raw code; retail's folded calls do not require a type adapter.
+template <class T>
+bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
+{
+    int count = srcVector.size();
+    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+        return false;
+    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
+        < static_cast<short>(count) * sizeof(T))
+        return false;
+    return true;
+}
+
+
+// E:\gamedcs\game.cpp:2733
+// Original load_object_vector; dest_vector -> destVector. CodeView proves an
+// ordinary overload taking the generator vector by reference, short count and
+// long i. Complete substitutes TAbstractFile for the Dreamcast gz handle.
+DC_ONLY(0xc1950, 0x98)
+unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector)
+{
+    short count;
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
+        return 0;
+    destVector.resize(count);
+    for (long i = 0; i < count; ++i) {
+        if (!destVector[i].load(infile))
+            return 0;
+    }
+    return 1;
+}
+
+
+// E:\gamedcs\game.cpp:2754
+// Original save_object_vector; src_vector -> srcVector. The ordinary overload
+// is expanded by game::save; keep the count short and the vector by reference.
+DC_ONLY(0xc1d38, 0x9C)
+unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector)
+{
+    short count = srcVector.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        return 0;
+    for (long i = 0; i < count; ++i) {
+        if (!srcVector[i].save(outfile))
+            return 0;
+    }
+    return 1;
+}
 
 // E:\gamedcs\game.cpp:2774
 // Retail inlines this record reader into load_object_vector. The fixed
@@ -3231,34 +3367,8 @@ int game::load(TAbstractFile* infile)
     if (loadRumours(infile) < 0)
         return -1;
 
-    // Retail CALLS vector<TBlackMarket>::erase(begin(), end()) here -
-    // clear()'s own body, expanded, with the erase left out of line. Our
-    // CL expands erase too and calls its `copy` and `_Destroy` instead, so
-    // the erase is spelled out and pinned; begin()/end() are hoisted first
-    // because the pin would otherwise de-inline them as well.
-    TBlackMarket* eventLast = m_blackMarkets.end();
-    TBlackMarket* eventFirst = m_blackMarkets.begin();
-#pragma inline_depth(0)
-    m_blackMarkets.erase(eventFirst, eventLast);
-#pragma inline_depth()
-    {
-        char charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer))
-            goto event_records_failed;
-#pragma inline_depth(0)
-        m_blackMarkets.resize(charBuffer);
-#pragma inline_depth()
-        // Retail recomputes `count * 28` TWICE - `movsx / lea [8*n] / sub /
-        // shl 2` once for the request and again for the compare. Landing it
-        // in an `eventBytes` local costs the second sign-extended reload.
-        if (infile->read(m_blackMarkets.begin(),
-                         charBuffer * sizeof(TBlackMarket))
-            < charBuffer * sizeof(TBlackMarket)) {
-        event_records_failed:
-            return -1;
-        }
-    }
+    if (loadBlackMarkets(infile) < 0)
+        return -1;
 
     if (m_worldMap.load(infile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers,
                       saved.m_version) < 0)
@@ -3268,23 +3378,10 @@ int game::load(TAbstractFile* infile)
     if (loadMinePool(infile, saved.m_version) < 0)
         return -1;
 
-    int i;
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) <
-            sizeof(shortBuffer)) {
-        generators_failed:
-            return -1;
-        }
-#pragma inline_depth(0)
-        m_generators.resize(shortBuffer);
-#pragma inline_depth()
-        for (i = 0; i < shortBuffer; ++i) {
-            if (!m_generators[i].load(infile))
-                goto generators_failed;
-        }
-    }
+    if (!loadObjectVector(infile, m_generators))
+        return -1;
 
+    int i;
     if (loadGarrisonPool(infile, saved.m_version) < 0)
         return -1;
     if (loadBoatPool(infile) < 0)
@@ -3300,18 +3397,8 @@ int game::load(TAbstractFile* infile)
             return -1;
     }
 
-    unsigned char townCount;
-    if (infile->read(&townCount, sizeof(townCount)) < sizeof(townCount)) {
-    towns_failed:
+    if (loadTownPool(infile, saved.m_version) < 0)
         return -1;
-    }
-#pragma inline_depth(0)
-    m_towns.resize(townCount);
-#pragma inline_depth()
-    for (i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].load(infile, saved.m_version) < 0)
-            goto towns_failed;
-    }
 
     int heroCount = saved.m_version < 25 ? 128 : HERO_COUNT;
     for (i = 0; i < heroCount; ++i) {
@@ -3446,91 +3533,14 @@ int game::load(TAbstractFile* infile)
         return -1;
 
     int poolCount = (((saved.m_version < 32) - 1) & 5) + 3;
-    for (i = 0; i < poolCount; ++i) {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_lithPools[i].resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_lithPools[i].begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    for (i = 0; i < poolCount; ++i) {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_lithExitPools[i].resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_lithExitPools[i].begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_whirlpools.resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_whirlpools.begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_undergroundGateExits.resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_undergroundGateExits.begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-            // The DC vector<long> pool shares the four-byte point storage
-            // used by this retained reader; keep the representation bridge
-            // here rather than introducing an unproven source helper.
-            union {
-                std::vector<long>* m_pairs;
-                std::vector<type_point>* m_points;
-            } pairAlias;
-            pairAlias.m_pairs = &m_undergroundGatePairs;
-            std::vector<type_point>* pairStorage = pairAlias.m_points;
-#pragma inline_depth(0)
-            pairStorage->resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(pairStorage->begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-
-    // The tail, mirroring game::Save's: universities as a plain block
-    // read, creatureBanks element by element, then the event log.
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_university emptyUniversity;
-#pragma inline_depth(0)
-            m_universities.resize(shortBuffer, emptyUniversity);
-#pragma inline_depth()
-            infile->read(m_universities.begin(),
-                         shortBuffer * sizeof(type_university));
-        }
-    }
+    for (i = 0; i < poolCount; ++i)
+        loadVector(infile, m_lithPools[i]);
+    for (i = 0; i < poolCount; ++i)
+        loadVector(infile, m_lithExitPools[i]);
+    loadVector(infile, m_whirlpools);
+    loadVector(infile, m_undergroundGateExits);
+    loadVector(infile, m_undergroundGatePairs);
+    loadVector(infile, m_universities);
 #pragma inline_depth(0)
     loadObjectVector(infile, &m_creatureBanks);
 #pragma inline_depth()
@@ -3875,6 +3885,9 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // map-extra size an `int`; that spelling on top of the neutral buffer pair
 // regresses this function to 94.38246%, so the winning unsigned source form
 // remains in place.
+// Canonical BlackMarkets, TownPool and generator-vector writers remove the
+// remaining shared failure labels. Together with the readers, they raise Save
+// from 80.2448% to 96.5761%; older flattened/pinned observations above are historical.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
@@ -3884,7 +3897,6 @@ int game::save(TAbstractFile* outfile)
     char charBuffer;
     short shortValue;
     short extraShortValue;
-    short shortBuffer;
     int zero;
     SavedGameHeader saved;
     saved.reset();
@@ -3902,25 +3914,8 @@ int game::save(TAbstractFile* outfile)
     if (saveRumours(outfile) < 0)
         return -1;
 
-    {
-        charBuffer = m_blackMarkets.size();
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-            goto load_events_failed;
-        }
-        // Length recomputed on BOTH sides of the compare, not cached:
-        // retail re-widens the count byte and rebuilds `n * 28` as
-        // `lea edx,[8*ecx] / sub edx,ecx / shl edx,2` for the test,
-        // exactly as save_vector re-reads its short. An `eventBytes`
-        // local CSEs the two and compares SIGNED (`cmp eax,edi / jge`)
-        // where retail compares UNSIGNED (`cmp eax,edx / jae`).
-        if (outfile->write(m_blackMarkets.begin(),
-                           charBuffer * sizeof(TBlackMarket)) <
-                           charBuffer * sizeof(TBlackMarket)) {
-        load_events_failed:
-            return -1;
-        }
-    }
+    if (saveBlackMarkets(outfile) < 0)
+        return -1;
 
     if (m_worldMap.save(outfile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers) < 0)
         return -1;
@@ -3948,20 +3943,10 @@ int game::save(TAbstractFile* outfile)
     if (saveMinePool(outfile) < 0)
         return -1;
 
-    int i;
-    {
-        shortBuffer = m_generators.size();
-        if (outfile->write(&shortBuffer, sizeof(shortBuffer)) <
-            sizeof(shortBuffer)) {
-        generators_failed:
-            return -1;
-        }
-        for (i = 0; i < shortBuffer; ++i) {
-            if (!m_generators[i].save(outfile))
-                goto generators_failed;
-        }
-    }
+    if (!saveObjectVector(outfile, m_generators))
+        return -1;
 
+    int i;
     if (saveGarrisonPool(outfile) < 0)
         return -1;
     if (saveBoatPool(outfile) < 0)
@@ -3975,22 +3960,8 @@ int game::save(TAbstractFile* outfile)
             return -1;
     }
 
-    {
-        charBuffer = m_towns.size();
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-        towns_failed:
-            return -1;
-        }
-        i = 0;
-#pragma inline_depth(0)
-        while (i < m_towns.size()) {
-#pragma inline_depth()
-            if (m_towns[i].save(outfile) < 0)
-                goto towns_failed;
-            ++i;
-        }
-    }
+    if (saveTownPool(outfile) < 0)
+        return -1;
 
     for (i = 0; i < HERO_COUNT; ++i) {
         if (m_heroes[i].save(outfile) < 0)
@@ -4117,40 +4088,28 @@ int game::save(TAbstractFile* outfile)
     if (outfile->write(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
 
-    // PINNED for the same reason the heroPoolMap bitset test above is:
-    // retail CALLS every one of these seven helpers out of line, and once
-    // the tail landed this body grew past the /Ob2 budget that had been
-    // keeping them out, so VC6 began expanding save_vector in place -
-    // the vector-size shl/sar and a `setae` per site.
+    // Existing Save fences still preserve the seven retained writer calls.
+    // With the canonical templates, removing the first or second scores
+    // 90.8331/90.9878 versus 96.7588; removing both scores 89.7442. The
+    // 97-state result-lifetime family does not recover those call boundaries.
+    // No fence was added or moved into a helper to obtain the Load removals.
     for (i = 0; i < 8; ++i) {
         unsigned char lithSaved;
 #pragma inline_depth(0)
-        lithSaved = saveVector(outfile, &m_lithPools[i]);
+        lithSaved = saveVector(outfile, m_lithPools[i]);
 #pragma inline_depth()
         if (!lithSaved)
             return -1;
     }
 #pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
-        if (!saveVector(outfile, &m_lithExitPools[i]))
+        if (!saveVector(outfile, m_lithExitPools[i]))
             return -1;
     }
-
-    saveVector(outfile, &m_whirlpools);
-    saveVector(outfile, &m_undergroundGateExits);
-    {
-        // Retail folds the long and type_point writers at 0x4d2ac0.
-        // Preserve the canonical long pool and its existing writer call.
-        union {
-            std::vector<long>* m_pairs;
-            std::vector<type_point>* m_points;
-        } pairAlias;
-        pairAlias.m_pairs = &m_undergroundGatePairs;
-        saveVector(outfile, pairAlias.m_points);
-    }
-
-    // Unguarded, like the three pool writes above them.
-    saveVector(outfile, &m_universities);
+    saveVector(outfile, m_whirlpools);
+    saveVector(outfile, m_undergroundGateExits);
+    saveVector(outfile, m_undergroundGatePairs);
+    saveVector(outfile, m_universities);
     saveObjectVector(outfile, &m_creatureBanks);
 #pragma inline_depth()
 
@@ -4504,6 +4463,9 @@ void game::giveTroopsToNeutralTown(int townId)
 // no arm spelling reaches it without paying the slot swap.
 // Before normalization (locals): check_map_locations, num_living_players, campaign_number,
 // vchero_loc, poolhero_loc, this_town, lchero_loc.
+// The validLossTown join remains: a town-validation result flag scores
+// 89.2426%, and explicit invalid-town arms score 87.7111%, against 90.0315%.
+// These are limits of the tested scopes, not proof of an original goto.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
 void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
@@ -4972,6 +4934,13 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
 // array accessor's retail range clamp even though the induction is [0,8): the
 // resulting >=8/<0 pair is present in the bytes.  The hotseat fallback walks
 // the player array backwards and selects zero only when no human exists.
+// DC line 4495 calls the canonical ordinary GetLocalPlayerGamePos. The
+// former setupFirstPlayerPosition was an unattested forced-inline copy;
+// restoring the canonical call removes that copy and its success goto.
+// GetLocalPlayerGamePos's selected-result scope preserves all three exact
+// bodies (this caller, GetLocalPlayer and the retained helper). Its previous
+// early-return scan made this caller 94.75%; break-and-clamp made it 91.5833%
+// and also lowered the retained helper/GetLocalPlayer, so neither is kept.
 VA(0x004c0630, 0xB1)  // anchor-callers + dc-order, dc 0xab8d0
 void game::setupFirstPlayer()
 {
@@ -4992,12 +4961,11 @@ void game::setupFirstPlayer()
     g_currentPlayer = &m_players[startingPos];
     g_unnamed69ccc4 = static_cast<unsigned char>(1 << startingPos);
 
-    int localPlayer = getLocalPlayerGamePos();
-    g_unnamed69778c = localPlayer;
-    g_mapVisibilityBit = static_cast<unsigned char>(1 << localPlayer);
+    int currentPlayer = getLocalPlayerGamePos();
+    g_unnamed69778c = currentPlayer;
+    g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
     g_unnamed69d810 = startingPos;
 }
-
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
 static void randomizeScholar(NewmapCell* cell)
@@ -5172,9 +5140,8 @@ static void randomizePyramid(NewmapCell* cell)
 // E:\gamedcs\game.cpp:4770
 // Retail builds one availability bit per secondary skill from the scenario's
 // disabled-skill row, draws four distinct set bits, and appends those four
-// ints as one university record.  The local is deliberately an int array:
-// the bytes contain no type_university constructor call before the vector
-// append, unlike the elemental-school default record used by townManager.
+// skills as one native university record. DC's local and aggregate type agree
+// with retail once Conflux's initializer is no longer a generic constructor.
 // WALL 99.7464%: all 24 blocks, every branch target and every instruction
 // count agree.  The explicit-code residual is one whole-loop register tie:
 // retail keeps the cached availability bound in EBX and each Random ordinal
@@ -5182,11 +5149,15 @@ static void randomizePyramid(NewmapCell* cell)
 // round.  Dreamcast CodeView attests university/used/choice/i and the
 // TSecondarySkill type of skill.  Restoring its indexed i loop raised 93.08
 // -> 99.75; restoring the shared local order and enum type is byte-flat and
-// source-shape-ratcheted.  The DC university aggregate type itself is revision
-// skew: Complete's model has an out-of-line default constructor, and declaring
-// that local directly emits the absent ctor call and falls to 97.8623%.  Its
-// recovered `university` identity remains on the retail-proved raw four-int
-// record below.
+// source-shape-ratcheted. The 36-state insertion family isolates the old
+// ownership error: a native record with automatic elemental initialization
+// falls to 97.8623%. The 13-state initializer family restores the native local
+// at 99.7464%, removes the pointer union, and preserves all Conflux call sites.
+// Remaining insert boundary: DC's push_back can expose the count-insert child
+// through the vendor wrapper; retail calls that child. Public single-insert
+// and push_back controls score 99.0145/97.5362; removing the existing fence
+// expands the child for all three APIs (0% large-body comparisons). Retain
+// this boundary debt, not a claim that the DC wrapper itself was absent.
 // why-reg confirms equal pseudo-definition slots but a different C1 processing
 // order.  Exhausted byte-inert levers: reset vs set(false), int/unsigned/
 // register bounds, cached-count vs explicit-highest formulations, split
@@ -5196,7 +5167,7 @@ static void randomizePyramid(NewmapCell* cell)
 VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
 void game::randomizeUniversity(NewmapCell* cell)
 {
-    int university[4];
+    type_university university;
     std::bitset<28> availableSkills;
     long choice;
     long i;
@@ -5233,7 +5204,7 @@ void game::randomizeUniversity(NewmapCell* cell)
             }
         }
 
-        university[i] = skill;
+        university.m_skills[i] = skill;
         availableSkills.set(skill, false);
         --availableCount;
     }
@@ -5246,16 +5217,8 @@ void game::randomizeUniversity(NewmapCell* cell)
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
     type_university* universityTail = universityList->end();
-    // DC names this local type_university (dc 0xac048). This bridge
-    // exposes the current four-int storage through that record's type.
-    union {
-        int* m_skills;
-        type_university* m_university;
-    } universityAlias;
-    universityAlias.m_skills = university;
-    type_university* universityRecord = universityAlias.m_university;
 #pragma inline_depth(0)
-    universityList->insert(universityTail, 1, *universityRecord);
+    universityList->insert(universityTail, 1, university);
 #pragma inline_depth()
 }
 
@@ -7197,9 +7160,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (NewSMapHeader::readString(infile, m_mapName) < 0)
+    if (readString(infile, m_mapName) < 0)
         return -1;
-    if (NewSMapHeader::readString(infile, m_mapDescription) < 0)
+    if (readString(infile, m_mapDescription) < 0)
         return -1;
 
     unsigned char ucharBuffer;
@@ -7873,29 +7836,35 @@ int NewSMapHeader::get(const char* path, const char* filename,
 // Map-format strings use a dword length, unlike saved-game strings. Retail
 // treats nonpositive and sentinel-sized values as empty and otherwise keeps
 // the temporary allocation alive on a short payload read.
-#pragma auto_inline(off)
-VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit length protocol
-int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& value)
+// DC NewSMapHeader::readString, b1110, records count at 7236/7237 and
+// 7245/7246. Restoring that local removes the auto-inline fence with the
+// entire game object unchanged. Flattening the reads loses the retained
+// readString calls in NewSMapHeader::read and game::loadMap. The boundary
+// row 7232 is borrowed from the preceding function, so no ASSERT is inferred.
+VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit protocol, dc 0xb1110
+int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     int length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0 && length < 0xffff) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value.erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -12487,18 +12456,30 @@ playerData* game::getLocalPlayer()
 }
 
 // E:\gamedcs\game.cpp:11796
+// The hotseat fallback records whether its reverse scan selected a human,
+// then returns the selected position or zero. It preserves the valid-net-pos
+// early return and the canonical ordinary boundary used by both callers.
+// Bool and unsigned-char selected flags both keep every game.obj score;
+// merging the initial validation into the flag scope lowers GetLocalPlayer
+// to 76.1765% and SetupFirstPlayer to 93.75%. Do not duplicate this selector
+// into a forced-inline caller-specific body to recover those expansions.
 VA(0x004cea20, 0x4E)  // anchor-global, dc 0xbc038
 int game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
+        bool selected = false;
         if (pos >= 0 && pos < 8 && m_players[pos].m_isHuman)
             return pos;
         for (pos = 7; pos >= 0; pos--) {
-            if (m_players[pos].m_isHuman)
-                return pos;
+            if (m_players[pos].m_isHuman) {
+                selected = true;
+                break;
+            }
         }
-        return 0;
+        if (!selected)
+            pos = 0;
+        return pos;
     }
     return g_localGamePos;
 }
@@ -12795,49 +12776,21 @@ unsigned char loadObjectVector(
     return 1;
 }
 
-// E:\gamedcs\game.cpp:2716
-// The pool writer game::Save uses five times over its type_point
-// vectors (the eight lithPools, the eight lithExitPools, then
-// whirlpools / undergroundGateExits / undergroundGatePairs).
-// A free function, so /Gr makes it fastcall: outfile in ecx, the
-// vector in edx, no stack args.
-// Two details the bytes fix. The count is an INT local written with
-// sizeof(short) - the same "wide local, narrow write" idiom
-// LoadGarrisonPool uses on the read side - and the payload length is
-// the SHORT re-read of that same slot, computed twice rather than
-// CSE'd (retail emits `movsx word [ebp-4]` then `shl eax,2` on both
-// sides of the compare). Dinkumware's size() supplies the leading
-// `_First == 0 ? 0 : _Last - _First` null test.
-VA(0x004d2ac0, 0x60)  // anchor-callee (game::Save pool writes), dc 0xc1dd4
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_point>* srcVector)
+// The retained template instances are claimed in retail address order.
+// Their one active implementation appears at the DC source-order boundary.
+#if 0  // @carcass -- claim-only template instances
+VA(0x004d2ac0, 0x60)  // point/long ICF twin, dc 0xc1dd4 / 0xc1e58
+bool saveVector(TAbstractFile* outfile, std::vector<type_point>& srcVector)
 {
-    int count = srcVector->size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
-        return 0;
-    unsigned char written = outfile->write(
-        srcVector->begin(),
-        static_cast<short>(count) * sizeof(type_point))
-        >= static_cast<short>(count) * sizeof(type_point);
-    return written;
+    // @stub
 }
 
-// The final plain-block specialization writes the university pool. Retail's
-// divide-by-16 size calculation and two payload shifts independently prove
-// type_university's four-int stride; game::Save supplies the sole call site.
-VA(0x004d2b20, 0x60)  // anchor-callee (game::Save universities), dc 0xc1edc
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_university>* srcVector)
+VA(0x004d2b20, 0x60)  // university stride and sole Save call, dc 0xc1edc
+bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 {
-    int count = srcVector->size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
-        return 0;
-    unsigned char written = outfile->write(
-        srcVector->begin(),
-        static_cast<short>(count) * sizeof(type_university))
-        >= static_cast<short>(count) * sizeof(type_university);
-    return written;
+    // @stub
 }
+#endif
 
 // E:\gamedcs\game.cpp:2754, dc 0xc1f64.
 // The creature-bank specialization: the only pool whose element is not a
@@ -15197,11 +15150,9 @@ unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
 }
 
 // E:\gamedcs\game.cpp:2733
-DC_ONLY(0xc1950, 0x98)
-unsigned char loadObjectVector(void* infile, std::vector<generator,std::allocator<generator>* dest_vector)
-{
-    // @stub
-}
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2698
 DC_ONLY(0xc19e8, 0x80)
@@ -15239,11 +15190,9 @@ void std::vector<hero,std::allocator<hero> >::_M_insert_overflow(hero* __positio
 }
 
 // E:\gamedcs\game.cpp:2754
-DC_ONLY(0xc1d38, 0x9C)
-unsigned char saveObjectVector(void* outfile, std::vector<generator,std::allocator<generator>* src_vector)
-{
-    // @stub
-}
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2716
 DC_ONLY(0xc1dd4, 0x84)

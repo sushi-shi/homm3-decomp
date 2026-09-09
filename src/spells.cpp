@@ -4787,50 +4787,28 @@ placeMirror:
 // picker-exhausted break falls through to the column step, which is why
 // retail carries TWO copies of the picker's inlined destructor.
 //
-// THE TRAITS COPY IS SPELLED memcpy AND THAT IS A MODELLING SHORTCUT.
-// Retail's `rep movsd` of 29 dwords into `summoned + 0x74` is the
-// embedded TCreatureTypeTraits row army.h's own note calls sMonInfo,
-// i.e. the source said `summoned.sMonInfo = akCreatureTypeTraits[type]`.
-// Modelling it as a member means adopting the DC TCreatureTypeTraits
-// aggregate for army +0x74..+0xe7 tree-wide (its slices have consumers in
-// sixteen TUs), so that is a layout change for the whole army run and not
-// this lane's to make. The memcpy emits the identical
-// `mov ecx,0x1d / rep movsd`.
-//
-// BOTH LOOPS ARE GOTO LOOPS, AND THAT IS WORTH TWELVE POINTS (81.26 ->
-// 93.38). Retail's outer back edge is `cmp / jle <exit> / jmp <head>` -
-// two jumps where a `for(;;)` with a trailing `break` gives VC6 the one
-// inverted `jg <head>` - and its inner back edge is a bare `jmp <head>`
-// off a shared merge point. Spelling both with explicit labels and
-// `goto` reproduces the pair, and the same edit splits the picker's
-// inlined destructor into retail's TWO copies, because the found exit
-// leaves the picker's scope from INSIDE the inner loop while the
-// exhausted exit leaves it at the scope's end. A do/while inner loop
-// was measured against this and is much worse (85.69): VC6 emits the
-// bottom test as `je <head>` with no merge point and the two destructor
-// copies collapse back into one.
+// The traits copy uses the canonical m_monInfo aggregate assignment.
+// DC's col/row_picker/hex scopes and lines 4729..4739 support the nested
+// search with a found test inside the picker's lifetime. Both loops can be
+// ordinary while(1) loops: after inner exhaustion, the outer loop advances
+// the column; after success, the second hex test exits the picker scope.
+// This removes all four gotos and improves 93.4375% to 99.0144%. Either a
+// negative exhausted-pick guard or positive pick scope has the same score.
+// The outer-loop-only edit is neutral; the inner loop is what removes
+// VC6's duplicated picker header. The old goto-only/peeling-limit claim
+// was disproved by these scopes, including both destructor exit paths.
 //
 // The message is built on the TEMPORARY, not through a named local
 // (93.38 -> 93.44): retail reads `[eax + 4]` straight off
 // format_string's returned object, where `std::string message = ...;
 // message.c_str()` reads the local's own _Ptr slot instead.
 //
-// Residual (93.44%): VC6 ROTATES the inner loop where retail does not -
-// it peels a second copy of `Pick()` plus the row arithmetic onto the
-// CanFit-false path and jumps back into the middle, and having done so
-// it can prove `hex == -1` there, so it tests ESI before the store
-// where retail re-reads `[ebp-0x10]` after it. Both halves are the one
-// decision and no spelling tried moved it; the rest is scratch-register
-// renaming around the 0-in-EDI the loop exits leave behind.
-// Residual (93.44%, re-read 2026-08-21): two clusters plus the EH push
-// addend. (1) Our compile DUPLICATES the try_next_row header (Pick +
-// candidate arithmetic, 10 instructions) into the goto edge where
-// retail jumps back to one shared copy - the same duplicated-header
-// class place_obstacle measured unreachable through every loop
-// spelling (goto form already in use here). (2) Ours caches `hex` in
-// ESI at the exit test where retail re-reads its frame slot; the
-// homing rides on the duplication. Not re-ground on the place_obstacle
-// precedent.
+// Residual (99.0144%): inspect the current structured-loop object; the
+// historical 93.44% duplicated-header diagnosis no longer describes it.
+// The canonical GetHexIndex call at DC 4729 is neutral at 99.0144%; making
+// the DC col/candidate locals const with a column ternary scores 98.7164%.
+// The remaining mismatch starts at the exhausted-picker guard/destructor
+// edge; all sixteen named calls agree.
 // Before normalization (locals): iMonType, iSpellPower.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::summonElemental(SpellID spell, TCreatureType monType,
@@ -4845,33 +4823,30 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     summoned.m_bitIndex = -1;
     summoned.m_facing = 1 - m_currentSide;
     int hex = -1;
-try_next_column:
-    {
+    while (1) {
         int column = leftColumn;
         if (m_currentSide)
             column = rightColumn;
         {
             TPickANumber picker(0, 10);
-        try_next_row:
-            {
+            while (1) {
                 int pick = picker.pick();
-                int candidate = column + pick * COMBAT_GRID_ROW_STRIDE;
-                if (pick >= 0) {
-                    if (summoned.canFit(candidate, 0, 0))
-                        hex = candidate;
-                    if (hex != -1)
-                        goto hex_chosen;
-                    goto try_next_row;
-                }
+                int candidate = getHexIndex(column, pick);
+                if (pick < 0)
+                    break;
+                if (summoned.canFit(candidate, 0, 0))
+                    hex = candidate;
+                if (hex != -1)
+                    break;
             }
+            if (hex != -1)
+                break;
         }
         leftColumn++;
         rightColumn--;
         if (rightColumn <= 0)
-            goto hex_chosen;
-        goto try_next_column;
+            break;
     }
-hex_chosen:
     m_summonedElemental[m_currentSide] = monType;
     if (shouldLowerDoor(&summoned, hex)) {
         drawFrame(1, 0, 0, 0, 1, 0);

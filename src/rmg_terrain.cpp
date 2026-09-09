@@ -1240,6 +1240,9 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Coordinate-assigned operator+ temporaries reach 92.3508% with all exact
 // siblings intact, but keep that same missing constructor and lower both
 // terrain paintPoint and line refresh. This is not a resolved call boundary.
+// Goto audit: the outer cycle exit is a byte-neutral break. Replacing the
+// inner exit with break plus an outer equality test loses 5.9713 points;
+// a bottom-tested outer cycle loses 6.6914. The multi-level exit remains.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1280,7 +1283,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         while (1) {
             direction = (direction + 1) % TILE_DIR_COUNT;
             if (direction == first)
-                goto gapsBuilt;
+                break;
             if (!matches[direction]) {
                 unsigned int currentGap = gapCount++;
                 gaps[currentGap].m_weight = 0;

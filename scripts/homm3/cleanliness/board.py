@@ -331,6 +331,12 @@ _FUNCLIKE_DEFINE = re.compile(
 _ANY_DEFINE = re.compile(
     r"^[ \t]*\#[ \t]*define[ \t]+([A-Za-z_]\w*)", re.MULTILINE)
 VA_HEADER = REPO / "include/va.h"
+# This switch selects annotation attributes for the source inventory while
+# it parses VC6 project branches. It changes no game declaration or body.
+# Only its conditional use in the annotation contract is legitimate; the
+# same name in a game TU/header, or a source #define, remains a scaffold.
+_OWNERSHIP_ANNOTATION_SWITCH = "HOMM3" + "_SOURCE_OWNERSHIP"
+_ANNOTATION_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|elif)\b")
 
 
 def _legit_pp_names(sources) -> frozenset:
@@ -357,6 +363,10 @@ def _scaffold_preprocessor_sites(code: str, ctx) -> list:
         for match in _SCAFFOLD_IDENT.finditer(text):
             name = match.group()
             if name.endswith("_H") or name in legit:
+                continue
+            if (ctx.get("path") == VA_HEADER
+                    and name == _OWNERSHIP_ANNOTATION_SWITCH
+                    and _ANNOTATION_CONDITIONAL.match(text)):
                 continue
             out.append(directive.start() + match.start())
     return out
@@ -471,6 +481,7 @@ def count(per_file: bool = False):
     totals = {label: 0 for label, _, _, _ in METRICS}
     offenders = []
     for path, code in sources:
+        ctx["path"] = path
         ctx["dc_local_classes"] = local_classes.get(path, frozenset())
         for label, sites, cpp_only, _fix in METRICS:
             if cpp_only and path.suffix not in _CPP:
@@ -753,6 +764,17 @@ def selftest() -> list[str]:
             if got != expected:
                 failures.append(f"{label}: counted {got}, expected "
                                 f"{expected} in {sample!r}")
+    annotation_switch = "#if defined(" + _OWNERSHIP_ANNOTATION_SWITCH + ")"
+    for path, sample, expected in (
+            (VA_HEADER, annotation_switch, 0),
+            (REPO / "src/game.cpp", annotation_switch, 1),
+            (REPO / "include/game.h", annotation_switch, 1),
+            (VA_HEADER, "#define " + _OWNERSHIP_ANNOTATION_SWITCH, 1),
+            (VA_HEADER, "#if defined(" + _SCAFFOLD_LAYOUT + ")", 1)):
+        got = len(_scaffold_preprocessor_sites(sample, dict(ctx, path=path)))
+        if got != expected:
+            failures.append(f"annotation switch: counted {got}, expected "
+                            f"{expected} for {path.name}: {sample!r}")
     missing = set(counters) - set(_SAMPLES)
     failures.extend(f"{label}: NO SELFTEST SAMPLES" for label in sorted(missing))
     volatile_fix = _FIX["volatile qualifiers"]

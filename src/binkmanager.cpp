@@ -208,62 +208,60 @@ void BinkManager::restartBink()
 // one shared `goto` 92.58 with the third guard's polarity inverted, folding
 // the last two guards into `||` 92.92, duplicating the third guard's tail
 // 89.43, and a `goto drawRects` that puts the label physically ahead of the
-// repaint tail is byte-flat at 92.92.
+// repaint tail is byte-flat at 92.92. A positive video/frameReady/!Wait
+// scope removes both remaining gotos at the same 92.9169%, as do nested
+// positive guards. DC supplies only the port stub; PC retail proves this
+// pump's behavior. Keep the ordinary closeBinkVideo call boundary.
 VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void nextBinkFrame()
 {
     Bink* video = g_binkVideo;
-    if (!video) {
+    if (!video)
         video = g_binkVideo2;
-        if (!video)
-            goto notReady;
-    }
-    if (!g_binkFrameReady || _BinkWait(video))
-        goto notReady;
+    if (video && g_binkFrameReady && !_BinkWait(video)) {
+        g_binkDirty = 1;
+        if (g_binkPaused)
+            return;
 
-    g_binkDirty = 1;
-    if (g_binkPaused)
-        return;
+        _BinkDoFrame(video);
+        _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
+                          g_binkSurfaceType);
 
-    _BinkDoFrame(video);
-    _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch, g_binkHeight, 0, 0,
-                      g_binkSurfaceType);
-
-    if (video->m_frameNum == video->m_frames) {
-        if (g_binkChainTrack) {
-            if (g_binkVideo && g_binkVideo2) {
-                if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
-                    g_windowManager->fadeScreen(1, 4, 0);
-                g_soundManager->serviceSounds();
-                _BinkClose(g_binkVideo);
-                g_binkVideo = 0;
-                video = g_binkVideo2;
-                if (g_videoDescriptors[g_binkVideoId].m_fadeInSecondTrack) {
-                    _BinkDoFrame(video);
-                    _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch,
-                                      g_binkHeight, 0, 0, g_binkSurfaceType);
-                    g_windowManager->fadeScreen(0, 4, 0);
+        if (video->m_frameNum == video->m_frames) {
+            if (g_binkChainTrack) {
+                if (g_binkVideo && g_binkVideo2) {
+                    if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
+                        g_windowManager->fadeScreen(1, 4, 0);
+                    g_soundManager->serviceSounds();
+                    _BinkClose(g_binkVideo);
+                    g_binkVideo = 0;
+                    video = g_binkVideo2;
+                    if (g_videoDescriptors[g_binkVideoId].m_fadeInSecondTrack) {
+                        _BinkDoFrame(video);
+                        _BinkCopyToBuffer(video, g_binkBuffer, g_binkPitch,
+                                          g_binkHeight, 0, 0, g_binkSurfaceType);
+                        g_windowManager->fadeScreen(0, 4, 0);
+                    }
+                } else {
+                    _BinkNextFrame(video);
                 }
             } else {
-                _BinkNextFrame(video);
+                _BinkGetSummary(video, &g_binkSummary);
+                closeBinkVideo();
+                if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
+                    g_windowManager->fadeScreen(1, 4, 0);
+                else
+                    g_windowManager->updateScreen(0, 0, 800, 600);
+                return;
             }
         } else {
-            _BinkGetSummary(video, &g_binkSummary);
-            closeBinkVideo();
-            if (g_videoDescriptors[g_binkVideoId].m_fadeOnAbort)
-                g_windowManager->fadeScreen(1, 4, 0);
-            else
-                g_windowManager->updateScreen(0, 0, 800, 600);
-            return;
+            _BinkNextFrame(video);
         }
-    } else {
-        _BinkNextFrame(video);
+        if (g_binkUseDirtyRects)
+            videoDrawRects();
+        return;
     }
-    if (g_binkUseDirtyRects)
-        videoDrawRects();
-    return;
 
-notReady:
     g_binkDirty = 0;
 }
 

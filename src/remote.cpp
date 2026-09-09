@@ -717,11 +717,19 @@ bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
 // boundary and zlib edge. Retail proves the 0x14-byte wire header, 20%
 // headroom, level-6 compression and the rule that a non-shrinking result is
 // discarded rather than transmitted.
-#pragma auto_inline(off)
+// DC 426 is a one-line gap before the size read, permitting a message
+// precondition, not proving ASSERT text. Retail's unsigned payload-length
+// subtraction requires at least the header size. The release verification
+// retires the auto-inline override: all TU section bytes and 1743 relocation
+// destinations match. Negative control: omit it and compressMsg expands in
+// transmitRemoteDataDPID, taking both member/free transmitRemoteData and
+// transmitRemoteDataDPID rows from 100 to 0. Non-null-only and split checks
+// also reproduce the pinned code; no runtime assertion branch remains.
 // Before normalization (locals): pNetMsg.
 VA(0x005532b0, 0xB9)  // anchor-callers + zlib-edge + dc-order-map
 CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 {
+    HOMM3_RELEASE_VERIFY(netMsg != 0 && netMsg->m_size >= sizeof(CNetMsg));
     unsigned long compressedSize =
         static_cast<unsigned long>(netMsg->m_size * 1.2) + 12;
     void* storage = ::operator new(compressedSize);
@@ -748,7 +756,6 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     }
     return compressedMsg;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\remote.cpp:496
 // The DPID form is the same send pipeline without recipient lookup. HD
@@ -1045,26 +1052,25 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
             canDisplay = 0;
     }
 
-    if (g_turnDuration69d630.m_currDuration != 0
+    if (!(g_turnDuration69d630.m_currDuration != 0
         && !g_unk69774c
         && g_turnDuration69d630.m_turnStartTime != 0
         && g_turnDuration69d630.m_pauseTime == 0
         && GameTime::get() + 59000
                > g_turnDuration69d630.m_turnStartTime
                      + g_turnDuration69d630.m_currDuration
-        && !canDisplay)
-        goto skipMessage;
+        && !canDisplay)) {
 
-    sprintf(
-        finalText,
-        DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
-        chatText);
-    m_isSysMsg = 1;
-    addChat(finalText);
-    m_isSysMsg = 0;
+        sprintf(
+            finalText,
+            DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
+            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+            chatText);
+        m_isSysMsg = 1;
+        addChat(finalText);
+        m_isSysMsg = 0;
+    }
 
-skipMessage:
     sample* sampleToPlay = m_turnDurSample;
     if (m_chatMemSample
         && g_soundManager->getSampleInfo(

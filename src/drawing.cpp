@@ -224,151 +224,139 @@ static std::string getEstimatedDamage(const army* currentArmy,
 // E:\gamedcs\drawing.cpp:178. Dreamcast preserves the complete source
 // decision tree; retail confirms the Complete creature ids, corpse-row
 // lookup, spell restrictions, Orb of Inhibition test and every message row.
-// Residual (92.3889%, polish-45): 13 of 14 calls, 54/54 branches and 90-vs-92
-// blocks.  The one target-only reference is a `sprintf`: retail emits BOTH
-// arms of the ARCHANGEL `numTroops == 1` message (texts 706 and 707) as
-// complete calls, while C2 here cross-jumps them from the shared `call
-// sprintf` backwards and leaves a single call site with only the format-string
-// push duplicated.  The `goto no_error` exits are the other half - retail
-// parks that `return false` block at CFG index 11, right after the bodies
-// loop, where this compile parks it at 67.  Both are C2 block-layout
-// decisions; the source statements, the if/else arms (the ternary spelling
-// was measured at 65.85/68.38 by polish-43) and the direct-GetArmyName
-// spelling above are already retail's.
-// Goto audit: Replacing all eleven no_error jumps with return false
-// scores 68.3889% versus 92.3889%; the shared exit is still materially closer.
+// Exact after recovering enclosing validity/type guards, ordinary target
+// rejection returns and switch breaks. All eleven former gotos disappear.
+// These scopes place the false return after the corpse scan and retain both
+// Archangel sprintf arms, resolving the former 92.3889% layout residual.
+// Controls: replacing every goto with return false scores 68.3889%; replacing
+// only the five target guards scores 86.5045%; nesting the target acceptance
+// predicate scores 98.2289%. Switch breaks alone are neutral. The canonical
+// GetName/GetArmyName and resurrection helpers remain at their source sites.
 VA(0x004922f0, 0x54C)  // retail body + DC source shape, dc 0x8354c
 bool combatManager::showCreatureSpellError(
     char* buffer, const army* currentArmy)
 {
-    if (!validHex(m_lastCellIndex)) {
-        goto no_error;
-    }
+    if (validHex(m_lastCellIndex) && (currentArmy->m_creatureType == CREATURE_ARCHANGEL
+            || currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD
+            || currentArmy->m_creatureType == CREATURE_OGRE_MAGE)) {
+        hexcell* cell;
+        army* targetArmy;
+        int i;
 
-    if (currentArmy->m_creatureType != CREATURE_ARCHANGEL
-            && currentArmy->m_creatureType != army::ARMY_CREATURE_PIT_LORD
-            && currentArmy->m_creatureType != CREATURE_OGRE_MAGE) {
-        goto no_error;
-    }
-
-    hexcell* cell;
-    army* targetArmy;
-    int i;
-
-    cell = &m_cells[m_lastCellIndex];
-    targetArmy = cell->getArmy();
-    if (!targetArmy) {
-        if (cell->m_attributes & 2) {
-            goto no_error;
-        }
-        for (i = cell->m_bodiesInHex - 1; i >= 0; i--) {
-            int deadSide = cell->m_deadArmySide[i];
-            int deadSlot = cell->m_deadArmySlot[i];
-            if (deadSide == m_currentSide) {
-                targetArmy = &m_armies[deadSide][deadSlot];
-                break;
+        cell = &m_cells[m_lastCellIndex];
+        targetArmy = cell->getArmy();
+        if (!targetArmy) {
+            if (cell->m_attributes & 2) {
+                return false;
+            }
+            for (i = cell->m_bodiesInHex - 1; i >= 0; i--) {
+                int deadSide = cell->m_deadArmySide[i];
+                int deadSlot = cell->m_deadArmySlot[i];
+                if (deadSide == m_currentSide) {
+                    targetArmy = &m_armies[deadSide][deadSlot];
+                    break;
+                }
             }
         }
-    }
-    if (!targetArmy) {
-        goto no_error;
-    }
-    if (targetArmy->getOwningSide() != m_currentSide) {
-        goto no_error;
-    }
-    if ((targetArmy->is(1u << 21))
-            && currentArmy->m_creatureType == CREATURE_OGRE_MAGE) {
-        goto no_error;
-    }
-    if (!(targetArmy->is(1u << 21))
-            && currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD) {
-        goto no_error;
-    }
-
-    if (!currentArmy->m_monInfo.m_hasSpell) {
-        if (currentArmy->m_numTroops == 1) {
-            sprintf(buffer, (*g_generalText)[697],
-                    getArmyName(currentArmy->m_creatureType,
-                                currentArmy->m_numTroops));
-        } else {
-            sprintf(buffer, (*g_generalText)[698],
-                    getArmyName(currentArmy->m_creatureType,
-                                currentArmy->m_numTroops));
+        if (!targetArmy) {
+            return false;
         }
-        return true;
-    }
+        if (targetArmy->getOwningSide() != m_currentSide) {
+            return false;
+        }
+        if ((targetArmy->is(1u << 21))
+                && currentArmy->m_creatureType == CREATURE_OGRE_MAGE) {
+            return false;
+        }
+        if (!(targetArmy->is(1u << 21))
+                && currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD) {
+            return false;
+        }
 
-    if (m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
-        strcpy(buffer, (*g_generalText)[699]);
-        return true;
-    }
-    if (m_onAntiMagicGarrison) {
-        strcpy(buffer, (*g_generalText)[700]);
-        return true;
-    }
-    for (i = 0; i < 2; i++) {
-        if (m_heroes[i]
-                && m_heroes[i]->isWieldingArtifact(
-                    ARTIFACT_ORB_OF_INHIBITION)) {
-            sprintf(buffer, (*g_generalText)[701],
-                    g_artifactTraits[ARTIFACT_ORB_OF_INHIBITION].m_name);
+        if (!currentArmy->m_monInfo.m_hasSpell) {
+            if (currentArmy->m_numTroops == 1) {
+                sprintf(buffer, (*g_generalText)[697],
+                        getArmyName(currentArmy->m_creatureType,
+                                    currentArmy->m_numTroops));
+            } else {
+                sprintf(buffer, (*g_generalText)[698],
+                        getArmyName(currentArmy->m_creatureType,
+                                    currentArmy->m_numTroops));
+            }
             return true;
         }
-    }
 
-    switch (currentArmy->m_creatureType) {
-    case CREATURE_OGRE_MAGE: {
-        if (getSpellWorkChance(SPELL_BLOODLUST,
-                                  targetArmy->m_creatureType, 0, 0) > 0.0f) {
-            goto no_error;
-        }
-        sprintf(buffer, (*g_generalText)[181], targetArmy->getName(2),
-                g_spellTraits[SPELL_BLOODLUST].m_name);
-        return true;
-    }
-
-    case army::ARMY_CREATURE_PIT_LORD: {
-        if (!(targetArmy->is(1u << 4))) {
-            sprintf(buffer, (*g_generalText)[702],
-                    getArmyName(army::ARMY_CREATURE_DEMON, 2));
+        if (m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
+            strcpy(buffer, (*g_generalText)[699]);
             return true;
         }
-        if (currentArmy->getResurrectionSize(targetArmy) > 0) {
-            goto no_error;
-        }
-        if (targetArmy->m_numTroops == 1) {
-            sprintf(buffer, (*g_generalText)[703], targetArmy->getName(),
-                    getArmyName(army::ARMY_CREATURE_DEMON, 2));
-        } else {
-            sprintf(buffer, (*g_generalText)[704], targetArmy->getName(),
-                    getArmyName(army::ARMY_CREATURE_DEMON, 2));
-        }
-        return true;
-    }
-
-    case CREATURE_ARCHANGEL: {
-        if (targetArmy->m_origNumTroops <= targetArmy->m_numTroops) {
-            goto no_error;
-        }
-        if (!(targetArmy->is(1u << 4))) {
-            strcpy(buffer, (*g_generalText)[705]);
+        if (m_onAntiMagicGarrison) {
+            strcpy(buffer, (*g_generalText)[700]);
             return true;
         }
-        if (currentArmy->getResurrectionSize(targetArmy) > 0) {
-            goto no_error;
+        for (i = 0; i < 2; i++) {
+            if (m_heroes[i]
+                    && m_heroes[i]->isWieldingArtifact(
+                        ARTIFACT_ORB_OF_INHIBITION)) {
+                sprintf(buffer, (*g_generalText)[701],
+                        g_artifactTraits[ARTIFACT_ORB_OF_INHIBITION].m_name);
+                return true;
+            }
         }
-        if (currentArmy->m_numTroops == 1) {
-            sprintf(buffer, (*g_generalText)[706], currentArmy->getName(),
-                    targetArmy->getName());
-        } else {
-            sprintf(buffer, (*g_generalText)[707], currentArmy->getName(),
-                    targetArmy->getName());
-        }
-        return true;
-    }
-    }
 
-no_error:
+        switch (currentArmy->m_creatureType) {
+        case CREATURE_OGRE_MAGE: {
+            if (getSpellWorkChance(SPELL_BLOODLUST,
+                                      targetArmy->m_creatureType, 0, 0) > 0.0f) {
+                break;
+            }
+            sprintf(buffer, (*g_generalText)[181], targetArmy->getName(2),
+                    g_spellTraits[SPELL_BLOODLUST].m_name);
+            return true;
+        }
+
+        case army::ARMY_CREATURE_PIT_LORD: {
+            if (!(targetArmy->is(1u << 4))) {
+                sprintf(buffer, (*g_generalText)[702],
+                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                return true;
+            }
+            if (currentArmy->getResurrectionSize(targetArmy) > 0) {
+                break;
+            }
+            if (targetArmy->m_numTroops == 1) {
+                sprintf(buffer, (*g_generalText)[703], targetArmy->getName(),
+                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+            } else {
+                sprintf(buffer, (*g_generalText)[704], targetArmy->getName(),
+                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+            }
+            return true;
+        }
+
+        case CREATURE_ARCHANGEL: {
+            if (targetArmy->m_origNumTroops <= targetArmy->m_numTroops) {
+                break;
+            }
+            if (!(targetArmy->is(1u << 4))) {
+                strcpy(buffer, (*g_generalText)[705]);
+                return true;
+            }
+            if (currentArmy->getResurrectionSize(targetArmy) > 0) {
+                break;
+            }
+            if (currentArmy->m_numTroops == 1) {
+                sprintf(buffer, (*g_generalText)[706], currentArmy->getName(),
+                        targetArmy->getName());
+            } else {
+                sprintf(buffer, (*g_generalText)[707], currentArmy->getName(),
+                        targetArmy->getName());
+            }
+            return true;
+        }
+        }
+
+    }
     return false;
 }
 
@@ -807,6 +795,9 @@ void combatManager::setupGridForArmy(const army* thisArmy)
 // only VC6's late register/homing choices and tops out at 94.34%.
 // E:\gamedcs\drawing.cpp:755
 // Before normalization (locals): bPostGridIsClean, bSetupGrid, UpdateLimits.
+// DC lines 767..770 call get_controlling_side in the rejection guard,
+// then select memset or SetupGridForArmy. Both if/else polarities are exact;
+// restoring that helper removes the copied side calculation and grid join.
 VA(0x00493930, 0x3c0)  // anchor-global + dc order/callgraph, dc 0x84420
 int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 {
@@ -815,24 +806,13 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
     army* currentArmy = getCurrentArmy();
     if (setupGrid) {
-        if (!isComputerAction()) {
-            int side;
-            if (currentArmy->m_spellInfluence[60])
-                side = 1 - currentArmy->m_combatSide;
-            else
-                side = currentArmy->m_combatSide;
-
-            if (m_sideIsLocalHuman[side]) {
-                setupGridForArmy(currentArmy);
-                goto grid_ready;
-            }
-        }
-        {
+        if (isComputerAction()
+                || !m_sideIsLocalHuman[currentArmy->getControllingSide()])
             memset(m_curDrawGridShade, 0, sizeof(m_curDrawGridShade));
-        }
+        else
+            setupGridForArmy(currentArmy);
     }
 
-grid_ready:
     if (postGridIsClean)
         g_combatGridPosted6969d4 = 0;
 
@@ -1367,6 +1347,8 @@ inline void combatManager::drawObstacleAt(int hexIndex)
 // E:\gamedcs\drawing.cpp:1426
 // Before normalization (locals): hex_index, wt_table, wall_hex, source_x, dest_x,
 // remaining_width, draw_x, draw_y.
+// The ordinary-wall / special-wall if/else also reproduces every retail byte;
+// the forward draw_special_wall label is unnecessary.
 VA(0x00494c20, 0x31c)  // callee-set + exact arity, dc 0x85478
 void combatManager::drawWallAt(int hexIndex, int dx)
 {
@@ -1379,104 +1361,100 @@ void combatManager::drawWallAt(int hexIndex, int dx)
         if (wallHex == -1 || !image)
             continue;
 
-        if (wall == eWallSectionMainBuilding
+        if (!(wall == eWallSectionMainBuilding
                 || wall == eWallSectionMainBuildingCover
                 || wall == eWallSectionLowerTower
                 || wall == eWallSectionLowerTowerCover
                 || wall == eWallSectionUpperTower
                 || wall == eWallSectionUpperTowerCover
-                || wall == eWallSectionGate)
-            goto draw_special_wall;
-
-        {
-        if (hexIndex
-                == wallHex + dx * COMBAT_GRID_ROW_STRIDE
-                    - rowIsOdd(gridY(wallHex))
-                || (hexIndex == wallHex && !gridY(wallHex))) {
-            const int sw = m_cells[wallHex].m_hexUlx - traits.m_x;
-            if (sw > 0)
-                drawWall(image, 0, 0, sw, image->getHeight(),
-                         traits.m_x, traits.m_y);
-        } else if (hexIndex
-                == wallHex - dx * COMBAT_GRID_ROW_STRIDE
-                    - rowIsOdd(gridY(wallHex)) + 1) {
-            const hexcell& cell = m_cells[wallHex];
-            const int sw = image->getWidth() - cell.m_hexUlx + traits.m_x
-                           - COMBAT_WALL_HEX_WIDTH;
-            if (sw > 0) {
-                const int sx = cell.m_hexUlx - traits.m_x
-                               + COMBAT_WALL_HEX_WIDTH;
-                drawWall(image, sx, 0, sw, image->getHeight(),
-                         cell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.m_y);
-            }
-        }
-
-        if (hexIndex == wallHex) {
-            int width = COMBAT_WALL_HEX_WIDTH;
-            const hexcell& cell = m_cells[wallHex];
-            int sourceX = cell.m_hexUlx - traits.m_x;
-            int destX = cell.m_hexUlx;
-            if (sourceX < 0) {
-                width += sourceX;
-                destX = traits.m_x;
-                sourceX = 0;
-            }
-            int remainingWidth = image->getWidth() - sourceX;
-            if (width > remainingWidth)
-                width = remainingWidth;
-            drawWall(image, sourceX, 0, width, image->getHeight(),
-                     destX, traits.m_y);
-        }
-        }
-        continue;
-
-draw_special_wall:
-        if (hexIndex != wallHex)
-            continue;
-
-        if (wall == eWallSectionMainBuildingCover
-                || wall == eWallSectionLowerTowerCover
-                || wall == eWallSectionUpperTowerCover) {
-            TArcher* archer;
-            if (wall == eWallSectionMainBuildingCover)
-                archer = &m_archers[0];
-            else if (wall == eWallSectionLowerTowerCover)
-                archer = &m_archers[1];
-            else
-                archer = &m_archers[2];
-
-            if (archer->m_sprite) {
-                int drawX;
-                if (!archer->m_facing) {
-                    drawX = archer->m_x - archer->m_sprite->getWidth();
-                    drawX += COMBAT_ARCHER_X_BIAS;
-                    if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
-                            & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
-                        drawX += COMBAT_WALL_HEX_WIDTH;
-                    if (archer->m_creatureType == CREATURE_MEDUSA)
-                        drawX -= 5;
-                } else {
-                    drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                    if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
-                            & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
-                        drawX -= COMBAT_WALL_HEX_WIDTH;
-                    if (archer->m_creatureType == CREATURE_MEDUSA)
-                        drawX += 5;
+                || wall == eWallSectionGate)) {
+            if (hexIndex
+                    == wallHex + dx * COMBAT_GRID_ROW_STRIDE
+                        - rowIsOdd(gridY(wallHex))
+                    || (hexIndex == wallHex && !gridY(wallHex))) {
+                const int sw = m_cells[wallHex].m_hexUlx - traits.m_x;
+                if (sw > 0)
+                    drawWall(image, 0, 0, sw, image->getHeight(),
+                             traits.m_x, traits.m_y);
+            } else if (hexIndex
+                    == wallHex - dx * COMBAT_GRID_ROW_STRIDE
+                        - rowIsOdd(gridY(wallHex)) + 1) {
+                const hexcell& cell = m_cells[wallHex];
+                const int sw = image->getWidth() - cell.m_hexUlx + traits.m_x
+                               - COMBAT_WALL_HEX_WIDTH;
+                if (sw > 0) {
+                    const int sx = cell.m_hexUlx - traits.m_x
+                                   + COMBAT_WALL_HEX_WIDTH;
+                    drawWall(image, sx, 0, sw, image->getHeight(),
+                             cell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.m_y);
                 }
-                int drawY = archer->m_y - COMBAT_ARCHER_Y_BIAS;
+            }
 
-                drawArcher(
-                    archer->m_sprite, archer->m_sequence, archer->m_frame,
-                    drawX, drawY, 0,
-                    !archer->m_facing,
-                    archer->m_sequence == COMBAT_ARCHER_ACTIVE_SEQUENCE
-                        && m_actingSide == COMBAT_ARCHER_DEFENDING_SIDE
-                        && m_actingSlot == archer->m_armySlot);
+            if (hexIndex == wallHex) {
+                int width = COMBAT_WALL_HEX_WIDTH;
+                const hexcell& cell = m_cells[wallHex];
+                int sourceX = cell.m_hexUlx - traits.m_x;
+                int destX = cell.m_hexUlx;
+                if (sourceX < 0) {
+                    width += sourceX;
+                    destX = traits.m_x;
+                    sourceX = 0;
+                }
+                int remainingWidth = image->getWidth() - sourceX;
+                if (width > remainingWidth)
+                    width = remainingWidth;
+                drawWall(image, sourceX, 0, width, image->getHeight(),
+                         destX, traits.m_y);
             }
         }
+        else {
+            if (hexIndex != wallHex)
+                continue;
 
-        drawWall(image, 0, 0, image->getWidth(), image->getHeight(),
-                 traits.m_x, traits.m_y);
+            if (wall == eWallSectionMainBuildingCover
+                    || wall == eWallSectionLowerTowerCover
+                    || wall == eWallSectionUpperTowerCover) {
+                TArcher* archer;
+                if (wall == eWallSectionMainBuildingCover)
+                    archer = &m_archers[0];
+                else if (wall == eWallSectionLowerTowerCover)
+                    archer = &m_archers[1];
+                else
+                    archer = &m_archers[2];
+
+                if (archer->m_sprite) {
+                    int drawX;
+                    if (!archer->m_facing) {
+                        drawX = archer->m_x - archer->m_sprite->getWidth();
+                        drawX += COMBAT_ARCHER_X_BIAS;
+                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                                & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                            drawX += COMBAT_WALL_HEX_WIDTH;
+                        if (archer->m_creatureType == CREATURE_MEDUSA)
+                            drawX -= 5;
+                    } else {
+                        drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
+                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                                & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                            drawX -= COMBAT_WALL_HEX_WIDTH;
+                        if (archer->m_creatureType == CREATURE_MEDUSA)
+                            drawX += 5;
+                    }
+                    int drawY = archer->m_y - COMBAT_ARCHER_Y_BIAS;
+
+                    drawArcher(
+                        archer->m_sprite, archer->m_sequence, archer->m_frame,
+                        drawX, drawY, 0,
+                        !archer->m_facing,
+                        archer->m_sequence == COMBAT_ARCHER_ACTIVE_SEQUENCE
+                            && m_actingSide == COMBAT_ARCHER_DEFENDING_SIDE
+                            && m_actingSlot == archer->m_armySlot);
+                }
+            }
+
+            drawWall(image, 0, 0, image->getWidth(), image->getHeight(),
+                     traits.m_x, traits.m_y);
+        }
     }
 }
 

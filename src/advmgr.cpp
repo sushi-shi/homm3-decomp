@@ -52,6 +52,7 @@
 // and its body remains unclaimed. See the help-text note further down.
 #include "includes.h"
 #include "creaturetype.h"
+#include "homm3_limit.h"
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
@@ -1099,12 +1100,11 @@ type_point advManager::get_mouse_map_point() const
 // domain enum, and the four .bss cells 0x6968e0 / 0x69777c / 0x698774 /
 // 0x699560. HeroView's existing gate was widened rather than duplicated.
 //
-// Findings kept from the decode, all still true of the bytes:
-//   - The two route-teardown blocks are LONGHAND, not calls. Retail leaves
-//     no call relocation at either. The second one is clear_adventure_route
-//     with bUpdateScreen folded to 0, but that static is DEFINED LATER in
-//     this file, so VC6 cannot inline it here and calling it would emit a
-//     call retail does not have; writing it out is the only faithful form.
+// Decode findings and source corrections:
+//   - DC lines 1310/1369 call HideRoute(1,0,1) and HideRoute(0,1,1).
+//     The canonical ordinary body is defined later in this TU and expands
+//     naturally at both sites. The former claim that later definitions
+//     cannot inline was false; pasted teardown bodies were unnecessary.
 //   - DC separates the header get_map_center (fixed viewport offsets)
 //     from the ordinary get_mouse_map_point (mouse offsets). Both source
 //     call boundaries are restored below; the former overload workaround
@@ -1198,27 +1198,26 @@ type_point advManager::get_mouse_map_point() const
 // branches against retail's 80, with both polarity flips unchanged. The
 // narrower per-iteration output-flag scope below is the retail-byte winner;
 // DC local scopes are name/type evidence, not x86 allocation evidence.
-// The route walk is a GOTO LOOP, not a `for` (88.5537 -> 90.2547). Retail's
-// back edge is `dec / mov [ebp-0x10],edi / js <done>` followed by an
-// UNCONDITIONAL jump to the head; a `for (i = n-1; i >= 0; i--)` gives the
-// rotated single `jns <head>` instead, and the two `continue` arms become
-// `goto route_walk_next`. Left at that spelling: VC6 still PEELS the head
-// into the back edge (29 instructions duplicated where retail emits
-// `mov eax,[gpSearchArray] / jmp <head>`), which is why the block count is
-// 122 against retail's 121. Dropping the `if (i < 0)` guard removes that
-// surplus block and takes the skeleton to 121/121 with 96 exact blocks, but
-// the ratchet number falls to 89.9938 - measured both ways, the guard
-// stays.
-// 2026-09-05: 90.2547 -> 94.2359 by UNPEELING that head. `route_walk_step:`
-// had both a fall-in predecessor (the `if (i < 0)` guard falling through)
-// and a backward `goto route_walk_step`, which is exactly the shape VC6
-// peels; wrapping the body in `while (1)` and leaving `route_walk_next:` at
-// the END of the loop as a forward-only continue point keeps the guard AND
-// gives 121/121 blocks with retail's unconditional back edge. calls now
-// AGREE 81 = 81 and only ONE polarity flip is left tree-wide in this body
-// (#15, the BuildPath budget select below). Same lever as wingraph's DDBlit
-// and cmbtmgr's place_obstacle.
+// Earlier loop controls measured 88.5537 -> 90.2547 with an explicit
+// decrement and unconditional back edge instead of a conventional for-test.
+// The earlier goto-only model still peeled 29 instructions into the back
+// edge; an enclosing while(1) removed that duplication (90.2547 -> 94.2359
+// in that older implementation). These observations support the explicit
+// decrement and loop scope, not a requirement for goto. The current audit
+// below removes all remaining exits and forward-continue labels, retaining
+// the initial empty-path guard and the same body decrement.
+// Restoring both HideRoute sites plus the IsFlying/CanWalkOnWater mode
+// helpers improves the current caller from 83.3621% to 84.9679%, without TU
+// collateral. Complete's explicit CanLand checks remain after the mode
+// queries. Restoring just one mode site can lose 0.0288 points; the complete
+// source-boundary combination is the reproduced winner.
 // Before normalization (locals): trigger_point, bNoMove, bFoughtBattle.
+// Goto audit: a positive initial guard and nested breaks remove seven route
+// jumps without changing any TU score. DC 1349..1357 sets bBreak, exits the
+// event loop, then tests it to exit the route loop; interrupted carries it.
+// Rotating the decrement into a guarded do/while loses 3.3322 points, so the
+// decrement stays in the body. Positive landing scopes remove the other two
+// jumps, preserving the same bytes with either nested or compound guards.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 {
@@ -1262,15 +1261,9 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
             else
                 standingOn = map->cell(cellPoint.m_x, cellPoint.m_y,
                                        cellPoint.m_z);
-            // Artifact ids 0x48 and 0x5a are spelled as literals for the
-            // reason findpath's GetTerrainCost records: armygrp.h's
-            // EArtifactId rides in initialize.cpp's measured include
-            // closure. heroSamples[10] is the row past the nine terrain
-            // walk samples - the flight/water-walk sample.
+            // The row past the nine terrain samples is the flight sample.
             sample* walkSample = m_heroSamples[standingOn->m_groundSet];
-            if (!(currHero->m_flags & 0x40000)
-                && (currHero->m_flightLevel != -1
-                    || currHero->isWieldingArtifact(0x48)))
+            if (currHero->isFlying(0))
                 walkSample = m_heroSamples[10];
             walkSample->m_memSample.m_memLooping = 0;
             g_unnamed6968e0 = g_soundManager->memorySample(walkSample);
@@ -1283,12 +1276,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         }
 
         int moveBudget;
-        if ((!(currHero->m_flags & 0x40000)
-             && (currHero->m_flightLevel != -1
-                 || currHero->isWieldingArtifact(0x48)))
-            || (!(currHero->m_flags & 0x40000)
-                && (currHero->m_waterWalkLevel != -1
-                    || currHero->isWieldingArtifact(0x5a))))
+        if ((currHero->isFlying(0))
+            || (currHero->canWalkOnWater(0)))
             moveBudget = currHero->m_movePoints;
         else
             moveBudget = 0xea5f;
@@ -1305,18 +1294,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         if (g_unnamed698774 || savedShowRoute) {
             showRoute(1, 0, 1);
         } else if (m_showRoute && m_advCommand != ADV_COMMAND_WALK_ROUTE) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_unnamed6989c8 && g_unnamed69ccd4)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(0);
-                    this->updateScreen(0, 0);
-                }
-            }
+            hideRoute(1, 0, 1);
         }
 
         g_mouseManager->hidePointer();
@@ -1324,78 +1302,55 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
         unsigned char interrupted = 0;
         int i = g_searchArray->m_result.size() - 1;
-        if (i < 0)
-            goto route_walk_done;
-        while (1) {
-            {
-                int noMove;
-                int foughtBattle;
-                eventCell = moveHero(g_searchArray->m_result[i]->m_direction,
-                                     i == 0, triggerPoint, &noMove, 0,
-                                     &foughtBattle, 0);
-                m_advWindow->updateHeroLocator(-1, 1, 1);
-                if (eventCell)
-                    goto route_walk_done;
-                if (noMove)
-                    goto route_walk_done;
-                if (foughtBattle)
-                    goto route_walk_done;
-                if (g_unnamed69777c)
-                    goto route_walk_done;
+        if (i >= 0) {
+            while (1) {
+                {
+                    int noMove;
+                    int foughtBattle;
+                    eventCell = moveHero(g_searchArray->m_result[i]->m_direction,
+                                         i == 0, triggerPoint, &noMove, 0,
+                                         &foughtBattle, 0);
+                    m_advWindow->updateHeroLocator(-1, 1, 1);
+                    if (eventCell)
+                        break;
+                    if (noMove)
+                        break;
+                    if (foughtBattle)
+                        break;
+                    if (g_unnamed69777c)
+                        break;
 
-                if (!(currHero->m_flags & 0x40000)
-                    && (currHero->m_flightLevel != -1
-                        || currHero->isWieldingArtifact(0x48))
-                    && !currHero->canLand())
-                    goto route_walk_next;
-                if (!(currHero->m_flags & 0x40000)
-                    && (currHero->m_waterWalkLevel != -1
-                        || currHero->isWieldingArtifact(0x5a))
-                    && !currHero->canLand())
-                    goto route_walk_next;
-
-                process1WindowsMessage();
-                message msg = g_inputManager->getEvent();
-                while (msg.m_id) {
-                    if (msg.m_id == MESSAGE_KEY_DOWN
-                        || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
-                        || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
-                        || msg.m_id == MESSAGE_WIDGET) {
-                        interrupted = 1;
-                        stopCursor(1);
-                        goto route_walk_done;
+                    if (!(currHero->isFlying(0)
+                        && !currHero->canLand())
+                        && !(currHero->canWalkOnWater(0)
+                        && !currHero->canLand())) {
+                        process1WindowsMessage();
+                        message msg = g_inputManager->getEvent();
+                        while (msg.m_id) {
+                            if (msg.m_id == MESSAGE_KEY_DOWN
+                                || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                                || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
+                                || msg.m_id == MESSAGE_WIDGET) {
+                                interrupted = 1;
+                                stopCursor(1);
+                                break;
+                            }
+                            process1WindowsMessage();
+                            msg = g_inputManager->getEvent();
+                        }
+                        if (interrupted)
+                            break;
                     }
-                    process1WindowsMessage();
-                    msg = g_inputManager->getEvent();
                 }
+                if (--i < 0)
+                    break;
             }
-        route_walk_next:
-            if (--i < 0)
-                goto route_walk_done;
         }
-
-    route_walk_done:
         m_seedingValid = 0;
         if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
              && currHero->m_y == currHero->m_pathTargetY)
             || (interrupted && !g_unnamed698774) || eventCell) {
-            // clear_adventure_route(this, 0), written out: that static is
-            // defined further down this file, so VC6 cannot inline it here.
-            if (g_currentPlayer->isLocalHuman()
-                || (g_unnamed6989c8 && g_unnamed69ccd4)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                int heroId = g_currentPlayer->m_currHeroId;
-                if (heroId != -1) {
-                    hero* pathHero = &g_game->m_heroes[heroId];
-                    pathHero->m_pathTargetX = -1;
-                    pathHero->m_pathTargetY = -1;
-                }
-                if (m_showRoute)
-                    m_showRoute = 0;
-            }
+            hideRoute(0, 1, 1);
         } else if (m_advCommand == ADV_COMMAND_WALK_ROUTE || g_unnamed698774) {
             showRoute(0, 1, 1);
         }
@@ -4179,10 +4134,15 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 // The ninth GetMapExtra bit is the monster-occupancy plane. On a trigger
 // square, the first byte of the canonical 16-byte object-traits row says
 // whether the underlying object blocks landing.
-#pragma auto_inline(off)
+// DC 4531..4532 has no line rows before the cell use. A non-null input
+// verification is a source hypothesis, not recovered ASSERT text. It removes
+// the auto-inline override while preserving all TU section bytes and 4105
+// relocation destinations. Negative control: omit it and getNormalCursor
+// expands in processHover (91.6263 -> 63.9466); its own body stays exact.
 VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
+    HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
             || !g_adventureObjectLandBlocked[currCell->m_type][0])) {
@@ -4203,7 +4163,6 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     }
     return ADV_WALK_POINTER;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
@@ -5199,12 +5158,12 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5232,12 +5191,12 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -6339,6 +6298,13 @@ NewmapCell* advManager::getCell(int x, int y, int z)
 // DemobilizeCurrHero.
 DATA(0x006aac3c) extern int g_unnamed6aac3c;
 
+// DC 7027..7029 proves the validity test and both public map-wrapper calls.
+// This ordinary definition stays exact and now also serves the boat twins
+// and ground drawing. In the boat calls, retaining getLocation as a value
+// return is material: reconstructing its coordinates at the site is 90.8714%
+// instead of 100%. The getBoat accessor alone is byte-flat. No helper body
+// is pasted into those callers, and their old DrawBoat/DrawGroundCell copies
+// are gone. Hero/underlay's remaining copy is documented at drawHeroPart.
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::getCell(type_point point)
 {
@@ -8072,8 +8038,10 @@ long aiApproximateStrength(const hero* currentHero);
 // INSIDE its scope. Closing the point's block around the IsInIdentifyRange
 // call - landing the answer in `inIdentifyRange` - makes the two blocks
 // siblings, the slot is reused, and the frame becomes retail's exactly.
-// (The earlier note's rejected goto restructure at 77.47 was collapsing the
-// flow shape; the scope close alone keeps the flow and pays the whole delta.)
+// A showDetails flag now records which constructor arm was selected; it
+// removes the goto while preserving all 713 bytes and these sibling scopes.
+// Do not use a null window pointer as that flag: allocation failure would
+// then spuriously attempt the second construction.
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
@@ -8092,6 +8060,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     g_game->getLocalPlayerGamePos();
 
     TQuickCreatureWindow* window;
+    bool showDetails = false;
     hero* currHero = g_game->getHero(localPlayer->m_currHeroId);
     if (currHero) {
         unsigned char inIdentifyRange;
@@ -8129,13 +8098,14 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             int cost = g_creatureTypeTraits[type].m_cost[6] * count;
             window = new TQuickCreatureWindow(
                 TQuickCreatureWindow::ViewAll, type, count, mood, cost);
-            goto wait_and_close;
+            showDetails = true;
         }
     }
-    window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
-                                      count, TQuickCreatureWindow::Flee, 0);
+    if (!showDetails) {
+        window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
+                                          count, TQuickCreatureWindow::Flee, 0);
 
-wait_and_close:
+    }
     window->m_x = limit(window->m_width / 2, cellx * 32,
                       WINDOW_SCREEN_WIDTH - 1 - window->m_width / 2)
                 - window->m_width / 2;
@@ -11623,4 +11593,3 @@ VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 // are identical, so /OPT:ICF left one row for both names; advmgr.obj emits
 // the logic_error spelling, which is the one claimed here.
 VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)
-

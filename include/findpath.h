@@ -303,13 +303,15 @@ public:
     // Before normalization (function): searchArray::mark_teleport.
     // Before normalization (locals): current_army, current_group.
     void markTeleport(const army* currentArmy, long currentGroup);
-    // Ordinary cpp helper at DC findpath.cpp:1172; MarkTeleport and
-    // CheckEnemyArmies share it. Retail expands it into both callers.
+private:
+    // DC publics prove ordinary private methods returning bool/void/bool.
+    // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.
+    // Before normalization (function): searchArray::build_combat_path.
+    bool buildCombatPath(const army* currentArmy, int startHex,
+                         int endHex, int destination);
     // Before normalization (function): searchArray::mark_enemy.
     void markEnemy(long hex, long cost);
-    // Original: searchArray::build_combat_path; findpath.cpp:1136.
-    unsigned char buildCombatPath(const army* currentArmy, int startHex,
-                                  int endHex, int destination);
+public:
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
@@ -329,14 +331,14 @@ public:
         return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
                          * g_mapWidth + point.m_x];
     }
-    // DC findpath.cpp:1187. Retail inlines it at both of FindCombatPath's
-    // call sites and carries no distinct body; the range check the
-    // second site needs is spelled at that site, because the first
-    // site's hex is already proven in range by the direction loop.
+    // DC findpath.cpp:1187. ValidHex belongs to the ordinary helper;
+    // retail eliminates it at the first, already-checked caller site.
     // Before normalization (function): searchArray::check_enemy_armies.
     // Before normalization (locals): current_group.
-    unsigned char checkEnemyArmies(long hex, long cost, long currentGroup,
-                                     long destination);
+private:
+    bool checkEnemyArmies(long hex, long cost, long currentGroup,
+                          long destination);
+public:
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     // Before normalization (function): searchArray::lower_door.
     void lowerDoor();

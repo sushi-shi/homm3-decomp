@@ -327,14 +327,16 @@ static int checkMem();
 // probe, the video and sound archives, the click sample and the process
 // variable reset.  Complete adds the object-type loader before
 // AI_initialize and expands both LoadGameData and InitVars in place.
-// Residual (94.25%): three branches more than retail, spread over the
-// LoadGameData expansion rather than concentrated - the call stream
-// itself agrees positionally at all 81 sites (47 of the pairings are
-// reloc-name-only, 41 against still-unclaimed retail labels and six
-// against `bool` spellings of the same declarator). Tried and rejected:
-// writing the two .smk scans as goto loops with the unconditional back
-// edge retail emits - byte-flat to the digit, so the surplus is not the
-// loop rotation.
+// Residual (99.5994%): two explicit head-tested while(1) scans remove
+// four control labels and improve the 95.3801% goto version. The older
+// claim that an unconditional retail back edge proved source goto was
+// too strong. A conventional for-test or a fully structured found flag
+// scores 94.2515%; retain the two exits that skip the fallback scan.
+// The remaining retail guard is an unconditional jump over the CD scans;
+// the current source retains its meaningful g_cdDriveNumber predicate.
+// The other differences exchange the 5/6 assignment blocks and one InitVars
+// store. The named InitLogFile mismatch resolves to the shared bare-ret
+// body represented by textWidget::dim at 0x5bc690, not a different action.
 VA(0x004ed650, 0x4E8)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
 int earlySetup()
 {
@@ -378,34 +380,28 @@ int earlySetup()
     if (g_cdDriveNumber) {
         int i;
 
-        // Retail scans both header tables with a GOTO loop: the count is
-        // re-read at the head (`cmp edi,[gVideoHeaderCount] / jge`) and the
-        // back edge is an unconditional `jmp`, with no rotation and no LICM
-        // hoist of the count - the shape a `for` cannot produce here.
         i = 0;
-    check_expansion_two:
-        if (i >= g_videoHeaderCount)
-            goto scan_expansion_one;
-        if (!_strcmpi(g_videoHeader3[i].m_name,
-                      DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                          "h3x2_rne1.smk")))
-            goto have_cd_version;
-        i++;
-        goto check_expansion_two;
-    scan_expansion_one:
-        i = 0;
-    check_expansion_one:
-        if (i >= g_videoHeaderCount)
-            goto no_expansion;
-        if (!_strcmpi(g_videoHeader3[i].m_name,
-                      DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                          "h3abab1.smk"))) {
-            g_cdDriveNumber = 6;
-            goto have_cd_version;
+        while (1) {
+            if (i >= g_videoHeaderCount)
+                break;
+            if (!_strcmpi(g_videoHeader3[i].m_name,
+                          DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
+                              "h3x2_rne1.smk")))
+                goto have_cd_version;
+            i++;
         }
-        i++;
-        goto check_expansion_one;
-    no_expansion:
+        i = 0;
+        while (1) {
+            if (i >= g_videoHeaderCount)
+                break;
+            if (!_strcmpi(g_videoHeader3[i].m_name,
+                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                              "h3abab1.smk"))) {
+                g_cdDriveNumber = 6;
+                goto have_cd_version;
+            }
+            i++;
+        }
         g_cdDriveNumber = 5;
     }
 
@@ -1077,6 +1073,14 @@ inline void showCredits()
 // to 84.3222% but contradicted their retained retail bodies; those diagnostic
 // pins were rejected. The two campaign-end calls are now present, so the
 // former missing-call diagnosis and wrapper-admission advice were stale.
+// Structured completion/cancel exits raise 77.4155% to 78.4499% and remove
+// two gotos. campaignScored preserves the already-scored map's shared end
+// action and resets on every runGame reentry. A cancelled campaign picker
+// breaks its own loop; only a non-cancelled selection starts the next game.
+// Bool and unsigned-char completion results reproduce the same winner; int
+// changes the caller's layout. An explicit replay loop with playGame and
+// backToMenu results falls to 59.9903--60.0568%, so the two restart edges
+// remain. All nested campaign-window lifetimes and ordinary helpers stay.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1395,8 +1399,10 @@ int oldmain()
         g_gameSelectBack = 0;
         videoClose();
 
+        bool campaignScored = 0;
         if (!unused) {
         runGame:
+            campaignScored = 0;
             g_windowManager->m_colorCyclingOn = 1;
             computeAdvNetControl();
             g_unnamed699558 = 1;
@@ -1409,48 +1415,48 @@ int oldmain()
                 showProgressBar();
                 g_defeatedAllPlayers = g_gameResultCampaignMapScored;
                 unloadProgressBar();
-                goto endOfGameBody;
+                campaignScored = 1;
+            } else {
+
+                if (g_executive->addManager(g_advManager, -1))
+                    shutDown((*g_generalText)[1]);
+                unloadProgressBar();
+
+                if (g_videoPaused) {
+                    waitForReadyToPlayMsg();
+                    g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
+                    CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
+                    transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
+                }
+
+                if (command == TMainMenu::NEW_GAME_ID
+                    || command == TMainMenu::RESTART_ID
+                    || g_unnamed699584) {
+                    g_unnamed699584 = 0;
+                    launchSample(
+                        DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
+                                     "newday.wav"),
+                        30000, 3);
+                    g_game->checkForTimeEvent();
+                    g_game->checkForTownEvent();
+                }
+
+                g_turnDuration69d630.start();
+                g_executive->mainLoop();
+                g_soundManager->m_playSounds = 1;
+                g_unnamed691209 = 0;
+                g_soundManager->stopAllSamples(1);
+                g_executive->removeManager(g_advManager);
+                g_windowManager->fadeScreen(1, 4, false);
+
+                if (g_gameCommand != TMainMenu::RESTART_ID)
+                    remoteCleanup();
+                if (g_dPlayReady)
+                    unused = 1;
             }
-
-            if (g_executive->addManager(g_advManager, -1))
-                shutDown((*g_generalText)[1]);
-            unloadProgressBar();
-
-            if (g_videoPaused) {
-                waitForReadyToPlayMsg();
-                g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
-                CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
-                transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
-            }
-
-            if (command == TMainMenu::NEW_GAME_ID
-                || command == TMainMenu::RESTART_ID
-                || g_unnamed699584) {
-                g_unnamed699584 = 0;
-                launchSample(
-                    DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
-                                 "newday.wav"),
-                    30000, 3);
-                g_game->checkForTimeEvent();
-                g_game->checkForTownEvent();
-            }
-
-            g_turnDuration69d630.start();
-            g_executive->mainLoop();
-            g_soundManager->m_playSounds = 1;
-            g_unnamed691209 = 0;
-            g_soundManager->stopAllSamples(1);
-            g_executive->removeManager(g_advManager);
-            g_windowManager->fadeScreen(1, 4, false);
-
-            if (g_gameCommand != TMainMenu::RESTART_ID)
-                remoteCleanup();
-            if (g_dPlayReady)
-                unused = 1;
         }
 
-        if (g_gameOver) {
-        endOfGameBody:
+        if (campaignScored || g_gameOver) {
             remoteCleanup();
             g_completeDrawEnabled = 1;
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -1516,7 +1522,7 @@ int oldmain()
                             videoPause();
                             if (g_windowManager->m_dialogReturn
                                 == DIALOG_RETURN_CANCEL)
-                                goto endOfGame;
+                                break;
                             {
                                 TCampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.doModal();
@@ -1525,9 +1531,12 @@ int oldmain()
                                 != DIALOG_RETURN_CANCEL)
                                 break;
                         }
-                        g_gameOver = 0;
-                        g_unnamed699584 = 1;
-                        goto runGame;
+                        if (g_windowManager->m_dialogReturn
+                            != DIALOG_RETURN_CANCEL) {
+                            g_gameOver = 0;
+                            g_unnamed699584 = 1;
+                            goto runGame;
+                        }
                     }
                 } else if (g_defeatedAllPlayers
                                == g_gameResultCampaignMapScored
@@ -1575,7 +1584,6 @@ int oldmain()
                         0, 1);
             }
 
-        endOfGame:
             g_gameOver = 0;
             if (g_showHighScore) {
                 g_showHighScore = 0;
@@ -2365,24 +2373,22 @@ unsigned char type_normal_dialog_frame::handleClick(unsigned char downClick,
 // answers with the remembered choice rather than with its own id.  Every
 // answering path rewrites the message into the forwarded shape and
 // disarms the deadline.
-// Residual (82.08%): blocks 20 = 20, branch view clean, and the ONLY
-// remaining difference is one constant-allocation decision - retail
-// keeps the ten in EDI (saved at entry) and spends it on the switch
-// range bound, on both NORMAL_DIALOG_CHOOSE_OPTIONAL compares and on
-// the two message stores, where our compile uses immediates and gives
-// EDI a lifetime that ends inside the deadline arm. Tried and rejected:
-// the chained `codeX = codeY = 10` store (byte-flat).
-// The +32.6 that got here was the switch shape: retail FALLS THROUGH
-// from the OK arm into the plain-reply group (jump-table entry 0 is
-// that arm's own tail), and the two picture-choice arms come first in
-// source order.
+// Residual (99.3701%): write each answer's message/deadline stores and
+// return at that answer. This removes three joins and improves 91.7323%;
+// a shared forwardAnswer flag also removes them but stays at 91.7323%.
+// DC 0xe206c supports the answer paths, radio-button order and stores.
+// Retail falls through from a non-choice OK arm into the plain replies.
+// Keep codeY before codeX; the older chained-store probe was byte-flat.
 VA(0x004f0fc0, 0x1C3)  // decorated identity (kb.h) + dialog-global shape, dc 0xe206c
 int eventWindowHandler(message* msg)
 {
     if (g_dialogDeadline697784 && GameTime::isPast(g_dialogDeadline697784)) {
         msg->m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_TIMEOUT;
-        goto forward_answer;
+        msg->m_codeY = 10;
+        msg->m_codeX = 10;
+        g_dialogDeadline697784 = 0;
+        return MESSAGE_DISPATCH_FORWARD;
     }
     if (msg->m_id == MESSAGE_WIDGET
         && msg->m_codeX == widget::WIDGET_DESELECT) {
@@ -2421,7 +2427,10 @@ int eventWindowHandler(message* msg)
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 g_windowManager->m_dialogReturn = g_normalDialogSelection;
-                goto forward_answer;
+                msg->m_codeY = 10;
+                msg->m_codeX = 10;
+                g_dialogDeadline697784 = 0;
+                return MESSAGE_DISPATCH_FORWARD;
             }
             // fall through
         case DIALOG_RETURN_CLOSE:
@@ -2429,16 +2438,13 @@ int eventWindowHandler(message* msg)
         case DIALOG_RETURN_ACCEPT:
         case DIALOG_RETURN_DECLINE:
             g_windowManager->m_dialogReturn = msg->m_codeY;
-            goto forward_answer;
+            msg->m_codeY = 10;
+            msg->m_codeX = 10;
+            g_dialogDeadline697784 = 0;
+            return MESSAGE_DISPATCH_FORWARD;
         }
     }
     return MESSAGE_DISPATCH_CONSUME;
-
-forward_answer:
-    msg->m_codeY = 10;
-    msg->m_codeX = 10;
-    g_dialogDeadline697784 = 0;
-    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\kb.cpp:2630, promoted from DC_ONLY on body evidence. FIVE BYTES
@@ -2629,22 +2635,18 @@ inline void sendPlayerLost()
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
 // Complete-only victory kinds plus three campaign-specific artifact texts.
-// Residual (94.9521%, polish-45 - first full evidence pass on this row):
-// the source order and every statement are already retail's; what differs is
-// where C2 PARKS the cross-jumped tail that all ten standard victory arms
-// share (`if (!remoteCheck) SendPlayerWon(); NormalDialog(gText,1,-1,...);
-// break;`).  Both sides merge the same set and both emit exactly two
-// (TransmitRemoteData, NormalDialog) pairs; retail keeps the ARTIFACT arm's
-// copy in place at fn+0x123/+0x150 and lets the later arms jump back to it,
-// while this compile keeps a late arm's copy at +0x108b/+0x10b8 and makes the
-// artifact arm jump forward.  That single displacement is the 2 base-only /
-// 2 target-only call rows, and it drags the artifact block group with it:
-// retail falls straight from `campaignText = (*gpGeneralText)[714]` into the
-// inline strcpy and places `other_campaign_artifacts` after the whole tail,
-// where this compile emits `jmp` over the campaign chain to reach the strcpy.
-// 55 of 57 calls, 123/123 branches and 237/237 blocks otherwise agree.  This
-// is the merged-block representative class townmgr's TTavernWindow::
-// SetRolloverText documents; no source spelling was found that moves it.
+// Residual (97.3784%): the Complete campaign artifact cases each write
+// their own string, followed by the ordinary victory announcement/dialog
+// tail. This removes five control-flow labels and improves 94.9521%.
+// DC supplies the base artifact/ordinary-victory scopes and common tail;
+// PC retail adds the 714/764/738 campaign texts. The old merged-block
+// representative diagnosis did not exhaust structured source forms.
+// A campaign text ID selector scores 95.1482%; a pointer plus explicit
+// found flag stays at 94.9521%. Do not test the text pointer itself as a
+// success flag: that would change behavior if a text lookup returns null.
+// The remaining call-stream displacement is the shared TransmitRemoteData/
+// NormalDialog pair, still emitted twice on both sides. The apparent extra
+// self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // Before normalization (locals): VictoryCondition, bGameWon, bGameLost, sNames.
 VA(0x004f15e0, 0x1348)  // linkorder + anchor-string/callee, dc 0xe29a8
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
@@ -2655,8 +2657,6 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
     switch (victoryCondition.m_type) {
     case VICTORY_CONDITION_ARTIFACT:
         if (victoryCondition.m_gameWon) {
-            const char* campaignText;
-
             if (g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
                                    victoryCondition.m_playerWinner)) {
                 gameWon = 1;
@@ -2664,68 +2664,55 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 gameLost = 1;
             }
 
-            if (!g_unk69774c)
-                goto normal_artifact_message;
-            if (g_game->m_campaign.m_currentCampaign != GAME_CAMPAIGN_7
-                || g_game->m_campaign.m_currentMap != GAME_SCENARIO_1)
-                goto other_campaign_artifacts;
-
-            campaignText = (*g_generalText)[714];
-
-campaign_artifact_message:
-            strcpy(g_text, campaignText);
-
-artifact_message_ready:
-            if (!remoteCheck)
-                sendPlayerWon();
-            normalDialog(g_text, 1, -1, -1, -1, 0,
-                         -1, 0, -1, 0, -1, 0);
-            break;
-
-other_campaign_artifacts:
-            if (g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
+            if (g_unk69774c
+                && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_7
+                && g_game->m_campaign.m_currentMap == GAME_SCENARIO_1) {
+                strcpy(g_text, (*g_generalText)[714]);
+            } else if (g_unk69774c
+                && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_8) {
-                campaignText = (*g_generalText)[764];
-                goto campaign_artifact_message;
-            }
-            if (g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
+                strcpy(g_text, (*g_generalText)[764]);
+            } else if (g_unk69774c
+                && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_9) {
-                campaignText = (*g_generalText)[738];
-                goto campaign_artifact_message;
-            }
-
-normal_artifact_message:
-            if (gameWon) {
-                if (remoteCheck) {
-                    sprintf(g_text, (*g_generalText)[638],
-                            g_game->getPlayerName(
-                                victoryCondition.m_playerWinner),
-                            g_artifactTraits[
-                                victoryCondition.m_artifactNum].m_name);
-                } else {
-                    sprintf(g_text, (*g_generalText)[281],
-                            g_artifactTraits[
-                                victoryCondition.m_artifactNum].m_name);
-                }
+                strcpy(g_text, (*g_generalText)[738]);
             } else {
-                if (remoteCheck) {
-                    if (getTeamNames(victoryCondition.m_playerWinner,
-                                     names)) {
-                        sprintf(g_text, (*g_generalText)[633], names,
+                if (gameWon) {
+                    if (remoteCheck) {
+                        sprintf(g_text, (*g_generalText)[638],
+                                g_game->getPlayerName(
+                                    victoryCondition.m_playerWinner),
                                 g_artifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     } else {
-                        sprintf(g_text, (*g_generalText)[632], names,
+                        sprintf(g_text, (*g_generalText)[281],
                                 g_artifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     }
                 } else {
-                    sprintf(g_text, (*g_generalText)[282],
-                            g_artifactTraits[
-                                victoryCondition.m_artifactNum].m_name);
+                    if (remoteCheck) {
+                        if (getTeamNames(victoryCondition.m_playerWinner,
+                                         names)) {
+                            sprintf(g_text, (*g_generalText)[633], names,
+                                    g_artifactTraits[
+                                        victoryCondition.m_artifactNum].m_name);
+                        } else {
+                            sprintf(g_text, (*g_generalText)[632], names,
+                                    g_artifactTraits[
+                                        victoryCondition.m_artifactNum].m_name);
+                        }
+                    } else {
+                        sprintf(g_text, (*g_generalText)[282],
+                                g_artifactTraits[
+                                    victoryCondition.m_artifactNum].m_name);
+                    }
                 }
             }
-            goto artifact_message_ready;
+            if (!remoteCheck)
+                sendPlayerWon();
+            normalDialog(g_text, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+
         }
         break;
 

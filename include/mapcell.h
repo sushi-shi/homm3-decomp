@@ -1453,7 +1453,6 @@ extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 // CODEVIEW(E:\gamedcs\mapcell.cpp:2951, dc 0xf0df4) int NewfullMap::readHeroData(void* infile, CObject* heroObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3229, dc 0xf151c) int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3290, dc 0xf16c8) int NewfullMap::readObject(void* infile, CObject* tempObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3443, dc 0xf1b1c) int NewfullMap::saveObject(void* outfile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3476, dc 0xf1bf8) int NewfullMap::loadObject(void* infile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3514, dc 0xf1cd8) int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3658, dc 0xf22cc) int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType);
@@ -2059,6 +2058,7 @@ public:
     int getNumLevels();
 private:
     const NewmapCell* zCell(int x, int y, int z) const;
+    NewmapCell* zCell(int x, int y, int z);
 public:
     const NewmapCell* cell(int x, int y, int z) const;
     NewmapCell* cell(int x, int y, int z);
@@ -2101,7 +2101,8 @@ public:
     void loadShipyards();
     void init(int size, unsigned char twoLayers);
     int loadObject(TAbstractFile* infile, CObject* object);
-    int saveObject(TAbstractFile* outfile, CObject* object);
+    // DC mapcell.cpp:3449, f1b1c: the serialized object is a reference.
+    int saveObject(TAbstractFile* outfile, CObject& tempObject);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
     int readObjectType(TAbstractFile* infile, CObjectType* objectType);
     int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
@@ -2243,6 +2244,12 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
+// Original: NewfullMap::zCell; MapCell.h:850, mutable overload.
+inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
+{
+    return m_cellData + x + y * m_size + z * m_size * m_size;
+}
+
 // Original: NewfullMap::cell; MapCell.h:889, dc 0xbc930.
 inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 {
@@ -2253,8 +2260,7 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 //
 // cell(type_point) has NO retail body - the DC row at dc 0x1f9f4 is the
 // WinCE build's out-of-line copy of a header inline - so it is a header
-// inline for EVERY compiland and its expansion leaves behind the call
-// to the three-scalar form.
+// inline for EVERY compiland. DC line 907 calls zCell directly.
 //
 // cell(int,int,int) is a header inline too, and MEASURED so: modelling
 // it as a declaration-only member with one out-of-line definition -
@@ -2271,12 +2277,21 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    return &m_cellData[(z * m_size + y) * m_size + x];
+    // DC 896 has no row before zCell at 897. This real storage
+    // precondition is a release-verification hypothesis, not ASSERT text.
+    // It retains cell's exact 0x408770 copy for advmgr callers without
+    // the old auto-inline pin. Negative control: remove it and only
+    // zCell emits the 49-byte body; the claimed cell copy disappears.
+    // Wider coordinate/initialized-map checks also retain the copy but
+    // change more caller expansions. Caller collateral is tracked at
+    // the 0x408770 claim; the helper and source calls stay canonical.
+    HOMM3_RELEASE_VERIFY(m_cellData != 0);
+    return zCell(x, y, z);
 }
 
 inline NewmapCell* NewfullMap::cell(type_point point)
 {
-    return cell(point.m_x, point.m_y, point.m_z);
+    return zCell(point.m_x, point.m_y, point.m_z);
 }
 
 // The five further MapCell.h accessors the tomb and witch-hut

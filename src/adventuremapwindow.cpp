@@ -950,6 +950,11 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 // then GetTown statement order, but let the town case labels branch forward
 // to the later town body. VC6 consequently emits retail's town-first switch
 // target layout while preserving the attested source hierarchy and calls.
+// Structured hover controls: placing town cases at their shared body loses
+// 29.7528 points; replacing the locator jump with five explicit case labels
+// loses 5.6910; a shared generic-help flag loses 5.5056. Their combinations
+// also lose. Keep the exact caller while recovering the original dispatch
+// scopes; these scores do not establish that the joins were source gotos.
 VA(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::processHover(int hx, int hy)
 {

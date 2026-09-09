@@ -5068,7 +5068,7 @@ void townManager::doPortalOfSummoning()
 // The stack record it fills holds 14, 15, 16, 17 - Fire, Air, Water and
 // Earth Magic, exactly the four schools the Conflux building teaches -
 // and it fills it with the same four dword stores that retail's
-// out-of-line `type_university` default constructor at 0x5d2d80 makes
+// out-of-line Conflux skill initializer at 0x5d2d80 makes
 // (`mov eax,ecx`, four stores, bare `ret`), expanded inline here. It
 // hands that record's ADDRESS to 0x5ef500, whose compiland is the one
 // that owns "univers1.pcx" and whose only other caller in the whole
@@ -5107,6 +5107,8 @@ void townManager::doPortalOfSummoning()
 // (`format_string(...).c_str()`), not a named std::string: the named form
 // spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
+// Combining the extra/special-building custom-text guards removes the goto
+// but lowers 100% to 97.7551%; the current custom-text join is retained.
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
@@ -5157,48 +5159,46 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     return g_infoText;
 }
 
-// The university record's default set, and this compiland owns the body.
+// The Conflux university's four schools, and this compiland owns the body.
 // Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
-// a bare `ret` - a frameless constructor returning `this` - and it sits at
+// a bare `ret`, returning the record address. It sits at
 // 0x5d2d80, inside townmgr.obj's link bracket and immediately ahead of the
 // page below, while its only three call sites in the image are the AI
 // bodies at 0x5253d0 (twice) and 0x52b1e0, whose objects link EARLIER. A
-// header-inline constructor's COMDAT would have been kept from one of
+// header-inline helper's COMDAT would have been kept from one of
 // those; a plain out-of-line member emitted by its own compiland lands
 // exactly here, in source order between GetBuildingInfo and DoUniversity.
 // DoUniversity is its only call site in this TU, so /Ob2 expands it there
 // as well as emitting this copy.
-//
-// Residual on the page below (89.77%): the two sides emit the SAME 164
-// instructions in the SAME order and differ in exactly two coupled ways.
-// Retail CALLS basic_string::_Tidy for the string constructor's `_Tidy()`
-// where our CL expands it to the three storage stores (9 bytes either
-// way, which is why the row sizes still agree) - and BOTH sides inline
-// the destructor's `_Tidy(true)`, so this is a per-site inline share and
-// not a depth or budget cap. The candidate-site count is what this TU is
-// short of: retail's GetBuildingInfo is a townmgr.cpp static with a body
-// and fourteen call sites, ours is a bodiless declaration and so is no
-// candidate at all. Coupled to it, the callee-save binding is permuted -
-// retail takes gpGame/0/this into esi/edi/ebx where we take
-// this/gpGame/0 - and because retail's zero lands in edi it dies at the
-// `repne scasb`, which is exactly why retail's NormalDialog zeros are
-// immediates and ours are `push ebx`.
-// Tried and rejected: default-construct then `operator=` (79.45);
-// uninitialised `hero* townHero;` with an explicit `else townHero = 0`
-// (87.48); naming gpGame in a local ahead of the lookup so its pseudo is
-// created first (87.48); copy-initialising the string (89.77, byte-
-// identical to the direct-init below). `homm3 vc6 why-reg`'s guided
-// search over the B-class catalog moved nothing.
+// The old generic-default-constructor attribution was too broad: DC's
+// type_university is a plain four-enum aggregate, and retail Load passes an
+// uninitialized instance to opaque resize. All three retained calls above
+// are Conflux-only. initializeMagicSkills is a provisional behavioral name;
+// the original helper name/kind is unknown. The pointer-return member keeps
+// the exact thirty-byte body, while a void-return control loses mov eax,ecx
+// and changes all four store operands. No additional class or copied body
+// is needed; explicit Conflux calls preserve their original call/expansion.
 
 VA(0x005d2d80, 0x1E)  // anchor-bracket(between GetBuildingInfo 0x5d2a40 and DoUniversity 0x5d2da0) + body(the four elemental magic schools) + arity(bare ret, thiscall), retail-only
-type_university::type_university()
+type_university* type_university::initializeMagicSkills()
 {
     m_skills[0] = eSecSkillSchoolOfFireMagic;
     m_skills[1] = eSecSkillSchoolOfAirMagic;
     m_skills[2] = eSecSkillSchoolOfWaterMagic;
     m_skills[3] = eSecSkillSchoolOfEarthMagic;
+    return this;
 }
 
+// Residual (93.6951%): a townToView CSE this compile makes and retail does
+// not. Retail keeps this in EBX and re-reads [ebx+0x38] at each use, including
+// universityInfoDialog; we cache the town pointer in EBX. Each source use is
+// still m_townToView, so this is compiler allocation, not an explicit cache.
+// The Conflux initializer ownership correction leaves this entire body flat.
+// Earlier inline-dialog controls, before universityInfoDialog recovery:
+// default string then operator= 79.45%; uninitialized townHero with explicit
+// null else or an earlier gpGame binding 87.48%; copy-initialized string
+// 89.77%, byte-identical to direct initialization. A B-class why-reg search
+// moved nothing. Those historical scores do not describe the current body.
 VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
 void townManager::doUniversity()
 {
@@ -5220,6 +5220,7 @@ void townManager::doUniversity()
                      EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
     } else {
         type_university townUniversity;
+        townUniversity.initializeMagicSkills();
         type_university_window universityWin(townHero, &townUniversity, 1);
         universityWin.doModal(0);
     }
@@ -5244,14 +5245,6 @@ void townManager::doUniversity()
 // written `< 0` first the row sits at 85.42. Both that gate AND
 // game::GetHero's own `== -1` are emitted - two compares against the
 // same id - because they are DIFFERENT comparisons; that is the same
-// [2026-08-21] Residual (93.6951%): a `townToView` CSE this compile makes
-// and retail does not. Retail keeps `this` in EBX and re-reads `[ebx+0x38]`
-// at every use (three times, including the one feeding
-// university_info_dialog); we load it once into EBX and index off that, which
-// transposes ecx/edx/eax through the rest of the body. The source already
-// spells every use as `townToView->...`, so there is no cache to delete -
-// C2 made this one on its own.
-//
 // asymmetry town::HasGarrison shows, and the reverse of
 // handle_hall_click below, where an identical `!= -1` gate folds the
 // accessor's test away.
@@ -5521,7 +5514,17 @@ void townManager::drawTown(int update, int incFrame,
 // blocks below); ChangeTown's roster twin is the town-switch tail the
 // locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
-VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(serviceSounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
+// Eleven copied per-arm popup bodies lower 90.2738% to 73.3704%. DC also
+// directly branches these arms to one shared popup (e.g. lines 6006/6017);
+// no separate helper is evidenced there, so the popup join remains.
+// Building-popup flag control: bool and int flags remove all eleven joins
+// but both score 87.0077% against 90.2738%; eleven copied popup bodies score
+// 73.3704%. DC's arms reach one common popup action, and no distinct helper
+// boundary is evidenced here. Retain the common action pending better scopes.
+// Eight result/lifetime controls include a byte-sized flag and declaration
+// before code selection or at function scope. Every structured flag form
+// emits the same 87.0077% object; changing its width/lifetime does not help.
+VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {
     int exitFlag = 0;
