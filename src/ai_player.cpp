@@ -669,20 +669,21 @@ void type_AI_player::calculateDemand()
 // use the first Marketplace town to gift AI allies before human allies.
 // Negative resources are accumulated into one warning string.
 //
-// Residual (89.5263%): the live semantics and major CFG are present. A
-// scoped inline-depth override now reproduces retail's call to the 230-byte
-// string::append(string, pos, count) instantiation at 0x41b250, while a
-// named format result lets its temporary destructor remain inlined. The
-// warning scan also uses retail's two advancing pointers and seven-count
-// tail loop. The Marketplace scan now spells retail's initial count test and
-// explicit increment/exit/backedge sequence, making 31 of 32 branch flows
-// agree. The last branch is the warning-length gate: spelling it as unsigned
-// `> 0` recovers retail's jbe but perturbs enough allocation to lower the
-// overall score, so the best form keeps the truth test. Other remaining
-// deltas are register allocation across the alliance scans and two warning
-// cursors: this compile merges the cursors into one induction plus a delta,
-// whereas retail keeps both in registers. The player/team checks are the
-// retail inline OnSameTeam form.
+// DC line 439 calls the ordinary purchase_buildings helper, whose own local
+// prohibited_creatures and fill/loop are at 0x31094 (1838..1843). Line 493
+// uses msg += format_string(...), and the warning index is signed short
+// (the loop backedge at 0x2e992 extends the incremented word). Complete
+// expands purchaseBuildings and operator+= but retains append at 0x41b250;
+// it passes the formatter's returned pointer, not a separately named copy.
+// These canonical boundaries and the unsigned-positive length test reproduce
+// the entire function at 100% with no inline override.
+// Negative controls in the 60-state source family: deleting the old append
+// fence alone gives 61.2669%; pasting the purchase body back into the exact
+// source gives 77.0226%. A named format copy gives 98.5038%, an int warning
+// index 90.6917%, and a truth-only length test 99.7744%. No other tracked
+// score changes across all five ai_player.h consumers. See source-families.md
+// for reproduction and actual-body behavioral controls.
+// DC local names: purchaser, checker, msg.
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::endTurn()
 {
@@ -695,18 +696,14 @@ void type_AI_player::endTurn()
             m_reservedFunds[resource] = 0;
     }
 
-    // Before normalization (locals): garrison_purchaser, threat_checker, prohibited_creatures,
-    // town_index, current_town, player_id, human_player_id, warning_amount, warning_name,
-    // warning_count.
-    type_garrison_purchaser garrisonPurchaser(m_team);
-    garrisonPurchaser.checkTowns();
-    type_town_threat_checker threatChecker(m_team);
-    threatChecker.checkTowns();
+    // Before normalization (locals): town_index, current_town, player_id,
+    // human_player_id.
+    type_garrison_purchaser purchaser(m_team);
+    purchaser.checkTowns();
+    type_town_threat_checker checker(m_team);
+    checker.checkTowns();
 
-    unsigned char prohibitedCreatures[145];
-    fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
-    while (purchaseBuilding(prohibitedCreatures)) {
-    }
+    purchaseBuildings();
     hireHeroes();
     calculateDemand();
 
@@ -738,25 +735,17 @@ void type_AI_player::endTurn()
         }
     }
 
-    std::string warning;
-    long* warningAmount = player->m_resources;
-    const char** warningName = g_resourceNames;
-    int warningCount = 7;
-    do {
-        if (*warningAmount < 0) {
-            std::string formatted = formatString(
+    std::string msg;
+    for (short warningResource = 0; warningResource < 7; ++warningResource) {
+        if (player->m_resources[warningResource] < 0) {
+            msg += formatString(
                 g_aiResourceWarningFormat,
-                *warningAmount,
-                *warningName);
-#pragma inline_depth(0)
-            warning.append(formatted, 0, std::string::npos);
-#pragma inline_depth()
+                player->m_resources[warningResource],
+                g_resourceNames[warningResource]);
         }
-        warningAmount++;
-        warningName++;
-    } while (--warningCount);
-    if (warning.length())
-        normalDialog(warning.c_str(), 1, -1, -1, -1, 0, -1, 0,
+    }
+    if (msg.length() > 0)
+        normalDialog(msg.c_str(), 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
 }
 
@@ -2078,15 +2067,21 @@ int maxBuyableCreatures(const long* funds, TCreatureType type, int limit)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1838
+#endif  // @carcass
+
+// E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
+// Ordinary protected purchase_buildings boundary (DC public ...@@IAAXXZ),
+// called by end_turn at DC line 439.
+// Complete expands it in 0x428dd0 and extends the prohibited flag table to 145.
+// Before normalization (local): prohibited_creatures.
 DC_ONLY(0x31094, 0x60)
 void type_AI_player::purchaseBuildings()
 {
-    // @stub
+    unsigned char prohibitedCreatures[145];
+    fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
+    while (purchaseBuilding(prohibitedCreatures)) {
+    }
 }
-
-// E:\gamedcs\ai_player.cpp:1954
-#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1850
 // Retail expands the purchaser ctor, do_swap, both set overloads,
