@@ -4600,7 +4600,7 @@ victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	99.0476	99.0476	99.0476	0x2042a0	c935e3a13
 victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	88.0400	88.0400	88.0400	0x2035c0	a71cbea40ef0
 victor	?victorExtractBits@@YGXPAEPBEHH@Z	74.2400	74.2400	74.2400	0x2047b0	e14362648eb0
 victor	?victorInitializePalette@@YGXPAUimgdes@@@Z	95.1630	95.1630	95.1630	0x2039c0	f8e02ac2ef4a
-victor	?victorInsertBits@@YGXPAEPBEHH@Z	94.4074	94.4074	94.4074	0x204720	557136f8b232
+victor	?victorInsertBits@@YGXPAEPBEHH@Z	94.4444	94.4444	94.4444	0x204720	c79c15e6dc26
 victor	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	85.8333	85.8333	85.8333	0x203ac0	d67245179a0d
 victor	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	92.5688	92.5688	92.5688	0x2043d0	f120f60f74ad
 victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	77.1403	77.1403	77.1403	0x203810	898e3923281d

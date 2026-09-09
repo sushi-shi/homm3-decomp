@@ -138,6 +138,19 @@ family. The two-return families score 51.14%, 55.32%, or 65.50%, so none is
 adopted. This bounds that interaction but does not identify the missing source
 or compilation-context fact.
 
+The insertion helper now reaches 94.4444%. Candidate and retail already had
+the same six CFG blocks, three branches, return, registers, calls and bit
+operations, but the saved mask occupied different dead parameter homes.
+A ten-form declaration/initialization family shows that declaring the signed
+shift before the destination cursor places the mask in retail's dead `offset`
+home and makes the entire prologue and epilogue exact. On that new parent,
+rebased families exhaust seven update/store schedules, eight explicit
+destination-byte lifetimes and twenty signed count-expression trees. They emit
+two, one and one distinct objects respectively and do not improve the peak.
+The only remaining instruction delta is candidate `lea temp,[shift-8]` plus
+`add count,temp` before the shifts versus retail's later single
+`lea count,[count+shift-8]`; every other block is exact.
+
 `flipimage` now lives in the provisional `victor_flip.cpp` grouping. Retail
 calls the bitmap validator twice, the dimension helper once, and the two
 bit-range helpers twice each. Making all those bodies visible in the current
