@@ -438,7 +438,7 @@ ai_tactical	?considerResurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z
 ai_tactical	?considerSacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b1e0	0ae3d0b38849
 ai_tactical	?considerSacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	89.0901	89.0901	89.0901	0x3af50	512d3874c53f
 ai_tactical	?considerSingleEnchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a670	9b4d93ecc960
-ai_tactical	?considerSpell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	98.1927	98.1927	98.1927	0x3bb20	272f5f6f087d
+ai_tactical	?considerSpell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3bb20	1b7ea06928e6
 ai_tactical	?considerTeleport@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	95.5486	95.5486	95.5486	0x3aa60	52c515f38701
 ai_tactical	?findAttackHex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000	100.0000	100.0000	0x36840	361cb14c5113
 ai_tactical	?findEnemyAttacks@type_AI_spellcaster@@QAEXXZ	87.7343	87.7343	87.7343	0x3c040	750c8f799555
@@ -462,7 +462,7 @@ ai_tactical	?getCounterstrokeValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_encha
 ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39c30	5e0d226c61a6
 ai_tactical	?getCurseValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b370	63e8fcc1daec
 ai_tactical	?getDamageSpellValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	4125ac4ebd29
-ai_tactical	?getDamageValue@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	72bf99369cc3
+ai_tactical	?getDamageValue@type_AI_spellcaster@@QBEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	6653612e278c
 ai_tactical	?getDefenseBoostValue@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0	73962de06747
 ai_tactical	?getDefenseSkillValue@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000	100.0000	100.0000	0x38910	f530eceef442
 ai_tactical	?getDiseaseValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10	055bac1c1d43
@@ -480,7 +480,7 @@ ai_tactical	?getFrenzyValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data
 ai_tactical	?getHasteValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0	63bccbf6025c
 ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	84.3750	84.3750	84.3750	0x36180	d12a7267f5fc
 ai_tactical	?getHypnotizeValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a500	8acd7a7d1e1f
-ai_tactical	?getMassDamageEffect@type_AI_spellcaster@@QAEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	2dba7f436098
+ai_tactical	?getMassDamageEffect@type_AI_spellcaster@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	393fadf580bd
 ai_tactical	?getMasteryValue@type_enchant_data@@QAEJXZ	100.0000	100.0000	100.0000	0x36930	a9cf5176efe0
 ai_tactical	?getMirthValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170	88bbc4ced4e5
 ai_tactical	?getMisfortuneValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38f60	36268daa6f86

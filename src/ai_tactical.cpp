@@ -1136,7 +1136,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army* enemy)
 // nowhere yet; their reloc names stay working labels.
 // Before normalization (locals): base_damage, target_hero, creature_cast.
 VA(0x00436e30, 0x125)  // anchor-global, dc 0x3d96c
-long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target)
+long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target) const
 {
     unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
     if ((immune & 1) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1180,7 +1180,8 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // The per-GROUP half of every mass-damage pricer: sum get_damage_value
 // over one side's stacks, walking BACKWARDS. No retail body - the
 // carve cuts nothing between get_damage_spell_value (0x436f60, 69 B)
-// and get_mass_damage_effect (0x436fb0) - so it is `inline`, and its
+// and get_mass_damage_effect (0x436fb0). Keep its ordinary definition;
+// absence of a retained retail body does not prove source inline. Its
 // two PARAMETERS are what let VC6 hoist the group index and the hero
 // out of the loop: consider_spell's mass arm homes them at [ebp+8] and
 // [ebp-0x10] before the walk and strength-reduces the army address
@@ -1188,23 +1189,29 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // out in the caller instead re-reads `this->enemy_side` every
 // iteration and re-derives the whole 1352-byte stride each time, which
 // is what capped consider_spell at 79.84.
-// Before normalization (locals): base_damage, target_hero.
+// DC row 973 forms the army address before row 975's damage call. Giving
+// that address its own target lifetime closes considerSpell 98.1927 -> 100;
+// the 16-state follow-up finds pointer/reference bindings exact, while the
+// inline address and a named damage result remain 98.1927. Mass-result
+// declaration/argument lifetimes do not change either outcome.
+// Before normalization (locals): base_damage, target_hero, value.
 DC_ONLY(0x3dabc, 0x6E)
-inline long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
-                                                        long group, hero* targetHero)
+long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
+                                                        long group, hero* targetHero) const
 {
-    long total = 0;
+    long value = 0;
     long count = g_combatManager->m_numArmies[group];
-    while (count--)
-        total += getDamageValue(spell, baseDamage, targetHero,
-                                  &g_combatManager->m_armies[group][count]);
-    return total;
+    while (count--) {
+        const army* target = &g_combatManager->m_armies[group][count];
+        value += getDamageValue(spell, baseDamage, targetHero, target);
+    }
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:986
 // Before normalization (locals): enemy_damage, friendly_damage, our_total.
 VA(0x00436fb0, 0x8A)  // anchor-global, dc 0x3db2c
-long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDamage)
+long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDamage) const
 {
     if (enemyDamage <= 0)
         return 0;
@@ -1361,24 +1368,26 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice)
 }
 
 // E:\gamedcs\ai_tactical.cpp:1126
-// Retail carries this helper only as an expansion in consider_spell. Ordinary
-// `inline` is rejected by VC6's cost model, so force the source-proven helper
-// boundary while retaining the retail no-body result.
-__forceinline void type_AI_spellcaster::considerMassDamage(
-    type_spell_choice* choice)
+// DC 0x3de90 proves this const/reference helper and both ordered group calls.
+// Retail 0x43bb20 expands it but calls get_mass_damage_effect. Restoring
+// consider_summon's get_mastery_value call (DC 3098/3167) recovers that split
+// without a force-inline declaration or depth pin. The exhaustive 24-state
+// boundary family preserves all five TUs' scores; flattening only that mastery
+// call while leaving the effect unpinned lowers considerSpell 98.1927 ->
+// 80.5073. Ordinary group/mass/summon helpers preserve every old code section.
+void type_AI_spellcaster::considerMassDamage(
+    type_spell_choice& choice) const
 {
     // Before normalization (locals): base_damage, enemy_damage, friendly_damage.
     long baseDamage =
-        g_spellTraits[choice->m_spell].m_powerFactor * choice->m_power
-        + choice->getMasteryValue();
-    long enemyDamage = getGroupDamageValue(choice->m_spell, baseDamage,
+        g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
+        + choice.getMasteryValue();
+    long enemyDamage = getGroupDamageValue(choice.m_spell, baseDamage,
                                                m_enemySide, m_enemyHero);
-    long friendlyDamage = getGroupDamageValue(choice->m_spell, baseDamage,
+    long friendlyDamage = getGroupDamageValue(choice.m_spell, baseDamage,
                                                   m_side, m_ourHero);
-#pragma inline_depth(0)
-    choice->m_value = getMassDamageEffect(enemyDamage, friendlyDamage);
-#pragma inline_depth()
-    choice->m_castNow = 1;
+    choice.m_value = getMassDamageEffect(enemyDamage, friendlyDamage);
+    choice.m_castNow = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1142
@@ -4050,19 +4059,25 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice)
     choice->m_castNow = 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3093
-// Same case as consider_mass_damage above: consider_spell's summon arm
-// is this body, VC6 will not fold it in even marked `inline`, so it
-// stays written out at the one call site.
+// DC 0x41e5c and dispatcher line 3167 prove this ordinary helper boundary.
+// Line 3098 calls get_mastery_value; line 3107 writes cast_now after the split.
 DC_ONLY(0x41e5c, 0x78)
-void type_AI_spellcaster::considerSummon(type_spell_choice* choice)
+void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 {
-    // @stub
+    if (m_winLikely)
+        return;
+    if (!g_combatManager->ableToSummonElemental(choice.m_spell, m_side))
+        return;
+    long power = choice.getMasteryValue() * choice.m_power;
+    if (m_estimate.m_killsOnly) {
+        choice.m_value = power * 1000;
+    } else {
+        TCreatureType summoned = getElementalType(choice.m_spell);
+        choice.m_value = g_creatureTypeTraits[summoned].m_aiValue * power;
+    }
+    choice.m_castNow = 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3114
 // The pricing dispatch: every spell the caster might cast lands here
@@ -4085,20 +4100,15 @@ void type_AI_spellcaster::considerSummon(type_spell_choice* choice)
 //     a kills-only estimate is worth a flat 1000 per power point, and
 //     otherwise the summoned creature's own AI_value scales it.
 //
-// Residual (98.19268%): the CFG is exact (19 branches, 10 returns) and the
-// remaining semantic instructions agree. Dreamcast line 3107 proves that the
-// summon helper writes field_20 once after its kills-only split; restoring that
-// source order raised 97.41219 -> 98.19268 and removed the whole summon delta.
-// What remains is register scheduling inside the two inlined group-damage
-// walks, plus EAX/EDX scratch choices on the first two Dispel calls. The VC6
-// allocator model reports identical first definitions (choice=EBX, spell=EDI,
-// this=ESI), so there is no minimum-slice creation-order edit to make. The
-// Dreamcast-proven `choice->get_mastery_value()` spelling and the original
-// forced-inline consider_mass_damage boundary are byte-flat at the maximum.
-// Tried and rejected as explanations: the former direct mastery-table
-// expression, the former longhand mass body, and IL-order modeling (the symbol
-// scanner exposes no later actionable pseudo). Do not invent locals merely to
-// perturb this register-homing plateau.
+// Exact after restoring ordinary mass/group/summon helpers, the summoning
+// mastery accessor (DC 3098/3167), and the group's named target lifetime
+// (DC 973/975). All 39 blocks, 19 branches and ten returns agree. The target
+// lifetime fixes both group walks and the later Dispel scratch registers;
+// the former 98.1927% allocator-wall diagnosis was incomplete.
+// Negative controls: flattening the summon mastery call with no effect pin
+// costs 98.1927 -> 80.5073; keeping an inline target address or naming only
+// the damage result leaves 98.1927. Four real mass-result lifetimes do not
+// change these outcomes. No inline override or synthetic caller mass remains.
 VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
 void type_AI_spellcaster::considerSpell(type_spell_choice* choice)
 {
@@ -4113,7 +4123,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice)
     case SPELL_DEATH_RIPPLE:
     case SPELL_DESTROY_UNDEAD:
     case SPELL_ARMAGEDDON:
-        considerMassDamage(choice);
+        considerMassDamage(*choice);
         return;
     case SPELL_DISPEL: {
         considerEnchantment(choice, m_side);
@@ -4141,22 +4151,9 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice)
     case SPELL_SUMMON_FIRE_ELEMENTAL:
     case SPELL_SUMMON_EARTH_ELEMENTAL:
     case SPELL_SUMMON_WATER_ELEMENTAL:
-    case SPELL_SUMMON_AIR_ELEMENTAL: {
-        if (m_winLikely)
-            return;
-        if (!g_combatManager->ableToSummonElemental(choice->m_spell, m_side))
-            return;
-        long power = g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery]
-                     * choice->m_power;
-        if (m_estimate.m_killsOnly) {
-            choice->m_value = power * 1000;
-        } else {
-            TCreatureType summoned = getElementalType(choice->m_spell);
-            choice->m_value = g_creatureTypeTraits[summoned].m_aiValue * power;
-        }
-        choice->m_castNow = 1;
+    case SPELL_SUMMON_AIR_ELEMENTAL:
+        considerSummon(*choice);
         return;
-    }
     case SPELL_TELEPORT:
         considerTeleport(choice);
         return;
