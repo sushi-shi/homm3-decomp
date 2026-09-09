@@ -149,6 +149,16 @@ enum TCreatureType {
     CREATURE_BASILISK = 0x6a,
     CREATURE_GREATER_BASILISK = 0x6b,
     CREATURE_WYVERN_MONARCH = 0x6d,
+    // Creature-bank table owners (DC guard_types/reward_types, 0x5601/0x5602).
+    // Complete's 0x6702a0/0x67037c tables corroborate these stored values.
+    // Original DC names: eCreatureCyclops, eCreatureImp, eCreatureNagaSentinel,
+    // eCreatureDragonFly, eCreatureVampire, eCreatureWyvern.
+    CREATURE_CYCLOPS = 94,
+    CREATURE_IMP = 42,
+    CREATURE_NAGA_SENTINEL = 38,
+    CREATURE_DRAGON_FLY = 105,
+    CREATURE_VAMPIRE = 62,
+    CREATURE_WYVERN = 108,
     CREATURE_MUMMY = 0x8d,
     // Retail army::get_mirror_effect floors this creature's backlash chance
     // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
@@ -638,6 +648,14 @@ SIZE(SSpellTraits, 136);
 // Before normalization: akSpellTraits.
 DATA(0x00687f58) extern const SSpellTraits (&g_spellTraits)[81];
 
+// Dreamcast SpellDefs.h:345..346, dc 0x4fd34: original IsMindSpell.
+// Its header definition and get_spell_work_chance line 505 establish the
+// canonical accessor boundary; Complete expands this bit test in the caller.
+inline unsigned char isMindSpell(int spell)
+{
+    return (g_spellTraits[spell].m_flags & 0x400) != 0;
+}
+
 // spelldefs.cpp owner; retail /Gr passes spell/mastery in ECX/EDX.
 // Before normalization (function): SpellTargetsASingleArmy.
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
@@ -999,7 +1017,6 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 
 // CODEVIEW(E:\gamedcs\armygrp.cpp:82, dc 0x4db88) void SplitSliderCallback(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1124, dc 0x4f328) long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);
-// CODEVIEW(E:\gamedcs\SpellDefs.h:345, dc 0x4fd34) unsigned char IsMindSpell(int spell);
 
 // --- TSplitWindow ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:62, dc 0x4db08) void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate);

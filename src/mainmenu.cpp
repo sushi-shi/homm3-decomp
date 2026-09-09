@@ -596,6 +596,12 @@ void TMainMenu::doModal()
 // register delta is one consequence of that cleanup choice. Tried and
 // rejected: two named string values (90.0704), two const-reference bindings
 // (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
+// A -1 help id and positive help guard remove the default-arm goto at the
+// unchanged 93.1746%. Moving updatePlease before the quit confirmation and
+// clearing it on cancellation falls to 92.2451%. A separate confirmation
+// result preserves the original updatePlease assignments and removes the
+// final goto at 93.1746%. Bool, byte and int results are score-identical;
+// a do/while(0) confirmation scope instead lowers it to 91.5690%.
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 int mainMenuHandler(message& msg)
 {
@@ -653,9 +659,9 @@ int mainMenuHandler(message& msg)
             case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
             case TMainMenu::CREDITS_ID: helpID = 3; break;
             case TMainMenu::QUIT_ID: helpID = 4; break;
-            default: goto draw_update;
+            default: helpID = -1; break;
             }
-            if (!g_dPlayReady)
+            if (helpID >= 0 && !g_dPlayReady)
                 normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -665,6 +671,7 @@ int mainMenuHandler(message& msg)
             return 0;
 
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            bool confirmed = 1;
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_dPlayReady) {
@@ -674,12 +681,14 @@ int mainMenuHandler(message& msg)
                     videoResume();
                     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
                         updatePlease = 0;
-                        goto draw_update;
+                        confirmed = 0;
                     }
                 }
             }
-            updatePlease = 1;
-            g_windowManager->m_dialogReturn = msg.m_codeY;
+            if (confirmed) {
+                updatePlease = 1;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
+            }
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = g_mainMenu->findWidget(msg.m_mouseY, msg.m_mouseX);
@@ -700,7 +709,6 @@ int mainMenuHandler(message& msg)
         }
     }
 
-draw_update:
     if (videoNeedsUpdate() || hoverChanged) {
         g_mainMenu->drawWindow(0, TMainMenu::NEW_GAME_ID,
                                TMainMenu::QUIT_ID);

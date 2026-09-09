@@ -1466,11 +1466,10 @@ unsigned char combatManager::unnamed464f50(
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2152
-// The turn scan. Two structural facts are forced by the encoding rather
-// than chosen: the outer pass loop is a GOTO loop - five separate sites
-// jump back to the top of the BODY without touching the pass counter, so
-// the restart is a `goto`, not a `continue` (a `while` would have been
-// rotated) - and the whole scan re-runs from scratch on every restart.
+// The turn scan retries the current pass after a disabled stack or bad morale.
+// A nested while (1) with continue preserves all 674 retail bytes, as does
+// for (;;). Five assembly back edges therefore do not establish source gotos;
+// the prior claim that a structured retry necessarily rotates was incorrect.
 // The stack rows are reached as `armies[side][i]`; VC6's own strength
 // reduction is what biases the induction pointer by +0x290 and steps it
 // by sizeof(army).
@@ -1490,56 +1489,58 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
         m_actingSlot = 0;
     }
     for (int pass = (m_inSecondPhase != 0) + 1; pass <= 2; pass++) {
-    restart:
-        army* best = 0;
-        for (int side = 0; side < 2; side++) {
-            for (int i = 0; i < m_numArmies[side]; i++) {
-                army* stack = &m_armies[side][i];
-                if (stack->is(1u << 26))
+        while (1) {
+            army* best = 0;
+            for (int side = 0; side < 2; side++) {
+                for (int i = 0; i < m_numArmies[side]; i++) {
+                    army* stack = &m_armies[side][i];
+                    if (stack->is(1u << 26))
+                        continue;
+                    if (stack->is(1u << 21))
+                        continue;
+                    if (stack->is(1u << 25))
+                        continue;
+                    if (stack->m_resetThisRound && stack->isIncapacitated())
+                        continue;
+                    if (m_creaturePlacement) {
+                        if (!stack->m_monInfo.m_speed)
+                            continue;
+                    }
+                    if (m_creaturePlacement) {
+                        if (m_placementBoundaryDepth > 0 && side != 0)
+                            continue;
+                        if (m_placementBoundaryDepth < 0 && side != 1)
+                            continue;
+                    }
+                    if (stack->m_creatureType == CREATURE_AMMO_CART)
+                        continue;
+                    if (m_creaturePlacement && (stack->is(1u << 6)))
+                        continue;
+                    if (best && unnamed464f50(best, stack))
+                        continue;
+                    best = stack;
+                }
+            }
+            if (best) {
+                if (!m_inSecondPhase)
+                    best->newTurn();
+                if (best->m_spellInfluence[62])
                     continue;
-                if (stack->is(1u << 21))
+                if (best->m_spellInfluence[70])
                     continue;
-                if (stack->is(1u << 25))
+                if (best->m_spellInfluence[74])
                     continue;
-                if (stack->m_resetThisRound && stack->isIncapacitated())
-                    continue;
-                if (m_creaturePlacement) {
-                    if (!stack->m_monInfo.m_speed)
+                if (checkingForBadMorale && !m_creaturePlacement
+                    && !m_inSecondPhase) {
+                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
+                        continue;
+                    if (unnamed464d40(best))
                         continue;
                 }
-                if (m_creaturePlacement) {
-                    if (m_placementBoundaryDepth > 0 && side != 0)
-                        continue;
-                    if (m_placementBoundaryDepth < 0 && side != 1)
-                        continue;
-                }
-                if (stack->m_creatureType == CREATURE_AMMO_CART)
-                    continue;
-                if (m_creaturePlacement && (stack->is(1u << 6)))
-                    continue;
-                if (best && unnamed464f50(best, stack))
-                    continue;
-                best = stack;
+                setNextArmy(best->m_combatSide, best->m_bitIndex);
+                return 1;
             }
-        }
-        if (best) {
-            if (!m_inSecondPhase)
-                best->newTurn();
-            if (best->m_spellInfluence[62])
-                goto restart;
-            if (best->m_spellInfluence[70])
-                goto restart;
-            if (best->m_spellInfluence[74])
-                goto restart;
-            if (checkingForBadMorale && !m_creaturePlacement
-                && !m_inSecondPhase) {
-                if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
-                    goto restart;
-                if (unnamed464d40(best))
-                    goto restart;
-            }
-            setNextArmy(best->m_combatSide, best->m_bitIndex);
-            return 1;
+            break;
         }
         if (pass == 1) {
             m_inSecondPhase = 1;
@@ -1774,48 +1775,44 @@ unsigned char combatManager::combatIsOver()
 
 // E:\gamedcs\cmbtmgr.cpp:2465
 // Before normalization (locals): this_side, other_side.
+// DC line 2485 calls the canonical Is helper for all three attributes;
+// line 2487 records the failed-stack flag changing before the scan exit.
+// Restoring those calls, the scan result, and the guarded opponent scan
+// removes all three gotos at 100%. Bool, unsigned-char and int result flags
+// agree; index exhaustion and two bare winning returns remain lower.
+// Every sibling retains its score in the 25-state source family.
 VA(0x004658b0, 0xBC)  // anchor-global, dc 0x5fc00
 unsigned char combatManager::isWinner(int thisSide) const
 {
-    int otherSide = 1 - thisSide;
+    const int otherSide = 1 - thisSide;
     int other;
+    bool noStacks = 1;
     for (int slot = 0; slot < 20; slot++) {
         const army& a = m_armies[thisSide][slot];
         if (a.m_creatureType == -1)
             continue;
-        unsigned char high = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 22);
-        if (high & 1)
+        if (a.is(1u << 22))
             continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 6);
-        if (flags & 1)
+        if (a.is(1u << 6))
             continue;
-        unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 21);
-        if ((removed & 1) == 0)
-            goto have_stack;
+        if (!a.is(1u << 21)) {
+            noStacks = 0;
+            break;
+        }
     }
-    return 0;
-have_stack:
-    if (m_sideSurrendered[otherSide])
-        goto won;
-    if (m_sideRetreated[otherSide])
-        goto won;
-    for (other = 0; other < 20; other++) {
-        const army& a = m_armies[otherSide][other];
-        if (a.m_creatureType == -1)
-            continue;
-        unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 21);
-        if (removed & 1)
-            continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 6);
-        if ((flags & 1) == 0)
-            return 0;
+    if (noStacks)
+        return 0;
+    if (!m_sideSurrendered[otherSide] && !m_sideRetreated[otherSide]) {
+        for (other = 0; other < 20; other++) {
+            const army& a = m_armies[otherSide][other];
+            if (a.m_creatureType == -1)
+                continue;
+            if (a.is(1u << 21))
+                continue;
+            if (!a.is(1u << 6))
+                return 0;
+        }
     }
-won:
     return 1;
 }
 
@@ -2104,8 +2101,8 @@ void combatManager::resetHitByCreature()
 // Dreamcast proves the const byte base_row_is_odd, bOverlap rejection flag,
 // GridX/GridY/RowIsOdd calls, and push_back at line 2848. Retail keeps the
 // signed extra-hex offset plus hex as an int (movsx/add, no byte truncation).
-// The forward retry label at the end of the while body preserves its single
-// Pick call; a label at the loop header made VC6 duplicate the call.
+// Retry with continue in the while body: this preserves the single Pick
+// call and all retail bytes. A label at the loop header duplicated Pick.
 // Restoring the pinned VC6 vector's push_back -> insert(one) -> insert(count)
 // boundaries naturally retains the counted-insert call and expands only the
 // outer picker destructor on failure: the vector receiver is picker + 8.
@@ -2127,14 +2124,14 @@ unsigned char combatManager::placeObstacle(int obstacleId)
         {
             int row = gridY(hex);
             if (shape->m_minRow > row)
-                goto next_hex;
+                continue;
             int column = gridX(hex);
             if (column == 0)
-                goto next_hex;
+                continue;
             if (shape->m_width + column > 15)
-                goto next_hex;
+                continue;
             if (m_cells[hex].m_attributes & 0x3f)
-                goto next_hex;
+                continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
             for (int i = 0; i < shape->m_extraHexCount; i++) {
@@ -2149,7 +2146,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 }
             }
             if (overlap)
-                goto next_hex;
+                continue;
 
             if (g_game->m_f1f698 < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
@@ -2157,7 +2154,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 if (wallColumn == COMBAT_HEX_GATE)
                     wallColumn = 0x5d;
                 if (shape->m_width + hex >= wallColumn - 2)
-                    goto next_hex;
+                    continue;
             }
 
             TObstacle obstacle;
@@ -2180,8 +2177,6 @@ unsigned char combatManager::placeObstacle(int obstacleId)
 #pragma inline_depth()
             return 1;
         }
-    next_hex:
-        ;
     }
 }
 
@@ -2548,6 +2543,12 @@ void combatManager::setupAndLoadObstacles()
 // which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` proves
 // two explicit masks where the DC signature has one, the same
 // retail-gained-a-parameter shape findpath's CalcTerrainCost shows.
+// Goto audit: break + post-loop negative-ID guard scores 83.0899%; an
+// in-loop guard scores 93.7079%, versus 100% here. Both preserve picker RAII
+// and its named calls, but move the search/placement join. A guarded redraw
+// loop plus positive placement improves that probe to 97.7528%; moving the
+// first pick into do/while gives 88.8764% with an early failure return, and
+// sharing the count result gives at most 85.5955%. Keep the exact join.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
@@ -3777,6 +3778,11 @@ static const long& maxOf(const long& x, const long& y)
 // likewise measured +0 or worse.
 // Before normalization (locals): bResetLimitCreature, bShowSomePowEffect, attack_frames,
 // wince_frames, wince_start_offset, bFramesChanged.
+// The positive frameCount if/else removes play_frame while preserving all
+// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
+// Its true arm permits the common frame body; only the false arm skips it.
+// The inverted continue guard still scores 96.2378%, so guard polarity and
+// scope matter here even though the source operations are otherwise equal.
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -3895,9 +3901,11 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                             && winceStartOffset
                                 > stack.m_remainingFramesToPlay) {
                         if (attackFrames) {
-                            if (frameCount >= attackFrames - 1)
-                                goto play_frame;
-                            continue;
+                            if (frameCount >= attackFrames - 1) {
+                                // The attack threshold permits this frame.
+                            } else {
+                                continue;
+                            }
                         } else if (stack.m_currFrameType == cs_wince
                                 && stack.m_currFrameIndex
                                     >= stack.m_stdIcon->getNumFrames(
@@ -3906,7 +3914,6 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                         }
                     }
 
-play_frame:
                     if (stack.m_currFrameType != stack.m_nextFrameType) {
                         if (!isQuickCombat()) {
                             if (stack.m_showAttackFrames)
@@ -4213,40 +4220,43 @@ void getMissileStartingPosition(int armyType, int x, int y, int facing,
     *startY = y + info.m_offsets[offset][1];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4669
+// Before normalization (function): DoorCanBeLowered.
+// DC's const-this record and lines 4675/4680/4686 prove the side check and
+// both canonical HasArmy calls. Complete expands this ordinary helper in
+// HexIsBlocked; its two cell/body tests are the same retail operands.
 DC_ONLY(0x63268, 0x5A)
-unsigned char combatManager::DoorCanBeLowered()
+unsigned char combatManager::doorCanBeLowered() const
 {
-    // @stub
+    if (m_currentSide != 1)
+        return 0;
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
+        || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+        return 0;
+    if (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
+        || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex)
+        return 0;
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4701
 // The two literal cell reads are cells[95] and cells[94] - the gate's
 // moat hex and the one outside it - byte-proven by the manager offsets
 // 0x2b6c/0x2b70 and 0x2afc/0x2b00 landing exactly on cells[95].armySide
 // / .iBodiesInHex and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
+// Keep the canonical DoorCanBeLowered call from DC line 4711. A positive
+// raised-bridge guard and an ordinary outer else remove both copied exits
+// at 100%, as does a nested guard. The bare gate return and a single-pass
+// rejection block lose score; all sibling functions remain unchanged.
 VA(0x00469a10, 0x80)  // anchor-global, dc 0x632c4
 unsigned char combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
-        if (m_drawbridgeState != DRAWBRIDGE_UP)
-            goto not_blocked;
-        if (m_currentSide != 1
-                || m_cells[COMBAT_HEX_GATE_MOAT].m_armySide >= 0
-                || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex != 0
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_armySide >= 0
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex != 0)
+        if (m_drawbridgeState == DRAWBRIDGE_UP && !doorCanBeLowered())
             return 1;
-        goto not_blocked;
-    }
-    if (m_cells[index].m_attributes & 2)
+    } else if (m_cells[index].m_attributes & 2)
         return 1;
-not_blocked:
     return 0;
 }
 
@@ -4263,8 +4273,9 @@ not_blocked:
 //     is nested inside `if (defender)` rather than hoisted;
 //   * the one-death and many-death arms are SHARED between the
 //     defender and no-defender paths (one EH state each, 5 and 6, not
-//     two), which is what puts the goto in - writing them inside both
-//     arms of the `if (defender)` duplicates them.
+//     two). A stackWipedOut flag keeps one shared formatting scope and
+//     removes the former goto at 100%; copying the formatting into both
+//     defender arms would duplicate its EH states.
 // The `deaths == 1` test is written twice in source and retail only
 // emits it once on the no-defender path: VC6 jump-threads the second
 // copy from 0x469c34 straight into the singular arm because it already
@@ -4297,13 +4308,14 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     if (deaths > 0) {
         std::string deathText;
         const char* name;
+        bool stackWipedOut = false;
         if (defender) {
             name = defender->getName(deaths);
             if (defender->is(1u << 6)) {
                 deathText = formatString(
                     g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
                     name);
-                goto have_death_text;
+                stackWipedOut = true;
             }
         } else {
             if (deaths == 1)
@@ -4311,14 +4323,15 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
             else
                 name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
         }
-        if (deaths == 1)
-            deathText = formatString(
-                g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
-        else
-            deathText = formatString(
-                g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
-                deaths, name);
-have_death_text:
+        if (!stackWipedOut) {
+            if (deaths == 1)
+                deathText = formatString(
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+            else
+                deathText = formatString(
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                    deaths, name);
+        }
         message += deathText;
     }
 

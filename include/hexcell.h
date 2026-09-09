@@ -126,8 +126,9 @@ public:
     // folds to retail's sign test on armySide, and the call SITE is
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
+    // The DC const-this record also permits DoorCanBeLowered to call it.
     // Before normalization (function): hexcell::HasArmy.
-    unsigned char hasArmy()
+    unsigned char hasArmy() const
     {
         return m_armySide >= 0;
     }

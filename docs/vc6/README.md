@@ -60,10 +60,12 @@ model cannot rot.
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
 | `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
+| `docs/vc6/goto-audit.md` | [goto audit](goto-audit.md): source census, canonical-helper/structured-loop reductions, and measured limits |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
 | `docs/vc6/debug-lines.md` | classic COFF source-line encoding and verified `/Z7` controls |
+| `docs/vc6/union-pragma-audit.md` | complete union/inline-override census, deletion controls, retained layout contracts and reconstruction debt |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 

@@ -15,13 +15,6 @@ class Bitmap816;
 class NewmapCell;
 class TResourceDisplay;
 
-union TPuzzleCoordinatePointer {
-    // Before normalization: bytes.
-    char* m_bytes;
-    // Before normalization: values.
-    short* m_values;
-};
-
 // Retail preserves the Dreamcast record's four packed allocation units:
 // a 10-bit object type, two signed four-bit object offsets, three terrain
 // descriptors, and the diggable/grail/visible flag trio.
@@ -133,10 +126,14 @@ SIZE(TPuzzleWindow, 0x12c);
 extern std::bitset<48> g_puzzlePiecesRemoved;
 // Before normalization: puzzlePieceOrder.
 extern short g_puzzlePieceOrder[];
+// Retail UpdatePuzzle (0x52c6c0) and AI_attempt_puzzle_guess (0x52c9b0)
+// read signed words at 2 * (puzzle * 96 + piece). DC UpdatePuzzle also
+// reads word coordinates (its scaling differs); these are short tables,
+// not byte buffers requiring pointer reinterpretation.
 // Before normalization: puzzlePieceX.
-extern char g_puzzlePieceX[];
+extern short g_puzzlePieceX[];
 // Before normalization: puzzlePieceY.
-extern char g_puzzlePieceY[];
+extern short g_puzzlePieceY[];
 // Before normalization: puzzleFilePrefixes.
 extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the

@@ -358,289 +358,297 @@ __forceinline void updateCombatOptions(unsigned char firstUpdate)
 // allocate the same register here.  This is behaviour-catalog D7 and it is
 // the same class as hero::THeroScreenWindow::WindowHandler's six help arms
 // and game::ValidateVictoryLossConditions' shared `je`.
+// Goto audit: Replacing consume jumps with direct returns scores
+// 81.7140% versus 83.3598%; other dispatch joins are unchanged by this probe.
+// DC 0x67b7c initializes an exit flag, records preference changes within the
+// selected case, and tests both before the redraw/message tails (lines 627-639).
+// Restoring those scopes and each audio-error dialog removes all nine gotos,
+// raising 83.3598% to 85.9186%. Keeping the shared audio label within this
+// recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
+// Older flattened-dispatch measurements above do not describe this source.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int combatOptionsWindowHandler(message& msg)
 {
+    unsigned char exitFlag = 0;
     pollSound();
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg.m_codeX == widget::WIDGET_SELECT
                 || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
             int id = msg.m_codeY;
-            if (id < 0)
-                goto consume;
-            int helpID = g_combatOptionsWindow->convertID2HelpID(id);
-            if (helpID >= 0)
-                normalDialog(g_combatOptionsHelp[helpID].m_text,
-                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
-        return MESSAGE_DISPATCH_CONSUME;
-    }
-
-    if (msg.m_id == MESSAGE_KEY_DOWN)
-        goto consume;
-
-    if (msg.m_id != MESSAGE_WIDGET)
-        goto consume;
-
-    switch (msg.m_codeX) {
-    case widget::WIDGET_SELECT:
-        goto handle_select;
-    case widget::WIDGET_DESELECT:
-        break;
-    default:
-        goto consume;
-    }
-
-    {
-        int id = msg.m_codeY;
-        if (id == DIALOG_RETURN_SPLIT_ACCEPT)
-            goto translate_command;
-
-        switch (id) {
-        case TCombatOptionsWindow::DEFAULT_ID: {
-            setDefaultCombatOptions();
-            g_combatOptionsWindow->highlightCombatSpeed();
-            g_combatOptionsWindow->highlightGrid();
-            g_combatOptionsWindow->highlightMovementShadow();
-            g_combatOptionsWindow->highlightMouseShadow();
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatAutoCreatures);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatAutoSpells);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatCatapult);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatBallista);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatFirstAidTent);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatArmyInfoLevel
-                    == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatArmyInfoLevel
-                    == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_animateSpellBook);
-            break;
-        }
-
-        case TCombatOptionsWindow::MUSIC_VOLUME_0_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_1_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_2_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_3_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_4_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_5_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_6_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_7_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_8_ID:
-        case TCombatOptionsWindow::MUSIC_VOLUME_9_ID: {
-            if (!g_unk698760 && !g_soundManager->m_ds)
-                goto audio_unavailable;
-            g_unk698760 = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
-            for (int music = TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
-                 music <= TCombatOptionsWindow::MUSIC_VOLUME_9_ID; ++music)
-                g_combatOptionsWindow->getWidget(music)->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-            g_combatOptionsWindow->getWidget(g_unk698760
-                    + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            g_combatOptionsWindow->getWidget(g_unk698760
-                    + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME, g_unk698760);
-            g_soundManager->adjustMusicVolumes();
-            break;
-        }
-
-        case TCombatOptionsWindow::EFFECTS_VOLUME_0_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_1_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_2_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_3_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_4_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_5_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_6_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_7_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_8_ID:
-        case TCombatOptionsWindow::EFFECTS_VOLUME_9_ID: {
-            if (!g_unk698764 && !g_soundManager->m_ds)
-                goto audio_unavailable;
-            g_unk698764 = id - TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
-            g_unnamed698758.m_lastSoundVolume = g_unk698764;
-            for (int effects = TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
-                 effects <= TCombatOptionsWindow::EFFECTS_VOLUME_9_ID;
-                 ++effects)
-                g_combatOptionsWindow->getWidget(effects)->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-            g_combatOptionsWindow->getWidget(g_unk698764
-                    + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            g_combatOptionsWindow->getWidget(g_unk698764
-                    + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME, g_unk698764);
-            g_soundManager->adjustSoundVolumes();
-            break;
-        }
-
-        case TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID:
-            g_unnamed698758.m_animateSpellBook ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_animateSpellBook);
-            break;
-
-        case TCombatOptionsWindow::AUTO_CREATURES_ID:
-            g_unnamed698758.m_combatAutoCreatures ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatAutoCreatures);
-            break;
-
-        case TCombatOptionsWindow::AUTO_SPELLS_ID:
-            g_unnamed698758.m_combatAutoSpells ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatAutoSpells);
-            break;
-
-        case TCombatOptionsWindow::AUTO_CATAPULT_ID:
-            g_unnamed698758.m_combatCatapult ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatCatapult);
-            break;
-
-        case TCombatOptionsWindow::AUTO_BALLISTA_ID:
-            g_unnamed698758.m_combatBallista ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatBallista);
-            break;
-
-        case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
-            g_unnamed698758.m_combatFirstAidTent ^= 1;
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatFirstAidTent);
-            break;
-
-        case TCombatOptionsWindow::COMBAT_SPEED_0_ID:
-        case TCombatOptionsWindow::COMBAT_SPEED_1_ID:
-        case TCombatOptionsWindow::COMBAT_SPEED_2_ID: {
-            g_unnamed698758.m_combatSpeed =
-                id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-            g_combatOptionsWindow->highlightCombatSpeed();
-            break;
-        }
-
-        case TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID:
-            if (g_unnamed698758.m_combatArmyInfoLevel
-                    != TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE) {
-                g_unnamed698758.m_combatArmyInfoLevel =
-                    TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE;
-                g_combatOptionsWindow->getWidget(
-                    TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)
-                    ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
-            } else {
-                g_unnamed698758.m_combatArmyInfoLevel = 0;
+            if (id >= 0) {
+                int helpID = g_combatOptionsWindow->convertID2HelpID(id);
+                if (helpID >= 0)
+                    normalDialog(g_combatOptionsHelp[helpID].m_text,
+                        4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatArmyInfoLevel
-                    == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
-            break;
-
-        case TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID:
-            if (g_unnamed698758.m_combatArmyInfoLevel
-                    != TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT) {
-                g_unnamed698758.m_combatArmyInfoLevel =
-                    TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT;
-                g_combatOptionsWindow->getWidget(
-                    TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)
-                    ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
-            } else {
-                g_unnamed698758.m_combatArmyInfoLevel = 0;
+        }
+    } else if (msg.m_id != MESSAGE_KEY_DOWN && msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_SELECT) {
+            int id = g_combatOptionsWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
+            if (id >= TCombatOptionsWindow::AUTO_CREATURES_ID
+                    && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
+                    && button::s_clickSample) {
+                button::s_clickSample->m_memSample.m_memVolume = 0x40;
+                button::s_clickSample->m_memSample.m_memLooping = 1;
+                button::s_clickSample->m_memSample.m_memCindex = 3;
+                g_soundManager->memorySample(button::s_clickSample);
             }
-            g_combatOptionsWindow->getWidget(
-                TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
-                widget::WIDGET_SET_ICON_FRAME,
-                g_unnamed698758.m_combatArmyInfoLevel
-                    == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
-            break;
+            return MESSAGE_DISPATCH_CONSUME;
+        } else if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            int id = msg.m_codeY;
+            if (id == DIALOG_RETURN_SPLIT_ACCEPT) {
+                exitFlag = 1;
+            } else {
+                unsigned char prefsChanged = 0;
+                switch (id) {
+                case TCombatOptionsWindow::DEFAULT_ID: {
+                    setDefaultCombatOptions();
+                    g_combatOptionsWindow->highlightCombatSpeed();
+                    g_combatOptionsWindow->highlightGrid();
+                    g_combatOptionsWindow->highlightMovementShadow();
+                    g_combatOptionsWindow->highlightMouseShadow();
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatAutoCreatures);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatAutoSpells);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatCatapult);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatBallista);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatFirstAidTent);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatArmyInfoLevel
+                            == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatArmyInfoLevel
+                            == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_animateSpellBook);
+                    prefsChanged = 1;
+                    break;
+                }
 
-        case TCombatOptionsWindow::SHOW_GRID_ID:
-            g_unnamed698758.m_showCombatGrid ^= 1;
-            g_combatOptionsWindow->highlightGrid();
-            break;
+                case TCombatOptionsWindow::MUSIC_VOLUME_0_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_1_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_2_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_3_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_4_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_5_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_6_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_7_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_8_ID:
+                case TCombatOptionsWindow::MUSIC_VOLUME_9_ID: {
+                    if (!g_unk698760 && !g_soundManager->m_ds) {
+                        normalDialog(
+                            g_generalText->getText(
+                                GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
+                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        break;
+                    }
+                    g_unk698760 = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
+                    for (int music = TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
+                         music <= TCombatOptionsWindow::MUSIC_VOLUME_9_ID; ++music)
+                        g_combatOptionsWindow->getWidget(music)->sendMessage(
+                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                    g_combatOptionsWindow->getWidget(g_unk698760
+                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                    g_combatOptionsWindow->getWidget(g_unk698760
+                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME, g_unk698760);
+                    g_soundManager->adjustMusicVolumes();
+                    prefsChanged = 1;
+                    break;
+                }
 
-        case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
-            g_unnamed698758.m_combatShadeLevel ^= 1;
-            g_combatOptionsWindow->highlightMovementShadow();
-            break;
+                case TCombatOptionsWindow::EFFECTS_VOLUME_0_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_1_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_2_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_3_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_4_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_5_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_6_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_7_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_8_ID:
+                case TCombatOptionsWindow::EFFECTS_VOLUME_9_ID: {
+                    if (!g_unk698764 && !g_soundManager->m_ds) {
+                        normalDialog(
+                            g_generalText->getText(
+                                GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
+                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                        break;
+                    }
+                    g_unk698764 = id - TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
+                    g_unnamed698758.m_lastSoundVolume = g_unk698764;
+                    for (int effects = TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
+                         effects <= TCombatOptionsWindow::EFFECTS_VOLUME_9_ID;
+                         ++effects)
+                        g_combatOptionsWindow->getWidget(effects)->sendMessage(
+                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                    g_combatOptionsWindow->getWidget(g_unk698764
+                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                    g_combatOptionsWindow->getWidget(g_unk698764
+                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME, g_unk698764);
+                    g_soundManager->adjustSoundVolumes();
+                    prefsChanged = 1;
+                    break;
+                }
 
-        case TCombatOptionsWindow::MOUSE_SHADOW_ID:
-            g_unnamed698758.m_showCombatMouseHex ^= 1;
-            g_combatOptionsWindow->highlightMouseShadow();
-            break;
+                case TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID:
+                    g_unnamed698758.m_animateSpellBook ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_animateSpellBook);
+                    prefsChanged = 1;
+                    break;
 
-        default:
-            goto consume;
+                case TCombatOptionsWindow::AUTO_CREATURES_ID:
+                    g_unnamed698758.m_combatAutoCreatures ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatAutoCreatures);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::AUTO_SPELLS_ID:
+                    g_unnamed698758.m_combatAutoSpells ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatAutoSpells);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::AUTO_CATAPULT_ID:
+                    g_unnamed698758.m_combatCatapult ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatCatapult);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::AUTO_BALLISTA_ID:
+                    g_unnamed698758.m_combatBallista ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatBallista);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
+                    g_unnamed698758.m_combatFirstAidTent ^= 1;
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatFirstAidTent);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::COMBAT_SPEED_0_ID:
+                case TCombatOptionsWindow::COMBAT_SPEED_1_ID:
+                case TCombatOptionsWindow::COMBAT_SPEED_2_ID: {
+                    g_unnamed698758.m_combatSpeed =
+                        id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
+                    g_combatOptionsWindow->highlightCombatSpeed();
+                    prefsChanged = 1;
+                    break;
+                }
+
+                case TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID:
+                    if (g_unnamed698758.m_combatArmyInfoLevel
+                            != TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE) {
+                        g_unnamed698758.m_combatArmyInfoLevel =
+                            TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE;
+                        g_combatOptionsWindow->getWidget(
+                            TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
+                    } else {
+                        g_unnamed698758.m_combatArmyInfoLevel = 0;
+                    }
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatArmyInfoLevel
+                            == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID:
+                    if (g_unnamed698758.m_combatArmyInfoLevel
+                            != TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT) {
+                        g_unnamed698758.m_combatArmyInfoLevel =
+                            TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT;
+                        g_combatOptionsWindow->getWidget(
+                            TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
+                    } else {
+                        g_unnamed698758.m_combatArmyInfoLevel = 0;
+                    }
+                    g_combatOptionsWindow->getWidget(
+                        TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
+                        widget::WIDGET_SET_ICON_FRAME,
+                        g_unnamed698758.m_combatArmyInfoLevel
+                            == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::SHOW_GRID_ID:
+                    g_unnamed698758.m_showCombatGrid ^= 1;
+                    g_combatOptionsWindow->highlightGrid();
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
+                    g_unnamed698758.m_combatShadeLevel ^= 1;
+                    g_combatOptionsWindow->highlightMovementShadow();
+                    prefsChanged = 1;
+                    break;
+
+                case TCombatOptionsWindow::MOUSE_SHADOW_ID:
+                    g_unnamed698758.m_showCombatMouseHex ^= 1;
+                    g_combatOptionsWindow->highlightMouseShadow();
+                    prefsChanged = 1;
+                    break;
+
+                default:
+                    break;
+                }
+                if (prefsChanged)
+                    updateCombatOptions(0);
+            }
         }
-
-        updateCombatOptions(0);
-        return MESSAGE_DISPATCH_CONSUME;
     }
-
-handle_select:
-    {
-        int id = g_combatOptionsWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
-        if (id >= TCombatOptionsWindow::AUTO_CREATURES_ID
-                && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
-                && button::s_clickSample) {
-            button::s_clickSample->m_memSample.m_memVolume = 0x40;
-            button::s_clickSample->m_memSample.m_memLooping = 1;
-            button::s_clickSample->m_memSample.m_memCindex = 3;
-            g_soundManager->memorySample(button::s_clickSample);
-        }
-        return MESSAGE_DISPATCH_CONSUME;
+    if (exitFlag) {
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
     }
-
-translate_command:
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
-
-audio_unavailable:
-    normalDialog(
-        g_generalText->getText(
-            GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
-        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-
-consume:
     return MESSAGE_DISPATCH_CONSUME;
 }
 

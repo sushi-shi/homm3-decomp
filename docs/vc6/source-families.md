@@ -35,7 +35,11 @@ retained slots favor aggregate score/exactness, with the rest covering specialis
 gains above the original baseline. Failed candidates are replaced by new
 combinations; a high failure count stops for inspection. Distinctness uses
 emitted code and named relocations, excluding timestamps, paths and VC6
-anonymous-namespace nonces. Report successful source candidates and distinct
+anonymous-namespace nonces. These scopes can originate in `.cpp` or `.h`;
+normalization retains the defining basename, type and full signature. The
+`TAutoStrPtr` header control reproduces with different compiler nonces, while
+changing its basename, type or constructor signature remains distinct.
+Report successful source candidates and distinct
 code results separately: several real C++ alternatives can compile identically.
 This identity is a search/reproduction metric, not an extra score normalization.
 The retained candidates must reproduce both their scores and that code identity.
@@ -2815,6 +2819,477 @@ moves `writeMapHeader` from 77.9030% to 77.8952%. The canonical signed field
 is independently required by other callers. No game-code change is adopted;
 the local extraction mismatch remains open, not a claimed semantic failure
 or a resolved compiler limitation.
+
+### Ordinary movement and native serialization boundaries
+
+The union/pragma cleanup uses the same driver outside RMG. Its historical
+`generate-shipyard-boundary-family.py`, `generate-shipyard-scope-family.py` and
+`generate-movehero-helper-family.py` populations restore four ordinary static
+helpers, preserving their actual calls and early-exit scopes while deleting
+seven existing fences. The native `generate-game-vector-helper-family.py` and
+`generate-game-vector-return-family.py` populations jointly recover typed
+load/save templates, delete a pointer union and six more fences, and retain
+both exact writer bodies. The
+[audit](union-pragma-audit.md#ordinary-shipyard-and-movement-helpers) records
+the frozen contexts, source/candidate counts, rejected higher-scoring false
+declarations, and caller/whole-object controls. These generators require their
+pre-adoption source snapshot; stale source anchors must not be relaxed merely
+to rerun historical numbers.
+
+`PYTHONPATH=scripts python -m unittest homm3.vc6.test_game_vector_io` extracts
+the adopted serializer templates into the native stream-contract fixture.
+It covers resize/zero-fill, short I/O, payload strides and narrow count
+boundaries with six rejected negative controls. The associated narrow
+source-owned vector-instance label join is tested by
+`homm3.retail_labels.test_vector_helper_signatures`; it must reject an equal-size
+ICF twin when the requested native element/signature is missing or ambiguous.
+
+### University record ownership and header collateral
+
+`generate-university-insertion-family.py` exhausts 36 meaningful API, receiver,
+record and fence choices (24 object identities) in context
+`9d5e8e882a44a0242bf7`. `generate-university-initializer-family.py` then compares
+the generic aggregate plus explicit Conflux initializer with the old default
+constructor: 13 successful states, 13 objects, context `99ba0ea5c2a6db673a5a`.
+Both families reproduce ten retained candidates. Their exact anchors require
+the pre-adoption `662ecc31` snapshot. The selected pointer/count-insert candidate
+`75bbad764fd068a3fcc87499` removes the pointer union without altering the
+randomizer's bytes or the Conflux initializer/caller bytes, and improves Load.
+The [audit](union-pragma-audit.md#generic-university-records-and-conflux-initialization)
+separates proven generic-record ownership from the provisional initializer name
+and original helper kind. Scores alone do not establish those source facts.
+
+`generate-university-header-control.py` is a post-adoption two-state negative
+control: restore only the old constructor declaration in unrelated consumers.
+It isolates the two small whole-build score movements in army and
+singleselectionwindow: context `ea72eb19220d16fbe772` scores both states,
+produces two distinct objects, and reproduces both. Restoring only the old
+header declaration recovers exactly 99.9424% and 100%; every other tracked row
+in those two TUs is unchanged. The initial seven-unit context `4b5443e33ddcd7da20ab`
+was rejected at opposite-corner reproduction: executable section bytes and
+scores reproduce, but five table/data units vary anonymous header identities
+or symbol placement. It is not counted as a successful search. The driver
+rejected those variations in that context. Header path/nonce identity is now
+handled as described above; symbol-placement or code differences still fail
+reproduction. That historical failed context remains excluded from the totals.
+
+The shared native stream fixture imports the real record and initializer,
+also checking untouched generic default-initialization bytes, the four Conflux
+schools and the returned record address. Three new semantic negative controls
+reject automatic defaults, a wrong school and a wrong return pointer. They
+complement, rather than substitute for, the five-TU raw COFF controls and full
+retail build.
+
+### Native marketplace artifact ownership
+
+`generate-market-artifact-owner-family.py` is a finite two-state ownership
+control against `2359d5a4`: context `d7a243b77c8e39872831`, two scored states,
+two object identities, both retained candidates reproduced. The selected
+`372591115abd7d96fb098eeb` changes the entry, header, dispatcher, state and
+every artifact reader/writer together. DC `DoBlackMarket` (0x1886d4) proves
+the `TArtifact*` parameter; the recovered game and black-market fields already
+have that element type. Retail's entry stores the pointer unchanged.
+
+The pre-delink old entry label scores zero for the corrected signature. This
+is not treated as body identity: `compare-coff-layout.py`, with the explicit
+old/new function-name pair, independently proves identical section layout and
+bytes, function positions, and relocation sites/kinds/destinations. It passes
+for tradpost (150 sections / 4059 relocations), events (304 / 3873), philai
+(229 / 1442), ai_player (420 / 1963), and townmgr (402 / 6828). The last three
+need no rename. Selected-candidate to production comparisons pass without any
+rename. Normal source-owned delinking migrates the entry at 100%; no current
+score changes, MAX resets, or historical peaks lost. Full gates pass at
+4063/4752 exact, 96.39% linked and 96.13% whole-image.
+
+`homm3.vc6.test_market_artifact_owner` imports the actual entry, dispatcher arm,
+enum, record, array member and global declarations into a native-only semantic
+fixture. It checks identity and in-place mutation of all seven slots in each
+owner, hero forwarding, modal state and AI dispatch. Eight negative controls
+reject wrong pointers, records, state, branch choice and missing modal calls.
+The host fixture does not claim x86 ABI or codegen proof.
+
+### Marketplace ratio accessor and setup boundaries
+
+`generate-market-ratio-boundary-family.py` exhausts the twelve supported
+accessor, resource-value lifetime and selection-call combinations against the
+native artifact-pointer checkpoint. Context `ddb391c2a56bfe8804a0` scores all
+twelve states, produces six object identities, and reproduces all six elites.
+DC rows 2235/2237 prove the two artifact getters; rows 2961/2990 reach the
+same `SetupNewTrade` as the arrow arms. Restoring those source calls is not
+conditional on a higher fuzzy score.
+
+The selected `c55c83a118bd50486be2a0a8` keeps one ordinary `setupNewTrade`,
+uses it at all four sites, and removes tradpost's final depth fence. Of 67
+raw emitted functions, only `windowHandler` changes bytes; all other tracked
+scores stay fixed, including the retained ratio helper at 100%. Production
+reproduces the selected object's entire 150 sections and 4061 relocation
+destinations. The handler falls from 90.6792% to 81.9322%, with the old peak
+retained in HIST. The direct unfenced/flattened control gives 80.5105%; the
+explicit right-value local and getter flattening do not recover the lost call.
+
+The difference is measured at the named site, not inferred from a call census:
+retail function +0x509 calls `computeTradeRatios` in resource selection, while
+the natural candidate expands it and shares a selection tail. A byte-identity
+gated C2 trace has caller cost 872 / initial budget 1744; its first two setup
+copies admit the cost-153 ratio helper against nested budgets 189 and 188.
+This is remaining caller-budget/source-state debt, not evidence against the
+canonical helper boundary. No manufactured assertion replaces the fence.
+
+The native market test also imports the actual setup body and checks selected
+artifact/resource arguments, output-pointer identities, and the order of the
+ratio call and amount reset. Five rejected semantic controls cover wrong
+arguments, outputs, amount, missing call and premature reset. The full retail
+build passes at 4063/4752 exact, 96.39% linked and 96.12% whole-image, with
+one observed MAX reset and no banked RVA lost. The new census is 227 inline
+overrides in 33 TUs, and 65 unions. The retained local peak is a recovery lead,
+not grounds to reintroduce the retired compiler intervention.
+
+`generate-count-markets-boundary-family.py` separately exhausts four
+declaration/building-query choices in context `d39faa6bb2f147e6f44f`, producing
+two symbol identities and reproducing both elites. DC row 621 calls
+`GetTown` followed by `HasBuilding(14, true)`; all three retail entry points
+expand this active-market test. Selected `5a8fa95a228c773b30041a02` restores
+that query and uses an ordinary static helper at its original source position.
+The baseline and selected raw COFF layouts, bytes and all 4061 relocation
+destinations are identical; all three entries remain exact. The explicit
+inline keyword was unnecessary, not evidence of an original annotation.
+
+### Full-width object-type input ownership
+
+`generate-object-type-read-owner-family.py` starts at `ba9d07f2` and exhausts
+eight owner/query alternatives in context `f19ddfdcac44d6eb1e45`: eight scored
+states, three emitted identities, all three elites reproduced. It preserves
+the existing integer buffer's filename-length and extra-field uses, crossing
+the old union and three native enum lifetimes with a buffer/record diagnostic
+query. DC rows 3610..3614 positively use `int_buffer`; the enum local is a
+Complete I/O-boundary hypothesis, not a purported recovered DC declaration.
+Row 3619 does positively query the committed record for the diagnostic.
+
+Selected `3edff3daea1caee731a5ae58` reads into an enum local adjacent to its
+guard, then assigns the record, and uses that committed field in the diagnostic.
+Both unscoped lifetimes produce the same 99.9633% function. Merely changing
+the union control's diagnostic is byte-neutral and stays exact. The scoped
+native value gives 99.9163%. All other mapcell scores stay fixed.
+
+The `--phase-scopes` follow-up tests actual independent field-value lifetimes,
+not unused compiler mass: filename length, native object type and extra field,
+each optionally scoped through its commit. Context `e8265cfda7e5bc50aa1e`
+exhausts nine states (including the unchanged union parent), nine object
+identities and nine reproduced elites. The best native phase variant is
+99.9673%, but requires splitting the positively evidenced generic integer
+buffer and adding scopes. That tiny improvement does not justify choosing
+the more speculative source model over the simpler native parent.
+
+The adopted object reproduces the selected candidate's complete sections.
+Against the old object, all 419 section layouts, 318 function-symbol positions
+and 2077 relocation sites/kinds/destinations agree. Only `readObjectType`'s
+1216-byte body changes: 18 stack-slot displacement bytes, with the same
+instructions otherwise. All other 259 emitted function bodies are unchanged.
+This is an explicit raw comparison, not a relaxation of retail normalization
+or the strict byte-neutral comparison tool.
+
+`homm3.vc6.test_object_type_read_owner` compiles the actual read/commit block,
+enum and abstract-file interface at native `-O0` and `-O2`. Six valid enum
+values and read reports 0..4 verify width, return value, one read call,
+neighboring sentinels and commit timing. Five negative controls reject direct
+field reads, a two-byte width, rejection of a full read, a wrong value and a
+missing assignment. No malformed-input or x86 ABI claim is made by this host
+fixture. The neighboring 16-bit readers cannot use the four-byte enum's
+`sizeof` without changing their actual wire contract.
+
+The full retail build passes at 4062/4752 exact, 96.39% linked fuzzy and
+96.12% whole-image. Only this function resets MAX (100% to 99.9633%); HIST
+retains 100%. The census becomes 227 inline overrides and 64 unions.
+
+### Ordinary volume conversion and selected-setting lifetimes
+
+`generate-volume-boundary-family.py` starts from `a7a83c6e` and exhausts
+twelve combinations in context `c682cc6559d87a47dbef`: twelve scored states,
+five object identities and five reproduced elites. Three actual setting
+bindings (value snapshot, const reference, direct reads) cross equivalent
+short-circuit/nested bounds and the old/removed auto-inline fence. The source
+keeps both duplicated scale arms and the shared lower/upper clamp; Complete's
+0..127 return must not acquire Dreamcast's final 0..100 platform conversion.
+
+Selected `7bb1334725faaa2026c1258b` uses branch-local const references and
+removes the fence. Strict `compare-coff-layout.py` passes for all 110 raw
+sections, 699 relocation destinations and function positions against the old
+`c441b9aa0f03520c7206d8aa` control. Production passes the same comparison.
+Every scored soundmgr function remains unchanged, including all four exact
+callers. These references are source-lifetime hypotheses, not declarations
+proved by DC's empty optimized-local inventory.
+
+The unfenced value control `338a47b3bd2bded6fbade5ae` retains the same helper
+body but removes the named calls at setMusicVolume +0x1f, modifySample +0x9a,
+memorySample +0x15a and processStopAndPlayMP3 +0x25. The four bodies grow,
+and their scores drop to 0%, 57.3125%, 81.0864%, and 83.8794%. Direct reads
+also expand the helper, with either guard form. Nested value/reference forms
+keep all four calls, but only the short-circuit reference form preserves the
+original whole object without changing the guards. This is a natural binding
+decision, not a new pragma, helper copy or release-elided dummy operation.
+
+`homm3.vc6.test_volume_boundary` imports the actual body and enum, checking
+15 music settings, 15 effects settings, four selector values and 513 bounded
+volume values at native `-O0` and `-O2`. The 461,700 cases per optimization
+verify selection, scale, minimum-one/maximum-127 limits, disabled settings
+and unchanged setting storage. Five
+negative controls change the selected setting, range, divisor, minimum or
+maximum and are all rejected. The host test does not assert Miles behavior,
+VC6 inlining or overflowing multiplication semantics.
+
+### Joint recheck of byte-neutral Load fences
+
+The complete post-integration deletion audit at `d7f7be28` finds two
+individually byte-neutral `game::load` fences. Before adopting them,
+`generate-redundant-load-fence-family.py` exhausts the four combinations in
+context `c37c4b8bdc6f290cfc35`: four scored states, one emitted object identity,
+one reproduced elite. This separate joint control prevents assuming that two
+individually inert directives are also inert together.
+
+The combined `87c339c85bd6535c153b4761` removes only the creature-bank
+`loadObjectVector` fence and the normal-return fence. Against the unchanged
+`3c3d0c896d77feef57c45b36`, strict raw comparison passes all 822 sections,
+5287 relocation destinations and function positions. Every game score stays
+fixed. Source statements, helper interfaces, return scopes and the remaining
+`isLocalHuman` directive are unchanged. The source generator records the
+pre-adoption anchors; the complete audit snapshots remain separate controls.
+
+### Compiler-generated text-dialog teardown
+
+`generate-text-dialog-dtor-family.py` uses positive Dreamcast member attributes:
+the CTextDialog field list (class `0x2c52`, fields `0x2c53`) gives its destructor
+`0x107`, including `compgenx`, as for CWaitForReadyPlayersDlg. Explicit
+CAnimatedDlg and TDialogBox destructor controls give `0x007`. This is not an
+absence-of-lines or absence-of-locals argument. The canonical correction removes
+the false explicit empty declaration/body and keeps the retained retail body
+at `0x490770` as an `IMPLICIT_DTOR` claim; the deleting wrapper stays claimed.
+
+Context `921c64eda6cd9b36c940` exhausts four states across all twelve actual
+header consumers: four combined emitted-object identities and four reproduced
+elites, each scoring 1129 functions. Implicit-with-existing-fence candidate
+`62c9f3297fad1750e2c2db22` preserves every score. CAnimatedDlg's instruction
+bytes stay fixed, while its base-cleanup relocation now correctly names
+TDialogBox instead of CTextDialog. The readiness caller and the separately
+emitted wait-dialog destructor keep their named calls and body bytes.
+
+Removing the animated-destructor fence makes the implicit wait-dialog
+destructor exact (86.3333% to 100%), but drops waitForReadyToPlayMsg from
+90.6522% to 75.0683% and removes the retained CNetMsgHandler::copy body.
+The correction therefore does not itself justify deleting that override.
+`generate-animated-dtor-lifetime-family.py` follows the corrected parent with
+six real nullable-sprite bindings crossed with that fence. Context
+`5ebe0ea56c6aed44ee2a` exhausts all twelve states, five emitted-object identities
+and five reproduced elites. Every unfenced state still loses the copy body;
+the guarded object reference raises the readiness caller to 83.0186%, while
+the remaining forms stay at 75.0683%. None is adopted. The ordinary destructor,
+virtual Complete sprite disposal and implicit base cleanup remain canonical;
+no dummy work, alternate declaration or explicit derived-destructor router is
+introduced. These finite results bound those lifetime alternatives, not all
+possible caller reconstruction.
+
+### Creature-bank and resource-cost boundaries
+
+`generate-bank-value-lifetime-family.py` starts from the shared nested-size
+fence in valueOfBank. Context `66bc080d5cad95205a44` exhausts sixty bank-receiver,
+artifact-size/receiver and combat-value lifetimes crossed with fence removal:
+sixty scored states, eight emitted-object identities, eight reproduced elites.
+Every unfenced option makes the retained bank body exact (92.2043% to 100%),
+but leaves aiValueOfEvent at 97.4610% instead of 98.0336%. No spelling resolves
+that remaining nested decision, and all other philai scores stay fixed.
+
+The follow-up discovers an actual missing source boundary: DC `0x10f2f8`,
+philai.cpp:1331, calls the player-pointer resource-cost overload from the
+player-ID overload. DC bank `0x110808` in turn calls the ID overload with the
+hero owner. `generate-bank-resource-boundary-family.py` restores that ordinary
+forwarding call and the bank's canonical call together, crossing both with
+fence removal. Context `a44951e66f11cc57a5c4` exhausts eight states, eight object
+identities and eight reproduced elites. The canonical pair with the fence
+(`d42fab3c0207a4cdb4be3f14`) preserves the complete control object's 229 sections,
+1442 relocation destinations and function locations. The previous duplicated
+loop was not evidence that retail lacked the forwarding boundary.
+
+The adopted unfenced pair `82675560b82de2a6702b0056` retains the ordinary
+overloads, the single pointer-based loop, the inline bank helper and all three
+source calls. Production exactly reproduces its 229 sections, 1440 relocation
+destinations and function positions. Against the original control, all 127
+emitted functions remain present; only valueOfBank and its dispatcher change
+raw body bytes, with the other 125 byte-identical. The retained bank matches
+all twelve retail blocks and all four named calls. Its remaining named data
+differences are the existing game/current-player aliases and unclaimed creature
+traits label, not new helper-call discrepancies.
+
+Ordered review narrows the dispatcher residual to its **first** bank arm:
+retail calls vector::size at +0x66d, while the candidate expands it. The second
+arm keeps its call (candidate +0x81e), and the final arm still calls valueOfBank
+(+0x11ff). The second arm's six blocks all match in the separately shifted
+local ranges; both early arms keep the correct pointer-based resource-cost
+calls. Thus the 0.5726-point caller reduction is one missing natural nested
+call, not loss of both arms or replacement of a canonical helper. Full build
+keeps its MAX/HIST at 98.0336% and restores the bank's MAX to 100%.
+
+`homm3.vc6.test_bank_resource_boundary` imports the three actual bodies. Its
+bounded 11,520-case native oracle at `-O0` and `-O2` checks empty/failed-combat
+exits, owner versus active-player selection, per-resource accumulation, signed
+reward guards, artifact counts and unchanged bank inputs. Fixture-only entry
+counters check the recovered call route and ordering. Seven negative controls
+are rejected, including a numerically equivalent bypass of the owner wrapper.
+The fixture does not claim retail ABI/layout, arbitrary floating-point edge
+behavior or VC6 inlining.
+
+### Mouse-thread lifetimes and inherited task teardown
+
+`generate-stop-mouse-lifetime-family.py` tests mutable/const references to
+the actual global thread and event storage, plus guarded-block/early-return
+exits, crossed with the existing fence. References retain every global reload
+across Windows calls; they are not snapshots of potentially changed handles.
+DC's older helper retains only the final pointer restore, so its PC line gap
+is not used as assertion evidence. Context `34cdd1cea3463120d055` exhausts all
+36 states: six emitted-object identities and six reproduced elites. Every
+unfenced option raises generateRandomMap from 92.6386% to 97.9759% but drops
+setupScenarioOptions from 100% to 90.1470%. None is adopted. The caller's
+proven request/progress/path scope and the shared ordinary helper stay intact.
+
+The score-flat task-destructor deletion needs a separate untracked-body review.
+`generate-update-task-fence-family.py`, context `0b5874006d53a33b2e6b`, reproduces
+both source states and both emitted-object identities. All 223 tracked scores
+agree. `verify-update-task-bodies.py` proves that all 396 emitted functions
+remain present, with 395 bodies and their relocation destinations unchanged.
+After excluding only `.debug` metadata, all 737 remaining sections preserve
+order and attributes; all bytes/relocations outside the generated Proc body
+stay fixed. That body changes from a five-byte jump to Task into the same
+38-byte teardown as Task, with identical instructions and delete relocation.
+Padding changes its section from 16 to 48 bytes. The retained Task body
+continues to match every retail instruction and named call at `0x583ef0`.
+
+The initial ICF hypothesis is **refuted**, not reported as a repair. Three
+genuine hash-verified VC6 LINK controls use the unchanged/unfenced real objects
+with `/OPT:ICF`, plus unfenced `/OPT:NOICF`. Each keeps Task and Proc at
+distinct addresses: the ordinary Task body is non-COMDAT. These partial
+diagnostic images have 45 unresolved symbols and are not executed. The normal
+source model is preserved; no false inline, explicit derived destructor or
+unproven implicit Task declaration is introduced to force a fold. The dead
+scalar-wrapper claim and final ownership/link-layout questions remain separate
+debt. Removing the override therefore buys a cleaner source at unchanged
+tracked scores, with an explicitly bounded 32-byte untracked code increase.
+
+Production exactly reproduces selected `f0e98f39dea432f23d145379`: all 824 raw
+sections, 7211 relocation destinations and function locations agree. The
+body verifier also passes directly against production and rejects unchanged,
+reversed and unrelated mouse-helper candidates as three negative controls.
+The final full build preserves 4074/4764 exact and 96.38% linked/whole-image,
+with no score change, MAX reset, migration or lost banked RVA.
+
+### Sacrifice-slot helper boundaries
+
+`generate-sacrifice-slot-boundary-family.py` checks two positive DC facts from
+`update_slot` (`0x125b3c`): line 842 obtains the artifact snapshot from
+`hero::get_artifact`, and lines 847/855 both call the ordinary
+`update_artifact_widget` (`0x125a4c`, line 800). Retail `0x562840` expands both
+widget-helper calls, with different nested visibility decisions. Keep the real
+helper before its caller and its retained claim at `0x5639e0`; no false inline
+declaration, assertion, source-order trick or replacement override is needed.
+
+Context `f394ad344803747dcb3d` exhausts six successfully scored states and
+reproduces all six search-identity objects: direct-field/accessor snapshot
+crossed with pasted-fenced, pasted-unfenced and canonical-unfenced first update.
+All 55 scores are unchanged for the canonical call. The pasted-unfenced
+negative controls lower only updateSlot from 100% to 99.1368%, whether or not
+the artifact accessor is restored. Production adopts both positive boundaries,
+candidate `b20261b99b0d0a9b31069e1f`, against unchanged
+`646bd196a8d8203b4e71d54c`.
+
+The six distinct runner identities do not imply six different instruction
+streams: private label counters are deliberately not generalized away by that
+metric. The stricter same-layout proof, `compare-coff-layout.py`, independently
+shows all **200 raw sections**, **1678 relocation destinations**, and function
+identities/positions unchanged between the untouched control and the selected
+candidate, and again against production. This includes untracked bodies and
+data, not just the 55 scored rows. The pasted-unfenced control fails that proof.
+
+Retail review confirms all twelve CFG blocks and the ordered fourteen named
+calls. The first expansion calls `setVisible` at `+0x6d`; the other visibility
+sites expand it into `sendMessage`, including the second artifact expansion
+at `+0x119`. The three remaining display-name relocation differences are
+already claimed artifact/slot data, not new helper-boundary mismatches.
+One depth-zero override is retired at unchanged object code and matching score.
+The full delink/build passes all gates at **4074/4764 exact and 96.38%
+linked/whole-image**. Only updateSlot's source hash changes in the matching
+ledger; no score, MAX or HIST changes. The cleanliness bound drops to 216
+depth-zero overrides.
+
+### Creature-bank table owners and ordinary level reader
+
+`generate-bank-table-owner-family.py` replaces two incorrectly file-scoped
+`const int` tables and the reward enum adapter with the source-owned tables.
+NB11's `guard_types` (type `0x5601`) and `reward_types` (`0x5602`) are mutable
+`TCreatureType[11][5]` and `[11]` statics belonging to loader procedure
+`0x7112c`. This is positive storage/type evidence, not a line-gap inference.
+The hash-verified retail image puts their 55 and 11 dwords in writable `.data`
+at `0x6702a0` and `0x67037c`. Preserve zero-initialized padding after guard
+sentinels rather than inventing extra creature entries.
+
+Six consumed creature names come from DC's actual enum: four added members
+and two moved atomically from AI's separate enum into canonical TCreatureType.
+The initial unscored opposite corner exposed the two duplicate names; that
+manifest was repaired before continuing. Corrected context
+`7db5f64e100e77ef33ce` reproduces both states across all **95 header consumers**
+and **4117 scored functions**. Control `ed35dc233ed5555e0bfbe8a9` and native
+candidate `24e6bf9987f4beff9cd1a45f` change only three tracked RMG scores:
+quest-creature generation 100% → 99.7349%, loadTemplates 80.8461% → 80.8308%,
+and writeMapHeader 77.8952% → 77.9030%. Their bodies' source hashes are
+unchanged, so MAX/HIST retain all prior peaks. All three bank scores stay flat.
+
+The stricter raw-object comparison passes **90 of 95 entire objects**.
+Creature-bank moves the tables from `.rdata` into `.data`; all fourteen
+emitted function bodies remain byte-identical. Three TUs (creaturetype,
+spelldefs, herodefs) retain identical function bytes/named references but
+shuffle anonymous-namespace BSS; **same-source reproduction also shuffles
+those BSS layouts**, so do not attribute that variation to the enum edit.
+RMG preserves all 441 function positions and section extents, with actual
+body-byte changes confined to the same three scored functions. No object
+rewriter or new scoring normalization is involved.
+
+`verify-bank-table-owners.py` independently checks NB11 procedure ownership,
+exact enum dimensions, emitted local-static mangled owners, writable section
+placement and **all 66 dwords**. It passes on the selected object and production,
+rejects the old file-static control, and rejects six non-mutating byte/order/
+extent negative controls. Before the reader recovery, candidate/production
+also match all 29 raw sections and 101 relocation destinations exactly.
+
+DC's ordinary static `initialize_creature_bank_level` (`0x70fe0`, source
+line 32) takes `type_creature_bank_level&` and `const vector<char*>&`; the
+loader calls it at line 136 after installing the guard/reward types. Restore
+that real body before its caller, not a false inline declaration or pasted
+reader. `generate-bank-level-boundary-family.py` crosses four meaningful
+column-cursor lifetimes plus the pasted control with unsigned/signed guard
+indices. Retail's guard-copy `jl` positively supports the signed index.
+Context `c601a370d5246188c67a` exhausts and reproduces all ten states/objects.
+Selected `f9671c7898dc10b79eeb7727` uses the DC cursor from column two and
+advances past each guard count before its zero test: **89.4550% → 97.5355%**.
+Both other tracked bank functions remain 100%. The signed-index-only
+negative control gives 88.8910%, demonstrating why an isolated score dip
+does not reject a source fact. Production reproduces all 28 raw sections,
+100 relocation destinations and function positions of the chosen object.
+
+All fifteen named calls now agree with retail, including the recovered
+string `_Eos` expansion, and all twelve branches agree. The remaining two
+CFG size differences are the guard-copy inductions: VC6 forms a destination
+minus source bias where retail keeps two cursors and a counter. A string
+byte-store address also exchanges commutative operands. This is a measured
+residual, not bank-TU closure or a request for a new suppression pragma.
+
+`homm3.vc6.test_bank_level_boundary` imports both actual bodies, with only a
+fixture entry counter added. At `-O0` and `-O2`, eleven numeric patterns across
+four resource conditions check null/short input disposal, the retail threshold
+of thirteen rows, all 44 level records, exact row and parsed-cell order, guard
+sentinels, seven resources, artifacts and the reward count's signed-byte zero
+test. Seven negative controls are rejected. The mock is a bounded behavioral
+oracle, not proof of retail ABI or compiler inlining.
+
+Full delinking/build passes at **4073/4764 exact, 96.39% linked fuzzy and
+96.38% whole-image**. One bank checkpoint rises; no MAX resets or banked
+RVA losses occur. The audit now has **63 unions** (37 source, 26 header),
+including 39 remaining reconstruction adapters, and **221 inline overrides**.
 
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained

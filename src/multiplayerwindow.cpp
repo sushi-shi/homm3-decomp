@@ -905,36 +905,52 @@ inline unsigned char TMultiPlayerWindow::onDirect()
     return 1;
 }
 
-// DC proves the three member-helper boundaries retained above; Complete inlines
-// all of them into this caller. With those boundaries present the CFG remains
-// 42/42 blocks exact and the current score is 97.493% (banked flattened MAX
-// 98.120%); the residual is VC6 register scheduling in the late case arms.
-// Flattening recovers MAX but violates the positive DC source fact. A plain
-// out-of-line spelling fell to 61.757%; __forceinline and success-guard polarity
-// were byte-flat at 97.493%, while making the session pointer volatile fell to
-// 92.580%. Unpromoted helper/data relocation names are cosmetic.
+// DC proves the three member-helper boundaries above; Complete expands
+// them here. Restore the separate OnModem/OnDirect failure scopes in DC
+// lines 1239..1241 and 1249..1251: RemoteCleanup precedes exitFlag and the
+// dialog result. Their current helpers always succeed, so these real
+// failure scopes are release-elided naturally; they are not dummy calls.
+// Keeping those source statements removes two gotos and restores the
+// 98.1199% historical peak from 97.4932%, with all helper boundaries intact.
+// Flattening is unnecessary. Fully duplicated arm tails score 91.5668%,
+// with either direct returns or breaks; the earlier 15-tail combination
+// probe also lost score (exitFlag/return copies alone reached 96.4714%).
+// A connectionFailed result removes the cancel/IPX failure joins at the
+// same 98.1199%; bool and byte results emit identical code. Cleanup remains
+// after exitFlag/dialogReturn for those failures, unlike TCP's source order.
+// Seventy-two combined failure/menu/host/exit alternatives were exhausted:
+// a shared menu result with merged cancel/IPX cases reaches only 97.5668%,
+// and copying the host's menu check gives 95.4905%. The remaining five joins
+// retain their common actions; late-arm register scheduling remains open.
+// Individual owned-action controls, in source order: Cancel menu 88.8147%,
+// Host success 94.2507%, Host failure check 91.2643%, Join menu 88.8147%,
+// Search success 94.0872%, versus 98.1199%. Combined menu/host/exit scopes
+// also lose; preserve OnHost/OnSearch and their distinct cleanup order.
+// Enclosing dispatch in do/while(0), with switch continue to a single action
+// tail, scores 87.2752% for successful Host/Search and 77.3978% for the two
+// menu exits. These preserve calls and cleanup semantics but change the CFG;
+// the neutral campaign scope does not transfer to this dispatcher.
 // Before normalization (locals): bExitFlag.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
+    bool connectionFailed = 0;
     switch (id) {
     case CANCEL_ID:
-        if (!m_inSessionList)
-            goto connection_failed;
+        if (!m_inSessionList) {
+            connectionFailed = 1;
+            break;
+        }
         goto return_to_main_menu;
 
     case IPX_ID: {
         goSessionList();
-        if (!onIPX())
-            goto connection_failed;
+        if (!onIPX()) {
+            connectionFailed = 1;
+            break;
+        }
         return 1;
     }
-
-connection_failed:
-    *exitFlag = 1;
-    g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-    remoteCleanup();
-    return 1;
 
     case TCP_ID:
         goSessionList();
@@ -948,14 +964,20 @@ connection_failed:
 
     case MODEM_ID:
         goSessionList();
-        if (!onModem())
-            goto connection_failed;
+        if (!onModem()) {
+            remoteCleanup();
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        }
         return 1;
 
     case DIRECT_ID:
         goSessionList();
-        if (!onDirect())
-            goto connection_failed;
+        if (!onDirect()) {
+            remoteCleanup();
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        }
         return 1;
 
     case ONLINE_ID:
@@ -1025,6 +1047,13 @@ check_host_join_screen:
     case GAME_SLIDER_ID:
     case ROLLOVER_ID:
         break;
+    }
+
+    if (connectionFailed) {
+        *exitFlag = 1;
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        remoteCleanup();
+        return 1;
     }
 
     return 1;

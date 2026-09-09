@@ -827,6 +827,12 @@ static inline FILE* openResourcePath(const char* name)
 // controls peak at 94.5542%; explicit key pairs also contradict the retained
 // pair<const char*, resource*> constructor at 0x55ecf0. No copied helper body
 // or synthetic pair overload is retained to steer those calls.
+// The ordinary-file allocation arm adds only a nonnull result to the
+// cache, then returns that result. This positive guard removes the failure
+// goto at 94.5542%, with every sibling unchanged; it is not a cache-hit exit.
+// An explicit successful-result scope is equally neutral. Merging both
+// arms' returns scores 94.0994%; sharing the cache insertion too scores
+// 86.3825% and loses the retained pair constructor. Keep both cache calls.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::getBitmap816(const char* name)
 {
@@ -844,10 +850,8 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             g_firstMaskBits, g_firstMaskShift,
             g_greenMaskBits, g_greenMaskShift,
             g_lastMaskBits, g_lastMaskShift);
-        if (!result)
-            goto get_bitmap816_done;
-
-        addToCache(result);
+        if (result)
+            addToCache(result);
         return result;
     }
 
@@ -928,7 +932,6 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             addToCache(result);
     }
 
-get_bitmap816_done:
     return result;
 }
 
@@ -958,9 +961,7 @@ VA(0x0055ac40, 0x388)  // GetBitmap16 loader callee + dc header record
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
     Bitmap16Bit* result = 0;
-#pragma inline_depth(1)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
-#pragma inline_depth()
 
     if (file) {
         fclose(file);
