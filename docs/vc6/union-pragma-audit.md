@@ -12,17 +12,17 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 68 (42 source, 26 header) | Ten removed; classify the remainder below |
-| Inline override regions | 289 | 241 | 48 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 234 | Remaining overrides are matching debt |
+| Union definitions | 78 (47 source, 31 header) | 67 (41 source, 26 header) | Eleven removed; classify the remainder below |
+| Inline override regions | 289 | 228 | 61 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 221 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 504 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 478 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 42 active inline overrides were removed; counting
-all 48 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 55 active inline overrides were removed; counting
+all 61 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -43,6 +43,7 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | Puzzle coordinate tables | `TPuzzleCoordinatePointer` byte/short pointer alias | Retail 0x52c6c0/0x52c9b0 reads signed words with a 96-short puzzle-row stride. Declare short tables and use typed row pointers. `updatePuzzle` remains 100%; `aiAttemptPuzzleGuess` preserves 97.1621%. |
 | `SavedGameHeader::reset` | Byte/dword `isHuman` local | Store the bool result directly in the integer flag array. Removing this matching-only representation costs 100% → 98.2888% in this one function; the old DC Reset predates Complete's loop. |
 | `TViewArmyWindow` | Three local `shownType` enum adapters | DC CodeView proves `ArmyType` is `TCreatureType`. Restore that member type and use it directly; retain the proven int constructor parameter and int `Upgrade` boundaries. Both affected constructors improve when their canonical name-helper calls are restored too. |
+| `game::load` / `game::save` | `TGatePairVectorPointerAlias` and its forced wrapper | Restore the common `loadVector` / `saveVector` templates with bool results and native vector references. The long-vector resize restores retail's zero-filled new elements; the point/long retained writers have identical bytes. Six Load fences disappear, both callers improve, and both claimed writers remain exact. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -57,10 +58,10 @@ pins, alternate declarations or dummy operations were introduced.
 |---|---:|---|
 | Scalar integer/enum adapters | 32 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
-| Pointer adapters/views | 11 | Two intentional ABI views; nine adapters requiring owner/call-boundary recovery |
+| Pointer adapters/views | 10 | Two intentional ABI views; eight adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **68** | **24 intentional representations; 44 reconstruction adapters/workarounds** |
+| **Total** | **67** | **24 intentional representations; 43 reconstruction adapters/workarounds** |
 
 The 32 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
@@ -96,7 +97,7 @@ admission a blanket waiver for every integer-to-enum conversion. The next step
 is canonical ownership and real input-domain recovery, preserving the attested
 public ABI rather than changing parameter types solely to satisfy callers.
 
-The other 36 remaining definitions are exhaustively grouped here:
+The other 35 remaining definitions are exhaustively grouped here:
 
 | Owner / member | Count | Why retained / removal condition |
 |---|---:|---|
@@ -104,7 +105,6 @@ The other 36 remaining definitions are exhaustively grouped here:
 | `Bitmap16MapPointer`, `Bitmap16ConstMapPointer` | 2 | Pixel reads use 16-bit elements while pitch and row stepping use bytes, including `winmgr::fizzle`. A canonical byte-pitch row-access model is needed before retiring these pointer adapters. |
 | `message` payload and `TIPv4SocketAddress` | 2 | Intentional integer/text message ABI and same-record sockaddr_in/sockaddr API views. Keep shared storage, not two sequential fields. |
 | Local pointer payloads: `advmgr::drawRolloverText`, two hero-screen portrait sends, `swapmgr::textPointerPayload` | 4 | Current retained broadcast overload takes an integer payload. Recover its real call/expansion decision before switching to the message-pointer overload; do not invent a text overload solely to hide the conversion. |
-| `TGatePairVectorPointerAlias` | 1 | DC retains both long-vector and point-vector serializers; retail folds their compatible bodies. Canonical element ownership, load/resize behavior and retained template claims need joint recovery, not another pointer cast. |
 | `TUniversitySkillsPointerAlias` | 1 | `RandomizeUniversity` passes a four-int default to the record constructor/copy boundary. Directly declaring the record currently introduces the out-of-line Complete constructor where retail has no call (prior control 97.86% vs 99.75%). DC lacks this Complete constructor; its absence there does not establish an inline body. |
 | `TMarketArtifactList` | 1 | The black-market entry accepts bytes; other entry points supply artifact arrays; panels use raw IDs/sentinels and typed artifact APIs. Reconcile entry-point/element ownership, then remove the adapter. |
 | `TFloatLongBits` / `TDoubleLongBits` in bitmap16 and palette; the two `viewwrld::ftol` locals | 6 | Actual float/double bit reinterpretation and low-word extraction for the magic-constant conversion. Numeric casts are not equivalent. Keep the representation unless an equally evidenced implementation replaces it. |
@@ -548,6 +548,114 @@ hand-edited generated label or second symbol ledger is involved.
 `findpath.cpp` now has **zero inline overrides**. The two removals here do not
 establish that the remaining overrides elsewhere are necessary.
 
+### Ordinary shipyard and movement helpers
+
+A fresh deletion audit at `6d71f4c3` exhausts all 241 regions in 34 TUs:
+231 isolated removals lose only, four have mixed effects, four improve only,
+and two keep tracked scores but change emitted code. The four positive sites
+are in `markShipyards`; this is a new lead after the shared map-accessor
+recovery, not a repetition of the earlier deletion verdicts.
+
+The matching pass restores `mark_shipyards`, `clear_shipyards`, `RestoreMouse`
+and `check_for_town` as ordinary static helpers. DC source boundaries at
+150/165/833/896 and retail's expanded copies supply the evidence. The resource
+guard exits before the marking loops; the absent-dock and absent-boat guards
+continue before the following cell work. `check_for_town` similarly returns
+on a negative ID before its two calls. The helpers and all source calls remain
+canonical; none needs a forced-inline declaration or any of the seven removed
+shipyard depth fences.
+
+| Reviewed family | Successful source states | Distinct code/relocation results |
+|---|---:|---:|
+| Seven-fence subsets and ordinary shipyard boundaries | 256 | 83 |
+| Continue scopes, copied/reference/temporary points, flag type | 97 | 7 |
+| Remaining ordinary movement helpers and town early return | 33 | 7 |
+
+The raw highest score, 93.3304%, retains the old forced shipyard enclosure;
+89.6719% still forces `checkForTown`. Neither score proves that declaration.
+The adopted ordinary four-helper source removes all seven fences and improves
+`moveHero` from 86.3549% to 86.6362%. Direct/reference point arguments in that
+fully ordinary family score 86.2031%; keeping the copied point value avoids
+that loss. No other tracked `philai` score changes. All 126 other emitted
+function spans have identical raw bytes, with no added or removed functions.
+The adopted production compile also exactly reproduces its chosen candidate's
+229 sections and 1,442 relocation destinations, including untracked code.
+
+The three generators are historical pre-adoption controls. Their frozen
+contexts are `72462b8f9ffdd5d808be`, `40bf439a08b295f6421e`, and
+`30bc95c403479c26cd58`; rerun them against the
+`6d71f4c3` source snapshot, not by weakening the now-stale seven-fence anchors.
+
+### Native saved-game vector helpers
+
+DC `load_vector` instances at 0xc19e8/0xc1a68/0xc1ae8 share game.cpp:2698;
+the three `save_vector` instances share line 2716. Their mangled declarations
+prove native bool results and vector references. The shared readers use a
+short count, public `resize(count)`, subscript zero and two guarded reads.
+Complete uses `TAbstractFile` in place of the older stream handle. Its retained
+writers use an int count slot, write its low two bytes, and sign-extend those
+two bytes for the payload length.
+
+The previous implementation pasted six reader expansions into Load and sent
+the long-vector gate pairs through a point-vector pointer union. That loses a
+real operation: retail zeroes the long fill before resize. The canonical
+template restores that initialization and naturally expands all six calls,
+without any of their six resize fences. Save uses the same native references;
+the pointer union, forced wrapper and duplicate writer implementations are gone.
+
+The helper family exhausts 33 source states / 33 code identities. A follow-up
+crosses four reader parents, six writer return forms and all four deletion
+subsets of the two existing Save fences: 97 source states / 73 code identities.
+The adopted default-argument resize and guarded returns improve Load
+78.2645% → 80.1570% and Save 96.5761% → 96.7588%. Named fill locals and direct
+read-result expressions reach 82.2663% in Load, but do not displace the positive
+DC default-argument and guard evidence. Removing either Save fence scores
+90.8331% / 90.9878%, and removing both scores 89.7442%; those existing caller
+fences remain debt. No override was added or moved into a helper.
+
+The native bool writers at 0x4d2ac0 / 0x4d2b20 reproduce all 96 retail bytes,
+including SETAE. Direct-expression and named-result alternatives emit SBB/INC;
+that difference does not refute the bool ABI. Point/long writer, resize, size,
+`_Ucopy` and `_Ufill` bodies have identical raw code, supporting the folded
+retail identities without changing the native container element types. The
+production object also reproduces the selected candidate's entire 822 sections
+and 5,288 relocation destinations. This is candidate/adoption identity, not a
+claim that Load or its whole TU matches retail.
+
+The disappearing untracked `vector<CampaignScenarioInfo>` destructor was
+referenced only by Load's expanded event-read failure cleanup and its unwind
+handler. That exit now calls the outer `SavedGameHeader` destructor; it is not
+an unrelated function loss. Retail partially expands that outer cleanup but
+retains `SCampaign` destruction, so cleanup boundaries still differ. Load also
+still calls the Complete university default constructor where retail passes
+an uninitialized fill record. That class boundary remains recovery work,
+shared with the retained `TUniversitySkillsPointerAlias`; the template recovery
+does not disguise it with a different declaration.
+
+The two retained claims remain source-owned, inactive declarations of their
+actual bool/reference instances. The old size/order label join could not
+distinguish three equally sized emitted instances from two retail addresses.
+`retail_labels/source.py` now binds this narrow helper family by its declared
+stream and vector element types before any weak fallback. Missing, ambiguous,
+wrong-ABI and already-taken instances cannot borrow an ICF twin. Eleven focused
+tests cover the contract; all 169 retail-label tests pass. Both identity
+migrations preserve the original RVAs and exact CUR/MAX/HIST.
+
+The native I/O fixture extracts the actual helper templates and university
+definition/constructor. It checks full round trips, empty/growing/shrinking
+vectors, short headers/payloads, native long zero-fill and signed-short save
+count boundaries. Six intentionally wrong width/count/failure variants fail.
+It preserves retail's unsigned read-result comparison, including its negative
+result quirk; this is behavioral evidence, not a replacement for the pinned
+Dinkumware/VC6 verdict or a portability claim for `&vector[0]` on empty vectors.
+
+Historical generators are `generate-game-vector-helper-family.py` and
+`generate-game-vector-return-family.py`, frozen in contexts
+`00e01d97ce77f329067a` and `5b633fb2e19799b0a4b3`. Their game.cpp anchors refer
+to the pre-adoption `6d71f4c3` source; the independent movement-helper changes
+do not alter that TU's inputs. Reproduce those contexts before rebasing a new
+family onto the adopted helpers.
+
 ## Reproduction and verification
 
 The audit scripts generate analysis only; they do not adopt source, adjust the
@@ -635,11 +743,24 @@ of source changes. Its canonical black-market, generator and town-pool
 serialization boundaries remove five additional depth fences; see the
 [goto audit](goto-audit.md#further-structured-reductions). The combined
 full build passes at 4064/4752 exact, 96.39% linked fuzzy and 96.12%
-whole-image, with no MAX reset or lost banked RVA. The current census is
+whole-image, with no MAX reset or lost banked RVA. That combined census is
 **241 inline overrides** (234 depth-zero, seven auto-inline-off), across 34
 TUs, and **68 unions**. The independent controls above retain their exact
 pre-integration snapshots rather than presenting those scores as new-tree
 measurements.
+
+The ordinary movement-helper checkpoint keeps 4064/4752 exact functions,
+96.39% linked fuzzy and 96.12% whole-image. Full retail delinking and all
+repository gates pass, with one raised function checkpoint and no MAX reset.
+The updated census is **234 inline overrides** (227 depth-zero, seven
+auto-inline-off) and **68 unions**.
+
+The native-vector checkpoint keeps **4064/4752 exact functions**, **96.39%
+linked fuzzy** and improves whole-image coverage to **96.13%**. No scored
+function loses its current score. Full retail delinking and all gates pass,
+with two raised checkpoints, two typed claim migrations and no MAX reset.
+The current census is **228 inline overrides** (221 depth-zero, seven
+auto-inline-off) and **67 unions**.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

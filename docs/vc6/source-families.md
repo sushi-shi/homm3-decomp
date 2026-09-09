@@ -1269,6 +1269,30 @@ the retained calls without an inline pin or an alternate declaration. The common
 six-slot painter prefix is supported by the same walker reading both final
 painters' dimensions at +4/+8; that model does not assert an original class name.
 
+### Ordinary movement and native serialization boundaries
+
+The union/pragma cleanup uses the same driver outside RMG. Its historical
+`generate-shipyard-boundary-family.py`, `generate-shipyard-scope-family.py` and
+`generate-movehero-helper-family.py` populations restore four ordinary static
+helpers, preserving their actual calls and early-exit scopes while deleting
+seven existing fences. The native `generate-game-vector-helper-family.py` and
+`generate-game-vector-return-family.py` populations jointly recover typed
+load/save templates, delete a pointer union and six more fences, and retain
+both exact writer bodies. The
+[audit](union-pragma-audit.md#ordinary-shipyard-and-movement-helpers) records
+the frozen contexts, source/candidate counts, rejected higher-scoring false
+declarations, and caller/whole-object controls. These generators require their
+pre-adoption source snapshot; stale source anchors must not be relaxed merely
+to rerun historical numbers.
+
+`PYTHONPATH=scripts python -m unittest homm3.vc6.test_game_vector_io` extracts
+the adopted serializer templates into the native stream-contract fixture.
+It covers resize/zero-fill, short I/O, payload strides and narrow count
+boundaries with six rejected negative controls. The associated narrow
+source-owned vector-instance label join is tested by
+`homm3.retail_labels.test_vector_helper_signatures`; it must reject an equal-size
+ICF twin when the requested native element/signature is missing or ambiguous.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
