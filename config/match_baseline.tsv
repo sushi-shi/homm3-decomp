@@ -4230,6 +4230,7 @@ spells	?updateSpellTarget@@YIHJ@Z	95.5113	95.5113	95.5113	0x19f700	c698ae769903
 spells	?validSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0	ae29480b4b07
 spells	?validSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	a4e7f2b9b636
 spells	?viewSpells@combatManager@@QAEHXZ	91.8147	91.8147	91.8147	0x19e900	054f00290071
+string_support	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x115010	-
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	3741e316f621
 strip	?draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80	8e98eb2b7b1a
 strip	?drawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0	2d71d192f5fa

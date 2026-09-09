@@ -727,6 +727,11 @@ build build/objdiff/base/objecttype.obj: cl src/objecttype.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = objecttype
 build objecttype: phony build/objdiff/base/objecttype.obj
+build build/objdiff/base/string_support.obj: cl src/string_support.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = string_support
+build string_support: phony build/objdiff/base/string_support.obj
 build build/objdiff/base/gzfile.obj: cl src/gzfile.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -859,10 +864,11 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_pcx_kernels.obj
 build all: phony build/objdiff/base/adler32.obj $
@@ -947,10 +953,11 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_pcx_kernels.obj
 default all
@@ -1036,10 +1043,11 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/rmg.obj build/objdiff/base/rmg_support.obj $
     build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
     build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_pcx_kernels.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
