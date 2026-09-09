@@ -18,10 +18,14 @@ zlib_o2_ml_gr_c_windows = [
 # stdcall entry points and internal cdecl calls are explicit in the source.
 # /O2's omitted frames reproduce both admitted wrappers; /Oy- does not.
 # These functions do not distinguish CRT mode or compiler generation.
+# victorInitializePalette expands the ordinary victorUploadPalette body.
+# /Ob2 reproduces its GDI call sequence; /O2 alone retains a mismatching call.
+# The existing allocation/validation wrappers remain byte-exact with /Ob2.
 victor_o2_ml_gd_windows = [
   "/nologo",
   "/c",
   "/O2",
+  "/Ob2",
   "/ML",
   "/Gd",
   "/D_WINDOWS",

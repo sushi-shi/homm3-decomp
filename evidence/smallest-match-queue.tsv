@@ -8,7 +8,7 @@ unmapped	115	0x006047b0	-	0.0000	0.0000				unmapped	locate the owning TU, then a
 unmapped	132	0x00604720	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 compiled	147	0x005348d0	95.1754	95.1754	95.1754	rmg	rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	151	0x00432640	85.8871	85.8871	85.8871	ai_player	ai_player	?getValue@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-unmapped	154	0x00603810	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
+compiled	154	0x00603810	70.3860	70.3860	70.3860	victor	victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	157	0x005226d0	94.8548	94.8548	94.8548	palette	palette	??0TPalette16@@QAE@PBVTPalette24@@HHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	158	0x0056a360	93.2615	93.2615	93.2615	search	search	?checkAdjacentMonster@@YIEPBVhero@@PAUpathCell@@W4type_search_type@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	159	0x00522770	94.9365	94.9365	94.9365	palette	palette	??0TPalette16@@QAE@PBDPBVTPalette24@@HHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -44,7 +44,7 @@ compiled	247	0x00416060	93.3333	93.3333	93.3333	advmgr	advmgr	?bvResMsg@advManag
 compiled	251	0x00420f00	94.5177	94.5177	94.5177	ai	ai	?sodChooseFaerieDragonSpell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	251	0x004f0490	99.1549	99.1549	99.1549	kb	kb	?doSinglePlayerWindow@@YIHXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	251	0x005d6810	98.0247	98.0247	98.0247	townmgr	townmgr	?windowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-unmapped	252	0x006039c0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
+compiled	252	0x006039c0	88.8478	88.8478	88.8478	victor	victor	?victorInitializePalette@@YGXPAUimgdes@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	254	0x00551460	96.6709	96.6709	96.6709	recruit	recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	255	0x005fd5b0	76.1539	76.1539	76.1539	rmg_support	rmg_support	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgBoundaryVertex@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	257	0x00443e30	98.5227	98.5227	98.5227	army	army	?getEstimatedDamage@army@@QBEJPBV1@JEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
