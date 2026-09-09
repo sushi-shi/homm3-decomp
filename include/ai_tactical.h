@@ -328,13 +328,16 @@ struct type_AI_spellcaster {
     long getFaerieDragonSpellValue(long hex, long power, SpellID spell);
     // Before normalization (function): type_AI_spellcaster::get_damage_value.
     // Before normalization (locals): base_damage, target_hero.
+    // DC 0x3d96c and public IBAJ prove a const member; retail 0x436e30
+    // reads the estimator and mutates neither it nor the target army.
     long getDamageValue(SpellID spell, long baseDamage,
-                          const hero* targetHero, const army* target);
+                          const hero* targetHero, const army* target) const;
     // Before normalization (function): type_AI_spellcaster::get_damage_spell_value.
     long getDamageSpellValue(const army* enemy, type_enchant_data caster);
     // Before normalization (function): type_AI_spellcaster::get_mass_damage_effect.
     // Before normalization (locals): enemy_damage, friendly_damage.
-    long getMassDamageEffect(long enemyDamage, long friendlyDamage);
+    // DC 0x3db2c: get_mass_damage_effect is const (public IBAJ).
+    long getMassDamageEffect(long enemyDamage, long friendlyDamage) const;
     // Before normalization (function): type_AI_spellcaster::get_area_effect_value.
     // Before normalization (locals): base_damage.
     long getAreaEffectValue(SpellID spell, long baseDamage,
@@ -491,20 +494,20 @@ struct type_AI_spellcaster {
     void considerSingleEnchantment(type_spell_choice* choice, long group);
     // Before normalization (function): type_AI_spellcaster::consider_enchantment.
     void considerEnchantment(type_spell_choice* choice, long group);
-    // Four pricers with NO retail body of their own: /Ob2 folds each
-    // into consider_spell (0x43bb20), which is their only call site,
-    // and the carve cuts no row for any of them. Defined `inline` in
-    // ai_tactical.cpp for that reason.
+    // These pricers expand into consider_spell (0x43bb20), and the carve
+    // has no retained row for them. That does not itself prove source inline;
+    // the group, mass and summon definitions are ordinary source helpers.
     // Before normalization (function): type_AI_spellcaster::get_group_damage_value.
     // Before normalization (locals): base_damage, target_hero.
     long getGroupDamageValue(SpellID spell, long baseDamage, long group,
-                                hero* targetHero);
+                                hero* targetHero) const;
     // Before normalization (function): type_AI_spellcaster::consider_area_effect.
     void considerAreaEffect(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_mass_damage.
-    void considerMassDamage(type_spell_choice* choice);
+    // DC 0x3de90: const member with a writable type_spell_choice reference.
+    void considerMassDamage(type_spell_choice& choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_summon.
-    void considerSummon(type_spell_choice* choice);
+    void considerSummon(type_spell_choice& choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_earthquake.
     void considerEarthquake(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_resurrect.
