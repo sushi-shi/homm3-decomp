@@ -1540,6 +1540,55 @@ no dummy work, alternate declaration or explicit derived-destructor router is
 introduced. These finite results bound those lifetime alternatives, not all
 possible caller reconstruction.
 
+### Creature-bank and resource-cost boundaries
+
+`generate-bank-value-lifetime-family.py` starts from the shared nested-size
+fence in valueOfBank. Context `66bc080d5cad95205a44` exhausts sixty bank-receiver,
+artifact-size/receiver and combat-value lifetimes crossed with fence removal:
+sixty scored states, eight emitted-object identities, eight reproduced elites.
+Every unfenced option makes the retained bank body exact (92.2043% to 100%),
+but leaves aiValueOfEvent at 97.4610% instead of 98.0336%. No spelling resolves
+that remaining nested decision, and all other philai scores stay fixed.
+
+The follow-up discovers an actual missing source boundary: DC `0x10f2f8`,
+philai.cpp:1331, calls the player-pointer resource-cost overload from the
+player-ID overload. DC bank `0x110808` in turn calls the ID overload with the
+hero owner. `generate-bank-resource-boundary-family.py` restores that ordinary
+forwarding call and the bank's canonical call together, crossing both with
+fence removal. Context `a44951e66f11cc57a5c4` exhausts eight states, eight object
+identities and eight reproduced elites. The canonical pair with the fence
+(`d42fab3c0207a4cdb4be3f14`) preserves the complete control object's 229 sections,
+1442 relocation destinations and function locations. The previous duplicated
+loop was not evidence that retail lacked the forwarding boundary.
+
+The adopted unfenced pair `82675560b82de2a6702b0056` retains the ordinary
+overloads, the single pointer-based loop, the inline bank helper and all three
+source calls. Production exactly reproduces its 229 sections, 1440 relocation
+destinations and function positions. Against the original control, all 127
+emitted functions remain present; only valueOfBank and its dispatcher change
+raw body bytes, with the other 125 byte-identical. The retained bank matches
+all twelve retail blocks and all four named calls. Its remaining named data
+differences are the existing game/current-player aliases and unclaimed creature
+traits label, not new helper-call discrepancies.
+
+Ordered review narrows the dispatcher residual to its **first** bank arm:
+retail calls vector::size at +0x66d, while the candidate expands it. The second
+arm keeps its call (candidate +0x81e), and the final arm still calls valueOfBank
+(+0x11ff). The second arm's six blocks all match in the separately shifted
+local ranges; both early arms keep the correct pointer-based resource-cost
+calls. Thus the 0.5726-point caller reduction is one missing natural nested
+call, not loss of both arms or replacement of a canonical helper. Full build
+keeps its MAX/HIST at 98.0336% and restores the bank's MAX to 100%.
+
+`homm3.vc6.test_bank_resource_boundary` imports the three actual bodies. Its
+bounded 11,520-case native oracle at `-O0` and `-O2` checks empty/failed-combat
+exits, owner versus active-player selection, per-resource accumulation, signed
+reward guards, artifact counts and unchanged bank inputs. Fixture-only entry
+counters check the recovered call route and ordering. Seven negative controls
+are rejected, including a numerically equivalent bypass of the owner wrapper.
+The fixture does not claim retail ABI/layout, arbitrary floating-point edge
+behavior or VC6 inlining.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
