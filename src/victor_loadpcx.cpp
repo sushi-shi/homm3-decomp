@@ -31,6 +31,8 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // completed RGB rows set it; partial RGB planes still continue immediately.
 // A separate memcpy in the nibble arm scores 76.6737%, and moving nibble to
 // fall through into indexed copy scores 53.9655%; keep the shared copy result.
+// Hoisting and reordering all prelude, decode-state and allocation-success
+// declarations across a complete 64-state old-C family emits one object.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
