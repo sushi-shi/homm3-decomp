@@ -2642,13 +2642,20 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // MAX. The remaining two-store residual stays a source-matching problem.
 // The result-local order documented above measured 98.8829 here and was
 // rejected. See docs/name-normalization.md; MAX/history remain preserved.
+// After removing the false game selector declaration, initializing behind
+// at its declaration before ResetHitByCreature and keeping an explicit final
+// else raises 98.8868% to 99.9424%, above the former 98.9251% peak. Retail
+// initializes that pointer before the reset call; initialization after it
+// plus the same else remains 98.9251%. DC retains the separate reset/target
+// initialization and final result branches. No compiler-state noise is kept.
+// The remaining differences are commuted base/index registers in the three
+// MarkCreatureEffect expansions; all 106 blocks and 31 named calls agree.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::doAttack(army* armyToAttack, int direction)
 {
     unsigned attackMask;
-    army* behind;
+    army* behind = 0;
     g_combatManager->resetHitByCreature();
-    behind = 0;
     if (is(1u << 19)) {
         if (m_spellInfluence[59])
             attackMask = getAttackMask(m_gridIndex, 2, -1);
@@ -2755,7 +2762,8 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         doFireShield(fireDamage);
     if (armyToAttack->m_residualBlindness && armyToAttack->m_blindFactor == 0.0)
         return 1;
-    return special;
+    else
+        return special;
 }
 
 // The whole melee exchange in one direction: turn the defender to face

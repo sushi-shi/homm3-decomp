@@ -5842,6 +5842,12 @@ void hero::transferArtifacts(hero* src)
 // equip_artifact, remove_artifact) changes nothing - VC6 already rotates
 // those, so their guards were never folded. This lever only pays where
 // the loop came out top-tested.
+// The two component-capacity failures set a slotFits result and break the
+// component scan; a false result continues the enclosing slot scan. This
+// removes both next_slot jumps with the predicate unchanged at 92.9185%.
+// Testing the exhausted component index instead loses 1.2018 points. This
+// predicate is Complete-only; the retail capacity checks and one spared
+// component establish the result, without inventing a source helper.
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -5890,6 +5896,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 g_combinationArtifacts[combination].m_components;
             // Before normalization (locals): kept_slot.
             bool keptSlot = false;
+            bool slotFits = true;
             int component = 0;
             do {
                 if (!components.test(component))
@@ -5905,8 +5912,10 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 std::bitset<19> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
-                if (counts[componentClass] >= capacity)
-                    goto next_slot;
+                if (counts[componentClass] >= capacity) {
+                    slotFits = false;
+                    break;
+                }
                 {
                     int occupied =
                         (g_artifactTraits[artifact].m_allowableSlotMask
@@ -5916,14 +5925,17 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
-                    if (counts[componentClass] >= capacity - occupied)
-                        goto next_slot;
+                    if (counts[componentClass] >= capacity - occupied) {
+                        slotFits = false;
+                        break;
+                    }
                 }
                 counts[componentClass]++;
             } while (++component < 144);
+            if (!slotFits)
+                continue;
         }
         return 1;
-    next_slot:;
     }
     return 0;
 }
@@ -6029,12 +6041,15 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // has no spellbook silently equips one into slot 17 first, through a
 // RECURSIVE call to this same body (retail's `call 0x4e2a00` is a
 // self-reference, not a sibling).
+// The strict call-name view misses that self-reference label: the raw
+// instruction at 0x4e2a8a is E8 71 FF FF FF, targeting 0x4e2a00 exactly.
 //
-// Residual (93.2%): the empty-slot SEARCH loop shape. Retail tests
-// `cmp slot,0x13` at the TOP and jumps back to it; our CL proves the
-// first iteration runs, drops the entry test and rotates the compare to
-// the bottom, which duplicates the return-0 epilogue (3 rets against
-// retail's 2).
+// The slot search is exact with a head-tested while loop whose exhaustion
+// return stays inside the loop, followed by an explicit-slot else scope.
+// Together these remove slot_chosen and reproduce all 455 retail bytes.
+// DC lines 4886..4895 attest the search, post-search rejection and separate
+// explicit-slot validation; Complete replaces artifactAllowedInSlot with its
+// component-aware predicate below. The predicate is called once per attempt.
 //
 // The 144-row component sweep is CLOSED (2026-08-20, 85.25 -> 93.21):
 // both it AND its inner four-byte loop had to become signed-INDEX loops
@@ -6047,31 +6062,28 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // that a pointer relational compare (unsigned, `jb`) can never produce.
 // See remove_artifact's note for the general rule.
 //
-// Tried and rejected since, one compile each: routing both failure paths
-// through one shared merged `return 0` block (93.21, byte-flat - VC6
-// re-threads it); `slot < 0` instead of `slot == -1` for the entry test,
-// chasing retail's `jge` at branch #1 (87.78, WORSE - the equality
-// spelling is right despite the branch-kind report). A literal `while`,
-// an explicit top `slot >= 19` guard, and an inverse helper test with an
-// explicit `continue` are all byte-flat at 93.2051: VC6 rotates each one.
-// A `break` followed by `if (slot == 19) return 0`, with the explicit-slot
-// failure in an `else if`, is strictly worse at 90.83. Earlier: the search
-// as an explicit goto loop (85.25 baseline, byte-flat - VC6 rotates it
-// anyway); both failure paths through a shared `reject:` label (80.31).
+// Negative controls: break followed by a slot==19 rejection and an else-if
+// explicit-slot check scores 90.83%; an explicit acceptance flag scores
+// 91.9231%. The former goto caller was 93.2051%. Earlier loop-only rewrites
+// kept its separate validation scope and stayed at that score; they do not
+// establish a VC6 limitation on structured searches.
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 {
     if (slot == -1) {
-        for (slot = 0; slot < 19; slot++) {
+        slot = 0;
+        while (1) {
+            if (slot >= 19)
+                return 0;
             if (heroFn004E2550(artifact->m_artifactId, slot))
-                goto slot_chosen;
+                break;
+            ++slot;
         }
-        return 0;
+    } else {
+        if (!heroFn004E2550(artifact->m_artifactId, slot))
+            return 0;
     }
-    if (!heroFn004E2550(artifact->m_artifactId, slot))
-        return 0;
 
-slot_chosen:
     m_equipped[slot].m_artifactId = artifact->m_artifactId;
     m_equipped[slot].m_extra = artifact->m_extra;
 
