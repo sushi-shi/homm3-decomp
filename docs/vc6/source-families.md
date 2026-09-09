@@ -1632,6 +1632,44 @@ reversed and unrelated mouse-helper candidates as three negative controls.
 The final full build preserves 4074/4764 exact and 96.38% linked/whole-image,
 with no score change, MAX reset, migration or lost banked RVA.
 
+### Sacrifice-slot helper boundaries
+
+`generate-sacrifice-slot-boundary-family.py` checks two positive DC facts from
+`update_slot` (`0x125b3c`): line 842 obtains the artifact snapshot from
+`hero::get_artifact`, and lines 847/855 both call the ordinary
+`update_artifact_widget` (`0x125a4c`, line 800). Retail `0x562840` expands both
+widget-helper calls, with different nested visibility decisions. Keep the real
+helper before its caller and its retained claim at `0x5639e0`; no false inline
+declaration, assertion, source-order trick or replacement override is needed.
+
+Context `f394ad344803747dcb3d` exhausts six successfully scored states and
+reproduces all six search-identity objects: direct-field/accessor snapshot
+crossed with pasted-fenced, pasted-unfenced and canonical-unfenced first update.
+All 55 scores are unchanged for the canonical call. The pasted-unfenced
+negative controls lower only updateSlot from 100% to 99.1368%, whether or not
+the artifact accessor is restored. Production adopts both positive boundaries,
+candidate `b20261b99b0d0a9b31069e1f`, against unchanged
+`646bd196a8d8203b4e71d54c`.
+
+The six distinct runner identities do not imply six different instruction
+streams: private label counters are deliberately not generalized away by that
+metric. The stricter same-layout proof, `compare-coff-layout.py`, independently
+shows all **200 raw sections**, **1678 relocation destinations**, and function
+identities/positions unchanged between the untouched control and the selected
+candidate, and again against production. This includes untracked bodies and
+data, not just the 55 scored rows. The pasted-unfenced control fails that proof.
+
+Retail review confirms all twelve CFG blocks and the ordered fourteen named
+calls. The first expansion calls `setVisible` at `+0x6d`; the other visibility
+sites expand it into `sendMessage`, including the second artifact expansion
+at `+0x119`. The three remaining display-name relocation differences are
+already claimed artifact/slot data, not new helper-boundary mismatches.
+One depth-zero override is retired at unchanged object code and matching score.
+The full delink/build passes all gates at **4074/4764 exact and 96.38%
+linked/whole-image**. Only updateSlot's source hash changes in the matching
+ledger; no score, MAX or HIST changes. The cleanliness bound drops to 216
+depth-zero overrides.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
