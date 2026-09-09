@@ -719,12 +719,9 @@ public:
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
     struct TObjectCell {
-        union {
-            // Before normalization: objectIndex.
-            unsigned short m_objectIndex;
-            // Before normalization: ObjectIndex.
-            unsigned short m_objectIndexAlias;
-        };
+        // Before normalization: objectIndex / ObjectIndex. These spellings
+        // denoted the same unsigned word, not alternative representations.
+        unsigned short m_objectIndex;
         union {
             // Before normalization: offsets.
             unsigned char m_offsets;
@@ -735,12 +732,8 @@ public:
                 signed char m_cellY : 4;
             };
         };
-        union {
-            // Before normalization: layer.
-            signed char m_layer;
-            // Before normalization: Height.
-            signed char m_height;
-        };
+        // Before normalization: layer / Height; one signed layer byte.
+        signed char m_layer;
 
         // Before normalization (function): NewmapCell::TObjectCell::get_object.
         CObject* getObject() const;

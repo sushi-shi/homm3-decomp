@@ -1417,15 +1417,11 @@ static unsigned char buildCombatPath(searchArray* search,
 
     while (endHex != startHex) {
         pathCell* stepCell = search->getCellData(endHex);
-        // OVER-INLINE, pinned. Retail calls vector<pathCell*>::insert
-        // (0x54d120) at BOTH push sites - +0x672 and +0x734 - and the /Ob2
-        // budget simply ran out between them on our side, exactly as it does
-        // between PushPoint's two queue.insert arms. `end()` is hoisted out of
-        // the pinned statement first because retail keeps it inline.
+        // Retail calls vector<pathCell*>::insert (0x54d120) at both push
+        // sites (+0x672 and +0x734), keeping end() inline. The 2026-09-09
+        // whole-TU control preserves those decisions without a depth pin.
         pathCell** tail = search->m_result.end();
-#pragma inline_depth(0)
         search->m_result.insert(tail, 1, stepCell);
-#pragma inline_depth()
         endHex = currentArmy->getAdjacentCellIndex(
             endHex, oppositeDirection(stepCell->m_direction));
     }

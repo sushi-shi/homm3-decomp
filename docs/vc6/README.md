@@ -64,6 +64,7 @@ model cannot rot.
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
 | `docs/vc6/debug-lines.md` | classic COFF source-line encoding and verified `/Z7` controls |
+| `docs/vc6/union-pragma-audit.md` | complete union/inline-override census, deletion controls, retained layout contracts and reconstruction debt |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 
