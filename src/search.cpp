@@ -15,7 +15,8 @@
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local
-// duplicate free helpers. The direct != body preserves retail's three tests.
+// duplicate free helpers. The direct != body preserves retail's three tests;
+// negating operator== instead scored 64.78% in the earlier buildPath probe.
 
 // Using the canonical comparisons changes buildPath from 82.5524% to
 // 81.4143%; its 86.3333% historical peak remains recorded below and in HIST.

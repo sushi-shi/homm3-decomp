@@ -191,7 +191,7 @@ VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 // callee differ. The colour member is an int; `mov dx, [ecx+0x30]` is
 // the truncation to Colorize/FrameRect's unsigned short parameter.
 VA(0x004501e0, 0x5B)  // anchor-vtable (slot 4 of 0x63ba5c), dc 0x546d4
-void coloredBorderFrame::draw()
+void coloredBorderFrame::draw() const
 {
     if (m_colorize)
         g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
@@ -357,7 +357,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 // gpWindowManager rather than a local, and with the 8-argument
 // Bitmap816 overload.
 VA(0x00450450, 0x44)  // anchor-vtable (slot 4 of 0x63ba94), dc 0x548fc
-void bitmapBorder::draw()
+void bitmapBorder::draw() const
 {
     if (m_image)
         m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
@@ -520,7 +520,7 @@ void bitmapBorder16::zBufferDraw()
 // verbatim EXCEPT for the parent-window origin added to the destination
 // point - which is exactly what a Draw/Draw2 pair means.
 VA(0x004507b0, 0x55)  // dc-bracket + body (Draw2 plus the window origin), dc 0x54ba8
-void bitmapBorder16::draw()
+void bitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
@@ -532,7 +532,7 @@ void bitmapBorder16::draw()
 
 // E:\gamedcs\border.cpp:425
 VA(0x00450810, 0x44)  // anchor-global, dc 0x54bf0
-void bitmapBorder16::draw2()
+void bitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;

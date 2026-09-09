@@ -11,6 +11,10 @@
 #include "game.h"
 #include "window.h"
 
+// Shared saved game snapshot; original Dreamcast name: saveHeader.
+// campaignbrief.cpp owns retail 0x69fdc4.
+extern game* g_saveHeader;
+
 class bitmapBorder;
 class button;
 class coloredBorderFrame;
@@ -210,12 +214,6 @@ public:
         // SCampaign::PruneCrossoverHeroes' per-hero-id table (provisional).
         // Before normalization (function): TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes.
         void markCrossoverHeroes(unsigned char* wanted);
-        // Prune's repeated inflated_size guard suggests an inlined scenario
-        // query in retail; the role name is provisional.
-        // Before normalization (function): TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes.
-        int getMaxCrossoverHeroes() const;
-        // Complete pool-eligibility predicate; retail expansion in Prune.
-        bool usesCrossoverPool(int pool);
     };
 
     struct CampaignHeaderStruct {
@@ -288,10 +286,6 @@ public:
         void freeData();
         // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetNumMaps.
         int getNumMaps() const;
-        // Prune's header-owned marking pass; name provisional without a DC row.
-        void markRequiredHeroes(unsigned char* wanted);
-        // Total scenario slots, unlike the populated-map count getNumMaps.
-        int getScenarioCount() const;
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

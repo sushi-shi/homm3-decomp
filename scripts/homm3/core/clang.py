@@ -57,7 +57,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 4
+PATCH_VERSION = 5
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -134,10 +134,16 @@ def _limits(text: str) -> str:
 
 
 def _fstream(text: str) -> str:
-    """Remove repeated defaults and qualify dependent ios_base enumerators."""
+    """Qualify stream flags without changing codecvt's in/out member calls."""
     text = _drop_redundant_traits_default(text)
+    def qualify(match):
+        # <fstream> also calls _Pcvt->in/out while transcoding. Those are
+        # codecvt methods, not the inherited stream-mode enumerators.
+        if text[:match.start()].rstrip().endswith(('->', '.')):
+            return match.group(0)
+        return "ios_base::" + match.group(0)
     return re.sub(r"(?<![\w:])(?:in|out|failbit|trunc)(?![\w:])",
-                  lambda m: "ios_base::" + m.group(0), text)
+                  qualify, text)
 
 
 def _qualify_ios_enumerators(names):

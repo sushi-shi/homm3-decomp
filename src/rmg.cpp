@@ -1252,12 +1252,12 @@ void TRmgZone::chooseTerrain()
         m_terrain = eTerrainSubterranean;
 }
 
-// Three trivial member vectors account for all 118 retained destructor
-// bytes, including the three independently resolved operator-delete calls.
-VA(0x00532B50, 0x76)
-TRmgZone::~TRmgZone()
-{
-}
+// The implicit destructor releases the three member vectors in reverse
+// declaration order: entrances (+0x404), boundary (+0x3f4), then distances
+// (+0x3e4). Retail 0x532b62/0x532b85/0x532ba6 frees each backing allocation
+// and clears its three pointers. No vptr, owned pointee or user cleanup is
+// present; the written empty destructor added no source operation.
+VA_COMPGEN(0x00532B50, 0x76, IMPLICIT_DTOR, TRmgZone)
 
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
@@ -1445,6 +1445,10 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
 
 // The base-sized default-payload classes retain separate serialization
 // vtables. Their ordinary constructors expand the same canonical base call.
+// These Complete generator classes have no Dreamcast RMG compiland or
+// class/procedure counterparts. The factories 0x534870/0x534970/0x534a00/
+// 0x534a90 allocate only the base's 0x1c bytes and install 0x640ac4/0x640b24/
+// 0x640b34/0x640b54 respectively; writer slot 3 proves each payload role.
 rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1472,6 +1476,11 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 
 // The three simple reward factories expand this same constructor. The
 // vector's automatic construction precedes these scalar/default writes.
+// Complete's generation classes have no Dreamcast RMG compiland, class or
+// procedure counterparts. DC's BlackBoxData and NewfullMap::readBlackBox
+// are the gameplay payload and reader, not these generator definitions.
+// Retail 0x534380/0x534410/0x534490 allocate 0x54 bytes, install 0x640ad4,
+// clear vector words +0x48/+0x4c/+0x50, and set the reward defaults below.
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {

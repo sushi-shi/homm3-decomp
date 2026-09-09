@@ -92,24 +92,6 @@ const unsigned int g_ctaNoMeleePenalty = 0x1000;
 // Before normalization: CTA_DOUBLE_RANGED_VALUE.
 const unsigned int g_ctaDoubleRangedValue = 0x8000;
 
-// armyGroup deliberately models its mutable roster as int while the
-// consumers' domain is TCreatureType. This bit-preserving inline bridge
-// avoids lying with an enum cast; VC6 reduces the four-byte copy to a move.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    TCreatureType creature;
-    memcpy(&creature, &value, sizeof creature);
-    return creature;
-}
-
-// Before normalization (function): speed_catagory_from_long.
-inline type_speed_catagory speedCatagoryFromLong(long value)
-{
-    type_speed_catagory catagory;
-    memcpy(&catagory, &value, sizeof catagory);
-    return catagory;
-}
-
 // Retail .data 0x6604d0: five doubles selected by the game's signed
 // difficulty byte. AI_value_of_combat uses the row when either combat
 // side belongs to a human. DC's static-global roster supplies the name;
@@ -327,7 +309,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 // Retail expands every use and carries no standalone row.
 inline type_speed_catagory type_AI_combat_data::getCatagory(
     TCreatureType creature,
-    long speed)
+    long speed) const
 {
     unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
     if (attributes & g_ctaShooter)
@@ -338,7 +320,9 @@ inline type_speed_catagory type_AI_combat_data::getCatagory(
         catagory = const_slow;
     if (m_penaltyDistance > catagory && !(attributes & g_ctaFlying))
         catagory = m_penaltyDistance;
-    return speedCatagoryFromLong(catagory);
+    type_speed_catagory result;
+    memcpy(&result, &catagory, sizeof result);
+    return result;
 }
 
 // E:\gamedcs\ai_combat.cpp:221
@@ -430,7 +414,8 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
         if (creatureId == CREATURE_NONE)
             continue;
 
-        TCreatureType creature = creatureTypeFromInt(creatureId);
+        TCreatureType creature;
+        memcpy(&creature, &creatureId, sizeof creature);
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
         if (m_myHero) {
@@ -470,7 +455,7 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
         m_monsters.push_back(unit);
     }
 
-    std::sort(m_monsters._First, m_monsters._Last);
+    std::sort(m_monsters.begin(), m_monsters.end());
 }
 
 // E:\gamedcs\ai_combat.cpp:332
@@ -800,7 +785,7 @@ unsigned char type_AI_combat_data::has_creature(TCreatureType creature)
 // call stays out of line, preserving the retail /Ob2 depth boundary.
 inline void type_AI_combat_data::getMassDamageValue(
     type_spell_choice& choice,
-    type_AI_combat_data& defender)
+    type_AI_combat_data& defender) const
 {
     long ownDamage = getMassDamageValue(choice, m_myHero);
     long defenderDamage = defender.getMassDamageValue(choice, m_myHero);
@@ -809,8 +794,19 @@ inline void type_AI_combat_data::getMassDamageValue(
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-// As above, retail keeps only the two cast_spell expansions of this helper.
-inline void type_AI_combat_data::castMassDamageSpell(
+// DC cast_spell lines 1062/1063 call this same ordinary helper at
+// dc 0x2b2ea/0x2b2f4. Retail expands its loop on both sides: get_spell_damage
+// stays a call at 0x425ff1/0x4260c1, while take_damage expands at
+// 0x426002..0x426028 on the first side and remains a call at 0x4260cf on
+// the defender side. Preserve one canonical body; those caller expansion
+// decisions do not establish separate source methods or explicit inline.
+//
+// Historical probes used a duplicate castMassDamageSpellWithDamageCall
+// with inline_depth pins to reach 87.0391% from 85.4316%. Call-site depth 1
+// was byte-flat; caller-local longhand reached 86.6484%, and repeated
+// monsters[i] reached 82.9043%. These are compiler observations, not source
+// evidence for the duplicate or pins, which have been removed.
+void type_AI_combat_data::castMassDamageSpell(
     type_spell_choice& choice,
     // Before normalization (locals): casting_hero.
     const hero* castingHero)
@@ -820,38 +816,9 @@ inline void type_AI_combat_data::castMassDamageSpell(
     long value = 0;
     for (long i = getTotal(); i-- > 0; ) {
         type_monster_data& monster = m_monsters[i];
-#pragma inline_depth(0)
-        value += monster.getSpellDamage(
-            choice.m_spell, castingHero, m_myHero, damage);
-#pragma inline_depth()
-        m_totalHitPoints -= monster.takeDamage(value);
-    }
-}
-
-// Caller-specific copy for cast_spell's defender-side expansion: retail
-// inlines the mass-damage loop there but leaves its nested take_damage call.
-// This restores the exact 55-branch CFG and raises cast_spell from 85.4316%
-// to 87.0391%. Residual: retail keeps the defender in ESI, the monster offset
-// in EBX and accumulated damage in EDI; SP3 instead keeps the named monster
-// in ESI, the defender in EDI and homes accumulated damage. Tried and
-// rejected: call-site inline_depth(1) (byte-flat), caller-local longhand
-// (86.6484; `register` was byte-flat), and repeated monsters[i] spelling
-// (82.9043; emitted a second vector::operator[] call and signed loop branch).
-inline void type_AI_combat_data::castMassDamageSpellWithDamageCall(
-    type_spell_choice& choice,
-    // Before normalization (locals): casting_hero.
-    const hero* castingHero)
-{
-    long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    long value = 0;
-    for (long i = getTotal(); i-- > 0; ) {
-        type_monster_data& monster = m_monsters[i];
-#pragma inline_depth(0)
         value += monster.getSpellDamage(
             choice.m_spell, castingHero, m_myHero, damage);
         m_totalHitPoints -= monster.takeDamage(value);
-#pragma inline_depth()
     }
 }
 
@@ -861,11 +828,11 @@ inline void type_AI_combat_data::castMassDamageSpellWithDamageCall(
 // and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
 // carry a base-only function retail never shipped.
 // Before normalization (locals): casting_hero.
-inline void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero)
+inline void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
 {
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
     for (long i = getTotal(); i-- > 0; ) {
-        type_monster_data& monster = m_monsters[i];
+        const type_monster_data& monster = m_monsters[i];
         long value = monster.getEnchantmentValue(choice, castingHero, m_myHero);
         if (mass) {
             choice.m_value += value;
@@ -893,7 +860,7 @@ inline void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, 
 // choice.target in the else-if (89.4%, and it costs the first pass its
 // exactness), and hoisting get_total().
 VA(0x00425510, 0x382)  // corroborates (hd-crossbuild + ida), dc 0x2ad58
-void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender)
+void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     if (!defender.m_canCast
         && (choice.m_spell == SPELL_DISPEL
@@ -1007,7 +974,8 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 // Reconstructed from the complete retail body. The Dreamcast contributes
 // the local/helper names and the by-reference signature only; spell gates,
 // dispatch classes, loop directions and all arithmetic come from retail.
-// Residual (87.0391%): branch structure agrees exactly at 55 conditionals
+// Historical residual before restoring the shared mass-damage helper
+// (87.0391%): branch structure agrees exactly at 55 conditionals
 // and four returns. Retail gives the spell loop EDI and mastery ESI; this CL
 // gives them ESI/EDI, and that callee-saved permutation cascades through the
 // three large damage/resurrection loops. why-reg --model finds identical
@@ -1120,7 +1088,7 @@ void type_AI_combat_data::castSpell(
         return;
     case g_aiSpellMassDamage:
         castMassDamageSpell(bestChoice, m_myHero);
-        defender.castMassDamageSpellWithDamageCall(
+        defender.castMassDamageSpell(
             bestChoice, m_myHero);
         return;
     case g_aiSpellEnchantment:
@@ -1377,17 +1345,12 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 // is written at this call site with nested inlining disabled because our CL
 // otherwise leaves the outer helper as a call; retail expands the outer body
 // and leaves get_final_melee_value/kill/inflict_damage out of line. The
-// residual is bounded to stack coloring plus constructor/destructor call
-// identity: retail calls the exact type_monster_vector wrapper for both local
-// copies, while this compile expands it to the underlying vector copy call.
-// MEASURED 2026-09-05: `#pragma auto_inline(off)` around the 0x4276c0 wrapper
-// definition DOES restore both retail call edges (census 26 same + 2 real ->
-// 28 same) and is byte-flat at 90.9329 - objdiff scores relocations at
-// function_reloc_diffs=none, so the wrapper and the vector copy ctor it
-// forwards to occupy one call slot either way. Not landed: a pin that buys a
-// name and no bytes is scaffolding. The two teardown rows are the same family
-// (retail calls the shared 0x46a650 vector destructor COMDAT, we expand it to
-// operator delete) and want caller mass, not another pin.
+// Historical residuals involved stack coloring and copy/destructor call
+// boundaries. The copies now use the canonical vector constructor at
+// 0x4276c0; the discarded wrapper-only inline pin changed no bytes. Retail
+// also calls the shared 0x46a650 vector destructor while earlier candidates
+// expanded its cleanup. These call decisions remain unverified after the
+// source ownership correction.
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
 bool type_AI_combat_data::chooseMelee(
     const type_AI_combat_data& enemy,
@@ -1870,17 +1833,10 @@ armyGroup* type_AI_combat_data::getArmy()
 
 #endif  // @carcass
 
-// IDENTITY CORRECTION 2026-08-09: the inherited order map called this a
-// type_AI_combat_data copy ctor, but retail copies only the embedded
-// vector's 16-byte head. The body is the pinned VC6 <vector> copy ctor
-// instruction for instruction; VC6 inlines it into this source-private
-// wrapper, producing all 135 bytes exactly. The displaced Dreamcast class
-// copy-ctor row remains DC_ONLY below.
-VA(0x004276c0, 0x87)  // retail body + pinned VC6 <vector>
-type_monster_vector::type_monster_vector(const type_monster_vector& other)
-    : std::vector<type_monster_data>(other)
-{
-}
+// The retained body copies the vector's 16-byte head and 0x48-byte
+// elements. CodeView's creatures field is std::vector<type_monster_data>;
+// the Complete implementation comes from VC6's <vector>, without a wrapper.
+VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
 
 // get_total (dc 0x2c6ac): canonical inline body and retail VA in ai_combat.h.
 

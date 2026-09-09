@@ -24,7 +24,7 @@ class resource;
 class sample;
 class ds_memsample;
 class TreasureData;
-union ExtraInfoUnion;
+struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
 class armyGroup;
@@ -842,6 +842,7 @@ public:
     // Before normalization (function): TAdventureMapWindow::UpdateResourceDisplay.
     void updateResourceDisplay(unsigned char draw, unsigned char update);
     // Before normalization (function): TAdventureMapWindow::UpdateButtons.
+    void setAdvWinButtonPalette(int id, int player);
     void updateButtons(unsigned char draw, unsigned char update);
     // Before normalization (function): TAdventureMapWindow::UpdateQuestLogButton.
     void updateQuestLogButton(unsigned char update);
@@ -1976,6 +1977,8 @@ public:
     int processWaitingHover(int mouseX, int mouseY);
     // Before normalization (function): advManager::ProcessHover.
     int processHover(int mouseX, int mouseY);
+    // Original: advManager::MouseInScrollZone (advmgr.cpp:10756, dc 0x1ccf8).
+    int mouseInScrollZone();
     // Before normalization (function): advManager::ProcessSearch.
     int processSearch(int x, int y, int z);
     // Before normalization (function): advManager::get_normal_cursor.
@@ -2186,6 +2189,8 @@ public:
     // Before normalization (locals): current_hero.
     int considerHidingMouse(class hero* currentHero, int direction);
 private:
+    // Original: advManager::get_garrison_cursor (advmgr.cpp:4514, dc 0xf23c).
+    type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     // cursor.cpp:420/458. Dreamcast marks both helpers private and Complete
     // retains their out-of-line bodies. MoveHero calls these source
     // boundaries; their bodies must not be pasted into the caller merely

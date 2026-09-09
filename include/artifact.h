@@ -237,24 +237,6 @@ enum TArtifact {
     ARTIFACT_RING_OF_THE_MAGI = 0x8b
 };
 
-// Representation boundary for serialized artifact ordinals and the generic
-// NewmapCell::m_objectIndex field. GiveArtifact at 0x49e8f0
-// loads a signed word; SCampaign::load at 0x48a310 widens a signed
-// stream word. Both feed the four-byte TArtifact domain without a
-// runtime mapping. Keep one bridge for those readers and UI carriers.
-// Before normalization (function): artifact_from_int.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // The per-artifact traits record. The 32-byte STRIDE is byte-proven by
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
 // body: it holds the id of the COMBINATION artifact this piece belongs
@@ -317,8 +299,8 @@ SIZE(TArtifactSlotTraits, 8);
 // +0x00 by the same body - it is the assembled artifact's own id, which
 // IsWieldingArtifact recurses on. The remaining 20 bytes are the
 // component mask the four retail-only combination bodies at
-// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). It is typed only
-// in hero.obj's narrow view; other translation units retain the proven pad.
+// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). This is the
+// canonical record used by the artifact table and all its consumers.
 struct TCombinationArtifact {
     // The cinit at 0x44c960 builds each of the twelve records in a 24-byte
     // stack temporary - the id dword stored FIRST, then the component
@@ -327,7 +309,6 @@ struct TCombinationArtifact {
     // two-argument constructor plus the implicit copy, and VC6 cannot
     // spell it any other way: brace initialization of a record carrying a
     // bitset member is a hard C2440 for this compiler.
-    TCombinationArtifact() {}
     TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
         : m_artifactId(id), m_components(usedComponents) {}
 

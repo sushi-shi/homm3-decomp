@@ -42,7 +42,7 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
             rows_by_unit: dict, problems: list[str]) -> None:
     from homm3.retail_labels import source
     from homm3.match.status import load_baseline
-    from homm3.match.source_ownership import collect
+    from homm3.match.source_ownership import collect, claim_definitions
     if not paths:
         return
     definitions, errors, _reached = collect()
@@ -52,7 +52,7 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
     # Prefer an object confirming the AST's exact mangled name. An existing
     # comparison binding can also measure a body which has stopped emitting;
     # it supplies only the carrier, never the source name.
-    header_names = {d.va - common.IMAGE_BASE: d.mangled for d in definitions
+    header_names = {d.va - common.IMAGE_BASE: d.mangled for d in claim_definitions(definitions)
                     if d.file.startswith('include/') and d.va is not None}
     banked = {row.rva: unit for (unit, _name), row in load_baseline().items()
               if row.rva is not None and unit in ir_maps}

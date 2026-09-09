@@ -986,13 +986,13 @@ exit_dialog:
 
                     for (int i = 0; i < m_numberToBuy; i++) {
                         if (m_monsterType == CREATURE_BALLISTA) {
-                            type_artifact artifact(ARTIFACT_BALLISTA, -1);
+                            type_artifact artifact(ARTIFACT_BALLISTA);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
-                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT, -1);
+                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_AMMO_CART) {
-                            type_artifact artifact(ARTIFACT_AMMO_CART, -1);
+                            type_artifact artifact(ARTIFACT_AMMO_CART);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         }
                     }

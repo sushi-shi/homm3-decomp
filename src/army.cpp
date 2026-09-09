@@ -782,7 +782,7 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 // E:\gamedcs\army.cpp:540
 #endif  // @carcass
 
-// Retail corrects the DC signature with a seventh, byte-wide alignment gate:
+// Complete extends the DC signature with a seventh, byte-wide alignment gate:
 // the sole live caller passes it after the magic-terrain mode and the body
 // forwards it to armyGroup::GetMorale. The two compressed switch tables at
 // 0x43e10c/0x43e124 match GetArmyMorale's Holy Ground / Evil Fog partition.
@@ -2969,7 +2969,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
             succeeded = 0;
         } else if (g_combatManager->m_cells[nextHex].m_attributes & 4) {
             g_combatManager->m_obstacles
-                .m_begin[g_combatManager->m_cells[nextHex].m_obstacleIndex]
+                [g_combatManager->m_cells[nextHex].m_obstacleIndex]
                 .m_isVisible = 1;
             succeeded = 0;
             stop = i;
@@ -2983,7 +2983,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
                 succeeded = 0;
             } else if (g_combatManager->m_cells[secondHex].m_attributes & 4) {
                 g_combatManager->m_obstacles
-                    .m_begin[g_combatManager->m_cells[secondHex].m_obstacleIndex]
+                    [g_combatManager->m_cells[secondHex].m_obstacleIndex]
                     .m_isVisible = 1;
                 succeeded = 0;
                 stop = i;
@@ -3249,14 +3249,42 @@ hero* army::getOwner() const
     return g_combatManager->m_heroes[getOwningSide()];
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2708
-DC_ONLY(0x47944, 0xD0)
-unsigned char is_natural_enemy(TCreatureType attacker, TCreatureType defender)
+// Original: is_natural_enemy; army.cpp:2708, dc 0x47944.
+// CodeView proves an ordinary free function with two TCreatureType values;
+// ComputeAttackerDamageBonuses calls it at dc 0x48ad8 (source line 3184).
+// Its six return arms at dc 0x4798a/0x479c8/0x479da/0x479ec/0x479fe/
+// 0x47a06 test the same creature pairs as Complete's expanded predicate
+// at 0x443475..0x4434e0, before the half-damage bonus at 0x4434e6.
+// Restore this canonical body after GetOwner and before GetAverageDamage;
+// the former computeHateFlag copy had a guessed name and inline qualifier.
+unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
 {
-    // @stub
+    switch (attacker) {
+    case CREATURE_ANGEL:
+    case CREATURE_ARCHANGEL:
+        return defender == CREATURE_DEVIL
+               || defender == CREATURE_ARCH_DEVIL;
+    case CREATURE_DEVIL:
+    case CREATURE_ARCH_DEVIL:
+        return defender == CREATURE_ANGEL
+               || defender == CREATURE_ARCHANGEL;
+    case CREATURE_EFREETI:
+    case CREATURE_EFREET_SULTAN:
+        return defender == CREATURE_GENIE
+               || defender == CREATURE_MASTER_GENIE;
+    case CREATURE_GENIE:
+    case CREATURE_MASTER_GENIE:
+        return defender == CREATURE_EFREETI
+               || defender == CREATURE_EFREET_SULTAN;
+    case CREATURE_BLACK_DRAGON:
+        return defender == CREATURE_TITAN;
+    case CREATURE_TITAN:
+        return defender == army::ARMY_CREATURE_BLACK_DRAGON;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2740
 // Located 2026-08-08 from a call site, not from the roster order: the
@@ -3807,39 +3835,13 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
 // split it out because get_estimated_damage (0x443e30) needs the number
 // without the combat message and sound the wrapper adds. NAME IS A
 // BOOTSTRAP INVENTION, same class as get_estimated_damage below.
-// EXACT 2026-08-26. Keeping the hate predicate in an ordinary inline
-// helper gives VC6 retail's string-teardown budget: the singular
-// temporary keeps its _Tidy call while the plural temporary and text
-// destructor inline. Making total live before controller also gives
-// retail's ESI/EDI allocation in the final hero-bonus arm.
-// Before normalization (function): compute_hate_flag.
-// Before normalization (locals): self_type, target_type.
-static inline unsigned char computeHateFlag(int selfType, int targetType)
-{
-    switch (selfType) {
-    case CREATURE_ANGEL:
-    case CREATURE_ARCHANGEL:
-        return targetType == CREATURE_DEVIL
-               || targetType == CREATURE_ARCH_DEVIL;
-    case CREATURE_DEVIL:
-    case CREATURE_ARCH_DEVIL:
-        return targetType == CREATURE_ANGEL
-               || targetType == CREATURE_ARCHANGEL;
-    case CREATURE_EFREETI:
-    case CREATURE_EFREET_SULTAN:
-        return targetType == CREATURE_GENIE
-               || targetType == CREATURE_MASTER_GENIE;
-    case CREATURE_GENIE:
-    case CREATURE_MASTER_GENIE:
-        return targetType == CREATURE_EFREETI
-               || targetType == CREATURE_EFREET_SULTAN;
-    case CREATURE_BLACK_DRAGON:
-        return targetType == CREATURE_TITAN;
-    case CREATURE_TITAN:
-        return targetType == army::ARMY_CREATURE_BLACK_DRAGON;
-    }
-    return 0;
-}
+// Historical probe (EXACT, 2026-08-26): the former compute_hate_flag
+// inline wrapper retained the singular text temporary's _Tidy call while
+// expanding the plural and text destructors. The real source helper is
+// is_natural_enemy (dc 0x47944), called at army.cpp:3184, dc 0x48ad8.
+// Its ordinary definition now lives in its original source position above.
+// Making total live before controller also recovered ESI/EDI allocation in
+// the final hero-bonus arm; preserve that separate lifetime observation.
 
 VA(0x00443320, 0x514)  // anchor-callee (0x443840 and 0x443e30 are its only
                        // callers) + arity ret 0x14, retail-only slot
@@ -3896,7 +3898,7 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
         }
 
         unsigned char hates =
-            computeHateFlag(m_creatureType, defender->m_creatureType);
+            isNaturalEnemy(m_creatureType, defender->m_creatureType);
         if (hates) {
             bonus += baseDamage / 2;
             if (announce) {
@@ -4382,21 +4384,6 @@ unsigned long army::strength()
 //   access at all. It is a dead parameter, transcribed faithfully, and
 //   that is also why C2 could turn the recursion into the loop.
 //
-// CancelAllSpells (dc 0x499ac, army.cpp:3802): DC's out-of-line copy
-// has NO retail slot, so on this build it is fully inlined into its one
-// caller. A static helper (not the at-site loop) so that ProcessDeath's
-// PRE-INLINE size - which sets its /Ob2 budget - matches a source that
-// wrote a call here, and so the helper vanishes per the
-// inlined-single-call-static emission rule.
-// Before normalization (function): CancelAllSpells_.
-static void cancelAllSpells(army* that)
-{
-    for (int i = 0; i < 81; i++) {
-        if (that->m_spellInfluence[i] > 0)
-            that->cancelIndividualSpell(i);
-    }
-}
-
 // SPELLING NOTES the bytes force:
 //   - The dead-row SOURCES are spelled LONGHAND through
 //     gpCombatManager->cells[...] while the DESTS go through the pCell
@@ -4415,8 +4402,8 @@ static void cancelAllSpells(army* that)
 //     expansion a budget large enough to also expand erase_item#1,
 //     which retail keeps as a call (76.27 -> 94.38 from restoring the
 //     three free candidate sites; docs/vc6/inliner.md section 5.9 is
-//     the mechanism). CancelAllSpells_ as a helper CALL (not the
-//     at-site loop) sizes the pre-inline caller the same way.
+//     the mechanism). The former CancelAllSpells_ wrapper measured the
+//     same effect; the proven army::CancelAllSpells member now owns it.
 //   - The two mirror-army blocks each name a POINTER LOCAL: spelled
 //     longhand twice, VC6 CSEs the whole folded address (+0x54f4 /
 //     +0x5518) where retail keeps a base register and small member
@@ -4438,11 +4425,9 @@ void army::processDeath(int fadeElementals)
             g_combatManager->m_playYeah[1 - getOwningSide()] = 1;
     }
 
-    // CancelAllSpells (dc 0x499ac): no retail slot - fully inlined
-    // here (the EndWalk situation). Spelled as the TU-local helper
-    // above rather than at the site because the CALL is what sizes
-    // ProcessDeath's own /Ob2 budget the way retail's source did.
-    ::cancelAllSpells(this);
+    // DC 0x49420 calls the canonical member (army.cpp:3512). Complete
+    // expands its positive-duration walk here; keep the source call.
+    cancelAllSpells();
 
     m_monInfo.m_attributes |= 0x200000;
     m_allUnitsKilled = 0;
@@ -4637,17 +4622,20 @@ void army::cancelIndividualSpell(int spell)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:3802
-DC_ONLY(0x499ac, 0x3A)
+// Original: army::CancelAllSpells; army.cpp:3802, dc 0x499ac.
+// Ordinary member, called by ProcessDeath at dc 0x49420. CodeView's body
+// walks positive spell durations and calls CancelIndividualSpell at dc
+// 0x499d4. Complete expands that member in ProcessDeath, with 81 spell
+// entries instead of DC's 80. Keep the canonical member and its source
+// position after CancelIndividualSpell; the former file-local wrapper
+// duplicated this identity only to control the caller's inline budget.
 void army::cancelAllSpells()
 {
-    // @stub
+    for (int i = 0; i < 81; i++) {
+        if (m_spellInfluence[i] > 0)
+            cancelIndividualSpell(i);
+    }
 }
-
-// E:\gamedcs\army.cpp:3816
-#endif  // @carcass
 
 // Rejected 99.5510% local maximum (2026-08-31): file-local duration and
 // Poison helpers, plus duplicated HYPNOTIZE/AGE bodies, manipulated VC6's
@@ -5325,24 +5313,6 @@ unsigned char army::moveTo(int hex, unsigned char restoreFacing)
     return simpleMove(hex, restoreFacing);
 }
 
-// cmbtmgr.h declares GetTargetWallIndex `int` because that is what its
-// own retail public says (?GetTargetWallIndex@@YIHH@Z); the Dreamcast
-// row returns TWallTargetId. Bridge the representation rather than cast
-// - the four-byte copy costs nothing under VC6, the same way
-// creature_type_from_int does in game.cpp.
-// Before normalization (function): wall_target_from_int.
-inline TWallTargetId wallTargetFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: wall.
-        TWallTargetId m_wall;
-    } storage;
-    storage.m_value = value;
-    return storage.m_wall;
-}
-
 // One catapult (or cyclops) bombardment: aim once at the segment the
 // grid index falls on, then fire the ballistics row's `shots` at it,
 // re-aiming at the nearest other STANDING segment whenever the one
@@ -5378,8 +5348,18 @@ void army::attackWall(int targetGridIndex)
 {
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
-    TWallTargetId wall =
-        wallTargetFromInt(getTargetWallIndex(targetGridIndex));
+    TWallTargetId wall;
+    {
+        // GetTargetWallIndex has an int retail interface and a DC enum
+        // result. Keep the representation bridge at this consuming call;
+        // the former wall_target_from_int was a reconstruction wrapper.
+        union {
+            int m_value;
+            TWallTargetId m_wall;
+        } storage;
+        storage.m_value = getTargetWallIndex(targetGridIndex);
+        wall = storage.m_wall;
+    }
     hero* controller = getController();
     long level;
     switch (m_creatureType) {

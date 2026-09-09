@@ -10,16 +10,6 @@
 class hero;
 class message;
 
-struct TLevelUpSkillTraits {
-    // Before normalization: name.
-    const char* m_name;
-    // Before normalization: levelNames.
-    const char* m_levelNames[3];
-};
-SIZE(TLevelUpSkillTraits, 0x10);
-// Before normalization: akLevelUpSkillTraits.
-extern const TLevelUpSkillTraits (&g_levelUpSkillTraits)[28];
-
 // Retail's vtable at 0x63fe60 has the inherited CAdvPopup shape: slot 0 is
 // the scalar-deleting destructor at 0x4f9700 and slot 9 is WindowHandler at
 // 0x4f9780.  The destructor touches no tail state, and the constructor's

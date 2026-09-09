@@ -222,7 +222,7 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
 // 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
 VA(0x005bc5f0, 0x92)  // anchor-vtable (0x642dc0) + font/FillRect calls, dc 0x164f80
-void textWidget::draw()
+void textWidget::draw() const
 {
     if (m_status & WIDGET_DRAWN) {
         int drawX = m_x + m_parentWindow->m_x;
@@ -407,7 +407,7 @@ void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // image. Blits the backing bitmap clamped to its own extent, then runs the
 // base text draw.
 VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
-void bitmapBackedTextWidget::draw()
+void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;

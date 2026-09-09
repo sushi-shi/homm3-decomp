@@ -978,8 +978,10 @@ void TOverviewWindow::updateFlaggableIcon(int i)
     }
 }
 
-// Dreamcast proves the seven-item loop and the helper boundary. Complete's
-// 42-byte body calls UpdateFlaggableIcon seven times and redraws the strip.
+// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
+// DC refreshes two items and draws overWin through its global pointer.
+// Complete extends the loop to seven and retains ECX as the window receiver
+// at 0x51e7c2/0x51e7c7/0x51e7e2, matching the adjacent converted helpers.
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
 {
@@ -2862,7 +2864,9 @@ void updateBackpack(int slot)
     hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
     type_artifact artifact;
-    message msg(0, 0, 0, 0, 0, 0, 0, 0);
+    // DC 0x1076c4 calls the default message constructor at 0x2d58.
+    // Retail 0x522470 initializes the same zero fields before id/codeX.
+    message msg;
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;

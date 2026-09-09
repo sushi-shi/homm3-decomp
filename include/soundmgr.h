@@ -73,9 +73,9 @@ struct LaunchedSample {
 };
 
 // The thread entry launch_sample hands to _beginthread, retail
-// 0x59a6b0 - a file-static in retail (the delinker bands it under
-// launch_sample), reached only by address-take. Declared non-static
-// here because its body is not claimed; name provisional.
+// 0x59a6b0, reached by the _beginthread address-take at 0x59a68e.
+// Its retained body is claimed in soundmgr.cpp; the name is provisional.
+// The delinker's function grouping does not establish source linkage.
 // Before normalization (function): WaitEndSampleThread.
 void __cdecl waitEndSampleThread(void* arglist);
 

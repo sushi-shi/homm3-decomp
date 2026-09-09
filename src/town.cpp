@@ -19,6 +19,7 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "town.h"
+#include "philai.h"
 #include "townmgr.h"
 
 // Narrow town.obj-only globals reached by town::View. Their owning
@@ -603,7 +604,7 @@ int town::hasGarrison()
 // re-threading the whole guard, so the written operand order is retail's and
 // only the load order differs.
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
-void town::giveSpells(hero* forceHero)
+void town::giveSpells(hero* forceHero) const
 {
     if (!forceHero && m_visitingHeroId == -1 && m_garrisonHeroId == -1)
         return;
@@ -795,18 +796,6 @@ void town::swapHeroes()
     placedHero->placeInMap(player, point, 0);
 }
 
-// Keep the two-argument Dinkumware bitset mutation out of line while the
-// tiny adapter itself disappears. Retail town.obj calls the shared COMDAT
-// here but still inlines the predicate's bitset::test.
-#pragma inline_depth(0)
-// Before normalization (function): set_town_spell_bit.
-static inline void setTownSpellBit(std::bitset<70>& bits,
-                                      unsigned position, bool value)
-{
-    bits.set(position, value);
-}
-#pragma inline_depth()
-
 // E:\gamedcs\town.cpp:1150
 // Builds a local prohibited set from the town and scenario masks, then rolls
 // each guild row from the faction weights in SSpellTraits. Fixed map spells
@@ -838,8 +827,9 @@ void town::initializeSpells(const TownExtra* townSetup)
 {
     std::bitset<70> prohibited;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        setTownSpellBit(
-            prohibited, spell,
+        // Complete builds this mask one bit at a time; retail 0x5be668
+        // retains Dinkumware's set(position,bool), without a game adapter.
+        prohibited.set(spell,
             m_spells[spell] || g_game->m_spellDisabledInfo[spell]);
     }
 
@@ -1224,7 +1214,7 @@ unsigned char town::buyBuilding(type_building_id building)
 
 // E:\gamedcs\town.cpp:1466
 VA(0x005bf4e0, 0xC)  // linkorder, dc 0x167378
-unsigned char town::canBuildDock()
+unsigned char town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
@@ -1343,7 +1333,7 @@ long town::getHordeBonus(long dwelling) const
 // with growth before the condition scores 81.7262%. The former allocator
 // wall was a missing contribution branch, not uncontrollable VC6 state.
 VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), retail-only
-long town::getLegionBonus(long dwelling)
+long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
@@ -1382,7 +1372,7 @@ long town::getLegionBonus(long dwelling)
 // `Size` reads written inline with no named local, and the whole index
 // landed in a named `int index` before the subscript.
 VA(0x005bf900, 0x258)  // anchor-body (tier/hero/artifact checks), dc 0x1675d4
-long town::townFn005BF900(long dwelling)
+long town::getLegionBonus(long dwelling) const
 {
     // Before normalization (locals): current_game, garrison_hero, visiting_hero.
     game* currentGame = g_game;
@@ -1450,7 +1440,7 @@ long town::townFn005BF900(long dwelling)
 // VC6 retail's shared signed average, dwelling spill, and horde-loop register
 // allocation.
 VA(0x005bfb60, 0x266)  // arity (short) + body, dc 0x167748
-short town::getGrowthRate(short dwelling)
+short town::getGrowthRate(short dwelling) const
 {
     // Before normalization (locals): dwelling_index, legion_bonus, legion_creature,
     // legion_growth, castle_bonus.
@@ -1490,7 +1480,7 @@ short town::getGrowthRate(short dwelling)
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
         growth += legionBonus;
-        growth += townFn005BF900(dwellingIndex);
+        growth += getLegionBonus(dwellingIndex);
     }
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
@@ -1972,26 +1962,10 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 // edx and [ebp+8] against the two map-extent globals 0x6783c8 /
 // 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
 
-// NewmapCell's +0xc flags word, read WHOLE. mapcell.h models those 16
-// bits as three bitfields, because mapcell.cpp's cell_is_trigger and
-// ai_player.cpp both read is_trigger by name - but retail's
-// check_shipyard_square loads the entire field (`mov si, word ptr
-// [cell+0xc]`) and then tests it twice with 32-bit immediates, which
-// is the shape a plain `unsigned short` read produces and a bitfield
-// read cannot (a bitfield emits a masked byte test). Overlaying a
-// union in mapcell.h DOES reproduce it, and was measured: it costs
-// initialize_game_data 100.0 -> 96.09 via the include-set sensitivity
-// class, so it is rejected. Taking the word view here has no closure
-// cost at all. The offset is the one the bitfields occupy.
-// The two-step cast through `const void*` is deliberate: it makes the
-// re-view a legal static_cast, so this costs no reinterpret_cast debt
-// (which the cleanliness board only ever drains).
-// Before normalization (function): cell_flags_word.
-static unsigned short cellFlagsWord(const NewmapCell* cell)
-{
-    return static_cast<const unsigned short*>(
-        static_cast<const void*>(cell))[6];
-}
+// Retail 0x5c0ce7 reads the whole +0xc flags word before testing bits 8
+// and 12 at 0x5c0ceb/0x5c0cf3. The canonical NewmapCell union now exposes
+// that word as m_cellFlags; the old cell_flags_word cast wrapper predates
+// its restoration and has no independent CodeView helper boundary.
 
 // MERGED FAIL BLOCK, the same shape can_build needed above: every gate
 // is a nested `if` and there is exactly ONE `return 0`, at the end.
@@ -2019,7 +1993,7 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
                     // source constants (eTerrainWater and BOAT) that
                     // happen to share a value, CSE'd by VC6.
                     if (cell->m_groundSet == eTerrainWater) {
-                        unsigned short flags = cellFlagsWord(cell);
+                        unsigned short flags = cell->m_cellFlags;
                         if (!(flags & 0x100)) {
                             if (!(flags & 0x1000) || cell->m_type == BOAT) {
                                 currentTown->m_dockSite =

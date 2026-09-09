@@ -14,8 +14,6 @@
 // Original spellings below come from the complete Dreamcast hero field list.
 #pragma pack(push, 1)
 struct LegacyCampaignHero : public type_obscuring_object {
-    LegacyCampaignHero();
-
     // Before normalization: mana.
     short m_mana;                              // +0x018
     // Before normalization: id.

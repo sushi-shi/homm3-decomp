@@ -33,9 +33,6 @@ double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  // Before normalization (locals): player_id.
-                                  long playerId);
 // Before normalization (locals): our_hero.
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
@@ -44,9 +41,6 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
 void aiSetHeroBonuses(hero* ourHero);
 // Before normalization (locals): current_hero.
 void aiEquipArtifacts(hero* currentHero);
-// Before normalization (function): mark_danger_zones.
-// Before normalization (locals): our_hero, danger_zones.
-void markDangerZones(const hero* ourHero, long* dangerZones);
 // Before normalization (locals): current_hero, max_distance, best_point, best_raw_value,
 // allow_spells, explore_mode.
 int aiChooseDestination(hero* currentHero, long maxDistance,
@@ -70,19 +64,6 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
                                  EGameResource* bestResource);
 TCreatureType siegeArtifactToCreature(TArtifact engine);
 TCreatureType upgradedCreatureType(TCreatureType type);
-
-// These remain the canonical inline bodies used by all real callers. Retail
-// selected one out-of-line COMDAT copy of each into philai.obj in this order;
-// typed address-takes materialize those copies without replacing any
-// Dreamcast-attested inline call with a source-false out-of-line call.
-// Before normalization: g_emit_PlayerKnowsCell.
-bool (ExtraInfoUnion::* g_emitPlayerKnowsCell)(short) const =
-    &ExtraInfoUnion::playerKnowsCell;
-// Before normalization: g_emit_OnSameTeam.
-bool (game::* g_emitOnSameTeam)(int, int) const = &game::onSameTeam;
-// Before normalization: g_emit_game_UpgradedCreatureType.
-TCreatureType (game::* g_emitGameUpgradedCreatureType)(TCreatureType) const =
-    &game::upgradedCreatureType;
 
 // Before normalization (locals): our_hero, complex_choice, typed_skill, army_value,
 // ranged_value, const_archery_value, const_estate_value.
@@ -419,9 +400,9 @@ static long getArtifactPurchaseValue(
     if (price > funds[resource])
         return 0;
 
-    type_artifact artifact(artifactId, -1);
+    type_artifact artifact(artifactId);
     long value = static_cast<long>(
-        static_cast<double>(aiGetArtifactPlayerValue(
+        static_cast<double>(aiGetValueOfArtifact(
             artifact, g_netLocalGamePos))
         - static_cast<double>(price)
             * g_currentPlayer->m_ai.m_resourceValue[resource]);
@@ -463,7 +444,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
         for (int resource = 0; resource < 7; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
-        type_artifact artifact(engine, -1);
+        type_artifact artifact(engine);
         currentHero->giveArtifact(&artifact, 1, 1);
     }
 }
@@ -646,8 +627,6 @@ int valueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 
 // Source-order declarations for helpers whose retained Complete bodies live
 // later in retail RVA order.
-// Before normalization (function): spell_id_from_int.
-inline SpellID spellIdFromInt(int value);
 // Before normalization (function): NetValueOfArtifact.
 // Before normalization (locals): current_hero, artifact_value, gold_cost, resource_cost,
 // resource_type.
@@ -763,7 +742,7 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     type_artifact artifact(cell->getArtifactIndex());
-    int value = aiGetArtifactPlayerValue(artifact, currentHero->m_owner);
+    int value = aiGetValueOfArtifact(artifact, currentHero->m_owner);
     if (value < 10)
         value = 10;
 
@@ -882,8 +861,12 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
             ARTIFACT_SPELLBOOK)) {
         for (unsigned int spell = 0;
              spell < blackBox->m_spells.size(); ++spell) {
-            value += valueOfLearning(
-                currentHero, spellIdFromInt(blackBox->m_spells[spell]));
+            SpellID spellId;
+            {
+                int ordinal = blackBox->m_spells[spell];
+                memcpy(&spellId, &ordinal, sizeof spellId);
+            }
+            value += valueOfLearning(currentHero, spellId);
         }
     }
 
@@ -1111,7 +1094,7 @@ __forceinline long valueOfHeroEvent(const hero* currentHero,
             currentHero, &secondHero->m_army, secondHero,
             hasAngelicAlliance) / 2;
         if (moveCost >= currentHero->m_maxMovePoints
-            && swapper.getArmyValueIncrease()
+            && swapper.getArmyIncrease()
                    < currentHero->m_army.getAIValue())
             return 0;
         return value;
@@ -1290,32 +1273,6 @@ __forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 #pragma inline_depth()
 }
 
-// armyGroup deliberately models its mutable roster as int while
-// get_spell_work_chance's domain is TCreatureType. This representation
-// bridge preserves the four-byte value. The artifact and resource bridges
-// are shared through their owning headers.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    TCreatureType creature;
-    memcpy(&creature, &value, sizeof creature);
-    return creature;
-}
-
-inline SpellID spellIdFromInt(int value)
-{
-    SpellID spell;
-    memcpy(&spell, &value, sizeof spell);
-    return spell;
-}
-
-inline type_building_id buildingIdFromInt(int value)
-{
-    type_building_id building;
-    memcpy(&building, &value, sizeof building);
-    return building;
-}
-
-
 // CHECKPOINT (93.7290 -> 98.1308): Dreamcast line 355 prices the tray entry,
 // then line 358 constructs the artifact from the tray again.  Removing the
 // source-false artifact-id cache restores retail's reload and, with it, every
@@ -1389,7 +1346,11 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
         * g_currentPlayer->m_ai.m_resourceValue[GOLD]);
 
     for (int i = WOOD; i < GOLD; i++) {
-        EGameResource resource = gameResourceFromInt(i);
+        EGameResource resource;
+        {
+            int ordinal = i;
+            memcpy(&resource, &ordinal, sizeof resource);
+        }
         long amount = price * 2 / getMarketValue(resource);
         if (amount <= g_currentPlayer->m_resources[i]) {
             long value = static_cast<long>(static_cast<double>(amount)
@@ -1976,8 +1937,12 @@ void aiEnterTown(hero* currentHero, town* currentTown)
         if (player->m_resources[GOLD] >= 500
             && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
             && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact artifact(
-                artifactFromInt(ARTIFACT_SPELLBOOK));
+            TArtifact artifactId;
+            {
+                int ordinal = ARTIFACT_SPELLBOOK;
+                memcpy(&artifactId, &ordinal, sizeof artifactId);
+            }
+            type_artifact artifact(artifactId);
             currentHero->giveArtifact(&artifact, 1, 1);
             player->m_resources[GOLD] -= 500;
         }
@@ -2091,10 +2056,14 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                 aiSwapArtifacts(garrisonHero, currentHero);
             }
 
-            buySiegeEngine(
-                currentHero, currentTown, BLACKSMITH_ID,
-                artifactFromInt(
-                    g_blacksmithArtifacts[currentTown->m_type].m_artifactId));
+            {
+                TArtifact artifactId;
+                int ordinal =
+                    g_blacksmithArtifacts[currentTown->m_type].m_artifactId;
+                memcpy(&artifactId, &ordinal, sizeof artifactId);
+                buySiegeEngine(currentHero, currentTown, BLACKSMITH_ID,
+                               artifactId);
+            }
             if (currentTown->m_type == TOWN_STRONGHOLD)
                 buySiegeEngine(currentHero, currentTown, EXTRA_1_ID,
                                  ARTIFACT_BALLISTA);
@@ -2218,7 +2187,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
         return;
 
     long value = aiGetValueOfArtifact(
-        type_artifact(engine, -1), currentHero, false, true);
+        type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
     int* costs = g_creatureRecords
         + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
@@ -2243,7 +2212,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     for (int costResource = 0; costResource < 7; ++costResource)
         g_currentPlayer->m_resources[costResource] -= costs[costResource];
 
-    currentHero->giveArtifact(&type_artifact(engine, -1), 1, 1);
+    currentHero->giveArtifact(&type_artifact(engine), 1, 1);
 }
 
 // E:\gamedcs\philai.cpp:811.  Two friendly heroes meeting exchange creatures
@@ -2485,7 +2454,7 @@ void moveHero(hero* currentHero, long* dangerZones, unsigned char isLastHero, un
             if (g_game->m_setup.m_difficulty > 0
                 || g_game->isHumanAlly(
                     g_game->getTeam(g_netLocalGamePos)))
-                markDangerZones(currentHero, dangerZones);
+                aiMarkDangerZones(currentHero, dangerZones);
         }
 
         markShipyards(player);
@@ -2687,12 +2656,13 @@ int aiResourceCost(const playerData* player, const int* resources);
 VA(0x00526cc0, 0x55)  // anchor: players-array ai.resource_value walk at game+0x20bf8, dc 0x10f2f8
 int aiResourceCost(long playerId, const int* resources);
 
-// Retail-only 0x526d20 (no DC row): the computer-owner purchase shim
-// town::buy_building runs over a cost row before charging it - route the
-// row through the owning AI player's resource trader.  town.h owns the
-// declaration and the house ordinal name; its "owner TU unlocated" note is
-// retired by this row (the body sits in philai's span, between the
-// AI_resource_cost pair and the spellvalue constructor).
+// Complete's computer-owner purchase wrapper; its declaration belongs to
+// philai.h with this definition. Retail buy_building calls it at 0x5bf476,
+// then tests builtThisTurn at 0x5bf47b. DC buy_building instead proceeds
+// from get_build_cost_array (dc 0x1672fc) to the resource checks/debits
+// (source 1451..1459), without the new computer-owner trading path.
+// Retail 0x526d2e selects g_aiPlayers[playerId] with a 152-byte stride,
+// calls trade_resources at 0x526d35, and returns with ret 4.
 VA(0x00526d20, 0x1e)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
 void unnamed526d20(int playerId, int* costs, int flag)
 {
@@ -2856,8 +2826,13 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, int mastery,
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         int creature = m_ourHero->m_army.m_armies[i];
         if (creature != CREATURE_NONE) {
-            double chance = getSpellWorkChance(spell,
-                creatureTypeFromInt(creature), m_ourHero, 0);
+            double chance;
+            {
+                TCreatureType creatureType;
+                int ordinal = creature;
+                memcpy(&creatureType, &ordinal, sizeof creatureType);
+                chance = getSpellWorkChance(spell, creatureType, m_ourHero, 0);
+            }
             total = static_cast<long>(
                 static_cast<double>(g_creatureTypeTraits[creature].m_aiValue)
                 * static_cast<double>(m_ourHero->m_army.m_numTroops[i])
@@ -3122,9 +3097,14 @@ void philAI::getTurnAIVars(int whichPlayer)
          artifactId < ARTIFACT_COUNT; ++artifactId) {
         if (!g_artifactTraits[artifactId].m_disabled) {
             ++artifactCount;
-            type_artifact artifact(artifactFromInt(artifactId), -1);
+            TArtifact artifactType;
+            {
+                int ordinal = artifactId;
+                memcpy(&artifactType, &ordinal, sizeof artifactType);
+            }
+            type_artifact artifact(artifactType);
             totalArtifactValue +=
-                aiGetArtifactPlayerValue(artifact, whichPlayer);
+                aiGetValueOfArtifact(artifact, whichPlayer);
         }
     }
     g_currentPlayer->m_ai.m_turnValueOfAvgArtifact =
@@ -3388,7 +3368,7 @@ int aiChooseMagicSkill(hero* currentHero)
         ? 3 : 2;
 }
 
-// E:\gamedcs\philai.cpp:2692. Retail changes the DC static's explicit
+// E:\gamedcs\philai.cpp:2692. Retail changes the DC helper's explicit
 // hero parameter into the receiver, but preserves its statement shape:
 // undead armies get no morale credit, the morale curve supplies the only
 // named double local, and the army value is scaled by the hero's four-stat
@@ -3871,15 +3851,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 // rows; Complete's three callers and HD-masked twin fix this selected copy.
 // Canonical body and VA: include/game.h.
 
-// Complete-only game member: reject the four base-set elementals when
-// f_1f698 is zero, otherwise tail into the free helper. Its canonical inline
-// body lives in game.h; the typed emission anchor above and this claim record the
-// selected copy's strict retail VA order.
-VA(0x00529710, 0x34)  // retail-only + sole AI_value_of_event caller
-TCreatureType game::upgradedCreatureType(TCreatureType creature) const
-{
-    // @stub - active inline definition is in game.h
-}
+// Complete-only upgrade selector: canonical body and VA in include/game.h.
 
 #endif  // @carcass
 
@@ -4010,7 +3982,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
 
     if (moveCost >= 400
         && currentGenerator.m_playerOwner == g_netLocalGamePos
-        && purchaser.getArmyValueIncrease()
+        && purchaser.getArmyIncrease()
                < currentHero->m_army.getAIValue() / 3)
         purchaseValue = 0;
     value += purchaseValue;
@@ -4244,9 +4216,9 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
             == static_cast<short>(g_game->m_ultimateArtifactZ))
         return 0;
 
-    type_artifact grailArtifact(ARTIFACT_HOLY_GRAIL, -1);
+    type_artifact grailArtifact(ARTIFACT_HOLY_GRAIL);
     // field_4e3e8 is the DC-named numObelisks (see its game.h note).
-    return aiGetArtifactPlayerValue(grailArtifact, playerId)
+    return aiGetValueOfArtifact(grailArtifact, playerId)
         / g_game->m_numObelisks;
 }
 
@@ -4385,8 +4357,12 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
 VA(0x0052a700, 0x10)  // anchor-callee value_of_recruiting + REFUGEE_CAMP arm, dc 0x1121b8
 int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 {
-    return valueOfRecruiting(currentHero,
-        creatureTypeFromInt(cell->m_objectIndex),
+    TCreatureType creature;
+    {
+        int ordinal = cell->m_objectIndex;
+        memcpy(&creature, &ordinal, sizeof creature);
+    }
+    return valueOfRecruiting(currentHero, creature,
         static_cast<short>(cell->m_extraInfo));
 }
 
@@ -4612,8 +4588,8 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
                 value += 5000000;
             }
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
-            value += aiGetArtifactPlayerValue(grail,
+            type_artifact grail(ARTIFACT_HOLY_GRAIL);
+            value += aiGetValueOfArtifact(grail,
                                                    currentHero->m_owner);
         }
     }
@@ -4698,21 +4674,20 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
         hasAngelicAlliance);
 
     if (moveCost >= 400
-        && purchaser.getArmyValueIncrease()
+        && purchaser.getArmyIncrease()
                < currentHero->m_army.getAIValue() / 3)
         return 0;
 
     return purchaseValue + swapValue / 2;
 }
 
-// Retail-only 0x52b1e0, value_of_town's building appraisal, split out of
-// the DC single body (value_of_town calls it twice; DC's own 1214-byte
-// value_of_town carries the same HasBuilding x6 / GetExperienceIncrement
-// x2 census in line).  What a visiting hero gains from the town: the
-// Conflux university, the mage guild's unlearned spells (or a 500-gold
-// spellbook, valued 1000), and the once-per-hero special-building stat
-// bonuses ledgered in TownSpecialGrantedMask.  PROVISIONAL house name;
-// extern for emission while value_of_town is a stub.
+// Complete retains this separate building appraisal and value_of_town
+// calls it at 0x52ac9c (allied town) and 0x52ad0c (owned town). DC's
+// value_of_town owns the special-building arms itself at source 3235..3263
+// (HasBuilding calls dc 0x112cb6/0x112cd4/0x112cf0/0x112d6e/0x112d96).
+// The new helper also prices the Conflux university and unlearned guild
+// spells, then checks the per-hero town bonus mask before the stat arms.
+// Its role name is provisional; keep the retained body in this module.
 VA(0x0052b1e0, 0x2f4)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
 long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 {

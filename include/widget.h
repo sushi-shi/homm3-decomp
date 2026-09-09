@@ -206,14 +206,16 @@ public:
     // Complete widened the Dreamcast nil-argument draw hook. The shared
     // vtable representative at 0x5bc7e0 is `ret 8`, and
     // TCampaignBrief dispatches this slot with the z-buffer and widget id.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) = 0; // slot 3
-    virtual void draw() = 0;                                // slot 4
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
+    // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
+    // These hooks write to the destination bitmap through its pointer.
+    virtual void draw() const = 0;                                // slot 4
     VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
     virtual int getRealHeight() const { return m_height; }          // slot 5
     VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
     virtual int getRealWidth() const { return m_width; }            // slot 6
     virtual void processHover();                           // slot 7
-    virtual void dim();                                     // slot 8
+    virtual void dim() const;                                     // slot 8
     virtual void enable(unsigned char on);                  // slot 9
     virtual void onSetFocus() {}                            // slot 10
     virtual void onKillFocus() {}                           // slot 11

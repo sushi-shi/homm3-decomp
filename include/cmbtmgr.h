@@ -6,6 +6,7 @@
 #define HOMM3_CMBTMGR_H
 
 #include <set>
+#include <vector>
 #include "army.h"
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "basemgr.h"
@@ -651,126 +652,20 @@ public:
     };
 
 
-    // Dinkumware's four-word vector representation. FreeIcons exposes the
-    // allocator word as well as first/last/end-capacity and inlines clear's
-    // move range before calling the template's destroy-range helper.
-    struct TObstacleVector {
-        // VC6's Dinkumware vector stores its otherwise-empty allocator in
-        // one byte, followed by alignment and its three pointer words.  The
-        // default allocator temporary is intentionally uninitialized: the
-        // retail manager ctor copies that byte before clearing the pointers.
-        struct TAllocator {
-            TAllocator() {}
-        };
-
-        // Before normalization: allocator.
-        TAllocator m_allocator;
-        // Before normalization: pad_01.
-        // The VC6 empty allocator occupies one byte; its three pointer
-        // fields start at +4. These three bytes align the first pointer.
-        char m_paddingBeforeBegin[3];
-        // Before normalization: begin.
-        TObstacle* m_begin;
-        // Before normalization: end.
-        TObstacle* m_end;
-        // Before normalization: capacity.
-        TObstacle* m_capacity;
-
-        TObstacleVector(const TAllocator& value = TAllocator())
-            : m_allocator(value), m_begin(0), m_end(0), m_capacity(0) {}
-        // DEFINED HERE, not declared-only: retail EXPANDS this teardown
-        // into ~combatManager (kb.obj 0x4f3975 - `mov eax,[esi+0x13d5c] /
-        // push eax / call ??3 / xor eax,eax / mov [esi+0x13d5c],eax /
-        // [+0x13d60] / [+0x13d64]`), which no out-of-line declaration can
-        // produce. TObstacle is a POD, so Dinkumware's _Destroy loop folds
-        // away and the body is exactly the deallocate plus the three
-        // pointer resets, unguarded.
-        ~TObstacleVector()
-        {
-            delete m_begin;
-            m_begin = 0;
-            m_end = 0;
-            m_capacity = 0;
-        }
-
-        // Before normalization (function): combatManager::TObstacleVector::Destroy.
-        void destroy(TObstacle* first, TObstacle* last);
-        // Dreamcast's DrawFrame line 1211 preserves the Dinkumware
-        // non-const subscript call and its S_PUB32 fixes an unsigned index
-        // with a TObstacle& result. Complete folds this tiny boundary away.
-        TObstacle& operator[](unsigned index) { return m_begin[index]; }
-        // Dinkumware's own null-guarded size(): place_obstacle folds the
-        // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
-        // divide by sizeof(TObstacle) inline right after the insert.
-        VA(0x00517750, 0x21)  // retained retail body; formerly enrolled by VECTOR_SIZE
-        int size() const { return m_begin == 0 ? 0 : m_end - m_begin; }
-        // The out-of-line worker push_back reduces to. Defined in
-        // cmbtmgr.cpp so that SetupAndLoadObstacles can expand it the way
-        // retail does while place_obstacle keeps retail's call.
-        void insert(TObstacle* where, unsigned count, const TObstacle& value);
-        TObstacle* begin() { return m_begin; }
-        TObstacle* end() { return m_end; }
-        // DC cmbtmgr.cpp:2848 calls push_back. Preserve the two forwarding
-        // layers from the pinned VC6 VECTOR: push_back -> insert(one) ->
-        // insert(count), including the iterator returned after reallocation.
-        // Before normalization (function): push_back.
-        void pushBack(const TObstacle& value) { insert(end(), value); }
-        TObstacle* insert(TObstacle* where, const TObstacle& value)
-        {
-            unsigned offset = where - begin();
-            insert(where, 1, value);
-            return begin() + offset;
-        }
-
-        // Dinkumware's two uninitialised-range helpers. DECLARED, NOT
-        // DEFINED here: retail's insert expansion in SetupAndLoadObstacles
-        // CALLS both (0x46b1a0 thiscall/ret 0xc returning the destination
-        // end, 0x46b1e0 thiscall/ret 0xc), so this header must not offer a
-        // body for either.
-        // Before normalization (function): combatManager::TObstacleVector::_Ucopy.
-        TObstacle* ucopy(const TObstacle* first, const TObstacle* last,
-                          TObstacle* dest);
-        // Before normalization (function): combatManager::TObstacleVector::_Ufill.
-        void ufill(TObstacle* first, unsigned count, const TObstacle& value);
-        void erase(TObstacle* first, TObstacle* last)
-        {
-            TObstacle* vectorEnd = m_end;
-            TObstacle* destination = first;
-            TObstacle* source = last;
-            for (; source != vectorEnd; ++source, ++destination)
-                *destination = *source;
-            destroy(destination, m_end);
-            m_end = destination;
-        }
-    };
-
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
     // when the corresponding tower is destroyed.
-    struct TArcherSprite {
-        // Before normalization: value.
-        CSprite* m_value;
-
-        TArcherSprite(CSprite* sprite = 0) : m_value(sprite) {}
-        ~TArcherSprite();
-        operator CSprite*() const { return m_value; }
-        CSprite* operator->() const { return m_value; }
-        TArcherSprite& operator=(CSprite* sprite)
-        {
-            m_value = sprite;
-            return *this;
-        }
-    };
-    SIZE(TArcherSprite, 0x4);
-
+    // DC TArcher (0x431d) has raw Sprite/Missile pointers. Complete owns
+    // both through four-byte resource handles, as in army: 0x462920 clears
+    // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
     struct TArcher {
         // Before normalization: creatureType.
         int m_creatureType;             // +0x0
         // Before normalization: sprite.
-        TArcherSprite m_sprite;          // +0x4
+        TResourceHandle<CSprite> m_sprite;          // +0x4
         // Before normalization: shadowSprite.
-        TArcherSprite m_shadowSprite;    // +0x8
+        TResourceHandle<CSprite> m_shadowSprite;    // +0x8
         // Before normalization: x.
         int m_x;                        // +0xc
         // Before normalization: y.
@@ -784,7 +679,6 @@ public:
         // Before normalization: armySlot.
         int m_armySlot;                 // +0x20
 
-        TArcher();
     };
 
     // InitializeArchers' two simultaneously live resource locals. Keeping
@@ -1322,7 +1216,10 @@ public:
     // DC roster's std::vector<combatManager::TObstacle> COMDATs say
     // this really is a vector; only its first two members are proven.
     // Before normalization: obstacles.
-    TObstacleVector m_obstacles;        // +0x13d58
+    // Original: Obstacles, std::vector<combatManager::TObstacle> in DC
+    // combatManager type 0x1ed7. Complete uses Dinkumware: allocator at +0,
+    // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
+    std::vector<TObstacle> m_obstacles;  // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
@@ -1493,10 +1390,8 @@ public:
     // only evidence there is.
     // Before normalization (function): combatManager::GetGridIndex.
     int getGridIndex(int x, int y) const;
-    // Before normalization (function): combatManager::IsQuickCombat.
-    unsigned char isQuickCombat();
     // Before normalization (function): combatManager::CombatIsOver.
-    unsigned char combatIsOver();
+    unsigned char combatIsOver() const;
     // Before normalization (function): combatManager::IsWinner.
     // Before normalization (locals): this_side.
     unsigned char isWinner(int thisSide) const;
@@ -1612,10 +1507,10 @@ public:
     // unsigned char return produces exactly that `xor al,al`).
     // Before normalization (function): combatManager::ShotIsThroughWall.
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
-                                    int destIndex);
+                                    int destIndex) const;
     // Before normalization (function): combatManager::ShotIsNotOptimal.
     unsigned char shotIsNotOptimal(const army* attacker,
-                                   const army* defender);
+                                   const army* defender) const;
     // Before normalization (function): combatManager::InLineOfSight.
     unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
     // Before normalization (function): combatManager::UpdateArmyLuckAndMorale.
@@ -1928,7 +1823,7 @@ public:
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
     // Before normalization (function): combatManager::GetObstacle.
-    TObstacle& getObstacle(int index) { return m_obstacles.m_begin[index]; }
+    TObstacle& getObstacle(int index) { return m_obstacles[index]; }
     // 0x477e10, an unclaimed cmbtmgr-side body. NAME IS THE DREAMCAST
     // XREF GRAPH'S: the DC dump lists combatManager::TurnOffHighlighter
     // (command.obj, dc 0x6ed18) as one of DoCompAI's eight callees and
@@ -2078,11 +1973,11 @@ public:
     long computeFireShieldDamage(long damage, const army* attacker,
                                     const army* target,
                                     // Before normalization (locals): target_hits.
-                                    long targetHits);        // 0x422440
+                                    long targetHits) const;        // 0x422440
     // Before normalization (function): combatManager::can_cast_spells.
     unsigned char canCastSpells(long side,
                                   // Before normalization (locals): hero_spell.
-                                  unsigned char heroSpell);  // 0x41f890
+                                  unsigned char heroSpell) const;  // 0x41f890
     // Before normalization (function): combatManager::find_move_order.
     void findMoveOrder(std::vector<army*>* result);         // 0x41f140
     // Before normalization (function): combatManager::get_attack_change.
@@ -2121,7 +2016,7 @@ public:
     // Before normalization (locals): current_army, best_value.
     long chooseShooterTarget(const army* currentArmy,
                                type_AI_combat_parameters* data,
-                               long* bestValue);             // 0x41eb80
+                               long* bestValue) const;             // 0x41eb80
     // Before normalization (function): combatManager::choose_cyclops_action.
     // Before normalization (locals): best_value.
     unsigned char chooseCyclopsAction(long bestValue, long side,
@@ -2150,13 +2045,13 @@ public:
     // Before normalization (locals): our_army, marked_enemies.
     long getAreaEffect(long side, const army* ourArmy,
                          long markedEnemies,
-                         const type_AI_combat_parameters* estimate);
+                         const type_AI_combat_parameters* estimate) const;
                                                               // 0x41f920
     // Before normalization (function): combatManager::mark_friendly_armies.
     // Before normalization (locals): our_army, enemy_attacks, marked_enemies.
     void markFriendlyArmies(const army* ourArmy, long* enemyAttacks,
                               long markedEnemies,
-                              const type_AI_combat_parameters* estimate);
+                              const type_AI_combat_parameters* estimate) const;
                                                               // 0x41fb60
     // `estimate` is NON-const where the Dreamcast roster prints
     // `const type_AI_combat_parameters*`, for the same reason the
@@ -2168,7 +2063,7 @@ public:
     void markMultiheadedEnemy(const army* ourArmy, const army* enemy,
                                 long* enemyAttacks, long limitValue,
                                 searchArray* currentSearchArray,
-                                type_AI_combat_parameters* estimate);
+                                type_AI_combat_parameters* estimate) const;
                                                               // 0x41fd60
     // Non-const `estimate` for the same reason mark_multiheaded_enemy
     // below is: this body calls that one and reaches
@@ -2177,7 +2072,7 @@ public:
     // Before normalization (locals): our_army, enemy_attacks, dangerous_enemies.
     void markEnemyAttacks(const army* ourArmy, long* enemyAttacks,
                             long* dangerousEnemies,
-                            type_AI_combat_parameters* estimate);
+                            type_AI_combat_parameters* estimate) const;
                                                               // 0x420260
     // Before normalization (function): combatManager::choose_creature_spell.
     // Before normalization (locals): current_army, best_value.
@@ -2224,15 +2119,14 @@ public:
     // ai_tactical bodies, every one of which the DC graph also records
     // as a find_AI_targets caller. Its own VA claim wants the ai.obj
     // span recomputed past 0x4224d9 and is left to that lane.
-    // The parameters object is NOT const here: the body calls the
-    // non-const type_AI_combat_parameters::get_simple_attack_effect
-    // (?...@@QAEJPBVarmy@@0EJ@Z) on it, and every caller in the tree
-    // already passes a non-const object.
+    // CodeView ai.cpp:2608 (dc 0x27888) declares a const parameters
+    // receiver. Its calculations are const too; the old non-const claim
+    // came from our reconstructed declaration, not the retail bytes.
     // Before normalization (function): combatManager::find_AI_targets.
     // Before normalization (locals): our_group, current_army, melee_only, search_array.
     void findAITargets(long ourGroup, const army* currentArmy,
                          unsigned char meleeOnly,
-                         type_AI_combat_parameters* data,
+                         const type_AI_combat_parameters* data,
                          searchArray* currentSearchArray);          // 0x422b20
     // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
     // both sides: DC's own ai.obj roster puts
@@ -2403,7 +2297,7 @@ public:
     // 0x59e900 ends exactly where the already-claimed InitiateSpell
     // begins at 0x59ec50 - the same order with no gap.
     // Before normalization (function): combatManager::ViewSpells.
-    int viewSpells();
+    int viewSpells() const;
     // 0x47a380. LOCATED from RightClick, which calls it with the literal
     // 1 for the three wall-target hexes; the DC command.obj roster puts
     // ViewCastleBallista (command.cpp:3932) between AddArmy (3867) and
@@ -2443,13 +2337,13 @@ public:
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
                             hero* castingHero, hero* targetHero,
                             const army* target,
-                            unsigned char simulated);          // 0x5a7890
+                            unsigned char simulated) const;          // 0x5a7890
     // Before normalization (function): combatManager::ModifySpellDamage.
     // Before normalization (locals): base_damage, casting_hero, target_hero.
     long modifySpellDamage(long baseDamage, SpellID spell,
                            const hero* castingHero, const hero* targetHero,
                            const army* target,
-                           unsigned char simulated);          // 0x5a78e0
+                           unsigned char simulated) const;          // 0x5a78e0
     // THE spells.obj-ONLY DECLARATION BLOCK. Everything in here is
     // reached from src/spells.cpp and from nowhere else in the tree, and
     // it is gated because this header's include-set class is live: three
@@ -2468,7 +2362,7 @@ public:
     // against, scales the damage by that school's factor.
     // Before normalization (function): combatManager::ModifySpellDamageForSpells.
     long modifySpellDamageForSpells(long damage, SpellID spell,
-                                    const army* target);       // 0x5a7bb0
+                                    const army* target) const;       // 0x5a7bb0
     // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
     // 187-cell grid and answers whether ANY cell passes ValidSpellTarget;
     // the two share every parameter but the cell index, which is what
@@ -2716,7 +2610,7 @@ public:
                               unsigned char redirected,
                               // Before normalization (locals): first_target, creature_spell.
                               unsigned char firstTarget,
-                              long creatureSpell);   // 0x5a8090
+                              long creatureSpell) const;   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -
@@ -2733,7 +2627,7 @@ public:
                                  const army* target,
                                  unsigned char redirected,
                                  // Before normalization (locals): creature_spell.
-                                 long creatureSpell);         // 0x5a8640
+                                 long creatureSpell) const;         // 0x5a8640
     // spells.obj leaves used by ai_tactical's sacrifice scan. The retail
     // call sites fix these exact stack arities; Dreamcast supplies names and
     // parameter types.
@@ -2746,7 +2640,7 @@ public:
     unsigned char validSpellTargetArmy(SpellID spellId, int castingSide,
                                        const army* targetArmy,
                                        unsigned char firstTarget,
-                                       long creatureSpell);    // 0x5a3c80
+                                       long creatureSpell) const;    // 0x5a3c80
     // Before normalization (function): combatManager::find_resurrection_target.
     army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);

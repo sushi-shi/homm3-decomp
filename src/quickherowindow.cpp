@@ -135,15 +135,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             int creature = g_game->m_f1f698 ? 145 : 118;
             int owner = thisHero->m_owner;
             while (creature--) {
-                int townType;
-                if (!g_game->m_f1f698 &&
-                    (creature == CREATURE_AIR_ELEMENTAL ||
-                     creature == CREATURE_EARTH_ELEMENTAL ||
-                     creature == CREATURE_FIRE_ELEMENTAL ||
-                     creature == CREATURE_WATER_ELEMENTAL))
-                    townType = -1;
-                else
-                    townType = g_creatureTypeTraits[creature].m_townType;
+                int townType = g_game->getAlignment(creature);
 
                 int alignment = owner >= 0
                     ? g_game->m_setup.m_alignment[owner]

@@ -2085,26 +2085,6 @@ void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, s
 // the identity is byte-proven - 0x49e0e0 stores the ResourceManager
 // return for "advevent.txt" (0x677710) into 0x696a18 and every one of
 // the 194 references to that cell is inside events.obj's link bracket.
-// The int->TCreatureType representation bridge, copied verbatim from the
-// head of game.cpp: NewmapCell's +0x22 is a GENERIC `short objectIndex`
-// shared by all 163 adventure-object types (T_SHORT in the DC fieldlist,
-// `movsx ecx, word ptr` in retail), while the Dreamcast types this
-// caller's local TCreatureType and decorates get_like_modifier's
-// parameter `W4TCreatureType@@`. The union keeps the bridge explicit
-// without an enum cast, exactly as game.cpp records; VC6 reduces it to
-// the move it already was.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
 // Before normalization: gpAdventureEventText.
 // Before normalization: gpRandomSignText.
 DATA(0x00696a18) static TTextResource* g_adventureEventText;
@@ -2647,18 +2627,6 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-// Before normalization (function): get_artifact_price.
-static inline int getArtifactPrice(const NewmapCell* cell)
-{
-    return static_cast<long>(cell->m_extraInfo << 28) >> 28;
-}
-
-// Before normalization (function): is_defended_artifact.
-static inline bool isDefendedArtifact(const NewmapCell* cell)
-{
-    return (cell->m_extraInfo & 0xf) == const_artifact_defended;
-}
-
 // Dreamcast events.cpp:629-641: DoArtifactSkillRequirement calls
 // DoEventFreeArtifact on success; its refusal branch names a short artifact.
 // Retail's skill-success dialogs likewise read g_artifactEventText, not the
@@ -2709,12 +2677,12 @@ void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
         doCustomArtifact(currentHero, cell, point, humanPlayer);
         return;
     }
-    if (isDefendedArtifact(cell)) {
+    if (cell->isDefendedArtifact()) {
         fightForArtifact(currentHero, cell, point, humanPlayer);
         return;
     }
 
-    switch (getArtifactPrice(cell)) {
+    switch (cell->getArtifactPrice()) {
     case const_free_artifact:
         doEventFreeArtifact(currentHero, cell, point, humanPlayer);
         break;
@@ -2804,8 +2772,9 @@ static void addReward(std::string& text, const std::string& alternate,
 // byte-flat. Caching the secondary-skill byte loses retail's repeated test.
 // Restoring game.h's DC skill/artifact element types removes the consumer
 // casts and reaches 94.7895% (2026-09-08). addReward keeps its DC enum ABI;
-// resource-index arithmetic crosses through town.h's shared representation
-// bridge. File-byte widening belongs to readBlackBox/loadBlackBox.
+// resource-index arithmetic crosses to that enum locally at the addReward
+// calls. The former shared conversion wrapper had no recovered boundary.
+// File-byte widening belongs to readBlackBox/loadBlackBox.
 // Before normalization (locals): current_hero, human_player, BlackBox.
 VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
@@ -2832,8 +2801,10 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     for (int i = 0; i < 4; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
+                union { int m_integer; EGameResource m_resource; } rewardType;
+                rewardType.m_integer = RES_PRIMARY_SKILL_ATTACK + i;
                 addReward(message, alternate, rewards,
-                          gameResourceFromInt(RES_PRIMARY_SKILL_ATTACK + i),
+                          rewardType.m_resource,
                            blackBox->m_primarySkillBonus[i]);
             }
             gave = 1;
@@ -2921,15 +2892,17 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     for (int k = 0; k < 7; k++) {
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
+                union { int m_integer; EGameResource m_resource; } rewardType;
+                rewardType.m_integer = k;
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(message, formatString(
                         g_adventureEventText->getText(183),
-                        currentHero->m_name), rewards, gameResourceFromInt(k),
+                        currentHero->m_name), rewards, rewardType.m_resource,
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(message, formatString(
                         g_adventureEventText->getText(182),
-                        currentHero->m_name), rewards, gameResourceFromInt(k),
+                        currentHero->m_name), rewards, rewardType.m_resource,
                                blackBox->m_resQty[k] - 100000);
                 }
             }
@@ -3005,8 +2978,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         } else if (humanPlayer) {
             joinFailed = 1;
         } else {
-            aiJoinDecision(currentHero, creatureTypeFromInt(type),
-                             count);
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = type;
+            aiJoinDecision(currentHero, storage.m_creature, count);
         }
         gave = 1;
     }
@@ -4540,8 +4517,8 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             if (combatMonsterEvent(
                     currentHero, currentMine.m_guards.m_armies[0],
                     &guardCount, cell, point,
-                    creatureTypeFromInt(-1), 0, 0,
-                    creatureTypeFromInt(-1), 0, 0)) {
+                    CREATURE_NONE, 0, 0,
+                    CREATURE_NONE, 0, 0)) {
                 currentMine.m_guards.m_numTroops[0] = guardCount;
                 return;
             }
@@ -4781,8 +4758,8 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
 
     int goldGolems = 40;
     if (combatMonsterEvent(currentHero, 116, &goldGolems, cell, point,
-                           creatureTypeFromInt(117), 20, 2,
-                           creatureTypeFromInt(-1), 0, 0))
+                           CREATURE_DIAMOND_GOLEM, 20, 2,
+                           CREATURE_NONE, 0, 0))
         return;
     currentHero->checkLevel();
 
@@ -4910,12 +4887,20 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
     }
 
     short available = cell->m_extraInfo;
-    TCreatureType creature = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType creature;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        creature = storage.m_creature;
+    }
     if (currentHero->belongsToHuman()) {
         recruitUnit dialog(&currentHero->m_army, 0, creature, &available,
-                           creatureTypeFromInt(-1), 0,
-                           creatureTypeFromInt(-1), 0,
-                           creatureTypeFromInt(-1), 0);
+                           CREATURE_NONE, 0,
+                           CREATURE_NONE, 0,
+                           CREATURE_NONE, 0);
         g_executive->doDialog(&dialog);
     } else {
         aiRecruitRefugees(currentHero, creature, &available);
@@ -5992,7 +5977,7 @@ int isBaseCreature(TCreatureType type);
 // return matches.  polish-41's countdown-walk rule ("pays only when the
 // bound is a VARIABLE; with a constant bound VC6 already emits it") does NOT
 // hold here: the bound is the constant 7 and the explicit walk is still what
-// retail wrote.  The two-arg type_artifact ctor (seerhut precedent) measured
+// retail wrote. The former two-arg type_artifact ctor historically measured
 // byte-flat and is kept as the cleaner spelling. 2026-08-27.
 // Before normalization (locals): current_hero, human_player.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
@@ -6012,7 +5997,8 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
             if (humanPlayer)
                 normalDialog(g_emptyRolloverText, 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
-            type_artifact artifact(reward->m_artifact, -1);
+            // The Complete monster reward stores a decoded map ordinal; type_artifact retains its DC TArtifact constructor.
+            type_artifact artifact(static_cast<TArtifact>(reward->m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -6057,12 +6043,20 @@ VA(0x004a6c60, 0x188)  // linkorder + CombatMonsterEvent/EraseAndFizzle, dc 0x96
 void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
-    TCreatureType monType = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType monType;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        monType = storage.m_creature;
+    }
     int numMons = cell->m_monsterInfo.m_qty;
     int survived = combatMonsterEvent(currentHero, monType, &numMons,
                                       cell, point,
-                                      creatureTypeFromInt(-1), 0, 0,
-                                      creatureTypeFromInt(-1), 0, 0);
+                                      CREATURE_NONE, 0, 0,
+                                      CREATURE_NONE, 0, 0);
     cell->m_monsterInfo.m_qty = numMons;
 
     if (!survived) {
@@ -6123,7 +6117,15 @@ VA(0x004a6df0, 0x20B)  // linkorder + advevent.txt 91 + AI_value_of_event, dc 0x
 void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
                                type_point point, bool humanPlayer)
 {
-    TCreatureType monType = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType monType;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        monType = storage.m_creature;
+    }
 
     if (humanPlayer) {
         sprintf(g_text,
@@ -6162,7 +6164,15 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
                                type_point point, bool wantToFight,
                                bool humanPlayer)
 {
-    TCreatureType monType = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType monType;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        monType = storage.m_creature;
+    }
     int numMons = cell->m_monsterInfo.m_qty;
 
     if (humanPlayer) {
@@ -6245,7 +6255,15 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
                                    type_point point, bool wantToFight,
                                    bool humanPlayer)
 {
-    TCreatureType monType = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType monType;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        monType = storage.m_creature;
+    }
     int numMons = cell->m_monsterInfo.m_qty;
     int cost = g_creatureTypeTraits[monType].m_cost[GOLD] * numMons;
 
@@ -6452,7 +6470,15 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
                                           hero* currentHero, type_point point,
                                           bool humanPlayer)
 {
-    TCreatureType monType = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType monType;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        monType = storage.m_creature;
+    }
     int numTroops = cell->m_monsterInfo.m_qty;
     int disposition = cell->m_monsterInfo.m_disposition;
 
@@ -6905,16 +6931,8 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
     g_advManager->teleportTo(currentHero, point, "telptout.wav", 0, 1, 0);
 }
 
-// The DC's `NewmapCell : public ExtraInfoUnion` upcast, spelled the way
-// game.cpp's randomizers already spell it - retail's NewmapCell cannot
-// derive from a union, so the handlers whose parameter is the union view
-// take the cell's own +0x00 dword through this no-op bridge.
-// Before normalization (function): cell_extra.
-static inline ExtraInfoUnion* cellExtra(NewmapCell* cell)
-{
-    return static_cast<ExtraInfoUnion*>(static_cast<void*>(&cell->m_extraInfo));
-}
-
+// NewmapCell now has its CodeView-proven ExtraInfoUnion base. Event
+// handlers take that base directly; the old cellExtra cast wrapper is gone.
 inline void advManager::doEventLighthouse(NewmapCell* cell,
                                           // Before normalization (locals): human_player.
                                           unsigned char humanPlayer)
@@ -7106,7 +7124,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventCreatureGenerator(currentHero, cell, point, humanPlayer);
         break;
     case DEAD_GUY:
-        doEventSkeleton(currentHero, cellExtra(cell), humanPlayer);
+        doEventSkeleton(currentHero, cell, humanPlayer);
         break;
     case DEFENSE_TOWER:
 #pragma inline_depth(0)
@@ -7156,7 +7174,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventFlotsam(currentHero, cell, point, humanPlayer);
         break;
     case FOUNTAIN_OF_FORTUNE:
-        doEventFountain(currentHero, cellExtra(cell), humanPlayer);
+        doEventFountain(currentHero, cell, humanPlayer);
         break;
     case FOUNTAIN_OF_YOUTH:
         doEventFountainOfYouth(currentHero, cell, humanPlayer);
@@ -7248,7 +7266,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventIdol(currentHero, cell, humanPlayer);
         break;
     case LEAN_TO:
-        doEventLeanTo(currentHero, cellExtra(cell), humanPlayer);
+        doEventLeanTo(currentHero, cell, humanPlayer);
         break;
     case LIBRARY:
         doEventLibrary(currentHero, cell, humanPlayer);
@@ -7276,10 +7294,10 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventMagicSchool(currentHero, cell, point, humanPlayer);
         break;
     case MAGIC_SPRING:
-        doEventMagicSpring(currentHero, cellExtra(cell), humanPlayer);
+        doEventMagicSpring(currentHero, cell, humanPlayer);
         break;
     case MAGIC_WELL:
-        doEventMagicWell(currentHero, cellExtra(cell), humanPlayer);
+        doEventMagicWell(currentHero, cell, humanPlayer);
         break;
     case MERC_CAMP:
 #pragma inline_depth(0)
@@ -7296,7 +7314,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventWanderingMonster(cell, currentHero, point, humanPlayer);
         break;
     case MYSTICAL_GARDEN:
-        doEventMysticalGarden(currentHero, cellExtra(cell), humanPlayer);
+        doEventMysticalGarden(currentHero, cell, humanPlayer);
         break;
     case OASIS:
         doEventOasis(currentHero, cell, humanPlayer);
@@ -7521,7 +7539,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventTreasure(currentHero, cell, point, humanPlayer);
         break;
     case TREE_OF_KNOWLEDGE:
-        doEventTreeOfKnowledge(currentHero, cellExtra(cell),
+        doEventTreeOfKnowledge(currentHero, cell,
                                humanPlayer);
         break;
     case UNDERGROUND_GATE: {
@@ -7552,13 +7570,13 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case UNIVERSITY:
         if (!humanPlayer || g_unk691209) {
             aiVisitUniversity(currentHero,
-                                cellExtra(cell)->getUniversity());
+                                cell->getUniversity());
         } else {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             {
                 type_university_window universityWindow(
-                    currentHero, cellExtra(cell)->getUniversity(), 0);
+                    currentHero, cell->getUniversity(), 0);
                 universityWindow.centerWindow(-1, -1);
                 universityWindow.doModal(0);
             }
@@ -7566,7 +7584,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         }
         break;
     case WAGON:
-        doEventWagon(currentHero, cellExtra(cell), humanPlayer);
+        doEventWagon(currentHero, cell, humanPlayer);
         break;
     case WAR_MACHINE_FACTORY:
         if (!humanPlayer) {
@@ -7589,22 +7607,22 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         }
         break;
     case WAR_SCHOOL:
-        doEventWarSchool(currentHero, cellExtra(cell), humanPlayer);
+        doEventWarSchool(currentHero, cell, humanPlayer);
         break;
     case WARRIOR_TOMB:
-        doEventWarriorTomb(currentHero, cellExtra(cell), humanPlayer);
+        doEventWarriorTomb(currentHero, cell, humanPlayer);
         break;
     case WATER_WHEEL:
-        doEventWaterWheel(currentHero, cellExtra(cell), humanPlayer);
+        doEventWaterWheel(currentHero, cell, humanPlayer);
         break;
     case WATERING_HOLE:
         doEventWateringHole(currentHero, cell, humanPlayer);
         break;
     case WINDMILL:
-        doEventWindmill(currentHero, cellExtra(cell), humanPlayer);
+        doEventWindmill(currentHero, cell, humanPlayer);
         break;
     case WITCH_HUT:
-        doEventWitchHut(currentHero, cellExtra(cell), humanPlayer);
+        doEventWitchHut(currentHero, cell, humanPlayer);
         break;
     }
 }
@@ -7747,7 +7765,7 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
         && g_game->isHuman(rightHero->m_owner)
         && rightHero->m_owner != leftHero->m_owner)
     {
-        CTradeHeroesMsg message(leftHero, rightHero);
+        CTradeRequestMsg message(leftHero, rightHero);
         transmitRemoteData(&message, rightHero->m_owner, 1, 1);
     }
 
@@ -8092,7 +8110,7 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
 int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text, type_point point, unsigned char humanPlayer)
 {
-    type_creature_bank& bank = cellExtra(cell)->getCreatureBank();
+    type_creature_bank& bank = cell->getCreatureBank();
     int leaderMonster = -1;
     long creatureCount = bank.m_guards.getCreatureTotal();
     if (humanPlayer) {
@@ -8183,11 +8201,11 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
                            -1)) {
             if (humanPlayer)
                 doMonsterJoinDialog(
-                    who, creatureTypeFromInt(bank.m_rewardCreature),
+                    who, bank.m_rewardCreature,
                     bank.m_rewardCreatures);
             else
                 aiJoinDecision(who,
-                                 creatureTypeFromInt(bank.m_rewardCreature),
+                                 bank.m_rewardCreature,
                                  bank.m_rewardCreatures);
         }
     }
@@ -8375,27 +8393,40 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
                                   + (*numMons % numGroups > i);
     }
 
-    if ((g_game->m_f1f698
-         || (monType != CREATURE_AIR_ELEMENTAL
-             && monType != CREATURE_EARTH_ELEMENTAL
-             && monType != CREATURE_FIRE_ELEMENTAL
-             && monType != CREATURE_WATER_ELEMENTAL))
-        && static_cast<unsigned char>(
-               isBaseCreature(creatureTypeFromInt(monType)))
-        && numGroups > 1
-        && monType2 == CREATURE_NONE
-        && monType3 == CREATURE_NONE
-        && random(1, 100) <= 50) {
-        TCreatureType upgraded;
-        if (!g_game->m_f1f698
-            && (monType == CREATURE_AIR_ELEMENTAL
-                || monType == CREATURE_EARTH_ELEMENTAL
-                || monType == CREATURE_FIRE_ELEMENTAL
-                || monType == CREATURE_WATER_ELEMENTAL))
-            upgraded = CREATURE_NONE;
-        else
-            upgraded = upgradedCreatureType(creatureTypeFromInt(monType));
-        currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = monType;
+        if ((g_game->m_f1f698
+             || (monType != CREATURE_AIR_ELEMENTAL
+                 && monType != CREATURE_EARTH_ELEMENTAL
+                 && monType != CREATURE_FIRE_ELEMENTAL
+                 && monType != CREATURE_WATER_ELEMENTAL))
+            && static_cast<unsigned char>(
+                   isBaseCreature(storage.m_creature))
+            && numGroups > 1
+            && monType2 == CREATURE_NONE
+            && monType3 == CREATURE_NONE
+            && random(1, 100) <= 50) {
+            TCreatureType upgraded;
+            if (!g_game->m_f1f698
+                && (monType == CREATURE_AIR_ELEMENTAL
+                    || monType == CREATURE_EARTH_ELEMENTAL
+                    || monType == CREATURE_FIRE_ELEMENTAL
+                    || monType == CREATURE_WATER_ELEMENTAL))
+                upgraded = CREATURE_NONE;
+            else {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } upgradeType;
+                upgradeType.m_value = monType;
+                upgraded = upgradedCreatureType(upgradeType.m_creature);
+            }
+            currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
+        }
     }
 
     int totalGroups = numGroups;
@@ -8431,8 +8462,14 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     int result = doCombat(point, who, &who->m_army, -1, 0, 0,
                           &currentArmyGroup, eventSeed, 1, 0);
-    *numMons = currentArmyGroup.getCreatureTotal(
-        creatureTypeFromInt(monType));
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = monType;
+        *numMons = currentArmyGroup.getCreatureTotal(storage.m_creature);
+    }
     mobilizeCurrHero(0, 0, 1);
     return result;
 }
@@ -8679,14 +8716,14 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 //      seats; return winner.
 // The combat-init payload's two serializers, slots 0 and 1 of vtable
 // 0x63e508. Their scalar prefix is written by SendHeroTownData and read
-// back by ReceiveHeroTownData; the tail hands the four sub-objects to the
+// back by ReceiveHeroTownData; the tail hands the five sub-objects to the
 // serializers they own - armyGroup's, town's and hero's - with the
 // CURRENT save version baked in, because a net packet is never a
 // back-level file.
 // Before normalization: NET_COMBAT_SAVE_VERSION.
 const int g_netCombatSaveVersion = 42;
 
-// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
+// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
 // frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
 // [ebp+8], overlapping inside the dead `infile` parameter slot once that
 // pointer is live in ESI. Block-scoping the pair and swapping their
@@ -8734,7 +8771,7 @@ unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 
 // The mirror. `write` is const across this whole message family - it is
 // the base class's virtual - while every sub-object's own save() is not,
-// so the four member calls go through one const_cast rather than four.
+// so the five member calls share one mutable alias.
 VA(0x004ad340, 0x126)  // anchor-vtable 0x63e508 slot 1; anchor-callee town::save + hero::save, retail-only
 unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 {

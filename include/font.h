@@ -161,24 +161,24 @@ public:
     // Before normalization (locals): color_scheme.
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
     // Before normalization (function): font::GetCharacterWidth.
-    int getCharacterWidth(unsigned char currChar);
+    int getCharacterWidth(unsigned char currChar) const;
     // Before normalization (function): font::SetPalette.
     // Before normalization (locals): new_palette.
     void setPalette(const TPalette16* newPalette);
     // Before normalization (function): font::DrawCharacter.
-    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
+    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
     // Before normalization (function): font::get_string_width.
-    long getStringWidth(const char* arg);
+    long getStringWidth(const char* arg) const;
     // Before normalization (function): font::LineLength.
-    int lineLength(const char* str, int boxWidth);
+    int lineLength(const char* str, int boxWidth) const;
     // Before normalization (function): font::LongestWrappedLineWidth.
-    int longestWrappedLineWidth(const char* str, int boxWidth);
+    int longestWrappedLineWidth(const char* str, int boxWidth) const;
     // Before normalization (function): font::LineWidth.
-    int lineWidth(const char* text);
+    int lineWidth(const char* text) const;
     // Before normalization (function): font::LongestLineWidth.
-    int longestLineWidth(const char* str);
+    int longestLineWidth(const char* str) const;
     // Before normalization (function): font::longest_word_length.
-    int longestWordLength(const char* str);
+    int longestWordLength(const char* str) const;
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
     // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and
     // the second parameter as a pixel box width; NH3API corroborates the

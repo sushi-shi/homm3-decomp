@@ -13,12 +13,6 @@ public:
 
     unsigned char* getData();
 
-    // Before normalization (function): CDiffFile::GetBase.
-    unsigned char* getBase()
-    {
-        return m_data - sizeof(m_numBytes);
-    }
-
     // Before normalization (function): CDiffFile::Apply.
     void* apply(unsigned char* oldSaveGame, int oldSaveGameSize);
 };

@@ -22,15 +22,6 @@
 // Before normalization: gpQuestLogWindow.
 DATA(0x0069cd20) static TQuestLogWindow* g_questLogWindow;
 
-inline unsigned char TQuestGuard::questActiveforPlayer(
-    const unsigned char playerNum) const
-{
-    return m_quest
-        && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-        && (m_visitedPlayers & (1 << playerNum))
-        && m_quest;
-}
-
 // E:\gamedcs\questlogwindow.cpp:34
 // Dreamcast proves the helper call; Complete expands the 16-row version of
 // UpdateQuestLocators and otherwise retains the same scroll/store/redraw

@@ -201,9 +201,9 @@ no_position:
 // E:\gamedcs\inputmgr.cpp:779
 // EXACT 2026-08-09: retail clears the 64 buffer elements before installing
 // inputManager's vptr, proving that the clear belongs to nontrivial member
-// construction rather than this constructor body. inputBufferMessage uses
-// message's canonical default constructor; repeating its eight stores in the
-// derived constructor emits a second clear pass that retail does not contain.
+// construction rather than this constructor body. The message array uses
+// its canonical default constructor; repeating its stores in an additional
+// derived wrapper would introduce a second clear pass absent from retail.
 VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
@@ -278,7 +278,7 @@ void inputManager::flush()
 // unclaimed rows between Flush and AsciiConvert are the GetEvent/PeekEvent
 // pair in the DC roster's order; both return the message BY VALUE (the
 // hidden pointer at [ebp+8], `ret 4`), both open with the eight-dword
-// inputBufferMessage clear, and both call the already-claimed
+// canonical message clear, and both call the already-claimed
 // AsciiConvert at 0x4ec6f0 - which is what tells them apart from the
 // GetCurrQuals/SetKeyCodeType rows the DC roster files between them and
 // retail never emitted.
@@ -290,7 +290,7 @@ void inputManager::flush()
 VA(0x004ec590, 0xAE)  // anchor-callee (AsciiConvert) + dc order, dc 0xdda74
 message inputManager::getEvent()
 {
-    inputBufferMessage msg;
+    message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {
@@ -314,7 +314,7 @@ message inputManager::getEvent()
 VA(0x004ec640, 0xAD)  // anchor-callee (AsciiConvert) + dc order, dc 0xddc14
 message inputManager::peekEvent()
 {
-    inputBufferMessage msg;
+    message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {

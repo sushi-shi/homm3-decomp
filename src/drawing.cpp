@@ -1772,16 +1772,20 @@ int combatManager::drawCreatureAndHeroSubwindows()
     if (m_combatWindow->m_heroSubWindows[1]->isShown())
         m_combatWindow->m_heroSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[0]->isShown())
+    // Complete adds four creature-panel tests at 0x49569b..0x495710.
+    // DC 0x85f1c calls only the two hero-panel IsShown accessors; neither
+    // its procedure roster nor its (forward-only) creature-panel type
+    // proves the reconstruction's additional creature accessor.
+    if (m_combatWindow->m_creatureSubWindows[0]->m_shown)
         m_combatWindow->m_creatureSubWindows[0]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[1]->isShown())
+    if (m_combatWindow->m_creatureSubWindows[1]->m_shown)
         m_combatWindow->m_creatureSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[2]->isShown())
+    if (m_combatWindow->m_creatureSubWindows[2]->m_shown)
         m_combatWindow->m_creatureSubWindows[2]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[3]->isShown())
+    if (m_combatWindow->m_creatureSubWindows[3]->m_shown)
         m_combatWindow->m_creatureSubWindows[3]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     return 1;
@@ -1794,7 +1798,7 @@ int combatManager::drawCreatureAndHeroSubwindows()
 VA(0x00495730, 0x73)  // dc order/signature + exact body, dc 0x85f70
 int combatManager::drawObstacle(const hexcell& cell)
 {
-    TObstacle& obstacle = m_obstacles.m_begin[cell.m_obstacleIndex];
+    TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,
@@ -1988,8 +1992,8 @@ void combatManager::computeMaxExtent()
     }
 
     if (m_obstacles.size()) {
-        for (TObstacle* obstacle = m_obstacles.m_begin;
-             obstacle != m_obstacles.m_end; obstacle++) {
+        for (TObstacle* obstacle = m_obstacles.begin();
+             obstacle != m_obstacles.end(); obstacle++) {
             CSprite* sprite = obstacle->m_sprite;
             if (sprite && sprite->getNumFrames(0) > 1) {
                 int yOffset = 42 * (obstacle->m_shape->m_minRow - 1);
@@ -2298,7 +2302,7 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
             drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    PlayImmEffect(g_spellEffectTraits[effect].m_immName, 1);
+    playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
     while (frame < m_powSprite->getNumFrames(cs_walk)) {
         m_powFrameIndex = frame;
         drawFrame(1, 0, 0, delay, 1, 1);
@@ -2348,7 +2352,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
         break;
     }
 
-    PlayImmEffect(g_spellEffectTraits[effect].m_immName, 1);
+    playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
     for (int frame = 0; frame < m_powSprite->getNumFrames(cs_walk); frame++) {
         drawFrame(0, 0, 0, delay, 1, 1);
 

@@ -22,6 +22,7 @@ static int campaignBriefHandler(message& msg);
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "textscroller.h"
 #include "widget.h"
 #include "winmgr.h"
 
@@ -1518,3 +1519,52 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
+
+// Original constructor family: campaignbrief.cpp:192, dc 0x5ae10.
+// Complete adds the filename argument and changes the record's members;
+// keep its retained body in the same owning module as the destructor.
+// Retail reads filename at 0x488636, copies it into the string at +4,
+// clears data/stream/status at 0x488681..0x488687, and returns with ret 4.
+// The four members default-construct (the empty
+// allocator byte is copied out of the parameter padding at [ebp+0xb]);
+// the body assigns the name and clears the three pointers/status.
+VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
+    const char* filename)
+{
+    m_fileName = filename;
+    m_data = 0;
+    m_stream = 0;
+    m_fileError = CAMPAIGN_FILE_OK;
+}
+
+// Original: TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct;
+// campaignbrief.cpp:192, dc 0x5ade8. Complete expands the record and its
+// cleanup; preserve that retail body in the original owning module.
+// Retail deletes every scenario record (null-checked by
+// `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
+// (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
+// i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
+// campaign_desc, campaign_name and file_name in reverse order.
+//
+// MAX 78.5339; current canonical clear() body 75.72034. Retail calls
+// both vector::erase and FreeData; candidate expands them and leaves
+// vector::_Destroy called from erase. Keep clear() as the source boundary.
+// The 2026-09-07 passive trace corrects the old small-free-class diagnosis:
+// FreeData's C2 cost is 101, not <=40, and its site has budget 752 after
+// clear/erase. The state gate allows it (body flags 0x8000, callee 0x68).
+// Clear's nested erase costs 69 against budget 144; its _Destroy costs 49
+// against 29 and stays called. These are ordinary measured budget decisions,
+// not proof that caller-side source structure can never affect the frontier.
+// Earlier artificial free/charged-site controls were byte-inert; do not
+// repeat them or use them to infer the helper's cost. Natural loop controls:
+// signed index is byte-identical at 75.72034; naming the scenarios vector
+// by reference gives 67.27966. Neither changes the retained source choice.
+VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    for (unsigned int i = 0; i < m_scenarios.size(); ++i)
+        delete m_scenarios[i];
+    m_scenarios.clear();
+    freeData();
+}

@@ -147,19 +147,6 @@ SIZE(type_monster_data, 0x48);
 // and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
 // such member. The vector therefore starts at type_AI_combat_data+0x00
 // and is 16 bytes, rather than being a 12-byte pointer head at +0x04.
-// This source-private derived view preserves the real Dinkumware layout
-// and copy constructor. Its direct operator[] adapter avoids adding the
-// base implementation's nested begin() inline to established callers;
-// that codegen detail changes no type semantics or offsets.
-struct type_monster_vector : public std::vector<type_monster_data> {
-    friend class type_AI_combat_data;
-
-    type_monster_vector() {}
-    type_monster_vector(const type_monster_vector& other);
-    type_monster_data& operator[](unsigned n) const { return _First[n]; }
-};
-SIZE(type_monster_vector, 0x10);
-
 // type_AI_combat_data - the quick-combat simulation side. Offsets are
 // byte-proven from the ctor's store sequence (0x423ee0) plus each
 // accessor:
@@ -185,7 +172,8 @@ SIZE(type_monster_vector, 0x10);
 class type_AI_combat_data {
 public:
     // Before normalization: monsters.
-    type_monster_vector m_monsters;    // +0x00
+    // Original: creatures, std::vector<type_monster_data>, DC class 0x5a07.
+    std::vector<type_monster_data> m_monsters;  // +0x00
     // Before normalization: terrain.
     long m_terrain;                    // +0x10
     // Before normalization: mana.
@@ -231,7 +219,7 @@ public:
     // Before normalization (locals): enemy_town.
     void checkWallArcheryPenalty(const town* enemyTown);
     // Before normalization (function): type_AI_combat_data::get_catagory.
-    type_speed_catagory getCatagory(TCreatureType creature, long speed);
+    type_speed_catagory getCatagory(TCreatureType creature, long speed) const;
     // Before normalization (function): type_AI_combat_data::adjust_army.
     // Before normalization (locals): dismiss_hero.
     void adjustArmy(unsigned char dismissHero);
@@ -259,15 +247,11 @@ public:
                                const hero* castingHero) const;
     // Before normalization (function): type_AI_combat_data::get_mass_damage_value.
     void getMassDamageValue(type_spell_choice& choice,
-                               type_AI_combat_data& defender);
+                               type_AI_combat_data& defender) const;
     // Before normalization (function): type_AI_combat_data::cast_mass_damage_spell.
     void castMassDamageSpell(type_spell_choice& choice,
                                 // Before normalization (locals): casting_hero.
                                 const hero* castingHero);
-    // Before normalization (function): type_AI_combat_data::cast_mass_damage_spell_with_damage_call.
-    void castMassDamageSpellWithDamageCall(
-        // Before normalization (locals): casting_hero.
-        type_spell_choice& choice, const hero* castingHero);
     // Before normalization (function): type_AI_combat_data::inflict_melee_damage.
     // Before normalization (locals): speed_limit.
     long inflictMeleeDamage(long damage, long start, long speedLimit);
@@ -283,31 +267,14 @@ public:
     long getFinalMeleeValue() const;
     armyGroup* getArmy() const { return m_myArmy; }
     // E:\gamedcs\ai_combat.h:255
-    // EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
-    // null test is a `?:` on the return expression, not an early-out `if`.
-    // The old `if (first == 0) return 0;` split makes our CL target eax
-    // directly for the divide; the ternary merges both arms into one
-    // pseudo, which VC6 homes in edx and copies out with the closing
-    // `mov eax,edx` retail has - and on the null path the merged pseudo
-    // is already the zero _M_start, so no `xor eax,eax` is emitted either.
-    // Both deltas were one cause.
-    //
-    // The payoff is in the ~12 INLINED copies, not here: get_area_value
-    // 86.6 -> 100, cast_area_effect 86.0 -> 97.4, do_general_melee
-    // 79.6 -> 94.8, adjust_army 89.8 -> 93.4 with no other edit.
-    //
-    // Tried and rejected: `monsters.size()` through begin()/end() (fixes
-    // this function and get_area_value, loses the _M_start CSE in the
-    // inlined copies and costs six other functions their exactness), a
-    // bare `_M_finish - _M_start` with no local, naming the _M_finish load
-    // (`last`), naming the difference (`count`, signed and unsigned), and
-    // dropping the unsigned cast - all four leave the split-if shape and
-    // score 83.57 unchanged.
+    // Complete counts the 0x48-byte vector elements, unlike the older
+    // Dreamcast leaf. Keep the standard-library size() operation canonical.
+    // Earlier raw-pointer probes found an early return changed the merged
+    // null/subtraction path; Dinkumware's own size() uses the same ternary.
     VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
     long getTotal() const
     {
-        type_monster_data* first = m_monsters._First;
-        return first == 0 ? 0 : (unsigned)(m_monsters._Last - first);
+        return m_monsters.size();
     }
     hero* getHero() const { return m_myHero; }
     void castChainLightning(type_spell_choice& choice,
@@ -322,10 +289,10 @@ public:
     // Before normalization (function): type_AI_combat_data::get_enchantment_value.
     void getEnchantmentValue(type_spell_choice& choice,
                                // Before normalization (locals): casting_hero.
-                               const hero* castingHero);
+                               const hero* castingHero) const;
     // Before normalization (function): type_AI_combat_data::get_enchantment_value.
     void getEnchantmentValue(type_spell_choice& choice,
-                               type_AI_combat_data& defender);
+                               type_AI_combat_data& defender) const;
     // Before normalization (function): type_AI_combat_data::cast_enchantment.
     // Before normalization (locals): casting_hero.
     void castEnchantment(type_spell_choice& choice, const hero* castingHero,

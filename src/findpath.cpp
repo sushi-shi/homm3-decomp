@@ -27,7 +27,7 @@ long aiGetShipCost(const hero* ourHero, type_point point);
 // searchArray constructor. GetCell's relocation independently names
 // 0x4b1330 as this predicate, and its four signed bound checks prove it.
 VA(0x004b1330, 0x3B)  // anchor-callee, dc 0x9ed40
-unsigned char type_point::isValid()
+unsigned char type_point::isValid() const
 {
     return m_x >= 0 && m_x < g_mapWidth && m_y >= 0 && m_y < g_mapHeight;
 }
@@ -133,7 +133,8 @@ void searchArray::close()
 // Both runs are the /Ob2 inline-away case, and both callers absorbed
 // the bytes: retail's FindCombatPath is 1927 B against the DC body's
 // 1082 + those three at 212+72+140.
-// One retail row has no DC row - getCellData at 0x4b3b90, below.
+// Retail 0x4b3b90 is the retained FindPath.h get_hex inline (formerly
+// named getCellData from an HD-build correlation).
 
 // E:\gamedcs\findpath.cpp:95
 // Clears the three vectors and then memsets the cellData rows of the
@@ -154,7 +155,7 @@ void searchArray::close()
 //
 // TWO SPELLINGS DECIDED THE MATCH, both of them register colouring.
 // (1) The destination is an ASSIGNED LOCAL, not a call to
-// getCellData(index): the accessor's two-return form makes VC6 load
+// getHex(index): the accessor's two-return form makes VC6 load
 // cellData once for the test and AGAIN for the address, and retail
 // loads it once into edi and adds to that same register (95.85% ->
 // 96.88%). Hoisting the index into its own local first changes
@@ -256,11 +257,10 @@ DATA(0x006778ac) long g_masteryTerrainCost[4] = { 140, 140, 120, 100 };
 // its only use is `if (flag && terrain == 1) terrain = 0`. Both call
 // sites say what it is: GetTerrainCost computes it as
 // `armyGroup::get_creature_total(0x8e) > 0` and MinimumTerrainCost
-// simply forwards its own trailing parameter. The name is left as an
-// ordinal - no roster, string or DC field reaches it - but the shape
-// (a per-hero army predicate that erases one specific terrain's
-// penalty) is what the body does. Creature 0x8e is the one whose
-// presence erases terrain 1's (Sand's) penalty.
+// simply forwards its own trailing parameter. Retail GetTerrainCost calls
+// GetCreatureTotal with creature 0x8e at 0x4b1a1b/0x4b1a22 and passes
+// its positive-result byte to CalcTerrainCost: hasNomad names that proven
+// creature predicate, which removes the Sand penalty.
 //
 // `end_road` is spelled `long` rather than the DC roster's TRoadType:
 // that enum has no definition anywhere in the tree yet and minting one
@@ -276,11 +276,11 @@ VA(0x004b1740, 0x13E)  // anchor-callee, dc 0x9f034
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
                     long pathfinding, long endRoad, long flying,
                     long waterWalking, long nativeTerrain,
-                    unsigned char param9)
+                    unsigned char hasNomad)
 {
     long terrain = cell->m_groundSet;
     long road = cell->m_roadSet;
-    if (param9 && terrain == 1)
+    if (hasNomad && terrain == 1)
         terrain = 0;
     TAdventureObjectType special = cell->getSpecialTerrain();
     long cost;
@@ -378,28 +378,20 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 // whole register-homing residual the note described goes with them.
 // The same edit is worth 93.0950 -> 98.7182 on TestPossibleDirections.
 //
-// EXACT 2026-08-26: the three packed destination-field stores belong to one
-// inline source operation. Keeping them in the caller made VC6 use the z
-// source as a memory operand; the explicit inline helper below preserves the
-// source packed word in EAX, matching retail's final eager load and xor. The
-// helper emits no out-of-line body and carries only the coordinate semantics.
-// Before normalization (function): make_terrain_destination.
-static inline void makeTerrainDestination(type_point& destination,
-                                            type_point start,
-                                            int direction)
-{
-    destination.m_x = start.m_x + g_stepDeltaX[4 * direction];
-    destination.m_y = start.m_y + g_stepDeltaY[4 * direction];
-    destination.m_z = start.m_z;
-}
-
+// DC findpath.cpp:234/235 computes dest_x and the y coordinate, then line
+// 239 constructs type_point (dc 0x9f1e6) for the destination cell lookup.
+// Use that canonical constructor. The former make_terrain_destination helper
+// only controlled VC6's packed-field load scheduling; the historical exact
+// result with that wrapper does not prove a separate source operation.
+// Before normalization (local): dest_x.
 // Before normalization (locals): current_hero, move_left, water_walking.
 VA(0x004b18c0, 0x1A2)  // anchor-callee, dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
+    const int destX = start.m_x + g_stepDeltaX[4 * direction];
+    const int destY = start.m_y + g_stepDeltaY[4 * direction];
     NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
-    type_point to;
-    makeTerrainDestination(to, start, direction);
+    type_point to(destX, destY, start.m_z);
     NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
     long flying = currentHero->m_flightLevel;
     long waterWalking = currentHero->m_waterWalkLevel;
@@ -1126,18 +1118,6 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     }
 }
 
-// E:\gamedcs\findpath.cpp:1172
-inline void searchArray::markEnemy(long hex, long cost)
-{
-    // Before normalization (locals): combat_cell.
-    hexcell* combatCell = &g_combatManager->m_cells[hex];
-    pathCell* cell = getCellData(hex);
-    if (!combatCell->m_validMove || cell->m_cost > cost) {
-        combatCell->m_validMove = 1;
-        cell->m_cost = static_cast<unsigned short>(cost);
-    }
-}
-
 // E:\gamedcs\findpath.cpp:1004
 // `ret 8` = two stack arguments over `this`, the DC count exactly, and
 // the body opens on searchArray's own signature move: `cmp [this+0x24],
@@ -1271,7 +1251,7 @@ void searchArray::setMoat(const army* currentArmy)
     { for (int cell = 0; cell < 187; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & 4) {
             const combatManager::TObstacle* obstacle =
-                &g_combatManager->m_obstacles.m_begin[g_combatManager->m_cells[cell].m_obstacleIndex];
+                &g_combatManager->m_obstacles[g_combatManager->m_cells[cell].m_obstacleIndex];
             if (currentArmy->m_combatSide == obstacle->m_owner || obstacle->m_isVisible)
                 m_isMoatSlowed[cell] = 1;
         }
@@ -1281,50 +1261,46 @@ void searchArray::setMoat(const army* currentArmy)
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:1136
-// NO RETAIL SLOT for these three: set_moat ends at 0x4b33ff and
-// FindCombatPath begins at 0x4b3400. They are the /Ob2 inline-away
-// case and FindCombatPath carries their bytes - 1927 retail against
-// the DC body's 1082 plus these three at 212 + 72 + 140.
-DC_ONLY(0xa0970, 0xD4)
-unsigned char searchArray::buildCombatPath(const army* current_army, int start_hex, int end_hex, int destination)
+// E:\gamedcs\findpath.cpp:1136, dc 0xa0970.
+// CodeView proves an ordinary searchArray member, not a free function with
+// an explicit search pointer. Lines 1137/1156/1159 name ValidHex, get_hex
+// and vector::push_back. Retail FindCombatPath expands this tail and retains
+// the native vector insertion call. The former free wrapper/pin was an
+// inline-budget experiment (73.5149 -> 78.9419%), not source ownership.
+// Before normalization (locals): current_army, start_hex, end_hex, step_cell.
+unsigned char searchArray::buildCombatPath(const army* currentArmy,
+                                           int startHex, int endHex,
+                                           int destination)
 {
-    // @stub
+    if (!combatManager::validHex(destination))
+        return 0;
+    if (currentArmy->m_side == -1) {
+        if (endHex != destination)
+            return 0;
+    } else if (m_result.size() == 0) {
+        return 0;
+    }
+
+    while (endHex != startHex) {
+        pathCell* stepCell = getHex(endHex);
+        m_result.push_back(stepCell);
+        endHex = currentArmy->getAdjacentCellIndex(
+            endHex, oppositeDirection(stepCell->m_direction));
+    }
+    return m_result.size() > 0;
 }
 
+// One canonical mark_enemy serves MarkTeleport and CheckEnemyArmies.
+// DC 0xa0a44 calls the FindPath.h get_hex accessor; retail retains that
+// accessor at 0x4b3b90 in FindCombatPath's four mark expansions. The former
+// markEnemySearched clone and its inline-depth pin are removed. Different
+// caller expansion decisions do not imply different source helpers.
 // E:\gamedcs\findpath.cpp:1172
-DC_ONLY(0xa0a44, 0x48)
 void searchArray::markEnemy(long hex, long cost)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// THE SEARCH SIDE'S COPY OF mark_enemy, AND THE BYTES REQUIRE A SECOND ONE.
-// Retail carries no mark_enemy body at all - both callers expand it - but the
-// two expansions do NOT agree on getCellData.  mark_teleport (0x4b2ff0) makes
-// exactly four calls (Init, CanFit, is_valid_teleport, get_adjacent_hex) and
-// NONE of them is getCellData, so its two marks have the accessor inline;
-// FindCombatPath (0x4b3400) calls getCellData (0x4b3b90) FOUR times and every
-// one of them sits inside a mark expansion - immediately after
-// hexcell::get_army at +0x42f/+0x53e and after army::get_second_grid_index at
-// +0x481/+0x590 - while the two sites FindCombatPath spells in its own body
-// (the `found:` block and the tail walk) have no call there at all.
-//
-// A statement pin inside a shared inline is a per-CALLEE knob, so one body
-// cannot serve both; a second, file-local copy makes it per-caller.  It costs
-// no symbol (both are expanded away) and no header declarator.
-// Before normalization (function): mark_enemy_searched.
-static void markEnemySearched(searchArray* search, long hex, long cost)
 {
     // Before normalization (locals): combat_cell.
     hexcell* combatCell = &g_combatManager->m_cells[hex];
-#pragma inline_depth(0)
-    pathCell* cell = search->getCellData(hex);
-#pragma inline_depth()
+    pathCell* cell = getHex(hex);
     if (!combatCell->m_validMove || cell->m_cost > cost) {
         combatCell->m_validMove = 1;
         cell->m_cost = static_cast<unsigned short>(cost);
@@ -1347,111 +1323,16 @@ unsigned char searchArray::checkEnemyArmies(long hex, long cost,
     if (enemy == 0 || enemy->m_combatSide == currentGroup)
         return 0;
 
-    markEnemySearched(this, enemy->m_gridIndex, cost);
+    markEnemy(enemy->m_gridIndex, cost);
     if (enemy->m_monInfo.m_attributes & 1)
-        markEnemySearched(this, enemy->getSecondGridIndex(), cost);
+        markEnemy(enemy->getSecondGridIndex(), cost);
     return hex == destination;
 }
 
-// E:\gamedcs\findpath.cpp:1136 - the THIRD of the DC roster's three
-// inlined-away helpers, and the one the carcass above still stubs.  Its DC
-// signature is `unsigned char searchArray::build_combat_path(const army*, int
-// start_hex, int end_hex, int destination)` (dc 0xa0970, 212 B), which is
-// exactly FindCombatPath's epilogue read back: given the hex the search
-// reached, walk the recorded directions back to start_hex and fill `result`.
-//
-// It is spelled here rather than left inside FindCombatPath's body for the
-// /Ob2 BUDGET, not for tidiness: the budget is `clamp(2 * caller_cb, ...)`,
-// so our pre-inline body being larger than retail's is what makes our CL
-// expand callees retail keeps out of line.  Moving this block out shrinks
-// caller_cb and hands the decisions back - FindCombatPath 73.5149 ->
-// 78.9419, with no other change.  File-local rather than a member because a
-// declarator in findpath.h reaches seventeen TUs, and every member it needs
-// (`result`, `getCellData`) is already public.
-// Before normalization (function): build_combat_path.
-static unsigned char buildCombatPath(searchArray* search,
-                                      // Before normalization (locals): current_army, start_hex,
-                                      // end_hex, step_cell.
-                                      const army* currentArmy,
-                                      int startHex, int endHex,
-                                      int destination)
-{
-    if (destination < 0 || destination >= COMBAT_GRID_CELLS)
-        return 0;
-    if (currentArmy->m_side == -1) {
-        if (endHex != destination)
-            return 0;
-    } else if (search->m_result.size() == 0) {
-        return 0;
-    }
-
-    while (endHex != startHex) {
-        pathCell* stepCell = search->getCellData(endHex);
-        // Retail calls vector<pathCell*>::insert (0x54d120) at both push
-        // sites (+0x672 and +0x734), keeping end() inline. The 2026-09-09
-        // whole-TU control preserves those decisions without a depth pin.
-        pathCell** tail = search->m_result.end();
-        search->m_result.insert(tail, 1, stepCell);
-        endHex = currentArmy->getAdjacentCellIndex(
-            endHex, oppositeDirection(stepCell->m_direction));
-    }
-    return search->m_result.size() > 0;
-}
-
-// FindCombatPath's speed/limit pick, lifted for the /Ob2 BUDGET probe.
-// Before normalization (function): combat_walk_limits.
-// Before normalization (locals): current_army, in_placement_phase, base_speed.
-static void combatWalkLimits(const army* currentArmy,
-                               unsigned char inPlacementPhase,
-                               long* limit, long* baseSpeed)
-{
-    if (inPlacementPhase) {
-        *baseSpeed = *limit = 1000;
-    } else {
-        if (*baseSpeed < 0)
-            *baseSpeed = currentArmy->getSpeed();
-        if (*baseSpeed == 0 || currentArmy->m_spellInfluence[72])
-            *limit = 0;
-    }
-}
-
-// FindCombatPath's siege-pressure preamble, lifted for the /Ob2 BUDGET probe.
-// Before normalization (function): combat_siege_pressure.
-// Before normalization (locals): current_army, current_group, siege_pressure.
-static unsigned char combatSiegePressure(const army* currentArmy,
-                                           long currentGroup)
-{
-    unsigned char siegePressure = 0;
-    if (g_combatManager->m_defendingTown != 0
-            && g_combatManager->isComputerAction(currentArmy)) {
-        if (currentGroup == 1
-                || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
-            siegePressure = 1;
-        if (currentArmy->getTotalHitPoints(0)
-                <= g_townSiegeStrength63bd18[
-                        g_combatManager->m_defendingTown->m_type] * 4)
-            siegePressure = 1;
-        if (siegePressure
-                && currentArmy->getTotalHitPoints(0)
-                    > g_townSiegeStrength63bd18[
-                            g_combatManager->m_defendingTown->m_type] * 40)
-            siegePressure = 0;
-    }
-    return siegePressure;
-}
-
-// FindCombatPath's 187-cell mark wipe, lifted for the /Ob2 BUDGET probe.
-// Before normalization (function): clear_combat_cell_marks.
-static void clearCombatCellMarks()
-{
-    // Before normalization (locals): clear_hex.
-    for (long clearHex = 0; clearHex < COMBAT_GRID_CELLS; clearHex++) {
-        g_combatManager->m_cells[clearHex].m_validMove = 0;
-        g_combatManager->m_cells[clearHex].m_frontMove = 0;
-    }
-}
-
 // E:\gamedcs\findpath.cpp:1218
+// Historical probes below predate removing combatWalkLimits,
+// combatSiegePressure, clearCombatCellMarks and the markEnemySearched
+// clone. Their statements/calls are now back in the canonical owners.
 // `ret 0x18` = six stack arguments over `this`, and the DC roster's
 // seven-parameter count matches exactly.
 //
@@ -1606,13 +1487,36 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
     if (currentArmy == 0)
         return 0;
 
-    unsigned char siegePressure =
-        combatSiegePressure(currentArmy, currentGroup);
+    unsigned char siegePressure = 0;
+    if (g_combatManager->m_defendingTown != 0
+            && g_combatManager->isComputerAction(currentArmy)) {
+        if (currentGroup == 1
+                || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
+            siegePressure = 1;
+        if (currentArmy->getTotalHitPoints(0)
+                <= g_townSiegeStrength63bd18[
+                        g_combatManager->m_defendingTown->m_type] * 4)
+            siegePressure = 1;
+        if (siegePressure
+                && currentArmy->getTotalHitPoints(0)
+                    > g_townSiegeStrength63bd18[
+                            g_combatManager->m_defendingTown->m_type] * 40)
+            siegePressure = 0;
+    }
 
-    clearCombatCellMarks();
+    for (long clearHex = 0; clearHex < COMBAT_GRID_CELLS; clearHex++) {
+        g_combatManager->m_cells[clearHex].m_validMove = 0;
+        g_combatManager->m_cells[clearHex].m_frontMove = 0;
+    }
 
-    combatWalkLimits(currentArmy, inPlacementPhase, &limit,
-                       &baseSpeed);
+    if (inPlacementPhase) {
+        baseSpeed = limit = 1000;
+    } else {
+        if (baseSpeed < 0)
+            baseSpeed = currentArmy->getSpeed();
+        if (baseSpeed == 0 || currentArmy->m_spellInfluence[72])
+            limit = 0;
+    }
 
     long startHex = currentArmy->m_gridIndex;
     if (m_cellData == 0)
@@ -1722,7 +1626,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
 
     found:
         {
-            pathCell* reached = getCellData(adjacent);
+            pathCell* reached = getHex(adjacent);
             reached->m_point.m_x = static_cast<short>(adjacent);
             reached->m_direction = direction;
             reached->m_lastPoint = pc.m_point;
@@ -1736,26 +1640,8 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
         }
     }
 
-    return buildCombatPath(this, currentArmy, startHex, bestHex,
+    return buildCombatPath(currentArmy, startHex, bestHex,
                              destination);
-}
-
-// THE ONE RETAIL ROW WITH NO DREAMCAST TWIN. 0x4b3b90 sits between
-// FindCombatPath and PushCombatPoint, where the DC roster has nothing,
-// and it is the accessor whose expansion the rest of the TU already
-// spells by hand: `mov ecx,[ecx+0x24]` (cellData), null-check, then
-// `lea eax,[eax+eax*2]; lea eax,[eax+eax*4]; lea eax,[ecx+eax*2]` -
-// the 30-byte stride get_travel_time (0x4b3f20) proved. Name from
-// NH3API, admitted only because the HD build's own 32-byte function at
-// its 0x4b38f0 is a masked-identity match for these exact bytes
-// (evidence/retail-hd-name-map.csv); the ADDRESS is our carve row's,
-// never NH3API's.
-VA(0x004b3b90, 0x20)  // anchor-bracket, retail-only
-pathCell* searchArray::getCellData(long pos)
-{
-    if (m_cellData == 0)
-        return 0;
-    return &m_cellData[pos];
 }
 
 // E:\gamedcs\findpath.cpp:1372
@@ -1799,7 +1685,7 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
     if (cost > limit)
         return;
 
-    pathCell* cell = getCellData(index);
+    pathCell* cell = getHex(index);
     if (cell->m_visited && cell->m_cost <= cost)
         return;
     if (m_queue.size() >= 500)
@@ -1849,7 +1735,7 @@ void searchArray::lowerDoor()
 // E:\gamedcs\findpath.cpp:1434
 // Before normalization (locals): current_army.
 VA(0x004b3f20, 0x41)  // anchor-global, dc 0xa10c4
-long searchArray::getTravelTime(const army* currentArmy, long hex)
+long searchArray::getTravelTime(const army* currentArmy, long hex) const
 {
     pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
     long speed = currentArmy->getSpeed();

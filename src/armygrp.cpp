@@ -15,6 +15,7 @@
 // town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
 // see town.h for why the inline's visibility is scoped.
 #include "armygrp.h"
+#include "creaturetype.h"
 #include "game.h"
 #include "hero.h"
 #include "town.h"
@@ -36,35 +37,11 @@
 // DC includes.h:134 names limit at the split-window and army-rating
 // sites below. homm3_limit.h owns its shared reference-selector chain.
 
-// The four-way base-elemental compare the magic-terrain gates share -
-// eight of them in this compiland, in both polarities. Byte-identical to
-// the longhand chain when expanded (viewarmywindow's own copy is the
-// byte-proven precedent, and the full-tree diff over all eight sites here
-// has ONE mover and no regressions: TSplitWindow 98.4605 -> 99.9895) and
-// free at cb <= 0x28, so it costs the /Ob2 allowance one candidate site
-// per use - which is the point, since three of this file's plateaued rows
-// are measured to be short of exactly that.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
-
-// Before normalization (function): creature_background_alignment.
-inline int creatureBackgroundAlignment(TCreatureType type)
-{
-    if (!g_game->m_f1f698 && isBaseElemental(type))
-        return -1;
-    return g_creatureTypeTraits[type].m_townType;
-}
-
-// Before normalization (function): armygrp_creature_plural_name.
-inline const char* armygrpCreaturePluralName(TCreatureType creature)
-{
-    if (creature >= 0 && creature <= 150)
-        return g_creatureTypeTraits[creature].m_pluralName;
-    return "";
-}
+// The former isBaseElemental wrapper existed to add /Ob2 candidates.
+// Keep the retail four-comparison conditions at their source sites; the
+// earlier wrapper probe moved TSplitWindow 98.4605 -> 99.9895 but did not
+// establish a source helper. Shared alignment/name queries use game.h and
+// creaturetype.h instead of local copies.
 
 // Before normalization: gpSplitWindow.
 DATA(0x00693878)
@@ -230,7 +207,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgrounds[
-        creatureBackgroundAlignment(m_creature)]);
+        g_game->getAlignment(m_creature)]);
 
     m_widgets.push_back(new bitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
@@ -1008,7 +985,10 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
+        if (g_game->m_f1f698 == 0 && (m_armies[i] == CREATURE_AIR_ELEMENTAL
+            || m_armies[i] == CREATURE_EARTH_ELEMENTAL
+            || m_armies[i] == CREATURE_FIRE_ELEMENTAL
+            || m_armies[i] == CREATURE_WATER_ELEMENTAL))
             alignment = -1;
         else
             alignment = traits.m_townType;
@@ -1308,13 +1288,13 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 }
 
 // E:\gamedcs\armygrp.cpp:1030
-// FULLY TRANSCRIBED 2026-08-06. SIX params (ret 0x18; the DC
-// prototype's five are wrong): (index, ownerHero, ownerTown, MODE
+// FULLY TRANSCRIBED 2026-08-06. Complete has SIX params (ret 0x18),
+// extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
 // int, arg5 uchar - forwarded to GetMorale - and apply_limits uchar).
 // Body: mode==2 -> 0; traits attributes bit 0x20000 (the NO-MORALE
 // trait, new CTA constant) -> 0; morale = GetMorale(hero, town, 0,0,
-// 0, arg5, 0) - SEVEN pushes, so GetMorale's DC six-param prototype
-// is also wrong; mode==3 -> (elementals/f_1f698 gate) townType
+// 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
+// to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
 // switch: 0-2 +1 / 3-5 -1 / 6-8 none (byte table 0x4b2a8 =
 // [0,0,0,1,1,1,2,2,2], jt 0x4b29c); mode==4 -> inverted (0-2 -1 /
 // 3-5 +1, jt 0x4b2b4; VC6 cross-jumps the shared inc/dec bodies);
@@ -1339,7 +1319,10 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
+        if (g_game->m_f1f698 != 0 || !(type == CREATURE_AIR_ELEMENTAL
+            || type == CREATURE_EARTH_ELEMENTAL
+            || type == CREATURE_FIRE_ELEMENTAL
+            || type == CREATURE_WATER_ELEMENTAL)) {
             switch (g_creatureTypeTraits[type].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1362,7 +1345,10 @@ holy_done:
     }
     if (mode == MAGIC_TERRAIN_EVIL_FOG) {
         int type = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
+        if (g_game->m_f1f698 != 0 || !(type == CREATURE_AIR_ELEMENTAL
+            || type == CREATURE_EARTH_ELEMENTAL
+            || type == CREATURE_FIRE_ELEMENTAL
+            || type == CREATURE_WATER_ELEMENTAL)) {
             switch (g_creatureTypeTraits[type].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1450,7 +1436,10 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(creature)) {
+        if (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL)) {
             switch (g_creatureTypeTraits[creature].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1827,13 +1816,17 @@ void armyGroup::mergeArmies(armyGroup* source)
 // elsewhere, and here it COSTS 2.96 (79.1754 -> 76.2182). Do not re-run
 // it; the over-inline that is left is a budget fact, not a depth one.
 //
+// Historical extraction probes below describe the former invented terrain
+// helpers. Their score gains establish optimizer effects, not source
+// boundaries; the blocks now live in their callers. Preserve these failed
+// alternatives as compiler observations, not instructions to extract again.
 // AND BECAUSE IT IS A BUDGET FACT, THE CALLER-SHRINK REACHES IT
 // (79.1754 -> 91.3771, 2026-08-20).  Every earlier attempt on this row moved
 // the /Ob2 DIVISOR - candidate sites added or removed - and the note above
 // correctly recorded that the divisor is not monotone here.  The other half
 // of `budget = clamp(2 * caller_cb, 1000, 35000)` is the NUMERATOR, and it
 // had never been tried: lifting the two magic-terrain blocks into
-// `apply_morale_magic_terrain` below drops the caller's own pre-inline mass,
+// the former `apply_morale_magic_terrain` dropped the caller's pre-inline mass,
 // the budget with it, and the Dinkumware expansions this row over-inlines
 // (`basic_string::assign` at both early returns, the `bitset<9>::_Xran`
 // throw path) go back out of line.  +12.20 with the statements unchanged -
@@ -1842,7 +1835,7 @@ void armyGroup::mergeArmies(armyGroup* source)
 // this one: the whole `GetAlignments` + grouping block 91.3771 -> 75.7762,
 // the grouping loop alone (the thinner slice of the same block)
 // -> 82.1934, and the angel/archangel member pick -> 89.2445.  This body
-// wants exactly one lift and it is the magic-terrain pair.
+// peaked at that magic-terrain extraction in the historical experiment.
 //
 // CALLER-SHRINK DOSE for get_morale_description (below): the row's residual
 // is measured as OUR /Ob2 budget being too large, so the lever is the
@@ -1857,63 +1850,6 @@ void armyGroup::mergeArmies(armyGroup* source)
 // [ebp+0x28] for GetMorale's result) where we recycle one and give the
 // offset a stack slot of its own, and the empty-allocator scratch byte again
 // sits at [ebp+0xf] against retail's [ebp+0x13].
-// Before normalization (function): apply_morale_magic_terrain.
-static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
-                                       int townType, int& currentMorale,
-                                       std::string& result)
-{
-    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto holy_ground_good;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto holy_ground_evil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            return;
-        }
-    holy_ground_good:
-        ++currentMorale;
-        result.append(g_holyGroundGoodMoraleText);
-        return;
-    holy_ground_evil:
-        --currentMorale;
-        result.append(g_holyGroundEvilMoraleText);
-        return;
-    }
-
-    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto evil_fog_good;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto evil_fog_evil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            return;
-        }
-    evil_fog_good:
-        --currentMorale;
-        result.append(g_evilFogGoodMoraleText);
-        return;
-    evil_fog_evil:
-        ++currentMorale;
-        result.append(g_evilFogEvilMoraleText);
-    }
-}
-
 // THE SPIRIT-OF-OPPRESSION ARM ASSIGNS, IT DOES NOT APPEND (byte-flat,
 // 2026-09-06, reloc census). Retail's call at fn+0x6ce is
 // basic_string::assign(const basic_string&, uint, uint) where ours was
@@ -1966,9 +1902,74 @@ std::string armyGroup::getMoraleDescription(
     if (ownerHero)
         result = ownerHero->getMoraleDescription();
 
-    applyMoraleMagicTerrain(magicTerrain, creature,
-                               g_creatureTypeTraits[creature].m_townType,
-                               currentMorale, result);
+    // The former applyMoraleMagicTerrain wrapper was extracted only to
+    // steer the inline budget. These statements belong to this caller:
+    // retail's holy-ground/evil-fog branches span 0x44ba81..0x44bb7b,
+    // with the string append at 0x44bb76 before GetAlignments at 0x44bb82.
+    // DC 0x4f708 (armygrp.cpp:1347) has the older cursed-ground flag;
+    // its signature does not establish a helper for Complete's terrain arms.
+    {
+        // Preserve the value copy formerly made for the helper argument.
+        int townType = g_creatureTypeTraits[creature].m_townType;
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
+            && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL))) {
+            switch (townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                goto holy_ground_good;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                goto holy_ground_evil;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto morale_terrain_done;
+            }
+        holy_ground_good:
+            ++currentMorale;
+            result.append(g_holyGroundGoodMoraleText);
+            goto morale_terrain_done;
+        holy_ground_evil:
+            --currentMorale;
+            result.append(g_holyGroundEvilMoraleText);
+            goto morale_terrain_done;
+        }
+
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
+            && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL))) {
+            switch (townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                goto evil_fog_good;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                goto evil_fog_evil;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto morale_terrain_done;
+            }
+        evil_fog_good:
+            --currentMorale;
+            result.append(g_evilFogGoodMoraleText);
+            goto morale_terrain_done;
+        evil_fog_evil:
+            ++currentMorale;
+            result.append(g_evilFogEvilMoraleText);
+        }
+    morale_terrain_done:
+        ;
+    }
 
     unsigned char alignments[10];
     int numAlignments = getAlignments(alignments);
@@ -2012,7 +2013,7 @@ std::string armyGroup::getMoraleDescription(
         if (dragonType != CREATURE_NONE)
             result += formatString(
                 g_enemyCreatureStatFormat,
-                armygrpCreaturePluralName(dragonType));
+                getArmyName(dragonType, 2));
     }
 
     if (ownerTown) {
@@ -2029,7 +2030,7 @@ std::string armyGroup::getMoraleDescription(
          || creature == CREATURE_MINOTAUR_KING)
         && currentMorale < 1) {
         result += formatString(g_alwaysPositiveMoraleFormat,
-                                armygrpCreaturePluralName(creature));
+                                getArmyName(creature, 2));
         currentMorale = 1;
     }
 
@@ -2142,16 +2143,19 @@ std::string armyGroup::getMoraleDescription(
 // to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
 // gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
 //
+// Historical extraction probes for the former apply_luck_magic_terrain:
+// the arm now belongs directly to getLuckDescription. An inline-budget
+// improvement alone does not establish a helper boundary.
 // THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
 // 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
 // `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
-// lifting the clover arm into `apply_luck_magic_terrain` below pushes it the
+// lifting the clover arm into `apply_luck_magic_terrain` pushed it the
 // same direction with real code instead of padding.  Same lever, same round,
 // +12.20 on get_morale_description.  Two further doses measured on top of
 // this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
 // devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
-// body, like its twin, wants exactly one lift and it is the magic-terrain
-// arm.  The old +4-site probe has now been re-measured against this baseline
+// body, like its twin, peaked at the magic-terrain extraction in that
+// experiment.  The old +4-site probe has now been re-measured against this baseline
 // (2026-08-21): four `limit` candidates in the lifted clover helper regress
 // 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
 // VERIFY family is not the remaining lever at the retained source shape.
@@ -2173,12 +2177,40 @@ std::string armyGroup::getMoraleDescription(
 // conditional branches and symbolic branch targets. A generated one-line
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
-// Before normalization (function): apply_luck_magic_terrain.
-static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
-                                     int& currentLuck, std::string& result)
+VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
+std::string armyGroup::getLuckDescription(
+    TCreatureType creature, int luck, const hero* ourHero,
+    const town* ourTown, const hero* enemyHero,
+    const armyGroup* enemyGroup, int magicTerrain) const
 {
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
+        return g_cursedGroundLuckText;
+
+    if ((ourHero && const_cast<hero*>(ourHero)->isWieldingArtifact(
+                        ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
+        || (enemyHero && const_cast<hero*>(enemyHero)->isWieldingArtifact(
+                           ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
+        return formatString(g_hourglassLuckFormat,
+                             g_artifactTraits[
+                                 ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].m_name);
+    }
+
+    int currentLuck = getLuck(
+        ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
+    std::string result;
+    if (ourHero)
+        result = ourHero->getLuckDescription();
+
+    // The former applyLuckMagicTerrain wrapper was another inline-budget
+    // extraction. Keep its clover-field arm here: retail tests terrain 5
+    // at 0x44c2d4, selects the town at 0x44c312..0x44c31f, and appends at
+    // 0x44c346 before the enemy-group arm at 0x44c34e. DC 0x4fab4
+    // (armygrp.cpp:1464) has the older cursed-ground-only parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+        && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL))) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a
         // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
@@ -2208,33 +2240,6 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
     clover_done:
         ;
     }
-}
-
-VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
-std::string armyGroup::getLuckDescription(
-    TCreatureType creature, int luck, const hero* ourHero,
-    const town* ourTown, const hero* enemyHero,
-    const armyGroup* enemyGroup, int magicTerrain) const
-{
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return g_cursedGroundLuckText;
-
-    if ((ourHero && const_cast<hero*>(ourHero)->isWieldingArtifact(
-                        ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
-        || (enemyHero && const_cast<hero*>(enemyHero)->isWieldingArtifact(
-                           ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
-        return formatString(g_hourglassLuckFormat,
-                             g_artifactTraits[
-                                 ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].m_name);
-    }
-
-    int currentLuck = getLuck(
-        ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
-    std::string result;
-    if (ourHero)
-        result = ourHero->getLuckDescription();
-
-    applyLuckMagicTerrain(magicTerrain, creature, currentLuck, result);
 
     if (enemyGroup) {
         TCreatureType devilType = CREATURE_NONE;
@@ -2244,7 +2249,7 @@ std::string armyGroup::getLuckDescription(
             devilType = CREATURE_ARCH_DEVIL;
         if (devilType != CREATURE_NONE)
             result += formatString(g_enemyCreatureStatFormat,
-                                    armygrpCreaturePluralName(devilType));
+                                    getArmyName(devilType, 2));
     }
 
     if (ourTown) {
@@ -2258,7 +2263,7 @@ std::string armyGroup::getLuckDescription(
 
     if (creature == CREATURE_HALFLING && currentLuck < 1) {
         result += formatString("%s are always lucky",
-                                armygrpCreaturePluralName(creature));
+                                getArmyName(creature, 2));
         currentLuck = 1;
     }
 
@@ -2278,7 +2283,10 @@ TTerrainType armyGroup::getNativeTerrain() const
         if (m_armies[i] == CREATURE_NONE)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
+        if (g_game->m_f1f698 == 0 && (m_armies[i] == CREATURE_AIR_ELEMENTAL
+            || m_armies[i] == CREATURE_EARTH_ELEMENTAL
+            || m_armies[i] == CREATURE_FIRE_ELEMENTAL
+            || m_armies[i] == CREATURE_WATER_ELEMENTAL))
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;

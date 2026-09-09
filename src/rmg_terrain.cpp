@@ -8,6 +8,7 @@
 #include "rmg_terrain.h"
 #include "exceptions.h"
 #include "tiles.h"
+#include "includes.h"
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
@@ -289,13 +290,6 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
-// Refresh 0x4f9f77 copies the translated grid value before passing it to
-// the retained painter proxy at 0x4f9f86. The shared unsigned grid identity
-// follows that proxy's copied coordinate and the painter dimensions, not
-// merely a same-sized point body. Its existing explicit copy constructor
-// reproduces all 22 raw bytes without relocations.
-VA_COMPGEN(0x004FA520, 0x16, CLASS_CTOR, TRmgGridPoint)
-
 // Refresh 0x4f9f60 and line paintPoint's first neighbour pass retain this
 // same two-dword add, returning the receiver for the subsequent value copy.
 // There is no Dreamcast RMG inline declaration. One ordinary definition in
@@ -339,7 +333,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 }
 
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
-// at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
+// at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
 unsigned char TRmgPatternTerrainRule::hasEntries()
 {
@@ -353,26 +347,15 @@ TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
-// Vtables 0x642c98 and 0x642cb0 share the deleting wrapper at 0x5b3a50,
-// which calls the base-only destructor at 0x5b3850. Neither derived rule
-// owns its source table or has any additional destruction work.
-TRmgPatternTerrainRule::~TRmgPatternTerrainRule()
-{
-}
-
-TRmgTableTerrainRule::~TRmgTableTerrainRule()
-{
-}
-
 // Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
-// The pattern-rule constructor at 0x5b3780 copies the same entry records.
+// Constructor 0x5b3780 retains the entry pointer at +0x10 (0x5b37a2).
 VA(0x005B3860, 0x11)  // Complete-only pattern terrain rule
 unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 {
     return m_entries[frame].m_special;
 }
 
-// Each copied source entry is two dwords. Vtable 0x642c98 slot 3 returns
+// Each source entry is two dwords. Vtable 0x642c98 slot 3 returns
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005B3880, 0x10)  // Complete-only pattern terrain rule
 int TRmgPatternTerrainRule::getEntry(int index)
@@ -476,6 +459,8 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 // Both concrete six-slot terrain-rule vtables use this ICF-folded deleting
 // wrapper. The emitted table-rule closure calls the shared retained destructor
 // at 0x5b3850 and has the same complete-object delete semantics.
+// The stateless table rule uses its implicit virtual destructor: retail
+// 0x5b3a56 calls the retained base, then bit 0 selects scalar deletion.
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 // Vtable 0x642cb0 slot 3 indexes the first dword of the fixed eight-byte
@@ -525,7 +510,7 @@ int TRmgTableTerrainRule::selectTransitionFrame(
 }
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
-// by the call at 0x5b5f4e. All selector names are provisional retail roles.
+// by the call at 0x5b5f5b. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
@@ -586,7 +571,7 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
-VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f4e; retail-only
+VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f5b; retail-only
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
@@ -1638,7 +1623,7 @@ noSeparation:
 // (87.5851 -> 94.9255). Direct temporaries expand the last classifier too.
 // Residual: register scheduling begins to differ at +0xb4; bounds-accessor
 // spelling and independent MapItem::clear snapshot order do not improve it.
-VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f45; retail-only
+VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f4d; retail-only
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, int* neighbours)
 {
@@ -1698,20 +1683,12 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Provisional name for the common reference-returning signed clamp. Retail
-// checkFirstDiagonal +0xfe/+0x126/+0x17b/+0x1a8 and checkSecondDiagonal
-// +0xb1/+0x105 select one of three operand addresses before loading it.
-// Keep this source boundary: a value-return clamp discards those lifetimes.
-static const int& clampRmgTerrainCoordinate(
-    const int& value, const int& minimum, const int& maximum)
-{
-    if (value < minimum)
-        return minimum;
-    if (value > maximum)
-        return maximum;
-    return value;
-}
-
+// Both diagonal queries use the canonical includes.h tLimit (DC t_limit,
+// includes.h:124, dc 0x20d2c): three const int& operands and const int& result.
+// Retail 0x5b6c9e..0x5b6caf and 0x5b6f0c..0x5b6f1d select the lower,
+// upper or value address before dereferencing it. The former local
+// clampRmgTerrainCoordinate duplicated that helper with a different argument
+// order; use tLimit(minimum, value, maximum) and preserve reference lifetimes.
 // Retail's guarded table at 0x6a5260 has two signed offsets per reflection.
 // The first query clamps y then x; the second assigns x before clamping y.
 // TPoint supplies the canonical signed two-dword construction. As with the
@@ -1734,16 +1711,16 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     int terrain = getTerrain(point);
     const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby;
-    nearby.m_x = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_x) + pair[0].m_x, 0, static_cast<int>(getWidth()) - 1);
-    nearby.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + pair[0].m_y, 0, static_cast<int>(getHeight()) - 1);
+    nearby.m_x = tLimit(
+        0, static_cast<int>(point.m_x) + pair[0].m_x, static_cast<int>(getWidth()) - 1);
+    nearby.m_y = tLimit(
+        0, static_cast<int>(point.m_y) + pair[0].m_y, static_cast<int>(getHeight()) - 1);
     if (getTerrain(nearby) == terrain)
         return 1;
-    nearby.m_x = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_x) + pair[1].m_x, 0, static_cast<int>(getWidth()) - 1);
-    nearby.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + pair[1].m_y, 0, static_cast<int>(getHeight()) - 1);
+    nearby.m_x = tLimit(
+        0, static_cast<int>(point.m_x) + pair[1].m_x, static_cast<int>(getWidth()) - 1);
+    nearby.m_y = tLimit(
+        0, static_cast<int>(point.m_y) + pair[1].m_y, static_cast<int>(getHeight()) - 1);
     return getTerrain(nearby) == terrain;
 }
 
@@ -1765,14 +1742,13 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     int terrain = getTerrain(point);
     const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby = TRmgGridPoint(
-        clampRmgTerrainCoordinate(static_cast<int>(point.m_x) + offset.m_x,
-            0, static_cast<int>(m_width) - 1), point.m_y);
+        tLimit(0, static_cast<int>(point.m_x) + offset.m_x, static_cast<int>(m_width) - 1), point.m_y);
     if (getTerrain(nearby) != terrain)
         return 1;
     TRmgGridPoint nextPoint;
     nextPoint.m_x = point.m_x;
-    nextPoint.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + offset.m_y, 0, static_cast<int>(m_height) - 1);
+    nextPoint.m_y = tLimit(
+        0, static_cast<int>(point.m_y) + offset.m_y, static_cast<int>(m_height) - 1);
     return getTerrain(nextPoint) != terrain;
 }
 
@@ -1904,15 +1880,11 @@ void TRmgTerrainBrush::paintRectangle(
 // destructor call, and scalar delete exactly identify this specialization.
 VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
 
-VA(0x005B76F0, 0x209) // anchor-callee 0x5b76d9; retained painter destructor
+VA(0x005B76F0, 0x209) // anchor-callee 0x5b76e0; retained painter destructor
 rmgTerrainPainter::~rmgTerrainPainter()
 {
     finish();
 }
-
-// The four late point constructions in RepairTerrainPoint pass x and y by
-// reference. The retained two-store body is 24 bytes including ret 8.
-VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 
 // The terrain work set's insertion at 0x5b7cd0 calls the admitted grid-point
 // comparator and the retained node insertion at 0x5b8720. Both node insertion

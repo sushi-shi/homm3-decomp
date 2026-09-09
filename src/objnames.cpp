@@ -15,6 +15,7 @@
 
 #include "exceptions.h"
 #include "objnames.h"
+#include "resourceptr.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 
@@ -95,9 +96,9 @@ static const int g_adventureObjectTrait1Ids[] = {
 // EXACT since 2026-09-05. The last residual was the second throw: retail
 // EXPANDS TAllocationFailure's constructor here - the literal, the
 // out-of-line TRuntimeError(const char*) at 0x49a0c0, then the 0x63aba8
-// vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT, which only an
-// inline definition can produce. Moving the body from gzinflatebuf.cpp into
-// exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
+// vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT. The shared header
+// supplies body visibility to both callers; expansion does not establish
+// the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
 // COMDAT row at 100 with its three throw sites unmoved.
 //
 // Three levers got the rest: an explicit row pointer in the zeroing loop
@@ -145,7 +146,7 @@ void initializeAdventureObjectNames()
 
     TTextResource* names = ResourceManager::getText(
         DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
-    TTextResourceGuard guard(names);
+    TResourcePtr<TTextResource> guard(names);
     if (names == 0)
         throw TRuntimeError();
 
@@ -166,13 +167,4 @@ void initializeAdventureObjectNames()
         g_adventureObjectTraitRows[line].m_name = next;
         next += size;
     }
-}
-
-// Retail 0x41bd90, reached from the loader's state-0 unwind funclet and
-// expanded again at its normal exit.
-VA(0x0041bd90, 0x12)  // anchor-eh 0x627890 unwind funclet for 0x41b500 state 0, retail-only
-TTextResourceGuard::~TTextResourceGuard()
-{
-    if (m_have && m_text != 0)
-        m_text->dispose();
 }

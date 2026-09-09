@@ -148,7 +148,6 @@ public:
     // Before normalization: field_10; reference member CNetMsg::m_UncompressedSize.
     int m_uncompressedSize;
 
-    CNetMsg() {}
     // Raw Dreamcast CodeView names these parameters `subType` and `size` and
     // types the first as eRS_Messages (0x2CCD), the same type rendered on the
     // CMapChange `id` parameter. Keep the five body statements in lines
@@ -181,14 +180,11 @@ SIZE(CReadyToPlayMsg, 0x14);
 
 class CAllReadyToPlayMsg : public CNetMsg {
 public:
+    // DC netmsg.h:199 (0x11f638) calls the canonical CNetMsg ctor.
+    // Retail's WaitForReadyToPlayMsg expansion stores that same 20-byte
+    // header at 0x5550c2..0x5550d8; no default-base workaround is needed.
     CAllReadyToPlayMsg()
-    {
-        m_subType = RS_ALL_READY_TO_PLAY;
-        m_from = -1;
-        m_size = sizeof(CAllReadyToPlayMsg);
-        m_dpidFrom = 0;
-        m_uncompressedSize = 0;
-    }
+        : CNetMsg(RS_ALL_READY_TO_PLAY, sizeof(CAllReadyToPlayMsg)) {}
 };
 SIZE(CAllReadyToPlayMsg, 0x14);
 
@@ -206,11 +202,11 @@ public:
     CCombatMainMsg(int nextAction, int nextActionExtra,
                    int nextActionGridIndex, int nextActionGridIndex2,
                    int seed)
+        : CNetMsg(RS_COMBAT_MAIN, sizeof(CCombatMainMsg))
     {
-        m_subType = RS_COMBAT_MAIN;
-        m_from = -1;
-        m_dpidFrom = 0;
-        m_uncompressedSize = 0;
+        // DC netmsg.h:217 calls CNetMsg at 0x70a78, then line 218
+        // explicitly assigns size again before the five payload stores.
+        // Retail 0x478f0b..0x478f2d expands that base initialization.
         m_size = sizeof(CCombatMainMsg);
         m_nextAction = nextAction;
         m_nextActionExtra = nextActionExtra;
@@ -598,7 +594,6 @@ SIZE(CPlayerLostMsg, 0x3c);
 
 class CMapChange : public CNetMsg {
 public:
-    CMapChange() {}
     // Dreamcast netmsg.h:532 names the parameters `id` and `size` and keeps
     // this CNetMsg construction as a distinct source boundary.
     CMapChange(eRS_Messages id, unsigned long size)
@@ -623,6 +618,9 @@ public:
     // netmsg.h:547-551 in Dreamcast. The wire-size field is rounded to the
     // retail record's dword boundary although Complete packs the point at
     // +0x17 and therefore gives the C++ object a 0x1b extent.
+    // DC MoveHero's 0x7b526..0x7b572 line run constructs CMapChange and
+    // stores heroId, dir, standEnd and point in this declared overload.
+    // @dc-inline-origin: 0x2d2e 0x7b526
     CMCMoveHero(unsigned char heroId, signed char direction,
                 unsigned char standEnd, type_point point)
         : CMapChange(RS_MOVE_HERO, 0x1c),
@@ -881,25 +879,35 @@ class CCombatTypeMsg : public CNetMsg {
 public:
     int m_quick;
 
+    // DC netmsg.h:770/771 calls CNetMsg at 0xe705c before assigning
+    // quick at 0xe7060. Retail oldmain expands the same header/payload
+    // at 0x4efe09 onward; its scheduling does not create a second ctor.
     CCombatTypeMsg(int quick)
+        : CNetMsg(RS_COMBAT_TYPE, sizeof(CCombatTypeMsg))
     {
         m_quick = quick;
-        m_subType = RS_COMBAT_TYPE;
-        m_from = -1;
-        m_size = sizeof(CCombatTypeMsg);
-        m_dpidFrom = 0;
-        m_uncompressedSize = 0;
     }
 };
 SIZE(CCombatTypeMsg, 0x18);
 
+// Dreamcast netmsg.h:782 (dc 0x9cd30) names CTradeRequestMsg and
+// m_left/m_right: default-construct both heroes, then assign left and right.
+// Retail heroSwap expands that sequence at 0x4aae99..0x4aaefe: the 0x14
+// header carries RS_TRADE_REQUEST and size 0x938, followed by two 0x492
+// heroes. Before attribution repair: CTradeHeroesMsg, m_hero1/m_hero2.
 class CTradeRequestMsg : public CNetMsg {
 public:
-    int m_playerPos;
-    int m_resource;
-    int m_amount;
+    hero m_left;
+    hero m_right;
+
+    CTradeRequestMsg(hero* left, hero* right)
+        : CNetMsg(RS_TRADE_REQUEST, sizeof(CTradeRequestMsg))
+    {
+        m_left = *left;
+        m_right = *right;
+    }
 };
-SIZE(CTradeRequestMsg, 0x20);
+SIZE(CTradeRequestMsg, 0x938);
 
 // netmsg.h:804 in the Dreamcast roster. Retail SendChat independently
 // proves the one-dword payload, 0x18-byte extent and constructor store order.

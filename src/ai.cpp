@@ -9,6 +9,7 @@
 // choose_spell_action, choose_creature_spell and choose_defense_hex prove
 // their retail uses.
 #include "ai.h"
+#include "ai_player.h"
 #include "ai_spellvalue.h"
 #include "ai_tactical.h"
 #include "findpath.h"
@@ -19,15 +20,6 @@
 #include "csprite.h"   // TResourceHandle<CSprite>::~TResourceHandle calls resource::Dispose
 #include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
-
-// ai_player.obj's artifact valuer (0x433aa0), declared file-locally the
-// way ai_player.cpp itself declares it - no header owns it yet.
-// Before normalization (function): AI_get_artifact_player_value.
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  // Before normalization (locals): player_id.
-                                  long playerId);
-
-
 
 // THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
 // between the compiland's ten terrain.h bitset initializers
@@ -302,7 +294,7 @@ unsigned char combatManager::aiCheckRetreat()
                         artifact = m_heroes[m_currentSide]->m_equipped[i];
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifactValue = aiGetArtifactPlayerValue(
+                        long artifactValue = aiGetValueOfArtifact(
                             artifact, m_playerIds[m_currentSide]);
                         combatValue += max(
                             artifactValue,
@@ -314,7 +306,7 @@ unsigned char combatManager::aiCheckRetreat()
                         artifact = m_heroes[m_currentSide]->m_backpack[i];
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifactValue = aiGetArtifactPlayerValue(
+                        long artifactValue = aiGetValueOfArtifact(
                             artifact, m_playerIds[m_currentSide]);
                         combatValue += max(
                             artifactValue,
@@ -487,14 +479,14 @@ long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowes
 // boundaries and continuing on rejection removes accept_target at 100%.
 // Keeping the expanded flag expressions is byte-score neutral as a control.
 VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
-long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_parameters* data, long* bestValue)
+long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_parameters* data, long* bestValue) const
 {
     long bestTarget = -1;
     long hex;
     long ourGroup = data->m_ourGroup;
     long enemyGroup = data->m_enemyGroup;
     unsigned char isAreaEffect = 0;
-    army* bestArmy = 0;
+    const army* bestArmy = 0;
     std::vector<army*> targets;
 
     if (currentArmy->m_creatureType == CREATURE_MAGOG
@@ -503,7 +495,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
         isAreaEffect = 1;
 
     for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
-        army* target = &m_armies[enemyGroup][i];
+        const army* target = &m_armies[enemyGroup][i];
         unsigned char dead = static_cast<unsigned char>(
             static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
         if ((dead & 1) != 0 || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -718,8 +710,9 @@ void combatManager::chooseShooterAction(const army* currentArmy, unsigned char s
 // not a free function: the retail sort call pushes a garbage 4-byte
 // slot for the by-value temp - the same uninitialised-empty-class
 // coalescing std::vector's allocator subobject shows - where a function
-// pointer would have taken a reloc. Retail's only copy is inlined into
-// the _Insertion_sort COMDAT at 0x4233c9, which reads it as
+// pointer would have taken a reloc. Retail expands it in the sort helpers
+// and also retains the ordinary body at 0x4235c0, defined in RVA order
+// below. The expansion in _Insertion_sort at 0x4233c9 reads it as
 //   x->field_190 > y->field_190
 //     || (x->field_190 == y->field_190 && x->bitIndex < y->bitIndex)
 // - descending on the move key, ascending on the stack index so equal
@@ -727,17 +720,6 @@ void combatManager::chooseShooterAction(const army* currentArmy, unsigned char s
 struct func_moves_before {
     unsigned char operator()(const army* a, const army* b);
 };
-
-// E:\gamedcs\ai.cpp:597, dc 0x28024.
-// CodeView fixes the ordinary non-const call operator.
-unsigned char func_moves_before::operator()(const army* a, const army* b)
-{
-    if (a->m_expectedMoveOrder > b->m_expectedMoveOrder)
-        return true;
-    if (a->m_expectedMoveOrder < b->m_expectedMoveOrder)
-        return false;
-    return a->m_bitIndex < b->m_bitIndex;
-}
 
 // E:\gamedcs\ai.cpp:610
 // STATIC with a single call site, so /Ob2 inlines it unconditionally
@@ -1105,7 +1087,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
 // E:\gamedcs\ai.cpp:897
 // Before normalization (locals): hero_spell.
 VA(0x0041f890, 0x8F)  // anchor-global, dc 0x24e5c
-unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell)
+unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell) const
 {
     if (!heroSpell && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS)
         return 0;
@@ -1162,7 +1144,7 @@ unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell)
 // E:\gamedcs\ai.cpp:926
 // Before normalization (locals): our_army, marked_enemies, casting_hero.
 VA(0x0041f920, 0x234)  // linkorder, dc 0x24ef4
-long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEnemies, const type_AI_combat_parameters* estimate)
+long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEnemies, const type_AI_combat_parameters* estimate) const
 {
     long total = 0;
     const army* enemy = m_armies[side];
@@ -1240,7 +1222,7 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
 // Before normalization (locals): our_army, enemy_attacks, marked_enemies, enemy_side,
 // area_effect, hit_points, floor_value, melee_value, far_hex.
 VA(0x0041fb60, 0x1F6)  // linkorder, dc 0x25124
-void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate)
+void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate) const
 {
     long enemySide = estimate->m_enemyGroup;
     long areaEffect = getAreaEffect(enemySide, ourArmy, markedEnemies,
@@ -1385,7 +1367,7 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
 // E:\gamedcs\ai.cpp:1152
 // Before normalization (locals): our_army, enemy_attacks, limit_value, search_array.
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
-void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate)
+void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate) const
 {
     const army* other = m_armies[estimate->m_ourGroup];
     long value = -estimate->getSimpleAttackEffect(enemy, ourArmy, 0, 0);
@@ -1501,7 +1483,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop,
 // Before normalization (locals): our_army, enemy_attacks, dangerous_enemies, enemy_side,
 // hit_points, floor_value.
 VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
-void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate)
+void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate) const
 {
     long side = estimate->m_ourGroup;
     long enemySide = estimate->m_enemyGroup;
@@ -2990,7 +2972,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
 // E:\gamedcs\ai.cpp:2372
 // Before normalization (locals): target_hits, fire_immune, target_hero, casting_hero.
 VA(0x00422440, 0x99)  // anchor-global, dc 0x27318
-long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits)
+long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits) const
 {
     if (!target->m_spellInfluence[29] && target->m_creatureType != CREATURE_EFREET_SULTAN)
         return 0;
@@ -3265,7 +3247,7 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
 void combatManager::findAITargets(long ourGroup, const army* currentArmy,
                                     unsigned char meleeOnly,
-                                    type_AI_combat_parameters* data,
+                                    const type_AI_combat_parameters* data,
                                     searchArray* currentSearchArray)
 {
     long enemyGroup = 1 - ourGroup;
@@ -4639,7 +4621,18 @@ VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before
 // COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
 VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
 
-// COMDAT pairing: func_moves_before::operator()(const army*, const army*) -
-// `ret 8` for the two pointer arguments. ai.obj's already-paired
-// _Unguarded_insert<army*, func_moves_before> is this predicate's consumer.
-VA_COMPGEN(0x004235c0, 0x44, FUNCTOR_CALL, func_moves_before)
+// Original: func_moves_before::operator(); ai.cpp:597, dc 0x28024.
+// CodeView fixes this ordinary non-const call operator. Retail compares
+// move order at army+0x190, then stack index at +0xf8, and returns a byte
+// with ret 8. The sort calls it at 0x4236be/0x4236d0/0x4236e2, while its
+// unguarded insertion helper expands the same comparison. The written body
+// owns this VA directly, replacing the former FUNCTOR_CALL enrollment.
+VA(0x004235c0, 0x44)  // retained comparator + CodeView identity
+unsigned char func_moves_before::operator()(const army* a, const army* b)
+{
+    if (a->m_expectedMoveOrder > b->m_expectedMoveOrder)
+        return true;
+    if (a->m_expectedMoveOrder < b->m_expectedMoveOrder)
+        return false;
+    return a->m_bitIndex < b->m_bitIndex;
+}

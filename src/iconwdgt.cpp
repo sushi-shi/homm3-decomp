@@ -326,7 +326,7 @@ int iconWidget::getRealHeight() const
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
 VA(0x004eab40, 0x4B0)  // anchor-vtable (slot 4 of 0x63ec48), dc 0xd96e8
-void iconWidget::draw()
+void iconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;

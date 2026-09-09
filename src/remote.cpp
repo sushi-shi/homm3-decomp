@@ -962,9 +962,11 @@ void CChatManager::shutDown()
 }
 
 // E:\gamedcs\remote.cpp:857
-// Retail PC lowers the DC member formatter to a cdecl free function with the
-// manager explicit. Besides maintaining the twenty-entry ring, it restarts
-// chat.wav only when the previous Miles handle has stopped.
+// Original: CChatManager::AddChat. CodeView retains (const char*, ...).
+// Retail 0x553840 uses the variadic-member cdecl ABI: receiver at [ebp+8],
+// format at [ebp+0xc], variable arguments at [ebp+0x10], and caller cleanup.
+// The stack receiver does not imply a free function. Besides maintaining the
+// twenty-entry ring, it restarts chat.wav when the previous handle stops.
 // Residual (96.63%): semantics, all blocks/branches and the sound tail agree;
 // only the msgArray base is scheduled one instruction later around strncpy,
 // which then swaps equivalent base/index encodings on the two following
@@ -975,7 +977,7 @@ void CChatManager::shutDown()
 // match retail and classifies the residual after them as an address-folding
 // schedule, not a source-nameable allocation lever.
 VA(0x00553840, 0x11B)  // anchor-callees + arity/order-map, dc 0x11c3a8
-void __cdecl addChat(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::addChat(const char* format, ...)
 {
     char chatText[1024];
     va_list args;
@@ -983,37 +985,35 @@ void __cdecl addChat(CChatManager* manager, const char* format, ...)
     vsprintf(chatText, format, args);
 
     bool atNewestMessage = false;
-    if (manager->m_position == manager->m_msgCount - 1)
+    if (m_position == m_msgCount - 1)
         atNewestMessage = true;
 
-    if (manager->m_msgCount >= 20) {
-        manager->m_msgArray[manager->m_currMsg].m_killTime = 0;
-        manager->m_currMsg = (manager->m_currMsg + 1) % manager->m_maxLines;
-        --manager->m_msgCount;
+    if (m_msgCount >= 20) {
+        m_msgArray[m_currMsg].m_killTime = 0;
+        m_currMsg = (m_currMsg + 1) % m_maxLines;
+        --m_msgCount;
     }
 
-    // Complete changed DC's member formatter into this free function, so its
-    // private GetNextFreeMsgNbr call necessarily became the proven equivalent
-    // expression when `manager` became explicit.
-    int msgNbr = (manager->m_currMsg + manager->m_msgCount) % manager->m_maxLines;
-    strncpy(manager->m_msgArray[msgNbr].m_text, chatText, 127);
-    manager->m_msgArray[msgNbr].m_killTime = 0;
-    manager->m_msgArray[msgNbr].m_isSystem = manager->m_isSysMsg;
-    ++manager->m_msgCount;
+    // DC names this private helper; retail expands its ring-index expression.
+    int msgNbr = getNextFreeMsgNbr();
+    strncpy(m_msgArray[msgNbr].m_text, chatText, 127);
+    m_msgArray[msgNbr].m_killTime = 0;
+    m_msgArray[msgNbr].m_isSystem = m_isSysMsg;
+    ++m_msgCount;
     if (atNewestMessage)
-        manager->m_position = manager->m_msgCount - 1;
-    manager->m_changed = 1;
+        m_position = m_msgCount - 1;
+    m_changed = 1;
 
-    if (!manager->m_isSysMsg) {
-        if (manager->m_chatMemSample
+    if (!m_isSysMsg) {
+        if (m_chatMemSample
             && g_soundManager->getSampleInfo(
-                manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+                m_chatMemSample, AIL_SAMPLE_PLAYING))
             return;
-        sample* chatSample = manager->m_chatSample;
+        sample* chatSample = m_chatSample;
         if (chatSample) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(chatSample);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
@@ -1021,12 +1021,12 @@ void __cdecl addChat(CChatManager* manager, const char* format, ...)
 }
 
 // E:\gamedcs\remote.cpp:904
-// Retail PC again lowers the DC member varargs function to a free cdecl
-// formatter. The display guard is IsClose(59000) inlined together with the
-// adventure-suspended and popup checks; the sound tail prefers timeover.wav
-// and falls back to chat.wav.
+// Original: CChatManager::TurnDurationMsg. The member remains variadic;
+// retail 0x553960 uses the same stack receiver/format/varargs layout as AddChat.
+// The display guard expands IsClose(59000) with adventure/popup checks;
+// the sound tail prefers timeover.wav and falls back to chat.wav.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
-void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1060,22 +1060,22 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    m_isSysMsg = 0;
 
 skipMessage:
-    sample* sampleToPlay = manager->m_turnDurSample;
-    if (manager->m_chatMemSample
+    sample* sampleToPlay = m_turnDurSample;
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1084,7 +1084,7 @@ skipMessage:
 // The system-message twin of TurnDurationMsg has no timer/popup guard and
 // selects sysmsg.wav before the common chat.wav fallback.
 VA(0x00553aa0, 0xC0)  // anchor-callees + arity/order-map, dc 0x11c558
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::systemMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1097,21 +1097,21 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    sample* sampleToPlay = manager->m_sysMsgSample;
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_sysMsgSample;
+    m_isSysMsg = 0;
 
-    if (manager->m_chatMemSample
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1120,7 +1120,7 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
 // Same formatter/ring path, with playexit.wav and a deliberately late
 // isSysMsg clear shared by every sound-path exit.
 VA(0x00553b60, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c5bc
-void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::playerDropMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1133,30 +1133,30 @@ void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    sample* sampleToPlay = manager->m_playerDropSample;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_playerDropSample;
 
-    if (!(manager->m_chatMemSample
+    if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
-              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
+              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->m_chatSample;
+            sampleToPlay = m_chatSample;
         if (sampleToPlay) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(sampleToPlay);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:990
 // The byte-identical structural twin selects playcome.wav instead.
 VA(0x00553c30, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c658
-void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1169,24 +1169,24 @@ void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    sample* sampleToPlay = manager->m_playerEnterSample;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_playerEnterSample;
 
-    if (!(manager->m_chatMemSample
+    if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
-              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
+              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->m_chatSample;
+            sampleToPlay = m_chatSample;
         if (sampleToPlay) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(sampleToPlay);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1033
@@ -1229,14 +1229,15 @@ int CChatManager::getNextMsgNbr(int msgNbr)
 // E:\gamedcs\remote.cpp:1070
 #endif  // @carcass
 
-// E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
-// Complete's free AddChat retains the first one's equivalent expression;
-// retail /Ob2 expands the second at both surviving KillOldChat call sites.
+// E:\gamedcs\remote.cpp:1060. Original: CChatManager::GetNextFreeMsgNbr.
+// Retail AddChat expands this ring-index expression; CodeView retains the helper.
 inline int CChatManager::getNextFreeMsgNbr()
 {
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
+// E:\gamedcs\remote.cpp:1065. Original: CChatManager::GetNextMsgNbr.
+// Retail KillOldChat expands this helper at both surviving call sites.
 inline int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
@@ -1705,12 +1706,9 @@ void sendChat(const char* chatString, int toWho)
     if (_strcmpi(chatString,
                  g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-            systemMsg(&g_chatMan,
-                      g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
         } else {
-            systemMsg(
-                &g_chatMan,
-                g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
                 g_game->getPlayerName(toWho));
         }
 
@@ -1729,9 +1727,7 @@ void sendChat(const char* chatString, int toWho)
             recipientName = DATA_COMPGEN(
                 0x00682b54, chatUnknownRecipient, "???");
 
-        addChat(
-            &g_chatMan,
-            DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
+        g_chatMan.addChat(DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
                          "%s: (%s:%s) %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
             g_generalText->getText(GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG),
@@ -1744,9 +1740,7 @@ void sendChat(const char* chatString, int toWho)
             chatString);
         outgoingChat = transformedChat;
     } else {
-        addChat(
-            &g_chatMan,
-            DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+        g_chatMan.addChat(DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
             chatString);
     }
@@ -1763,7 +1757,7 @@ void sendChat(const char* chatString, int toWho)
 VA(0x00554a20, 0x21)  // anchor-callee (AddChat 0x553840), dc 0x11d1c8
 void receiveChat(char* chatString, int fromPlayer)
 {
-    addChat(&g_chatMan, DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+    g_chatMan.addChat(DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
         g_game->getPlayerName(fromPlayer), chatString);
 }
 
@@ -2083,7 +2077,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    systemMsg(&g_chatMan, g_generalText->getText(471));
+                    g_chatMan.systemMsg(g_generalText->getText(471));
                     break;
 
                 case RS_SESSION_LOST:
@@ -2540,8 +2534,7 @@ void handlePlayerDrop(unsigned long dpid)
     g_logFile.log(DATA_COMPGEN(0x00682df8, handlingPlayerDropLog,
                             "Handling player drop [%d]"),
                 dpid);
-    playerDropMsg(&g_chatMan,
-                  g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED),
+    g_chatMan.playerDropMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED),
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();
 
@@ -2594,7 +2587,7 @@ void handleNewHost()
             }
         }
     }
-    systemMsg(&g_chatMan, g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(471));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -2949,7 +2942,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                systemMsg(&g_chatMan, g_generalText->getText(471));
+                g_chatMan.systemMsg(g_generalText->getText(471));
                 break;
 
             case RS_SESSION_LOST:
@@ -3978,9 +3971,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(629));
+            g_chatMan.turnDurationMsg(g_generalText->getText(629));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(630), minutes);
+            g_chatMan.turnDurationMsg(g_generalText->getText(630), minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -3992,9 +3985,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(627));
+            g_chatMan.turnDurationMsg(g_generalText->getText(627));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(628), seconds);
+            g_chatMan.turnDurationMsg(g_generalText->getText(628), seconds);
     }
 
     m_lastWarned = currTime;
@@ -4011,12 +4004,13 @@ void CTurnDuration::checkForWarning()
 }
 
 // E:\gamedcs\remote.cpp:3020
-
-// E:\gamedcs\remote.cpp:3020
+// Original IsClose calls IsOn (remote.cpp:2920, dc 0x11f070). Keep the
+// ordinary helper above visible to this caller; the former IsOnInline
+// copy invented a second source boundary to steer its expansion.
 VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
-    if (!isOnInline())
+    if (!isOn())
         return 0;
     if (m_turnStartTime == 0)
         return 0;

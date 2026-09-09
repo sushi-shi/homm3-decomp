@@ -127,7 +127,7 @@ public:
         s_lastSchool = school;
     }
     // E:\gamedcs\SpellbookWindow.h:230
-    unsigned getSchool()
+    unsigned getSchool() const
     {
         return m_school;
     }
@@ -141,7 +141,7 @@ public:
         s_lastContext = context;
     }
     // E:\gamedcs\SpellbookWindow.h:248
-    unsigned getContextMask()
+    unsigned getContextMask() const
     {
         return m_contextMask;
     }

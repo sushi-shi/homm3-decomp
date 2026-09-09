@@ -215,12 +215,14 @@ public:
     // Before normalization (function): searchArray::Clear.
     // Before normalization (locals): fly_level, start_z, stop_z.
     void clear(long flyLevel, long startZ, long stopZ);
-    // 0x4b3b90. The bounds-free cellData accessor whose expansion
-    // get_travel_time and SeedCombatPosition both spell by hand; the
-    // null arm answers 0 and the caller still dereferences it.
-    pathCell* getCellData(long pos);
-    // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
-    // two expansions in check_adjacent_hexes and no retained retail call.
+    // Original: searchArray::get_hex; FindPath.h:194, dc 0x27fe8.
+    // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
+    // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
+    // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
+    // expansions of DC mark_enemy's get_hex call.
+    // The old getCellData name came from HD/NH3API; CodeView supplies the
+    // canonical name and const header ownership of this same body.
+    VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
     pathCell* getHex(long x) const
     {
         if (m_cellData == 0)
@@ -301,10 +303,13 @@ public:
     // Before normalization (function): searchArray::mark_teleport.
     // Before normalization (locals): current_army, current_group.
     void markTeleport(const army* currentArmy, long currentGroup);
-    // DC findpath.cpp:1172. Retail inlines both calls into mark_teleport and
-    // carries no distinct body.
+    // Ordinary cpp helper at DC findpath.cpp:1172; MarkTeleport and
+    // CheckEnemyArmies share it. Retail expands it into both callers.
     // Before normalization (function): searchArray::mark_enemy.
     void markEnemy(long hex, long cost);
+    // Original: searchArray::build_combat_path; findpath.cpp:1136.
+    unsigned char buildCombatPath(const army* currentArmy, int startHex,
+                                  int endHex, int destination);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
@@ -341,7 +346,7 @@ public:
     // body's.
     // Before normalization (function): searchArray::get_travel_time.
     // Before normalization (locals): current_army.
-    long getTravelTime(const army* currentArmy, long hex);
+    long getTravelTime(const army* currentArmy, long hex) const;
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
     // Before normalization (function): searchArray::get_danger_value.
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)

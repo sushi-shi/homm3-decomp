@@ -204,6 +204,12 @@ found:
 // register hints, and inert type-count probes.  This is a measured C1
 // front-end-handle wall, not license to invent an alias local absent from DC.
 // E:\gamedcs\diff.cpp:174
+// DC diff.cpp:204/211, 222/226 and 237 use the whole output buffer
+// plus diffOffset as their memcpy destinations (first pair 0x82500/0x82510).
+// GetBase was an unattested header wrapper subtracting the size member
+// from GetData's array address. The modeled payload array starts after the
+// size prefix, so subtract that prefix from the whole-buffer offsets here.
+// Apply keeps its separate payload-relative GetData accesses.
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 {
@@ -223,20 +229,20 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             int newCount = 0;
             if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
                 CDiffHeader header(newCount, 1, oldCount);
-                memcpy(diff->getBase() + diffOffset, &header,
-                       sizeof(CDiffHeader));
+                memcpy(diff->m_data + diffOffset - sizeof(diff->m_numBytes),
+                       &header, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->getBase() + diffOffset,
+                memcpy(diff->m_data + diffOffset - sizeof(diff->m_numBytes),
                        m_newData + newOffset, newCount);
                 diffOffset += newCount;
                 oldOffset += oldCount;
                 newOffset += newCount;
             } else {
                 CDiffHeader header(m_newSize - newOffset, 1, 0);
-                memcpy(diff->getBase() + diffOffset, &header,
-                       sizeof(CDiffHeader));
+                memcpy(diff->m_data + diffOffset - sizeof(diff->m_numBytes),
+                       &header, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->getBase() + diffOffset,
+                memcpy(diff->m_data + diffOffset - sizeof(diff->m_numBytes),
                        m_newData + newOffset, m_newSize - newOffset);
                 diffOffset += m_newSize - newOffset;
                 diffSize = diffOffset;
@@ -245,8 +251,8 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             }
         } else {
             CDiffHeader header(sameCount, 0, 0);
-            memcpy(diff->getBase() + diffOffset, &header,
-                   sizeof(CDiffHeader));
+            memcpy(diff->m_data + diffOffset - sizeof(diff->m_numBytes),
+                   &header, sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);
             oldOffset += sameCount;
             newOffset += sameCount;

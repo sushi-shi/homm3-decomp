@@ -43,7 +43,7 @@ public:
     virtual int main(message* msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CHotspotWidget::Draw.
-    virtual void draw();             // slot 4, folded onto 0x404df0
+    virtual void draw() const;             // slot 4, folded onto 0x404df0
 };
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
@@ -63,7 +63,7 @@ public:
     virtual int main(message* msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CSpriteWidget::Draw.
-    virtual void draw();             // slot 4, retail 0x575750
+    virtual void draw() const;             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
 
@@ -82,7 +82,7 @@ public:
     virtual int main(message* msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CBitmapWidget::Draw.
-    virtual void draw();             // slot 4, retail 0x575a20
+    virtual void draw() const;             // slot 4, retail 0x575a20
 };
 
 class CNetMsgHandler;

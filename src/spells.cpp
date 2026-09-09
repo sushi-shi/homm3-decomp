@@ -29,7 +29,7 @@
 // army::Fly does; drawing.h is where this tree parks that unowned table.
 #include "drawing.h"           // gCombatSpeedFactors
 #include "resourcemanager.h"   // ResourceManager::GetSprite
-#include "game.h"     // PlayImmEffect, Resurrect's force-feedback cue
+#include "game.h"     // playImmEffect, Resurrect's force-feedback cue
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
 #include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
@@ -212,7 +212,7 @@ unsigned char combatManager::checkFireWall(long hex, army* current_army, unsigne
 // already two separate `return -1;` statements, which is the form the
 // house rule prescribes.
 VA(0x0059e900, 0x34F)  // anchor-callee DoCommand's spell-book case and ProcessCombatMsg call it with `this` only and forward the result to InitiateSpell; anchor-callee TSpellbookWindow's ctor/DoModal/dtor triple; the row ends exactly where the claimed InitiateSpell begins, dc-order spells.cpp:97
-int combatManager::viewSpells()
+int combatManager::viewSpells() const
 {
     int i;
 
@@ -967,7 +967,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newQuicksand.m_spellDamage = 0;
             newQuicksand.m_duration = 0;
             newQuicksand.m_dispelEffect = 0x3a;
-            m_obstacles.insert(m_obstacles.m_end, 1, newQuicksand);
+            m_obstacles.insert(m_obstacles.end(), 1, newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newQuicksand, obstacleSlot, hex, 4);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1022,7 +1022,7 @@ quicksand_done:
             newLandmine.m_spellDamage = damage;
             newLandmine.m_duration = 0;
             newLandmine.m_dispelEffect = 0x3b;
-            m_obstacles.insert(m_obstacles.m_end, 1, newLandmine);
+            m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newLandmine, obstacleSlot, hex, 8);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1053,7 +1053,7 @@ landmine_done:
         newWall.m_spellDamage = 0;
         newWall.m_duration = 2;
         newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
-        m_obstacles.insert(m_obstacles.m_end, 1, newWall);
+        m_obstacles.insert(m_obstacles.end(), 1, newWall);
         int obstacleSlot = m_obstacles.size() - 1;
         placeObstacle(&newWall, obstacleSlot, targetIndex, 0x22);
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1078,7 +1078,7 @@ landmine_done:
             newWall.m_spellDamage = damage;
             newWall.m_duration = 2;
             newWall.m_dispelEffect = 0x42;
-            m_obstacles.insert(m_obstacles.m_end, 1, newWall);
+            m_obstacles.insert(m_obstacles.end(), 1, newWall);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newWall, obstacleSlot, hex, 0x10);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1470,11 +1470,11 @@ landmine_done:
             showSpellMessage(isMonsterSpell, spellId, 0);
             showMassSpell(m_effected, traits->m_effect, 0);
 
-            for (TObstacle* obstacle = m_obstacles.m_begin;
-                 obstacle != m_obstacles.m_end; ++obstacle) {
+            for (TObstacle* obstacle = m_obstacles.begin();
+                 obstacle != m_obstacles.end(); ++obstacle) {
                 if (obstacle->m_sprite
                     && (m_cells[obstacle->m_hex].m_attributes & 0x3c)) {
-                    removeObstacle(obstacle - m_obstacles.m_begin);
+                    removeObstacle(obstacle - m_obstacles.begin());
                     if (obstacle->m_dispelEffect != -1)
                         spellEffect(obstacle->m_dispelEffect, obstacle->m_hex,
                                     100, 0);
@@ -2629,7 +2629,7 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
                                                   int castingSide,
                                                   const army* targetArmy,
                                                   unsigned char firstTarget,
-                                                  long creatureSpell)
+                                                  long creatureSpell) const
 {
     return spellCastWorkChance(spellId, castingSide, targetArmy, 0,
                                firstTarget, creatureSpell) > 0.0;
@@ -3456,23 +3456,16 @@ void combatManager::armageddon(int level, int power)
 // emitted first, and retail converts `remaining` first. Worth 94.82 ->
 // 97.29 on the operand order alone.
 //
-// Residual (97.31%): the explicit squared-delta inline helper breaks C1's
-// commutative canonicalisation and gives the sqrt retail's x-then-y delta
-// order. Direct `+` operand order is byte-flat, while hoisting the deltas into
-// locals is worse in both declaration orders (93.98 / 88.19).
-//   * The progress divide uses two temp slots where retail reuses one:
-//     retail loads the numerator to st0 BEFORE materialising the
-//     denominator, so the numerator's slot is free again. Making the
-//     numerator a named float local (`travelled`) was needed for the
-//     rest of the shape but does not move this.
-// Before normalization (function): BoltDeltaSquared.
-static inline long boltDeltaSquared(long destination, long current)
-{
-    long delta = abs(destination - current);
-    return delta * delta;
-}
-
-// Residual (97.32%): the two FP scratch slots are transposed - retail loads
+// DC spells.cpp:3582/3583 computes the two absolute deltas directly, then
+// line 3584 squares/adds them for sqrt. Retail 0x5a5276..0x5a529c preserves
+// those operations. The former BoltDeltaSquared wrapper was introduced only
+// to steer commutative canonicalisation, not from a recovered helper boundary.
+// Historical probes: direct + operand reversal was byte-flat; named deltas
+// in the two declaration orders measured 93.98 / 88.19 versus 97.31 with the
+// artificial wrapper. These observations do not displace the DC source form.
+//
+// Historical residual with the squared-delta wrapper (97.32%): the two FP
+// scratch slots are transposed - retail loads
 // `travelled` off [ebp+8] the instant it is stored and reuses that slot for
 // the divisor's float temp, so its later temps land in [ebp-4] and ours in
 // [ebp+8]; the instruction stream is otherwise identical. Tried and rejected,
@@ -3486,10 +3479,10 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     if (bolt->m_done)
         return;
 
+    long deltaX = abs(bolt->m_destX - bolt->m_pixelX);
+    long deltaY = abs(bolt->m_destY - bolt->m_pixelY);
     long remaining = static_cast<long>(
-        sqrt(static_cast<double>(
-            boltDeltaSquared(bolt->m_destX, bolt->m_pixelX)
-            + boltDeltaSquared(bolt->m_destY, bolt->m_pixelY))));
+        sqrt(static_cast<double>(deltaX * deltaX + deltaY * deltaY)));
     if (remaining > bolt->m_totalLength) {
         bolt->m_progress = 0;
     } else {
@@ -4304,18 +4297,6 @@ static const int g_earthquakeShakeOffsets[15][2] = {
 // Before normalization: kEarthquakeImpactFrame.
 const int g_earthquakeImpactFrame = 5;
 
-// combatManager::DamageWall's first slot is TWallTargetId while
-// Earthquake's own walk of wallTargets is an int counter; this
-// bit-preserving inline bridges the crossing rather than lying with an
-// enum cast, exactly as ai_combat.cpp's creature_type_from_int and
-// ai_player.cpp's twin do. VC6 reduces the four-byte copy to a move.
-inline TWallTargetId wallTargetFromInt(int value)
-{
-    TWallTargetId wall;
-    memcpy(&wall, &value, sizeof wall);
-    return wall;
-}
-
 // Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
 // makes ONE by-value copy our CL does not fold - retail lets the
 // address _cpp_max returned flow straight into _cpp_min and compares the
@@ -4622,7 +4603,7 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
                 }
             }
         } }
-        PlayImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
+        playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
         { for (int frame = 0; frame < frames; frame++) {
             { for (int side = 0; side < 2; side++) {
                 for (int i = 0; i < m_numArmies[side]; i++) {
@@ -5096,7 +5077,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
             targetArmy->m_stdIcon->getNumFrames(cs_death);
         long frames = cppMax(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
-        PlayImmEffect(g_spellEffectTraits[effect].m_immName, 1);
+        playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
         long back = deathFrames - 1;
         { for (long i = 0; i < frames; i++) {
             m_powFrameIndex = i;
@@ -5177,7 +5158,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
 VA(0x005a7890, 0x4D)  // anchor-callee+arity, RET-MISMATCH resolved, dc 0x156b94
 long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mastery,
                                        hero* castingHero, hero* targetHero,
-                                       const army* target, unsigned char simulated)
+                                       const army* target, unsigned char simulated) const
 {
     long damage = g_spellTraits[spell].m_masteryBonus[mastery]
         + g_spellTraits[spell].m_powerFactor * spellPower;
@@ -5243,7 +5224,7 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                                       const hero* castingHero,
                                       const hero* affectedHero,
                                       const army* targetArmy,
-                                      unsigned char printResult)
+                                      unsigned char printResult) const
 {
     long damage = baseDamage;
     if (castingHero)
@@ -5315,7 +5296,7 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
 // 32-bit `fstp dword ptr [ebp+8]` before reloading it for the multiply.
 VA(0x005a7bb0, 0xC5)  // order-map+arity, dc 0x156dc4
 long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
-                                               const army* target)
+                                               const army* target) const
 {
     if (!target)
         return damage;
@@ -5472,8 +5453,11 @@ void combatManager::earthquake(int level)
                     bounds->m_maxX = g_combatDrawLimits694f18.m_maxX;
                 if (bounds->m_maxY > g_combatDrawLimits694f18.m_maxY)
                     bounds->m_maxY = g_combatDrawLimits694f18.m_maxY;
-                if (frame == g_earthquakeImpactFrame)
-                    damageWall(wallTargetFromInt(i), counts[i]);
+                if (frame == g_earthquakeImpactFrame) {
+                    TWallTargetId wall;
+                    memcpy(&wall, &i, sizeof wall);
+                    damageWall(wall, counts[i]);
+                }
                 blast->draw(0, frame, 0, 0,
                             bounds->m_maxX - bounds->m_minX + 1,
                             bounds->m_maxY - bounds->m_minY + 1,
@@ -5492,8 +5476,11 @@ void combatManager::earthquake(int level)
         blast->dispose();
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
-        for (int i = 0; i < WALL_TARGET_COUNT; i++)
-            damageWall(wallTargetFromInt(i), counts[i]);
+        for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+            TWallTargetId wall;
+            memcpy(&wall, &i, sizeof wall);
+            damageWall(wall, counts[i]);
+        }
     }
     g_mouseManager->showPointer(0);
 }
@@ -5598,7 +5585,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          // Before normalization (locals): first_target,
                                          // creature_spell, casting_hero, target_hero.
                                          unsigned char firstTarget,
-                                         long creatureSpell)
+                                         long creatureSpell) const
 {
     hero* castingHero = m_heroes[side];
     hero* targetHero = target->getController();
@@ -5757,7 +5744,7 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             const army* target,
                                             unsigned char redirected,
                                             // Before normalization (locals): creature_spell.
-                                            long creatureSpell)
+                                            long creatureSpell) const
 {
     int chance = spellCastWorkChance(spell, side, target, redirected, 1,
                                      creatureSpell) * 100.0f;

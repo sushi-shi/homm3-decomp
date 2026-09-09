@@ -17,13 +17,10 @@
 #include "recruit.h"
 #include "remote.h"
 #include "soundmgr.h"
+#include "sskilltraits.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-
-#define HOMM3_LEVELUP_RELEASE_DIAGNOSTIC()                                \
-    (1 ? static_cast<void>(0)                                            \
-       : static_cast<void>(printf("level up\n")))
 
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
@@ -38,31 +35,22 @@ DATA(0x00697784) extern unsigned long g_dialogDeadline697784;
 DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
 DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
-// Retail's packed table is four pointers per secondary skill: the generic
-// name followed by its basic/advanced/expert display strings. The encoded
-// choice is 3*skill+level, with skill zero represented by values 3..5.
-DATA(0x0067dcf0) extern const TLevelUpSkillTraits (&g_levelUpSkillTraits)[28];
-
 // Text tables read directly by the retail constructor. The shared four-entry
 // primary-skill table is declared with the other game-wide data in game.h.
 DATA(0x006a7570) extern const char* g_skillMasteryNames[3];
 
-// Before normalization (function): LevelUpSkillName.
-static const char* levelUpSkillName(int encodedSkill)
-{
-    return g_levelUpSkillTraits[encodedSkill / 3 - 1]
-        .m_levelNames[encodedSkill % 3];
-}
-
 // E:\gamedcs\levelupwindow.cpp:48
-// CURRENT (99.12995%, from 98.8241%, originally 97.7369): nine
+// Historical probe only: the nine HOMM3_LEVELUP_RELEASE_DIAGNOSTIC calls
+// were dummy calls with unattested text, retained solely to alter /Ob2.
+// They are removed; the observations below do not establish source statements
+// and the scores have not been remeasured after this ownership cleanup.
+// Previous result (99.12995%, from 98.8241%, originally 97.7369): nine
 // release-elided, call-shaped diagnostic sites supply the last live /Ob2
 // mass window without emitting calls or string bytes. The titration is sharp:
 // one and eight sites give 98.0000, nine, ten and eleven give 99.12995, and
-// twelve overshoots to 98.07131. Nine is the minimum winning dose retained
-// below. Its exact macro name, placement and text are unattested; retail proves
-// only the dead call-candidate shape already established independently by the
-// artifact, THall and TCastle constructors.
+// twelve overshoots to 98.07131. Nine was the minimum winning probe dose.
+// Its exact macro name, placement and text were unattested; a score increase
+// did not prove dead source calls in this or the other constructors.
 // A genuine release VERIFY interpretation was tested on 2026-08-21 rather
 // than assumed. Nine byte-elided `TownSpecialGrantedMask.size()` expressions
 // give 98.0000%; one through three byte-elided `GetPrimarySkill(0) >= 0`
@@ -70,7 +58,7 @@ static const char* levelUpSkillName(int encodedSkill)
 // `first_choice == -1 || LevelUpSkillName(first_choice) != 0` precondition
 // gives 98.0000%. Mixing three GetPrimarySkill checks with one size check is
 // still 98.8241%, and mixing them with six size checks is 98.0000%. Therefore
-// the retained carrier cannot honestly be named VERIFY from present evidence:
+// that probe carrier could not honestly be named VERIFY from present evidence:
 // a real VERIFY remains plausible historically, but no tested invariant has
 // its compiler-phase shape.
 // At the new maximum, all 66 branch mnemonics and symbolic targets agree. Base
@@ -103,15 +91,6 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     : CAdvPopup(205, 65, 385, 470, 0x12),
       m_leftSkill(firstChoice), m_rightSkill(secondChoice), m_selected(0)
 {
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
     // /Ob2 budget ledger (2026-08-14). Both axes are now at a local maximum
     // and were re-swept TOGETHER at the landed spelling: pad statements ahead
     // of this `reserve` x xx_nop sites past the last push_back give 98.8241
@@ -258,9 +237,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE);
         sprintf(g_text, choiceFormat,
                 g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name,
+                g_sSkillTraits[firstChoice / 3 - 1].m_name,
                 g_skillMasteryNames[secondChoice % 3],
-                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
+                g_sSkillTraits[secondChoice / 3 - 1].m_name);
         textWidget* choiceText = new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8);
@@ -297,13 +276,13 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         m_widgets.push_back(rightIcon);
 
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* leftLabel = new textWidget(
             102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8);
         m_widgets.push_back(leftLabel);
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[secondChoice % 3],
-                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
+                g_sSkillTraits[secondChoice / 3 - 1].m_name);
         textWidget* rightLabel = new textWidget(
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8);
@@ -313,7 +292,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE);
         sprintf(g_text, singleChoiceFormat,
                 g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* soleText = new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8);
@@ -327,7 +306,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             firstChoice, 0, 0, 0, 0x10);
         m_widgets.push_back(soleIcon);
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* soleLabel = new textWidget(
             149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8);
@@ -416,6 +395,12 @@ TLevelUpWindow::~TLevelUpWindow()
 // after the codeY switch. Seven separate `return 0;` statements had cost
 // seven duplicated epilogues AND made VC6 cross-jump the four
 // enable/DrawWindow/`return 1` tails that retail keeps separate.
+// DC levelupwindow.cpp:267/274 (0xe8e90/0xe8ed8) directly index
+// akSSkillTraits, the canonical TSSkillTraits table in sskilltraits.h.
+// Retail 0x4f99e4/0x4f9a2a reads that same reference at 0x67dcf0,
+// then selects the mastery string before NormalDialog at 0x4f9a39.
+// The former LevelUpSkillName helper and TLevelUpSkillTraits table copy
+// had no separate CodeView source boundary.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::windowHandler(message* msg)
 {
@@ -490,12 +475,16 @@ int TLevelUpWindow::windowHandler(message* msg)
             switch (msg->m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
-                normalDialog(levelUpSkillName(g_levelUpWindow->m_leftSkill),
+                normalDialog(
+                    g_sSkillTraits[g_levelUpWindow->m_leftSkill / 3 - 1]
+                        .m_levelNames[g_levelUpWindow->m_leftSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case SKILLICON_2_ID:
             case SKILLBORDER_2_ID:
-                normalDialog(levelUpSkillName(g_levelUpWindow->m_rightSkill),
+                normalDialog(
+                    g_sSkillTraits[g_levelUpWindow->m_rightSkill / 3 - 1]
+                        .m_levelNames[g_levelUpWindow->m_rightSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }

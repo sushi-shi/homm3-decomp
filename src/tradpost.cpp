@@ -20,7 +20,9 @@
 #include "winmgr.h"
 #include "mousemgr.h"
 #include "slider.h"
-#include "tradpost_widgets.h"
+#include "netmsg.h"
+#include "remote.h"
+#include "customcampaign.h"
 
 // The three slider callbacks (E:\gamedcs\tradpost.cpp:74/80/86). Retail's
 // /Gy link placed each COMDAT body immediately AFTER the constructor that
@@ -3463,8 +3465,11 @@ int TGiveResourceWindow::windowHandler(message* msg)
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
                 if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
-                    TGiveNetMsg m(g_game->getLocalPlayerGamePos(),
-                                  g_selectedArtifact, g_rightAmount);
+                    // CGiftMsg belongs to netmsg.h (DC line 828). Retail
+                    // 0x5ed651..0x5ed67d writes its giver/resource/quantity
+                    // payload at +0x14/+0x18/+0x1c, subtype 0x432, size 32.
+                    CGiftMsg m(g_game->getLocalPlayerGamePos(),
+                               g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);
                 }
                 g_leftDenominated = 1;
@@ -3581,9 +3586,7 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                 } else {
                     g_currentPlayer->m_resources[g_selectedArtifact] -=
                         g_giveQuantity * g_rightAmount;
-                    type_artifact artifact(
-                        g_marketArtifacts.m_asArtifacts[g_leftResource],
-                        -1);
+                    type_artifact artifact(g_marketArtifacts.m_asArtifacts[g_leftResource]);
                     g_marketHero->giveArtifact(&artifact, 1, 1);
                     g_marketArtifacts.m_asArtifacts[g_leftResource] =
                         ARTIFACT_NONE;
@@ -3686,10 +3689,8 @@ int TBuyArtifactWindow::windowHandler(message* msg)
             if (msg->m_codeY < BUY_ARTIFACT_SLOT_0_ID
                 || msg->m_codeY > BUY_ARTIFACT_SLOT_6_ID)
                 return MESSAGE_DISPATCH_CONSUME;
-            type_artifact artifact(
-                g_marketArtifacts.m_asArtifacts[
-                    msg->m_codeY - BUY_ARTIFACT_SLOT_0_ID],
-                -1);
+            type_artifact artifact(g_marketArtifacts.m_asArtifacts[
+                    msg->m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
             g_marketHero->viewArtifact(&artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }

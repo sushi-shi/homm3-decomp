@@ -147,7 +147,7 @@ type_event_record* type_record_move_hero::create()
 
 // E:\gamedcs\event_record.cpp:116
 VA(0x0049a680, 0x6)  // anchor-vtable, dc 0x8c7e8
-type_event_record_type type_record_move_hero::getType()
+type_event_record_type type_record_move_hero::getType() const
 {
     return RECORD_MOVE_HERO;
 }
@@ -282,7 +282,7 @@ type_event_record* type_record_teleport::create()
 
 // E:\gamedcs\event_record.cpp:219
 VA(0x0049a9b0, 0x6)  // anchor-vtable, dc 0x8caec
-type_event_record_type type_record_teleport::getType()
+type_event_record_type type_record_teleport::getType() const
 {
     return RECORD_TELEPORT;
 }
@@ -522,7 +522,7 @@ type_event_record* type_record_hide_boat::create()
 
 // E:\gamedcs\event_record.cpp:392
 VA(0x0049acf0, 0x6)  // anchor-vtable, dc 0x8ced8
-type_event_record_type type_record_hide_boat::getType()
+type_event_record_type type_record_hide_boat::getType() const
 {
     return RECORD_HIDE_BOAT;
 }
@@ -661,7 +661,7 @@ type_event_record* type_record_show_boat::create()
 
 // E:\gamedcs\event_record.cpp:466
 VA(0x0049af30, 0x6)  // anchor-vtable, dc 0x8d06c
-type_event_record_type type_record_show_boat::getType()
+type_event_record_type type_record_show_boat::getType() const
 {
     return RECORD_SHOW_BOAT;
 }
@@ -766,7 +766,7 @@ type_event_record* type_record_erase::create()
 
 // E:\gamedcs\event_record.cpp:552
 VA(0x0049b180, 0x6)  // anchor-vtable, dc 0x8d2b8
-type_event_record_type type_record_erase::getType()
+type_event_record_type type_record_erase::getType() const
 {
     return RECORD_ERASE;
 }
@@ -1131,7 +1131,7 @@ type_event_record* type_record_player_death::create()
 
 // E:\gamedcs\event_record.cpp:858
 VA(0x0049ba30, 0x6)  // anchor-vtable, dc 0x8dae8
-type_event_record_type type_record_player_death::getType()
+type_event_record_type type_record_player_death::getType() const
 {
     return RECORD_PLAYER_DEATH;
 }
@@ -1216,7 +1216,7 @@ type_event_record* type_record_shroud::create()
 
 // E:\gamedcs\event_record.cpp:927
 VA(0x0049bc80, 0x6)  // anchor-vtable, dc 0x8dcd4
-type_event_record_type type_record_shroud::getType()
+type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }

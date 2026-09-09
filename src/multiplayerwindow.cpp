@@ -390,22 +390,12 @@ DATA(0x006a7788) char* g_searchAddressHelp;
 
 
 
-// The text-entry widgets the two multiplayer dialogs use. All three add the
-// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
-// dialog can chase focus around its field ring; the hierarchy is proven by
-// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
-// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
-//
-// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
-// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
-// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
-// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
-// constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
-// CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
-// OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
-// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
-// OnKeyPress(15). Only the constructors and the two inline setters are
-// reached from this TU; the override bodies live in their own carve rows.
+// CMPEdit owns the focus-ring links and navigation slots shared by the
+// multiplayer and hot-seat edits. Retail tables 0x640184/0x640130/0x640210
+// share SetFocus (0x510890), OnNextEdit (0x510850), and OnPrevEdit (0x510870).
+// DC CHotSeatEdit::OnKeyPress calls CMPEdit::OnKeyPress directly at line 861.
+// Different constructor expansion in CMPInputDlg and CHotSeatDlg does not
+// establish different base classes; keep the common base and its real calls.
 class CMPEdit : public textEntryWidget {
 public:
     CMPEdit* m_nextEdit;   // +0x70
@@ -416,9 +406,11 @@ public:
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
     // Original: CMPEdit::SetNextEdit; multiplayerwindow.cpp:269, dc 0x1020b4.
-    void setNextEdit(CMPEdit* m_nextEdit) { m_nextEdit = m_nextEdit; }
+    // DC 0x1020b8 stores the argument at this+0x70.
+    void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
     // Original: CMPEdit::SetPrevEdit; multiplayerwindow.cpp:274, dc 0x1020bc.
-    void setPrevEdit(CMPEdit* m_prevEdit) { m_prevEdit = m_prevEdit; }
+    // DC 0x1020c0 stores the argument at this+0x74.
+    void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
     virtual void setFocus(unsigned char state);  // slot 14, retail 0x510890
     virtual int onKeyPress(message* msg);        // slot 15, retail 0x5107d0
     // DECLARATION ORDER CORRECTED 2026-09-06 (claim lane 31): retail's own
@@ -448,6 +440,29 @@ public:
     {
     }
     virtual int onKeyPress(message* msg);         // slot 15, retail 0x50de50
+};
+
+// This dialog-specific edit stays with the private CMPEdit hierarchy.
+// Its retained CodeView procedures are OnKillFocus and OnKeyPress below;
+// constructor source-line evidence is unavailable. DC CHotSeatDlg instead
+// constructs textWidget labels at dc 0x1029d8/0x102a10 (line 648). Complete
+// constructs 0x78-byte edit controls at 0x511fbb, installs vtable 0x640210
+// at 0x51201f and initializes their focus links at +0x70/+0x74. The added
+// constructor forwards the canonical CMPEdit interface in this local class.
+class CHotSeatEdit : public CMPEdit {
+public:
+    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : CMPEdit(x, y, w, h, textSize, text, fontName, color,
+                  justification, backgroundIcon, backgroundFrame, id,
+                  style, readType, insetX, insetY)
+    {
+    }
+    virtual void onKillFocus();
+    virtual int onKeyPress(message* msg);
 };
 
 // CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
@@ -636,32 +651,15 @@ void CHotSeatEdit::onKillFocus()
     static_cast<CHotSeatDlg*>(m_parentWindow)->onKillFocus(m_id);
 }
 
-// Retail gives this direct textEntryWidget-derived class the same ring layout
-// and byte-identical walk bodies as CMPEdit; /OPT:ICF folds them onto the
-// canonical CMPEdit entries used by vtable 0x640210.
-void CHotSeatEdit::onNextEdit()
-{
-    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
-        m_parentWindow->setFocus(m_nextEdit->m_id);
-}
-
-void CHotSeatEdit::onPrevEdit()
-{
-    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
-        m_parentWindow->setFocus(m_prevEdit->m_id);
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:860 - promoted from DC_ONLY. Slot 15 of
 // vtable 0x640210. DC explicitly attributes the reused handler to
 // CMPEdit::OnKeyPress, then calls UpdateOK and DrawWindow. The two edit classes
-// have the same base and ring layout, while retail constructor codegen proves
-// CHotSeatEdit is not derived from CMPEdit, so preserve that qualified reuse
-// through the original layout-compatible cast.
+// share CMPEdit's ring layout and inherited navigation slots. Preserve the
+// qualified base call instead of casting between unrelated class copies.
 VA(0x0050df60, 0xEE)  // anchor-vtable (slot 15 of 0x640210), dc 0xffb0c
 int CHotSeatEdit::onKeyPress(message* msg)
 {
-    int handled = static_cast<CMPEdit*>(static_cast<void*>(this))
-                      ->CMPEdit::onKeyPress(msg);
+    int handled = CMPEdit::onKeyPress(msg);
 
     static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
     static_cast<CHotSeatDlg*>(m_parentWindow)->drawWindow(1, 0xffff0001,

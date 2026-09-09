@@ -52,9 +52,9 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 // The return type is INT, not the Dreamcast roster's unsigned char: retail
 // materializes the two results as `mov eax,1` / `xor eax,eax` (an unsigned
 // char return is `mov al,1` / `xor al,al` - IsSiegeWeapon right below is the
-// exact control). Its hill-fort caller still tests only AL because the
-// wrapper it is inlined into returns unsigned char, which is what truncates
-// the value at the call site.
+// exact control). Its hill-fort callers still test only AL, preserved by
+// their explicit unsigned-char conversion. That test does not establish the
+// CanUpgradeCreature wrapper previously introduced in hillfortwindow.cpp.
 VA(0x0047b120, 0x5D)  // linkorder + anchor-callee (hill fort), dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {

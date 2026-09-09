@@ -10,7 +10,7 @@ import argparse
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 import csv
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
 from pathlib import Path
@@ -41,6 +41,12 @@ class Definition:
     argument_types: tuple[str, ...] = ()
     const: bool = False
     class_offset: int | None = None
+    variadic: bool = False
+    instance: str = ""
+    # Extra retained specializations share this one physical source body.
+    additional_instances: tuple[tuple[int, str, str], ...] = ()
+    return_type: str = ""
+    inline_origin: tuple[int, int] = ()
 
 
 @dataclass(frozen=True)
@@ -56,6 +62,7 @@ class Origin:
     generated: bool = False
     declaration_only: bool = False
     type_index: int = 0
+    return_type: str = ""
 
 
 def source_file(path: str) -> str:
@@ -86,7 +93,7 @@ def read_dc(root: Path = ROOT, *, include_declarations: bool = False) -> list[Or
             arguments = None
             const = False
             if function.get('kind') == 'function':
-                arguments = tuple(types.declaration(t) for t in
+                arguments = tuple('...' if t == 0 else types.declaration(t) for t in
                                   types.get(function['arguments']).get('types', []))
                 this = types.get(function.get('this', 0))
                 if this['kind'] == 'pointer':
@@ -94,7 +101,9 @@ def read_dc(root: Path = ROOT, *, include_declarations: bool = False) -> list[Or
             origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
                                   int(r['params'] or 0), r['module'], r['offset'],
                                   arguments, const, bool(proc and
-                                      (family_name(proc.name), proc.type_index) in generated)))
+                                      (family_name(proc.name), proc.type_index) in generated),
+                                  return_type=(types.declaration(function['returns'])
+                                               if 'returns' in function else '')))
     if include_declarations:
         origins.extend(declaration_origins(types, origins))
     return origins
@@ -129,7 +138,7 @@ def declaration_origins(types, procedures: list[Origin]) -> list[Origin]:
         function = types.get(method['type'])
         if function.get('kind') != 'function':
             continue
-        arguments = tuple(types.declaration(t) for t in
+        arguments = tuple('...' if t == 0 else types.declaration(t) for t in
                           types.get(function['arguments']).get('types', []))
         this = types.get(function.get('this', 0))
         const = (this.get('kind') == 'pointer' and
@@ -140,7 +149,8 @@ def declaration_origins(types, procedures: list[Origin]) -> list[Origin]:
             continue
         seen.add(key)
         result.append(Origin('', name, 0, len(arguments), '', '', arguments,
-                             const, generated, True, method['type']))
+                             const, generated, True, method['type'],
+                             types.declaration(function['returns']) if 'returns' in function else ''))
     return result
 
 
@@ -212,7 +222,7 @@ def reference_stubs_only(raw: str) -> bool:
     return not remaining.strip()
 
 
-def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
+def attached_prefix(raw: str, start: int) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
     line_start = raw.rfind('\n', 0, start) + 1
@@ -224,6 +234,11 @@ def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
             break
         prefix.append(line)
     prefix.reverse()
+    return prefix
+
+
+def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
+    prefix = attached_prefix(raw, start)
     origin_file, origin_line, dc_offset = '', 0, ''
     for line in prefix:
         renamed = re.fullmatch(
@@ -240,6 +255,69 @@ def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
         if offsets and line.lstrip().startswith('VA('):
             dc_offset = hex(int(offsets[-1], 16))
     return origin_file, origin_line, dc_offset
+
+
+def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
+    """An explicit review binds a field-list type to a positive inline row."""
+    rows = [line.strip() for line in attached_prefix(raw, start)
+            if '@dc-inline-origin:' in line]
+    if not rows:
+        return (), False
+    match = re.fullmatch(r'//\s*@dc-inline-origin:\s*(0x[0-9a-fA-F]+)\s+'
+                         r'(0x[0-9a-fA-F]+)', rows[0])
+    if len(rows) != 1 or not match:
+        return (), True
+    return (int(match.group(1), 16), int(match.group(2), 16)), False
+
+
+def inline_origins(definitions: list[Definition], origins: list[Origin], symbols):
+    """Validate reviewed inline source rows without borrowing procedure lines.
+
+    CodeView's foreign-header rows prove location, while the exact field-list
+    type pins the reviewed overload. The attached evidence comment must explain
+    the instructions establishing that semantic binding, just as for a VA.
+    """
+    result, errors, bound = [], [], set()
+    for d in definitions:
+        if not d.inline_origin:
+            continue
+        where = f'{d.file}:{d.line} {d.name}'
+        if len(d.inline_origin) != 2:
+            errors.append(f'INLINE_ORIGIN {where}: expected a type and an inline address')
+            continue
+        type_index, address = d.inline_origin
+        candidates = [o for o in origins if o.declaration_only and not o.generated
+                      and o.type_index == type_index
+                      and procedure_name(o.name) == procedure_name(d.name)]
+        if len(candidates) != 1 or not d.inline or not d.member:
+            errors.append(f'INLINE_ORIGIN {where}: type must identify this unlocated inline member')
+            continue
+        declaration = candidates[0]
+        key = (procedure_name(declaration.name), type_index)
+        if key in bound:
+            errors.append(f'INLINE_ORIGIN {where}: duplicate body for one CodeView declaration')
+            continue
+        bound.add(key)
+        rows = {(module, source_file(file), line)
+                for module, lines in symbols.source_lines.items()
+                for file, line, offset in lines if offset == address}
+        callers = [(start, proc) for start, proc in symbols.procedures.items()
+                   if start < address < start + proc.size]
+        if len(rows) != 1 or len(callers) != 1:
+            errors.append(f'INLINE_ORIGIN {where}: address needs one source row inside a caller')
+            continue
+        module, file, line = next(iter(rows))
+        start, caller = callers[0]
+        caller_origins = [o for o in origins if o.offset == hex(start)
+                          and o.module == module and not o.declaration_only]
+        if (caller.module != module or not caller_origins
+                or any(o.file == file for o in caller_origins)
+                or Path(file).suffix not in {'.h', '.hpp', '.inl'}):
+            errors.append(f'INLINE_ORIGIN {where}: row must attribute a foreign header in that caller')
+            continue
+        result.append(replace(declaration, file=file, line=line, module=module,
+                              offset=hex(address), declaration_only=False))
+    return result, errors
 
 
 def _qualified(cursor, kinds) -> str:
@@ -282,6 +360,133 @@ def declaration_name(cursor) -> str:
             dispose(names)
 
 
+def instance_annotations(raw: str, start: int, declaration: int):
+    """Pair each selector comment with its following VA on this declaration."""
+    from homm3.retail_labels import source
+    beginning = raw.rfind('\n', 0, start) + 1
+    for line in reversed(raw[:beginning].splitlines(keepends=True)):
+        stripped = line.strip()
+        if stripped and not stripped.startswith(('//', 'VA(')):
+            break
+        beginning -= len(line)
+    attached = raw[beginning:declaration]
+    hints = [(m.start(), 'hint', m.group(1)) for m in re.finditer(
+        r'(?m)^[ \t]*//\s*VA instance:[ \t]*(.*?)[ \t]*$', attached)]
+    if not hints:
+        return [], False
+    masked = source.mask_lexical_noise(attached)
+    annotations = [(pos, 'va', int(args[0].strip(), 16))
+                   for pos, end, args, _ in source.macro_invocations(
+                       masked, source.MACRO_HEADS['VA'][0], attached)
+                   if end is not None and len(args) == 2]
+    pending, paired = [], []
+    invalid = False
+    for _pos, kind, value in sorted(hints + annotations):
+        if kind == 'hint':
+            pending.append(value)
+        else:
+            if len(pending) != 1 or not pending[0]:
+                invalid = True
+            else:
+                paired.append((value, pending[0]))
+            pending = []
+    invalid |= bool(pending)
+    invalid |= len({va for va, _ in paired}) != len(paired)
+    invalid |= len({selector for _, selector in paired}) != len(paired)
+    return paired, invalid
+
+
+def claim_definitions(definitions):
+    """Expand retained claims without counting template bodies more than once."""
+    for d in definitions:
+        yield d
+        for va, selector, mangled in getattr(d, 'additional_instances', ()):
+            yield replace(d, va=va, instance=selector, mangled=mangled,
+                          additional_instances=())
+
+
+def resolve_instances(definitions, requests, unit, root, args):
+    """Resolve selected member names in an unsaved AST-only probe.
+
+    The probe is never compiled or written to project source. Its reference
+    must point back to the annotated generic declaration's exact physical
+    token, so a sibling member or explicit specialization cannot steal a VA.
+    """
+    from clang import cindex
+    kinds = cindex.CursorKind
+    probes = []
+    expected = {}
+    errors = []
+    for index, token_offset in requests:
+        d = definitions[index]
+        owner, separator, member = d.instance.rpartition('::')
+        if (not separator or '<' not in owner
+                or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
+                or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\))', member)):
+            errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid class-member selector {d.instance!r}')
+            continue
+        name = f'__homm3_va_instance_{index}'
+        if member.startswith('~'):
+            # A destructor cannot have its address taken. A never-executed
+            # initializer expression supplies the same declaration identity.
+            alias = name + '_type'
+            probes.append(f'typedef {owner} {alias};\n'
+                          f'int {name} = ((({owner}*)0)->~{alias}(), 0);')
+        else:
+            probes.append(f'auto {name} = &{d.instance};')
+        expected[name] = (index, token_offset)
+    if not probes:
+        return definitions, errors
+    path = root / unit['source']
+    original = path.read_text()
+    probe = original + '\n' + '\n'.join(probes) + '\n'
+    tu = cindex.Index.create().parse(
+        str(path), args=[*args, '-fno-access-control'],
+        unsaved_files=[(str(path), probe)],
+        options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+    failures = [str(d) for d in tu.diagnostics
+                if d.severity >= cindex.Diagnostic.Error]
+    if failures:
+        return definitions, errors + [f'INSTANCE {unit["source"]}: {d}' for d in failures]
+    callable_kinds = {kinds.CXX_METHOD, kinds.DESTRUCTOR, kinds.FUNCTION_DECL}
+    def references(cursor):
+        found = {}
+        ref = cursor.referenced
+        if ref and ref.kind in callable_kinds:
+            found[(ref.location.file.name if ref.location.file else '',
+                   ref.location.offset, declaration_name(ref))] = ref
+        for child in cursor.get_children():
+            found.update(references(child))
+        return found
+    seen = set()
+    for cursor in tu.cursor.get_children():
+        if cursor.kind != kinds.VAR_DECL or cursor.spelling not in expected:
+            continue
+        seen.add(cursor.spelling)
+        index, offset = expected[cursor.spelling]
+        d = definitions[index]
+        targets = references(cursor)
+        if len(targets) != 1:
+            errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} does not identify one member')
+            continue
+        (file, target_offset, mangled), ref = next(iter(targets.items()))
+        if file != str(root / d.file) or target_offset != offset or not mangled:
+            errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} does not name the annotated definition')
+            continue
+        # Check the destructor spelling too: the alias expression above
+        # identifies the owner's destructor, not an arbitrary trailing name.
+        if d.instance.rpartition('::')[2].startswith('~'):
+            selected = d.instance.rpartition('::')[2]
+            if selected != ref.spelling.split('<', 1)[0]:
+                errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid destructor selector {d.instance!r}')
+                continue
+        definitions[index] = replace(d, mangled=mangled)
+    for name in expected.keys() - seen:
+        d = definitions[expected[name][0]]
+        errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} was not resolved')
+    return definitions, errors
+
+
 def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str], list[str]]:
     """Fail visibly on parse errors; never turn an unreadable TU into no bodies."""
     from clang import cindex
@@ -292,7 +497,12 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     is_inlined.restype = ctypes.c_uint
     function_kinds = {k.FUNCTION_DECL, k.CXX_METHOD, k.CONSTRUCTOR,
                       k.DESTRUCTOR, k.FUNCTION_TEMPLATE, k.CONVERSION_FUNCTION}
-    args = ['--driver-mode=cl', '/TP', *clang.FLAGS, '-imsvc', str(clang.mirror()),
+    # Inventory the matching compiler's project branches, including written
+    # definitions hidden from the editor behind !defined(__clang__). Keep
+    # annotations available through va.h without selecting editor-only code.
+    args = ['--driver-mode=cl', '/TP', *clang.FLAGS, '-U__clang__',
+            '-D_MSC_VER=' + clang.MSC_VER, '-DHOMM3_SOURCE_OWNERSHIP',
+            '-imsvc', str(clang.mirror()),
             '/I' + str(root / 'include'), '/I' + str(root / 'vendor/zlib-1.1.3')]
     tu = cindex.Index.create().parse(
         str(root / unit['source']), args=args,
@@ -304,6 +514,8 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
     errors = [f"PARSE {unit['source']}: {d}" for d in tu.diagnostics
               if d.severity >= cindex.Diagnostic.Error]
     definitions = []
+    instance_requests = []
+    instance_groups = []
     reached = set()
 
     def visit(cursor):
@@ -357,22 +569,59 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
             while parent.kind in {k.CLASS_DECL, k.STRUCT_DECL, k.UNION_DECL, k.CLASS_TEMPLATE}:
                 class_offset = char_offset(parent.extent.start.offset)
                 parent = parent.lexical_parent
+            instances, invalid = instance_annotations(
+                raw_texts[relative], char_offset(cursor.extent.start.offset),
+                char_offset(cursor.location.offset))
+            if invalid or (instances and Counter(va for va, _ in instances) != Counter(vas)):
+                errors.append(f'INSTANCE {relative}:{loc.line}: each selector must accompany one distinct VA annotation')
+                instances = []
+            elif len(vas) > 1 and not instances:
+                errors.append(f'INSTANCE {relative}:{loc.line}: multiple VA annotations require concrete selectors')
+            inline_origin, invalid = inline_origin_hint(
+                raw_texts[relative], char_offset(cursor.extent.start.offset))
+            if invalid:
+                errors.append(f'INLINE_ORIGIN {relative}:{loc.line}: malformed or repeated annotation')
+            first = len(definitions)
             definitions.append(Definition(
                 relative, loc.line, char_offset(cursor.extent.start.offset),
                 closing + 1, _qualified(cursor, k),
                 re.sub(r'\s+noexcept\b', '', cursor.type.spelling),
                 sum(c.kind == k.PARM_DECL for c in cursor.get_children()),
                 member, bool(is_inlined(cursor)),
-                vas[0] if len(vas) == 1 else None, declaration_name(cursor),
+                instances[0][0] if instances else (vas[0] if len(vas) == 1 else None),
+                declaration_name(cursor),
                 *origin_hint(raw_texts[relative], char_offset(cursor.location.offset)),
                 tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
                 cursor.is_const_method() if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False,
-                class_offset))
+                class_offset, cursor.type.is_function_variadic(),
+                instances[0][1] if instances else "",
+                return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
+                             else cursor.result_type.spelling),
+                inline_origin=inline_origin))
+            if instances:
+                instance_requests.append((first, cursor.location.offset))
+                extras = []
+                for va, selector in instances[1:]:
+                    extras.append(len(definitions))
+                    instance_requests.append((len(definitions), cursor.location.offset))
+                    definitions.append(replace(definitions[first], va=va, instance=selector))
+                instance_groups.append((first, extras))
             return  # locals/calls are not definitions in another source file
         for child in cursor.get_children():
             visit(child)
 
     visit(tu.cursor)
+    if instance_requests:
+        definitions, failures = resolve_instances(
+            definitions, instance_requests, unit, root, args)
+        errors.extend(failures)
+        extra_indices = set()
+        for first, extras in instance_groups:
+            definitions[first] = replace(definitions[first], additional_instances=tuple(
+                (definitions[i].va, definitions[i].instance, definitions[i].mangled)
+                for i in extras))
+            extra_indices.update(extras)
+        definitions = [d for i, d in enumerate(definitions) if i not in extra_indices]
     return definitions, errors, sorted(reached)
 
 
@@ -446,7 +695,14 @@ def read_filter(path: Path, fields: tuple[str, ...]):
 
 
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict) -> tuple[list[str], dict]:
+            win_only: dict, *, symbols=None) -> tuple[list[str], dict]:
+    inline_errors = []
+    if any(d.inline_origin for d in definitions):
+        if symbols is None:
+            from homm3.core import inputs
+            symbols = inputs.dreamcast_symbols()
+        recovered, inline_errors = inline_origins(definitions, origins, symbols)
+        origins = [*origins, *recovered]
     by_name = defaultdict(list)
     dc_keys = set()
     for o in origins:
@@ -455,7 +711,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             dc_keys.add(key)
         if key not in dc_only:
             by_name[procedure_name(o.name)].append(o)
-    errors = [f'FILTER stale dc_only.tsv entry {key}' for key in dc_only if key not in dc_keys]
+    errors = inline_errors + [f'FILTER stale dc_only.tsv entry {key}'
+                              for key in dc_only if key not in dc_keys]
     used_win = set()
     matches = []
     bindings = {}
@@ -464,32 +721,38 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         where = f'{d.file}:{d.line} {d.name}'
         key = (d.file, d.name, d.signature)
         candidates = by_name.get(procedure_name(d.name), [])
-        explicit_identity = False
         if d.dc_offset:
             bridged = [o for o in origins if o.offset == d.dc_offset
                        and (o.file, o.name, str(o.line)) not in dc_only]
             if bridged:
                 candidates = bridged
-                explicit_identity = True
         if d.origin_file and d.origin_line:
             narrowed = [o for o in candidates if o.file == d.origin_file
                         and o.line == d.origin_line]
             if narrowed:
                 candidates = narrowed
-                explicit_identity = True
         # Formal CodeView types exclude hidden ABI arguments and survive when
         # optimized debug variable records omit unused source parameters.
+        # An origin hint selects a counterpart; it cannot waive the formal
+        # signature check. A reviewed platform overload belongs in the exact
+        # Windows-only filter, including when its source comment names DC.
+        # CodeView terminates variadic LF_ARGLIST records with T_NOTYPE (0),
+        # rendered as an ellipsis. Clang's PARM_DECLs count only fixed arguments;
+        # retain the ellipsis separately so removing it cannot pass this gate.
         narrowed = [o for o in candidates if o.argument_types is not None
-                    and len(o.argument_types) == d.parameters and o.const == d.const]
+                    and len(o.argument_types) - (o.argument_types[-1:] == ('...',)) == d.parameters
+                    and (o.argument_types[-1:] == ('...',)) == d.variadic
+                    and o.const == d.const]
         signature_mismatch = []
         if narrowed:
             candidates = narrowed
-        elif not explicit_identity:
+        else:
             signature_mismatch = [o for o in candidates if o.argument_types is not None]
             candidates = [o for o in candidates if o.argument_types is None]
+        definition_arguments = tuple(d.argument_types) + (('...',) if d.variadic else ())
         narrowed = [o for o in candidates if o.argument_types is not None
                     and tuple(type_identity(t) for t in o.argument_types)
-                    == tuple(type_identity(t) for t in d.argument_types)]
+                    == tuple(type_identity(t) for t in definition_arguments)]
         if not narrowed:
             # Template definitions have T where CV records a concrete class
             # instantiation. Keep the containing type and its qualifiers:
@@ -497,7 +760,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             # T* cannot borrow that declaration's identity.
             narrowed = [o for o in candidates if o.argument_types is not None
                         and tuple(type_identity(family_name(t)) for t in o.argument_types)
-                        == tuple(type_identity(family_name(t)) for t in d.argument_types)]
+                        == tuple(type_identity(family_name(t)) for t in definition_arguments)]
         if narrowed:
             candidates = narrowed
         elif any(not o.declaration_only for o in candidates):
@@ -508,7 +771,17 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         written = [o for o in candidates if not o.generated]
         if key in win_only:
             used_win.add(key)
-            if written:
+            # A declaration without a source body is not a Windows-only
+            # exemption. A reviewed, different return interface is distinct:
+            # e.g. Complete's pointer-changed result vs DC's void declaration.
+            # Require both parsed return types; old/partial inventories cannot
+            # authorize this distinction. An emitted DC body still needs its
+            # proper owner rather than this declaration-only exception.
+            changed_return = (written and d.return_type
+                              and all(o.declaration_only and o.return_type
+                                      and type_identity(o.return_type) != type_identity(d.return_type)
+                                      for o in written))
+            if written and not changed_return:
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
             else:
                 counts['win_only'] += 1
@@ -520,7 +793,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                                + (' const' if o.const else '')
                                for o in signature_mismatch})
             errors.append(f'SIGNATURE {where} [{d.signature}]: no matching CodeView '
-                          'formal arity/constness; review overload identity or the '
+                          'formal arity/constness/ellipsis; review overload identity or the '
                           'platform signature change against ' + '; '.join(expected))
             counts['signature'] += 1
             continue
@@ -610,8 +883,8 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     claims = all_claims()
     errors.extend(header_claim_ownership(definitions, claims))
     errors.extend(claim_identity(definitions, claims))
-    errors.extend(compgen_identity(claims))
-    return dict(definitions=len(definitions), counts=counts, violations=errors, reached=reached)
+    return dict(definitions=len(definitions), counts=counts, violations=errors,
+                unpaired_generated_claims=unpaired_generated_claims(claims), reached=reached)
 
 
 def header_claim_ownership(definitions: list[Definition], claims) -> list[str]:
@@ -621,7 +894,7 @@ def header_claim_ownership(definitions: list[Definition], claims) -> list[str]:
         if claim.kind == 'func' and claim.channel.startswith('src-VA'):
             by_name[claim.name].add(claim.rva + common.IMAGE_BASE)
     errors = []
-    for d in definitions:
+    for d in claim_definitions(definitions):
         if not d.file.startswith('include/') or not d.mangled:
             continue
         addresses = by_name.get(d.mangled, set())
@@ -633,25 +906,29 @@ def header_claim_ownership(definitions: list[Definition], claims) -> list[str]:
 
 def claim_identity(definitions: list[Definition], claims) -> list[str]:
     """Retaining an RVA under a raw placeholder is not retaining its identity."""
+    from homm3.retail_labels.source import vc6_function_name
     by_address = defaultdict(set)
     for claim in claims:
         if claim.kind == 'func':
             by_address[claim.rva + common.IMAGE_BASE].add(claim.name)
     return [f'CLAIM_IDENTITY {d.file}:{d.line} {d.name}: {hex(d.va)} must name '
             f'{d.mangled!r}, extracted {sorted(by_address[d.va])!r}'
-            for d in definitions if d.va is not None and d.mangled
-            and d.mangled not in by_address[d.va]]
+            for d in claim_definitions(definitions) if d.va is not None and d.mangled
+            and vc6_function_name(d.mangled, by_address[d.va], Path(d.file).stem) is None]
 
 
-def compgen_identity(claims) -> list[str]:
-    """Generated-member enrollment must bind an actual VC6-emitted symbol.
+def unpaired_generated_claims(claims) -> list[str]:
+    """Report code-emission debt separately from written-source ownership.
 
-    Anonymous initialization thunks acquire synthetic names deliberately.
-    Other VA_COMPGEN kinds join a pre-existing public; retaining their raw
-    enrollment name means no public was paired, even if the RVA survived.
+    A library/implicit body may stop emitting after its callers change. Its
+    source enrollment still identifies the retained retail body; do not force
+    instantiation just to pass an ownership check. A written body has a direct
+    VA obligation checked above and cannot borrow this generated enrollment.
+    Anonymous initialization thunks acquire synthetic names deliberately and
+    do not expect a named public.
     """
     from homm3.retail_labels.source import ANONYMOUS_COMPGEN_KINDS
-    return [f'CLAIM_COMPGEN {c.unit}: {hex(c.rva + common.IMAGE_BASE)} '
+    return [f'{c.unit}: {hex(c.rva + common.IMAGE_BASE)} '
             f'{c.meta["ckind"]} {c.meta.get("owner", "")}: '
             'no VC6 function paired with the source enrollment'
             for c in claims if c.kind == 'func'
@@ -664,6 +941,9 @@ def run_gate() -> list[str]:
     result = audit()
     print(f"[build] source-ownership: {result['definitions']} canonical definitions; "
           f"{len(result['violations'])} violations")
+    if result['unpaired_generated_claims']:
+        print(f"[build] {len(result['unpaired_generated_claims'])} generated enrollments "
+              "have no paired compiler body (code-emission debt)")
     return result['violations']
 
 

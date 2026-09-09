@@ -36,21 +36,11 @@ DATA(0x006a3d08) static int g_unnamed6a3d08;
 DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
-// Reset has four DC calls to includes.h limit (0x1ef5c), one around
-// each morale/luck value. Its canonical definition is in homm3_limit.h.
+// The shared includes.h helper is named by Reset's four Dreamcast xrefs
+// (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
+// selects one of the argument addresses, matching the reference-returning
+// template independently proved by the other TUs.
 
-// Before normalization (function): text_pointer_payload.
-inline int textPointerPayload(char* text)
-{
-    union {
-        // Before normalization: pointer.
-        char* m_pointer;
-        // Before normalization: payload.
-        int m_payload;
-    } converted;
-    converted.m_pointer = text;
-    return converted.m_payload;
-}
 
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
@@ -1156,21 +1146,32 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         && m_heroes[hero]->heroFn004E2840(
                g_heroScreenDraggedArtifact.m_artifactId, slot))
     {
+        union {
+            int m_integer;
+            TArtifact m_artifact;
+        } converted;
+        converted.m_integer = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
-            artifactFromInt(artifact));
+            converted.m_artifact);
+        converted.m_integer = 0x90;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifactFromInt(0x90));
+            converted.m_artifact);
     }
     else
     {
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
+        union {
+            int m_integer;
+            TArtifact m_artifact;
+        } converted;
+        converted.m_integer = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifactFromInt(artifact));
+            converted.m_artifact);
     }
 }
 
@@ -1475,8 +1476,8 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
         if (!ourHero->addToBackpack(&g_heroScreenDraggedArtifact, id)) {
             normalDialog(
                 ourHero
-                    ->getBackpackError(artifactFromInt(
-                        g_heroScreenDraggedArtifact.m_artifactId))
+                    ->getBackpackError(
+                        g_heroScreenDraggedArtifact.m_artifactId)
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
@@ -2230,8 +2231,15 @@ void swapManager::setRolloverText(int codeY)
         break;
     }
 
-    m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                             0x7b, textPointerPayload(g_text));
+    {
+        union {
+            char* m_pointer;
+            int m_payload;
+        } converted;
+        converted.m_pointer = g_text;
+        m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                 0x7b, converted.m_payload);
+    }
     m_parent->drawWindow(0, 0x7a, 0x7b);
     g_windowManager->updateScreen(4, 0x242, 0x2d4, 0x12);
 }

@@ -81,8 +81,8 @@ public:
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Before normalization (function): button::Select.
     int select(message* msg);
-    // Before normalization (function): button::DeselectSelected.
-    int deselectSelected(message* msg);
+    // Original: button::Deselect; button.cpp:401, dc 0x57854.
+    int deselect(message& msg);
 
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
@@ -125,20 +125,12 @@ public:
     // Before normalization (function): button::clear_hotkeys.
     void clearHotkeys() { m_hotKeyCodes.clear(); }
 
-    // Complete-only, like field_40 itself (the hover/highlight frame,
-    // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
-    // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
-    // vector<widget*>::insert sequence needs exactly two free candidate
-    // sites per loop iteration, and the loop body has exactly two stores.
-    // Before normalization (function): button::set_highlight_frame.
-    void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
-
     // Before normalization (function): button::Main.
     virtual int main(message* msg);  // slot 2, retail 0x456190
 
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): button::Draw.
-    virtual void draw();  // slot 4, retail 0x456940
+    virtual void draw() const;  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0
 
@@ -165,7 +157,7 @@ public:
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
 
     // Before normalization (function): textButton::Draw.
-    virtual void draw();    // slot 4, retail 0x456ca0
+    virtual void draw() const;    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 };

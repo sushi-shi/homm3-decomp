@@ -383,6 +383,8 @@ public:
     void updateTownLocator(int i);
     // Before normalization (function): TTownScreenWindow::UpdateTownLocators.
     void updateTownLocators();
+    void doTownKnob(unsigned char up);
+    void bonusRightClick(long id);
     // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
     // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
     // only caller in the image and hands it the town being shown.
@@ -1109,7 +1111,9 @@ public:
     // player's eight-hero count before doing so. DoCommand is its only
     // caller in the whole image, and retail still emits it out of line.
     // Before normalization (function): townManager::MoveHeroFromGarrison.
+    void moveHeroToGarrison();
     void moveHeroFromGarrison();
+    void drawTown(int update, int incFrame, unsigned char drawHotspots);
     // Retail 0x5d4c10 (dc 0x176634). The town page's command dispatch.
     // Before normalization (function): townManager::DoCommand.
     void doCommand(int inCommand, unsigned char isGarrison,

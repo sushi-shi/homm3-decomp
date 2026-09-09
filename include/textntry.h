@@ -115,7 +115,7 @@ public:
     // Before normalization (function): textEntryWidget::Main.
     virtual int main(message* msg);              // slot 2, retail 0x5bb150
     // Before normalization (function): textEntryWidget::Draw.
-    virtual void draw();                         // slot 4, retail 0x5bb400
+    virtual void draw() const;                         // slot 4, retail 0x5bb400
     // Before normalization (function): textEntryWidget::OnSetFocus.
     virtual void onSetFocus();                   // slot 10, retail 0x5bba50
     // Before normalization (function): textEntryWidget::OnKillFocus.

@@ -1577,14 +1577,14 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // return value, leaving the guard, scalar delete and two field clears. The
 // VC6 header-inline destructor emits that body as the ??1CDPlayMsg COMDAT.
 
-// TRuntimeError's message-carrying constructor - the one body of the game's
-// own exception family that lives in THIS compiland's span, and the callee
-// every `throw TAllocationFailure()` site reaches (objnames' 0x41b500
-// expands the derived body around a call to it; gzinflatebuf keeps its own
-// 0x4d6b80 COMDAT and calls it three times).
+// TRuntimeError's retained message constructor sits after the DxPlay family.
+// The physical dxplay.cpp allocation follows that retail band; RTTI proves
+// the class name, while the original Windows source filename is unknown.
+// Objnames' 0x41b500 expands the derived allocation-error initialization
+// around a call here; gzinflatebuf retains and calls 0x4d6b80.
 //
-// The body is the base list and nothing else. TDebugBreak is an empty base
-// with an empty inline constructor, so it emits nothing at all; the
+// The body is the base list. RTTI proves the empty TDebugBreak base;
+// its canonical empty default constructor is visible in exceptions.h. The
 // `std::string(text)` temporary is built in place (strlen, `_Grow`, the
 // `rep movsd` copy) and handed to std::runtime_error, whose constructor VC6
 // expands here - the member string's allocator byte plus three zero stores
@@ -1595,7 +1595,7 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // dead hidden-return slot a full-width pointer parameter leaves free.
 VA(0x0049a0c0, 0xF9)  // linkorder (dxplay span, after 0x49a020) + anchor-callee objnames 0x41b500 / gzinflatebuf 0x4d6b80, retail-only
 TRuntimeError::TRuntimeError(const char* text)
-    : TDebugBreak(text), std::runtime_error(std::string(text))
+    : std::runtime_error(std::string(text))
 {
 }
 

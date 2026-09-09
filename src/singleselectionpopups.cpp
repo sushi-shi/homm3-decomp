@@ -190,7 +190,7 @@ unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame
 // CSprite::Draw, whose header wrapper expands the dst->map/Width/Height/Pitch
 // reads inline.
 VA(0x00575750, 0x54)  // anchor-vtable CSpriteWidget vtbl 0x641a00 slot4 (Draw override), size = DC exact, dc 0x12f0c8
-void CSpriteWidget::draw()
+void CSpriteWidget::draw() const
 {
     m_sprite->draw(0, m_frame, 0, 0, m_width, m_height,
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
@@ -254,7 +254,7 @@ int CSpriteWidget::main(message* msg)
 // E:\gamedcs\singleselectionpopups.cpp:103 - slot 4 of vtable 0x641a34. Blits
 // the image at full size through the screen bitmap; no null guard on image.
 VA(0x00575a20, 0x3e)  // anchor-vtable CBitmapWidget vtbl 0x641a34 slot4 (Draw override), calls Bitmap816::Draw, dc 0x12f1fc
-void CBitmapWidget::draw()
+void CBitmapWidget::draw() const
 {
     m_image->draw(0, 0, m_image->m_width, m_image->m_height,
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,

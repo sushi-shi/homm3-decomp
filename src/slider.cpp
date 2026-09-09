@@ -471,7 +471,7 @@ void slider::zBufferDraw() {}
 
 // E:\gamedcs\slider.cpp:613
 VA(0x00596C40, 0x3D5)  // contiguous slider block, dc 0x14a6b0
-void slider::draw()
+void slider::draw() const
 {
     if (m_width > m_height) {
         if ((m_status & WIDGET_SELECTED) && m_clickX - m_x < m_knobStart) {

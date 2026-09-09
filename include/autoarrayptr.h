@@ -6,11 +6,11 @@ template<class T>
 class TAutoArrayPtr {
 public:
     TAutoArrayPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
-    TAutoArrayPtr(const TAutoArrayPtr& rhs)
-        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
-    {
-        rhs.m_owns = 0;
-    }
+    // CodeView 0x57b9 declares this ordinary copy constructor, but has no
+    // procedure/source location for its body. Current consumers construct
+    // directly from pointers; retain the declaration without guessing a
+    // transfer implementation from the other ownership operations.
+    TAutoArrayPtr(const TAutoArrayPtr& rhs);
     ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
 
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)

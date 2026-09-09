@@ -56,7 +56,7 @@ public:
     type_event_record();
     virtual ~type_event_record();
     // Before normalization (function): type_event_record::get_type.
-    virtual type_event_record_type getType() = 0;
+    virtual type_event_record_type getType() const = 0;
     virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
@@ -74,7 +74,7 @@ class type_record_move_hero : public type_event_record {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_move_hero::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -112,7 +112,7 @@ public:
 
     static type_event_record* create();
     // Before normalization (function): type_record_teleport::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
 };
 
@@ -123,7 +123,7 @@ class type_record_claim_mine : public type_event_record {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_claim_mine::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -151,7 +151,7 @@ public:
 
     static type_event_record* create();
     // Before normalization (function): type_record_claim_town::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 };
@@ -165,7 +165,7 @@ class type_record_hide_boat : public type_event_record {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_hide_boat::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -203,7 +203,7 @@ class type_record_show_boat : public type_record_hide_boat {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_show_boat::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -225,7 +225,7 @@ class type_record_erase : public type_event_record {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_erase::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -252,7 +252,7 @@ class type_record_hide_hero : public type_event_record {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_hide_hero::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -282,7 +282,7 @@ class type_record_show_hero : public type_record_hide_hero {
 public:
     static type_event_record* create();
     // Before normalization (function): type_record_show_hero::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -305,7 +305,7 @@ public:
 class type_record_player_death : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -329,7 +329,7 @@ public:
     static type_event_record* create();
 
     // Before normalization (function): type_record_shroud::get_type.
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;

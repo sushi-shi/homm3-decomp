@@ -102,35 +102,6 @@ DATA(0x00697788) int g_thisNetGotAdventureControl;
 
 // includes.h:134 supplies the shared limit calls below.
 
-// The objectIndex short is the shared creature-id lane; the union bridge
-// (events.cpp precedent) keeps the TCreatureType conversion cast-free and
-// VC6 reduces it to the move it already was.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
-// townmgr.cpp's building-id twin of the creature bridge.
-inline type_building_id buildingIdFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: building.
-        type_building_id m_building;
-    } storage;
-    storage.m_value = value;
-    return storage.m_building;
-}
-
-
 // The three text resources this compiland keeps alive for the rollover
 // tables below. Every reference to all three in the whole image is one of
 // the four stores in the two readers that follow (config/retail-reloc-
@@ -278,7 +249,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            systemMsg(&g_chatMan, g_generalText->getText(352),
+            g_chatMan.systemMsg(g_generalText->getText(352),
                       g_currentPlayer->m_name);
             g_unnamed69d810 = g_netLocalGamePos;
         }
@@ -393,7 +364,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             m_abortPopupMsg = netMsg;
             return 0;
         }
-        CTradeHeroesMsg* msg = static_cast<CTradeHeroesMsg*>(netMsg);
+        CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
         // Retail CALLS the compiler-generated ??4hero COMDAT at both
         // trade copies; unpinned, our /Ob2 expands the 0x492-byte
         // memberwise assign twice (100.00 -> 32.00). The pin replaces
@@ -402,16 +373,15 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         // recruitUnit::Update through the include-set wall (16 rows
         // returned to exact when it left).
 #pragma inline_depth(0)
-        g_game->m_heroes[msg->m_hero1.m_id] = msg->m_hero1;
-        g_game->m_heroes[msg->m_hero2.m_id] = msg->m_hero2;
+        g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
+        g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
 #pragma inline_depth()
-        g_advManager->heroSwap(&g_game->m_heroes[msg->m_hero1.m_id],
-                               &g_game->m_heroes[msg->m_hero2.m_id]);
+        g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
+                               &g_game->m_heroes[msg->m_right.m_id]);
         break;
     }
     case RS_PLAYER_ACTIVE:
-        systemMsg(
-            &g_chatMan, g_generalText->getText(40),
+        g_chatMan.systemMsg(g_generalText->getText(40),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -538,33 +508,37 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 }
 
 // E:\gamedcs\advmgr.cpp:713
+// The retained handler name receives RS_GIFT. Retail 0x406c2d reads
+// the donor at +0x14; 0x406cee/0x406cf1 and 0x406d5e/0x406d61 read
+// quantity/resource at +0x1c/+0x18, matching DC CGiftMsg, not the
+// two-hero CTradeRequestMsg. Former view fields: m_playerPos/m_amount.
 // Before normalization (locals): pNetMsg, pMsg.
 VA(0x00406bf0, 0x1FA)  // dc-bracket forced, dc 0x6428
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 {
-    CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
+    CGiftMsg* msg = static_cast<CGiftMsg*>(netMsg);
     std::string text;
-    if (g_game->m_players[msg->m_playerPos].isHuman()) {
+    if (g_game->m_players[msg->m_niceGuy].isHuman()) {
         text = formatString(
             g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_game->m_players[msg->m_playerPos].m_name);
+            g_game->m_players[msg->m_niceGuy].m_name);
     } else {
         text = formatString(
             g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_playerColorNames[msg->m_playerPos]);
+            g_playerColorNames[msg->m_niceGuy]);
     }
 
     std::vector<type_dialog_resource> resources;
     type_dialog_resource resource;
     resource.m_resource = msg->m_resource;
-    resource.m_qualifier = msg->m_amount;
+    resource.m_qualifier = msg->m_qty;
     resources.push_back(resource);
     extendedDialog(text.c_str(), resources, -1, -1, 15000);
     resources.clear();
 
     playerData* localPlayer = g_game->getLocalPlayer();
     if (localPlayer) {
-        localPlayer->m_resources[msg->m_resource] += msg->m_amount;
+        localPlayer->m_resources[msg->m_resource] += msg->m_qty;
         g_advManager->m_advWindow->updateResourceDisplay(!isInPopup(), 1);
     }
 }
@@ -4093,18 +4067,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
 }
 
 
-// The DC header names this expression type_point::operator==. Keeping the
-// retail-proven inline body local avoids changing unrelated compilands while
-// reproducing the packed bitfield comparison in ProcessHover.
-// Before normalization (function): PointsEqual.
-inline unsigned char pointsEqual(const type_point* point,
-                                 const type_point* arg)
-{
-    return point->m_x == arg->m_x
-           && point->m_y == arg->m_y
-           && point->m_z == arg->m_z;
-}
-
 // E:\gamedcs\advmgr.cpp:4385
 // RETAIL-RECONSTRUCTED 2026-08-11 (80.9400%). Retail proves the complete
 // map-area, packed-hover, visibility/current-level, rollover, owned hero/town
@@ -4187,31 +4149,30 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
 
     if (g_mouseManager->m_frame >= HOVER_SCROLL_POINTER_FIRST
         && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
-        int rx;
-        int ry;
-        g_mouseManager->mouseCoords(&rx, &ry);
-        if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
-            || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
-            || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
-                && ry >= HOVER_SCROLL_MARGIN
-                && ry <= HOVER_SCROLL_BOTTOM)) {
+        if (!mouseInScrollZone())
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        }
     }
 
     m_advWindow->processHover(mouseX, mouseY);
     return 1;
 }
 
-// E:\gamedcs\advmgr.cpp:4514
-#if 0  // @carcass
-DC_ONLY(0xf23c, 0x84)
+// E:\gamedcs\advmgr.cpp:4514, dc 0xf23c.
+// CodeView proves the private member and type_adventure_cursor return type.
+// ProcessHover calls it at dc 0xfc00; Complete expands the same garrison/team/
+// army checks there. Restore the member boundary and canonical GetGarrison
+// call instead of the former file-static function taking an explicit mgr.
+// Before normalization (function): get_garrison_cursor.
 type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 {
-    // @stub
+    if (currCell->m_isTrigger) {
+        garrison& mapGarrison = *g_game->getGarrison(currCell->m_extraInfo);
+        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
+            && mapGarrison.m_garrisonArmy.hasCreatures())
+            return ADV_SWORD_POINTER;
+    }
+    return getNormalCursor(currCell);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4530
 // Chooses the base cursor before ProcessHover adds its multi-turn offset.
@@ -4243,45 +4204,6 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     return ADV_WALK_POINTER;
 }
 #pragma auto_inline(on)
-
-// DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
-// (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
-// cursor when a manned garrison belongs to another team, otherwise the
-// cell's normal cursor. ProcessHover's GARRISON arm calls it and /Ob2
-// folds it (no retail row); a static like MouseInScrollZone above.
-// Before normalization (function): get_garrison_cursor.
-static int getGarrisonCursor(advManager* mgr, NewmapCell* currCell)
-{
-    if (currCell->m_isTrigger) {
-        garrison& mapGarrison = g_game->m_garrisons[currCell->m_extraInfo];
-        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
-            && mapGarrison.m_garrisonArmy.hasCreatures())
-            return 5;
-    }
-    return mgr->getNormalCursor(currCell);
-}
-
-// DC advmgr.cpp:10756 `?MouseInScrollZone@advManager@@QAAHXZ` (110 B): true
-// when the pointer sits in the 16-pixel scroll border of the 800x600
-// screen. Both hover handlers expand it in place (retail homes its two
-// coordinates in the dead mouseX/mouseY parameter slots); a static here
-// because no retail row is claimed for it and it reads nothing from
-// `this`.
-// Before normalization (function): MouseInScrollZone.
-static int mouseInScrollZone()
-{
-    int rx;
-    int ry;
-    g_mouseManager->mouseCoords(&rx, &ry);
-    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
-        || ry >= advManager::HOVER_SCREEN_HEIGHT)
-        return 0;
-    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
-        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
-        return 0;
-    return 1;
-}
-
 
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
@@ -4465,7 +4387,7 @@ int advManager::processHover(int mouseX, int mouseY)
         heroPoint.m_x = currHero->m_x;
         heroPoint.m_y = currHero->m_y;
         heroPoint.m_z = currHero->m_z;
-        if (pointsEqual(&heroPoint, &m_lastMapHover)) {
+        if (heroPoint == m_lastMapHover) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
@@ -4562,7 +4484,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             }
             case GARRISON:
-                newCursor = getGarrisonCursor(this, currCell);
+                newCursor = getGarrisonCursor(currCell);
                 break;
             case TOWN: {
                 town* currentTown = g_game->getTown(currCell->m_extraInfo);
@@ -4727,7 +4649,7 @@ int advManager::processSearch(int x, int y, int z)
                         GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
+            type_artifact grail(ARTIFACT_HOLY_GRAIL);
 
             if (g_currentPlayer->isHuman()) {
                 g_unnamed69950c = g_netLocalGamePos;
@@ -4743,7 +4665,7 @@ int advManager::processSearch(int x, int y, int z)
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL, -1);
+                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
                 std::string description = describedGrail.getDescription();
                 normalDialog(description.c_str(), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
@@ -5121,36 +5043,6 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
-// Before normalization (function): DrawHeroCell.
-static inline NewmapCell* drawHeroCell(advManager* manager, type_point point)
-{
-    unsigned char valid = point.isValid();
-    NewfullMap* map = manager->m_fullMap;
-    if (!valid)
-        return map->cell(0, 0, 0);
-    return map->cell(point.m_x, point.m_y, point.m_z);
-}
-
-// Before normalization (function): DrawBoatCell.
-static inline NewmapCell* drawBoatCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->cell(0, 0, 0);
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
-// Before normalization (function): DrawGroundCell.
-static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->m_cellData;
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
 // E:\gamedcs\advmgr.cpp:5688
 // Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
 // call and a single conditional return expression. Its former two-return
@@ -5161,12 +5053,12 @@ static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
 // currHero/frame-count release invariants, a discarded GetNumFrames value,
 // and naming the divisor; naming the remainder scored 98.1571%.
 //
-// Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
-// DrawHeroCell keeps Complete's invalid-point arm: retail calls
-// NewfullMap::cell(0, 0, 0), while the older DC GetCell returns cellData.
-// Substituting that older GetCell semantic scored 93.18%. The register
-// model's lack of binding divergence did not establish correct helper
-// expression shape; see docs/vc6/regalloc.md 6f.
+// Keep game::GetHero, get_location, GetHflip and advManager::GetCell.
+// DC 0x11424 calls the latter, as do the five other drawing routines.
+// Its DC lines 7028/7029 call NewfullMap::cell(0,0,0) / cell(point).
+// The earlier 93.18% substitution probe used a flattened GetCell body;
+// it does not prove a semantic difference or justify local helper copies.
+// See docs/vc6/regalloc.md 6f for that historical probe.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -5180,7 +5072,7 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
 
     if (currHero->m_flags & 0x40000) {
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
-        NewmapCell* heroCell = drawHeroCell(this, currHero->getLocation());
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
             m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5251,7 +5143,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             return;
 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
-        NewmapCell* heroCell = drawHeroCell(this, currHero->getLocation());
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
             m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -5311,8 +5203,8 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5344,8 +5236,8 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -6242,7 +6134,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 
     type_point point;
     point = type_point(srcX, srcY, z);
-    thisCell = drawHeroCell(this, point);
+    thisCell = getCell(point);
 
     baseX = m_scrollX + destX * 32;
     baseY = m_scrollY + destY * 32;
@@ -6359,8 +6251,8 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    NewmapCell* thisCell = drawGroundCell(
-        this, type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(
+        type_point(srcX, srcY, z));
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -6450,10 +6342,12 @@ DATA(0x006aac3c) extern int g_unnamed6aac3c;
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::getCell(type_point point)
 {
+    // DC advmgr.cpp:7028/7029 preserve both NewfullMap overloads.
+    // Retail 0x412be6 folds the zero-coordinate call to cellData, and
+    // 0x412bf0..0x412c35 expands the point overload's row arithmetic.
     if (!point.isValid())
-        return m_fullMap->m_cellData;
-    return &m_fullMap->m_cellData[(point.m_z * m_fullMap->m_size + point.m_y)
-                              * m_fullMap->m_size + point.m_x];
+        return m_fullMap->cell(0, 0, 0);
+    return m_fullMap->cell(point);
 }
 
 // E:\gamedcs\advmgr.cpp:7037
@@ -7940,23 +7834,10 @@ void advManager::heroQuickView(int heroId, int x, int y,
 // AI_approximate_strength precedent).
 const char* getBuildingName(int townType, int buildingId);
 
-// One-call /Ob2 depth devices for TownQuickView. The DC roster has no helper
-// rows here, so these are not source-boundary claims; VC6 expands both and
-// emits no standalone functions. Their measured effect is recorded below.
-// Before normalization (function): append_town_quick_view_resource.
-static inline void appendTownQuickViewResource(
-    std::string& text, int amount, const char* resourceName)
-{
-    text += formatString("%i %s", amount, resourceName);
-}
-
-// Before normalization (function): append_town_quick_view_income_header.
-static inline void appendTownQuickViewIncomeHeader(std::string& text)
-{
-    text += "\n\nIncome:\n";
-}
-
 // E:\gamedcs\advmgr.cpp:9115
+// The resource/income wrapper probes below are historical. Those local
+// wrappers existed only to alter /Ob2 depth; use the same direct string
+// appends as the income-resource loop and retain one formatString helper.
 // 90.98338 -> 92.75378 -> 92.941086 (2026-08-21), after the two pinned
 // building-name appends had already raised the older 85.32 plateau. The
 // resource helper adds one source nesting level around the formatted-string
@@ -8046,35 +7927,40 @@ void advManager::townQuickView(int townId, int x, int y,
             text += "\n\n";
         first = 1;
         for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-            if ((thisTown->m_built & g_bitNumber[building])
-                && thisTown->isLegalBuilding(
-                       buildingIdFromInt(building))) {
-                // Retail CALLS basic_string::append(const char*,
-                // size_type) at BOTH of this arm's appends - fn+0x349 for
-                // the separator and fn+0x371 for the name - with the
-                // strlen expanded in front of each as `repne scasb`, and
-                // our CL expanded the append too. `operator+=` reaches
-                // append(const char*) which reaches this two-argument one,
-                // so the site has to be spelled at the depth retail stops
-                // at before a statement pin can impose the call.
-                // MEASURED NEGATIVE, do not extend: the same treatment on
-                // the other seven `text += <literal>` sites in this block
-                // costs 90.9834 -> 73.8082. Retail calls append at THESE
-                // two and expands it at the rest.
-                if (!first) {
-                    const char* sep = ", ";
-                    size_t sepLen = strlen(sep);
+            if (thisTown->m_built & g_bitNumber[building]) {
+                union {
+                    int m_value;
+                    type_building_id m_building;
+                } storage;
+                storage.m_value = building;
+                if (thisTown->isLegalBuilding(storage.m_building)) {
+                    // Retail CALLS basic_string::append(const char*,
+                    // size_type) at BOTH of this arm's appends - fn+0x349 for
+                    // the separator and fn+0x371 for the name - with the
+                    // strlen expanded in front of each as `repne scasb`, and
+                    // our CL expanded the append too. `operator+=` reaches
+                    // append(const char*) which reaches this two-argument one,
+                    // so the site has to be spelled at the depth retail stops
+                    // at before a statement pin can impose the call.
+                    // MEASURED NEGATIVE, do not extend: the same treatment on
+                    // the other seven `text += <literal>` sites in this block
+                    // costs 90.9834 -> 73.8082. Retail calls append at THESE
+                    // two and expands it at the rest.
+                    if (!first) {
+                        const char* sep = ", ";
+                        size_t sepLen = strlen(sep);
 #pragma inline_depth(0)
-                    text.append(sep, sepLen);
+                        text.append(sep, sepLen);
+#pragma inline_depth()
+                    }
+                    first = 0;
+                    const char* buildingName =
+                        getBuildingName(thisTown->m_type, building);
+                    size_t buildingNameLen = strlen(buildingName);
+#pragma inline_depth(0)
+                    text.append(buildingName, buildingNameLen);
 #pragma inline_depth()
                 }
-                first = 0;
-                const char* buildingName =
-                    getBuildingName(thisTown->m_type, building);
-                size_t buildingNameLen = strlen(buildingName);
-#pragma inline_depth(0)
-                text.append(buildingName, buildingNameLen);
-#pragma inline_depth()
             }
         }
 
@@ -8082,11 +7968,11 @@ void advManager::townQuickView(int townId, int x, int y,
         for (int res = 0; res < 7; res++) {
             if (res > 0)
                 text += ", ";
-            appendTownQuickViewResource(
-                text, ownerPlayer->m_resources[res], g_resourceNames[res]);
+            text += formatString(
+                "%i %s", ownerPlayer->m_resources[res], g_resourceNames[res]);
         }
 
-        appendTownQuickViewIncomeHeader(text);
+        text += "\n\nIncome:\n";
         g_game->calculateProduction();
         first = 1;
         for (int inc = 0; inc < 7; inc++) {
@@ -8192,7 +8078,15 @@ VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
     int count = cell->m_extraInfo & 0xfff;
-    TCreatureType type = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType type;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        type = storage.m_creature;
+    }
 
     playerData* localPlayer = g_game->getLocalPlayer();
     g_game->getLocalPlayerGamePos();
@@ -9488,8 +9382,8 @@ void advManager::screenScroll(int dir, int changeMouse)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10696
-// The DC carries MouseInScrollZone (dc 0x1ccf8) out of line; retail has no
-// body for it anywhere in the bracket, so the zone decision lives here.
+// The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
+// definition follows this routine. Retail expands the hover callers' tests.
 VA(0x00419820, 0x169)  // anchor-callee, dc 0x1cb08
 void advManager::checkScreenScroll()
 {
@@ -9543,17 +9437,25 @@ void advManager::checkScreenScroll()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:10756
-DC_ONLY(0x1ccf8, 0x6E)
+// E:\gamedcs\advmgr.cpp:10756, dc 0x1ccf8.
+// CodeView proves this public member and its rx/ry locals. Both hover
+// handlers call it (dc 0xf1c4/0xfd28); Complete expands its border test.
+// A body that does not read this still belongs to the proven class, at this
+// source position rather than beside the first retained caller.
+// Before normalization (function): MouseInScrollZone.
 int advManager::mouseInScrollZone()
 {
-    // @stub
+    int rx;
+    int ry;
+    g_mouseManager->mouseCoords(&rx, &ry);
+    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
+        || ry >= advManager::HOVER_SCREEN_HEIGHT)
+        return 0;
+    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
+        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
+        return 0;
+    return 1;
 }
-
-// E:\gamedcs\advmgr.cpp:10842
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10778
 // Centres the adventure view at the start of a turn. Retail picks the
@@ -9901,26 +9803,15 @@ void advManager::enableButtons()
 }
 
 // E:\gamedcs\advmgr.cpp:11125
-// EXACT 2026-08-21 (82.00565 -> 82.14124 -> 96.38418 -> 100). The DC
-// local roster is literal source evidence here: RECT rect, int x/y, and one
-// NewmapCell* map_cell. Restoring that shape supplies retail's 0x24-byte frame
-// and four contiguous bound slots. The decisive step is the inline accessor
-// boundary below. A flat cellData subscript lets C2 strength-reduce the inner
-// walk (191 instructions); retail recomputes the header-inline cell lookup on
-// every iteration (177). advmgr's shared NewfullMap personality deliberately
-// exposes cell(x,y,z) out of line for its other call sites, so this two-site
-// surrogate recreates the original inline depth without emitting a standalone
-// helper. Finally, `_cpp_min` is symmetric semantically but VC6 evaluates its
-// operands in source-sensitive scratch-register order; width/height first is
-// the exact retail schedule. Calls, 16 branches, two returns, 24 blocks and all
-// 177 instructions now agree.
-// Before normalization (function): find_adjacent_map_cell.
-static inline NewmapCell* findAdjacentMapCell(
-    NewfullMap* map, int x, int y, int z)
-{
-    return &map->m_cellData[(z * map->m_size + y) * map->m_size + x];
-}
-
+// DC 0x1dc24 names NewfullMap::cell at line 11138. Both cell lookups
+// use its canonical MapCell.h body; the former findAdjacentMapCell
+// surrogate copied that body to work around a since-removed TU-specific
+// declaration. Retail recomputes the same 38-byte-stride cell address.
+// Historical probes: flat cellData indexing emitted 191 instructions
+// versus retail's 177; restoring RECT, x/y, one mapCell pointer and the
+// accessor advanced 82.00565 -> 82.14124 -> 96.38418 -> 100%.
+// Keep width/height first in cppMin: the reverse operand order changed
+// VC6 scratch-register scheduling. Those scores predate this cleanup.
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
@@ -9935,8 +9826,7 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
     rect.right = cppMin<int>(g_mapWidth, point.m_x + 2);
     rect.bottom = cppMin<int>(g_mapHeight, point.m_y + 2);
 
-    mapCell = findAdjacentMapCell(
-        m_fullMap, point.m_x, point.m_y, point.m_z);
+    mapCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     unsigned char centerIsWater = mapCell->m_groundSet == eTerrainWater;
     if (mapCell->cellIsTrigger()
         && !g_adventureObjectTraits[mapCell->getMapObject()][1])
@@ -9944,8 +9834,7 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
 
     for (x = rect.left; x < rect.right; ++x) {
         for (y = rect.top; y < rect.bottom; ++y) {
-            mapCell = findAdjacentMapCell(
-                m_fullMap, x, y, point.m_z);
+            mapCell = m_fullMap->cell(x, y, point.m_z);
             if (mapCell->m_type == MONSTER && mapCell->m_isTrigger
                 && (mapCell->m_groundSet == eTerrainWater) == centerIsWater
                 && (x != excluded.m_x || y != excluded.m_y

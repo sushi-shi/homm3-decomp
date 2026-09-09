@@ -34,6 +34,15 @@
 #include "exceptions.h"
 #include "gzinflatebuf.h"
 
+// Only this implementation throws the nested error type. The retail throw
+// descriptor names TGzInflateBuf::TDataError; all recovered throw sites use
+// its default constructor, retained at 0x4d65e0 and also expanded by VC6.
+// The former string-taking overload had no caller or supporting evidence.
+class TGzInflateBuf::TDataError : public std::runtime_error {
+public:
+    TDataError();
+};
+
 // Retail .rdata 0x63e6fc, immediately ahead of this unit's two vftables.
 // zlib's own gzio.c spells the pair exactly this way, and the constructor
 // LOADS both rather than testing immediates, which is what proves it is a
@@ -364,12 +373,10 @@ int TGzInflateBuf::underflow()
     return -1;
 }
 
-// 0x4d6b80: `TRuntimeError`'s `const char*` constructor is the out-of-line
-// 0x49a0c0 call; this body is the vftable swap on top of it. The DEFINITION
-// moved to exceptions.h (objnames.obj's throw expands the same body, which
-// only an inline can produce); this object still emits and calls the COMDAT,
-// so the claim stays here on the re-declaration.
-// Canonical body and VA: include/exceptions.h.
+// 0x4d6b80 calls TRuntimeError(const char*) at 0x49a0c0, then installs
+// the derived vptr. Both its canonical body and VA are in exceptions.h;
+// this object retains the out-of-line copy and calls it, while the
+// objnames throw expands the shared derived initialization.
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
 VA(0x004d6ba0, 0x81)  // anchor-bracket, called from 0x4d6920, retail-only

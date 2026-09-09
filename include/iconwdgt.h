@@ -106,7 +106,7 @@ public:
     virtual int main(message* msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): iconWidget::Draw.
-    virtual void draw();
+    virtual void draw() const;
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
     // own extent, not the widget rect.

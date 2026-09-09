@@ -61,21 +61,6 @@ static const int g_creatureBankRewardCreature[CREATURE_BANK_COUNT] = {
     -1, -1, CREATURE_ANGEL, -1, -1, -1, 108, -1, -1, -1, -1
 };
 
-// The union bridge advmgr.cpp and eight other TUs already use to reach
-// TCreatureType from an int lane without a cast.
-// Before normalization (function): creature_type_from_int.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
 // Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
 // The traits constructor below sees the original ordinary body and lets
 // VC6 expand the armyGroup construction for each of its four levels.
@@ -147,8 +132,14 @@ unsigned char initializeCreatureBankTraits()
             level->m_guards.initialize();
             for (unsigned int slot = 0; slot < 5 && guardTypes[slot] != -1; ++slot)
                 level->m_guards.m_armies[slot] = guardTypes[slot];
-            level->m_rewardCreature = creatureTypeFromInt(
-                g_creatureBankRewardCreature[bank]);
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = g_creatureBankRewardCreature[bank];
+                level->m_rewardCreature = storage.m_creature;
+            }
 
             const std::vector<char*>& cells = sheet->getRow(row);
             level->m_chance = atoi(cells[2]);
@@ -185,17 +176,6 @@ unsigned char initializeCreatureBankTraits()
 
     sheet->dispose();
     return 1;
-}
-
-// The four-way base-elemental compare gpGame->f_1f698 gates. Byte-identical
-// to the longhand chain when expanded, and armygrp.cpp / viewarmywindow.cpp
-// already carry the same inline for the same reason; retail expands it twice
-// in initialize_creature_bank below.
-// Before normalization (function): is_base_elemental.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
 }
 
 // E:\gamedcs\creature_bank.cpp:146, dc 0x71218. Retail expands this file
@@ -249,7 +229,8 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // `bank->guards.armyTypes[slot]` at each use instead lets VC6 re-materialise
 // the load inside each compare block and duplicate the store.
 //
-// Exact (2026-09-07, 98.1132% -> 100%): preserving the `groups` parameter
+// Historical match before canonical-helper cleanup (2026-09-07,
+// 98.1132% -> 100%): preserving the `groups` parameter
 // through a `groupsLeft` countdown declared after splitSlot's free cursor
 // makes VC6 initialize slot/ESI before groups/EDI in all five expansions,
 // as retail does. Consuming IsBaseCreature's canonical int result as an
@@ -306,14 +287,13 @@ void initializeCreatureBank(type_creature_bank* bank,
 
     if (random(1, 100) <= level->m_upgradeChance) {
         TCreatureType current = bank->m_guards.m_armyTypes[slot];
-        if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
+        if (!(g_game->m_f1f698 == 0 && (current == CREATURE_AIR_ELEMENTAL
+                || current == CREATURE_EARTH_ELEMENTAL
+                || current == CREATURE_FIRE_ELEMENTAL
+                || current == CREATURE_WATER_ELEMENTAL))
             && static_cast<unsigned char>(isBaseCreature(current))) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
-            int upgraded;
-            if (g_game->m_f1f698 == 0 && isBaseElemental(promoted))
-                upgraded = -1;
-            else
-                upgraded = upgradedCreatureType(promoted);
+            int upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;
         }
     }

@@ -595,9 +595,18 @@ struct TRmgGridPoint {
     // and terrain paintPoint to 98.3653% by copying through assignment, but
     // then no RMG TU emits the retained 22-byte constructor at 0x4fa520.
     // Explicit assignment forms do not recover it; preserve this boundary.
+    // Refresh 0x4f9f77 copies the translated grid value before passing it to
+    // the retained painter proxy at 0x4f9f86. The shared unsigned grid identity
+    // follows that proxy's copied coordinate and the painter dimensions, not
+    // merely a same-sized point body. Its existing explicit copy constructor
+    // reproduces all 22 raw bytes without relocations.
+    VA(0x004FA520, 0x16)
     TRmgGridPoint(const TRmgGridPoint& other)
         : m_x(other.m_x), m_y(other.m_y) {}
 
+    // The four late point constructions in RepairTerrainPoint pass x and y by
+    // reference. The retained two-store body is 24 bytes including ret 8.
+    VA(0x005B76B0, 0x18)
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
 
@@ -1682,7 +1691,6 @@ struct TRmgZone {
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
     void chooseTerrain();
-    ~TRmgZone();
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
     unsigned char canConnect(const TRmgZone* other) const;

@@ -110,169 +110,12 @@ type_point aiAttemptPuzzleGuess(long player);
 DATA(0x00691684) int g_curHourGlassPhase;
 DATA(0x00698770) int g_unnamed698770;
 
-// The generator save format stores creature ids as bytes while the live
-// roster uses TCreatureType. Keep the representation bridge explicit without
-// introducing an enum cast; VC6 reduces this four-byte copy to a move.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
-// The present retail hero layout records the class slot as a raw dword,
-// while GetNewHeroId's ABI uses THeroClass.  Preserve that representation
-// across the boundary without an enum cast (and therefore without changing
-// the codegen-sensitive hero.obj model).
-// Before normalization (function): hero_class_from_int.
-inline THeroClass heroClassFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: heroClass.
-        THeroClass m_heroClass;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_heroClass;
-}
-
-// Before normalization (function): creature_bank_type_from_int.
-inline type_creature_bank_type creatureBankTypeFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: bankType.
-        type_creature_bank_type m_bankType;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_bankType;
-}
-
-// Before normalization (function): secondary_skill_from_int.
-inline TSecondarySkill secondarySkillFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: skill.
-        TSecondarySkill m_skill;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_skill;
-}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-std::pair<const int, type_map_hero_info>::~pair() {}
-#endif
-
-// Must precede the first real map use: VC6 fixes nested inline decisions when
-// it first instantiates this template member. Retail's retained copy calls
-// both _Lockit members rather than expanding them.
-// The seven `std::_Lockit` scopes in this template block, and the anchor
-// call below, used to carry statement `#pragma inline_depth(0)` pins. They
-// are dead since this TU moved to /MT: yvals.h gives _Lockit out-of-line
-// ctor/dtor under _MT, so the calls the pins were forcing are the only
-// bodies that exist. Removing all eight is byte-flat across the whole unit
-// (2026-09-06, polish lane 50, measured one at a time and jointly).
-template<>
-THeroSetupMapMinComdatAnchor::NodePtr
-std::map<int, type_map_hero_info>::_Imp::_Min(
-    THeroSetupMapMinComdatAnchor::NodePtr node)
-{
-    std::_Lockit lock;
-    while (node->_Left != _Nil)
-        node = node->_Left;
-    return node;
-}
-
-template<>
-__forceinline THeroSetupMapMinComdatAnchor::NodePtr
-std::map<int, type_map_hero_info>::_Imp::_Max(
-    THeroSetupMapMinComdatAnchor::NodePtr node)
-{
-    {
-        std::_Lockit lock;
-        while (node->_Right != _Nil)
-            node = node->_Right;
-    }
-    return node;
-}
-
-template<>
-void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
-{
-    {
-        std::_Lockit lock;
-        if (_Color(_Ptr) == _Red
-                && _Parent(_Parent(_Ptr)) == _Ptr)
-            _Ptr = _Right(_Ptr);
-        else if (_Left(_Ptr) != _Nil)
-            _Ptr = _Max(_Left(_Ptr));
-        else {
-            _Nodeptr parent;
-            while (_Ptr == _Left(parent = _Parent(_Ptr)))
-                _Ptr = parent;
-            _Ptr = parent;
-        }
-    }
-}
-
-template<>
-std::map<int, type_map_hero_info>::_Imp::_Pairib
-std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
-{
-    _Nodeptr node = _Root();
-    _Nodeptr parent = _Head;
-    bool insertLeft = true;
-    {
-        std::_Lockit lock;
-        while (node != _Nil) {
-            parent = node;
-            insertLeft = key_compare(
-                THeroSetupMapMinComdatAnchor::KeyFunction()(value),
-                _Key(node));
-            node = insertLeft ? _Left(node) : _Right(node);
-        }
-    }
-    if (_Multi)
-        return _Pairib(_Insert(node, parent, value), true);
-    iterator position = iterator(parent);
-    if (!insertLeft)
-        ;
-    else if (position == begin())
-        return _Pairib(_Insert(node, parent, value), true);
-    else
-        --position;
-    if (key_compare(
-            _Key(position._Mynode()),
-            THeroSetupMapMinComdatAnchor::KeyFunction()(value)))
-        return _Pairib(_Insert(node, parent, value), true);
-    return _Pairib(position, false);
-}
-
-void THeroSetupMapMinComdatAnchor::retainMin()
-{
-    // Retail CMapHeaderData::Save retains the protected _Tree::_Min COMDAT
-    // after the surrounding iterator work exhausts VC6's inline budget.
-    // Preserve the real helper: measured negative controls reject
-    // flattening, a member pointer, or volatile mass. This call used to
-    // carry an `inline_depth(0)` pin as well; it is byte-flat now that
-    // _Min's own body holds an out-of-line /MT _Lockit pair, so the pin
-    // went (2026-09-06, polish lane 50).
-    _Min(_Nil);
-}
-
-void THeroSetupMapMinComdatAnchor::retainInsert(const Value& value)
-{
-    insert(value);
-}
+// Hero-setup maps use the native Dinkumware <utility>/<xtree> definitions.
+// Retail retains the pair cleanup at 0x4c4df0 and the tree minimum, insert
+// and iterator decrement at 0x4d2050/0x4cff50/0x4d27b0. Their VA_COMPGEN
+// claims below name those library instances; project-written replacements
+// do not own them. The per-TU /MT profile supplies the external _Lockit
+// calls used by the native tree scopes (0x60b598/0x60b634).
 
 // Defined at the foot of this file, where retail emits it (0x4d2ac0):
 // declared here so game::Save's pool writes call it out of line.
@@ -281,24 +124,6 @@ unsigned char saveVector(TAbstractFile* outfile,
                           // Before normalization (locals): src_vector.
                           std::vector<type_point>* srcVector);
 
-// The retail linker folds the byte-identical type_point and long writers at
-// 0x4d2ac0.  Keep the one admitted writer while exposing the pairing vector's
-// DC-proven element type to the rest of game.cpp.
-union TGatePairVectorPointerAlias {
-    // Before normalization: pairs.
-    std::vector<long>* m_pairs;
-    // Before normalization: points.
-    std::vector<type_point>* m_points;
-};
-
-static __forceinline std::vector<type_point>*
-// Before normalization (function): gate_pair_storage_as_points.
-gatePairStorageAsPoints(std::vector<long>* pairs)
-{
-    TGatePairVectorPointerAlias alias;
-    alias.m_pairs = pairs;
-    return alias.m_points;
-}
 // The other two instantiations game::Save's tail reaches, both also
 // defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
 // one is a plain block write like the type_point overload; the creature
@@ -374,27 +199,6 @@ const int g_campaignVictoryOverrideSecond = 11;
 const int g_campaignVictoryOverrideThird = 12;
 // Before normalization: CAMPAIGN_VICTORY_OVERRIDE_DAYS.
 const int g_campaignVictoryOverrideDays = 112;
-
-// Source-inline map counterpart of ReadHeroId.  Retail expands this shape at
-// both fixed-hero fields in the player-slot reader; the retained /Gr helper at
-// 0x4ba1c0 serves other callers.
-// Before normalization (function): read_map_header_hero_id.
-static __forceinline int readMapHeaderHeroId(TAbstractFile* infile,
-                                                 int mapVersion)
-{
-    unsigned long value;
-    infile->read(&value, sizeof(unsigned char));
-    int heroId = value & 0xff;
-    if (heroId == g_savedHeroNone)
-        return -1;
-    if (mapVersion == g_mapVersionOldCampaignHeroIds) {
-        if (heroId == g_savedHeroPre25First)
-            return g_heroPre25FirstRemap;
-        if (heroId == g_savedHeroPre25Second)
-            return g_heroPre25SecondRemap;
-    }
-    return heroId;
-}
 
 // E:\gamedcs\game.cpp's file-static `resources` row (dc game.obj static
 // 0x2ffc). Complete retains the same four rare-resource ids in retail
@@ -506,27 +310,6 @@ DATA(0x00696d9c) extern const char* g_cannedRumours[256];
 // image reads the slot.
 // Before normalization: gpRandomTavernText.
 DATA(0x00697294) extern TTextResource* g_randomTavernText;
-
-// The PC-only save-version remap is a real inline source boundary. Retail's
-// three expansions read through an unsigned dword buffer, keep the decoded id
-// in EAX, and join each direct-return arm at the caller's destination store.
-// Before normalization (function): load_saved_hero_id.
-static inline int loadSavedHeroId(TAbstractFile* infile, int saveVersion)
-{
-    // Before normalization (locals): uint_buffer.
-    unsigned long uintBuffer;
-    infile->read(&uintBuffer, sizeof(unsigned char));
-    int heroId = uintBuffer & 0xff;
-    if (heroId == g_savedHeroNone)
-        return -1;
-    if (saveVersion < 25) {
-        if (heroId == g_savedHeroPre25First)
-            return g_heroPre25FirstRemap;
-        if (heroId == g_savedHeroPre25Second)
-            return g_heroPre25SecondRemap;
-    }
-    return heroId;
-}
 
 // Before normalization: ALL_RANDOM_ARTIFACT_CLASSES.
 const int g_allRandomArtifactClasses = 0x1e;
@@ -710,115 +493,6 @@ int bufread(void* buf, int size)
 
 #endif  // @carcass
 
-// Retail-only Immersion force-feedback mouse block (absent from the
-// WinCE build; no DC lines). Identities from the import table: the
-// singleton ctor at 0x4b6260 calls __imp_??0CImmMouse@@QAE@XZ and
-// touches ?m_dwErrHandlingFlags@CIFCErrors@@0KA - Immersion
-// Foundation Classes (iFeel). Names provisional pending the real
-// source names. font..game bracket; between bufread and generator in
-// the retail layout.
-
-// InitImmMouse: once-guarded `static <ImmWrapper> obj(hInst, hwnd)`
-// construction (guard byte 0x696d58, atexit dtor thunk 0x4b6910);
-// WinMain's post-CreateWindow callee. Construction failure is caught and
-// reported as false; 0x4b68f4/0x4b68fa are the EH handler/catch funclet.
-// Before normalization (locals): hInst.
-VA(0x004b6890, 0x7D)  // anchor-callee + contiguous catch funclets, retail-only
-unsigned char initImmMouse(void* instance, void* hwnd)
-{
-    try {
-        DATA_COMPGEN_GUARD(0x00696d58, immMouseGuard, immMouse)
-        DATA(0x00696d78)
-        static TImmMouseRuntime immMouse(instance, hwnd);
-        return 1;
-    } catch (TImmMouseRuntime::t_initialize_failure) {
-        return 0;
-    }
-}
-
-// The exit thunk _atexit receives from InitImmMouse above: retail expanded
-// the whole of `~TImmMouseRuntime` into it, so the 58 bytes are the two
-// singleton teardowns and nothing of the holder itself. The claim binds
-// through canonicalize_data_symbols' owner-free static-destructor arm -
-// nothing in the body relocates `immMouse`, because the unused `this` went
-// with the expansion (build/test_ownerless_static_dtor.py is its control).
-VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)
-
-// ImmMouseWindowMoved: re-derives the client origin via
-// ClientToScreen and offsets every tracked effect rect (linked list
-// in the map whose _Head is at 0x696d64) by the delta; AppWndProc's WM_MOVE
-// callee.
-VA(0x004b6950, 0x9A)  // anchor-callee, retail-only
-void immMouseWindowMoved()
-{
-    POINT origin = { 0, 0 };
-    ClientToScreen(g_immWindow, &origin);
-
-    long dx = origin.x - g_immWindowX;
-    long dy = origin.y - g_immWindowY;
-    if (dx == 0 && dy == 0)
-        return;
-
-    g_immWindowX = origin.x;
-    g_immWindowY = origin.y;
-    for (std::map<CImmEnclosure*, RECT>::iterator it = g_immEffectEntries.begin();
-         it != g_immEffectEntries.end(); ++it) {
-        CImmEnclosure* enclosure = it->first;
-        RECT* rect = &it->second;
-        OffsetRect(rect, dx, dy);
-        enclosure->SetRect(rect);
-    }
-}
-
-// The loop above retains VC6's real map<CImmEnclosure*, RECT> tree-successor
-// COMDAT. Retail 0x4b7330 has the same nine blocks and 0xa3 bytes; its node
-// consumer independently fixes the pair at +0x0c/+0x10 and `_Nil` at
-// 0x696d8c. Dreamcast's generic STLport _M_increment at dc 0x64214
-// corroborates the helper boundary; the Immersion integration is retail-only.
-VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
-
-// TAdventureMapWindow's slot-2 Close override (0x4014d0) reaches this body as
-// `mov ecx,edi / call 0x4b6e40 / push edi / call operator delete` on its owned
-// +0x9c member - the split form of `delete`, which types 0x4b6e40 as that
-// member's destructor. The implementation destructor is inlined here as
-// retail's only copy, which is what puts the whole
-// map<CImmEnclosure*, RECT>::erase(const key_type&) chain in this body:
-// _Ubound out of line at 0x4b7e70, lower_bound at 0x4b79b0, the discarded
-// _Distance walk over the claimed const_iterator::_Inc, and erase(first, last)
-// at 0x4b7200. The `_Pairii(lower_bound, upper_bound)` argument pair evaluates
-// right to left, so upper_bound lands first; the count _Distance returns is
-// dead because the caller drops erase's return value.
-//
-// Residual (44.8%): retail carries a C++ EH frame here and this compile does
-// not, which costs the prologue, the epilogue and the two out-of-line
-// iterator helpers retail calls (the 14-byte iterator ctor at 0x4b7da0 and
-// the 25-byte operator== at 0x4b73e0, both expanded here). The frame is not
-// decoration - it is the whole residual, and retail's own EH data says what
-// produces it. FuncInfo 0x64cec8 has one unwind state whose action (0x62b6a0)
-// is `mov ecx,[ebp-0x20] / jmp 0x4b7020`, handing the IMPLEMENTATION pointer
-// to a 19-byte body that is only `if (+0) { if (+4) delete +4; }`. An
-// unwind that DESTROYS a sub-object is not what a delete-expression emits;
-// it is what a destructor body emits while a base or member is still alive.
-// So the implementation is really two levels - a sub-object holding the
-// owned-flag/enclosure pair, and a derived body holding the erase - and
-// 0x4b7020 is that sub-object's own destructor.
-//
-// 2026-09-05: the sub-object is `std::auto_ptr<CImmEnclosure>`, and the
-// holder here is `std::auto_ptr<force_feedback::t_enclosure>`. Both are
-// byte-proven from ForceFeedback.obj's own constructors: 0x4b6dc0 and
-// 0x4b6a50 each buy their pointee and then write `(p != 0)` and `p` in
-// that order, which is auto_ptr's `_Owns(_P != 0), _Ptr(_P)` verbatim,
-// and 0x4b7020 / 0x4b7040 / 0x4b7050 are the three out-of-line
-// `~auto_ptr` bodies (CImmEnclosure, char, CImmProject) the same
-// compiland emits. The earlier "TRIED AND REJECTED: splitting the class
-// in two scores 14.62" measurement was taken with a HAND-WRITTEN
-// sub-object; a real std::auto_ptr member is a different inline
-// candidate, so the body below is now just the implicit member teardown.
-VA(0x004b6e40, 0xE3)  // anchor-callee (TAdventureMapWindow::Close), retail-only
-TImmMouseEffect::~TImmMouseEffect()
-{
-}
-
 // E:\gamedcs\game.cpp:208
 // The canned-rumour table's loader. `Text` is TTextResource's
 // vector<char*> at +0x1c, so its `_First` is the `[eax+0x20]` retail
@@ -903,7 +577,14 @@ unsigned char generator::load(TAbstractFile* infile)
     for (int slot = 0; slot < 4; slot++) {
         infile->read(&loaded, 1);
         int creature = loaded & 0xff;
-        m_type[slot] = creatureTypeFromInt(creature);
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = creature;
+            m_type[slot] = storage.m_creature;
+        }
         if (creature == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
     }
@@ -1228,6 +909,9 @@ void game::calculateProduction()
     long playerId;
     long i;
     EGameResource resource;
+    // DC calculate_production keeps its EGameResource induction variable.
+    // Widen the ordinal locally without adding a conversion call boundary.
+    union { int m_integer; EGameResource m_resource; } resourceValue;
     double playerHandicap;
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!m_playerDisabled[playerId]) {
@@ -1271,10 +955,16 @@ void game::calculateProduction()
         // `currentTown` is `town&`; the static_cast selects retail's
         // const get_army overload, and the Dreamcast-public QB query then
         // consumes its const armyGroup directly.
-        if (static_cast<const town&>(currentTown).getArmy()
-                .getCreatureTotal(
-                creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currentTown.m_owner] = 1;
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = g_productionCreatureCrystalDragon;
+            if (static_cast<const town&>(currentTown).getArmy()
+                    .getCreatureTotal(storage.m_creature) > 0)
+                crystalDragonIncome[currentTown.m_owner] = 1;
+        }
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
@@ -1311,9 +1001,15 @@ void game::calculateProduction()
         const hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
-        if (currHero.m_army.getCreatureTotal(
-                creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currHero.m_owner] = 1;
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = g_productionCreatureCrystalDragon;
+            if (currHero.m_army.getCreatureTotal(storage.m_creature) > 0)
+                crystalDragonIncome[currHero.m_owner] = 1;
+        }
         long (&production)[NUM_RESOURCES] =
             m_players[currHero.m_owner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
@@ -1339,7 +1035,7 @@ void game::calculateProduction()
             production[ORE] += getDayBonus(
                 ORE, production[ORE] * 7 / 4, m_day);
             for (resource = WOOD; resource < GOLD;
-                 resource = gameResourceFromInt(resource + 1)) {
+                 resource = (resourceValue.m_integer = resource + 1, resourceValue.m_resource)) {
                 long weeklyBonus = (m_setup.m_difficulty - 2) * production[resource];
                 production[resource] += getDayBonus(
                     resource, weeklyBonus, m_day);
@@ -1354,7 +1050,7 @@ void game::calculateProduction()
         playerHandicap = g_productionHandicap[m_setup.m_handicap[playerId]];
         long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
         for (resource = WOOD; resource < GOLD;
-                 resource = gameResourceFromInt(resource + 1))
+                 resource = (resourceValue.m_integer = resource + 1, resourceValue.m_resource))
             production[resource] -= production[resource] * playerHandicap;
     }
 }
@@ -1370,7 +1066,7 @@ int game::loadSignPool(TAbstractFile* infile)
 
     m_signs.resize(count);
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (loadString(infile, &m_signs[i].m_signText) < 0)
+        if (game::loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -1393,7 +1089,7 @@ int game::saveSignPool(TAbstractFile* outfile)
         return -1;
 
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (saveAbstractString(outfile, &m_signs[i].m_signText) < 0)
+        if (game::saveString(outfile, m_signs[i].m_signText) < 0)
             return -1;
 
         count = m_signs[i].m_hasText;
@@ -1972,6 +1668,9 @@ void playerData::clearNetInfo()
 
 // The map and save streams both store hero ids as one unsigned byte.  Their
 // two retained /Gr helpers differ only in the legacy-version predicate:
+// Each ordinary helper owns one body, also visible to inlining callers.
+// Former readMapHeaderHeroId/loadSavedHeroId definitions duplicated these
+// implementations with extra inline qualifiers; no separate ABI exists.
 // original-format maps remap at exactly version 14, while saved records remap
 // every version before the Complete roster landed at version 25.
 VA(0x004ba1c0, 0x50)
@@ -2030,15 +1729,15 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_numHeroes = value;
 
-    m_currHeroId = loadSavedHeroId(infile, saveVersion);
+    m_currHeroId = loadHeroId(infile, saveVersion);
 
     int i;
     for (i = 0; i < 8; i++) {
-        m_heroes[i] = loadSavedHeroId(infile, saveVersion);
+        m_heroes[i] = loadHeroId(infile, saveVersion);
     }
 
     for (i = 0; i < 2; i++) {
-        m_recruits[i] = loadSavedHeroId(infile, saveVersion);
+        m_recruits[i] = loadHeroId(infile, saveVersion);
     }
 
     unsigned char flag;
@@ -2304,7 +2003,7 @@ int game::LoadHeroPool(void* infile)
 // this body from FindTown's, where the ids are chars and every compare
 // needs its own movsx.
 VA(0x004ba9e0, 0x2D)  // anchor-global, dc 0xa5c4c
-int playerData::findHero(int id)
+int playerData::findHero(int id) const
 {
     if (id != -1) {
         for (int i = 0; i < m_numHeroes; i++) {
@@ -2317,7 +2016,7 @@ int playerData::findHero(int id)
 
 // E:\gamedcs\game.cpp:1788
 VA(0x004baa10, 0x2E)  // anchor-global, dc 0xa5c98
-int playerData::findTown(int id)
+int playerData::findTown(int id) const
 {
     if (id != -1) {
         for (int i = 0; i < m_numTowns; i++) {
@@ -2410,7 +2109,7 @@ int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
 // E:\gamedcs\game.cpp:1900
 // Before normalization (locals): iWhichArtifact.
 VA(0x004babd0, 0xDC)  // anchor-global, dc 0xa5ff0
-int playerData::numOfGivenArtifact(int whichArtifact)
+int playerData::numOfGivenArtifact(int whichArtifact) const
 {
     int count = 0;
 
@@ -2961,9 +2660,11 @@ int game::getGeneratorId(int x, int y, int z)
 }
 
 // E:\gamedcs\game.cpp:2492
+// DC static game member (0xa7414); retail ECX is the stream, EDX the
+// string reference. A missing this operand does not imply free ownership.
 #pragma auto_inline(off)
 VA(0x004bb990, 0x1CF)
-int __fastcall loadString(TAbstractFile* infile, std::string* value)
+int __fastcall game::loadString(TAbstractFile* infile, std::string& value)
 {
     short length;
 
@@ -2975,10 +2676,10 @@ int __fastcall loadString(TAbstractFile* infile, std::string* value)
         memset(buffer, 0, length + 1);
         if (infile->read(buffer, length) < length)
             return -1;
-        *value = buffer;
+        value = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        value.erase();
     }
 
     return length;
@@ -2997,20 +2698,6 @@ int game::GetGarrisonId(int x, int y, int z)
 // E:\gamedcs\game.cpp:2448
 DC_ONLY(0xa7320, 0xF2)
 void GenerateStandardFileName(char* cLongName, char* cRetName)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2492
-DC_ONLY(0xa7414, 0xF8)
-int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2531
-DC_ONLY(0xa750c, 0xC2)
-int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
 {
     // @stub
 }
@@ -3042,8 +2729,10 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 #endif  // @carcass
 
 // The Dreamcast roster calls this game::saveString (dc 0xa750c), paired
-// with game::loadString above. Retail lowers both helpers as free /Gr
-// functions. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
+// with game::loadString above. DC marks both static, with a string-reference
+// formal; their two-register retail /Gr ABI preserves that interface.
+// Former reconstruction names: loadString / SaveAbstractString.
+// SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
 // map-cell serializers independently corroborate the writer at 0x4bbb60.
 // EXACT 2026-08-22: the direct transcription matches all code bytes;
 // only the allocation and pooled-empty-string relocation names differ.
@@ -3051,9 +2740,9 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 // into SaveSignPool and SaveRumours, while retail calls it out of line.
 #pragma auto_inline(off)
 VA(0x004bbb60, 0xBB)  // caller tree + dc 0xa750c
-int __fastcall saveAbstractString(TAbstractFile* outfile, std::string* text)
+int __fastcall game::saveString(TAbstractFile* outfile, std::string& text)
 {
-    short length = text->length();
+    short length = text.length();
 
     if (outfile->write(&length, sizeof(length)) < sizeof(length))
         return -1;
@@ -3061,7 +2750,7 @@ int __fastcall saveAbstractString(TAbstractFile* outfile, std::string* text)
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        strcpy(buffer, text->c_str());
+        strcpy(buffer, text.c_str());
         if (outfile->write(buffer, length) < length)
             return -1;
         delete[] buffer;
@@ -3090,7 +2779,7 @@ int game::saveRumours(TAbstractFile* outfile)
     unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
-    int saveResult = saveAbstractString(outfile, &currentRumour);
+    int saveResult = game::saveString(outfile, currentRumour);
     if (0 > saveResult)
         return -1;
 
@@ -3103,7 +2792,7 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
-        if (saveAbstractString(outfile, &rit->m_text) < 0)
+        if (game::saveString(outfile, rit->m_text) < 0)
             return -1;
         boolBuffer = rit->m_unavailable;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -3128,7 +2817,7 @@ int game::loadRumours(TAbstractFile* infile)
     unsigned char value;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         current;
-    if (loadString(infile, &current) < 0)
+    if (game::loadString(infile, current) < 0)
         return -1;
 
     strcpy(m_currentRumour, current.c_str());
@@ -3141,7 +2830,7 @@ int game::loadRumours(TAbstractFile* infile)
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
-        if (loadString(infile, &it->m_text) < 0)
+        if (game::loadString(infile, it->m_text) < 0)
             return -1;
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
@@ -3438,15 +3127,17 @@ int game::GetSaveGameHeaders(void* infile)
 // named block-scoped local is retail's shape), and the poolCount
 // ternary flipped to `>= 32 ? 8 : 3` is -0.75, so the setl lowering is
 // not the operand order.
-// 91.8624 -> 92.3721, 2026-08-21: the pool count is retail's exact
-// `setl al / dec eax / and eax,5 / add eax,3` idiom. Keeping that
-// expression in this one-call static helper is an honest CODEGEN DEVICE,
-// not a DC-attested source helper: VC6 inlines it, emits no separate body,
-// and also moves the gMapExtra failure cleanup across the inliner threshold
-// so it calls `_Tidy` at retail's state 0x4b. Directly embedding the same
-// bit expression gets the local idiom but perturbs the whole function to
-// 90.4374. `(version < 32 ? 0 : 5) + 3` is 91.8536; a named bool inside
-// the helper is 91.0300; adding `inline` is byte-flat.
+// Historical probe (91.8624 -> 92.3721, 2026-08-21): the invented
+// load_lith_pool_count helper carried retail's `setl al / dec eax /
+// and eax,5 / add eax,3` expression and shifted the gMapExtra failure
+// cleanup across VC6's inliner threshold, retaining `_Tidy` at state 0x4b.
+// That optimizer effect does not establish a source boundary. The same
+// expression now belongs directly to game::Load; retail 0x4bd99e loads
+// saved.version before the arithmetic at 0x4bd9a6..0x4bd9b0. DC's older
+// game::Load is dc 0xa83d0, game.cpp:3026. The earlier direct-expression
+// probe reached 90.4374. `(version < 32 ? 0 : 5) + 3` reached 91.8536;
+// a named bool inside the former helper reached 91.0300; adding `inline`
+// was byte-flat. Keep these observations without restoring the wrapper.
 //
 // Residual (92.3721%): base now has 37 `_Tidy` calls against retail's 39
 // and 73 conditional branches against 72. The two remaining depth-one
@@ -3479,12 +3170,6 @@ int game::GetSaveGameHeaders(void* infile)
 // `std::fill(first,last,0x40)` and an explicit guarded runtime-size memset
 // both reach the retail-style empty-range guard but select the same 91.7116,
 // 77-branch inliner phase. All three lower spellings were reverted.
-// Before normalization (function): load_lith_pool_count.
-static int loadLithPoolCount(int version)
-{
-    return (((version < 32) - 1) & 5) + 3;
-}
-
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::load(TAbstractFile* infile)
 {
@@ -3760,7 +3445,7 @@ int game::load(TAbstractFile* infile)
     if (infile->read(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
 
-    int poolCount = loadLithPoolCount(saved.m_version);
+    int poolCount = (((saved.m_version < 32) - 1) & 5) + 3;
     for (i = 0; i < poolCount; ++i) {
         short shortBuffer;
         if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
@@ -3815,8 +3500,15 @@ int game::load(TAbstractFile* infile)
         if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
             sizeof(shortBuffer)) {
             type_point emptyPoint;
-            std::vector<type_point>* pairStorage =
-                gatePairStorageAsPoints(&m_undergroundGatePairs);
+            // The DC vector<long> pool shares the four-byte point storage
+            // used by this retained reader; keep the representation bridge
+            // here rather than introducing an unproven source helper.
+            union {
+                std::vector<long>* m_pairs;
+                std::vector<type_point>* m_points;
+            } pairAlias;
+            pairAlias.m_pairs = &m_undergroundGatePairs;
+            std::vector<type_point>* pairStorage = pairAlias.m_points;
 #pragma inline_depth(0)
             pairStorage->resize(shortBuffer, emptyPoint);
 #pragma inline_depth()
@@ -3966,7 +3658,7 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
     int* heroPos = m_startingHero;
     int heroesRemaining = 8;
     do {
-        *heroPos = loadSavedHeroId(input, saveVersion);
+        *heroPos = loadHeroId(input, saveVersion);
         ++heroPos;
         --heroesRemaining;
     } while (heroesRemaining);
@@ -4446,8 +4138,16 @@ int game::save(TAbstractFile* outfile)
 
     saveVector(outfile, &m_whirlpools);
     saveVector(outfile, &m_undergroundGateExits);
-    saveVector(outfile,
-                gatePairStorageAsPoints(&m_undergroundGatePairs));
+    {
+        // Retail folds the long and type_point writers at 0x4d2ac0.
+        // Preserve the canonical long pool and its existing writer call.
+        union {
+            std::vector<long>* m_pairs;
+            std::vector<type_point>* m_points;
+        } pairAlias;
+        pairAlias.m_pairs = &m_undergroundGatePairs;
+        saveVector(outfile, pairAlias.m_points);
+    }
 
     // Unguarded, like the three pool writes above them.
     saveVector(outfile, &m_universities);
@@ -4775,24 +4475,9 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 }
 
-// Game.h's IsHumanTeam is an inline in the Dreamcast roster. Retail expands
-// it at every validation site below: the team lookup uses this game, while
-// the range-clamped IsHuman half reads the active global game.
-// Before normalization (function): validate_is_human_team.
-inline unsigned char validateIsHumanTeam(game* thisGame, int teamNum)
-{
-    for (int i = 0; i < 8; ++i) {
-        if (thisGame->m_mapHeader.m_teamInfo[i] == teamNum) {
-            int gamePos = i;
-            if (gamePos >= 8 || gamePos < 0)
-                gamePos = 0;
-            if (g_game->m_players[gamePos].m_isHuman)
-                return 1;
-        }
-    }
-    return 0;
-}
-
+// DC ValidateVictoryLossConditions (0xaa7e0) calls Game.h::IsHumanTeam
+// (0x37f64); use that canonical member instead of the former local
+// validateIsHumanTeam copy, including its shared IsHuman call.
 // E:\gamedcs\game.cpp:4050
 // Residual wall (89.61%): the semantic blocks, calls, and field offsets are
 // proved.  A compound campaign predicate (73.44%), shared-label gotos
@@ -4910,7 +4595,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 int team = m_heroes[i].m_owner;
                 if (team >= 0)
                     team = m_mapHeader.m_teamInfo[team];
-                if (team >= 0 && validateIsHumanTeam(this, team)) {
+                if (team >= 0 && isHumanTeam(team)) {
                     victory.m_type = -1;
                     break;
                 }
@@ -4926,11 +4611,17 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         NewmapCell* thisCell = m_worldMap.cell(
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
-            victory.m_creatureType =
-                creatureTypeFromInt(thisCell->m_objectIndex);
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = thisCell->m_objectIndex;
+                victory.m_creatureType = storage.m_creature;
+            }
         } else {
             victory.m_type = -1;
-            victory.m_creatureType = creatureTypeFromInt(-1);
+            victory.m_creatureType = CREATURE_NONE;
             victory.m_allowNormalVictory = 1;
         }
     }
@@ -4941,7 +4632,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         int team = thisTown->m_owner;
         if (team >= 0)
             team = m_mapHeader.m_teamInfo[team];
-        if (team >= 0 && validateIsHumanTeam(this, team))
+        if (team >= 0 && isHumanTeam(team))
             victory.m_type = -1;
     }
 
@@ -4954,7 +4645,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             if (lcheroLoc.operator==(poolheroLoc)) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
-                    if (validateIsHumanTeam(this, team))
+                    if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
                 if (numHumanTeams <= 1) {
@@ -4963,7 +4654,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                         team = m_mapHeader.m_teamInfo[team];
                     unsigned char humanTeam = 0;
                     if (team >= 0)
-                        humanTeam = validateIsHumanTeam(this, team);
+                        humanTeam = isHumanTeam(team);
                     if (team < 0 || humanTeam) {
                         loss.m_heroId = i;
                         break;
@@ -4984,7 +4675,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         int owner;
         int townTeam;
         for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (validateIsHumanTeam(this, teamCheck))
+            if (isHumanTeam(teamCheck))
                 ++numHumanTeams;
         }
         if (numHumanTeams > 1)
@@ -4995,7 +4686,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             townTeam = m_mapHeader.m_teamInfo[townTeam];
         if (townTeam >= 0) {
             unsigned char humanTeam =
-                validateIsHumanTeam(this, townTeam);
+                isHumanTeam(townTeam);
             if (!humanTeam)
                 goto invalid_loss_town;
         }
@@ -5005,14 +4696,6 @@ invalid_loss_town:
         loss.m_type = -1;
 valid_loss_town:;
     }
-}
-
-// Before normalization (function): add_new_map_starting_materials.
-static __forceinline void addNewMapStartingMaterials(
-    long* wood, long* ore, long amount)
-{
-    *wood += amount;
-    *ore += amount;
 }
 
 // E:\gamedcs\game.cpp:4236
@@ -5128,7 +4811,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             != -1)
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
-            type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE, -1);
+            type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
             campaignHero->giveArtifact(&alliance, 0, 0);
         }
     }
@@ -5174,7 +4857,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                     heroId = m_players[setupPlayer].m_heroes[0];
                 hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
-                    type_artifact artifact(getRandomArtifactId(2), -1);
+                    type_artifact artifact(getRandomArtifactId(2));
                     bonusHero->giveArtifact(&artifact, 1, 1);
                 }
                 break;
@@ -5190,9 +4873,12 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 case TOWN_STRONGHOLD:
                 case TOWN_FORTRESS: {
                     amount = random(5, 10);
-                    addNewMapStartingMaterials(
-                        &m_players[setupPlayer].m_resources[WOOD],
-                        &m_players[setupPlayer].m_resources[ORE], amount);
+                    // DC game.cpp:4407/4408 keeps these additions in
+                    // NewMap. Retail 0x4c0306/0x4c030e stores wood then
+                    // ore using the same Random(5, 10) result. The former
+                    // add_new_map_starting_materials wrapper was unattested.
+                    m_players[setupPlayer].m_resources[WOOD] += amount;
+                    m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
                 case TOWN_RAMPART:
@@ -5279,25 +4965,6 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
     }
 }
 
-__forceinline int game::setupFirstPlayerPosition(int firstHuman)
-{
-    if (g_mpNetProtocol == MP_HOTSEAT) {
-        if (firstHuman >= 0 && firstHuman < 8 &&
-            m_players[firstHuman].m_isHuman) {
-            return firstHuman;
-        }
-        int player;
-        for (player = 7; player >= 0; --player) {
-            if (m_players[player].m_isHuman)
-                goto playerSelected;
-        }
-        player = 0;
-playerSelected:
-        return player;
-    }
-    return g_localGamePos;
-}
-
 // E:\gamedcs\game.cpp:4474
 // The DC roster names a no-argument SetupFirstPlayer.  Retail's callers put
 // gpGame in ECX, and every indexed player load is relative to that receiver,
@@ -5308,41 +4975,28 @@ playerSelected:
 VA(0x004c0630, 0xB1)  // anchor-callers + dc-order, dc 0xab8d0
 void game::setupFirstPlayer()
 {
-    int firstHuman = 0;
-    while (firstHuman < 8) {
-        int playerIndex = firstHuman;
-        if (playerIndex >= 8 || playerIndex < 0)
-            playerIndex = 0;
-        if (m_players[playerIndex].m_isHuman)
+    // DC locals: startingPos, localPlayer. The calls at dc 0xab8f8 and
+    // 0xab942 name IsHuman and GetLocalPlayerGamePos. Retail 0x4c0636
+    // expands IsHuman's clamp; 0x4c067a..0x4c06c7 expands the protocol
+    // test and descending human scan of GetLocalPlayerGamePos. The latter
+    // reads g_netLocalGamePos just written below; it needs no extra formal
+    // or separate setupFirstPlayerPosition source helper.
+    int startingPos = 0;
+    while (startingPos < 8) {
+        if (isHuman(startingPos))
             break;
-        ++firstHuman;
+        ++startingPos;
     }
 
-    g_netLocalGamePos = firstHuman;
-    g_currentPlayer = &m_players[firstHuman];
-    g_unnamed69ccc4 = static_cast<unsigned char>(1 << firstHuman);
+    g_netLocalGamePos = startingPos;
+    g_currentPlayer = &m_players[startingPos];
+    g_unnamed69ccc4 = static_cast<unsigned char>(1 << startingPos);
 
-    int currentPlayer = setupFirstPlayerPosition(firstHuman);
-    g_unnamed69778c = currentPlayer;
-    g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
-    g_unnamed69d810 = firstHuman;
+    int localPlayer = getLocalPlayerGamePos();
+    g_unnamed69778c = localPlayer;
+    g_mapVisibilityBit = static_cast<unsigned char>(1 << localPlayer);
+    g_unnamed69d810 = startingPos;
 }
-
-union TUniversitySkillsPointerAlias {
-    // Before normalization: skills.
-    int* m_skills;
-    // Before normalization: university.
-    type_university* m_university;
-};
-
-// Before normalization (function): university_skills_record.
-static __forceinline type_university* universitySkillsRecord(int* skills)
-{
-    TUniversitySkillsPointerAlias alias;
-    alias.m_skills = skills;
-    return alias.m_university;
-}
-
 
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
@@ -5351,8 +5005,11 @@ static void randomizeScholar(NewmapCell* cell)
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
     if (info->getScholarAward() != const_scholar_primary_skill) {
+        // DC game.cpp:4515 keeps Random inside the SetScholar expression.
+        // Preserve that expression and its enum ABI with a local bridge.
+        union { int m_integer; TPrimarySkill m_skill; } primary;
         info->setScholar(info->getScholarAward(),
-            primarySkillFromInt(random(0, 3)),
+            (primary.m_integer = random(0, 3), primary.m_skill),
             info->getScholarSecondarySkill(), info->getScholarSpell());
     }
 }
@@ -5419,7 +5076,11 @@ static void randomizeWagon(NewmapCell* cell)
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
     int i = random(0, 99);
-    info->setWagon(gameResourceFromInt(random(0, 5)),
+    // DC game.cpp:4662 has both Random calls in SetWagon's expression.
+    // Keep them there; the conversion itself has no recovered helper.
+    union { int m_integer; EGameResource m_resource; } resourceValue;
+    info->setWagon((resourceValue.m_integer = random(0, 5),
+                    resourceValue.m_resource),
         static_cast<short>(random(2, 5)));
     if (i < 10)
         info->emptyWagon();
@@ -5480,7 +5141,7 @@ static void randomizeTomb(NewmapCell* cell)
         level = 16;
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
-    info->setTomb(artifactFromInt(g_game->getRandomArtifactId(level)));
+    info->setTomb(g_game->getRandomArtifactId(level));
 }
 
 
@@ -5549,13 +5210,27 @@ void game::randomizeUniversity(NewmapCell* cell)
         skill = eSecSkillPathfinding;
         for (;;) {
             if (!availableSkills.test(skill)) {
-                skill = secondarySkillFromInt(skill + 1);
+                {
+                    union {
+                        int m_integer;
+                        TSecondarySkill m_skill;
+                    } converted;
+                    converted.m_integer = skill + 1;
+                    skill = converted.m_skill;
+                }
                 continue;
             }
             if (choice == 0)
                 break;
             --choice;
-            skill = secondarySkillFromInt(skill + 1);
+            {
+                union {
+                    int m_integer;
+                    TSecondarySkill m_skill;
+                } converted;
+                converted.m_integer = skill + 1;
+                skill = converted.m_skill;
+            }
         }
 
         university[i] = skill;
@@ -5571,8 +5246,14 @@ void game::randomizeUniversity(NewmapCell* cell)
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
     type_university* universityTail = universityList->end();
-    type_university* universityRecord =
-        universitySkillsRecord(university);
+    // DC names this local type_university (dc 0xac048). This bridge
+    // exposes the current four-int storage through that record's type.
+    union {
+        int* m_skills;
+        type_university* m_university;
+    } universityAlias;
+    universityAlias.m_skills = university;
+    type_university* universityRecord = universityAlias.m_university;
 #pragma inline_depth(0)
     universityList->insert(universityTail, 1, *universityRecord);
 #pragma inline_depth()
@@ -5946,9 +5627,14 @@ void game::randomizeEvents()
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
                         type_creature_bank bank;
-                        initializeCreatureBank(
-                            &bank,
-                            creatureBankTypeFromInt(tempCell->m_objectIndex));
+                        {
+                            union {
+                                int m_integer;
+                                type_creature_bank_type m_bankType;
+                            } converted;
+                            converted.m_integer = tempCell->m_objectIndex;
+                            initializeCreatureBank(&bank, converted.m_bankType);
+                        }
                         m_creatureBanks.push_back(bank);
                     }
                     break;
@@ -6095,7 +5781,14 @@ void game::randomizeEvents()
                     {
                         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                             static_cast<void*>(&tempCell->m_extraInfo));
-                        resType = gameResourceFromInt(random(0, 5));
+                        {
+                            union {
+                                int m_integer;
+                                EGameResource m_resource;
+                            } converted;
+                            converted.m_integer = random(0, 5);
+                            resType = converted.m_resource;
+                        }
                         resQty = static_cast<unsigned char>(random(1, 5));
                         info->setLeanTo(numLeanTo++, resQty, resType);
                     }
@@ -6348,7 +6041,14 @@ void game::randomizeEvents()
                         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                             static_cast<void*>(&tempCell->m_extraInfo));
                         resQty = static_cast<unsigned char>(random(3, 6));
-                        resType = gameResourceFromInt(random(1, 5));
+                        {
+                            union {
+                                int m_integer;
+                                EGameResource m_resource;
+                            } converted;
+                            converted.m_integer = random(1, 5);
+                            resType = converted.m_resource;
+                        }
                         info->setWindmill(resType, resQty);
                     }
                     break;
@@ -6372,33 +6072,6 @@ void game::randomizeEvents()
 // CodeView dc 0xbd58c: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
-
-// Before normalization (function): test_new_map_spell.
-static __forceinline bool testNewMapSpell(
-    const std::bitset<70>& spells, int spell)
-{
-    return spells[spell];
-}
-
-// Before normalization (function): assign_map_hero_name.
-// Retail keeps the string assign call in readMapHeroSetups and
-// readMapPlayerSlot. The former inline-depth pin forced it; removing it
-// changes the setup reader from 86.08842% to 51.72866% and the player reader
-// from 67.55869% to 55.81455% in isolation. Preserve the source assignment
-// while recovering its natural nested boundary; setup's MAX/HIST survives.
-static __forceinline void assignMapHeroName(
-    std::string& destination, const std::string& source)
-{
-    destination.assign(source, 0, std::string::npos);
-}
-
-// Before normalization (function): read_map_player_name.
-static inline void readMapPlayerName(char* destination,
-                                        TAbstractFile* infile)
-{
-    std::string name = readLengthPrefixedString(infile);
-    strcpy(destination, name.c_str());
-}
 
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
@@ -6535,8 +6208,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                     if (g_artifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
                             m_artifactDisabled[artifact]
-                            || testNewMapSpell(
-                                markSpells(artifact), spell);
+                            || markArtifactSpells(artifact).test(spell);
                     }
                 }
             }
@@ -6585,10 +6257,10 @@ bool game::loadMap(TAbstractFile* mapFile)
     for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
          ++rumour) {
         std::string throwAway;
-        int result = readMapString(mapFile, &throwAway);
+        int result = NewSMapHeader::readString(mapFile, throwAway);
         if (result < 0)
             return false;
-        result = readMapString(mapFile, &rumour->m_text);
+        result = NewSMapHeader::readString(mapFile, rumour->m_text);
         if (result < 0)
             return false;
         rumour->m_unavailable = 0;
@@ -6699,7 +6371,8 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
                 short artifact;
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_artifacts[equipped] =
-                    type_artifact(artifact, -1);
+                    // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
+                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             short backpackCount;
@@ -6711,19 +6384,20 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
                 short artifact;
                 mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_backpack[carried] =
-                    type_artifact(artifact, -1);
+                    // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
+                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
-                type_artifact(ARTIFACT_CATAPULT, -1);
+                type_artifact(ARTIFACT_CATAPULT);
         }
 
         char customName;
         mapFile->read(&customName, sizeof(customName));
         if (customName) {
             heroRecord->m_customName = 1;
-            assignMapHeroName(heroRecord->m_name,
-                                 readLengthPrefixedString(mapFile));
+            heroRecord->m_name.assign(
+                readLengthPrefixedString(mapFile), 0, std::string::npos);
         }
 
         signed char sexByte;
@@ -6795,13 +6469,25 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_creatureType =
-                creatureTypeFromInt(intBuffer & 0xff);
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = intBuffer & 0xff;
+                m_victoryCondition.m_creatureType = storage.m_creature;
+            }
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_victoryCondition.m_creatureType =
-                creatureTypeFromInt(shortBuffer);
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = shortBuffer;
+                m_victoryCondition.m_creatureType = storage.m_creature;
+            }
         }
         {
             int intBuffer;
@@ -7093,8 +6779,14 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     case VICTORY_CONDITION_TOTAL_CREATURES: {
         int creature;
         infile->read(&creature, sizeof(char));
-        m_victoryCondition.m_creatureType =
-            creatureTypeFromInt(creature & 0xff);
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = creature & 0xff;
+            m_victoryCondition.m_creatureType = storage.m_creature;
+        }
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
             return -1;
@@ -7388,12 +7080,17 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
-    m_nonRandomHeroId = readMapHeaderHeroId(infile, mapVersion);
+    m_nonRandomHeroId = readHeroId(infile, mapVersion);
     m_defaultPlaceholders = 0;
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
-            readMapHeaderHeroId(infile, mapVersion);
-        readMapPlayerName(m_nonRandomHeroCustomName, infile);
+            readHeroId(infile, mapVersion);
+        // Retail 0x4c4159 calls readLengthPrefixedString, copies its
+        // c_str() to receiver+0x24, and destroys the local at 0x4c418f.
+        // The former read_map_player_name wrapper and depth pin only
+        // separated these statements; retain the string's block lifetime.
+        std::string name = readLengthPrefixedString(infile);
+        strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
         m_nonRandomHeroCustomPortrait = -1;
         m_nonRandomHeroCustomName[0] = 0;
@@ -7443,8 +7140,8 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
             if (heroId == g_savedHeroNone)
                 heroId = -1;
             m_heroes[heroIndex].m_heroId = heroId;
-            assignMapHeroName(m_heroes[heroIndex].m_name,
-                                 readLengthPrefixedString(infile));
+            m_heroes[heroIndex].m_name.assign(
+                readLengthPrefixedString(infile), 0, std::string::npos);
             ++heroIndex;
             --heroCount;
         } while (heroCount != 0);
@@ -7500,9 +7197,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (readMapString(infile, &m_mapName) < 0)
+    if (NewSMapHeader::readString(infile, m_mapName) < 0)
         return -1;
-    if (readMapString(infile, &m_mapDescription) < 0)
+    if (NewSMapHeader::readString(infile, m_mapDescription) < 0)
         return -1;
 
     unsigned char ucharBuffer;
@@ -7777,9 +7474,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(boolBuffer))
         return -1;
 
-    if (saveAbstractString(outfile, &m_mapName) < 0)
+    if (game::saveString(outfile, m_mapName) < 0)
         return -1;
-    if (saveAbstractString(outfile, &m_mapDescription) < 0)
+    if (game::saveString(outfile, m_mapDescription) < 0)
         return -1;
 
     ucharBuffer = m_difficulty;
@@ -7849,7 +7546,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
             std::string s;
             s = player->m_nonRandomHeroCustomName;
-            if (saveAbstractString(outfile, &s) < 0)
+            if (game::saveString(outfile, s) < 0)
                 return -1;
         }
     }
@@ -7925,13 +7622,6 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     return 0;
 }
 
-// Before normalization (function): set_saved_header_availability.
-static __forceinline void setSavedHeaderAvailability(
-    std::bitset<8>& availability, unsigned int player, bool available)
-{
-    availability[player] = available;
-}
-
 // Saved headers share the scenario header's scalar layout but add four
 // versioned migrations: max hero level, widened alignment masks, custom hero
 // records, and per-player availability masks.  The two old campaign hero ids
@@ -7953,6 +7643,9 @@ static __forceinline void setSavedHeaderAvailability(
 // the depth this callee expands at moves the four surrounding
 // `_Tidy`/`assign`/`out_of_range`/`__CxxThrowException` sites with it and
 // costs more than the call is worth.
+// The former setSavedHeaderAvailability wrapper only assigned a bitset
+// proxy. Retail's availability mask loop at 0x4c5c50 onward performs that
+// proxy assignment directly; its extra source boundary was unproven.
 // Complete adds saveVersion to the stream reader; retail returns with ret 8.
 VA(0x004c5630, 0x7CD)  // DC Load + saved-header callers + helper edges, dc 0xb0754
 int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
@@ -7984,9 +7677,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (loadString(infile, &m_mapName) < 0)
+    if (game::loadString(infile, m_mapName) < 0)
         return -1;
-    if (loadString(infile, &m_mapDescription) < 0)
+    if (game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
     if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
@@ -8064,12 +7757,12 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         player->m_nonRandomHeroId =
-            loadSavedHeroId(infile, saveVersion);
+            loadHeroId(infile, saveVersion);
         if (player->m_nonRandomHeroId != -1) {
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
-                loadSavedHeroId(infile, saveVersion);
-            loadString(infile, &strTemp);
+                loadHeroId(infile, saveVersion);
+            game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
             player->m_nonRandomHeroCustomPortrait = -1;
@@ -8133,9 +7826,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             infile->read(&ucharBuffer, sizeof(ucharBuffer));
             for (availabilityIndex = 0;
                  availabilityIndex < 8; ++availabilityIndex) {
-                setSavedHeaderAvailability(
-                    availability, availabilityIndex,
-                    (ucharBuffer & (1 << (availabilityIndex & 7))) != 0);
+                availability[availabilityIndex] =
+                    (ucharBuffer & (1 << (availabilityIndex & 7))) != 0;
             }
         } else {
             availability.set();
@@ -8176,12 +7868,14 @@ int NewSMapHeader::get(const char* path, const char* filename,
     return 0;
 }
 
+// DC NewSMapHeader::readString (0xb1110), static with a string reference.
+// Former reconstruction name: readMapString.
 // Map-format strings use a dword length, unlike saved-game strings. Retail
 // treats nonpositive and sentinel-sized values as empty and otherwise keeps
 // the temporary allocation alive on a short payload read.
 #pragma auto_inline(off)
 VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit length protocol
-int __fastcall readMapString(TAbstractFile* infile, std::string* value)
+int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& value)
 {
     int length;
 
@@ -8193,10 +7887,10 @@ int __fastcall readMapString(TAbstractFile* infile, std::string* value)
         memset(buffer, 0, length + 1);
         if (infile->read(buffer, length) < length)
             return -1;
-        *value = buffer;
+        value = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        value.erase();
     }
 
     return length;
@@ -8373,28 +8067,10 @@ int NewSMapHeader::get(const char* filename)
     // @stub
 }
 
-// E:\gamedcs\game.cpp:7232
-DC_ONLY(0xb1110, 0x11E)
-int NewSMapHeader::readString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
-// victorylossconditions.cpp's `get_team` under a TU-local name: the
-// negative arm returns the player number itself, which is what lets VC6
-// thread `owner < 0` straight through the caller's `>= 0` test instead
-// of branching twice. That file's applies_to_player (0x5f15a0, exact)
-// is the shape ClaimTown's team block repeats.
-// Before normalization (function): claim_town_team.
-static int claimTownTeam(game* thisGame, int playerNum)
-{
-    if (playerNum < 0)
-        return playerNum;
-    return thisGame->m_mapHeader.m_teamInfo[playerNum];
-}
-
+// DC ClaimTown (0xb1230) names Game.h::GetTeam at both team lookups.
+// Use the canonical member; the former claimTownTeam repeated its body.
 // E:\gamedcs\game.cpp:7289
 // The two generator sweeps are generator::remove_bonus and
 // generator::update_bonus INLINED - both keep the owner re-read that
@@ -8443,9 +8119,9 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     }
 
     if (thisTown->m_owner != -1) {
-        int team = claimTownTeam(this, thisTown->m_owner);
+        int team = getTeam(thisTown->m_owner);
         if (team >= 0 && isComputerTeam(team)) {
-            int newTeam = claimTownTeam(this, newPlayerOwner);
+            int newTeam = getTeam(newPlayerOwner);
             if (newTeam >= 0) {
                 int player = 0;
                 signed char* teams = m_mapHeader.m_teamInfo;
@@ -9485,8 +9161,14 @@ void game::setRecruits(int playerPos)
         if (player->m_recruits[1 - recruitSlot] < 0)
             otherClass = kNumHeroClasses;
         else
-            otherClass = heroClassFromInt(
-                getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+        {
+            union {
+                int m_integer;
+                THeroClass m_heroClass;
+            } converted;
+            converted.m_integer = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
+            otherClass = converted.m_heroClass;
+        }
 
         int heroId;
         if (m_isTutorial
@@ -9546,8 +9228,14 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     THeroClass otherClass = kNumHeroClasses;
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
-        otherClass = heroClassFromInt(
-            getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
+    {
+        union {
+            int m_integer;
+            THeroClass m_heroClass;
+        } converted;
+        converted.m_integer = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
+        otherClass = converted.m_heroClass;
+    }
 
     int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
     player->m_recruits[recruitSlot] = heroId;
@@ -9634,15 +9322,36 @@ void game::perWeek()
             }
         }
         g_weekTypeExtra = align;
-        bonusCreature = creatureTypeFromInt(align);
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } storage;
+            storage.m_value = align;
+            bonusCreature = storage.m_creature;
+        }
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, 0)) {
             g_weekType = g_weekTypeInfernoGrail;
-            bonusCreature = creatureTypeFromInt(g_creatureImpId);
-            alternateBonus = creatureTypeFromInt(g_creatureFamiliarId);
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = g_creatureImpId;
+                bonusCreature = storage.m_creature;
+            }
+            {
+                union {
+                    int m_value;
+                    TCreatureType m_creature;
+                } storage;
+                storage.m_value = g_creatureFamiliarId;
+                alternateBonus = storage.m_creature;
+            }
             bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
             g_weekTypeExtra = g_creatureImpId;
             break;
@@ -9756,8 +9465,15 @@ void game::perWeek()
                     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                         static_cast<void*>(&mapCell->m_extraInfo));
                     int resQty = random(3, 6);
-                    EGameResource resType =
-                        gameResourceFromInt(random(1, 5));
+                    EGameResource resType;
+                    {
+                        union {
+                            int m_integer;
+                            EGameResource m_resource;
+                        } converted;
+                        converted.m_integer = random(1, 5);
+                        resType = converted.m_resource;
+                    }
                     info->setWindmill(resType, resQty);
                     break;
                 }
@@ -10017,7 +9733,12 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         }
         ++x;
     }
-    return creatureTypeFromInt(x);
+    union {
+        int m_value;
+        TCreatureType m_creature;
+    } storage;
+    storage.m_value = x;
+    return storage.m_creature;
 }
 
 #if 0  // @carcass
@@ -10073,7 +9794,12 @@ TArtifact game::getRandomArtifactId(int artifactClass)
             }
         }
         m_artifactUsed[i] = 1;
-        return artifactFromInt(i);
+        union {
+            int m_integer;
+            TArtifact m_artifact;
+        } converted;
+        converted.m_integer = i;
+        return converted.m_artifact;
     } else {
         curCount = 0;
         for (i = 0; i < 144; ++i) {
@@ -10981,6 +10707,13 @@ inline const char* getRandomTownName(int townType)
     return g_townNames[townType][name];
 }
 
+// Original: resetRandomTownNames; game.cpp:9821, dc 0xb69b8.
+inline void resetRandomTownNames()
+{
+    for (int i = 0; i < 9; ++i)
+        g_randomTownNames[i].reset();
+}
+
 // E:\gamedcs\game.cpp:9833; original name: ProcessOnMapTowns.
 // DC proves the setup sweep's locals and resize, z/y/x scan, random-town
 // conversion, direct town-name assignment, initialize and ConvertObject order.
@@ -11675,7 +11408,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 break;
 
             case RS_SET_AS_HOST:
-                systemMsg(&g_chatMan, (*g_generalText)[471]);
+                g_chatMan.systemMsg((*g_generalText)[471]);
                 break;
 
             case RS_CHAT_MSG: {
@@ -12408,13 +12141,13 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
                                     // Before normalization (locals): cell_type, lith_count,
                                     // open_count, exit_point, exit_cell.
                                     type_point* result, long cellType,
-                                    long excluded)
+                                    long excluded) const
 {
     long lithCount = points->size();
     long openCount = 0;
     type_point exitPoint;
     long i;
-    NewmapCell* exitCell;
+    const NewmapCell* exitCell;
 
     for (i = 0; i < lithCount; ++i) {
         exitPoint = (*points)[i];
@@ -12465,7 +12198,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>* points,
 // at +0x4e77c (0x6f). The `shl 4` in the first two is the 16-byte
 // std::vector stride, which is how the arrays were sized.
 VA(0x004cddc0, 0x22)  // anchor-global, dc 0xbb3e0
-unsigned char game::getRandomLithExit(long color, type_point* result)
+unsigned char game::getRandomLithExit(long color, type_point* result) const
 {
     return getRandomLith(&m_lithExitPools[color], result, 0x2c, -1);
 }
@@ -12476,14 +12209,14 @@ unsigned char game::getRandomLithExit(long color, type_point* result)
 
 // E:\gamedcs\game.cpp:11644
 VA(0x004cddf0, 0x24)  // anchor-bracket, dc 0xbb41c
-unsigned char game::getRandomLith(long color, long excluded, type_point* result)
+unsigned char game::getRandomLith(long color, long excluded, type_point* result) const
 {
     return getRandomLith(&m_lithPools[color], result, 0x2d, excluded);
 }
 
 // E:\gamedcs\game.cpp:11653
 VA(0x004cde20, 0x1D)  // anchor-global, dc 0xbb45c
-unsigned char game::getRandomWhirlpool(long excluded, type_point* result)
+unsigned char game::getRandomWhirlpool(long excluded, type_point* result) const
 {
     return getRandomLith(&m_whirlpools, result, 0x6f, excluded);
 }
@@ -12755,7 +12488,7 @@ playerData* game::getLocalPlayer()
 
 // E:\gamedcs\game.cpp:11796
 VA(0x004cea20, 0x4E)  // anchor-global, dc 0xbc038
-int game::getLocalPlayerGamePos()
+int game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
@@ -12809,7 +12542,7 @@ char* game::getPlayerName(int gamePos)
 
 // E:\gamedcs\game.cpp:11839
 VA(0x004cec20, 0x25)  // linkorder, dc 0xbc23c
-int game::getGamePosFromDPID(unsigned long dpid)
+int game::getGamePosFromDPID(unsigned long dpid) const
 {
     for (int i = 0; i < 8; i++) {
         if (m_players[i].m_dpid == dpid)
@@ -13025,10 +12758,6 @@ VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, generator)
 VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, type_university)
 VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, type_university)
 VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
-// GetRandomMonster's iterator dereference returns the iterator's bitset
-// pointer and absolute offset as bitset<145>::reference. Retail copies those
-// two words verbatim, and the sole emitted specialization has the same body.
-VA_COMPGEN(0x004d4ca0, 0x14, BITSET_ITERATOR_DEREF, Bitset145)
 // NewSMapHeader::Read materializes the eight-player availability setter and
 // the four-dword default mask initializer. Their immediate bounds/fill counts
 // distinguish these two retained bitset widths from the neighboring rows.
@@ -18325,67 +18054,9 @@ void CObjectType::~CObjectType()
 
 #endif  // @carcass
 
-// Kept below every reconstructed game body: only the emission anchor needs
-// the complete transfer-dialog layout, and importing the remote UI closure at
-// the TU head would perturb game.cpp's codegen-sensitive include population.
-#include "remotedlg.h"
-
-// STL COMDAT emission anchor. The original game bodies that exhausted VC6's
-// inline budget are not reconstructed yet, so this late definition restores
-// only their named out-of-line members without changing any runtime caller.
-// As with hero.cpp's established anchor, objdiff enumerates target functions;
-// this scaffold and any unclaimed helper it emits add no comparison rows.
-// The five bitset reset bodies belong to the pinned VC6 BITSET header.
-// Former application-local specializations only inserted inline_depth pins
-// around _Tidy; they supplied no recovered game behavior and are removed.
-// With canonical reset, the five retained _Tidy comparisons (5/8/28/70/128
-// bits) lose their game.obj emissions; their MAX 100 checkpoints remain banked.
-// No game function score changed in this control. Recover real caller/compiler
-// state rather than restoring these private library replacements.
-#pragma inline_depth(0)
-// Before normalization (function): h3_game_class_comdat_anchor.
-void h3GameClassComdatAnchor(unsigned char sending)
-{
-    CGameTransferDlg transferDialog(sending);
-}
-
-// Before normalization (function): h3_game_stl_comdat_anchor.
-void h3GameStlComdatAnchor(std::bitset<70>& spells,
-                               std::bitset<144>& artifacts,
-                               const std::string& message,
-                               std::bitset<4>& players,
-                               std::vector<type_university>& universities,
-                               std::bitset<156>& availableHeroes,
-                               std::bitset<28>& availableSkills,
-                               std::bitset<128>& objectTypes,
-                               std::bitset<5>& spellLevels,
-                               std::bitset<8>& heroPool,
-                               std::vector<type_creature_bank>& creatureBanks,
-                               THeroSetupMapMinComdatAnchor& heroSetupMap,
-                               const THeroSetupMapMinComdatAnchor::Value& heroSetupValue)
-{
-    spellLevels.reset();
-    heroPool.reset();
-    availableSkills.reset();
-    spells.reset();
-    creatureBanks.erase(creatureBanks.begin(), creatureBanks.end());
-    heroSetupMap.retainMin();
-    heroSetupMap.retainInsert(heroSetupValue);
-    spells[0] = true;
-    artifacts.set(0, true);
-    std::logic_error error(message);
-    players.test(0);
-    universities.capacity();
-    availableHeroes.set(0, true);
-    availableHeroes[0] = true;
-    availableSkills.test(0);
-    heroPool.set(0, true);
-    objectTypes.reset();
-    objectTypes.set(0, true);
-    objectTypes.test(0);
-}
-#pragma inline_depth()
-
+// Retained library bodies keep their canonical VA enrollments. Emission
+// must come from recovered callers and compiler state; the former dummy
+// class/STL callers and their inline-depth pin supplied no game behavior.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
@@ -18489,17 +18160,6 @@ VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
 
-// COMDAT pairing: map<CImmEnclosure*, RECT>::erase, both overloads, newly
-// emitted by the TImmMouseEffect destructor above. The chain is closed on
-// both sides: the range overload at 0x4b7200 is reached from that destructor
-// (0x4b6eea) and from the already-claimed tree destructor at 0x4b61f0
-// (0x4b6204, `erase(begin(), end())`), and it is the ONLY caller of 0x4b74a0
-// (0x4b72fd) - exactly `while (_F != _L) erase(_F++)`. Sizes corroborate
-// independently: resourcemanager's TCacheMapKey tree, the other pointer-keyed
-// map in the tree, carries this same pair at 0x50F and 0x121.
-VA_COMPGEN(0x004b7200, 0x121, TREE_ERASE_RANGE, CImmEnclosure)
-VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
-
 // COMDAT pairing: out_of_range's `const string&` constructor - the overload
 // lane 17 identified at this address and then had to leave unclaimed, because
 // every unit emitting it also emits the copy constructor and the two zip by
@@ -18512,41 +18172,6 @@ VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
 // emits only the copy; the COMDAT itself is identical wherever it appears,
 // which is why /OPT:ICF left one retail copy for the whole link.
 VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
-
-// COMDAT pairing: the rest of map<CImmEnclosure*, RECT>'s out-of-line tree
-// surface, reached from the TImmMouseEffect destructor above. _Lbound and
-// _Ubound are the same 73 bytes and differ only in which way round they
-// compare, which is exactly how <xtree> writes them and is decisive here:
-// 0x4b7d50 is `cmp [node+0xc], key / jae` = `key_compare(_Key(_X), _Kv)`,
-// _Lbound's polarity, and 0x4b7e70 is `cmp key, [node+0xc] / jae` =
-// `key_compare(_Kv, _Key(_X))`, _Ubound's. The call graph corroborates both
-// independently: 0x4b7d50 has exactly one caller, the out-of-line lower_bound
-// at 0x4b79b0, while 0x4b7e70 is called straight from the destructor, which
-// is where upper_bound is expanded. _Erase is erase(iterator, iterator)'s
-// whole-tree arm.
-//
-// NOT claimed here: 0x4b6f60, the 190-byte map<int, type_map_hero_info>
-// constructor this unit also emits. The name is already proven at 0x45bf70 in
-// campaignbrief, so retail carries two un-folded copies of one COMDAT and only
-// the first can hold the label; a second claim is refused as a duplicate
-// proven name, which is the delinker working correctly.
-// COMDAT pairing: the enclosure map's nested-iterator surface, the last
-// three out-of-line rows of this tree. Each is byte-identical to the COMDAT
-// this object emits and each is corroborated from the call graph rather
-// than from length alone, which decides nothing at 25/23/14 bytes:
-//   0x4b73e0  iterator::operator==   `mov eax,[ecx] / cmp eax,[edx] / sete`
-//             - the _Node* compare, and the only `??8` this tree emits;
-//   0x4b79b0  lower_bound            - the out-of-line wrapper, whose ONLY
-//             callee is _Lbound at 0x4b7d50 (claimed above, and 0x4b7d50's
-//             only caller in turn), storing the node into the hidden return;
-//   0x4b7da0  const_iterator(_Node*) - the one-argument iterator ctor,
-//             `ret 4` storing its argument at +0.
-VA_COMPGEN(0x004b73e0, 0x19, TREE_ITERATOR_EQUAL, CImmEnclosure)
-VA_COMPGEN(0x004b79b0, 0x17, TREE_LOWER_BOUND, CImmEnclosure)
-VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)
-VA_COMPGEN(0x004b7d50, 0x49, TREE_LBOUND, CImmEnclosure)
-VA_COMPGEN(0x004b7da0, 0xE, TREE_CONST_ITERATOR_CTOR, CImmEnclosure)
-VA_COMPGEN(0x004b7e70, 0x49, TREE_UBOUND, CImmEnclosure)
 
 // COMDAT pairing: the campaign carry-over pools' remaining element rows in
 // the campaignwindow..castle bracket, each placed by a POSITIONAL zip of our

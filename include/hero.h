@@ -167,7 +167,7 @@ struct type_obscuring_object {
     {
         return type_point(m_x, m_y, m_z);
     }
-    class town* getObscuredTown();
+    class town* getObscuredTown() const;
     void obscureCell(TAdventureObjectType newType, long id);
     void restoreCell();
     bool load(void* infile);
@@ -268,22 +268,10 @@ struct type_artifact {
         m_artifactId = ARTIFACT_SPELL_SCROLL;
         m_extra = spell;
     }
-    // The two-argument form stores artifactId FIRST and extra second, like
-    // both single-argument constructors above.  Spelled with `extra` in a
-    // member-initialiser list instead (VC6 runs it in DECLARATION order, so
-    // the memcpy body statement then landed second) the two stores emerge
-    // reversed: kb's handle_click showed retail's `mov [ebp-0x14],eax` /
-    // `mov [ebp-0x10],edx` against our `edx` first.  Restoring the source
-    // order took handle_click 99.9475 -> 99.9761 and returned TEN rows that
-    // had silently drifted below their banked MAX (philai buy_siege_engine,
-    // buy_special_building, get_artifact_purchase_value, value_of_obelisk,
-    // value_of_town, AI_visit_war_factory; hero HeroFn_004D9B30,
-    // HeroFn_004DC070; game NewMap) to 100.0000, +12 exact tree-wide.
-    type_artifact(int id, int extraValue)
-    {
-        memcpy(&m_artifactId, &id, sizeof m_artifactId);
-        m_extra = extraValue;
-    }
+    // The reconstruction-only (int, int) overload was removed. Ordinary
+    // artifacts use the TArtifact constructor; scrolls use SpellID. A
+    // separately decoded payload is assigned explicitly by its owning caller.
+    // Both proven constructors retain their DC id-before-payload store order.
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the
@@ -990,9 +978,6 @@ public:
     // Original: hero::get_artifact; Hero.h:965, dc 0x27e8c.
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
-    // Complete campaign carryover collector; customcampaign.cpp owns the
-    // retail-proven expansion and provisional name.
-    void collectArtifacts(std::vector<type_artifact>& artifacts) const;
     const type_artifact& getArtifact(TArtifactSlot slot) const
     {
         return m_equipped[slot];
@@ -1030,7 +1015,7 @@ public:
     }
 
     // Before normalization (function): hero::HasArtifact.
-    unsigned char hasArtifact(int whichArtifact);
+    unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     // Before normalization (function): hero::AddSpell.
@@ -1039,8 +1024,8 @@ public:
     // Before normalization (function): hero::update_spell_list.
     void updateSpellList();
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
-    long getEquippedArtifacts(unsigned char countWarMachines);
-    long getNumberInBackpack(unsigned char countWarMachines);
+    long getEquippedArtifacts(unsigned char countWarMachines) const;
+    long getNumberInBackpack(unsigned char countWarMachines) const;
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
     // header-inline helper in source. Retail folds its packed-point
     // construction into SetHeroContext and move_hero, so the canonical
@@ -1161,9 +1146,9 @@ public:
     // Original names: GetLogisticsFactor, GetNavigationFactor.
     float getLogisticsFactor() const;
     long getNavigationFactor() const;
-    int getMobility(unsigned char seaMovement);
+    int getMobility(unsigned char seaMovement) const;
     // Before normalization (function): hero::GetMobility.
-    int getMobility();
+    int getMobility() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     // Before normalization (function): hero::get_primary_skill_total.
@@ -1177,17 +1162,17 @@ public:
     void walkOnWater(int level);
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     // Before normalization (function): hero::can_land.
-    unsigned char canLand();
+    unsigned char canLand() const;
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     // Before normalization (function): hero::can_summon_boat.
     unsigned char canSummonBoat() const;
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     // Before normalization (function): hero::IsInIdentifyRange.
-    unsigned char isInIdentifyRange(const type_point* location);
+    unsigned char isInIdentifyRange(const type_point* location) const;
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
     // hero::IsInIdentifyRange inlines. ORDINAL PLACEHOLDER name.
     // Before normalization (function): hero::HeroFn_004E5DE0.
-    int heroFn004E5DE0();
+    int heroFn004E5DE0() const;
     // 0x4e6120, RETAIL-ONLY (no DC row): folds this hero's own bonuses
     // into a CALLER-OWNED copy of a creature's table row - the two
     // opening blocks add GetPrimarySkill(0) and (1) into the copy's
@@ -1202,9 +1187,9 @@ public:
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
     // Before normalization (function): hero::belongs_to_human.
-    unsigned char belongsToHuman();
+    unsigned char belongsToHuman() const;
     // Before normalization (function): hero::get_player.
-    class playerData* getPlayer();
+    class playerData* getPlayer() const;
     // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
     // Before normalization (function): hero::GetMobilityFrame.
     int getMobilityFrame() const;
@@ -1233,12 +1218,12 @@ public:
     // 0x4e4390 - Estates gold per day, the int twin of the five
     // specialty-factor getters.
     // Before normalization (function): hero::GetEstatesBonus.
-    int getEstatesBonus();
+    int getEstatesBonus() const;
     // 0x4e5b80 - the hit-point artifact family. Takes a creature type
     // (`ret 4`); the Dreamcast row's no-argument form is that build's
     // own revision (see the note over the body).
     // Before normalization (function): hero::get_hit_point_bonus.
-    long getHitPointBonus(int creatureType);
+    long getHitPointBonus(int creatureType) const;
     // 0x004da510 / 0x004da710 - the win half is a stub, but the loss
     // half's whole retail body is a tail jump into it, so it needs the
     // declaration.
@@ -1249,7 +1234,7 @@ public:
     // The three backpack primitives at 0x004dbd90 / 0x004dbdb0 /
     // 0x004dbe10; all three walk `backpack` above.
     // Before normalization (function): hero::get_last_backpack_index.
-    long getLastBackpackIndex();
+    long getLastBackpackIndex() const;
     // Before normalization (function): hero::rotate_backpack_left.
     void rotateBackpackLeft();
     // Before normalization (function): hero::rotate_backpack_right.
@@ -1261,7 +1246,7 @@ public:
     // 0x004e56e0 - the patrol test: Manhattan distance from the patrol
     // anchor, same level, against patrolRadius.
     // Before normalization (function): hero::is_in_patrol_radius.
-    unsigned char isInPatrolRadius(struct type_point point);
+    unsigned char isInPatrolRadius(struct type_point point) const;
     // 0x004e2bd0 - unequips ONE equipped slot, by slot INDEX. The
     // Dreamcast spells the parameter `TArtifactSlot`, but on that build
     // TArtifactSlot is an ENUM of the wearable positions
@@ -1352,7 +1337,7 @@ public:
     // Declared for playerData::NextHero, which inlines nothing of it -
     // it is a real call from game.obj.
     // Before normalization (function): hero::IsMobile.
-    unsigned char isMobile();
+    unsigned char isMobile() const;
 
     // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
@@ -1382,7 +1367,7 @@ public:
     // Before normalization (function): hero::GetLuck.
     // Before normalization (locals): on_cursed_ground, apply_limits.
     int getLuck(const hero* otherHero, unsigned char onCursedGround,
-                unsigned char applyLimits);
+                unsigned char applyLimits) const;
     // Claimed in src/hero.cpp (0x4e39b0); declared here because
     // armyGroup::GetMorale (0x44ae60) calls it with three arguments -
     // the DC prototype's arity, corroborated by the retail call site's
@@ -1390,7 +1375,7 @@ public:
     // Before normalization (function): hero::GetMorale.
     // Before normalization (locals): on_cursed_ground, apply_limits.
     int getMorale(const hero* otherHero, unsigned char onCursedGround,
-                  unsigned char applyLimits);
+                  unsigned char applyLimits) const;
     // Retail 0x527cf0 / 0x527d80. The Dreamcast philai.cpp roster keeps
     // these as file-local functions taking `(const hero*, int)`, but both
     // retail bodies and every retail call use the x86 member ABI: the hero
@@ -1415,7 +1400,7 @@ public:
         m_valueOfSpring = arg;
     }
     // Before normalization (function): hero::GetMagicResistanceFactor.
-    float getMagicResistanceFactor();
+    float getMagicResistanceFactor() const;
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
     // CalculateGainedExperience (0x46a350) scales the whole award by it
     // with a single-precision fmul.
@@ -1431,15 +1416,15 @@ public:
     // note over GetOffenseFactor in src/hero.cpp): 0x4e42b0 / 0x4e4310 /
     // 0x4e48b0 / 0x4e4920.
     // Before normalization (function): hero::GetArcheryFactor.
-    float getArcheryFactor();
+    float getArcheryFactor() const;
     // Before normalization (function): hero::GetEagleEyeChance.
-    float getEagleEyeChance();
+    float getEagleEyeChance() const;
     // Before normalization (function): hero::GetMysticismBonus.
-    int getMysticismBonus();
+    int getMysticismBonus() const;
     // Before normalization (function): hero::GetVisibility.
-    int getVisibility();
+    int getVisibility() const;
     // Before normalization (function): hero::GetSpellDurationBonus.
-    int getSpellDurationBonus();
+    int getSpellDurationBonus() const;
     // Retail's same-coordinate pair diverges from the DC prototype names:
     // 0x4e4ec0 returns the adventure-object type at the hero's square,
     // while the DC-named get_special_terrain at 0x4e4fa0 returns retail's
@@ -1450,18 +1435,18 @@ public:
     // so Fly expands it while the out-of-line body those callers bind
     // stays emitted.
     int getSpecialTerrain() const;
-    long getCombatSpeedBonus();
+    long getCombatSpeedBonus() const;
     // Before normalization (function): hero::GetSurrenderCostFactor.
-    float getSurrenderCostFactor();
+    float getSurrenderCostFactor() const;
     // Before normalization (function): hero::GetOffenseFactor.
-    float getOffenseFactor();
+    float getOffenseFactor() const;
     // Before normalization (function): hero::GetDefenseFactor.
-    float getDefenseFactor();
+    float getDefenseFactor() const;
     float getIntelligenceFactor() const;
 
     // Original ViewStat is the ordinary hero.cpp:1709 body at 0x4d9990.
     void viewStat(int whichStat, int isQuickView);
-    float getFirstAidFactor();
+    float getFirstAidFactor() const;
     // Before normalization (function): hero::CreatureTypeCount.
     int creatureTypeCount(int creatureType);
     // Before normalization (function): hero::GetNthSS.
@@ -1483,7 +1468,7 @@ public:
     // call them.
     // Before normalization (function): hero::modify_spell_damage.
     // Before normalization (locals): target_army.
-    long modifySpellDamage(int spell, int damage, const class army* targetArmy);
+    long modifySpellDamage(int spell, int damage, const class army* targetArmy) const;
     // Before normalization (function): hero::GetHeroSpellBonus.
     // Before normalization (locals): spell_id, target_level.
     int getHeroSpellBonus(int spellId, int targetLevel, int value) const;
@@ -1527,7 +1512,7 @@ public:
         return m_availableSpells[spell];
     }
     // Before normalization (function): hero::get_combat_value_modifier.
-    float getCombatValueModifier();
+    float getCombatValueModifier() const;
     // ai_combat's create_skeletons (0x426df0) calls both back to back:
     // the factor with a pushed 1, then the creature type with no
     // argument. GetNecromancyFactor is claimed in src/hero.cpp
@@ -1535,7 +1520,7 @@ public:
     // row - its name is HD-crossbuild + IDA lineage only, PROVISIONAL.
     // Before normalization (function): hero::GetNecromancyFactor.
     // Before normalization (locals): apply_limit.
-    float getNecromancyFactor(unsigned char applyLimit);
+    float getNecromancyFactor(unsigned char applyLimit) const;
     // Before normalization (function): hero::GetNecromancyCreature.
     TCreatureType getNecromancyCreature();
     // Before normalization (function): hero::HeroFn_004D8FB0.
@@ -1722,8 +1707,9 @@ DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
 // CODEVIEW(E:\gamedcs\hero.cpp:329, dc 0xca984) unsigned char initialize_ballistics_table();
 // Complete returns the 70-bit grant set by value; game::LoadMap consumes it
 // when a scenario disables a spell supplied by an artifact.
-// Before normalization (function): mark_spells.
-std::bitset<70> markSpells(int artifactId);
+// Provisional name: markArtifactSpells. The former mark_spells label belongs
+// to hero.cpp's school helper, whose DC signature is recorded below.
+std::bitset<70> markArtifactSpells(int artifactId);
 // CODEVIEW(E:\gamedcs\hero.cpp:1527, dc 0xcc360) void mark_spells(unsigned char* spell_list, TSpellSchool school);
 // CODEVIEW(E:\gamedcs\hero.cpp:2014, dc 0xccf78) TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded);
 // CODEVIEW(E:\gamedcs\hero.cpp:2340, dc 0xcd68c) void update_artifact_slot(long id, TArtifact artifact);

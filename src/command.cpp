@@ -632,8 +632,11 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
     return inCombatCommand;
 }
 
-// E:\gamedcs\command.cpp header inline in the DC build. DC publishes three
-// int arguments; Complete adds an unsigned-byte "pointer changed" result.
+// DC class function types 0x1fd5/0x4c8e declare a void member with three
+// int arguments, without a procedure or inline source row. Complete adds
+// an unsigned-byte "pointer changed" result consumed by ProcessCombatMsg.
+// Its retained body belongs to command.cpp's retail band; no DC header
+// definition or inline qualifier is inferred from that declaration.
 // The standalone retail body is independently fixed by its exact field graph:
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
@@ -1359,12 +1362,12 @@ void combatManager::resetRound()
     if (m_someCreaturesVanish)
         makeCreaturesVanish();
 
-    for (TObstacle* obstacle = m_obstacles.m_begin;
-            obstacle != m_obstacles.m_end; ++obstacle) {
+    for (TObstacle* obstacle = m_obstacles.begin();
+            obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_duration > 0) {
             obstacle->m_duration--;
             if (obstacle->m_duration == 0) {
-                removeObstacle(obstacle - m_obstacles.m_begin);
+                removeObstacle(obstacle - m_obstacles.begin());
                 if (obstacle->m_dispelEffect != -1)
                     spellEffect(obstacle->m_dispelEffect, obstacle->m_hex, 100, 0);
             }

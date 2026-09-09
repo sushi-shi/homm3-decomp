@@ -222,10 +222,10 @@ def _scan():
                 claims_by_file[str(path.relative_to(common.HOMM3_DIR))] = claims
                 total += len(claims)
     from homm3.match import universe
-    from homm3.match.source_ownership import collect
+    from homm3.match.source_ownership import collect, claim_definitions
     classes, _sizes = universe.classify()
     definitions, errors, _reached = collect()
-    inline_claims = {(d.file, d.va) for d in definitions if d.inline and d.va is not None}
+    inline_claims = {(d.file, d.va) for d in claim_definitions(definitions) if d.inline and d.va is not None}
     violations = check(claims_by_file, load_functions(), classes, inline_claims)
     violations.extend(('PARSE', 0, error) for error in errors)
     return claims_by_file, total, violations

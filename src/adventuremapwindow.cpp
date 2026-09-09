@@ -43,26 +43,19 @@ DATA(0x0065f224)
 const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 
 // Retail's gosolo handler at 0x4022e0 calls this Dinkumware specialization
-// at 0x404150 to build its local string. The VC6 public emitted elsewhere is
-// byte-identical across all 0xA1 bytes. This unclaimed wrapper keeps the ODR
-// body in adventuremapwindow.obj; without the statement-scoped depth pin the
-// call flattens and the public disappears (negative control).
+// at 0x404150 to build its local string. The retained library body belongs
+// to <string>; emission must come from real use, not an invented caller.
 VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
-// Before normalization (function): EmitBasicStringAssignPtrSize.
-void emitBasicStringAssignPtrSize(std::string* value, const char* source,
-                                  unsigned size)
-{
-#pragma inline_depth(0)
-    value->assign(source, size);
-#pragma inline_depth()
-}
 
 #if 0  // @carcass
 
-// E:\gamedcs\adventuremapwindow.cpp:52. Retail has no own body: the DC
-// roster types it non-virtual (VANILLA, ?SleepAllWidgets@...@@QAAX_N@Z) and
-// retail delegates to the base heroWindow::SleepAllWidgets (0x5ff5b0), so the
-// TADW wrapper is inlined/dropped. Kept DC-only.
+// E:\gamedcs\adventuremapwindow.cpp:52. DC's ordinary derived member
+// directly walks Widgets and calls widget::sleep at dc 0x39a. Complete
+// generalizes that operation into heroWindow: its retained 0x5ff5b0 owns
+// a new nesting counter and dispatches a virtual edge hook, whose base
+// implementation 0x5ff5f0 owns the walk. The adventure override 0x4040b0
+// additionally controls its mouse effect. This is a changed class boundary,
+// not evidence that an otherwise identical TADW wrapper was inlined away.
 DC_ONLY(0x370, 0x3E)
 void TAdventureMapWindow::sleepAllWidgets(unsigned char put_to_sleep)
 {
@@ -262,7 +255,7 @@ int TAdventureMapWindow::open(int zOrder, unsigned char update)
             TImmMouseEffect* effect =
                 new TImmMouseEffect(&area, 10000, 16, 10000, 1, 0);
             m_immersion = effect;
-            effect->Start();
+            effect->start();
         }
         catch (...) {
         }
@@ -627,15 +620,15 @@ void checkAdvCheatCode(std::string& chatString)
                && currentHero) {
         cheatUsed = true;
         if (!currentHero->hasArtifact(ARTIFACT_AMMO_CART)) {
-            type_artifact artifact(ARTIFACT_AMMO_CART, -1);
+            type_artifact artifact(ARTIFACT_AMMO_CART);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_BALLISTA)) {
-            type_artifact artifact(ARTIFACT_BALLISTA, -1);
+            type_artifact artifact(ARTIFACT_BALLISTA);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_FIRST_AID_TENT)) {
-            type_artifact artifact(ARTIFACT_FIRST_AID_TENT, -1);
+            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
     } else if (code.compare(DATA_COMPGEN(
@@ -713,7 +706,7 @@ void checkAdvCheatCode(std::string& chatString)
         cheatUsed = true;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            type_artifact spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(&spellbook, 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
@@ -1560,18 +1553,16 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
             m_chatTextWidget->m_width, m_chatTextWidget->m_height);
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:1273
-// Retail has NO out-of-line row for this helper: the carve runs
-// DrawChatText (0x403f20, 0x3f) straight into UpdateButtons at 0x403f60,
-// so /Ob2 expanded it at all ten call sites below. The Dreamcast build
-// keeps it (dc 0x1238, 34 B) as TAdvMenu::SetAdvWinButtonPalette, which
-// is where the shape and the argument names come from - note it reaches
-// the window through gpAdvManager rather than through `this`, and retail
-// reloads gpAdvManager for every one of the ten expansions because of it.
-// Before normalization (function): SetAdvWinButtonPalette.
-static void setAdvWinButtonPalette(int id, int player)
+// Complete merges the DC TAdvMenu controls into TAdventureMapWindow.
+// DC SetAdvWinButtonPalette uses its receiver for GetWidget (0x1240),
+// not gpAdvManager. Retail UpdateButtons reloads gpAdvManager+0x44 for
+// each expansion at 0x403f74..0x404083: that is the caller's receiver.
+// Keep the ordinary member and those ten source calls; the former static
+// helper moved receiver selection inside the wrong source boundary.
+// Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
+void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
-    widget* w = g_advManager->m_advWindow->getWidget(id);
+    widget* w = getWidget(id);
     if (w)
         static_cast<button*>(w)->setPlayerPaletteColors(player);
 }
@@ -1582,16 +1573,16 @@ void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update
 {
     int player = g_game->getLocalPlayerGamePos();
 
-    setAdvWinButtonPalette(KINGDOM_OVERVIEW_ID, player);
-    setAdvWinButtonPalette(ELEVATION_TOGGLE_ID, player);
-    setAdvWinButtonPalette(QUEST_LOG_ID, player);
-    setAdvWinButtonPalette(SLEEP_ID, player);
-    setAdvWinButtonPalette(MOVE_ID, player);
-    setAdvWinButtonPalette(CAST_SPELL_ID, player);
-    setAdvWinButtonPalette(ADVENTURE_OPTIONS_ID, player);
-    setAdvWinButtonPalette(SYSTEM_OPTIONS_ID, player);
-    setAdvWinButtonPalette(NEXT_HERO_ID, player);
-    setAdvWinButtonPalette(END_TURN_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(KINGDOM_OVERVIEW_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(ELEVATION_TOGGLE_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(QUEST_LOG_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(SLEEP_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(MOVE_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(CAST_SPELL_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(ADVENTURE_OPTIONS_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(SYSTEM_OPTIONS_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(NEXT_HERO_ID, player);
+    g_advManager->m_advWindow->setAdvWinButtonPalette(END_TURN_ID, player);
 
     if (draw)
         drawWindow(update, KINGDOM_OVERVIEW_ID, END_TURN_ID);
@@ -2981,10 +2972,10 @@ void TAdventureMapWindow::vslot8(unsigned char on)
 
     if (on) {
         if (m_immersion)
-            static_cast<TImmMouseEffect*>(m_immersion)->Stop();
+            static_cast<TImmMouseEffect*>(m_immersion)->stop();
     } else {
         if (m_immersion)
-            static_cast<TImmMouseEffect*>(m_immersion)->Start();
+            static_cast<TImmMouseEffect*>(m_immersion)->start();
     }
 }
 

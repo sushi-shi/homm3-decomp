@@ -235,38 +235,6 @@ SIZE(SCampaign, 0x7c);
 // Before normalization: akCampaignMusicTraits.
 extern const SCampaignMusicCue* g_campaignMusicTraits;
 
-// The ordering both of SCampaign::PruneCrossoverHeroes' std::sort calls
-// instantiate: strongest crossover hero first, by primary skills plus the 28
-// secondary mastery bytes, then by experience, then by hero id. Retail emits
-// the operator() (0x483f80) as a plain customcampaign.obj body immediately
-// behind the two TStreamBufFile virtuals, and `this` is dead in it - the
-// functor is empty. The class name is a ROLE invention; no Dreamcast row
-// survives for it.
-class hero;
-struct CrossoverHeroStronger {
-    bool operator()(hero& lhs, hero& rhs) const;
-};
-
-// The map's own hero placeholders are sorted by their power rating before
-// the campaign hands out its carried heroes: the strongest placeholder gets
-// the first carried hero. Retail instantiates std::sort over it in
-// customcampaign.obj (0x48eec0 and its helpers). The rating is compared
-// SIGNED. Role name; no Dreamcast row covers it.
-struct HeroPlaceholderData;
-struct HeroPlaceholderStronger {
-    bool operator()(const HeroPlaceholderData& left,
-                    const HeroPlaceholderData& right) const;
-};
-
-// The crossover-hero score the ordering above compares: the primary-skill
-// total plus the 28 secondary mastery bytes. Retail keeps it as a separate
-// /Gr free body at 0x483f50 (the hero arrives in ECX and it returns with a
-// bare `ret`), which the sort's own helpers CALL while the standalone
-// operator() expands it twice. Retail-only, name provisional - no Dreamcast
-// row covers it.
-// Before normalization (function): GetCrossoverHeroValue.
-int getCrossoverHeroValue(hero* candidate);
-
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
 // bonus-list reader at 0x485190, which switches a type byte 0..7 and
 // `new`s an object of the matching vftable:
@@ -673,7 +641,7 @@ enum ECampaignBonusResource {
 };
 
 // The seven localized resource names, as advmgr.h / ai_player.h /
-// newgame.h / tradpost_widgets.h already declare them; the resource
+// newgame.h / tradpost.cpp already declare them; the resource
 // bonus's description indexes the same table and this is the cheaper
 // include-set edge.
 extern const char* g_resourceNames[7];

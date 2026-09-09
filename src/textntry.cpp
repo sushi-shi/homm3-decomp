@@ -490,7 +490,7 @@ int textEntryWidget::main(message* msg)
 // threes are one CSE'd constant and font::PRIMARY_DIM is the spelling
 // that lands it.
 VA(0x005bb400, 0x254)  // anchor-vtable slot 4, dc 0x163150
-void textEntryWidget::draw()
+void textEntryWidget::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;

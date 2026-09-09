@@ -177,7 +177,7 @@ _CPP_EXTERN = re.compile(r"^[ \t]*extern\b", re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
 _CPP_LOCAL_DEF = re.compile(
-    r"\b(?:struct|class)\s+\w+\b(?:\s+final)?\s*(?::[^;{]*)?\{")
+    r"\b(?:struct|class)\s+(?P<name>\w+(?:::\w+)*)\b(?:\s+final)?\s*(?::[^;{]*)?\{")
 _CPP_LOCAL_ENUM = re.compile(
     r"\b(?:typedef\s+)?enum\b\s*\w*\s*\{")
 
@@ -186,7 +186,7 @@ def _cpp_local_view_sites(code: str, ctx) -> list:
     allowed = ctx.get("dc_local_classes", frozenset()) if isinstance(ctx, dict) else frozenset()
     out = []
     for match in _CPP_LOCAL_DEF.finditer(code):
-        name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+        name = match.group('name').rsplit('::', 1)[-1]
         if name not in allowed:
             out.append(match.start())
     return out
@@ -201,7 +201,7 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
     allowed = ctx.get("dc_local_classes", frozenset())
     classes = {}
     for match in _CPP_LOCAL_DEF.finditer(code):
-        name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+        name = match.group('name').rsplit('::', 1)[-1]
         classes[match.end() - 1] = name in allowed
     enums = {match.start(): match for match in _CPP_LOCAL_ENUM.finditer(code)}
     out = []
@@ -219,7 +219,7 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
 
 def _dc_local_classes(sources):
     from collections import Counter, defaultdict
-    from homm3.match.source_ownership import read_dc, family_name
+    from homm3.match.source_ownership import read_dc, read_filter, family_name
     origins = defaultdict(set)
     private_origins = defaultdict(set)
     for row in read_dc(REPO):
@@ -242,13 +242,25 @@ def _dc_local_classes(sources):
             # uniqueness below still rejects another physical definition or
             # a competing namespace/header owner with the same local name.
             origins[owner.rsplit("::", 1)[-1]].add(row.file)
+    # The exact Windows function inventory also records reviewed ownership
+    # for Complete-only local classes. Do not invent a second class ledger.
+    # The source-ownership gate independently rejects unused filters and
+    # filters attempting to waive a known Dreamcast counterpart.
+    windows, errors = read_filter(REPO / 'config/win_only.tsv',
+                                 ('file', 'function', 'signature'))
+    windows_origins = defaultdict(set)
+    if not errors:
+        for file, function, _signature in windows:
+            if file.startswith('src/') and '::' in function:
+                owner = family_name(function).rsplit('::', 1)[0].rsplit('::', 1)[-1]
+                windows_origins[owner].add(file)
     counts = Counter()
     file_counts = Counter()
     private_sites = defaultdict(set)
     for path, code in sources:
         classes = {}
         for match in _CPP_LOCAL_DEF.finditer(code):
-            name = re.match(r"(?:struct|class)\s+(\w+)", match.group()).group(1)
+            name = match.group('name').rsplit('::', 1)[-1]
             counts[name] += 1
             file_counts[path, name] += 1
             classes[match.end() - 1] = name
@@ -266,6 +278,11 @@ def _dc_local_classes(sources):
     # it happens to use an authentic class name.
     return {path: frozenset(name for name, files in origins.items()
                            if counts[name] == 1 and files == {path.name.lower()})
+                  | frozenset(name for name, files in windows_origins.items()
+                              if counts[name] == 1
+                              and path.is_relative_to(REPO)
+                              and files == {path.relative_to(REPO).as_posix()}
+                              and not origins[name] and not private_origins[name])
                   | frozenset(name for name in private_sites[path]
                               if file_counts[path, name] == 1
                               and path.name.lower() in private_origins[name]

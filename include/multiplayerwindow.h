@@ -43,37 +43,8 @@ SIZE(TIPv4SocketAddress, 0x10);
 
 
 
-class CHotSeatEdit : public textEntryWidget {
-public:
-    // Before normalization: nextEdit.
-    CHotSeatEdit* m_nextEdit;   // +0x70
-    // Before normalization: prevEdit.
-    CHotSeatEdit* m_prevEdit;   // +0x74
-
-    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
-                 unsigned justification, const char* backgroundIcon,
-                 int backgroundFrame, int id, int style, int readType,
-                 int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-        m_nextEdit = 0;
-        m_prevEdit = 0;
-    }
-    void setNextEdit(CHotSeatEdit* pNextEdit) { m_nextEdit = pNextEdit; }
-    void setPrevEdit(CHotSeatEdit* prevEdit) { m_prevEdit = prevEdit; }
-    virtual void onKillFocus();                   // slot 11, retail 0x50dee0
-    // Before normalization (function): CHotSeatEdit::SetFocus.
-    virtual void setFocus(unsigned char state);   // slot 14, retail 0x510890
-    // Before normalization (function): CHotSeatEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50df60
-    // Before normalization (function): CHotSeatEdit::OnNextEdit.
-    virtual void onNextEdit();                    // slot 19, folded 0x510850
-    // Before normalization (function): CHotSeatEdit::OnPrevEdit.
-    virtual void onPrevEdit();                    // slot 20, folded 0x510870
-};
+// The private edit hierarchy is defined in multiplayerwindow.cpp.
+class CHotSeatEdit;
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven

@@ -24,7 +24,7 @@ DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
 #pragma pack(push, 1)
 
 // Retail's constructor family and NewfullMap vector walks prove the packed
-// five-byte base: a quest pointer followed by the visited-player mask.
+// five-byte guard record: a quest pointer followed by the visited-player mask.
 class TAbstractFile;
 
 class TQuestGuard {
@@ -34,11 +34,9 @@ public:
     // Before normalization: visitedPlayers.
     unsigned char m_visitedPlayers;
 
-    // NOT inline for this view: readObject (0x502e00) CALLS the constructor
-    // at 0x572b50 on its quest-guard local instead of expanding the two
-    // stores, so the declaration retail's mapcell.cpp saw was this one and
-    // the definition lived in seerhut.cpp. The inline body stays for the
-    // views whose own call sites do expand it.
+    // readObject (0x502e00) retains constructor 0x572b50 on its quest-guard
+    // local. This Complete-only class has no DC inline declaration; keep
+    // one ordinary constructor definition in seerhut.cpp.
     TQuestGuard();
 
     // The quest-guard adventure event. The exact HD structural twin fixes
@@ -82,13 +80,15 @@ public:
     // visited-player bit followed by a fresh quest-pointer read.
     // Before normalization (function): TQuestGuard::QuestActiveforPlayer.
     unsigned char questActiveforPlayer(
-        const unsigned char playerNum) const;
+        const unsigned char playerNum) const
+    {
+        return m_quest
+            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && (m_visitedPlayers & (1 << playerNum))
+            && m_quest;
+    }
     int load(TAbstractFile* infile, int saveVersion);
 
-protected:
-    // TSeerHut initializes the shared bytes in its own body; retail's store
-    // order proves that its reward constructor runs before those assignments.
-    explicit TQuestGuard(int) {}
 };
 SIZE(TQuestGuard, 0x5);
 
@@ -181,15 +181,26 @@ struct TSeerReward {
 };
 SIZE(TSeerReward, 0xc);
 
-// Retail indexes NewfullMap::SeerHutList with a 0x13 stride and the constructor
-// writes every named state byte below. This is the one class layout used by
-// seerhut, mapcell, and advmgr; there is no TU-private vector projection.
-class TSeerHut : private TQuestGuard {
-    // readObject's SEER arm tests the base's `quest` pointer on the local it
-    // just deserialized, before deciding whether to register it in the
-    // +0xb0 pool. Friendship rather than a public base: only the map reader
-    // reaches across, and everything else here still goes through TSeerHut's
-    // own surface.
+// Original CodeView class: TSeerData (type 0x266a), the private base of
+// TSeerHut. Complete replaces its fixed artifact requirement with a quest
+// pointer/visited mask and a separate reward record. Retail TSeerHut ctor
+// 0x573580 initializes reward +5 before writing quest +0 and visited +4.
+// An implicit TSeerData constructor initializes only its reward member;
+// TSeerHut's own body then writes the scalar state. The former TQuestGuard
+// base and empty integer-tag constructor were reconstruction artifacts.
+struct TSeerData {
+    type_quest* m_quest;              // Prior role: quest.
+    unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
+    TSeerReward m_reward;            // Prior role: reward.
+};
+SIZE(TSeerData, 0x11);
+
+// Retail indexes NewfullMap::SeerHutList with a 0x13 stride. Preserve the
+// Dreamcast-proven private TSeerData base with the revised Complete payload.
+class TSeerHut : private TSeerData {
+    // readObject's SEER arm tests the private base's quest pointer before
+    // registering the deserialized record in the +0xb0 pool. These consumers
+    // retain friendship while ordinary access stays on TSeerHut's surface.
     friend class NewfullMap;
     friend class TAdventureMapWindow;
 
@@ -211,8 +222,6 @@ class TSeerHut : private TQuestGuard {
     inline int getRewardType();
 
 public:
-    // Before normalization: reward.
-    TSeerReward m_reward;
     // Before normalization: NameIndex.
     signed char m_nameIndex;
     // Original: CompletedByPlayer (Dreamcast TSeerHut +0x11).
@@ -227,7 +236,6 @@ public:
     // Original: TSeerHut::TSeerHut; SeerHut.h:108, dc 0xf4b38.
     VA(0x00573580, 0x13)
     TSeerHut()
-        : TQuestGuard(0), m_reward()
     {
         m_quest = 0;
         m_visitedPlayers = 0;
@@ -273,8 +281,8 @@ public:
     int getValue(hero* currentHero);
 
     // The SeerHutList twin of TQuestGuard::read, reached the same way from
-    // readObject's SEER arm. Declared separately because the TQuestGuard
-    // base is private here. VOID, corrected 2026-09-05 when the body came
+    // readObject's SEER arm. Each record owns its own reader. VOID,
+    // corrected 2026-09-05 when the body came
     // in: retail's 0x574610 sets no return register at any exit, exactly as
     // TQuestGuard::read does, and its one caller discards the result.
     void read(TAbstractFile* infile);
@@ -301,7 +309,7 @@ public:
     std::string getSeerLogText();
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
     // same way from NewfullMap::Save. Declared separately because the
-    // TQuestGuard base is private here.
+    // seer and guard records each own their serialization interface.
     int save(TAbstractFile* outfile);
 
 };

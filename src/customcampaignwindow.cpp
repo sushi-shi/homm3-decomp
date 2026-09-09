@@ -24,6 +24,7 @@
 #include "border.h"
 #include "button.h"
 #include "textwdgt.h"
+#include "textscroller.h"
 #include "kbwin.h"
 #include "winmgr.h"
 

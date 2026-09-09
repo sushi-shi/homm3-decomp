@@ -15,6 +15,174 @@
 #include <vector>
 #include "remote.h"
 
+// Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
+// (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
+// its random flavor creature past both. TU-private for the same
+// include-set reason army.h scopes its own creature ids.
+enum EWaitDialogCreatures {
+    WAIT_CREATURE_DEVIL = 0x36,
+    WAIT_CREATURE_ARCH_DEVIL = 0x37
+};
+
+// Update (0x584550) remaps a campaign scenario's version icon from the
+// row's campaign ordinal: rows 0..6 are Restoration of Erathia's seven
+// campaigns, 7..12 Armageddon's Blade's six, 13..19 Shadow of Death's
+// seven - the same shipping-order split campaignwindow.h's
+// ECampaignSets pages by (byte table at 0x584bd4: 7x0, 6x1, 7x2).
+// Title identities are deliberately not imported (the
+// EGameCampaignOrdinal precedent).
+enum ECampaignOrdinal {
+    CAMPAIGN_ROE_0 = 0,
+    CAMPAIGN_ROE_1 = 1,
+    CAMPAIGN_ROE_2 = 2,
+    CAMPAIGN_ROE_3 = 3,
+    CAMPAIGN_ROE_4 = 4,
+    CAMPAIGN_ROE_5 = 5,
+    CAMPAIGN_ROE_6 = 6,
+    CAMPAIGN_AB_0 = 7,
+    CAMPAIGN_AB_1 = 8,
+    CAMPAIGN_AB_2 = 9,
+    CAMPAIGN_AB_3 = 10,
+    CAMPAIGN_AB_4 = 11,
+    CAMPAIGN_AB_5 = 12,
+    CAMPAIGN_SOD_0 = 13,
+    CAMPAIGN_SOD_1 = 14,
+    CAMPAIGN_SOD_2 = 15,
+    CAMPAIGN_SOD_3 = 16,
+    CAMPAIGN_SOD_4 = 17,
+    CAMPAIGN_SOD_5 = 18,
+    CAMPAIGN_SOD_6 = 19
+};
+
+// The sort columns SortMaps' jump table dispatches (`how`), in the file
+// list's column order. Values are the RS_SORT_MAPS payload rungs.
+enum ESortMapsColumn {
+    SORT_MAPS_BY_NAME = 0,
+    SORT_MAPS_BY_PLAYERS = 1,
+    SORT_MAPS_BY_VERSION = 2,
+    SORT_MAPS_BY_SIZE = 3,
+    SORT_MAPS_BY_VICTORY = 4,
+    SORT_MAPS_BY_LOSS = 5
+};
+
+// field_18A0[6] selects one of the first three filter buttons; the fourth
+// button is the aggregate choice. The underlying category names are not yet
+// attested, so only the byte-proven aggregate member is named.
+enum EScenarioFilterCategory {
+    SCENARIO_FILTER_CATEGORY_ANY = 3
+};
+
+// Widget ids consumed by TSingleSelectionWindow::OnWidgetDeselect. The
+// constructor, retail jump table, and Dreamcast's named handler calls agree
+// on these ranges.
+enum ESingleSelectionWidgetId {
+    SSW_DIFFICULTY_FIRST = 107,
+    SSW_DIFFICULTY_LAST = 111,
+    SSW_SCENARIO_OPTIONS = 128,
+    SSW_ADVANCED_OPTIONS = 129,
+    SSW_FILTER_OPTIONS = 130,
+    SSW_CHAT_TOGGLE = 131,
+    SSW_SIZE_FILTER_SMALL = 137,
+    SSW_SIZE_FILTER_MEDIUM = 138,
+    SSW_SIZE_FILTER_LARGE = 139,
+    SSW_SIZE_FILTER_XLARGE = 140,
+    SSW_SIZE_FILTER_ALL = 141,
+    SSW_FILE_ROW_FIRST = 142,
+    SSW_FILE_ROW_LAST = 159,
+    SSW_BEGIN = 186,
+    SSW_BACK = 188,
+    SSW_SORT_SIZE = 190,
+    SSW_SORT_PLAYERS = 191,
+    SSW_SORT_VERSION = 192,
+    SSW_SORT_NAME = 193,
+    SSW_SORT_VICTORY = 194,
+    SSW_SORT_LOSS = 195,
+    SSW_HANDICAP_FIRST = 207,
+    SSW_HANDICAP_LAST = 214,
+    SSW_TOWN_PREV_FIRST = 215,
+    SSW_TOWN_PREV_LAST = 222,
+    SSW_TOWN_NEXT_FIRST = 223,
+    SSW_TOWN_NEXT_LAST = 230,
+    SSW_HERO_PREV_FIRST = 231,
+    SSW_HERO_PREV_LAST = 238,
+    SSW_HERO_NEXT_FIRST = 239,
+    SSW_HERO_NEXT_LAST = 246,
+    SSW_BONUS_PREV_FIRST = 247,
+    SSW_BONUS_PREV_LAST = 254,
+    SSW_BONUS_NEXT_FIRST = 255,
+    SSW_BONUS_NEXT_LAST = 262,
+    SSW_PLAYER_POS_FIRST = 263,
+    SSW_PLAYER_POS_LAST = 270,
+    SSW_GENERATE_RANDOM_MAP = 279,
+    SSW_FILTER_MAP_SMALL = 281,
+    SSW_FILTER_MAP_MEDIUM = 282,
+    SSW_FILTER_MAP_LARGE = 283,
+    SSW_FILTER_MAP_XLARGE = 284,
+    SSW_FILTER_MAP_ALL = 285,
+    SSW_FILTER_PLAYERS_FIRST = 287,
+    SSW_FILTER_PLAYERS_LAST = 294,
+    SSW_FILTER_PLAYERS_ANY = 295,
+    SSW_FILTER_HUMANS_FIRST = 297,
+    SSW_FILTER_HUMANS_LAST = 304,
+    SSW_FILTER_HUMANS_ANY = 305,
+    SSW_FILTER_TEAMS_FIRST = 307,
+    SSW_FILTER_TEAMS_LAST = 314,
+    SSW_FILTER_TEAMS_ANY = 315,
+    SSW_FILTER_VERSION_FIRST = 317,
+    SSW_FILTER_VERSION_LAST = 323,
+    SSW_FILTER_VERSION_ANY = 324,
+    SSW_FILTER_CATEGORY_FIRST = 326,
+    SSW_FILTER_CATEGORY_LAST = 329,
+    SSW_FILTER_DURATION_FIRST = 331,
+    SSW_FILTER_DURATION_LAST = 333,
+    SSW_FILTER_DURATION_ANY = 334,
+    SSW_RANDOM_MAPS = 335,
+    SSW_NAME_FIRST = 345,
+    SSW_NAME_LAST = 352,
+    SSW_HERO_DETAIL_FIRST = 362,
+    SSW_HERO_DETAIL_LAST = 369,
+    SSW_TOWN_DETAIL_FIRST = 370,
+    SSW_TOWN_DETAIL_LAST = 377,
+    SSW_BONUS_DETAIL_FIRST = 378,
+    SSW_BONUS_DETAIL_LAST = 385,
+    SSW_TEAM_ALIGNMENT = 387
+};
+
+// A cross-module dword at 0x6989f0 the game-selection window branches on
+// during teardown; DoModal and ExitDialog each take a distinct path when it
+// equals 3, the only value recoverable here. House ordinal placeholder,
+// exactly the textntry.h EField68 rule - names the domain member so the
+// branch is not a magic compare, without claiming an attested identity.
+enum EWindowMode6989f0 {
+    WINDOW_MODE_6989F0_3 = 3
+};
+
+// Constructor-only domains. DC gives gameMode as int; retail proves the two
+// non-default commands by their load/save setup arms. The context values are
+// intentionally ordinal until the gpVideoGameState owner supplies names.
+enum ESingleSelectionGameMode {
+    SINGLE_SELECTION_LOAD_GAME = 1,
+    SINGLE_SELECTION_SAVE_GAME = 2
+};
+
+enum ESingleSelectionLaunchContext {
+    SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN = 101
+};
+
+// One queued header re-request (CMapHeaderRequestMsg's payload pair);
+// CNewPlayerUpdateProc::HandleRequests drains a vector of these. Field
+// order is byte-proven by both ends: HeaderRequested's push_back fills
+// the byte at +0 and the dword at +4, and HandleRequests reads
+// [elem+8*i] as the transfer flag and [elem+8*i+4] as the row number.
+struct SHeaderRequest {
+    unsigned char m_flag;
+    // Before normalization: pad_1.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
+    int m_number;
+};
+
 // Forward-declared for TSingleSelectionWindow's slider members
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
@@ -29,6 +197,12 @@ class textWidget;
 class textButton;
 class button;
 struct GameSelectionHeadersStruct;
+
+// Difficulty mirror (DC lastDiff), teardown mode and constructor headings.
+// Retail addresses: 0x683454, 0x6989f0 and 0x6a8098 respectively.
+extern int g_lastDiff;
+extern int g_unnamed6989f0;
+extern const char* g_unnamed6a8098[];
 
 // Shared selection/scenario presentation tables. Retail scenarioinfo.obj
 // references the same addresses initialized and owned by
@@ -694,8 +868,6 @@ public:
     // Before normalization (function): TSingleSelectionWindow::DrawHeroAdvancedOption.
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
-    // Before normalization (function): TSingleSelectionWindow::GetMapCount.
-    unsigned int getMapCount() const;
     // Before normalization (function): TSingleSelectionWindow::OnNewSetupInfoMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);

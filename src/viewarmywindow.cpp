@@ -27,31 +27,6 @@
 #include "includes.h"
 
 
-// Two representation bridges in game.cpp's/ai_combat.cpp's shape - a
-// four-byte copy VC6 reduces to a move - so that neither a
-// reinterpret_cast nor an enum cast appears here:
-//
-//  * army.h models the traits row EVERY stack carries embedded at +0x74
-//    as a handful of sliced ints, `monInfoTownType` first, because
-//    modelling the record itself is a layout change for the whole army
-//    run (army.h says so at the slice). Retail's constructor takes the
-//    row's address once and hands it to three widget builders, so this
-//    TU needs the record view. Draining this belongs to whoever gives
-//    army a real `TCreatureTypeTraits sMonInfo`.
-//  * armyGroup's describers take TCreatureType where army::creatureType
-//    and this window's own ArmyType are both spelled int for the same
-//    header-closure reason.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
 // 48 bytes sitting in this TU's own band that
@@ -78,25 +53,9 @@ const unsigned int g_ctaShooter = 0x4;
 // local copy became a hard C2373 - and the two spell it in the same
 // place with the same value, so the substitution is byte-inert.
 
-// The four BASE elementals, tested behind the version gate everywhere the
-// game asks whether a creature has an alignment at all - eight times in
-// armygrp.cpp, four in game.cpp, once each in cmbtmgr.cpp and
-// quickherowindow.cpp, and TWICE in this file. TU-local for the reason
-// CTA_SHOOTER and SPELL_BIND above are: the shared header stays as small as
-// its own consumers need.
-//
-// This is a CODEGEN construct as much as a spelling, and the constructor at
-// 0x5f4210 is where that was proven: it expands to exactly the four
-// `cmp eax,0x7N / je` compares the longhand chain gives (both call sites in
-// this file are byte-flat under the substitution), while costing the /Ob2
-// allowance one more candidate site in each caller - which is what stops
-// the SECOND std::string member's `_Tidy` from being expanded there. See
-// that constructor's note.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
+// The former isBaseElemental wrapper added an /Ob2 candidate at each
+// of the two constructor sites. That byte-flat comparison probe changed
+// string cleanup inlining, but did not establish an original helper.
 
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
@@ -482,7 +441,10 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(name);
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
+    if (!g_game->m_f1f698 && (m_armyType == CREATURE_AIR_ELEMENTAL
+            || m_armyType == CREATURE_EARTH_ELEMENTAL
+            || m_armyType == CREATURE_FIRE_ELEMENTAL
+            || m_armyType == CREATURE_WATER_ELEMENTAL))
         townType = -1;
     else
         townType = g_creatureTypeTraits[m_armyType].m_townType;
@@ -515,9 +477,15 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
     createLuckWidget(m_luck);
-    m_luckHelp = group->getLuckDescription(
-        creatureTypeFromInt(m_armyType), m_luck, thisHero, thisTown,
-        0, 0, -1);
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = m_armyType;
+        m_luckHelp = group->getLuckDescription(
+            storage.m_creature, m_luck, thisHero, thisTown, 0, 0, -1);
+    }
 
     if (showOk)
         createOkWidget();
@@ -551,8 +519,16 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
         long cost[7];
-        getUpgradeCost(creatureTypeFromInt(m_armyType),
-                         creatureTypeFromInt(upgrade), m_armySize, cost);
+        {
+            union {
+                int m_value;
+                TCreatureType m_creature;
+            } original, upgraded;
+            original.m_value = m_armyType;
+            upgraded.m_value = upgrade;
+            getUpgradeCost(original.m_creature, upgraded.m_creature,
+                           m_armySize, cost);
+        }
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
                 widgetSetStatus(UPGRADE_ID, 8);
@@ -639,7 +615,10 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createNameWidget(traits->m_pluralName);
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(armyType))
+    if (!g_game->m_f1f698 && (armyType == CREATURE_AIR_ELEMENTAL
+            || armyType == CREATURE_EARTH_ELEMENTAL
+            || armyType == CREATURE_FIRE_ELEMENTAL
+            || armyType == CREATURE_WATER_ELEMENTAL))
         townType = -1;
     else
         townType = g_creatureTypeTraits[armyType].m_townType;

@@ -17,6 +17,167 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_reviewed_inline_row_recovers_owner_and_keeps_duplicate_checks(self):
+        from dataclasses import replace
+        from types import SimpleNamespace
+        d = replace(definition(), inline_origin=(0x1234, 0x1010))
+        declaration = replace(origin(), file='', line=0, offset='', module='',
+                              argument_types=(), declaration_only=True, type_index=0x1234)
+        caller = replace(origin(name='Window::draw', file='window.cpp'),
+                         module='window.obj', argument_types=())
+        symbols = SimpleNamespace(
+            source_lines={'window.obj': [('E:\\gamedcs\\widget.h', 88, 0x1010),
+                                         ('E:\\gamedcs\\widget.h', 89, 0x1020)]},
+            procedures={0x1000: SimpleNamespace(size=0x100, module='window.obj')})
+        origins = [declaration, caller]
+        self.assertEqual(compare([d], origins, {}, {}, symbols=symbols),
+                         ([], {'same_file': 1}))
+        errors, _ = compare([replace(d, file='include/other.h')], origins, {}, {}, symbols=symbols)
+        self.assertTrue(any(e.startswith('OWNER ') for e in errors))
+        # Choosing a different statement from one inline body is not a second
+        # source definition for that field-list declaration.
+        other = replace(d, offset=30, line=30, inline_origin=(0x1234, 0x1020))
+        errors, _ = compare([d, other], origins, {}, {}, symbols=symbols)
+        self.assertTrue(any('duplicate body' in e for e in errors))
+        # A resolved inline row also makes a Windows-only exemption invalid.
+        errors, _ = compare([d], origins, {},
+                            {(d.file, d.name, d.signature): 'wrong'}, symbols=symbols)
+        self.assertTrue(any('hides a CodeView counterpart' in e for e in errors))
+
+    def test_inline_origin_cannot_borrow_another_method_or_a_procedure_boundary(self):
+        from dataclasses import replace
+        from types import SimpleNamespace
+        from homm3.match.source_ownership import inline_origins
+        d = replace(definition(), inline_origin=(0x1234, 0x1010))
+        decl = replace(origin(), file='', line=0, offset='', module='',
+                       argument_types=(), declaration_only=True, type_index=0x1234)
+        caller = replace(origin(name='Window::draw', file='window.cpp'),
+                         module='window.obj', argument_types=())
+        symbols = SimpleNamespace(
+            source_lines={'window.obj': [('E:\\gamedcs\\widget.h', 88, 0x1010)]},
+            procedures={0x1000: SimpleNamespace(size=0x100, module='window.obj')})
+        for bad in (replace(decl, name='Widget::erase'), replace(decl, generated=True),
+                    replace(decl, type_index=0x5678), replace(decl, declaration_only=False)):
+            self.assertTrue(inline_origins([d], [bad, caller], symbols)[1])
+        for bad in (replace(d, inline=False), replace(d, member=False),
+                    replace(d, inline_origin=(0x1234, 0x1000)),
+                    replace(d, inline_origin=(0x1234, 0x2000))):
+            self.assertTrue(inline_origins([bad], [decl, caller], symbols)[1])
+        # A caller's own line is not positive foreign-header attribution.
+        symbols.source_lines['window.obj'] = [('window.cpp', 88, 0x1010)]
+        self.assertTrue(inline_origins([d], [decl, caller], symbols)[1])
+        symbols.source_lines['window.obj'] = [('widget.h', 88, 0x1010),
+                                              ('other.h', 99, 0x1010)]
+        self.assertTrue(inline_origins([d], [decl, caller], symbols)[1])
+
+    def test_inline_origin_hint_is_attached_and_unambiguous(self):
+        from homm3.match.source_ownership import inline_origin_hint
+        raw = '// @dc-inline-origin: 0x1234 0x1010\nvoid draw() {}\n'
+        self.assertEqual(inline_origin_hint(raw, raw.index('void')), ((0x1234, 0x1010), False))
+        raw += 'void next() {}\n'
+        self.assertEqual(inline_origin_hint(raw, raw.index('void next')), ((), False))
+        for comments in ('// @dc-inline-origin: 0x1234\n',
+                         '// @dc-inline-origin: 0x1234 0x1010\n' * 2):
+            raw = comments + 'void draw() {}\n'
+            self.assertTrue(inline_origin_hint(raw, raw.index('void'))[1])
+
+    def test_scanned_inline_origin_and_return_survive_inventory_roundtrip(self):
+        from dataclasses import asdict
+        import json
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'include').mkdir()
+            (root / 'src').mkdir()
+            (root / 'include/widget.h').write_text(
+                'class Widget { public:\n'
+                '// @dc-inline-origin: 0x1234 0x1010\n'
+                'unsigned char draw() { return 1; }\n'
+                '};\n')
+            (root / 'src/test.cpp').write_text('#include <widget.h>\n')
+            definitions, errors, _ = scan_unit({'source': 'src/test.cpp'}, root)
+            self.assertEqual(errors, [])
+            self.assertEqual(len(definitions), 1)
+            scanned = definitions[0]
+            restored = Definition(**json.loads(json.dumps(asdict(scanned))))
+            self.assertEqual(tuple(restored.inline_origin), (0x1234, 0x1010))
+            self.assertEqual(restored.return_type, 'unsigned char')
+            self.assertTrue(restored.inline)
+
+    def test_changed_return_requires_review_and_known_declaration_return(self):
+        from dataclasses import replace
+        d = replace(definition(signature='unsigned char ()'), return_type='unsigned char')
+        decl = replace(origin(), file='', line=0, offset='', module='', argument_types=(),
+                       declaration_only=True, type_index=0x1234, return_type='void')
+        key = (d.file, d.name, d.signature)
+        self.assertTrue(any(e.startswith('UNLOCATED ') for e in compare([d], [decl], {}, {})[0]))
+        self.assertEqual(compare([d], [decl], {}, {key: 'Reviewed new result contract'}),
+                         ([], {'win_only': 1}))
+        for bad in (replace(decl, return_type='unsigned char'), replace(decl, return_type=''),
+                    replace(decl, declaration_only=False)):
+            self.assertTrue(any('hides a CodeView counterpart' in e for e in
+                                compare([d], [bad], {}, {key: 'wrong'})[0]))
+        self.assertTrue(any('hides a CodeView counterpart' in e for e in
+                            compare([replace(d, return_type='')], [decl], {}, {key: 'wrong'})[0]))
+
+    def test_variadic_formals_preserve_ellipsis_owner_and_duplicate_checks(self):
+        from dataclasses import replace
+        d = replace(definition(name='formatString', file='src/misc.cpp', inline=False),
+                    member=False, parameters=1, argument_types=('const char *',),
+                    signature='string (const char *, ...)', variadic=True)
+        o = replace(origin(name='formatString', file='misc.cpp'),
+                    argument_types=('const char *', '...'))
+        self.assertEqual(compare([d], [o], {}, {})[0], [])
+        for bad in (replace(d, variadic=False), replace(d, parameters=2)):
+            self.assertTrue(compare([bad], [o], {}, {})[0][0].startswith('SIGNATURE '))
+        fixed_origin = replace(o, argument_types=('const char *',))
+        self.assertTrue(compare([d], [fixed_origin], {}, {})[0][0].startswith('SIGNATURE '))
+        wrong_owner = replace(d, file='src/other.cpp')
+        self.assertTrue(compare([wrong_owner], [o], {}, {})[0][0].startswith('OWNER '))
+        duplicate = replace(d, line=30, offset=30)
+        self.assertTrue(any(e.startswith('DUPLICATE ') for e in
+                            compare([d, duplicate], [o], {}, {})[0]))
+        key = (d.file, d.name, d.signature)
+        self.assertTrue(any('hides a CodeView counterpart' in e for e in
+                            compare([d], [o], {}, {key: 'Incorrect exemption'})[0]))
+
+    def test_codeview_varargs_marker_is_read_in_procedures_and_declarations(self):
+        from types import SimpleNamespace
+        from unittest import mock
+        from homm3.match.source_ownership import read_dc
+        class Types:
+            records = {1: {}}
+            def get(self, index):
+                return {
+                    0: dict(kind='primitive'),
+                    1: dict(kind='class', name='Logger', fields=10),
+                    20: dict(kind='function', arguments=30),
+                    30: dict(types=[40, 0]),
+                }[index]
+            def fields(self, index):
+                return [dict(kind='method', name='write', type=20, attributes=0)]
+            def declaration(self, index):
+                self_type = {40: 'const char *'}
+                return self_type[index]  # T_NOTYPE must not become a fixed parameter.
+        proc = SimpleNamespace(type_index=20, name='Logger::write')
+        symbols = SimpleNamespace(procedures={0x1000: proc})
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'evidence/dreamcast').mkdir(parents=True)
+            csv = root / 'evidence/dreamcast/functions.csv'
+            heading = 'offset,file,name,line,params,module\n'
+            csv.write_text(heading + '0x1000,logger.cpp,Logger::write,50,1,logger.obj\n')
+            with mock.patch('homm3.core.inputs.dreamcast_symbols', return_value=symbols), \
+                 mock.patch('homm3.core.nb11_types.Types.from_symbols', return_value=Types()):
+                procedures = read_dc(root, include_declarations=True)
+                self.assertEqual(len(procedures), 1)
+                self.assertEqual(procedures[0].argument_types, ('const char *', '...'))
+                csv.write_text(heading)
+                declarations = read_dc(root, include_declarations=True)
+                self.assertEqual(len(declarations), 1)
+                self.assertTrue(declarations[0].declaration_only)
+                self.assertEqual(declarations[0].argument_types, procedures[0].argument_types)
+
     def test_normalized_operation_keeps_owner_signature_and_duplicate_checks(self):
         from dataclasses import replace
         d = definition(name='Widget::getValue')
@@ -303,6 +464,186 @@ class OwnershipTest(unittest.TestCase):
 
 
 class DefinitionScannerTest(unittest.TestCase):
+    def scan_instance_fixture(self, body, extra=''):
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'include').mkdir()
+            (root / 'include/instance.h').write_text(
+                '#define VA(a,b) __attribute__((annotate("va:" #a " size:" #b)))\n'
+                + body)
+            (root / 'src/instance.cpp').write_text('#include "instance.h"\n' + extra)
+            return scan_unit({'source': 'src/instance.cpp'}, root)
+
+    def test_template_instance_selects_concrete_member_without_copied_body(self):
+        definitions, errors, _ = self.scan_instance_fixture(
+            'template<int N> struct Bits {\n'
+            ' // VA instance: Bits<144>::operator*\n'
+            ' VA(0x00401000, 3) int operator*() const { return N; }\n'
+            '};\n')
+        self.assertEqual(errors, [])
+        self.assertEqual(len(definitions), 1)
+        body = definitions[0]
+        self.assertEqual(body.instance, 'Bits<144>::operator*')
+        self.assertEqual(body.mangled, '??D?$Bits@$0JA@@@QBEHXZ')
+        self.assertEqual(body.file, 'include/instance.h')
+        self.assertEqual(body.va, 0x401000)
+
+    def test_out_of_class_template_body_keeps_its_instance_selector(self):
+        definitions, errors, _ = self.scan_instance_fixture(
+            'template<int N> struct Bits { int operator*() const; };\n'
+            'template<int N>\n'
+            '// VA instance: Bits<144>::operator*\n'
+            'VA(0x00401000, 3) int Bits<N>::operator*() const { return N; }\n')
+        self.assertEqual(errors, [])
+        self.assertEqual(len(definitions), 1)
+        self.assertEqual(definitions[0].mangled, '??D?$Bits@$0JA@@@QBEHXZ')
+
+    def test_multiple_instances_keep_one_body_and_distinct_claim_identities(self):
+        from homm3.match.source_ownership import claim_definitions, claim_identity
+        from types import SimpleNamespace
+        from dataclasses import asdict
+        import json
+        definitions, errors, _ = self.scan_instance_fixture(
+            'template<int N> struct Bits { int operator*() const; };\n'
+            'template<int N>\n'
+            '// VA instance: Bits<144>::operator*\n'
+            'VA(0x00401000, 3)\n'
+            '// VA instance: Bits<145>::operator*\n'
+            'VA(0x00402000, 4)\n'
+            'int Bits<N>::operator*() const { return N; }\n')
+        self.assertEqual(errors, [])
+        self.assertEqual(len(definitions), 1)
+        # JSON caches preserve every instance while ownership counts one body.
+        body = Definition(**json.loads(json.dumps(asdict(definitions[0]))))
+        claimed = list(claim_definitions([body]))
+        self.assertEqual([d.va for d in claimed], [0x401000, 0x402000])
+        self.assertEqual([d.mangled for d in claimed],
+                         ['??D?$Bits@$0JA@@@QBEHXZ', '??D?$Bits@$0JB@@@QBEHXZ'])
+        self.assertEqual(len({(d.file, d.offset, d.end) for d in claimed}), 1)
+        claims = [SimpleNamespace(kind='func', rva=d.va - 0x400000, name=d.mangled)
+                  for d in claimed]
+        self.assertEqual(claim_identity([body], claims), [])
+        self.assertTrue(any('0x402000' in e for e in claim_identity([body], claims[:1])))
+
+    def test_secondary_instance_must_name_the_same_physical_body(self):
+        _, errors, _ = self.scan_instance_fixture(
+            'template<int N> struct Bits {\n'
+            ' // VA instance: Bits<144>::get\n'
+            ' VA(0x00401000, 3)\n'
+            ' // VA instance: Bits<145>::other\n'
+            ' VA(0x00402000, 3)\n'
+            ' int get() const { return N; } int other() const { return 0; }\n'
+            '};\n')
+        self.assertTrue(any('does not name the annotated definition' in e for e in errors), errors)
+
+    def test_instance_pairs_cannot_be_duplicated_or_grouped_ambiguously(self):
+        for second_va, second_selector, grouped in (
+                ('0x00401000', 'Bits<145>::get', False),
+                ('0x00402000', 'Bits<144>::get', False),
+                ('0x00402000', 'Bits<145>::get', True)):
+            with self.subTest(va=second_va, selector=second_selector, grouped=grouped):
+                first = '// VA instance: Bits<144>::get\n'
+                second = f'// VA instance: {second_selector}\n'
+                annotations = ('VA(0x00401000, 3)\n', f'VA({second_va}, 3)\n')
+                prefix = (first + second + ''.join(annotations) if grouped else
+                          first + annotations[0] + second + annotations[1])
+                _, errors, _ = self.scan_instance_fixture(
+                    'template<int N> struct Bits {\n' + prefix +
+                    'int get() const { return N; } };\n')
+                self.assertTrue(any(e.startswith('INSTANCE ') for e in errors), errors)
+
+    def test_template_destructor_instance_uses_ordinary_destructor_name(self):
+        definitions, errors, _ = self.scan_instance_fixture(
+            'template<class T> struct Owner {\n'
+            ' // VA instance: Owner<int>::~Owner\n'
+            ' VA(0x00401000, 3) ~Owner() {}\n'
+            '};\n')
+        self.assertEqual(errors, [])
+        self.assertEqual(len(definitions), 1)
+        self.assertEqual(definitions[0].mangled, '??1?$Owner@H@@QAE@XZ')
+
+    def test_template_instance_cannot_borrow_another_physical_definition(self):
+        for selector, extra in (
+                ('Bits<144>::other', ''),
+                ('Bits<144>::get', 'template<> int Bits<144>::get() const { return 8; }\n')):
+            with self.subTest(selector=selector, specialized=bool(extra)):
+                definitions, errors, _ = self.scan_instance_fixture(
+                    'template<int N> struct Bits {\n'
+                    f' // VA instance: {selector}\n'
+                    # Both members share a line: token identity, not merely
+                    # line identity, has to distinguish them.
+                    ' VA(0x00401000, 3) int get() const { return N; } int other() const { return 0; }\n'
+                    '};\n', extra)
+                self.assertTrue(any('does not name the annotated definition' in e for e in errors), errors)
+
+    def test_template_instance_requires_one_selector_one_va_and_valid_member(self):
+        for hints, annotation in (
+                ('// VA instance: Bits<144>::get\n', ''),
+                ('// VA instance: Bits<144>::get\n// VA instance: Bits<129>::get\n', 'VA(0x00401000, 3)'),
+                ('// VA instance: Bits<144>::missing\n', 'VA(0x00401000, 3)'),
+                ('// VA instance: \n', 'VA(0x00401000, 3)')):
+            with self.subTest(hints=hints, annotation=annotation):
+                _, errors, _ = self.scan_instance_fixture(
+                    'template<int N> struct Bits {\n' + hints +
+                    annotation + ' int get() const { return N; }\n};\n')
+                self.assertTrue(any(e.startswith('INSTANCE ') for e in errors), errors)
+
+    def test_vc6_only_definitions_cannot_hide_from_inventory(self):
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'include').mkdir()
+            # Use the real annotation boundary: selecting the VC6 source
+            # branch must not erase VA metadata or enable editor bodies.
+            actual_root = Path(__file__).resolve().parents[3]
+            (root / 'include/va.h').write_text(
+                (actual_root / 'include/va.h').read_text())
+            (root / 'include/value.h').write_text(
+                '#include "va.h"\n'
+                '#if defined(_MSC_VER) && !defined(__clang__)\n'
+                'struct Value { VA(0x00401000, 3) int get() { return 1; } };\n'
+                '#else\n'
+                'struct Value { int editorOnly() { return 2; } };\n'
+                '#endif\n')
+            (root / 'src/value.cpp').write_text(
+                '#include "value.h"\n'
+                '#if _MSC_VER == 1200 && !defined(__clang__)\n'
+                'VA(0x00402000, 3) int retained() { return 1; }\n'
+                '#else\n'
+                'int editorOnly() { return 2; }\n'
+                '#endif\n'
+                '#if 0\nint inactive() { return 0; }\n#endif\n')
+            definitions, errors, _ = scan_unit({'source': 'src/value.cpp'}, root)
+            self.assertEqual(errors, [])
+            bodies = {d.name: d for d in definitions}
+            self.assertEqual(set(bodies), {'Value::get', 'retained'})
+            self.assertEqual(bodies['Value::get'].file, 'include/value.h')
+            self.assertEqual(bodies['Value::get'].va, 0x401000)
+            self.assertTrue(bodies['Value::get'].inline)
+            self.assertEqual(bodies['retained'].va, 0x402000)
+            self.assertFalse(bodies['retained'].inline)
+
+    def test_variadic_ast_flag_does_not_count_callback_ellipsis(self):
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'include').mkdir()
+            (root / 'src/format.cpp').write_text(
+                'int format(const char* pattern, ...) { return 0; }\n'
+                'void callback(void (*fn)(const char*, ...)) {}\n'
+                'struct Logger { void write(const char* pattern, ...) {} };\n')
+            definitions, errors, _ = scan_unit({'source': 'src/format.cpp'}, root)
+            self.assertEqual(errors, [])
+            bodies = {d.name: d for d in definitions}
+            self.assertTrue(bodies['format'].variadic)
+            self.assertTrue(bodies['Logger::write'].variadic)
+            self.assertFalse(bodies['callback'].variadic)
+            self.assertTrue(all(d.parameters == 1 for d in definitions))
+
     def test_conversion_operators_preserve_member_constness(self):
         from dataclasses import replace
         from homm3.match.source_ownership import scan_unit
@@ -392,6 +733,36 @@ class DefinitionScannerTest(unittest.TestCase):
                          ('window.cpp', 200, '0x14111c'))
 
 class LocalClassTest(unittest.TestCase):
+    def test_exact_windows_owner_admits_only_unique_local_class(self):
+        from unittest import mock
+        from homm3.cleanliness import board
+        root = Path('/tmp/example')
+        path = root / 'src/windows.cpp'
+        source = 'class WindowsDialog { void draw(); };'
+        windows = {('src/windows.cpp', 'WindowsDialog::draw', 'void ()'): 'retail proof'}
+        with mock.patch.object(board, 'REPO', root), \
+             mock.patch('homm3.match.source_ownership.read_dc', return_value=[]), \
+             mock.patch('homm3.match.source_ownership.read_filter', return_value=(windows, [])):
+            self.assertEqual(board._dc_local_classes([(path, source)])[path], {'WindowsDialog'})
+            other = root / 'src/other.cpp'
+            self.assertEqual(board._dc_local_classes([(other, source)])[other], set())
+            self.assertEqual(board._dc_local_classes([(path, source),
+                (root / 'include/windows.h', source)])[path], set())
+        dc = [Origin('original.h', 'WindowsDialog::draw', 10, 1, 'x.obj', '0x1000')]
+        with mock.patch.object(board, 'REPO', root), \
+             mock.patch('homm3.match.source_ownership.read_dc', return_value=dc), \
+             mock.patch('homm3.match.source_ownership.read_filter', return_value=(windows, [])):
+            self.assertEqual(board._dc_local_classes([(path, source)])[path], set())
+
+    def test_qualified_nested_class_uses_its_own_name(self):
+        from homm3.cleanliness import board
+        source = 'class Reader::Failure { enum { CODE = 2 }; };'
+        self.assertTrue(board._cpp_local_view_sites(source, {'dc_local_classes': {'Reader'}}))
+        self.assertEqual(board._cpp_local_view_sites(source,
+                         {'dc_local_classes': {'Failure'}}), [])
+        self.assertEqual(board._cpp_local_enum_sites(source,
+                         {'dc_local_classes': {'Failure'}}), [])
+
     def test_enum_admission_is_limited_to_proven_class_member_scope(self):
         from homm3.cleanliness import board
         source = '''class LocalDialog {
@@ -460,13 +831,34 @@ class CoverageTest(unittest.TestCase):
         key = (d.file, d.name, d.signature)
         self.assertEqual(compare([d], [o], {}, {key: 'New Windows overload'})[0], [])
 
-    def test_platform_signature_change_needs_an_explicit_identity(self):
+    def test_origin_hints_cannot_waive_formal_arity_or_constness(self):
         from dataclasses import replace
-        d = replace(definition(), parameters=2, argument_types=('int', 'int'))
-        o = replace(origin(), argument_types=('int',))
-        self.assertTrue(compare([d], [o], {}, {})[0][0].startswith('SIGNATURE '))
-        # A source annotation names the independently reviewed DC procedure.
-        self.assertEqual(compare([replace(d, dc_offset=o.offset)], [o], {}, {})[0], [])
+        o = replace(origin(), argument_types=())
+        hints = [{}, {'dc_offset': o.offset},
+                 {'origin_file': o.file, 'origin_line': o.line},
+                 {'dc_offset': o.offset, 'origin_file': o.file,
+                  'origin_line': o.line}]
+        mismatches = [replace(definition(), parameters=1,
+                              argument_types=('int',), signature='void (int)'),
+                      replace(definition(), const=True, signature='void () const')]
+        for d in mismatches:
+            for hint in hints:
+                with self.subTest(signature=d.signature, hint=hint):
+                    annotated = replace(d, **hint)
+                    errors, counts = compare([annotated], [o], {}, {})
+                    self.assertEqual(counts, {'signature': 1})
+                    self.assertTrue(errors[0].startswith('SIGNATURE '))
+                    key = (annotated.file, annotated.name, annotated.signature)
+                    self.assertEqual(compare([annotated], [o], {},
+                        {key: 'Reviewed Complete overload'})[0], [])
+
+    def test_renamed_body_keeps_explicit_identity_with_matching_signature(self):
+        from dataclasses import replace
+        o = replace(origin(), argument_types=())
+        d = replace(definition(name='Widget::paint'), dc_offset=o.offset)
+        self.assertEqual(compare([d], [o], {}, {})[0], [])
+        wrong_const = replace(d, const=True)
+        self.assertTrue(compare([wrong_const], [o], {}, {})[0][0].startswith('SIGNATURE '))
 
     def test_constness_mismatch_does_not_silently_inherit_source_order(self):
         from dataclasses import replace
@@ -518,23 +910,46 @@ class InlineCppOrderTest(unittest.TestCase):
 
 
 class CompilerIdentityTest(unittest.TestCase):
-    def test_generated_enrollment_without_a_vc6_public_is_fatal(self):
+    def test_audit_separates_unemitted_generated_body_from_written_identity(self):
+        from dataclasses import replace
+        from unittest import mock
+        from homm3.match.source_ownership import audit
         from homm3.retail_labels import Claim
-        from homm3.match.source_ownership import compgen_identity
         raw = '__h3cg$window$class_ctor$Reply'
         claim = Claim(0x1000, raw, 'func', 'src-VA_COMPGEN', 33, 'window',
                       dict(ckind='CLASS_CTOR', owner='Reply', raw=raw))
-        self.assertTrue(compgen_identity([claim])[0].startswith('CLAIM_COMPGEN '))
+        body = replace(definition(file='src/window.cpp'), va=0x401000,
+                       mangled='??0Reply@@QAE@XZ')
+        for definitions in ([], [body]):
+            with mock.patch('homm3.match.source_ownership.collect',
+                            return_value=(definitions, [], [])), \
+                 mock.patch('homm3.match.source_ownership.read_filter', return_value=({}, [])), \
+                 mock.patch('homm3.match.source_ownership.read_dc', return_value=[]), \
+                 mock.patch('homm3.match.source_ownership.compare', return_value=([], {})), \
+                 mock.patch('homm3.retail_labels.fragments.all_claims', return_value=[claim]):
+                result = audit()
+            self.assertEqual(len(result['unpaired_generated_claims']), 1)
+            self.assertEqual(bool(result['violations']), bool(definitions))
+            if definitions:
+                self.assertTrue(result['violations'][0].startswith('CLAIM_IDENTITY '))
+
+    def test_generated_enrollment_without_a_vc6_public_reports_emission_debt(self):
+        from homm3.retail_labels import Claim
+        from homm3.match.source_ownership import unpaired_generated_claims
+        raw = '__h3cg$window$class_ctor$Reply'
+        claim = Claim(0x1000, raw, 'func', 'src-VA_COMPGEN', 33, 'window',
+                      dict(ckind='CLASS_CTOR', owner='Reply', raw=raw))
+        self.assertIn('no VC6 function paired', unpaired_generated_claims([claim])[0])
         paired = claim._replace(name='??0Reply@@QAE@XZ', channel='src-VA+base')
-        self.assertEqual(compgen_identity([paired]), [])
+        self.assertEqual(unpaired_generated_claims([paired]), [])
 
     def test_anonymous_generated_thunk_keeps_its_deliberate_name(self):
         from homm3.retail_labels import Claim
-        from homm3.match.source_ownership import compgen_identity
+        from homm3.match.source_ownership import unpaired_generated_claims
         claim = Claim(0x1000, '__h3cg$window$static_ctor$record', 'func',
                       'src-VA_COMPGEN', 33, 'window',
                       dict(ckind='STATIC_CTOR', owner='record'))
-        self.assertEqual(compgen_identity([claim]), [])
+        self.assertEqual(unpaired_generated_claims([claim]), [])
 
     def test_retained_address_with_raw_name_is_not_a_valid_identity(self):
         from dataclasses import replace

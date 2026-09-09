@@ -23,6 +23,7 @@ enum EDayOfWeek {
 #include "mapcell.h"
 #include "netmsg.h"
 #include "secondaryskill.h"
+#include "creaturetype.h"
 #include "struct.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
 // type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
@@ -43,16 +44,12 @@ enum EDayOfWeek {
 #include "advmgr_objects.h"
 #include "seerhut.h"
 
-int __fastcall loadString(TAbstractFile* infile, std::string* value);
-// Map-format strings use a 32-bit length and live in the later game.cpp
-// helper at 0x4c6010 (distinct from saved-game loadString's short length).
-int __fastcall readMapString(TAbstractFile* infile, std::string* value);
 // 0x4ba1c0, 80 B, in a compiland this tree has not admitted. One stream byte
 // masked to 0xff, -1 for the 0xff sentinel, and on the oldest map format two
 // campaign ids remapped (0x80 -> 0x92, 0x81 -> 0x9c) - which is what makes
 // the second argument the map version rather than anything of the file's.
 // Reached from readHeroData; the NAME is invented from that role, on
-// readMapString's own precedent.
+// the readString reader's former provisional-name precedent.
 // Before normalization (function): ReadHeroId.
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 // 0x4ba210, 80 B. The save-record twin uses the Complete-roster version
@@ -473,54 +470,12 @@ struct type_map_hero_info {
     // Before normalization: field_14.
     std::bitset<8> m_players;
 
-    type_map_hero_info() {}
+    // Map readers supply all three fields below; Dinkumware map insertion
+    // copies the supplied value and does not default-construct this record.
     type_map_hero_info(int portrait, std::string name,
                        std::bitset<8> availability);
 };
 SIZE(type_map_hero_info, 0x18);
-
-// VC6 retains this map value's implicit destructor in game.obj. Specializing
-// the user-type pair preserves the Dinkumware layout and constructors while
-// giving that one otherwise implicit member an out-of-line definition.
-#if defined(_MSC_VER) && !defined(__clang__)
-namespace std {
-template<>
-struct pair<const int, type_map_hero_info> {
-    typedef const int first_type;
-    typedef type_map_hero_info second_type;
-
-    pair() : first(int()), second(type_map_hero_info()) {}
-    pair(const int& firstValue, const type_map_hero_info& secondValue)
-        : first(firstValue), second(secondValue) {}
-    template<class U, class V>
-    pair(const pair<U, V>& value)
-        : first(value.first), second(value.second) {}
-    ~pair();
-
-    const int first;
-    type_map_hero_info second;
-};
-}
-#endif
-
-// Emission-only access shim for the retained Dinkumware _Tree::_Min COMDAT.
-// The real call is inside CMapHeaderData::Save after iterator::_Inc has been
-// expanded; this derived map exposes the protected static member without
-// changing the authoritative map member's type or any runtime caller.
-class THeroSetupMapMinComdatAnchor
-    : public std::map<int, type_map_hero_info>::_Imp {
-public:
-    typedef _Nodeptr NodePtr;
-    typedef std::pair<const int, type_map_hero_info> Value;
-    typedef std::map<int, type_map_hero_info, std::less<int>,
-                     std::allocator<type_map_hero_info> > HeroMap;
-    typedef HeroMap::_Kfn KeyFunction;
-    // Before normalization (function): THeroSetupMapMinComdatAnchor::retain_min.
-    void retainMin();
-    // Before normalization (function): THeroSetupMapMinComdatAnchor::retain_insert.
-    void retainInsert(const Value& value);
-};
-
 
 // The three serialized aggregates embedded consecutively in `game` are
 // fixed by retail's SavedGameHeader constructor, assignment calls, and copy
@@ -683,6 +638,11 @@ SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
 class NewSMapHeader : public CMapHeaderData {
 public:
+    // DC game.cpp:7232 and the class method record name this static
+    // string-reference reader. Retail 0x4c6010 uses the same two-register
+    // ABI as game's short-length reader, with a dword map length instead.
+    static int __fastcall readString(TAbstractFile* infile, std::string& value);
+
     // Before normalization: mapName.
     std::string m_mapName;
     // Before normalization: mapDescription.
@@ -999,24 +959,6 @@ struct TBlackMarket {
 };
 SIZE(TBlackMarket, 0x1c);
 
-// THIS CLAIM NAMES NOTHING, and that is enumerated debt, not an
-// NAME FINDING. `SaveAbstractString` looks like an invention. The
-// Dreamcast CodeView dump names this pair game::loadString /
-// game::saveString (dc 0xa7414 / 0xa750c); retail makes both free /Gr
-// functions, which is why the reconstructed reader in game.cpp is
-// spelled `loadString` and not `game::loadString`; and every comment in
-// this tree that mentions 0x4bbb60 - in game.cpp and four times in
-// mapcell.cpp - already calls it saveString. Renaming this declaration
-// and its three call sites rewrites a mangled symbol in two base
-// objects, so it is a separately measurable change and is deliberately
-// not bundled into the implementation claim in game.cpp.
-// Before normalization (function): SaveAbstractString.
-int __fastcall saveAbstractString(
-    TAbstractFile* outfile,
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >* text);
-
-
-
 class Sign {
 public:
     unsigned char m_hasText;
@@ -1284,9 +1226,9 @@ public:
     // Before normalization (function): playerData::NextTown.
     int nextTown();
     // Before normalization (function): playerData::FindHero.
-    int findHero(int id);
+    int findHero(int id) const;
     // Before normalization (function): playerData::FindTown.
-    int findTown(int id);
+    int findTown(int id) const;
     // Before normalization (function): playerData::AssignNetInfo.
     // Before normalization (locals): pNetPlayerInfo.
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
@@ -1327,7 +1269,7 @@ public:
     // Before normalization (locals): our_town.
     unsigned char addGarrisonHero(town* ourTown);
     // Before normalization (function): playerData::NumOfGivenArtifact.
-    int numOfGivenArtifact(int artifact);
+    int numOfGivenArtifact(int artifact) const;
     // 0x4bacb0. town::get_legion_bonus calls it on
     // gpGame->players[town->owner] with artifact id 0x85. The HD cross-build
     // signature and retail's true/false AL materialization type it bool.
@@ -1357,9 +1299,12 @@ public:
     ~game();
     game& __fastcall operator=(const game& that);
 
-    static int saveString(
-        void* outfile,
-        std::basic_string<char, std::char_traits<char>, std::allocator<char> >* value);
+    // DC game.cpp:2492/2531 and the class method records explicitly
+    // declare static loadString/saveString with a string reference.
+    // Retail passes stream in ECX and string address in EDX at
+    // 0x4bb990/0x4bbb60. Static /Gr members have that same ABI.
+    static int __fastcall loadString(TAbstractFile* infile, std::string& value);
+    static int __fastcall saveString(TAbstractFile* outfile, std::string& text);
 
     struct TRumour {
         // Before normalization: text.
@@ -1700,7 +1645,7 @@ public:
     // Before normalization (function): game::GetLocalPlayer.
     playerData* getLocalPlayer();
     // Before normalization (function): game::GetLocalPlayerGamePos.
-    int getLocalPlayerGamePos();                 // 0x4cea20
+    int getLocalPlayerGamePos() const;                 // 0x4cea20
     // Before normalization (function): game::CheckHeroConsistency.
     void checkHeroConsistency();                 // DC game.cpp:10132
     // Before normalization (function): game::get_puzzle_origin.
@@ -1726,7 +1671,7 @@ public:
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
     // Before normalization (function): game::GetGamePosFromDPID.
-    int getGamePosFromDPID(unsigned long dpid);  // 0x4cec20
+    int getGamePosFromDPID(unsigned long dpid) const;  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
     // Before normalization (function): game::IsLastHuman.
     bool isLastHuman(int gamePos) const;         // 0x4cec50
@@ -1818,7 +1763,10 @@ public:
     // Its body must be visible here: viewArmy expands this helper, while
     // AI_value_of_event retains the canonical philai COMDAT.
     // Before normalization (function): game::UpgradedCreatureType.
-    inline TCreatureType upgradedCreatureType(TCreatureType creature) const
+    // Own the retained inline body here with the game interface. The selected
+    // retail copy is in philai.obj; emission does not give that TU ownership.
+    VA(0x00529710, 0x34)
+    TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
         if (m_f1f698 == 0
             && (creature == CREATURE_AIR_ELEMENTAL
@@ -1942,9 +1890,9 @@ public:
     // retail passes the record in ECX at both rows - while their bodies stay
     // with the rest of kb.cpp.
     // Before normalization (function): game::get_base_map_score.
-    short getBaseMapScore();
+    short getBaseMapScore() const;
     // Before normalization (function): game::get_map_score.
-    short getMapScore();
+    short getMapScore() const;
     // Before normalization (function): game::GiveTimeEventReward.
     void giveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
     // Before normalization (function): game::CheckForTimeEvent.
@@ -1955,14 +1903,14 @@ public:
     unsigned char getRandomLith(const std::vector<type_point>* points,
                                   // Before normalization (locals): cell_type.
                                   type_point* result, long cellType,
-                                  long excluded);            // 0x4cdb80
+                                  long excluded) const;            // 0x4cdb80
     // Before normalization (function): game::get_random_lith_exit.
-    unsigned char getRandomLithExit(long color, type_point* result);
+    unsigned char getRandomLithExit(long color, type_point* result) const;
     // Before normalization (function): game::get_random_lith.
     unsigned char getRandomLith(long color, long excluded,
-                                  type_point* result);
+                                  type_point* result) const;
     // Before normalization (function): game::get_random_whirlpool.
-    unsigned char getRandomWhirlpool(long excluded, type_point* result);
+    unsigned char getRandomWhirlpool(long excluded, type_point* result) const;
     // Before normalization (function): game::get_underground_gate_exit.
     // DC game.cpp:11662, get_underground_gate_exit: const game accessor.
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
@@ -2057,7 +2005,6 @@ public:
     // Before normalization (function): game::SetupFirstPlayer.
     void setupFirstPlayer();
     // Before normalization (function): game::setup_first_player_position.
-    int setupFirstPlayerPosition(int firstHuman);
     // Before normalization (function): game::LoadMap.
     bool loadMap(TAbstractFile* mapFile);
     // Before normalization (function): game::apply_map_header_availability.
@@ -2595,29 +2542,6 @@ extern int g_netLocalGamePos;                // .bss 0x69cca8
 // to sit on - a real, distinct cell. Name stays ordinal.
 extern unsigned char g_unnamed69ccc4;
 
-// The two-hero-snapshot trade payload HandleNetMsg's RS_TRADE_REQUEST arm
-// copies into gpGame->heroes by each snapshot's own id field. The DC
-// gives its same-shape class the CTradeRequestMsg name ("embeds two hero
-// snapshots", see netmsg.h) - that tree name is currently on the compact
-// gift record, so this view keeps an ordinal spelling until the netmsg
-// attribution swap lands. Defined HERE (not netmsg.h) because it embeds
-// hero by value and game.h is where advmgr's include order has both
-// CNetMsg and hero complete.
-class CTradeHeroesMsg : public CNetMsg {
-public:
-    hero m_hero1;
-    hero m_hero2;
-
-    // Dreamcast names this constructor CHeroUpdateMsg; retail's
-    // RS_TRADE_REQUEST payload has this exact base and two-hero shape.
-    CTradeHeroesMsg(hero* left, hero* right)
-        : CNetMsg(RS_TRADE_REQUEST, sizeof(CTradeHeroesMsg))
-    {
-        m_hero1 = *left;
-        m_hero2 = *right;
-    }
-};
-
 // The two game-band routines StartLocalPlayerTurn drove through /Gr free
 // stand-ins at 0x4ca530/0x4cc7d0 are class game's own CancelComputerScreen
 // and DoNewTurn, declared above and claimed in game.cpp; retail's own calls
@@ -2648,10 +2572,7 @@ DATA(0x006a5d24) extern const char* const g_grailTerrainNames[];
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call
 // sites).
-// TImmMouseRuntime moved to imm_mouse.h 2026-09-05, beside the compiland
-// that DEFINES its constructor (0x4b6260): only game.cpp and
-// forcefeedback.cpp need the name, and its throw type has to be nested in
-// it, which game.h's include closure should not have to carry.
+// ForceFeedback.cpp owns the Immersion initializer and window-move bodies.
 
 // Before normalization (function): InitImmMouse.
 // Before normalization (locals): hInst.
@@ -2667,7 +2588,7 @@ void immMouseWindowMoved();                           // 0x4b6950
 // feedback that plays with a combat spell. Retail-only (the Dreamcast
 // build has no Immersion layer), so the NAME is a bootstrap invention
 // and the return value, which PowEffect discards, stays unmodelled.
-unsigned char PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+unsigned char playImmEffect(const char* effectName, int count);  // 0x4b69f0
 // E:\gamedcs\game.cpp:208, dc 0xa2af8 - retail 0x4b8410.
 // Before normalization (function): InitializeRandomTavernText.
 unsigned char initializeRandomTavernText();
@@ -3997,11 +3918,14 @@ inline bool game::townAlreadyBuiltOn(int townId) const
 // CODEVIEW(..\stlport\stl_vector.h:609, dc 0xc8dd0) void* type_creature_bank::`scalar deleting destructor'(unsigned __flags);
 
 // Dreamcast Game.h proves the complete 200-byte class and its single char
-// array. Retail's adventure/combat cheat handlers inline the constructor and
-// compare members while sharing the out-of-line encoder at 0x402a30.
+// array. Retail's adventure/combat cheat handlers inline the string-taking
+// constructor and compare members while sharing the encoder at 0x402a30.
+// The default constructor and GetCode are ordinary declarations in DC type
+// 0x3dc2 (method types 0x3dc5/0x3dcb), without procedure/source locations.
+// Neither has an active caller; leave their bodies unreconstructed.
 class TCheatCode {
 public:
-    TCheatCode() { m_code[0] = 0; }
+    TCheatCode();
     TCheatCode(const char* value) { encode(value); }
 
     bool compare(const char* value) const
@@ -4009,7 +3933,7 @@ public:
         return _strcmpi(m_code, value) == 0;
     }
 
-    const char* getCode() const { return m_code; }
+    const char* getCode() const;
 
 private:
     void encode(const char* value);

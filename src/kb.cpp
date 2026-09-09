@@ -17,6 +17,7 @@
 #include "border.h"
 #include "button.h"
 #include "campaignbrief.h"
+#include "campaign.h"
 #include "campaignwindow.h"
 #include "castle.h"
 #include "command.h"
@@ -53,6 +54,7 @@
 #include "timer.h"
 #include "text.h"
 #include "textwdgt.h"
+#include "textscroller.h"
 #include "winmgr.h"
 #include "wingraph.h"
 #include "findpath.h"
@@ -2292,7 +2294,9 @@ unsigned char type_normal_dialog_frame::handleClick(unsigned char downClick,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_ARTIFACT: {
-            type_artifact artifact(LOWORD(m_qualifier), HIWORD(m_qualifier));
+            // The Complete resource message packs an artifact ordinal in its low word and scroll payload in its high word; the constructor keeps DC TArtifact.
+            type_artifact artifact(static_cast<TArtifact>(LOWORD(m_qualifier)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            artifact.m_extra = HIWORD(m_qualifier);
 
             if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL)
                 normalDialog(artifact.getDescription().c_str(),
@@ -2581,6 +2585,7 @@ unsigned char getTeamNames(int player, char* names)
 // E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
+    // Before normalization (locals): new_resource, new_qualifier.
     EGameResource newResource, long newQualifier)
     : coloredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
 {
@@ -4292,7 +4297,7 @@ stop_congrats:
 // score formula; the offset is what retail loads either way, and nothing here
 // re-opens that identification.
 VA(0x004f3e30, 0x7A)  // dc-order-map + the get_current_turn expression, dc 0xe4298
-short game::getBaseMapScore()
+short game::getBaseMapScore() const
 {
     short turn = getCurrentTurn();
     playerData* player = g_game->getLocalPlayer();
@@ -4309,7 +4314,7 @@ short game::getBaseMapScore()
 // here), then scales by the .rdata float row the setup difficulty selects.
 // The fild/fstp/fld round trip is the `float` cast under /Op.
 VA(0x004f3eb0, 0xA7)  // dc-order-map + inlined get_base_map_score, dc 0xe4300
-short game::getMapScore()
+short game::getMapScore() const
 {
     return static_cast<short>(static_cast<float>(getBaseMapScore())
                               * g_mapScoreDifficultyFactor[m_setup.m_difficulty]);
@@ -4380,15 +4385,7 @@ void showCongrats(int hsType)
     g_windowManager->fadeScreen(1, 4, 0);
 }
 
-type_normal_dialog_frame::type_normal_dialog_frame(
-    long x, long y, long w, long h, long id,
-    // Before normalization (locals): new_resource, new_qualifier.
-    EGameResource newResource, long newQualifier)
-    : coloredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
-{
-    m_resource = newResource;
-    m_qualifier = newQualifier;
-}
+
 
 // kb.obj-owned recursion guard: both writers (the credits loop 0x4edda0
 // and MemError below) live in this TU, and the .bss slot sits in kb's
@@ -4604,8 +4601,16 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_unk69774c)
                 g_game->m_campaign.m_isCheater = 1;
-            type_artifact artifact(
-                artifactFromInt(idItem - APP_MENU_ARTIFACT_FIRST));
+            TArtifact artifactId;
+            {
+                union {
+                    int m_integer;
+                    TArtifact m_artifact;
+                } converted;
+                converted.m_integer = idItem - APP_MENU_ARTIFACT_FIRST;
+                artifactId = converted.m_artifact;
+            }
+            type_artifact artifact(artifactId);
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
@@ -4620,8 +4625,14 @@ int handleAppSpecificMenuCommands(int idItem)
                 if (g_unk69774c)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                    artifact.m_artifactId =
-                        artifactFromInt(ARTIFACT_SPELLBOOK);
+                    {
+                        union {
+                            int m_integer;
+                            TArtifact m_artifact;
+                        } converted;
+                        converted.m_integer = ARTIFACT_SPELLBOOK;
+                        artifact.m_artifactId = converted.m_artifact;
+                    }
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
 

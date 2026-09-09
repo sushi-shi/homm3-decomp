@@ -2568,16 +2568,6 @@ void type_sacrifice_window::pickUpArtifact(
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-// CODEGEN SCAFFOLD: this partial reconstruction is one source-level inline
-// candidate short of retail's /Ob2 divisor in create_creature_icons below.
-// The empty tail call emits no instructions; it only keeps the third nested
-// vector::insert out of line, as retail does. Remove it when the missing
-// original source expression that supplied that candidate is recovered.
-// Before normalization (function): transformer_grid_inline_surface.
-static void transformerGridInlineSurface()
-{
-}
-
 // E:\gamedcs\sacrifice_window.cpp:1053
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
@@ -2713,7 +2703,7 @@ void type_sacrifice_window::backpackClick(
             normalDialog(
                 m_currentHero
                     ->getBackpackError(
-                        artifactFromInt(m_holdingArtifact.m_artifactId))
+                        m_holdingArtifact.m_artifactId)
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
@@ -3794,7 +3784,6 @@ void type_skeleton_window::createCreatureIcons(
         textY += 98;
         iconY += 98;
     }
-    transformerGridInlineSurface();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385

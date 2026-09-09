@@ -28,24 +28,17 @@ public:
         const char* m_extraText;
     };
     heroWindow* m_window;
-    // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
-    // declaration order. The attested consumer sites need the real
-    // constructor shape and VC6 removes fields overwritten before first read.
-    // Dreamcast type 0x1016 lists this eight-argument overload before the
-    // default constructor; both are header-inline source boundaries.
+    // DC type 0x1020 proves this overload's declaration, but no body or
+    // inline source row has been recovered. Keep the declaration alone;
+    // overview's zero-initialization uses the proven default constructor.
     message(int id, int codeX, int codeY, int qualifier,
-            int mouseX, int mouseY, int extra, heroWindow* window)
-    {
-        m_id = id;
-        m_codeX = codeX;
-        m_codeY = codeY;
-        m_qualifier = qualifier;
-        m_mouseX = mouseX;
-        m_mouseY = mouseY;
-        m_extra = extra;
-        m_window = window;
-    }
+            int mouseX, int mouseY, int extra, heroWindow* window);
 
+    // Original: message::message; struct.h:42, dc 0x2d58.
+    // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
+    // setting codeY and passing it to OnWidgetDeselect. The retained body
+    // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
+    VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
     message()
     {
         m_id = 0;
@@ -108,7 +101,7 @@ struct type_point {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
     // Before normalization (function): type_point::is_valid.
-    unsigned char isValid();
+    unsigned char isValid() const;
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS

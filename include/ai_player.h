@@ -18,6 +18,9 @@ class town;
 class generator;
 struct type_artifact;
 
+// Original: AI_mark_danger_zones; ai_player.cpp:3013, dc 0x329f8.
+void aiMarkDangerZones(hero* currentHero, long* dangerZones);
+
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
 // Before normalization: hero_limits.
@@ -34,6 +37,10 @@ void aiSwapArtifacts(hero* source, hero* destination);
 // Before normalization (locals): our_hero.
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
+// Original: AI_get_value_of_artifact; ai_player.cpp:5684, dc 0x37514.
+// This overload values the artifact across a player's heroes. CodeView
+// proves the const reference and long player id; retail retains 0x433aa0.
+long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 // Before normalization (function): get_full_value.
 // Before normalization (locals): our_hero.
 long getFullValue(const hero* ourHero);
@@ -200,8 +207,10 @@ public:
                         const armyGroup* sourceArmy,
                         const hero* secondHero,
                         unsigned char newHasAngelicAlliance);
-    // Before normalization (function): type_AI_creature_swapper::get_army_value_increase.
-    long getArmyValueIncrease() const { return m_armyValueIncrease; }
+    // Original: type_AI_creature_swapper::get_army_increase.
+    // E:\gamedcs\ai_player.h:307, dc 0x114bd8: returns army_value_increase
+    // at +0x18. The former getArmyValueIncrease spelling obscured this identity.
+    long getArmyIncrease() const { return m_armyValueIncrease; }
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
@@ -401,7 +410,7 @@ long aiValueOfObservatory(struct type_point origin, long playerId, long range);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:4930, dc 0x35f08) void initialize_artifact_effects();
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5557, dc 0x37194) long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5643, dc 0x37464) long AI_get_equip_value(type_artifact artifact, const hero* our_hero, unsigned char exact);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5684, dc 0x37514) long AI_get_value_of_artifact(const type_artifact* artifact, long player_id);
+// CODEVIEW(E:\gamedcs\ai_player.cpp:5684, dc 0x37514) long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5708, dc 0x37588) long get_full_value(const hero* our_hero);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5792, dc 0x377f0) long remove_negative_artifacts(hero* our_hero);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5835, dc 0x37898) unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change);
