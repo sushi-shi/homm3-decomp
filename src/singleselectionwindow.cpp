@@ -2193,6 +2193,10 @@ void CEnterNameEdit::onKillFocus()
 // always-reject arm's ret-1 while the fall-through emits its own), so the
 // GetKeyState call is live and the duplication is source-faithful.
 // E:\gamedcs\singleselectionwindow.cpp:1892
+// Independent controls keep GetKeyState live: direct rejection return
+// 97.5397%, switch exit 94.8809%, do-scope continue 97.8413%, period
+// fallthrough 97.8571%, versus 100%. Rejection-default results reach
+// 93.6905% (bool/byte) or 94.1667% (int); retain the shared rejection join.
 VA(0x0057cfe0, 0xCF)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot16 (IgnoreKey override vs textEntryWidget base), dc 0x1493c8
 unsigned char CSaveGameEdit::ignoreKey(message* msg)
 {

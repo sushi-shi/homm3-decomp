@@ -41,6 +41,38 @@ Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
 MAX to its new CUR; a lower MAX is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
 
+## Reconstruction debt
+
+Manually maintained cleanup checklist:
+
+- [ ] Review casts and remove avoidable conversions: **3,047 named casts**
+  (**2,830 `static_cast`**, **217 `const_cast`**).
+- [ ] Review unions and simplify avoidable alternate views: **63 union definitions**.
+- [ ] Review gotos: **31 statements** in **12 functions across 10 files**.
+- [ ] Review artificial address arithmetic.
+- [ ] Review owner recovery from member pointers.
+- [ ] Review out-of-object pointers.
+- [ ] Review manual varargs.
+- [ ] Review unrelated variable reuse.
+- [ ] Review stack aggregates and unused members.
+- [ ] Review unresolved buffer bounds.
+- [ ] Review compiler warnings.
+- [ ] Investigate potentially uninitialized locals and missing-return warnings.
+- [ ] Search for inline functions.
+- [ ] Search for macros for common code.
+
+Counts cover tracked project C/C++ in `src/` and `include/`, excluding comments,
+literals, disabled `#if 0` bodies, generated build copies and vendor code. Casts
+count written named conversions; the cleanliness gates separately report zero
+C-style and `reinterpret_cast` conversions. Items without counts still need a
+tree-wide census; an unchecked item is a review category, not proof of a defect.
+
+All remaining gotos have individual dispositions in the [goto audit](docs/vc6/goto-audit.md).
+The [union and pragma audit](docs/vc6/union-pragma-audit.md) distinguishes real
+shared-storage representations from reconstruction adapters and inlining debt.
+Recover helpers, macros, types and lifetimes from source and retail evidence;
+validate changes with VC6, measure collateral matches and preserve MAX/HIST.
+
 ## Pinned target
 
 The canonical image is the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:

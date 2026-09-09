@@ -8919,13 +8919,17 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
 // predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
 // because the fold does not care which way the compare runs; making the miss
-// a `goto` to the function's own trailing INVALID return is what breaks it,
-// because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
+// an exit to the function's trailing INVALID return breaks that fold.
+// The original goto probe raised 94.5074 -> 96.9031, and our
 // shared block now carries the same six predecessors retail has.
 // An enclosing do/while(0) with switch continue preserves the invalid-index
 // skip over the terrain switch, but scores 24.7668% around dispatch and
 // 23.8079% around the whole calculation, versus 96.9031%. These scopes do
 // not preserve the retail lowering, even with all sound/helper results kept.
+// The trigger test owns the object switch and its else owns the terrain
+// switch. With that partition, both invalid-index arms use switch break;
+// the shared INVALID return preserves all 1504 compiled bytes and 101
+// relocations/addends at 96.9031%. Break without the else loses agreement.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -8970,7 +8974,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
                 return LOOPING_SOUND_41;
             if (thisCell->m_objectIndex == GET_SOUND_GARRISON_1)
                 return LOOPING_SOUND_25;
-            goto invalid;
+            break;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -9083,7 +9087,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
                 return LOOPING_SOUND_43;
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
-            goto invalid;
+            break;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -9115,21 +9119,20 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
         default:
             return LOOPING_SOUND_INVALID;
         }
-    }
-
-    switch (thisCell->m_type) {
-    case NOTHING:
-        switch (thisCell->getSpecialTerrain()) {
-        case CURSED_GROUND:
-            return LOOPING_SOUND_48;
-        case MAGIC_PLAINS:
-            return LOOPING_SOUND_25;
+    } else {
+        switch (thisCell->m_type) {
+        case NOTHING:
+            switch (thisCell->getSpecialTerrain()) {
+            case CURSED_GROUND:
+                return LOOPING_SOUND_48;
+            case MAGIC_PLAINS:
+                return LOOPING_SOUND_25;
+            }
+            break;
+        case TERRAIN_VOLCANO:
+            return LOOPING_SOUND_45;
         }
-        break;
-    case TERRAIN_VOLCANO:
-        return LOOPING_SOUND_45;
     }
-invalid:
     return LOOPING_SOUND_INVALID;
 }
 
