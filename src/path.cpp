@@ -3,30 +3,13 @@
 // 9 functions in link order; retail drops GetBestDirection (no carve
 // row fits between OppositeDirection and the cinit cluster - the
 // combat move choice lives in the ai_* units).
-// THE PATH-FAMILY SHAPE, cracked 2026-08-08 (TU 75.97% -> 92.13%,
-// 1/8 -> 6/8 exact). The whole TU used to be parked on a supposed
-// "retail merges adjacent bounds-check returns and our CL cannot"
-// compiler-generation class. It is NOT a CL limitation - it is a
-// source shape, and the shape is a `goto` INTO the second guard's
-// body:
-//
-//     if (index < 0)
-//         goto off_grid;
-//     if (index >= 187)
-//     off_grid:
-//         return <fail>;
-//
-// which emits retail's `test/jl A; cmp/jl B; A: <fail-block>; B:`
-// exactly: guard 1 jumps into the block, guard 2 falls into it, and
-// the block sits BETWEEN the guards instead of being duplicated per
-// guard (split ifs, the old form, +4 bytes each) or sunk to the
-// function end (`||`, `&&`+goto, `!(a && b)`, a goto to a label after
-// the block - all four re-threaded to the sunk form and score ~11
-// points WORSE than the duplicated one). Applying it closed FindPath,
-// GetAdjacentCellIndex, GetAdjacentCellIndexNoArmy and
-// get_adjacent_hex in one edit. The same block-placement trick works
-// for a non-return merged block. ValidAttack now obtains that bounds check
-// by calling the canonical GetAdjacentCellIndex; its explicit copy is gone.
+// The shared bounds-check exits are expansions of combatManager::ValidHex,
+// attested at Dreamcast path.cpp:31, :52 and :279. Calling the canonical
+// inline reproduces retail's merged failure block without source gotos.
+// The old labelled guards matched too, but did not establish original gotos.
+// Negative control: nesting the successful body under if (validHex(...))
+// sinks the failure block and lowers FindPath to 78.8679% and
+// GetAdjacentCellIndexNoArmy to 74.1667%; the early-return helper form is exact.
 // Second family lever, byte-proven here and worth trying anywhere
 // `creatureId & 1` appears (cmbtmgr, ai_tactical, army): retail
 // computes the two-hex test as a BYTE-typed value and reuses it -
@@ -49,10 +32,7 @@
 VA(0x005239d0, 0x96)  // anchor-bracket, dc 0x10c918
 int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
 {
-    if (fpTargetCellIndex < 0)
-        goto off_grid;
-    if (fpTargetCellIndex >= 187)
-off_grid:
+    if (!combatManager::validHex(fpTargetCellIndex))
         return 0;
     int moves;
     if (!g_combatManager->m_creaturePlacement && !moveUnlimited)
@@ -71,40 +51,20 @@ off_grid:
 }
 
 // E:\gamedcs\path.cpp:51
-// The leading GetSpeed() call is real - retail issues it and discards
-// the result before the conditional re-query.
-// The target must survive the path query for the success store.  An earlier
-// exact spelling forced the query result through a volatile view of the
-// parameter; that was optimizer steering, not a source fact.  Keep the real
-// assignment and let the banked exact checkpoint record the old codegen.
+// Dreamcast dc 0x10c9c2 calls GetSpeed, then FindPath(destIndex, speed, 0,
+// bLiteralTest). Retail expands FindPath and discards its unused maxMoves
+// argument, retaining the first GetSpeed call and the conditional re-query.
+// Restoring that ordinary helper boundary also preserves the target for the
+// success store and recovers 95.7377% -> exact without a volatile workaround.
 // Before normalization (locals): bLiteralTest.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
 unsigned char army::validPath(int destIndex, unsigned char literalTest)
 {
-    if (destIndex < 0)
-        goto off_grid;
-    if (destIndex >= 187)
-off_grid:
+    if (!combatManager::validHex(destIndex))
         return 0;
-    getSpeed();
-    int moves;
-    if (!g_combatManager->m_creaturePlacement)
-        moves = getSpeed();
-    else
-        moves = 99;
-    if (m_spellInfluence[72])
-        moves = 0;
-    int group;
-    if (m_spellInfluence[60])
-        group = 1 - m_combatSide;
-    else
-        group = m_combatSide;
-    int target = destIndex;
-    destIndex = g_searchArray->findCombatPath(this, group, destIndex,
-        g_combatManager->m_creaturePlacement, moves, -1);
-    if (!destIndex)
+    if (!findPath(destIndex, getSpeed(), 0, literalTest))
         return 0;
-    m_pathTarget = target;
+    m_pathTarget = destIndex;
     return 1;
 }
 
@@ -224,10 +184,7 @@ long army::getAdjacentHex(long hex, long direction) const
 VA(0x00523e80, 0x3B)  // linkorder, dc 0x10ccdc
 int getAdjacentCellIndexNoArmy(int currIndex, int direction)
 {
-    if (currIndex < 0)
-        goto off_grid;
-    if (currIndex >= 187)
-off_grid:
+    if (!combatManager::validHex(currIndex))
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = 5;

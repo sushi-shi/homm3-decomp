@@ -1094,10 +1094,8 @@ type_building_id town::buildBuilding(int buildingId,
                                      unsigned char applySpecialEffect)
 {
     type_building_id built;
-#pragma inline_depth(1)
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
-#pragma inline_depth()
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
     // HEE@Z`) and required by the townmgr call sites - while
     // create_building's domain is the enum; the conversion is the
@@ -1129,10 +1127,8 @@ type_building_id town::buildBuilding(int buildingId,
     }
     giveSpells(0);
 
-#pragma inline_depth(1)
     if ((isCapitol() && !hadCapitol)
         || (isCastle() && !hadFort))
-#pragma inline_depth()
     {
         g_game->convertObject(g_game->m_worldMap.cell(m_mapX, m_mapY, m_mapZ));
     }

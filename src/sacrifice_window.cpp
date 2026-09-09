@@ -1551,21 +1551,6 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
-// type_artifact stores the retail id as an int while the source interface to
-// get_backpack_error keeps the CodeView TArtifact enum. The union is the
-// established in-tree representation bridge and compiles to no code.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // E:\gamedcs\sacrifice_window.cpp:125
 // Complete expands this source helper into each artifact pickup. The retail
 // jump table independently proves the four class/value pairs, and the x87

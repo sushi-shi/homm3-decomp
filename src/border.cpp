@@ -339,13 +339,12 @@ void bitmapBorder::setPalette(const char* palette_name)
 #endif  // @carcass
 
 // E:\gamedcs\border.cpp:301
-// Promoted from DC_ONLY 2026-08-08. Complete widened widget slot 3 to this
-// two-argument form: TCampaignBrief calls it through the vtable and the
-// image-wide empty representative at 0x5bc7e0 returns with `ret 8`.
+// Dreamcast proves the const two-argument override. TCampaignBrief calls
+// it through retail slot 3, and the shared empty returns with `ret 8`.
 // The 11-argument push run is the DC Bitmap816::zBufferDraw signature
 // verbatim, and the three literals are the 800x600 screen and its pitch.
 VA(0x004503f0, 0x55)  // dc-bracket + body (11-arg zBufferDraw call), dc 0x5489c
-void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
+void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     if (m_image)
         m_image->zBufferDraw(0, 0, m_width, m_height, zBuffer,
@@ -604,13 +603,6 @@ int bitmapBorder16::getRealWidth()
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
 int bitmapBorder16::getRealHeight()
-{
-    // @stub
-}
-
-// E:\gamedcs\Widget.h:186
-DC_ONLY(0x54d1c, 0x4)
-void widget::onSetFocus()
 {
     // @stub
 }

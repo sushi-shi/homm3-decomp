@@ -729,56 +729,51 @@ void army::freeResources()
 // direct guard below emits `mov [luck],1` and one alignment NOP. Naming the
 // constant is byte-neutral; reference and by-value selector forms disturb
 // the proven CFG (81.60% / 81.71%), so the natural guard is retained.
+// DC lines 517/518 enclose the calculation under the terrain/Hourglass
+// gates. A positive guard with the common final store preserves the score
+// and removes the three reconstructed jumps to that store.
 VA(0x0043df20, 0xDD)  // anchor-global + complete body, dc 0x44318
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
 {
     int value = 0;
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        goto store_luck;
-    if (ownerHero
-        && const_cast<hero*>(ownerHero)->isWieldingArtifact(
-            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR)) {
-        goto store_luck;
-    }
-    if (otherHero
-        && const_cast<hero*>(otherHero)->isWieldingArtifact(
-            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR)) {
-        goto store_luck;
-    }
-
-    if (ownerGroup) {
-        value = ownerGroup->getLuck(
-            ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
-    }
-    if (m_spellInfluence[51])
-        value += m_luckBonus;
-    if (m_spellInfluence[52])
-        value -= m_luckPenalty;
-
-    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-        switch (m_monInfo.m_townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto no_clover_bonus;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            value += 2;
-            break;
+    if (magicTerrain != MAGIC_TERRAIN_CURSED_GROUND
+        && (!ownerHero || !const_cast<hero*>(ownerHero)->isWieldingArtifact(
+            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
+        && (!otherHero || !const_cast<hero*>(otherHero)->isWieldingArtifact(
+            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
+        if (ownerGroup) {
+            value = ownerGroup->getLuck(
+                ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
         }
-no_clover_bonus:
-        ;
-    }
+        if (m_spellInfluence[51])
+            value += m_luckBonus;
+        if (m_spellInfluence[52])
+            value -= m_luckPenalty;
 
-    if (m_creatureType == CREATURE_HALFLING && value < 1)
-        value = 1;
-store_luck:
+        if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
+            switch (m_monInfo.m_townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                goto no_clover_bonus;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                value += 2;
+                break;
+            }
+    no_clover_bonus:
+            ;
+        }
+
+        if (m_creatureType == CREATURE_HALFLING && value < 1)
+            value = 1;
+    }
     m_luck = value;
 }
 
@@ -792,7 +787,7 @@ store_luck:
 // forwards it to armyGroup::GetMorale. The two compressed switch tables at
 // 0x43e10c/0x43e124 match GetArmyMorale's Holy Ground / Evil Fog partition.
 // CLOSED 97.5194 -> 100.0000 (2026-08-21), the SetLuck mechanism: the
-// early exit and the oppression arm both GOTO one shared
+// terrain guard and the oppression arms share one final
 // `morale = value;` store instead of writing their own. VC6
 // tail-duplicates the shared store into each path and MATERIALIZES the
 // propagated constant (`xor eax,eax; mov [morale],eax`), which no
@@ -800,6 +795,8 @@ store_luck:
 // had measured four constant spellings (branch-result local 91.75,
 // memset 95.81, `false` and `value-value` byte-flat) without trying
 // the join shape.
+// The positive calculation scope matches DC's terrain/undead gates and
+// keeps the exact bytes without a reconstructed jump to the final store.
 VA(0x0043e000, 0x139)  // dc-bracket forced + body/caller proof, dc 0x443b4
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
@@ -807,78 +804,76 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      unsigned char groupAlignments)
 {
     int value = 0;
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (is(1u << 17)))
-        goto store_morale;
-
-    if (ownerGroup) {
-        value = ownerGroup->getMorale(
-            ownerHero, ownerTown, otherHero, otherGroup, 0,
-            groupAlignments, 0);
-    }
-    if (m_spellInfluence[49])
-        value += m_moraleBonus;
-    if (m_spellInfluence[50])
-        value -= m_moralePenalty;
-
-    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-        switch (m_monInfo.m_townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            ++value;
-            break;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            --value;
-            break;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto holy_done;
+    if (magicTerrain != MAGIC_TERRAIN_CURSED_GROUND && !is(1u << 17)) {
+        if (ownerGroup) {
+            value = ownerGroup->getMorale(
+                ownerHero, ownerTown, otherHero, otherGroup, 0,
+                groupAlignments, 0);
         }
-holy_done:
-        ;
-    }
-    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-        switch (m_monInfo.m_townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            --value;
-            break;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            ++value;
-            break;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto evil_done;
-        }
-evil_done:
-        ;
-    }
+        if (m_spellInfluence[49])
+            value += m_moraleBonus;
+        if (m_spellInfluence[50])
+            value -= m_moralePenalty;
 
-    if ((m_creatureType == CREATURE_MINOTAUR
-         || m_creatureType == CREATURE_MINOTAUR_KING)
-        && value < 1) {
-        value = 1;
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
+            switch (m_monInfo.m_townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                ++value;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                --value;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto holy_done;
+            }
+    holy_done:
+            ;
+        }
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+            switch (m_monInfo.m_townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                --value;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                ++value;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto evil_done;
+            }
+    evil_done:
+            ;
+        }
+
+        if ((m_creatureType == CREATURE_MINOTAUR
+             || m_creatureType == CREATURE_MINOTAUR_KING)
+            && value < 1) {
+            value = 1;
+        }
+        if (ownerHero
+            && const_cast<hero*>(ownerHero)->isWieldingArtifact(
+                ARTIFACT_SPIRIT_OF_OPPRESSION)
+            && value > 0) {
+            value = 0;
+        }
+        if (otherHero
+            && const_cast<hero*>(otherHero)->isWieldingArtifact(
+                ARTIFACT_SPIRIT_OF_OPPRESSION)
+            && value > 0) {
+            value = 0;
+        }
     }
-    if (ownerHero
-        && const_cast<hero*>(ownerHero)->isWieldingArtifact(
-            ARTIFACT_SPIRIT_OF_OPPRESSION)
-        && value > 0) {
-        value = 0;
-    }
-    if (otherHero
-        && const_cast<hero*>(otherHero)->isWieldingArtifact(
-            ARTIFACT_SPIRIT_OF_OPPRESSION)
-        && value > 0) {
-        value = 0;
-    }
-store_morale:
     m_morale = value;
 }
 
@@ -4671,15 +4666,11 @@ static void drop_aura_links(army* self)
     long i = self->m_auraSources.size();
     while (i-- > 0) {
         std::vector<army*>& clients = self->m_auraSources[i]->m_auraClients;
-#pragma inline_depth(0)
         unsigned n = clients.size();
-#pragma inline_depth()
         while (n-- != 0) {
             if (clients[n] == self) {
                 army** pos = clients.begin() + n;
-#pragma inline_depth(0)
                 clients.erase(pos);
-#pragma inline_depth()
                 break;
             }
         }
@@ -4688,22 +4679,16 @@ static void drop_aura_links(army* self)
         std::vector<army*>& links = self->m_auraSources;
         army** first = links.begin();
         army** last = links.end();
-#pragma inline_depth(0)
         links.erase(first, last);
-#pragma inline_depth()
     }
     long j = self->m_auraClients.size();
     while (j-- > 0) {
         std::vector<army*>& sources = self->m_auraClients[j]->m_auraSources;
-#pragma inline_depth(0)
         unsigned n = sources.size();
-#pragma inline_depth()
         while (n-- != 0) {
             if (sources[n] == self) {
                 army** pos = sources.begin() + n;
-#pragma inline_depth(0)
                 sources.erase(pos);
-#pragma inline_depth()
                 break;
             }
         }
@@ -4712,9 +4697,7 @@ static void drop_aura_links(army* self)
         std::vector<army*>& links = self->m_auraClients;
         army** first = links.begin();
         army** last = links.end();
-#pragma inline_depth(0)
         links.erase(first, last);
-#pragma inline_depth()
     }
 }
 #endif
@@ -7049,6 +7032,9 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
 // The Cerberus fan: which directions a three-headed swing at `enemy`
 // would also land on. Every other creature strikes all its neighbours
 // and takes the full mask.
+// Dreamcast line 5768 calls the ordinary get_attack_direction helper.
+// Calling its canonical three-argument overload removes the copied scan
+// and its found label while preserving 100% and all scored army siblings.
 //
 // ONE RETURN, and the retail bytes SAY SO before any score does: the
 // non-Cerberus `jne` lands at 0x448bbf, which is INSIDE the final
@@ -7065,7 +7051,7 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
 // and moving. Same lever as ComputeBaseDamage's shared result
 // variable, reached from the other side.
 //
-// Tried and rejected, ALL byte-flat at 90.9901: declaring `direction`
+// Historical copied-scan controls, ALL byte-flat at 90.9901: declaring `direction`
 // ahead of `enemy_second`, an `int` loop counter, a separate
 // accumulator variable for the fan, and even collapsing
 // enemy_second and direction into ONE local - VC6 coalesces the copy
@@ -7097,22 +7083,7 @@ long army::getMultiHeadDirections(long ourHex, const army* enemy,
     if (!(m_monInfo.m_attributes & 1))
         mask = 0x3f;
     if (m_creatureType == ARMY_CREATURE_CERBERUS) {
-        long enemySecond = enemyHex;
-        if (enemy->m_monInfo.m_attributes & 1)
-            enemySecond = enemyHex + (enemy->m_facing ? 1 : -1);
-
-        long direction;
-        for (long d = 0; d < 8; d++) {
-            if (d < COMBAT_DIRECTION_COUNT || (m_monInfo.m_attributes & 1)) {
-                long hex = getAdjacentHex(ourHex, d);
-                if (hex == enemyHex || hex == enemySecond) {
-                    direction = d;
-                    goto found;
-                }
-            }
-        }
-        direction = -1;
-found:
+        long direction = getAttackDirection(ourHex, enemy, enemyHex);
 
         mask = 1 << direction;
         mask |= 1 << getCounterClockwise(direction);
@@ -7651,8 +7622,9 @@ VA_COMPGEN(0x00448db0, 0x2FE, DEQUE_ERASE, int)
 // COMDAT pairing: vector<army*>::clear, agreement 0.954.
 VA_COMPGEN(0x00448d70, 0x3D, VECTOR_CLEAR, army)
 
-// COMDAT pairing: deque<int>::iterator::operator+=, agreement 0.935.
-VA_COMPGEN(0x004491c0, 0x69, DEQUE_ITERATOR_ADD_ASSIGN, int)
+// The former operator+= claim at 0x4491c0 is const_iterator::_Add: retail
+// returns no iterator reference. Its naturally retained, exact instance is
+// claimed in combatcontrolsubwindow.cpp; the operator body here is distinct.
 
 // COMDAT pairing: deque<int>::iterator::operator++ and ::operator--, both
 // 51 bytes and byte-identical apart from the step they add - 0x449230 adds

@@ -36,27 +36,8 @@ DATA(0x006a3d08) static int g_unnamed6a3d08;
 DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
-// The shared includes.h helper is named by Reset's four Dreamcast xrefs
-// (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
-// selects one of the argument addresses, matching the reference-returning
-// template independently proved by the other TUs.
-
-
-
-// The dragged-artifact record stores its id as an int while the recovered
-// hero interface keeps the Dreamcast TArtifact parameter.  This established
-// in-tree union bridge preserves that source type without emitting a cast.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
+// Reset has four DC calls to includes.h limit (0x1ef5c), one around
+// each morale/luck value. Its canonical definition is in homm3_limit.h.
 
 // Before normalization (function): text_pointer_payload.
 inline int textPointerPayload(char* text)

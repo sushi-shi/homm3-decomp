@@ -68,8 +68,12 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
              static_cast<short>(id), 8)
 {
     m_font = ResourceManager::getFont(fontName);
-    if (text)
+    // DC textwdgt.cpp:64..65 records the conditional body's lexical scope.
+    // Removing these braces leaves this constructor's bytes unchanged, but
+    // makes VC6 expand it in bitmapBackedTextWidget (retail call 0x5bc7ab).
+    if (text) {
         m_text = text;
+    }
     m_color = color;
     m_backColor = backColor;
     m_justify = justify;
@@ -97,38 +101,6 @@ int textWidget::main(message* msg)
     // @stub
 }
 
-// E:\gamedcs\textwdgt.cpp:232
-// EXCLUDED CLASS - no claim may sit here. The empty body compiles to a
-// bare `ret`, which /OPT:ICF folded onto the program-wide 1-byte
-// representative at 0x5bc690: forty-eight vtable slots across the whole
-// image point at it (whole-image scan of the absolute operand), so the
-// row has no single owning TU. Same standing as widget::Close and the
-// slot-3 `ret 8` fold at 0x5bc7e0 that border.h/button.h already record.
-// Re-audited 2026-09-01: retail is exactly one `ret`; DC zBufferDraw and
-// Dim are independent four-byte `rts; nop` publics, and bitmapBacked's
-// zBufferDraw is a third independent empty public. Defining any one at this
-// VA is the negative control: it falsely assigns the other 47 retail vtable
-// references to one source identity and emits an unpairable TU-local COMDAT.
-DC_ONLY(0x164f7c, 0x4)
-void textWidget::zBufferDraw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:257
-// EXCLUDED CLASS, same cause as zBufferDraw above: the empty override
-// folded onto the shared 1-byte `ret`. textWidget's vtable slot 8 and
-// the empty zBufferDraw both point at 0x5bc690 for that reason.
-// The adjacent 0x5bc7e0 row is independently a three-byte `ret 8` with 56
-// retail vtable references; its different callee-pop ABI rules it out for
-// both nil-ary DC publics. It too remains an image-wide ICF representative,
-// not textwdgt-owned unclaimed work.
-DC_ONLY(0x165034, 0x4)
-void textWidget::dim()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // E:\gamedcs\textwdgt.cpp:120
@@ -150,18 +122,19 @@ void textWidget::dim()
 // allocation unchanged or regress it; its best edit, volatile mouseX, falls
 // to 92.39041% under the byte verdict. No semantic or control-flow delta is
 // left to justify further source distortion.
+// The shared zero epilogue needs no source label: ordinary early returns
+// preserve the 98.4932% score and the complete retail CFG in this TU.
 VA(0x005bc440, 0x1AD)
 int textWidget::main(message* msg)
 {
     if (m_sleepCount > 0) {
-returnZero:
         return 0;
     }
 
     short widgetStatus = m_status;
     if (!(widgetStatus & WIDGET_ACTIVE)) {
         if (msg->m_id != MESSAGE_WIDGET)
-            goto returnZero;
+            return 0;
         return widget::main(msg);
     }
 
@@ -172,16 +145,16 @@ returnZero:
     switch (msg->m_id) {
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
-            goto returnZero;
+            return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_DOWN: {
         if (!(widgetStatus & WIDGET_DRAWN))
-            goto returnZero;
+            return 0;
         short mouseY = msg->m_codeY - m_parentWindow->m_y;
         short mouseX = msg->m_codeX - m_parentWindow->m_x;
         if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
             || mouseY >= m_y + m_height)
-            goto returnZero;
+            return 0;
         if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
             msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
             msg->m_codeX = WIDGET_RIGHT_SELECT;
@@ -199,12 +172,12 @@ returnZero:
 
     case MESSAGE_LEFT_BUTTON_UP:
         if (isDisabled)
-            goto returnZero;
+            return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
         if (!(widgetStatus & WIDGET_DRAWN)
             || !(widgetStatus & WIDGET_SELECTED))
-            goto returnZero;
+            return 0;
         widgetStatus &= ~WIDGET_SELECTED;
         m_status = widgetStatus;
         if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
@@ -235,6 +208,16 @@ returnZero:
     return widget::main(msg);
 }
 
+// E:\gamedcs\textwdgt.cpp:232
+// Dreamcast dc 0x164f7c proves an ordinary const two-argument empty body,
+// not the nil-argument prototype in the old generated roster. Retail
+// textWidget vtable 0x642db0 slot 3 targets the shared `ret 8` at 0x5bc7e0.
+// The claim-only home below keeps VA order while this definition retains
+// its original source order before Draw.
+void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
 // E:\gamedcs\textwdgt.cpp:235
 // Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
 // 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
@@ -258,6 +241,18 @@ void textWidget::draw()
                                 drawX, drawY, m_width, m_height,
                                 colorScheme, m_justify, -1);
     }
+}
+
+// E:\gamedcs\textwdgt.cpp:257; original spelling textWidget::Dim.
+// Dreamcast dc 0x165034 proves this ordinary const empty override. Both
+// textWidget vtable 0x642db0 and bitmapBackedTextWidget vtable 0x642de8
+// put 0x5bc690 in slot 8, distinct from widget::Dim at 0x5fe800. The old
+// declaration omitted the override and incorrectly inherited darkening.
+// This claim represents one source-proven member of the shared bare-ret
+// ICF family; it does not assign every folded reference to textWidget.
+VA(0x005bc690, 0x1)  // anchor-vtable (0x642dd0, 0x642e08), dc 0x165034
+void textWidget::dim() const
+{
 }
 
 #if 0  // @carcass
@@ -300,13 +295,6 @@ void bitmapBackedTextWidget::bitmapBackedTextWidget()
 // E:\gamedcs\textwdgt.cpp:325
 DC_ONLY(0x1651d8, 0x7A)
 void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:345
-DC_ONLY(0x165254, 0x4)
-void bitmapBackedTextWidget::zBufferDraw()
 {
     // @stub
 }
@@ -355,17 +343,6 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// TWO /OPT:ICF FOLDS SIT IN THIS COMPILAND'S SPAN, AND NEITHER IS CLAIMABLE
-// (read out 2026-09-06). 0x5bc690 is ONE byte, a bare `ret`, and 0x5bc7e0 is
-// THREE, a bare `ret 8`; the carve rows are 1 and 3 bytes exactly. Both are
-// the image-wide representatives every empty function of their arity was
-// folded onto - 0x5bc7e0 alone is slot 3 of eight vtables the reloc census
-// names (border, coloredBorderFrame, button, textButton, type_func_button and
-// three unnamed ones) plus slot 2 of a ninth, and 0x5bc690 is reached by
-// executive::ShutDownSystem. No single source function owns either row, so
-// they stay recorded here rather than claimed; the kb.cpp EarlySetup note
-// already names 0x5bc690 the same way for InitLogFile.
-
 // bitmapBackedTextWidget::`scalar deleting destructor' (0x5bc6a0, 33 B,
 // dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note here recorded
 // the measurement that the Draw override alone emits no vtable and no ??_G:
@@ -389,6 +366,10 @@ VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 // reads. That is the Dreamcast prototype (x, y, w, h, text, font, back,
 // color, id, justify, style) verbatim. The vptr store retail makes right
 // after the base call is the one that emits vtable 0x642de8.
+// Exact with the base constructor's recovered conditional scope. Bare-if
+// string assignment expands the base here (0%); scoped assignment gives
+// 100%, with either infix or explicit operator= syntax. Explicit default
+// string construction is flat; all other textwdgt scores are unchanged.
 VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8 + arity screen, dc 0x1651d8
 bitmapBackedTextWidget::bitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
@@ -397,6 +378,28 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
     m_image = ResourceManager::getBitmap816(backName);
+}
+
+// Claim-only home for the ordinary textWidget definition above. Retail
+// textWidget and bitmapBackedTextWidget slot 3 (0x642dbc, 0x642df4) both
+// target this `ret 8`; DC independently proves the two-argument const
+// signatures and empty bodies. Other classes share this ICF representative.
+// Full VC6 checkpoint: both text claims and widget::OnSetFocus are exact;
+// both text vtables remain 14 slots with the proven overrides at 3 and 8.
+// The shared const interface moves unchanged CEnterNameEdit::OnKillFocus
+// CUR 100 -> 99.8710; its MAX/HIST stay 100 and no banked peak is lost.
+#if 0  // @carcass
+VA(0x005bc7e0, 0x3)  // anchor-vtable (0x642dbc, 0x642df4), dc 0x164f7c
+void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\textwdgt.cpp:345. Dreamcast dc 0x165254 proves a separate
+// ordinary empty override; retail folds it with textWidget's body above.
+void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
 }
 
 // E:\gamedcs\textwdgt.cpp:348

@@ -237,6 +237,24 @@ enum TArtifact {
     ARTIFACT_RING_OF_THE_MAGI = 0x8b
 };
 
+// Representation boundary for serialized artifact ordinals and the generic
+// NewmapCell::m_objectIndex field. GiveArtifact at 0x49e8f0
+// loads a signed word; SCampaign::load at 0x48a310 widens a signed
+// stream word. Both feed the four-byte TArtifact domain without a
+// runtime mapping. Keep one bridge for those readers and UI carriers.
+// Before normalization (function): artifact_from_int.
+inline TArtifact artifactFromInt(int value)
+{
+    union {
+        // Before normalization: integer.
+        int m_integer;
+        // Before normalization: artifact.
+        TArtifact m_artifact;
+    } converted;
+    converted.m_integer = value;
+    return converted.m_artifact;
+}
+
 // The per-artifact traits record. The 32-byte STRIDE is byte-proven by
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
 // body: it holds the id of the COMBINATION artifact this piece belongs

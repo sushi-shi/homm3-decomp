@@ -45,6 +45,7 @@
 #include <math.h>
 #include <memory>
 #include "game.h"
+#include "gamecontext.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
 // game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
@@ -124,19 +125,6 @@ inline TCreatureType creatureTypeFromInt(int value)
     return storage.m_creature;
 }
 
-// Before normalization (function): artifact_from_int.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // The present retail hero layout records the class slot as a raw dword,
 // while GetNewHeroId's ABI uses THeroClass.  Preserve that representation
 // across the boundary without an enum cast (and therefore without changing
@@ -165,19 +153,6 @@ inline type_creature_bank_type creatureBankTypeFromInt(int value)
     } converted;
     converted.m_integer = value;
     return converted.m_bankType;
-}
-
-// Before normalization (function): game_resource_from_int.
-inline EGameResource gameResourceFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: resource.
-        EGameResource m_resource;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_resource;
 }
 
 // Before normalization (function): secondary_skill_from_int.
@@ -399,14 +374,6 @@ const int g_campaignVictoryOverrideSecond = 11;
 const int g_campaignVictoryOverrideThird = 12;
 // Before normalization: CAMPAIGN_VICTORY_OVERRIDE_DAYS.
 const int g_campaignVictoryOverrideDays = 112;
-
-// Four resource/game-format contexts, each carrying the feature bits exposed
-// by that install.  The player-slot reader tests bit one before admitting the
-// ninth (Conflux) alignment.  The address and [*gpVideoGameState] indexing are
-// independently repeated by the hero-window and resource consumers; no
-// surviving symbol provides a semantic spelling.
-// Before normalization: gGameContextFeatures.
-DATA(0x00699240) extern std::bitset<4> g_gameContextFeatures[4];
 
 // Source-inline map counterpart of ReadHeroId.  Retail expands this shape at
 // both fixed-hero fields in the player-slot reader; the retained /Gr helper at
@@ -671,8 +638,6 @@ const int g_blackBoxRandomMajor = 4;
 const int g_blackBoxRandomRelic = 5;
 // Before normalization: PYRAMID_SPELL_LEVEL.
 const int g_pyramidSpellLevel = 5;
-// Before normalization: SHRINE_RANDOM_SPELL.
-const unsigned long g_shrineRandomSpell = 0x007fe000;
 // Before normalization: SHRINE_LEVEL_ONE.
 const int g_shrineLevelOne = 0;
 // Before normalization: SHRINE_LEVEL_TWO.
@@ -905,9 +870,8 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
 // walking `type` by 4 and `population` by 2, which is what fixes
 // population as SHORTS.
 // Retail keeps this byte-exact constructor out of line when vector::resize
-// creates game::Load's default generator. Preserve that VC6 auto-inline
-// decision so the 92-byte temporary occupies the retail stack slot.
-#pragma auto_inline(off)
+// creates game::Load's default generator. The 2026-09-09 whole-TU control
+// preserves that decision and the 92-byte temporary without auto_inline(off).
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
 generator::generator()
     : m_genClass(-1), m_genType(-1)
@@ -922,7 +886,6 @@ generator::generator()
         m_population[i] = 0;
     }
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
@@ -1223,7 +1186,9 @@ void generator::grow(int unusedArg)
 #endif  // @carcass
 
 // Before normalization (function): get_day_bonus.
-static long getDayBonus(int resource, long weekBonus, long day)
+// Before normalization (parameter): week_bonus.
+// DC game.cpp:627 fixes the resource parameter as EGameResource.
+static long getDayBonus(EGameResource resource, long weekBonus, long day)
 {
     long result = weekBonus / 7;
     long remainder = weekBonus % 7;
@@ -1233,59 +1198,53 @@ static long getDayBonus(int resource, long weekBonus, long day)
 }
 
 // E:\gamedcs\game.cpp:643
-// 88.7511 -> 92.0874, 2026-08-20, and the whole route was the BRANCH-KIND
-// sequence rather than a score: 44 branches on retail's side against 42 on
-// ours, and after the two edits below the two sequences agree kind for
-// kind at 44/44 with exactly two disagreements left.
-//   * THE DIFFICULTY LOOP READS `isHuman` THROUGH A RANGE-CLAMPED INDEX,
-//     and that is the pair of missing branches. Retail emits `mov ecx,eax
-//     / cmp eax,8 / jge L / test eax,eax / jge M / L: xor ecx,ecx / M:
-//     lea ecx,[ecx+4*ecx] / lea ecx,[ecx+8*ecx] / mov dl,[ebx+8*ecx+
-//     0x20bb2]` - i.e. `players[(i >= 8 || i < 0) ? 0 : i].isHuman`, with
-//     the `>= 8` test FIRST - while the `playerDisabled[i]` beside it and
-//     the `production` walk both use the raw index. No other players[]
-//     access in this body carries the guard, so it is one accessor at one
-//     site, not a global rule. +2.24.
-//   * `town::field_34` IS UNSIGNED. Retail's special-building arm is `mov
-//     al,[esi+0x34] / test al,al / jbe` and widens with `and eax,0xff`; a
-//     signed `char` gives `jle` and `movsx`. Retyped IN PLACE in town.h
-//     (no new declarator, no include-set cost, townmgr unmoved). +1.09.
-//
-// 92.0874 -> 94.4126, 2026-08-21: the difficulty loop's supposed
-// register-homing residual was a missing SOURCE operation. Dreamcast
-// get_day_bonus line 633 subtracts its `resource` parameter from `day`
-// before adding 6 and taking `% 7`; the SH4 sequence is `sub r1,r3 / add
-// #6,r3`. The old body discarded `resource`. Restoring
-// `(day - resource + 6) % 7` keeps the resource induction live and removes
-// the sole branch-kind mismatch (`jne` -> retail's `jl`) without a codegen
-// device.
-//
-// Residual (94.4126%): both sides now have 42 conditional branches and one
-// return with identical branch mnemonics. The only flow delta is two
-// identical early tests landing on block 15 here versus block 17 in retail
-// (cross-jumping / block placement); the special-building store also remains
-// a memory read-modify-write in retail (`lea edi,[edi+4*ecx] / add
-// [edi],eax`) versus a load/add/store here. Tried and rejected for the fixed
-// resource loop: a volatile counter (83.8587), an address-carried counter
-// (byte-flat), a separately advancing production pointer (byte-flat), and
-// the earlier function-scope/shared counter (byte-flat).
-VA(0x004b8af0, 0x573)
+// Before normalization (function): calculate_production.
+// Before normalization (locals): town_id, mine_id, player_id, current_mine,
+// current_town, current_player, silo_income, player_handicap, currHero.
+// DC proves references for the mine, town, player and const hero records,
+// scoped references to seven-element production arrays (but a pointer in the
+// town arm), shared long i/player_id loops, and the EGameResource resource
+// local. IsHuman at line 784 is the canonical range-clamped query. Restoring
+// these interfaces is byte-flat at 95.0560%; the array references and original
+// handicap/index lifetimes then restore retail's 0x20 frame and reach 97.58%.
+// DC lines 699..709 enclose BOTH treasury and pond income in the Rampart,
+// day-one guard. Retail's two branches skip both contributions too; the former
+// pond-outside spelling was a behavior mismatch, not block cross-jumping.
+// Restoring that guard makes the branches agree (97.47%). DC line 753 tests
+// the hero specialty type before line 756 reads its resource. Removing the
+// premature cached resource and retaining that guard raises the score to 98.79%.
+// The shared resource enum and get_day_bonus's enum parameter are byte-flat.
+// Residual (98.79%): only the two constant active-building mask expansions
+// schedule their loads differently. All 71 blocks, 42 branches and named calls
+// agree. The handicap high-word relocation is an addend alias.
+// Earlier controls: omitting IsHuman's bounds clamp lost two retail branches;
+// treating pondAmount as signed emitted jle/movsx rather than jbe/zero-extension.
+// The day-bonus remainder uses (day - resource + 6) % 7 in both builds;
+// discarding resource broke its signed loop branch. Volatile counters lost
+// heavily, and extra counter-address/production-pointer carriers were flat.
+VA(0x004b8af0, 0x573)  // mine/town/player production consumers, dc 0xa3474
 void game::calculateProduction()
 {
-    int playerId;
+    long playerId;
+    long i;
+    EGameResource resource;
+    double playerHandicap;
     for (playerId = 0; playerId < 8; ++playerId) {
-        if (!m_playerDisabled[playerId])
-            memset(m_players[playerId].m_ai.m_turnProductionResource, 0,
-                   sizeof(m_players[playerId].m_ai.m_turnProductionResource));
+        if (!m_playerDisabled[playerId]) {
+            long (&production)[NUM_RESOURCES] =
+                m_players[playerId].m_ai.m_turnProductionResource;
+            for (i = 0; i < NUM_RESOURCES; ++i)
+                production[i] = 0;
+        }
     }
 
-    unsigned int mineId;
+    long mineId;
     for (mineId = 0; mineId < m_mines.size(); ++mineId) {
-        mine* currentMine = &m_mines[mineId];
-        if (currentMine->m_playerOwner >= 0 && currentMine->m_type < GOLD) {
-            m_players[currentMine->m_playerOwner]
-                .m_ai.m_turnProductionResource[currentMine->m_type] +=
-                    g_mineProduction[currentMine->m_type];
+        mine& currentMine = m_mines[mineId];
+        if (currentMine.m_playerOwner >= 0 && currentMine.m_type < GOLD) {
+            m_players[currentMine.m_playerOwner]
+                .m_ai.m_turnProductionResource[currentMine.m_type] +=
+                    g_mineProduction[currentMine.m_type];
         }
     }
 
@@ -1295,72 +1254,72 @@ void game::calculateProduction()
     // `= {0,0,0,0,0,0,0,0}` is worse again (91.26).
     unsigned char crystalDragonIncome[8];
     memset(crystalDragonIncome, 0, sizeof(crystalDragonIncome));
-    unsigned int townId;
+    long townId;
     for (townId = 0; townId < m_towns.size(); ++townId) {
-        town* currentTown = &m_towns[townId];
-        if (currentTown->m_owner < 0)
+        town& currentTown = m_towns[townId];
+        if (currentTown.m_owner < 0)
             continue;
 
-        playerData* currentPlayer = &m_players[currentTown->m_owner];
-        long* production = currentPlayer->m_ai.m_turnProductionResource;
-        if (currentTown->hasBuilding(MARKETPLACE_SILO_ID, 0)) {
-            int* siloIncome = currentTown->getSiloIncome();
-            for (int i = 0; i < NUM_RESOURCES; ++i)
+        playerData& currentPlayer = m_players[currentTown.m_owner];
+        long* production = currentPlayer.m_ai.m_turnProductionResource;
+        if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, 0)) {
+            int* siloIncome = currentTown.getSiloIncome();
+            for (i = 0; i < NUM_RESOURCES; ++i)
                 production[i] += siloIncome[i];
         }
 
-        // `currentTown` is `town*`; the static_cast selects retail's
+        // `currentTown` is `town&`; the static_cast selects retail's
         // const get_army overload, and the Dreamcast-public QB query then
         // consumes its const armyGroup directly.
-        if (static_cast<const town*>(currentTown)->getArmy()
+        if (static_cast<const town&>(currentTown).getArmy()
                 .getCreatureTotal(
                 creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currentTown->m_owner] = 1;
+            crystalDragonIncome[currentTown.m_owner] = 1;
 
-        if (currentTown->m_type == TOWN_RAMPART && m_day == 1
-            && currentTown->hasBuilding(EXTRA_1_ID, 1)) {
-            production[GOLD] += currentPlayer->m_resources[GOLD] / 10;
-        }
-        if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1)
-            && currentTown->m_pondAmount > 0) {
-            production[currentTown->m_pondResource] += currentTown->m_pondAmount;
+        if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
+            if (currentTown.hasBuilding(EXTRA_1_ID, true))
+                production[GOLD] += currentPlayer.m_resources[GOLD] / 10;
+            if (currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)
+                && currentTown.m_pondAmount > 0)
+                production[currentTown.m_pondResource] += currentTown.m_pondAmount;
         }
     }
 
     for (playerId = 0; playerId < 8; ++playerId) {
         if (m_playerDisabled[playerId])
             continue;
-        playerData* currentPlayer = &m_players[playerId];
-        long* production = currentPlayer->m_ai.m_turnProductionResource;
-        int cornucopias = currentPlayer->numOfGivenArtifact(
+        playerData& currentPlayer = m_players[playerId];
+        long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
+        int cornucopias = currentPlayer.numOfGivenArtifact(
             g_productionArtifactCornucopia) * 5;
-        production[SULFUR] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[SULFUR] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactSulfur);
-        production[MERCURY] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[MERCURY] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactMercury);
-        production[GEMS] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[GEMS] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactGems);
-        production[WOOD] += currentPlayer->numOfGivenArtifact(
+        production[WOOD] += currentPlayer.numOfGivenArtifact(
             g_productionArtifactWood);
-        production[ORE] += currentPlayer->numOfGivenArtifact(
+        production[ORE] += currentPlayer.numOfGivenArtifact(
             g_productionArtifactOre);
-        production[CRYSTAL] += cornucopias + currentPlayer->numOfGivenArtifact(
+        production[CRYSTAL] += cornucopias + currentPlayer.numOfGivenArtifact(
             g_productionArtifactCrystal);
         production[GOLD] += computeDailyGold(playerId, 0);
     }
 
-    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
-        hero* currentHero = &m_heroes[heroId];
-        if (currentHero->m_owner == -1)
+    for (i = 0; i < HERO_COUNT; ++i) {
+        const hero& currHero = m_heroes[i];
+        if (currHero.m_owner == -1)
             continue;
-        if (currentHero->m_army.getCreatureTotal(
+        if (currHero.m_army.getCreatureTotal(
                 creatureTypeFromInt(g_productionCreatureCrystalDragon)) > 0)
-            crystalDragonIncome[currentHero->m_owner] = 1;
-        const THeroSpecificAbility& ability = g_heroSpecificAbilities[heroId];
-        int resource = ability.m_skill;
-        if (ability.m_type == eHeroAbilityResource
-            && resource >= WOOD && resource <= GEMS) {
-            ++m_players[currentHero->m_owner].m_ai.m_turnProductionResource[resource];
+            crystalDragonIncome[currHero.m_owner] = 1;
+        long (&production)[NUM_RESOURCES] =
+            m_players[currHero.m_owner].m_ai.m_turnProductionResource;
+        if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
+            if (g_heroSpecificAbilities[i].m_skill >= WOOD
+                && g_heroSpecificAbilities[i].m_skill <= GEMS)
+                ++production[g_heroSpecificAbilities[i].m_skill];
         }
     }
 
@@ -1371,18 +1330,16 @@ void game::calculateProduction()
 
     if (m_setup.m_difficulty > 2) {
         for (playerId = 0; playerId < 8; ++playerId) {
-            playerData* currentPlayer = &m_players[playerId];
-            int humanId = playerId;
-            if (humanId >= 8 || humanId < 0)
-                humanId = 0;
-            if (m_players[humanId].m_isHuman || m_playerDisabled[playerId])
+            if (isHuman(playerId) || m_playerDisabled[playerId])
                 continue;
-            long* production = currentPlayer->m_ai.m_turnProductionResource;
+            playerData& currentPlayer = m_players[playerId];
+            long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
             production[WOOD] += getDayBonus(
                 WOOD, production[WOOD] * 7 / 4, m_day);
             production[ORE] += getDayBonus(
                 ORE, production[ORE] * 7 / 4, m_day);
-            for (int resource = WOOD; resource < GOLD; ++resource) {
+            for (resource = WOOD; resource < GOLD;
+                 resource = gameResourceFromInt(resource + 1)) {
                 long weeklyBonus = (m_setup.m_difficulty - 2) * production[resource];
                 production[resource] += getDayBonus(
                     resource, weeklyBonus, m_day);
@@ -1393,12 +1350,12 @@ void game::calculateProduction()
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!m_setup.m_handicap[playerId] || m_playerDisabled[playerId])
             continue;
-        double handicap = g_productionHandicap[m_setup.m_handicap[playerId]];
-        for (int resource = WOOD; resource < GOLD; ++resource) {
-            long original = m_players[playerId].m_ai.m_turnProductionResource[resource];
-            m_players[playerId].m_ai.m_turnProductionResource[resource] =
-                original - original * handicap;
-        }
+        playerData& currentPlayer = m_players[playerId];
+        playerHandicap = g_productionHandicap[m_setup.m_handicap[playerId]];
+        long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
+        for (resource = WOOD; resource < GOLD;
+                 resource = gameResourceFromInt(resource + 1))
+            production[resource] -= production[resource] * playerHandicap;
     }
 }
 
@@ -1774,26 +1731,39 @@ int game::saveBoatPool(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1235
-// No retail row: SaveBoatPool ends at 0x4b9ded and playerData::playerData
-// starts at 0x4b9df0, so neither obelisk body has a slot. Both are 94
-// SH4 bytes - single-call-site /Ob2 fodder.
+// E:\gamedcs\game.cpp:1235; original LoadObeliskPool.
+// Retail expands this ordinary helper in game::load. Complete routes the
+// two reads through TAbstractFile instead of Dreamcast's gzread handle.
+// Original locals: count, char_buffer.
 DC_ONLY(0xa4c08, 0x5E)
-int game::LoadObeliskPool(void* infile)
+int game::loadObeliskPool(TAbstractFile* infile)
 {
-    // @stub
+    char charBuffer;
+    int count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    m_numObelisks = charBuffer;
+    count = infile->read(m_obeliskFlags, sizeof(m_obeliskFlags));
+    if (count < sizeof(m_obeliskFlags))
+        return -1;
+    return 0;
 }
 
-// E:\gamedcs\game.cpp:1256
+// E:\gamedcs\game.cpp:1256; original SaveObeliskPool.
+// The ordinary writer mirrors the reader; retail expands it in game::save.
+// Original locals: count, char_buffer.
 DC_ONLY(0xa4c68, 0x5E)
-int game::SaveObeliskPool(void* outfile)
+int game::saveObeliskPool(TAbstractFile* outfile)
 {
-    // @stub
+    char charBuffer = m_numObelisks;
+    int count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    count = outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags));
+    if (count < sizeof(m_obeliskFlags))
+        return -1;
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1278
 // The body is EMPTY: every store is implicit member construction -
@@ -1851,6 +1821,8 @@ void playerData::init()
 // slot - and it is read as two dwords ANDed against town::built's two
 // halves and ORed, which is retail's whole __int64 lowering. GetTown's
 // -1 arm is emitted here and never taken.
+// The guarded do/while retains the exact town scan without a backward
+// label; an infinite loop with the bound exit inside also reproduces it.
 VA(0x004b9f40, 0x71)  // anchor-global, dc 0xa4e80
 bool playerData::hasCapitol()
 {
@@ -1860,13 +1832,11 @@ bool playerData::hasCapitol()
 
     if (towns <= 0)
         return false;
-loop:
-    if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, 0))
-        return true;
-    i++;
-    if (i >= towns)
-        return false;
-    goto loop;
+    do {
+        if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, 0))
+            return true;
+    } while (++i < towns);
+    return false;
 }
 
 // E:\gamedcs\game.cpp:1336
@@ -2881,6 +2851,9 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     // (`counts[hero_class] == 0`, `total_count == 0`, and the preferred-class
     // test); all three were byte-flat at distance six, classifying the residual
     // as C1 front-end handle order rather than a missing source value.
+    // DC line 2335 resets total_count for the later class-weight sum; reuse
+    // that original local rather than introducing a separate totalWeight.
+    // This lifetime correction is byte-flat at 98.9815%.
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2916,12 +2889,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
         heroClass = preferredClass;
     } else {
-        long totalWeight = 0;
+        totalCount = 0;
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
-            totalWeight += weights[heroClass];
+            totalCount += weights[heroClass];
         }
-        choice = random(1, totalWeight);
+        choice = random(1, totalCount);
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             choice -= weights[heroClass];
@@ -3422,6 +3395,7 @@ int game::GetSaveGameHeaders(void* infile)
 //     hoisted out of the pin. With the recompute of `count * 28`,
 //     85.1473 -> 86.7504.
 //
+// Historical copied-pool controls (before restoring the source helpers):
 // 86.7504 -> 90.0926, 2026-08-20, and the note it replaces was wrong to
 // call the merged-return class unreachable (game::Save carries the full
 // write-up of the lever). Retail emits 39 numbered cleanup sites here and
@@ -3631,24 +3605,10 @@ int game::load(TAbstractFile* infile)
     if (loadBoatPool(infile) < 0)
         return -1;
 
-    // Retail's state 0x16 at 0x41ec is entered by `jb` from the byte guard
-    // and by the FALL-THROUGH from the obeliskFlags guard: one `return -1`
-    // for two conditions. The `||`-with-comma spelling measured -2.5 here
-    // because it lowers as a two-jump join that sinks to the end of the
-    // function; a forward `goto` into the second guard's own block puts
-    // the teardown where retail puts it.
-    {
-        char charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer))
-            goto obelisk_failed;
-        m_numObelisks = charBuffer;
-        if (infile->read(m_obeliskFlags, sizeof(m_obeliskFlags)) <
-            sizeof(m_obeliskFlags)) {
-        obelisk_failed:
-            return -1;
-        }
-    }
+    // DC line 3073 calls LoadObeliskPool. Its canonical body preserves one
+    // caller failure/cleanup boundary for the count and payload reads.
+    if (loadObeliskPool(infile) < 0)
+        return -1;
 
     for (i = 0; i < 8; ++i) {
         if (m_players[i].load(infile, saved.m_version) < 0)
@@ -3697,9 +3657,7 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-#pragma inline_depth(0)
             std::bitset<8> poolMap(0);
-#pragma inline_depth()
             infile->read(poolBits, sizeof(poolBits));
             unsigned int player;
             for (player = 0; player < 8; ++player) {
@@ -4139,6 +4097,8 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //     Writing it the other way round - the loop inside an `if` with the
 //     `return -1` in a trailing `else` - merges the site but SINKS the
 //     block to the end of the function and scores 0.02 lower.
+//   * Historical flattened ObeliskPool control; the canonical helper below
+//     now owns these early returns and preserves the caller cleanup boundary.
 //   * field_4e3e8 + obeliskFlags - two adjacent guarded writes. Here the
 //     label goes in the SECOND guard and the first `goto`s FORWARD into
 //     it, because retail's teardown is the fall-through successor of the
@@ -4315,18 +4275,8 @@ int game::save(TAbstractFile* outfile)
     if (saveBoatPool(outfile) < 0)
         return -1;
 
-    {
-        charBuffer = m_numObelisks;
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-            goto obelisk_failed;
-        }
-        if (outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags)) <
-            sizeof(m_obeliskFlags)) {
-        obelisk_failed:
-            return -1;
-        }
-    }
+    if (saveObeliskPool(outfile) < 0)
+        return -1;
 
     for (i = 0; i < 8; ++i) {
         if (m_players[i].save(outfile) < 0)
@@ -4748,21 +4698,6 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     }
 }
 
-union TNeutralWeightAddress {
-    // Before normalization: pointer.
-    const int* m_pointer;
-    // Before normalization: address.
-    int m_address;
-};
-
-// Before normalization (function): neutral_weight_address.
-static __forceinline int neutralWeightAddress(const int* pointer)
-{
-    TNeutralWeightAddress value;
-    value.m_pointer = pointer;
-    return value.m_address;
-}
-
 // E:\gamedcs\game.cpp:3953, dc 0xaa3f0.  Neutral towns gain one weighted
 // dwelling's weekly growth.  A full garrison only replaces its weakest
 // stack when the incoming stack is stronger, and a five-percent roll upgrades
@@ -4780,17 +4715,15 @@ void game::giveTroopsToNeutralTown(int townId)
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
 
+    // DC game.cpp:3967 tests monster_level < 6 and level_weight[index]
+    // before subtracting at :3969. VC6 strength-reduces this signed index
+    // into retail's pointer/end comparison; no address-to-int bridge is
+    // needed. Both loop-guard and body-guard controls remain retail-exact.
     long monsterLevel;
-    const int* levelWeight;
-    monsterLevel = 0;
-    levelWeight = g_neutralTownLevelWeights;
-    for (;
-         neutralWeightAddress(levelWeight)
-             < neutralWeightAddress(&g_neutralTownLevelWeightsEnd);
-         ++monsterLevel, ++levelWeight) {
-        if (*levelWeight >= roll)
-            break;
-        roll -= *levelWeight;
+    for (monsterLevel = 0;
+         monsterLevel < 6 && g_neutralTownLevelWeights[monsterLevel] < roll;
+         ++monsterLevel) {
+        roll -= g_neutralTownLevelWeights[monsterLevel];
     }
 
     int townType = currentTown->m_type;
@@ -5415,15 +5348,12 @@ static __forceinline type_university* universitySkillsRecord(int* skills)
 // and spell stores fold away, leaving only the randomized primary lane.
 static void randomizeScholar(NewmapCell* cell)
 {
-    int award = cell->getScholarAward();
-    if (award != const_scholar_primary_skill) {
-        int primary = random(0, 3);
-        int secondary = cell->getScholarSecondarySkill();
-        int spell = cell->getScholarSpell();
-        cell->m_scholarInfo.m_award = award;
-        cell->m_scholarInfo.m_primary = primary;
-        cell->m_scholarInfo.m_secondary = secondary;
-        cell->m_scholarInfo.m_spell = spell;
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    if (info->getScholarAward() != const_scholar_primary_skill) {
+        info->setScholar(info->getScholarAward(),
+            primarySkillFromInt(random(0, 3)),
+            info->getScholarSecondarySkill(), info->getScholarSpell());
     }
 }
 
@@ -5443,11 +5373,11 @@ static void randomizeArtifact(NewmapCell* cell)
 // E:\gamedcs\game.cpp:4613.
 static void randomizeSeaChest(NewmapCell* cell)
 {
-    int chance = random(0, 99);
-    if (chance < 20) {
+    int i = random(0, 99);
+    if (i < 20) {
         cell->m_seaChestInfo.m_reward = 0;
     }
-    else if (chance < 90) {
+    else if (i < 90) {
         cell->m_seaChestInfo.m_reward = 1;
     }
     else {
@@ -5463,16 +5393,18 @@ static void randomizeSeaChest(NewmapCell* cell)
 // bitset::operator[] followed by _Bit_reference::operator=.
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    if ((cell->m_extraInfo & g_shrineRandomSpell) == g_shrineRandomSpell) {
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    SpellID spell = info->m_shrineInfo.m_spell;
+    if (spell == -1) {
 #pragma inline_depth(0)
         std::bitset<5> spellLevels(0);
         spellLevels[level] = true;
 #pragma inline_depth()
-        int spell = g_game->getRandomSpell(spellLevels);
-        cell->m_extraInfo = (cell->m_extraInfo & 0xff801fff)
-            | ((spell & 0x3ff) << 13);
+        spell = g_game->getRandomSpell(spellLevels);
+        info->m_shrineInfo.m_spell = spell;
     }
-    cell->m_extraInfo &= 0xffffe01f;
+    info->m_cellVisitedInfo.m_visited = 0;
 }
 
 // E:\gamedcs\game.cpp:4654. These two helpers are expanded into
@@ -5486,16 +5418,15 @@ static void randomizeWagon(NewmapCell* cell)
 {
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
-    int chance = random(0, 99);
-    short amount = static_cast<short>(random(2, 5));
-    EGameResource resource = gameResourceFromInt(random(0, 5));
-    info->setWagon(resource, amount);
-    if (chance < 10)
+    int i = random(0, 99);
+    info->setWagon(gameResourceFromInt(random(0, 5)),
+        static_cast<short>(random(2, 5)));
+    if (i < 10)
         info->emptyWagon();
-    else if (chance < 50)
-#pragma inline_depth(0)
-        info->setWagon(g_game->getRandomArtifactId(6));
-#pragma inline_depth()
+    else if (i < 50) {
+        TArtifact artifact = g_game->getRandomArtifactId(6);
+        info->setWagon(artifact);
+    }
 }
 
 
@@ -5514,15 +5445,15 @@ static void randomizeWiseTree(short id, NewmapCell* cell)
 // E:\gamedcs\game.cpp:4691.
 static void randomizeTreasure(NewmapCell* cell)
 {
-    int chance = random(0, 99);
+    int i = random(0, 99);
     if (g_game->m_isTutorial)
-        chance = 60;
+        i = 60;
     cell->m_treasureInfo.m_hasArtifact = 0;
-    if (chance < 32)
+    if (i < 32)
         cell->m_treasureInfo.m_gold = 2;
-    else if (chance < 64)
+    else if (i < 64)
         cell->m_treasureInfo.m_gold = 3;
-    else if (chance < 95)
+    else if (i < 95)
         cell->m_treasureInfo.m_gold = 4;
     else {
         cell->m_treasureInfo.m_artifact =
@@ -5658,7 +5589,7 @@ static void randomizeWitchHut(NewmapCell* cell)
     std::bitset<28> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
     if (!possibleSkills.any())
-        possibleSkills = std::bitset<28>(0).flip();
+        possibleSkills = ~std::bitset<28>(0);
 
     int i;
     for (i = 0; i < 28; ++i)
@@ -5791,21 +5722,20 @@ void game::initRandomArtifacts()
 // Pair each still-unmatched underground gate with the nearest unmatched gate
 // on the other map level.  The pairing vector stores reciprocal signed
 // indices; distance is the truncated Euclidean x/y distance used by retail.
-// WALL 98.34513%: all 18 blocks, all 10 branches, every block size, and the
-// complete instruction count agree.  The residual is a register rotation in
-// the inlined packed-coordinate comparison/distance expression: retail keeps
-// exit_point's packed y/z word in EDX while this compile keeps current_gate's
-// in ECX, then reloads the other word.  `i + 1 < size()` is essential (the
-// algebraic `i < size()-1` form falls to 72.87%), as is the square-symmetric
-// exit.y-current.y spelling (94.67% otherwise).  Exhausted byte-inert or lower
-// levers: nested != versus equality/continue, reversed z operands (98.14),
-// reversed x delta (94.76), and direct versus force-inlined distance helpers
-// with or without named deltas (98.35/97.86).  The former `_sqrt` relocation
-// delta was a false runtime boundary, now byte-proven and corrected in the
-// hand-owned inventories from the pinned VC6 SP3 LIBCMT sqrt.obj.
-// A 2026-09-01 why-reg v2 negative control also tested the two adjacent local
-// orders and the current_gate/closest store order: two were byte-flat at
-// distance 18 and the third worsened to 20, leaving the DC-proven order intact.
+// DC lines 4977/4978 skip equal-level candidates, and 4985/4986 skip
+// non-improving distances before the assignments at 4988/4989. Preserve those
+// early-continue scopes. DC line 4984 subtracts exit_point from current_gate
+// for both coordinates; retail likewise subtracts their unpacked components.
+// Residual (94.67%): all 18 blocks, 10 branches and both calls agree, but the
+// packed y/z words and coordinate deltas receive different scratch registers.
+// Reversing both y subtractions is algebraically equivalent and reaches the
+// historical 98.3451%, but is not the recovered expression. Nested positive
+// guards versus these early continues do not resolve that register allocation.
+// Other controls: i < size()-1 loses the retail bound lowering (72.87%);
+// reversed z operands gave 98.14%, reversed x deltas 94.76%, and named-delta
+// helper variants 97.86% against the earlier reversed-y source. Adjacent local
+// orders and current_gate/closest assignment order were flat or worse.
+// The sqrt boundary is verified against the pinned VC6 SP3 LIBCMT sqrt.obj.
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
 {
@@ -5829,17 +5759,17 @@ void game::matchUndergroundGates()
                 continue;
 
             exitPoint = m_undergroundGateExits[j];
-            if (currentGate.m_z != exitPoint.m_z) {
-                distance = static_cast<long>(sqrt(static_cast<double>(
-                    (currentGate.m_x - exitPoint.m_x)
-                        * (currentGate.m_x - exitPoint.m_x)
-                    + (exitPoint.m_y - currentGate.m_y)
-                        * (exitPoint.m_y - currentGate.m_y))));
-                if (closest < 0 || distance < bestDistance) {
-                    closest = j;
-                    bestDistance = distance;
-                }
-            }
+            if (currentGate.m_z == exitPoint.m_z)
+                continue;
+            distance = static_cast<long>(sqrt(static_cast<double>(
+                (currentGate.m_x - exitPoint.m_x)
+                    * (currentGate.m_x - exitPoint.m_x)
+                + (currentGate.m_y - exitPoint.m_y)
+                    * (currentGate.m_y - exitPoint.m_y))));
+            if (closest >= 0 && distance >= bestDistance)
+                continue;
+            closest = j;
+            bestDistance = distance;
         }
 
         if (closest >= 0) {
@@ -6451,12 +6381,15 @@ static __forceinline bool testNewMapSpell(
 }
 
 // Before normalization (function): assign_map_hero_name.
+// Retail keeps the string assign call in readMapHeroSetups and
+// readMapPlayerSlot. The former inline-depth pin forced it; removing it
+// changes the setup reader from 86.08842% to 51.72866% and the player reader
+// from 67.55869% to 55.81455% in isolation. Preserve the source assignment
+// while recovering its natural nested boundary; setup's MAX/HIST survives.
 static __forceinline void assignMapHeroName(
     std::string& destination, const std::string& source)
 {
-#pragma inline_depth(0)
     destination.assign(source, 0, std::string::npos);
-#pragma inline_depth()
 }
 
 // Before normalization (function): read_map_player_name.
@@ -6467,10 +6400,6 @@ static inline void readMapPlayerName(char* destination,
     strcpy(destination, name.c_str());
 }
 
-// The retail player-slot reader expands vector::erase/resize themselves but
-// retains the algorithms each operation reaches.  One wrapper level lets the
-// local depth cap reproduce that two-level boundary without changing either
-// container operation's semantics.
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
 // artifact/spell masks into the Complete-width live rows, then reads the
@@ -6566,9 +6495,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
             for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
-#pragma inline_depth(0)
                 disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
-#pragma inline_depth()
             }
         }
 
@@ -6590,6 +6517,11 @@ bool game::loadMap(TAbstractFile* mapFile)
              ++spellBit) {
             std::bitset<70>::reference serializedBit =
                 serializedSpells[spellBit];
+            // Removal controls are non-additive (2026-09-09): deleting this
+            // pin alone improves LoadMap, but deleting it together with the
+            // artifact-copy and serializedSkills pins lowers 63.8664% to
+            // 62.3643%. The two-pin removal kept here is 63.9902%; this last
+            // pin remains matching debt, not a recovered source directive.
 #pragma inline_depth(0)
             serializedBit =
                 (spellBits[spellBit >> 3] & (1 << (spellBit & 7))) != 0;
@@ -6613,9 +6545,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-#pragma inline_depth(0)
         std::bitset<28> serializedSkills(0);
-#pragma inline_depth()
         unsigned char skillBits[4];
         mapFile->read(skillBits, sizeof(skillBits));
         for (unsigned int skillBit = 0; skillBit < sizeof(m_ssDisabled);
@@ -7388,7 +7318,8 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // record.  Player heroes are resized from a dword count after the separate
 // one-byte default-placeholder count; their ids use only 0xff as a sentinel.
 //
-// Residual (95.69718%, 2026-08-26): 58 candidate blocks against retail's 59,
+// Historical shim calibration (95.69718%, 2026-08-26): 58 candidate blocks
+// against retail's 59,
 // with 41 exact skeleton blocks and the complete scalar/vector flow present.
 // The 0x48-vs-0x3c frame comes from three stack-coloring misses: retail reuses
 // the dead input/version slots for the word and count reads and for its two
@@ -7429,10 +7360,8 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
         m_hasRandomAlignment = charBuffer != 0;
         if (m_hasRandomAlignment)
             m_legalAlignments |= 0x100;
-#pragma inline_depth(0)
         if (!g_gameContextFeatures[*g_videoGameState].test(1))
             m_legalAlignments &= 0xfeff;
-#pragma inline_depth()
 
         infile->read(&charBuffer, sizeof(charBuffer));
         m_hasMainTown = charBuffer != 0;
@@ -7464,9 +7393,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
             readMapHeaderHeroId(infile, mapVersion);
-#pragma inline_depth(2)
         readMapPlayerName(m_nonRandomHeroCustomName, infile);
-#pragma inline_depth()
     } else {
         m_nonRandomHeroCustomPortrait = -1;
         m_nonRandomHeroCustomName[0] = 0;
@@ -7478,6 +7405,22 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     // 67.5422) at the price of retyping the member - see game.h's field_34
     // note for the two retail rows that refute it. The residual is the
     // OVER-inline class on hand-unreachable Dinkumware children.
+    // Further lifetime controls (2026-09-08) also emit no _Destroy:
+    // direct read-result c_str() plus string assignment gives 55.3920;
+    // direct assign(result, 0, npos) gives 49.3803; branch/loop-scoped
+    // named strings give 54.6854. DC NewSMapHeader::Read (0xaf64c,
+    // game.cpp:6584,6668-6669) names strTemp, but its lifetime spans the
+    // older player loop; Complete cleans up at the custom-name branch.
+    // These controls do not settle the later nested copy/_Destroy calls.
+    // Removing the obsolete dummy clear/erase uses from the emission
+    // scaffold below leaves every game.obj comparison row unchanged,
+    // including this reader at 67.5587; only real callers now use the
+    // hero-identity vector in this TU.
+    // Removing the feature-test pin above now naturally emits _Destroy;
+    // the player reader rises from 67.55869% to 71.60329% in that control.
+    // Removing the name-reader pin alone is flat; removing the assignment
+    // pin alone gives 55.81455%. With all three removed, _Destroy still
+    // emits and the caller is 57.89906%. The std::copy boundary is unresolved.
     m_heroes.clear();
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
@@ -7532,10 +7475,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
 
-#pragma inline_depth(1)
     m_mapName.erase();
     m_mapDescription.erase();
-#pragma inline_depth()
 
     if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
@@ -7655,10 +7596,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         m_availableHeroes.reset();
-#pragma inline_depth(1)
         // Before normalization (locals): AvailableHeroesMask.
         std::bitset<g_mapHeaderLegacyHeroCount> availableHeroesMask;
-#pragma inline_depth()
         unsigned char heroBits[g_mapHeaderLegacyHeroCount / 8];
         infile->read(heroBits, sizeof(heroBits));
         for (unsigned int i = 0; i < g_mapHeaderLegacyHeroCount; ++i) {
@@ -7726,9 +7665,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                     heroId = -1;
 
                 std::string heroName = readLengthPrefixedString(infile);
-#pragma inline_depth(1)
                 std::bitset<8> availability;
-#pragma inline_depth()
                 unsigned char availabilityBits[1];
                 infile->read(availabilityBits, sizeof(availabilityBits));
                 for (unsigned int i = 0; i < g_mapHeaderPlayerCount; ++i) {
@@ -8223,10 +8160,8 @@ int NewSMapHeader::get(const char* path, const char* filename,
                        int campaignMap)
 {
     std::string fullPath(path);
-#pragma inline_depth(1)
     fullPath += DATA_COMPGEN(0x00677dac, newMapGetPathSeparator, "\\");
     fullPath += filename;
-#pragma inline_depth()
 
     try {
         TGzFile infile(
@@ -8641,34 +8576,21 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7441
-// Residual (84.4118%): the map-location packing, message fields, calls, branch
-// and epilogue are instruction-identical; only VC6's scheduling of the five
-// inlined CMCClaimGarrison constructor stores differs. Moving the message
-// declaration before the location or between the garrison pointer and the
-// location regresses to 60.56% / 64.62%, so the natural lifetime order stays.
+// DC records current_garrison as a reference and passes the constructor's
+// result directly to SendMapChange at line 7446. Preserve that full-expression
+// temporary: VC6 then interleaves its member stores with location construction
+// exactly as retail does. A named CMCClaimGarrison local or the former pasted
+// member stores both leave the five nonzero stores grouped too late (84.4118%).
 VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
 void game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
     // Before normalization (locals): current_garrison.
-    garrison* currentGarrison = &m_garrisons[garrisonId];
-    type_point location(currentGarrison->m_mapX, currentGarrison->m_mapY,
-                        currentGarrison->m_mapZ);
-    // This later, smaller caller uses the same canonical constructor.
-    // Residual (84.4059%): retail issues subType / field_00 / size /
-    // garrisonId / playerPos INTO the gaps of the inlined type_point
-    // construction and sinks only the two zero stores behind it; we emit all
-    // seven together after the point.  Tried and rejected, each measured
-    // against 84.4059: hoisting the whole `change` block above the
-    // `type_point location` declaration - 63.9706 (the location block moves
-    // with it); reordering the seven stores into retail's EMISSION order
-    // (subType, field_00, size, garrisonId, playerPos, then the two zeros) -
-    // 81.0559.  The zeros are sunk on both sides because they share the
-    // `xor ecx,ecx` the packing code already needs, so their source position
-    // is not observable; what is left is scheduling, not statement order.
-    CMCClaimGarrison change(garrisonId, newPlayerOwner);
-    sendMapChange(&change);
+    garrison& currentGarrison = m_garrisons[garrisonId];
+    type_point location(currentGarrison.m_mapX, currentGarrison.m_mapY,
+                        currentGarrison.m_mapZ);
+    sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
-    currentGarrison->m_playerOwner = newPlayerOwner;
+    currentGarrison.m_playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -8796,82 +8718,46 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 // span has it.
 #endif  // @carcass
 
-// RECONSTRUCTED 2026-08-20. Decide what the stack could be upgraded to,
-// whether its owner holds the Angelic Alliance, raise the view window,
-// and act on what the window returned.
-//
-// The upgrade answer comes from TWO independent sources and the second
-// overwrites the first: the town the stack is standing in (its dwelling
-// row must name this creature AND the matching UPGRADED dwelling must be
-// built), then the hero's own specialty record.
-//
-// THE FOUR-WAY ELEMENTAL GUARD APPEARS FOUR TIMES, and the first of them
-// IS game::get_alignment (0x4c6690) - a header inline on the Dreamcast,
-// which is why retail carries both an out-of-line copy and this
-// expansion. The other three wrap UpgradedCreatureType in the identical
-// `f_1f698 == 0 && creature is one of the four base-set elementals`
-// test, so they are the same source idiom with a different tail;
-// written longhand because no second out-of-line row for that shape
-// exists to name.
-//
-// THREE MEASURED EDITS TOOK THIS FROM 81.27 TO 96.96, and each is a
-// standing rule paying out again:
-//   * DO NOT CACHE WHAT RETAIL RELOADS, 81.2742 -> 90.3347. Binding the
-//     specialty record's two creature subjects to locals up front makes
-//     our CL load BOTH before the first compare; retail reads +0x04,
-//     tests it, and only then reads +0x14. Spell the member accesses
-//     where they are used.
-//   * THE RESULT DISPATCH IS A SWITCH, NOT AN IF-CHAIN, 90.3347 ->
-//     96.6936 (with the bitNumber operand swap, which was inert on its
-//     own). Both compile to the same compare chain over 300 / 0x7803,
-//     but the switch SINKS the first arm's body past the second's -
-//     the documented "compare-chain arm bodies emerge in reverse of the
-//     dispatch order" layout - and the if-chain leaves it inline.
-//   * THE DWELLING SCAN EXITS ON THE CONDITION, 96.6936 -> 96.9556.
-//     `for (b = 30; b <= 36; b++)` gives `jle top / jmp exit`; retail
-//     has `jg exit / jmp top`, which is the `for (;;) { ...;
-//     if (++b > DWELLING_6_ID) break; }` shape. Branches then agree
-//     41/41 with one ret on both sides.
-//
-// Residual (96.9556%): three things, all below control flow. The
-// bitNumber test copies the dwelling id into a second register where
-// retail destroys it on the last use; the specialty row's base pointer
-// is loaded before the index scale rather than after; and the
-// gTownDwellingCreatures subscript carries its `- DWELLING_0_ID` bias as
-// a NEGATIVE displacement on the relocation where retail folded the same
-// -120 into the symbol's own addend, which is a reloc-addend difference
-// rather than an addressing one.
-// Before normalization (locals): this_hero, this_town, show_dismiss.
+// The town's upgraded dwelling and then the hero specialty determine the
+// upgrade offered by this window; the specialty can override the town.
+// DC lines 7518/7520 name HasBuilding and UpgradedCreatureType. Complete's
+// three elemental guards are expansions of game::upgradedCreatureType,
+// whose retained body is 0x529710. Keeping that canonical inline visible in
+// game.h and replacing the pasted guards restores 83.8710% to 96.9556%.
+// The old unqualified calls resolved to the member and repeated its guard.
+// Restoring hasBuilding(..., true) and DC's const numTroops yields 99.52%;
+// initializing the Complete alliance flag before UpgradeToType matches the
+// final retail store order and reaches 100%.
+// Earlier controls: caching both specialty subjects before the first test
+// loaded the second too early (81.2742%); an if-chain instead of the result
+// switch put the two action bodies in the wrong order (90.3347%); a bounded
+// dwelling for-loop emitted jle/back rather than retail's jg/exit (96.6936%).
+// QuickView's target name is the folded TQuickTownWindow wait body. The
+// dwelling-table bias and high bitNumber word are relocation/addend aliases.
+// Before normalization (locals): this_hero, this_town, show_dismiss,
+// armyType, UpgradeToType, view_army_window, upgrade_cost, i.
 VA(0x004c6c50, 0x2EB)  // arity (ret 0x20 = p9) + anchor-bracket, dc 0xb1c8c
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
                     unsigned char showDismiss, unsigned char isQuickView)
 {
-    TCreatureType creature = group.m_armyTypes[iarmy];
-    int numTroops = group.m_numTroops[iarmy];
-    TCreatureType upgrade = CREATURE_NONE;
+    TCreatureType armyType = group.m_armyTypes[iarmy];
+    const int numTroops = group.m_numTroops[iarmy];
     unsigned char hasAngelicAlliance = 0;
+    TCreatureType upgradeToType = CREATURE_NONE;
 
-    if (thisTown && getAlignment(creature) == thisTown->m_type) {
-        int building = DWELLING_0_ID;
+    if (thisTown && getAlignment(armyType) == thisTown->m_type) {
+        int i = DWELLING_0_ID;
         for (;;) {
             if (g_townDwellingCreatures[thisTown->m_type * 2
                                            * TOWN_DWELLING_COUNT
-                                       + building - DWELLING_0_ID]
-                    == creature
-                && (g_bitNumber[town::upgradedDwellingID(building)]
-                    & thisTown->m_active)) {
-                if (!m_f1f698
-                    && (creature == CREATURE_AIR_ELEMENTAL
-                        || creature == CREATURE_EARTH_ELEMENTAL
-                        || creature == CREATURE_FIRE_ELEMENTAL
-                        || creature == CREATURE_WATER_ELEMENTAL))
-                    upgrade = CREATURE_NONE;
-                else
-                    upgrade = upgradedCreatureType(creature);
+                                       + i - DWELLING_0_ID]
+                    == armyType
+                && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
+                upgradeToType = upgradedCreatureType(armyType);
                 break;
             }
-            if (++building > DWELLING_6_ID)
+            if (++i > DWELLING_6_ID)
                 break;
         }
     }
@@ -8880,30 +8766,11 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
         const THeroSpecificAbility& ability =
             g_heroSpecificAbilities[thisHero->m_id];
         if (ability.m_type == eHeroAbilityCreatureUpgrade) {
-            if (creature == ability.m_creature
-                || creature
-                       == ((!m_f1f698
-                            && (ability.m_creature == CREATURE_AIR_ELEMENTAL
-                                || ability.m_creature == CREATURE_EARTH_ELEMENTAL
-                                || ability.m_creature == CREATURE_FIRE_ELEMENTAL
-                                || ability.m_creature == CREATURE_WATER_ELEMENTAL))
-                               ? CREATURE_NONE
-                               : upgradedCreatureType(ability.m_creature))
-                || creature == ability.m_upgradeAlternateSubject
-                || creature
-                       == ((!m_f1f698
-                            && (ability.m_upgradeAlternateSubject
-                                    == CREATURE_AIR_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_EARTH_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_FIRE_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_WATER_ELEMENTAL))
-                               ? CREATURE_NONE
-                               : upgradedCreatureType(
-                                     ability.m_upgradeAlternateSubject)))
-                upgrade = ability.m_upgradeResult;
+            if (armyType == ability.m_creature
+                || armyType == upgradedCreatureType(ability.m_creature)
+                || armyType == ability.m_upgradeAlternateSubject
+                || armyType == upgradedCreatureType(ability.m_upgradeAlternateSubject))
+                upgradeToType = ability.m_upgradeResult;
         }
     }
 
@@ -8921,20 +8788,20 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     ARTIFACT_ANGELIC_ALLIANCE);
     }
 
-    TViewArmyWindow* window = new TViewArmyWindow(
-        &group, iarmy, thisHero, thisTown, x, y, upgrade, showDismiss,
+    TViewArmyWindow* viewArmyWindow = new TViewArmyWindow(
+        &group, iarmy, thisHero, thisTown, x, y, upgradeToType, showDismiss,
         !isQuickView, hasAngelicAlliance);
     if (isQuickView) {
-        window->quickView();
+        viewArmyWindow->quickView();
     } else {
-        window->doModal();
+        viewArmyWindow->doModal();
         switch (g_windowManager->m_dialogReturn) {
         case TViewArmyWindow::UPGRADE_ID: {
-            long cost[NUM_RESOURCES];
-            getUpgradeCost(creature, upgrade, numTroops, cost);
-            for (int resource = 0; resource < NUM_RESOURCES; resource++)
-                g_currentPlayer->m_resources[resource] -= cost[resource];
-            group.m_armies[iarmy] = upgrade;
+            long upgradeCost[NUM_RESOURCES];
+            getUpgradeCost(armyType, upgradeToType, numTroops, upgradeCost);
+            for (int i = 0; i < NUM_RESOURCES; i++)
+                g_currentPlayer->m_resources[i] -= upgradeCost[i];
+            group.m_armies[iarmy] = upgradeToType;
             break;
         }
         case TViewArmyWindow::DISMISS_ID:
@@ -8942,7 +8809,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
             break;
         }
     }
-    delete window;
+    delete viewArmyWindow;
 }
 
 #if 0  // @carcass
@@ -10161,13 +10028,17 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 // The two 144-byte pools are the used and scenario-disabled flags. When a
 // requested class is exhausted, retail restores used from disabled; if that
 // class has no allocatable member at all, it retries against the four normal
-// artifact classes. Residual (94.7260%): all 15 branches and operations
-// agree; VC6 rotates the traits pointer and the two non-overlapping counter
-// lifetimes through ESI/EDI/EDX differently from retail. The Dreamcast local
-// roster order (UnallocatedInClass, TotalInClass, curCount, x, i) is restored
-// below and is byte-flat. why-reg v2 classifies the permutation as C1
-// front-end handle state: aliasing ArtifactClass and swapping i/x or
-// x/curCount fail to move its distance-27 binding divergence.
+// artifact classes. DC lines 8751/8752 initialize TotalInClass and
+// UnallocatedInClass separately; line 8769 initializes curCount before the
+// branch, and both selection and reset scans use that same local. TotalInClass
+// counts eligible members but has no consumer and VC6 eliminates it.
+// DC line 8812 retries recursively; retail's back edges are VC6 tail recursion.
+// Restoring these roles and recursive source reaches 100%. The former loop
+// with separate branch counters was 94.7260%; sharing the counters while
+// retaining that loop gave 88.84%. This was a source-lifetime mismatch,
+// not the previously claimed front-end handle-state wall.
+// DC line 8801 clears the used flag before copying the disabled flag. Retail
+// omits that older store; retaining it emits an extra store and gives 85.0000%.
 // Before normalization (locals): ArtifactClass, UnallocatedInClass, TotalInClass.
 VA(0x004c94d0, 0xCD)  // anchor-global, dc 0xb4c84
 TArtifact game::getRandomArtifactId(int artifactClass)
@@ -10178,34 +10049,20 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     int x;
     int i;
 
-    for (;;) {
-        totalInClass = 0;
-        for (i = 0; i < 144; ++i) {
-            if (!g_artifactTraits[i].m_disabled
-                && (g_artifactTraits[i].m_artifactClass & artifactClass)
-                && !m_artifactUsed[i]) {
-                ++totalInClass;
-            }
+    totalInClass = 0;
+    unallocatedInClass = 0;
+    for (i = 0; i < 144; ++i) {
+        if (!g_artifactTraits[i].m_disabled
+            && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+            ++totalInClass;
+            if (!m_artifactUsed[i])
+                ++unallocatedInClass;
         }
+    }
 
-        unallocatedInClass = 0;
-        if (!totalInClass) {
-            for (i = 0; i < 144; ++i) {
-                if (!g_artifactTraits[i].m_disabled
-                    && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
-                    m_artifactUsed[i] = m_artifactDisabled[i];
-                    if (!m_artifactUsed[i])
-                        ++unallocatedInClass;
-                }
-            }
-            if (unallocatedInClass > 0)
-                continue;
-            artifactClass = g_allRandomArtifactClasses;
-            continue;
-        }
-
-        x = random(0, totalInClass - 1);
-        curCount = 0;
+    curCount = 0;
+    if (unallocatedInClass) {
+        x = random(0, unallocatedInClass - 1);
         for (i = 0; i < 144; ++i) {
             if (!g_artifactTraits[i].m_disabled
                 && (g_artifactTraits[i].m_artifactClass & artifactClass)
@@ -10217,6 +10074,19 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         }
         m_artifactUsed[i] = 1;
         return artifactFromInt(i);
+    } else {
+        curCount = 0;
+        for (i = 0; i < 144; ++i) {
+            if (!g_artifactTraits[i].m_disabled
+                && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+                m_artifactUsed[i] = m_artifactDisabled[i];
+                if (!m_artifactUsed[i])
+                    ++curCount;
+            }
+        }
+        if (curCount > 0)
+            return getRandomArtifactId(artifactClass);
+        return getRandomArtifactId(g_allRandomArtifactClasses);
     }
 }
 
@@ -10625,6 +10495,9 @@ void game::processRandomObjects()
 // The 2026-09-01 model pass likewise rejects both proposed names
 // (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
 // structure remains 29/29 exact blocks; no legal B14 mutation remains.
+// DC line 9464 passes GetTownId directly to GetTown and records thisTown.
+// Restoring that canonical accessor and local name is byte-flat at 98.6076%;
+// the remaining difference is inside GetTownId's coordinate comparison.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::createTownHeroes(int* startingHeroIds)
 {
@@ -10635,11 +10508,10 @@ void game::createTownHeroes(int* startingHeroIds)
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        int townId =
+        town* thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
-                      m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z);
-        town* whichTown = townId == -1 ? NULL : &m_towns[townId];
+                      m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
 
         int heroId;
         if (startingHeroIds != NULL && m_players[i].m_isHuman
@@ -10653,8 +10525,8 @@ void game::createTownHeroes(int* startingHeroIds)
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;
         m_heroAvailability[heroId] = static_cast<char>(i);
-        whichTown->placeInMap(heroId, i, 1);
-        whichTown->giveSpells(NULL);
+        thisTown->placeInMap(heroId, i, 1);
+        thisTown->giveSpells(NULL);
 
         if (g_unk69774c
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
@@ -11109,73 +10981,23 @@ inline const char* getRandomTownName(int townType)
     return g_townNames[townType][name];
 }
 
-// E:\gamedcs\game.cpp:9821, dc 0xb69b8.
-inline void resetRandomTownNames()
-{
-    for (int i = 0; i < 9; ++i)
-        g_randomTownNames[i].reset();
-}
-
-// E:\gamedcs\game.cpp:9833
-// The Dreamcast locals and callees fix the setup sweep. Complete widens the
-// map setup record and town-name storage, but retains the same resize,
-// z/y/x map scan, random-town conversion, name selection and initialize
-// phases. RESIDUAL (80.3907%, 2026-08-26): retail expands one more layer of
-// Dinkumware inside vector::resize and the non-custom string assignment,
-// while this build calls the nested vector::size/_Grow helpers. Explicitly
-// spelling resize scored 66.13, assign(ptr,strlen(ptr)) scored 79.45, and
-// statement-local inline_depth(3) was byte-flat; retain the semantic source.
-//
-// THE HOLE IS MEASURED (2026-09-05) AND IT IS CALLER MASS, NOT A SPELLING.
-// An `if (0)` carrier at the head of the body - the measuring instrument,
-// NOT a fix, and deliberately not shipped - gives a sharp peak:
-//   N =  1,2,3,5,8,20 -> 80.3907 (flat, the /Ob2 1000-byte floor)
-//   N = 30, 40        -> 84.2809
-//   N = 50            -> 98.6301   <- CFG CLOSED: 57 vs 57 blocks (56 exact),
-//                                     31 vs 31 branches, calls AGREE, and
-//                                     only 10 masked instruction rows left
-//   N = 60            -> 89.4404
-//   N = 70, 90, 150   -> 85.71 / 76.87 / 51.08
-// At the peak retail's `_Grow` expansion appears with its `max_size`/`_Xlen`
-// /`_Tidy` x3/`_Copy` call set exactly, and the `vector<town>::size` census
-// closes 1-vs-1.  So every statement, call, constant and field offset in this
-// body is already correct and the ONLY divergence is that our caller_cb sits
-// under the threshold where 2*caller_cb clears the 1000-byte floor by enough
-// to buy the assign->_Grow expansion.  Byte-for-byte comparison of the head
-// (ResetRandomTownNames' inlined 0x18-stride loop, the resize, the whole
-// z/y/x scan, the RANDOM_TOWN arm and the custom-name assign) shows retail
-// and this compile agreeing instruction for instruction with only slot
-// displacements differing, so the missing mass is NOT in any of them.
-// The Dreamcast body has four statements this one does not (dc rows 9876,
-// 9878, 9880 `pick_alignment`, 9884 - 62 SH4 B, and the unused `owner` local
-// they would write); retail's RANDOM_TOWN arm does NOT emit them, but a
-// front-end-visible / C2-eliminated statement would carry cb without
-// emitting.  That is the shape to look for - do not ship the carrier.
-// CORRECTION 2026-09-06: THE CFG IS NOT CLOSED, and the note above is wrong
-// to say so.  Retail has 57 blocks against this compile's 42 and 31 branches
-// against 23, with FIVE target-only calls - `_Xlen`, `_Tidy` x3 and `_Copy`,
-// all of them internals of `basic_string::_Grow`.  The fifteen missing blocks
-// are one construct: retail EXPANDS the random-name arm's
-// `assign(const char*, size_type)` and the `_Grow` inside it, and calls only
-// _Grow's own helpers, where this compile CALLS `_Grow` itself and stops a
-// level short.  That is an UNDER-inline, whose lever is caller mass - which
-// is exactly why polish lane 21's `if (0)` titration reached 98.63 at N=50:
-// the dose was buying the budget that expands _Grow, not filling fifteen
-// separate holes.  The number to look for is therefore ONE construct worth
-// ~50 statements of caller_cb, not fifty statements.
-// Measured and rejected 2026-09-06 (baseline 80.3874):
-//   * `cName = GetRandomTownName(...)` (operator=(const char*)) 80.3874,
-//     byte-flat - the library level of the RANDOM arm is not the selector;
-//   * `cName.assign(ptr, strlen(ptr))` 65.4176, and with the pointer named
-//     first 79.4547 - both still 15 blocks short;
-//   * `cName.assign(townExtra->name, 0, npos)` in the CUSTOM arm makes the
-//     block count EXACT (57 = 57, 0 missing) and scores 50.4032 - the
-//     structure it buys is the wrong one, because retail CALLS that same
-//     three-argument assign at that site (the two sides already pair there)
-//     and the frame goes from 4 B under retail's 0x18c to 4 B over.
-// So the custom arm is right as written and the whole deficit is the random
-// arm's expansion depth.
-VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
+// E:\gamedcs\game.cpp:9833; original name: ProcessOnMapTowns.
+// DC proves the setup sweep's locals and resize, z/y/x scan, random-town
+// conversion, direct town-name assignment, initialize and ConvertObject order.
+// Complete uses std::string for the name; DC uses strcpy/strncpy. Complete's
+// random-town arm also omits DC's owner-dependent pick_alignment operation.
+// Residual (94.3642%): current retail comparison aligns the CFG topology;
+// all 17 candidate calls pair, with one additional retail max_size call in
+// the random-name string assignment. Our VC6 expands that nested helper.
+// The old 80.39% diagnosis of missing _Grow expansion is obsolete: _Grow's
+// branches and _Xlen/_Tidy/_Copy calls now align. Remaining register/frame
+// allocation differs around that assignment (both frames are 0x18c bytes).
+// Prior failed controls: explicit resize 66.13%; assign(ptr, strlen(ptr))
+// 79.45%; operator=(const char*) and temporary inline_depth(3) were byte-flat
+// at the old baseline. Three-argument custom-name assign added the wrong
+// expansion. Synthetic dead statements once altered the inline budget but
+// provide no source evidence and are not a reconstruction strategy.
+VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
 void game::processOnMapTowns()
 {
     int numMapLayers;
@@ -12919,33 +12741,16 @@ bool game::isLocalHuman(int gamePos) const
 }
 
 // E:\gamedcs\game.cpp:11791
-// GetLocalPlayer and GetLocalPlayerGamePos carry the SAME selection
-// longhand rather than one calling the other: this body comes first in
-// address (so in source) order, so VC6 cannot have inlined the later
-// one into it, and neither body contains a call.
-// The selection: on the network game kind, trust the announced net
-// position only if it is in range and human, else take the highest
-// human slot, else player 0. Any other game kind hands back the plain
-// local position unchecked.
+// Dreamcast dc 0xbc016 calls GetLocalPlayerGamePos before indexing players.
+// VC6 /Ob2 expands that ordinary helper even though its definition follows
+// this caller; both retail bodies remain exact with the canonical call.
+// The old hand-expanded selection used a goto for the helper's early return.
+// Replacing only that goto with a caller return scored 84.5588%; restoring
+// the actual helper boundary keeps 100% and removes the duplicated scan.
 VA(0x004ce9b0, 0x6A)  // anchor-global, dc 0xbc010
 playerData* game::getLocalPlayer()
 {
-    int pos;
-
-    if (g_mpNetProtocol == MP_HOTSEAT) {
-        pos = g_netLocalGamePos;
-        if (pos < 0 || pos >= 8 || !m_players[pos].m_isHuman) {
-            for (pos = 7; pos >= 0; pos--) {
-                if (m_players[pos].m_isHuman)
-                    goto found;
-            }
-            pos = 0;
-        }
-    } else {
-        pos = g_localGamePos;
-    }
-found:
-    return &m_players[pos];
+    return &m_players[getLocalPlayerGamePos()];
 }
 
 // E:\gamedcs\game.cpp:11796
@@ -13017,6 +12822,7 @@ int game::getGamePosFromDPID(unsigned long dpid)
 // "Nobody human after this slot." IsHuman is inlined, and the loop
 // bound folds away its `>= 8` half - only the `< 0` clamp survives,
 // which is what identifies the callee.
+// A guarded do/while preserves the exact scan and its early success exit.
 VA(0x004cec50, 0x3E)  // linkorder, dc 0xbc2b8
 bool game::isLastHuman(int gamePos) const
 {
@@ -13024,13 +12830,11 @@ bool game::isLastHuman(int gamePos) const
 
     if (i >= 8)
         return true;
-loop:
-    if (isHuman(i))
-        return false;
-    i++;
-    if (i >= 8)
-        return true;
-    goto loop;
+    do {
+        if (isHuman(i))
+            return false;
+    } while (++i < 8);
+    return true;
 }
 
 // E:\gamedcs\game.cpp:11861
@@ -13503,7 +13307,7 @@ void ExtraInfoUnion::SetMagicSpring(short id, unsigned char full)
 
 // E:\gamedcs\MapCell.h:1084
 DC_ONLY(0xbca4c, 0x7C)
-void ExtraInfoUnion::SetScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
+void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
 {
     // @stub
 }
@@ -18556,7 +18360,6 @@ void h3GameStlComdatAnchor(std::bitset<70>& spells,
                                std::bitset<128>& objectTypes,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
-                               std::vector<type_map_hero_identity>& heroIdentities,
                                std::vector<type_creature_bank>& creatureBanks,
                                THeroSetupMapMinComdatAnchor& heroSetupMap,
                                const THeroSetupMapMinComdatAnchor::Value& heroSetupValue)
@@ -18565,8 +18368,6 @@ void h3GameStlComdatAnchor(std::bitset<70>& spells,
     heroPool.reset();
     availableSkills.reset();
     spells.reset();
-    heroIdentities.clear();
-    heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
     creatureBanks.erase(creatureBanks.begin(), creatureBanks.end());
     heroSetupMap.retainMin();
     heroSetupMap.retainInsert(heroSetupValue);
@@ -18591,6 +18392,13 @@ VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
 VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
 VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
+// Exact: removing readMapPlayerSlot's feature-test inline-depth pin lets
+// VC6 retain this ordinary Dinkumware destructor loop. Its 35 bytes match
+// retail after the single call relocation. The called identity destructor
+// and retail's ICF representative Sign::~Sign at 0x4b9230 have identical
+// 62-byte bodies and the same operator-delete relocation; the name-only
+// difference in sema's call view is therefore a proven folded destructor.
+// Removing the two name-handling pins as well preserves this exact body.
 VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
 VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
 VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)

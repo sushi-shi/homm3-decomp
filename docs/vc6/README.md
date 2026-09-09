@@ -58,15 +58,26 @@ model cannot rot.
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
+| `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
+| `docs/vc6/goto-audit.md` | [goto audit](goto-audit.md): source census, canonical-helper/structured-loop reductions, and measured limits |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
 | `docs/vc6/debug-lines.md` | classic COFF source-line encoding and verified `/Z7` controls |
+| `docs/vc6/union-pragma-audit.md` | complete union/inline-override census, deletion controls, retained layout contracts and reconstruction debt |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 
 ## Residual-routing contract
+
+Before diagnosing a missing emitted body, compare the claim label with the
+COFF symbol. The terrain table reconstruction exposed a missing `operator+=`
+join key: `TRmgGridPoint` still emitted its exact 33-byte `??Y` body, but the
+generic source label no longer paired it. The bounded arithmetic-operator
+scanner now joins `+=` by owner and operation; its equal-size, reversed-order
+test prevents a positional match from hiding this error. This is a label
+binding issue, not evidence for changing the compiler's inline decisions.
 
 `homm3 vc6 queue` ranks existing compiled functions by ascending banked MAX for
 their current source implementation, with retail size breaking ties. Current
@@ -111,6 +122,47 @@ includes the measured flat-label defect and the one-side-only case as negative
 controls, so the census cannot silently regress into treating missing source as
 a compiler wall.
 
+Tree erasure also requires the exact overload identity before compiler-state
+diagnosis. `TREE_ERASE` claims private `_Erase(node)`; `TREE_ERASE_KEY` claims
+public `erase(const key_type&)`, which returns `size_type`. The iterator and
+range overloads retain `TREE_ERASE_ITERATOR` and `TREE_ERASE_RANGE`. The key
+overload's VC6 signature tail starts `QAEIAB`, distinct from the iterator
+return ABI. RMG terrain's 89-byte `erase(key)` at `0x5b7f60` is exact when
+paired with that naturally emitted symbol; the old private-helper probe scored
+36.62%. `test_tree_member_keys.py` checks the signatures, both kind registries,
+and actual claim joins with deliberately equal-sized overloads.
+
+The RMG branch queue at `0x543e20` proves `std::list<TPoint>` through its
+coordinate arithmetic and 16-byte linked nodes. `LIST_DTOR`,
+`LIST_INSERT_SINGLE`, `LIST_ERASE_ITERATOR`, `LIST_ERASE_RANGE`, and
+`LIST_BUYNODE` name its ordinary Dinkumware members. These are direct COFF
+symbols, so both the claim parser and the canonicalizer register them as such.
+The two erase keys use their iterator argument suffixes, independently of
+object size and emission order. `test_list_member_keys.py` checks shuffled,
+equal-sized claim joins, a second element class, and unrelated container and
+insert overloads. A missing range-erase COMDAT remains an inlining question;
+it must not be paired with the retained iterator overload.
+
+`TREE_CONST_END` identifies the const `_Tree::end()` overload by its const
+member signature and `const_iterator` return type. Its fifteen-byte body
+copies `_Head` through a hidden result pointer. `getDisplayFace` reaches
+100% through a const map reference: all eighteen const lifetime/guard forms
+retain retail's two calls within `find()`, while the fifty-four mutable
+forms plateau. This is an overload-selection boundary. Keep the source
+lookup const and let the vendor implementation make its own inline choices.
+The same correction makes `makeHeroFilter` exact when its const reference
+stays inside the hero loop; hoisting it outside changes register homes and
+scores 90.13809%. Its mutable controls remain below 89%.
+`test_tree_member_keys.py` checks distinct owners, equal-sized joins, and
+negative controls for mutable end, begin, and unrelated containers.
+
+`STD_CONSTRUCT` also recognizes VC6's scalar placement-construction overloads.
+The byte helper at `0x48e9d0` is `?_Construct@std@@YIXPAEABE@Z`; its destination
+pointer and const-reference source must encode the same builtin type. Keys
+retain signedness and width instead of grouping scalar overloads under `std`.
+`test_scalar_construct_keys.py` checks shuffled, equal-sized claim joins and
+rejects conversion, qualifier, namespace, calling-convention and arity mismatches.
+
 `homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
 labels from unclaimed, generated and local labels using the regenerated
 symbol inventory's provenance. A carcass `VA` already owns its retail name
@@ -119,6 +171,100 @@ report keeps that name difference visible and recommends checking the
 declaration/relocation identity, rather than asking for the same claim again.
 This annotation does not equate overloads, change reference pairing, or hide
 addends. The summary and JSON views carry the same categories.
+
+The resource cache now uses its actual `std::map<TCacheMapKey, resource*>`.
+Its global lifetime naturally emits teardown, while the ordinary key comparator
+and shared `getFromCache`/`addToCache` functions emit the locked tree searches
+and insertion helpers. `_Lbound` at `0x55ebd0`, insert at `0x55dbc0`, `_Insert`
+at `0x55e7e0`, and iterator `_Dec` at `0x55ec30` are exact. Handwritten STL
+facades and an unused destructor-emission wrapper had obscured that ownership.
+
+`remapGraphics` and `saturateGraphics` show why source accessor boundaries
+must survive even when their bodies are only field reads. A for loop restores
+the retained iterator increment, but flattened `getName`/`getResType` calls
+still expand tree::begin and score 97.7907/97.9075%. Restoring the Dreamcast
+header accessors makes both callers exact. Six iterator-construction forms
+confirm the distinction; prefix/postfix choice alone does not fix it. The
+shared palette getter also makes `loadFontData` exact where its manually
+expanded cache path had stalled at 97.6539%.
+
+`MAP_FIND` and named-key `MAP_INSERT` keep the public map layer separate from
+the underlying tree. Their return signatures distinguish mutable find and
+single-value insert from const find and hinted/range insert. A typed
+`PAIR_CTOR` key (`cstr_resource_pair`) identifies the two-reference
+`pair<const char*, resource*>` constructor independently of iterator/bool
+result constructors. `test_map_member_keys.py` covers owner changes, equal-size
+joins, and overload/type negative controls.
+
+An empty destructor's final base-vftable store does not uniquely identify
+its source class. At `0x487e00`, the implicit `TStreamBufFile` destructor,
+both resource-adapter destructors, and `TAbstractFile` constructor-cleanup
+copies have identical bytes **and relocations**. Retail shares that body:
+the two resource-adapter deleting destructors call it and seventeen EH
+funclets jump to it. `TStreamBufFile`'s retail vtable also uses the LOD
+adapter's deleting-destructor copy at `0x55a7d0`. The natural representative
+in customcampaign is `TStreamBufFile`; a separately defined ordinary base
+destructor had obscured the fold. Restoring the canonical header-inline
+base body matches both parked derived destructors and recovers six message/
+resource consumers to 100%, while the retained folded body remains exact.
+Eight `vc6 hypotheses` states checked absent/inline/ordinary body visibility
+in gzfile, netmsg and customcampaign. Inspect emitted copies across the
+consuming TUs before treating a missing inline symbol in one TU as evidence
+against the declaration.
+
+`TQuickHeroWindow` demonstrates why caller shrinkage must preserve recovered
+source ownership. Dreamcast places its disguise scans in constructor scopes;
+an unclaimed helper introduced solely to lower the constructor's inline cost
+made VC6 retain `basic_ostream` instead of the nested `basic_ios::init`.
+Restoring those scopes naturally emits the 71-byte initializer at `0x52f440`
+with all three retail calls and relocations exact. An eight-state hypothesis
+batch also established that ordinary quantity-widget `push_back` raises the
+constructor to 94.1662%, and removing the old mana inline-depth pin is flat.
+Its remaining mana-string cleanup expansion is documented beside the caller.
+The `BASIC_IOS_INIT` claim accepts the complete protected char-stream,
+two-argument signature; overload, stream-type, traits, access and qualifier
+negative controls prevent it from claiming an enclosing constructor or a
+different initializer.
+
+A deque advance body can share every arithmetic operation with `operator+=`
+while belonging to `const_iterator::_Add`. Retail `0x4491c0` leaves arithmetic
+in EAX at both returns; the public operator must instead return the iterator
+address. The protected void helper already emitted by the ordinary deque
+subscript in `TCombatCreatureSubWindow::update` matches all 105 raw bytes.
+The previous 93.9535% operator claim was an identity error, not an allocator
+plateau. Claim the existing emitted helper in its consuming TU; no extra
+caller or inlining control is needed. `DEQUE_CONST_ITERATOR_ADD` checks the
+complete protected void signature, primitive element and matching allocator,
+with negative controls for the returning operators and other signatures.
+
+Primitive `deque::push_back` claims require an element-specific symbol key,
+just as pointer-element claims do. The natural `deque<int>` append in
+ai_tactical at `0x43cb20` was emitted but remained unpaired because the join
+only recognized pointer elements. The primitive join checks the complete
+const-reference overload and matching allocator type. Tests distinguish
+equal-sized int/unsigned-int bodies in reversed symbol order and reject
+inconsistent allocator and argument types. Its iterator constructor is
+byte-identical to the retail CNetMsg-pointer representative at `0x5586d0`;
+that relocation spelling is an ICF alias, not a different operation.
+The same primitive-element binding applies to its `_Growmap` callee at
+`0x43cdf0`, whose 109-byte retained body is exact. Offsets +0x10 and +0x20
+are the two deque iterators' map pointers, so they do not indicate a custom
+array class. This join checks the protected element-pointer-pointer return
+and unsigned size argument; reversed equal-size element tests and allocator,
+return-type, access and argument controls keep it separate from other bodies.
+
+
+A full-expression constructor temporary can change scheduling even when a
+named local emits the same instructions and calls. In `game::claimGarrison`
+(`0x4c6960`), `sendMapChange(&CMCClaimGarrison(id, owner))` lets VC6 interleave
+five message stores with the preceding point construction and reaches 100%.
+A named message followed by `sendMapChange(&message)` remains at 84.4118%,
+as does the former expansion into individual member assignments. Dreamcast
+line 7446 passes the constructor result directly to `SendMapChange`, providing
+positive evidence for the temporary; the retail byte result corroborates it.
+This address-of-temporary form uses the original compiler's C++ extension.
+Check expression lifetime before attributing equal-CFG store ordering to
+unrecoverable register allocation.
 
 ## Status
 

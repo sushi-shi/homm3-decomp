@@ -244,18 +244,7 @@ int aiResourceCost(int player, const int* costs);
 // deserialize their elements as plain 16-bit serial values and the
 // vectors below them are typed on the real domains, so the edge is
 // crossed through a union rather than through a cast into an enum.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } storage;
-    storage.m_value = value;
-    return storage.m_artifact;
-}
-
+// The artifact twin is shared through artifact.h.
 inline TCreatureType creatureTypeFromInt(int value)
 {
     union {

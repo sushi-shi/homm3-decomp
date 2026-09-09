@@ -100,11 +100,7 @@ DATA(0x00697788) int g_thisNetGotAdventureControl;
 #include "systemoptionswindow.h"
 
 
-// E:\gamedcs\includes.h:124/134 - the reference-returning template and its
-// by-value wrapper, the same pair quicktownwindow and armygrp carry.
-
-
-
+// includes.h:134 supplies the shared limit calls below.
 
 // The objectIndex short is the shared creature-id lane; the union bridge
 // (events.cpp precedent) keeps the TCreatureType conversion cast-free and
@@ -6138,6 +6134,9 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 // A zero cloud lookup shares the full-draw star tail; it does not skip the
 // cell. Keeping that tail after the cloud path gives VC6 retail's two
 // forward branches and one common star draw.
+// Goto audit: Combining the cloud lookup guard and draw-stars fallback
+// into an if/else removes both jumps but scores 47.7198% versus 100%;
+// retain the separate guards and shared draw-stars arm.
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -7685,6 +7684,8 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
 VA(0x00415de0, 0x140)  // exact dispatcher/deadline/draw flow, dc 0x18d38
 void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
 {
+    // DC's override/default scopes join before drawing the bottom view.
+    // The structured else arm preserves the exact retail body.
     if (m_bottomViewOverride == BOTTOM_VIEW_8)
         return;
 
@@ -7716,10 +7717,7 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
             changed = updBottomViewTown(forceUpdate);
             break;
         }
-        goto update_bottom_view;
-    }
-
-    if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
+    } else if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
         if (g_currentPlayer->m_currHeroId != -1)
             changed = updBottomViewHero(forceUpdate);
         else if (g_currentPlayer->m_currTownId != -1)
@@ -7730,7 +7728,6 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         changed = updBottomViewEnemyTurn(forceUpdate);
     }
 
-update_bottom_view:
     if (changed && drawWindow)
         m_advWindow->drawBottomView(update != 0);
 }
@@ -9782,6 +9779,8 @@ void advManager::loadRemote(unsigned char makeOrig)
 VA(0x0041a1e0, 0xF1)  // anchor-global, dc 0x1d804
 void advManager::trimLoopingSounds(int maxSoundsAllowed)
 {
+    // DC line 11063 exits the slot scan. A plain break reaches the same
+    // disposal pass and preserves the exact retail body.
     if (g_highMemBuffer > 0)
         maxSoundsAllowed += g_highMemBuffer / 100;
 
@@ -9813,12 +9812,11 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
                 ++soundsFound;
                 ++saveSounds[i];
                 if (soundsFound >= maxSoundsAllowed)
-                    goto disposeSamples;
+                    break;
             }
         }
     }
 
-disposeSamples:
     for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
         if (m_loopedSample[i] && !saveSounds[i]) {
             m_loopedSample[i]->dispose();
@@ -11427,7 +11425,7 @@ const int* cppMax(const int* _X, const int* _Y)
 
 // E:\gamedcs\includes.h:124
 DC_ONLY(0x20d2c, 0x38)
-const int* tLimit(const int* min, const int* value, const int* max)
+const int& tLimit(const int& minimum, const int& value, const int& maximum)
 {
     // @stub
 }

@@ -143,14 +143,14 @@ OPERATOR_NOT_EQUAL_RE = re.compile(
 # owners still require the IR channel or a dedicated template key.
 VALUE_OPERATOR_RE = re.compile(
     r"(?<![\w:])(?:(?P<owner>[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)::)?"
-    r"operator\s*(?P<token>[+*/<-])\s*\(")
+    r"operator\s*(?P<token>\+=|[+*/<-])\s*\(")
 VALUE_OPERATOR_NAMES = {
     "+": "plus", "-": "minus", "*": "multiply", "/": "divide",
-    "<": "less",
+    "<": "less", "+=": "plus_assign",
 }
 VALUE_OPERATOR_CODES = {
     "H": "plus", "G": "minus", "D": "multiply", "K": "divide",
-    "M": "less",
+    "M": "less", "Y": "plus_assign",
 }
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
@@ -255,6 +255,7 @@ CHAR_STREAM_MEMBERS = (
     ("?substr@?$basic_string@D", None, "basic_string_substr"),
     ("?max_size@?$basic_string@D", "QBEIXZ", "basic_string_max_size"),
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
+    ("?_Copy@?$basic_string@D", "AAEXI@Z", "basic_string_copy"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
     ("?assign@?$basic_string@D", "@ABV12@II@Z",
@@ -411,6 +412,18 @@ CHAR_STREAM_MEMBERS = (
 )
 
 
+# Signatures that need a complete match rather than an overload-family prefix.
+# The retained quickherowindow body takes (streambuf<char>*, bool), unlike
+# the one-argument stream constructors and ios_base::_Init it can resemble.
+CHAR_STREAM_EXACT_MEMBERS = {
+    "?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV"
+    "?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z": "basic_ios_init",
+}
+CHAR_STREAM_MEMBER_KINDS = (
+    {member for _p, _s, member in CHAR_STREAM_MEMBERS}
+    | set(CHAR_STREAM_EXACT_MEMBERS.values()))
+
+
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
                  "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
@@ -421,6 +434,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_INSERT_COUNT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
+                 "LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
+                 "LIST_ERASE_RANGE", "LIST_BUYNODE",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_ITERATOR_DEREF",
@@ -442,18 +457,20 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_SORT", "STD_SORT_0", "STD_MEDIAN",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
-                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
+                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE", "TREE_ERASE_KEY",
                  "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
+                 "DEQUE_CONST_ITERATOR_ADD",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
                  "DEQUE_PUSH_BACK", "DEQUE_GROWMAP",
                  "DEQUE_CONST_ITERATOR_CTOR",
                  "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
-                 "TREE_EQUAL_RANGE", "MAP_INSERT",
+                 "TREE_CONST_END",
+                 "TREE_EQUAL_RANGE", "MAP_INSERT", "MAP_FIND",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -462,7 +479,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
-COMPGEN_KINDS |= {member.upper() for _p, _s, member in CHAR_STREAM_MEMBERS}
+COMPGEN_KINDS |= {member.upper() for member in CHAR_STREAM_MEMBER_KINDS}
 #: The kinds that name NO pre-existing COFF symbol - MSVC's anonymous
 #: static-initialization thunks, which the canonicalizer RENAMES rather
 #: than joins. Every other kind claims a symbol cl already emitted, so
@@ -1063,6 +1080,29 @@ def _demangle_key(mangled: str):
         r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
     if local_static_dtor:
         return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+    # RMG's branch queue retains ordinary Dinkumware list<TPoint> members.
+    # Public erase overloads have the same owner and iterator result: the
+    # argument suffix, not size or emission order, distinguishes the range.
+    # Keep this admission bounded to class/struct values with their matching
+    # default allocator; nested and non-default allocator lists need evidence.
+    list_member = re.match(
+        r"^(?P<member>\?\?1|\?(?:insert|erase|_Buynode)@)\?\$list@"
+        r"(?P<element>[UV](?P<owner>[A-Za-z_]\w*)@@)"
+        r"V\?\$allocator@(?P=element)@std@@@std@@(?P<signature>.+)$",
+        mangled)
+    if list_member:
+        member = list_member.group("member")
+        signature = list_member.group("signature")
+        kind = {
+            ("??1", "QAE@XZ"): "list_dtor",
+            ("?_Buynode@", "IAEPAU_Node@12@PAU312@0@Z"): "list_buynode",
+            ("?erase@", "QAE?AViterator@12@V312@@Z"): "list_erase_iterator",
+            ("?erase@", "QAE?AViterator@12@V312@0@Z"): "list_erase_range",
+            ("?insert@", "QAE?AViterator@12@V312@AB"
+             + list_member.group("element") + "@Z"): "list_insert_single",
+        }.get((member, signature))
+        if kind:
+            return f"{list_member.group('owner').lower()}@{kind}"
 
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
@@ -1099,6 +1139,12 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_node_insert"
     if mangled.startswith("?find@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_find"
+    # Const lookup retains this hidden-result wrapper in GetDisplayFace.
+    # Keep its const iterator result distinct from mutable end(), including
+    # when both overloads emit the same fifteen-byte body.
+    if (mangled.startswith("?end@?$_Tree@") and tree_owner
+            and mangled.endswith("QBE?AVconst_iterator@12@XZ")):
+        return f"{tree_owner.lower()}@tree_const_end"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
@@ -1124,6 +1170,27 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_equal_range"
     if mangled.startswith("?insert@?$map@V?$basic_string@D"):
         return "string@map_insert"
+    # The resource cache retains both map::find and _Tree::find. Key the
+    # public layer on its named key as well; its const overload and the
+    # hinted/range insert overloads have different machine interfaces.
+    named_map = re.match(r"^\?(find|insert)@\?\$map@(?:V|U)([A-Za-z_]\w*)@",
+                         mangled)
+    if named_map:
+        member, owner = named_map.groups()
+        if (member == "find"
+                and "@@QAE?AViterator@?$_Tree@" in mangled):
+            return f"{owner.lower()}@map_find"
+        if (member == "insert"
+                and "@@QAE?AU?$pair@Viterator@?$_Tree@" in mangled):
+            return f"{owner.lower()}@map_insert"
+    # A cache insertion also retains pair<const char*, resource*>'s
+    # two-reference constructor. A generic CLASS_CTOR(pair) becomes
+    # ambiguous when the map's iterator/bool result constructor is emitted.
+    cstr_pointer_pair = re.fullmatch(
+        r"\?\?0\?\$pair@PBDPA(?P<tag>V|U)(?P<owner>[A-Za-z_]\w*)"
+        r"@@@std@@QAE@ABQBDABQA(?P=tag)(?P=owner)@@@Z", mangled)
+    if cstr_pointer_pair:
+        return f"cstr_{cstr_pointer_pair.group('owner').lower()}_pair@pair_ctor"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -1175,12 +1242,13 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_lbound"
     if mangled.startswith("?_Ubound@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_ubound"
-    # ...and the PUBLIC `erase`, which is overloaded on one class: the
-    # range form takes two iterators (`V312@0@Z`), the single form one
-    # (`V312@@Z`). Two kinds rather than a two-member overload group, for
-    # the same reason `_Copy` needed the split - the group's members would
-    # otherwise have to be told apart by size alone.
+    # Public erase has three overloads: key returns unsigned size_type and
+    # takes a const reference (QAEIAB...), while range and single-iterator
+    # forms return an iterator. Keep all three apart from private _Erase;
+    # neither the return ABI nor the operation can be inferred from size.
     if mangled.startswith("?erase@?$_Tree@") and tree_owner:
+        if re.search(r"@@QAEIAB.+@Z$", mangled):
+            return f"{tree_owner.lower()}@tree_erase_key"
         if mangled.endswith("V312@0@Z"):
             return f"{tree_owner.lower()}@tree_erase_range"
         return f"{tree_owner.lower()}@tree_erase_iterator"
@@ -1205,6 +1273,18 @@ def _demangle_key(mangled: str):
     if deque_pointer:
         member = deque_pointer.group(1).lstrip("_").lower()
         return f"{deque_pointer.group(2).lower()}_ptr@deque_{member}"
+    deque_primitive_push = re.match(
+        r"^\?push_back@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@QAEXAB\1@Z$", mangled)
+    if deque_primitive_push:
+        owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_push.group(1)]
+        return f"{owner}@deque_push_back"
+    deque_primitive_grow = re.match(
+        r"^\?_Growmap@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@IAEPAPA\1I@Z$", mangled)
+    if deque_primitive_grow:
+        owner = DEQUE_PRIMITIVE_ELEMENT[deque_primitive_grow.group(1)]
+        return f"{owner}@deque_growmap"
     # deque's nested `const_iterator`'s default constructor, over the same
     # POINTER element the two members above key on. The generic `??0` arm
     # reduces it to `const_iterator_const_iterator`, which _Tree's own
@@ -1230,6 +1310,15 @@ def _demangle_key(mangled: str):
         if element:
             member = deque_primitive.group(1).lstrip("_").lower()
             return f"{element}@deque_{member}"
+    # The protected void _Add retains no iterator-reference return. Retail
+    # 0x4491c0 is this body, not the enclosing public operator+=; both use
+    # identical arithmetic but have different return-value obligations.
+    deque_const_add = re.match(
+        r"^\?_Add@const_iterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@\1"
+        r"@std@@@std@@IAEXH@Z$", mangled)
+    if deque_const_add:
+        element = DEQUE_PRIMITIVE_ELEMENT[deque_const_add.group(1)]
+        return f"{element}@deque_const_iterator_add"
     deque_iterator = re.match(
         r"^\?\?Yiterator@\?\$deque@([CDEFGHIJK])V\?\$allocator@", mangled)
     if deque_iterator:
@@ -1321,6 +1410,14 @@ def _demangle_key(mangled: str):
         return f"bitset{iterator_width}@bitset_iterator_deref"
     if mangled.startswith("?_Construct@std@@YIXPAV?$basic_string@D"):
         return "string@std_construct"
+    # Scalar placement construction has no class identifier. Require the
+    # destination and const-reference source to carry the same builtin type;
+    # a conversion overload must not borrow this source claim's identity.
+    construct_scalar = re.fullmatch(
+        r"\?_Construct@std@@YIXPA([CDEFGHIJK])AB\1@Z", mangled)
+    if construct_scalar:
+        return (f"{DEQUE_PRIMITIVE_ELEMENT[construct_scalar.group(1)]}"
+                "@std_construct")
     # ...and over a map's value_type, whose element is `pair<const int, T>`.
     # Keyed on T with a `_pair` suffix, the spelling `pair_const_int_dtor`
     # already uses for the same shape.
@@ -1396,6 +1493,9 @@ def _demangle_key(mangled: str):
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
+    exact_stream_member = CHAR_STREAM_EXACT_MEMBERS.get(mangled)
+    if exact_stream_member:
+        return f"char@{exact_stream_member}"
     for prefix, suffix, member in CHAR_STREAM_MEMBERS:
         if mangled.startswith(prefix) and (suffix is None
                                            or mangled.endswith(suffix)):
@@ -1493,7 +1593,7 @@ def _demangle_key(mangled: str):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_operator_not_equal".lower() if cls else None
     value_operator = re.match(
-        r"^\?\?([DGHKM])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
+        r"^\?\?([DGHKMY])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
     if value_operator:
         owner = "_".join(reversed(value_operator.group(2).strip("@").split("@")))
         operation = VALUE_OPERATOR_CODES[value_operator.group(1)]
@@ -2103,7 +2203,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         simple = next(
             (kind for kind in ("vector_clear", "exception_doraise",
-                               "functor_call", "deque_iterator_add_assign")
+                               "functor_call", "deque_iterator_add_assign",
+                               "deque_const_iterator_add")
              if f"${kind}$" in row["name"]), None)
         if simple is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -2251,9 +2352,20 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
             continue
+        list_member = next(
+            (kind for kind in ("list_dtor", "list_insert_single",
+                               "list_erase_iterator", "list_erase_range",
+                               "list_buynode")
+             if f"${kind}$" in row["name"]), None)
+        if list_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@{list_member}", []).append(row)
+            continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
+                               "tree_erase_key",
                                "tree_lbound", "tree_ubound", "tree_find",
+                               "tree_const_end",
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",
@@ -2266,12 +2378,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
             continue
-        if "$map_insert$" in row["name"]:
+        map_member = next((kind for kind in ("map_insert", "map_find")
+                           if f"${kind}$" in row["name"]), None)
+        if map_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
-            claim_keys.setdefault(f"{owner}@map_insert", []).append(row)
+            claim_keys.setdefault(f"{owner}@{map_member}", []).append(row)
             continue
         char_member = next(
-            (member for _p, _s, member in CHAR_STREAM_MEMBERS
+            (member for member in CHAR_STREAM_MEMBER_KINDS
              if f"${member}$" in row["name"]), None)
         if char_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()

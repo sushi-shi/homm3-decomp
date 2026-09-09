@@ -199,7 +199,7 @@ void searchArray::enterLith(const hero* currentHero,
             exitCell.m_adjustedCost =
                 entryPoint->m_adjustedCost + (count - 1) * 100;
         }
-        pushPoint(entryPoint, &exitCell, entryPoint->m_direction, 0, limit,
+        pushPoint(*entryPoint, exitCell, entryPoint->m_direction, 0, limit,
                   entryPoint->m_barrierValue + barrierValue, monster,
                   cell->m_type == HERO);
     }
@@ -223,7 +223,7 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
         exitCell.m_point.m_z = exitPoint.m_z;
-        pushPoint(cell, &exitCell, cell->m_direction, 0, limit,
+        pushPoint(*cell, exitCell, cell->m_direction, 0, limit,
                   cell->m_barrierValue, cell->m_monster,
                   exitMapCell->m_type == HERO);
     }
@@ -301,7 +301,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
         newCell.m_point.m_y = otherTown->m_mapY;
         newCell.m_point.m_z = otherTown->m_mapZ;
         newCell.m_castleGate = 1;
-        pushPoint(currentPathCell, &newCell, 0, 0, limit,
+        pushPoint(*currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,
                   0);
     }
@@ -557,7 +557,7 @@ void searchArray::checkTownPortal(const hero* currentHero,
             + abs(newCell.m_point.m_x - startCell->m_point.m_x)
             + abs(newCell.m_point.m_y - startCell->m_point.m_y);
         newCell.m_adjustedCost += (distance + 4) * 50;
-        pushPoint(startCell, &newCell, 0, cost, maxMobility, 0,
+        pushPoint(*startCell, newCell, 0, cost, maxMobility, 0,
                   startCell->m_monster, 0);
     }
 }
@@ -714,7 +714,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
         cell.m_lastPoint = type_point(-1, -1, -1);
         cell.m_adjustedCost = 0;
 
-        pushPoint(&cell, &cell, 2, 0, maxMobility, 0, monster, 0);
+        pushPoint(cell, cell, 2, 0, maxMobility, 0, monster, 0);
 
         if (searchType >= const_AI_enemy_search) {
             int startTown = g_game->getTownId(

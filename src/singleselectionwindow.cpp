@@ -4233,112 +4233,104 @@ void TSingleSelectionWindow::updateGameVars()
     }
 }
 
-// Rebuild every occupied seat's pickable-hero list: resolve the shown
-// town (attribute band or pick_alignment - the inline_depth(0) pin
-// keeps HasMultipleTowns retail's CALL), map it to its two hero
-// classes (the per-case operand order is source-faithful:
-// Rampart/Tower name the caster class first, the rest the might
-// class; the duplicated Castle/default arms are what give retail's
-// 0..8 jump table with entry 0 on the shared block), then admit up to
-// 16 heroes whose class matches, whose pool byte is free, and whose
-// scenario setup row - when one exists - grants this seat in its
-// availability bitset.
-// Residual (87.3): pure register-homing - every switch arm stores
-// classB as an immediate to [ebp-4] in retail while our CL promotes
-// it to edi; branch sequences agree 25/25. Function-scope vs
-// block-scope classB is byte-flat; the family is the documented
-// register-homing residual class.
-// E:\gamedcs\singleselectionwindow.cpp:3927
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
-// scan counter is `unsigned int`.  87.5476 -> 88.9857.
+// E:\gamedcs\singleselectionwindow.cpp:3927, dc 0x139498. Original names:
+// heroClass1, heroClass2, i, pPlayer, town, hero_id. Dreamcast proves the
+// THeroClass/TTownType locals and the GetDisplayTown call at line 3949.
+// Keep that canonical helper instead of its former pasted body and inline
+// pin; retail expands the helper while retaining its HasMultipleTowns call.
+// Town class order follows retail's jump table, including Castle/default.
+// The signed hero_id agrees with retail's jl back edge. With mutable map
+// lookup, the restored caller reached 88.97143% and naturally emitted the
+// exact public lower_bound wrapper at 0x58f0f0; 64 local/guard controls and
+// 24 lookup controls retained that plateau (unsigned hero scan: 88.48572%).
+// GetDisplayFace then proved the missing const-lookup boundary. Keeping a
+// const map reference inside the hero loop and using const_iterator makes
+// this caller exact, including both end() const calls at 0x583a65/0x583a83.
+// Of eight follow-up controls, both inner-loop const guards reach 100%;
+// hoisting that reference outside the hero loop gives 90.13809%, mutable
+// inner references 88.94762%, and mutable outer references 84.22381%.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::makeHeroFilter()
 {
+    THeroClass heroClass1;
+    THeroClass heroClass2;
+    int i;
+    CNetPlayerHandlerPlayer* player;
+    TTownType town;
+    int heroId;
+
     if (m_flag65)
         return;
-    for (int i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
         if (m_flag64 && g_game->m_playerDisabled[i])
             continue;
-        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
-        if (!p)
+        player = m_players.getPlayerInPos(i);
+        if (!player)
             continue;
-        CNetPlayerHandlerPlayer* shown = m_players.getPlayerInPos(i);
-        if (!shown)
-            shown = m_players.getCompPlayerInPos(i);
-        CMapHeaderData::TPlayerSlotAttributes* slot =
-            &g_game->m_mapHeader.m_playerSlotAttributes[i];
-        int town;
-#pragma inline_depth(0)
-        if (slot->m_hasRandomAlignment || hasMultipleTowns(i))
-            town = shown->m_townIndex;
-        else
-            town = pickAlignment(
-                static_cast<unsigned short>(slot->m_legalAlignments), 1);
-#pragma inline_depth()
+        town = getDisplayTown(i);
         if (town == -1)
             continue;
-        int classA;
-        int classB;
         switch (town) {
         case TOWN_RAMPART:
-            classA = eClassDruid;
-            classB = eClassRanger;
+            heroClass1 = eClassDruid;
+            heroClass2 = eClassRanger;
             break;
         case TOWN_TOWER:
-            classA = eClassWizard;
-            classB = eClassAlchemist;
+            heroClass1 = eClassWizard;
+            heroClass2 = eClassAlchemist;
             break;
         case TOWN_INFERNO:
-            classA = eClassPagan;
-            classB = eClassHeretic;
+            heroClass1 = eClassPagan;
+            heroClass2 = eClassHeretic;
             break;
         case TOWN_NECROPOLIS:
-            classA = eClassDeathKnight;
-            classB = eClassNecromancer;
+            heroClass1 = eClassDeathKnight;
+            heroClass2 = eClassNecromancer;
             break;
         case TOWN_DUNGEON:
-            classA = eClassOverlord;
-            classB = eClassWarlock;
+            heroClass1 = eClassOverlord;
+            heroClass2 = eClassWarlock;
             break;
         case TOWN_STRONGHOLD:
-            classA = eClassBarbarian;
-            classB = eClassBattleMage;
+            heroClass1 = eClassBarbarian;
+            heroClass2 = eClassBattleMage;
             break;
         case TOWN_FORTRESS:
-            classA = eClassBeastmaster;
-            classB = eClassWitch;
+            heroClass1 = eClassBeastmaster;
+            heroClass2 = eClassWitch;
             break;
         case TOWN_CONFLUX:
-            classA = eClassPlanesWalker;
-            classB = eClassElementalist;
+            heroClass1 = eClassPlanesWalker;
+            heroClass2 = eClassElementalist;
             break;
         case TOWN_CASTLE:
-            classA = eClassKnight;
-            classB = eClassCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         default:
-            classA = eClassKnight;
-            classB = eClassCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         }
-        p->m_availableHeroesCount = 0;
-        for (unsigned int h = 0; h < 156; ++h) {
-            if (g_game->m_heroAvailability[h] != -1)
+        player->m_availableHeroesCount = 0;
+        for (heroId = 0; heroId < 156; ++heroId) {
+            if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
-            if (g_heroTraits[h].m_heroClass != classA
-                    && g_heroTraits[h].m_heroClass != classB)
+            if (g_heroTraits[heroId].m_heroClass != heroClass1
+                    && g_heroTraits[heroId].m_heroClass != heroClass2)
                 continue;
-            std::map<int, type_map_hero_info>::iterator it =
-                g_game->m_mapHeader.m_heroPlayerSetups.find(h);
-            if (it != g_game->m_mapHeader.m_heroPlayerSetups.end()) {
+            const std::map<int, type_map_hero_info>& setups =
+                g_game->m_mapHeader.m_heroPlayerSetups;
+            std::map<int, type_map_hero_info>::const_iterator it = setups.find(heroId);
+            if (it != setups.end()) {
                 if (!it->second.m_players[i])
                     continue;
             }
-            p->m_availableHeroes[p->m_availableHeroesCount] = h;
-            ++p->m_availableHeroesCount;
-            if (p->m_availableHeroesCount >= 16)
+            player->m_availableHeroes[player->m_availableHeroesCount] = heroId;
+            ++player->m_availableHeroesCount;
+            if (player->m_availableHeroesCount >= 16)
                 break;
         }
     }
@@ -8761,47 +8753,43 @@ unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
 // the committed setup hero on the network arm, the seat's picked
 // available hero otherwise - then the per-hero setup pool may remap
 // it to a scenario portrait.
-// Residual (77.0): the find inline boundary. Retail expands map::find
-// one level (CALLS lower_bound 0x58f110 and end() 0x58eb50 twice); our
-// CL goes one deeper (inlines the lower_bound wrapper, calls _Lbound,
-// folds end() to the _Head read). Same class as GetHeroName's site 2
-// and the button.cpp/hero.cpp _Grow walls. Tried and rejected: a dead
-// second find site (75.99 - the collector moves the wrong way).
+// Dreamcast singleselectionwindow.cpp:8108/8113 names player and slotAtt
+// and proves both player-accessor calls. Complete adds the final portrait
+// remap through heroPlayerSetups. That lookup only reads the map; using a
+// const reference and const_iterator reproduces retail's two retained
+// _Tree::end() const calls inside find(), while the caller's final end()
+// comparison expands. All 18 const variants in a 72-candidate lifetime/API
+// batch are exact; 36 mutable reference/pointer forms plateau at 85.26733%,
+// and 18 direct-member forms at 84.53465%. Moving heroId/iterator declarations
+// and splitting the lookup guard do not change those results. The old
+// residual incorrectly treated const/mutable overload selection as a generic
+// inliner limit; no pin or extra call is needed.
 // E:\gamedcs\singleselectionwindow.cpp:8107
-// Residual (85.2679%): the map lookup only. Retail expands find() but CALLS
-// map::end() at both of the two sites inside it, while our budget expands
-// those too; the caller's own `!= end()` is inline on both sides. No pin is
-// available for a callee two levels down. Fixed here: testing
-// nonRandomHeroCustomPortrait WITHOUT landing it in heroId first (retail
-// returns the loaded value straight out of the shared epilogue rather than
-// storing it - 77.0099 -> 84.5300, and the branch view goes clean), plus a
-// named `setups` reference for the map (+0.74; retail holds its address in
-// ESI across the whole tail).
 VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
 int TSingleSelectionWindow::getDisplayFace(int gamePos)
 {
-    CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(gamePos);
-    if (!p)
-        p = m_players.getCompPlayerInPos(gamePos);
-    CMapHeaderData::TPlayerSlotAttributes* slot =
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    if (!player)
+        player = m_players.getCompPlayerInPos(gamePos);
+    CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     int heroId;
     if (m_flag64) {
-        if (slot->m_nonRandomHeroCustomPortrait != -1)
-            return slot->m_nonRandomHeroCustomPortrait;
+        if (slotAtt->m_nonRandomHeroCustomPortrait != -1)
+            return slotAtt->m_nonRandomHeroCustomPortrait;
         heroId = g_game->m_setup.m_startingHero[gamePos];
-    } else if (slot->m_generateHero || slot->m_hasRandomHero) {
-        if (p->m_heroIndex == -1)
+    } else if (slotAtt->m_generateHero || slotAtt->m_hasRandomHero) {
+        if (player->m_heroIndex == -1)
             return -1;
-        heroId = p->m_availableHeroes[p->m_heroIndex];
+        heroId = player->m_availableHeroes[player->m_heroIndex];
     } else {
-        if (slot->m_nonRandomHeroCustomPortrait != -1)
-            return slot->m_nonRandomHeroCustomPortrait;
-        heroId = slot->m_nonRandomHeroCustomPortrait;
+        if (slotAtt->m_nonRandomHeroCustomPortrait != -1)
+            return slotAtt->m_nonRandomHeroCustomPortrait;
+        heroId = slotAtt->m_nonRandomHeroCustomPortrait;
     }
-    std::map<int, type_map_hero_info>& setups =
+    const std::map<int, type_map_hero_info>& setups =
         g_game->m_mapHeader.m_heroPlayerSetups;
-    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    std::map<int, type_map_hero_info>::const_iterator it = setups.find(heroId);
     if (it != setups.end() && it->second.m_portrait != -1)
         heroId = it->second.m_portrait;
     return heroId;
@@ -10359,13 +10347,6 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
-// NOT CLAIMED: retail call semantics identify 0x58eb50 as
-// map<int,type_map_hero_info>::end(), not the same-size char_traits::assign
-// candidate once proposed from mnemonic agreement. Its callers pass the map
-// in ECX and a hidden iterator result on the stack; the body copies `_Head`
-// from this+4. This TU inlines every end() and emits no standalone COMDAT, so
-// the boundary remains parked with its two caller inlining residuals rather
-// than being assigned to an unrelated emitted symbol.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
@@ -10748,6 +10729,13 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 VA_COMPGEN(0x00515480, 0x14, BITSET_AND_ASSIGN, Bitset4)
 VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
 VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
+// GetDisplayFace's const map lookup naturally emits this const end wrapper.
+// Retail calls at 0x58d1a7 and 0x58d1c5 pass the map in ECX and a hidden
+// iterator result on the stack; the fifteen-byte body copies _Head from
+// this+4 and returns the result pointer with ret 4. The const overload's
+// two calls and their surrounding find expansion match together in all
+// eighteen const candidates; mutable lookup emits neither retained call.
+VA_COMPGEN(0x0058eb50, 0xF, TREE_CONST_END, type_map_hero_info)
 VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
 VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)

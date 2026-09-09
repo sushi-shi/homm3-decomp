@@ -71,20 +71,6 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 TCreatureType siegeArtifactToCreature(TArtifact engine);
 TCreatureType upgradedCreatureType(TCreatureType type);
 
-// Complete-only game.h inline retained by AI_value_of_event. The later
-// claim-only declaration records the selected philai.obj COMDAT in retail
-// RVA order while this source definition stays beside its free helper.
-inline TCreatureType game::upgradedCreatureType(TCreatureType creature) const
-{
-    if (m_f1f698 == 0
-        && (creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))
-        return CREATURE_NONE;
-    return ::upgradedCreatureType(creature);
-}
-
 // These remain the canonical inline bodies used by all real callers. Retail
 // selected one out-of-line COMDAT copy of each into philai.obj in this order;
 // typed address-takes materialize those copies without replacing any
@@ -660,7 +646,6 @@ int valueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 
 // Source-order declarations for helpers whose retained Complete bodies live
 // later in retail RVA order.
-inline TArtifact artifactFromInt(int value);
 // Before normalization (function): spell_id_from_int.
 inline SpellID spellIdFromInt(int value);
 // Before normalization (function): NetValueOfArtifact.
@@ -777,7 +762,7 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
             >= HERO_BACKPACK_CAPACITY)
         return 0;
 
-    type_artifact artifact(artifactFromInt(cell->getArtifactIndex()));
+    type_artifact artifact(cell->getArtifactIndex());
     int value = aiGetArtifactPlayerValue(artifact, currentHero->m_owner);
     if (value < 10)
         value = 10;
@@ -1306,30 +1291,14 @@ __forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 }
 
 // armyGroup deliberately models its mutable roster as int while
-// get_spell_work_chance's domain is TCreatureType, and the resource
-// sweep below counts with an int while its consumers take
-// EGameResource. Same bit-preserving inline bridges ai_combat.cpp uses
-// for the same crossings, rather than lying with an enum cast; VC6
-// reduces the four-byte copy to a move.
+// get_spell_work_chance's domain is TCreatureType. This representation
+// bridge preserves the four-byte value. The artifact and resource bridges
+// are shared through their owning headers.
 inline TCreatureType creatureTypeFromInt(int value)
 {
     TCreatureType creature;
     memcpy(&creature, &value, sizeof creature);
     return creature;
-}
-
-inline EGameResource gameResourceFromInt(int value)
-{
-    EGameResource resource;
-    memcpy(&resource, &value, sizeof resource);
-    return resource;
-}
-
-inline TArtifact artifactFromInt(int value)
-{
-    TArtifact artifact;
-    memcpy(&artifact, &value, sizeof artifact);
-    return artifact;
 }
 
 inline SpellID spellIdFromInt(int value)
@@ -1843,8 +1812,9 @@ void aiVisitWarFactory(hero* currentHero)
     visitWarFactory(currentHero, ARTIFACT_AMMO_CART);
 }
 
-// MATCHING_DEBT: retail keeps this helper out of all three expansions of
-// visit_war_factory; preserve that decision explicitly until understood.
+// Retail keeps this helper out of all three expansions of visit_war_factory.
+// The 2026-09-09 whole-TU control reproduces that decision without the
+// former auto_inline(off) override.
 // CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
 // creature-cost row before the accumulator. Retail additionally proves a
 // cached ai.resource_value row. All blocks, branches and bytes through the funds
@@ -1853,7 +1823,6 @@ void aiVisitWarFactory(hero* currentHero)
 // Swapping the resource_values / costs declarations is byte-flat; the tail's
 // only remaining delta is EAX-vs-EDX for the reloaded costs pointer, which
 // forces the __ftol result to move out of EAX one instruction earlier.
-#pragma auto_inline(off)
 VA(0x00525120, 0xE0)
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
@@ -1879,7 +1848,6 @@ static long valueOfWarFactory(const hero* currentHero,
     }
     return 0;
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\philai.cpp:687.  The unique DC callee set
 // {GetHero, type_AI_creature_swapper::{ctor,do_swap},
@@ -3905,12 +3873,12 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 
 // Complete-only game member: reject the four base-set elementals when
 // f_1f698 is zero, otherwise tail into the free helper. Its canonical inline
-// and typed emission anchor remain together above; this claim records the
+// body lives in game.h; the typed emission anchor above and this claim record the
 // selected copy's strict retail VA order.
 VA(0x00529710, 0x34)  // retail-only + sole AI_value_of_event caller
 TCreatureType game::upgradedCreatureType(TCreatureType creature) const
 {
-    // @stub - active inline definition remains in source order above
+    // @stub - active inline definition is in game.h
 }
 
 #endif  // @carcass

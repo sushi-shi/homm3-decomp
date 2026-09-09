@@ -235,6 +235,8 @@ static std::string getEstimatedDamage(const army* currentArmy,
 // decisions; the source statements, the if/else arms (the ternary spelling
 // was measured at 65.85/68.38 by polish-43) and the direct-GetArmyName
 // spelling above are already retail's.
+// Goto audit: Replacing all eleven no_error jumps with return false
+// scores 68.3889% versus 92.3889%; the shared exit is still materially closer.
 VA(0x004922f0, 0x54C)  // retail body + DC source shape, dc 0x8354c
 bool combatManager::showCreatureSpellError(
     char* buffer, const army* currentArmy)

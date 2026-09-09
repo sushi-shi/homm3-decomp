@@ -33,22 +33,8 @@
 #include "misc.h"
 #include "armygrp_split.h"
 
-// E:\gamedcs\includes.h:124/134, the pair quickherowindow.cpp and
-// quicktownwindow.cpp already carry. The DC xref census names it here by
-// COUNT as well as by name: `limit` (dc 0x1ef5c) x2 from
-// TSplitWindow::WindowHandler, x1 from GetMorale and x1 from GetArmyMorale -
-// exactly the four sites below. Retail's inlined clamp users home low, high
-// and value then select one of their ADDRESSES, which is what the reference-
-// returning template does; the by-value `limit` wrapper in front of it keeps
-// the rating enregistered until the clamp site. The (low,value,high) order is
-// byte-proven by all four users. Respelling the former house-coined
-// `armygrp_clamp` as this pair is EXACTLY byte-flat at all four sites
-// (99.9912 / 99.9170 / 98.5654 / 96.5625 unchanged), so it is landed for
-// fidelity, not for score - a forwarding wrapper replaces the call site it
-// wraps and supplies no /Ob2 divisor site.
-
-
-
+// DC includes.h:134 names limit at the split-window and army-rating
+// sites below. homm3_limit.h owns its shared reference-selector chain.
 
 // The four-way base-elemental compare the magic-terrain gates share -
 // eight of them in this compiland, in both polarities. Byte-identical to
@@ -1314,7 +1300,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
             && ownerTown->hasBuilding(EXTRA_1_ID, 1))
             morale += 2;
     }
-    // The by-value wrapper over the reference-returning template preserves
+    // The by-value wrapper over the reference-returning selector preserves
     // EBX until this site and reproduces retail's three operand homes.
     if (applyLimits)
         return limit(-3, morale, 3);
@@ -1456,6 +1442,9 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
 {
+    // Put the Clover bonus in its case arm; this removes one jump at 100%.
+    // Replacing the neutral/default exits with break collapses the selector
+    // table and scores 78.6737%, so those two exits remain shared.
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
@@ -1473,12 +1462,11 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
             case TOWN_STRONGHOLD:
             case TOWN_FORTRESS:
             case TOWN_CONFLUX:
-                goto add_town_luck_bonus;
+                luck += 2;
+                break;
             default:
                 goto no_town_luck_bonus;
             }
-        add_town_luck_bonus:
-            luck += 2;
         no_town_luck_bonus:;
         }
     }
@@ -1693,8 +1681,9 @@ unsigned char armyGroup::merge(armyGroup* ag)
 // weakest slot's value (the two je's at +0x8f/+0x94 skip only the
 // subtraction). Every action restarts the whole selection.
 // EXACT 2026-08-09: retail stops the weakest scan at the first empty
-// slot. Both fit searches jump directly to their success continuations,
-// avoiding a redundant post-loop bound test. The two reversed-argument
+// slot. Dreamcast lines 1311/1322 call CanJoin and line 1325 calls Dismiss;
+// the canonical ordinary helpers expand here to the same exact retail
+// body, including the success exits of both fit searches. The reversed-argument
 // std::swap calls are load-bearing: they reproduce retail's frame layout,
 // register allocation and source-before-destination exchange order.
 VA(0x0044b820, 0x140)  // anchor-global, dc 0x4f5ec
@@ -1720,14 +1709,8 @@ void armyGroup::mergeArmies(armyGroup* source)
                 continue;
             long gain = g_creatureTypeTraits[source->m_armies[j]].m_aiValue
                         * source->m_numTroops[j];
-            int slot;
-            for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
-                if (m_armies[slot] == source->m_armies[j]
-                    || m_armies[slot] == CREATURE_NONE)
-                    goto source_stack_fits;
-            }
-            gain -= weakestValue;
-source_stack_fits:
+            if (!canJoin(source->m_armies[j]))
+                gain -= weakestValue;
             if (gain > bestGain) {
                 bestGain = gain;
                 bestIndex = j;
@@ -1735,21 +1718,13 @@ source_stack_fits:
         }
         if (bestIndex < 0)
             return;
-        int slot;
-        for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
-            if (m_armies[slot] == source->m_armies[bestIndex]
-                || m_armies[slot] == CREATURE_NONE)
-                goto source_stack_merges;
-        }
-        {
+        if (canJoin(source->m_armies[bestIndex])) {
+            add(source->m_armies[bestIndex], source->m_numTroops[bestIndex], -1);
+            source->dismiss(bestIndex);
+        } else {
             std::swap(source->m_armies[bestIndex], m_armies[weakestIndex]);
             std::swap(source->m_numTroops[bestIndex], m_numTroops[weakestIndex]);
         }
-        continue;
-source_stack_merges:
-        add(source->m_armies[bestIndex], source->m_numTroops[bestIndex], -1);
-        source->m_armies[bestIndex] = CREATURE_NONE;
-        source->m_numTroops[bestIndex] = 0;
     }
 }
 

@@ -27,39 +27,6 @@
 #include "includes.h"
 
 
-// The [-3, 3] rating selector the one-army constructor CALLS at
-// 0x4e6750 (33 B, `ret 4`). Three CONST REFERENCES, not values: the
-// body dereferences ecx and edx and returns one of the three incoming
-// pointers, and the caller materialises -3 and 3 into homes of their
-// own to have addresses to pass. The branch graph fixes both the
-// parameter order and the expression - `mov eax,[ecx] / mov esi,[edx] /
-// cmp esi,eax / jge` returns argument ONE when argument TWO is below
-// it, then `cmp [arg3],esi / jl` keeps argument three - i.e.
-// (_Lo, _V, _Hi) and `_V < _Lo ? _Lo : _Hi < _V ? _Hi : _V`, with the
-// low bound tested first. ai_tactical.cpp's own three-operand clamp is
-// the same selector under a different parameter order (_V, _Hi, _Lo)
-// and by value; that TU only ever sees it INLINED, so its order is
-// inferred from home-materialisation while this one is read straight
-// off an out-of-line body.
-// DECLARED, NOT DEFINED - the same treatment textWidget::SetText and
-// combatManager::mark_moat get. Retail's copy is a COMDAT the linker
-// parked at 0x4e6750. The old reading here ("this TU never saw a body")
-// is contradicted by the ten-arg constructor's luck-site inline AND by
-// measurement (2026-08-20): DEFINING the body moves the ten-arg ctor
-// 90.4657 -> 91.2431 (its luck inline appears, exactly note-442's
-// retail shape) but costs the one-army ctor 90.8074 -> 89.7735 (its
-// two sites inline where retail calls both), a ratchet-blocked trade.
-// The asymmetry is NOT hittable from a shared body: the defined
-// selector prices FREE-tier (<=0x28) up to four filler statements -
-// both ctors inline both sites - and one statement more refuses BOTH
-// of the ten-arg ctor's sites at once (91.24 -> 89.71); no leaf cb
-// lands between the two sites' quotients, so retail's call-morale/
-// inline-luck split needs a cb window our statement quantization jumps
-// over. Declared-only remains the ratchet optimum; if the one-army
-// ctor's plateau ever moves, re-measure the define WITH it.
-// Before normalization (locals): _Lo, _V, _Hi.
-const int& cppClamp(const int& lo, const int& v, const int& hi);
-
 // Two representation bridges in game.cpp's/ai_combat.cpp's shape - a
 // four-byte copy VC6 reduces to a move - so that neither a
 // reinterpret_cast nor an enum cast appears here:
@@ -193,7 +160,7 @@ inline void TViewArmyWindow::createMoraleWidget(int newMorale)
     m_widgets.push_back(new iconWidget(
         23, 189, 42, 38, MORALE_ID,
         DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
-        cppClamp(-3, newMorale, 3) + 3, 0, 0, 0, 0x10));
+        limit(-3, newMorale, 3) + 3, 0, 0, 0, 0x10));
 }
 
 // Before normalization (locals): new_luck.
@@ -202,7 +169,7 @@ inline void TViewArmyWindow::createLuckWidget(int newLuck)
     m_widgets.push_back(new iconWidget(
         77, 189, 42, 38, LUCK_ID,
         DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
-        cppClamp(-3, newLuck, 3) + 3, 0, 0, 0, 0x10));
+        limit(-3, newLuck, 3) + 3, 0, 0, 0, 0x10));
 }
 
 inline void TViewArmyWindow::createRolloverWidget()
@@ -467,21 +434,16 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // Retail takes TEN arguments (`ret 0x28`), one more than the Dreamcast
 // nine: a trailing alignment-grouping byte forwarded to GetArmyMorale's
 // arg5 and get_morale_description's arg8.
-// Residual (88.7003%): base 35 conditional branches against retail's 37,
-// and the two-branch gap is ONE thing - retail INLINES the [-3, 3]
-// selector at the luck icon and CALLS it at the morale icon, in the same
-// function. That settles a question the one-army constructor's note left
-// open the wrong way: this TU DID see a body for the selector (it could
-// not inline the luck site otherwise), so the two calls that constructor
-// makes are budget, not an absent definition. Reproducing the asymmetry
-// is not available here: `_cpp_clamp` stays DECLARED-ONLY, so both sites
-// are calls, and defining it as a template was already measured to take
-// the one-army constructor from 89.62 to 87.11 - below its ratcheted MAX
-// - because create_morale_widget/create_luck_widget are shared inline
-// members and no per-call-site knob separates them. The rest of the
-// delta is register choice and scheduling inside blocks whose shapes
-// agree (`movsx ecx,al` for hero->owner where we pick eax; the table
-// base loaded before the index rather than after it in the name lookup).
+// The shared includes.h limit/t_limit chain replaces the former
+// declared-only cppClamp. DC create_morale_widget/create_luck_widget
+// (0x1927d4/0x19288c) call limit; its by-value parameters provide the
+// three homes before the reference selector. This raises the one-army
+// constructor 90.1633 -> 91.2989 and this constructor 90.9521 -> 92.2569.
+// Retail retains tLimit at the morale site and expands it at the luck
+// site; VC6 still retains both here. Keep the source-proven shared
+// helpers while resolving that remaining nested-inlining difference.
+// Bypassing limit and calling tLimit directly at the two widget sites
+// lowers the constructors to 88.5008 and 90.1918, respectively.
 // E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
@@ -547,11 +509,9 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
         TCreatureType m_creature;
     } shownType;
     shownType.m_value = m_armyType;
-#pragma inline_depth(0)
     m_moraleHelp = group->getMoraleDescription(
         shownType.m_creature, m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
-#pragma inline_depth()
 
     m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
     createLuckWidget(m_luck);

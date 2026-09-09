@@ -17,7 +17,7 @@ public:
     border(int x, int y, int w, int h, int id, int style);
     border();
     virtual int main(message* msg);  // slot 2, retail 0x44ff60
-    virtual void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): border::Draw.
     virtual void draw();             // slot 4
     // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
@@ -112,7 +112,7 @@ public:
                    // Before normalization (locals): image_.
                    const char* image, int style);
     virtual ~bitmapBorder16();
-    virtual void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): bitmapBorder16::Draw.
     virtual void draw();  // slot 4, retail 0x4507b0
     // Before normalization (function): bitmapBorder16::Draw2.
@@ -143,7 +143,7 @@ void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);
 // CODEVIEW(E:\gamedcs\border.cpp:294, dc 0x54860) void bitmapBorder::~bitmapBorder();
-// CODEVIEW(E:\gamedcs\border.cpp:301, dc 0x5489c) void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id);
+// CODEVIEW(E:\gamedcs\border.cpp:301, dc 0x5489c) void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const;
 // CODEVIEW(E:\gamedcs\border.cpp:307, dc 0x548fc) void bitmapBorder::Draw();
 // CODEVIEW(E:\gamedcs\border.cpp:313, dc 0x54948) int bitmapBorder::GetRealWidth();
 // CODEVIEW(E:\gamedcs\border.cpp:318, dc 0x54968) int bitmapBorder::GetRealHeight();

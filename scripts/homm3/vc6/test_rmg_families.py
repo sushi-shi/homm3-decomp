@@ -107,11 +107,12 @@ class RmgSourceFamilyTests(unittest.TestCase):
     def test_line_proxy_binding_generated_cpp_preserves_value_ownership(self):
         self.check_line_proxy_cpp("generate-rmg-line-proxy-binding-family.py")
 
-    def check_line_proxy_cpp(self, name):
+    def check_line_proxy_cpp(self, name, *, axes=None):
         module = generator(name)
         root = Path(__file__).resolve().parents[3]
         original = {name: (root / name).read_text() for name in (module.HEADER, module.SOURCE)}
-        axes = module.make_axes(original[module.HEADER], original[module.SOURCE])
+        if axes is None:
+            axes = module.make_axes(original[module.HEADER], original[module.SOURCE])
         terrain_header = (root / "include/rmg_terrain.h").read_text()
         tile_start = terrain_header.index("struct rmgTerrainTile {")
         tile = terrain_header[tile_start:terrain_header.index("\n};", tile_start) + 3]
@@ -132,6 +133,10 @@ class RmgSourceFamilyTests(unittest.TestCase):
                             "struct TRmgLinePainterTile;\n", model, "\n", interface_constructor, "\n"])
             program.extend([module.constructor_definition(source), "\n",
                             module.constructor_definition(source, copy=True, required=False), "\n"])
+            if "TRmgGridPoint::operator+=(" in source:
+                program.extend([module.helpers().definition(source, "TRmgGridPoint::operator+="), "\n"])
+            if "TRmgGridPoint::operator+(" in source:
+                program.extend([module.helpers().definition(source, "TRmgGridPoint::operator+"), "\n"])
             for method in ("TRmgLinePainterTile::getLand",
                            "TRmgLinePainterTile::getTile", "TRmgLinePainterTile::setTile",
                            "TRmgLinePainterInterface::at"):
@@ -729,7 +734,12 @@ int main() {
         header = (root / "include/rmg.h").read_text()
         source = (root / "src/rmg.cpp").read_text()
         axes = module.make_axes(header, source)
-        self.assertEqual([len(item["options"]) for item in axes], [8, 7, 288])
+        self.assertEqual([len(item["options"]) for item in axes[:2]], [8, 7])
+        # The unchanged source can be outside the historical 288 alternatives.
+        # markRiverCoastTarget now proves construction after translation, so
+        # the canonical operator+ need not call += like those older controls.
+        self.assertIn(len(axes[2]["options"]), (288, 289))
+        self.assertEqual(axes[2]["options"][0], dict(name="baseline", replace=axes[2]["find"]))
         for name, text in module.copy_forms()[2:]:
             for field in "xyz":
                 self.assertEqual(text.count(f"m_{field} = other.m_{field};"), 1)
@@ -740,7 +750,8 @@ int main() {
         for option in axes[2]["options"]:
             body = option["replace"]
             self.assertEqual(body.count("TRmgMapPosition::operator+(TPoint offset) const"), 1)
-            self.assertEqual(body.count("result += offset;"), 1)
+            if option["name"] != "baseline":
+                self.assertEqual(body.count("result += offset;"), 1)
             for op in ("+=", "-="):
                 for field in "xy":
                     self.assertEqual(body.count(f"m_{field} {op} offset.m_{field};"), 1)
@@ -751,7 +762,8 @@ int main() {
                 candidate = header.replace(axes[0]["find"], copy["replace"]).replace(
                     axes[1]["find"], assignment["replace"])
                 rebased = module.make_axes(candidate, source)
-                self.assertEqual([len(item["options"]) for item in rebased], [8, 7, 288])
+                self.assertEqual([len(item["options"]) for item in rebased],
+                                 [8, 7, len(axes[2]["options"])])
 
     def test_path_scopes_keep_post_placement_query_and_same_zone_walk(self):
         module = generator("generate-rmg-path-family.py")

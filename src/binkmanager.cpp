@@ -309,6 +309,9 @@ void closeBinkVideo()
 VA(0x0044DD20, 0x227)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
 int playBinkVideo(int id, int x, int y, int w, int h)
 {
+    // Preserve the switch and use its existing aborted flag to break the
+    // playback loop. This removes the cleanup jump at unchanged 88.1839%;
+    // replacing the switch with a combined event condition loses matching.
     int vh = h;
     int vw = w;
     int updateX;
@@ -359,15 +362,16 @@ int playBinkVideo(int id, int x, int y, int w, int h)
                     case MESSAGE_RIGHT_BUTTON_DOWN:
                         if (!g_videoNoSkip) {
                             aborted = 1;
-                            goto stop_playback;
+                            break;
                         }
                         break;
                 }
+                if (aborted)
+                    break;
             }
             if (videoNeedsUpdate())
                 videoDrawRects();
         }
-stop_playback:
         if (g_binkVideo) {
             _BinkPause(g_binkVideo, 1);
             _BinkClose(g_binkVideo);

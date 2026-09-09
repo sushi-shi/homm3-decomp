@@ -1064,28 +1064,28 @@ void ExtraInfoUnion::setPyramid(unsigned char guards, SpellID new_spell)
 
 // E:\gamedcs\MapCell.h:1063
 DC_ONLY(0x9c898, 0xC)
-ScholarAwards ExtraInfoUnion::getScholarAward()
+ScholarAwards ExtraInfoUnion::getScholarAward() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1068
 DC_ONLY(0x9c8a4, 0xC)
-TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill()
+TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1073
 DC_ONLY(0x9c8b0, 0xC)
-TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill()
+TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
 {
     // @stub
 }
 
 // E:\gamedcs\MapCell.h:1078
 DC_ONLY(0x9c8bc, 0xC)
-SpellID ExtraInfoUnion::getScholarSpell()
+SpellID ExtraInfoUnion::getScholarSpell() const
 {
     // @stub
 }
@@ -2165,7 +2165,6 @@ bool initializeRandomSignText()
     return true;
 }
 
-
 // E:\gamedcs\events.cpp:300.  Removes a picked-up adventure object and
 // plays the vanish flash over the map centre. Both the adventure-map
 // animation pause and the .data byte at 0x67f574 are SAVED, forced, and
@@ -2409,7 +2408,7 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
     NewmapCell* cell = getCell(point);
 
     type_artifact artifact(ARTIFACT_NONE);
-    artifact.m_artifactId = static_cast<TArtifact>(cell->getArtifactIndex());
+    artifact.m_artifactId = cell->getArtifactIndex();
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2803,6 +2802,10 @@ static void addReward(std::string& text, const std::string& alternate,
 // Controls: moving show_rewards before add_reward, using a shared signed
 // loop index, and spelling the pending-message temporary explicitly are
 // byte-flat. Caching the secondary-skill byte loses retail's repeated test.
+// Restoring game.h's DC skill/artifact element types removes the consumer
+// casts and reaches 94.7895% (2026-09-08). addReward keeps its DC enum ABI;
+// resource-index arithmetic crosses through town.h's shared representation
+// bridge. File-byte widening belongs to readBlackBox/loadBlackBox.
 // Before normalization (locals): current_hero, human_player, BlackBox.
 VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
@@ -2830,7 +2833,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(message, alternate, rewards,
-                          static_cast<EGameResource>(RES_PRIMARY_SKILL_ATTACK + i),
+                          gameResourceFromInt(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
             }
             gave = 1;
@@ -2839,8 +2842,8 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     }
 
     for (unsigned int j = 0; j < blackBox->m_secondarySkills.size(); j++) {
-        TSecondarySkill skill = static_cast<TSecondarySkill>(blackBox->m_secondarySkills[j].m_type);
-        TSkillMastery level = static_cast<TSkillMastery>(blackBox->m_secondarySkills[j].m_level);
+        TSecondarySkill skill = blackBox->m_secondarySkills[j].m_type;
+        TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->m_skillLevel[skill] == 0 && currentHero->m_skillCount < 8) {
             currentHero->giveSS(skill, level);
@@ -2921,12 +2924,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(message, formatString(
                         g_adventureEventText->getText(183),
-                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
+                        currentHero->m_name), rewards, gameResourceFromInt(k),
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(message, formatString(
                         g_adventureEventText->getText(182),
-                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
+                        currentHero->m_name), rewards, gameResourceFromInt(k),
                                blackBox->m_resQty[k] - 100000);
                 }
             }
@@ -2945,7 +2948,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
             }
-            artifact.m_artifactId = static_cast<TArtifact>(blackBox->m_artifacts[m]);
+            artifact.m_artifactId = blackBox->m_artifacts[m];
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -2958,7 +2961,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
             if (g_spellTraits[blackBox->m_spells[n]].m_level
                     <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-                && !currentHero->isInSpellbook(static_cast<SpellID>(blackBox->m_spells[n]))) {
+                && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(
@@ -3021,6 +3024,21 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     updBottomView(1, 1, 1);
     return gave;
 }
+
+// Shared retail clear representative at 0x54c120. Dreamcast show_rewards
+// (dc 0x912bc, events.cpp:826) proves vector<type_dialog_resource>::clear;
+// eight expanded flushes in retail giveBlackBoxReward call this body.
+// Retail also folds SHeaderRequest clear and RMG treasure-list clears onto
+// this address. This claim binds the naturally emitted reward specialization,
+// without attributing the shared body exclusively to an RMG source type.
+VA_COMPGEN(0x0054c120, 0x43, VECTOR_CLEAR, type_dialog_resource)
+
+// The reward vector's retained insert at 0x54cba0 calls this null-guarded
+// two-dword _Construct at 0x54cc1e and 0x54cc39. Both source calls naturally
+// retain the canonical VC6 specialization in events.obj. Retail folds the
+// same body across type_artifact and TPoint callers too; this annotation
+// records a proven reward representative of that shared implementation.
+VA_COMPGEN(0x005b8cc0, 0x0f, STD_CONSTRUCT, type_dialog_resource)
 
 // E:\gamedcs\events.cpp:826.  The page flusher, Dreamcast's
 // show_rewards: once `threshold` lines are pending, show the page and
@@ -5056,9 +5074,11 @@ VA(0x004a4dc0, 0x263)  // jump-table arm 0x51 + advevent.txt 115, dc 0x951f4
 void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
                                 type_point point, bool humanPlayer)
 {
-    int award = cell->getScholarAward();
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    int award = info->getScholarAward();
     if (award == const_scholar_spell) {
-        int spell = cell->getScholarSpell();
+        int spell = info->getScholarSpell();
         if (!currentHero->m_inSpellbook[spell]
             && g_spellTraits[spell].m_level <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
             && currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
@@ -5070,7 +5090,7 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
             goto pick_up;
         }
     } else if (award == const_scholar_secondary_skill) {
-        int skill = cell->getScholarSecondarySkill();
+        int skill = info->getScholarSecondarySkill();
         if (currentHero->giveSS(skill, 1)) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
@@ -5085,7 +5105,7 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     }
 
     {
-        int primary = cell->getScholarPrimarySkill();
+        int primary = info->getScholarPrimarySkill();
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_SCHOLAR),
@@ -8915,11 +8935,11 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                  rightTown, rightHero, rightArmyGroup,
                                  point.m_x, point.m_y, seed, alternateLayout);
     if (!leftHuman)
-        splitArmies(leftHero, rightHero, rightArmyGroup);
+        splitArmies(leftHero, rightHero, *rightArmyGroup);
     if (!rightHuman && rightHero
         && rightHero->m_skillLevel[eSecSkillBattleTactics]
                > leftHero->m_skillLevel[eSecSkillBattleTactics])
-        splitArmies(rightHero, leftHero, leftArmyGroup);
+        splitArmies(rightHero, leftHero, *leftArmyGroup);
     if (g_highMemBuffer > 2900)
         g_unnamed699548 = 2;
     else if (g_highMemBuffer > 900)

@@ -179,9 +179,9 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     for (int i = 0; i < 256; ++i) {
         m_p16.m_data[i] =
             static_cast<unsigned short>(
-                ((pcxfile.m_palette[i].m_rgbRed >> (8 - rbits)) << rshift) |
-                ((pcxfile.m_palette[i].m_rgbGreen >> (8 - gbits)) << gshift) |
-                ((pcxfile.m_palette[i].m_rgbBlue >> (8 - bbits)) << bshift));
+                ((pcxfile.m_palette[i].rgbRed >> (8 - rbits)) << rshift) |
+                ((pcxfile.m_palette[i].rgbGreen >> (8 - gbits)) << gshift) |
+                ((pcxfile.m_palette[i].rgbBlue >> (8 - bbits)) << bshift));
     }
 
     freeimage(&pcxfile);

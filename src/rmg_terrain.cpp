@@ -67,6 +67,9 @@ TRmgGridRectangle::TRmgGridRectangle(
 // row and improving terrain paintPoint too. All 384 construction/return/query
 // combinations were tested; the remaining proxy and arithmetic calls still
 // need recovery. Keep their canonical boundaries rather than flattening them.
+// Shared grid/proxy controls can restore the += call (70.2846%) but introduce
+// unwanted arithmetic calls in terrain painting. Five ordinary operator+
+// placements add no gain; parameter-by-value proxy construction also loses.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -286,6 +289,55 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
+// Refresh 0x4f9f77 copies the translated grid value before passing it to
+// the retained painter proxy at 0x4f9f86. The shared unsigned grid identity
+// follows that proxy's copied coordinate and the painter dimensions, not
+// merely a same-sized point body. Its existing explicit copy constructor
+// reproduces all 22 raw bytes without relocations.
+VA_COMPGEN(0x004FA520, 0x16, CLASS_CTOR, TRmgGridPoint)
+
+// Refresh 0x4f9f60 and line paintPoint's first neighbour pass retain this
+// same two-dword add, returning the receiver for the subsequent value copy.
+// There is no Dreamcast RMG inline declaration. One ordinary definition in
+// this painting TU emits all 33 raw retail bytes while staying available for
+// auto-inlining. The 168-state placement/lifetime family (48 code results)
+// leaves every other tracked RMG score unchanged with this placement alone.
+VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
+TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)
+{
+    m_x += offset.m_x;
+    m_y += offset.m_y;
+    return *this;
+}
+
+// Constructor 0x5b3780 copies five caller arguments into the rule prefix,
+// initializes 58 range records, then groups entries by frame/special flag.
+// The base vptr survives through array initialization; the derived vptr is
+// installed before the scan. Complete-only, with no Dreamcast counterpart.
+// All 179 bytes match, including the shared range constructor's expansion.
+VA(0x005B3780, 0xB3)
+TRmgPatternTerrainRule::TRmgPatternTerrainRule(
+    unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
+    int defaultFrame, unsigned int entryCount, const TRmgTerrainPatternEntry* entries)
+    : TRmgTerrainRule(blendsWithOtherTerrain, allowsSeparatedNeighbours),
+      m_defaultFrame(defaultFrame), m_entryCount(entryCount), m_entries(entries)
+{
+    int frame = m_entries[0].m_frame;
+    unsigned char special = m_entries[0].m_special;
+    int range = frame * 2 + special;
+    ++m_ranges[range].m_count;
+    for (unsigned int index = 1; index < m_entryCount; ++index) {
+        const TRmgTerrainPatternEntry& entry = m_entries[index];
+        if (entry.m_frame != frame || entry.m_special != special) {
+            frame = entry.m_frame;
+            special = entry.m_special;
+            range = frame * 2 + special;
+            m_ranges[range].m_firstIndex = index;
+        }
+        ++m_ranges[range].m_count;
+    }
+}
+
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
 VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
@@ -298,6 +350,13 @@ unsigned char TRmgPatternTerrainRule::hasEntries()
 // boundary. Retail restores the six-slot pure base vtable at 0x642c80.
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
 TRmgTerrainRule::~TRmgTerrainRule()
+{
+}
+
+// Vtables 0x642c98 and 0x642cb0 share the deleting wrapper at 0x5b3a50,
+// which calls the base-only destructor at 0x5b3850. Neither derived rule
+// owns its source table or has any additional destruction work.
+TRmgPatternTerrainRule::~TRmgPatternTerrainRule()
 {
 }
 
@@ -362,6 +421,40 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
+DATA(0x006A4158)
+TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
+
+// Static initializer 0x5b3a10 passes the global at 0x6a4158. Retail clears
+// its 116 ranges, then groups the 48 fixed records by transition and flips.
+// No Dreamcast counterpart exists for this Complete-only table owner.
+// Partial 96.61%: unsigned indexing restores the retail branch signedness
+// (signed indexing: 95.76%). An explicit record-pointer loop gives 92.38%.
+// Residual: VC6 anchors the scan at the Y-flip byte instead of X-flip and
+// compares the record count rather than the fixed table's end address.
+// Flat flip fields and the nested flip pair emit the same constructor bytes.
+VA(0x005B3940, 0xC5)
+TRmgTerrainPatternTable::TRmgTerrainPatternTable()
+{
+    int frame = g_rmgTerrainPatterns[0].m_frame;
+    unsigned char flipX = g_rmgTerrainPatterns[0].m_flipX;
+    unsigned char flipY = g_rmgTerrainPatterns[0].m_flipY;
+    TRmgTerrainPatternRange* range =
+        &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+    ++range->m_count;
+    for (unsigned int index = 1; index < 48; ++index) {
+        const TRmgTerrainTransitionEntry* entry = &g_rmgTerrainPatterns[index];
+        if (entry->m_frame != frame || entry->m_flipX != flipX
+            || entry->m_flipY != flipY) {
+            frame = entry->m_frame;
+            flipX = entry->m_flipX;
+            flipY = entry->m_flipY;
+            range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
+            range->m_firstIndex = index;
+        }
+        ++range->m_count;
+    }
+}
+
 // The sole caller is the static initializer at 0x5b3da0. Retail clears the
 // two inherited rule flags and installs vtable 0x642cb0.
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
@@ -401,9 +494,33 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
     if (oldFrame == -1
         || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
-        oldFrame = rand() % g_rmgTerrainPatternRanges[0].m_count
-            + g_rmgTerrainPatternRanges[0].m_firstIndex;
+        oldFrame = rand() % g_rmgTerrainPatternRanges.m_ranges[0].m_count
+            + g_rmgTerrainPatternRanges.m_ranges[0].m_firstIndex;
     }
+    return oldFrame;
+}
+
+// Vtable 0x642cb0 slot 5. Reuse the old frame only when the fixed record
+// matches the transition and both requested flips; otherwise choose from
+// the corresponding four-way range. Table entries already encode flips,
+// so the selected output flip is zero. Complete-only, no DC counterpart.
+// Exact on the first candidate (116 bytes). The four data references name
+// the fixed table at 0x6424a8, its +4/+5 flip fields, and ranges at 0x6a4158;
+// the delinked image still labels these external data declarations by RVA.
+VA(0x005B3AE0, 0x74)
+int TRmgTableTerrainRule::selectTransitionFrame(
+    int transition, TRmgTerrainFlip requestedFlip,
+    TRmgTerrainFlip& selectedFlip, int oldFrame)
+{
+    if (oldFrame == -1
+        || g_rmgTerrainPatterns[oldFrame].m_frame != transition
+        || g_rmgTerrainPatterns[oldFrame].m_flipX != requestedFlip.m_flipX
+        || g_rmgTerrainPatterns[oldFrame].m_flipY != requestedFlip.m_flipY) {
+        TRmgTerrainPatternRange& range = g_rmgTerrainPatternRanges.m_ranges[
+            (transition * 2 + requestedFlip.m_flipX) * 2 + requestedFlip.m_flipY];
+        oldFrame = rand() % range.m_count + range.m_firstIndex;
+    }
+    selectedFlip = TRmgTerrainFlip(0, 0);
     return oldFrame;
 }
 
@@ -434,6 +551,12 @@ static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
     return TRmgTerrainFlip(x, y);
 }
 
+// The retained fill is exact. A 60-case tile-lifetime / packed-receiver /
+// existing-setter matrix leaves paintRectangle at 72.8497%; crossing its
+// top ten parents with six orders of the cache query/terrain/dimension
+// helpers also leaves that caller flat. Both batches move other terrain
+// bodies, but none improves a current score. Preserve this canonical fill;
+// its missing expansion in paintRectangle remains a caller-boundary lead.
 VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, unsigned int index)
@@ -669,6 +792,8 @@ int __fastcall selectTerrainTransition(
 // Signed dimension fields, reversed dimension stores, a named area product,
 // and moving the packed-cell flag initialization into its ctor body are flat.
 // Copy-initializing the empty size temporary retains the wrong size call (92.04%).
+// A focused 60-case matrix of dimension snapshots, member/local area operands,
+// assignment-result references and named products is also flat at 97.9205%.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
@@ -761,9 +886,13 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // and refreshes the base frame for cells already using the selected terrain.
 // This ordinary caller precedes paintPoint in the retail terrain cluster;
 // there is no Dreamcast RMG compiland or recovered source spelling.
-// Residual (69.9804%): all 13 CFG blocks have the retail destinations, but
+// Residual (72.8497%): all 13 CFG blocks have the retail destinations, but
 // initializePackedCell is called where retail expands the adapter read and
 // cache fill. The bound loads, loop registers and tile-zero stores also differ.
+// Sixty bounds/predicate/tile-lifetime candidates lift 69.9804% to this peak
+// with named endpoints and the canonical isPaintTerrain call. Ten retained
+// parents crossed with six for/while/guarded-do forms are all byte-flat here;
+// no other terrain score changes. The nested cache-fill boundary stays open.
 // Restoring this predecessor is byte-neutral for paintPoint's eight-byte
 // multiplication residual. Sharing the base-frame/constructed-tile sequence
 // through another helper leaves selectBaseFrame, the tile constructor and
@@ -773,12 +902,12 @@ void rmgTerrainPainter::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
 {
-    rectangleWidth += x;
-    rectangleHeight += y;
+    unsigned int endX = x + rectangleWidth;
+    unsigned int endY = y + rectangleHeight;
     TRmgGridPoint point;
-    for (point.m_y = y; point.m_y < rectangleHeight; ++point.m_y) {
-        for (point.m_x = x; point.m_x < rectangleWidth; ++point.m_x) {
-            if (getPaintTerrain() != getTerrain(point)) {
+    for (point.m_y = y; point.m_y < endY; ++point.m_y) {
+        for (point.m_x = x; point.m_x < endX; ++point.m_x) {
+            if (!isPaintTerrain(point)) {
                 paintPoint(point);
             } else {
                 int frame = selectBaseFrame(point, m_paintTerrain, -1);
@@ -1078,13 +1207,20 @@ unsigned char rmgTerrainPainter::isVerticalGap(const TRmgGridPoint& point)
 // guards. Booleanizing it through &&, != 0, or a final conditional 1/0
 // instead changes the two destructors' cmp al,bl into test al,al. This one
 // comparison was their final raw-byte difference (549 and 521 bytes).
+// An else-if chain preserves those direct byte returns and raises the
+// repairTerrainPoint caller from 89.9680% to 90.0961% with no collateral.
+// Six predicate forms over ten worklist parents, followed by six helper
+// orders over ten joint parents, isolate this gain; keep the original order.
 unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 {
-    if (isHorizontalGap(point) || isVerticalGap(point))
+    if (isHorizontalGap(point))
         return 1;
-    if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
+    else if (isVerticalGap(point))
+        return 1;
+    else if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
         return 0;
-    return hasSeparatedNeighbours(point);
+    else
+        return hasSeparatedNeighbours(point);
 }
 
 // Repair a one-cell terrain gap, then merge all but the largest remaining
@@ -1093,9 +1229,9 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // point to this method; PaintPoint consumes the resulting repairs.
 // Separate paint statements let the preceding predicate temporaries expire:
 // retail reuses EBP-0x10 at +0x32 and +0xbd. Together with canonical dimension
-// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. All cache
-// reads now retain getPackedCell; the two vertical-gap second-coordinate
-// constructors still over-inline. Retail also retains the copied x at +0x5bb.
+// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. At that
+// checkpoint all cache reads retained getPackedCell, but two vertical-gap
+// second-coordinate constructors over-inlined. Retail retains copied x at +0x5bb.
 // Controls: separate statements alone 80.9056%; dimensions alone 84.5649%;
 // together 89.5970%. A positive-guard rewrite is byte-identical; a byte choice
 // local introduces extra result/branch code (87.1956%). Explicit helper edge
@@ -1103,6 +1239,22 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // named point after += is byte-flat; copy-constructing it changes the load
 // order (89.8583% scratch) but still omits retail's copied-x store. Retain the
 // coordinate construction supported by paintPoint's separate retail evidence.
+// The neighbour-ring scan uses an explicit while(1) header and a word-sized
+// diagonal local: retail +0x4de has a single advance/test header and +0x511
+// copies the full direction before masking its low bit. This raises 90.0961%
+// to 91.3390% and restores the complete retail CFG, without TU collateral.
+// Sixty outer-loop/receiver/width controls and six inner-loop forms over the
+// ten best parents retain the original inner do loop. A top-tested for(;;),
+// explicit header label, do(1), or assignment-condition while still rotates
+// the outer test; reference/pointer gap receivers also lose code agreement.
+// Retail +0x52d leaves both loops directly. A compound inner do condition
+// followed by another test duplicates this comparison and rotates the exit.
+// At 91.3390%, the only remaining call-sequence difference is the coordinate
+// constructor in the final vertical-gap expansion (retail +0x449); the other
+// 45 calls agree. The paired gap-point lifetime controls below do not fix it.
+// Coordinate-assigned operator+ temporaries reach 92.3508% with all exact
+// siblings intact, but keep that same missing constructor and lower both
+// terrain paintPoint and line refresh. This is not a resolved call boundary.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1140,21 +1292,21 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
             ++first;
 
         unsigned int direction = first;
-        while ((direction = (direction + 1) % TILE_DIR_COUNT) != first) {
+        while (1) {
+            direction = (direction + 1) % TILE_DIR_COUNT;
+            if (direction == first)
+                goto gapsBuilt;
             if (!matches[direction]) {
                 unsigned int currentGap = gapCount++;
                 gaps[currentGap].m_weight = 0;
                 gaps[currentGap].m_start = direction;
                 gaps[currentGap].m_length = 0;
                 do {
-                    unsigned char diagonal = direction & 1;
+                    unsigned int diagonal = direction & 1;
                     gaps[currentGap].m_weight += diagonal ? 1 : 2;
                     ++gaps[currentGap].m_length;
                     direction = (direction + 1) % TILE_DIR_COUNT;
                     if (direction == first)
-                        // Retail +0x52d leaves both loops directly. A
-                        // compound do condition followed by another test
-                        // duplicates this comparison and rotates the exit.
                         goto gapsBuilt;
                 } while (!matches[direction]);
             }
@@ -1370,6 +1522,11 @@ void rmgTerrainPainter::paintTransitions()
 // the callers' test al,al proves that only the byte result is consumed.
 // Both bodies and the reference-taking grid constructor pass a raw-byte
 // audit after resolving their real retail relocation destinations.
+// Under the 157638d4 context, 60 named-point lifetime/scope/site combinations
+// do not improve any terrain score: best repairTerrainPoint is 90.4604%,
+// while its modified vertical predicate falls to 78.9709%. Crossing the ten
+// best parents with six orders of these predicates and paintTransitions
+// also gives no gain. Keep both exact canonical bodies and the original order.
 VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
@@ -1630,6 +1787,11 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // copy-initialized point values do not recover the missing cache boundaries.
 // Residual: the first frame query expands getPackedCell where retail calls
 // it; later source call/expansion decisions are also displaced. No pins.
+// A 60-case point/query matrix and a 60-case follow-up crossing ten parents
+// with canonical cache-helper definition order both retain 70.1029% as best,
+// with no collateral gain. Shared/copied points and named frame queries lower
+// the score; moving the existing helper definitions leaves the leading caller
+// unchanged. Reopening this family requires new evidence, not resampling it.
 VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
@@ -1699,6 +1861,20 @@ TRmgTerrainBrush::TRmgTerrainBrush(
         throw TAllocationFailure();
 }
 
+// Residual (78.6021%): ownership cleanup and the completion worklist expand,
+// but needsTerrainRepair remains a call where retail expands it and retains
+// its nested cache/gap queries. The standalone painter destructor is exact.
+// Sixty snapshot/condition/loop forms, ten parents crossed with six predicate
+// forms, and ten joint parents crossed with six helper orders do not improve
+// this boundary. Keep canonical auto_ptr cleanup and the ordinary finish;
+// the predicate family independently improves repairTerrainPoint above.
+// Fifty independent primary/secondary snapshot combinations also stay at
+// this peak or lower: the two snapshot sites do not expose an intermediate
+// expansion state in the measured five-lifetime/two-condition family.
+// Copy-through-assignment grid construction expands the predicate (92.1398%),
+// but loses the retained copy body and lowers exact changeTerrain to 81.3309%.
+// Mixed construction, explicit assignment and returned-value controls do not
+// recover all three boundaries together; the canonical copy interface stays.
 VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
@@ -1738,9 +1914,73 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 
+// The terrain work set's insertion at 0x5b7cd0 calls the admitted grid-point
+// comparator and the retained node insertion at 0x5b8720. Both node insertion
+// and initialization allocate 0x18-byte nodes and share nil at 0x6a52c4
+// (reference count 0x6a52c8). Existing set operations emit all three bodies.
+// Initialization and node insertion match all 168/766 bytes.
+// Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
+// copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
+// Public insert reaches 79.83%: its named call sequence agrees, but VC6 elides the lock
+// scope's EH frame and emits four returns where retail shares one tail.
+// Preserve the canonical Dinkumware implementation and real comparator.
+VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPoint)
+VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPoint)
+VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
+// Public insert's predecessor test calls this node walk; its color field
+// at +0x14 and nil references identify the same terrain point-set instance.
+// The naturally emitted body matches all 179 bytes.
+VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
+
+// PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
+// obtains upper/lower bounds, counts their iterator range, erases that
+// range, and returns size_type (ret 4). This is public erase(key), not
+// private _Erase(node): the old TREE_ERASE probe paired the wrong body
+// and scored 36.62%. The existing set calls naturally emit this overload,
+// which matches all 89 bytes under the correct TREE_ERASE_KEY claim.
+VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
+
+// The retained erase(key) calls 0x5b7e30 with two iterators and a hidden
+// result pointer. Its whole-range branch recursively clears nodes through
+// 0x5b85f0; its partial-range branch increments then calls 0x5b8090.
+// All three share the point tree's nil sentinel at 0x6a52c4. These ordinary
+// Dinkumware bodies are naturally emitted by the existing set operations.
+// All 289/1295/126 bytes match respectively. The retained _Lockit destructor
+// at 0x60b634 releases the CRT lock through LeaveCriticalSection.
+VA_COMPGEN(0x005B7E30, 0x121, TREE_ERASE_RANGE, TRmgGridPoint)
+VA_COMPGEN(0x005B8090, 0x50F, TREE_ERASE_ITERATOR, TRmgGridPoint)
+VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPoint)
+
+// Both erase overloads and the admitted distance loop retain this successor
+// walk. Its 0x6a52c4 nil references prove the terrain point-set ownership;
+// the naturally emitted TRmgGridPoint specialization matches all 163 bytes.
+// This replaces the provisional TPoint claim and its artificial emission
+// wrapper in rmg.cpp. The two specializations have distinct nil symbols.
+VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPoint)
+
+// The one-point lookup calls _Lbound and tests y/x before returning an
+// iterator through the hidden result pointer (ret 8). Residual 99.4634%:
+// ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
+// Banked MAX 100%: two comparator batches (24 branch/binding forms, then
+// 108 capture/operand forms) found 28 exact observations. A full build with
+// `unsigned int ry = right.m_y; unsigned int ly = left.m_y;` before the
+// lexical comparison verified and banked find's exact body. That form lowers
+// standalone operator< to 98.75%; restoring its direct expression recovers
+// its 100% while find's unchanged-source MAX retains the exact observation.
+// Simultaneous CUR exactness remains unresolved; no candidate closes both.
+VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
+
 // The terrain painter constructor erases a range of packed two-byte cells.
 // The naturally emitted specialization agrees with all 53 retail bytes.
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
+
+// paintTransitions' edge-count vector constructor retains this byte fill
+// after the recovered neighbour scopes and coordinate translation. Retail's
+// zero-count guard, null destination guard and one-byte stride identify the
+// canonical unsigned-char specialization independently of the caller. All
+// 36 bytes agree on the first full checkpoint; the parked entry predated
+// the caller's recovered neighbour scopes.
+VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.

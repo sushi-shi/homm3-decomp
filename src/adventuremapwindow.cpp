@@ -3009,6 +3009,15 @@ void std::basic_string<char>::_Eos(unsigned n)
 // COMDAT pairing: _Grow on the char instantiation, mnemonic agreement 0.971.
 VA_COMPGEN(0x00404a90, 0x122, BASIC_STRING_GROW, char)
 
+// Dinkumware _Copy is emitted by this compiland's ordinary string calls.
+// The retail main path at 0x404c27 jumps over catch 0x404c29 into 0x404c50;
+// that catch instead returns 0x404c4a, restoring the same parent's EBX/ESI.
+// FuncInfo 0x648070 proves that ownership. These are one 264-byte COMDAT,
+// not a separate game function at the continuation's former carved address.
+// Exact after correcting that boundary: 21 CFG blocks, three calls and all
+// 264 instruction bytes agree. Only the FuncInfo label remains anonymous.
+VA_COMPGEN(0x00404BD0, 0x108, BASIC_STRING_COPY, char)
+
 // COMDAT pairing: std::_Construct<widget*>, 9 B against this compiland's
 // single 9-byte COMDAT. Declarator form: the authority keys the free
 // template flat (std__construct) with no owner arm.

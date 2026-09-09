@@ -80,6 +80,19 @@ public:
     // Before normalization: ReferenceCount.
     int m_referenceCount;
 
+    // Dreamcast resrce.h:33-37; the cache getters and disposal paths
+    // expand these same field operations in Complete. Original spellings:
+    // get_resType, get_Name, AddRef, Release.
+    EResourceType getResType() const { return m_resType; }
+    const char* getName() const { return m_name; }
+    int addRef() { return ++m_referenceCount; }
+    int release()
+    {
+        if (m_referenceCount > 0)
+            --m_referenceCount;
+        return m_referenceCount;
+    }
+
     resource(const char* newName, EResourceType newType);
     virtual ~resource();         // slot 0
     // Before normalization (function): resource::Dispose.

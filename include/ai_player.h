@@ -179,11 +179,11 @@ protected:
     void dumpExtraCreature();
     // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
     // Before normalization (locals): is_shooter, check_alignments.
-    long chooseWeakestArmy(bool isShooter, bool checkAlignments);
+    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::value_of_adding_army.
     long valueOfAddingArmy(TCreatureType type, short count,
                               // Before normalization (locals): must_replace_creature.
-                              short& slot, bool mustReplaceCreature);
+                              short& slot, unsigned char mustReplaceCreature);
 
 public:
     type_AI_creature_swapper();
@@ -372,7 +372,7 @@ long aiValueOfObservatory(struct type_point origin, long playerId, long range);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:2692, dc 0x323bc) void AI_consolidate_army(armyGroup* current_army);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:2718, dc 0x32430) void AI_arrange_army(armyGroup* current_army);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:2778, dc 0x325bc) long split_army(armyGroup* current_army, short index, short limit, short open_slots);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:2817, dc 0x32670) void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy);
+// CODEVIEW(E:\gamedcs\ai_player.cpp:2817, dc 0x32670) void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup& enemy);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:2952, dc 0x3285c) void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:2975, dc 0x32894) void mark_danger_zones(const hero* our_hero, hero* enemy_hero, long* danger_zones);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:3013, dc 0x329f8) void AI_mark_danger_zones(hero* current_hero, long* danger_zones);

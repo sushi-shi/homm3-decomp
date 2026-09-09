@@ -66,7 +66,7 @@ public:
 
     // Before normalization (function): slider::Main.
     virtual int main(message* msg);                 // slot 2
-    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): slider::Draw.
     virtual void draw();                            // slot 4
     virtual int getRealHeight() const;                    // slot 5

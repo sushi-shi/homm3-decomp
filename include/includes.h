@@ -31,10 +31,15 @@ inline int min(int left, int right)
 // through the by-value limit wrapper in the adventure and small-window TUs.
 template <class T>
 inline const T& tLimit(const T& minimum, const T& value,
-                               const T& maximum)
+                       const T& maximum)
 {
-    return value < minimum ? minimum
-                           : (maximum < value ? maximum : value);
+    if (value < minimum) {
+        return minimum;
+    } else if (maximum < value) {
+        return maximum;
+    } else {
+        return value;
+    }
 }
 
 // E:\gamedcs\includes.h:134

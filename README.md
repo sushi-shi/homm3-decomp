@@ -12,24 +12,24 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 92.83%** — fuzzy-weighted bytes over all 1,998,823 unfiltered bytes.
+**Executable matched: 96.04%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 3,932 / 4,765 functions exact (82.5%) across the full engine (4563 in linked units).
+**Match score** — 4,062 / 4,764 functions exact (85.3%) across the full engine (4752 in linked units).
 
-**Function exact MAX** — 3,939 / 4,765 current implementations (82.7%) have reached 100%.
+**Function exact MAX** — 4,082 / 4,764 current implementations (85.7%) have reached 100%.
 
 | Module        | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`        |   132 | 3863 / 4494 (86.0%) | 3870 / 4494 (86.1%) |  96.65% |    96.72% |
+| `game`        |   135 | 3993 / 4683 (85.3%) | 4013 / 4683 (85.7%) |  96.26% |    96.48% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |      0 / 202 (0.0%) |      0 / 202 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |       0 / 12 (0.0%) |       0 / 12 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       914 |  110,625 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 

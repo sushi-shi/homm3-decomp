@@ -37,9 +37,12 @@ public:
     virtual ~textWidget();  // retail 0x5bc3b0
     // Before normalization (function): textWidget::Main.
     virtual int main(message* msg);
-    virtual void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): textWidget::Draw.
     virtual void draw();
+    // Dreamcast textwdgt.cpp:257, original spelling Dim. Retail slot 8
+    // is empty, overriding widget::Dim's screen darkening operation.
+    virtual void dim() const;
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
     // /Gy header COMDAT far outside textwdgt.obj's band: it takes one
@@ -75,7 +78,7 @@ public:
     virtual int open(int priority, heroWindow* parent);
     // Before normalization (function): type_text_scroller::Main.
     virtual int main(message* msg);
-    virtual void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): type_text_scroller::Draw.
     virtual void draw();
     // Before normalization (function): type_text_scroller::SetText.
@@ -124,13 +127,14 @@ public:
                            font::TColor color, int id, unsigned justify,
                            int style);
     // Implicit destructor; CodeView dc 0x1653b0 compgenx.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw();  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:319, dc 0x165184) void bitmapBackedTextWidget::bitmapBackedTextWidget();
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:325, dc 0x1651d8) void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style);
-// CODEVIEW(E:\gamedcs\textwdgt.cpp:345, dc 0x165254) void bitmapBackedTextWidget::zBufferDraw();
+// CODEVIEW(E:\gamedcs\textwdgt.cpp:345, dc 0x165254) void bitmapBackedTextWidget::zBufferDraw(unsigned short*, int) const;
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:348, dc 0x165258) void bitmapBackedTextWidget::Draw();
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:320, dc 0x16537c) void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:320, dc 0x1653b0) void bitmapBackedTextWidget::~bitmapBackedTextWidget();
@@ -149,9 +153,9 @@ public:
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:95, dc 0x164d24) void textWidget::~textWidget();
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:102, dc 0x164d68) void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::TColor _color, unsigned _justify, unsigned char focusable);
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:120, dc 0x164dd4) int textWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\textwdgt.cpp:232, dc 0x164f7c) void textWidget::zBufferDraw();
+// CODEVIEW(E:\gamedcs\textwdgt.cpp:232, dc 0x164f7c) void textWidget::zBufferDraw(unsigned short*, int) const;
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:235, dc 0x164f80) void textWidget::Draw();
-// CODEVIEW(E:\gamedcs\textwdgt.cpp:257, dc 0x165034) void textWidget::Dim();
+// CODEVIEW(E:\gamedcs\textwdgt.cpp:257, dc 0x165034) void textWidget::Dim() const;
 // CODEVIEW(E:\gamedcs\TextWdgt.h:78, dc 0x1652f4) void textWidget::SetColor(font::TColor new_color);
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:42, dc 0x1652fc) void* textWidget::`scalar deleting destructor'(unsigned __flags);
 

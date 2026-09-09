@@ -1,5 +1,9 @@
 # `why-branch` — the control-flow solver (v1)
 
+For the project-wide inventory and controlled reductions, see the
+[goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
+show why a matching assembly join alone does not establish an original goto.
+
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /
 branch-shape** residual (not a register binding) and runs a guided oracle
@@ -95,6 +99,23 @@ and the later home reuse. Merely seeing two values share a stack offset is
 insufficient: unrelated locals can also share a slot. Keep the actual source
 operations and references; do not add dummy address escapes or volatile.
 
+## Integral conversion can separate a loop index from a vector argument
+
+The Pandora's Box spell factory (`0x534520`) scans spell traits with a
+136-byte induction stride and copies the integer spell ID to a temporary
+before the expanded `vector<int>::push_back`. Passing an `int` loop variable
+directly exposes its address to the insertion and leaves a multiply-derived
+trait address in each iteration (85.8423%). A `long` loop variable converts
+to the vector's `int` element type, restoring both the copied argument and
+retail's induction stride; the entire 615-byte function matches exactly.
+
+A separate `int spellId = spell` passed to `push_back` is also exact. Writing
+`int(spell)` with an already-`int` index is byte-identical to the direct
+reference form under VC6 and does not create the required boundary. Inspect
+the actual caller's argument copy and loop addressing before choosing a
+conversion or a separately scoped payload; neither form proves the original
+source spelling by itself.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are
@@ -159,6 +180,19 @@ rc 0
 The search independently reproduces the catalog's D2 claim: only the
 `while (1)+break` forms unrotate; `for (;;)+break`, do-while and the goto
 transcription still rotate/duplicate.
+
+The Complete-only RMG repair method (`0x5b5440`) confirms this distinction
+with a nested circular scan and an exit from both loops. Retail `+0x4de`
+advances at one header. An assignment-condition outer `while` duplicates
+that test; an explicit `while (1)` advance/test/goto restores the entire
+71-block CFG, whereas equivalent `for (;;)`, `do (1)` and labelled-header
+forms still rotate. A word-width diagonal local also recovers the full-register
+copy at `+0x511`. The combined source change raises 90.0961% to 91.3390%
+without collateral. The 60 outer-loop/receiver/width candidates and 60 top-ten
+inner-loop refinements in `generate-rmg-gap-scan-hypotheses.py` all compile;
+the latter add no gain. The native oracle exhausts all nonempty ring masks.
+This extends the measured D2 behaviour to a multi-loop exit; it does not make
+equivalent source loop forms interchangeable in the VC6 oracle.
 
 **D4 merged return — recovered, rc 0.**
 ```

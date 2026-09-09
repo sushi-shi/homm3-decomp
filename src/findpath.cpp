@@ -417,258 +417,77 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
                                CREATURE_NOMAD) > 0);
 }
 
-// PushPoint's cursed/garrison terrain test, lifted for the /Ob2 BUDGET probe.
-// Before normalization (function): terrain_forbids_magic.
-static unsigned char terrainForbidsMagic(type_point where)
-{
-    TAdventureObjectType special =
-        g_game->m_worldMap.cell(where.m_x, where.m_y, where.m_z)
-            ->getSpecialTerrain();
-    return special == CURSED_GROUND || special == GARRISON;
-}
-
-// PushPoint's ordering key search, lifted out of its body for the /Ob2
-// BUDGET (2026-08-20).  There is NO Dreamcast row for this - the roster runs
-// PushPoint at findpath.cpp:271 straight to TestPossibleDirections at 461 with
-// nothing between, and it does list the helpers a build inlined away (that is
-// how build_combat_path and mark_enemy are known) - so this is a codegen
-// device, in the same class as the statement pins above it and not a claim
-// about retail's source.
+// E:\gamedcs\findpath.cpp:271..447 (dc 0x9f2a4). Dreamcast proves
+// const pathCell& old_cell, pathCell& point, the local upper/lower binary
+// search, and the eight point stores at lines 429..436. Retail's ret 0x20
+// agrees with the eight stack arguments. Original local spellings include
+// adjusted_cost, pCell, move_cost, barrier_value, delta_x and delta_y.
+// The queue orders barrier plus danger after this turn's movement, with
+// adjusted cost breaking ties. Only after queue/visited insertion is the
+// point copied to its grid cell. Retail's dead erase copy loop requires
+// erase(end()-1) for the 500-entry cap; DC line 396 instead calls pop_back.
 //
-// What it buys: the budget is `clamp(2 * caller_cb, 1000, 35000)` and the
-// nested expansions get `budget / sites-remaining`, so a pre-inline caller
-// larger than retail's makes our CL expand callees retail keeps out of line.
-// Shrinking caller_cb by this one block takes PushPoint 74.3805 -> 81.1401
-// and brings the whole queue.insert expansion into agreement: ten calls each
-// side, matching in IDENTITY as well as count (new, _Construct, _Ufill,
-// _Ucopy, _Destroy, operator delete, size, _Ucopy, _Ufill, _Ucopy) where
-// before we called _Construct at two of the sites retail calls _Ufill and
-// _Ucopy at.  It costs no symbol: findpath.obj defines no find_queue_slot.
+// Removed the old terrainForbidsMagic, findQueueSlot and fillPathCell
+// compiler-budget probes and the tail-insert inline_depth(0) pin. Their
+// prior 87.5488% peak is superseded; none had source-boundary evidence.
+// The real game::get_cell accessor remains a canonical game.h inline.
 //
-// The lever is DOSE-SENSITIVE, but the GRANULARITY matters more than the
-// count (2026-08-20).  Lifting the WHOLE magic_forbidden block - the next
-// block up - measures 81.1401 -> 76.4357; lifting only the CELL LOOKUP inside
-// it (terrain_forbids_magic, below) is worth 83.7018 -> 87.4589.  When a dose
-// overshoots, try a SMALLER SLICE of the same block before concluding the
-// lever is spent.  Two other slices measured negative from that peak and are
-// recorded so they are not re-spent: the dimension-door delta block
-// 83.7018 -> 63.7172, and the already-visited key comparison
-// 87.4589 -> 72.7429.
-// The second /Ob2 budget dose for PushPoint - see find_queue_slot below.
-// Worth 81.1401 -> 83.7018, and it is what brings visited_points.insert's
-// expansion into agreement with retail's ten calls.  No Dreamcast row; a
-// codegen device.
-// Before normalization (function): fill_path_cell.
-static void fillPathCell(pathCell* point, int direction, long cost,
-                           // Before normalization (locals): barrier_value.
-                           long adjusted, long barrierValue, long danger,
-                           int isTrigger, type_point monster)
-{
-    point->m_direction = direction;
-    point->m_cost = static_cast<unsigned short>(cost);
-    point->m_adjustedCost = static_cast<unsigned short>(adjusted);
-    point->m_barrierValue = barrierValue;
-    point->m_dangerValue = danger;
-    point->m_isTrigger = isTrigger;
-    point->m_monster = monster;
-    point->m_visited = 1;
-}
-
-// Before normalization (function): find_queue_slot.
-static int findQueueSlot(searchArray* search, long key, long adjusted)
-{
-    int last = search->m_queue.size();
-    int middle = last >> 1;
-    int first = 0;
-    while (last > first) {
-        // Before normalization (locals): entry_key.
-        long entryKey = search->m_queue[middle].m_barrierValue;
-        if (search->m_queue[middle].m_cost > search->m_thisTurnsMovement)
-            entryKey += search->m_queue[middle].m_dangerValue;
-        if (entryKey < key
-                || (entryKey == key
-                    && adjusted < search->m_queue[middle].m_adjustedCost))
-            first = middle + 1;
-        else
-            last = middle;
-        middle = (first + last) >> 1;
-    }
-    return middle;
-}
-
-// E:\gamedcs\findpath.cpp:271
-// `ret 0x20` = eight stack arguments over the thiscall `this`, the DC
-// count exactly. The first thing the body does is `mov edx,[ebp+8];
-// mov ax, word [edx+0x18]` - a 16-bit read at pathCell+0x18, which is
-// `cost` - so parameter one really is the const pathCell* old_cell.
-//
-// RECONSTRUCTED 2026-08-14. The body is the search's ONE writer: it
-// prices the candidate against the cell already recorded for that square,
-// inserts it into the priority queue at the position a hand-rolled binary
-// search finds, and only then copies it over the grid record. Both halves
-// of the ordering key are visible in the bytes - `barrier_value`, plus
-// `danger_value` once the step leaves this turn's movement allowance, with
-// `adjusted_cost` as the tie-break - which is what fixes the three long
-// fields' roles.
-//
-// THREE STL EXPANSIONS ARE SPELLED HERE, all of them Dinkumware's:
-//   * `queue.erase(queue.end() - 1)` when the queue is already 500 deep -
-//     erase(iterator) is copy(_P+1, _Last, _P) then --_Last, and with
-//     _P == _Last-1 the copy's own `cmp eax, ecx` decides nothing, which
-//     is exactly the dead loop retail emits at 0x4b1a95.
-//   * `queue.insert(pos, 1, *point)` TWICE, and only the FIRST is inlined.
-//     That is the /Ob2 budget running out mid-body, not two different
-//     calls: the inlined copy carries the whole three-arm insert
-//     (grow / _Ucopy+_Ufill+fill / _Ucopy+copy_backward+fill) and the
-//     out-of-line one is the same symbol. The `jb` that picks between them
-//     is the signed `middle` being widened against the unsigned size().
-//   * `visited_points.insert(visited_points.end(), 1, dest)`, whose
-//     four-byte stride is what retyped that member (see findpath.h).
-//
-// get_cell and get_danger_cell are findpath.h's own inlines and both
-// expand here verbatim - the `z*2 + !last_can_stop` plane selector and the
-// `[danger_zones + 4*index]` load - which is the cheapest corroboration
-// that this really is the adventure-map searcher's push.
-//
-// 57.4653 -> 74.3805% 2026-08-20, and the whole 16.9 points is ONE
-// statement-scoped `#pragma inline_depth(0)` on the SECOND
-// `queue.insert`. The note above had already read retail correctly -
-// only the first arm is expanded - but the class was recorded as
-// unreachable because nothing was known to impose a refusal the /Ob2
-// budget rule accepts. The pragma imposes it. Two bounds measured right
-// here: hoisting `queue.end()` into `tail` FIRST is worth 0.54
-// (73.8393 pinned in place against 74.3805 hoisted), because the pin is
-// statement-granular and would otherwise de-inline `end()` too; and the
-// SAME pin on `visited_points.insert` LOSES 6.68 (74.3805 -> 67.6979),
-// so retail really does expand that one - the pin is only correct where
-// retail keeps the whole callee out of line.
-//
-// THE BRANCH COUNT SAYS THE INLINE STORY IS NOT FINISHED (2026-08-20).
-// `why-branch` prices this body at base 73 conditional branches against
-// retail's 78 - FIVE short, on a call multiset that pairs 23/22 - and the
-// target-only runs in the unmasked diff are all vector-insert internals:
-// a capacity computation (`sub ecx,edx / sar ecx / cmp ecx,<max> / ja`), a
-// `_Ucopy` walk and a `_Construct` fill that retail EXPANDS and we call.
-// That is the UNDER-inline direction, i.e. the opposite of the three
-// caller-shrink doses below, so the sequential spend has been pushed past
-// its optimum at these late sites rather than the lever being wrong.
-//
-// TITRATED 2026-08-20 WITH THE `if (0)` cb INSTRUMENT, AND THE DIRECTION IS
-// CONFIRMED - BUT NO REAL CARRIER REACHES IT.  Wrapping N dead arithmetic
-// statements in `if (0)` at the top of the body grows caller_cb without
-// touching the candidate-site count, and the curve is:
-//   N=  0    8   12   16   20   24   26   28   30   32   40   80
-//     87.55 88.62 86.31 90.80 91.64 91.95 91.05 91.97 91.97 90.81 88.54 82.19
-// The peak is +4.42 (87.5488 -> 91.9730 at N=28..30), and at that dose the
-// branch count crosses retail's: 73 at N=0, 78 in retail, 80 at N=28.  So
-// the body genuinely wants a caller roughly 28 statements LARGER and the
-// wall is the /Ob2 NUMERATOR, not the divisor.
-//
-// EVERY REAL CARRIER MEASURED WORSE, and they are recorded so the next lane
-// does not re-spend them.  Un-lifting a dose adds its cb but also REMOVES a
-// candidate site, and the divisor change dominates: fill_path_cell 87.10,
-// terrain_forbids_magic 79.70, find_queue_slot 85.87, the last two together
-// 75.78.  Handing budget forward with an early statement pin fails too -
-// `inline_depth(0)` on the erase 86.08, on find_queue_slot 75.53, on
-// fill_path_cell 81.66, on terrain_forbids_magic 86.36, on the
-// `queue.size() >= 500` test 85.96.  So do NOT re-try "pin an early site to
-// free budget for the later ones" here; it is measured five ways.
-// Container spellings are also already optimal: `queue.pop_back()` for the
-// erase 86.89, the single-element `insert(pos, val)` 57.80,
-// `visited_points.push_back(dest)` 75.94, and passing
-// terrain_forbids_magic three longs instead of a type_point 81.30.
-// Re-titrating the third dose as a SMALLER slice (a helper returning the
-// TAdventureObjectType with the two comparisons left in the caller) is
-// 87.4589 - exactly the pre-`NewfullMap::cell` value, i.e. the granularity
-// step is below /Ob2's threshold and only the accessor's +0.09 moves.
-// What is still unexplored: a real statement or block that PushPoint is
-// missing.  It would have to be worth ~28 statements of cb, and the score
-// at N=0 (87.55) is too high for that much real code to be absent, so the
-// honest reading is that this is a codegen-device wall, not a source one.
-// The `terrain_forbids_magic` helper now reads the map through
-// `NewfullMap::cell` (+0.09 here; +10.58 on GetTerrainCost, +5.62 on
-// TestPossibleDirections - see those bodies).
-//
-// Residual (87.5488%): 74.3805 -> 81.1401 -> 83.7018 -> 87.4589 on the
-// caller-shrink lever, in THREE doses, and the call multiset now sits at 23
-// out-of-line calls against retail's 22 with every name pairing by count.
-// What is left is the register-homing family (retail binds the map-cell base
-// to EDI where we bind EBX) plus one folded iterator: our
-// `queue.erase(queue.end() - 1)` emits `mov eax,[edi+8] / sub eax,0x1c /
-// add eax,0x1c` where retail folded `_P + 1` straight back to `_Last`.
-//
-// LOCALISED 2026-08-20 by aligning the two call sequences site by site. The
-// old note said the six callees we expand and retail calls were "all of them
-// NESTED inside the first insert's own expansion". They were not - the queue
-// insert was already agreeing in count, and the six were in `visited_points`:
-//
-//   queue.insert's expansion: TEN calls each side, and since the caller
-//   shrink they agree in IDENTITY too - new +0x570/+0x581, _Construct
-//   +0x58e/+0x59f, _Ufill +0x5b2/+0x5c3, _Ucopy +0x5c5/+0x5d6, _Destroy
-//   +0x5d4/+0x5e5, operator delete +0x5dd/+0x5ee, size +0x5f9/+0x60a, _Ucopy
-//   +0x63b/+0x64c, _Ufill +0x666/+0x677, _Ucopy +0x69f/+0x6a4. Before the
-//   shrink we called _Construct at the two sites retail calls _Ufill
-//   (0x434c30) and _Ucopy (0x434bf0) at.
-//
-//   visited_points.insert's expansion took the SECOND dose (lifting the eight
-//   field stores into fill_path_cell, 81.1401 -> 83.7018) and now agrees to
-//   the call: new +0x74f/+0x763, _Construct<pathCell*> +0x769/+0x77d and
-//   +0x786/+0x79a, _Ucopy +0x796/+0x7aa, _Destroy +0x7a5/+0x7b9, delete
-//   +0x7ae/+0x7c2, size +0x7c4/+0x7d8, _Ucopy +0x7ec/+0x800, _Ufill
-//   +0x80a/+0x81e, _Ucopy +0x82c/+0x840.
-//
-// WHAT IS LEFT is two things, both small. (1) One identity swap inside the
-// queue grow arm: at slots two and three we emit _Ucopy +0x583 and _Construct
-// +0x58f where retail emits _Construct +0x59f and _Ufill +0x5c3 - one more
-// notch of budget in either direction. (2) The out-of-line `insert` sits at
-// +0x6dc, AFTER the expansion, where retail's is at +0x4d2, before it.
-// Writing the test as `middle >= queue.size()` with the blocks swapped - what
-// retail's `cmp ecx,edx / jb <expanded arm>` looks like read literally - is
-// still worse, and has now been measured in BOTH inline structures:
-// 74.3805 -> 67.4717 before the shrink, 83.7018 -> 81.0180 after.
-// Before normalization (locals): old_cell, move_cost, barrier_value, delta_x, delta_y, dest_key.
+// 2026-09-08: 72 public vector-overload/arm-order/midpoint-lifetime
+// hypotheses recover 97.8175% with DC's push_back/insert/push_back sequence.
+// Retail also supports the explicit three-way key comparison, rather than
+// the probe's combined Boolean test. Computing the first midpoint before
+// the loop and updating it after each bound recovers retail's loop layout;
+// the equivalent top-tested loop is 94.3098%. All 72 candidates pass an
+// independent linear-order oracle across 12,800 cap/tie/cost/alias cases.
+// A further 24 declaration/scope/erase-iterator controls reach 98.2622%
+// by initializing cheaper before the key comparison, as retail does.
+// Hoisting upper/lower or adding visited-branch braces is byte-flat;
+// a named erase iterator falls to 98.1234%. No other TU score falls.
+// Residual: stack homes, the folded erase iterator and pointer-vector
+// _Destroy retention in visitedPoints' grow arm. All interior queue-insert
+// calls, including the retained _Construct<pathCell>, now agree naturally.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
-void searchArray::pushPoint(const pathCell* oldCell, pathCell* point,
+void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
                             int direction, int moveCost, int limit,
                             long barrierValue, type_point monster,
                             int isTrigger)
 {
-    long cost = oldCell->m_cost + moveCost;
-    long adjusted = point->m_adjustedCost - point->m_cost + cost;
+    long cost = oldCell.m_cost + moveCost;
+    long adjustedCost = point.m_adjustedCost - point.m_cost + cost;
 
-    if (!point->m_point.isValid())
+    if (!point.m_point.isValid())
         return;
-    if (point->m_point.m_x < m_validRectangle.left || point->m_point.m_x >= m_validRectangle.right
-            || point->m_point.m_y < m_validRectangle.top || point->m_point.m_y >= m_validRectangle.bottom)
+    if (point.m_point.m_x < m_validRectangle.left || point.m_point.m_x >= m_validRectangle.right
+            || point.m_point.m_y < m_validRectangle.top || point.m_point.m_y >= m_validRectangle.bottom)
         return;
 
-    point->m_lastPoint = oldCell->m_point;
-    point->m_lastCanStop = oldCell->m_canStop;
-    if (point->m_dimensionDoor) {
-        if (point->m_canStop && isTrigger)
+    point.m_lastPoint = oldCell.m_point;
+    point.m_lastCanStop = oldCell.m_canStop;
+    if (point.m_dimensionDoor) {
+        if (point.m_canStop && isTrigger)
             return;
-        if (!oldCell->m_canStop) {
-            point->m_lastPoint = oldCell->m_lastPoint;
-            point->m_lastCanStop = 1;
+        if (!oldCell.m_canStop) {
+            point.m_lastPoint = oldCell.m_lastPoint;
+            point.m_lastCanStop = 1;
         }
-        long deltaX = point->m_point.m_x - point->m_lastPoint.m_x;
-        long deltaY = point->m_point.m_y - point->m_lastPoint.m_y;
+        long deltaX = point.m_point.m_x - point.m_lastPoint.m_x;
+        long deltaY = point.m_point.m_y - point.m_lastPoint.m_y;
         if (abs(deltaX) > 9)
             return;
         if (abs(deltaY) > 8)
             return;
-        point->m_deltaX = deltaX;
-        point->m_deltaY = deltaY;
+        point.m_deltaX = deltaX;
+        point.m_deltaY = deltaY;
     } else {
-        point->m_deltaX = 0;
-        point->m_deltaY = 0;
+        point.m_deltaX = 0;
+        point.m_deltaY = 0;
     }
 
     long danger = 0;
     if (m_dangerZones != 0) {
-        danger = *getDangerCell(m_dangerZones, point->m_point);
+        danger = *getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
-            danger = cppMin(oldCell->m_dangerValue, danger);
+            danger = cppMin(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
             // below it. Spelled as the literal retail compares against.
@@ -677,22 +496,22 @@ void searchArray::pushPoint(const pathCell* oldCell, pathCell* point,
         }
     }
 
-    pathCell* dest = getCell(point->m_point, !point->m_canStop);
+    pathCell* cell = getCell(point.m_point, !point.m_canStop);
 
+    unsigned char cheaper = 0;
     long key = barrierValue;
     if (cost > m_thisTurnsMovement)
         key = danger + barrierValue;
 
-    unsigned char cheaper = 0;
-    if (dest->m_visited) {
-        long destKey = dest->m_barrierValue;
-        if (dest->m_cost > m_thisTurnsMovement)
-            destKey += dest->m_dangerValue;
-        if (destKey > key)
+    if (cell->m_visited) {
+        long cellKey = cell->m_barrierValue;
+        if (cell->m_cost > m_thisTurnsMovement)
+            cellKey += cell->m_dangerValue;
+        if (cellKey > key)
             return;
-        if (destKey < key)
+        if (cellKey < key)
             cheaper = 1;
-        else if (adjusted >= dest->m_adjustedCost)
+        else if (adjustedCost >= cell->m_adjustedCost)
             return;
     }
 
@@ -701,47 +520,58 @@ void searchArray::pushPoint(const pathCell* oldCell, pathCell* point,
         return;
     }
 
-    if (dest->m_visited) {
-        point->m_magicForbidden = dest->m_magicForbidden;
+    if (cell->m_visited) {
+        point.m_magicForbidden = cell->m_magicForbidden;
     } else {
-        point->m_magicForbidden = 0;
+        point.m_magicForbidden = 0;
         if (m_canCastTeleport || m_canSummonBoat || m_canCastFlight
                 || m_canCastWaterWalk) {
-            if (terrainForbidsMagic(point->m_point))
-                point->m_magicForbidden = 1;
+            NewmapCell* mapCell = g_game->getCell(point.m_point);
+            TAdventureObjectType special = mapCell->getSpecialTerrain();
+            if (special == CURSED_GROUND || special == GARRISON)
+                point.m_magicForbidden = 1;
         }
     }
 
     if (m_queue.size() >= 500)
         m_queue.erase(m_queue.end() - 1);
 
-    int middle = findQueueSlot(this, key, adjusted);
-
-    fillPathCell(point, direction, cost, adjusted, barrierValue, danger,
-                   isTrigger, monster);
-
-    if (middle < m_queue.size())
-        m_queue.insert(m_queue.begin() + middle, 1, *point);
-    else {
-        // OVER-INLINE, pinned. Retail expands the `begin() + middle` arm
-        // and CALLS this one - the same symbol, the /Ob2 budget simply
-        // running out between the two arms. `end()` is hoisted out of the
-        // pinned statement first because retail keeps it inline
-        // (57.4653 -> 73.8393 without the hoist, 74.3805 with it).
-        // The arms are in RETAIL'S ORDER: writing the test as
-        // `middle >= size()` with the two blocks swapped - which is what
-        // retail's `cmp/jb` into the expanded arm at +0x4dc looks like -
-        // measures 74.3805 -> 67.4717.
-        pathCell* tail = m_queue.end();
-#pragma inline_depth(0)
-        m_queue.insert(tail, 1, *point);
-#pragma inline_depth()
+    int upper = m_queue.size();
+    int lower = 0;
+    int middle = (upper + lower) >> 1;
+    while (upper > lower) {
+        long entryKey = m_queue[middle].m_barrierValue;
+        if (m_queue[middle].m_cost > m_thisTurnsMovement)
+            entryKey += m_queue[middle].m_dangerValue;
+        if (entryKey < key)
+            lower = middle + 1;
+        else if (entryKey > key)
+            upper = middle;
+        else if (adjustedCost < m_queue[middle].m_adjustedCost)
+            lower = middle + 1;
+        else
+            upper = middle;
+        middle = (upper + lower) >> 1;
     }
 
-    if (!dest->m_visited && point->m_canStop)
-        m_visitedPoints.insert(m_visitedPoints.end(), 1, dest);
+    point.m_direction = direction;
+    point.m_cost = static_cast<unsigned short>(cost);
+    point.m_adjustedCost = static_cast<unsigned short>(adjustedCost);
+    point.m_barrierValue = barrierValue;
+    point.m_dangerValue = danger;
+    point.m_isTrigger = isTrigger;
+    point.m_monster = monster;
+    point.m_visited = 1;
 
-    *dest = *point;
+    if (middle >= m_queue.size())
+        m_queue.push_back(point);
+    else
+        m_queue.insert(m_queue.begin() + middle, point);
+
+    if (!cell->m_visited && point.m_canStop)
+        m_visitedPoints.push_back(cell);
+
+    *cell = point;
 }
 
 
@@ -1131,7 +961,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     boatCell.m_flying = 0;
                     boatCell.m_waterWalking = 0;
                 }
-                pushPoint(source, &boatCell, direction, boatCost,
+                pushPoint(*source, boatCell, direction, boatCost,
                           maxMobility, boatCell.m_barrierValue,
                           boatCell.m_monster, 0);
             }
@@ -1174,13 +1004,13 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (source->m_canStop || !destCell->m_isTrigger
                 || (g_adventureObjectTraits[destCell->m_type][0] == 0
                     && destCell->m_type != TOWN))
-            pushPoint(source, &candidate, direction, cost, maxMobility,
+            pushPoint(*source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster,
                       destCell->m_isTrigger);
         if ((candidate.m_flying || candidate.m_dimensionDoor)
                 && destCell->m_isTrigger && candidate.m_canStop) {
             candidate.m_canStop = 0;
-            pushPoint(source, &candidate, direction, cost, maxMobility,
+            pushPoint(*source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster, 0);
         }
     }
@@ -1557,15 +1387,11 @@ static unsigned char buildCombatPath(searchArray* search,
 
     while (endHex != startHex) {
         pathCell* stepCell = search->getCellData(endHex);
-        // OVER-INLINE, pinned. Retail calls vector<pathCell*>::insert
-        // (0x54d120) at BOTH push sites - +0x672 and +0x734 - and the /Ob2
-        // budget simply ran out between them on our side, exactly as it does
-        // between PushPoint's two queue.insert arms. `end()` is hoisted out of
-        // the pinned statement first because retail keeps it inline.
+        // Retail calls vector<pathCell*>::insert (0x54d120) at both push
+        // sites (+0x672 and +0x734), keeping end() inline. The 2026-09-09
+        // whole-TU control preserves those decisions without a depth pin.
         pathCell** tail = search->m_result.end();
-#pragma inline_depth(0)
         search->m_result.insert(tail, 1, stepCell);
-#pragma inline_depth()
         endHex = currentArmy->getAdjacentCellIndex(
             endHex, oppositeDirection(stepCell->m_direction));
     }
@@ -2104,6 +1930,11 @@ VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)
 // while the free /Gr copy takes first and last in ecx/edx and only the
 // destination on the stack. Retail ends `ret 4`.
 VA_COMPGEN(0x004b4270, 0x35, STD_COPY, pathCell)
+
+// The sole retail call is pushPoint's interior queue-insert growth arm.
+// Restoring its local binary search, field stores, reference parameters and
+// canonical game accessor naturally retains this 22-byte scalar copy.
+VA_COMPGEN(0x004b42b0, 0x16, STD_CONSTRUCT, pathCell)
 
 // COMDAT pairing: vector<pathCell>::_Ufill, agreement 1.000. The object
 // emits two _Ufill instantiations for this element (51 B and 38 B); only the

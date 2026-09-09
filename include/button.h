@@ -136,7 +136,7 @@ public:
     // Before normalization (function): button::Main.
     virtual int main(message* msg);  // slot 2, retail 0x456190
 
-    virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): button::Draw.
     virtual void draw();  // slot 4, retail 0x456940
 

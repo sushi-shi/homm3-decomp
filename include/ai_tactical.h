@@ -511,6 +511,10 @@ struct type_AI_spellcaster {
     void considerResurrect(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_spell.
     void considerSpell(type_spell_choice* choice);
+protected:
+    // Before normalization: type_AI_spellcaster::spells_not_required.
+    unsigned char spellsNotRequired() const;
+public:
     // Before normalization (function): type_AI_spellcaster::cast_spell.
     unsigned char castSpell(unsigned char retreating);
     // Before normalization (function): type_AI_spellcaster::consider_teleport.

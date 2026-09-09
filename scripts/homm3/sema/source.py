@@ -195,6 +195,44 @@ def _same_logical_code(base: bytes, debug: bytes) -> bool:
     return False
 
 
+def _recorded_source(filename: str | None, tu_path: Path,
+                     tu_rel: str) -> tuple[Path, str]:
+    """Resolve COFF .file ownership without guessing from a function name.
+
+    cc_wrap compiles absolute paths under Wine's Z: mapping. Relative records
+    are relative to that compiler's repository cwd. A recorded but unresolved
+    header must never silently fall back to the TU's unrelated line numbers.
+    """
+    if filename is None:
+        return tu_path, tu_rel  # legacy objects with no .file records
+    normalized = filename.replace("\\", "/")
+    if normalized[:3].lower() == "z:/":
+        normalized = normalized[2:]
+    path = Path(normalized)
+    if not path.is_absolute():
+        path = common.HOMM3_DIR / path
+    path = path.resolve()
+    compiler_include = (cc_wrap.msvc_dir() / "include").resolve()
+    # Wine resolves <xtree> to the pinned XTREE file case-insensitively,
+    # while /Z7 retains the include spelling. Resolve only a unique filename
+    # inside the pinned compiler tree; never guess a project dependency.
+    if (not path.is_file() and path.parent.is_dir()
+            and path.parent.is_relative_to(compiler_include)):
+        matches = [candidate for candidate in path.parent.iterdir()
+                   if candidate.name.casefold() == path.name.casefold()
+                   and candidate.is_file()]
+        if len(matches) == 1:
+            path = matches[0].resolve()
+    if (not path.is_file() or (path not in _cache_inputs(tu_path)
+                              and not path.is_relative_to(compiler_include))):
+        raise SourceError(
+            f"/Z7 source file {filename!r} is not a current TU dependency "
+            "or pinned compiler header; refusing a possibly wrong source label")
+    root = common.HOMM3_DIR.resolve()
+    label = str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
+    return path, label
+
+
 def load(unit: str, name: str, ordinal: int, base_obj: Path) -> SourceMap:
     """Compile/load one TU's debug object and return a verified source map."""
     debug_obj, source_path, source_rel = _debug_obj(unit)
@@ -214,6 +252,7 @@ def load(unit: str, name: str, ordinal: int, base_obj: Path) -> SourceMap:
             f"{base_obj.relative_to(common.HOMM3_DIR)}; refusing unsafe "
             "source offsets (run `homm3 build` and retry)")
 
+    source_path, source_rel = _recorded_source(info.source_file, source_path, source_rel)
     source_lines = source_path.read_text(errors="replace").splitlines()
     raw = [(record.offset, record.line) for record in info.lines]
     if not any(offset == 0 for offset, _line in raw):
@@ -226,7 +265,7 @@ def load(unit: str, name: str, ordinal: int, base_obj: Path) -> SourceMap:
         seen.add((offset, line))
         if not 1 <= line <= len(source_lines):
             raise SourceError(
-                f"/Z7 line {line} for {name} is outside manifest source "
+                f"/Z7 line {line} for {name} is outside recorded source "
                 f"{source_rel} ({len(source_lines)} lines); refusing to show "
                 "a possibly wrong source label")
         text = source_lines[line - 1].strip()

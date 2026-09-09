@@ -1264,6 +1264,10 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
 // raise 55.04 -> 70.55%; no separate retail helper body is claimed.
 // After the caller's pointer/lifetime corrections, default zero construction
 // reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
+// Direct proxy assignment plus an explicit prerequisite-loop body scope
+// raises the caller to 84.92324%. Either change alone is byte-flat at 83.29%.
+// A named reference keeps the same public bitset operation but changes VC6's
+// nested decisions; neither form retains all four retail proxy assignments.
 template <size_t N>
 // Before normalization (function): ReadPackedCampaignBits.
 std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
@@ -1272,8 +1276,7 @@ std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
     unsigned char packed[(N + 7) / 8];
     infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
-        typename std::bitset<N>::reference bit = result[index];
-        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
+        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
     }
     return result;
 }
@@ -1870,22 +1873,22 @@ void TCampaignBrief::ScenarioStruct::loadMapHeader(
     mapHeader->read(&file, which);
 }
 
-// TAbstractFile's ordinary destructor is visible here: retail retains its
-// seven-byte body and expands the same vftable store into the deleting thunk.
-// The body and all 19 retail callers restore vftable 0x63dac0; no
-// TAbstractFile procedure exists in the Dreamcast CodeView corpus. Keeping
-// the body inline, either in or after the class, emits no candidate symbol;
-// this ordinary boundary is exact on its first scored candidate. A full
-// dependent rebuild changes call/inline decisions in eight previously exact
-// TAbstractFile consumers; their historical MAX remains banked.
-VA(0x00487e00, 0x07)
-TAbstractFile::~TAbstractFile()
-{
-}
-
 // Retail keeps this object's deleting-destructor copy (vftable 0x63dac0
 // slot 0), being the first in link order to instantiate the class.
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
+
+// The implicit TStreamBufFile destructor restores TAbstractFile's vftable.
+// Retail folds the identical base and resource-adapter destructors here:
+// 0x55a7a0 and 0x55a7d0 call it, and seventeen EH cleanup funclets jump here.
+// The stream adapter used by loadMapHeader above emits these exact seven
+// bytes naturally with the canonical header-inline base destructor. No
+// TAbstractFile procedure exists in the Dreamcast CodeView corpus; the
+// retained vftable store alone did not prove the previous base-dtor identity
+// or its ordinary declaration. An ordinary base body in this TU matches the
+// same bytes but prevents expansion in eight destructor/message/resource
+// consumers. The shared inline definition recovers all eight at 100%, and
+// naturally emits matching base copies in the gzfile and netmsg TUs.
+VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, TStreamBufFile)
 
 // Complete-only. PruneCrossoverHeroes' first pass calls this on every
 // scenario the player has not finished: each hero placeholder the scenario
@@ -1963,8 +1966,9 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
     // Before normalization (locals): iPrereq.
-    for (int prereq = 0; prereq < numScenarios; ++prereq)
+    for (int prereq = 0; prereq < numScenarios; ++prereq) {
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
+    }
 
     {
         unsigned char value;
@@ -2415,6 +2419,9 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
+    // The subtitle completion flag can also end playback after input.
+    // Retaining the event switch and testing finished removes three jumps
+    // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
     if (m_video < 0)
         return;
 
@@ -2599,17 +2606,17 @@ void TCampaignBrief::MapTextStruct::play()
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX != g_campaignSkipKey)
-                goto stop;
+                finished = 1;
             break;
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_DOWN:
-            goto stop;
+            finished = 1;
+            break;
         }
         if (finished)
-            goto stop;
+            break;
     }
 
-stop:
     if (speech) {
         g_soundManager->stopSample(speech->m_memSample.m_memSampleHandle);
         speech->dispose();
@@ -3062,12 +3069,15 @@ static short readCampaignWord(TAbstractFile* infile)
 // with retail, while spelling erase(begin(), end()) expands those workers.
 //
 // Retail's count loads mask to 8/16 bits and keep signed int loop bounds.
-// The artifact fields sign-extend two-byte reads; a direct TArtifact cast
-// expresses that conversion without the old memcpy carrier. The legacy
+// The artifact fields sign-extend two-byte reads through artifact.h's shared
+// representation bridge into TArtifact. The legacy
 // secret flag is reset after the filename assignment (retail +0xd0).
 // Widened counts plus the cast score 67.8382%; correcting the flag order
 // gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
 // Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
+// Sharing artifactFromInt through artifact.h replaces that cast without
+// changing the signed word boundary; the typed-header checkpoint is
+// 70.3423%, with 79.2531% retained in HIST (2026-09-08).
 //
 // Residual: the array-constructor iterator and nested vector size/resize
 // helpers still expand where retail retains calls. The 69.5768% trace
@@ -3241,7 +3251,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
             artifactPool[whichArtifact].m_artifactId =
-                static_cast<TArtifact>(readCampaignWord(infile));
+                artifactFromInt(readCampaignWord(infile));
             artifactPool[whichArtifact].m_extra = readCampaignWord(infile);
         }
     }
@@ -3572,8 +3582,8 @@ VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronge
 // ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
 // game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
 // 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
-// compares against 0x81 (129) at all three of its callers and has moved to
-// game.cpp - customcampaign.obj does not emit a bitset<129> instantiation.
+// compares against 0x81 (129) at all three of its callers and is claimed in
+// game.cpp. Recovered campaign readers now emit 129-bit members here too.
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
@@ -3769,25 +3779,22 @@ VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
 VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
 VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 
-// ScenarioStruct::Read's prerequisite push_back. Retail keeps this insert's
-// own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
-// where this CL expands all three into it, so the pairing is identity, not a
-// score.
-// 2026-09-06, an arity screen over every sub-100 row (base `ret N` multiset
-// against the delinked body's) says the OVERLOAD is wrong too, which is most
-// of the 34.74%: retail's body ends `ret 8` and takes (iterator, const E&) -
-// the single-element `insert` - while this object emits only the three-
-// argument fill `insert(iterator, size_type, const E&)` (`ret 0xc`), because
-// our CL expands the single-element forwarder into `push_back` at every call
-// site and retail keeps it out of line. The explicit single-element claim
-// now stays unpaired instead of borrowing the emitted count overload's
-// name. Making the two-argument insert emit naturally is an inline-shape
-// fix in its caller, ScenarioStruct::Read; its prior MAX remains banked.
-// Main's independent call-site check confirms ret 8, returned iterator,
-// byte-sized element copies, and the expanded fill overload inside this
-// forwarder. Changing prerequisites.push_back(x) to two-argument insert
-// did not emit it and lowered ScenarioStruct::Read from 83.29 to 81.4819.
+// ScenarioStruct::read's prerequisite append retains single-element insert
+// in retail: ret 8, returned iterator and byte-sized copies distinguish it
+// from count insert (ret 12). The old 34.74% compared the wrong overload;
+// the single-element claim remains unpaired while VC6 expands that wrapper.
+// A 72-candidate batch compares push_back/single/count-one insertion, three
+// actual Boolean lifetimes, scoped/function-scope size buffers, and four
+// bitset constructor/proxy forms. Direct single insertion still does not
+// retain the parent; count-one insertion expands it into the reader and
+// naturally emits all three children below. Their 36/36/9-byte bodies match
+// retail exactly with no other TU score loss (reader 51.56930%). Restoring
+// push_back and direct bitset proxy assignment gives the best reader,
+// 84.92324%, and inlines these unchanged library bodies; their MAX stays 100%.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
+VA_COMPGEN(0x0048db40, 0x24, VECTOR_UCOPY, unsigned_char)
+VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
+VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
 //
@@ -3830,6 +3837,12 @@ VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
 // Artifact-vector callers retain the range erase for the eight-byte element.
 // The naturally emitted COMDAT agrees with all 57 retail bytes.
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
+
+// The canonical 129-bit setter also survives here. Its 99-byte COMDAT matches
+// retail 0x54ded0 in every non-relocation byte and calls the same bitset<129>
+// _Xran helper. RMG expands this setter after its local reference pin is
+// removed; claim this naturally emitted representative of the shared body.
+VA_COMPGEN(0x0054ded0, 0x63, BITSET_SET, Bitset129)
 
 // The facet's installation and teardown. _Addfac copies the locale, adds
 // the codecvt to its facet vector and hands the locale back; _Tidyfac's

@@ -283,7 +283,7 @@ SIZE(TObjectType, 0x4c);
 // The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
 // dimensions - in .rdata at 0x640278. Both of its consumers, the default
 // constructor above and TObjectType::setTriggerMask's else arm, issue both
-// loads before either store. No compiland in the tree defines it yet.
+// loads before either store. objecttype.cpp owns the definition.
 // Before normalization: gNoTriggerCell.
 extern const TObjectType::TPoint g_noTriggerCell;
 

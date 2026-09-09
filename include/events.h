@@ -77,10 +77,11 @@ public:
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup* defendingArmy, town* defendingTown,
                               NewmapCell* cell);
+// Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
 // Before normalization (function): split_armies.
 // Before normalization (locals): current_hero, enemy_hero.
 void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup* enemy);
+                  const armyGroup& enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource
 // events.obj loads through InitializeAdventureEventText (0x49e0e0).

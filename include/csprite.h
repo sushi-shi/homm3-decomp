@@ -120,6 +120,14 @@ public:
         return m_s[seq]->m_f[frame]->getCroppedHeight();
     }
 
+    // DC CSprite.h:154 (0x122ba8) proves this non-const header accessor.
+    // Complete's dispose frame loop expands the same sequence/frame loads.
+    // Before normalization (function): CSprite::GetFrame.
+    CSpriteFrame* getFrame(int sequence, int frame)
+    {
+        return m_s[sequence]->m_f[frame];
+    }
+
     // Original: CSprite::SetPalette; CSprite.h:259, dc 0x744e4.
     // Complete expands this wrapper in ResetPalette.
     void setPalette(TPalette16& pal)

@@ -18,6 +18,12 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Provisional role name; retail stores the two grid dimensions here.
+// The only references are TObjectTypeTable::load's default object and
+// TObjectType::setTriggerMask's no-trigger path, both in this compiland.
+// Before normalization: gNoTriggerCell.
+DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
+
 // Shared registry at 0x69cb80, guard 0x69cb64. GetImageName's empty-name
 // static has a separate guard at 0x69cb70, proving a shared accessor boundary.
 // That does not prove an inline declaration: C2 classifies this ordinary
@@ -231,8 +237,8 @@ VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 // vector<TImageInfo>::insert(iterator, const TImageInfo&) with the
 // three-argument overload expanded inside: ret 8, /24 reciprocal
 // 0x2aaaaaab, and add [ebx+8],0x18. The nested registry lookup also makes
-// that two-argument insert emit naturally here. Its address remains
-// unclaimed; the three-argument overload is already claimed at 0x46aeb0.
+// that two-argument insert emit naturally here. Its separate claim appears
+// below; the three-argument overload is claimed at 0x46aeb0.
 // The two zeroed dwords and two bitset<48>::_Tidy calls establish the
 // 24-byte TImageInfo temporary; the row cursor uses oldCount * 24.
 //
@@ -685,6 +691,17 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // an ordinary TU-local constructor definition are byte-flat. VC6 rejects
 // aggregate initialization of TImageInfo with C2552; its bitset members make
 // that source form unavailable. No constructor or helper changes retained.
+// The real tree-erasure callers now retain _Inc without the former artificial
+// emission wrapper; removing that wrapper is flat across every claimed body.
+// Eight count/row getText versus operator[] and implicit/explicit-zero
+// istrstream-length controls are also byte-flat and emit no ulong bitset ctor.
+// Defining the known {8,6} sentinel in this TU preserves both retail loads
+// and is byte-flat across every function; it does not change this boundary.
+// A minimal record with no user-declared constructors still fails C2552
+// when aggregate-initialized with a point and omitted bitset members.
+// An explicit 0UL argument in the passable-mask initializer is also flat
+// at 73.3263% across this TU and emits no ulong constructor; argument
+// conversion is not what selects the nested inline boundary.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
@@ -713,16 +730,9 @@ void TObjectTypeTable::load(char* filename)
 // image-name MAP's iterator, not a set<string>'s (whose node is 32).
 // Dreamcast's generic STLport _M_increment at dc 0x64214 independently
 // corroborates the source helper boundary and its nine-block control flow.
+// The two retained erase overloads emit this specialization naturally. Removing
+// the old uncalled increment wrapper leaves every claimed TU function unchanged.
 VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
-
-// Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. This
-// wrapper is not a retail claim and adds no target/report row.
-// Before normalization (function): EmitObjectImageNameIndexIncrement.
-void __fastcall emitObjectImageNameIndexIncrement(
-    TObjectImageNameTable::TNameIndex::const_iterator* it)
-{
-    ++*it;
-}
 
 // --- Dinkumware COMDAT pairings -------------------------------------------
 //
@@ -1100,6 +1110,16 @@ VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 // count claim stays unpaired then: that other body's ret 8 cannot name
 // this retail ret-12 body or inherit its exact-match identity.
 VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
+
+// SetImageName's insertion at 0x514760 retains the single-value overload.
+// Its six-dword elements, returned insertion position and ret 8 distinguish
+// it from the separate count overload above. The current source naturally
+// emits this specialization through the canonical image-cache push_back.
+// Exact after refreshing the retail target. Independent comparisons prove
+// the six differently named nested calls are ICF: _Ucopy/_Ufill/size agree
+// with TObstacleVector at 0x46b1a0/0x46b1e0/0x517750, and _Destroy agrees
+// with type_artifact at 0x404140. All four comparisons agree in every view.
+VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.

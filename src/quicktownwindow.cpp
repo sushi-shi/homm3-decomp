@@ -22,12 +22,8 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// E:\gamedcs\includes.h:124/134. The by-value wrapper deliberately passes
-// its three parameter copies to the reference-returning template: retail
-// inlines both layers into center and selects one address before loading it.
-
-
-
+// The shared includes.h limit wrapper passes copies to tLimit before
+// center selects an operand address and loads the coordinate.
 
 // Seven compact army slots, consumed only by initialize_army_display.
 // Retail's sole reference is 0x5309df and the 56-byte extent closes at the

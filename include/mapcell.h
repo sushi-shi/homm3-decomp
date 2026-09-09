@@ -7,8 +7,10 @@
 
 #include <vector>
 #include <string>
-#include "terrain_type.h"
 #include "artifact.h"
+#include "terrain_type.h"
+#include "secondaryskill.h"
+#include "herospec.h"
 #include "town.h"
 
 class BlackBoxData;
@@ -820,8 +822,8 @@ SIZE(TreasureData, 0x4c);
 // an enum here would put a cast into an enum domain on every load. The DC
 // declarators' types survive in the member names.
 struct SecondarySkillData {
-    int m_type;
-    int m_level;
+    TSecondarySkill m_type;
+    TSkillMastery m_level;
 };
 SIZE(SecondarySkillData, 8);
 
@@ -838,8 +840,8 @@ public:
     // Element type int for SecondarySkillData's reason - loadBlackBox
     // writes a widened stream byte into each slot. DC: vector<TArtifact>
     // and vector<SpellID>, preserved in the member names.
-    std::vector<int> m_artifacts;             // +0x8c
-    std::vector<int> m_spells;                // +0x9c
+    std::vector<TArtifact> m_artifacts;             // +0x8c
+    std::vector<SpellID> m_spells;                // +0x9c
     armyGroup m_creatures;                    // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
@@ -1254,12 +1256,9 @@ public:
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
     struct TObjectCell {
-        union {
-            // Before normalization: objectIndex.
-            unsigned short m_objectIndex;
-            // Before normalization: ObjectIndex.
-            unsigned short m_objectIndexAlias;
-        };
+        // Before normalization: objectIndex / ObjectIndex. These spellings
+        // denoted the same unsigned word, not alternative representations.
+        unsigned short m_objectIndex;
         union {
             // Before normalization: offsets.
             unsigned char m_offsets;
@@ -1270,12 +1269,8 @@ public:
                 signed char m_cellY : 4;
             };
         };
-        union {
-            // Before normalization: layer.
-            signed char m_layer;
-            // Before normalization: Height.
-            signed char m_height;
-        };
+        // Before normalization: layer / Height; one signed layer byte.
+        signed char m_layer;
 
         // Before normalization (function): NewmapCell::TObjectCell::get_object.
         CObject* getObject() const;
@@ -1369,7 +1364,7 @@ public:
     // register assignment off retail's.
     // Before normalization (function): NewmapCell::IsCustomized.
     bool isCustomized() const { return m_monsterInfo.m_custom != 0; }
-    int getArtifactIndex() const;
+    TArtifact getArtifactIndex() const;
 
     // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
     // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
@@ -1400,23 +1395,6 @@ public:
     int getTreasureArtifact() const { return m_treasureInfo.m_artifact; }
     // Before normalization (function): NewmapCell::GetTreasureSize.
     short getTreasureSize() const { return m_treasureInfo.m_gold * 500; }
-
-    // The scholar's four accessors, all published by the Dreamcast
-    // (MapCell.h:1063/1068/1073/1078) with their own enum return types -
-    // ScholarAwards, TPrimarySkill, TSecondarySkill and SpellID. All four
-    // are spelled `int` for get_tomb_artifact's reason: none of those
-    // domains has a modelled definition, an enum return is int-wide under
-    // VC6, and the WIDTH is what the bytes constrain. Scoped to NewmapCell
-    // for the campfire's reason - the handler hands the whole cell to
-    // EraseAndFizzle.
-    // Before normalization (function): NewmapCell::GetScholarAward.
-    int getScholarAward() const { return m_scholarInfo.m_award; }
-    // Before normalization (function): NewmapCell::GetScholarPrimarySkill.
-    int getScholarPrimarySkill() const { return m_scholarInfo.m_primary; }
-    // Before normalization (function): NewmapCell::GetScholarSecondarySkill.
-    int getScholarSecondarySkill() const { return m_scholarInfo.m_secondary; }
-    // Before normalization (function): NewmapCell::GetScholarSpell.
-    int getScholarSpell() const { return m_scholarInfo.m_spell; }
 
     // The sea chest's pair, both Dreamcast-published with their own enum
     // returns (SeaChestRewardTypes and TArtifact) and both spelled `int`
@@ -2668,7 +2646,7 @@ inline void ExtraInfoUnion::setWitchSkill(int skill)
 // cross into the enum domain explicitly. Dreamcast masks the older
 // seven-bit object index; Complete's inlined artifact readers load the
 // full signed word, proving that the later accessor no longer masks it.
-inline int NewmapCell::getArtifactIndex() const { return m_objectIndex; }
+inline TArtifact NewmapCell::getArtifactIndex() const { return artifactFromInt(m_objectIndex); }
 
 // E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line
 // copy, while retail /Ob2 expands this header helper at its callers.

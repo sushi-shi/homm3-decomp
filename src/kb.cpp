@@ -470,6 +470,8 @@ void initMainClasses()
 // earlier in retail and lands background->GetMap in EDX where ours uses EAX,
 // and the `new Bitmap16Bit(328, textHeight + fs.height)` block is the same
 // three instructions with EDX/EDI/ECX against our ECX/EBX/EDX.
+// Goto audit: An event-switch completion flag removes stop_credits but
+// scores 99.0393% versus 100%; keep this loop exit for now.
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void creditsWait()
 {
@@ -839,6 +841,8 @@ static void setupCDRom()
 // evidence appears. Retail proves the fastcall (videoId, frameName) ABI and
 // keeps this boundary out of line; oldmain calls it for the third intro.
 // Before normalization (function): KbFn_004EE1B0.
+// Goto audit: A combined key/click condition with a loop break removes
+// stop_intro but scores 84.6629% versus 100%; retain the event switch.
 VA(0x004ee1b0, 0xF6)
 static void kbFn004EE1B0(int videoId, const char* frameName)
 {
@@ -892,6 +896,9 @@ stop_intro:
 VA(0x004ee2b0, 0x121)  // anchor-callee + dc-order-map, dc 0xdffe4
 void lostGame()
 {
+    // DC lines 904..911 retain the event switch and completion flag.
+    // Breaking the video loop from that flag preserves all retail bytes;
+    // replacing the switch with a combined condition does not.
     unsigned char done = 0;
     videoOpen(34, 0, 0, 0, 0, 0, 1, 1);
     g_soundManager->startMP3("UltimateLose", 1, 1);
@@ -916,15 +923,16 @@ void lostGame()
         case MESSAGE_RIGHT_BUTTON_DOWN:
             if (!g_firstTimeThrough) {
                 done = 1;
-                goto stop_video;
+                break;
             }
             break;
         }
+        if (done)
+            break;
         if (videoNeedsUpdate())
             videoDrawRects();
     }
 
-stop_video:
     videoClose();
     g_windowManager->fadeScreen(1, 4, 0);
     int status;
@@ -4170,6 +4178,8 @@ void fileError(const char* buf)
 // Before normalization (function): CongratsWait.
 // Before normalization (locals): iBase, iScore, iDayz, pFont, cTemp, msg,
 // WinText, smk.
+// Goto audit: A combined key/click condition with a loop break removes
+// stop_congrats but scores 73.4633% versus 100%; retain the event switch.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
@@ -4370,22 +4380,15 @@ void showCongrats(int hsType)
     g_windowManager->fadeScreen(1, 4, 0);
 }
 
-// This tree still carries the spellbook id in the older combat-side enum,
-// while type_artifact's source interface correctly uses TArtifact. Preserve
-// the shared four-byte representation without an integer-to-enum cast; VC6
-// folds this established in-tree bridge away completely.
-inline TArtifact artifactFromInt(int value)
+type_normal_dialog_frame::type_normal_dialog_frame(
+    long x, long y, long w, long h, long id,
+    // Before normalization (locals): new_resource, new_qualifier.
+    EGameResource newResource, long newQualifier)
+    : coloredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
 {
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
+    m_resource = newResource;
+    m_qualifier = newQualifier;
 }
-
 
 // kb.obj-owned recursion guard: both writers (the credits loop 0x4edda0
 // and MemError below) live in this TU, and the .bss slot sits in kb's
@@ -4686,33 +4689,31 @@ void cleanUpMenus()
 VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
 int getNextHumanPlayer(int start)
 {
-    // Residual (95.1191%): after the opening modulo, every instruction and
-    // branch agrees.  Retail defers `mov ebx,ecx` between `and esi,7` and
-    // `jns`; this CL hoists it ahead of the saved-register pushes.  Tried and
-    // A 33-state source batch also tested the DC while-loop/shared-exit
-    // form, four initialization orders, and separate counter updates:
-    // none beat 95.1191% (the copy-start family falls to 66.5476%).
-    // Earlier rejected controls: reversing the locals, splitting the modulo assignment, a
-    // preserved initial-seat local, and both together (flat or 66.5476%).
-    // Thirty batched combinations of six initialization schedules, three
-    // loop forms, parameter const/register hints, and counter widths retain
-    // the same 95.1190% maximum; the prologue scheduling difference remains.
+    // DC kb.cpp:4787..4800 tests the scan condition before advancing,
+    // returns -1 after eight failures, then rejects a wrap to start.
+    // Keep that while-loop and separate final guard; the previous positive
+    // if/for(;;) rewrite is byte-flat at 95.1191% across this TU.
+    // Residual: retail delays mov ebx,ecx until after the initial modulo's
+    // and; VC6 hoists it and uses EBX instead of ECX for the opening lea.
+    // Initializing player before checked moves the counter zero below the
+    // modulo join (66.5476%; inlined caller 100 -> 99.0610%). Counter-first
+    // preserves retail's early zero and the caller's exact bytes.
+    // Earlier controls: 33 loop/initialization/shared-exit states and 30
+    // counter-width/parameter-hint combinations never exceed 95.1191%.
     int checked = 0;
     int player = (start + 1) % 8;
 
-    for (;;) {
-        if (g_game->isHuman(player)
-            && !g_game->m_playerDisabled[player]) {
-            if (player == start)
-                break;
-            return player;
-        }
-
+    while (!g_game->isHuman(player) || g_game->m_playerDisabled[player]) {
         player = (player + 1) % 8;
-        if (++checked >= 8)
-            break;
+        ++checked;
+        if (checked >= 8) {
+            return -1;
+        }
     }
-    return -1;
+    if (player == start) {
+        return -1;
+    }
+    return player;
 }
 
 // E:\gamedcs\kb.cpp:4806

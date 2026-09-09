@@ -202,22 +202,10 @@ double aiValueOfLuck(long luck, long change)
 // +0x450..+0x4c1 as plain dwords. One frame artefact rides with it: retail
 // recycles the dead `[ebp+8]` parameter home for the array end pointer where
 // this compile takes a fresh slot.
-// THE MEMBER IS ALREADY MODELLED - army.h's `std::deque<int>
-// SpellInfluenceQueue` at +0x420 - so the layout job is done and the two
-// bodies retail calls per element are NOT reachable, 2026-09-06:
-//   0x43cb20 (719 B) is `deque<int>::push_back`: `push 0x1000` for the
-//     block, the map purchase, and a const_iterator construction the delink
-//     names with deque<CNetMsg*>'s spelling because /OPT:ICF folded the two
-//     instantiations' iterator constructors onto 0x5586d0;
-//   0x43cdf0 (109 B) is its `_Growmap`.
-// NO base object in the tree emits either. The whole image has exactly two
-// push_back sites - THIS compiler-generated copy constructor, whose size is
-// fixed by the class layout and therefore not shrinkable, and army.cpp's
-// SetSpellInfluence (0x4448f0), where retail EXPANDS it too (that row's
-// call sequence agrees 31/31 at 98.94%). So the only lever left is a
-// committed `#pragma inline_depth(0)` at the copy site, and a
-// compiler-generated body has no source to carry one. Recorded so the next
-// lane does not re-derive it.
+// The member is army.h's std::deque<int> spell-influence queue at +0x420.
+// Current source naturally emits push_back at 0x43cb20; its claim is below.
+// The earlier no-emission observation is obsolete. Its retained map-growth
+// callee at 0x43cdf0 is also claimed below.
 VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
@@ -363,6 +351,8 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, c
 // value;` (75.5), and on the tail `value /= 5; return value;`, a named
 // quotient and a braced if/else (all 95.9).
 // Before normalization (locals): current_army, our_total, enemy_total, enemy_flags.
+// Goto audit: Replacing both disabled jumps with return value / 10 scores
+// 88.1132% versus 100%; retain the shared quotient-return block.
 VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
 long type_AI_combat_parameters::getRangedAttackValue(const army* currentArmy, const army* enemy)
 {
@@ -1038,75 +1028,22 @@ inline unsigned char type_AI_spellcaster::isLastAction()
 }
 
 // E:\gamedcs\ai_tactical.cpp:862
-// Residual (85.6%): retail MEMORY-HOMES the first loop's counter
-// (mov [ebp-4],0 / reload-inc-store each turn) and therefore has ECX
-// free to hold creatureId across the whole body, which lets it load
-// disabled_290 / disabled_2c0 into EBX instead of comparing them in
-// place; our CL enregisters the counter in ECX and every scratch pair
-// in both loops swaps with it. Tried and rejected: declaring `count`
-// before `current` (80.1%), spelling the three creatureId bit tests
-// without the unsigned char step (81.3%, and it folds shr/test cl into
-// a single test dword), and `break` + `if (i >= count) return 1` after
-// the loop instead of the goto (83.9%, one redundant compare).
-// Register-homing family.
-// The two "biased bases" the carcass flagged (manager + 0x577c and
-// + 0x575c) are just armies[side][i].disabled_2b0 / .disabled_290 with
-// the field offset folded into the induction variable, and the manager
-// words at 0x132b8/0x132bc are the acting stack's (side, slot) pair -
-// the flattened index side*21 + slot is the same one hexcell::get_army
-// uses. Nothing here needed a new leaf.
-// Residual (86.7%): retail MEMORY-HOMES the first loop index
-// (`mov [ebp-X],0` before `current` is even computed, then reload /
-// inc / store each iteration) and spends the register it frees on
-// LOADING each disabled counter before testing it; ours enregisters the
-// index in EBX and folds the tests into memory operands. That retail
-// loads only TWO of the three disabled counters and still folds
-// `disabled_2b0` into a `cmp dword ptr [eax],0` is what says this is
-// allocator noise and not a source distinction. Register-homing family;
-// `vc6 diagnose` agrees (flow-distance 0, "callee-saved role swap,
-// schedule aligned: ebx->ecx x6, edi->ebx x6") and why-reg --model puts
-// the divergence past the B1 minimum slice.
-//
-// CORRECTION 2026-08-20 (85.5822 -> 86.6781). The 2026-08-08 note
-// listed `i = 0` above `current` under "tried and rejected" WITH ITS
-// SCORE, 86.68 - which is 1.10 ABOVE the row it left banked. MAX is the
-// only ledger, so that spelling should have been kept when it was
-// measured; it is now in the source and in the baseline. Re-measured
-// here at 86.6781, matching the old note's number exactly.
-// Tried and rejected: dropping either cached `numArmies[side]` local
-// (no change - unlike get_speed_value, this cache is not what crowds
-// the allocator), declaring `i` without an initialiser (no change),
-// hoisting the count above `current` (81.0), both together (81.7), and
-// reusing the single `i` for the second loop as old C would
-// (byte-identical at 86.6781).
+// DC line 864 calls is_last_action (dc 0x3d7b0), then obtains GetCurrentArmy.
+// Restoring the canonical helper removes the copied search's goto and raises
+// 86.6781% to 94.2671%, with no sibling score changes. The existing inline
+// helper's local lifetimes recover most of the first loop's retail allocation.
+// Flattening it again returns to 86.6781%; break + a post-loop counter test
+// previously measured 83.9%. GetCurrentArmy versus its indexed expression is
+// byte-score neutral. The remaining register and instruction-order delta is
+// still open; the prior claim that this caller needed no helper was incorrect.
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
 unsigned char type_AI_spellcaster::shouldAttackNow(const army* enemy)
 {
     if (m_estimate.m_killsOnly)
         return 1;
-    long i = 0;
-    const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                  [g_combatManager->m_actingSlot];
-    long count = g_combatManager->m_numArmies[m_side];
-    for (; i < count; i++) {
-        // Before normalization (locals): our_army, no_target.
-        const army* ourArmy = &g_combatManager->m_armies[m_side][i];
-        if (ourArmy->m_monInfo.m_attributes & 0x200040)
-            continue;
-        if (ourArmy->m_spellInfluence[62])
-            continue;
-        if (ourArmy->m_spellInfluence[70])
-            continue;
-        if (ourArmy->m_spellInfluence[74])
-            continue;
-        unsigned char noTarget = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-        if (noTarget & 1)
-            continue;
-        if (ourArmy != current)
-            goto found;
-    }
-    return 1;
-found:
+    if (isLastAction())
+        return 1;
+    const army* current = g_combatManager->getCurrentArmy();
     if (current->m_combatSide == m_side && current->getAITarget() == enemy) {
         unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(current->m_monInfo.m_attributes) >> 16);
         if (current->getAITargetTime(current->getSpeed()) == 1
@@ -2633,7 +2570,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (g_spellTraits[i].m_level > level)
             continue;
-        if (!m_enemyHero->spellIsAvailable(static_cast<SpellID>(i)))
+        if (!m_enemyHero->spellIsAvailable(i))
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
@@ -4567,16 +4504,29 @@ inline void type_AI_spellcaster::checkSimulation()
     m_winLikely = 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3398
+// Before normalization: type_AI_spellcaster::spells_not_required.
+// DC 0x42610 proves the const helper and early returns; cast_spell calls it
+// at line 3436. Complete also excludes Arrow Towers. Retail expands this
+// ordinary helper into 0x43c800; the bracket has no retained body for it.
 DC_ONLY(0x42610, 0xA0)
-unsigned char type_AI_spellcaster::spells_not_required()
+unsigned char type_AI_spellcaster::spellsNotRequired() const
 {
-    // @stub
+    if (!m_winLikely)
+        return 0;
+    const army* ourArmy = g_combatManager->m_armies[m_side];
+    long count = g_combatManager->m_numArmies[m_side];
+    for (; count-- > 0; ++ourArmy) {
+        if (ourArmy->is(1u << 21))
+            continue;
+        if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
+                >= ourArmy->m_monInfo.m_hitPoints)
+            return 0;
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3420
 // The top of the spell AI: walk every spell the hero actually knows,
@@ -4596,11 +4546,10 @@ unsigned char type_AI_spellcaster::spells_not_required()
 // more in the pool the spell keeps 5/2 of its value, and below that it
 // is scaled by `sqrt(mana / cost)`. Then Random(75, 100) percent of
 // that is what actually competes.
-// EXACT 2026-08-22 (98.8760 -> 100.0): retail does not pre-initialize
-// healing_only.  The no-simulation path and the first doomed friendly stack
-// assign zero through one shared exit, while only loop exhaustion assigns
-// one.  Spelling those terminal assignments directly reproduces its lone
-// remaining branch polarity and the complete instruction stream.
+// Calling the DC-proven spells_not_required helper preserves 100% and
+// removes the copied helper's healing_only_done jump. Its two early zero
+// returns and exhaustion return expand into retail's shared assignment join;
+// no explicit inline keyword or inlining pin is needed.
 VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
 unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
 {
@@ -4616,28 +4565,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
         if (m_enemyHero->isWieldingArtifact(g_artifactRecantersCloak))
             inhibited = 1;
     }
-    unsigned char healingOnly;
-    if (!m_winLikely) {
-        healingOnly = 0;
-    } else {
-        const army* ourArmy = g_combatManager->m_armies[m_side];
-        long count = g_combatManager->m_numArmies[m_side];
-        for (; count-- > 0; ++ourArmy) {
-            unsigned char immune = static_cast<unsigned char>(
-                static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
-            if (immune & 1)
-                continue;
-            if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
-                continue;
-            if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
-                    >= ourArmy->m_monInfo.m_hitPoints) {
-                healingOnly = 0;
-                goto healing_only_done;
-            }
-        }
-        healingOnly = 1;
-    }
-healing_only_done:
+    unsigned char healingOnly = spellsNotRequired();
     if (m_ourHero)
         duration = m_ourHero->getSpellDurationBonus() + power;
     if (retreating)
@@ -4969,3 +4897,20 @@ void std::construct(SpellID* __p, const SpellID* __value)
 // it, recording the second spelling as an alias. It sits 8 bytes past the
 // end of this compiland's last claimed function, in its COMDAT tail.
 VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
+
+// The army copy path described above retains this deque<int> append.
+// Retail uses four-byte elements, 0x1000-byte blocks, and the deque's map
+// and finish fields; the existing source naturally emits the specialization.
+// Retail-only, anchor-callee: 719 bytes match, including all 20 blocks.
+// Seven iterator calls use the 36-byte body shared with CNetMsg* at 0x5586d0;
+// the emitted int iterator has identical raw bytes. Both map-growth calls
+// reach 0x43cdf0, whose 109-byte body also agrees after call relocation.
+VA_COMPGEN(0x0043CB20, 0x2CF, DEQUE_PUSH_BACK, int)
+
+// Dinkumware _Growmap, retained by the preceding append. This is the deque's
+// pointer-map allocation, not vector reserve: +0x10/+0x20 are the two
+// iterators' _Map members, +0x24 is the owned map and +0x28 is its capacity.
+// Retail copies [_First._Map, _Last._Map + 1) to the new map's quarter point,
+// frees the old map, and returns that quarter point. The existing int
+// specialization matches all 109 bytes after its new/delete relocations.
+VA_COMPGEN(0x0043cdf0, 0x6D, DEQUE_GROWMAP, int)

@@ -104,7 +104,7 @@ public:
     virtual ~iconWidget();  // retail 0x4ea7b0
     // Before normalization (function): iconWidget::Main.
     virtual int main(message* msg);
-    virtual void zBufferDraw(unsigned short* zBuffer, int id);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): iconWidget::Draw.
     virtual void draw();
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20

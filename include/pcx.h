@@ -7,7 +7,7 @@
 // bmh / hBitmap - is Victor's own image descriptor, and allocimage /
 // freeimage / flipimage / loadpcx / savepcx / pcxinfo is its documented API.
 //
-// It occupies the WHOLE unmapped tail of the game band, 0x603590..0x604823,
+// It occupies the tail at 0x603590..0x604823,
 // about 4.7 KB in 22 functions, ending where zlib's own band begins at
 // 0x604830. The two callers on the game side are Bitmap24Bit::importPCXFile
 // (0x44eef0) and Bitmap816::importPCXFile (0x44fa40); each calls five of the
@@ -28,13 +28,25 @@
 // import set is the rest of the fingerprint: OpenFile/_lread/_llseek/_lclose,
 // GlobalAlloc/Lock/Unlock/Free/Handle, CreateCompatibleDC/SelectObject/
 // DeleteDC/DeleteObject, GetDesktopWindow/GetDC/ReleaseDC and IsBadReadPtr -
-// frameless cdecl throughout, a different compiler profile from the game.
+// public wrappers use stdcall (ret N), while the allocation worker and
+// dimension helper use cdecl. The compiled wrappers omit EBP frames.
 //
-// NOT ADMISSIBLE AS A UNIT: Victor is commercial closed source, it is not in
-// vendor/, and none of it is trivially reconstructible. The band stays
-// unmapped; only the ABI above is ours.
+// Recovered external-library code is grouped in src/victor.cpp and
+// src/victor_pcx_kernels.cpp; original source/object filenames are unavailable.
+// Separate VC6 profiles reproduce the allocation/validation wrappers and
+// all three assembly kernels, including the RLE decoder's register saves.
+// The remaining library band is only partly reconstructed; vendor/ is pristine.
 #ifndef HOMM3_PCX_H
 #define HOMM3_PCX_H
+
+// Use the SDK declarations for the external RGBQUAD, BITMAPINFOHEADER and
+// HBITMAP ABI instead of maintaining a second Windows structure definition.
+// Bitmap24Bit also uses numeric_limits::max(); suppress the SDK function
+// macros while importing these ABI types.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 
 struct PcxData {
     // Before normalization: PCXvers.
@@ -53,17 +65,6 @@ struct PcxData {
     int m_palInt;
     // Before normalization: vbitcount.
     int m_vbitcount;
-};
-
-struct RGBQUAD {
-    // Before normalization: rgbBlue.
-    unsigned char m_rgbBlue;
-    // Before normalization: rgbGreen.
-    unsigned char m_rgbGreen;
-    // Before normalization: rgbRed.
-    unsigned char m_rgbRed;
-    // Before normalization: rgbReserved.
-    unsigned char m_rgbReserved;
 };
 
 struct imgdes {
@@ -86,9 +87,9 @@ struct imgdes {
     // Before normalization: imgtype.
     int m_imgtype;
     // Before normalization: bmh.
-    void* m_bmh;
+    BITMAPINFOHEADER* m_bmh;
     // Before normalization: hBitmap.
-    void* m_bitmap;
+    HBITMAP m_bitmap;
 };
 
 int __stdcall pcxinfo(const char* filename, PcxData* data);
