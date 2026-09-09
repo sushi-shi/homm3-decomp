@@ -1454,6 +1454,42 @@ The full retail build passes at 4062/4752 exact, 96.39% linked fuzzy and
 96.12% whole-image. Only this function resets MAX (100% to 99.9633%); HIST
 retains 100%. The census becomes 227 inline overrides and 64 unions.
 
+### Ordinary volume conversion and selected-setting lifetimes
+
+`generate-volume-boundary-family.py` starts from `a7a83c6e` and exhausts
+twelve combinations in context `c682cc6559d87a47dbef`: twelve scored states,
+five object identities and five reproduced elites. Three actual setting
+bindings (value snapshot, const reference, direct reads) cross equivalent
+short-circuit/nested bounds and the old/removed auto-inline fence. The source
+keeps both duplicated scale arms and the shared lower/upper clamp; Complete's
+0..127 return must not acquire Dreamcast's final 0..100 platform conversion.
+
+Selected `7bb1334725faaa2026c1258b` uses branch-local const references and
+removes the fence. Strict `compare-coff-layout.py` passes for all 110 raw
+sections, 699 relocation destinations and function positions against the old
+`c441b9aa0f03520c7206d8aa` control. Production passes the same comparison.
+Every scored soundmgr function remains unchanged, including all four exact
+callers. These references are source-lifetime hypotheses, not declarations
+proved by DC's empty optimized-local inventory.
+
+The unfenced value control `338a47b3bd2bded6fbade5ae` retains the same helper
+body but removes the named calls at setMusicVolume +0x1f, modifySample +0x9a,
+memorySample +0x15a and processStopAndPlayMP3 +0x25. The four bodies grow,
+and their scores drop to 0%, 57.3125%, 81.0864%, and 83.8794%. Direct reads
+also expand the helper, with either guard form. Nested value/reference forms
+keep all four calls, but only the short-circuit reference form preserves the
+original whole object without changing the guards. This is a natural binding
+decision, not a new pragma, helper copy or release-elided dummy operation.
+
+`homm3.vc6.test_volume_boundary` imports the actual body and enum, checking
+15 music settings, 15 effects settings, four selector values and 513 bounded
+volume values at native `-O0` and `-O2`. The 461,700 cases per optimization
+verify selection, scale, minimum-one/maximum-127 limits, disabled settings
+and unchanged setting storage. Five
+negative controls change the selected setting, range, divisor, minimum or
+maximum and are all rejected. The host test does not assert Miles behavior,
+VC6 inlining or overflowing multiplication semantics.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the

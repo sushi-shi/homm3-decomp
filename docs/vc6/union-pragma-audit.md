@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
-| Inline override regions | 289 | 227 | 62 removed, including six in disabled negative-example code |
+| Inline override regions | 289 | 226 | 63 removed, including six in disabled negative-example code |
 | `inline_depth(0)` regions | 262 | 220 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
-| `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
+| `auto_inline(off)` regions | 20 | 6 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 476 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 474 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 56 active inline overrides were removed; counting
-all 62 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 57 active inline overrides were removed; counting
+all 63 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -366,7 +366,7 @@ Map-access checkpoint census: 253 overrides (246 depth-zero, seven auto-inline-o
 This does not reclassify them as necessary. The assertion controls directly
 demonstrate why a pragma-deletion-only census cannot establish necessity.
 
-The seven remaining auto-inline regions have bounded next actions:
+At that checkpoint the seven remaining auto-inline regions had bounded next actions:
 `convertVolume`, `checkDimNextHeroBut`, and `~CAnimatedDlg` have no leading
 DC gap supporting an assertion; the destructor's sprite is explicitly
 optional. `AppCommand` is a four-byte DC platform stub and `stopMouseThread`
@@ -377,6 +377,8 @@ is measured below.
 The empty `CNewPlayerUpdateTask` destructor has the previously measured
 untracked derived-destructor expansion. These remain reconstruction debt,
 not candidates for invented checks or declarations merely to alter inlining.
+The later volume lifetime recovery below retires `convertVolume` without an
+assertion or additional operation; six auto-inline regions remain.
 
 ### Further reduction from `ab315284`
 
@@ -723,6 +725,32 @@ all rejected, in addition to the six stream-contract negative controls. Host
 value-initialization during native vector tests does not assert the unspecified
 bytes of VC6's retail-proven uninitialized fill.
 
+### Ordinary volume helper with read-only setting bindings
+
+`soundManager::convertVolume` at 0x5996c0 keeps its ordinary declaration,
+original source order, duplicated setting/range/scale arms, and shared clamps.
+Each arm now binds the selected setting as a `const int&` rather than copying
+it. This is a supported lifetime hypothesis, not a claimed DC reference local:
+the debug inventory records none, while rows 125/136 read the selected
+configuration field. No call or write occurs between those reads. No leading
+gap or positive inline clue supports manufacturing an assertion.
+
+The 12-state lifetime/guard family exhausts all options, gives five emitted
+identities and reproduces all five elites. The selected unfenced-reference
+form has the entire old object's section layout, bytes, function positions
+and 699 relocation destinations unchanged (110 sections). All four callers
+still call the retained exact body: `setMusicVolume`, `modifySample`,
+`memorySample`, and the PC `processStopAndPlayMP3` worker. In contrast, simple
+deletion with the old value locals expands it at all four named sites; their
+scores become 0%, 57.3125%, 81.0864%, and 83.8794%. Nested value guards also
+preserve the calls, but do not preserve the whole raw object as the reference
+form does. The actual production object independently reproduces the selected
+candidate. The arithmetic oracle checks 461,700 valid-input combinations per
+optimization level and rejects five faulty selection/range/scale/clamp controls.
+
+This retires soundmgr's last intervention. The current census is **226 inline
+overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, with **64 unions**.
+
 ## Reproduction and verification
 
 The audit scripts generate analysis only; they do not adopt source, adjust the
@@ -856,7 +884,7 @@ relocation destinations agree with the old implementation. Only the target's
 18 stack-displacement bytes differ; all other 259 emitted functions are
 byte-identical. Full retail delinking and all gates pass at **4062/4752 exact,
 96.39% linked and 96.12% whole-image**. The one MAX reset is 100% to 99.9633%,
-with HIST held at 100%. The current census is **227 inline overrides** and
+with HIST held at 100%. That checkpoint's census is **227 inline overrides** and
 **64 unions** (38 source, 26 header). The neighboring narrow wire fields are
 not candidates for this four-byte read without changing their format contract.
 
@@ -866,6 +894,11 @@ whole-image**, with no further MAX reset or lost banked RVA. The 22 focused
 tests cover the native enum/market contracts and the newly integrated spell,
 source-family and CodeView behavior. Census and the native read's local
 99.9633% residual are unchanged.
+
+The volume reference-binding checkpoint preserves **4063/4752 exact, 96.40%
+linked and 96.13% whole-image**. Full retail delinking and all gates pass;
+no score changes or MAX resets occur. The current census is **226 inline
+overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, and **64 unions**.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
