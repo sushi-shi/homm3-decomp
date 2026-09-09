@@ -4594,7 +4594,7 @@ university_window	?skillClick@type_university_window@@QAEXW4TSecondarySkill@@@Z	
 university_window	?updateSkillButton@type_university_window@@IAEXAAUtype_university_skill@@@Z	100.0000	100.0000	100.0000	0x1f0790	015cae42b76b
 victor	?allocimage@@YGHPAUimgdes@@HHH@Z	100.0000	100.0000	100.0000	0x203590	6d5aed566ad9
 victor	?freeimage@@YGXPAUimgdes@@@Z	90.0976	90.0976	90.0976	0x2037a0	7bd7bc050031
-victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	98.5714	98.5714	98.5714	0x2042a0	699c9de6bc60
+victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	99.0476	99.0476	99.0476	0x2042a0	c935e3a136cf
 victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	88.0400	88.0400	88.0400	0x2035c0	a71cbea40ef0
 victor	?victorExtractBits@@YGXPAEPBEHH@Z	74.2400	74.2400	74.2400	0x2047b0	e14362648eb0
 victor	?victorInitializePalette@@YGXPAUimgdes@@@Z	94.6087	94.6087	94.6087	0x2039c0	42d1d7a9b313
