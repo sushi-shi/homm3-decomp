@@ -124,10 +124,65 @@ def scheduling_refinements(body):
         yield label + "_count_last", without_count.replace("    for (int y", "    int count = 0;\n    for (int y", 1)
 
 
-def load_parents(checkpoint_path, source, *, frontier=False):
+def entry_binding_axes(source):
+    """Retail reads the slot index before finishing the returned coordinate copy.
+
+    Test real slot/index bindings and the lifetime of that returned value,
+    independently of accumulator construction. No helper interface changes.
+    """
+    original = helpers().definition(source, FUNCTION)
+    prefix, loop = original.split("    for (int y", 1)
+    expected = """void type_random_map_generator::recenterZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    TRmgMapPosition position;
+    position = zone->getLevelPosition();
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    int count = 0;
+    TRmgMapPosition total;
+    total.m_x = 0;
+    total.m_y = 0;
+    total.m_z = position.m_z;
+"""
+    if prefix != expected:
+        raise ValueError("review recenter entry-binding baseline")
+    bindings = (
+        "    int zoneIndex = zone->m_slot->m_zoneIndex;\n",
+        "    const int& zoneIndex = zone->m_slot->m_zoneIndex;\n",
+        "    TRmgTownSlot* slot = zone->m_slot;\n    int zoneIndex = slot->m_zoneIndex;\n",
+        "    const TRmgTownSlot& slot = *zone->m_slot;\n    int zoneIndex = slot.m_zoneIndex;\n",
+        "    long zoneIndex = zone->m_slot->m_zoneIndex;\n",
+    )
+    totals = (
+        "    TRmgMapPosition total;\n    total.m_x = 0;\n    total.m_y = 0;\n    total.m_z = position.m_z;\n",
+        "    TRmgMapPosition total;\n    total.m_x = total.m_y = 0;\n    total.m_z = position.m_z;\n",
+        "    TRmgMapPosition total(0, 0, position.m_z);\n",
+        "    TRmgMapPosition total = position;\n    total.m_x = total.m_y = 0;\n",
+    )
+    alternatives = []
+    for binding, capture, total in itertools.product(range(5), range(3), range(4)):
+        index = bindings[binding]
+        position = "    TRmgMapPosition position;\n    position = zone->getLevelPosition();\n"
+        declarations = (
+            position + index,
+            index + position,
+            "    const TRmgMapPosition& savedPosition = zone->getLevelPosition();\n" + index
+            + "    TRmgMapPosition position;\n    position = savedPosition;\n",
+        )[capture]
+        body = ("void type_random_map_generator::recenterZone(TRmgZone* zone)\n{\n"
+            + "    TRmgZoneBounds bounds = zone->m_bounds;\n" + declarations
+            + "    int count = 0;\n" + totals[total] + "    for (int y" + loop)
+        alternatives.append((f"slot_{binding}+capture_{capture}+total_{total}", body))
+    result = helpers().axis("recenter_entry_bindings", SOURCE, original, alternatives)
+    if len(result["options"]) != 60:
+        raise ValueError("expected sixty entry-binding states")
+    return [result]
+
+
+def load_parents(checkpoint_path, source, *, frontier=False, entry=False):
     directory = checkpoint_path.parent
     payload = json.loads((directory / "input.json").read_text())
-    expected = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=make_axes(source), evidence=__doc__)
+    expected = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=entry_binding_axes(source) if entry else make_axes(source), evidence=__doc__)
     if frontier:
         prior = Path(payload["parent_checkpoint"])
         expected.update(axes=make_parent_axes(source, load_parents(prior, source)), parent_checkpoint=str(prior.resolve()))
@@ -156,6 +211,50 @@ def load_parents(checkpoint_path, source, *, frontier=False):
             raise ValueError("parent source changed")
         parents.append((row["id"], text))
     return parents
+
+
+def zeroing_refinements(body):
+    # Only the independent X/Y initialization moves. Keep the level read at
+    # its original point after the actual returned coordinate has been copied.
+    pattern = r"    TRmgMapPosition total;\n(?:    total.m_x = 0;\n    total.m_y = 0;\n|    total.m_x = total.m_y = 0;\n)"
+    match = re.search(pattern, body)
+    if not match:
+        raise ValueError("review zeroing parent: expected field-initialized total")
+    initialization = match[0]
+    remainder = body[:match.start()] + body[match.end():]
+    anchors = (
+        ("entry", "void type_random_map_generator::recenterZone(TRmgZone* zone)\n{\n"),
+        ("bounds", "    TRmgZoneBounds bounds = zone->m_bounds;\n"),
+        ("position", "    TRmgMapPosition position;\n"),
+        ("count", "    int count = 0;\n"),
+    )
+    for label, anchor in anchors:
+        if remainder.count(anchor) != 1:
+            raise ValueError("review zeroing anchor " + label)
+        for order in ("original", "yx"):
+            moved = initialization if order == "original" else "    TRmgMapPosition total;\n    total.m_y = 0;\n    total.m_x = 0;\n"
+            yield label + "_" + order, remainder.replace(anchor, anchor + moved, 1)
+
+
+def zeroing_axes(source, parents):
+    original = helpers().definition(source, FUNCTION)
+    retained = [(label, helpers().definition(text, FUNCTION)) for label, text in parents]
+    if len(retained) != 10 or len({body for _, body in retained}) != 10:
+        raise ValueError("expected ten distinct reproduced zeroing parents")
+    options = helpers().axis("recenter_zeroing", SOURCE, original, retained)["options"]
+    seen = {option["replace"] for option in options}
+    mutations = [list(zeroing_refinements(body)) for _, body in retained]
+    for entries in itertools.zip_longest(*mutations):
+        for (parent, _), entry in zip(retained, entries):
+            if entry is None:
+                continue
+            label, body = entry
+            if body not in seen:
+                seen.add(body)
+                options.append(dict(name=parent + "+" + label, replace=body))
+            if len(options) == 60:
+                return [dict(name="recenter_zeroing", source=SOURCE, find=original, options=options)]
+    return [dict(name="recenter_zeroing", source=SOURCE, find=original, options=options)]
 
 
 def make_parent_axes(source, parents, *, scheduling=False, balanced=False):
@@ -193,21 +292,26 @@ def main():
     parser.add_argument("--parents-from", type=Path)
     parser.add_argument("--centroid-parents-from", type=Path)
     parser.add_argument("--centroid-balanced-parents-from", type=Path)
+    parser.add_argument("--entry-bindings", action="store_true")
+    parser.add_argument("--zeroing-from", type=Path)
     args = parser.parse_args()
-    if sum(bool(value) for value in (args.parents_from, args.centroid_parents_from, args.centroid_balanced_parents_from)) > 1:
+    if sum(bool(value) for value in (args.parents_from, args.centroid_parents_from, args.centroid_balanced_parents_from, args.entry_bindings, args.zeroing_from)) > 1:
         parser.error("select only one parent stage")
     centroid = args.centroid_balanced_parents_from or args.centroid_parents_from
     checkpoint = centroid or args.parents_from
     source = (HOMM3_DIR / SOURCE).read_text()
     payload = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"],
-        axes=make_parent_axes(source, load_parents(checkpoint, source, frontier=bool(centroid)), scheduling=bool(centroid), balanced=bool(args.centroid_balanced_parents_from)) if checkpoint else make_axes(source), evidence=__doc__)
+        axes=make_parent_axes(source, load_parents(checkpoint, source, frontier=bool(centroid)), scheduling=bool(centroid), balanced=bool(args.centroid_balanced_parents_from)) if checkpoint else entry_binding_axes(source) if args.entry_bindings else make_axes(source), evidence=__doc__)
     if checkpoint:
         payload["parent_checkpoint"] = str(checkpoint.resolve())
     if centroid:
         payload["stage"] = "centroid_balanced" if args.centroid_balanced_parents_from else "centroid_scheduling"
+    if args.zeroing_from:
+        payload["axes"] = zeroing_axes(source, load_parents(args.zeroing_from, source, entry=True))
+        payload["parent_checkpoint"] = str(args.zeroing_from.resolve())
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     source_families.load_manifest(args.output, HOMM3_DIR)
-    print("generated 60 recenter states ->", args.output)
+    print("generated", len(payload["axes"][0]["options"]), "recenter states ->", args.output)
 
 
 if __name__ == "__main__":

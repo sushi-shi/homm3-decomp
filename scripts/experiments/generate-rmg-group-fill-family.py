@@ -230,7 +230,17 @@ def center_refinements(body):
 def make_axes(source):
     original = helpers().definition(source, FUNCTION)
     alternatives = list(forms())
-    if original not in admitted_bodies():
+    # Main's verified retry-exhaustion exit clears nextObject then takes the
+    # existing null-result break. Recognize that exact paired transformation,
+    # without weakening admission for any selection, cleanup or value change.
+    structured = ("            if (++attempts >= RMG_TREASURE_ATTEMPTS) {\n"
+                  "                nextObject = 0;\n                break;\n            }")
+    legacy = original
+    if original.count(structured) == 1 and "groupFilled:" not in original:
+        legacy = original.replace(structured,
+            "            if (++attempts >= RMG_TREASURE_ATTEMPTS)\n                goto groupFilled;")
+        legacy = legacy.replace("    group->updateBounds();", "groupFilled:\n    group->updateBounds();")
+    if legacy not in admitted_bodies():
         raise ValueError("review the current fill helper before generating")
     result = helpers().axis("group_fill", SOURCE, original, alternatives)
     result["options"] = result["options"][:60]

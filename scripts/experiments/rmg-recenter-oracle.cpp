@@ -61,6 +61,7 @@ template<class T> static bool check() {
         TRmgMapPosition expected = saved.m_levelPosition;
         if (count) { expected.m_x = sumX / count; expected.m_y = sumY / count; }
         if (std::memcmp(&zone.m_levelPosition, &expected, sizeof(expected)) || zone.m_slot != saved.m_slot
+            || slot.m_zoneIndex != index
             || std::memcmp(&zone.m_bounds, &saved.m_bounds, sizeof(zone.m_bounds))
             || std::memcmp(&items[0], &before[0], items.size() * sizeof(items[0]))) return false;
     }

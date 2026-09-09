@@ -11,6 +11,70 @@ produces code byte-identical to retail `HEROES3.EXE`, verified by objdiff throug
 `homm3 build`. External sources remain hypotheses until retail-byte evidence proves
 them; substantive outcomes are recorded in the port plan's §5 decision log.
 
+## Main matching driver: JSON source-family search
+
+Use `homm3.vc6.source_families` as the default driver for iterative C++
+matching, not a long sequence of manual one-candidate edits/builds. It is a
+general TU search tool, not an island-fill or RMG-only generator. Read
+`docs/vc6/source-families.md` in the active repository for its maintained
+schema and examples; implementation: `scripts/homm3/vc6/source_families.py`.
+
+First establish retail identity, a compiling reconstruction, and the required
+Dreamcast/retail evidence pass from AGENTS.md. Use that evidence to author
+meaningful JSON choices for construction, lifetimes, statement order, public
+interfaces, canonical helper visibility and natural inlining. The runner
+combines choices; it does not invent or semantically validate C++ alternatives.
+
+Run from the owning worktree in the pinned build shell, with `HOMM3_DIR`
+pointing there and the VC6/Wine environment configured:
+
+```sh
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  path/to/choices.json --width 60 --keep 10 --jobs 6 --generations 3
+```
+
+- Set `units` explicitly in the manifest to the affected TU(s), including
+  callers affected by shared helpers. Omission defaults to the three RMG
+  units, which is not appropriate for an arbitrary matching task.
+- Encode independent alternatives as named `axes` with exact source anchors
+  and named `options`; use atomic `extra_edits` for coupled changes. Keep the
+  first option unchanged and edits non-overlapping. Reuse existing generators
+  where relevant. Validate the manifest with `--validate-only` before compiling.
+- Establish a fresh full-build checkpoint before searching. The runner checks
+  the unchanged-source scores and opposite-corner compile/reproduction before
+  the population. Stop and repair failed controls rather than trusting scores.
+- Use 50–60 successfully scored states per batch (default 60), parallel jobs
+  suited to the machine, and retain multiple best/diverse candidates (default
+  workflow: ten). Check all scored siblings, not just the selected function.
+  Report successful source candidates separately from distinct emitted objects.
+- Recombine retained candidates and introduce evidence-based alternatives in
+  subsequent generations. When a finite manifest is exhausted, construct a
+  follow-up family from reproduced top candidates plus new supported choices;
+  repeating the exhausted manifest does not explore anything new. Preserve
+  parent controls and verify that the bounded population covers each intended
+  alternative family instead of filling its width with early spelling variants.
+- Results, snapshots and resumable checkpoints live under
+  `build/source-families/<context>/`. Verify parent snapshot/manifest identity
+  when generating a follow-up; after source, header or target changes establish
+  a fresh context rather than applying stale anchors or trusting old scores.
+- Review the reproduced winner against retail CFG, instructions and named
+  call/relocation streams; use behavioral tests and negative controls where
+  appropriate. Apply only supported C++ and finish with full `homm3 build`.
+  The search itself never adopts source or updates CUR/MAX/HIST.
+
+Manual `homm3 build --fast <TU>` remains useful for bootstrapping, a focused
+diagnostic/negative control, and checking an adopted edit. Once exploring
+multiple plausible alternatives, put them in the JSON search rather than
+falling back to serial manual probing. Do not invent dummy alternatives just
+to reach the batch width; a genuinely smaller finite family may be exhausted.
+
+This is not random-include `state-sweep`. Preserve proven source models even
+through temporary score dips. Do not use fake inline declarations, copied
+helper bodies, dummy calls/self-assignments, or retained diagnostic pragmas as
+search shortcuts. Current AGENTS.md restrictions override historical lever
+examples below. An exhausted batch is not function/TU completion: identify a
+new evidence-backed family or document the precise residual and scope limit.
+
 ## The governing ledger: per-function CUR / MAX / HIST
 
 `config/match_baseline.tsv` maintains the invariant **CUR <= MAX <= HIST**.
@@ -158,14 +222,17 @@ runs, the second build never runs, and the numbers you read are a lie about
 a stale tree. Use `;` between them. A lane lost its whole baseline to this
 and diagnosed twelve phantom regressions before noticing.
 
-4. **Build + score.** `homm3 sema diff` refreshes the unit it compares by
+4. **Build + score.** Use the JSON source-family search above as the main
+   candidate driver. For focused diagnostics, `homm3 sema diff` refreshes the unit it compares by
    itself (its ninja target, normalized copies, objdiff report: free when
    nothing changed, one VC6 compile otherwise), so an edit-diff cycle needs no
    separate build; `homm3 build --fast` is for the tree-wide score. After ANY
    new claim or DATA lands, run `homm3 delink` ONCE (the target side must
    relearn names), then `--fast` again. Scores: filter `build/objdiff/report.json` by
    unit (report addresses are obj-local — count identity, not RVAs).
-5. **Iterate.** `homm3 sema diff 0x<va> --summary` first: every view's verdict on
+5. **Iterate.** Inspect reproduced elites and author follow-up JSON families
+   from evidence, retaining multiple parents rather than just the best score.
+   `homm3 sema diff 0x<va> --summary` first: every view's verdict on
    one screen plus the next view to run (`--why-bytes` adds the first byte-level
    divergence unmasked). Then `--calls` (the callee sequences, judged like
    `objdiff-cli diff`; a one-sided call is an inlining decision), `--branches`
@@ -1140,7 +1207,7 @@ Sweep 1,2,3,4,5 FIRST, then widen.
   proven closer on the whole basewin family. Preserve its provenance in the
   §5 record.
 
-## Known residual classes (document, don't grind past 3-4 real hypotheses)
+## Known residual classes (use evidence-backed JSON families, not serial grinding)
 
 - **Merged-return blocks / stale-CL-generation** (path.obj, kbwin AppWndProc):
   retail's tail-merge behavior differs from our SP3 CL in both directions;

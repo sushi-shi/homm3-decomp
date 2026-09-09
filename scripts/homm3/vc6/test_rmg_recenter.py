@@ -1,5 +1,6 @@
 """Centroid source families preserve signed zone filtering and empty zones."""
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -28,6 +29,22 @@ class RecenterTests(unittest.TestCase):
             self.assertEqual(len(self.module.make_axes(source)[0]["options"]), 60)
         with self.assertRaisesRegex(ValueError, "review current"):
             self.module.make_axes(self.source.replace("total.m_x += x", "total.m_x += y"))
+
+    def test_entry_binding_admission(self):
+        axes = self.module.entry_binding_axes(self.source)
+        payload = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=axes)
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "input.json"
+            path.write_text(json.dumps(payload))
+            _, originals, loaded = source_families.load_manifest(path, self.root)
+        self.assertEqual(len(loaded[0].options), 60)
+        self.assertEqual(source_families.render(originals, loaded, (0,)), originals)
+        original = self.module.helpers().definition(self.source, self.module.FUNCTION)
+        for _, body in self.module.zeroing_refinements(original):
+            self.assertEqual(body.count("total.m_z = position.m_z;"), 1)
+            self.assertLess(body.index("position = zone->getLevelPosition();"), body.index("total.m_z = position.m_z;"))
+        with self.assertRaisesRegex(ValueError, "review recenter entry-binding"):
+            self.module.entry_binding_axes(self.source.replace("int count = 0;\n    TRmgMapPosition total;", "int count = 1;\n    TRmgMapPosition total;"))
 
     @unittest.skipUnless(shutil.which("g++"), "requires native C++ compiler")
     def test_flat_reference_and_negative_controls(self):
@@ -71,6 +88,19 @@ class RecenterTests(unittest.TestCase):
             self.assertIn("+" + family, labels)
         for i, option in enumerate(balanced[0]["options"]):
             candidate("Balanced" + str(i), option["replace"], True)
+        entries = self.module.entry_binding_axes(self.source)
+        self.assertEqual(len(entries[0]["options"]), 60)
+        for i, option in enumerate(entries[0]["options"]):
+            candidate("EntryBinding" + str(i), option["replace"], True)
+        candidate("Authored", original, True)
+        if os.environ.get("HOMM3_RECENTER_MANIFEST"):
+            manifest = Path(os.environ["HOMM3_RECENTER_MANIFEST"])
+            if not manifest.is_absolute():
+                manifest = self.root / manifest
+            _, originals, axes = source_families.load_manifest(manifest, self.root)
+            for i in range(len(axes[0].options)):
+                rendered = source_families.render(originals, axes, (i,))[self.module.SOURCE]
+                candidate("Manifest" + str(i), self.module.helpers().definition(rendered, self.module.FUNCTION), True)
         baseline = list(self.module.forms())[0][1]
         for name, before, after in (
             ("Zone", "== zoneIndex", "!= zoneIndex"),
@@ -82,6 +112,7 @@ class RecenterTests(unittest.TestCase):
             ("KeepLevel", "zone->setLevelPosition(position);", "position.m_z = 0; zone->setLevelPosition(position);")):
             self.assertIn(before, baseline)
             candidate("Wrong" + name, baseline.replace(before, after), False)
+        candidate("WrongSlotWrite", baseline.replace("    int count = 0;", "    ++zone->m_slot->m_zoneIndex;\n    int count = 0;"), False)
         program = (self.root / "scripts/experiments/rmg-recenter-oracle.cpp").read_text()
         for marker, value in (("TYPES", types), ("HELPERS", helper),
                 ("ACCESSOR", re.search(r"inline TRmgMapItem\* getMapItem\(int x, int y, int z\)\s*\{[^}]+}", header)[0]),
