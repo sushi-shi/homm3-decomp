@@ -56,6 +56,8 @@ Manually maintained cleanup checklist:
 - [ ] Review unrelated variable reuse.
 - [ ] Review stack aggregates and unused members.
 - [ ] Review unresolved buffer bounds.
+- [ ] Review compiler warnings.
+- [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 
