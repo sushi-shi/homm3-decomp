@@ -84,13 +84,24 @@ order, and the final depth-normalization CFG. Four named PCX extrema restore
 retail's load schedule and raise the body from 83.1429% to 91.8452%. A complete
 72-state follow-up exhausts all 24 metadata orders against three normalization
 forms. Storing planes, stride, palette type, then depth raises the body to
-98.5714%; the other eleven Victor rows are unchanged. Candidate and retail now
-differ only in the EBX/EDI save order and one redundant jump in the final
-normalization. The combined condition remains stronger than the two independent
-`if` statements (96.6667% under the winning metadata order). A further 192-state
-family exhausts all coordinate-declaration orders and eight shared-store CFG
-forms; six ordinary/goto forms compile to the same retained object and none
-improves it. Eight nested-label/switch controls produce two objects and no gain.
+98.5714%; the other eleven Victor rows are unchanged. The combined condition
+remains stronger than the two independent `if` statements (96.6667% under the
+winning metadata order). A further 192-state family exhausts all coordinate-
+declaration orders and eight shared-store CFG forms; six ordinary/goto forms
+compile to the same retained object and none improves it. Eight nested-label/
+switch controls produce two objects and no gain.
+
+Retail nevertheless preserves its four-bit fallback comparison after the
+monochrome/planes arm. An eight-state lvalue family shows why: projecting the
+already stored integer `m_bpPixel` back to its source byte for that fallback
+removes the candidate's redundant jump and raises the body to 99.0476%. The CFG
+is now exact in all ten blocks, six branches and two returns. The residual is
+only the output-byte memory compare versus retail's retained DL and the EBX/EDI
+save order. Eight unprojected header/output combinations, ten depth snapshots,
+twelve entry-declaration orders and ten named-predicate/value forms exercise 40
+sources and yield twenty family-level distinct-object results without improving
+this peak. `/Oa`, `/Ow`, `/Oi-`, `/Ob1`, `/Ot` and `/Op` controls are flat for
+`pcxinfo` or damage sibling rows.
 
 The palette reader has the same 21 CFG blocks, twelve branches, nine calls and
 ten relocations as retail. Its broad declaration-scope family emits one object,
