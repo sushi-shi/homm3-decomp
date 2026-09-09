@@ -56,13 +56,17 @@ Manually maintained cleanup checklist:
 - [ ] Review unrelated variable reuse.
 - [ ] Review stack aggregates and unused members.
 - [ ] Review unresolved buffer bounds.
-- [ ] Review compiler warnings.
+- [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
+- [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
+- [ ] Review pragma debt in `src/`: **436 `#pragma` directives**, all for inlining
+  (**213 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 
-Counts cover tracked project C/C++ in `src/` and `include/`, excluding comments,
-literals, disabled `#if 0` bodies, generated build copies and vendor code. Casts
+Unless scoped otherwise, counts cover tracked project C/C++ in `src/` and
+`include/`, excluding comments, literals, disabled `#if 0` bodies, generated build
+copies and vendor code. Casts
 count written named conversions; the cleanliness gates separately report zero
 C-style and `reinterpret_cast` conversions. Items without counts still need a
 tree-wide census; an unchecked item is a review category, not proof of a defect.
