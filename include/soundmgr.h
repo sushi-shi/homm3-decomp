@@ -576,6 +576,11 @@ extern soundManager* g_soundManager;
 // the retained member exact and recovers showVideo 67.8147 -> 94.1120;
 // every other tracked score holds across all 51 dependent TUs. The combined
 // guard control stays at 67.8147. No declaration or helper owner changes.
+// Definition-placement control: moving the existing Miles/global dependencies
+// before this class is code-identical; defining this same inline body inside
+// the class produces a second object identity but changes no tracked score
+// across all 51 consumers. NextBinkFrame still expands serviceSounds where
+// retail 0x44daa0 calls 0x59a7d0. Keep this placement and its proven guards.
 // Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
 VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
 inline void soundManager::serviceSounds()

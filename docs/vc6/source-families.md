@@ -1826,3 +1826,65 @@ and no CUR declines. Restoring Bink member names changes the own-source hashes
 of `nextBinkFrame` and `videoClose`, resetting their MAX values to their
 unchanged current scores (0% and 38.1538%); their 92.9245% and 100% HIST peaks
 remain available. Every unchanged-source MAX is preserved.
+
+
+## Sound definition placement and shared native library bodies
+
+`generate-sound-placement-family.py` isolates a remaining sound inlining
+hypothesis after the guard/binding and Bink-pump families plateau. Dreamcast's
+`SoundMgr.h:140` member (dc 0xe6ef4) is a WinCE stub: it proves the header
+boundary, but not whether the PC body was defined inside its class. Retail
+NextBinkFrame (0x44daa0) calls the retained service member; the current VC6
+header body expands there. Preserve the inline declaration and exact body.
+Compare the current header, moving its real Miles/global dependencies before
+the class, and defining that body inside the class. No duplicate declarations,
+new helper, dummy caller or pragma is introduced.
+
+All **three states** compile and score across all **51 dependent TUs** in
+`acc470ea6c108d3aa715`, producing two reproduced object identities and identical
+score vectors. The dependency-only move is code-identical; the in-class body
+has a different aggregate identity without any tracked score changes. Keep
+the authored placement and guards. The generator keeps those placements as
+reviewable controls, not arbitrary declaration-count perturbations.
+
+The next emission audit finds retained canonical library bodies in other
+real consumers. A source enrollment in a TU that has ceased emitting a
+COMDAT does not mean the shared library definition is absent everywhere.
+Move only the enrollments, retaining the existing native definitions and
+calls. Retail callers and raw bytes establish these identities independently
+of the matching score:
+
+| Retained body | Emitting consumer | Retail evidence |
+| --- | --- | --- |
+| String assign from pointer/count, 0x404150 | advmgr | Hero assignment and getArmyHelpText call it, as does SendChat. All 161 bytes agree outside four matching named calls. |
+| Vector size, 0x517750 | objecttype / TImageInfo | Image-cache insertion and setupAndLoadObstacles share the 24-byte element implementation. All 33 bytes agree with no relocations. |
+| Single string-vector insertion, 0x4af350 | seerhut | Five quest dialogs, creatureBankEvent and text scrolling call the same 387-byte retained body. |
+| String-vector destroy/copy, 0x4af500 / 0x4af800 | seerhut | The retained insertion calls these exact 77/56-byte specializations. |
+| String fill/copy_backward, 0x4af870 / 0x4af9d0 | seerhut | The insertion's shift/fill arms call these exact 340/357-byte loops. |
+| Mutable/const int copy, 0x5093c0 / 0x54df40 | rmg | The addObject costs worklist and BlackBoxData/RMG helper paths use the two overloads; both emitted bodies agree with all 37 bytes. |
+
+For the 1,217-byte string-vector chain, every non-relocation byte agrees.
+Allocation/deallocation and the retained _Construct/_Ufill targets match.
+The size call at 0x4af4e0 names a folded vector<vector<hero> > representative;
+its native string-vector size matches every byte. The remaining runtime/data
+references are the invalid-position throw, overlap-safe memmove, npos at
+0x63a60c and the empty string at 0x63a608. Inspect the actual destinations,
+including the backward-copy arm and the zero/-1 data, before accepting their
+differing generated labels. Do not add a type proxy, explicit instantiation
+or a game call to force these COMDATs back into their former consumer.
+
+The full checkpoint restores all nine rows from 0% to **100%**, reaching
+**95.15% executable matching** and **3,950/4,751 exact functions**. Generated
+emission debt falls from 38 to **29**. All 4,752 ledger rows survive, with
+nine CUR gains, no CUR declines, no MAX resets and every historical peak
+preserved. Ownership remains 4,788 canonical definitions with zero
+violations, and the existing 200 inline-depth pins are unchanged. All 76
+ownership and native-oracle tests pass, including the sound-service callback
+and receiver checks.
+
+Seven edited TUs retain their cached native code/relocation identities.
+The cached RMG raw identity differs from its fresh compile, but recompiling
+the frozen pre-edit source and headers reproduces the current object exactly:
+the enrollment edits introduce no code change. RMG's pre-existing score rows
+also remain unchanged. This control is necessary before attributing a cached
+object difference to a comment/enrollment edit.

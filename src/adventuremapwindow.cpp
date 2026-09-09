@@ -42,10 +42,9 @@ const char* TCheatCode::s_a = "abcdefghijklmnopqrstuvwxyz";
 DATA(0x0065f224)
 const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 
-// Retail's gosolo handler at 0x4022e0 calls this Dinkumware specialization
-// at 0x404150 to build its local string. The retained library body belongs
-// to <string>; emission must come from real use, not an invented caller.
-VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
+// Retail's gosolo handler at 0x4022e0 calls Dinkumware's string assignment
+// at 0x404150. The shared <string> body now expands here and remains emitted
+// in advmgr, whose retail callers also use it; its enrollment lives there.
 
 #if 0  // @carcass
 

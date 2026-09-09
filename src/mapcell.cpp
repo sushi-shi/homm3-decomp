@@ -5697,14 +5697,10 @@ VA_COMPGEN(0x005089a0, 0x34, VECTOR_UFILL, TQuestGuard)
 // HeroPlaceholderData instantiation in mapcell.obj and owns the folded body.
 VA_COMPGEN(0x005089e0, 0x30A, VECTOR_INSERT, RandomDwellingData)
 VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
-// This 4-byte element loop is also the folded body called as copy<pathCell**>
-// from ai_player/findpath.  mapcell.obj's COFF order emits copy<int> here,
-// immediately before copy<TTimedEvent> and copy<type_university>, so copy<int>
-// is the primary owner even though the surviving retail xref uses an alias.
-VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
-// BlackBoxData's exact implicit assignment retains the const-source overload
-// separately; its body is the same dword-copy loop as the mutable overload.
-VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
+// The mutable/const-source int-copy helpers at 0x5093c0/0x54df40 now expand
+// in mapcell. Both canonical <algorithm> specializations still emit in rmg,
+// where their enrollments live. The former is also called for folded pointer
+// arrays; BlackBoxData's implicit assignment calls the separate const form.
 // Residual (96.50%, compiler CSE wall): after the implicit padding fields
 // were removed, base and retail have the same 36-block CFG and differ in
 // only three blocks. Retail hoists string::npos (0x63a60c) into ESI for the

@@ -9324,14 +9324,6 @@ VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, int_spell_level_order)
 // COMDAT pairing: std::_Unguarded_insert<int, spell_level_order>, 0.966.
 VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, int_spell_level_order)
 
-// COMDAT pairing: std::copy_backward<std::string>, agreement 0.972.
-VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)
-
-// COMDAT pairing: std::fill<std::string>, agreement 0.971 against 0.944 for
-// copy_backward, which pairs with 0xaf9d0 instead.
-VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
-
-
 // COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
 VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
 
@@ -9339,25 +9331,17 @@ VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
 VA_COMPGEN(0x004aeb00, 0x4B, IMPLICIT_DTOR, clevelpickwaitdlg)
 
 // COMDAT pairing: vector<std::string>::insert(pos, n, val), agreement 0.985.
-// Its one-element sibling below is the other half of the overload group.
+// Its single-element sibling and retained cleanup/copy/fill chain are now
+// enrolled in seerhut, where their canonical <vector>/<algorithm> bodies
+// still emit. Retail creatureBankEvent and five quest dialogs share them.
 VA_COMPGEN(0x004af550, 0x2A5, VECTOR_INSERT, string)
-
-// COMDAT pairing: vector<std::string>::insert(pos, val), agreement 0.975.
-VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT, string)
 
 // COMDAT pairing: std::_Construct<std::string>, agreement 0.972.
 VA_COMPGEN(0x004afb40, 0x167, STD_CONSTRUCT, string)
 
 
-// COMDAT pairing: vector<std::string>::_Destroy, agreement 0.960.
-VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
-
 // COMDAT pairing: vector<std::string>::~vector, agreement 0.950.
 VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
-
-// COMDAT pairing: vector<std::string>::_Ucopy (thiscall, three pointer
-// arguments, `ret 0xc`).
-VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
 
 // COMDAT pairing: vector<type_dialog_resource>::size(). Byte-exact over the
 // whole 19-byte extent against this object's own COMDAT, and UNIQUE there -

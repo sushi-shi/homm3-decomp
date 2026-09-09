@@ -1239,6 +1239,12 @@ VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 // with type_artifact at 0x404140. All four comparisons agree in every view.
 VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
 
+// This insertion and setupAndLoadObstacles (0x466290) both call 0x517750.
+// Retail retains the folded size helper here in the objecttype cluster.
+// The TObstacle copy expands in cmbtmgr; this native TImageInfo instance
+// matches all 33 retail bytes, with no relocations or added instantiation.
+VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TImageInfo)
+
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
 VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)

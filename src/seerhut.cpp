@@ -3615,3 +3615,20 @@ VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)
 // COMDAT pairing: vector<basic_string<char>>::_Ufill, agreement 1.000 at an
 // exactly equal 41-byte extent.
 VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)
+
+// The shared single-string insertion and its retained library helpers no
+// longer emit in events, but this TU naturally emits the same specializations.
+// Retail calls 0x4af350 from creatureBankEvent and five quest dialogs:
+// artifact/creature/resource proposals, creature progress and resource text.
+// The latter callers prove this consumer independently of matching scores.
+// All 1,217 instruction bytes below agree outside relocation operands.
+// Allocation/deallocation, _Construct/_Ufill and the four calls within this
+// chain agree; size at 0x4af4e0 is byte-identical to the retained string-vector
+// size (also folded with vector<vector<hero> >). _Xran and memmove are the
+// retail invalid-position throw and overlap-safe copy; npos/empty-string
+// data point to 0x63a60c/0x63a608. No template body or caller is manufactured.
+VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT_SINGLE, string)
+VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
+VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
+VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
+VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)
