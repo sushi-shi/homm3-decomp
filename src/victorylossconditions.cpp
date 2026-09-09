@@ -82,24 +82,35 @@ static const int g_angelicAllianceSecondMap = 9;
 // 98.2057 -> 98.49 (2026-09-07): put the direct-artifact winner store before
 // the gameWon store, matching both Dreamcast's line order and this function's
 // combination-win arm; retail's whole direct-win block is now exact.
-// Residual: register-visible slots across the Complete-only campaign
-// prologue, one commutative hero-array SIB, and the final exception-cleanup
-// state initialization. Keeping currMap as
-// a reference is the whole-body optimum: direct member reads now fall to
-// 92.69% and add a 78th block. The fresh eight-cell why-reg catalog is flat
-// or worse (unnamed comboIdx is flat; volatile team/comboIdx/remaining/j and
-// a named completion flag are worse). Earlier negative controls remain:
-// erase(it,it+1), inline_depth(1), and the pre-helper direct-member spelling.
+// 98.49 -> 99.7368 (2026-09-09): retail loads currentMap directly in the
+// Complete-only campaign guards and forms the retained reference only on the
+// two paths entering their body. The five-state scope family
+// (fb9eccef69cfa41ddb7c; five objects) restores those three entry blocks and
+// makes the inlined range-failure tail the sole size mismatch.
+// 99.7368 -> EXACT (2026-09-09): the 50-state Complete-only result family
+// (89c47e8af4b5571d0885; eight objects) found eight spellings of the same
+// retail object. The selected int bitset result fixes the commutative
+// campaign hero-array SIB; the following bool HasArtifact result changes
+// /Ob2 state enough to expand out_of_range's derived constructor and emit its
+// final vftable store. Negative controls: 30 hero-id value/reference/pointer
+// lifetimes made six objects without a gain (8b02455ec261aa663089); seven
+// vector exhaustion spellings made six objects without a gain
+// (55c47942207fb45df3a4); the canonical game::getTeam spelling was byte-flat
+// (2fc9185b24879d14aece). Earlier erase(it,it+1), inline_depth(1), volatile
+// loop locals, and named completion-result probes remain rejected.
 // E:\gamedcs\victorylossconditions.cpp:31
 VA(0x005f1610, 0x4FE)  // anchor-global, dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
     int& currCampaign = g_game->m_campaign.m_currentCampaign;
-    signed char& currMap = g_game->m_campaign.m_currentMap;
-    if ((currCampaign == g_armorOfTheDamnedCampaign && currMap == 1)
+    if ((currCampaign == g_armorOfTheDamnedCampaign
+            && g_game->m_campaign.m_currentMap == 1)
         || (currCampaign == g_angelicAllianceCampaign
-            && (currMap == g_angelicAllianceFirstMap
-                || currMap == g_angelicAllianceSecondMap))) {
+            && (g_game->m_campaign.m_currentMap
+                    == g_angelicAllianceFirstMap
+                || g_game->m_campaign.m_currentMap
+                    == g_angelicAllianceSecondMap))) {
+        signed char& currMap = g_game->m_campaign.m_currentMap;
         if (!g_currentPlayer->isHuman())
             return 0;
 
@@ -163,8 +174,10 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
             int remaining = components.count();
             hero* h = g_game->getHero(g_currentPlayer->m_heroes[j]);
             for (int i = 0;; ++i) {
-                if (components.test(i)) {
-                    if (!h->hasArtifact(i))
+                int hasComponent = components.test(i);
+                if (hasComponent) {
+                    bool carriesComponent = h->hasArtifact(i);
+                    if (!carriesComponent)
                         break;
                     if (--remaining == 0) {
                         m_playerWinner =
