@@ -5192,6 +5192,8 @@ void townManager::doPortalOfSummoning()
 // (`format_string(...).c_str()`), not a named std::string: the named form
 // spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
+// Combining the extra/special-building custom-text guards removes the goto
+// but lowers 100% to 97.7551%; the current custom-text join is retained.
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
@@ -5619,6 +5621,16 @@ static int exitTownManager(message& msg)
 // blocks below); ChangeTown's roster twin is the town-switch tail the
 // locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
+// Eleven copied per-arm popup bodies lower 90.2738% to 73.3704%. DC also
+// directly branches these arms to one shared popup (e.g. lines 6006/6017);
+// no separate helper is evidenced there, so the popup join remains.
+// Building-popup flag control: bool and int flags remove all eleven joins
+// but both score 87.0077% against 90.2738%; eleven copied popup bodies score
+// 73.3704%. DC's arms reach one common popup action, and no distinct helper
+// boundary is evidenced here. Retain the common action pending better scopes.
+// Eight result/lifetime controls include a byte-sized flag and declaration
+// before code selection or at function scope. Every structured flag form
+// emits the same 87.0077% object; changing its width/lifetime does not help.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {

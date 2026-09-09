@@ -195,6 +195,8 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 // and ten jump-table slots exactly.
 // Goto audit: Replacing the five callWidgetMain jumps with direct base
 // calls/returns scores 89.6667% versus 100%; the shared call tail remains.
+// The base-widget exits break the outer switch and remain exact. Replacing
+// sliderMessageHandled with a return costs 0.0123 points, so that label stays.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
 int slider::main(message* msg)
 {
@@ -219,7 +221,7 @@ int slider::main(message* msg)
         if (isDisabled)
             return 0;
         if (!(m_status & WIDGET_DRAWN) || (m_status & WIDGET_DIMMED))
-            goto callWidgetMain;
+            break;
         if (!m_hotKeys)
             return 0;
         switch (msg->m_codeX) {
@@ -244,7 +246,7 @@ int slider::main(message* msg)
 
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (!(m_status & WIDGET_DRAWN))
-            goto callWidgetMain;
+            break;
         if (isDisabled)
             return 0;
         m_clickX = msg->m_codeX - m_parentWindow->m_x;
@@ -304,12 +306,12 @@ int slider::main(message* msg)
         if (isDisabled)
             return 0;
         if (!(m_status & WIDGET_DRAWN) || !(m_status & WIDGET_SELECTED))
-            goto callWidgetMain;
+            break;
         return deselect(msg);
 
     case MESSAGE_RIGHT_BUTTON_DOWN:
         if (!(m_status & WIDGET_DRAWN))
-            goto callWidgetMain;
+            break;
         m_clickX = msg->m_codeX - m_parentWindow->m_x;
         m_clickY = msg->m_codeY - m_parentWindow->m_y;
         if (m_clickX < m_x || m_clickY < m_y || m_clickX >= m_x + m_width
@@ -336,13 +338,12 @@ int slider::main(message* msg)
             }
             break;
         }
-        goto callWidgetMain;
+        break;
 
     sliderMessageHandled:
         return 1;
     }
 
-callWidgetMain:
     return widget::main(msg);
 }
 
@@ -401,9 +402,9 @@ int slider::select(message* msg, unsigned char dragging)
 }
 
 // E:\gamedcs\slider.cpp:545
-// EXACT 2026-08-11. Successful decrements jump to the common redraw exit;
-// preserving that source edge releases the coordinate lifetime and lets C2
-// share retail's knob arithmetic without an extra EBX save.
+// DC lines 553-574 place the coordinate-specific decrement/increment arms
+// in separate scopes. Two else-if pairs preserve the exact common redraw
+// tail without gotos or an extra EBX save.
 VA(0x00596AF0, 0x143)  // contiguous slider block, dc 0x14a508
 int slider::deselect(message* msg)
 {
@@ -416,9 +417,7 @@ int slider::deselect(message* msg)
             --m_currentState;
             m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
                 + m_knobStart;
-            goto redraw;
-        }
-        if (m_clickX - m_x > m_length - m_knobStart
+        } else if (m_clickX - m_x > m_length - m_knobStart
             && m_currentState < m_numStates - 1) {
             ++m_currentState;
             m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
@@ -429,9 +428,7 @@ int slider::deselect(message* msg)
             --m_currentState;
             m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
                 + m_knobStart;
-            goto redraw;
-        }
-        if (m_clickY - m_y > m_length - m_knobStart
+        } else if (m_clickY - m_y > m_length - m_knobStart
             && m_currentState < m_numStates - 1) {
             ++m_currentState;
             m_knobPos = m_knobRange * m_currentState / (m_numStates - 1)
@@ -439,7 +436,6 @@ int slider::deselect(message* msg)
         }
     }
 
-redraw:
     draw();
     g_windowManager->updateScreen(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);

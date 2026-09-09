@@ -2129,48 +2129,28 @@ unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
-// NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
-// restored OnKeyPress once; since then BOTH rows of the pair OSCILLATE
-// between 100.0000 and 99.89/99.87 per delink generation on a pure
-// data-name pairing deadlock (max accepted downward as needed, hist
-// keeps the peaks): the bytes are exact and the deltas are reloc names
-// only -
-// (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
-// the delinker names the merged retail cell 0x63a608 after
-// adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
-// two legitimate names - whichever the synth PDB picks, the other TU's
-// row shows the mismatch); (b) gLocalPlayerName's 0x698817 cell is not
-// carried by the delink data manifest, so the target side keeps the
-// flat data_298817. Closes only via a data-manifest change (a pipeline
-// contract, not a lane edit).
-// The shared name-commit helper both CEnterNameEdit overrides expand. DC
-// keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
-// two overrides carry its whole body - so the definition is `inline`.
-// The committed name lands in three places: the lobby slot record, the
-// persisted prefs nickname, and the row's read-only name text widget
-// (id pos+345). player->sName on the not-found path is address arithmetic
-// only, exactly as retail compiles it.
+// E:\gamedcs\singleselectionwindow.cpp:1820
+// DC lines 1823/1824 call hide, GetText and ordinary OnNameChange. Keep
+// all three boundaries; OnNameChange owns the player/prefs/widget work.
+// The merged header/helper state keeps OnKeyPress exact with GetText as the
+// direct argument. Capturing a separate text pointer scored 100% before the
+// integration but now swaps two stack-slot operands (99.8868%). A 12-state
+// family covering text/receiver evaluation and return scopes reproduces the
+// direct-argument winner with every other function unchanged. Retain the
+// canonical helper chain; no declaration or inlining override is needed.
+// OnEnter's existing inline declaration remains unchanged.
 inline int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
-    sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    const char* text = m_text.c_str();
-    TSingleSelectionWindow* win = g_unnamed69fbe8;
-    CNetPlayerHandlerPlayer* player = win->m_players.getPlayerInPos(pos);
-    win->setFocus(-1);
-    if (player) {
-        strcpy(player->m_name, text);
-        strcpy(g_localPlayerName, text);
-        writePrefs();
-    }
-    static_cast<textWidget*>(win->getWidget(pos + 345))
-        ->setText(player->m_name);
-    win->drawHeroAdvancedOption(pos, 1, -1);
+    hide();
+    g_unnamed69fbe8->onNameChange(pos, getText());
     return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
-// Canonical map-type header collateral: 100 -> 99.8868; recovery pending.
+// The canonical OnEnter/OnNameChange chain now keeps this body exact with
+// either two direct returns or an explicit else. Earlier wrapper-only key
+// and else controls were sensitive to the missing helper/header state.
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
 int CEnterNameEdit::onKeyPress(message* msg)
 {
@@ -7033,12 +7013,32 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:8230
+// Before normalization (function/locals): OnNameChange, gamePos, newName, player, w.
+// Both CEnterNameEdit overrides expand this ordinary member; there is no
+// retained retail body to claim. DC line 8231 overrides gamePos from a
+// platform-specific field and line 8252 reads a stored icon position. Retail
+// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
+// so those two Complete semantics remain explicit below. The original w
+// local and all eight named/virtual source calls retain their order.
 DC_ONLY(0x143810, 0xA8)
-void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
+void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 {
-    // @stub
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    setFocus(-1);
+    if (player) {
+        strcpy(player->m_name, newName);
+        strcpy(g_localPlayerName, newName);
+        writePrefs();
+    }
+    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
+    w->setText(player->m_name);
+    drawHeroAdvancedOption(gamePos, 1, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8256
 DC_ONLY(0x1438b8, 0x9A)

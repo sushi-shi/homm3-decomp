@@ -312,12 +312,14 @@ gatePairStorageAsPoints(std::vector<long>* pairs)
 unsigned char saveVector(TAbstractFile* outfile,
                           std::vector<type_university>* srcVector);
 // Before normalization (function): save_object_vector.
+unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector);
 unsigned char saveObjectVector(TAbstractFile* outfile,
                                  // Before normalization (locals): src_vector.
                                  std::vector<type_creature_bank>* srcVector);
 // The Load mirror of save_object_vector (retail 0x4d2870), reached only
 // by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
 // Before normalization (function): load_object_vector.
+unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector);
 unsigned char loadObjectVector(TAbstractFile* infile,
                                  // Before normalization (locals): dest_vector.
                                  std::vector<type_creature_bank>* destVector);
@@ -2273,18 +2275,48 @@ int game::SavePlayerData(void* outfile)
 }
 
 // E:\gamedcs\game.cpp:1698
+#endif  // @carcass
+
+// Original LoadTownPool; uchar_buffer -> townCount. Complete passes the save
+// version to town::load. DC returns the element error unchanged, while the
+// game::load caller maps any negative result to -1.
 DC_ONLY(0xa5a40, 0xB6)
-int game::LoadTownPool(void* infile)
+int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    unsigned char townCount;
+    int count = infile->read(&townCount, sizeof(townCount));
+    if (count < sizeof(townCount))
+        return -1;
+    m_towns.resize(townCount);
+    for (int x = 0; x < m_towns.size(); ++x) {
+        int err = m_towns[x].load(infile, saveVersion);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:1722
+
+// Original SaveTownPool; uchar_buffer -> townCount. Keep the DC vector-size
+// loop and element error return; ordinary inlining replaces the copied loop
+// and its pinned condition in game::save.
 DC_ONLY(0xa5af8, 0xA4)
-int game::SaveTownPool(void* outfile)
+int game::saveTownPool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char townCount = m_towns.size();
+    int count = outfile->write(&townCount, sizeof(townCount));
+    if (count < sizeof(townCount))
+        return -1;
+    for (int x = 0; x < m_towns.size(); ++x) {
+        int err = m_towns[x].save(outfile);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1745
 DC_ONLY(0xa5b9c, 0x56)
@@ -3465,12 +3497,43 @@ void game::setupShipyards()
 
 #if 0  // @carcass
 
-// E:\gamedcs\game.cpp:2672
-DC_ONLY(0xa7a24, 0x98)
-int game::LoadBlackMarkets(void* infile)
+#endif  // @carcass
+
+// E:\gamedcs\game.cpp:2654; original name SaveBlackMarkets.
+DC_ONLY(0xa795c, 0xC6)
+int game::saveBlackMarkets(TAbstractFile* outfile)
 {
-    // @stub
+    char blackMarketListSize = m_blackMarkets.size();
+    int count = outfile->write(&blackMarketListSize, sizeof(blackMarketListSize));
+    if (count < sizeof(blackMarketListSize))
+        return -1;
+    count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    if (count < blackMarketListSize * sizeof(TBlackMarket))
+        return -1;
+    return 0;
 }
+
+// E:\gamedcs\game.cpp:2672
+
+// Original LoadBlackMarkets; black_market_list_size -> blackMarketListSize.
+// DC calls clear, resize and operator[]. The ordinary helper restores one
+// caller cleanup boundary; its natural expansion needs no inline-depth pin.
+DC_ONLY(0xa7a24, 0x98)
+int game::loadBlackMarkets(TAbstractFile* infile)
+{
+    m_blackMarkets.clear();
+    char blackMarketListSize;
+    int count = infile->read(&blackMarketListSize, sizeof(blackMarketListSize));
+    if (count < sizeof(blackMarketListSize))
+        return -1;
+    m_blackMarkets.resize(blackMarketListSize);
+    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    if (count < blackMarketListSize * sizeof(TBlackMarket))
+        return -1;
+    return 0;
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2774
 DC_ONLY(0xa7abc, 0xA4)
@@ -3695,6 +3758,9 @@ static int loadLithPoolCount(int version)
     return (((version < 32) - 1) & 5) + 3;
 }
 
+// Canonical BlackMarkets, TownPool and generator-vector readers remove the
+// remaining shared failure labels. The six-helper family raises Load from
+// 63.4030% to 76.9004%; older flattened/pinned observations above are historical.
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::load(TAbstractFile* infile)
 {
@@ -3756,34 +3822,8 @@ int game::load(TAbstractFile* infile)
     if (loadRumours(infile) < 0)
         return -1;
 
-    // Retail CALLS vector<TBlackMarket>::erase(begin(), end()) here -
-    // clear()'s own body, expanded, with the erase left out of line. Our
-    // CL expands erase too and calls its `copy` and `_Destroy` instead, so
-    // the erase is spelled out and pinned; begin()/end() are hoisted first
-    // because the pin would otherwise de-inline them as well.
-    TBlackMarket* eventLast = m_blackMarkets.end();
-    TBlackMarket* eventFirst = m_blackMarkets.begin();
-#pragma inline_depth(0)
-    m_blackMarkets.erase(eventFirst, eventLast);
-#pragma inline_depth()
-    {
-        char charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer))
-            goto event_records_failed;
-#pragma inline_depth(0)
-        m_blackMarkets.resize(charBuffer);
-#pragma inline_depth()
-        // Retail recomputes `count * 28` TWICE - `movsx / lea [8*n] / sub /
-        // shl 2` once for the request and again for the compare. Landing it
-        // in an `eventBytes` local costs the second sign-extended reload.
-        if (infile->read(m_blackMarkets.begin(),
-                         charBuffer * sizeof(TBlackMarket))
-            < charBuffer * sizeof(TBlackMarket)) {
-        event_records_failed:
-            return -1;
-        }
-    }
+    if (loadBlackMarkets(infile) < 0)
+        return -1;
 
     if (m_worldMap.load(infile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers,
                       saved.m_version) < 0)
@@ -3793,23 +3833,10 @@ int game::load(TAbstractFile* infile)
     if (loadMinePool(infile, saved.m_version) < 0)
         return -1;
 
-    int i;
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) <
-            sizeof(shortBuffer)) {
-        generators_failed:
-            return -1;
-        }
-#pragma inline_depth(0)
-        m_generators.resize(shortBuffer);
-#pragma inline_depth()
-        for (i = 0; i < shortBuffer; ++i) {
-            if (!m_generators[i].load(infile))
-                goto generators_failed;
-        }
-    }
+    if (!loadObjectVector(infile, m_generators))
+        return -1;
 
+    int i;
     if (loadGarrisonPool(infile, saved.m_version) < 0)
         return -1;
     if (loadBoatPool(infile) < 0)
@@ -3825,18 +3852,8 @@ int game::load(TAbstractFile* infile)
             return -1;
     }
 
-    unsigned char townCount;
-    if (infile->read(&townCount, sizeof(townCount)) < sizeof(townCount)) {
-    towns_failed:
+    if (loadTownPool(infile, saved.m_version) < 0)
         return -1;
-    }
-#pragma inline_depth(0)
-    m_towns.resize(townCount);
-#pragma inline_depth()
-    for (i = 0; i < m_towns.size(); ++i) {
-        if (m_towns[i].load(infile, saved.m_version) < 0)
-            goto towns_failed;
-    }
 
     int heroCount = saved.m_version < 25 ? 128 : HERO_COUNT;
     for (i = 0; i < heroCount; ++i) {
@@ -4393,6 +4410,9 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // map-extra size an `int`; that spelling on top of the neutral buffer pair
 // regresses this function to 94.38246%, so the winning unsigned source form
 // remains in place.
+// Canonical BlackMarkets, TownPool and generator-vector writers remove the
+// remaining shared failure labels. Together with the readers, they raise Save
+// from 80.2448% to 96.5761%; older flattened/pinned observations above are historical.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
@@ -4402,7 +4422,6 @@ int game::save(TAbstractFile* outfile)
     char charBuffer;
     short shortValue;
     short extraShortValue;
-    short shortBuffer;
     int zero;
     SavedGameHeader saved;
     saved.reset();
@@ -4420,25 +4439,8 @@ int game::save(TAbstractFile* outfile)
     if (saveRumours(outfile) < 0)
         return -1;
 
-    {
-        charBuffer = m_blackMarkets.size();
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-            goto load_events_failed;
-        }
-        // Length recomputed on BOTH sides of the compare, not cached:
-        // retail re-widens the count byte and rebuilds `n * 28` as
-        // `lea edx,[8*ecx] / sub edx,ecx / shl edx,2` for the test,
-        // exactly as save_vector re-reads its short. An `eventBytes`
-        // local CSEs the two and compares SIGNED (`cmp eax,edi / jge`)
-        // where retail compares UNSIGNED (`cmp eax,edx / jae`).
-        if (outfile->write(m_blackMarkets.begin(),
-                           charBuffer * sizeof(TBlackMarket)) <
-                           charBuffer * sizeof(TBlackMarket)) {
-        load_events_failed:
-            return -1;
-        }
-    }
+    if (saveBlackMarkets(outfile) < 0)
+        return -1;
 
     if (m_worldMap.save(outfile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers) < 0)
         return -1;
@@ -4466,20 +4468,10 @@ int game::save(TAbstractFile* outfile)
     if (saveMinePool(outfile) < 0)
         return -1;
 
-    int i;
-    {
-        shortBuffer = m_generators.size();
-        if (outfile->write(&shortBuffer, sizeof(shortBuffer)) <
-            sizeof(shortBuffer)) {
-        generators_failed:
-            return -1;
-        }
-        for (i = 0; i < shortBuffer; ++i) {
-            if (!m_generators[i].save(outfile))
-                goto generators_failed;
-        }
-    }
+    if (!saveObjectVector(outfile, m_generators))
+        return -1;
 
+    int i;
     if (saveGarrisonPool(outfile) < 0)
         return -1;
     if (saveBoatPool(outfile) < 0)
@@ -4493,22 +4485,8 @@ int game::save(TAbstractFile* outfile)
             return -1;
     }
 
-    {
-        charBuffer = m_towns.size();
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-        towns_failed:
-            return -1;
-        }
-        i = 0;
-#pragma inline_depth(0)
-        while (i < m_towns.size()) {
-#pragma inline_depth()
-            if (m_towns[i].save(outfile) < 0)
-                goto towns_failed;
-            ++i;
-        }
-    }
+    if (saveTownPool(outfile) < 0)
+        return -1;
 
     for (i = 0; i < HERO_COUNT; ++i) {
         if (m_heroes[i].save(outfile) < 0)
@@ -5029,6 +5007,9 @@ inline unsigned char validateIsHumanTeam(game* thisGame, int teamNum)
 // no arm spelling reaches it without paying the slot swap.
 // Before normalization (locals): check_map_locations, num_living_players, campaign_number,
 // vchero_loc, poolhero_loc, this_town, lchero_loc.
+// The validLossTown join remains: a town-validation result flag scores
+// 89.2426%, and explicit invalid-town arms score 87.7111%, against 90.0315%.
+// These are limits of the tested scopes, not proof of an original goto.
 VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
 void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
@@ -5489,25 +5470,6 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
     }
 }
 
-__forceinline int game::setupFirstPlayerPosition(int firstHuman)
-{
-    if (g_mpNetProtocol == MP_HOTSEAT) {
-        if (firstHuman >= 0 && firstHuman < 8 &&
-            m_players[firstHuman].m_isHuman) {
-            return firstHuman;
-        }
-        int player;
-        for (player = 7; player >= 0; --player) {
-            if (m_players[player].m_isHuman)
-                goto playerSelected;
-        }
-        player = 0;
-playerSelected:
-        return player;
-    }
-    return g_localGamePos;
-}
-
 // E:\gamedcs\game.cpp:4474
 // The DC roster names a no-argument SetupFirstPlayer.  Retail's callers put
 // gpGame in ECX, and every indexed player load is relative to that receiver,
@@ -5515,6 +5477,13 @@ playerSelected:
 // array accessor's retail range clamp even though the induction is [0,8): the
 // resulting >=8/<0 pair is present in the bytes.  The hotseat fallback walks
 // the player array backwards and selects zero only when no human exists.
+// DC line 4495 calls the canonical ordinary GetLocalPlayerGamePos. The
+// former setupFirstPlayerPosition was an unattested forced-inline copy;
+// restoring the canonical call removes that copy and its success goto.
+// GetLocalPlayerGamePos's selected-result scope preserves all three exact
+// bodies (this caller, GetLocalPlayer and the retained helper). Its previous
+// early-return scan made this caller 94.75%; break-and-clamp made it 91.5833%
+// and also lowered the retained helper/GetLocalPlayer, so neither is kept.
 VA(0x004c0630, 0xB1)  // anchor-callers + dc-order, dc 0xab8d0
 void game::setupFirstPlayer()
 {
@@ -5532,7 +5501,7 @@ void game::setupFirstPlayer()
     g_currentPlayer = &m_players[firstHuman];
     g_unnamed69ccc4 = static_cast<unsigned char>(1 << firstHuman);
 
-    int currentPlayer = setupFirstPlayerPosition(firstHuman);
+    int currentPlayer = getLocalPlayerGamePos();
     g_unnamed69778c = currentPlayer;
     g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
     g_unnamed69d810 = firstHuman;
@@ -13041,18 +13010,30 @@ playerData* game::getLocalPlayer()
 }
 
 // E:\gamedcs\game.cpp:11796
+// The hotseat fallback records whether its reverse scan selected a human,
+// then returns the selected position or zero. It preserves the valid-net-pos
+// early return and the canonical ordinary boundary used by both callers.
+// Bool and unsigned-char selected flags both keep every game.obj score;
+// merging the initial validation into the flag scope lowers GetLocalPlayer
+// to 76.1765% and SetupFirstPlayer to 93.75%. Do not duplicate this selector
+// into a forced-inline caller-specific body to recover those expansions.
 VA(0x004cea20, 0x4E)  // anchor-global, dc 0xbc038
 int game::getLocalPlayerGamePos()
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
+        bool selected = false;
         if (pos >= 0 && pos < 8 && m_players[pos].m_isHuman)
             return pos;
         for (pos = 7; pos >= 0; pos--) {
-            if (m_players[pos].m_isHuman)
-                return pos;
+            if (m_players[pos].m_isHuman) {
+                selected = true;
+                break;
+            }
         }
-        return 0;
+        if (!selected)
+            pos = 0;
+        return pos;
     }
     return g_localGamePos;
 }
@@ -15785,11 +15766,26 @@ unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
 }
 
 // E:\gamedcs\game.cpp:2733
+#endif  // @carcass
+
+// Original load_object_vector; dest_vector -> destVector. CodeView proves an
+// ordinary overload taking the generator vector by reference, short count and
+// long i. Complete substitutes TAbstractFile for the Dreamcast gz handle.
 DC_ONLY(0xc1950, 0x98)
-unsigned char loadObjectVector(void* infile, std::vector<generator,std::allocator<generator>* dest_vector)
+unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector)
 {
-    // @stub
+    short count;
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
+        return 0;
+    destVector.resize(count);
+    for (long i = 0; i < count; ++i) {
+        if (!destVector[i].load(infile))
+            return 0;
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2698
 DC_ONLY(0xc19e8, 0x80)
@@ -15827,11 +15823,24 @@ void std::vector<hero,std::allocator<hero> >::_M_insert_overflow(hero* __positio
 }
 
 // E:\gamedcs\game.cpp:2754
+#endif  // @carcass
+
+// Original save_object_vector; src_vector -> srcVector. The ordinary overload
+// is expanded by game::save; keep the count short and the vector by reference.
 DC_ONLY(0xc1d38, 0x9C)
-unsigned char saveObjectVector(void* outfile, std::vector<generator,std::allocator<generator>* src_vector)
+unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector)
 {
-    // @stub
+    short count = srcVector.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        return 0;
+    for (long i = 0; i < count; ++i) {
+        if (!srcVector[i].save(outfile))
+            return 0;
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2716
 DC_ONLY(0xc1dd4, 0x84)

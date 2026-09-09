@@ -404,6 +404,8 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId;
 // `if (id == CANCEL) { ... } goto consume;` (byte-flat, VC6 canonicalises both).
 // The six consume edges can be ordinary returns: this retains 84.4576%
 // and all sibling scores. The end-dialog join remains a separate residual.
+// A shared exit flag with the original helper calls removes both joins but
+// scores 83.7571% versus 84.4576%; its cleanup layout still needs refinement.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {

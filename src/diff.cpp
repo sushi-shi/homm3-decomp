@@ -128,6 +128,8 @@ int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
 // and the two early-failure exits.  A fresh why-reg sweep leaves 14 schedule slots:
 // zero-hoisting, delta declaration swaps, and one chained assignment are flat;
 // the reverse chain/store order and volatile deltas are worse.
+// Early returns at the DC failure and success scopes remove both labels
+// without moving the 84.1667% residual; all four exit combinations are neutral.
 // E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
 bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
@@ -147,11 +149,13 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
             while (oldDelta < 64) {
                 if (oldOffset + oldDelta + 16 >= m_oldSize ||
                     newOffset + newDelta + 16 >= m_newSize)
-                    goto notFound;
+                    return 0;
 
                 if (memcmp(m_newData + newOffset + newDelta,
                            m_oldData + oldOffset + oldDelta, 16) == 0) {
-                    goto found;
+                    newCount += newDelta;
+                    oldCount += oldDelta;
+                    return 1;
                 }
                 ++oldDelta;
             }
@@ -163,14 +167,6 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
         oldCount += 64;
         newCount += 64;
     }
-
-notFound:
-    return 0;
-
-found:
-    newCount += newDelta;
-    oldCount += oldDelta;
-    return 1;
 }
 
 // Residual (current 83.9244%, banked MAX 83.9477%): exact 447-byte extent,

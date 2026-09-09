@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 68 (42 source, 26 header) | Ten removed; classify the remainder below |
-| Inline override regions | 289 | 246 | 43 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 239 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 241 | 48 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 234 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 514 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 504 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 37 active inline overrides were removed; counting
-all 43 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 42 active inline overrides were removed; counting
+all 48 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -627,8 +627,19 @@ delinking pass. That checkpoint's census is 248 inline overrides and 68 union de
 The shared-combat/drawing checkpoint is 4059/4752 exact, 96.29% linked fuzzy
 and 96.03% whole-image. The full affected-TU build, retail delinking and all
 gates pass, with no source edit lowering MAX. The subsequent insertion
-recovery raises the exact count to 4060/4752. The current census is 246
+recovery raises the exact count to 4060/4752. That checkpoint's census is 246
 inline overrides (239 depth-zero and seven auto-inline-off) and 68 unions.
+
+Integration with main's `265bc0f7` control-flow recovery preserves both sets
+of source changes. Its canonical black-market, generator and town-pool
+serialization boundaries remove five additional depth fences; see the
+[goto audit](goto-audit.md#further-structured-reductions). The combined
+full build passes at 4064/4752 exact, 96.39% linked fuzzy and 96.12%
+whole-image, with no MAX reset or lost banked RVA. The current census is
+**241 inline overrides** (234 depth-zero, seven auto-inline-off), across 34
+TUs, and **68 unions**. The independent controls above retain their exact
+pre-integration snapshots rather than presenting those scores as new-tree
+measurements.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

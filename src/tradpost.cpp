@@ -1935,6 +1935,8 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // in-arm assignment order (qtyRight before qtyLeft in the true arm,
 // qtyLeft before qtyRight in the false arm) on top scores 84.3290.
 // Before normalization (locals): bUpdate.
+// Duplicating the decimal-format call into the reciprocal/unit branches
+// removes ratioDone but lowers 88.5391% to 86.8941%; the join remains.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::update(unsigned char update)
 {
@@ -2385,6 +2387,8 @@ void TGiveResourceWindow::update(bool update)
 // order contradicts retail. Repeating msg.id at the retail store site is also a
 // measured loss (-0.39 raw), so both are intentionally left unbanked.
 // Before normalization (locals): bUpdate.
+// Keeping the singular/plural assignment inside its quantity arm removes
+// have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2396,15 +2400,15 @@ void TBuyArtifactWindow::update(unsigned char update)
         const char* word;
         if (g_ratioInverted) {
             qty = 1;
+            word = (*g_generalText)[162];
         } else {
             qty = g_giveQuantity;
             if (qty > 1) {
                 word = (*g_generalText)[161];
-                goto have_word;
+            } else {
+                word = (*g_generalText)[162];
             }
         }
-        word = (*g_generalText)[162];
-have_word:
         sprintf(g_text, (*g_generalText)[268],
                 g_artifactTraits[g_marketArtifacts.m_asIds[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
@@ -4164,28 +4168,27 @@ int TSellCreatureWindow::windowHandler(message* msg)
 VA(0x005eebd0, 0x1a1)  // anchor-callee (TSellCreatureWindow::WindowHandler), dc 0x18c7b0
 void TSellCreatureWindow::setRolloverText(int codeY)
 {
-    const char* rolloverText;
     switch (codeY) {
     case MARKET_LEFT_PANEL_ID:
-        rolloverText = g_sellCreaHelpText[0].m_text;
+        strcpy(g_text, g_sellCreaHelpText[0].m_text);
         break;
     case MARKET_RIGHT_PANEL_ID:
         strcpy(g_text, g_sellCreaHelpText[1].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_LEFT_COUNT_ID:
-        rolloverText = g_sellCreaHelpText[2].m_text;
+        strcpy(g_text, g_sellCreaHelpText[2].m_text);
         break;
     case MARKET_LEFT_LABEL_ID:
         strcpy(g_text, g_sellCreaHelpText[3].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_COMMAND_ID:
         strcpy(g_text, g_sellCreaHelpText[4].m_text);
-        goto rollover_text_ready;
+        break;
     case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
     case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
     case MARKET_BUY_GOLD_ID:
-        rolloverText = g_resourceNames[codeY - MARKET_BUY_WOOD_ID];
+        strcpy(g_text, g_resourceNames[codeY - MARKET_BUY_WOOD_ID]);
         break;
     case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
     case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
@@ -4194,26 +4197,20 @@ void TSellCreatureWindow::setRolloverText(int codeY)
         int creatureType =
             g_marketHero->m_army.m_armies[codeY - MARKET_CREATURE_SLOT_0_ID];
         sprintf(g_text, getArmyName(creatureType, 2));
-        goto rollover_text_ready;
+        break;
     }
     default:
         strcpy(g_text, g_emptyRolloverText);
-        goto rollover_text_ready;
+        break;
     }
-    strcpy(g_text, rolloverText);
-rollover_text_ready:
     message update;
     update.m_extraText = g_text;
     broadcastMessage(0x200, 3, 0x93, update.m_extra);
     drawWindow(0, 0x92, 0x93);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x238, 0x249, 0x12);
-    // Residual (90.26%, banked MAX 97.05%): all 24 blocks and edges agree;
-    // twenty blocks are exact and three more differ by one instruction.
-    // Dreamcast positively attests GetArmyName(creature, 2), which Complete
-    // folds to the range test and plural trait load. Keeping that helper while
-    // joining the resource arm to the shared strcpy raises 78.69 -> 90.26.
-    // Negative controls: sharing every DC strcpy arm falls to 68.96, forcing
-    // the left-panel copy direct falls to 77.87, and `register` is byte-flat.
-    // Omitting GetArmyName reaches the older 97.05 peak but violates the
-    // positive helper gate; a volatile creature local is likewise source-false.
+    // Every switch arm now owns its strcpy or sprintf and ends with break.
+    // DC 0x18c7b0 lines 3338-3373 prove the copies and GetArmyName call;
+    // VC6 merges the plain copies naturally. This removes five gotos and
+    // restores 100% from 90.2612%, retaining the canonical name helper.
+    // The old shared-copy source split prevented that natural merge.
 }

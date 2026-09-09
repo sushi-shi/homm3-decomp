@@ -117,9 +117,11 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 // E:\gamedcs\inputmgr.cpp:190
 // Located as AppWndProc's 0x200..0x206 mouse-message callee (homm2
 // lineage as above). Synthesises one ring-buffer entry per Windows
-// mouse message. The `default: goto` is load-bearing: retail's switch
-// default jumps PAST the coordinate block (the `ja` lands after it), so
-// the coordinates are inside the handled arms, not after the switch.
+// mouse message. The switch default must skip the coordinate block;
+// hasPosition records whether an arm handled a mouse position and keeps
+// the function exact. This supersedes the former load-bearing-goto claim.
+// A separate winMsg range guard scores 94.2553%. Do not derive the flag
+// from e->m_id across SetCapture/ReleaseCapture, which can dispatch events.
 // gpInputManager is reloaded after `bufferBusy = 1` because that store
 // kills VC6's CSE of the global - the guard chain above it shares one
 // load, exactly as retail does. EXACT after expressing the six-field clear
@@ -142,6 +144,7 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
     g_inputManager->m_bufferBusy = 1;
     e = &g_inputManager->m_buffer[g_inputManager->m_tail];
     e->m_id = e->m_codeX = e->m_codeY = e->m_mouseX = e->m_mouseY = e->m_qualifier = 0;
+    bool hasPosition = true;
     switch (winMsg) {
     case WM_MOUSEMOVE:
         e->m_id = MESSAGE_MOUSE_MOVE;
@@ -169,15 +172,17 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
         ReleaseCapture();
         break;
     default:
-        goto no_position;
+        hasPosition = false;
+        break;
     }
-    x = static_cast<short>(longParam);
-    y = static_cast<short>(static_cast<unsigned long>(longParam) >> 16);
-    e->m_codeX = x;
-    e->m_codeY = y;
-    e->m_mouseX = x;
-    e->m_mouseY = y;
-no_position:
+    if (hasPosition) {
+        x = static_cast<short>(longParam);
+        y = static_cast<short>(static_cast<unsigned long>(longParam) >> 16);
+        e->m_codeX = x;
+        e->m_codeY = y;
+        e->m_mouseX = x;
+        e->m_mouseY = y;
+    }
     if (e->m_id != 0) {
         int quals = 0;
         if (GetKeyState(VK_CONTROL) & 0x8000)

@@ -703,6 +703,8 @@ public:
     void onSortMaps(int how);
     // Before normalization (function): TSingleSelectionWindow::OnNameClick.
     void onNameClick(int pos);
+    // Before normalization (function): TSingleSelectionWindow::OnNameChange.
+    void onNameChange(int gamePos, const char* newName);
     // Before normalization (function): TSingleSelectionWindow::OnPlayerPosClick.
     void onPlayerPosClick(int pos);
     // Before normalization (function): TSingleSelectionWindow::OnBeginGame.

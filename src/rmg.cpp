@@ -1176,6 +1176,11 @@ VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
 // reloading slot across rand. The shared town-selection exit is required:
 // a result initialized to -1 and assigned before break adds a stack home
 // (91.47%), while a post-loop selectedTown == 9 test adds a comparison.
+// The townSelected join remains exact. A bounded selected-town break with
+// an available-count else scores 98.5294%; an unbounded selection loop using
+// the proven positive availability count scores 97.6471%. Neither preserves
+// retail's constructor CFG, and this Complete-only constructor has no DC
+// helper boundary that would justify extracting the shared assignment.
 VA(0x005329E0, 0xCF) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
 TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
 {
@@ -2711,6 +2716,9 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
 // peak. Full map-position queries previously reached only 86.3757%. Native
 // controls check scan order and helper arguments; no helper is flattened or
 // given a false inline declaration to obtain these source-lifetime results.
+// Individual direct-failure returns score 98.7778% (first scan) and
+// 98.1693% (second); both score 98.1429%, below 98.8042%. These partial
+// controls do not preserve the first-failure branch destinations.
 VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
@@ -8285,6 +8293,15 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // peak. Retail still loads map width before prototype width and prefetches
 // the insertion end between dimension reads; the native lifecycle oracle
 // separately verifies retries, unsigned centers, value reads and cleanup.
+// Structured retry exit: clear nextObject after deleting the third failed
+// fit, then use the existing null-selection break. This removes the jump
+// at 97.8371%, with every RMG sibling unchanged in a 48-state family.
+// A post-loop attempt-count check and duplicated updateBounds/return change
+// the emitted control flow and lose score; the selection result is sufficient.
+// The named vector-insert mismatch is a folded pointer-template alias:
+// vector<type_object*>::insert matches retail 0x54d120's 521 bytes after
+// masking its two call operands, and both operator new/delete targets agree.
+// The retail label names vector<widget*>; keep the real source element type.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int value)
@@ -8339,14 +8356,15 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
                 break;
             nextObject->unknownOperation();
             delete nextObject;
-            if (++attempts >= RMG_TREASURE_ATTEMPTS)
-                goto groupFilled;
+            if (++attempts >= RMG_TREASURE_ATTEMPTS) {
+                nextObject = 0;
+                break;
+            }
         }
         if (!nextObject)
             break;
         total += objectValue;
     }
-groupFilled:
     group->updateBounds();
     return total;
 }
@@ -8609,6 +8627,12 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // Every batch reproduced ten elites; the adopted body preserves all other
 // 339 RMG scores. Native controls check live vector bounds, cached bounds/zone,
 // ordered helper arguments and every placement veto; no helper body is pasted.
+// Goto audit: the policy's final 1/0 assignment is an ordinary if/else,
+// neutral across the TU. A scan-result flag loses 3.5760 points and a
+// post-loop exhaustion test loses 2.6708, so the search exit remains.
+// Separate entrance-policy result controls remain lower: int 96.1471%,
+// unsigned char 96.7905%, against 99.9850%. Both preserve the source's
+// object/guard policy but change the emitted branch structure.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -8686,11 +8710,10 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     }
     if (!group->m_hasGuard) {
         allowEntrances = 1;
-        goto checkOutline;
-    }
+    } else {
 disallowEntrances:
-    allowEntrances = 0;
-checkOutline:
+        allowEntrances = 0;
+    }
     if (!m_map.hasConnectedOutline(group->m_outline, position, allowEntrances, zone, 1))
         return 0;
     TPoint point;

@@ -76,6 +76,11 @@ inline int sRandom(int lower, int upper)
 // count/skill declaration order are byte-flat; moving the wall lifetime
 // earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
 // DC-shaped access rather than forcing a register with synthetic state.
+// A chosen-target result guards the fallback wall/tower selection and
+// removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
+// forms are neutral, as are two single-pass selection scopes. Copying the
+// final order stores and return into the keep arm scores 95.9569%. Preserve
+// the four named calls and their conditional random draw.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
@@ -107,68 +112,70 @@ unsigned char combatManager::automateCatapult()
     long count;
     long skill = currentArmy->getController()->getSecondarySkill(
         eSecSkillSiegeBallistics);
+    bool targetChosen = 0;
     if (static_cast<const combatManager*>(this)->isQuickCombat()
             || isComputerAction(getCurrentArmy())) {
         if (skill > 0
                 && m_wallStrength[s_wallTargets[WALL_TARGET_3].m_wall] > 0) {
             target = WALL_TARGET_3;
-            goto target_chosen;
+            targetChosen = 1;
         }
     } else if (skill > 0) {
         return 0;
     }
 
-    count = 0;
-    { for (long i = 0; i < 4; i++) {
-            if (getWallStrength(walls[i]) > 0)
-                count++;
-        }
-    }
-
-    if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
-        long weakest = 100;
+    if (!targetChosen) {
         count = 0;
         { for (long i = 0; i < 4; i++) {
-                long strength = getWallStrength(walls[i]);
-                if (strength <= 0 || strength > weakest)
-                    continue;
-                if (strength < weakest)
-                    count = 0;
-                count++;
-                weakest = strength;
+                if (getWallStrength(walls[i]) > 0)
+                    count++;
             }
         }
 
-        long choice = sRandom(1, count);
-        long index = 0;
-        for (; index < 4; index++) {
-            long strength = getWallStrength(walls[index]);
-            if (strength == weakest && --choice == 0)
-                break;
-        }
-        target = walls[index];
-    } else {
-        DATA(0x00670198) static TWallTargetId towers[4] = {
-            WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
-        };
+        if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
+            long weakest = 100;
+            count = 0;
+            { for (long i = 0; i < 4; i++) {
+                    long strength = getWallStrength(walls[i]);
+                    if (strength <= 0 || strength > weakest)
+                        continue;
+                    if (strength < weakest)
+                        count = 0;
+                    count++;
+                    weakest = strength;
+                }
+            }
 
-        long index;
-        for (index = 0; index < 4; index++) {
-            if (validWallTarget(towers[index]))
-                break;
-        }
-        if (index < 4) {
-            target = towers[index];
-        } else {
-            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-                    target = TWallTargetId(target + 1)) {
-                if (validWallTarget(target))
+            long choice = sRandom(1, count);
+            long index = 0;
+            for (; index < 4; index++) {
+                long strength = getWallStrength(walls[index]);
+                if (strength == weakest && --choice == 0)
                     break;
+            }
+            target = walls[index];
+        } else {
+            DATA(0x00670198) static TWallTargetId towers[4] = {
+                WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
+            };
+
+            long index;
+            for (index = 0; index < 4; index++) {
+                if (validWallTarget(towers[index]))
+                    break;
+            }
+            if (index < 4) {
+                target = towers[index];
+            } else {
+                for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+                        target = TWallTargetId(target + 1)) {
+                    if (validWallTarget(target))
+                        break;
+                }
             }
         }
     }
 
-target_chosen:
     m_nextAction = 9;
     m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
     m_nextActionExtra = -1;
@@ -663,6 +670,8 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // 13/13 with three returns; what is left is only the ESI/EDI pair the old note
 // described, now the whole delta rather than a symptom.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+// Goto audit: direct return loses 3.9161 points; a combined OR loses 11.7483.
+// The nullary isComputerAction wrapper does not recover those exits here.
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int direction;
