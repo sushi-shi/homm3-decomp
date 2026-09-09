@@ -8912,6 +8912,12 @@ unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 // two islands appear and 10 variants recover 98.5379. No probe declarations
 // are retained. The later retail-proven TPalette16 consolidation recovers
 // 98.5379 in production without noise; preserve both canonical types.
+// Goto audit: DC line 6482 destroys CWaitForRemoteBattleDlg before branching
+// to the common aftermath (dc 0x9bd66 -> 0x9c012). A bool/byte remote-battle
+// result guarding local setup scores 92.5247%; a breakable for scope scores
+// 92.5181%, and do/while scores 71.2640%, versus 98.5379%. Keep the RAII exit.
+// The existing call residual is separate: CCombatInitMsg's destructor expands
+// into three string _Tidy calls here, while retail retains the destructor.
 VA(0x004ad470, 0x1531)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
 {

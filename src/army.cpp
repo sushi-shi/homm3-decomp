@@ -778,6 +778,9 @@ void army::freeResources()
 // DC lines 517/518 enclose the calculation under the terrain/Hourglass
 // gates. A positive guard with the common final store preserves the score
 // and removes the three reconstructed jumps to that store.
+// The remaining neutral Clover arm cannot use plain break in the current
+// selector context: it scores 80.6782% versus 100%. Keep its separate exit;
+// no_clover_bonus still precedes the common Halfling minimum and final store.
 VA(0x0043df20, 0xDD)  // anchor-global + complete body, dc 0x44318
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
@@ -843,6 +846,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 // the join shape.
 // The positive calculation scope matches DC's terrain/undead gates and
 // keeps the exact bytes without a reconstructed jump to the final store.
+// Neutral terrain exits were tested independently: holy_done as break scores
+// 88.2326%, evil_done 91.2093%, both 82.3178%, versus 100%. Each collapses the
+// corresponding retail selector partition; retain both explicit destinations.
 VA(0x0043e000, 0x139)  // dc-bracket forced + body/caller proof, dc 0x443b4
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,

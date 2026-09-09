@@ -5622,6 +5622,11 @@ static int exitTownManager(message& msg)
 // Eight result/lifetime controls include a byte-sized flag and declaration
 // before code selection or at function scope. Every structured flag form
 // emits the same 87.0077% object; changing its width/lifetime does not help.
+// Individual popup copies also lose: Hall 86.6755%, Mage Guild 86.6195%,
+// Castle 86.6774%, Tavern 88.4013%, Dock 88.6837%, Marketplace 88.4592%,
+// Silo 88.6132%, Blacksmith 88.6379%, Extra 1 88.5200%, Extra 2 88.6987%,
+// Special 88.4172%, versus 90.2738%. Each was scored separately; retain
+// these joins and the original string, popup and exit-helper boundaries.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {

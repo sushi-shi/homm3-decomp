@@ -538,6 +538,10 @@ __forceinline void TSystemOptionsWindow::updateSystemOptions(
 // translated command label still admits commands that need no confirmation.
 // Combining this with an outer widget-code if dispatch falls to 85.1339%;
 // both byte and bool preference flags preserve the retained switch form.
+// The outer widget-code default can return one directly: all 1526 compiled
+// bytes and 96 relocation names/addends remain unchanged at 94.3957%.
+// Separate direct confirmation/translation bodies and their combinations
+// still lose code agreement; those two shared command actions remain.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message* msg)
 {
@@ -573,7 +577,7 @@ int TSystemOptionsWindow::windowHandler(message* msg)
         case widget::WIDGET_DESELECT:
             break;
         default:
-            goto consume;
+            return one;
         }
 
         {
@@ -760,7 +764,6 @@ int TSystemOptionsWindow::windowHandler(message* msg)
             }
         }
     }
-consume:
     return one;
 }
 

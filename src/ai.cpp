@@ -2407,9 +2407,9 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 //   * the two `field_3c = 6` exits store in DIFFERENT orders - the
 //     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
 //     transcribed as retail has them.
-//   * the disengage tail is reached by fallthrough from two arms and
-//     the commit block sits AFTER it, so the commit is a labelled block
-//     entered by `goto` - the layout an if/else-if/else cannot produce.
+//   * DC 2119..2138 puts the defensive action in its own positive scope
+//     after the fortification arm. That ordinary if also reproduces the
+//     current retail comparison; a labelled commit is unnecessary.
 //   * the moat-row walk is the fortification arm's last resort: index
 //     gCastleWallColumns by the mover's row (gridIndex / 17), then scan
 //     DOWN from that hex for the first one that is both reachable and
@@ -2520,6 +2520,10 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // Before normalization (locals): current_army, action_value, enemy_attacks, best_enemy,
 // best_value, best_troops, best_time, best_flag, dangerous_enemies, best_hex, stay_in_castle,
 // attack_cell.
+// Goto controls: the positive defensive scope preserves all 2266 compiled
+// bytes and 46 relocation names/addends at 91.6697%. A for/break scope and
+// bool/byte commit result also preserve the score; do/while(0) falls to
+// 75.7425%. Keep the DC positive scope and its ordinary helper calls.
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
 {
@@ -2737,31 +2741,27 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             m_nextAction = 3;
             return 1;
         }
-    } else if (bestValue < 0 && bestValue < bestTime
-               && !(currentArmy->is(1u << 22))
-               && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
-               && hasRangedAdvantage(estimate)) {
-        // Deliberately empty: a shooter that would lose the exchange
-        // falls into the same disengage tail an empty board reaches.
-    } else {
-        goto commit;
     }
-
-    *actionValue = 0;
-    if (!estimate->m_simulated
-            && getAreaEffect(estimate->m_enemyGroup, currentArmy,
-                               dangerousEnemies,
-                               estimate) == 0
-            && attemptShooterDefense(currentArmy, g_searchArray, estimate))
-        return 1;
-    if (bestEnemy == 0) {
+    if (bestEnemy == 0
+            || (bestValue < 0 && bestValue < bestTime
+                && !(currentArmy->is(1u << 22))
+                && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
+                && hasRangedAdvantage(estimate))) {
+        *actionValue = 0;
         if (!estimate->m_simulated
-                && chooseToRun(currentArmy, enemyAttacks, g_searchArray))
+                && getAreaEffect(estimate->m_enemyGroup, currentArmy,
+                                   dangerousEnemies,
+                                   estimate) == 0
+                && attemptShooterDefense(currentArmy, g_searchArray, estimate))
             return 1;
-        return 0;
+        if (bestEnemy == 0) {
+            if (!estimate->m_simulated
+                    && chooseToRun(currentArmy, enemyAttacks, g_searchArray))
+                return 1;
+            return 0;
+        }
     }
 
-commit:
     *actionValue = bestValue;
     if (bestTroops <= 1 && !m_creaturePlacement) {
         m_nextActionExtra = bestHex;
