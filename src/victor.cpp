@@ -412,22 +412,27 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 // Retail-only bit-range insertion, called by flipimage. The first and last
 // destination bytes retain bits outside the inclusive range. Signed count
 // division and the two-stage loop follow retail, including zero counts.
-// Residual 94.41%: local shift and destination cursors retain saved bits
-// in AL and recover retail's register allocation. Staging the shifted byte
-// before updating count raises 90.70% to 94.41%; retail still uses one LEA
-// where VC6 emits LEA/add. JSON batches measured shift types, cursor
+// Residual 94.44%: local shift and destination cursors retain saved bits
+// in AL and recover retail's register allocation. Declaring shift before the
+// cursor places the saved mask in retail's dead offset-parameter home. Staging
+// the shifted byte before updating count raises 90.70% to 94.41%; retail still
+// uses one LEA where VC6 emits LEA/add. JSON batches measured shift types, cursor
 // lifetimes and eight count/store schedules. /Og-, /Os and /O1 are worse.
 // A further nine-state batch of reassociated/unsigned count arithmetic and
 // separate source/destination byte reads does not improve 94.41%.
 // Rechecking ten shift-type/store combinations after the cursor fix still
-// favors signed int plus staged byte. /Ol- and /G5 controls are byte-flat;
+// favors signed int plus staged byte. The declaration-home family emits two
+// objects across ten forms and identifies the shift-first gain; rebased seven-
+// schedule, eight-byte-lifetime and twenty-arithmetic families emit only two,
+// one and one objects and do not fuse the remaining count update. /Ol- and
+// /G5 controls are byte-flat;
 // /G6 lowers insertion to 75.24% and extraction to 66.24%.
 VA(0x00604720, 0x84)  // anchor-caller flipimage + paired bit-mask tables
 void __stdcall victorInsertBits(unsigned char* destination,
                                 const unsigned char* source, int offset, int count)
 {
-    unsigned char* target = destination;
     int shift = offset & 7;
+    unsigned char* target = destination;
     unsigned char mask = g_victorTrailingBits[(shift + count - 1) & 7];
     unsigned char saved = target[(shift + count - 1) / 8] & mask;
     *target &= g_victorLeadingBits[shift];
