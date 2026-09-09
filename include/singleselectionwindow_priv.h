@@ -830,6 +830,10 @@ public:
     virtual void tick();     // slot 1, 0x578a90
     // Before normalization (function): CNewPlayerUpdateProc::Finish.
     virtual void finish();   // slot 2, 0x5795a0
+    // Before normalization: CNewPlayerUpdateProc::HeaderRequested.
+    void headerRequested(unsigned char flag, int number);
+    // Before normalization: CNewPlayerUpdateProc::HeaderConfirmed.
+    void headerConfirmed();
     // Before normalization (function): CNewPlayerUpdateProc::RequestConfirmation.
     void requestConfirmation();  // DC source helper, inlined in retail Tick
     // Before normalization (function): CNewPlayerUpdateProc::HandleRequests.
@@ -886,13 +890,7 @@ public:
 
     // DC GetProc (protected there); the HeaderConfirmed body expands it.
     // Before normalization (function): CNewPlayerUpdateMan::GetProc.
-    CNewPlayerUpdateProc* getProc(unsigned long dpid)
-    {
-        for (int i = 0; i < 8; ++i)
-            if (m_procs[i] && m_procs[i]->m_dpid == dpid)
-                return m_procs[i];
-        return 0;
-    }
+    CNewPlayerUpdateProc* getProc(unsigned long dpid);
 
     // Before normalization (function): CNewPlayerUpdateMan::Tick.
     void tick();

@@ -12,7 +12,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.02%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 96.03%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
 **Match score** — 4,057 / 4,764 functions exact (85.2%) across the full engine (4752 in linked units).
 

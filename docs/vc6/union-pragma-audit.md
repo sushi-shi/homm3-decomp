@@ -12,17 +12,17 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 72 (46 source, 26 header) | Six removed; classify the remainder below |
-| Inline override regions | 289 | 253 | 36 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 246 | Remaining overrides are matching debt |
+| Union definitions | 78 (47 source, 31 header) | 68 (42 source, 26 header) | Ten removed; classify the remainder below |
+| Inline override regions | 289 | 248 | 41 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 241 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 528 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 518 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 30 active inline overrides were removed; counting
-all 36 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 35 active inline overrides were removed; counting
+all 41 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -41,6 +41,8 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | `File` in `winfile.h` | HANDLE / integer `m_fileValue` | Canonical `void*` handle plus `return 0` in seven null-handle guards reproduces the whole TU's code and named relocations. The old claim that explicit zero could not match was false for the current source state. |
 | `game::giveTroopsToNeutralTown` | `TNeutralWeightAddress` and its address-to-integer helper | DC game.cpp:3967/3969 positively establishes a signed level index, six-entry bound and indexed weight subtraction. VC6 strength reduction recreates retail's signed pointer/end comparison from that loop; both indexed guard formulations stay 100%. |
 | Puzzle coordinate tables | `TPuzzleCoordinatePointer` byte/short pointer alias | Retail 0x52c6c0/0x52c9b0 reads signed words with a 96-short puzzle-row stride. Declare short tables and use typed row pointers. `updatePuzzle` remains 100%; `aiAttemptPuzzleGuess` preserves 97.1621%. |
+| `SavedGameHeader::reset` | Byte/dword `isHuman` local | Store the bool result directly in the integer flag array. Removing this matching-only representation costs 100% → 98.2888% in this one function; the old DC Reset predates Complete's loop. |
+| `TViewArmyWindow` | Three local `shownType` enum adapters | DC CodeView proves `ArmyType` is `TCreatureType`. Restore that member type and use it directly; retain the proven int constructor parameter and int `Upgrade` boundaries. Both affected constructors improve when their canonical name-helper calls are restored too. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -53,14 +55,14 @@ pins, alternate declarations or dummy operations were introduced.
 
 | Role | Count | Disposition |
 |---|---:|---|
-| Scalar integer/enum adapters | 35 | Encoding/type-boundary debt; not established as necessary compiler interventions |
+| Scalar integer/enum adapters | 32 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
 | Pointer adapters/views | 11 | Two intentional ABI views; nine adapters requiring owner/call-boundary recovery |
-| Numeric bit/width views | 8 | Seven intentional representations; one measured matching workaround |
+| Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **72** | **24 intentional representations; 48 reconstruction adapters/workarounds** |
+| **Total** | **68** | **24 intentional representations; 44 reconstruction adapters/workarounds** |
 
-The 35 scalar adapters are accounted for below. A local definition with two
+The 32 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
 an integer, loop ordinal, serialized value or packed field to a recovered enum
 consumer. They should not be advertised as original union declarations.
@@ -83,7 +85,7 @@ consumer. They should not be advertised as original union declarations.
 | `src/philai.cpp` | 3 | Two secondary-skill values and one creature value |
 | `src/seerhut.cpp` | 1 | Serialized quest creature value |
 | `src/townmgr.cpp` | 2 | Creature and building ordinals |
-| `src/viewarmywindow.cpp` | 5 | Creature helper, displayed types and upgrade types |
+| `src/viewarmywindow.cpp` | 2 | Proven int constructor/upgrade inputs; the displayed member is now typed |
 
 The tree also has memcpy-based versions of some of these adapters, outside the
 union census. Replacing every union with a memcpy, `void*` detour or an admitted
@@ -94,7 +96,7 @@ admission a blanket waiver for every integer-to-enum conversion. The next step
 is canonical ownership and real input-domain recovery, preserving the attested
 public ABI rather than changing parameter types solely to satisfy callers.
 
-The other 37 remaining definitions are exhaustively grouped here:
+The other 36 remaining definitions are exhaustively grouped here:
 
 | Owner / member | Count | Why retained / removal condition |
 |---|---:|---|
@@ -107,7 +109,6 @@ The other 37 remaining definitions are exhaustively grouped here:
 | `TMarketArtifactList` | 1 | The black-market entry accepts bytes; other entry points supply artifact arrays; panels use raw IDs/sentinels and typed artifact APIs. Reconcile entry-point/element ownership, then remove the adapter. |
 | `TFloatLongBits` / `TDoubleLongBits` in bitmap16 and palette; the two `viewwrld::ftol` locals | 6 | Actual float/double bit reinterpretation and low-word extraction for the magic-constant conversion. Numeric casts are not equivalent. Keep the representation unless an equally evidenced implementation replaces it. |
 | `TBlendMask` | 1 | Actual word/dword views used by blend-mask loads, not two independent values. |
-| `SavedGameHeader::reset`'s `isHuman` | 1 | Current codegen workaround. Fresh unsigned-char, bool, int and unsigned-int controls all give 98.2888%, versus 100% with the byte-store/dword-mask home. The older DC Reset does not contain Complete's loop. No claim of an original union. |
 | DirectPlay `DPNAME`, `DPSESSIONDESC2`, `DPCHAT` narrow/wide string slots | 5 | External ABI alternatives occupy the same fields. |
 | `ExtraInfoUnion`, CObject extra-info, NewmapCell extra-info, `LegacyUpgradeExtraInfo`, `CurrentUpgradeExtraInfo` | 5 | Tagged map-object payloads and legacy/current serialized bit layouts. |
 | NewmapCell flags and TObjectCell packed X/Y offset byte | 2 | Real bitfield/raw views of the same allocation units. |
@@ -358,7 +359,7 @@ python scripts/experiments/generate-cell-boundary-family.py build/cell-family.js
 The other cell-generator modes explicitly replay the historical forked source
 and refuse the adopted boundary. `--current` preserves the canonical helpers.
 
-Follow-up census: 253 overrides remain (246 depth-zero, seven auto-inline-off).
+Map-access checkpoint census: 253 overrides (246 depth-zero, seven auto-inline-off).
 This does not reclassify them as necessary. The assertion controls directly
 demonstrate why a pragma-deletion-only census cannot establish necessity.
 
@@ -367,11 +368,71 @@ The seven remaining auto-inline regions have bounded next actions:
 DC gap supporting an assertion; the destructor's sprite is explicitly
 optional. `AppCommand` is a four-byte DC platform stub and `stopMouseThread`
 is mostly PC-only teardown, so missing PC statements are not assertion proof.
-`CNewPlayerUpdateMan::headerRequested` has a missing source call to the
-concrete proc's `headerRequested`, plus Complete's changed queue payload.
+`CNewPlayerUpdateMan::headerRequested` now has its source-proven concrete-proc
+call and Complete's changed queue payload; its remaining caller dependency
+is measured below.
 The empty `CNewPlayerUpdateTask` destructor has the previously measured
 untracked derived-destructor expansion. These remain reconstruction debt,
 not candidates for invented checks or declarations merely to alter inlining.
+
+### Further reduction from `ab315284`
+
+This stage removes five more depth overrides and four union definitions.
+Seven auto-inline-off regions remain; none is newly certified necessary.
+
+`CNewPlayerUpdateMan::headerRequested` at 0x5892b0 now calls the ordinary
+`CNewPlayerUpdateProc::headerRequested` defined in the original TU. DC line
+1496 names the call, and the earlier helper at 0x148348 owns queue insertion.
+Complete's retail expansion queues an eight-byte flag/number value instead
+of the older allocated integer. The adjacent `headerConfirmed` call and
+out-of-class ordinary `getProc` definition are restored from their DC
+boundaries too. The 16-state family raises the manager from 88.6223% to
+100%, preserving every other tracked score in its TU. Deleting the manager's
+auto-inline override still expands it into `handleNetMsg`, lowering that
+caller from 89.7408% to 85.9113%; no fabricated assertion replaces the fence.
+
+`SavedGameHeader::reset` uses the real implicit campaign/map-header assignments,
+replacing the pasted member walks and their three depth fences. Its empty
+`resetAssignmentSurface` helper and call are removed, not replaced by other
+compiler work. The 54-state family separates both assignment spellings,
+human-flag values and the empty helper. Real assignments with the old union
+remain 100%; the adopted direct bool-to-int store gives 98.2888%. Every other
+tracked game score is unchanged. This small explicit tradeoff removes a
+byte/dword workaround without pretending DC proves Complete's flag loop.
+
+`TViewArmyWindow::ArmyType` is an enum in DC CodeView; `Upgrade` and the third
+constructor's `army_type` parameter remain int. Restoring the field type
+removes three local union definitions and one redundant declarator from the
+remaining upgrade union. The battle constructor calls `army::getName` (DC
+line 70) and appends both help strings (98/107); the group constructor calls
+`getArmyName(m_armyType, 2)` (159) and retains its own help-string assignments.
+These are canonical helper/operator boundaries, not pasted lookup code.
+
+The 32-state popup family crosses field ownership, both name calls, the battle
+append operations and all four deletion subsets of its two description fences.
+It checks `viewarmywindow`, `cmbtmgr`, `game`, `recruit`, `sacrifice_window` and
+`hillfortwindow`. With all source corrections and both fences removed, the
+battle constructor improves 91.2989% → 92.6780%, and the group constructor
+93.7569% → 97.4452%; every other tracked score across all six TUs is unchanged.
+Keeping only the luck fence reaches 93.5871% in the battle constructor, but
+the two-deletion state removes more debt and still improves over the baseline.
+Deleting both fences without restoring the name calls gives only 87.4391%
+with the typed field. The ordinary source boundaries matter jointly.
+
+These families are reproduced by their generators under `scripts/experiments/`:
+`generate-header-request-boundary-family.py` (`--adjacent`, context
+`775af75f16447393e9f2`), `generate-saved-header-reset-family.py`
+(`8eb0ac9d4548f228b82f`), and `generate-viewarmy-ownership-family.py`
+(`36638968a9b0a5d650da`). They are historical pre-adoption controls: run in a
+prepared worktree at `ab315284` for the header/reset sources. The popup family
+was run after their adoption, so its whole-six-TU score vector also includes
+the lower reset score. Generators reject changed anchors rather than silently
+testing different source. Frozen input snapshots retain the exact experiments.
+All 16/54/32 states scored, with 16/48/32 distinct objects and ten reproduced
+elites in each family. The selected all-corrections corners were independently
+recompiled as well. Final production objects match the selected family objects
+under the strict whole-COFF check, including named external relocations and
+all untracked emitted sections, for both edited TUs and all six popup consumers.
 
 ## Reproduction and verification
 
@@ -441,6 +502,13 @@ exact rows are the explicitly measured shared-map-header collateral above,
 not losses hidden by the byte-neutral serialization controls. Source identity
 migrations preserve the original RVAs and histories; no historically banked
 row is lost. Retail delinking and all repository gates pass.
+
+The further-reduction checkpoint is 4057/4752 exact, 96.29% linked fuzzy and
+96.03% whole-image, versus `ab315284`'s 4057/4752, 96.28% and 96.02%.
+Only four current function scores change: headerRequested and both popup
+constructors improve; reset takes the documented 1.7112-point local reduction.
+Its HIST remains 100%; no banked RVA is lost. All repository gates and retail
+delinking pass. The final census is 248 inline overrides and 68 union definitions.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
