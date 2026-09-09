@@ -2030,7 +2030,7 @@ game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	448cf03c70c
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	685b08da3000
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	2ff7c6c12d06
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	93dcbdbb2edf
-game	?load@game@@QAEHPAVTAbstractFile@@@Z	78.2645	78.2645	92.4127	0xbcda0	da29d5275660
+game	?load@game@@QAEHPAVTAbstractFile@@@Z	80.1570	80.1570	92.4127	0xbcda0	859628cf006e
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	72bc38da6dfe
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	ec4d7df9d53a
 game	?loadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	9b61dbd40921
@@ -2085,7 +2085,7 @@ game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	10
 game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	87.0015	87.0015	87.0015	0xc4f10	7faaf4dab81b
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	78a1e6407ac0
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0	6325e355c936
-game	?save@game@@QAEHPAVTAbstractFile@@@Z	96.5761	96.5761	96.5761	0xbe3f0	45fefeeecb6b
+game	?save@game@@QAEHPAVTAbstractFile@@@Z	96.7588	96.7588	96.7588	0xbe3f0	72db1a263a97
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	bce3081dd00d
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	dd2fa1b893aa
 game	?saveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40	b41b2b53116f
@@ -2096,8 +2096,8 @@ game	?saveObjectVector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_creature_bank@@V?
 game	?saveRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbc20	2fa2a614a232
 game	?saveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270	b7dda5ddf072
 game	?saveString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60	4e80bbf4d747
-game	?saveVector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	9ae6ecb9eb99
-game	?saveVector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	0a0371fe5c8b
+game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	b10051e37e77
+game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	e686a16e799d
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	5abf6977bd33
 game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0	-
 game	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4de0	-
@@ -2932,7 +2932,7 @@ philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	0411
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	dd2b8e9e5b09
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	5b7d637d7938
 philai	?moveHero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	37f67cdbaf51
-philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	86.3549	86.3549	86.6362	0x1261f0	86e8aac98e37
+philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	86.6362	86.6362	86.6362	0x1261f0	86e8aac98e37
 philai	?netValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	601dea9f2ae3
 philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	b09f6a955578
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	e3eeb799dc09

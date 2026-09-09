@@ -279,38 +279,6 @@ void THeroSetupMapMinComdatAnchor::retainInsert(const Value& value)
     insert(value);
 }
 
-// Defined at the foot of this file, where retail emits it (0x4d2ac0):
-// declared here so game::Save's pool writes call it out of line.
-// Before normalization (function): save_vector.
-unsigned char saveVector(TAbstractFile* outfile,
-                          // Before normalization (locals): src_vector.
-                          std::vector<type_point>* srcVector);
-
-// The retail linker folds the byte-identical type_point and long writers at
-// 0x4d2ac0.  Keep the one admitted writer while exposing the pairing vector's
-// DC-proven element type to the rest of game.cpp.
-union TGatePairVectorPointerAlias {
-    // Before normalization: pairs.
-    std::vector<long>* m_pairs;
-    // Before normalization: points.
-    std::vector<type_point>* m_points;
-};
-
-static __forceinline std::vector<type_point>*
-// Before normalization (function): gate_pair_storage_as_points.
-gatePairStorageAsPoints(std::vector<long>* pairs)
-{
-    TGatePairVectorPointerAlias alias;
-    alias.m_pairs = pairs;
-    return alias.m_points;
-}
-// The other two instantiations game::Save's tail reaches, both also
-// defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
-// one is a plain block write like the type_point overload; the creature
-// bank one serialises each element, hence the different name.
-// Before normalization (function): save_vector.
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_university>* srcVector);
 // Before normalization (function): save_object_vector.
 unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector);
 unsigned char saveObjectVector(TAbstractFile* outfile,
@@ -3533,6 +3501,52 @@ int game::loadBlackMarkets(TAbstractFile* infile)
     return 0;
 }
 
+// E:\gamedcs\game.cpp:2698; original load_vector / dest_vector.
+// The point, long and university instances share this source template.
+// DC 0xc19e8/0xc1a68/0xc1ae8 has one source boundary, a short count,
+// resize(count), subscript(0), and two guarded reads. The S_PUB32 names
+// prove a bool result and vector reference; Complete uses TAbstractFile.
+// Retail Load's gate-pair arm zeroes its fill before resize:
+// that is the native long default, not the old point-vector pointer union.
+// All six source calls expand naturally, removing six resize fences and
+// raising Load 78.2645 -> 80.1570. The 33-state helper family and 97-state
+// return/fence follow-up also test explicit T() locals and direct boolean
+// returns (up to 82.2663); retain the DC default-argument and guard scopes.
+// Residual: the university default still calls the Complete constructor;
+// retail Load passes an uninitialized fill record before that resize. Recover
+// that class/constructor boundary jointly with RandomizeUniversity, not with
+// another pointer union or a false local declaration of the record.
+template <class T>
+bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
+{
+    short count;
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
+        return false;
+    destVector.resize(count);
+    if (infile->read(&destVector[0], count * sizeof(T)) < count * sizeof(T))
+        return false;
+    return true;
+}
+
+// E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
+// Complete writes two bytes of an int slot, then uses its signed-short value.
+// The guarded return reproduces both retained 96-byte writers exactly,
+// including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
+// that spelling difference does not refute the DC bool/reference signature.
+// The point/long writer, resize, size, _Ucopy and _Ufill instances emit
+// identical raw code; retail's folded calls do not require a type adapter.
+template <class T>
+bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
+{
+    int count = srcVector.size();
+    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+        return false;
+    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
+        < static_cast<short>(count) * sizeof(T))
+        return false;
+    return true;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2774
@@ -3988,84 +4002,14 @@ int game::load(TAbstractFile* infile)
         return -1;
 
     int poolCount = loadLithPoolCount(saved.m_version);
-    for (i = 0; i < poolCount; ++i) {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_lithPools[i].resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_lithPools[i].begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    for (i = 0; i < poolCount; ++i) {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_lithExitPools[i].resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_lithExitPools[i].begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_whirlpools.resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_whirlpools.begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-#pragma inline_depth(0)
-            m_undergroundGateExits.resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(m_undergroundGateExits.begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_point emptyPoint;
-            std::vector<type_point>* pairStorage =
-                gatePairStorageAsPoints(&m_undergroundGatePairs);
-#pragma inline_depth(0)
-            pairStorage->resize(shortBuffer, emptyPoint);
-#pragma inline_depth()
-            infile->read(pairStorage->begin(),
-                         shortBuffer * sizeof(type_point));
-        }
-    }
-
-    // The tail, mirroring game::Save's: universities as a plain block
-    // read, creatureBanks element by element, then the event log.
-    {
-        short shortBuffer;
-        if (infile->read(&shortBuffer, sizeof(shortBuffer)) >=
-            sizeof(shortBuffer)) {
-            type_university emptyUniversity;
-#pragma inline_depth(0)
-            m_universities.resize(shortBuffer, emptyUniversity);
-#pragma inline_depth()
-            infile->read(m_universities.begin(),
-                         shortBuffer * sizeof(type_university));
-        }
-    }
+    for (i = 0; i < poolCount; ++i)
+        loadVector(infile, m_lithPools[i]);
+    for (i = 0; i < poolCount; ++i)
+        loadVector(infile, m_lithExitPools[i]);
+    loadVector(infile, m_whirlpools);
+    loadVector(infile, m_undergroundGateExits);
+    loadVector(infile, m_undergroundGatePairs);
+    loadVector(infile, m_universities);
 #pragma inline_depth(0)
     loadObjectVector(infile, &m_creatureBanks);
 #pragma inline_depth()
@@ -4613,32 +4557,28 @@ int game::save(TAbstractFile* outfile)
     if (outfile->write(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
 
-    // PINNED for the same reason the heroPoolMap bitset test above is:
-    // retail CALLS every one of these seven helpers out of line, and once
-    // the tail landed this body grew past the /Ob2 budget that had been
-    // keeping them out, so VC6 began expanding save_vector in place -
-    // the vector-size shl/sar and a `setae` per site.
+    // Existing Save fences still preserve the seven retained writer calls.
+    // With the canonical templates, removing the first or second scores
+    // 90.8331/90.9878 versus 96.7588; removing both scores 89.7442. The
+    // 97-state result-lifetime family does not recover those call boundaries.
+    // No fence was added or moved into a helper to obtain the Load removals.
     for (i = 0; i < 8; ++i) {
         unsigned char lithSaved;
 #pragma inline_depth(0)
-        lithSaved = saveVector(outfile, &m_lithPools[i]);
+        lithSaved = saveVector(outfile, m_lithPools[i]);
 #pragma inline_depth()
         if (!lithSaved)
             return -1;
     }
 #pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
-        if (!saveVector(outfile, &m_lithExitPools[i]))
+        if (!saveVector(outfile, m_lithExitPools[i]))
             return -1;
     }
-
-    saveVector(outfile, &m_whirlpools);
-    saveVector(outfile, &m_undergroundGateExits);
-    saveVector(outfile,
-                gatePairStorageAsPoints(&m_undergroundGatePairs));
-
-    // Unguarded, like the three pool writes above them.
-    saveVector(outfile, &m_universities);
+    saveVector(outfile, m_whirlpools);
+    saveVector(outfile, m_undergroundGateExits);
+    saveVector(outfile, m_undergroundGatePairs);
+    saveVector(outfile, m_universities);
     saveObjectVector(outfile, &m_creatureBanks);
 #pragma inline_depth()
 
@@ -13364,49 +13304,21 @@ unsigned char loadObjectVector(
     return 1;
 }
 
-// E:\gamedcs\game.cpp:2716
-// The pool writer game::Save uses five times over its type_point
-// vectors (the eight lithPools, the eight lithExitPools, then
-// whirlpools / undergroundGateExits / undergroundGatePairs).
-// A free function, so /Gr makes it fastcall: outfile in ecx, the
-// vector in edx, no stack args.
-// Two details the bytes fix. The count is an INT local written with
-// sizeof(short) - the same "wide local, narrow write" idiom
-// LoadGarrisonPool uses on the read side - and the payload length is
-// the SHORT re-read of that same slot, computed twice rather than
-// CSE'd (retail emits `movsx word [ebp-4]` then `shl eax,2` on both
-// sides of the compare). Dinkumware's size() supplies the leading
-// `_First == 0 ? 0 : _Last - _First` null test.
-VA(0x004d2ac0, 0x60)  // anchor-callee (game::Save pool writes), dc 0xc1dd4
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_point>* srcVector)
+// The retained template instances are claimed in retail address order.
+// Their one active implementation appears at the DC source-order boundary.
+#if 0  // @carcass -- claim-only template instances
+VA(0x004d2ac0, 0x60)  // point/long ICF twin, dc 0xc1dd4 / 0xc1e58
+bool saveVector(TAbstractFile* outfile, std::vector<type_point>& srcVector)
 {
-    int count = srcVector->size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
-        return 0;
-    unsigned char written = outfile->write(
-        srcVector->begin(),
-        static_cast<short>(count) * sizeof(type_point))
-        >= static_cast<short>(count) * sizeof(type_point);
-    return written;
+    // @stub
 }
 
-// The final plain-block specialization writes the university pool. Retail's
-// divide-by-16 size calculation and two payload shifts independently prove
-// type_university's four-int stride; game::Save supplies the sole call site.
-VA(0x004d2b20, 0x60)  // anchor-callee (game::Save universities), dc 0xc1edc
-unsigned char saveVector(TAbstractFile* outfile,
-                          std::vector<type_university>* srcVector)
+VA(0x004d2b20, 0x60)  // university stride and sole Save call, dc 0xc1edc
+bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 {
-    int count = srcVector->size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
-        return 0;
-    unsigned char written = outfile->write(
-        srcVector->begin(),
-        static_cast<short>(count) * sizeof(type_university))
-        >= static_cast<short>(count) * sizeof(type_university);
-    return written;
+    // @stub
 }
+#endif
 
 // E:\gamedcs\game.cpp:2754, dc 0xc1f64.
 // The creature-bank specialization: the only pool whose element is not a
