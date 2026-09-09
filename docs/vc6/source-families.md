@@ -1507,6 +1507,39 @@ fixed. Source statements, helper interfaces, return scopes and the remaining
 `isLocalHuman` directive are unchanged. The source generator records the
 pre-adoption anchors; the complete audit snapshots remain separate controls.
 
+### Compiler-generated text-dialog teardown
+
+`generate-text-dialog-dtor-family.py` uses positive Dreamcast member attributes:
+the CTextDialog field list (class `0x2c52`, fields `0x2c53`) gives its destructor
+`0x107`, including `compgenx`, as for CWaitForReadyPlayersDlg. Explicit
+CAnimatedDlg and TDialogBox destructor controls give `0x007`. This is not an
+absence-of-lines or absence-of-locals argument. The canonical correction removes
+the false explicit empty declaration/body and keeps the retained retail body
+at `0x490770` as an `IMPLICIT_DTOR` claim; the deleting wrapper stays claimed.
+
+Context `921c64eda6cd9b36c940` exhausts four states across all twelve actual
+header consumers: four combined emitted-object identities and four reproduced
+elites, each scoring 1129 functions. Implicit-with-existing-fence candidate
+`62c9f3297fad1750e2c2db22` preserves every score. CAnimatedDlg's instruction
+bytes stay fixed, while its base-cleanup relocation now correctly names
+TDialogBox instead of CTextDialog. The readiness caller and the separately
+emitted wait-dialog destructor keep their named calls and body bytes.
+
+Removing the animated-destructor fence makes the implicit wait-dialog
+destructor exact (86.3333% to 100%), but drops waitForReadyToPlayMsg from
+90.6522% to 75.0683% and removes the retained CNetMsgHandler::copy body.
+The correction therefore does not itself justify deleting that override.
+`generate-animated-dtor-lifetime-family.py` follows the corrected parent with
+six real nullable-sprite bindings crossed with that fence. Context
+`5ebe0ea56c6aed44ee2a` exhausts all twelve states, five emitted-object identities
+and five reproduced elites. Every unfenced state still loses the copy body;
+the guarded object reference raises the readiness caller to 83.0186%, while
+the remaining forms stay at 75.0683%. None is adopted. The ordinary destructor,
+virtual Complete sprite disposal and implicit base cleanup remain canonical;
+no dummy work, alternate declaration or explicit derived-destructor router is
+introduced. These finite results bound those lifetime alternatives, not all
+possible caller reconstruction.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
