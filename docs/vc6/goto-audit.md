@@ -610,3 +610,15 @@ failure scopes fall to 87.4352..87.7111%, while its single final success return
 is neutral. Multiplayer menu-result combinations reach at most 97.5668%, and
 replacing the system-options outer widget-code switch falls to 85.1339%.
 These measured alternatives do not establish a minimum possible goto count.
+
+Integration also retains `ba9d07f2`'s native market-artifact pointer, ordinary
+market-count helper, artifact accessors and `SetupNewTrade` boundary. The C++
+and header changes merge without conflicts. Against that destination all four
+improvements above remain and no current score falls; all historical peaks
+from both branches survive. Its already accepted artifact-handler change from
+90.6792% to 81.9322% is the only current-score difference from the isolated
+goto result, with the fenced peak retained in HIST. The combined full build
+passes at 4,064 exact, 96.40% fuzzy and 96.13% executable matched, with 220
+remaining inlining pins. Both native market checks and the spell oracle pass
+against the combined source. The trading-resource helper remains ordinary
+and its update stays at 88.5391%.

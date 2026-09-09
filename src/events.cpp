@@ -7147,8 +7147,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                                   &g_game->m_blackMarkets[cell->m_extraInfo]);
         else
             doBlackMarket(currentHero,
-                          static_cast<char*>(static_cast<void*>(
-                              &g_game->m_blackMarkets[cell->m_extraInfo])));
+                          g_game->m_blackMarkets[cell->m_extraInfo].m_artifacts);
         break;
     case BOAT:
         doEventBoat(currentHero, cell);
