@@ -54,3 +54,70 @@ The shared PCX descriptor now imports the real Windows `RGBQUAD`,
 `NOMINMAX` keeps those SDK imports compatible with Bitmap24Bit's existing
 `numeric_limits::max()` calls. Both PCX importers and every previously
 banked function remain unchanged in the full-build comparison.
+
+The image validator's remaining delta is the established tail-merge class:
+retail keeps four return sequences while SP3 keeps two. A complete 64-state
+source family crossed equivalent constant expressions for its region and
+stride failures; all 64 sources emitted one object. Both the VC6 RTM back-end
+and full RTM front/back-end controls emit that same SP3 object, so the return
+topology is not a compiler-generation effect.
+
+The palette initializer's first broad source family crossed entry guards,
+color-count construction, and loop-local order over 120 candidates. A named
+bitmap-header pointer is the sole improving source fact: it preserves retail's
+otherwise redundant depth reload and raises the body from 88.8478% to 94.6087%.
+All guard and loop-local alternatives collapse to the same object once that
+snapshot exists; the remaining delta is the helper expansion's EBX/EBP save
+placement.
+
+For `pcxinfo`, a 60-state family crossed extent construction, metadata store
+order, and the final depth-normalization CFG. Four named PCX extrema restore
+retail's load schedule and raise the body from 83.1429% to 91.8452%. A complete
+72-state follow-up exhausts all 24 metadata orders against three normalization
+forms. Storing planes, stride, palette type, then depth raises the body to
+98.5714%; the other eleven Victor rows are unchanged. Candidate and retail now
+differ only in the EBX/EDI save order and one redundant jump in the final
+normalization. The combined condition remains stronger than the two independent
+`if` statements (96.6667% under the winning metadata order). A further 192-state
+family exhausts all coordinate-declaration orders and eight shared-store CFG
+forms; six ordinary/goto forms compile to the same retained object and none
+improves it. Eight nested-label/switch controls produce two objects and no gain.
+
+The palette reader has the same 21 CFG blocks, twelve branches, nine calls and
+ten relocations as retail. Its broad declaration-scope family emits one object,
+and putting the status call before the color-count initialization is worse.
+Retail instead computes the real `buffer + 1` source pointer before the palette
+`memset`; moving that declaration across the intrinsic raises the body from
+85.2844% to 92.5688%. It simultaneously recovers retail's 0xAC frame, spilled
+file handle, EBX color count and ESI filename. Index and countdown loop forms
+are byte-identical. The remaining delta is EDI save shrink-wrapping and the
+source/destination register pair around the copy loop. Moving the source
+initialization earlier is worse, and five named/indexed destination cursors
+fall to 82.5688%. A ten-form source/file-scope retry emits one object. A final
+73-state old-C family hoists buffer, file, source and index in all 24 orders and
+crosses nested, shared-goto and early-return flows: nested/goto forms reproduce
+92.5688%, while early returns fall to 78.2569%. This bounds the residual without
+inventing an extra operation to force EDI live at entry.
+
+The bit-range extractor remains at 74.24%. Retail has seven CFG blocks and
+three conditional branches like the reconstruction, but keeps two return
+sites, saves EBX/ESI/EDI before the empty-count branch, and updates the first
+remaining-count step with `lea eax,[eax+edx-8]`; the reconstruction merges its
+tail and hoists `offset - 8` into EBP. The earlier count and empty-exit probes
+tested those facts separately. An exhaustive 60-state follow-up crossed six
+real empty-tail/cursor lifetimes with ten equivalent count-update spellings.
+All states compiled, produced four distinct code/relocation results, and none
+exceeded 74.24%; every arithmetic spelling collapsed within its control-flow
+family. The two-return families score 51.14%, 55.32%, or 65.50%, so none is
+adopted. This bounds that interaction but does not identify the missing source
+or compilation-context fact.
+
+`flipimage` now lives in the provisional `victor_flip.cpp` grouping. Retail
+calls the bitmap validator twice, the dimension helper once, and the two
+bit-range helpers twice each. Making all those bodies visible in the current
+`victor.cpp` `/Ob2` context expands them and produces a 0% comparison. Keeping
+their canonical declarations in the flip caller's unit restores all nine
+named calls (including allocation and free) and reaches 77.50% after status
+scope reconstruction. This is a body-visibility hypothesis, not proof of an
+original library object name or boundary. The palette initializer and its
+ordinary upload helper remain together because retail expands that helper.
