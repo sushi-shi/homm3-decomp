@@ -2734,6 +2734,11 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
 // well as its width. The two tests are sequential ifs, not an
 // else-if: retail runs the `== 0` block and then falls into the `== 1`
 // compare rather than jumping over it.
+// The resurrection/animate-dead corpse loops use a guarded do/while with
+// continue for rejected corpses. DC spells.cpp:2815..2847 and :2962..2997
+// preserve the reverse scan and per-corpse rejection scopes; retail's signed
+// decrement/exit and separate back edge are reproduced exactly. The previous
+// labels described those continue edges, not a required source goto.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
 army* combatManager::findResurrectionTarget(int side, int hex,
                                               // Before normalization (locals): creature_spell.
@@ -2760,33 +2765,30 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
         return 0;
-    for (;;) {
+    do {
         army* corpse = &m_armies[cell->m_deadArmySide[i]]
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
-            goto next;
+            continue;
         if (!(corpse->is(1u << 4)))
-            goto next;
+            continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex + 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex - 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
                                 creatureSpell) > 0.0)
             return corpse;
-    next:
-        i--;
-        if (i < 0)
-            return 0;
-    }
+    } while (--i >= 0);
+    return 0;
 }
 
 // The Vampire Lord's drain, and the one of the three that rolls NO
@@ -2852,33 +2854,30 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
         return 0;
-    for (;;) {
+    do {
         army* corpse = &m_armies[cell->m_deadArmySide[i]]
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
-            goto next;
+            continue;
         if (!(corpse->is(1u << 18)))
-            goto next;
+            continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex + 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
-                goto next;
+                continue;
             if (m_cells[hex - 1].m_attributes & 2)
-                goto next;
+                continue;
         }
         if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
                 > 0.0)
             return corpse;
-    next:
-        i--;
-        if (i < 0)
-            return 0;
-    }
+    } while (--i >= 0);
+    return 0;
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows

@@ -1021,6 +1021,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
+    // Keep the two shroud-selection scopes and their common draw checks.
+    // An else arm removes the reconstructed join label at unchanged 97.9205%.
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
         return;
     if (srcY >= g_mapHeight && !g_completeDrawAllCells)
@@ -1045,33 +1047,31 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
             || g_unnamed6989f4)) {
         drawShroud = false;
-        goto draw_shroud;
+    } else {
+        drawShroud = true;
+        if (!g_completeDrawAllCells)
+            lookup = getCloudLookup(srcX, srcY, z);
+        if (!lookup) {
+            memset(g_memoryBuffer->getMap(0, 0), 0,
+                   g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+            m_starTileset->drawShroudTile(
+                ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
+                0, 0, false, false);
+            vwScaleToScreenBuffer(baseX, baseY + 8);
+            return;
+        }
+
+        if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+            hflip = true;
+            lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+        }
+        if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+            && (srcX & 1))
+            ++lookup;
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+            lookup = CLOUD_DRAW_FRAME_4;
     }
 
-    drawShroud = true;
-    if (!g_completeDrawAllCells)
-        lookup = getCloudLookup(srcX, srcY, z);
-    if (!lookup) {
-        memset(g_memoryBuffer->getMap(0, 0), 0,
-               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
-        m_starTileset->drawShroudTile(
-            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
-            0, 0, false, false);
-        vwScaleToScreenBuffer(baseX, baseY + 8);
-        return;
-    }
-
-    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
-        hflip = true;
-        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
-    }
-    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-        && (srcX & 1))
-        ++lookup;
-    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
-        lookup = CLOUD_DRAW_FRAME_4;
-
-draw_shroud:
     if (g_unnamed6989f4)
         return;
     if (!drawShroud)

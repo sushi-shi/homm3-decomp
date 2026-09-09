@@ -957,6 +957,8 @@ void NewfullMap::newfullMapFn004FD950(
 // seer resize and its size queries; our remaining nested decisions differ.
 // The former 93.4037% peak depended on the removed synthetic boundaries and
 // stays in HIST. Keep the real clear/resize/append calls through this dip.
+// Goto audit: Replacing the two load_failure jumps with direct returns
+// scores 53.5994% versus 56.7217%; retain this failure boundary.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)

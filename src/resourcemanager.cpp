@@ -827,6 +827,8 @@ static inline FILE* openResourcePath(const char* name)
 // controls peak at 94.5542%; explicit key pairs also contradict the retained
 // pair<const char*, resource*> constructor at 0x55ecf0. No copied helper body
 // or synthetic pair overload is retained to steer those calls.
+// Goto audit: Returning result directly at the cache-hit exit scores
+// 91.6626% versus 94.5542%; retain the shared get_bitmap816_done exit.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::getBitmap816(const char* name)
 {

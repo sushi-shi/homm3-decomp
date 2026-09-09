@@ -2888,6 +2888,10 @@ public:
     int loadBoatPool(TAbstractFile* infile);      // 0x4b9a00
     // Before normalization (function): game::SaveBoatPool.
     int saveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
+    // Before normalization (function): game::LoadObeliskPool.
+    int loadObeliskPool(TAbstractFile* infile);
+    // Before normalization (function): game::SaveObeliskPool.
+    int saveObeliskPool(TAbstractFile* outfile);
     // Before normalization (function): game::Load.
     int load(TAbstractFile* infile);              // 0x4bcda0
     // Before normalization (function): game::LoadGame.

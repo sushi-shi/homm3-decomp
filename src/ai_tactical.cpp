@@ -385,6 +385,8 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, c
 // value;` (75.5), and on the tail `value /= 5; return value;`, a named
 // quotient and a braced if/else (all 95.9).
 // Before normalization (locals): current_army, our_total, enemy_total, enemy_flags.
+// Goto audit: Replacing both disabled jumps with return value / 10 scores
+// 88.1132% versus 100%; retain the shared quotient-return block.
 VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
 long type_AI_combat_parameters::getRangedAttackValue(const army* currentArmy, const army* enemy)
 {
@@ -1091,75 +1093,22 @@ inline unsigned char type_AI_spellcaster::isLastAction()
 }
 
 // E:\gamedcs\ai_tactical.cpp:862
-// Residual (85.6%): retail MEMORY-HOMES the first loop's counter
-// (mov [ebp-4],0 / reload-inc-store each turn) and therefore has ECX
-// free to hold creatureId across the whole body, which lets it load
-// disabled_290 / disabled_2c0 into EBX instead of comparing them in
-// place; our CL enregisters the counter in ECX and every scratch pair
-// in both loops swaps with it. Tried and rejected: declaring `count`
-// before `current` (80.1%), spelling the three creatureId bit tests
-// without the unsigned char step (81.3%, and it folds shr/test cl into
-// a single test dword), and `break` + `if (i >= count) return 1` after
-// the loop instead of the goto (83.9%, one redundant compare).
-// Register-homing family.
-// The two "biased bases" the carcass flagged (manager + 0x577c and
-// + 0x575c) are just armies[side][i].disabled_2b0 / .disabled_290 with
-// the field offset folded into the induction variable, and the manager
-// words at 0x132b8/0x132bc are the acting stack's (side, slot) pair -
-// the flattened index side*21 + slot is the same one hexcell::get_army
-// uses. Nothing here needed a new leaf.
-// Residual (86.7%): retail MEMORY-HOMES the first loop index
-// (`mov [ebp-X],0` before `current` is even computed, then reload /
-// inc / store each iteration) and spends the register it frees on
-// LOADING each disabled counter before testing it; ours enregisters the
-// index in EBX and folds the tests into memory operands. That retail
-// loads only TWO of the three disabled counters and still folds
-// `disabled_2b0` into a `cmp dword ptr [eax],0` is what says this is
-// allocator noise and not a source distinction. Register-homing family;
-// `vc6 diagnose` agrees (flow-distance 0, "callee-saved role swap,
-// schedule aligned: ebx->ecx x6, edi->ebx x6") and why-reg --model puts
-// the divergence past the B1 minimum slice.
-//
-// CORRECTION 2026-08-20 (85.5822 -> 86.6781). The 2026-08-08 note
-// listed `i = 0` above `current` under "tried and rejected" WITH ITS
-// SCORE, 86.68 - which is 1.10 ABOVE the row it left banked. MAX is the
-// only ledger, so that spelling should have been kept when it was
-// measured; it is now in the source and in the baseline. Re-measured
-// here at 86.6781, matching the old note's number exactly.
-// Tried and rejected: dropping either cached `numArmies[side]` local
-// (no change - unlike get_speed_value, this cache is not what crowds
-// the allocator), declaring `i` without an initialiser (no change),
-// hoisting the count above `current` (81.0), both together (81.7), and
-// reusing the single `i` for the second loop as old C would
-// (byte-identical at 86.6781).
+// DC line 864 calls is_last_action (dc 0x3d7b0), then obtains GetCurrentArmy.
+// Restoring the canonical helper removes the copied search's goto and raises
+// 86.6781% to 94.2671%, with no sibling score changes. The existing inline
+// helper's local lifetimes recover most of the first loop's retail allocation.
+// Flattening it again returns to 86.6781%; break + a post-loop counter test
+// previously measured 83.9%. GetCurrentArmy versus its indexed expression is
+// byte-score neutral. The remaining register and instruction-order delta is
+// still open; the prior claim that this caller needed no helper was incorrect.
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
 unsigned char type_AI_spellcaster::shouldAttackNow(const army* enemy)
 {
     if (m_estimate.m_killsOnly)
         return 1;
-    long i = 0;
-    const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                  [g_combatManager->m_actingSlot];
-    long count = g_combatManager->m_numArmies[m_side];
-    for (; i < count; i++) {
-        // Before normalization (locals): our_army, no_target.
-        const army* ourArmy = &g_combatManager->m_armies[m_side][i];
-        if (ourArmy->m_monInfo.m_attributes & 0x200040)
-            continue;
-        if (ourArmy->m_spellInfluence[62])
-            continue;
-        if (ourArmy->m_spellInfluence[70])
-            continue;
-        if (ourArmy->m_spellInfluence[74])
-            continue;
-        unsigned char noTarget = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-        if (noTarget & 1)
-            continue;
-        if (ourArmy != current)
-            goto found;
-    }
-    return 1;
-found:
+    if (isLastAction())
+        return 1;
+    const army* current = g_combatManager->getCurrentArmy();
     if (current->m_combatSide == m_side && current->getAITarget() == enemy) {
         unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(current->m_monInfo.m_attributes) >> 16);
         if (current->getAITargetTime(current->getSpeed()) == 1
@@ -4591,16 +4540,29 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3398
+// Before normalization: type_AI_spellcaster::spells_not_required.
+// DC 0x42610 proves the const helper and early returns; cast_spell calls it
+// at line 3436. Complete also excludes Arrow Towers. Retail expands this
+// ordinary helper into 0x43c800; the bracket has no retained body for it.
 DC_ONLY(0x42610, 0xA0)
-unsigned char type_AI_spellcaster::spells_not_required()
+unsigned char type_AI_spellcaster::spellsNotRequired() const
 {
-    // @stub
+    if (!m_winLikely)
+        return 0;
+    const army* ourArmy = g_combatManager->m_armies[m_side];
+    long count = g_combatManager->m_numArmies[m_side];
+    for (; count-- > 0; ++ourArmy) {
+        if (ourArmy->is(1u << 21))
+            continue;
+        if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
+                >= ourArmy->m_monInfo.m_hitPoints)
+            return 0;
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3420
 // The top of the spell AI: walk every spell the hero actually knows,
@@ -4620,11 +4582,10 @@ unsigned char type_AI_spellcaster::spells_not_required()
 // more in the pool the spell keeps 5/2 of its value, and below that it
 // is scaled by `sqrt(mana / cost)`. Then Random(75, 100) percent of
 // that is what actually competes.
-// EXACT 2026-08-22 (98.8760 -> 100.0): retail does not pre-initialize
-// healing_only.  The no-simulation path and the first doomed friendly stack
-// assign zero through one shared exit, while only loop exhaustion assigns
-// one.  Spelling those terminal assignments directly reproduces its lone
-// remaining branch polarity and the complete instruction stream.
+// Calling the DC-proven spells_not_required helper preserves 100% and
+// removes the copied helper's healing_only_done jump. Its two early zero
+// returns and exhaustion return expand into retail's shared assignment join;
+// no explicit inline keyword or inlining pin is needed.
 VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
 unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
 {
@@ -4640,28 +4601,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
         if (m_enemyHero->isWieldingArtifact(g_artifactRecantersCloak))
             inhibited = 1;
     }
-    unsigned char healingOnly;
-    if (!m_winLikely) {
-        healingOnly = 0;
-    } else {
-        const army* ourArmy = g_combatManager->m_armies[m_side];
-        long count = g_combatManager->m_numArmies[m_side];
-        for (; count-- > 0; ++ourArmy) {
-            unsigned char immune = static_cast<unsigned char>(
-                static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
-            if (immune & 1)
-                continue;
-            if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
-                continue;
-            if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
-                    >= ourArmy->m_monInfo.m_hitPoints) {
-                healingOnly = 0;
-                goto healing_only_done;
-            }
-        }
-        healingOnly = 1;
-    }
-healing_only_done:
+    unsigned char healingOnly = spellsNotRequired();
     if (m_ourHero)
         duration = m_ourHero->getSpellDurationBonus() + power;
     if (retreating)

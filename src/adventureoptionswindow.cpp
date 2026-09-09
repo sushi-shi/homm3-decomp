@@ -211,6 +211,8 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 // contradiction of the older helper location, not a score-based skew claim.
 // Retail also selects the rollover field for right-click help where Dreamcast
 // loads the other THelpText field; both are direct byte-level Complete changes.
+// Goto audit: Replacing the three consume jumps with direct returns scores
+// 87.4684% versus 100%; the shared dispatch epilogue remains.
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
 int TAdventureOptionsWindow::windowHandler(message* msg)
 {

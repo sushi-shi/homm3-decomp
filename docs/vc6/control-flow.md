@@ -1,5 +1,9 @@
 # `why-branch` — the control-flow solver (v1)
 
+For the project-wide inventory and controlled reductions, see the
+[goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
+show why a matching assembly join alone does not establish an original goto.
+
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /
 branch-shape** residual (not a register binding) and runs a guided oracle

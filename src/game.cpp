@@ -1738,26 +1738,39 @@ int game::saveBoatPool(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1235
-// No retail row: SaveBoatPool ends at 0x4b9ded and playerData::playerData
-// starts at 0x4b9df0, so neither obelisk body has a slot. Both are 94
-// SH4 bytes - single-call-site /Ob2 fodder.
+// E:\gamedcs\game.cpp:1235; original LoadObeliskPool.
+// Retail expands this ordinary helper in game::load. Complete routes the
+// two reads through TAbstractFile instead of Dreamcast's gzread handle.
+// Original locals: count, char_buffer.
 DC_ONLY(0xa4c08, 0x5E)
-int game::LoadObeliskPool(void* infile)
+int game::loadObeliskPool(TAbstractFile* infile)
 {
-    // @stub
+    char charBuffer;
+    int count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    m_numObelisks = charBuffer;
+    count = infile->read(m_obeliskFlags, sizeof(m_obeliskFlags));
+    if (count < sizeof(m_obeliskFlags))
+        return -1;
+    return 0;
 }
 
-// E:\gamedcs\game.cpp:1256
+// E:\gamedcs\game.cpp:1256; original SaveObeliskPool.
+// The ordinary writer mirrors the reader; retail expands it in game::save.
+// Original locals: count, char_buffer.
 DC_ONLY(0xa4c68, 0x5E)
-int game::SaveObeliskPool(void* outfile)
+int game::saveObeliskPool(TAbstractFile* outfile)
 {
-    // @stub
+    char charBuffer = m_numObelisks;
+    int count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    count = outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags));
+    if (count < sizeof(m_obeliskFlags))
+        return -1;
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1278
 // The body is EMPTY: every store is implicit member construction -
@@ -1815,6 +1828,8 @@ void playerData::init()
 // slot - and it is read as two dwords ANDed against town::built's two
 // halves and ORed, which is retail's whole __int64 lowering. GetTown's
 // -1 arm is emitted here and never taken.
+// The guarded do/while retains the exact town scan without a backward
+// label; an infinite loop with the bound exit inside also reproduces it.
 VA(0x004b9f40, 0x71)  // anchor-global, dc 0xa4e80
 bool playerData::hasCapitol()
 {
@@ -1824,13 +1839,11 @@ bool playerData::hasCapitol()
 
     if (towns <= 0)
         return false;
-loop:
-    if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, 0))
-        return true;
-    i++;
-    if (i >= towns)
-        return false;
-    goto loop;
+    do {
+        if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, 0))
+            return true;
+    } while (++i < towns);
+    return false;
 }
 
 // E:\gamedcs\game.cpp:1336
@@ -3640,6 +3653,7 @@ int game::GetSaveGameHeaders(void* infile)
 //     hoisted out of the pin. With the recompute of `count * 28`,
 //     85.1473 -> 86.7504.
 //
+// Historical copied-pool controls (before restoring the source helpers):
 // 86.7504 -> 90.0926, 2026-08-20, and the note it replaces was wrong to
 // call the merged-return class unreachable (game::Save carries the full
 // write-up of the lever). Retail emits 39 numbered cleanup sites here and
@@ -3849,24 +3863,10 @@ int game::load(TAbstractFile* infile)
     if (loadBoatPool(infile) < 0)
         return -1;
 
-    // Retail's state 0x16 at 0x41ec is entered by `jb` from the byte guard
-    // and by the FALL-THROUGH from the obeliskFlags guard: one `return -1`
-    // for two conditions. The `||`-with-comma spelling measured -2.5 here
-    // because it lowers as a two-jump join that sinks to the end of the
-    // function; a forward `goto` into the second guard's own block puts
-    // the teardown where retail puts it.
-    {
-        char charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer))
-            goto obelisk_failed;
-        m_numObelisks = charBuffer;
-        if (infile->read(m_obeliskFlags, sizeof(m_obeliskFlags)) <
-            sizeof(m_obeliskFlags)) {
-        obelisk_failed:
-            return -1;
-        }
-    }
+    // DC line 3073 calls LoadObeliskPool. Its canonical body preserves one
+    // caller failure/cleanup boundary for the count and payload reads.
+    if (loadObeliskPool(infile) < 0)
+        return -1;
 
     for (i = 0; i < 8; ++i) {
         if (m_players[i].load(infile, saved.m_version) < 0)
@@ -4357,6 +4357,8 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //     Writing it the other way round - the loop inside an `if` with the
 //     `return -1` in a trailing `else` - merges the site but SINKS the
 //     block to the end of the function and scores 0.02 lower.
+//   * Historical flattened ObeliskPool control; the canonical helper below
+//     now owns these early returns and preserves the caller cleanup boundary.
 //   * field_4e3e8 + obeliskFlags - two adjacent guarded writes. Here the
 //     label goes in the SECOND guard and the first `goto`s FORWARD into
 //     it, because retail's teardown is the fall-through successor of the
@@ -4533,18 +4535,8 @@ int game::save(TAbstractFile* outfile)
     if (saveBoatPool(outfile) < 0)
         return -1;
 
-    {
-        charBuffer = m_numObelisks;
-        if (outfile->write(&charBuffer, sizeof(charBuffer)) <
-            sizeof(charBuffer)) {
-            goto obelisk_failed;
-        }
-        if (outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags)) <
-            sizeof(m_obeliskFlags)) {
-        obelisk_failed:
-            return -1;
-        }
-    }
+    if (saveObeliskPool(outfile) < 0)
+        return -1;
 
     for (i = 0; i < 8; ++i) {
         if (m_players[i].save(outfile) < 0)
@@ -13104,33 +13096,16 @@ bool game::isLocalHuman(int gamePos) const
 }
 
 // E:\gamedcs\game.cpp:11791
-// GetLocalPlayer and GetLocalPlayerGamePos carry the SAME selection
-// longhand rather than one calling the other: this body comes first in
-// address (so in source) order, so VC6 cannot have inlined the later
-// one into it, and neither body contains a call.
-// The selection: on the network game kind, trust the announced net
-// position only if it is in range and human, else take the highest
-// human slot, else player 0. Any other game kind hands back the plain
-// local position unchecked.
+// Dreamcast dc 0xbc016 calls GetLocalPlayerGamePos before indexing players.
+// VC6 /Ob2 expands that ordinary helper even though its definition follows
+// this caller; both retail bodies remain exact with the canonical call.
+// The old hand-expanded selection used a goto for the helper's early return.
+// Replacing only that goto with a caller return scored 84.5588%; restoring
+// the actual helper boundary keeps 100% and removes the duplicated scan.
 VA(0x004ce9b0, 0x6A)  // anchor-global, dc 0xbc010
 playerData* game::getLocalPlayer()
 {
-    int pos;
-
-    if (g_mpNetProtocol == MP_HOTSEAT) {
-        pos = g_netLocalGamePos;
-        if (pos < 0 || pos >= 8 || !m_players[pos].m_isHuman) {
-            for (pos = 7; pos >= 0; pos--) {
-                if (m_players[pos].m_isHuman)
-                    goto found;
-            }
-            pos = 0;
-        }
-    } else {
-        pos = g_localGamePos;
-    }
-found:
-    return &m_players[pos];
+    return &m_players[getLocalPlayerGamePos()];
 }
 
 // E:\gamedcs\game.cpp:11796
@@ -13202,6 +13177,7 @@ int game::getGamePosFromDPID(unsigned long dpid)
 // "Nobody human after this slot." IsHuman is inlined, and the loop
 // bound folds away its `>= 8` half - only the `< 0` clamp survives,
 // which is what identifies the callee.
+// A guarded do/while preserves the exact scan and its early success exit.
 VA(0x004cec50, 0x3E)  // linkorder, dc 0xbc2b8
 bool game::isLastHuman(int gamePos) const
 {
@@ -13209,13 +13185,11 @@ bool game::isLastHuman(int gamePos) const
 
     if (i >= 8)
         return true;
-loop:
-    if (isHuman(i))
-        return false;
-    i++;
-    if (i >= 8)
-        return true;
-    goto loop;
+    do {
+        if (isHuman(i))
+            return false;
+    } while (++i < 8);
+    return true;
 }
 
 // E:\gamedcs\game.cpp:11861

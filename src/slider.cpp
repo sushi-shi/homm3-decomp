@@ -193,6 +193,8 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 // arms reach the common zero return, and making the state-message arm join
 // its common success tail, reproduces all 85 blocks, 60 branches, 11 returns,
 // and ten jump-table slots exactly.
+// Goto audit: Replacing the five callWidgetMain jumps with direct base
+// calls/returns scores 89.6667% versus 100%; the shared call tail remains.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
 int slider::main(message* msg)
 {

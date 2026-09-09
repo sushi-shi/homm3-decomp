@@ -186,6 +186,10 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
 // GetHero/GetTown -1 arms reach the armyGroup accessor unguarded,
 // exactly as the inline accessors expand.
 // E:\gamedcs\victorylossconditions.cpp:61
+// This and the five eligibility checks below call game::IsHumanTeam in DC
+// (source lines 71, 108, 327, 384, 413 and 442). Retail expands its eight-player
+// scan; the former goto eligible edges were returns from that inline.
+// Restoring the canonical calls preserves all six exact retail bodies.
 VA(0x005f1b10, 0x169)  // anchor-global, dc 0x18fe98
 unsigned char VictoryConditionStruct::checkForTotalCreatures()
 {
@@ -194,16 +198,7 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
         if (g_currentPlayer
             && !g_game->m_playerDisabled[g_netLocalGamePos]) {
             int team = getTeam(g_game, g_netLocalGamePos);
-            if (team >= 0) {
-                int player = 0;
-                signed char* teams = g_game->m_mapHeader.m_teamInfo;
-                for (; player < 8; ++player) {
-                    if (teams[player] == team && g_game->isHuman(player))
-                        goto eligible;
-                }
-            }
-            if (m_appliesToComputer) {
-eligible:
+            if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
@@ -232,16 +227,7 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         int team = getTeam(g_game, g_netLocalGamePos);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team && g_game->isHuman(player))
-                    goto eligible;
-            }
-        }
-        if (m_appliesToComputer) {
-eligible:
+        if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
             if (g_currentPlayer->m_resources[m_resourceType] >= m_resourceAmount) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
@@ -437,18 +423,9 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     int townId = g_game->getTownId(m_townX, m_townY, m_townZ);
     if (townId < 0)
         return 0;
@@ -517,18 +494,9 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
         int owner = g_game->m_generators[i].m_playerOwner;
         if (!sameTeam(g_game, owner, g_netLocalGamePos))
@@ -549,19 +517,9 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team
-                && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (!m_appliesToComputer)
+    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
         return 0;
 
-eligible:
     for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
         int owner = g_game->m_mines[i].m_playerOwner;
         if (!sameTeam(g_game, owner, g_netLocalGamePos))
@@ -610,16 +568,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         return 0;
 
     int team = getTeam(g_game, g_netLocalGamePos);
-    if (team >= 0) {
-        int player = 0;
-        signed char* teams = g_game->m_mapHeader.m_teamInfo;
-        for (; player < 8; ++player) {
-            if (teams[player] == team && g_game->isHuman(player))
-                goto eligible;
-        }
-    }
-    if (m_appliesToComputer) {
-eligible:
+    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
         if (!target.operator==(&townLoc))
             return 0;
