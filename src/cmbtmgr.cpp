@@ -1775,50 +1775,44 @@ unsigned char combatManager::combatIsOver()
 
 // E:\gamedcs\cmbtmgr.cpp:2465
 // Before normalization (locals): this_side, other_side.
-// Goto audit: Direct returns at the won label's two incoming jumps score
-// 81.9178% versus 100%; the shared winner exit remains.
+// DC line 2485 calls the canonical Is helper for all three attributes;
+// line 2487 records the failed-stack flag changing before the scan exit.
+// Restoring those calls, the scan result, and the guarded opponent scan
+// removes all three gotos at 100%. Bool, unsigned-char and int result flags
+// agree; index exhaustion and two bare winning returns remain lower.
+// Every sibling retains its score in the 25-state source family.
 VA(0x004658b0, 0xBC)  // anchor-global, dc 0x5fc00
 unsigned char combatManager::isWinner(int thisSide) const
 {
-    int otherSide = 1 - thisSide;
+    const int otherSide = 1 - thisSide;
     int other;
+    bool noStacks = 1;
     for (int slot = 0; slot < 20; slot++) {
         const army& a = m_armies[thisSide][slot];
         if (a.m_creatureType == -1)
             continue;
-        unsigned char high = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 22);
-        if (high & 1)
+        if (a.is(1u << 22))
             continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 6);
-        if (flags & 1)
+        if (a.is(1u << 6))
             continue;
-        unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 21);
-        if ((removed & 1) == 0)
-            goto have_stack;
+        if (!a.is(1u << 21)) {
+            noStacks = 0;
+            break;
+        }
     }
-    return 0;
-have_stack:
-    if (m_sideSurrendered[otherSide])
-        goto won;
-    if (m_sideRetreated[otherSide])
-        goto won;
-    for (other = 0; other < 20; other++) {
-        const army& a = m_armies[otherSide][other];
-        if (a.m_creatureType == -1)
-            continue;
-        unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 21);
-        if (removed & 1)
-            continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.m_monInfo.m_attributes) >> 6);
-        if ((flags & 1) == 0)
-            return 0;
+    if (noStacks)
+        return 0;
+    if (!m_sideSurrendered[otherSide] && !m_sideRetreated[otherSide]) {
+        for (other = 0; other < 20; other++) {
+            const army& a = m_armies[otherSide][other];
+            if (a.m_creatureType == -1)
+                continue;
+            if (a.is(1u << 21))
+                continue;
+            if (!a.is(1u << 6))
+                return 0;
+        }
     }
-won:
     return 1;
 }
 
@@ -4220,42 +4214,43 @@ void getMissileStartingPosition(int armyType, int x, int y, int facing,
     *startY = y + info.m_offsets[offset][1];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4669
+// Before normalization (function): DoorCanBeLowered.
+// DC's const-this record and lines 4675/4680/4686 prove the side check and
+// both canonical HasArmy calls. Complete expands this ordinary helper in
+// HexIsBlocked; its two cell/body tests are the same retail operands.
 DC_ONLY(0x63268, 0x5A)
-unsigned char combatManager::DoorCanBeLowered()
+unsigned char combatManager::doorCanBeLowered() const
 {
-    // @stub
+    if (m_currentSide != 1)
+        return 0;
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
+        || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+        return 0;
+    if (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
+        || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex)
+        return 0;
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4701
 // The two literal cell reads are cells[95] and cells[94] - the gate's
 // moat hex and the one outside it - byte-proven by the manager offsets
 // 0x2b6c/0x2b70 and 0x2afc/0x2b00 landing exactly on cells[95].armySide
 // / .iBodiesInHex and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
-// Goto audit: Direct zero returns instead of not_blocked jumps score
-// 75.6098% versus 100%; retain the shared gate/moat rejection exit.
+// Keep the canonical DoorCanBeLowered call from DC line 4711. A positive
+// raised-bridge guard and an ordinary outer else remove both copied exits
+// at 100%, as does a nested guard. The bare gate return and a single-pass
+// rejection block lose score; all sibling functions remain unchanged.
 VA(0x00469a10, 0x80)  // anchor-global, dc 0x632c4
 unsigned char combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
-        if (m_drawbridgeState != DRAWBRIDGE_UP)
-            goto not_blocked;
-        if (m_currentSide != 1
-                || m_cells[COMBAT_HEX_GATE_MOAT].m_armySide >= 0
-                || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex != 0
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_armySide >= 0
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex != 0)
+        if (m_drawbridgeState == DRAWBRIDGE_UP && !doorCanBeLowered())
             return 1;
-        goto not_blocked;
-    }
-    if (m_cells[index].m_attributes & 2)
+    } else if (m_cells[index].m_attributes & 2)
         return 1;
-not_blocked:
     return 0;
 }
 

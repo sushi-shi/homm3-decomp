@@ -1169,6 +1169,14 @@ inline void showCredits()
 // to 84.3222% but contradicted their retained retail bodies; those diagnostic
 // pins were rejected. The two campaign-end calls are now present, so the
 // former missing-call diagnosis and wrapper-admission advice were stale.
+// Structured completion/cancel exits raise 77.4155% to 78.4499% and remove
+// two gotos. campaignScored preserves the already-scored map's shared end
+// action and resets on every runGame reentry. A cancelled campaign picker
+// breaks its own loop; only a non-cancelled selection starts the next game.
+// Bool and unsigned-char completion results reproduce the same winner; int
+// changes the caller's layout. An explicit replay loop with playGame and
+// backToMenu results falls to 59.9903--60.0568%, so the two restart edges
+// remain. All nested campaign-window lifetimes and ordinary helpers stay.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1487,8 +1495,10 @@ int oldmain()
         g_gameSelectBack = 0;
         videoClose();
 
+        bool campaignScored = 0;
         if (!unused) {
         runGame:
+            campaignScored = 0;
             g_windowManager->m_colorCyclingOn = 1;
             computeAdvNetControl();
             g_unnamed699558 = 1;
@@ -1501,48 +1511,48 @@ int oldmain()
                 showProgressBar();
                 g_defeatedAllPlayers = g_gameResultCampaignMapScored;
                 unloadProgressBar();
-                goto endOfGameBody;
+                campaignScored = 1;
+            } else {
+
+                if (g_executive->addManager(g_advManager, -1))
+                    shutDown((*g_generalText)[1]);
+                unloadProgressBar();
+
+                if (g_videoPaused) {
+                    waitForReadyToPlayMsg();
+                    g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
+                    CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
+                    transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
+                }
+
+                if (command == TMainMenu::NEW_GAME_ID
+                    || command == TMainMenu::RESTART_ID
+                    || g_unnamed699584) {
+                    g_unnamed699584 = 0;
+                    launchSample(
+                        DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
+                                     "newday.wav"),
+                        30000, 3);
+                    g_game->checkForTimeEvent();
+                    g_game->checkForTownEvent();
+                }
+
+                g_turnDuration69d630.start();
+                g_executive->mainLoop();
+                g_soundManager->m_playSounds = 1;
+                g_unnamed691209 = 0;
+                g_soundManager->stopAllSamples(1);
+                g_executive->removeManager(g_advManager);
+                g_windowManager->fadeScreen(1, 4, false);
+
+                if (g_gameCommand != TMainMenu::RESTART_ID)
+                    remoteCleanup();
+                if (g_dPlayReady)
+                    unused = 1;
             }
-
-            if (g_executive->addManager(g_advManager, -1))
-                shutDown((*g_generalText)[1]);
-            unloadProgressBar();
-
-            if (g_videoPaused) {
-                waitForReadyToPlayMsg();
-                g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
-                CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
-                transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
-            }
-
-            if (command == TMainMenu::NEW_GAME_ID
-                || command == TMainMenu::RESTART_ID
-                || g_unnamed699584) {
-                g_unnamed699584 = 0;
-                launchSample(
-                    DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
-                                 "newday.wav"),
-                    30000, 3);
-                g_game->checkForTimeEvent();
-                g_game->checkForTownEvent();
-            }
-
-            g_turnDuration69d630.start();
-            g_executive->mainLoop();
-            g_soundManager->m_playSounds = 1;
-            g_unnamed691209 = 0;
-            g_soundManager->stopAllSamples(1);
-            g_executive->removeManager(g_advManager);
-            g_windowManager->fadeScreen(1, 4, false);
-
-            if (g_gameCommand != TMainMenu::RESTART_ID)
-                remoteCleanup();
-            if (g_dPlayReady)
-                unused = 1;
         }
 
-        if (g_gameOver) {
-        endOfGameBody:
+        if (campaignScored || g_gameOver) {
             remoteCleanup();
             g_completeDrawEnabled = 1;
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -1608,7 +1618,7 @@ int oldmain()
                             videoPause();
                             if (g_windowManager->m_dialogReturn
                                 == DIALOG_RETURN_CANCEL)
-                                goto endOfGame;
+                                break;
                             {
                                 TCampaignBrief campaignBriefWindow(0, 0);
                                 campaignBriefWindow.doModal();
@@ -1617,9 +1627,12 @@ int oldmain()
                                 != DIALOG_RETURN_CANCEL)
                                 break;
                         }
-                        g_gameOver = 0;
-                        g_unnamed699584 = 1;
-                        goto runGame;
+                        if (g_windowManager->m_dialogReturn
+                            != DIALOG_RETURN_CANCEL) {
+                            g_gameOver = 0;
+                            g_unnamed699584 = 1;
+                            goto runGame;
+                        }
                     }
                 } else if (g_defeatedAllPlayers
                                == g_gameResultCampaignMapScored
@@ -1667,7 +1680,6 @@ int oldmain()
                         0, 1);
             }
 
-        endOfGame:
             g_gameOver = 0;
             if (g_showHighScore) {
                 g_showHighScore = 0;

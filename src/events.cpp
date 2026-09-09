@@ -5666,27 +5666,15 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 
 // E:\gamedcs\events.cpp:3377. The gold-or-experience offer shared by the
 // treasure chest and the campfire-style pickups.
-// [2026-08-27] Residual (83.04%): a whole-body current_hero/this register
-// transposition (retail this=EBX surviving to GiveExperience,
-// current_hero=EDI; ours edi/esi) plus the AI-arm branch polarity. A
-// register-homing wall - no local spelling reaches the pseudo order.
-// Residual (83.04%): the merged-return class (path.obj/AppWndProc
-// family), in the direction where RETAIL DUPLICATES. Our source already
-// writes GiveResource(GOLD, amount); return; twice (the CHOICE_1 arm
-// and the shared tail) and our CL cross-jumps them into one exit
-// (`jne` back into the shared copy); retail keeps both byte-identical
-// GiveResource+ret exits - the accept je and the AI fall-through share
-// the second - while merging the GiveExperience tail exactly as we do.
-// No structured respelling changes which copy survives; the register
-// story (this in ebx vs our edi, amount edi vs esi) is downstream of
-// that extra exit's pressure. 2026-08-27.
-// [2026-09-01] Fresh why-branch classifies the same residual as D6
-// retail-side exit duplication plus one D8 polarity. An explicit
-// accept-path goto to the shared resource label is byte-flat at 83.0357%,
-// and the guided catalog finds no legal mutation, so the natural form stays.
+// A shared choice result with the gold arm first removes both experience
+// joins and raises 83.0357% to 94.4643%. The separate CHOICE_1 resource
+// return remains, as do the canonical experience/resource and AI helpers.
+// Bool, unsigned char and int choice results reproduce the same winner;
+// reversing the final two arms is neutral at the old 83.0357%. A single
+// breakable choice scope is also neutral, while either individual copied
+// GiveExperience/return exit lowers the match. This 44-state family checks
+// all event siblings; the witch-hut refusal alternatives remain lower.
 // Before normalization (locals): current_hero, human_player.
-// Goto audit: two direct GiveExperience/return arms lose 2.3095 points;
-// the common experience join remains closer in this compiler context.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
@@ -5694,6 +5682,7 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
     int experience = static_cast<int>(currentHero->getExperienceBonusFactor()
                                       * (amount - 500));
 
+    bool takeExperience = 0;
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
@@ -5704,18 +5693,17 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
                 currentHero->giveResource(GOLD, amount);
                 return;
             }
-            goto give_experience;
+            takeExperience = 1;
         }
     } else if (!aiChooseResourceOrExperience(currentHero, GOLD, amount,
                                                  experience)) {
-        goto give_experience;
+        takeExperience = 1;
     }
 
-    currentHero->giveResource(GOLD, amount);
-    return;
-
-give_experience:
-    currentHero->giveExperience(experience, 0, 1);
+    if (!takeExperience)
+        currentHero->giveResource(GOLD, amount);
+    else
+        currentHero->giveExperience(experience, 0, 1);
 }
 
 // E:\gamedcs\events.cpp:3414.  The treasure chest (jump-table arm 0x65):
@@ -6805,6 +6793,10 @@ void advManager::doEventWindmill(hero* currentHero, ExtraInfoUnion* cell,
 // Before normalization (locals): current_hero, human_player.
 // Goto audit: copying the common refusal dialog into the known-skill arm
 // loses 47.2917 points; retain the join pending a better source model.
+// A shared refusal result (bool or unsigned char) scores 52.2569%; an
+// explicit refusal-text selector scores 44.1875%, against the exact body.
+// The visit/info writes and human-only dialogs were preserved in each
+// control, so these results concern their source scopes and compiler layout.
 VA(0x004a8080, 0x1A5)  // linkorder + GlobalInfoFlags[WitchHutInfo], dc 0x97dc8
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)

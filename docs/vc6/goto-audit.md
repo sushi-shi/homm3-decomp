@@ -1,10 +1,15 @@
 # Goto reconstruction audit
 
-The isolated audit removes **198 of 316 goto statements (62.7%)**, across 83 functions,
-without lowering any current score among the 4,752 scored functions.
-The remaining inventory is **118 statements in 53 functions across 29 files**,
-down from 123 functions in 55 files. Seventy functions and twenty-six files
-no longer contain gotos.
+The current inventory is **98 goto statements in 46 functions across 27 files**.
+That is **218 fewer than the initial 316 (69.0%)**, across 93 functions;
+77 functions and 28 files no longer contain gotos. The latest follow-up removes
+20 statements from the merged 118-statement checkpoint, improves four current
+scores and lowers none among all 4,752 scored functions.
+
+The isolated audit removed **198 statements (62.7%)**, across 83 functions,
+without lowering any current score. That checkpoint contained 118 statements
+in 53 functions across 29 files. Its measurements below describe that source
+context; the integration and subsequent reductions are recorded separately.
 
 The isolated worktree follow-ups from `bcb7f5ed` remove **123 statements
 (241 to 118)**. The final search removes **25 (143 to 118)** in fourteen
@@ -36,8 +41,8 @@ The recorded before tree is commit
 `231248aaac65c6a630d22f3bed3d26b1f5e8c133`; pass that to `--revision` to
 reproduce the 316-statement inventory after these changes are committed.
 
-The initial inventory contained 275 forward and 41 backward jumps. The result
-contains 106 forward and 12 backward jumps. Eighteen remaining statements
+The initial inventory contained 275 forward and 41 backward jumps. The isolated result
+contains 106 forward and 12 backward jumps. Eighteen of those statements
 syntactically target a terminal return; that alone does not make a direct return
 byte-equivalent.
 
@@ -68,8 +73,8 @@ adopted in that function.
 
 Local manifests, candidate results and evidence outputs are in
 `build/goto-audit/` (initial workspace), `build/goto-followup/`,
-`build/goto-more/`, `build/goto-residuals/` and
-`build/source-families/`. These are scratch artifacts; source-specific
+`build/goto-more/`, `build/goto-residuals/`, `build/goto-integration/`,
+`build/goto-after-merge/` and `build/source-families/`. These are scratch artifacts; source-specific
 conclusions live beside the affected functions. No new inline keywords,
 forced-inlining directives, inlining pins, dummy operations or volatile
 surrogates were introduced. Canonical helpers keep their declarations and
@@ -286,7 +291,7 @@ a proof of the maximum possible reduction. Remaining leads include:
   missing source boundaries and lifetimes rather than assuming a compiler
   generation limitation from a flattened body.
 
-## Full checkpoint
+## Isolated full checkpoint
 
 `homm3 build` rebuilds affected units, regenerates labels/retail targets and
 runs the gates. The checkpoint includes shared-header collateral across all
@@ -382,3 +387,95 @@ reproduces 100% with the canonical `getText()` call passed directly to
 `onNameChange`. The separate text local that was exact in the isolated tree
 now changes two stack-slot operands. Every sibling keeps its score; retail
 CFG, instructions and the eight named calls agree in the adopted result.
+
+## Further structured reductions
+
+Starting from merged checkpoint `2f737f67`, twelve new finite source families
+exhaust **217 successfully scored states and 146 distinct objects**. Each
+family checks the owning TU's complete score vector and reproduces its
+retained objects. Together with the isolated audit and integration family,
+the search comprises 116 families, 1,028 scored states and 869 distinct objects
+summed within their separate contexts. These counts include parent controls.
+
+The follow-up removes **20 more gotos in eleven functions**, from 118 to 98.
+Seven additional functions and two additional files are cleared. The remaining
+inventory has 86 forward jumps, twelve backward jumps and eleven jumps whose
+label syntactically begins a terminal return.
+
+| Function or group | Removed | Retained source form |
+| --- | ---: | --- |
+| Army-group luck and terrain-description helpers | 6 | Default `break`, per-arm adjustments and returns; preserve out-of-range town behavior |
+| `combatManager::isWinner` | 3 | Canonical `army::is` calls, first-scan result, guarded opponent scan |
+| `combatManager::hexIsBlocked` | 2 | Ordinary `doorCanBeLowered`, const `hexcell::hasArmy`, positive bridge guard and outer `else` |
+| `combatManager::automateCatapult` | 1 | Selected-target result before fallback selection |
+| `advManager::doTreasureDialog` | 2 | Choice result with the gold arm first and the separate explicit-gold return |
+| `oldmain` | 2 | Scored-campaign result and picker cancellation `break` |
+| `NewfullMap::load` | 2 | One breakable failure scope around seer and event loading |
+| `ResourceManager::getBitmap816` | 1 | Positive allocation result before cache insertion and return |
+| `fillTreasureGroup` | 1 | Clear the failed selection after the final deletion, then use its existing loop exit |
+| **Total** | **20** | **11 functions** |
+
+The missing drawbridge helper illustrates why helper recovery precedes exit
+rewrites. DC line 4711 calls `DoorCanBeLowered`; its const-this record and
+lines 4675/4680/4686 prove the current-side check and two `HasArmy` calls.
+The latter's own const-this record corrects the existing accessor declaration.
+Restoring these canonical boundaries is neutral, and the structured caller
+reproduces all 128 retail bytes without a new inline declaration or pin.
+Likewise, `isWinner` restores five original `army::is` calls and the first
+scan's failure result. Its fully structured source reproduces all 188 bytes.
+
+Partial switch recovery also matters. The neutral terrain cases still need a
+separate compiler destination in this context, but that does not require every
+other arm to retain a goto. Moving the actual bonus into its arm and allowing
+default to break removes three luck jumps without changing either caller.
+The morale helper admits three removals and a small improvement. Keeping one
+additional good-town join reaches 93.9282%; this independently reproduced
+alternative is preserved in MAX/HIST, while the greater reduction has CUR
+93.1409%. The caller's own source hash is unchanged. Its final CFG still differs
+from retail; neither candidate is a claim of function closure.
+
+The earlier direct-return failures in map loading did not prove the failure
+join needed a goto. A `do { ... } while (0)` scope preserves the short read,
+seer lifetime, event calls and one failure return. Both this form and an
+exhaustive `for (;;)` scope retain 56.7217%; either individual direct return
+falls to 53.5994%. In the bitmap loader, the positive allocation guard is
+neutral while moving both cache insertions into one shared action loses the
+retained pair constructor.
+
+All 4,752 score identities and historical peaks survive the full checkpoint.
+Relative to `2f737f67`, 4,748 current scores are unchanged and four improve:
+
+| Function | Before | Current |
+| --- | ---: | ---: |
+| `army::doAttack` | 99.9040% | **99.9424%** |
+| `armyGroup::getMoraleDescription` | 93.0566% | **93.1409%** |
+| `advManager::doTreasureDialog` | 83.0357% | **94.4643%** |
+| `oldmain` | 77.4155% | **78.4499%** |
+
+The attack improvement is shared-header compiler collateral from the restored
+const/accessor declarations. Exact functions remain 4,061; the full build
+passes at 96.38% fuzzy and 96.12% executable matched. The 236 inlining pins
+are unchanged. Existing historical gaps remain explicit: editing `oldmain`
+resets MAX from 78.9421% to 78.4499%, and editing `getBitmap816` resets MAX
+from 97.6325% to its unchanged CUR 94.5542%; HIST preserves both earlier peaks.
+Those resets are not current-score losses caused by these rewrites.
+
+Final retail review proves exact instructions, CFG and call streams for
+`isWinner` and `hexIsBlocked`. Catapult selection retains its 59-block CFG,
+four named calls and six scratch-register instruction differences. Treasure
+choice now retains the seven-block CFG and all nine named calls; register
+homes remain different. Map loading, bitmap loading and `oldmain` retain
+existing inlining and frame residuals and are not described as closed. The
+RMG fill's only named-call mismatch is its existing pointer-vector insertion
+alias (`type_object*` versus the retail `widget*` label); its source type is
+kept and all eight call positions remain. The insertion body's 521 bytes
+match retail 0x54d120 after masking its two call operands; both operator
+new/delete targets also agree, confirming the folded template alias.
+
+Remaining limits are specific, not a proof of a minimum goto count. All eight
+town-popup result/lifetime alternatives reproduce the same 87.0077% result,
+below 90.2738%. Witch-hut refusal flags and text selection lower its match.
+The explicit campaign replay-loop variants fall to 59.9903--60.0568%, so the
+two backward restarts remain. RMG entrance policies and individual fit returns
+also remain lower. These rejected forms are recorded beside their functions;
+none justifies hiding the remaining joins in invented helpers or macros.
