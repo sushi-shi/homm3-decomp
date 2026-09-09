@@ -1222,11 +1222,15 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // morale after the early returns). `register` hints on either value are inert.
 // Before normalization (locals): apply_limits.
 // Fresh partial-scope controls confirm 80.5625% for plain no-op breaks.
-// Wrapping the terrain switches in do/while(0) scopes and using continue
-// is lower still (67.0170%); keep the two neutral selector destinations.
+// Wrapping only the terrain switches in do/while(0) scopes with continue
+// is lower still (67.0170%); the outer Evil Fog scope below is different.
 // Independent neutral-arm break controls: Holy Ground 85.7784%, Evil Fog
 // 89.2727%, both 80.5625%, versus 96.5625%. Each changes its selector table;
 // keep both exits while preserving the canonical morale and artifact calls.
+// Both neutral-town joins are replaced by continue. Holy Ground encloses
+// only its switch, while Evil Fog encloses the terrain and elemental guards.
+// This preserves 460 compiled bytes and 17 references/addends at 96.5625%;
+// putting both scopes around only their switches scores 67.0170%.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1238,49 +1242,50 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
         if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
-            switch (g_creatureTypeTraits[type].m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale++;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale--;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto holy_done;
-            }
-holy_done:
-            ;
+            do {
+                switch (g_creatureTypeTraits[type].m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                    morale++;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    morale--;
+                    break;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    continue;
+                }
+            } while (0);
         }
     }
-    if (mode == MAGIC_TERRAIN_EVIL_FOG) {
-        int type = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
-            switch (g_creatureTypeTraits[type].m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale--;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale++;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto evil_done;
+    do {
+        if (mode == MAGIC_TERRAIN_EVIL_FOG) {
+            int type = m_armies[index];
+            if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
+                switch (g_creatureTypeTraits[type].m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                    morale--;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    morale++;
+                    break;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    continue;
+                }
             }
-evil_done:
-            ;
         }
-    }
+    } while (0);
+
     int type = m_armies[index];
     if ((type == CREATURE_MINOTAUR || type == CREATURE_MINOTAUR_KING)
         && morale < 1)
@@ -1335,10 +1340,13 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 // EXACT 2026-08-09: the Halfling minimum applies after the Clover-only
 // block. A Clover-scoped creature snapshot then gives VC6 retail's EDI
 // index reuse and shrink-wrapped EBX save around the game-state test; the
-// explicit no-bonus/+2 labels preserve its compressed town selector.
+// explicit no-bonus/+2 partition preserves its compressed town selector.
 // Before normalization (locals): apply_limits.
 // The remaining neutral-arm break scores 78.6737% versus 100%, collapsing
 // the compressed selector. The Clover bonus and default already use break.
+// The Clover switch's neutral towns continue from a single do/while(0)
+// scope, retaining its existing default break and the later Halfling clamp.
+// This removes the join without changing the exact function contribution.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
 {
@@ -1352,23 +1360,24 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
         if (g_game->m_f1f698 != 0 || !isBaseElemental(creature)) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto no_town_luck_bonus;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                luck += 2;
-                break;
-            default:
-                break;
-            }
-        no_town_luck_bonus:;
+            do {
+                switch (g_creatureTypeTraits[creature].m_townType) {
+                case TOWN_CASTLE:
+                case TOWN_RAMPART:
+                case TOWN_TOWER:
+                case TOWN_INFERNO:
+                case TOWN_NECROPOLIS:
+                case TOWN_DUNGEON:
+                    continue;
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS:
+                case TOWN_CONFLUX:
+                    luck += 2;
+                    break;
+                default:
+                    break;
+                }
+            } while (0);
         }
     }
     if (m_armies[index] == CREATURE_HALFLING && luck < 1)
@@ -1770,30 +1779,36 @@ void armyGroup::mergeArmies(armyGroup* source)
 // Replacing only holy_ground_good with switch break also scores 91.4420%
 // in GetMoraleDescription, versus 93.1409%; adding an explicit good default
 // produces the same loss. Keeping the adjustment below the switch therefore
-// does not recover a neutral structured exit in this helper context.
+// does not recover a neutral plain-switch exit in this helper context.
+// A do/while(0) around Holy Ground's switch allows the good towns to
+// continue to the common adjustment/append/return. The ordinary helper and
+// its caller boundary remain canonical; all 2108 compiled caller bytes and
+// relocation names/addends stay at 93.1409%. Plain switch break remains lower.
 static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
                                        int townType, int& currentMorale,
                                        std::string& result)
 {
     if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
         && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto holy_ground_good;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            --currentMorale;
-            result.append(g_holyGroundEvilMoraleText);
-            return;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            return;
-        }
-    holy_ground_good:
+        do {
+            switch (townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                continue;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                --currentMorale;
+                result.append(g_holyGroundEvilMoraleText);
+                return;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                return;
+            }
+        } while (0);
+
         ++currentMorale;
         result.append(g_holyGroundGoodMoraleText);
         return;

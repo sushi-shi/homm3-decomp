@@ -1039,6 +1039,10 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 // loses 5.6910; a shared generic-help flag loses 5.5056. Their combinations
 // also lose. Keep the exact caller while recovering the original dispatch
 // scopes; these scores do not establish that the joins were source gotos.
+// A town-action result (bool/byte/int), including a fully structured selected-
+// hero/town/generic partition, scores 70.2472% versus 100%. It preserves
+// GetHero before GetTown but changes the retail dispatch layout at all three
+// joins. These controls do not establish that the source used gotos.
 VA(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::processHover(int hx, int hy)
 {
