@@ -3,6 +3,27 @@
 For the project-wide inventory and controlled reductions, see the
 [goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
 show why a matching assembly join alone does not establish an original goto.
+The follow-up also recovers dialog exit flags and switch-arm copies: shared
+source tails can inhibit the compiler merge that ordinary per-arm statements
+produce. Serializer helper boundaries can remove both gotos and old inliner
+pins by preserving each caller's cleanup scope. The Windows message pump
+also disproves a blanket goto-loop rule: an outer event loop with `continue`
+is exact, while a nested `while (PeekMessageA(...))` rotates/hoists the import
+and lowers both retained and expanded bodies. Creature-spell error handling
+requires the combined positive outer scope, direct target rejections and
+switch breaks; testing only the direct returns misses the exact form.
+Map stamping similarly needs the complete DC local/reference model and its
+canonical map accessor: together they remove the cover-search jump, remove an
+unattested release-VERIFY and reach 100%. The artifact slot search is exact
+when exhaustion returns inside the loop and explicit-slot validation occupies
+an `else`; a loop-only rewrite had left that coupled scope unresolved.
+
+The ordinary player-position helper gives another caller/retained-body control.
+A selected-result flag in its reverse fallback scan preserves the exact helper
+and both exact callers, while direct scan returns lower first-player setup.
+Restoring that canonical call eliminates a separate forced-inline copy. Always
+measure shared-header consumers when removing the obsolete declaration; even
+an unused declaration can affect VC6 register allocation elsewhere.
 
 `homm3 vc6 why-branch <src> --fn F (--against UNIT:FN | --against-src FILE)
 [--json]` — the control-flow twin of `why-reg`. It diagnoses a **CFG /

@@ -155,6 +155,9 @@ void TGameTypeWindow::doModal()
 }
 
 // E:\gamedcs\gametypewindow.cpp:138
+// DC lines 148-163 nest the selection guard and assign -1 for an unknown
+// help id before testing it. Both source scopes remove the video-update
+// gotos while preserving 100%; all four combinations reproduce the TU.
 VA(0x004d5940, 0x220)  // address-taken by DoModal + full handler CFG, dc 0xc9524
 int gameTypeWindowHandler(message& msg)
 {
@@ -165,32 +168,33 @@ int gameTypeWindowHandler(message& msg)
     pollSound();
 
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg.m_codeX != widget::WIDGET_SELECT
-            && msg.m_codeX != widget::WIDGET_RIGHT_SELECT)
-            goto update_video;
-
-        int helpIndex;
-        switch (msg.m_codeY) {
-        case TGameTypeWindow::SINGLE_ID:
-            helpIndex = 0;
-            break;
-        case TGameTypeWindow::CAMPAIGN_ID:
-            helpIndex = 1;
-            break;
-        case TGameTypeWindow::MULTIPLAYER_ID:
-            helpIndex = 2;
-            break;
-        case TGameTypeWindow::TUTORIAL_ID:
-            helpIndex = 3;
-            break;
-        case TGameTypeWindow::QUIT_ID:
-            helpIndex = 4;
-            break;
-        default:
-            goto update_video;
+        if (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            int helpIndex;
+            switch (msg.m_codeY) {
+            case TGameTypeWindow::SINGLE_ID:
+                helpIndex = 0;
+                break;
+            case TGameTypeWindow::CAMPAIGN_ID:
+                helpIndex = 1;
+                break;
+            case TGameTypeWindow::MULTIPLAYER_ID:
+                helpIndex = 2;
+                break;
+            case TGameTypeWindow::TUTORIAL_ID:
+                helpIndex = 3;
+                break;
+            case TGameTypeWindow::QUIT_ID:
+                helpIndex = 4;
+                break;
+            default:
+                helpIndex = -1;
+                break;
+            }
+            if (helpIndex >= 0)
+                normalDialog(g_newGameHelp[helpIndex].m_text,
+                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        normalDialog(g_newGameHelp[helpIndex].m_text,
-            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else if (msg.m_id == MESSAGE_WIDGET) {
         if (msg.m_codeX == widget::WIDGET_DESELECT
             && msg.m_codeY >= TGameTypeWindow::SINGLE_ID
@@ -229,7 +233,6 @@ int gameTypeWindowHandler(message& msg)
         }
     }
 
-update_video:
     if (videoNeedsUpdate() || redraw) {
         g_gameTypeWindow->drawWindow(
             0, TGameTypeWindow::SINGLE_ID,

@@ -10,8 +10,10 @@
 //   stride, sole caller LODFile::open - excluded class, stays DC_ONLY);
 //   mainmenu's terrain.h $E head follows at 0xfaeb0.
 // 9 extern spine rows have no retail slot (every inter-claim gap is closed):
-//   GetFileSize, getDataPtr, exist, getErrorString, set_filemap, sort -
-//     unreferenced by retail game code, /OPT:REF-stripped (the clear/flush
+//   getDataPtr - ordinary helper expanded into pointAt, with no retained
+//     retail body; restored from DC's call and retail's seek/index sequence.
+//   GetFileSize, exist, getErrorString, set_filemap, sort -
+//     no standalone retail references, /OPT:REF-stripped (the clear/flush
 //     logic of set_filemap survives only inlined in clear/open/~LODFile);
 //   compare - address only taken by sort, stripped with it (retail open has
 //     no qsort call);
@@ -46,14 +48,25 @@ int LODFile::GetFileSize()
     // @stub
 }
 
-// E:\gamedcs\lodfile.cpp:72
-DC_ONLY(0xe9100, 0x54)
-void* LODFile::getDataPtr(const char* item_name)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\lodfile.cpp:72
+// Before normalization (locals): item_name.
+// DC's getDataPtr is an ordinary helper called at pointAt line 431.
+// The PC expansion seeks the archive stream before returning its handle.
+DC_ONLY(0xe9100, 0x54)
+void* LODFile::getDataPtr(const char* itemName)
+{
+    if (!m_opened)
+        return 0;
+    find(0, m_numEntries, itemName);
+    if (m_matchindex >= 0) {
+        fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
+        m_dataItemIndex = m_matchindex;
+        return m_fileptr;
+    }
+    return 0;
+}
 
 // E:\gamedcs\lodfile.cpp:93
 // Before normalization (locals): item_name.
@@ -566,28 +579,16 @@ int LODFile::open(const char* filename, int flags)
     return 0;
 }
 
-// E:\gamedcs\lodfile.cpp:430.  The shared failure block sits in the
-// MIDDLE of retail's body, not at its tail: all three failing arms jump
-// into the -1 pair and the success arm is the function's LAST block.
-// One spelling reproduces that - a `fail:` label inside the
-// `if (fileptr == 0)` arm that the two early-outs goto.  Writing the
-// failure as a duplicated tail return is otherwise instruction-for-
-// instruction identical but lets VC6 tail-merge it to the bottom, which
-// costs the placement (87.11 and 86.38 measured, both rejected).  The
-// seek is issued before the handle is checked, and dataItemIndex really
-// is stored twice - once before the check, once in the success arm.
+// E:\gamedcs\lodfile.cpp:430. DC line 431 calls the ordinary getDataPtr;
+// retail expands its Find/seek/index setup. Restoring that boundary removes
+// both failure gotos and preserves all 171 bytes, including the failure
+// block in the middle and the repeated dataItemIndex success assignment.
+// The former copied-body direct returns scored 87.11/86.38 by moving that
+// failure block. The helper's own early returns expand into the right join.
 VA(0x004faa70, 0xAB)  // anchor-global, dc 0xe9690
 unsigned char LODFile::pointAt(const char* itemName)
 {
-    if (!m_opened)
-        goto fail;
-    find(0, m_numEntries, itemName);
-    if (m_matchindex < 0)
-        goto fail;
-    fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
-    m_dataItemIndex = m_matchindex;
-    if (m_fileptr == 0) {
-fail:
+    if (!getDataPtr(itemName)) {
         m_dataItemIndex = -1;
         m_dataPos = -1;
         return 0;

@@ -1176,6 +1176,11 @@ VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot)
 // reloading slot across rand. The shared town-selection exit is required:
 // a result initialized to -1 and assigned before break adds a stack home
 // (91.47%), while a post-loop selectedTown == 9 test adds a comparison.
+// The townSelected join remains exact. A bounded selected-town break with
+// an available-count else scores 98.5294%; an unbounded selection loop using
+// the proven positive availability count scores 97.6471%. Neither preserves
+// retail's constructor CFG, and this Complete-only constructor has no DC
+// helper boundary that would justify extracting the shared assignment.
 VA(0x005329E0, 0xCF) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
 TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
 {
@@ -8609,6 +8614,9 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // Every batch reproduced ten elites; the adopted body preserves all other
 // 339 RMG scores. Native controls check live vector bounds, cached bounds/zone,
 // ordered helper arguments and every placement veto; no helper body is pasted.
+// Goto audit: the policy's final 1/0 assignment is an ordinary if/else,
+// neutral across the TU. A scan-result flag loses 3.5760 points and a
+// post-loop exhaustion test loses 2.6708, so the search exit remains.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -8686,11 +8694,10 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     }
     if (!group->m_hasGuard) {
         allowEntrances = 1;
-        goto checkOutline;
-    }
+    } else {
 disallowEntrances:
-    allowEntrances = 0;
-checkOutline:
+        allowEntrances = 0;
+    }
     if (!m_map.hasConnectedOutline(group->m_outline, position, allowEntrances, zone, 1))
         return 0;
     TPoint point;

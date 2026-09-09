@@ -2880,8 +2880,12 @@ public:
     void recordMonsterIdentifier(int identifier, type_point point);
     // Before normalization (function): game::LoadGarrisonPool.
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
+    // Before normalization (function): game::LoadTownPool.
+    int loadTownPool(TAbstractFile* infile, int saveVersion);
     // Before normalization (function): game::SaveMinePool.
     int saveMinePool(TAbstractFile* outfile);     // 0x4b9580
+    // Before normalization (function): game::SaveTownPool.
+    int saveTownPool(TAbstractFile* outfile);
     // Before normalization (function): game::SaveGarrisonPool.
     int saveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
     // Before normalization (function): game::LoadBoatPool.
@@ -2890,8 +2894,12 @@ public:
     int saveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     // Before normalization (function): game::LoadObeliskPool.
     int loadObeliskPool(TAbstractFile* infile);
+    // Before normalization (function): game::LoadBlackMarkets.
+    int loadBlackMarkets(TAbstractFile* infile);
     // Before normalization (function): game::SaveObeliskPool.
     int saveObeliskPool(TAbstractFile* outfile);
+    // Before normalization (function): game::SaveBlackMarkets.
+    int saveBlackMarkets(TAbstractFile* outfile);
     // Before normalization (function): game::Load.
     int load(TAbstractFile* infile);              // 0x4bcda0
     // Before normalization (function): game::LoadGame.
@@ -2927,8 +2935,6 @@ public:
     // dataflow prove the PC build made it a member.
     // Before normalization (function): game::SetupFirstPlayer.
     void setupFirstPlayer();
-    // Before normalization (function): game::setup_first_player_position.
-    int setupFirstPlayerPosition(int firstHuman);
     // Before normalization (function): game::LoadMap.
     bool loadMap(TAbstractFile* mapFile);
     // Before normalization (function): game::apply_map_header_availability.

@@ -1060,7 +1060,9 @@ void __cdecl addChat(CChatManager* manager, const char* format, ...)
 // Retail PC again lowers the DC member varargs function to a free cdecl
 // formatter. The display guard is IsClose(59000) inlined together with the
 // adventure-suspended and popup checks; the sound tail prefers timeover.wav
-// and falls back to chat.wav.
+// and falls back to chat.wav. A positive display scope removes the
+// skip-chat goto with identical VC6 scores throughout this TU, retaining
+// the common sound tail and the order of the short-circuit time checks.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
 void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
 {
@@ -1081,26 +1083,25 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
             canDisplay = 0;
     }
 
-    if (g_turnDuration69d630.m_currDuration != 0
+    if (!(g_turnDuration69d630.m_currDuration != 0
         && !g_unk69774c
         && g_turnDuration69d630.m_turnStartTime != 0
         && g_turnDuration69d630.m_pauseTime == 0
         && GameTime::get() + 59000
                > g_turnDuration69d630.m_turnStartTime
                      + g_turnDuration69d630.m_currDuration
-        && !canDisplay)
-        goto skipMessage;
+        && !canDisplay)) {
 
-    sprintf(
-        finalText,
-        DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
-        chatText);
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    manager->m_isSysMsg = 0;
+        sprintf(
+            finalText,
+            DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
+            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+            chatText);
+        manager->m_isSysMsg = 1;
+        addChat(manager, finalText);
+        manager->m_isSysMsg = 0;
+    }
 
-skipMessage:
     sample* sampleToPlay = manager->m_turnDurSample;
     if (manager->m_chatMemSample
         && g_soundManager->getSampleInfo(

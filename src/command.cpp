@@ -663,6 +663,8 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // 13/13 with three returns; what is left is only the ESI/EDI pair the old note
 // described, now the whole delta rather than a symptom.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+// Goto audit: direct return loses 3.9161 points; a combined OR loses 11.7483.
+// The nullary isComputerAction wrapper does not recover those exits here.
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int direction;
