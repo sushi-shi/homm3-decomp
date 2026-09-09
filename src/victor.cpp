@@ -179,14 +179,23 @@ int __stdcall victorUploadPalette(imgdes* image)
 // Retail-only Victor validator: IsBadReadPtr on the pixel buffer, unsigned
 // inclusive-region normalization, signed byte-stride calculation and
 // compression/depth status precedence. No Dreamcast implementation exists.
-// Residual (79.95%): retail retains four return sequences while VC6 merges
-// them into two; all checks, swaps and the import call otherwise agree.
-// Explicit region-error / finished labels are byte-flat and do not restore
-// those exits. Reversing the swap stores lowers the score to 79.68%.
+// Residual (88.64%): an explicit success else preserves retail's compression
+// branch polarity and raises the body from 79.95%; both sides now retain
+// twenty CFG blocks, thirteen branches and four return sequences. Retail still
+// keeps the initial -42 in EBP and shares the final status exit, while VC6
+// splits a trailing literal -42 return. Its null/region failures also use a
+// later -1 epilogue instead of sharing the stride failure's first epilogue.
+// Explicit region-error / finished labels are byte-flat at the earlier shape,
+// and reversing the swap stores lowers the score to 79.68%.
 // A complete 64-state source family crossed eight equivalent expressions for
 // the shared region error with eight for the stride error; every candidate
 // compiled to the same object. VC6 RTM and RTM-front-end controls are also
 // byte-identical to SP3, excluding the known compiler-generation hypothesis.
+// A twenty-state exit-structure family emits six objects and proves the else
+// gain. Two twenty-five-state follow-ups exhaust nested error/stride joins and
+// outer bad-pointer return/goto forms; they emit two and six objects, with no
+// further gain. Five forward gotos are invalid because they cross header and
+// maxWidth initialization; the other twenty outer-flow sources compile.
 VA(0x006038b0, 0xea)  // anchor-caller victorValidateBitmap + imgdes offsets / IsBadReadPtr
 int __stdcall victorValidateImage(imgdes* image)
 {
@@ -220,6 +229,8 @@ int __stdcall victorValidateImage(imgdes* image)
             status = victorUnsupportedBitDepth;
         if (header->biCompression)
             return -12;
+        else
+            return status;
     }
     return status;
 }

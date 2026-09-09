@@ -55,12 +55,20 @@ The shared PCX descriptor now imports the real Windows `RGBQUAD`,
 `numeric_limits::max()` calls. Both PCX importers and every previously
 banked function remain unchanged in the full-build comparison.
 
-The image validator's remaining delta is the established tail-merge class:
-retail keeps four return sequences while SP3 keeps two. A complete 64-state
-source family crossed equivalent constant expressions for its region and
-stride failures; all 64 sources emitted one object. Both the VC6 RTM back-end
-and full RTM front/back-end controls emit that same SP3 object, so the return
-topology is not a compiler-generation effect.
+The image validator's first delta was the tail-merge class: retail kept four
+return sequences while SP3 kept two. A complete 64-state source family crossed
+equivalent constant expressions for its region and stride failures; all 64
+sources emitted one object. Both the VC6 RTM back-end and full RTM front/back-
+end controls emit that same SP3 object, so the topology is not a compiler-
+generation effect. A later 20-state structural family finds the missing source
+fact: an explicit success `else` after the compression error raises the body
+from 79.9457% to 88.6413%. Candidate and retail now both have twenty blocks,
+thirteen branches and four returns. The remaining split is narrower: retail
+keeps the initial `-42` in EBP and shares the final status exit, and separates
+the null/region `-1` epilogue from the stride failure. Twenty-five nested error/
+stride joins collapse to two objects; a separate 25-state bad-pointer early-
+return/goto/else family has twenty valid sources and six objects. Neither beats
+the explicit-else control.
 
 The palette initializer's first broad source family crossed entry guards,
 color-count construction, and loop-local order over 120 candidates. A named
