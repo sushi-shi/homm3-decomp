@@ -310,7 +310,7 @@ public:
     // Before normalization (function): type_AI_combat_data::cast_spells.
     void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
     // Before normalization (function): type_AI_combat_data::choose_melee.
-    unsigned char chooseMelee(const type_AI_combat_data& enemy,
+    bool chooseMelee(const type_AI_combat_data& enemy,
                       // Before normalization (locals): current_round.
                       type_speed_catagory currentRound) const;
     // Before normalization (function): type_AI_combat_data::do_ranged_combat.

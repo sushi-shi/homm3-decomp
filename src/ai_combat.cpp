@@ -1308,10 +1308,12 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 // Negative control under the old owner: canonical helper alone 77.6098%
 // versus the fenced paste's 90.9329%; removing only the fence scores 0 even
 // though the caller is emitted. Neither justifies the synthetic owner.
-// DC method type 0x5a2b returns primitive 0x20 (unsigned char), not bool.
-// Retail's byte result and both byte-consuming callers corroborate that ABI.
+// The DC public ?choose_melee@type_AI_combat_data@@IBA_NABV1@
+// W4type_speed_catagory@@@Z proves bool. Its 0x5a2b debug record uses the
+// unsigned-byte storage primitive 0x20; that is not a source-type override.
+// Retail's byte result and byte-consuming callers are compatible with bool.
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
-unsigned char type_AI_combat_data::chooseMelee(
+bool type_AI_combat_data::chooseMelee(
     const type_AI_combat_data& enemy,
     // Before normalization (locals): current_round, best_value, best_index, melee_round,
     // local_data, local_enemy.

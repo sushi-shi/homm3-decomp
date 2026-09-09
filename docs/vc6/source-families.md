@@ -3400,11 +3400,13 @@ faults are rejected. This is a bounded behavioral check, not a VC6 ABI oracle.
 The final interface cleanup follows raw NB11 types rather than inherited
 comments: class `0x5a07` / field list `0x5a4c` names `current_hero`,
 `current_army`, `can_cast_spells`, `wall_archery_penalty` and `wall_speed_limit`.
-Those names now own the corresponding `m_` members. chooseMelee's type
-`0x5a2b` returns primitive `0x20`, unsigned char; its byte-return ABI and both
-byte-consuming callers agree with retail. This cleanup preserves every raw
-byte and relocation destination in both consumers, under that one explicit
-function rename (77 ai_combat sections / 462 destinations).
+Those names now own the corresponding `m_` members. The cleanup preserves
+every raw byte and relocation destination in both consumers (77 ai_combat
+sections / 462 destinations). A follow-up public-symbol check corrects the
+initial return-type reading: chooseMelee's `0x5a2b` debug record uses primitive
+`0x20` for byte storage, but its decorated public contains `IBA_N` and proves
+`bool`. The byte-return ABI and byte-consuming callers do not distinguish
+these source types. The declaration and definition therefore retain `bool`.
 
 Conversely, the same class's constructor method list `0x5a0f` gives its copy
 constructor attributes `0x003`, not the `0x103` compiler-generated attributes

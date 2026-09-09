@@ -256,7 +256,7 @@ ai_combat	?castEnchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@
 ai_combat	?castEnchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0	ea74accc4f64
 ai_combat	?castSpell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	86.7910	86.7910	93.0273	0x25bd0	e07da1cb12b4
 ai_combat	?checkWallArcheryPenalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790	4bea5c3283c4
-ai_combat	?chooseMelee@type_AI_combat_data@@QBEEABV1@W4type_speed_catagory@@@Z	100.0000	100.0000	100.0000	0x267c0	77c9471e3570
+ai_combat	?chooseMelee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	100.0000	100.0000	100.0000	0x267c0	75d3b4de1067
 ai_combat	?createSkeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0	3080e232f826
 ai_combat	?doAftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	100.0000	100.0000	100.0000	0x26ee0	3797175ae9e8
 ai_combat	?doGeneralMelee@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x264d0	6ecf06219e2f
