@@ -26,6 +26,8 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // families leave a register wall: retail carries consumed in ESI and reloads
 // image around the decode loop, while VC6 carries image in ESI and spills
 // consumed. Explicit shared switch exits and six classifier forms are flat.
+// Hoisting and reordering all prelude, decode-state and allocation-success
+// declarations across a complete 64-state old-C family emits one object.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {

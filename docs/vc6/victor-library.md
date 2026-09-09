@@ -84,6 +84,8 @@ likewise finds no natural register recovery: a volatile preinitialized status
 reaches only 78.0702% and simultaneously drops the inlined initializer from
 94.6087% to 82.8261%. Applying `/Og-` to the Victor profile breaks several
 neighboring rows and is therefore not evidence for changing this unit.
+A later 60-state failure-flow/resource-lifetime cross exhausts six emitted
+objects and again leaves 77.1403% as the best ordinary implementation.
 
 For `pcxinfo`, a 60-state family crossed extent construction, metadata store
 order, and the final depth-normalization CFG. Four named PCX extrema restore
@@ -150,6 +152,10 @@ two, one and one distinct objects respectively and do not improve the peak.
 The only remaining instruction delta is candidate `lea temp,[shift-8]` plus
 `add count,temp` before the shifts versus retail's later single
 `lea count,[count+shift-8]`; every other block is exact.
+Thirty-six further states cross a real loop-count copy with inclusive-end
+snapshots, and seventy states recombine source-byte staging with all post-fix
+store/update schedules. Both finite families emit only two objects and retain
+the parameter-count control at 94.4444%.
 
 `flipimage` now lives in the provisional `victor_flip.cpp` grouping. Retail
 calls the bitmap validator twice, the dimension helper once, and the two
@@ -197,3 +203,8 @@ orders each emit one unchanged object. Explicit gotos therefore do not recover
 retail's shared row-advance block in this profile. These finite negative
 controls leave the natural implementation intact rather than adding a dummy
 operation solely to rotate registers.
+A complete 64-state follow-up hoists and reorders the function prelude,
+decode-state and allocation-success declarations while preserving runtime
+initialization order. All 64 sources emit the same 78.4456% object. Two prior
+60-state crosses likewise show that parameter/status/consumed ownership and a
+meaningful reuse of status as the consumed-byte count are byte-flat.

@@ -43,6 +43,9 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // An 18-state JSON/Python batch crossed switch/positive/negative depth
 // guards, signed/unsigned/depth-derived palette sizes and header/descriptor
 // count reloads. None improved 88.04%; the descriptor reload reached 86.46%.
+// A later 60-state color-count/guard/product cross emits six objects; every
+// named color lifetime collapses to the retained direct-member object and no
+// state improves the peak.
 VA(0x006035c0, 0x1d6)  // anchor-caller allocimage + imgdes / bitmap header / Win32 allocation
 int __cdecl victorAllocateImage(imgdes* image, int width, int height,
                                int bitsPerPixel, unsigned int useDibSection)
@@ -425,8 +428,10 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 // objects across ten forms and identifies the shift-first gain; rebased seven-
 // schedule, eight-byte-lifetime and twenty-arithmetic families emit only two,
 // one and one objects and do not fuse the remaining count update. /Ol- and
-// /G5 controls are byte-flat;
-// /G6 lowers insertion to 75.24% and extraction to 66.24%.
+// /G5 controls are byte-flat. Thirty-six loop-count/end-position ownership
+// states and a fresh seventy-state post-fix source-byte/schedule cross each
+// emit two objects; neither improves the retained parameter-count form. /G6
+// lowers insertion to 75.24% and extraction to 66.24%.
 VA(0x00604720, 0x84)  // anchor-caller flipimage + paired bit-mask tables
 void __stdcall victorInsertBits(unsigned char* destination,
                                 const unsigned char* source, int offset, int count)
