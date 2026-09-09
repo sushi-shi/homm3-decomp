@@ -898,6 +898,18 @@ keeps body assignments and the caller keeps its canonical map accessor.
 This is a retail-driven model of an expanded constructor, with no DC RMG
 counterpart; the other view caller, `CreateRiver`, remains partial.
 
+The constructor's field-store order is independently observable too. Once the
+island painter's real three-coordinate lifetime is restored, changing only
+the shared body from width/height/items to items/width/height closes that
+caller from 95.8947% to 100%, while water-border repair stays exact. All six
+orders were measured across ten reproduced underground callers and all seven
+header consumers. Four independent caller/helper controls isolate the island
+gain to the constructor, not the unrelated underground rewrite. The full
+build confirms the gain; a lower unchanged-source terrain-coordinator CUR is
+recorded with its previous MAX/HIST intact and no changed call sequence.
+The signature, inline declaration, assignment-in-body model and scalar field
+ownership remain canonical; no caller-specific constructor is introduced.
+
 ### 6i. A caller improvement does not prove a helper declaration
 
 The former member-subtraction model made
@@ -1438,3 +1450,31 @@ read; the retail damage calculation precedes its argument loads. Restoring
 `get_duration` helper is byte-flat before these two statement changes.
 The exact padded 704-byte function has SHA-256
 `9c8c35382ab8b583231581f37408868f3409ae471d6f8b03eadcdc18ddff6fcf`.
+
+### Inspect canonical return construction when the caller's late schedule differs
+
+`connectJunctionEntrance` (0x5443a0) had all 40 CFG blocks aligned at
+99.5699%. Its neighbour lookup loaded map height and multiplied by the level
+register; retail copied the level register and multiplied by memory. The
+lookup itself was not the source change needed. Constructing the ordinary
+`TRmgVector::operator*` result with a default local and x/y member assignments
+recovers the caller's schedule, while the retained 29-byte operator at
+0x5fdcd0 remains exact. Its parameter and return ABI, definition visibility,
+and every source call are unchanged.
+
+A Voronoi source-family search found the return form; four reproduced controls
+then isolated its effect from the unrelated `buildVertices` local lifetimes:
+
+| Caller locals | Scale operator result | Vertices | Junction entrance |
+| --- | --- | ---: | ---: |
+| Original | Constructed temporary | 31.6268% | 99.5699% |
+| Named radius / bound side references | Constructed temporary | 37.8873% | 99.5699% |
+| Original | Named, assigned x/y | 31.6268% | 100% |
+| Named radius / bound side references | Named, assigned x/y | 37.8873% | 100% |
+
+Only the scale operator change is retained. The full build raises exactly one
+score and leaves every other tracked function unchanged. The junction's three
+vector-insertion relocation spellings remain the existing eight-byte-element
+ICF aliases; their positions and overload arities do not change. This is not
+evidence that arbitrary helper edits improve scheduling: it is a controlled
+example where identical standalone code did not imply identical expansions.
