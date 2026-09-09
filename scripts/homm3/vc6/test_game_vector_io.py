@@ -22,8 +22,31 @@ class GameVectorIOTests(unittest.TestCase):
         start = header.index("struct type_university {")
         university = header[start:header.index("\n};", start) + 3]
         town = (root / "src/townmgr.cpp").read_text()
-        start = town.index("type_university::type_university()\n{")
-        constructor = town[start:town.index("\n}", start) + 2]
+        start = town.index("type_university* type_university::initializeMagicSkills()\n{")
+        initializer = town[start:town.index("\n}", start) + 2]
+        self.assertNotIn("type_university();", university)
+        randomize = game[game.index("void game::randomizeUniversity("):]
+        randomize = randomize[:randomize.index("\n}\n")]
+        self.assertIn("type_university university;", randomize)
+        self.assertNotIn("universitySkillsRecord", randomize)
+        university_variants = [
+            ("ActualUniversity", university, initializer, True),
+            ("BadSchool", university, initializer.replace(
+                "m_skills[3] = eSecSkillSchoolOfEarthMagic;",
+                "m_skills[3] = eSecSkillSchoolOfFireMagic;"), False),
+            ("BadReturn", university, initializer.replace("return this;", "return 0;"), False),
+            ("BadDefault", university.replace(
+                "TSecondarySkill m_skills[4];",
+                "TSecondarySkill m_skills[4];\n"
+                "    type_university() { initializeMagicSkills(); }"), initializer, False),
+        ]
+        university_candidates, university_checks = [], []
+        for name, record, body, valid in university_variants:
+            if not valid:
+                self.assertNotEqual((record, body), (university, initializer), name)
+            university_candidates.append("namespace " + name + " {\n" + record + "\n" + body + "\n}")
+            university_checks.append("if (checkUniversity<" + name + "::type_university>() != "
+                                     + str(valid).lower() + ") return 2;")
         variants = [
             ("Adopted", helpers, True),
             ("BadHeaderWidth", helpers.replace("sizeof(count)", "sizeof(int)"), False),
@@ -52,7 +75,9 @@ struct Ops {
 """)
             checks.append("if (check<" + name + "::Ops>() != " + str(valid).lower() + ") return 1;")
         program = (root / "scripts/experiments/game-vector-io-oracle.cpp").read_text()
-        for marker, value in (("UNIVERSITY", university), ("UNIVERSITY_CTOR", constructor),
+        for marker, value in (("UNIVERSITY", university), ("UNIVERSITY_INITIALIZER", initializer),
+                              ("UNIVERSITY_CANDIDATES", "\n".join(university_candidates)),
+                              ("UNIVERSITY_CHECKS", "\n".join(university_checks)),
                               ("CANDIDATES", "\n".join(candidates)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", value)
         with tempfile.TemporaryDirectory(prefix="game-vector-io-") as directory:

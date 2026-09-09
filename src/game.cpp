@@ -3512,10 +3512,9 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // raising Load 78.2645 -> 80.1570. The 33-state helper family and 97-state
 // return/fence follow-up also test explicit T() locals and direct boolean
 // returns (up to 82.2663); retain the DC default-argument and guard scopes.
-// Residual: the university default still calls the Complete constructor;
-// retail Load passes an uninitialized fill record before that resize. Recover
-// that class/constructor boundary jointly with RandomizeUniversity, not with
-// another pointer union or a false local declaration of the record.
+// Restoring the generic university aggregate removes an extra constructor
+// call from its default fill and raises Load to 81.2284. The elemental-school
+// initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
 bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
@@ -5447,27 +5446,11 @@ void game::setupFirstPlayer()
     g_unnamed69d810 = firstHuman;
 }
 
-union TUniversitySkillsPointerAlias {
-    // Before normalization: skills.
-    int* m_skills;
-    // Before normalization: university.
-    type_university* m_university;
-};
-
-// Before normalization (function): university_skills_record.
-static __forceinline type_university* universitySkillsRecord(int* skills)
-{
-    TUniversitySkillsPointerAlias alias;
-    alias.m_skills = skills;
-    return alias.m_university;
-}
-
 // E:\gamedcs\game.cpp:4770
 // Retail builds one availability bit per secondary skill from the scenario's
 // disabled-skill row, draws four distinct set bits, and appends those four
-// ints as one university record.  The local is deliberately an int array:
-// the bytes contain no type_university constructor call before the vector
-// append, unlike the elemental-school default record used by townManager.
+// skills as one native university record. DC's local and aggregate type agree
+// with retail once Conflux's initializer is no longer a generic constructor.
 // WALL 99.7464%: all 24 blocks, every branch target and every instruction
 // count agree.  The explicit-code residual is one whole-loop register tie:
 // retail keeps the cached availability bound in EBX and each Random ordinal
@@ -5475,11 +5458,15 @@ static __forceinline type_university* universitySkillsRecord(int* skills)
 // round.  Dreamcast CodeView attests university/used/choice/i and the
 // TSecondarySkill type of skill.  Restoring its indexed i loop raised 93.08
 // -> 99.75; restoring the shared local order and enum type is byte-flat and
-// source-shape-ratcheted.  The DC university aggregate type itself is revision
-// skew: Complete's model has an out-of-line default constructor, and declaring
-// that local directly emits the absent ctor call and falls to 97.8623%.  Its
-// recovered `university` identity remains on the retail-proved raw four-int
-// record below.
+// source-shape-ratcheted. The 36-state insertion family isolates the old
+// ownership error: a native record with automatic elemental initialization
+// falls to 97.8623%. The 13-state initializer family restores the native local
+// at 99.7464%, removes the pointer union, and preserves all Conflux call sites.
+// Remaining insert boundary: DC's push_back can expose the count-insert child
+// through the vendor wrapper; retail calls that child. Public single-insert
+// and push_back controls score 99.0145/97.5362; removing the existing fence
+// expands the child for all three APIs (0% large-body comparisons). Retain
+// this boundary debt, not a claim that the DC wrapper itself was absent.
 // why-reg confirms equal pseudo-definition slots but a different C1 processing
 // order.  Exhausted byte-inert levers: reset vs set(false), int/unsigned/
 // register bounds, cached-count vs explicit-highest formulations, split
@@ -5489,7 +5476,7 @@ static __forceinline type_university* universitySkillsRecord(int* skills)
 VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
 void game::randomizeUniversity(NewmapCell* cell)
 {
-    int university[4];
+    type_university university;
     std::bitset<28> availableSkills;
     long choice;
     long i;
@@ -5512,7 +5499,7 @@ void game::randomizeUniversity(NewmapCell* cell)
             skill = secondarySkillFromInt(skill + 1);
         }
 
-        university[i] = skill;
+        university.m_skills[i] = skill;
         availableSkills.set(skill, false);
         --availableCount;
     }
@@ -5525,10 +5512,8 @@ void game::randomizeUniversity(NewmapCell* cell)
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
     type_university* universityTail = universityList->end();
-    type_university* universityRecord =
-        universitySkillsRecord(university);
 #pragma inline_depth(0)
-    universityList->insert(universityTail, 1, *universityRecord);
+    universityList->insert(universityTail, 1, university);
 #pragma inline_depth()
 }
 

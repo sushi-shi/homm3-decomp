@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstring>
+#include <new>
 #include <vector>
 #include "abstractfile.h"
 #include "secondaryskill.h"
@@ -9,7 +10,34 @@
 #include "struct.h"
 
 // @UNIVERSITY@
-// @UNIVERSITY_CTOR@
+// @UNIVERSITY_INITIALIZER@
+
+template<class University> bool checkUniversity() {
+    union Storage {
+        unsigned char bytes[sizeof(University)];
+        long double alignment;
+        void* pointerAlignment;
+    } storage;
+    unsigned char before[sizeof(University)];
+    std::memset(storage.bytes, 0xa5, sizeof(University));
+    std::memcpy(before, storage.bytes, sizeof(University));
+    // Default initialization, deliberately without parentheses. Generic map
+    // records must not silently become Conflux records. Inspect only their
+    // object representation until the explicit initializer sets the enums.
+    University* record = new (storage.bytes) University;
+    if (std::memcmp(before, storage.bytes, sizeof(University)))
+        return false;
+    if (record->initializeMagicSkills() != record
+        || record->m_skills[0] != eSecSkillSchoolOfFireMagic
+        || record->m_skills[1] != eSecSkillSchoolOfAirMagic
+        || record->m_skills[2] != eSecSkillSchoolOfWaterMagic
+        || record->m_skills[3] != eSecSkillSchoolOfEarthMagic)
+        return false;
+    record->~University();
+    return true;
+}
+
+// @UNIVERSITY_CANDIDATES@
 
 struct ScriptFile : TAbstractFile {
     enum { FULL = INT_MAX };
@@ -78,6 +106,7 @@ template<> type_point item<type_point>(unsigned i) {
 }
 template<> type_university item<type_university>(unsigned i) {
     type_university value;
+    value.initializeMagicSkills();
     std::rotate(value.m_skills, value.m_skills + i % 4, value.m_skills + 4);
     return value;
 }
@@ -149,6 +178,9 @@ template<class Ops, class T> bool partialReads() {
     for (unsigned r = 0; r < 6; ++r) {
         std::vector<T> destination(1, item<T>(29));
         std::vector<T> expected(destination);
+        // Native value-initialization is only the host fixture's fill policy.
+        // VC6's uninitialized university fill is checked against retail asm;
+        // this portable stream test does not assert its unspecified bytes.
         expected.push_back(T());
         expected.push_back(T());
         std::vector<unsigned char> expectedBytes = bytes(expected);
@@ -214,6 +246,7 @@ template<class Ops> bool check() {
 // @CANDIDATES@
 
 int main() {
+    // @UNIVERSITY_CHECKS@
     // @CHECKS@
     return 0;
 }

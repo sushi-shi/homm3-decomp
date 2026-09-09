@@ -1293,6 +1293,40 @@ source-owned vector-instance label join is tested by
 `homm3.retail_labels.test_vector_helper_signatures`; it must reject an equal-size
 ICF twin when the requested native element/signature is missing or ambiguous.
 
+### University record ownership and header collateral
+
+`generate-university-insertion-family.py` exhausts 36 meaningful API, receiver,
+record and fence choices (24 object identities) in context
+`9d5e8e882a44a0242bf7`. `generate-university-initializer-family.py` then compares
+the generic aggregate plus explicit Conflux initializer with the old default
+constructor: 13 successful states, 13 objects, context `99ba0ea5c2a6db673a5a`.
+Both families reproduce ten retained candidates. Their exact anchors require
+the pre-adoption `662ecc31` snapshot. The selected pointer/count-insert candidate
+`75bbad764fd068a3fcc87499` removes the pointer union without altering the
+randomizer's bytes or the Conflux initializer/caller bytes, and improves Load.
+The [audit](union-pragma-audit.md#generic-university-records-and-conflux-initialization)
+separates proven generic-record ownership from the provisional initializer name
+and original helper kind. Scores alone do not establish those source facts.
+
+`generate-university-header-control.py` is a post-adoption two-state negative
+control: restore only the old constructor declaration in unrelated consumers.
+It isolates the two small whole-build score movements in army and
+singleselectionwindow: context `ea72eb19220d16fbe772` scores both states,
+produces two distinct objects, and reproduces both. Restoring only the old
+header declaration recovers exactly 99.9424% and 100%; every other tracked row
+in those two TUs is unchanged. The initial seven-unit context `4b5443e33ddcd7da20ab`
+was rejected at opposite-corner reproduction: executable section bytes and
+scores reproduce, but five table/data units vary anonymous header identities
+or symbol placement. It is not counted as a successful search. The driver
+continues to reject those variations; no scoring/identity rule was weakened.
+
+The shared native stream fixture imports the real record and initializer,
+also checking untouched generic default-initialization bytes, the four Conflux
+schools and the returned record address. Three new semantic negative controls
+reject automatic defaults, a wrong school and a wrong return pointer. They
+complement, rather than substitute for, the five-TU raw COFF controls and full
+retail build.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
