@@ -908,7 +908,7 @@ campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210	307
 campaignwindow	??4?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5f9e0	-
 campaignwindow	??4?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x601f0	-
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0	-
-campaignwindow	?campaignWindowHandler@@YIHAAVmessage@@@Z	84.4576	84.4576	84.4576	0x5f2f0	6caa811721a5
+campaignwindow	?campaignWindowHandler@@YIHAAVmessage@@@Z	84.4576	84.4576	84.4576	0x5f2f0	1db9a168fce5
 campaignwindow	?doModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2c0	763ed18ddcf9
 campaignwindow	?openPreview@TCampaignWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x5e7c0	4411aa05cf4a
 castle	?canBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	17a1d22e5f2a
@@ -1712,7 +1712,7 @@ events	?doEventWarriorTomb@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.
 events	?doEventWaterWheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7de0	3328d8750828
 events	?doEventWateringHole@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa7ea0	8db88ee1be03
 events	?doEventWindmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	79d32f56b7de
-events	?doEventWitchHut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	cb35a3db4c38
+events	?doEventWitchHut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	e28ce3247f6e
 events	?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0xacd70	47c1b159627f
 events	?doTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	94.4643	94.4643	94.4643	0xa6440	487a37a1842a
 events	?doWanderingMonsterResult@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa7740	f82f5075721a
@@ -4466,7 +4466,7 @@ townmgr	?doTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480	4727b5f
 townmgr	?doTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0	4e1b8fc24d32
 townmgr	?doUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0	a51dd4d07b42
 townmgr	?draw@townObject@@QAEXHE@Z	95.5464	95.5464	95.5464	0x1c2ff0	17d5cb9a2a69
-townmgr	?getBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a40	a9a5a9b4db8e
+townmgr	?getBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a40	09150455cd34
 townmgr	?getCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	202f192bb751
 townmgr	?getText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	a12b9ae124a3
 townmgr	?handleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0	21c45b27b755

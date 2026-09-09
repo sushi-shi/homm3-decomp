@@ -926,6 +926,10 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 // Host success 94.2507%, Host failure check 91.2643%, Join menu 88.8147%,
 // Search success 94.0872%, versus 98.1199%. Combined menu/host/exit scopes
 // also lose; preserve OnHost/OnSearch and their distinct cleanup order.
+// Enclosing dispatch in do/while(0), with switch continue to a single action
+// tail, scores 87.2752% for successful Host/Search and 77.3978% for the two
+// menu exits. These preserve calls and cleanup semantics but change the CFG;
+// the neutral campaign scope does not transfer to this dispatcher.
 // Before normalization (locals): bExitFlag.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
