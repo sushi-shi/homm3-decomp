@@ -91,6 +91,14 @@ Matcher guidance:
 * A15 ("leaf spelling is a global variable") now has a mechanism: a leaf's
   `cb` enters every caller's sequential budget arithmetic, so respelling a
   leaf re-decides inline structure at every call site in the image.
+* Recover real accessor calls together with helper ownership. In the
+  2026-09-09 combat-path family, removing a duplicate mark helper/pragma and
+  three budget-only preamble extractions initially changed 87.9780% to
+  60.0911%. Restoring the DC-attested flag, geometry, validity and cell
+  accessor boundaries recovered 90.2669%, leaving every tracked sibling
+  unchanged. The isolated dip was not evidence for inventing helper copies
+  or abandoning the ordinary private methods. See the joint controls in
+  [the union/pragma audit](union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
 
 ## 1. Where the inliner lives (and why the atlas pointed one region over)
 

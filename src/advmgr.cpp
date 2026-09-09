@@ -5217,26 +5217,6 @@ static inline NewmapCell* drawHeroCell(advManager* manager, type_point point)
     return map->cell(point.m_x, point.m_y, point.m_z);
 }
 
-// Before normalization (function): DrawBoatCell.
-static inline NewmapCell* drawBoatCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->cell(0, 0, 0);
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
-// Before normalization (function): DrawGroundCell.
-static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
-{
-    if (!point.isValid())
-        return manager->m_fullMap->m_cellData;
-    return &manager->m_fullMap->m_cellData[
-        (point.m_z * manager->m_fullMap->m_size + point.m_y)
-        * manager->m_fullMap->m_size + point.m_x];
-}
-
 // E:\gamedcs\advmgr.cpp:5688
 // Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
 // call and a single conditional return expression. Its former two-return
@@ -5252,8 +5232,12 @@ static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
 // NewfullMap::cell(0, 0, 0). DC GetCell at 0x14b90 also calls that scalar
 // wrapper at line 7028, then the packed-point wrapper at 7029; the prior
 // claim that DC returned cellData directly mistook flattened code for source.
-// The three Draw*Cell copies above remain canonical-helper recovery debt.
-// Substituting the current flattened GetCell scored 93.18%. The register
+// DrawHeroCell remains canonical-helper recovery debt. The boat and ground
+// copies have been retired in favor of the ordinary GetCell below. Restoring
+// all three hero/underlay calls too scores 96.6095/96.6415/86.9011 and stops
+// emitting scalar cell; neither const-byte nor const-bool isValid changes
+// those choices. This does not refute the canonical helper or its callers.
+// The earlier flattened GetCell substitution scored 93.18%. The register
 // model's lack of binding divergence did not establish correct helper
 // expression shape; see docs/vc6/regalloc.md 6f.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
@@ -5396,12 +5380,12 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5429,12 +5413,12 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
                                     int baseX, int baseY, int tilex,
                                     int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     // Before normalization (locals): BoatCellY, BoatCellX.
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = drawBoatCell(
-        this, type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(
+        currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -6448,8 +6432,8 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    NewmapCell* thisCell = drawGroundCell(
-        this, type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(
+        type_point(srcX, srcY, z));
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -6536,13 +6520,19 @@ NewmapCell* advManager::getCell(int x, int y, int z)
 // DemobilizeCurrHero.
 DATA(0x006aac3c) extern int g_unnamed6aac3c;
 
+// DC 7027..7029 proves the validity test and both public map-wrapper calls.
+// This ordinary definition stays exact and now also serves the boat twins
+// and ground drawing. In the boat calls, retaining getLocation as a value
+// return is material: reconstructing its coordinates at the site is 90.8714%
+// instead of 100%. The getBoat accessor alone is byte-flat. No helper body
+// is pasted into those callers, and their old DrawBoat/DrawGroundCell copies
+// are gone. Hero/underlay's remaining copy is documented at drawHeroPart.
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::getCell(type_point point)
 {
     if (!point.isValid())
-        return m_fullMap->m_cellData;
-    return &m_fullMap->m_cellData[(point.m_z * m_fullMap->m_size + point.m_y)
-                              * m_fullMap->m_size + point.m_x];
+        return m_fullMap->cell(0, 0, 0);
+    return m_fullMap->cell(point);
 }
 
 // E:\gamedcs\advmgr.cpp:7037
