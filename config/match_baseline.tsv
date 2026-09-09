@@ -104,7 +104,7 @@ advmgr	?drawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	99.7524	100.
 advmgr	?drawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80	b37b1d5387ce
 advmgr	?drawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60	9d0820f9cfab
 advmgr	?drawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0	e984038d6bcd
-advmgr	?drawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	94e9d0820258
+advmgr	?drawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220	31a2e7a6d0c1
 advmgr	?drawUnderlay@advManager@@QAEXHHHHH@Z	90.1506	92.7034	92.7034	0x12470	1df5bbbc4bf4
 advmgr	?enableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a3a0	f16bc6f67e8a
 advmgr	?exitDialog@CAdvPopup@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b190	fc0587c7cdcb
@@ -206,7 +206,7 @@ ai	?chooseCreatureSpell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_paramet
 ai	?chooseCyclopsAction@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0	3ced22655052
 ai	?chooseDefenseHex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0	38a574e524e0
 ai	?chooseMeleeAction@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80	e3171825de67
-ai	?chooseMeleeTarget@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	91.6697	91.6697	91.6697	0x21680	fa8d07253266
+ai	?chooseMeleeTarget@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	91.6697	91.6697	91.6697	0x21680	21e0be15ccd5
 ai	?chooseResurrectAction@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	95.7822	95.7822	95.7822	0x21000	3b2a7f984f71
 ai	?chooseShooterAction@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060	415d686364ae
 ai	?chooseShooterTarget@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80	845427472eac
@@ -971,7 +971,7 @@ cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	8933359e9a5a
 cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	a81b0642ac20
 cmbtmgr	?placeObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	6c6ad562be53
-cmbtmgr	?powEffect@combatManager@@QAEXHH@Z	96.2927	96.2927	96.2963	0x68990	63c0be0574d0
+cmbtmgr	?powEffect@combatManager@@QAEXHH@Z	96.2927	96.2927	96.2963	0x68990	1350f964f1a2
 cmbtmgr	?raiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0	e0b703320eca
 cmbtmgr	?raiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	91173d121bbb
 cmbtmgr	?removeArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	37854b2caf2e
@@ -2330,7 +2330,7 @@ hillfortwindow	??1THillFortWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe7e10	1cf
 hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0	-
 hillfortwindow	?doModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90	733dad3f5081
 hillfortwindow	?handleClick@THillFortWindow@@QAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8690	25822498fd07
-hillfortwindow	?hillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850	79d66fb36a9c
+hillfortwindow	?hillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850	91d8b5bbde63
 hillfortwindow	?recalculate@THillFortWindow@@QAEXE@Z	95.2727	95.2727	95.2727	0xe7eb0	8fc67377e6e0
 hillfortwindow	?upgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500	6062059bf5ce
 hiscore	??0CHighScoreEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0xe96a0	769a0f4e9cf0
@@ -3584,7 +3584,7 @@ rmg_terrain	?getRmgTerrainNeighbourKind@@YIHHH@Z	100.0000	100.0000	100.0000	0x1b
 rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	70.1029	70.1029	70.1029	0x1b6fd0	e3ffc676899a
 rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	689aa34d7a84
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
-rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	96cda942cbe5
+rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	5428ff7efd87
 rmg_terrain	?initializePackedCell@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	e2b27f66e488
 rmg_terrain	?insert@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@_N@2@ABUTRmgGridPoint@@@Z	79.8254	79.8254	79.8254	0x1b7cd0	-
 rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	3d38f29ba8e4
@@ -4081,7 +4081,7 @@ slider	?draw@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x196c40	98dfc2041fd5
 slider	?enable@slider@@UAEXE@Z	100.0000	100.0000	100.0000	0x197140	e1d91816929d
 slider	?initialize@slider@@IAEXPBD@Z	100.0000	100.0000	100.0000	0x196050	3f1f4e7063d6
 slider	?keyAccel@slider@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x196230	8f66db142489
-slider	?main@slider@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1964e0	f0193874a41e
+slider	?main@slider@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1964e0	12caccd6eea9
 slider	?onKillFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197130	f4a9051e91a2
 slider	?onSetFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197120	000280074600
 slider	?select@slider@@QAEHPAVmessage@@E@Z	100.0000	100.0000	100.0000	0x196980	6d58417c46de
@@ -4268,7 +4268,7 @@ systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	96.3370	96.3370	98.1326	0x1b
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040	167409d8ebe7
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010	-
 systemoptionswindow	?doModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0	9fc6962bea94
-systemoptionswindow	?windowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	94.3957	94.3957	94.3957	0x1b3140	bcd4264bc7ab
+systemoptionswindow	?windowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	94.3957	94.3957	94.3957	0x1b3140	d52ab8b20887
 text	?initializeAdvObjNames@@YIEXZ	100.0000	100.0000	100.0000	0x1b92d0	3335cf04735c
 text	?initializeArrayText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9cc0	b1aa1cfc2c9d
 text	?initializeCampaignDialogText@@YIEXZ	100.0000	100.0000	100.0000	0x1b9800	b021e809648a

@@ -922,6 +922,10 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 // a shared menu result with merged cancel/IPX cases reaches only 97.5668%,
 // and copying the host's menu check gives 95.4905%. The remaining five joins
 // retain their common actions; late-arm register scheduling remains open.
+// Individual owned-action controls, in source order: Cancel menu 88.8147%,
+// Host success 94.2507%, Host failure check 91.2643%, Join menu 88.8147%,
+// Search success 94.0872%, versus 98.1199%. Combined menu/host/exit scopes
+// also lose; preserve OnHost/OnSearch and their distinct cleanup order.
 // Before normalization (locals): bExitFlag.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)

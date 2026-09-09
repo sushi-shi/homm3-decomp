@@ -470,6 +470,10 @@ static void initVars()
 // scores 94.2515%; retain the two exits that skip the fallback scan.
 // The remaining retail guard is an unconditional jump over the CD scans;
 // the current source retains its meaningful g_cdDriveNumber predicate.
+// Checking each scan's exhaustion independently instead of taking its found
+// exit scores 99.0000% for the first scan, 92.4123% for the fallback, and
+// 91.8275% together, versus 99.5994%. Both must skip the version fallback
+// on success; those scoped alternatives do so but change the retail CFG.
 // The other differences exchange the 5/6 assignment blocks and one InitVars
 // store. The named InitLogFile mismatch resolves to the shared bare-ret
 // body represented by textWidget::dim at 0x5bc690, not a different action.
@@ -606,6 +610,9 @@ void initMainClasses()
 // three instructions with EDX/EDI/ECX against our ECX/EBX/EDX.
 // Goto audit: An event-switch completion flag removes stop_credits but
 // scores 99.0393% versus 100%; keep this loop exit for now.
+// A nested abort result inside the event switch reaches 99.4562%; replacing
+// the switch with the full key/button predicate reaches 95.7100%. Neither
+// preserves the exact loop/cleanup join with the original playback helpers.
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void creditsWait()
 {
@@ -937,6 +944,8 @@ static int checkMem()
 // Before normalization (function): KbFn_004EE1B0.
 // Goto audit: A combined key/click condition with a loop break removes
 // stop_intro but scores 84.6629% versus 100%; retain the event switch.
+// Keeping the switch with a nested abort result reaches 94.1011%. This
+// Complete-only routine has no older DC body; its retail event paths govern.
 VA(0x004ee1b0, 0xF6)
 static void kbFn004EE1B0(int videoId, const char* frameName)
 {
@@ -4170,6 +4179,8 @@ void fileError(const char* buf)
 // WinText, smk.
 // Goto audit: A combined key/click condition with a loop break removes
 // stop_congrats but scores 73.4633% versus 100%; retain the event switch.
+// A nested abort result covering both key and mouse exits reaches 74.4067%.
+// Preserve the existing DC message/video locals and the shared cleanup tail.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {

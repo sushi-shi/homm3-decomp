@@ -3778,9 +3778,11 @@ static const long& maxOf(const long& x, const long& y)
 // likewise measured +0 or worse.
 // Before normalization (locals): bResetLimitCreature, bShowSomePowEffect, attack_frames,
 // wince_frames, wince_start_offset, bFramesChanged.
-// Goto audit: replacing play_frame with the inverted frameCount continue
-// guard changes 96.2927% to 96.2378%. Keep the existing join pending a source
-// boundary/lifetime explanation for that instruction-layout difference.
+// The positive frameCount if/else removes play_frame while preserving all
+// 2561 compiled bytes and the 25 relocation names/addends at 96.2927%.
+// Its true arm permits the common frame body; only the false arm skips it.
+// The inverted continue guard still scores 96.2378%, so guard polarity and
+// scope matter here even though the source operations are otherwise equal.
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -3899,9 +3901,11 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                             && winceStartOffset
                                 > stack.m_remainingFramesToPlay) {
                         if (attackFrames) {
-                            if (frameCount >= attackFrames - 1)
-                                goto play_frame;
-                            continue;
+                            if (frameCount >= attackFrames - 1) {
+                                // The attack threshold permits this frame.
+                            } else {
+                                continue;
+                            }
                         } else if (stack.m_currFrameType == cs_wince
                                 && stack.m_currFrameIndex
                                     >= stack.m_stdIcon->getNumFrames(
@@ -3910,7 +3914,6 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                         }
                     }
 
-play_frame:
                     if (stack.m_currFrameType != stack.m_nextFrameType) {
                         if (!isQuickCombat()) {
                             if (stack.m_showAttackFrames)
