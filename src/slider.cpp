@@ -195,8 +195,10 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 // and ten jump-table slots exactly.
 // Goto audit: Replacing the five callWidgetMain jumps with direct base
 // calls/returns scores 89.6667% versus 100%; the shared call tail remains.
-// The base-widget exits break the outer switch and remain exact. Replacing
-// sliderMessageHandled with a return costs 0.0123 points, so that label stays.
+// The base-widget exits break the outer switch and remain exact. A handled
+// result also removes the state-message join with all 1184 bytes and 29
+// relocation names/addends unchanged. Its direct return control still costs
+// 0.0123 points; the ordinary setState/setResolution calls stay canonical.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
 int slider::main(message* msg)
 {
@@ -323,12 +325,14 @@ int slider::main(message* msg)
         msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
 
-    case MESSAGE_WIDGET:
+    case MESSAGE_WIDGET: {
+        bool handled = 0;
         switch (msg->m_codeX) {
         case WIDGET_SET_SLIDER_STATE:
             if (msg->m_codeY == m_id) {
                 setState(msg->m_extra);
-                goto sliderMessageHandled;
+                handled = 1;
+                break;
             }
             break;
         case WIDGET_SET_SLIDER_RESOLUTION:
@@ -338,10 +342,10 @@ int slider::main(message* msg)
             }
             break;
         }
+        if (handled)
+            return 1;
         break;
-
-    sliderMessageHandled:
-        return 1;
+    }
     }
 
     return widget::main(msg);

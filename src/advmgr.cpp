@@ -6161,9 +6161,12 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 // A zero cloud lookup shares the full-draw star tail; it does not skip the
 // cell. Keeping that tail after the cloud path gives VC6 retail's two
 // forward branches and one common star draw.
-// Goto audit: Combining the cloud lookup guard and draw-stars fallback
-// into an if/else removes both jumps but scores 47.7198% versus 100%;
-// retain the separate guards and shared draw-stars arm.
+// A single cloud-attempt scope preserves both separate failure guards and
+// all 584 retail bytes. Both do/while(0) and for/break controls remove the
+// two jumps with identical code and relocation addends. Positive lookup or
+// full-draw scopes and their combined nesting still lose code agreement;
+// the earlier nested-cloud form scored 47.7198%. Neither result proves a
+// source-goto requirement.
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -6207,28 +6210,29 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
         && (getMapExtra(srcX, srcY, z) & g_mapVisibilityBit))
         return;
 
-    int lookup;
-    if (g_completeDrawAllCells)
-        goto draw_stars;
+    do {
+        int lookup;
+        if (g_completeDrawAllCells)
+            break;
 
-    lookup = getCloudLookup(srcX, srcY, z);
-    if (!lookup)
-        goto draw_stars;
-    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
-        hflip = true;
-        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
-    }
-    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
-        && (srcX & 1))
-        ++lookup;
-    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
-        lookup = CLOUD_DRAW_FRAME_4;
-    m_cloudIcons->drawShroudTile(
-        lookup - 1, tilex, tiley, tilew, tileh,
-        g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
-    return;
+        lookup = getCloudLookup(srcX, srcY, z);
+        if (!lookup)
+            break;
+        if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+            hflip = true;
+            lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+        }
+        if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+            && (srcX & 1))
+            ++lookup;
+        if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+            lookup = CLOUD_DRAW_FRAME_4;
+        m_cloudIcons->drawShroudTile(
+            lookup - 1, tilex, tiley, tilew, tileh,
+            g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
+        return;
+    } while (0);
 
-draw_stars:
     int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
     m_starTileset->drawShroudTile(
         frame, tilex, tiley, tilew, tileh,

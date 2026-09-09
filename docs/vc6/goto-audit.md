@@ -1,12 +1,13 @@
 # Goto reconstruction audit
 
-The current inventory is **67 goto statements in 37 functions across 21 files**.
-That is **249 fewer than the initial 316 (78.8%)**, across 101 functions;
-86 functions and 34 files no longer contain gotos. The latest source-scope and
-helper pass removes **31 statements from the 98-statement checkpoint**, improves
-four current scores and lowers none among all 4,752 scored functions. Its
-border handler is newly exact, and the spell-immunity audit corrects several
-retail switch-routing mistakes.
+The completed audit leaves **58 goto statements in 31 functions across 18 files**.
+That is **258 fewer than the initial 316 (81.6%)**, across 106 functions;
+92 functions and 37 files no longer contain gotos. Every surviving statement
+has an individual disposition below. The final nine removals preserve all
+4,752 current scores, maxima and historical peaks, with identical emitted
+function bytes and relocation references/addends relative to their controls.
+The preceding source-scope pass removed 31 statements and corrected several
+retail spell-immunity switch routes. These are separate measured checkpoints.
 
 The isolated audit removed **198 statements (62.7%)**, across 83 functions,
 without lowering any current score. That checkpoint contained 118 statements
@@ -76,7 +77,8 @@ adopted in that function.
 Local manifests, candidate results and evidence outputs are in
 `build/goto-audit/` (initial workspace), `build/goto-followup/`,
 `build/goto-more/`, `build/goto-residuals/`, `build/goto-integration/`,
-`build/goto-after-merge/`, `build/goto-next/` and `build/source-families/`. These are scratch artifacts; source-specific
+`build/goto-after-merge/`, `build/goto-next/`, `build/goto-completion/`
+and `build/source-families/`. These are scratch artifacts; source-specific
 conclusions live beside the affected functions. The isolated audit added no new inline keywords,
 forced-inlining directives, inlining pins, dummy operations or volatile
 surrogates were introduced. Canonical helpers keep their declarations and
@@ -275,23 +277,92 @@ The terrain-ring predicate differs only in which duplicate return block receives
 three branches. A tiny score loss can therefore represent a real branch-target
 difference. None of these findings justifies converting every goto mechanically.
 
-## Remaining work classes
+## Disposition of every remaining statement
 
-The inventory is comprehensive; the source-family exploration is bounded, not
-a proof of the maximum possible reduction. Remaining leads include:
+All **58 sites** below were checked against their owning source, target label,
+retail instructions/CFG, available Dreamcast dossier, line blocks and inline
+clues. Each site was included in a structured-source family or, for
+`mirrorImage`, retained on positive source evidence already corroborated by
+retail. Repeated labels are separate statements; the origin identifies each
+one. A final inventory-to-disposition check covers every surviving statement
+exactly once. There are **52 forward and six backward jumps**; only the two
+`getSoundId` sites syntactically target a terminal return.
 
-- Shared dialog actions and dispatch tails, notably the eleven building-popup
-  jumps in `townManager::main` and the multiplayer connection/error joins.
-  The popup arms also branch to one common body in Dreamcast. The tested
-  per-arm copies and full multiplayer cleanup combinations lose score. Two
-  modem/direct failure exits now use their original stores; seven other joins
-  remain. No new helper was invented to hide those joins.
-- Multi-level search exits in combat pathfinding, random map generation and
-  spell placement. Preserve exhaustion behavior and object lifetimes when
-  changing their loops. `mirrorImage` already has positive DC evidence for a jump out of its search, so its mere presence is not a defect.
-- Shared return/selector blocks with the measured costs above. Search for
-  missing source boundaries and lifetimes rather than assuming a compiler
-  generation limitation from a flattened body.
+The scores describe the controlled `06f2f4f7` source context. The retained
+forms preserve behavior, original helper calls and lifetimes while the tested
+alternatives change emitted code. These bounded failures do not prove a
+minimum goto count or that every remaining jump was spelled `goto` originally.
+The original task's stopping point is met by investigating every site, adopting
+the supported reductions and recording what still limits the others.
+
+| Function | Remaining site and origin | Disposition |
+| --- | --- | --- |
+| [`TAdventureMapWindow::processHover`](../../src/adventuremapwindow.cpp) | `hero_rollover` (Hero locator) | Explicit locator case labels score 94.3090% vs 100%; preserve DC GetHero/GetTown order and the shared hero body. |
+| [`TAdventureMapWindow::processHover`](../../src/adventuremapwindow.cpp) | `town_rollover` (Town selector) | Moving town cases to their body scores 70.2472% vs 100%; retain the retail switch destinations. |
+| [`TAdventureMapWindow::processHover`](../../src/adventuremapwindow.cpp) | `generic_help` (Default help) | A generic-help result scores 94.4944% vs 100%; combined selector/result forms also lose. |
+| [`advManager::getSoundId`](../../src/advmgr.cpp) | `invalid` (Garrison rejection) | A switch break scores 95.1626% vs 96.9031%; direct invalid returns score 94.5074% and change constant selection. |
+| [`advManager::getSoundId`](../../src/advmgr.cpp) | `invalid` (Creature-generator-4 rejection) | An independent switch break scores 95.2036% vs 96.9031%; keep the common invalid result. |
+| [`army::setLuck`](../../src/army.cpp) | `no_clover_bonus` (Neutral Clover towns) | A break scores 80.6782% vs 100%; it collapses the compressed town selector before the common minimum/store. |
+| [`army::setMorale`](../../src/army.cpp) | `holy_done` (Holy Ground neutral towns) | An independent break scores 88.2326% vs 100%; retain its selector destination. |
+| [`army::setMorale`](../../src/army.cpp) | `evil_done` (Evil Fog neutral towns) | An independent break scores 91.2093% vs 100%; both breaks score 82.3178%. |
+| [`armyGroup::getArmyMorale`](../../src/armygrp.cpp) | `holy_done` (Holy Ground neutral towns) | An independent break scores 85.7784% vs 96.5625%; preserve the terrain selector and common limits. |
+| [`armyGroup::getArmyMorale`](../../src/armygrp.cpp) | `evil_done` (Evil Fog neutral towns) | An independent break scores 89.2727% vs 96.5625%; both breaks score 80.5625%. |
+| [`armyGroup::getArmyLuck`](../../src/armygrp.cpp) | `no_town_luck_bonus` (Neutral Clover towns) | A break scores 78.6737% vs 100%; bonus/default already use structured exits, but the neutral selector still changes. |
+| [`applyMoraleMagicTerrain`](../../src/armygrp.cpp) | `holy_ground_good` (Holy Ground good towns) | Moving this final adjustment/append into its arm with a default scores 91.4420% vs caller 93.1409%; keep the existing ordinary helper and shared adjustment. |
+| [`campaignWindowHandler`](../../src/campaignwindow.cpp) | `end_dialog` (Campaign choice) | The shared dialog-result flag scores 83.7571% vs 84.4576%; preserve message stores and forwarding after selection. |
+| [`campaignWindowHandler`](../../src/campaignwindow.cpp) | `end_dialog` (Keyboard exit) | The same result-scope family covers this exit and preserves its dialog return value, but moves the retail shared tail. |
+| [`combatManager::placeLargeObstacle`](../../src/cmbtmgr.cpp) | `found` (Successful obstacle pick) | Guarded redraw/positive placement reaches 97.7528% vs 100%; simple breaks reach 83.0899%/93.7079%. Keep picker lifetime and placement join. |
+| [`combatManager::main`](../../src/command.cpp) | `process_action` (Received combat action) | A bool/byte received-action result scores 81.5489% vs 97.6611%; retain CMessageKill destruction before the action tail and skip local ownership/Berserk checks. |
+| [`advManager::doEventWitchHut`](../../src/events.cpp) | `refuse` (Already-known secondary skill) | An owned refusal dialog scores 52.7083% vs 100%; refusal flags score 52.2569%, text selection 44.1875%. Keep the common dialog and visit-before-decision order. |
+| [`advManager::doCombat`](../../src/events.cpp) | `aftermath` (Remote battle completed) | DC line 6482 destroys the wait dialog before the common aftermath. Result guards reach 92.5247% vs 98.5379%; breakable scopes reach at most 92.5181%. Preserve RAII. |
+| [`game::validateVictoryLossConditions`](../../src/game.cpp) | `invalid_loss_town` (Multiple human teams) | The town-validation result scores 89.2426% vs 90.0315%; coupled breakable scopes reach at most 87.7111%. Keep the common invalidation store. |
+| [`game::validateVictoryLossConditions`](../../src/game.cpp) | `invalid_loss_town` (Town belongs to a non-human team) | The same family covers this rejection while preserving the neutral-owner check; no nondecreasing structured candidate was found. |
+| [`earlySetup`](../../src/kb.cpp) | `have_cd_version` (Expansion-two video found) | A scan-exhaustion scope scores 99.0000% vs 99.5994%; it preserves skipping the fallback scan but changes the retail CFG. |
+| [`earlySetup`](../../src/kb.cpp) | `have_cd_version` (Expansion-one video found) | An independent exhaustion scope scores 92.4123% vs 99.5994%; both scopes score 91.8275%. Preserve version 6 on success and version 5 only on failure. |
+| [`creditsWait`](../../src/kb.cpp) | `stop_credits` (Non-F4 key or mouse down) | A nested abort result reaches 99.4562% vs 100%; the full event predicate reaches 95.7100%. Keep the event switch and single playback cleanup. |
+| [`kbFn004EE1B0`](../../src/kb.cpp) | `stop_intro` (Intro skip event after first run) | Retail-only body: nested abort result scores 94.1011% vs 100%, full predicate 84.6629%. Keep the first-run guard and cleanup. |
+| [`oldmain`](../../src/kb.cpp) | `runGame` (Campaign replay restart) | Bool/byte replay loops score 60.0568% vs 78.4499%; int loops score 59.9903%. Keep the DC player-save lifetime and canonical menu helpers. |
+| [`oldmain`](../../src/kb.cpp) | `runGame` (Campaign continuation restart) | The same while/do replay families cover this back edge; preserving both restart paths does not preserve the current emitted layout. |
+| [`congratsWait`](../../src/kb.cpp) | `stop_congrats` (Non-F4 key) | Nested event abort result scores 74.4067% vs 100%; full predicate scores 73.4633%. Keep the recovered message/video locals and cleanup. |
+| [`congratsWait`](../../src/kb.cpp) | `stop_congrats` (Mouse button down/up) | Both event-result families cover this second exit; the current switch retains the exact playback body. |
+| [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `return_to_main_menu` (Cancel to main menu) | An owned menu action scores 88.8147% vs 98.1199%; preserve existing exit/dialog/cleanup order. |
+| [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `exit_dialog` (Successful Host) | An owned successful exit scores 94.2507% vs 98.1199%; retain OnHost and the shared result tail. |
+| [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `check_host_join_screen` (Failed Host) | An owned host/join-screen check scores 91.2643% vs 98.1199%; keep this distinct failure route. |
+| [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `return_to_main_menu` (Join from host/join screen) | An owned menu action scores 88.8147% vs 98.1199%; menu/host/result combinations also lose. |
+| [`TMultiPlayerWindow::onWidgetDeselect`](../../src/multiplayerwindow.cpp) | `exit_dialog` (Successful Search) | An owned successful exit scores 94.0872% vs 98.1199%; preserve OnSearch and the existing result tail. |
+| [`TRmgZone::TRmgZone`](../../src/rmg.cpp) | `townSelected` (Allowed town selected) | Retail-only constructor: bounded break scores 98.5294% vs 100%, unbounded selection 97.6471%. Keep selected-town assignment after vector construction. |
+| [`TRmgTreasureGroup::canFitObject`](../../src/rmg.cpp) | `placementFailure` (First placement failure) | Retail-only body: a direct return scores 98.7778% vs 98.8042%; keep the first failure destination. |
+| [`TRmgTreasureGroup::canFitObject`](../../src/rmg.cpp) | `placementFailure` (Second placement failure) | An independent return scores 98.1693% vs 98.8042%; both returns score 98.1429%. Preserve point/trigger copies and map checks. |
+| [`type_random_map_generator::canPlaceTreasureGroup`](../../src/rmg.cpp) | `disallowEntrances` (Entrance policy rejected) | Retail-only body: byte/int policy results score 96.7905%/96.1471% vs 99.9850%. Keep the explicit allow arm, coordinate construction and shared rejection. |
+| [`rmgTerrainPainter::repairTerrainPoint`](../../src/rmg_terrain.cpp) | `gapsBuilt` (Neighbour-gap cycle completed) | Retail-only body: inner break plus outer completion test scores 85.3676% vs 91.3389%; retain gap construction and the common merge phase. |
+| [`rmgTerrainPainter::hasSeparatedNeighbours`](../../src/rmg_terrain.cpp) | `noSeparation` (Matching run wraps to first direction) | A direct false return at this site scores 99.6610% vs 100%; it selects the wrong duplicate epilogue. |
+| [`rmgTerrainPainter::hasSeparatedNeighbours`](../../src/rmg_terrain.cpp) | `noSeparation` (Final nonmatching run wraps) | An independent false return also scores 99.6610%; both surviving returns score 99.7458% with the already-adopted initial return. Keep direction lifetime and branch destinations. |
+| [`CSaveGameEdit::ignoreKey`](../../src/singleselectionwindow.cpp) | `ignore` (Shift-period rejection) | A direct return retaining GetKeyState scores 97.5397% vs 100%; a shared switch exit scores 94.8809%. Preserve the live key-state call and duplicate return blocks. |
+| [`combatManager::doBolt`](../../src/spells.cpp) | `done` (All bolts completed) | DC bComplete governs the draw pass. Inner break plus outer break/guard scores 96.4526% vs 100%; retain the multi-level exit to one delete/reset tail. |
+| [`combatManager::mirrorImage`](../../src/spells.cpp) | `placeMirror` (Valid clone hex found) | Positive DC line 4650 evidence: exit all search loops before the failure dialog/return at 4657/4659. Keep this supported jump, canonical hex helpers and exact direction/placement behavior. |
+| [`swapManager::main`](../../src/swapmgr.cpp) | `show_secondary_skill` (Left secondary-skill popup) | Combined left/right case scopes score 83.1641% or 83.4984% vs 84.0502%; preserve DC constructor/helper order and the shared skill action. |
+| [`TSystemOptionsWindow::windowHandler`](../../src/systemoptionswindow.cpp) | `confirm_command` (Command requires confirmation) | An owned confirmation tail scores 92.9902% vs 94.3957%; preserve the accepted-command scope and shared translation. |
+| [`TSystemOptionsWindow::windowHandler`](../../src/systemoptionswindow.cpp) | `translate_command` (Command skips confirmation) | An owned translation tail also scores 92.9902%; combinations with confirmation lose equally. The unrelated consume exit is already a return. |
+| [`getBuildingInfo`](../../src/townmgr.cpp) | `emit_custom` (Rampart extra description) | A combined custom-building scope scores 97.7551% vs 100%; retain the separator order and shared pond-description action. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Hall popup) | An independently owned popup scores 86.6755% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Mage Guild popup) | An independently owned popup scores 86.6195% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Castle popup) | An independently owned popup scores 86.6774% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Tavern popup) | An independently owned popup scores 88.4013% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Dock popup) | An independently owned popup scores 88.6837% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Marketplace popup) | An independently owned popup scores 88.4592% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Silo popup) | An independently owned popup scores 88.6132% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Blacksmith popup) | An independently owned popup scores 88.6379% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Extra 1 popup) | An independently owned popup scores 88.5200% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Extra 2 (Dungeon/Stronghold) popup) | An independently owned popup scores 88.6987% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+| [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Special popup) | An independently owned popup scores 88.4172% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
+
+The eleven town-popup sites were tested individually as well as together.
+All copied bodies score 73.3704%; popup-result flags with different widths
+and declaration scopes score 87.0077%, against 90.2738%. The multiplayer
+sites likewise have independent owned-action controls and combined
+menu/host/exit scopes. A missing Dreamcast helper attribution is not evidence
+that retail could not have expanded one; these dispositions reject the tested
+forms, not unobserved source possibilities.
 
 ## Isolated full checkpoint
 
@@ -622,3 +693,66 @@ passes at 4,064 exact, 96.40% fuzzy and 96.13% executable matched, with 220
 remaining inlining pins. Both native market checks and the spell oracle pass
 against the combined source. The trading-resource helper remains ordinary
 and its update stays at 88.5391%.
+
+## Completion pass
+
+Starting from `06f2f4f7`, 25 finite source families exhaust **306 successfully
+scored states and 235 distinct objects**. Unchanged parents, opposite-corner
+controls and retained candidates reproduce. Every selected TU's complete
+score vector is checked. The cumulative recorded search is 161 families,
+1,555 successful states and 1,229 distinct objects, summed within their
+separate compiler contexts; these counts include controls and rechecks.
+
+The six-part Dreamcast/retail evidence pass was refreshed for all 37 owners
+of the pre-pass 67 statements, with named-call and inlining reviews added.
+The ordinary terrain helpers are reviewed through their emitted description
+callers. The intro and five RMG owners have no older Dreamcast counterpart;
+their retail code remains authoritative.
+
+| Function | Removed | Adopted source form | Unchanged score |
+| --- | ---: | --- | ---: |
+| `chooseMeleeTarget` | 1 | Separate positive defensive scope before common commit stores | 91.6697% |
+| `applyLuckMagicTerrain` | 1 | Neutral-town return inside the existing ordinary helper | Caller 92.3623% |
+| `drawShroud` | 2 | One breakable cloud scope followed by the star fallback | 100% |
+| `powEffect` | 1 | Positive attack-threshold arm with `else continue` | 96.2927% |
+| `hillFortWindowHandler` | 1 | OK arm owns the existing message stores and forward return | 91.9430% |
+| `hasSeparatedNeighbours` | 1 | Initial all-matching scan returns false directly | 100% |
+| `slider::main` | 1 | Widget-state handled result after the inner switch | 100% |
+| System-options handler | 1 | Default widget command returns consumed directly | 94.3957% |
+| **Total** | **9** | **Eight functions; six functions and three files cleared** | |
+
+Each winning COFF function contribution equals its unchanged parent after
+masking relocation bytes, and every relocation's offset, kind, symbol and
+raw addend agrees. Function-local switch data is included. The production
+objects after formatting and comments reproduce those same contributions.
+This is stronger than the project's relocation-name-insensitive score alone.
+No helper body is pasted into a caller, no inline declaration is changed,
+and no inlining control or release-budget operation is introduced.
+
+Several useful negative controls are superseded only in part. `drawShroud`'s
+combined positive guard still loses 52.2802 points, but separate exits from a
+single scope preserve all 584 bytes. A direct slider-state return still loses
+0.0123 points, while the handled result preserves all 1,184 bytes. The initial
+ring scan admits a direct return; either later return changes which duplicate
+false epilogue receives the branch. The earlier all-or-nothing failures did
+not establish that every site had to remain.
+
+Named-call review keeps existing non-exact residuals explicit. `doCombat`
+expands `CCombatInitMsg`'s destructor into three string cleanup calls where
+retail retains it. `oldmain` still expands ordinary multiplayer/load-picker
+and drawing helpers that retail calls; the canonical source calls are already
+present. Morale description retains an extra string `_Eos` call, town dispatch
+expands string `_Tidy`/`_Eos` calls, swap dispatch retains an extra `sprintf`,
+and terrain repair expands one coordinate constructor retained by retail.
+These are function-matching work beyond the bounded goto investigation.
+Self-relative switch-table offsets are data references, not missing helpers.
+The logging calls reach retail's folded empty `ret` body at `0x5bc690`;
+`doBolt`'s sine/cosine references still have unclaimed CRT labels. Unchanged
+score or aggregate call count alone is not used to declare these functions
+closed.
+
+The full `homm3 build` passes for the adopted source context: all **4,752**
+CUR/MAX/HIST triples are unchanged, **4,064** functions are exact, linked
+fuzzy match is **96.40%**, and executable matched bytes are **96.13%**.
+All **220** existing inlining pins are preserved. Integration with later
+workspace changes is checked separately against the incoming baseline.
