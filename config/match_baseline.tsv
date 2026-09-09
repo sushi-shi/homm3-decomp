@@ -3503,7 +3503,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.8952	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -4613,13 +4613,13 @@ victor_pcx_kernels	?victorInterleaveRgbPlanes@@YAXPAEPBEH@Z	100.0000	100.0000	10
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x204570	ee4ddb1456b3
 victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x8b370	-
 victorylossconditions	?appliesToPlayer@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	d46074573b63
-victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	1f95601e85cd
+victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	e159d22ca8ca
 victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1610	3d645aad029f
 victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	ad170bd91420
 victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390	8627723629f7
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40	07cb6c50ebee
-victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	e5f22c4922ab
-victorylossconditions	?checkForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720	b2c73503088c
+victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	53de46fb981f
+victorylossconditions	?checkForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720	54da60c54daf
 victorylossconditions	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1ef0	72aba842f853
 victorylossconditions	?checkForHeroDefeatWin@VictoryConditionStruct@@QAE_NHPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2100	95ba2dba7864
 victorylossconditions	?checkForTimeLimitExpired@LossConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2f20	0d4aeef8dee4
