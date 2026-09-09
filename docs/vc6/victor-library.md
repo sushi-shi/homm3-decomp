@@ -121,3 +121,34 @@ named calls (including allocation and free) and reaches 77.50% after status
 scope reconstruction. This is a body-visibility hypothesis, not proof of an
 original library object name or boundary. The palette initializer and its
 ordinary upload helper remain together because retail expands that helper.
+
+A later extractor register-allocation family crossed 64 real cursor, count and
+shift lifetimes after the structural family above. All 64 sources emitted the
+same 74.24% object. The insertion helper's corresponding loop family attempted
+50 states; 45 compiled into two distinct objects and none exceeded 94.4074%.
+VC6 RTM and SP3 emit identical retained objects for both helpers. `/Oa` and
+`/Ow` are worse, while `/Oi-`, `/Ox`, `/Ob1`, `/Ob0`, `/Oy` and `/Ol-` are
+flat. These controls bound the residual register schedules without changing
+the canonical helpers or manufacturing alternate declarations.
+
+The reconstructed `loadpcx` body now has the same 73 CFG blocks, 37 branches,
+two returns and 15 real calls as retail. A 60-state refill family identifies
+the branchless nonnegative remainder clamp (`sets`/`dec`/`and`), raising the
+body from 69.0159% to 74.0928%. Rechecking four validation structures in that
+new context favors the two early exits and reaches 76.2573%; four failure-tail
+gotos do not improve it. Forty-eight decode-state declaration orders then reach
+76.4138%. Six nibble-arm forms recover retail's low-arm fallthrough, and a
+seven-state result-lifetime follow-up identifies one full-width shared value.
+That makes the complete 21-instruction nibble loop byte-identical and raises
+the function to 78.4456%.
+
+The remaining loader delta is dominated by a whole-function allocation wall:
+retail carries the image/destination chain in EBX and the consumed-byte count
+in ESI, while SP3 carries the image in ESI and spills the count. Six mode
+classifiers, six status declarations, four parameter-storage forms, all 16
+loop-state `register` combinations, eight consumed declaration scopes, ten
+destination/address lifetimes, four shared switch exits and four palette-loop
+orders each emit one unchanged object. Explicit gotos therefore do not recover
+retail's shared row-advance block in this profile. These finite negative
+controls leave the natural implementation intact rather than adding a dummy
+operation solely to rotate registers.
