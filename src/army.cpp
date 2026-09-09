@@ -2650,6 +2650,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // initialization and final result branches. No compiler-state noise is kept.
 // The remaining differences are commuted base/index registers in the three
 // MarkCreatureEffect expansions; all 106 blocks and 31 named calls agree.
+// University ownership collateral: the corrected generic aggregate in game.h
+// moves this unchanged body to 99.9040% (address-register allocation and an
+// independent reload schedule). Restoring only the old constructor declaration
+// in the two-state header control recovers 99.9424%; it is not a valid type
+// model for generic university records. MAX/HIST retain the earlier peaks.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::doAttack(army* armyToAttack, int direction)
 {

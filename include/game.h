@@ -631,29 +631,24 @@ public:
 #pragma pack(pop)
 SIZE(HeroExtra, 0x334);
 
-// The four secondary skills a university offers, in slot order. Retail's
-// own default constructor 0x5d2d80 - `mov eax,ecx` plus four dword stores
-// of 14, 15, 16, 17 and a bare `ret`, no frame - proves the shape and the
-// element width: the record IS four ints, and the four values are the
-// elemental magic schools (Fire, Air, Water, Earth), which is exactly the
-// set the Conflux town building teaches. townManager::DoUniversity
-// 0x5d2da0 expands that constructor inline over its own stack record and
-// hands its address to the university window; the map object's copy comes
-// out of ExtraInfoUnion::get_university instead. Sixteen bytes either way,
-// unchanged.
+// The four secondary skills a university offers, in slot order. Dreamcast
+// type 0x1adf / field list 0x3521 proves the sixteen-byte aggregate with one
+// skills array and no constructor. Complete's game::Load likewise passes an
+// uninitialized fill record to opaque vector::resize, and RandomizeUniversity
+// fills this native local with four selected skills. Neither path initializes
+// the elemental schools: that operation belongs to the Conflux callers.
 struct type_university {
     // Before normalization: skills.
     TSecondarySkill m_skills[4];
 
-    // DEFINED in townmgr.cpp, not here, and the retail image is what says
-    // so: the out-of-line copy at 0x5d2d80 sits inside townmgr.obj's link
-    // bracket, immediately ahead of townManager::DoUniversity, while the
-    // only three callers of it in the image are AI bodies at 0x5253d0 and
-    // 0x52b1e0 - objects that link EARLIER. A header-inline constructor
-    // would have had its COMDAT kept from the first object that used it,
-    // i.e. over there; a plain out-of-line member emitted by its own
-    // compiland lands exactly where this one does.
-    type_university();
+    // Provisional behavioral name for retail 0x5d2d80, not a recovered DC
+    // symbol. ECX is the record; EAX returns its address. The ordinary body
+    // lives immediately before DoUniversity in townmgr.cpp: retail calls it
+    // from three Conflux AI sites and expands it in the town window. This
+    // role model preserves those bytes without imposing magic-school default
+    // construction on generic map records. The original helper name/kind is
+    // not independently known; a void-return control does not match its body.
+    type_university* initializeMagicSkills();
 };
 SIZE(type_university, 0x10);
 

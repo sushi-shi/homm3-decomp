@@ -2151,6 +2151,11 @@ inline int CEnterNameEdit::onEnter()
 // The canonical OnEnter/OnNameChange chain now keeps this body exact with
 // either two direct returns or an explicit else. Earlier wrapper-only key
 // and else controls were sensitive to the missing helper/header state.
+// The subsequent generic-university correction in game.h exchanges the two
+// spill slots in the OnEnter expansion (99.8868%); branches and calls agree.
+// A reproduced header-only old-constructor control recovers 100%, proving
+// shared-header collateral, not a defect in this canonical helper chain.
+// Preserve the correct university model and this body's 100% MAX/HIST.
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
 int CEnterNameEdit::onKeyPress(message* msg)
 {

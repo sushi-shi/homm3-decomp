@@ -2082,6 +2082,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                 if (!currentTown->canBuild(EXTRA_0_ID))
                     break;
                 type_university university;
+                university.initializeMagicSkills();
 #pragma inline_depth(0)
                 long value = valueOfUniversity(
                     currentHero, &university, 0);
@@ -2114,6 +2115,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     if (currentTown->m_type == TOWN_CONFLUX
         && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
         type_university university;
+        university.initializeMagicSkills();
         aiVisitUniversity(currentHero, &university);
     }
 
@@ -4780,13 +4782,14 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 // spellbook, valued 1000), and the once-per-hero special-building stat
 // bonuses ledgered in TownSpecialGrantedMask.  PROVISIONAL house name;
 // extern for emission while value_of_town is a stub.
-VA(0x0052b1e0, 0x2f4)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
+VA(0x0052b1e0, 0x2f4)  // anchor-callee {Conflux skill initializer, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
 long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 {
     long value = 0;
     if (currentTown->m_type == TOWN_CONFLUX
         && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
         type_university university;
+        university.initializeMagicSkills();
         // Retail CALLS the university appraisal here (the arm in
         // AI_value_of_event does too); our /Ob2 otherwise expands it.
 #pragma inline_depth(0)

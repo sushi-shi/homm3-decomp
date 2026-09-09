@@ -540,7 +540,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	1c749144bef3
 army	?cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500	b798d45ffe05
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	009dce137b6d
-army	?doAttack@army@@QAEEPAV1@H@Z	99.9424	99.9424	99.9962	0x41610	de21b1a97ac2
+army	?doAttack@army@@QAEEPAV1@H@Z	99.9040	99.9424	99.9962	0x41610	de21b1a97ac2
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	933b8d8871b4
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	89b7919ee308
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	ecdb5f58e893
@@ -2030,7 +2030,7 @@ game	?isMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	448cf03c70c
 game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	685b08da3000
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	2ff7c6c12d06
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	93dcbdbb2edf
-game	?load@game@@QAEHPAVTAbstractFile@@@Z	80.1570	80.1570	92.4127	0xbcda0	859628cf006e
+game	?load@game@@QAEHPAVTAbstractFile@@@Z	81.2284	81.2284	92.4127	0xbcda0	859628cf006e
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	72bc38da6dfe
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	ec4d7df9d53a
 game	?loadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	9b61dbd40921
@@ -2063,7 +2063,7 @@ game	?processOnMapTowns@game@@QAEXXZ	98.6258	98.6258	98.6258	0xcaa70	e6c2e01c2d7
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	bb0a93e2417d
 game	?randomizeEvents@game@@QAEXXZ	86.8205	87.0102	87.0102	0xc0cc0	475406c1f55c
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	d92f472f2523
-game	?randomizeUniversity@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0	e63a467abefa
+game	?randomizeUniversity@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0	e2342241bcd9
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	1773261d8194
 game	?readHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	7b2e3ff964ee
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80	ec593ae83402
@@ -2893,7 +2893,7 @@ philai	?aiChooseMagicSkill@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x127cd0	6
 philai	?aiChooseResourceOrExperience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	7e3d93c2941d
 philai	?aiChooseSecondarySkill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	f9cfb974f78c
 philai	?aiEnterGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	45082ca937b7
-philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1253d0	8fe02c0f51bc
+philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1253d0	1156f13fb2c7
 philai	?aiExamineMap@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	67d7e1b500b6
 philai	?aiFriendlyHeroMeeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	03e5c19f0b13
 philai	?aiGetSpellValue@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	1c0426b11e13
@@ -2964,7 +2964,7 @@ philai	?valueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960	86fc31
 philai	?valueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0	5733798923fb
 philai	?valueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0	06fe3d7413b3
 philai	?valueOfTown@@YIJPBVhero@@HHHF@Z	100.0000	100.0000	100.0000	0x12ab80	0d034f7bbb83
-philai	?valueOfTownBuildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x12b1e0	203c1aa180a2
+philai	?valueOfTownBuildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x12b1e0	0822cd9ba58b
 philai	?valueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	9b1bbeb2ebab
 philai	?valueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	f8fc4be32318
 philai	?valueOfUniversity@@YIJPBVhero@@PAUtype_university@@E@Z	100.0000	100.0000	100.0000	0x125bf0	b5c64e0c08ce
@@ -4006,7 +4006,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
@@ -4417,7 +4417,6 @@ townmgr	??0townManager@@QAE@XZ	99.0800	99.0800	100.0000	0x1c3310	e630123b36d4
 townmgr	??0townObject@@QAE@HHPBD@Z	100.0000	100.0000	100.0000	0x1c2ea0	e7d906a6393b
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1ce830	a7d1a11d0bec
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	0b473a175a3c
-townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	7fb3c7fd35df
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30	2fde6a5771eb
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70	84384b626870
 townmgr	??1TCastleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1dcb80	662ef217517b
@@ -4460,7 +4459,7 @@ townmgr	?doSkeletonTransformer@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x
 townmgr	?doTavern@@YIEXZ	96.4800	96.4800	96.4800	0x1d7ec0	6d2adfb329d5
 townmgr	?doTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480	4727b5f8b056
 townmgr	?doTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0	4e1b8fc24d32
-townmgr	?doUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0	9f8854c512cf
+townmgr	?doUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0	a51dd4d07b42
 townmgr	?draw@townObject@@QAEXHE@Z	95.5464	95.5464	95.5464	0x1c2ff0	17d5cb9a2a69
 townmgr	?getBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a40	a9a5a9b4db8e
 townmgr	?getCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	202f192bb751
@@ -4468,6 +4467,7 @@ townmgr	?getText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	a1
 townmgr	?handleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0	21c45b27b755
 townmgr	?handleHallClick@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0	2f37745d4447
 townmgr	?handleMageGuildClick@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ce560	0aecd4fdab1b
+townmgr	?initializeMagicSkills@type_university@@QAEPAU1@XZ	100.0000	100.0000	100.0000	0x1d2d80	63e5b4bf2a1f
 townmgr	?main@townManager@@UAEHAAVmessage@@@Z	90.2738	90.2738	90.2738	0x1d3240	c142935d244a
 townmgr	?moveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	5e8bfb67694f
 townmgr	?newStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	88c4e3cf9f99

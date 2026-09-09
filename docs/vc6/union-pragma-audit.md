@@ -12,7 +12,7 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 67 (41 source, 26 header) | Eleven removed; classify the remainder below |
+| Union definitions | 78 (47 source, 31 header) | 66 (40 source, 26 header) | Twelve removed; classify the remainder below |
 | Inline override regions | 289 | 228 | 61 removed, including six in disabled negative-example code |
 | `inline_depth(0)` regions | 262 | 221 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
@@ -44,6 +44,7 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | `SavedGameHeader::reset` | Byte/dword `isHuman` local | Store the bool result directly in the integer flag array. Removing this matching-only representation costs 100% → 98.2888% in this one function; the old DC Reset predates Complete's loop. |
 | `TViewArmyWindow` | Three local `shownType` enum adapters | DC CodeView proves `ArmyType` is `TCreatureType`. Restore that member type and use it directly; retain the proven int constructor parameter and int `Upgrade` boundaries. Both affected constructors improve when their canonical name-helper calls are restored too. |
 | `game::load` / `game::save` | `TGatePairVectorPointerAlias` and its forced wrapper | Restore the common `loadVector` / `saveVector` templates with bool results and native vector references. The long-vector resize restores retail's zero-filled new elements; the point/long retained writers have identical bytes. Six Load fences disappear, both callers improve, and both claimed writers remain exact. |
+| `game::randomizeUniversity` | `TUniversitySkillsPointerAlias` and its forced wrapper | Restore the DC-proven native aggregate. Retail's elemental-school initializer is Conflux-specific, not a generic record constructor. The map local remains 99.7464%, Load improves to 81.2284%, and explicit Conflux initialization preserves the retained body and all four call/expansion sites. Shared-header collateral is measured below. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -58,10 +59,10 @@ pins, alternate declarations or dummy operations were introduced.
 |---|---:|---|
 | Scalar integer/enum adapters | 32 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
-| Pointer adapters/views | 10 | Two intentional ABI views; eight adapters requiring owner/call-boundary recovery |
+| Pointer adapters/views | 9 | Two intentional ABI views; seven adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **67** | **24 intentional representations; 43 reconstruction adapters/workarounds** |
+| **Total** | **66** | **24 intentional representations; 42 reconstruction adapters/workarounds** |
 
 The 32 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
@@ -97,7 +98,7 @@ admission a blanket waiver for every integer-to-enum conversion. The next step
 is canonical ownership and real input-domain recovery, preserving the attested
 public ABI rather than changing parameter types solely to satisfy callers.
 
-The other 35 remaining definitions are exhaustively grouped here:
+The other 34 remaining definitions are exhaustively grouped here:
 
 | Owner / member | Count | Why retained / removal condition |
 |---|---:|---|
@@ -105,7 +106,6 @@ The other 35 remaining definitions are exhaustively grouped here:
 | `Bitmap16MapPointer`, `Bitmap16ConstMapPointer` | 2 | Pixel reads use 16-bit elements while pitch and row stepping use bytes, including `winmgr::fizzle`. A canonical byte-pitch row-access model is needed before retiring these pointer adapters. |
 | `message` payload and `TIPv4SocketAddress` | 2 | Intentional integer/text message ABI and same-record sockaddr_in/sockaddr API views. Keep shared storage, not two sequential fields. |
 | Local pointer payloads: `advmgr::drawRolloverText`, two hero-screen portrait sends, `swapmgr::textPointerPayload` | 4 | Current retained broadcast overload takes an integer payload. Recover its real call/expansion decision before switching to the message-pointer overload; do not invent a text overload solely to hide the conversion. |
-| `TUniversitySkillsPointerAlias` | 1 | `RandomizeUniversity` passes a four-int default to the record constructor/copy boundary. Directly declaring the record currently introduces the out-of-line Complete constructor where retail has no call (prior control 97.86% vs 99.75%). DC lacks this Complete constructor; its absence there does not establish an inline body. |
 | `TMarketArtifactList` | 1 | The black-market entry accepts bytes; other entry points supply artifact arrays; panels use raw IDs/sentinels and typed artifact APIs. Reconcile entry-point/element ownership, then remove the adapter. |
 | `TFloatLongBits` / `TDoubleLongBits` in bitmap16 and palette; the two `viewwrld::ftol` locals | 6 | Actual float/double bit reinterpretation and low-word extraction for the magic-constant conversion. Numeric casts are not equivalent. Keep the representation unless an equally evidenced implementation replaces it. |
 | `TBlendMask` | 1 | Actual word/dword views used by blend-mask loads, not two independent values. |
@@ -492,12 +492,13 @@ after the validity-signature correction. The pathfinding families additionally
 include the adopted boat/ground changes. Use the frozen snapshots for exact
 reproduction; source anchors intentionally reject the post-adoption tree.
 
-The university family retains the real Complete constructor boundary: a
+The initial university family retained the then-modelled constructor boundary: a
 typed local scores 97.8623% versus 99.7464%; typed local plus `push_back`
 scores 95.6522% while the insert fence remains. Removing that fence expands
 the insertion heavily and scores zero, not because the function disappears.
-Every other tracked game function is unchanged. No fabricated inline or
-no-initialization constructor is used to remove this union.
+Every other tracked game function was unchanged. Those scores did not prove
+generic constructor ownership. The later Conflux-initializer evidence below
+resolves that mistake without a fabricated inline or no-initialization overload.
 
 The Scholar bitfield widths/positions are readable, but NB11's embedded
 type indices in LF_BITFIELD records 0x2f7e-0x2f81 do not resolve to legal
@@ -626,11 +627,10 @@ The disappearing untracked `vector<CampaignScenarioInfo>` destructor was
 referenced only by Load's expanded event-read failure cleanup and its unwind
 handler. That exit now calls the outer `SavedGameHeader` destructor; it is not
 an unrelated function loss. Retail partially expands that outer cleanup but
-retains `SCampaign` destruction, so cleanup boundaries still differ. Load also
-still calls the Complete university default constructor where retail passes
-an uninitialized fill record. That class boundary remains recovery work,
-shared with the retained `TUniversitySkillsPointerAlias`; the template recovery
-does not disguise it with a different declaration.
+retains `SCampaign` destruction, so cleanup boundaries still differ. The
+template-recovery checkpoint also called the university constructor where retail
+passes an uninitialized fill record. The subsequent generic-record/Conflux
+ownership correction below resolves that separate class-boundary error.
 
 The two retained claims remain source-owned, inactive declarations of their
 actual bool/reference instances. The old size/order label join could not
@@ -642,7 +642,7 @@ tests cover the contract; all 169 retail-label tests pass. Both identity
 migrations preserve the original RVAs and exact CUR/MAX/HIST.
 
 The native I/O fixture extracts the actual helper templates and university
-definition/constructor. It checks full round trips, empty/growing/shrinking
+definition/initializer. It checks full round trips, empty/growing/shrinking
 vectors, short headers/payloads, native long zero-fill and signed-short save
 count boundaries. Six intentionally wrong width/count/failure variants fail.
 It preserves retail's unsigned read-result comparison, including its negative
@@ -655,6 +655,70 @@ Historical generators are `generate-game-vector-helper-family.py` and
 to the pre-adoption `6d71f4c3` source; the independent movement-helper changes
 do not alter that TU's inputs. Reproduce those contexts before rebasing a new
 family onto the adopted helpers.
+
+### Generic university records and Conflux initialization
+
+The earlier default-constructor attribution at 0x5d2d80 mistook a Conflux-only
+operation for generic initialization. Two independent source/retail facts
+contradict it. Dreamcast CodeView type 0x1adf is a sixteen-byte struct with
+field list 0x3521: its sole member is the four-element `TSecondarySkill`
+array `skills`, with no constructor. Complete's Load passes an uninitialized
+sixteen-byte fill to an opaque vector resize; automatic four-school stores
+could not disappear across that call. Its randomizer also fills the native
+record directly, with no elemental initialization.
+
+All three retained calls to 0x5d2d80 are in Conflux branches: two in
+`aiEnterTown` (0x5253d0), one in `valueOfTownBuildings` (0x52b1e0).
+`townManager::doUniversity` expands the same four stores. The ordinary member
+`initializeMagicSkills`, defined at the same townmgr source position and
+explicitly called at those four sites, models that role. Its name and historical
+helper kind remain provisional; neither DC nor the unused EAX result uniquely
+proves a historical spelling. The pointer-return model preserves the observed
+ECX input/EAX output and all thirty retail bytes. A void-return negative control
+loses `mov eax,ecx` and changes every store operand. No alternate declaration,
+special no-initialization constructor, new derived class or copied helper body
+is introduced.
+
+The insertion family covers count-insert, single-insert and push_back, raw/native
+records, pointer/reference/member receivers and the existing fence. All 36
+states compile (24 distinct objects), with ten reproduced retained candidates.
+The 13-state ownership follow-up crosses void/pointer initializer results with
+the three APIs and fence controls; all 13 distinct objects compile and ten elites
+reproduce. The retained count-insert boundary remains debt: unpinning all three
+APIs expands the child heavily (0% comparisons). DC's push_back is positive
+evidence for the public wrapper; its inline count-insert child explains retail's
+named call without proving that the wrapper was absent.
+
+The selected native local removes the union at unchanged 99.7464%. Load rises
+80.1570% → 81.2284%; all other common game function bodies remain byte-identical.
+The entire philai/townmgr objects agree with their controls under the single
+explicit initializer rename; mapcell and initialize agree without a rename.
+The adopted five objects reproduce the selected candidate exactly. The source
+claim migrates the initializer's existing RVA with 100% CUR/MAX/HIST.
+
+Full shared-header verification also matters: the overall build remains 96.39%
+linked / 96.13% whole executable, but two unchanged-source callers move slightly.
+`CEnterNameEdit::onKeyPress` is 100% → 99.8868% (two spill slots exchanged), and
+`army::doAttack` is 99.9424% → 99.9040% (address-register allocation). Their MAX
+and HIST remain intact; the full build reports no source-caused MAX reset.
+This is measured collateral, not a loss-free or whole-TU exactness claim.
+Both states of the focused header-only control reproduce: restoring only the
+old constructor declaration recovers those two scores, with all siblings flat.
+Across all 149 raw objects, 141 compare strictly identical (including the two
+explicit-rename Conflux objects). Besides Load and the two changed callers,
+the remaining five differences are data placement or anonymous header-symbol
+identities; all their executable section bytes agree. No untracked executable
+body disappears in this ownership change.
+The shared-header control and frozen contexts are recorded with the generators
+in `docs/vc6/source-families.md`.
+
+The native fixture now tests the actual initializer and generic default
+initialization separately. Preseeded object bytes remain untouched by default
+construction; explicit initialization sets Fire/Air/Water/Earth and returns the
+record address. Wrong-school, wrong-return and automatic-default variants are
+all rejected, in addition to the six stream-contract negative controls. Host
+value-initialization during native vector tests does not assert the unspecified
+bytes of VC6's retail-proven uninitialized fill.
 
 ## Reproduction and verification
 
