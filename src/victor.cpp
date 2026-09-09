@@ -302,12 +302,13 @@ void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
 // successful open clears it even when the header signature is rejected.
 // Retail deliberately ignores the short-read result and always closes an
 // opened file. Preserve that behavior and the planar four-bit normalization.
-// Residual 98.57%: a 60-state extent/store/normalization family identifies
+// Residual 99.05%: a 60-state extent/store/normalization family identifies
 // the four named coordinate snapshots below, raising the body from 83.14% by
 // restoring retail's load schedule. Exhausting all 24 metadata orders against
 // three normalization forms then identifies planes/stride/palette/depth order.
-// The combined condition remains best. Earlier direct extent/conditional
-// variants were flat or worse, and 48 output-store orders peaked at 83.19%.
+// Reading the stored output depth for the fallback restores retail's exact
+// ten-block CFG. Only its byte reload and the EBX/EDI save order remain.
+// Snapshot, predicate and entry-declaration follow-ups are flat or worse.
 VA(0x006042a0, 0x127)  // anchor-caller PCX importers + OpenFile/header offsets
 int __stdcall pcxinfo(const char* filename, PcxData* data)
 {
@@ -335,7 +336,7 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
         data->m_vbitcount = data->m_bpPixel * data->m_nplanes;
         if ((header.m_bitsPerPixel == victorMonochrome
              && header.m_planes == victorPcxEgaPlanes)
-            || header.m_bitsPerPixel == victorFourBitColor)
+            || static_cast<unsigned char>(data->m_bpPixel) == victorFourBitColor)
             data->m_vbitcount = victorIndexedColor;
     } else {
         status = -16;
