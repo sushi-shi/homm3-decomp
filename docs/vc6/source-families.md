@@ -1584,3 +1584,115 @@ calls, as retail does; its later expanded `videoSoundOnOff` still leaves a
 `serviceSounds` call where retail calls that ordinary helper. Source-labelled
 comparison first differs at the Smacker-handle guard. These specific residuals
 remain recovery leads; equal call totals are not evidence of equal boundaries.
+
+### Restoring map readers and the enemy-marking implementation
+
+The next recovery starts from PR #4's `30ecbab7` full-build checkpoint.
+`NewfullMap::readObject` had four Dreamcast-proven ordinary readers flattened
+into its switch while their named definitions remained inactive stubs.
+Restore `readBoatData`, `readHolyGrailData`, `readShrineData` and
+`readShipyardData` in mapcell.cpp at their original source positions, with
+ordinary declarations using the PC `TAbstractFile` stream. DC 0xed984,
+0xedd14, 0xedde8 and 0xefe28 prove the signatures, locals, reads and status
+returns; DC readObject calls them at source lines 3350/3379/3388/3406.
+Retail's corresponding arms prove their inline expansions, field layout and
+character conversions. Complete defers the old shipyard terrain scan to
+`loadShipyards`. Grail/shrine retain their final short-read checks in the
+helper; the caller discards status, so those final comparisons disappear
+naturally in the retail expansion.
+
+`generate-map-reader-helper-family.py` records the initial two-state byte
+control in context `a70571d26b1e09d9f9f3`, comparing all 76 header-dependent
+TUs. Both objects reproduce; candidate `6835a1c0264f821a3d5faaff` raises the
+reader from 56.6382% to 60.0594%. Restoring the helpers also exposes an older
+placement error: the existing inline `CObject::getTrigger` (DC line 1119)
+sat before line 1095's reader. The final source moves it between
+`getObjectTypePtr` and `findTrigger`; its body and declaration are preserved.
+That mandatory source-order correction is score-neutral, and the next full
+checkpoint passes the ownership gate. Replay the initial generator at
+`30ecbab7` with the experiment script available; the control itself predates
+this separate order correction.
+
+The host reader oracle imports both the recovered helper source and the
+actual four caller arms. It covers all 256 byte values and every short-read
+boundary, including partial shipyard state, boat arguments, read sizes/order,
+and discarded caller status. Five negative controls reject wrong boat owner,
+grail radius, shrine value, boat coordinate and status. This is an effect
+oracle, not a replacement for VC6 layout or byte validation.
+
+`generate-quest-guard-append-family.py` then tests 36 source choices at the
+corrected full checkpoint (`376ad64f07b280fd969d`): DC's function-scope
+read-count local and five separate read/result-test statements, plus actual
+quest-vector iterator/reference lifetimes and public append spelling.
+Twenty distinct objects and ten retained candidates reproduce. Candidate
+`159e2077aa36cf6abc2d1005` keeps the count local and uses `push_back` in the
+QUEST_GUARD arm, reaching 60.9729% without any sibling movement. The count
+alone is byte-flat; preserve its positive source evidence. Named vector
+references and inline data-end expressions add no gain. Both insertion
+workers still expand where retail keeps two-argument calls, and the seer
+constructor still expands: this is partial recovery, not a closed boundary.
+The native quest-arm oracle imports the actual constructor and reader and
+checks append-before-index behavior, record copy, existing vector contents,
+null quests and optional data registration across empty/reserved vectors.
+Every explored arm passes; five wrong controls fail. The generator accepts
+an adopted member only after an exact round trip through its finite family.
+
+The active `searchArray::markEnemy` body was a more direct failure: an
+integrated carcass stub replaced the existing implementation. The earlier
+source still contains the real body after its inactive reference stub, and
+DC 0xa0a44 independently proves get_hex, the nested minimum-cost guard,
+valid-move flag and unsigned-short cost store. Retail contains the matching
+expansions in both callers. Restoring that one ordinary body in place gives:
+
+| Function | Before CUR | Recovered CUR |
+| --- | ---: | ---: |
+| `findCombatPath` | 50.9545% | 92.2920% |
+| `markTeleport` | 71.6135% | 100% |
+| Retained `getHex` | 0% | 100% |
+
+`generate-mark-enemy-restoration-family.py` exhausts the two-state control
+in `8a71980a4ee16edd6844`; both objects reproduce. The adopted implementation
+is candidate `10a61ce51f0271cdda248e93`. The native oracle imports its actual
+body and covers existing flags, cheaper/equal/dearer costs, negative and
+32-bit boundary costs, unsigned-short narrowing, neighboring-cell preservation
+and accessor ordering. The empty-body control and four incorrect controls
+fail. Retail comparison verifies the four retained getHex calls inside
+findCombatPath's mark expansions; teleport marking and the retained accessor
+are exact again. The previous combat-path peak is fully recovered.
+
+An audit of all 4,784 active definitions at the original checkpoint found
+only this explicit active stub. The source-ownership gate now rejects
+`ACTIVE-STUB` even when ownership and signature are correct. It enumerates
+active definitions through the AST, then checks placeholder comments while
+ignoring string/character literals. Tests cover inactive stubs, unannotated
+source/header bodies, actual empty constructors and literal marker text. The
+new gate also rejects the real pre-fix markEnemy snapshot as a negative control.
+
+### Crossover lifetime recovery bound
+
+`generate-crossover-lifetime-family.py` tests the current retail-only
+`SCampaign::pruneCrossoverHeroes` body, preserving the repeated inflated-size
+read after the virtual pool query, signed scenario count, canonical max,
+artifact accessors, sort and vector assignment. Thirty-six combinations of
+real hero references/pointers, scenario-vector access, sort endpoints and
+front/begin access produce 24 distinct objects and ten reproduced retained
+candidates (`98fcd19748a92c53c1fc`). None improves the original 20.6088%.
+The caller stays unchanged. Its former five extracted phase wrappers have
+no independent source evidence and are not restored to regain their score.
+
+The combined map/path checkpoint passes the full build, fresh retail delink
+and all gates: 95.04% executable matching (from 94.98%), 3,940/4,751 current
+exact functions, 4,788 canonical definitions and zero ownership violations.
+All 71 relevant ownership and native-oracle tests pass. The final mapcell
+object matches its reproduced refinement object across 434 sections and
+2,094 relocation destinations; findpath matches its restoration object across
+54 sections and 238 relocation destinations, with function locations checked.
+
+Five CUR rows improve. Two unchanged-source rows move with the four required
+map-header declarations: `army::doAttack` 99.9424% -> 99.9040%, and
+`advManager::doCombat` 98.5379% -> 98.1758%. Their MAX and HIST remain held.
+`CEnterNameEdit::onKillFocus` returns from 99.8710% to exact. All 4,752 ledger
+rows and all historical peaks survive; no unchanged-source MAX is lowered.
+The existing 200 inline-depth pins are unchanged. These results preserve
+source structure through measured header collateral and leave the wider
+map/campaign recovery queue open.

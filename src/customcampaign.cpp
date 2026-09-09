@@ -2856,6 +2856,11 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 // the canonical options interface and moving the loop-index declaration
 // were byte-neutral. Those measurements predate this ownership correction;
 // no new compilation or match result is claimed here.
+// Current-source lifetime control (2026-09-09): 36 variants naming a
+// source hero, scenario vector and sort endpoints, plus front()/begin()
+// access, produce 24 objects and no gain above 20.6088. Retained helper
+// calls are the remaining frontier; do not restore the five budget-only
+// wrappers to recover their historical percentage.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 {

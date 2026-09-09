@@ -1015,16 +1015,6 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     return -1;
 }
 
-// E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
-// out-of-line SH4 body; Complete expands it into every admitted retail use.
-inline type_point CObject::getTrigger() const
-{
-    int resultX;
-    int resultY;
-    findTrigger(resultX, resultY);
-    return type_point(resultX, resultY, m_z);
-}
-
 // E:\gamedcs\mapcell.cpp:759
 // The save-game driver: two layers, the objects, then the five custom
 // record sets in the order their vectors sit in the class - black boxes,
@@ -1501,22 +1491,36 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
     return size * size;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:1095
-DC_ONLY(0xed984, 0x98)
-int NewfullMap::readBoatData(void* infile, CObject* boatObject)
+// Original: NewfullMap::readBoatData, mapcell.cpp:1095, dc 0xed984.
+// DC proves the ordinary helper, boatType/x/y locals and call order.
+// Retail readObject's BOAT arm expands this body and discards status.
+int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
 {
-    // @stub
+    signed char boatType = static_cast<signed char>(
+        m_objectTypes[boatObject->m_typeIndex].m_extra);
+    int x;
+    int y;
+    boatObject->findTrigger(x, y);
+    boatObject->m_extraInfo = g_game->createBoat(
+        x, y, boatObject->m_z, -1, 1, boatType);
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:1110
 VA(0x004fec10, 0x1D)  // anchor-global, dc 0xeda1c
 CObjectType* CObject::getObjectTypePtr() const
 {
     return &g_game->m_worldMap.m_objectTypes[m_typeIndex];
+}
+
+// E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
+// out-of-line SH4 body; Complete expands it into every admitted retail use.
+inline type_point CObject::getTrigger() const
+{
+    int resultX;
+    int resultY;
+    findTrigger(resultX, resultY);
+    return type_point(resultX, resultY, m_z);
 }
 
 // E:\gamedcs\mapcell.cpp:1131
@@ -1576,23 +1580,48 @@ int NewfullMap::readGeneratorData(
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:1199
-DC_ONLY(0xedd14, 0xD2)
-int NewfullMap::readHolyGrailData(void* infile, CObject* grailObject)
+// Original: NewfullMap::readHolyGrailData, mapcell.cpp:1199, dc 0xedd14.
+// Before normalization (locals): char_buffer. DC proves count, padding[3],
+// both read checks and -1/0 status; readObject discards the return, so retail
+// eliminates the final padding-read comparison from its inline expansion.
+int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 {
-    // @stub
+    char charBuffer;
+    int count;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    g_game->m_ultimateArtifactX = grailObject->m_x;
+    g_game->m_ultimateArtifactY = grailObject->m_y;
+    g_game->m_ultimateArtifactZ = grailObject->m_z;
+    g_game->m_ultimateRadius = charBuffer;
+
+    char padding[3];
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
+        return -1;
+    return 0;
 }
 
-// E:\gamedcs\mapcell.cpp:1224
-DC_ONLY(0xedde8, 0x70)
-int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
+// Original: NewfullMap::readShrineData, mapcell.cpp:1224, dc 0xedde8.
+// Before normalization (locals): char_buffer. The ordinary helper keeps its
+// count local and both read checks. Its discarded final status leaves only
+// the second virtual read in readObject's retail expansion.
+int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
 {
-    // @stub
-}
+    char charBuffer;
+    int count;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    shrineObject->m_shrineInfo.m_spell = charBuffer;
 
-#endif  // @carcass
+    char padding[3];
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
+        return -1;
+    return 0;
+}
 
 // E:\gamedcs\mapcell.cpp:1246
 VA(0x004fee50, 0xBC)  // order-map: calls readString 0x4c6010; callers exactly readArtifact/readSpellScroll/readResource/readBlackBox (DC-isomorphic), dc 0xede58
@@ -2642,16 +2671,28 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     return count < sizeof(padding) ? -1 : 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:2383
-DC_ONLY(0xefe28, 0x1C2)
-int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject)
+// Original: NewfullMap::readShipyardData, mapcell.cpp:2383, dc 0xefe28.
+// Before normalization (locals): char_buffer. DC proves the ordinary member,
+// count/padding locals and two guarded reads. Complete defers the later DC
+// trigger/terrain scan to loadShipyards; its readObject arm only initializes
+// the two boat coordinates after the reads, then discards the status.
+int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)
 {
-    // @stub
-}
+    char charBuffer;
+    int count;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    shipyardObject->m_shipyardInfo.m_owner = charBuffer;
 
-#endif  // @carcass
+    char padding[3];
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
+        return -1;
+    shipyardObject->m_shipyardInfo.m_boatX = 0xff;
+    shipyardObject->m_shipyardInfo.m_boatY = 0xff;
+    return 0;
+}
 
 // The twelve adjacent squares LoadShipyards tests, in retail order. The
 // body strength-reduces the indexed walk to a pointer at +4 (the first dy),
@@ -3811,10 +3852,15 @@ void NewfullMap::soDTransformRandomDwellings()
 //
 // The switch is a jump table over 5..218 with a 214-entry byte index, and its
 // arm order is retail's own source order - the reconstruction keeps it.
-// Twenty of the twenty-five arms are a single call; the five inlined ones are
-// HERO_PLACEHOLDER, SHIPYARD, HOLY_GRAIL, SEER, SHRINE1/2/3, QUEST_GUARD and
-// the three RANDOM_DWELLING flavours, which is what the Dreamcast roster's
-// missing readHolyGrail/readShrine/readShipyard rows mean here.
+// Dreamcast calls the ordinary readBoatData/readShipyardData/
+// readHolyGrailData/readShrineData members. Their definitions stay at their
+// original mapcell.cpp positions, and Complete expands those calls here.
+// No standalone retail slot is needed to preserve those source boundaries.
+// The Complete-only placeholder, quest and dwelling records stay in their
+// caller arms. Historical measurements below predate this restoration.
+// Restoring all four helpers raises 56.6382 -> 60.0594 in the 76-TU control.
+// The native-vector frontier in QUEST_GUARD remains the large residual;
+// no invented arm wrapper or additional inline-depth pin is introduced.
 //
 // MINE and LIGHTHOUSE share a tail: retail cross-jumps the mine's non-
 // abandoned arm into the lighthouse's `readMineData` call rather than
@@ -3913,30 +3959,42 @@ void NewfullMap::soDTransformRandomDwellings()
 // where the Read result feeds an UNSIGNED compare whose operand VC6 would
 // otherwise fold; a `< sizeof(...)` compare on a plain `char` read is
 // already in retail's shape.
+// Follow-up after ordinary-reader restoration: keep DC's function-scope
+// count and the five separate header-read/result-test statements. The
+// 36-state QUEST_GUARD lifetime family finds public push_back at 60.9729%
+// versus direct two-argument insert at 60.0594%; no sibling score moves.
+// Both guard/data insertion workers still expand where retail calls the
+// two-argument bodies, so this does not close that native-vector frontier.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
 {
+    int count;
     char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     tempObject->m_x = value;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     tempObject->m_y = value;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     tempObject->m_z = value;
 
     int typeIndex;
-    if (infile->read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    count = infile->read(&typeIndex, sizeof(typeIndex));
+    if (count < sizeof(typeIndex))
         return -1;
     tempObject->m_typeIndex = static_cast<unsigned short>(typeIndex);
 
     char padding[5];
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
         return -1;
 
     switch (m_objectTypes[tempObject->m_typeIndex].m_objectType) {
@@ -3955,16 +4013,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         readHeroData(infile, tempObject, mapVersion);
         break;
 
-    case BOAT: {
-        signed char boatType = static_cast<signed char>(
-            m_objectTypes[tempObject->m_typeIndex].m_extra);
-        int triggerX;
-        int triggerY;
-        tempObject->findTrigger(triggerX, triggerY);
-        tempObject->m_extraInfo = g_game->createBoat(
-            triggerX, triggerY, tempObject->m_z, -1, 1, boatType);
+    case BOAT:
+        readBoatData(infile, tempObject);
         break;
-    }
 
     case RANDOM_TOWN:
     case TOWN:
@@ -4011,37 +4062,18 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         readSpellScrollData(infile, tempObject);
         break;
 
-    case SHIPYARD: {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
-            break;
-        tempObject->m_shipyardInfo.m_owner = value;
-
-        char shipyardPadding[3];
-        if (infile->read(shipyardPadding, sizeof(shipyardPadding))
-                < sizeof(shipyardPadding))
-            break;
-        tempObject->m_shipyardInfo.m_boatX = 0xff;
-        tempObject->m_shipyardInfo.m_boatY = 0xff;
+    case SHIPYARD:
+        readShipyardData(infile, tempObject);
         break;
-    }
 
     case RANDOM_RESOURCE:
     case RESOURCE:
         readResourceData(infile, tempObject);
         break;
 
-    case HOLY_GRAIL: {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
-            break;
-        g_game->m_ultimateArtifactX = tempObject->m_x;
-        g_game->m_ultimateArtifactY = tempObject->m_y;
-        g_game->m_ultimateArtifactZ = tempObject->m_z;
-        g_game->m_ultimateRadius = value;
-
-        char grailPadding[3];
-        infile->read(grailPadding, sizeof(grailPadding));
+    case HOLY_GRAIL:
+        readHolyGrailData(infile, tempObject);
         break;
-    }
 
     case BLACK_BOX:
         readBlackBoxData(infile, tempObject, mapVersion);
@@ -4069,15 +4101,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 
     case SHRINE1:
     case SHRINE2:
-    case SHRINE3: {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
-            break;
-        tempObject->m_shrineInfo.m_spell = value;
-
-        char shrinePadding[3];
-        infile->read(shrinePadding, sizeof(shrinePadding));
+    case SHRINE3:
+        readShrineData(infile, tempObject);
         break;
-    }
 
     case OCEAN_BOTTLE:
     case SIGN:
@@ -4196,9 +4222,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         TQuestGuard tempGuard;
         tempGuard.read(infile);
         {
-            std::vector<TQuestGuard>::iterator guardEnd
-                = m_questGuardList.end();
-            m_questGuardList.insert(guardEnd, tempGuard);
+            m_questGuardList.push_back(tempGuard);
             tempObject->m_extraInfo = m_questGuardList.size() - 1;
         }
         if (tempGuard.m_quest) {

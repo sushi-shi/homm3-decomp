@@ -870,9 +870,32 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     return errors, dict(counts)
 
 
+def active_stub_definitions(definitions: list[Definition], root: Path) -> list[str]:
+    """Reject explicit placeholder comments inside AST-proven active bodies."""
+    texts = {}
+    errors = []
+    # Consume literals before comments so a diagnostic string containing the
+    # marker cannot turn a real implementation into a placeholder. These are
+    # VC6 sources; raw C++11 string literals are outside their language profile.
+    tokens = re.compile(r'''"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|//[^\n]*|/\*[\s\S]*?\*/''')
+    for definition in definitions:
+        if definition.file not in texts:
+            texts[definition.file] = (root / definition.file).read_text()
+        body = texts[definition.file][definition.offset:definition.end]
+        if '@stub' not in body:
+            continue
+        if any(re.match(r'(?:\/\/|\/\*)\s*@stub\b', token.group())
+               for token in tokens.finditer(body)):
+            errors.append(f'ACTIVE-STUB {definition.file}:{definition.line} '
+                          f'{definition.name}: active definition contains an @stub placeholder; '
+                          'recover its implementation or keep the reference under #if 0')
+    return errors
+
+
 def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     from homm3.retail_labels.fragments import all_claims
     definitions, errors, reached = collect(root, jobs, fresh)
+    errors.extend(active_stub_definitions(definitions, root))
     dc_only, failures = read_filter(root / 'config/dc_only.tsv', ('file', 'function', 'line'))
     errors.extend(failures)
     win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))

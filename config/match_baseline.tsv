@@ -540,7 +540,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	1c749144bef3
 army	?cure@army@@QAEXHHPBVhero@@@Z	89.9485	100.0000	100.0000	0x46500	b798d45ffe05
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	009dce137b6d
-army	?doAttack@army@@QAEEPAV1@H@Z	99.9424	99.9424	99.9962	0x41610	de21b1a97ac2
+army	?doAttack@army@@QAEEPAV1@H@Z	99.9040	99.9424	99.9962	0x41610	de21b1a97ac2
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	933b8d8871b4
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	89b7919ee308
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	ecdb5f58e893
@@ -1649,7 +1649,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?creatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.5134	85.5134	91.5889	0xabdc0	127b1cb32604
 events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.4678	99.4678	99.9911	0xa84f0	75054d227556
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	65ff4c6ab04a
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	98.5379	99.1139	0xad470	2819eb9aed71
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.1758	98.5379	99.1139	0xad470	2819eb9aed71
 events	?doCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	264555464136
 events	?doCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	613b7a452b9b
 events	?doCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	189dc96286ef
@@ -1770,15 +1770,15 @@ findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	97.6228	97.6228	100.0000
 findpath	?clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	833656f7d951
 findpath	?close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	8710ae12491e
 findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
-findpath	?findCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	50.9545	50.9545	92.2920	0xb3400	51a6e35010fe
-findpath	?getHex@searchArray@@QBEPAUpathCell@@J@Z	0.0000	0.0000	100.0000	0xb3b90	9b6c8709ed5a
+findpath	?findCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	92.2920	92.2920	92.2920	0xb3400	51a6e35010fe
+findpath	?getHex@searchArray@@QBEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90	9b6c8709ed5a
 findpath	?getTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	f3526a484661
 findpath	?getTravelTime@searchArray@@QBEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20	e65c9f0aefcc
 findpath	?init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460	1bd96ae63569
 findpath	?insert@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QAEXPAUpathCell@@IABU3@@Z	100.0000	100.0000	100.0000	0xb3f70	-
 findpath	?isValid@type_point@@QBE_NXZ	100.0000	100.0000	100.0000	0xb1330	71948554b40b
 findpath	?lowerDoor@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb3f10	5bbbee669bd8
-findpath	?markTeleport@searchArray@@QAEXPBVarmy@@J@Z	71.6135	100.0000	100.0000	0xb2ff0	5e97b0060df9
+findpath	?markTeleport@searchArray@@QAEXPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb2ff0	5e97b0060df9
 findpath	?minimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880	5174335f564f
 findpath	?pushCombatPoint@searchArray@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0xb3bb0	f4210878228a
 findpath	?pushPoint@searchArray@@QAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	99.0424	99.5758	99.5758	0xb1a70	0913930b4936
@@ -2599,7 +2599,7 @@ mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.
 mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	97.4012	97.4012	97.4012	0x104470	d07a52fa8434
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020	fe01f358cc0b
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	97.2906	97.2906	97.2906	0x1013b0	b2f16206527a
-mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	56.6382	56.6382	97.4369	0x102e00	5548e2b6a285
+mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	60.9729	60.9729	97.4369	0x102e00	db27a4180dbf
 mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780	99bc0dc680ad
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff4d0	206480e3dd6b
 mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x100b30	3c32a9802fd0
@@ -4009,7 +4009,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	dea2b9a188f1

@@ -1298,10 +1298,24 @@ bool searchArray::buildCombatPath(const army* currentArmy,
 // accessor at 0x4b3b90 in FindCombatPath's four mark expansions. The former
 // markEnemySearched clone and its inline-depth pin are removed. Different
 // caller expansion decisions do not imply different source helpers.
+// Recovery, 2026-09-09: the active definition had accidentally retained its
+// carcass stub. DC 0xa0a44 and retail's six caller expansions prove the flag,
+// minimum-cost guard and unsigned-short store below. Restoring this body
+// recovers FindCombatPath 50.9545 -> 92.2920 and MarkTeleport 71.6135 -> 100;
+// the retained getHex body is emitted at 100 again. An empty-body negative
+// control loses those effects and all three recoveries.
 // E:\gamedcs\findpath.cpp:1172
 void searchArray::markEnemy(long hex, long cost)
 {
-    // @stub
+    // Before normalization (locals): combat_cell.
+    hexcell* combatCell = &g_combatManager->m_cells[hex];
+    pathCell* cell = getHex(hex);
+    if (combatCell->m_validMove) {
+        if (cell->m_cost <= cost)
+            return;
+    }
+    combatCell->m_validMove = 1;
+    cell->m_cost = static_cast<unsigned short>(cost);
 }
 
 // E:\gamedcs\findpath.cpp:1187

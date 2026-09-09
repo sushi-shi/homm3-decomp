@@ -17,6 +17,31 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_active_stub_gate_uses_active_definitions_and_comment_tokens(self):
+        from homm3.match.source_ownership import active_stub_definitions, scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'include').mkdir()
+            (root / 'include/widgets.h').write_text(
+                'struct Widget { Widget() {} void pending() { /* @stub */ } };\n')
+            (root / 'src/widgets.cpp').write_text(
+                '// Unicode evidence: café — source.\n#include "widgets.h"\n'
+                '#if 0\nvoid inactive() { /* @stub */ }\n#endif\n'
+                'void active() {\n    // @stub\n}\n'
+                'const char* literal() { return "// @stub /* @stub */"; }\n'
+                'const char* escaped() { return "\\\" // @stub"; }\n'
+                "char slash() { return '/'; }\n"
+                'void empty() {}\n'
+                'void historical() { /* Previously an @stub, now a real empty body. */ }\n')
+            definitions, errors, _ = scan_unit({'source': 'src/widgets.cpp'}, root)
+            self.assertEqual(errors, [])
+            errors = active_stub_definitions(definitions, root)
+            self.assertEqual(len(errors), 2, errors)
+            self.assertTrue(any('include/widgets.h:1 Widget::pending' in error for error in errors))
+            self.assertTrue(any('src/widgets.cpp:6 active' in error for error in errors))
+            self.assertTrue(all(error.startswith('ACTIVE-STUB ') for error in errors))
+
     def test_reviewed_inline_row_recovers_owner_and_keeps_duplicate_checks(self):
         from dataclasses import replace
         from types import SimpleNamespace
@@ -926,6 +951,7 @@ class CompilerIdentityTest(unittest.TestCase):
                  mock.patch('homm3.match.source_ownership.read_filter', return_value=({}, [])), \
                  mock.patch('homm3.match.source_ownership.read_dc', return_value=[]), \
                  mock.patch('homm3.match.source_ownership.compare', return_value=([], {})), \
+                 mock.patch('homm3.match.source_ownership.active_stub_definitions', return_value=[]), \
                  mock.patch('homm3.retail_labels.fragments.all_claims', return_value=[claim]):
                 result = audit()
             self.assertEqual(len(result['unpaired_generated_claims']), 1)

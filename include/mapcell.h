@@ -2136,6 +2136,12 @@ public:
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
     int loadTownEventList(TAbstractFile* infile, int saveVersion);
+    // Ordinary mapcell.cpp readers expanded in Complete's readObject.
+    // DC source lines 1095, 1199, 1224 and 2383; pointer object parameters.
+    int readBoatData(TAbstractFile* infile, CObject* boatObject);
+    int readHolyGrailData(TAbstractFile* infile, CObject* grailObject);
+    int readShrineData(TAbstractFile* infile, CObject* shrineObject);
+    int readShipyardData(TAbstractFile* infile, CObject* shipyardObject);
     int readGeneratorData(TAbstractFile* infile, CObject* object);
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
     int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
