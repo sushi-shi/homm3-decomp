@@ -64,11 +64,17 @@ topology is not a compiler-generation effect.
 
 The palette initializer's first broad source family crossed entry guards,
 color-count construction, and loop-local order over 120 candidates. A named
-bitmap-header pointer is the sole improving source fact: it preserves retail's
-otherwise redundant depth reload and raises the body from 88.8478% to 94.6087%.
-All guard and loop-local alternatives collapse to the same object once that
-snapshot exists; the remaining delta is the helper expansion's EBX/EBP save
-placement. Four further register-hint variants also emit one unchanged object.
+bitmap-header pointer preserves retail's otherwise redundant depth reload and
+raises the body from 88.8478% to 94.6087%. A later real per-iteration index
+snapshot raises it again to 95.1630%: it reproduces retail's EBX/EBP entry saves
+and final restore order. The loop still retains a separate scaled old-index
+temporary and allocates colors/index/shade to EBP/EDI/EDX where retail uses
+EDI/EDX/ECX. Four follow-ups exhaust 66 scalar-type/update combinations, thirteen
+zero-initialization orders, eleven coalescing forms, sixty header/count/loop
+register-hint combinations, and twelve real member-reference/pointer bindings.
+They produce six, two, five, four, and six distinct objects respectively without
+exceeding the retained snapshot. This bounds the remaining register schedule
+without changing the ordinary upload-helper boundary.
 
 The upload helper retains its natural stack-resident status and failure-only
 `-14` assignment at 77.1403%. A 97-state family crossed declaration position,
