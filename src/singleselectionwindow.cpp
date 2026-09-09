@@ -268,6 +268,11 @@ void startMouseThread()
 // StartMouseThread immediately above expands there.  Marking this body
 // non-inlinable preserves the Dreamcast-proven helper boundary and that
 // asymmetric retail lowering without changing either function's source order.
+// A 36-state global-handle-reference/early-return family preserves every
+// reload and zero store but cannot reproduce the split without this fence:
+// GenerateRandomMap rises 92.6386% -> 97.9759%, while SetupScenarioOptions
+// falls 100% -> 90.1470%. Mutable/const references and both guard forms
+// share that score tradeoff; no source alternative is retained.
 #pragma auto_inline(off)
 // Before normalization (function): StopMouseThread.
 VA(0x00577810, 0x61)  // event/handle teardown and pointer restore, dc 0x12fdd4
@@ -3981,12 +3986,19 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // A `??_G<C>` needs C's own vtable to be emitted, and an abstract novtable
 // interface never emits one. Leave the claim; do not spend a lane on it.
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateTask)  // wrapper calls the task dtor below; DC concrete-proc wrapper at 0x1489f0
-#pragma auto_inline(off)
+// No auto-inline override: the two-state control preserves every tracked
+// score and 395 of 396 emitted bodies. Only the untracked implicit Proc
+// destructor changes, from a jump to this body into the same 38-byte teardown
+// (identical instructions and delete relocation; 32 additional padded bytes).
+// Do not call this an ICF fix: genuine VC6 links with /OPT:ICF still keep the
+// ordinary non-COMDAT Task body separate from the generated Proc COMDAT.
+// Both remain emitted; callers keep their original symbols and source calls.
+// The separate dead scalar-wrapper claim and ownership/link-layout questions
+// above are not solved by removing an unnecessary code-generation override.
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
 {
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\singleselectionwindow.cpp:4074
 VA(0x00583f20, 0xEF)  // anchor-callee DrawBasicMapInfo 0x5840f0 selects it over GetMapName on m_flag64/m_flag65; body owns the header +0x33d fileName / +0x58c title reads and the general-text 508/509 fallbacks, size 1.03x dc 0xE6, dc 0x139a20
@@ -5056,15 +5068,16 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // progress bar advances one step; the generator's result code selects one of
 // three general-text failure dialogs.
 //
-// Residual (91.9718%): one construct, and it is a shared-helper conflict
+// Residual (92.6386%): the main delta is a shared-helper conflict
 // rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
 // WaitForSingleObject, the two CloseHandles and the pointer restore all
 // inline, one extra branch) while keeping it OUT of line at
 // SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
 // around its definition above buys. Measured both ways in one build:
-// dropping the pragma takes this row 91.9718 -> 96.9735 and
-// SetupScenarioOptions 100.0000 -> 90.1470, a net loss of about 100 bytes
-// and a ratchet break, so the pragma stays and this call stays a call.
+// dropping the pragma takes this row 92.6386 -> 97.9759 and
+// SetupScenarioOptions 100.0000 -> 90.1470. The 36-state real-handle-lifetime
+// follow-up reproduces that same tradeoff throughout its unfenced options;
+// it does not recover the split, so the pragma stays and this call stays a call.
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.

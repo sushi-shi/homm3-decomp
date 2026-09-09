@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
-| Inline override regions | 289 | 223 | 66 removed, including six in disabled negative-example code |
+| Inline override regions | 289 | 222 | 67 removed, including six in disabled negative-example code |
 | `inline_depth(0)` regions | 262 | 217 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
-| `auto_inline(off)` regions | 20 | 6 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications |
+| `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 468 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 466 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 60 active inline overrides were removed; counting
-all 66 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 61 active inline overrides were removed; counting
+all 67 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -375,10 +375,11 @@ is mostly PC-only teardown, so missing PC statements are not assertion proof.
 call and Complete's changed queue payload; its remaining caller dependency
 is measured below.
 The empty `CNewPlayerUpdateTask` destructor has the previously measured
-untracked derived-destructor expansion. These remain reconstruction debt,
+untracked derived-destructor expansion, reviewed and removed below. These remain reconstruction debt,
 not candidates for invented checks or declarations merely to alter inlining.
 The later volume lifetime recovery below retires `convertVolume` without an
-assertion or additional operation; six auto-inline regions remain.
+assertion or additional operation; the later task-destructor review leaves
+five auto-inline regions.
 
 ### Further reduction from `ab315284`
 
@@ -958,6 +959,22 @@ and whole-image**, with one raised checkpoint, no MAX reset and no lost banked
 RVA. The current census is **223 overrides** (217 depth-zero, six auto-inline-off)
 and **64 unions**. See the
 [bank controls](source-families.md#creature-bank-and-resource-cost-boundaries).
+
+The task-destructor follow-up removes another auto-inline region without
+changing any tracked score. Its two reproduced states are not whole-object
+identical: the generated Proc destructor grows from a jump thunk to the exact
+retained Task teardown, adding 32 padded bytes. All other 395 emitted bodies
+and relocation destinations stay fixed; all 737 non-debug sections preserve
+their order/attributes and all other bytes. Genuine VC6 linker controls refute
+the tempting ICF explanation: the ordinary non-COMDAT Task body remains
+separate. No source interface or declaration is changed to force a fold.
+The independent 36-state mouse-handle family finds no safe removal and keeps
+that override. Full delinking and all gates preserve **4074/4764 exact and
+96.38% linked/whole-image**, with no score or history changes. The current
+census is **222 overrides** (217 depth-zero, five auto-inline-off) and
+**64 unions**. See the
+[task and mouse controls](source-families.md#mouse-thread-lifetimes-and-inherited-task-teardown)
+for the explicit untracked-code and linker limitations.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
