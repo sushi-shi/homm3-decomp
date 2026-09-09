@@ -5193,7 +5193,11 @@ void townManager::doPortalOfSummoning()
 // spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
 // Combining the extra/special-building custom-text guards removes the goto
-// but lowers 100% to 97.7551%; the current custom-text join is retained.
+// but lowers 100% to 97.7551%. Keeping the Extra and Special tests separate
+// in a for/break scope removes that join with all 824 compiled bytes and 22
+// relocation names/addends unchanged. Both guard polarities are exact;
+// do/while(0) gives 99.9864%, and switch fallthrough gives 98.0918%. Preserve
+// the original separator order, string temporary and shared title tail.
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
@@ -5210,13 +5214,12 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     } else if (buildingId < DWELLING_0_ID) {
         strcpy(buffer, g_buildingDescTown[type * 11 + buildingId]);
         if (type == 1 && extended) {
-            if (buildingId == EXTRA_0_ID) {
-                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
-                strcat(buffer, g_rampartExtraDesc);
-                goto emit_custom;
-            }
-            if (buildingId == SPECIAL_BUILDING_ID) {
-            emit_custom:
+            for (;;) {
+                if (buildingId == EXTRA_0_ID) {
+                    strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                    strcat(buffer, g_rampartExtraDesc);
+                } else if (buildingId != SPECIAL_BUILDING_ID)
+                    break;
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
                 if (thisTown->m_pondAmount == 0) {
                     strcat(buffer, g_generalText->getText(678));
@@ -5227,6 +5230,7 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
                                        g_rampartCustomText[thisTown->m_pondResource])
                                        .c_str());
                 }
+                break;
             }
         }
     } else {

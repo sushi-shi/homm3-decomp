@@ -1,15 +1,17 @@
 # Goto reconstruction audit
 
-The completed audit leaves **58 goto statements in 31 functions across 18 files**.
-That is **258 fewer than the initial 316 (81.6%)**, across 106 functions;
-92 functions and 37 files no longer contain gotos. Every surviving statement
-has an individual disposition below. The completion pass removes nine more
-original sites, then also removes two PCX sites introduced by parallel work.
-The integrated result preserves all 4,764 incoming current scores, maxima
-and historical peaks. Each removal preserves emitted function bytes and
-relocation references/addends relative to its own reproduced control.
-The preceding source-scope pass removed 31 statements and corrected several
-retail spell-immunity switch routes. These are separate measured checkpoints.
+The current inventory is **54 goto statements in 28 functions across 17 files**.
+That is **262 fewer than the initial 316 (82.9%)**, across 108 functions;
+95 functions and 38 files no longer contain gotos. Every surviving statement
+has an individual disposition below. The latest four removals preserve the
+three affected functions' bytes and relocation references/addends, including
+all current scores and sibling scores in their controlled families.
+
+The preceding completion pass removed nine more original sites and two PCX
+sites introduced by parallel work. Its integrated result preserved all 4,764
+incoming CUR/MAX/HIST triples. The source-scope pass before that removed 31
+statements and corrected retail spell-immunity switch routes. The measured
+checkpoints below distinguish these compiler contexts.
 
 The isolated audit removed **198 statements (62.7%)**, across 83 functions,
 without lowering any current score. That checkpoint contained 118 statements
@@ -79,8 +81,8 @@ adopted in that function.
 Local manifests, candidate results and evidence outputs are in
 `build/goto-audit/` (initial workspace), `build/goto-followup/`,
 `build/goto-more/`, `build/goto-residuals/`, `build/goto-integration/`,
-`build/goto-after-merge/`, `build/goto-next/`, `build/goto-completion/`
-and `build/source-families/`. These are scratch artifacts; source-specific
+`build/goto-after-merge/`, `build/goto-next/`, `build/goto-completion/`,
+`build/goto-extra-20260909/` and `build/source-families/`. These are scratch artifacts; source-specific
 conclusions live beside the affected functions. The isolated audit added no new inline keywords,
 forced-inlining directives, inlining pins, dummy operations or volatile
 surrogates were introduced. Canonical helpers keep their declarations and
@@ -281,16 +283,17 @@ difference. None of these findings justifies converting every goto mechanically.
 
 ## Disposition of every remaining statement
 
-All **58 sites** below were checked against their owning source, target label,
+All **54 sites** below were checked against their owning source, target label,
 retail instructions/CFG, available Dreamcast dossier, line blocks and inline
 clues. Each site was included in a structured-source family or, for
 `mirrorImage`, retained on positive source evidence already corroborated by
 retail. Repeated labels are separate statements; the origin identifies each
 one. A final inventory-to-disposition check covers every surviving statement
-exactly once. There are **52 forward and six backward jumps**; only the two
+exactly once. There are **50 forward and four backward jumps**; only the two
 `getSoundId` sites syntactically target a terminal return.
 
-The scores describe the controlled `06f2f4f7` source context. The retained
+The remaining-site scores describe the controlled `06f2f4f7` source context;
+the later scope pass rechecks its selected owners against `b843a75d`. The retained
 forms preserve behavior, original helper calls and lifetimes while the tested
 alternatives change emitted code. These bounded failures do not prove a
 minimum goto count or that every remaining jump was spelled `goto` originally.
@@ -311,11 +314,8 @@ the supported reductions and recording what still limits the others.
 | [`armyGroup::getArmyMorale`](../../src/armygrp.cpp) | `evil_done` (Evil Fog neutral towns) | An independent break scores 89.2727% vs 96.5625%; both breaks score 80.5625%. |
 | [`armyGroup::getArmyLuck`](../../src/armygrp.cpp) | `no_town_luck_bonus` (Neutral Clover towns) | A break scores 78.6737% vs 100%; bonus/default already use structured exits, but the neutral selector still changes. |
 | [`applyMoraleMagicTerrain`](../../src/armygrp.cpp) | `holy_ground_good` (Holy Ground good towns) | Moving this final adjustment/append into its arm with a default scores 91.4420% vs caller 93.1409%; keep the existing ordinary helper and shared adjustment. |
-| [`campaignWindowHandler`](../../src/campaignwindow.cpp) | `end_dialog` (Campaign choice) | The shared dialog-result flag scores 83.7571% vs 84.4576%; preserve message stores and forwarding after selection. |
-| [`campaignWindowHandler`](../../src/campaignwindow.cpp) | `end_dialog` (Keyboard exit) | The same result-scope family covers this exit and preserves its dialog return value, but moves the retail shared tail. |
 | [`combatManager::placeLargeObstacle`](../../src/cmbtmgr.cpp) | `found` (Successful obstacle pick) | Guarded redraw/positive placement reaches 97.7528% vs 100%; simple breaks reach 83.0899%/93.7079%. Keep picker lifetime and placement join. |
 | [`combatManager::main`](../../src/command.cpp) | `process_action` (Received combat action) | A bool/byte received-action result scores 81.5489% vs 97.6611%; retain CMessageKill destruction before the action tail and skip local ownership/Berserk checks. |
-| [`advManager::doEventWitchHut`](../../src/events.cpp) | `refuse` (Already-known secondary skill) | An owned refusal dialog scores 52.7083% vs 100%; refusal flags score 52.2569%, text selection 44.1875%. Keep the common dialog and visit-before-decision order. |
 | [`advManager::doCombat`](../../src/events.cpp) | `aftermath` (Remote battle completed) | DC line 6482 destroys the wait dialog before the common aftermath. Result guards reach 92.5247% vs 98.5379%; breakable scopes reach at most 92.5181%. Preserve RAII. |
 | [`game::validateVictoryLossConditions`](../../src/game.cpp) | `invalid_loss_town` (Multiple human teams) | The town-validation result scores 89.2426% vs 90.0315%; coupled breakable scopes reach at most 87.7111%. Keep the common invalidation store. |
 | [`game::validateVictoryLossConditions`](../../src/game.cpp) | `invalid_loss_town` (Town belongs to a non-human team) | The same family covers this rejection while preserving the neutral-owner check; no nondecreasing structured candidate was found. |
@@ -345,7 +345,6 @@ the supported reductions and recording what still limits the others.
 | [`swapManager::main`](../../src/swapmgr.cpp) | `show_secondary_skill` (Left secondary-skill popup) | Combined left/right case scopes score 83.1641% or 83.4984% vs 84.0502%; preserve DC constructor/helper order and the shared skill action. |
 | [`TSystemOptionsWindow::windowHandler`](../../src/systemoptionswindow.cpp) | `confirm_command` (Command requires confirmation) | An owned confirmation tail scores 92.9902% vs 94.3957%; preserve the accepted-command scope and shared translation. |
 | [`TSystemOptionsWindow::windowHandler`](../../src/systemoptionswindow.cpp) | `translate_command` (Command skips confirmation) | An owned translation tail also scores 92.9902%; combinations with confirmation lose equally. The unrelated consume exit is already a return. |
-| [`getBuildingInfo`](../../src/townmgr.cpp) | `emit_custom` (Rampart extra description) | A combined custom-building scope scores 97.7551% vs 100%; retain the separator order and shared pond-description action. |
 | [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Hall popup) | An independently owned popup scores 86.6755% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
 | [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Mage Guild popup) | An independently owned popup scores 86.6195% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
 | [`townManager::main`](../../src/townmgr.cpp) | `building_popup` (Castle popup) | An independently owned popup scores 86.6774% vs 90.2738%. DC arms reach the common popup; keep its string/window lifetime. |
@@ -785,10 +784,66 @@ distinct objects. The full recorded search therefore contains **163 families,
 1,567 states and 1,233 distinct objects**, including controls and rechecks.
 
 The two newly introduced sites are also removed, leaving the same **58**
-survivors from the original inventory; the final Markdown disposition table
-is checked against the integrated source, including repeated-label counts.
+survivors from the original inventory at that checkpoint. Its Markdown
+disposition table was checked against the integrated source, including
+repeated-label counts; the later pass below removes four of those sites.
 The integration full build passes with **4,764 unchanged CUR/MAX/HIST triples**,
 **4,073 exact functions**, **96.38% linked fuzzy match**, **96.38% executable
 matched bytes**, and **218 existing inlining pins**. The additional functions,
 units and two removed pins belong to the incoming workspace work; this audit
 introduces no inlining controls or function-score loss.
+
+## Further shared-action scopes
+
+A fresh full checkpoint at `b843a75d` supports six new finite families over
+six remaining owners. All **22 successful states and 19 distinct objects**
+are exhausted, with unchanged-source/opposite-corner controls and retained
+objects reproduced. These are new switch-break and enclosing-scope models,
+not reruns of the earlier direct-return/flag families. The cumulative record
+is **169 families, 1,589 successful states and 1,252 distinct objects**, summed
+within their contexts and including controls.
+
+The Dreamcast dossier, assembly blocks and inline clues, plus retail summary,
+structure, candidate-source, named-call and inlining views, were refreshed
+before the probes. The following four removals preserve each full function
+contribution, including local data and every relocation kind/name/addend:
+
+| Function | Removed | Retained source form | Bytes / references | Score |
+| --- | ---: | --- | ---: | ---: |
+| `campaignWindowHandler` | 2 | Breakable dispatch scope before common message stores | 621 / 43 | 84.4576% |
+| `getBuildingInfo` | 1 | Separate Extra/Special tests in one `for`/`break` scope | 824 / 22 | 100% |
+| `advManager::doEventWitchHut` | 1 | Learning returns after `giveSS`; rejection arms share an ordinary dialog tail | 424 / 20 | 100% |
+
+Campaign `do` and `for` scopes are identical. Moving only the selected-campaign
+fallthrough also works but leaves the keyboard goto, so the full scope is
+retained. Both building-description guard polarities are exact with `for`;
+`do/while(0)` gives 99.9864%, and switch fallthrough gives 98.0918%. The former
+combined predicate remains at 97.7551%; it was not a general limit on sharing
+the custom-description action.
+
+The witch-hut result preserves the separate human guards and visit-before-
+decision order. Moving the no-skill arm into an early return also keeps this
+function exact, but lowers `monstersSellOut` from 100% to 99.9517%. The nested
+form avoids that collateral. Its prior refusal flags and text selector were
+substantially worse; no new helper or inlining control is needed.
+
+The other three owners retain their gotos. A plain Holy Ground switch break,
+with or without explicit default, lowers the morale-description caller from
+93.1409% to 91.4420%. Independent multiplayer scopes for success and menu
+exits lower 98.1199% to 87.2752% and 77.3978%. Enclosing the sound rejection
+paths in one failure scope preserves their intended terrain-switch bypass,
+but lowers 96.9031% to 24.7668% or 23.8079%, depending on local lifetime.
+These losses are recorded beside the functions and none is adopted.
+
+The resulting inventory is **54 sites**, including four backward jumps and
+two terminal-return joins. All three changed functions are now goto-free;
+one additional file is cleared. The remaining-site table is checked against
+the new inventory, including every repeated label. These results still do
+not establish a minimum possible goto count.
+
+The adopted full `homm3 build` passes: all **4,764 CUR/MAX/HIST triples** are
+unchanged from `b843a75d`, including **4,074 exact functions**. Linked fuzzy
+and executable matched bytes both remain **96.38%**; all **216** incoming
+inlining pins are preserved. Production objects after formatting reproduce
+the three verified contributions, and the Markdown table covers all 54
+remaining statements exactly once.

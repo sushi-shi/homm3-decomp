@@ -8922,6 +8922,10 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // a `goto` to the function's own trailing INVALID return is what breaks it,
 // because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
 // shared block now carries the same six predecessors retail has.
+// An enclosing do/while(0) with switch continue preserves the invalid-index
+// skip over the terrain switch, but scores 24.7668% around dispatch and
+// 23.8079% around the whole calculation, versus 96.9031%. These scopes do
+// not preserve the retail lowering, even with all sound/helper results kept.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
