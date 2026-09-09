@@ -1327,6 +1327,80 @@ reject automatic defaults, a wrong school and a wrong return pointer. They
 complement, rather than substitute for, the five-TU raw COFF controls and full
 retail build.
 
+### Native marketplace artifact ownership
+
+`generate-market-artifact-owner-family.py` is a finite two-state ownership
+control against `2359d5a4`: context `d7a243b77c8e39872831`, two scored states,
+two object identities, both retained candidates reproduced. The selected
+`372591115abd7d96fb098eeb` changes the entry, header, dispatcher, state and
+every artifact reader/writer together. DC `DoBlackMarket` (0x1886d4) proves
+the `TArtifact*` parameter; the recovered game and black-market fields already
+have that element type. Retail's entry stores the pointer unchanged.
+
+The pre-delink old entry label scores zero for the corrected signature. This
+is not treated as body identity: `compare-coff-layout.py`, with the explicit
+old/new function-name pair, independently proves identical section layout and
+bytes, function positions, and relocation sites/kinds/destinations. It passes
+for tradpost (150 sections / 4059 relocations), events (304 / 3873), philai
+(229 / 1442), ai_player (420 / 1963), and townmgr (402 / 6828). The last three
+need no rename. Selected-candidate to production comparisons pass without any
+rename. Normal source-owned delinking migrates the entry at 100%; no current
+score changes, MAX resets, or historical peaks lost. Full gates pass at
+4063/4752 exact, 96.39% linked and 96.13% whole-image.
+
+`homm3.vc6.test_market_artifact_owner` imports the actual entry, dispatcher arm,
+enum, record, array member and global declarations into a native-only semantic
+fixture. It checks identity and in-place mutation of all seven slots in each
+owner, hero forwarding, modal state and AI dispatch. Eight negative controls
+reject wrong pointers, records, state, branch choice and missing modal calls.
+The host fixture does not claim x86 ABI or codegen proof.
+
+### Marketplace ratio accessor and setup boundaries
+
+`generate-market-ratio-boundary-family.py` exhausts the twelve supported
+accessor, resource-value lifetime and selection-call combinations against the
+native artifact-pointer checkpoint. Context `ddb391c2a56bfe8804a0` scores all
+twelve states, produces six object identities, and reproduces all six elites.
+DC rows 2235/2237 prove the two artifact getters; rows 2961/2990 reach the
+same `SetupNewTrade` as the arrow arms. Restoring those source calls is not
+conditional on a higher fuzzy score.
+
+The selected `c55c83a118bd50486be2a0a8` keeps one ordinary `setupNewTrade`,
+uses it at all four sites, and removes tradpost's final depth fence. Of 67
+raw emitted functions, only `windowHandler` changes bytes; all other tracked
+scores stay fixed, including the retained ratio helper at 100%. Production
+reproduces the selected object's entire 150 sections and 4061 relocation
+destinations. The handler falls from 90.6792% to 81.9322%, with the old peak
+retained in HIST. The direct unfenced/flattened control gives 80.5105%; the
+explicit right-value local and getter flattening do not recover the lost call.
+
+The difference is measured at the named site, not inferred from a call census:
+retail function +0x509 calls `computeTradeRatios` in resource selection, while
+the natural candidate expands it and shares a selection tail. A byte-identity
+gated C2 trace has caller cost 872 / initial budget 1744; its first two setup
+copies admit the cost-153 ratio helper against nested budgets 189 and 188.
+This is remaining caller-budget/source-state debt, not evidence against the
+canonical helper boundary. No manufactured assertion replaces the fence.
+
+The native market test also imports the actual setup body and checks selected
+artifact/resource arguments, output-pointer identities, and the order of the
+ratio call and amount reset. Five rejected semantic controls cover wrong
+arguments, outputs, amount, missing call and premature reset. The full retail
+build passes at 4063/4752 exact, 96.39% linked and 96.12% whole-image, with
+one observed MAX reset and no banked RVA lost. The new census is 227 inline
+overrides in 33 TUs, and 65 unions. The retained local peak is a recovery lead,
+not grounds to reintroduce the retired compiler intervention.
+
+`generate-count-markets-boundary-family.py` separately exhausts four
+declaration/building-query choices in context `d39faa6bb2f147e6f44f`, producing
+two symbol identities and reproducing both elites. DC row 621 calls
+`GetTown` followed by `HasBuilding(14, true)`; all three retail entry points
+expand this active-market test. Selected `5a8fa95a228c773b30041a02` restores
+that query and uses an ordinary static helper at its original source position.
+The baseline and selected raw COFF layouts, bytes and all 4061 relocation
+destinations are identical; all three entries remain exact. The explicit
+inline keyword was unnecessary, not evidence of an original annotation.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
