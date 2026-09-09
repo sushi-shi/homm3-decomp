@@ -3617,15 +3617,18 @@ long type_AI_creature_purchaser::doBestPurchase(
 // do_best_purchase. DC line 2633 proves that stack merging is the separate
 // AI_consolidate_army call; restoring that boundary closes this body from
 // 99.87% to exact. It also proves do_best_purchase takes a byte. The scoped
-// auto-inline pin preserves retail's calls to this now-smaller routine:
+// auto-inline pin formerly preserved retail's calls to this smaller routine:
 // without it mark_town falls from exact to zero, buy_creatures from 73.66%
 // to 53.78%, and value_of_hiring from 99.95% to 79.22%. The helper itself
-// and all three callers retain their prior scores with the pin. Rechecked
-// after the buy_creatures source recovery (2026-09-06): removing it expands
-// the purchase loop, lowering that caller 97.77 -> 52.44 and mark_town
-// 100 -> 0 while this standalone body stays exact. This pin remains debt.
+// and all three callers retain their prior scores with the pin.
+// The override is now retired: DC 2627..2628 leaves two lines before the
+// input stores, permitting the real non-null army/funds preconditions below
+// (not recovered ASSERT spelling). All TU section bytes and 1962 relocation
+// destinations match the pinned control. Negative control: omit both checks
+// and doPurchase expands, buyCreatures 97.7723 -> 52.4409, markTown 100 -> 0,
+// valueOfHiring 99.9522 -> 79.2183; the standalone body stays exact. A single
+// army check or a combined predicate also matches. newAdjacentArmy is optional.
 VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
-#pragma auto_inline(off)
 void type_AI_creature_purchaser::doPurchase(
     // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
     // allow_trade, new_has_angelic_alliance.
@@ -3633,6 +3636,8 @@ void type_AI_creature_purchaser::doPurchase(
     long* newFunds, unsigned char allowTrade,
     unsigned char newHasAngelicAlliance)
 {
+    HOMM3_RELEASE_VERIFY(newArmy != 0);
+    HOMM3_RELEASE_VERIFY(newFunds != 0);
     m_army = newArmy;
     m_adjacentArmy = newAdjacentArmy;
     m_morale = newMorale;
@@ -3648,7 +3653,6 @@ void type_AI_creature_purchaser::doPurchase(
     for (short source = 0; source < m_creatures.size(); ++source)
         *m_creatures[source].m_ptr = m_creatures[source].m_number;
 }
-#pragma auto_inline(on)
 
 // Complete adds the final Angelic-Alliance byte to the DC signature. Retail
 // copies both armies and all seven resources, so the valuation can run the

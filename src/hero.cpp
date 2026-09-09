@@ -5646,30 +5646,40 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
 }
 
 // E:\gamedcs\hero.cpp:4627
-// PINNED against /Ob2. Retail keeps GiveSS a real CALL at both of
-// CheckLevel's surviving sites (the three dialogReturn arms cross-jump
-// onto one shared `mov ecx,ebx / call`), where our CL expanded it at all
-// six - `predict-inline` reported it as the sole OVER-inline there,
-// worth 23 extra conditional branches. auto_inline(off) suppresses the
-// expansion without touching this body's own emission.
-#pragma auto_inline(off)
+// Retail keeps GiveSS out of line in initialize, HeroFn_004D8B30, SetSS
+// and CheckLevel. DC lines 4628..4631 have no line rows before the indexed
+// skill read at 4632; a release-form bounds verification is a supported
+// hypothesis, not recovered assertion text. The actual index invariant
+// below retires the former auto_inline override: all raw COFF section bytes
+// and all 3439 relocation targets agree with the pinned control (only local
+// label identifiers change). No assertion branch or runtime call remains.
+// Negative control: delete only this verification with the pin absent, and
+// VC6 expands GiveSS: SetSS 100 -> 3.8, CheckLevel 87.1338 -> 49.8180,
+// initialize 91.0235 -> 75.0201, HeroFn_004D8B30 97.5831 -> 89.9819.
+// Split lower/upper verifications also retain the calls but perturb
+// GiveArtifact 79.8138 -> 79.7247; a combined predicate preserves the TU.
+// DC 4637/4639 retains an outer else and an inner capacity test; flattening
+// that scope is byte-neutral, unlike dropping the range verification.
 // Before normalization (locals): iWhichSS, iNumLevelsToGive, iOldLevel.
 VA(0x004e22d0, 0x61)  // anchor-caller (SetSS, CheckLevel), dc 0xd37c0
 int hero::giveSS(int whichSS, int numLevelsToGive)
 {
+    HOMM3_RELEASE_VERIFY(whichSS >= 0
+        && whichSS < sizeof(m_skillLevel) / sizeof(m_skillLevel[0]));
     int oldLevel = m_skillLevel[whichSS];
     if (m_skillLevel[whichSS] > 0) {
         m_skillLevel[whichSS] += numLevelsToGive;
-    } else if (m_skillCount < 8) {
-        m_skillLevel[whichSS] = numLevelsToGive;
-        m_skillOrder[whichSS] = m_skillCount + 1;
-        m_skillCount++;
+    } else {
+        if (m_skillCount < 8) {
+            m_skillLevel[whichSS] = numLevelsToGive;
+            m_skillOrder[whichSS] = m_skillCount + 1;
+            m_skillCount++;
+        }
     }
     if (m_skillLevel[whichSS] > 3)
         m_skillLevel[whichSS] = 3;
     return m_skillLevel[whichSS] - oldLevel;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -7853,14 +7863,21 @@ unsigned char hero::isMobile()
 }
 
 // E:\gamedcs\hero.cpp:6428
-// The scoped inline pin is required while this TU has only one reconstructed
-// caller: VC6 otherwise expands the body into modify_spell_damage, whereas
-// retail calls it there. Cross-TU retail callers prove the external body.
-#pragma auto_inline(off)
+// Retail calls this from modifySpellDamage; cross-TU calls prove the retained
+// body. DC 6429..6430 leaves two lines before bonus initialization. The real
+// hero-array bounds below are a release-verification hypothesis, not recovered
+// ASSERT text. They retire the auto-inline override with every TU section byte
+// and all 3439 relocation destinations unchanged. Negative control: omit both
+// checks and getHeroSpellBonus expands in modifySpellDamage (100 -> 32.6226).
+// One combined predicate retains that call but perturbs giveArtifact
+// 79.8138 -> 79.7247; separate bounds preserve the entire TU.
 // Before normalization (locals): spell_id, target_level.
 VA(0x004e5ff0, 0x123)  // anchor-global, dc 0xd5710
 int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 {
+    HOMM3_RELEASE_VERIFY(m_id >= 0);
+    HOMM3_RELEASE_VERIFY(m_id < sizeof(g_heroSpecificAbilities)
+        / sizeof(g_heroSpecificAbilities[0]));
     int bonus = 0;
     const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
     if (ability.m_type == eHeroAbilitySpell
@@ -7889,7 +7906,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
     }
     return bonus;
 }
-#pragma auto_inline(on)
 
 // The flat creature bonus kinds 4 and 7 both add. Two call sites, so
 // /Ob2 expands it into each and emits no out-of-line body.
