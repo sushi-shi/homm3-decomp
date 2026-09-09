@@ -240,9 +240,13 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // /Ob2 restores that ordinary-helper expansion (21.84 -> 69.72%); the
 // reserved-byte post-increment raises it to 88.85%. A 120-state guard/count/
 // loop family then identifies the bitmap-header pointer snapshot below and
-// raises this body to 94.61%; all guard and loop-local variants are byte-flat
-// once that snapshot is present. EBX/EBP save placement remains. The loop
-// increment in the for-clause is a measured negative control (69.72%).
+// raises this body to 94.61%. A real per-iteration index snapshot then fixes
+// retail's EBX/EBP entry saves and restore order, reaching 95.16%. Its remaining
+// loop delta is a separate scaled old-index temporary plus EBP/EDI/EDX allocation
+// where retail keeps colors/index/shade in EDI/EDX/ECX. Sixty-six type/update,
+// thirteen zero-order, eleven coalescing, sixty register-hint, and twelve real
+// member-binding combinations do not exceed it. The for-clause increment is
+// worse (69.72%).
 VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
 void __stdcall victorInitializePalette(imgdes* image)
 {
@@ -259,10 +263,11 @@ void __stdcall victorInitializePalette(imgdes* image)
         }
         int shade = 0;
         for (int i = 0; i < image->m_colors;) {
-            image->m_palette[i].rgbRed = shade;
-            image->m_palette[i].rgbGreen = shade;
-            image->m_palette[i].rgbBlue = shade;
-            image->m_palette[i++].rgbReserved = 0;
+            int colorIndex = i++;
+            image->m_palette[colorIndex].rgbRed = shade;
+            image->m_palette[colorIndex].rgbGreen = shade;
+            image->m_palette[colorIndex].rgbBlue = shade;
+            image->m_palette[colorIndex].rgbReserved = 0;
             shade += step;
         }
         victorUploadPalette(image);
