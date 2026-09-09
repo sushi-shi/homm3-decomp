@@ -4038,6 +4038,11 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // bComplete, iDrawsPerSeg, iSplitChanceTimes100, iSwap, psBolts, iHalfThickness, iDelayTil,
 // iMaxBolt, iUpdTLY, iUpdTLX, iUpdBRY, iUpdBRX, iMaxBoltForThisCycle, iAbsDist, fOffset, fAngle,
 // iDrawLength, iSplitX, iSplitY, iSplitThickness, pArmy, iFrames, iFrameDelay.
+// Goto audit: DC's bComplete belongs to the draw pass. Breaking that inner
+// pass and testing it before either breaking or guarding the outer split
+// pass scores 96.4526%, versus 100%. Both keep the single delete[] and reset
+// tail, but change the loop/cleanup CFG. Retain this multi-level completion
+// exit and the canonical AddBolt, DrawBolt and NextFrameTime boundaries.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                            int destX, int destY, int splitFrequency,

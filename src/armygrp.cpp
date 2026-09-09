@@ -1224,6 +1224,9 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // Fresh partial-scope controls confirm 80.5625% for plain no-op breaks.
 // Wrapping the terrain switches in do/while(0) scopes and using continue
 // is lower still (67.0170%); keep the two neutral selector destinations.
+// Independent neutral-arm break controls: Holy Ground 85.7784%, Evil Fog
+// 89.2727%, both 80.5625%, versus 96.5625%. Each changes its selector table;
+// keep both exits while preserving the canonical morale and artifact calls.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1334,6 +1337,8 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 // index reuse and shrink-wrapped EBX save around the game-state test; the
 // explicit no-bonus/+2 labels preserve its compressed town selector.
 // Before normalization (locals): apply_limits.
+// The remaining neutral-arm break scores 78.6737% versus 100%, collapsing
+// the compressed selector. The Clover bonus and default already use break.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
 {
@@ -2079,16 +2084,12 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
 {
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        // Nine town values routed to NAMED exits, the recipe GetArmyMorale
-        // (0x44b100) already carries: retail lowers this arm through a
-        // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
-        // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
-        // survives with the neutral cases naming their exit. The bonus can
-        // live in its own arm and default can break, removing two gotos
-        // without changing any score in the 36-state family. Spelled with `return`
-        // in the no-op arms VC6 sees two outcomes, collapses the whole
-        // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
-        // instead of the tables.
+        // Retail uses a compressed nine-town selector. After restoring the
+        // bonus/default arms, an ordinary neutral return preserves all 957
+        // caller bytes and 53 relocation names/addends at 92.3623%. The older
+        // comment rejecting return no longer applies to this helper body.
+        // A neutral break still collapses the selector and scores 85.3503%;
+        // all 48 combinations with the other terrain joins were checked.
         switch (g_creatureTypeTraits[creature].m_townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -2096,7 +2097,7 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            goto clover_done;
+            return;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
@@ -2106,8 +2107,6 @@ static void applyLuckMagicTerrain(int magicTerrain, TCreatureType creature,
         default:
             break;
         }
-    clover_done:
-        ;
     }
 }
 

@@ -26,6 +26,11 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // families leave a register wall: retail carries consumed in ESI and reloads
 // image around the decode loop, while VC6 carries image in ESI and spills
 // consumed. Explicit shared switch exits and six classifier forms are flat.
+// Goto audit: a bool/byte copyDecoded result removes copyRow with identical
+// emitted code and relocation names/addends at 78.4456%. Nibble, indexed and
+// completed RGB rows set it; partial RGB planes still continue immediately.
+// A separate memcpy in the nibble arm scores 76.6737%, and moving nibble to
+// fall through into indexed copy scores 53.9655%; keep the shared copy result.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
@@ -95,6 +100,7 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                     consumed = 0;
                 }
                 consumed += victorDecodeRleBytes(decoded, input + consumed, decodeBytes);
+                bool copyDecoded = 0;
                 switch (mode) {
                 case victorPcxNibbleMode: {
                     int pixels = width;
@@ -109,7 +115,8 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                         }
                         decoded[pixels - 1] = value;
                     } while (--pixels);
-                    goto copyRow;
+                    copyDecoded = 1;
+                    break;
                 }
                 case victorPcxFourPlaneMode:
                     victorUnpackFourPlanes(destination, decoded, data.m_bytesPerLine, width);
@@ -126,10 +133,11 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                     plane = planeStart;
                     victorInterleaveRgbPlanes(decoded, planeStart, width);
                 case victorPcxIndexedMode:
-                copyRow:
-                    memcpy(destination, decoded, copyBytes);
+                    copyDecoded = 1;
                     break;
                 }
+                if (copyDecoded)
+                    memcpy(destination, decoded, copyBytes);
                 destination -= image->m_buffwidth;
                 --rowsRemaining;
             }
