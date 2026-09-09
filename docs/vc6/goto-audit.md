@@ -1,10 +1,12 @@
 # Goto reconstruction audit
 
-The current inventory is **98 goto statements in 46 functions across 27 files**.
-That is **218 fewer than the initial 316 (69.0%)**, across 93 functions;
-77 functions and 28 files no longer contain gotos. The latest follow-up removes
-20 statements from the merged 118-statement checkpoint, improves four current
-scores and lowers none among all 4,752 scored functions.
+The current inventory is **67 goto statements in 37 functions across 21 files**.
+That is **249 fewer than the initial 316 (78.8%)**, across 101 functions;
+86 functions and 34 files no longer contain gotos. The latest source-scope and
+helper pass removes **31 statements from the 98-statement checkpoint**, improves
+four current scores and lowers none among all 4,752 scored functions. Its
+border handler is newly exact, and the spell-immunity audit corrects several
+retail switch-routing mistakes.
 
 The isolated audit removed **198 statements (62.7%)**, across 83 functions,
 without lowering any current score. That checkpoint contained 118 statements
@@ -74,8 +76,8 @@ adopted in that function.
 Local manifests, candidate results and evidence outputs are in
 `build/goto-audit/` (initial workspace), `build/goto-followup/`,
 `build/goto-more/`, `build/goto-residuals/`, `build/goto-integration/`,
-`build/goto-after-merge/` and `build/source-families/`. These are scratch artifacts; source-specific
-conclusions live beside the affected functions. No new inline keywords,
+`build/goto-after-merge/`, `build/goto-next/` and `build/source-families/`. These are scratch artifacts; source-specific
+conclusions live beside the affected functions. The isolated audit added no new inline keywords,
 forced-inlining directives, inlining pins, dummy operations or volatile
 surrogates were introduced. Canonical helpers keep their declarations and
 inlining status; newly reconstructed helpers are ordinary members or free
@@ -479,3 +481,132 @@ The explicit campaign replay-loop variants fall to 59.9903--60.0568%, so the
 two backward restarts remain. RMG entrance policies and individual fit returns
 also remain lower. These rejected forms are recorded beside their functions;
 none justifies hiding the remaining joins in invented helpers or macros.
+
+
+## Source scopes and spell routing
+
+Starting from `2359d5a4`, twenty finite families exhaust **221 successfully
+scored source states and 125 distinct objects**, counted once per family
+context. The multiplayer family covers all 72 combinations over two batches;
+its 24 objects are distinct across both batches. Together with the preceding
+audit, the recorded search covers 136 families, 1,249 states and 994 objects.
+These counts include reproduced parent controls, not independent fixes.
+
+The pass removes 31 jumps in twelve functions. Nine functions and six files
+are cleared; the remaining 67 statements comprise 61 forward and six backward
+jumps, with three labels syntactically beginning a terminal return.
+
+| Function or group | Removed | Retained source form |
+| --- | ---: | --- |
+| `getSpellWorkChance` | 7 | Separate canonical artifact calls, corrected switch routing and shared hero resistance; header `isMindSpell` |
+| `border::main` | 3 | Negative inactive-widget arm with dispatch in `else`, positive mouse-hit and selected scopes |
+| `iconWidget::main` | 5 | Positive mouse-hit and selected scopes, direct zero exits and ordinary `setPalette` |
+| `searchArray::findCombatPath` | 3 | Direction index propagates the successful scan through ordinary breaks |
+| `downgradedCreatureType` | 3 | One breakable lookup failure scope |
+| `combatManager::castSpell` | 2 | Guarded redraw loops and separate exhaustion checks for Quicksand/Land Mine |
+| Multiplayer widget handler | 2 | Connection-failure result with original cleanup order |
+| System-options handler | 2 | Preference-change result and positive accepted-command scope |
+| Main-menu handler | 1 | Confirmation result preserving the existing update assignments |
+| `TTradeResourceWindow::update` | 1 | Ordinary `computeTradeRatios` and its three recovered output locals |
+| `checkSetMouseDirection` | 1 | One failure scope containing the separate quick/computer guards |
+| `validateVictoryLossConditions` | 1 | Direct final return for a valid loss-condition town |
+| **Total** | **31** | **12 functions** |
+
+The widget results refute the earlier claimed return-merging limit. In
+`border::main`, merely replacing each goto with a return had scored 91.7822%.
+The positive selected scope first restores 100%; the negative inactive-widget
+scope then removes the last goto without changing any of the 461 retail bytes.
+Reversing the outer polarity instead gives 76.7079%. The icon handler reaches
+99.9639% with all five jumps removed and its original palette-helper call.
+Its 756-byte body differs only in the EDX-versus-ECX operand used to copy the
+widget id at `+0x113` and `+0x117`; all relocation references agree. It is not
+reported as byte-exact.
+
+The trading-post boundary also resolves a misleading earlier local analysis.
+Dreamcast line 1208 calls `ComputeTradeRatios`, and lines 1210..1213 read its
+ratio and denomination outputs. Only the maximum output is unused in this
+caller. Restoring all three output locals and the complete ordinary helper
+removes the formatting join at unchanged 88.5391%; all five header consumers
+were measured. Keeping only the copied arithmetic had hidden that boundary.
+
+The spell-work result required correcting behavior before interpreting scores.
+Retail's compressed spell tables at `+0x418/+0x45c` and creature tables at
+`+0x494/+0x4b8` establish each destination. Resurrection rejects undead without
+the damage-high test; Bless falls into the shared Fortune/Misfortune/Slayer
+damage test; Precision shares Forgetfulness's shooter test. Stone uses the
+Troglodyte pair, while Poison uses the living trait and Gargoyle pair. The
+arrow-tower rejection is independent of the siege trait. Green/Red/Azure
+Dragons reject levels through three, Gold through four, and Black Dragons and
+Magic Elementals reject all levels. Diamond Golems take the normal path.
+
+Mind immunity is the creature trait **or** the hero's Badge of Courage, and
+hero resistance runs after every non-rejecting creature arm, including default.
+The old body had inverted the trait and limited resistance to Dwarves. These
+facts are established by retail control flow and corroborated by DC 505..507
+and 564..565. Separate original artifact calls plus corrected scopes raise
+88.5071% to 95.8839%; the header-defined `IsMindSpell` call raises that to
+96.6018%. Its unsigned-byte signature and header boundary come from DC
+`SpellDefs.h:345..346`; the recovered header definition uses `inline`, while
+the palette and trade-ratio helpers remain ordinary functions. All 95
+spell-header consumers were checked; no new inlining pin is introduced.
+
+The native spell fixture imports the actual function, accessor and enum
+values. It covers all 150 creature ids with a resistance-bearing hero, all 81
+spell ids, pendant checks, undead/living/shooter restrictions, dragon levels,
+Orb precedence, clamping and beneficial spells. Three deliberately wrong
+variants must fail: inverted mind immunity, Dwarf-only resistance and the
+Black-Dragon/Diamond-Golem substitution. This checks recovered behavior;
+VC6 under Wine remains the matching verdict.
+
+Two parser issues had obscured the controls. VC6 `.bss` records an allocated
+size without file payload; `creaturetype.obj` has a 19,204-byte `.bss` in a
+7,563-byte object. The CodeView reader now skips only uninitialized-section
+payload bounds, while truncated initialized data still fails. The family
+identity reader now handles anonymous namespaces defined in `.h` as well as
+`.cpp`, stripping only the path/nonce and preserving basename, type and full
+signature. This fixes the `TAutoStrPtr` reproduction control without changing
+byte scoring. The failed earlier controls are excluded. The focused parser,
+source-label, family and spell tests pass (34 tests).
+
+The full build preserves all 4,752 identities, historical peaks and
+`CUR <= MAX <= HIST`. Relative to `2359d5a4`, 4,748 current scores are unchanged:
+
+| Function | Before | Current |
+| --- | ---: | ---: |
+| `getSpellWorkChance` | 88.5071% | **96.6018%** |
+| `border::main` | 94.9505% | **100%** |
+| `searchArray::findCombatPath` | 90.2669% | **92.2920%** |
+| `iconWidget::main` | 95.7040% | **99.9639%** |
+
+Exact functions increase from 4,063 to 4,064. The full build passes at 96.40%
+fuzzy and 96.14% executable matched. The baseline's 221 inlining pins remain
+unchanged. The recovered helpers and source scopes do not imply closure of
+the remaining non-exact callers.
+
+Final contribution checks compare the actual extents and named relocations:
+all 461 border bytes agree after relocation masking, and the icon differs only
+at `+0x115` and `+0x118`, the register operands described above. The border's
+linear assembly view also decodes embedded selector-table data as instructions;
+its apparent two-row discrepancy is absent from the byte and CFG checks.
+All three cursor calls and all 54 trading-post calls agree. The spell-work,
+multiplayer and system-options call views flag only shifted self-references
+to their switch tables; their actual helper call sequences agree.
+
+Pathfinding's six differently named references are independently confirmed
+folded template bodies: its pointer copy is the same 37-byte body as the
+retail int copy, both empty vector destructors match the three-byte
+`type_artifact` body, and both pointer insertions match the 521-byte
+`widget*` body. Code and callee references agree in each comparison. The
+main menu retains its existing extra string-cleanup delete call; the large
+spell dispatcher retains earlier inlining/frame differences. Neither is
+reported as closed.
+
+The remaining limits are recorded at the affected functions. Mirror-image
+result flags reach 99.9696%: only two initial ValidHex failure branches choose
+the final return instead of retail's earlier return. Positive placement and
+else scopes do not recover those destinations. Guarded large-obstacle picking
+with positive placement reaches 97.7528%, below the exact join. Full town-loss
+failure scopes fall to 87.4352..87.7111%, while its single final success return
+is neutral. Multiplayer menu-result combinations reach at most 97.5668%, and
+replacing the system-options outer widget-code switch falls to 85.1339%.
+These measured alternatives do not establish a minimum possible goto count.

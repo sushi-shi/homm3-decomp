@@ -996,6 +996,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             launchSample(traits->m_sample, -1, 3);
 
         switch (spellId) {
+    // DC 814/819/823 and 890/895/899 record the picker assignment,
+    // guarded repeat, then a separate exhaustion test. Retain those two
+    // source stages: both multi-level exits become ordinary loop breaks
+    // at unchanged 93.3658%. Merely breaking the old infinite inner loop
+    // and retesting afterward lowers the pair to 92.4546%.
     case SPELL_QUICKSAND: {
         const int nhexes = g_quicksandCountByMastery[mastery];
         sample* sample2b;
@@ -1007,16 +1012,15 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
-            for (;;) {
+            do {
                 hex = picker.pick();
-                if (hex < 0)
-                    goto quicksand_done;
-                if (!inInvisibleColumn(hex)
-                    && !(m_cells[hex].m_attributes & 0x3f)
-                    && !m_cells[hex].hasArmy()
-                    && m_cells[hex].m_bodiesInHex <= 0)
-                    break;
-            }
+            } while (hex >= 0
+                     && (inInvisibleColumn(hex)
+                         || (m_cells[hex].m_attributes & 0x3f)
+                         || m_cells[hex].hasArmy()
+                         || m_cells[hex].m_bodiesInHex > 0));
+            if (hex < 0)
+                break;
 
             ds_memsample* placeSample;
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -1045,7 +1049,6 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
-quicksand_done:
         showSpellMessage(isMonsterSpell, spellId, 0);
         if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
             sample2b->dispose();
@@ -1065,16 +1068,15 @@ quicksand_done:
         TPickANumber picker(0, COMBAT_GRID_CELLS - 1);
         for (int i = 0; i < nhexes; ++i) {
             int hex;
-            for (;;) {
+            do {
                 hex = picker.pick();
-                if (hex < 0)
-                    goto landmine_done;
-                if (!inInvisibleColumn(hex)
-                    && !(m_cells[hex].m_attributes & 0x3f)
-                    && !m_cells[hex].hasArmy()
-                    && m_cells[hex].m_bodiesInHex <= 0)
-                    break;
-            }
+            } while (hex >= 0
+                     && (inInvisibleColumn(hex)
+                         || (m_cells[hex].m_attributes & 0x3f)
+                         || m_cells[hex].hasArmy()
+                         || m_cells[hex].m_bodiesInHex > 0));
+            if (hex < 0)
+                break;
 
             ds_memsample* placeSample;
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -1100,7 +1102,6 @@ quicksand_done:
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
                 g_soundManager->waitSample(placeSample, -1);
         }
-landmine_done:
         showSpellMessage(isMonsterSpell, spellId, 0);
         if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
             sample2b->dispose();
@@ -4754,6 +4755,13 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
 // Before normalization (locals): iSourceHexCount, iDirCount, iSourceHexIndex,
 // iHexCount; distance is the unnamed DC outer-loop value. The old source
 // incorrectly shifted those four names onto other induction variables.
+// Explicit outer-loop search results (bool/byte/int) reach 99.9696%, below
+// the exact label form. Both COFF contributions contain 1032 bytes. Only
+// the two initial ValidHex failure branches change destination, selecting
+// the final +0x3fc
+// epilogue instead of retail's earlier +0x1b7. Positive placement and extra
+// else scopes do not recover those destinations. DC 4650 also records a
+// distinct search-to-placement transfer; keep the exact remaining join.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::mirrorImage(int targetIndex, int level)
 {
