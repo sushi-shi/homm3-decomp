@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 68 (42 source, 26 header) | Ten removed; classify the remainder below |
-| Inline override regions | 289 | 248 | 41 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 241 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 246 | 43 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 239 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 7 | Three redundant; ten retired by recovered helpers, locals, types and meaningful release verifications |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 518 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 514 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 35 active inline overrides were removed; counting
-all 41 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 37 active inline overrides were removed; counting
+all 43 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -434,6 +434,120 @@ recompiled as well. Final production objects match the selected family objects
 under the strict whole-COFF check, including named external relocations and
 all untracked emitted sections, for both edited TUs and all six popup consumers.
 
+### Shared combat helpers and drawing callers
+
+From `e4650642`, the pathfinding pass removes one more depth fence, the
+duplicated `markEnemySearched` body, and all three preamble helper extractions
+whose source comments explicitly described them as inline-budget experiments.
+DC publics establish ordinary private `build_combat_path`, `mark_enemy`, and
+`check_enemy_armies` methods; their bodies retain the original source order.
+The mark helper has the nested early-return scope at lines 1176-1179.
+`checkEnemyArmies` owns its `ValidHex` guard and uses the real owning-side,
+creature-flag and second-hex accessors. Its two callers share one mark body.
+
+The 48-state helper family alone initially lowers the fully reconstructed
+`FindCombatPath` to 60.0911%. A second 48-state family restores the positively
+named `Is`, `get_owning_side`, `OffsetToFront(-1)`, `get_spell_time`, `ValidHex`
+and const `get_hex` boundaries. Together these raise the old 87.9780% to
+90.2669%, with every other tracked findpath score unchanged, including
+`markTeleport` at 100%. The compound mark guard gives 88.6656%; omitting the
+geometry accessors gives 84.7692%, and omitting the validity boundary gives
+74.6845%. A temporary score dip did not refute the recovered helpers.
+The final production object matches the selected family object in all 55
+sections, 237 relocation destinations and function locations.
+
+The drawing pass restores `advManager::getCell`'s scalar-invalid/point-valid
+helper calls and retires `drawBoatCell` and `drawGroundCell`. Both boat
+callers use `game::getBoat` and `getLocation` and improve 98.2619% to 100%;
+ground drawing and every other tracked advmgr score are unchanged. Omitting
+the location accessor while restoring the cell helper gives 90.8714% in the
+boat twins. Restoring all hero/underlay calls as well gives
+96.6095%/96.6415%/86.9011% and stops emitting the claimed scalar-cell body.
+That remaining `drawHeroCell` copy is explicit recovery debt, not evidence
+against DC's ordinary helper or its callers. The selected production object
+matches all 308 family-object sections and 4,097 relocation destinations.
+
+`type_point::isValid` is now `bool ... const`, as established by DC's public
+`?is_valid@type_point@@QBA_NXZ`; the dossier's unsigned-char rendering does
+not override the public's bool encoding. Its ordinary body stays in
+findpath.cpp:36, not in a header. The renamed 59-byte body and the complete
+pre-pathfinding findpath object are byte-identical under one explicit rename
+(52 sections, 235 relocation destinations). Neither const-byte nor const-bool
+rescues the remaining hero drawing expansion decision.
+
+Historical generators and contexts:
+
+| Generator suffix (`scripts/experiments/generate-...-family.py`) | Context | Scored states / distinct objects |
+|---|---|---|
+| `adventure-cell-call` | `76b71ba668f31dcdfd1d` | 32 / 32 |
+| `adventure-cell-const` | `2675b9280570a49850e1` | 24 / 24 |
+| `adventure-cell-sites` | `bc78bc047916d70eaef7` | 32 / 32 |
+| `findpath-helper` | `94c8b2f5a3af5fa41569` | 48 / 27 |
+| `findpath-accessor` | `e39aa0ed39b14fca4d84` | 48 / 40 |
+| `university-record` | `eb059cf1c1273d8b1223` | 8 / 8 |
+
+Each family reproduced its retained candidates (ten, except seven for the
+eight-state university family). The drawing base is `e4650642`; sites runs
+after the validity-signature correction. The pathfinding families additionally
+include the adopted boat/ground changes. Use the frozen snapshots for exact
+reproduction; source anchors intentionally reject the post-adoption tree.
+
+The university family retains the real Complete constructor boundary: a
+typed local scores 97.8623% versus 99.7464%; typed local plus `push_back`
+scores 95.6522% while the insert fence remains. Removing that fence expands
+the insertion heavily and scores zero, not because the function disappears.
+Every other tracked game function is unchanged. No fabricated inline or
+no-initialization constructor is used to remove this union.
+
+The Scholar bitfield widths/positions are readable, but NB11's embedded
+type indices in LF_BITFIELD records 0x2f7e-0x2f81 do not resolve to legal
+underlying field types in the global table (pointer, argument list, unrelated
+structures). They cannot yet prove enum field ownership. Preserve the
+retail signed loads and document the unresolved type references instead of
+silently changing those fields to enums just to remove two unions.
+
+### Pragma-free pathfinding insertion
+
+`PushCombatPoint`'s remaining depth fence is removed too. The DC call is the
+two-argument `vector::insert(begin() + middle, path_cell)`, not its count
+overload. VC6 naturally expands that wrapper and retains the count-insert
+child while expanding the separate `push_back` arm. This recovers retail's
+decisions without controlling the outer statement's inline policy.
+
+Re-reading the actual SH4 argument loads corrects an older source comment:
+the stores at lines 1412-1417 are point.x, visited, point.y, direction, cost,
+flight_cost. Those stores and the proper insertion boundary improve
+98.9844% to 100%, preserving every tracked sibling. The DC midpoint-before-
+break loop is retained: `if (last <= first)` is exact, whereas the equivalent
+`if (first >= last)` gives 99.7819%. Swapping the midpoint sum's operands is
+byte-flat. This is a local comparison-expression effect, not evidence to
+discard the recovered loop scope.
+
+Deleting the old fence around count-insert alone gives 87.0685%; with the
+recovered stores it gives 88.0841%. Conversely, fencing the proper direct
+two-argument insert gives 91.8318%. These negative controls explain why
+deletion alone had hidden the removable dependency.
+
+`generate-pushcombat-boundary-family.py`, context `aba7f0923bc87620316b`,
+exhausted 64 states (20 distinct objects, ten reproduced elites in each of
+two generations). The follow-up `generate-pushcombat-loop-family.py`, context
+`34bab0471386d66e7211`, exhausted ten states (three distinct objects, all three
+reproduced). The adopted fully recovered loop has its own production
+recompile; all 55 sections and 237 relocation destinations match that
+selected object. These are historical controls against the frozen input,
+before adoption and removal of the duplicate accessor described next.
+
+DC's const `get_hex` header body emits all 32 raw retail bytes at 0x4b3b90,
+with no relocations. Its four calls inside the shared `mark_enemy` expansion
+corroborate this identity beyond leaf shape. The old `getCellData` spelling
+was an NH3API fallback, not a second source helper. It is removed; the
+canonical header body is claimed through the owning TU's standard claim-only
+carcass annotation. The full build migrates the source-owned name; no
+hand-edited generated label or second symbol ledger is involved.
+
+`findpath.cpp` now has **zero inline overrides**. The two removals here do not
+establish that the remaining overrides elsewhere are necessary.
+
 ## Reproduction and verification
 
 The audit scripts generate analysis only; they do not adopt source, adjust the
@@ -508,7 +622,13 @@ The further-reduction checkpoint is 4057/4752 exact, 96.29% linked fuzzy and
 Only four current function scores change: headerRequested and both popup
 constructors improve; reset takes the documented 1.7112-point local reduction.
 Its HIST remains 100%; no banked RVA is lost. All repository gates and retail
-delinking pass. The final census is 248 inline overrides and 68 union definitions.
+delinking pass. That checkpoint's census is 248 inline overrides and 68 union definitions.
+
+The shared-combat/drawing checkpoint is 4059/4752 exact, 96.29% linked fuzzy
+and 96.03% whole-image. The full affected-TU build, retail delinking and all
+gates pass, with no source edit lowering MAX. The subsequent insertion
+recovery raises the exact count to 4060/4752. The current census is 246
+inline overrides (239 depth-zero and seven auto-inline-off) and 68 unions.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

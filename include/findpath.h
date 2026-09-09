@@ -219,14 +219,14 @@ public:
     // Before normalization (function): searchArray::Clear.
     // Before normalization (locals): fly_level, start_z, stop_z.
     void clear(long flyLevel, long startZ, long stopZ);
-    // 0x4b3b90. The bounds-free cellData accessor whose expansion
-    // get_travel_time and SeedCombatPosition both spell by hand; the
-    // null arm answers 0 and the caller still dereferences it.
-    pathCell* getCellData(long pos);
     // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
     // two expansions in check_adjacent_hexes and no retained retail call.
+    // Retail 0x4b3b90 retains this 32-byte bounds-free accessor. Four calls
+    // inside FindCombatPath's mark expansions reach it; PushCombatPoint's
+    // source call expands. The old getCellData name/body was an NH3API
+    // fallback; DC's canonical const helper is byte-identical and owns it.
     // Before normalization (function): searchArray::get_hex.
-    pathCell* getHex(long x)
+    pathCell* getHex(long x) const
     {
         if (m_cellData == 0)
             return 0;
@@ -306,10 +306,15 @@ public:
     // Before normalization (function): searchArray::mark_teleport.
     // Before normalization (locals): current_army, current_group.
     void markTeleport(const army* currentArmy, long currentGroup);
-    // DC findpath.cpp:1172. Retail inlines both calls into mark_teleport and
-    // carries no distinct body.
+private:
+    // DC publics prove ordinary private methods returning bool/void/bool.
+    // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.
+    // Before normalization (function): searchArray::build_combat_path.
+    bool buildCombatPath(const army* currentArmy, int startHex,
+                         int endHex, int destination);
     // Before normalization (function): searchArray::mark_enemy.
     void markEnemy(long hex, long cost);
+public:
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
@@ -325,14 +330,14 @@ public:
     // loses the movsx, exactly as it should.
     // Before normalization (function): searchArray::is_moat.
     unsigned char isMoat(short hex) { return m_isMoatSlowed[hex]; }
-    // DC findpath.cpp:1187. Retail inlines it at both of FindCombatPath's
-    // call sites and carries no distinct body; the range check the
-    // second site needs is spelled at that site, because the first
-    // site's hex is already proven in range by the direction loop.
+    // DC findpath.cpp:1187. The ValidHex guard belongs to this helper;
+    // retail eliminates it at the already-checked first caller site.
     // Before normalization (function): searchArray::check_enemy_armies.
     // Before normalization (locals): current_group.
-    unsigned char checkEnemyArmies(long hex, long cost, long currentGroup,
-                                     long destination);
+private:
+    bool checkEnemyArmies(long hex, long cost, long currentGroup,
+                          long destination);
+public:
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     // Before normalization (function): searchArray::lower_door.
     void lowerDoor();
