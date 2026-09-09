@@ -1762,3 +1762,67 @@ match their reproduced candidates in executable section bytes, relocation
 destinations and function-symbol locations: respectively 391/312 sections,
 1,930/1,862 relocations and 344/274 function locations. The broader recovery
 queue remains open.
+
+### Bink ownership and the misplaced obstacle-insert claim
+
+The Bink Dreamcast bodies are port stubs, but their static member declarations
+remain positive source evidence. The retained draw/advance/close/play bodies
+now use the existing `BinkManager` declarations; callers no longer refer to
+provisional free functions. The restart caller previously referenced an
+undefined free `restartBinkVideo`, despite the existing `restartBink` member.
+OpenBink's dossier (dc:0x50a84) gives six ints and an unsigned char, correcting
+the former bool class declaration. Its retained body and the forwarding
+VideoOpen caller remain exact after the member/signature restoration.
+Two full ownership checkpoints preserve every current score. Five function
+names migrate by retail RVA, preserving their historical peaks. Own-source
+hash changes reset the frame pump's and VideoClose's current-source MAX to
+CUR; their historical 92.9245% and 100% peaks remain available.
+
+`generate-bink-pump-family.py` tests pointer selection, readiness guards,
+paused scopes, frame-end orientation and the playback cleanup call. All 48
+states compile in `68e3947857975ce4f7e9`; two distinct objects reproduce, with
+**no score changes**. Keep the original pump guards. Replace the duplicated
+playback pause/close/reset block with the existing ordinary `closeBink` call
+at the same 88.1802%. Retail's four SDK cleanup calls remain expanded there.
+The retained pump's current zero score is not an absent body: its native
+function is present, but the shared header-owned `serviceSounds` expands
+Miles/locking operations where retail calls it. The old 92.92% block-layout
+comment described the earlier ordinary-cpp sound-helper model.
+
+The native Bink oracle imports the actual pump and close member plus all 24
+pump forms and both cleanup forms. It checks 1,024 track/guard combinations,
+both descriptor-callback modes, ordering and arguments of SDK/sound/fade
+operations, dirty/paused/ready state and track resets. Five incorrect controls
+fail, including a stale descriptor read after servicing sound. The existing
+video oracle now calls the canonical Bink member and keeps its close-order
+negative control. The family generator admits the adopted cleanup form only
+through its two reviewed alternatives; it does not add a wrapper to retain
+an emission or use a pragma.
+
+A separate emission audit found that 0x46aeb0 was incorrectly claimed as
+`objecttype`'s `vector<TImageInfo>::insert(ptr, count, const&)`. Its actual
+retail callers are `combatManager::placeObstacle` (0x466010) and `castSpell`
+(0x59fe30), operating on the manager's TObstacle vector. The function also
+precedes cmbtmgr's native `_Ucopy`/`_Ufill` cluster. Both cmbtmgr and spells
+already emit the native TObstacle specialization: all **740 retail bytes**
+agree outside two relocations, whose operator new/delete destinations also
+agree. Twelve following alignment bytes are outside the admitted extent.
+The identical 24-byte stride had made TImageInfo a misleading proxy.
+
+Move the existing claim to cmbtmgr's `VECTOR_INSERT_COUNT, TObstacle` without
+changing C++ operations, adding an instantiation, or inventing a source call.
+Fresh delinking restores the native body to **100%**, preserves the old peak
+by RVA, and lowers generated emission debt from 39 to 38. The full adopted
+checkpoint reaches **95.08% executable matching**, 3,941/4,751 exact functions,
+4,788 canonical definitions and zero ownership violations; the existing 200
+pins are unchanged. This fixes a type/owner error rather than forcing the
+image-cache overload to emit. The Bink inline-boundary residual remains open.
+
+Final validation passes all 75 ownership and native-oracle tests. The fresh
+retail comparison for 0x46aeb0 has 55 exact blocks, matching branches, calls
+and relocation destinations, and equal masked assembly. The RVA-based ledger
+audit retains all 4,752 rows and every HIST peak: this batch has one CUR gain
+and no CUR declines. Restoring Bink member names changes the own-source hashes
+of `nextBinkFrame` and `videoClose`, resetting their MAX values to their
+unchanged current scores (0% and 38.1538%); their 92.9245% and 100% HIST peaks
+remain available. Every unchanged-source MAX is preserved.

@@ -321,7 +321,7 @@ TCampaignWindow::~TCampaignWindow()
         int* savedBinkState = g_campaignPreviews[preview].m_binkState;
         if (*savedBinkState) {
             memcpy(&g_binkVideo, savedBinkState, 12 * sizeof(int));
-            closeBinkVideo();
+            BinkManager::closeBink();
             memcpy(savedBinkState, &g_binkVideo, 12 * sizeof(int));
         }
     }

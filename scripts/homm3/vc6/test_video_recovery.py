@@ -30,8 +30,8 @@ class VideoRecoveryTests(unittest.TestCase):
             ("MissingPauseClear", (sound, resume.replace("g_smackPaused = 0;", "(void)0;"), close), False),
             ("MissingSmackerClose", (sound, resume, close.replace("SmackManager::closeSmacker();", "(void)0;")), False),
             ("WrongCloseOrder", (sound, resume, close.replace(
-                "SmackManager::closeSmacker();\n    closeBinkVideo();",
-                "closeBinkVideo();\n    SmackManager::closeSmacker();")), False),
+                "SmackManager::closeSmacker();\n    BinkManager::closeBink();",
+                "BinkManager::closeBink();\n    SmackManager::closeSmacker();")), False),
         ]
         fixture = r"""
 std::vector<int> effects;
@@ -40,7 +40,7 @@ int g_videoPauseCount, g_smackPaused, g_binkPaused;
 struct Sound { void serviceSounds() { effects.push_back(10); } } sound;
 Sound* g_soundManager = &sound;
 struct SmackManager { static void closeSmacker() { effects.push_back(20); } };
-void closeBinkVideo() { effects.push_back(30); }
+struct BinkManager { static void closeBink() { effects.push_back(30); } };
 void BinkPause(int handle, int pause) { effects.push_back(handle * 100 + pause); }
 // @BODIES@
 void setup(int mask, int count, int paused) {

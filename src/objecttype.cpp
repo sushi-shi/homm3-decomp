@@ -1221,14 +1221,13 @@ VA_COMPGEN(0x00404660, 0x21, SCALAR_DELETING_DTOR, logic_error)
 VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
 VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 
-// COMDAT pairing: vector<TObjectType::TImageInfo>::insert(ptr, count,
-// const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
-// is this header's nested type and no other object instantiates the vector,
-// which is why the sizes agree to the byte.
-// GetIndex leaves only the two-argument overload emitted. The explicit
-// count claim stays unpaired then: that other body's ret 8 cannot name
-// this retail ret-12 body or inherit its exact-match identity.
-VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
+// The old count-insert claim at 0x46aeb0 named TImageInfo only because
+// its trivial 24-byte record produced the same generic vector code. Retail
+// callers are combatManager::placeObstacle and castSpell, both operating
+// on TObstacle. Their native count-insert bodies match all 740 retail bytes
+// outside the two verified new/delete relocations. The retained claim now
+// belongs to cmbtmgr's TObstacle specialization; no image-cache count-insert
+// call or explicit instantiation is introduced just to emit another copy.
 
 // SetImageName's insertion at 0x514760 retains the single-value overload.
 // Its six-dword elements, returned insertion position and ret 8 distinguish

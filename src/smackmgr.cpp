@@ -360,7 +360,7 @@ int videoPlay(int id, int x, int y, int w, int h)
         g_smackFrameReady = 0;
         return result;
     }
-    return playBinkVideo(id, x, y, w, h);
+    return BinkManager::playBink(id, x, y, w, h);
 }
 
 // E:\gamedcs\smackmgr.cpp:143
@@ -376,7 +376,7 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
         showVideo(id, x, y, w, h, a6, a7, a8);
     else
-        openBinkVideo(id, x, y, w, h, a6, a7);
+        BinkManager::openBink(id, x, y, w, h, a6, a7);
 }
 
 // E:\gamedcs\smackmgr.cpp:156
@@ -401,7 +401,7 @@ void videoClose()
         videoResume();
     g_soundManager->serviceSounds();
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
 }
 
 // E:\gamedcs\smackmgr.cpp:176
@@ -417,7 +417,7 @@ void videoNextFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            nextBinkFrame();
+            BinkManager::nextBinkFrame();
     }
     g_inVideoNextFrame = 0;
 }
@@ -432,7 +432,7 @@ void videoDrawCurrentFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            drawCurrentBinkFrame();
+            BinkManager::drawCurrentBinkFrame();
     }
 }
 
@@ -497,7 +497,7 @@ void videoRestart()
         SmackGoto(g_smackVideo, 1);
         SmackDoFrame(g_smackVideo);
     }
-    restartBinkVideo();
+    BinkManager::restartBink();
 }
 
 // E:\gamedcs\smackmgr.cpp:274
@@ -638,7 +638,7 @@ VA(0x00597c70, 0x84)  // anchor-global, dc 0x14ac64
 void videoShutDown()
 {
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
     if (g_videoFile3)
         CloseHandle(g_videoFile3);
     if (g_videoFile2)

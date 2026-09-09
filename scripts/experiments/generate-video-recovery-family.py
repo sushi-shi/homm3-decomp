@@ -72,7 +72,7 @@ def variants():
         "resumeVideo:\n    if (g_videoPauseCount != 0) {\n        videoResume();\n        goto resumeVideo;\n    }",
     ]
     close = ["void videoClose()\n{\n" + loop + "\n    g_soundManager->serviceSounds();\n"
-             "    SmackManager::closeSmacker();\n    closeBinkVideo();\n}" for loop in loops]
+             "    SmackManager::closeSmacker();\n    BinkManager::closeBink();\n}" for loop in loops]
     return sound, resume, close
 
 

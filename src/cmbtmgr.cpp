@@ -5115,6 +5115,15 @@ void std::__destroy_aux()
 // Canonical Dinkumware std::vector<combatManager::TObstacle> helpers.
 // Retail _Ucopy/_Ufill use placement construction with a 0x18-byte stride;
 // size() reads the pointer pair at +4/+8 and guards a null begin pointer.
+// Retail 0x46aeb0 is the count-insert called by placeObstacle (0x466010)
+// and castSpell (0x59fe30), whose receiver is the manager's TObstacle vector.
+// It sits directly before this TU's _Ucopy/_Ufill cluster. Both cmbtmgr and
+// spells emit the native specialization: all 740 retail bytes agree after
+// excluding its two independently verified operator new/delete relocations.
+// Twelve following alignment bytes are outside the admitted retail extent.
+// The former objecttype/TImageInfo claim was a same-stride ICF proxy without
+// a matching caller; retain the actual TObstacle owner and public STL API.
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TObstacle)
 VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, TObstacle)
 VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacle)
 VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacle)
