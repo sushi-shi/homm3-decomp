@@ -3698,11 +3698,9 @@ VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 // way in both directions.
 VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
 
-// COMDAT pairing: TCampaignBrief::ScenarioStruct's scalar deleting
-// destructor. It calls 0x485fe0 - this file's own claimed ~ScenarioStruct -
-// in the flags&1 / operator delete wrapper, and this unit emits the only
-// ??_GScenarioStruct in the image.
-VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
+// ScenarioStruct's deleting wrapper at 0x488eb0 now expands in this TU.
+// The same native wrapper remains in campaignbrief, where its enrollment
+// lives; its ordinary destructor at 0x485fe0 remains owned by this file.
 
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
@@ -3758,6 +3756,9 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // 84.92324%, and inlines these unchanged library bodies; their MAX stays 100%.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
 VA_COMPGEN(0x0048db40, 0x24, VECTOR_UCOPY, unsigned_char)
+// rmg_terrain emits a byte-identical _Ufill, but that body already represents
+// its distinct retained 0x5b8060. Do not steal that enrollment or manufacture
+// another copy to hide this consumer's remaining emission debt.
 VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
 VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 

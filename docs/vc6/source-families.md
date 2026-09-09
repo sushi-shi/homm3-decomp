@@ -1888,3 +1888,43 @@ the frozen pre-edit source and headers reproduces the current object exactly:
 the enrollment edits introduce no code change. RMG's pre-existing score rows
 also remain unchanged. This control is necessary before attributing a cached
 object difference to a comment/enrollment edit.
+
+
+## Remaining bitset and scenario emission audit
+
+The same native-consumer audit identifies four more retained bodies without
+changing their canonical source definitions or adding callers:
+
+| Retained body | Emitting consumer | Proof |
+| --- | --- | --- |
+| bitset<4>::test, 0x4cf960 | singleselectionwindow | Retail readMapPlayerSlot and setNewPlayerSlot share the 52-byte body and its _Xran call. |
+| bitset<4>::_Xran, 0x4d1850 | singleselectionwindow | The feature-test and advanced-options paths call it; all 203 instruction bytes agree outside relocations. |
+| bitset<70>::_Tidy, 0x4cfa10 | hero | Retail markArtifactSpells, loadMap and readTownData use the three-word fill/six-bit trim; all 37 bytes agree without relocations. |
+| ScenarioStruct deleting destructor, 0x488eb0 | campaignbrief | Its scenario delete loop emits the 33-byte wrapper shared by retail CampaignHeaderStruct::load and selectCampaign; both calls agree. |
+
+The _Xran proof includes exception metadata. Both implementations install
+a two-state unwind map, destroy the temporary string at EBP-36 and the
+exception at EBP-64, and use the same invalid-bitset-position message,
+out_of_range throw information, vtable and five ordinary calls. The two
+native `__except_list` relocations resolve to the retail FS:[0] offsets.
+Retail's string cleanup at 0x4fca60 is folded with TreasureData's destructor;
+the native string destructor has identical blocks, instructions and its
+operator-delete target. The three unreachable pops after throwing remain
+inside the admitted 203-byte extent. Relocating the enrollment preserves
+this metadata ownership and the canonical <bitset> definition.
+
+The byte-vector fill at 0x48db70 also has a byte-identical native copy in
+rmg_terrain. That copy already represents the separate retained 0x5b8060,
+so it cannot recover another row by taking over that enrollment. Keep both
+retail identities and leave the campaign copy's emission debt visible.
+Likewise, no other TU currently emits the matching TSeerHut/university resize
+or map-hero/university copy specializations; matching a same-stride unrelated
+type would not establish their source identity.
+
+The full build restores all four rows to **100%**, reaching **95.17% executable
+matching** and **3,954/4,751 exact functions**, with **25** unpaired generated
+enrollments. Every one of the five edited TUs retains identical native code,
+function locations and named relocations. All 76 ownership/native-oracle tests
+pass. The RVA audit has four CUR gains, no declines or MAX resets, and retains
+all 4,752 ledger rows plus every historical peak. Ownership remains 4,788
+canonical definitions with zero violations; the 200 existing pins are unchanged.

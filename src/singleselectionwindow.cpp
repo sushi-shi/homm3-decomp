@@ -11204,3 +11204,15 @@ VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)
 // _Nw+1 = 5 confirms it. Byte-identical to the emitted
 // `?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z` over all 40 bytes.
 VA_COMPGEN(0x0045c1a0, 0x28, BITSET_TIDY, Bitset156)
+
+// Retail readMapPlayerSlot and setNewPlayerSlot (0x58e700) share the
+// four-bit feature test at 0x4cf960. The game TU expands it; this consumer
+// retains the native 52-byte body and its call to _Xran at 0x4d1850.
+// The same throw helper is called by setupAdvancedOptions, onBeginGame
+// and getCommonGameVersion. Its 203 instruction bytes agree outside named
+// relocations: five calls, the invalid-bitset-position string, out_of_range
+// RTTI/vtable, npos, and the standard exception-chain/cleanup metadata.
+// Keep the unreachable post-throw epilogue within the admitted extent.
+// These are the canonical <bitset> bodies, with no forced instantiation.
+VA_COMPGEN(0x004cf960, 0x34, BITSET_TEST, Bitset4)
+VA_COMPGEN(0x004d1850, 0xCB, BITSET_XRAN, Bitset4)

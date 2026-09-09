@@ -870,6 +870,7 @@ campaignbrief	??4CMapHeaderData@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x57
 campaignbrief	??4NewSMapHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x5cd10	-
 campaignbrief	??4TPlayerSlotAttributes@CMapHeaderData@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5cf70	-
 campaignbrief	??4type_map_hero_identity@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x5d8e0	-
+campaignbrief	??_GScenarioStruct@TCampaignBrief@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x88eb0	-
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
 campaignbrief	??_Gtype_map_hero_identity@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x5da40	-
 campaignbrief	?_Buynode@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@W4_Redbl@12@@Z	100.0000	100.0000	100.0000	0x5dea0	-
@@ -1373,7 +1374,6 @@ customcampaign	?test@?$bitset@$0IB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x8
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
 customcampaign	?write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	f33fce8729ae
-customcampaign	__h3cg$customcampaign$scalar_deleting_dtor$ScenarioStruct	0.0000	100.0000	100.0000	0x88eb0	-
 customcampaign	__h3cg$customcampaign$std_construct$unsigned_char	0.0000	100.0000	100.0000	0x8e9d0	-
 customcampaign	__h3cg$customcampaign$vector_erase$type_artifact	0.0000	100.0000	100.0000	0x14c6f0	-
 customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	0.0000	0.0000	34.7407	0x8bf00	-
@@ -2125,12 +2125,9 @@ game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.00
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	e819aa75453b
 game	__h3cg$game$bitset_flip$Bitset28	0.0000	100.0000	100.0000	0xd17b0	-
 game	__h3cg$game$bitset_test$Bitset28	0.0000	100.0000	100.0000	0xd17d0	-
-game	__h3cg$game$bitset_test$Bitset4	0.0000	100.0000	100.0000	0xcf960	-
 game	__h3cg$game$bitset_tidy$Bitset128	0.0000	100.0000	100.0000	0xd4e90	-
 game	__h3cg$game$bitset_tidy$Bitset28	0.0000	100.0000	100.0000	0xd1830	-
 game	__h3cg$game$bitset_tidy$Bitset5	0.0000	100.0000	100.0000	0xd1790	-
-game	__h3cg$game$bitset_tidy$Bitset70	0.0000	100.0000	100.0000	0xcfa10	-
-game	__h3cg$game$bitset_xran$Bitset4	0.0000	100.0000	100.0000	0xd1850	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_capacity$type_university	0.0000	100.0000	100.0000	0xcfa40	-
 game	__h3cg$game$vector_resize$type_university	0.0000	100.0000	100.0000	0xd4800	-
@@ -2178,6 +2175,7 @@ hero	??0hero@@QAE@XZ	89.2796	89.2796	89.2796	0xd85f0	74119c9d6326
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470	246b11db2cdd
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550	478379ac136e
 hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520	-
+hero	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcfa10	-
 hero	?_Ufill@?$vector@HV?$allocator@H@std@@@std@@IAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x8d940	-
 hero	?addSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330	e33726ce2469
 hero	?addToBackpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2f90	5baf4f3bdb18
@@ -3938,6 +3936,7 @@ singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	95.2761	95.2761	95.2761	0x195420	-
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVersion@@@Z	100.0000	100.0000	100.0000	0x194f20	-
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVictory@@@Z	100.0000	100.0000	100.0000	0x195920	-
+singleselectionwindow	?_Xran@?$bitset@$03@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1850	-
 singleselectionwindow	?addNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0	b52b3280f7fb
 singleselectionwindow	?backupGameHeaders@@YIXPAVgame@@0@Z	100.0000	100.0000	100.0000	0x177530	24f2ef77ffdb
 singleselectionwindow	?beginNewGame@TSingleSelectionWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x18c570	82c83d065ae5
@@ -4055,6 +4054,7 @@ singleselectionwindow	?sliderFileMenu@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	1
 singleselectionwindow	?sortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.6682	91.6682	0x185050	bb9ac8b568d8
 singleselectionwindow	?startMouseThread@@YIXXZ	38.3333	100.0000	100.0000	0x177790	66446f103090
 singleselectionwindow	?stopMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177810	6a4ab534bd3a
+singleselectionwindow	?test@?$bitset@$03@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcf960	-
 singleselectionwindow	?tick@CNewPlayerUpdateProc@@UAEXXZ	86.6723	86.6723	86.6723	0x178a90	d2acb93e722c
 singleselectionwindow	?tick@t_map_list_update@@UAEXXZ	89.8712	89.8712	89.8712	0x177de0	3e0c142a89b7
 singleselectionwindow	?turnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0	463d46b454a7
