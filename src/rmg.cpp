@@ -4985,7 +4985,30 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 
 // The retained size call in propagation uses zone+0x3e4, and the signed
 // two-byte loads above prove the short element independently of ICF peers.
+// JoinExtraZones retains resize after the distance initializer is exposed as
+// one ordinary source helper. The emitted 0x1e9-byte COMDAT has retail's 31
+// blocks, 19 branches, four returns, raw bytes and relocation positions.
+VA_COMPGEN(0x0054C1E0, 0x1E9, VECTOR_RESIZE, Short)
 VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
+
+// The distance table is one cohesive operation: size every signed-short row,
+// fill it with the 32000 sentinel, then clear an original zone's diagonal.
+// Complete-only source inference. A nine-state JSON family compared whole-set,
+// per-zone and post-resize boundaries. This ordinary helper and the source-
+// inline spelling compile identically, raise JoinExtraZones 68.8871 -> 79.6078,
+// emit the exact retained resize above, and leave every sibling score fixed.
+static void initializeRmgZoneDistances(
+    type_random_map_generator* generator, int originalZones)
+{
+    for (int index = 0; index < generator->m_zones.size(); ++index) {
+        TRmgZone* zone = generator->m_zones[index];
+        zone->m_zoneDistances.resize(originalZones);
+        for (int column = originalZones; column--;)
+            zone->m_zoneDistances[column] = 32000;
+        if (zone->m_slot->m_zoneIndex < originalZones)
+            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
+    }
+}
 
 // BuildZoneBoundaries passes the count from before the radial sites were
 // added and its live Voronoi diagram. Extra-to-extra edges become completed
@@ -4998,12 +5021,17 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // the initial 30.0554%. The final direct single-element insert restores the
 // retained _Construct<TRmgZoneConnection> body; all four push_back calls
 // instead inline two count-insert bodies and omit that construction symbol.
-// Reusing one connection per function or outer loop remains lower. Short
-// vector resizing and the third connection insertion still expand differently
-// from retail; preserve the real operations and their canonical helpers.
+// Reusing one connection per function or outer loop remains lower. The third
+// connection insertion still expands differently from retail; preserve the
+// real operation and its canonical helpers.
 // A sixteen-state connection push_back/insert batch emits no short-vector
 // resize specialization in any object. Its caller peak of 72.7823% does
-// not recover the missing 0x54c1e0 boundary, so no caller edit is retained.
+// not recover the missing 0x54c1e0 boundary, so no connection edit is retained.
+// Residual 79.6078%: extracting the complete distance initializer as the
+// ordinary helper above recovers that exact boundary and cuts the candidate
+// CFG from 86 to 73 blocks (retail 79). Per-zone helpers reach 79.2772%; moving
+// only the post-resize fill loses at 66.1663%. The two large connection loops,
+// their ring-search exits and final insertion expansion remain to reconcile.
 VA(0x0053DAD0, 0x57F) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
 {
@@ -5038,14 +5066,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             }
         }
     }
-    for (index = 0; index < m_zones.size(); ++index) {
-        TRmgZone* zone = m_zones[index];
-        zone->m_zoneDistances.resize(originalZones);
-        for (int column = originalZones; column--;)
-            zone->m_zoneDistances[column] = 32000;
-        if (zone->m_slot->m_zoneIndex < originalZones)
-            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
-    }
+    initializeRmgZoneDistances(this, originalZones);
     for (index = 0; index < originalZones; ++index)
         propagateZoneDistances(m_zones[index]);
 
