@@ -900,6 +900,12 @@ linked and 96.13% whole-image**. Full retail delinking and all gates pass;
 no score changes or MAX resets occur. The current census is **226 inline
 overrides** (220 depth-zero, six auto-inline-off) in **32 TUs**, and **64 unions**.
 
+The later integration with main's `7e4a9aa8` preserves its Victor, victory
+condition and support-TU recovery. Full delinking and all gates pass at
+**4073/4764 exact, 96.38% linked and whole-image**, with all 4764 functions
+now in 152 linked units and no additional MAX reset. This expanded denominator
+is not the older 149-unit linked score. The pragma/union census is unchanged.
+
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
 what must be recovered; they are not permissions to add new suppression pins.
