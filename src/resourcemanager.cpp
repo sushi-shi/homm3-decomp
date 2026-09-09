@@ -960,9 +960,7 @@ VA(0x0055ac40, 0x388)  // GetBitmap16 loader callee + dc header record
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
     Bitmap16Bit* result = 0;
-#pragma inline_depth(1)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
-#pragma inline_depth()
 
     if (file) {
         fclose(file);

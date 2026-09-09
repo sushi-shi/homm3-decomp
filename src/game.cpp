@@ -877,9 +877,8 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
 // walking `type` by 4 and `population` by 2, which is what fixes
 // population as SHORTS.
 // Retail keeps this byte-exact constructor out of line when vector::resize
-// creates game::Load's default generator. Preserve that VC6 auto-inline
-// decision so the 92-byte temporary occupies the retail stack slot.
-#pragma auto_inline(off)
+// creates game::Load's default generator. The 2026-09-09 whole-TU control
+// preserves that decision and the 92-byte temporary without auto_inline(off).
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
 generator::generator()
     : m_genClass(-1), m_genType(-1)
@@ -894,7 +893,6 @@ generator::generator()
         m_population[i] = 0;
     }
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
@@ -1379,7 +1377,7 @@ int game::loadSignPool(TAbstractFile* infile)
 
     m_signs.resize(count);
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (loadString(infile, &m_signs[i].m_signText) < 0)
+        if (loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -1402,7 +1400,7 @@ int game::saveSignPool(TAbstractFile* outfile)
         return -1;
 
     for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (saveAbstractString(outfile, &m_signs[i].m_signText) < 0)
+        if (saveString(outfile, m_signs[i].m_signText) < 0)
             return -1;
 
         count = m_signs[i].m_hasText;
@@ -3000,29 +2998,35 @@ int game::getGeneratorId(int x, int y, int z)
 }
 
 // E:\gamedcs\game.cpp:2492
-#pragma auto_inline(off)
+// DC a7414 records count and separate read/result-test statements at
+// 2496/2497 and 2505/2506. Restoring that local removes the old auto-inline
+// fence while preserving the complete game object. Removal without count
+// instead expands loadString into loadSignPool/loadRumours and loses both
+// exact callers; no assertion is needed for this reader.
 VA(0x004bb990, 0x1CF)
-int __fastcall loadString(TAbstractFile* infile, std::string* value)
+int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     short length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        *value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -3036,20 +3040,6 @@ int game::GetGarrisonId(int x, int y, int z)
 // E:\gamedcs\game.cpp:2448
 DC_ONLY(0xa7320, 0xF2)
 void GenerateStandardFileName(char* cLongName, char* cRetName)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2492
-DC_ONLY(0xa7414, 0xF8)
-int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2531
-DC_ONLY(0xa750c, 0xC2)
-int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
 {
     // @stub
 }
@@ -3081,34 +3071,42 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 #endif  // @carcass
 
 // The Dreamcast roster calls this game::saveString (dc 0xa750c), paired
-// with game::loadString above. Retail lowers both helpers as free /Gr
-// functions. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
+// with game::loadString above: both static methods take string references.
+// Retail's /Gr ABI is compatible with that declaration, not evidence of
+// free-function ownership. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
 // map-cell serializers independently corroborate the writer at 0x4bbb60.
 // EXACT 2026-08-22: the direct transcription matches all code bytes;
 // only the allocation and pooled-empty-string relocation names differ.
-// The fence is part of the match: without it VC6 expands this exact body
-// into SaveSignPool and SaveRumours, while retail calls it out of line.
-#pragma auto_inline(off)
+// DC a750c records count and separate write/result-test statements at
+// 2535/2536 and 2545/2546. Its leading gap 2532 permits the meaningful
+// outfile precondition below, not proof of the original ASSERT spelling.
+// Negative controls: either count alone or verification alone still expands
+// saveString into saveSignPool/saveRumours (100 -> 6.5/18.895).
+// Together they remove the fence and preserve all game-object bytes and
+// relocation destinations, including NewSMapHeader::save's retained call.
 VA(0x004bbb60, 0xBB)  // caller tree + dc 0xa750c
-int __fastcall saveAbstractString(TAbstractFile* outfile, std::string* text)
+int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
-    short length = text->length();
+    HOMM3_RELEASE_VERIFY(outfile != 0);
+    int count;
+    short length = s.length();
 
-    if (outfile->write(&length, sizeof(length)) < sizeof(length))
+    count = outfile->write(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        strcpy(buffer, text->c_str());
-        if (outfile->write(buffer, length) < length)
+        strcpy(buffer, s.c_str());
+        count = outfile->write(buffer, length);
+        if (count < length)
             return -1;
         delete[] buffer;
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 // anchor-caller game::Save (0x4be3f0) + the string helper: this body
 // calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
@@ -3129,7 +3127,7 @@ int game::saveRumours(TAbstractFile* outfile)
     unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
-    int saveResult = saveAbstractString(outfile, &currentRumour);
+    int saveResult = saveString(outfile, currentRumour);
     if (0 > saveResult)
         return -1;
 
@@ -3142,7 +3140,7 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
-        if (saveAbstractString(outfile, &rit->m_text) < 0)
+        if (saveString(outfile, rit->m_text) < 0)
             return -1;
         boolBuffer = rit->m_unavailable;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -3167,7 +3165,7 @@ int game::loadRumours(TAbstractFile* infile)
     unsigned char value;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         current;
-    if (loadString(infile, &current) < 0)
+    if (loadString(infile, current) < 0)
         return -1;
 
     strcpy(m_currentRumour, current.c_str());
@@ -3180,7 +3178,7 @@ int game::loadRumours(TAbstractFile* infile)
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
-        if (loadString(infile, &it->m_text) < 0)
+        if (loadString(infile, it->m_text) < 0)
             return -1;
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
@@ -3222,24 +3220,21 @@ VictoryConditionStruct::VictoryConditionStruct()
 }
 #endif  // @carcass
 
-// Reset's retail source saw the implicit SCampaign/NewSMapHeader assignment
-// surface that this TU deliberately hides to keep game::Load exact. One free
-// inline-candidate site restores that lost /Ob2 divisor without emitting code.
-// Before normalization (function): reset_assignment_surface.
-static void resetAssignmentSurface()
-{
-}
-
 // The Dreamcast header roster emits SavedGameHeader::Reset immediately
 // after the constructor (dc 0xbcf00). Retail's only call is saved.Reset()
 // in game::Save, and its stores cover the same 0x5a4-byte header layout.
-// EXACT 2026-08-22: the memberwise copies below reproduce the two implicit
-// assignment bodies without widening game.h's codegen-sensitive surface.
-// The final free inline site is load-bearing: k=0 leaves string::_Grow
-// expanded (79.54%), k=1 makes every instruction agree, and a semantic
-// IsHuman adapter is not free enough and remains at the k=0 phase. The
-// byte/dword union spells retail's last stack slot exactly: setne writes its
-// byte view, then the int store reloads and masks the dword view.
+// Complete adds the campaign/map copies and human-player loop. Their
+// canonical implicit assignments are now visible in game.h; pasting their
+// member walks, three inline-depth fences and the empty
+// resetAssignmentSurface call are unnecessary. The 54-state assignment /
+// flag-lifetime / empty-helper family preserves every other game-TU score.
+// With the former byte/dword flag union, both ordinary assignments and
+// removal of the empty helper also preserve this body's 100% instruction
+// score. Using the actual bool result directly gives 98.2888%: retail spills
+// its low byte then reloads/masks a dword, while VC6 widens the byte result
+// normally. Both store exactly 0 or 1. Bool/byte/int local controls do not
+// recover that spill. Keep the small measured residual, not artificial
+// overlapping storage solely to reproduce a stack-allocation choice.
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 void SavedGameHeader::reset()
 {
@@ -3251,43 +3246,9 @@ void SavedGameHeader::reset()
     m_version = 42;
     m_gameVersion = g_game->m_f1f698;
 
-    SCampaign& savedCampaign = m_campaign;
-    const SCampaign& gameCampaign = g_game->m_campaign;
-    savedCampaign.m_isCheater = gameCampaign.m_isCheater;
-    savedCampaign.m_secretActive = gameCampaign.m_secretActive;
-    savedCampaign.m_currentMap = gameCampaign.m_currentMap;
-    savedCampaign.m_currentCampaign = gameCampaign.m_currentCampaign;
-    savedCampaign.m_numMapRegions = gameCampaign.m_numMapRegions;
-    savedCampaign.m_crossoverArrayIndex = gameCampaign.m_crossoverArrayIndex;
-    savedCampaign.m_briefingChoice = gameCampaign.m_briefingChoice;
-#pragma inline_depth(0)
-    savedCampaign.m_campaignFilename.assign(gameCampaign.m_campaignFilename,
-                                          0, std::string::npos);
-#pragma inline_depth()
-    for (int campaignIndex = 0;
-         campaignIndex < sizeof(savedCampaign.m_campaignCompleted);
-         ++campaignIndex) {
-        savedCampaign.m_campaignCompleted[campaignIndex] =
-            gameCampaign.m_campaignCompleted[campaignIndex];
-    }
-#pragma inline_depth(0)
-    savedCampaign.m_carryOverHeroes = gameCampaign.m_carryOverHeroes;
-    savedCampaign.m_carryoverArtifact = gameCampaign.m_carryoverArtifact;
-    savedCampaign.m_mapScores = gameCampaign.m_mapScores;
-    savedCampaign.m_assignedCarryover = gameCampaign.m_assignedCarryover;
-#pragma inline_depth()
+    m_campaign = g_game->m_campaign;
 
-    NewSMapHeader& savedMapHeader = m_mapHeader;
-    const NewSMapHeader& gameMapHeader = g_game->m_mapHeader;
-#pragma inline_depth(0)
-    static_cast<CMapHeaderData&>(savedMapHeader) =
-        static_cast<const CMapHeaderData&>(gameMapHeader);
-    savedMapHeader.m_mapName.assign(gameMapHeader.m_mapName,
-                                  0, std::string::npos);
-    savedMapHeader.m_mapDescription.assign(gameMapHeader.m_mapDescription,
-                                         0, std::string::npos);
-#pragma inline_depth()
-    savedMapHeader.m_availableHeroes = gameMapHeader.m_availableHeroes;
+    m_mapHeader = g_game->m_mapHeader;
 
     m_currentPlayer = g_netLocalGamePos;
     m_mapSetup = g_game->m_setup;
@@ -3298,17 +3259,8 @@ void SavedGameHeader::reset()
     memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
 
     int* human = m_humanPlayer;
-    union {
-        // Before normalization: byte.
-        unsigned char m_byte;
-        // Before normalization: value.
-        unsigned int m_value;
-    } isHuman;
-    for (int i = 0; i < 8; ++i) {
-        isHuman.m_byte = g_game->m_players[i].isHuman();
-        *human++ = isHuman.m_value & 0xff;
-    }
-    resetAssignmentSurface();
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
 }
 
 // Retail disproves the earlier order-only SaveBlackMarkets claim: every
@@ -3932,9 +3884,7 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-#pragma inline_depth(0)
             std::bitset<8> poolMap(0);
-#pragma inline_depth()
             infile->read(poolBits, sizeof(poolBits));
             unsigned int player;
             for (player = 0; player < 8; ++player) {
@@ -4936,21 +4886,6 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     }
 }
 
-union TNeutralWeightAddress {
-    // Before normalization: pointer.
-    const int* m_pointer;
-    // Before normalization: address.
-    int m_address;
-};
-
-// Before normalization (function): neutral_weight_address.
-static __forceinline int neutralWeightAddress(const int* pointer)
-{
-    TNeutralWeightAddress value;
-    value.m_pointer = pointer;
-    return value.m_address;
-}
-
 // E:\gamedcs\game.cpp:3953, dc 0xaa3f0.  Neutral towns gain one weighted
 // dwelling's weekly growth.  A full garrison only replaces its weakest
 // stack when the incoming stack is stronger, and a five-percent roll upgrades
@@ -4968,17 +4903,15 @@ void game::giveTroopsToNeutralTown(int townId)
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
 
+    // DC game.cpp:3967 tests monster_level < 6 and level_weight[index]
+    // before subtracting at :3969. VC6 strength-reduces this signed index
+    // into retail's pointer/end comparison; no address-to-int bridge is
+    // needed. Both loop-guard and body-guard controls remain retail-exact.
     long monsterLevel;
-    const int* levelWeight;
-    monsterLevel = 0;
-    levelWeight = g_neutralTownLevelWeights;
-    for (;
-         neutralWeightAddress(levelWeight)
-             < neutralWeightAddress(&g_neutralTownLevelWeightsEnd);
-         ++monsterLevel, ++levelWeight) {
-        if (*levelWeight >= roll)
-            break;
-        roll -= *levelWeight;
+    for (monsterLevel = 0;
+         monsterLevel < 6 && g_neutralTownLevelWeights[monsterLevel] < roll;
+         ++monsterLevel) {
+        roll -= g_neutralTownLevelWeights[monsterLevel];
     }
 
     int townType = currentTown->m_type;
@@ -6784,9 +6717,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
             for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
-#pragma inline_depth(0)
                 disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
-#pragma inline_depth()
             }
         }
 
@@ -6808,6 +6739,11 @@ bool game::loadMap(TAbstractFile* mapFile)
              ++spellBit) {
             std::bitset<70>::reference serializedBit =
                 serializedSpells[spellBit];
+            // Removal controls are non-additive (2026-09-09): deleting this
+            // pin alone improves LoadMap, but deleting it together with the
+            // artifact-copy and serializedSkills pins lowers 63.8664% to
+            // 62.3643%. The two-pin removal kept here is 63.9902%; this last
+            // pin remains matching debt, not a recovered source directive.
 #pragma inline_depth(0)
             serializedBit =
                 (spellBits[spellBit >> 3] & (1 << (spellBit & 7))) != 0;
@@ -6831,9 +6767,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-#pragma inline_depth(0)
         std::bitset<28> serializedSkills(0);
-#pragma inline_depth()
         unsigned char skillBits[4];
         mapFile->read(skillBits, sizeof(skillBits));
         for (unsigned int skillBit = 0; skillBit < sizeof(m_ssDisabled);
@@ -6873,10 +6807,10 @@ bool game::loadMap(TAbstractFile* mapFile)
     for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
          ++rumour) {
         std::string throwAway;
-        int result = readMapString(mapFile, &throwAway);
+        int result = NewSMapHeader::readString(mapFile, throwAway);
         if (result < 0)
             return false;
-        result = readMapString(mapFile, &rumour->m_text);
+        result = NewSMapHeader::readString(mapFile, rumour->m_text);
         if (result < 0)
             return false;
         rumour->m_unavailable = 0;
@@ -7761,10 +7695,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
 
-#pragma inline_depth(1)
     m_mapName.erase();
     m_mapDescription.erase();
-#pragma inline_depth()
 
     if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
@@ -7788,9 +7720,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (readMapString(infile, &m_mapName) < 0)
+    if (readString(infile, m_mapName) < 0)
         return -1;
-    if (readMapString(infile, &m_mapDescription) < 0)
+    if (readString(infile, m_mapDescription) < 0)
         return -1;
 
     unsigned char ucharBuffer;
@@ -7884,10 +7816,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         m_availableHeroes.reset();
-#pragma inline_depth(1)
         // Before normalization (locals): AvailableHeroesMask.
         std::bitset<g_mapHeaderLegacyHeroCount> availableHeroesMask;
-#pragma inline_depth()
         unsigned char heroBits[g_mapHeaderLegacyHeroCount / 8];
         infile->read(heroBits, sizeof(heroBits));
         for (unsigned int i = 0; i < g_mapHeaderLegacyHeroCount; ++i) {
@@ -7955,9 +7885,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                     heroId = -1;
 
                 std::string heroName = readLengthPrefixedString(infile);
-#pragma inline_depth(1)
                 std::bitset<8> availability;
-#pragma inline_depth()
                 unsigned char availabilityBits[1];
                 infile->read(availabilityBits, sizeof(availabilityBits));
                 for (unsigned int i = 0; i < g_mapHeaderPlayerCount; ++i) {
@@ -8069,9 +7997,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(boolBuffer))
         return -1;
 
-    if (saveAbstractString(outfile, &m_mapName) < 0)
+    if (game::saveString(outfile, m_mapName) < 0)
         return -1;
-    if (saveAbstractString(outfile, &m_mapDescription) < 0)
+    if (game::saveString(outfile, m_mapDescription) < 0)
         return -1;
 
     ucharBuffer = m_difficulty;
@@ -8141,7 +8069,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 
             std::string s;
             s = player->m_nonRandomHeroCustomName;
-            if (saveAbstractString(outfile, &s) < 0)
+            if (game::saveString(outfile, s) < 0)
                 return -1;
         }
     }
@@ -8275,9 +8203,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (loadString(infile, &m_mapName) < 0)
+    if (game::loadString(infile, m_mapName) < 0)
         return -1;
-    if (loadString(infile, &m_mapDescription) < 0)
+    if (game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
     if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
@@ -8360,7 +8288,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
                 loadSavedHeroId(infile, saveVersion);
-            loadString(infile, &strTemp);
+            game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
             player->m_nonRandomHeroCustomPortrait = -1;
@@ -8450,10 +8378,8 @@ int NewSMapHeader::get(const char* path, const char* filename,
                        int campaignMap)
 {
     std::string fullPath(path);
-#pragma inline_depth(1)
     fullPath += DATA_COMPGEN(0x00677dac, newMapGetPathSeparator, "\\");
     fullPath += filename;
-#pragma inline_depth()
 
     try {
         TGzFile infile(
@@ -8471,29 +8397,35 @@ int NewSMapHeader::get(const char* path, const char* filename,
 // Map-format strings use a dword length, unlike saved-game strings. Retail
 // treats nonpositive and sentinel-sized values as empty and otherwise keeps
 // the temporary allocation alive on a short payload read.
-#pragma auto_inline(off)
-VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit length protocol
-int __fastcall readMapString(TAbstractFile* infile, std::string* value)
+// DC NewSMapHeader::readString, b1110, records count at 7236/7237 and
+// 7245/7246. Restoring that local removes the auto-inline fence with the
+// entire game object unchanged. Flattening the reads loses the retained
+// readString calls in NewSMapHeader::read and game::loadMap. The boundary
+// row 7232 is borrowed from the preceding function, so no ASSERT is inferred.
+VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit protocol, dc 0xb1110
+int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
+    int count;
     int length;
 
-    if (infile->read(&length, sizeof(length)) < sizeof(length))
+    count = infile->read(&length, sizeof(length));
+    if (count < sizeof(length))
         return -1;
 
     if (length > 0 && length < 0xffff) {
         char* buffer = new char[length + 1];
         memset(buffer, 0, length + 1);
-        if (infile->read(buffer, length) < length)
+        count = infile->read(buffer, length);
+        if (count < length)
             return -1;
-        *value = buffer;
+        s = buffer;
         delete[] buffer;
     } else {
-        value->erase();
+        s.erase();
     }
 
     return length;
 }
-#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -18730,7 +18662,7 @@ void CObjectType::~CObjectType()
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
 // Retail's real game callers also retain five private `_Tidy` COMDATs after
-// exhausting their inline budgets. These narrow reset specializations keep
+// exhausting their inline budgets. The four remaining reset specializations keep
 // the real Dinkumware helper calls and constrain only those statements. The
 // measured negative controls reject direct expansion, member
 // pointers, volatile carriers, and a TU-wide auto_inline switch.
@@ -18742,13 +18674,12 @@ template<> std::bitset<5>& std::bitset<5>::reset()
     return *this;
 }
 
-template<> std::bitset<8>& std::bitset<8>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
+// bitset<8>::reset now uses the canonical vendor definition. Load's real
+// call at +0xb76 keeps _Tidy<8> emitted after removing its poolMap ctor pin.
+// The 2026-09-09 whole-specialization deletion control preserves every one
+// of this TU's 314 tracked scores, including the exact _Tidy<8> body. The
+// former pin only changed an untracked reset wrapper from 9 to 14 bytes;
+// its out-of-line-emission purpose no longer requires a specialization.
 
 template<> std::bitset<28>& std::bitset<28>::reset()
 {

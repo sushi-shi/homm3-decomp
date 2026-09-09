@@ -914,6 +914,26 @@ void t_map_list_update::go()
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
+// DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
+// Complete's expanded copy at 0x5892b0 queues flag/number by value instead
+// of the older port's allocated integer. This is the same ordinary helper,
+// visible in its owning TU; the manager calls it at DC line 1496.
+void CNewPlayerUpdateProc::headerRequested(unsigned char flag, int number)
+{
+    SHeaderRequest req;
+    req.m_flag = flag;
+    req.m_number = number;
+    m_requests.push_back(req);
+}
+
+// DC HeaderConfirmed (0x148384), lines 1360/1362; retail 0x589270
+// expands the finished store followed by Complete's virtual Finish call.
+void CNewPlayerUpdateProc::headerConfirmed()
+{
+    m_finished = 1;
+    finish();
+}
+
 // DC keeps this source helper out of Tick. Complete VC6 /Ob2 expands its
 // base-Tick call sites; the separate 0x578010 HandleRequests body and derived
 // Tick consume the same boundary.
@@ -2112,18 +2132,18 @@ VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
 // E:\gamedcs\singleselectionwindow.cpp:1820
 // DC lines 1823/1824 call hide, GetText and ordinary OnNameChange. Keep
 // all three boundaries; OnNameChange owns the player/prefs/widget work.
-// Capturing GetText's result before the global window receiver preserves
-// retail's evaluation order and recovers OnKeyPress's two spill homes after
-// deleting the false game selector declaration. Passing getText() directly
-// scores 99.8868%; the named text restores 100%. OnKillFocus and all other
-// consumers of singleselectionwindow.h keep their previous scores.
+// The merged header/helper state keeps OnKeyPress exact with GetText as the
+// direct argument. Capturing a separate text pointer scored 100% before the
+// integration but now swaps two stack-slot operands (99.8868%). A 12-state
+// family covering text/receiver evaluation and return scopes reproduces the
+// direct-argument winner with every other function unchanged. Retain the
+// canonical helper chain; no declaration or inlining override is needed.
 // OnEnter's existing inline declaration remains unchanged.
 inline int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
     hide();
-    const char* text = getText();
-    g_unnamed69fbe8->onNameChange(pos, text);
+    g_unnamed69fbe8->onNameChange(pos, getText());
     return 1;
 }
 
@@ -6599,37 +6619,32 @@ t_map_list_update::t_map_list_update(unsigned long dpid)
 VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm calls it with the sender dpid before its 'Header confirmed' log line, dc 0x148838
 void CNewPlayerUpdateMan::headerConfirmed(unsigned long dpid)
 {
-    CNewPlayerUpdateTask* proc = getProc(dpid);
-    if (proc) {
-        proc->m_finished = 1;
-        proc->finish();
-    }
+    CNewPlayerUpdateProc* proc = getProc(dpid);
+    if (proc)
+        proc->headerConfirmed();
 }
 
 // Queue one header re-request on the sender's transfer job: GetProc's
-// scan expands in place (the HeaderConfirmed shape) and the push_back
-// expands with its grow logic.
-// Residual (88.6): retail's push_back expansion keeps the Dinkumware
-// helpers OUT of line (_Ucopy 0x58dc10 x2, the fill 0x58dc50, a
-// destroy stub and a far COMDAT 0x5af330) where our CL loops them in
-// place, and the GetProc scan's bound 8 lives in ebx there vs our
-// immediate - the same /Ob2 collector class as the map::find pair.
+// scan and Proc::HeaderRequested both expand here. Keeping the canonical
+// source helper (DC line 1496), rather than pasting its insertion body here,
+// recovers the nested _Ucopy/_Ufill calls and the shared eight-byte bound.
+// The 449-byte body's instruction view now agrees; folded STL relocation labels remain
+// independently named for their owning element types. The old flattened
+// control scores 88.6223%. A 16-state family also restores the adjacent
+// confirmation helper and moves GetProc to its DC-proven cpp definition;
+// neither changes any other tracked score.
 // auto_inline(off): retail CALLS this from HandleNetMsg's request arm;
-// with a body visible /Ob2 expanded it there (and the budget shift
-// dragged the neighboring HeaderConfirmed call in with it), costing
-// HandleNetMsg 90.16 -> 86.33. The pin restores both calls.
+// removal still expands it and the adjacent HeaderConfirmed call there,
+// lowering HandleNetMsg 89.7408 -> 85.9113 even with all three helpers
+// restored. This remaining override is debt, not original-source evidence.
 #pragma auto_inline(off)
 // E:\gamedcs\singleselectionwindow.cpp:1492
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
 void CNewPlayerUpdateMan::headerRequested(unsigned long dpid, unsigned char flag, int number)
 {
-    CNewPlayerUpdateTask* proc = getProc(dpid);
-    if (proc) {
-        SHeaderRequest req;
-        req.m_flag = flag;
-        req.m_number = number;
-        proc->m_requests.push_back(req);
-    }
+    CNewPlayerUpdateProc* proc = getProc(dpid);
+    if (proc)
+        proc->headerRequested(flag, number);
 }
 #pragma auto_inline(on)
 
@@ -6643,6 +6658,17 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
             m_procs[i] = 0;
         }
     }
+}
+
+// DC GetProc is an ordinary cpp helper at 0x148998, source line 1544.
+CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
+            return m_procs[i];
+        }
+    }
+    return 0;
 }
 
 // Bounce the setup ping straight back at its sender, echoing the
@@ -9288,20 +9314,6 @@ unsigned char CNewPlayerUpdateProc::isFinished()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1346
-DC_ONLY(0x148348, 0x3C)
-void CNewPlayerUpdateProc::headerRequested(int headerNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1355
-DC_ONLY(0x148384, 0x24)
-void CNewPlayerUpdateProc::headerConfirmed()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1369
 DC_ONLY(0x1483a8, 0x50)
 void CNewPlayerUpdateProc::requestConfirmation()
@@ -9368,13 +9380,6 @@ unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 // E:\gamedcs\singleselectionwindow.cpp:1533
 DC_ONLY(0x148960, 0x38)
 int CNewPlayerUpdateMan::getFirstAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1544
-DC_ONLY(0x148998, 0x56)
-CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
     // @stub
 }

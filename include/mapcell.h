@@ -719,12 +719,9 @@ public:
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
     struct TObjectCell {
-        union {
-            // Before normalization: objectIndex.
-            unsigned short m_objectIndex;
-            // Before normalization: ObjectIndex.
-            unsigned short m_objectIndexAlias;
-        };
+        // Before normalization: objectIndex / ObjectIndex. These spellings
+        // denoted the same unsigned word, not alternative representations.
+        unsigned short m_objectIndex;
         union {
             // Before normalization: offsets.
             unsigned char m_offsets;
@@ -735,12 +732,8 @@ public:
                 signed char m_cellY : 4;
             };
         };
-        union {
-            // Before normalization: layer.
-            signed char m_layer;
-            // Before normalization: Height.
-            signed char m_height;
-        };
+        // Before normalization: layer / Height; one signed layer byte.
+        signed char m_layer;
 
         // Before normalization (function): NewmapCell::TObjectCell::get_object.
         CObject* getObject() const;
@@ -1014,7 +1007,6 @@ extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 // CODEVIEW(E:\gamedcs\mapcell.cpp:2951, dc 0xf0df4) int NewfullMap::readHeroData(void* infile, CObject* heroObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3229, dc 0xf151c) int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3290, dc 0xf16c8) int NewfullMap::readObject(void* infile, CObject* tempObject);
-// CODEVIEW(E:\gamedcs\mapcell.cpp:3443, dc 0xf1b1c) int NewfullMap::saveObject(void* outfile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3476, dc 0xf1bf8) int NewfullMap::loadObject(void* infile, CObject* tempObject);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3514, dc 0xf1cd8) int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:3658, dc 0xf22cc) int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType);

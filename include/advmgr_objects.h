@@ -452,17 +452,10 @@ public:
     // included.
     // Before normalization: mask_34.
     std::bitset<10> m_mask34;
-    // loadObjectType stores the serialized type as a full dword. Keep one
-    // instance declarator here: VC6's generated union copy copies every
-    // declarator, whereas retail copies +0x38 exactly once. The unused
-    // static spelling preserves this header's established VC6 include-set
-    // sensitivity without adding a second field to generated copies.
-    union {
-        // Before normalization: objectType.
-        TAdventureObjectType m_objectType;
-    };
-    // Before normalization: objectTypeValue.
-    static unsigned long s_objectTypeValue;
+    // loadObjectType stores one full dword at +0x38. A scalar preserves
+    // that field and its single generated copy; no alternative view exists.
+    // Before normalization: objectType.
+    TAdventureObjectType m_objectType;
     // Before normalization: extra.
     int m_extra;
     // Before normalization: suppressDraw.

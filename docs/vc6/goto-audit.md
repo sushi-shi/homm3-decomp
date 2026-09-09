@@ -1,6 +1,6 @@
 # Goto reconstruction audit
 
-The audit removes **198 of 316 goto statements (62.7%)**, across 83 functions,
+The isolated audit removes **198 of 316 goto statements (62.7%)**, across 83 functions,
 without lowering any current score among the 4,752 scored functions.
 The remaining inventory is **118 statements in 53 functions across 29 files**,
 down from 123 functions in 55 files. Seventy functions and twenty-six files
@@ -354,3 +354,31 @@ These label differences do not justify changing the recovered source types.
 The evidence establishes source simplification without current-score regressions.
 Non-exact functions retain documented residuals; this is not a claim that all
 executable behavior has been validated through gameplay.
+
+## Integration with the helper cleanup
+
+The combined checkpoint includes destination `e4650642` and audit `dd2b4c97`.
+The C++ sources merge without conflicts. The generated status files are
+regenerated from the combined sources; both branches' historical peaks remain
+available through the build's Git-history recovery.
+
+Relative to the destination, all 4,752 row identities remain: **18 current
+scores improve and none decrease**, with exact functions rising from 4,057
+to 4,061. The full build passes, at 96.38% fuzzy and 96.12% executable matched.
+All 118 remaining gotos and the destination's 236 remaining inlining pins are
+preserved. No new helper forks or inlining controls resolve the merge.
+
+The destination's canonical map accessor, string I/O members, saved-header
+reset and popup ownership changes are retained. Against the isolated audit,
+13 current scores rise and 16 fall; those are separate from the destination
+comparison. The movement includes `doAdvCommand` at 80.8250% (destination
+77.1728%, audit 84.9679%), `game::load` at 78.2645% (destination 64.2804%, audit
+76.9004%) and `army::doAttack` at 99.9040% (destination 98.8868%, audit 99.9424%).
+The earlier isolated percentages describe their own compiler context.
+
+One integration-specific loss was recovered: `CEnterNameEdit::onKeyPress`
+initially scored 99.8868%. A new 12-state family (six distinct objects)
+reproduces 100% with the canonical `getText()` call passed directly to
+`onNameChange`. The separate text local that was exact in the isolated tree
+now changes two stack-slot operands. Every sibling keeps its score; retail
+CFG, instructions and the eight named calls agree in the adopted result.
