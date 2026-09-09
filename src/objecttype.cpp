@@ -1000,25 +1000,6 @@ VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
 // this change. Ordered by RVA; agreements are the masked-mnemonic difflib
 // ratio against the compiled COMDAT of the same content size.
 
-// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: retail 0x515010 (408 B) is
-// `basic_string<char>::resize(size_type)`, this object's own COMDAT copy.
-// The bytes are Dinkumware's one-argument overload with both arms expanded -
-// `_N <= _Len ? erase(_N) : append(_N - _Len, _E(0))`. The erase arm is the
-// no-op `_Xran` guard on `_Len < _P0` (retail's `cmp [ebx+8],esi / jae` over
-// `_Xran`), `_Split()` (the `_Ptr[-1]` refcount test, `_Tidy(1)`, the inline
-// strlen, `_Grow`, `memmove`) and `_Eos`; the append arm is `_Xlen()` behind
-// `npos - _Len <= _N`, the second `_Xlen` behind `_Grow`'s own `npos - 3`
-// test, and the `rep stosb` of `_Tr::assign(_Ptr + _Len, _N, _C)`. `ret 4`
-// and the `[ebx+8]` / `[ebx+4]` member reads fix the arity and the receiver.
-// It cannot be claimed yet: a VA_COMPGEN only pairs a COFF symbol VC6 has
-// already emitted, and no site in this file's reconstructed source calls
-// `resize`. The retail whole-image xref finds the only CALL in
-// `collate<char>::do_transform` (0x614260, outside this band), so every use
-// inside objecttype.obj was inlined and the emitted COMDAT is the leftover -
-// which means the call site is in a body of this TU still unwritten, not in
-// one already here. A future lane that adds it should also add
-// BASIC_STRING_RESIZE to DIRECT_SYMBOL_COMPGEN_KINDS.
-
 // COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
 VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
 

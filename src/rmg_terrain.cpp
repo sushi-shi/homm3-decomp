@@ -779,6 +779,10 @@ int __fastcall selectTerrainTransition(
 // Copy-initializing the empty size temporary retains the wrong size call (92.04%).
 // A focused 60-case matrix of dimension snapshots, member/local area operands,
 // assignment-result references and named products is also flat at 97.9205%.
+// A further 60-state family uses the ordinary getWidth/getHeight boundaries
+// from paintTransitions, with five dimension bindings and three area-result
+// lifetimes. Its 24 distinct objects and ten reproduced finalists add no
+// tracked peak; the direct dimension stores remain the closest reconstruction.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
@@ -1243,6 +1247,10 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Goto audit: the outer cycle exit is a byte-neutral break. Replacing the
 // inner exit with break plus an outer equality test loses 5.9713 points;
 // a bottom-tested outer cycle loses 6.6914. The multi-level exit remains.
+// Inner break followed by the outer cycle-completion test scores 85.3676%
+// versus 91.3389%; it preserves gap construction but changes the loop CFG.
+// A cycle-complete result with either a loop-head test or bottom break
+// scores 86.0995% or 86.1619% for bool/byte/int, below 91.3389%.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1582,9 +1590,14 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
 // +0x20/+0x52/+0x72 choosing the +0x64 epilogue instead of retail's +0x44
 // (99.7458%); native bool is neutral. Sharing the return in the first
 // empty-run scan reproduces all 132 raw bytes, including those destinations.
-// Declare direction before the initial scan so its failure can legally
-// enter the shared return without bypassing an initialized declaration.
-// VC6 still duplicates a false epilogue at +0x64 for the later loop exit.
+// The initial scan can return directly while the two later backward joins
+// retain that early epilogue: all 132 bytes and the helper relocation are
+// unchanged. Eight independent return combinations check each source edge;
+// removing either remaining join changes its branch destination. Keep the
+// direction lifetime; VC6 still duplicates the later +0x64 false epilogue.
+// Positive continue-scan/else-return scopes score 87.7966% for the first
+// surviving join and 99.6610% for the final one, versus 100%. A shared
+// bool/byte/int false result is lower (81.5254..81.8644%).
 VA(0x005B6810, 0x84) // anchor-callee 0x5b58e4; retail-only
 unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
@@ -1595,7 +1608,7 @@ unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& poi
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
         if (first == 0)
-            goto noSeparation;
+            return 0;
     }
     direction = first;
     do {

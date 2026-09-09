@@ -652,6 +652,11 @@ void startMouseThread()
 // StartMouseThread immediately above expands there.  Marking this body
 // non-inlinable preserves the Dreamcast-proven helper boundary and that
 // asymmetric retail lowering without changing either function's source order.
+// A 36-state global-handle-reference/early-return family preserves every
+// reload and zero store but cannot reproduce the split without this fence:
+// GenerateRandomMap rises 92.6386% -> 97.9759%, while SetupScenarioOptions
+// falls 100% -> 90.1470%. Mutable/const references and both guard forms
+// share that score tradeoff; no source alternative is retained.
 #pragma auto_inline(off)
 // Before normalization (function): StopMouseThread.
 VA(0x00577810, 0x61)  // event/handle teardown and pointer restore, dc 0x12fdd4
@@ -2993,6 +2998,10 @@ void CEnterNameEdit::onKillFocus()
 // always-reject arm's ret-1 while the fall-through emits its own), so the
 // GetKeyState call is live and the duplication is source-faithful.
 // E:\gamedcs\singleselectionwindow.cpp:1892
+// Independent controls keep GetKeyState live: direct rejection return
+// 97.5397%, switch exit 94.8809%, do-scope continue 97.8413%, period
+// fallthrough 97.8571%, versus 100%. Rejection-default results reach
+// 93.6905% (bool/byte) or 94.1667% (int); retain the shared rejection join.
 VA(0x0057cfe0, 0xCF)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot16 (IgnoreKey override vs textEntryWidget base), dc 0x1493c8
 unsigned char CSaveGameEdit::ignoreKey(message* msg)
 {
@@ -5789,15 +5798,16 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // progress bar advances one step; the generator's result code selects one of
 // three general-text failure dialogs.
 //
-// Residual (91.9718%): one construct, and it is a shared-helper conflict
+// Residual (92.6386%): the main delta is a shared-helper conflict
 // rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
 // WaitForSingleObject, the two CloseHandles and the pointer restore all
 // inline, one extra branch) while keeping it OUT of line at
 // SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
 // around its definition above buys. Measured both ways in one build:
-// dropping the pragma takes this row 91.9718 -> 96.9735 and
-// SetupScenarioOptions 100.0000 -> 90.1470, a net loss of about 100 bytes
-// and a ratchet break, so the pragma stays and this call stays a call.
+// dropping the pragma takes this row 92.6386 -> 97.9759 and
+// SetupScenarioOptions 100.0000 -> 90.1470. The 36-state real-handle-lifetime
+// follow-up reproduces that same tradeoff throughout its unfenced options;
+// it does not recover the split, so the pragma stays and this call stays a call.
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
@@ -11128,6 +11138,12 @@ VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
 VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
 VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
+// SCampaign assignment's retained copy of its artifact-vector range.
+// This TU naturally emits the canonical std::copy specialization. Retail
+// 0x4d2c90 advances 16-byte vector objects and expands their assignments;
+// all 41 blocks align with this emission. Its _Construct<type_artifact>
+// call is folded with the identical type_dialog_resource construction.
+VA_COMPGEN(0x004d2c90, 0x1B3, STD_COPY, type_artifact_vector)
 
 VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)

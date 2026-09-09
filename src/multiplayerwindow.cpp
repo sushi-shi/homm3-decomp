@@ -1094,7 +1094,20 @@ inline unsigned char TMultiPlayerWindow::onModem()
 // a shared menu result with merged cancel/IPX cases reaches only 97.5668%,
 // and copying the host's menu check gives 95.4905%. The remaining five joins
 // retain their common actions; late-arm register scheduling remains open.
+// Individual owned-action controls, in source order: Cancel menu 88.8147%,
+// Host success 94.2507%, Host failure check 91.2643%, Join menu 88.8147%,
+// Search success 94.0872%, versus 98.1199%. Combined menu/host/exit scopes
+// also lose; preserve OnHost/OnSearch and their distinct cleanup order.
+// Enclosing dispatch in do/while(0), with switch continue to a single action
+// tail, scores 87.2752% for successful Host/Search and 77.3978% for the two
+// menu exits. These preserve calls and cleanup semantics but change the CFG;
+// the neutral campaign scope does not transfer to this dispatcher.
 // Before normalization (locals): bExitFlag.
+// Shared success results for Host/Search reach 97.9836% versus 98.1199%;
+// Host alone reaches 97.6022%. Bool/byte/int and split-initialization/lifetime
+// controls do not improve this. Retaining the actual helper result reaches
+// 96.7302..97.7112%; combining success and menu results is lower. Grouped
+// Host/Join arms score 96.9836% or 93.6403%. All five sites remain measured.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 {

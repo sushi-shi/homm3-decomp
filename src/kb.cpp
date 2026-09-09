@@ -330,13 +330,21 @@ static int checkMem();
 // Residual (99.5994%): two explicit head-tested while(1) scans remove
 // four control labels and improve the 95.3801% goto version. The older
 // claim that an unconditional retail back edge proved source goto was
-// too strong. A conventional for-test or a fully structured found flag
-// scores 94.2515%; retain the two exits that skip the fallback scan.
+// too strong. Changing these headers to conventional for-tests, including
+// the earlier found-result variant, scores 94.2515%.
 // The remaining retail guard is an unconditional jump over the CD scans;
 // the current source retains its meaningful g_cdDriveNumber predicate.
+// Checking each scan's exhaustion independently instead of taking its found
+// exit scores 99.0000% for the first scan, 92.4123% for the fallback, and
+// 91.8275% together, versus 99.5994%. Both must skip the version fallback
+// on success; those scoped alternatives do so but change the retail CFG.
 // The other differences exchange the 5/6 assignment blocks and one InitVars
 // store. The named InitLogFile mismatch resolves to the shared bare-ret
 // body represented by textWidget::dim at 0x5bc690, not a different action.
+// Keeping the two explicit while(1) headers and adding a found result
+// removes both CD-version exits at 99.5994%: 1251 compiled bytes and 122
+// references/addends agree. Bool, byte and int results are identical; the
+// older flag probe also changed the loop headers and is not this control.
 VA(0x004ed650, 0x4E8)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
 int earlySetup()
 {
@@ -380,32 +388,38 @@ int earlySetup()
     if (g_cdDriveNumber) {
         int i;
 
+        bool found = 0;
         i = 0;
         while (1) {
             if (i >= g_videoHeaderCount)
                 break;
             if (!_strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                              "h3x2_rne1.smk")))
-                goto have_cd_version;
-            i++;
-        }
-        i = 0;
-        while (1) {
-            if (i >= g_videoHeaderCount)
+                              "h3x2_rne1.smk"))) {
+                found = 1;
                 break;
-            if (!_strcmpi(g_videoHeader3[i].m_name,
-                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                              "h3abab1.smk"))) {
-                g_cdDriveNumber = 6;
-                goto have_cd_version;
             }
             i++;
         }
-        g_cdDriveNumber = 5;
+        if (!found) {
+            i = 0;
+            while (1) {
+                if (i >= g_videoHeaderCount)
+                    break;
+                if (!_strcmpi(g_videoHeader3[i].m_name,
+                              DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                                  "h3abab1.smk"))) {
+                    g_cdDriveNumber = 6;
+                    found = 1;
+                    break;
+                }
+                i++;
+            }
+            if (!found)
+                g_cdDriveNumber = 5;
+        }
     }
 
-have_cd_version:
     button::s_clickSample = ResourceManager::getSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
@@ -469,7 +483,14 @@ void initMainClasses()
 // and the `new Bitmap16Bit(328, textHeight + fs.height)` block is the same
 // three instructions with EDX/EDI/ECX against our ECX/EBX/EDX.
 // Goto audit: An event-switch completion flag removes stop_credits but
-// scores 99.0393% versus 100%; keep this loop exit for now.
+// scores 99.0393% versus 100%.
+// A nested abort predicate inside the event switch reaches 99.4562%; replacing
+// the switch with the full key/button predicate reaches 95.7100%. Neither
+// preserves the exact loop/cleanup join with the original playback helpers.
+// Place the normal frame in the event switch's default arm. Non-F4 keys
+// and mouse events break the switch then the outer loop; normal frames
+// continue the actual playback loop. This removes stop_credits and preserves
+// all 1032 compiled bytes and 57 references/addends at 100%.
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void creditsWait()
 {
@@ -507,55 +528,58 @@ void creditsWait()
         process1WindowsMessage();
         message msg = g_inputManager->getEvent();
         switch (msg.m_id) {
-        case MESSAGE_KEY_DOWN:
-            if (msg.m_codeX == KEYCODE_F4)
-                break;
-            // fall through
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_DOWN:
-            goto stop_credits;
-        }
-        if (videoNeedsUpdate()) {
-            Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-            background->draw(0, 0, background->getWidth(),
-                             background->getHeight(), screen->getMap(0, 0),
-                             460, 10, screen->getWidth(), screen->getHeight(),
-                             screen->getPitch(), 0);
-            if (startOffset) {
-                startOffset -= 2;
-                screen = g_windowManager->m_screenBitmap;
-                credits->draw(0, 0, 328, 580 - startOffset,
-                              screen->getMap(0, 0), 460, startOffset + 10,
-                              screen->getWidth(), screen->getHeight(),
-                              screen->getPitch(), 1);
-            } else if (yOffset < textHeight - 580) {
-                yOffset += 2;
-                screen = g_windowManager->m_screenBitmap;
-                credits->draw(0, yOffset, 328, 580, screen->getMap(0, 0), 460,
-                              10, screen->getWidth(), screen->getHeight(),
-                              screen->getPitch(), 1);
-            } else if (endOffset >= 0) {
-                endOffset -= 2;
-                yOffset += 2;
-                screen = g_windowManager->m_screenBitmap;
-                credits->draw(0, yOffset, 328, endOffset, screen->getMap(0, 0),
-                              460, 10, screen->getWidth(), screen->getHeight(),
-                              screen->getPitch(), 1);
-                if (endOffset < 435)
-                    g_smallFont->drawBoundedString(
-                        g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
-                        328, 580, 13, 8, -1);
-            } else {
-                done = 1;
-            }
-            g_windowManager->updateScreen(460, 10, 328, 580);
-            videoDrawRects();
-            if (done)
+            break;
+        case MESSAGE_KEY_DOWN:
+            if (msg.m_codeX != KEYCODE_F4)
                 break;
-        }
-    }
+            // fall through
+        default:
+            if (videoNeedsUpdate()) {
+                Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+                background->draw(0, 0, background->getWidth(),
+                                 background->getHeight(), screen->getMap(0, 0),
+                                 460, 10, screen->getWidth(), screen->getHeight(),
+                                 screen->getPitch(), 0);
+                if (startOffset) {
+                    startOffset -= 2;
+                    screen = g_windowManager->m_screenBitmap;
+                    credits->draw(0, 0, 328, 580 - startOffset,
+                                  screen->getMap(0, 0), 460, startOffset + 10,
+                                  screen->getWidth(), screen->getHeight(),
+                                  screen->getPitch(), 1);
+                } else if (yOffset < textHeight - 580) {
+                    yOffset += 2;
+                    screen = g_windowManager->m_screenBitmap;
+                    credits->draw(0, yOffset, 328, 580, screen->getMap(0, 0), 460,
+                                  10, screen->getWidth(), screen->getHeight(),
+                                  screen->getPitch(), 1);
+                } else if (endOffset >= 0) {
+                    endOffset -= 2;
+                    yOffset += 2;
+                    screen = g_windowManager->m_screenBitmap;
+                    credits->draw(0, yOffset, 328, endOffset, screen->getMap(0, 0),
+                                  460, 10, screen->getWidth(), screen->getHeight(),
+                                  screen->getPitch(), 1);
+                    if (endOffset < 435)
+                        g_smallFont->drawBoundedString(
+                            g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
+                            328, 580, 13, 8, -1);
+                } else {
+                    done = 1;
+                }
+                g_windowManager->updateScreen(460, 10, 328, 580);
+                videoDrawRects();
+                if (done)
+                    break;
+            }
 
-stop_credits:
+            continue;
+        }
+        break;
+}
+
     if (credits)
         delete credits;
     if (background)
@@ -841,6 +865,12 @@ static void setupCDRom()
 // Before normalization (function): KbFn_004EE1B0.
 // Goto audit: A combined key/click condition with a loop break removes
 // stop_intro but scores 84.6629% versus 100%; retain the event switch.
+// Keeping the switch with a nested abort predicate reaches 94.1011%. This
+// Complete-only routine has no older DC body; its retail event paths govern.
+// An event-local done result, set by a skip event and checked after the
+// switch, preserves all 248 compiled bytes and 17 references/addends at 100%.
+// Bool, byte and int results with event/iteration/function lifetimes agree.
+// The failed nested predicate is a different source form, not a flag limit.
 VA(0x004ee1b0, 0xF6)
 static void kbFn004EE1B0(int videoId, const char* frameName)
 {
@@ -858,6 +888,7 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
             break;
 
         {
+            bool done = 0;
             process1WindowsMessage();
             message msg = g_inputManager->getEvent();
             switch (msg.m_id) {
@@ -867,17 +898,20 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
                 // fall through
             case MESSAGE_LEFT_BUTTON_DOWN:
             case MESSAGE_RIGHT_BUTTON_DOWN:
-                if (!g_firstTimeThrough)
-                    goto stop_intro;
+                if (!g_firstTimeThrough) {
+                    done = 1;
+                    break;
+                }
                 break;
             }
+            if (done)
+                break;
         }
 
         if (videoNeedsUpdate())
             videoDrawRects();
     }
 
-stop_intro:
     videoClose();
     frame->dispose();
 }
@@ -1081,6 +1115,11 @@ inline void showCredits()
 // changes the caller's layout. An explicit replay loop with playGame and
 // backToMenu results falls to 59.9903--60.0568%, so the two restart edges
 // remain. All nested campaign-window lifetimes and ordinary helpers stay.
+// Replay scopes with the videoPaused aftermath inside the loop, preserving
+// campaignScored and translating menu reentry to an inner break, score
+// 59.0584..59.7480% with bool/byte/int play or skip results and for/while/do
+// headers. Rechecked after the playback edits: all are below 78.4499%, as
+// are the older two-result replay scopes (59.9903..60.0568%).
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -4172,6 +4211,12 @@ void fileError(const char* buf)
 // WinText, smk.
 // Goto audit: A combined key/click condition with a loop break removes
 // stop_congrats but scores 73.4633% versus 100%; retain the event switch.
+// A nested abort predicate covering both key and mouse exits reaches 74.4067%.
+// Preserve the existing DC message/video locals and the shared cleanup tail.
+// Normal drawing in the event switch's default arm continues the actual
+// playback loop; key/mouse switch breaks then leave that loop. Both joins
+// are removed with all 884 compiled bytes and 52 references/addends at 100%,
+// including the recovered message/video locals and single cleanup tail.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
@@ -4224,52 +4269,55 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         process1WindowsMessage();
         msg = g_inputManager->getEvent();
         switch (msg.m_id) {
-        case MESSAGE_KEY_DOWN:
-            if (msg.m_codeX != KEYCODE_F4)
-                goto stop_congrats;
-            break;
         case MESSAGE_LEFT_BUTTON_DOWN:
         case MESSAGE_LEFT_BUTTON_UP:
         case MESSAGE_RIGHT_BUTTON_DOWN:
         case MESSAGE_RIGHT_BUTTON_UP:
-            goto stop_congrats;
-        }
-        if (videoNeedsUpdate()) {
-            for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
-                x = i * 160;
-                currentFont->drawBoundedString(labels[i],
-                                         g_windowManager->m_screenBitmap,
-                                         x, 450, 160, 100, 281, 5, -1);
-                switch (i) {
-                case CONGRATS_COLUMN_DAYS:
-                    sprintf(temp, DATA_COMPGEN(0x00660a1c,
-                        dialogDecimalFormat, "%d"), dayz);
-                    break;
-                case CONGRATS_COLUMN_BASE_SCORE:
-                    sprintf(temp, DATA_COMPGEN(0x00660a1c,
-                        dialogDecimalFormat, "%d"), base);
-                    break;
-                case CONGRATS_COLUMN_DIFFICULTY:
-                    strcpy(temp,
-                           g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
-                    break;
-                case CONGRATS_COLUMN_SCORE:
-                    sprintf(temp, DATA_COMPGEN(0x00660a1c,
-                        dialogDecimalFormat, "%d"), score);
-                    break;
-                case CONGRATS_COLUMN_RANK:
-                    strcpy(temp, rank);
-                    break;
+            break;
+        case MESSAGE_KEY_DOWN:
+            if (msg.m_codeX != KEYCODE_F4)
+                break;
+            // fall through
+        default:
+            if (videoNeedsUpdate()) {
+                for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
+                    x = i * 160;
+                    currentFont->drawBoundedString(labels[i],
+                                             g_windowManager->m_screenBitmap,
+                                             x, 450, 160, 100, 281, 5, -1);
+                    switch (i) {
+                    case CONGRATS_COLUMN_DAYS:
+                        sprintf(temp, DATA_COMPGEN(0x00660a1c,
+                            dialogDecimalFormat, "%d"), dayz);
+                        break;
+                    case CONGRATS_COLUMN_BASE_SCORE:
+                        sprintf(temp, DATA_COMPGEN(0x00660a1c,
+                            dialogDecimalFormat, "%d"), base);
+                        break;
+                    case CONGRATS_COLUMN_DIFFICULTY:
+                        strcpy(temp,
+                               g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
+                        break;
+                    case CONGRATS_COLUMN_SCORE:
+                        sprintf(temp, DATA_COMPGEN(0x00660a1c,
+                            dialogDecimalFormat, "%d"), score);
+                        break;
+                    case CONGRATS_COLUMN_RANK:
+                        strcpy(temp, rank);
+                        break;
+                    }
+                    currentFont->drawBoundedString(temp,
+                                             g_windowManager->m_screenBitmap,
+                                             x, 540, 160, 50, 281, 5, -1);
                 }
-                currentFont->drawBoundedString(temp,
-                                         g_windowManager->m_screenBitmap,
-                                         x, 540, 160, 50, 281, 5, -1);
+                videoDrawRects();
             }
-            videoDrawRects();
-        }
-    }
 
-stop_congrats:
+            continue;
+        }
+        break;
+}
+
     currentFont->dispose();
 }
 

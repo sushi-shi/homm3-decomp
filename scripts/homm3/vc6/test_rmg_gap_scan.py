@@ -60,6 +60,14 @@ class RmgGapScanTests(unittest.TestCase):
         bodies = [(name + "+" + inner, body) for inner in self.module.INNER_LOOPS
                   for name, body in self.module.scans(inner)]
         self.assertEqual(len({body for _, body in bodies}), 360)
+        # Also execute the current authored scan, including main's verified
+        # outer break. Historical generated forms alone do not cover adoption.
+        definition = self.module._source.find_definitions(self.source, self.module.FUNCTION)[0]
+        function = self.source[definition.head:definition.body_close + 1]
+        start = function.index(self.module.START)
+        adopted = function[start:function.index(self.module.END, start)]
+        if adopted not in {body for _, body in bodies}:
+            bodies.append(("adopted", adopted))
         for index, (_, body) in enumerate(bodies):
             program += [f"unsigned int scan{index}(const unsigned char* matches, TRmgTerrainGap* gaps) {{\n",
                         "unsigned int gapCount = 0, first = 0;\nwhile (!matches[first]) ++first;\n",

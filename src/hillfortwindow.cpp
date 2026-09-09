@@ -721,6 +721,10 @@ void THillFortWindow::handleClick(message& msg)
 // unrecognised message id must return CONSUME, not FORWARD.
 // Everything else agrees: the outer id chain, both switch shapes, all
 // five hover arms, the sprintf recipes and the shared epilogues.
+// The accept arm can own its stores and direct forward return: all 881
+// compiled bytes and 49 relocation names/addends remain unchanged at
+// 91.9430%. The placement residual above survives either spelling; the
+// former claim that only a source label reproduced it was too strong.
 VA(0x004e8850, 0x369)  // DoModal address-take, dc 0xd7458
 int hillFortWindowHandler(message& msg)
 {
@@ -737,8 +741,13 @@ int hillFortWindowHandler(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
 
         case widget::WIDGET_DESELECT:
-            if (msg.m_codeY == DIALOG_RETURN_OK)
-                goto acceptDialog;
+            if (msg.m_codeY == DIALOG_RETURN_OK) {
+                msg.m_id = MESSAGE_WIDGET;
+                g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
+                msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.m_codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
             switch (msg.m_codeY) {
             case THillFortWindow::UPGRADE_BUTTON_1_ID:
             case THillFortWindow::UPGRADE_BUTTON_2_ID:
@@ -846,17 +855,6 @@ int hillFortWindowHandler(message& msg)
     }
 
     return MESSAGE_DISPATCH_CONSUME;
-
-    // Retail puts this arm at the very END of the function body, after the
-    // hover tail, even though its test is the FIRST thing the deselect arm
-    // does. Written in place - either polarity - VC6 emits it inline right
-    // after the compare; only the label reproduces retail's placement.
-acceptDialog:
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
 }
 
 #if 0  // @carcass: remaining located bodies

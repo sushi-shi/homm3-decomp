@@ -1546,6 +1546,10 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // plus skill index in one scope removes the shared-skill jump, but scores
 // 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
 // preserve the named skill and dialog calls; the dispatch layout remains open.
+// Keeping separate left/right selector assignments and a shared skill-
+// requested result after the switch scores 71.6782% (bool/byte/int).
+// A combined inner selector scores 80.3929%; conditional left/right forms
+// reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
 VA(0x005afdf0, 0xABB)  // full retail dispatcher + dc 0x15d4ac dossier
 int swapManager::main(message& msg)
 {

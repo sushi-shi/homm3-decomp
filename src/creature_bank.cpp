@@ -26,44 +26,7 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
-// The two per-bank tables crbanks.txt does NOT carry. Both are indexed by
-// type_creature_bank_type and both are read only by the loader below.
-//
-// The guard list is five slots wide and -1 terminated - nine banks have a
-// single guard type, the sepulcher four undead and the dragon bank four
-// dragons - and the spreadsheet supplies only the COUNTS, which is why the
-// loader has to bring the types with it. Named where armygrp.h's enum
-// reaches; the rest are the raw ids retail stores.
-// Before normalization: creature_bank_guard_types.
-DATA(0x006702a0)
-static const int g_creatureBankGuardTypes[CREATURE_BANK_COUNT][5] = {
-    { 94, -1, 0, 0, 0 },                              // cyclops
-    { CREATURE_DWARF, -1, 0, 0, 0 },                  // dwarf
-    { CREATURE_GRIFFIN, -1, 0, 0, 0 },                // griffin
-    { 42, -1, 0, 0, 0 },                              // imp
-    { CREATURE_MEDUSA, -1, 0, 0, 0 },                 // medusa
-    { 38, -1, 0, 0, 0 },                              // naga
-    { 105, -1, 0, 0, 0 },                             // dragonfly
-    { CREATURE_WIGHT, -1, 0, 0, 0 },                  // shipwreck
-    { CREATURE_WATER_ELEMENTAL, -1, 0, 0, 0 },        // derelict
-    { CREATURE_SKELETON, CREATURE_WALKING_DEAD,
-      CREATURE_WIGHT, 62, -1 },                       // sepulcher
-    { CREATURE_GREEN_DRAGON, CREATURE_RED_DRAGON,
-      CREATURE_GOLD_DRAGON, CREATURE_BLACK_DRAGON, -1 }  // dragon
-};
-
-// ...and the creature the bank rewards, which only two banks have: the
-// griffin conservatory pays in angels and the dragonfly hive in 108. The
-// loader clears the slot again when the spreadsheet's count column is zero.
-// Before normalization: creature_bank_reward_creature.
-DATA(0x0067037c)
-static const int g_creatureBankRewardCreature[CREATURE_BANK_COUNT] = {
-    -1, -1, CREATURE_ANGEL, -1, -1, -1, 108, -1, -1, -1, -1
-};
-
 // Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
-// The traits constructor below sees the original ordinary body and lets
-// VC6 expand the armyGroup construction for each of its four levels.
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25. Retail initializes the Dinkumware string
@@ -75,30 +38,67 @@ type_creature_bank_traits::type_creature_bank_traits()
 {
 }
 
+// E:\gamedcs\creature_bank.cpp:32; original initialize_creature_bank_level.
+// DC proves static linkage and both reference parameters. Retail expands
+// the one source call in initializeCreatureBankTraits; keep the real body.
+DC_ONLY(0x70fe0, 0x14A)
+static void initializeCreatureBankLevel(type_creature_bank_level& traits,
+                                       const std::vector<char*>& resource)
+{
+    int column = 2;
+    traits.m_chance = atoi(resource[column++]);
+    traits.m_guards.m_numTroops[0] = atoi(resource[column]);
+    column += 2;
+    traits.m_upgradeChance = atoi(resource[column++]);
+    for (int guard = 1; guard < 4; ++guard) {
+        traits.m_guards.m_numTroops[guard] = atoi(resource[column]);
+        column += 2;
+        if (traits.m_guards.m_numTroops[guard] == 0)
+            traits.m_guards.m_armyTypes[guard] = CREATURE_NONE;
+    }
+
+    ++column;
+    for (int resourceId = 0; resourceId < 7; ++resourceId)
+        traits.m_resources[resourceId] = atoi(resource[column++]);
+
+    traits.m_rewardCreatures = atoi(resource[column]);
+    column += 2;
+    if (traits.m_rewardCreatures == 0)
+        traits.m_rewardCreature = CREATURE_NONE;
+
+    traits.m_treasureArtifacts = atoi(resource[column++]);
+    traits.m_minorArtifacts = atoi(resource[column++]);
+    traits.m_majorArtifacts = atoi(resource[column]);
+    traits.m_relicArtifacts = atoi(resource[column + 1]);
+}
+
 // E:\gamedcs\creature_bank.cpp:67, dc 0x7112c. crbanks.txt gives four rows
 // per bank - one per guard strength - and 26 columns per row; everything the
 // sheet does NOT carry (the guard creature types, the reward creature) comes
-// from the two tables above. The column walk is the readable part: cell 0 is
+// from the two function-static tables below. Cell 0 is
 // the bank name (taken once per bank, from the first of its four rows), 2 is
 // the level's roll weight, 3 and then 6/8/10 are the four guard counts, 5 is
 // the upgrade threshold, 13..19 the seven resources, 20 the reward count and
 // 22..25 the four artifact counts. Cells 4, 7, 9, 11, 12 and 21 are the
 // human-readable names beside each number and retail reads none of them.
 //
-// Two clears fall out of the same rule - a zero count means the slot is not
-// there: a zero guard count writes CREATURE_NONE over the type the table
-// just supplied, and a zero reward count clears the reward creature.
-// Residual (88.89%): 19 of 24 blocks byte-exact, all 12 branches agree,
-// 15 of 16 calls agree. Three things are left and all three were measured.
-// (1) `_Eos` - retail EXPANDS the string's terminator write
-// (`_Len = n; _Ptr[n] = 0`) where our compile calls the COMDAT; the two
-// bodies are 596 and 608 bytes, so this is an /Ob2 site-count decision, not
-// a spelling. (2) VC6 fuses the guard copy's two walks into one induction
-// plus a `dest - src` bias where retail keeps a source pointer, a
-// destination pointer and a counter; writing the three out explicitly is
-// byte-flat, VC6 re-fuses them. (3) an EBX/EDI transposition between the
-// level pointer and the row vector, and the +4 bias retail carries on its
-// traits induction.
+// Zero counts clear guard slots 1..3 (not slot 0) and the reward creature;
+// the reward test reads the stored signed byte, not atoi's full-width result.
+// Residual (97.5355%): all 12 branches and 15 named calls agree. Restoring
+// the ordinary level-reader boundary and its real column cursor recovers
+// `_Eos`'s expansion and the parser's registers; 22 of 24 CFG blocks have
+// matching structure/size. The two size differences are the guard copy:
+// VC6 fuses its walks into an induction plus a dest-src bias, while retail
+// keeps source/destination cursors and a signed counter. The string's final
+// byte store also swaps commutative address operands. Claimed table/traits
+// relocation names and +4 symbol biases are not new helper-call mismatches.
+// The ten-state family exhausts four ordinary-reader column lifetimes and
+// unsigned/signed guard indices plus both pasted controls. The best retains
+// DC's cursor from column 2 and advances past each count before testing it.
+// Pasting the parser back gives 89.4550%; changing only the guard index to
+// signed gives 88.8910%. A lower isolated score does not refute that signed
+// index: retail's guard-copy back edge is jl. No inline keyword or override
+// substitutes for the canonical static reference-taking reader above.
 //
 // MEASURED AND REJECTED: a `do/while` over an advancing `traits` pointer
 // (89.4340) - it scores higher and it is WRONG, because a pointer relational
@@ -120,53 +120,48 @@ unsigned char initializeCreatureBankTraits()
         return 0;
     }
 
+    // DC procedure 0x7112c owns these two mutable function-static arrays:
+    // guard_types (type 0x5601) and reward_types (0x5602), both TCreatureType.
+    // Retail keeps all 66 dwords in writable .data, at these exact addresses.
+    // Unspecified guard cells after CREATURE_NONE are zero-initialized padding.
+    DATA(0x006702a0)
+    static TCreatureType guardTypes[CREATURE_BANK_COUNT][5] = {
+        { CREATURE_CYCLOPS, CREATURE_NONE },
+        { CREATURE_DWARF, CREATURE_NONE },
+        { CREATURE_GRIFFIN, CREATURE_NONE },
+        { CREATURE_IMP, CREATURE_NONE },
+        { CREATURE_MEDUSA, CREATURE_NONE },
+        { CREATURE_NAGA_SENTINEL, CREATURE_NONE },
+        { CREATURE_DRAGON_FLY, CREATURE_NONE },
+        { CREATURE_WIGHT, CREATURE_NONE },
+        { CREATURE_WATER_ELEMENTAL, CREATURE_NONE },
+        { CREATURE_SKELETON, CREATURE_WALKING_DEAD,
+          CREATURE_WIGHT, CREATURE_VAMPIRE, CREATURE_NONE },
+        { CREATURE_GREEN_DRAGON, CREATURE_RED_DRAGON,
+          CREATURE_GOLD_DRAGON, CREATURE_BLACK_DRAGON, CREATURE_NONE }
+    };
+    DATA(0x0067037c)
+    static TCreatureType rewardTypes[CREATURE_BANK_COUNT] = {
+        CREATURE_NONE, CREATURE_NONE, CREATURE_ANGEL, CREATURE_NONE,
+        CREATURE_NONE, CREATURE_NONE, CREATURE_WYVERN, CREATURE_NONE,
+        CREATURE_NONE, CREATURE_NONE, CREATURE_NONE
+    };
+
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
         type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
-        const int* guardTypes = g_creatureBankGuardTypes[bank];
+        const TCreatureType* bankGuardTypes = guardTypes[bank];
         traits->m_name = sheet->getRow(row)[0];
 
         type_creature_bank_level* level = traits->m_levels;
         int levelsLeft = 4;
         do {
             level->m_guards.initialize();
-            for (unsigned int slot = 0; slot < 5 && guardTypes[slot] != -1; ++slot)
-                level->m_guards.m_armies[slot] = guardTypes[slot];
-            {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = g_creatureBankRewardCreature[bank];
-                level->m_rewardCreature = storage.m_creature;
-            }
+            for (int slot = 0; slot < 5 && bankGuardTypes[slot] != CREATURE_NONE; ++slot)
+                level->m_guards.m_armies[slot] = bankGuardTypes[slot];
+            level->m_rewardCreature = rewardTypes[bank];
 
-            const std::vector<char*>& cells = sheet->getRow(row);
-            level->m_chance = atoi(cells[2]);
-            level->m_guards.m_numTroops[0] = atoi(cells[3]);
-            level->m_upgradeChance = atoi(cells[5]);
-
-            int column = 6;
-            for (int guard = 1; guard < 4; ++guard) {
-                level->m_guards.m_numTroops[guard] = atoi(cells[column]);
-                if (level->m_guards.m_numTroops[guard] == 0)
-                    level->m_guards.m_armies[guard] = CREATURE_NONE;
-                column += 2;
-            }
-
-            ++column;
-            for (int resource = 0; resource < 7; ++resource)
-                level->m_resources[resource] = atoi(cells[column++]);
-
-            level->m_rewardCreatures = atoi(cells[column]);
-            column += 2;
-            if (level->m_rewardCreatures == 0)
-                level->m_rewardCreature = CREATURE_NONE;
-
-            level->m_treasureArtifacts = atoi(cells[column++]);
-            level->m_minorArtifacts = atoi(cells[column++]);
-            level->m_majorArtifacts = atoi(cells[column]);
-            level->m_relicArtifacts = atoi(cells[column + 1]);
+            initializeCreatureBankLevel(*level, sheet->getRow(row));
 
             ++row;
             ++level;
@@ -300,13 +295,6 @@ void initializeCreatureBank(type_creature_bank* bank,
 }
 
 #if 0  // @carcass -- remaining Dreamcast hypotheses
-
-// E:\gamedcs\creature_bank.cpp:32
-DC_ONLY(0x70fe0, 0x14A)
-void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource)
-{
-    // @stub
-}
 
 // E:\gamedcs\creature_bank.cpp:25
 DC_ONLY(0x714e0, 0x34)

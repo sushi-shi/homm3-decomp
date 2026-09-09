@@ -5108,7 +5108,11 @@ void townManager::doPortalOfSummoning()
 // spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
 // Combining the extra/special-building custom-text guards removes the goto
-// but lowers 100% to 97.7551%; the current custom-text join is retained.
+// but lowers 100% to 97.7551%. Keeping the Extra and Special tests separate
+// in a for/break scope removes that join with all 824 compiled bytes and 22
+// relocation names/addends unchanged. Both guard polarities are exact;
+// do/while(0) gives 99.9864%, and switch fallthrough gives 98.0918%. Preserve
+// the original separator order, string temporary and shared title tail.
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
@@ -5125,13 +5129,12 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     } else if (buildingId < DWELLING_0_ID) {
         strcpy(buffer, g_buildingDescTown[type * 11 + buildingId]);
         if (type == 1 && extended) {
-            if (buildingId == EXTRA_0_ID) {
-                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
-                strcat(buffer, g_rampartExtraDesc);
-                goto emit_custom;
-            }
-            if (buildingId == SPECIAL_BUILDING_ID) {
-            emit_custom:
+            for (;;) {
+                if (buildingId == EXTRA_0_ID) {
+                    strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                    strcat(buffer, g_rampartExtraDesc);
+                } else if (buildingId != SPECIAL_BUILDING_ID)
+                    break;
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
                 if (thisTown->m_pondAmount == 0) {
                     strcat(buffer, g_generalText->getText(678));
@@ -5142,6 +5145,7 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
                                        g_rampartCustomText[thisTown->m_pondResource])
                                        .c_str());
                 }
+                break;
             }
         }
     } else {
@@ -5524,6 +5528,16 @@ void townManager::drawTown(int update, int incFrame,
 // Eight result/lifetime controls include a byte-sized flag and declaration
 // before code selection or at function scope. Every structured flag form
 // emits the same 87.0077% object; changing its width/lifetime does not help.
+// Individual popup copies also lose: Hall 86.6755%, Mage Guild 86.6195%,
+// Castle 86.6774%, Tavern 88.4013%, Dock 88.6837%, Marketplace 88.4592%,
+// Silo 88.6132%, Blacksmith 88.6379%, Extra 1 88.5200%, Extra 2 88.6987%,
+// Special 88.4172%, versus 90.2738%. Each was scored separately; retain
+// these joins and the original string, popup and exit-helper boundaries.
+// A positive popup-handled result with plain/do/for dispatch scopes also
+// scores 87.0077% for bool/byte/int, covering all eleven exits. A post-switch
+// normal-return scope scores 76.1869% or 78.7779%. These tested scopes do
+// not recover the current 90.2738%; absence of a named DC helper is not
+// proof against an inline expansion.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {
