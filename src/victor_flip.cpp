@@ -14,9 +14,11 @@
 // temporary so source and destination may be the same image. Monochrome
 // regions use two bit-range temporaries to preserve neighboring pixels.
 // Dreamcast has only the public API stub; all Windows semantics are retail.
-// Residual 77.50%: all nine named calls agree; stack-local allocation,
-// address arithmetic and status/return scheduling still differ. Four
-// JSON-batched status lifetimes favor nested validation/allocation scopes;
+// Residual 77.86%: all nine named calls agree, named depth snapshots recover
+// the retail compare exactly, and a destination-stride snapshot improves the
+// allocation setup. Stack-local allocation, address arithmetic and status/
+// return scheduling still differ. JSON-batched status, pointer, row-distance,
+// declaration-order and register-hint families leave the nested scopes best;
 // early validation and allocation returns score 76.21%.
 VA(0x00603b20, 0x2d2)  // anchor-caller PCX importers + paired row/bit helper calls
 int __stdcall flipimage(imgdes* source, imgdes* destination)
@@ -25,8 +27,10 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
     if (!status) {
         status = victorValidateBitmap(destination);
         if (!status) {
-            if (source->m_bmh->biBitCount != destination->m_bmh->biBitCount)
-            return victorUnsupportedBitDepth;
+            unsigned short sourceDepth = source->m_bmh->biBitCount;
+            unsigned short destinationDepth = destination->m_bmh->biBitCount;
+            if (sourceDepth != destinationDepth)
+                return victorUnsupportedBitDepth;
             unsigned int width, height;
             victorMinimumDimensions(source, destination, &height, &width);
             unsigned int rowBytes, allocationBytes;
@@ -49,12 +53,13 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
                 unsigned char* sourceTop = source->m_ibuff + sourceOffset;
                 unsigned char* sourceBottom = source->m_ibuff + sourceOffset
                 - (height - 1) * source->m_buffwidth;
+                unsigned int destinationStride = destination->m_buffwidth;
                 int destinationBitOffset = destination->m_bmh->biBitCount * destination->m_stx;
                 unsigned int destinationOffset = (destination->m_bmh->biHeight - destination->m_sty - 1)
-                * destination->m_buffwidth + destinationBitOffset / 8;
+                * destinationStride + destinationBitOffset / 8;
                 unsigned char* destinationTop = destination->m_ibuff + destinationOffset;
                 unsigned char* destinationBottom = destination->m_ibuff + destinationOffset
-                - (height - 1) * destination->m_buffwidth;
+                - (height - 1) * destinationStride;
                 if (depth >= victorIndexedColor) {
                     while (rows--) {
                         memcpy(temporary, sourceTop, rowBytes);
