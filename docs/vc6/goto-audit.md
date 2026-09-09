@@ -5,7 +5,8 @@ That is **285 fewer than the initial 316 (90.2%)**, across 117 functions;
 111 original functions and 45 files no longer contain gotos. Every surviving
 statement has an individual disposition below. The latest 23 removals preserve
 the 16 affected function contributions' code and relocation references/addends.
-All 4,764 CUR/MAX/HIST triples remain unchanged from `22f8b0fd`.
+The integrated result preserves all 4,764 incoming CUR/MAX/HIST triples
+from `3423ece1`; the isolated goto pass also preserves `22f8b0fd`.
 
 The preceding completion pass removed nine more original sites and two PCX
 sites introduced by parallel work. Its integrated result preserved all 4,764
@@ -899,3 +900,19 @@ from `22f8b0fd`, **4,074 exact functions**, **96.38% linked fuzzy match** and
 **96.38% executable matched bytes**. The incoming **216 inlining pins** are
 preserved. The current-source inventory and the 31-row disposition table
 agree exactly, including repeated labels.
+
+
+Integration with `3423ece1` retains its native creature-bank tables, canonical
+level-reader boundary and shared creature enums. The combined full build
+preserves **all 4,764 incoming CUR/MAX/HIST triples**. Its **4,073 exact
+functions**, **96.39% linked fuzzy match**, **96.38% executable matched bytes**
+and **216 inlining pins** are
+unchanged from that destination. The incoming bank improvement and three RMG
+current-score changes remain as recorded there, with their MAX/HIST values
+preserved; the goto changes introduce no additional score loss.
+
+All 16 adopted contributions still reproduce their original control bytes,
+relocation names and addends in the combined tree. The surviving RMG fit and
+entrance-policy bodies also keep their code and references/addends after
+normalizing only the anonymous-namespace path/nonce. The integrated inventory
+still contains 31 statements, and its disposition table covers each one.
