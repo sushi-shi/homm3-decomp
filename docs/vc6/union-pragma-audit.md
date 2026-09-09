@@ -12,7 +12,7 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
+| Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
 | Inline override regions | 289 | 221 | 68 removed, including six in disabled negative-example code |
 | `inline_depth(0)` regions | 262 | 216 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
@@ -47,6 +47,7 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | `game::randomizeUniversity` | `TUniversitySkillsPointerAlias` and its forced wrapper | Restore the DC-proven native aggregate. Retail's elemental-school initializer is Conflux-specific, not a generic record constructor. The map local remains 99.7464%, Load improves to 81.2284%, and explicit Conflux initialization preserves the retained body and all four call/expansion sites. Shared-header collateral is measured below. |
 | Marketplace artifact state | `TMarketArtifactList` byte/enum/integer pointer views | DC `DoBlackMarket` takes `TArtifact*`; both actual producers already own seven-element `TArtifact` arrays. Correct the entry signature, pass `TBlackMarket::m_artifacts`, and use one native pointer throughout. All five header consumers preserve their whole raw COFF section bytes, function locations and relocation destinations under the evidenced signature rename. |
 | `NewfullMap::readObjectType` | Full-width integer/enum `convertedType` | Read the four-byte wire value into its native enum local and commit only after the short-read guard. This is a Complete ownership hypothesis, not the DC `int_buffer` spelling. The diagnostic queries the committed record, positively supported by DC row 3619. Only 18 stack-displacement bytes change; the function retains 99.9633% and all other mapcell functions are byte-identical. |
+| `initializeCreatureBankTraits` | Reward-table `creatureTypeFromInt` | DC proves both tables are mutable function-static `TCreatureType` arrays owned by this loader. Restore those owners, the enum's consumed names and the direct enum assignment. All 66 emitted dwords match writable retail data; the reader's canonical static helper also lifts the loader from 89.4550% to 97.5355%. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -59,14 +60,14 @@ pins, alternate declarations or dummy operations were introduced.
 
 | Role | Count | Disposition |
 |---|---:|---|
-| Scalar integer/enum adapters | 31 | Encoding/type-boundary debt; not established as necessary compiler interventions |
+| Scalar integer/enum adapters | 30 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
 | Pointer adapters/views | 8 | Two intentional ABI views; six adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **64** | **24 intentional representations; 40 reconstruction adapters/workarounds** |
+| **Total** | **63** | **24 intentional representations; 39 reconstruction adapters/workarounds** |
 
-The 31 scalar adapters are accounted for below. A local definition with two
+The 30 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
 an integer, loop ordinal, serialized value or packed field to a recovered enum
 consumer. They should not be advertised as original union declarations.
@@ -80,7 +81,6 @@ consumer. They should not be advertised as original union declarations.
 | `src/advmgr.cpp` | 4 | Creature/building helpers and two creature-bank extra-info reads |
 | `src/ai_player.cpp` | 4 | Building/resource enumeration and selected-building values |
 | `src/army.cpp` | 1 | Wall-target ordinal |
-| `src/creature_bank.cpp` | 1 | Reward-creature input |
 | `src/events.cpp` | 1 | Creature event/input adapter |
 | `src/game.cpp` | 4 | Creature, hero-class, creature-bank and secondary-skill adapters |
 | `src/hero.cpp` | 1 | Drawn secondary-skill index |
@@ -990,11 +990,28 @@ fixed, and the **entire raw object** stays identical: 200 sections, 1678
 relocation destinations and every function position. The copied-body deletion
 control loses 100% to 99.1368%; the canonical boundary restores retail's nested
 `setVisible` call naturally. The six-state family and production both reproduce
-the byte-neutral result. The census is now **221 overrides** (216 depth-zero,
+the byte-neutral result. That checkpoint has **221 overrides** (216 depth-zero,
 five auto-inline-off) and **64 unions**. See the
 [sacrifice-slot controls](source-families.md#sacrifice-slot-helper-boundaries).
 Full delinking and all gates preserve **4074/4764 exact and 96.38%
 linked/whole-image**, with no matching-score or history changes.
+
+The bank-table owner recovery removes the reward-creature adapter: NB11
+proves both loader-local tables are mutable `TCreatureType` arrays, and all
+66 emitted dwords match retail's writable data. All 95 consumers of the
+corrected creature enum are measured. Three RMG rows move slightly while
+retaining their unchanged-source MAX/HIST; the other 4114 scores do not move.
+Restoring the loader's canonical static reference-taking level reader then
+raises it from **89.4550% to 97.5355%**, with all fifteen named calls and
+twelve branches matching retail. Production reproduces the chosen object's
+28 raw sections and 100 relocation destinations; the native two-body oracle
+and table-owner verifier pass with their negative controls. See the
+[bank ownership and reader controls](source-families.md#creature-bank-table-owners-and-ordinary-level-reader).
+Full build passes at **4073/4764 exact, 96.39% linked fuzzy and 96.38%
+whole-image**, with no MAX reset or lost banked RVA. The current census is
+**221 overrides** (216 depth-zero, five auto-inline-off) and **63 unions**
+(37 source, 26 header): 24 intentional representations and 39 reconstruction
+adapters. The post-header-change deletion audit must use a fresh snapshot.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
