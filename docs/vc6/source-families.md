@@ -1744,6 +1744,213 @@ Full delinking/build passes at **4073/4764 exact, 96.39% linked fuzzy and
 RVA losses occur. The audit now has **63 unions** (37 source, 26 header),
 including 39 remaining reconstruction adapters, and **221 inline overrides**.
 
+### Skill-quest proposal lifetimes and six-fence boundary
+
+The Complete-only skill-quest proposal at `0x56dad0` has no established
+Dreamcast counterpart. Its current score is **83.2252%**, not the old 75.4324%
+quoted beside its source. Retail CFG, named calls and byte-verified candidate
+statements were inspected before these families. The input is a signed byte;
+the current `const int&` binds a converted temporary, not the field itself.
+
+`generate-skill-proposal-input-family.py`, context `32c06caa67f5495b6533`,
+exhausts **36 states / 24 distinct objects**, with ten reproduced elites.
+It crosses three input bindings, three output bindings, independent declaration
+order and the first dialog loop's index signedness. None improves the caller
+or any sibling. A native signed-byte reference reaches the same 83.2252%;
+the signed dialog index required by retail's `jl` measures 82.9730%.
+Output pointer cursors lose further. The byte-reference control has identical
+raw section bytes but different generated EH function-label numbering, so
+this is not claimed as a strict whole-object identity result.
+
+`generate-skill-proposal-fence-family.py`, context `d65a9ca695d30ffc1d3c`,
+exhausts all **64 subsets / 64 objects** of the six inherited fences, including
+joint removals; ten elites are reproduced per generation. Every nonempty
+deletion lowers only the proposal caller. The least-cost individual deletion
+is the custom-string insert fence, **83.2252% → 82.2342%**; removing both
+insert fences gives 78.7928%. All 118 other scored rows stay fixed.
+
+`generate-skill-proposal-string-family.py` verifies that parent's snapshot
+and reproduced control, then crosses owned versus lifetime-extended const
+references for both unmodified returned strings with twelve paired/individual
+fence masks. Context `c46dad8e3df70bd51249` exhausts **48 states / 36 objects**
+and reproduces ten elites. These real string-lifetime alternatives change no
+score; every deletion has the same cost as its parent. They do not recover a
+removable fence. Of six differing displayed call names, four are byte-identical
+shared vector COMDATs; only two are real string-destructor versus `_Tidy`
+boundaries. An aggregate call count is not an additional six-site diagnosis.
+
+These bounds do not prove that the six fences are original source or that
+the whole function is unrecoverable. They rule out deletion alone, these
+input/output bindings and these returned-string lifetimes in the measured
+source context, without inventing helper bodies or changing normalization.
+
+### AI combat container ownership and canonical melee
+
+The inherited `type_monster_vector` subclass was a code-generation shim,
+not the Dreamcast member type. DC's `creatures` is an actual
+`std::vector<type_monster_data>`. Its `size()` is separate from
+`type_AI_combat_data::get_total`: the latter's complete DC body at `0x2c6ac`
+loads the `total_combat_value` member. Retail `0x427750` is the 33-byte vendor
+vector-size body, not that game accessor; `0x4276c0` is the 135-byte native
+vector copy constructor. Both claims now belong to their compiler-generated
+STL owners. The class field is named `m_totalCombatValue`, and ordinary count
+loops call the native vector's `size()`. Public begin/end also replace access
+to vendor-private pointer members. Neither the vendored STL nor normalization
+is modified.
+
+Before that correction, `generate-general-melee-boundary-family.py` exhausted
+**12 states / six objects**, all six reproduced, in context
+`7e95efb5c8032fc9c974`. It crossed canonical versus pasted/pinned melee with
+separate/joint zero guards and shared/branch-scoped ratios. Replacing only the
+paste with the DC-proven ordinary call lowered chooseMelee from 90.9329% to
+77.6098%; removing only its fence scored zero despite retaining the emitted
+caller. Those results did not refute the source call at DC line 1346.
+
+With native container ownership, the canonical call raises **chooseMelee,
+doGeneralMelee and the two-side getEnchantmentValue to 100%**. One override
+is retired. All 42 chooseMelee CFG blocks agree, and the retained general-melee
+body also matches. Two displayed chooseMelee call-name differences are proved
+shared bodies: its 38-byte vector destructor equals retail's widget-vector
+destructor at `0x46a650`, and its three-byte `_Destroy` equals the artifact
+instantiation at `0x404140`. They are not wrong helper calls.
+
+The owner change has real collateral: initializeCreatures falls from 91.9548%
+to 82.6704%, and the previously exact `_Unguarded_partition` body at `0x427c30`
+is no longer emitted because it expands into the initializer. Its compiler-
+generated claim and historical peak remain; a passing banked-RVA gate does
+not mean that body is still present. `_Sort`, vector-size and vector-copy
+remain exact. This must not be hidden as claim removal or a normalization fix.
+
+`generate-ai-creature-initialization-family.py` exhausts/reproduces **nine
+states / nine objects**, context `6de4e0a94f21173ed59e`: the force modifier's
+real early initialization and three public sort-argument lifetimes. DC line
+222 and retail's entry argument copy support the declaration initializer;
+it recovers initializeCreatures to **83.4275%**. Direct calls, a vector
+reference and named iterators score identically.
+`generate-ai-classifier-boundary-family.py` verifies all nine parents and extends them with the
+ordinary/inline, const/mutable and original/hoisted `getCatagory` interface.
+Context `2027c66d848baf9eadfa` exhausts **72 states / 27 objects** and reproduces
+ten elites per generation. Those declaration choices do not change scores;
+the adopted ordinary const helper follows DC `0x2a52c` in its real source
+position after wall-archery adjustment. All 72 emitted objects were checked:
+none restores the missing partition body. The chosen non-elite was independently
+recompiled and reproduced before adoption.
+
+The selected initialization/classifier implementation and production agree
+in all 73 raw ai_combat sections / 432 relocation destinations, and all 420
+ai_player sections / 1963 destinations, including function identities and
+positions. Both header consumers and all 176 scored rows are checked.
+The full checkpoint has **4075/4764 exact, 96.39% linked and 96.38% whole-image**.
+Only the initializer's source edit resets MAX below its old peak; HIST retains
+91.9548%. The missing partition keeps its unchanged-source MAX/HIST at 100%.
+
+`test-ai-melee-owner-boundary.py` extracts the actual accessor and ordinary
+melee body. At native `-O0` and `-O2`, twenty independent vector-count/total
+cases and 169 melee pairs cover zeroes, ties and float rounding around 2^24.
+Mocked kill/damage/final-value calls check operands and ordering. Five deliberate
+faults are rejected. This is a bounded behavioral check, not a VC6 ABI oracle.
+
+The final interface cleanup follows raw NB11 types rather than inherited
+comments: class `0x5a07` / field list `0x5a4c` names `current_hero`,
+`current_army`, `can_cast_spells`, `wall_archery_penalty` and `wall_speed_limit`.
+Those names now own the corresponding `m_` members. chooseMelee's type
+`0x5a2b` returns primitive `0x20`, unsigned char; its byte-return ABI and both
+byte-consuming callers agree with retail. This cleanup preserves every raw
+byte and relocation destination in both consumers, under that one explicit
+function rename (77 ai_combat sections / 462 destinations).
+
+Conversely, the same class's constructor method list `0x5a0f` gives its copy
+constructor attributes `0x003`, not the `0x103` compiler-generated attributes
+on assignment/destruction. Preserve the explicit memberwise copy constructor;
+its native vector member has a separate retained STL owner. A sole line row
+at a caller's closing source line is not enough to declare it implicit.
+
+### AI mass damage, Familiar predicate and value-wrapper boundaries
+
+DC `cast_mass_damage_spell` (`0x2ac58`, lines 747..760) is one body with two
+source calls, not caller-specific copies. Crucially, line 758 overwrites the
+running damage value with `take_damage`'s returned capped value; line 759
+subtracts that value from total combat value. Both retail `castSpell` expansions
+at `0x425bd0` corroborate this assignment (ESI/EDI from EAX). The old cloned,
+fenced loops carried the uncapped sum to the next creature, which changes
+behavior when accumulated damage exceeds a stack's total. Separate vector
+subscripts across the opaque spell-damage call and zero initialization before
+mastery lookup are also corroborated by both builds.
+
+`generate-ai-mass-damage-boundary-family.py` crosses these three facts with
+cloned/canonical, inherited-inline/ordinary and fenced/unfenced boundaries.
+Context `ba7a1cfd8351a6b35d25` exhausts **48 states / 48 objects**, with ten
+reproduced elites and complete 176-row, two-TU vectors. A high score from the
+uncapped-dataflow control is not an eligible reconstruction. The corrected
+ordinary single helper scores 88.5664% with the first inherited fence, and
+79.8398% with both old fences removed.
+
+DC `cast_spell` line 1047 calls the ordinary const `has_creature` predicate
+(`0x2ab3c`, source line 694, before mass valuation). Retail's Familiar scan
+corroborates its type/positive-count tests and single mana update after success.
+`generate-ai-familiar-boundary-family.py` verifies the 48-parent manifest,
+snapshots and reproduced elites, then crosses that canonical boundary with
+all parents. Context `dbe7501806f1d9581f9e` exhausts **96 states / 96 objects**,
+with ten reproduced elites per generation. Restoring the predicate raises the
+correct unpinned mass variant to **86.7910%**, while the corrected one-pin
+variant stays 88.5664%. It changes no other score. The adopted all-correct,
+unpinned corner is `f236fbd6dcc860f3c9c8c5da`; production matches its 75 raw
+ai_combat sections / 443 relocation destinations and the complete ai_player
+object. Both old mass fences and the false helper clone are removed.
+
+The remaining castSpell difference is a real nested-boundary mismatch, not
+the old allocator-only diagnosis. Its first mass expansion expands
+`getSpellDamage` where retail calls it and retains `takeDamage` where retail
+expands it. The resulting extra branches/frame slot explain the source diff's
+first prologue mismatch. Retail keeps both calls in the second mass expansion.
+The current CFG has 100 blocks / 60 conditionals against 92 / 55 in retail;
+both have four returns. No additional pragma or duplicate body is introduced.
+The previous 93.0273% score used the incorrect dataflow and survives in HIST.
+
+DC also proves const receivers for both enchantment-valuation overloads and
+the two-side mass-valuation wrapper. Correcting all declarations/definitions
+together is strictly byte-neutral under the one emitted function rename:
+75 ai_combat sections / 443 relocation destinations, plus all of ai_player.
+The full build migrates the existing enchantment claim at its same RVA.
+
+`generate-ai-value-helper-family.py` restores a different canonical boundary:
+the by-value `min`/`max` wrappers already owned by `homm3_minmax.h`. DC
+`includes.h:97,114` and actual AI call relocations name those wrappers; their
+callee selectors return const references to the wrappers' still-live arguments.
+The local templates incorrectly returned references to their own by-value
+parameters. Retail's two operand homes do not prove that invalid declaration.
+Context `5468aea93d306459a4f1` exhausts/reproduces **eight states / eight objects**,
+also checking ordinary versus inherited-inline mass/enchantment valuation
+definitions. The ordinary definitions are score-flat. Canonical min/max
+preserve every score except getResurrectionValue's 100% → 92.9310% dip.
+Production reproduces the all-canonical corner's 77 sections / 462 relocation
+destinations and the unchanged ai_player object.
+
+`generate-ai-resurrection-value-family.py` addresses that precise residual:
+retail loads the selected scalar before multiplying, while a single return
+expression multiplies through a retained address. DC lines 99..102 support
+separate scale/divide, cap and result stages. Context `5de5d8835a813ce9959c`
+exhausts **six states / three objects**, all three reproduced. A fresh capped-
+value local (`a25b0998f922c6853ac8d8cb`) restores **100%**; reusing the earlier
+spell-value local, including separate DC-order stages, remains 92.9310%.
+All other 175 scores remain fixed. Keep the real value-returning wrappers.
+Production reproduces the selected 77-section / 462-relocation object; retail
+review confirms nine CFG blocks, four named calls and zero instruction deltas.
+
+`test-ai-mass-damage-boundary.py` extracts both the actual canonical mass loop
+and `takeDamage`; at native `-O0` and `-O2`, 328 stack-array cases check reverse
+order, the capped loop carry, hero/damage arguments, stack counts and total
+combat value. Six deliberate faults, including the inherited uncapped carry,
+are rejected. `test-ai-resurrection-value.py` checks 3456 bounded input cases,
+call order and nonmutation with five negative controls. The spell/hero services
+are mocked; these are behavioral tests, not VC6 ABI or inlining proofs.
+
+The final full build has **4075/4764 exact and 96.38% linked/whole-image**.
+All three ai_combat inline overrides are gone; the global census is **218**.
+The independently measured signed skill-dialog index/native-byte binding is
+also adopted at 82.9730%, with its 83.2252% HIST preserved. All source-backed
+name/signature changes are regenerated by the normal labels/delink pipeline.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the

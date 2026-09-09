@@ -322,7 +322,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
     type_AI_combat_data defender(0, &defendingArmy, 0.75, attackingHero, 0,
                                  cell);
     attacker.simulateCombat(defender);
-    return attacker.m_totalHitPoints > 0;
+    return attacker.m_totalCombatValue > 0;
 }
 
 #if 0  // @carcass

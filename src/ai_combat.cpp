@@ -46,40 +46,14 @@
 #include "hero.h"
 #include "town.h"
 
-// VC6's own <xutility> reference-returning min/max (`_cpp_min` /
-// `_cpp_max`, which the <algorithm> min/max macros expand to). Retail
-// materialises BOTH operands into stack temps and then selects between
-// their addresses - the signature of these templates, not of a
-// by-value helper - e.g. get_fastest_speed 0x4249a3..0x4249b3 and
-// get_spell_damage 0x423e7c..0x423e86. Declared file-locally rather
-// than via <xutility>. NOTE (2026-08-07, P2.3 answered): <xutility> is
-// now available and its real signature is `const _Ty&` for BOTH
-// parameters, where these copies take them BY VALUE - swapping to the
-// header is a live experiment, not a blocked one.
-// EXPERIMENT RUN 2026-08-08, REFUTED: `const _TYPE&` costs SIX exact
-// functions in this TU alone - get_resurrection_value 100.00 -> 92.93,
-// get_spell_damage 100.00 -> 92.18, get_fastest_speed 100.00 -> 78.06,
-// get_next_chain_lightning_target 100.00 -> 89.82,
-// get_damage_spell_value 100.00 -> 87.25, get_mass_damage_value
-// 100.00 -> 85.67 - and raises nothing. get_fastest_speed 0x4249a1 is
-// the clean discriminator: retail COPIES `monsters[i].speed` into a
-// slot although its address is already live in eax, which only a
-// by-value parameter does. Whatever retail's helper was named, its
-// operands were passed by value; the <xutility> signature is not it.
-// See the head of ai_tactical.cpp for the full argument.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
+// DC includes.h min/max (0x2da4/0x1ef28) return int by value after
+// calling the reference-returning selectors. Retail 0x4249a1's two argument
+// homes agree. The old templates returned references to their own parameter
+// copies: conflating these two layers was not a valid source reconstruction.
+// The eight-state ownership/valuation-helper family leaves every score fixed
+// except getResurrectionValue's initial 100 -> 92.9310. Naming its capped
+// result below restores 100 without the dangling reference or another wrapper.
+#include "homm3_minmax.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
@@ -205,6 +179,11 @@ inline void type_monster_data::castEnchantment(long spellValue, unsigned char in
 
 // E:\gamedcs\ai_combat.cpp:84
 // Before normalization (locals): casting_hero.
+// DC lines 99..102 scale/divide, call the by-value min, then return combat
+// value. The named capped result (reconstructed local name) reproduces retail's
+// selected-value load before imul; folding it into the return gives 92.9310%.
+// Six actual quotient/cap lifetimes were exhausted: a fresh capped-value local
+// is exact, but reusing the earlier spell-value local leaves that residual.
 VA(0x00423d00, 0xDA)  // anchor-global, dc 0x29b94
 long type_monster_data::getResurrectionValue(type_spell_choice& choice, const hero* castingHero) const
 {
@@ -217,8 +196,9 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
             choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
-    return cppMin(static_cast<long>(value * m_combatValuePerHit) / m_value,
-                    m_originalNumber - m_number) * m_value;
+    long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
+                           m_originalNumber - m_number);
+    return resurrected * m_value;
 }
 
 // E:\gamedcs\ai_combat.cpp:110
@@ -252,7 +232,7 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
     if (damage == 0)
         return 0;
-    return cppMin(static_cast<long>(damage * m_combatValuePerHit), m_totalValue);
+    return min(static_cast<long>(damage * m_combatValuePerHit), m_totalValue);
 }
 
 // E:\gamedcs\ai_combat.cpp:148
@@ -304,23 +284,23 @@ long type_monster_data::takeDamage(long damage)
 VA(0x00423ee0, 0x233)  // anchor-bracket, dc 0x29e2c
 type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* newArmy, double baseModifier, const hero* enemyHero, const town* enemyTown, NewmapCell* mapCell)
 {
-    m_myHero = const_cast<hero*>(newHero);
-    m_myArmy = const_cast<armyGroup*>(newArmy);
+    m_currentHero = const_cast<hero*>(newHero);
+    m_currentArmy = const_cast<armyGroup*>(newArmy);
     checkWallArcheryPenalty(enemyTown);
     m_enemyHero = const_cast<hero*>(enemyHero);
 
     if (newHero == 0)
         m_mana = 0;
     else
-        m_mana = m_myHero->m_mana;
+        m_mana = m_currentHero->m_mana;
 
-    m_canCast = 1;
-    if (m_myHero == 0
-        || !m_myHero->isWieldingArtifact(ARTIFACT_SPELLBOOK))
-        m_canCast = 0;
-    if (m_myHero != 0
-        && m_myHero->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
-        m_canCast = 0;
+    m_canCastSpells = 1;
+    if (m_currentHero == 0
+        || !m_currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK))
+        m_canCastSpells = 0;
+    if (m_currentHero != 0
+        && m_currentHero->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
+        m_canCastSpells = 0;
 
     m_terrain = -1;
     if (mapCell != 0) {
@@ -345,73 +325,37 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
             if (g_game->m_f1f698 >= 2)
                 break;
         case GARRISON:
-            m_canCast = 0;
+            m_canCastSpells = 0;
             break;
         }
     }
 
     if (m_enemyHero != 0
         && m_enemyHero->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
-        m_canCast = 0;
+        m_canCastSpells = 0;
     initializeCreatures(baseModifier, m_enemyHero);
 }
 
-// E:\gamedcs\ai_combat.cpp:381
-// Retail expands every use and carries no standalone row.
-inline type_speed_catagory type_AI_combat_data::getCatagory(
-    TCreatureType creature,
-    long speed)
-{
-    unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
-    if (attributes & g_ctaShooter)
-        return const_ranged;
-
-    long catagory = (speed + 2 * (7 - m_tacticsAdvantage)) / speed;
-    if (catagory > const_slow)
-        catagory = const_slow;
-    if (m_penaltyDistance > catagory && !(attributes & g_ctaFlying))
-        catagory = m_penaltyDistance;
-    return speedCatagoryFromLong(catagory);
-}
-
 // E:\gamedcs\ai_combat.cpp:221
-// Retail has no out-of-line get_catagory row: the helper below expands into
-// this function and OPT:REF removes its body.
+// DC 0x29f58 places these six named locals in the outer scope (its record
+// order does not prove declaration order). Line 222 copies base_modifier
+// before the tactics stores; retail likewise copies both dwords at entry.
+// Preserve that initializer and the actual vector begin/end sort interface.
 //
-// Residual (91.0075%, 2026-08-21): structure is closed - 58 branches, two
-// returns and ten out-of-line calls agree exactly. The 334-slot register
-// distance starts with retail binding this/zero/enemy_hero to EDI/EBX/ESI
-// against our EBX/EDI/ESI and propagates through the loop. why-reg's model
-// classifies it as C1 front-end handle state; its prescribed first-created
-// enemy_hero alias is byte-flat.
-//
-// Dreamcast CodeView directly places `unit`, `speed_bonus`, `hit_points`,
-// `force_modifier`, `archery_modifier` and `hit_bonus` in the outer lexical
-// scope, in that order, so the reconstruction now preserves that source
-// evidence. VC6 makes the scope restoration byte-flat, as it does an outer
-// loop-index declaration and removal of the creature enum alias. The traits
-// reference is not optional codegen mass: spelling its uses as direct table
-// subscripts regresses 91.0075 -> 81.3842. With the evidenced locals restored
-// and all four C1 levers bounded, the remaining permutation is not presently
-// source-nameable.
-// The 2026-08-21 carrier/homing follow-up closes the obvious remaining probes:
-// release `VERIFY(my_army != 0)` falls to 81.713745%, a volatile loop creature
-// id to 88.56874%, and swapping the adjacent unit.creature/unit.slot stores to
-// 90.92844%. why-branch still sees the same 58 conditional branches and two
-// returns, with only a 101-vs-103 block partition; none of these selects it.
-// 2026-09-05: 91.0111 -> 91.9520. `archery_modifier` is a real if/ELSE in
-// retail, not the default-then-override form: it branches over a two-
-// instruction else arm that materialises the 0.2 double, where
-// `archery_modifier = 0.2; if (my_hero) ...` makes VC6 store both halves of
-// the constant unconditionally inside the guard block. (This is the opposite
-// of the levelup-window rule that a branched ternary ARGUMENT wants
-// `x = a; if (c) x = b;` - read the lowering, not the shape.) Flow-kind
-// blocks fell 50 -> 33 on that one edit.
-// Residual (91.9520%): one missing block that is retail DEAD CODE - retail
-// memory-homes `this` at [ebp-0x8] and reloads it into ECX, and the reload it
-// left at the wall-penalty join (+0x77e) has no predecessor at all, since both
-// guards and the divide arm jump past it. This compile keeps `this` in EBX for
-// the whole body, so there is no reload to strand. Not source-reachable.
+// Residual (83.4275%): recovering std::vector ownership lowered the old
+// 91.9548% CUR, whose HIST is retained. Sort now over-expands its nested
+// _Unguarded_partition (retail call at +0x4e3), so the separately claimed
+// 100-byte helper is not emitted. The older register/stack-color difference
+// remains too. No new suppression or private-field container adapter is used.
+// Nine initialization/iterator states plus 72 classifier-interface states
+// bound the present recovery: assignment after tactics 82.6704%, early
+// separate assignment 82.0885%, declaration initializer 83.4275%. Direct
+// arguments, vector reference and named iterators do not restore the call;
+// neither do getCatagory's const receiver, ordinary definition or original
+// source order. All other scored functions in both header consumers hold.
+// Earlier controls (under the synthetic vector) also failed: direct traits
+// subscripts, enemy alias, loop-index hoisting, store-order swaps and a
+// guessed army VERIFY. Those scores are not bounds on this corrected owner.
 // Before normalization (locals): base_modifier, enemy_hero, speed_bonus, hit_points,
 // force_modifier, archery_modifier, hit_bonus, enemy_defense, enemy_attack, creature_id.
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
@@ -420,60 +364,59 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     type_monster_data unit;
     long speedBonus;
     double hitPoints;
-    double forceModifier;
+    double forceModifier = baseModifier;
     double archeryModifier;
     long hitBonus;
 
     m_tacticsAdvantage = 0;
-    if (m_myHero)
-        m_tacticsAdvantage = m_myHero->m_skillLevel[g_secondarySkillTactics];
+    if (m_currentHero)
+        m_tacticsAdvantage = m_currentHero->m_skillLevel[g_secondarySkillTactics];
     if (enemyHero) {
         m_tacticsAdvantage -= enemyHero->m_skillLevel[g_secondarySkillTactics];
         if (m_tacticsAdvantage < 0)
             m_tacticsAdvantage = 0;
     }
 
-    forceModifier = baseModifier;
-    if (m_myHero) {
-        long attack = m_myHero->getPrimarySkill(0);
-        long defense = m_myHero->getPrimarySkill(1);
+    if (m_currentHero) {
+        long attack = m_currentHero->getPrimarySkill(0);
+        long defense = m_currentHero->getPrimarySkill(1);
         if (enemyHero) {
             long enemyDefense = enemyHero->getPrimarySkill(1);
-            attack -= cppMin(attack, enemyDefense);
+            attack -= min(attack, enemyDefense);
             long enemyAttack = enemyHero->getPrimarySkill(0);
-            defense -= cppMin(defense, enemyAttack);
+            defense -= min(defense, enemyAttack);
         }
         forceModifier = sqrt(attack * 0.05 + 1.0)
                          * sqrt(defense * 0.05 + 1.0)
                          * baseModifier;
     }
 
-    if (m_myHero)
-        archeryModifier = m_myHero->getArcheryFactor() / 5.0;
+    if (m_currentHero)
+        archeryModifier = m_currentHero->getArcheryFactor() / 5.0;
     else
         archeryModifier = 0.2;
 
     speedBonus = 0;
-    if (m_myHero)
-        speedBonus = m_myHero->getCombatSpeedBonus();
+    if (m_currentHero)
+        speedBonus = m_currentHero->getCombatSpeedBonus();
 
-    m_totalHitPoints = 0;
+    m_totalCombatValue = 0;
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        int creatureId = m_myArmy->m_armies[i];
+        int creatureId = m_currentArmy->m_armies[i];
         if (creatureId == CREATURE_NONE)
             continue;
 
         TCreatureType creature = creatureTypeFromInt(creatureId);
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
-        if (m_myHero) {
-            hitBonus = m_myHero->getHitPointBonus(creatureId);
+        if (m_currentHero) {
+            hitBonus = m_currentHero->getHitPointBonus(creatureId);
             hitPoints += hitBonus;
         }
 
         unit.m_index = i;
         unit.m_type = creature;
-        unit.m_number = m_myArmy->m_numTroops[i];
+        unit.m_number = m_currentArmy->m_numTroops[i];
         unit.m_originalNumber = unit.m_number;
         unit.m_speed = traits.m_speed + speedBonus;
         unit.m_value = static_cast<long>(
@@ -495,15 +438,15 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
             unit.m_rangedModifier = archeryModifier;
             if (traits.m_attributes & g_ctaDoubleRangedValue)
                 unit.m_rangedModifier *= 2.0;
-            if (m_wallPenalty && creature != CREATURE_ARCH_MAGE)
+            if (m_wallArcheryPenalty && creature != CREATURE_ARCH_MAGE)
                 unit.m_rangedModifier /= 2.0;
         }
 
-        m_totalHitPoints += unit.m_totalValue;
-        m_monsters.push_back(unit);
+        m_totalCombatValue += unit.m_totalValue;
+        m_creatures.push_back(unit);
     }
 
-    std::sort(m_monsters._First, m_monsters._Last);
+    std::sort(m_creatures.begin(), m_creatures.end());
 }
 
 // E:\gamedcs\ai_combat.cpp:332
@@ -520,47 +463,57 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 VA(0x00424790, 0xE5)  // dc-callgraph unique, dc 0x2a470
 void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 {
-    m_wallPenalty = 0;
-    m_penaltyDistance = 0;
+    m_wallArcheryPenalty = 0;
+    m_wallSpeedLimit = 0;
     if (enemyTown == 0)
         return;
     if (enemyTown->hasBuilding(CASTLE_FORT_ID, 0)) {
-        m_wallPenalty = 1;
-        m_penaltyDistance = 4;
+        m_wallArcheryPenalty = 1;
+        m_wallSpeedLimit = 4;
     }
     if (enemyTown->hasBuilding(CASTLE_CITADEL_ID, 0)) {
-        m_wallPenalty = 1;
-        m_penaltyDistance = 5;
+        m_wallArcheryPenalty = 1;
+        m_wallSpeedLimit = 5;
     }
     if (enemyTown->hasBuilding(CASTLE_CASTLE_ID, 0)) {
-        m_wallPenalty = 1;
-        m_penaltyDistance = 6;
+        m_wallArcheryPenalty = 1;
+        m_wallSpeedLimit = 6;
     }
-    if (m_myHero) {
-        if (m_myHero->m_availableSpells[SPELL_EARTHQUAKE]) {
-            m_wallPenalty = 0;
-            m_penaltyDistance = 0;
+    if (m_currentHero) {
+        if (m_currentHero->m_availableSpells[SPELL_EARTHQUAKE]) {
+            m_wallArcheryPenalty = 0;
+            m_wallSpeedLimit = 0;
         }
-        if (m_penaltyDistance > 0) {
-            m_penaltyDistance = static_cast<short>(m_penaltyDistance - m_myHero->m_skillLevel[g_secondarySkillSiegeBallistics]);
-            if (m_penaltyDistance < 2)
-                m_penaltyDistance = 2;
+        if (m_wallSpeedLimit > 0) {
+            m_wallSpeedLimit = static_cast<short>(m_wallSpeedLimit - m_currentHero->m_skillLevel[g_secondarySkillSiegeBallistics]);
+            if (m_wallSpeedLimit < 2)
+                m_wallSpeedLimit = 2;
         }
     }
-    if (m_penaltyDistance > 4)
-        m_penaltyDistance = 4;
+    if (m_wallSpeedLimit > 4)
+        m_wallSpeedLimit = 4;
 }
-
-#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:381
-DC_ONLY(0x2a52c, 0x5C)
-type_speed_catagory type_AI_combat_data::getCatagory(TCreatureType creature, long speed)
+// DC 0x2a52c proves the const receiver and this source position. Retail
+// expands the one call in initializeCreatures; that is not evidence for an
+// explicit inline keyword. All eight declaration/order controls are score-
+// flat; keep the ordinary canonical helper and its real read-only interface.
+type_speed_catagory type_AI_combat_data::getCatagory(
+    TCreatureType creature,
+    long speed) const
 {
-    // @stub
-}
+    unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
+    if (attributes & g_ctaShooter)
+        return const_ranged;
 
-#endif  // @carcass
+    long catagory = (speed + 2 * (7 - m_tacticsAdvantage)) / speed;
+    if (catagory > const_slow)
+        catagory = const_slow;
+    if (m_wallSpeedLimit > catagory && !(attributes & g_ctaFlying))
+        catagory = m_wallSpeedLimit;
+    return speedCatagoryFromLong(catagory);
+}
 
 // E:\gamedcs\ai_combat.cpp:404
 // EXACT 2026-08-08 (89.8 -> 100.0): the Dismiss loop's index is a
@@ -581,21 +534,21 @@ type_speed_catagory type_AI_combat_data::getCatagory(TCreatureType creature, lon
 VA(0x00424880, 0xDB)  // anchor-global, dc 0x2a588
 void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
 {
-    if (m_totalHitPoints == 0) {
+    if (m_totalCombatValue == 0) {
         for (short i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
-            m_myArmy->dismiss(i);
-        if (m_myHero && dismissHero)
-            g_advManager->heroLoses(m_myHero, 0);
+            m_currentArmy->dismiss(i);
+        if (m_currentHero && dismissHero)
+            g_advManager->heroLoses(m_currentHero, 0);
         return;
     }
-    for (short i = static_cast<short>(getTotal()); i-- > 0; ) {
-        type_monster_data monster = m_monsters[i];
+    for (short i = static_cast<short>(m_creatures.size()); i-- > 0; ) {
+        type_monster_data monster = m_creatures[i];
         if (monster.m_index < 0)
             continue;
         if (monster.m_number == 0)
-            m_myArmy->dismiss(monster.m_index);
+            m_currentArmy->dismiss(monster.m_index);
         else
-            m_myArmy->m_numTroops[monster.m_index] = monster.m_number;
+            m_currentArmy->m_numTroops[monster.m_index] = monster.m_number;
     }
 }
 
@@ -604,9 +557,9 @@ VA(0x00424960, 0x65)  // anchor-global, dc 0x2a644
 long type_AI_combat_data::getFastestSpeed() const
 {
     long fastest = 0;
-    for (long i = getTotal(); i-- > 0; )
-        if (m_monsters[i].m_number > 0)
-            fastest = cppMax(fastest, m_monsters[i].m_speed);
+    for (long i = m_creatures.size(); i-- > 0; )
+        if (m_creatures[i].m_number > 0)
+            fastest = max(fastest, m_creatures[i].m_speed);
     return fastest;
 }
 
@@ -620,20 +573,20 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
     for (i = start; i-- > 0; ) {
         if (excluded & (1 << i))
             continue;
-        if (defender.m_monsters[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_myHero,
-                                                  defender.m_myHero, damage) > 0)
+        if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
+                                                  defender.m_currentHero, damage) > 0)
             break;
     }
     if (i >= 0)
         return i;
-    for (i = start; (unsigned)++i < defender.getTotal(); ) {
+    for (i = start; (unsigned)++i < defender.m_creatures.size(); ) {
         if (excluded & (1 << i))
             continue;
-        if (defender.m_monsters[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_myHero,
-                                                  defender.m_myHero, damage) > 0)
+        if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
+                                                  defender.m_currentHero, damage) > 0)
             break;
     }
-    if ((unsigned)i < defender.getTotal())
+    if ((unsigned)i < defender.m_creatures.size())
         return i;
     return -1;
 }
@@ -653,30 +606,26 @@ inline void type_AI_combat_data::getChainLightningValue(type_spell_choice& choic
         target = getNextChainLightningTarget(excluded, defender, target, damage);
         if (target < 0)
             break;
-        choice.m_value += defender.m_monsters[target].getSpellDamage(
-            choice.m_spell, m_myHero, defender.m_myHero, damage);
+        choice.m_value += defender.m_creatures[target].getSpellDamage(
+            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
         excluded |= 1 << target;
     }
 }
 
 // E:\gamedcs\ai_combat.cpp:525
-// Residual (86.6%, MAX 99.0): retail keeps `defender` in ecx - a
-// caller-saved register it reloads after every call - and therefore has
-// eax free as the divide-tail scratch; our CL parks defender in ebx and
-// scratches with ecx, which renames every register downstream. The
-// 99.0% MAX came from spelling get_total as `monsters.size()` through
-// begin()/end(), which costs six other functions their exactness (it
-// loses the _M_start CSE), so the direct spelling is kept.
+// Exact with the real vector's size() and const subscript. The historical
+// register residual predated recovery of the canonical container; the old
+// game get_total spelling was a misidentified vector::size body.
 // Before normalization (locals): extra_targets.
 VA(0x00424bf0, 0x123)  // anchor-global, dc 0x2a7e4
 void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extraTargets) const
 {
-    long center = defender.m_monsters[choice.m_target].m_index;
-    for (unsigned i = 0; i < defender.getTotal(); i++) {
-        if (abs(center - defender.m_monsters[i].m_index) != 1)
+    long center = defender.m_creatures[choice.m_target].m_index;
+    for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
+        if (abs(center - defender.m_creatures[i].m_index) != 1)
             continue;
-        long value = defender.m_monsters[i].getSpellDamage(choice.m_spell, m_myHero,
-                                                           defender.m_myHero, damage);
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+                                                           defender.m_currentHero, damage);
         if (value <= 0)
             continue;
         choice.m_value += value;
@@ -693,9 +642,9 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    for (long i = defender.getTotal(); i-- > 0; ) {
-        long value = defender.m_monsters[i].getSpellDamage(choice.m_spell, m_myHero,
-                                                           defender.m_myHero, damage);
+    for (long i = defender.m_creatures.size(); i-- > 0; ) {
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+                                                           defender.m_currentHero, damage);
         if (value > choice.m_value) {
             choice.m_value = value;
             choice.m_target = i;
@@ -739,10 +688,10 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
             excluded, targetData, target, damage);
         if (target < 0)
             break;
-        long value = targetData.m_monsters[target].getSpellDamage(
-            choice.m_spell, m_myHero, targetData.m_myHero, damage);
-        value = targetData.m_monsters[target].takeDamage(value);
-        targetData.m_totalHitPoints -= value;
+        long value = targetData.m_creatures[target].getSpellDamage(
+            choice.m_spell, m_currentHero, targetData.m_currentHero, damage);
+        value = targetData.m_creatures[target].takeDamage(value);
+        targetData.m_totalCombatValue -= value;
         excluded |= 1 << target;
     }
 }
@@ -755,15 +704,15 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
 VA(0x00425100, 0x15A)  // anchor-global, dc 0x2a9e8
 void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extraTargets) const
 {
-    long center = defender.m_monsters[choice.m_target].m_index;
-    for (unsigned i = 0; i < defender.getTotal(); i++) {
-        if (abs(center - defender.m_monsters[i].m_index) != 1)
+    long center = defender.m_creatures[choice.m_target].m_index;
+    for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
+        if (abs(center - defender.m_creatures[i].m_index) != 1)
             continue;
-        long value = defender.m_monsters[i].getSpellDamage(
-            choice.m_spell, m_myHero, defender.m_myHero, damage);
+        long value = defender.m_creatures[i].getSpellDamage(
+            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
         if (value <= 0)
             continue;
-        defender.m_totalHitPoints -= defender.m_monsters[i].takeDamage(value);
+        defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
         if (--extraTargets == 0)
             break;
     }
@@ -777,9 +726,9 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    long value = defender.m_monsters[choice.m_target].getSpellDamage(
-        choice.m_spell, m_myHero, defender.m_myHero, damage);
-    defender.m_totalHitPoints -= defender.m_monsters[choice.m_target].takeDamage(value);
+    long value = defender.m_creatures[choice.m_target].getSpellDamage(
+        choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+    defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
     switch (choice.m_spell) {
@@ -797,6 +746,19 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
     }
 }
 
+// E:\gamedcs\ai_combat.cpp:694; original has_creature, dc 0x2ab3c.
+// Retail 0x425bd0 expands this const predicate before the one mana update.
+// Keep the ordinary helper and source call; the previous pasted scan enlarged
+// castSpell and changed its later mass-damage expansion decisions.
+unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
+{
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        if (m_creatures[i].m_type == creature && m_creatures[i].m_number > 0)
+            return 1;
+    }
+    return 0;
+}
+
 // E:\gamedcs\ai_combat.cpp:711
 // The carcass tied this row to has_creature; the body is the two-arg
 // get_mass_damage_value (see the file header's NAME CORRECTION).
@@ -808,95 +770,66 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
     long value = 0;
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    for (long i = getTotal(); i-- > 0; )
-        value += m_monsters[i].getSpellDamage(choice.m_spell, castingHero, m_myHero, damage);
+    for (long i = m_creatures.size(); i-- > 0; )
+        value += m_creatures[i].getSpellDamage(choice.m_spell, castingHero, m_currentHero, damage);
     return value;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:694
-DC_ONLY(0x2ab3c, 0x4C)
-unsigned char type_AI_combat_data::has_creature(TCreatureType creature)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:731
 // Retail expands this helper inside cast_spell and emits no out-of-line row.
 // Its first nested get_mass_damage_value expands while the defender-side
-// call stays out of line, preserving the retail /Ob2 depth boundary.
-inline void type_AI_combat_data::getMassDamageValue(
+// call stays out of line. DC 0x2ac18 proves the const receiver; the ordinary
+// body retains that natural split without an invented inline qualifier.
+void type_AI_combat_data::getMassDamageValue(
     type_spell_choice& choice,
-    type_AI_combat_data& defender)
+    type_AI_combat_data& defender) const
 {
-    long ownDamage = getMassDamageValue(choice, m_myHero);
-    long defenderDamage = defender.getMassDamageValue(choice, m_myHero);
-    if (ownDamage < m_totalHitPoints && ownDamage < defenderDamage)
+    long ownDamage = getMassDamageValue(choice, m_currentHero);
+    long defenderDamage = defender.getMassDamageValue(choice, m_currentHero);
+    if (ownDamage < m_totalCombatValue && ownDamage < defenderDamage)
         choice.m_value = defenderDamage - ownDamage;
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-// As above, retail keeps only the two cast_spell expansions of this helper.
-inline void type_AI_combat_data::castMassDamageSpell(
+// Original cast_mass_damage_spell, dc 0x2ac58: one ordinary helper, two
+// castSpell calls. Line 758 assigns take_damage's return to the running value;
+// retail 0x425bd0 does so in both expansions (ESI/EDI <- EAX), then subtracts
+// that capped value. Separate subscripts also reproduce retail's vector reload
+// across getSpellDamage. The inherited cloned loops incorrectly carried the
+// uncapped sum. Never restore that dataflow or a caller-specific clone for score.
+// The 48-state boundary family and 96-state hasCreature follow-up exhausted
+// cloned/canonical, retained/removed fences and the three dataflow/lifetime
+// facts. Correct ordinary/unfenced + hasCreature scores castSpell 86.7910;
+// keeping the first inherited fence scores 88.5664. Neither matches retail's
+// distinct nested takeDamage decisions yet. Both old fences are removed.
+void type_AI_combat_data::castMassDamageSpell(
     type_spell_choice& choice,
     // Before normalization (locals): casting_hero.
     const hero* castingHero)
 {
+    long value = 0;
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    long value = 0;
-    for (long i = getTotal(); i-- > 0; ) {
-        type_monster_data& monster = m_monsters[i];
-#pragma inline_depth(0)
-        value += monster.getSpellDamage(
-            choice.m_spell, castingHero, m_myHero, damage);
-#pragma inline_depth()
-        m_totalHitPoints -= monster.takeDamage(value);
-    }
-}
-
-// Caller-specific copy for cast_spell's defender-side expansion: retail
-// inlines the mass-damage loop there but leaves its nested take_damage call.
-// This restores the exact 55-branch CFG and raises cast_spell from 85.4316%
-// to 87.0391%. Residual: retail keeps the defender in ESI, the monster offset
-// in EBX and accumulated damage in EDI; SP3 instead keeps the named monster
-// in ESI, the defender in EDI and homes accumulated damage. Tried and
-// rejected: call-site inline_depth(1) (byte-flat), caller-local longhand
-// (86.6484; `register` was byte-flat), and repeated monsters[i] spelling
-// (82.9043; emitted a second vector::operator[] call and signed loop branch).
-inline void type_AI_combat_data::castMassDamageSpellWithDamageCall(
-    type_spell_choice& choice,
-    // Before normalization (locals): casting_hero.
-    const hero* castingHero)
-{
-    long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    long value = 0;
-    for (long i = getTotal(); i-- > 0; ) {
-        type_monster_data& monster = m_monsters[i];
-#pragma inline_depth(0)
-        value += monster.getSpellDamage(
-            choice.m_spell, castingHero, m_myHero, damage);
-        m_totalHitPoints -= monster.takeDamage(value);
-#pragma inline_depth()
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        value += m_creatures[i].getSpellDamage(
+            choice.m_spell, castingHero, m_currentHero, damage);
+        value = m_creatures[i].takeDamage(value);
+        m_totalCombatValue -= value;
     }
 }
 
 // E:\gamedcs\ai_combat.cpp:768
 // RECONSTRUCTED FROM ITS FOUR INLINED COPIES (dc 0x2ace4) - no retail
 // row: /Ob2 inlined all four call sites in the two-side overload below
-// and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
-// carry a base-only function retail never shipped.
+// and OPT:REF dropped the body. The const signature and ordinary definition
+// preserve all four expansions; emission alone does not prove source inline.
 // Before normalization (locals): casting_hero.
-inline void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero)
+void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const
 {
     unsigned char mass = !spellTargetsASingleArmy(choice.m_spell, choice.m_mastery);
-    for (long i = getTotal(); i-- > 0; ) {
-        type_monster_data& monster = m_monsters[i];
-        long value = monster.getEnchantmentValue(choice, castingHero, m_myHero);
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        const type_monster_data& monster = m_creatures[i];
+        long value = monster.getEnchantmentValue(choice, castingHero, m_currentHero);
         if (mass) {
             choice.m_value += value;
         } else if (choice.m_value < value) {
@@ -911,21 +844,16 @@ inline void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, 
 // table: retail emits eight cmp/je in the source order below
 // (0x42554f..0x425893). All eight are the anti-magic family - worth
 // nothing against a side that cannot cast at all.
-// Residual (95.09%): 2026-09-06 - the index/offset homing the older note
-// blamed on the allocator IS a source fact. Naming the element,
-// `type_monster_data& monster = monsters[i];` at the head of the inline
-// helper's loop, gives the 72-byte offset the register and spills the index
-// exactly as retail does: 89.4646 -> 95.0862 across all four inlined passes.
-// The pointer spelling (`type_monster_data* monster = &monsters[i]`) is
-// byte-identical to the reference one. What is left is a register renaming
-// plus `mov ecx,edi / add ecx,edx` where retail forms the same address with
-// one `lea ecx,[edi+eax]`. Still rejected: storing choice.value before
-// choice.target in the else-if (89.4%, and it costs the first pass its
-// exactness), and hoisting get_total().
+// Exact after canonical std::vector ownership (previously 95.0862%). The
+// actual element reference in the one-side helper remains important: the
+// earlier direct-subscript spelling was 89.4646%. Restoring the vendor
+// subscript and size removes the remaining address/register differences.
+// Historical failed controls: swapping target/value stores and hoisting the
+// count; a pointer to the same element was byte-equivalent to its reference.
 VA(0x00425510, 0x382)  // corroborates (hd-crossbuild + ida), dc 0x2ad58
-void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender)
+void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
-    if (!defender.m_canCast
+    if (!defender.m_canCastSpells
         && (choice.m_spell == SPELL_DISPEL
             || choice.m_spell == SPELL_ANTI_MAGIC
             || choice.m_spell == SPELL_PROTECTION_FROM_AIR
@@ -936,13 +864,13 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
             || choice.m_spell == SPELL_CURE))
         return;
     if (choice.m_spell == SPELL_DISPEL) {
-        getEnchantmentValue(choice, m_myHero);
+        getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery < eMasteryAdvanced)
             return;
         // retail copies the whole 0x24-byte record with one rep movsd
         // (0x4256b7) and compares the saved value after the second pass
         type_spell_choice saved = choice;
-        defender.getEnchantmentValue(choice, m_myHero);
+        defender.getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery != eMasteryAdvanced)
             return;
         if (saved.m_value >= choice.m_value)
@@ -952,9 +880,9 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         return;
     }
     if (g_spellTraits[choice.m_spell].m_karma > 0)
-        getEnchantmentValue(choice, m_myHero);
+        getEnchantmentValue(choice, m_currentHero);
     else
-        defender.getEnchantmentValue(choice, m_myHero);
+        defender.getEnchantmentValue(choice, m_currentHero);
 }
 
 // E:\gamedcs\ai_combat.cpp:844
@@ -966,14 +894,14 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 {
     long value;
     if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
-        value = m_monsters[choice.m_target].getEnchantmentValue(choice, castingHero, m_myHero);
-        m_monsters[choice.m_target].castEnchantment(value, increase);
+        value = m_creatures[choice.m_target].getEnchantmentValue(choice, castingHero, m_currentHero);
+        m_creatures[choice.m_target].castEnchantment(value, increase);
         return;
     }
-    for (long i = getTotal(); i-- > 0; ) {
-        value = m_monsters[i].getEnchantmentValue(choice, castingHero, m_myHero);
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        value = m_creatures[i].getEnchantmentValue(choice, castingHero, m_currentHero);
         if (value > 0)
-            m_monsters[i].castEnchantment(value, increase);
+            m_creatures[i].castEnchantment(value, increase);
     }
 }
 
@@ -998,19 +926,19 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
             if (choice.m_target < 0) {
                 if (choice.m_secondTargetHex >= 0) {
                     choice.m_target = choice.m_secondTargetHex;
-                    defender.castEnchantment(choice, m_myHero, 0);
+                    defender.castEnchantment(choice, m_currentHero, 0);
                 }
             } else {
-                castEnchantment(choice, m_myHero, 1);
+                castEnchantment(choice, m_currentHero, 1);
             }
         } else {
-            castEnchantment(choice, m_myHero, 1);
-            defender.castEnchantment(choice, m_myHero, 0);
+            castEnchantment(choice, m_currentHero, 1);
+            defender.castEnchantment(choice, m_currentHero, 0);
         }
     } else if (g_spellTraits[choice.m_spell].m_karma > 0) {
-        castEnchantment(choice, m_myHero, 1);
+        castEnchantment(choice, m_currentHero, 1);
     } else {
-        defender.castEnchantment(choice, m_myHero, 0);
+        defender.castEnchantment(choice, m_currentHero, 0);
     }
 }
 
@@ -1034,50 +962,49 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:965
-// Reconstructed from the complete retail body. The Dreamcast contributes
-// the local/helper names and the by-reference signature only; spell gates,
-// dispatch classes, loop directions and all arithmetic come from retail.
-// Residual (87.0391%): branch structure agrees exactly at 55 conditionals
-// and four returns. Retail gives the spell loop EDI and mastery ESI; this CL
-// gives them ESI/EDI, and that callee-saved permutation cascades through the
-// three large damage/resurrection loops. why-reg --model finds identical
-// first definitions and classifies the split as past-first-def allocator
-// state. Tried and byte-flat: `register` mastery, an optimizer-dead mastery
-// initializer, a function-scope spell counter declared after mastery, and
-// moving the mastery declaration ahead of spell_power. No source-reachable
-// register-order lever was found in the bounded pass.
-// MEASURED AND REJECTED (polish 29), all byte-flat at 87.0391: naming the
-// familiar's mana share in its own `long`, swapping the `best_mana_cost` /
-// `mastery` declarations, dropping `register` from `spell_power`, and moving
-// `mastery` into the loop. The frame and its whole slot SET already agree
-// with retail exactly; what differs is a permutation - `spell` lives in EDI
-// and `best_mana_cost` at [ebp-0x18] in retail against our ESI / [ebp-0x1c] -
-// so this is the register-homing family with no declaration lever left.
+// Retail decides Complete's spell gates and dispatch classes. DC supplies
+// real helper calls, signatures and mass-damage dataflow, corroborated by the
+// retail expansions rather than inferred from the candidate's source labels.
+// Residual (86.7910%): the first mass arm expands getSpellDamage and calls
+// takeDamage; retail makes the opposite nested decisions. The second arm
+// calls getSpellDamage and expands takeDamage; retail calls both. This gives
+// 100/92 blocks and 60/55 conditionals, with four returns in both versions.
+// The first source mismatch is a four-byte extra frame slot caused by these
+// expansions, not proof that the entry guard or local order is wrong.
+// The 48 mass-boundary and 96 Familiar-boundary states are documented beside
+// the canonical helpers above; min/max and valuation qualifiers do not fix
+// these nested decisions. Both mass fences and the caller-specific clone
+// are gone. The prior 93.0273% HIST used the wrong uncapped damage carry.
+// Earlier allocator-only probes (before native vector/dataflow recovery)
+// were byte-flat at 87.0391: register mastery, a dead mastery initializer,
+// hoisted/reordered spell and mastery declarations, a named Familiar mana
+// share, swapped bestManaCost/mastery declarations, and dropping register
+// from spellPower. They are historical controls, not bounds on this source.
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::castSpell(
     type_AI_combat_data& defender,
     type_speed_catagory round)
 {
-    if (m_totalHitPoints == 0 || m_mana == 0 || !m_canCast)
+    if (m_totalCombatValue == 0 || m_mana == 0 || !m_canCastSpells)
         return;
 
     // Before normalization (locals): best_choice, recanters_cloak, spell_power, spell_duration,
     // best_mana_cost, mana_cost.
     type_spell_choice bestChoice;
     unsigned char recantersCloak = 0;
-    if (m_myHero->isWieldingArtifact(g_artifactRecantersCloak))
+    if (m_currentHero->isWieldingArtifact(g_artifactRecantersCloak))
         recantersCloak = 1;
     if (m_enemyHero
         && m_enemyHero->isWieldingArtifact(g_artifactRecantersCloak))
         recantersCloak = 1;
 
-    register long spellPower = m_myHero->getPrimarySkill(2);
-    long spellDuration = spellPower + m_myHero->getSpellDurationBonus();
+    register long spellPower = m_currentHero->getPrimarySkill(2);
+    long spellDuration = spellPower + m_currentHero->getSpellDurationBonus();
     long bestManaCost;
     TSkillMastery mastery;
 
     for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
-        if (!m_myHero->m_availableSpells[spell])
+        if (!m_currentHero->m_availableSpells[spell])
             continue;
 
         if (g_spellTraits[spell].m_level > 1
@@ -1086,8 +1013,8 @@ void type_AI_combat_data::castSpell(
         if (g_spellTraits[spell].m_level > 2 && recantersCloak)
             continue;
 
-        mastery = m_myHero->getSpellLevel(spell, m_terrain);
-        long manaCost = m_myHero->getManaCost(spell, defender.m_myArmy, m_terrain);
+        mastery = m_currentHero->getSpellLevel(spell, m_terrain);
+        long manaCost = m_currentHero->getManaCost(spell, defender.m_currentArmy, m_terrain);
         if (manaCost > m_mana)
             continue;
 
@@ -1110,10 +1037,10 @@ void type_AI_combat_data::castSpell(
             if (choice.m_spell < SPELL_RESURRECTION
                 || choice.m_spell > SPELL_ANIMATE_DEAD)
                 break;
-            for (long i = getTotal(); i-- > 0; ) {
-                type_monster_data& monster = m_monsters[i];
+            for (long i = m_creatures.size(); i-- > 0; ) {
+                type_monster_data& monster = m_creatures[i];
                 long value = monster.getResurrectionValue(
-                    choice, m_myHero);
+                    choice, m_currentHero);
                 if (value > choice.m_value) {
                     choice.m_value = value;
                     choice.m_target = i;
@@ -1132,15 +1059,8 @@ void type_AI_combat_data::castSpell(
         return;
 
     m_mana -= bestManaCost;
-    if (defender.m_myHero) {
-        for (long i = defender.getTotal(); i-- > 0; ) {
-            if (defender.m_monsters[i].m_type == CREATURE_FAMILIAR
-                && defender.m_monsters[i].m_number > 0) {
-                defender.m_mana += bestManaCost / 5;
-                break;
-            }
-        }
-    }
+    if (defender.m_currentHero && defender.hasCreature(CREATURE_FAMILIAR))
+        defender.m_mana += bestManaCost / 5;
 
     switch (g_spellTraits[bestChoice.m_spell].m_flags
             & g_aiSpellClassMask) {
@@ -1149,9 +1069,9 @@ void type_AI_combat_data::castSpell(
         castDamageSpell(bestChoice, defender);
         return;
     case g_aiSpellMassDamage:
-        castMassDamageSpell(bestChoice, m_myHero);
-        defender.castMassDamageSpellWithDamageCall(
-            bestChoice, m_myHero);
+        castMassDamageSpell(bestChoice, m_currentHero);
+        defender.castMassDamageSpell(
+            bestChoice, m_currentHero);
         return;
     case g_aiSpellEnchantment:
         castEnchantment(bestChoice, defender);
@@ -1159,8 +1079,8 @@ void type_AI_combat_data::castSpell(
     case g_aiSpellResurrection:
         if (bestChoice.m_spell >= SPELL_RESURRECTION
             && bestChoice.m_spell <= SPELL_ANIMATE_DEAD)
-            m_monsters[bestChoice.m_target].castResurrection(
-                bestChoice, m_myHero);
+            m_creatures[bestChoice.m_target].castResurrection(
+                bestChoice, m_currentHero);
         return;
     }
 }
@@ -1203,20 +1123,20 @@ long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speed
 {
     long total = 0;
     unsigned i;
-    for (i = 0; i < getTotal(); i++)
-        if (m_monsters[i].m_catagory >= start && m_monsters[i].m_catagory <= speedLimit)
-            total += m_monsters[i].m_totalValue;
-    for (i = 0; i < getTotal(); i++) {
-        if (m_monsters[i].m_catagory < start)
+    for (i = 0; i < m_creatures.size(); i++)
+        if (m_creatures[i].m_catagory >= start && m_creatures[i].m_catagory <= speedLimit)
+            total += m_creatures[i].m_totalValue;
+    for (i = 0; i < m_creatures.size(); i++) {
+        if (m_creatures[i].m_catagory < start)
             continue;
-        if (m_monsters[i].m_catagory > speedLimit)
+        if (m_creatures[i].m_catagory > speedLimit)
             continue;
-        long hits = m_monsters[i].m_totalValue;
+        long hits = m_creatures[i].m_totalValue;
         if (hits <= 0)
             continue;
         long share = static_cast<long>(static_cast<double>(hits) * damage / total);
         total -= hits;
-        damage -= m_monsters[i].takeDamage(share);
+        damage -= m_creatures[i].takeDamage(share);
         if (damage <= 0)
             break;
         if (total <= 0)
@@ -1229,10 +1149,10 @@ long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speed
 VA(0x004262b0, 0x4F)  // anchor-global, dc 0x2b5a4
 void type_AI_combat_data::kill()
 {
-    m_totalHitPoints = 0;
-    for (long i = getTotal(); i-- > 0; ) {
-        m_monsters[i].m_number = 0;
-        m_monsters[i].m_totalValue = 0;
+    m_totalCombatValue = 0;
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        m_creatures[i].m_number = 0;
+        m_creatures[i].m_totalValue = 0;
     }
 }
 
@@ -1244,8 +1164,8 @@ void type_AI_combat_data::kill()
 VA(0x00426300, 0x8D)  // anchor-global, dc 0x2b5ec
 void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
 {
-    m_totalHitPoints -= damage;
-    if (m_totalHitPoints <= 0) {
+    m_totalCombatValue -= damage;
+    if (m_totalCombatValue <= 0) {
         kill();
         return;
     }
@@ -1260,15 +1180,15 @@ VA(0x00426390, 0xBB)  // anchor-global, dc 0x2b624
 long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned char shootersBlocked) const
 {
     long value = 0;
-    for (long i = getTotal(); i-- > 0; ) {
-        if (m_monsters[i].m_catagory > speedLimit)
+    for (long i = m_creatures.size(); i-- > 0; ) {
+        if (m_creatures[i].m_catagory > speedLimit)
             continue;
-        if (!shootersBlocked && m_monsters[i].m_catagory == SPEED_CATAGORY_SHOOTER)
-            value = static_cast<long>(m_monsters[i].m_number * m_monsters[i].m_value
-                                      * m_monsters[i].m_rangedModifier + value);
+        if (!shootersBlocked && m_creatures[i].m_catagory == SPEED_CATAGORY_SHOOTER)
+            value = static_cast<long>(m_creatures[i].m_number * m_creatures[i].m_value
+                                      * m_creatures[i].m_rangedModifier + value);
         else
-            value = static_cast<long>(m_monsters[i].m_number * m_monsters[i].m_value
-                                      * m_monsters[i].m_meleeModifier + value);
+            value = static_cast<long>(m_creatures[i].m_number * m_creatures[i].m_value
+                                      * m_creatures[i].m_meleeModifier + value);
     }
     return value;
 }
@@ -1278,8 +1198,8 @@ VA(0x00426450, 0x71)  // anchor-global, dc 0x2b7bc
 long type_AI_combat_data::getFinalMeleeValue() const
 {
     long value = 0;
-    for (long i = getTotal(); i-- > 0; )
-        value = static_cast<long>(m_monsters[i].m_totalValue * m_monsters[i].m_finalMeleeModifier + value);
+    for (long i = m_creatures.size(); i-- > 0; )
+        value = static_cast<long>(m_creatures[i].m_totalValue * m_creatures[i].m_finalMeleeModifier + value);
     return value;
 }
 
@@ -1321,63 +1241,37 @@ inline void type_AI_combat_data::doMeleeCombat(
     defender.inflictDamage(ourAttack, 0);
 }
 
+// DC class 0x5a07's constructor method list 0x5a0f gives the copy constructor
+// attributes 0x003 (explicit), unlike its 0x103 compiler-generated assignment
+// and destructor. Preserve this memberwise source boundary. The native vector
+// member owns its own separate retained copy constructor at 0x4276c0.
 inline type_AI_combat_data::type_AI_combat_data(
     const type_AI_combat_data& other)
-    : m_monsters(other.m_monsters),
+    : m_creatures(other.m_creatures),
       m_terrain(other.m_terrain),
       m_mana(other.m_mana),
-      m_canCast(other.m_canCast),
-      m_totalHitPoints(other.m_totalHitPoints),
+      m_canCastSpells(other.m_canCastSpells),
+      m_totalCombatValue(other.m_totalCombatValue),
       m_tacticsAdvantage(other.m_tacticsAdvantage),
-      m_myHero(other.m_myHero),
-      m_myArmy(other.m_myArmy),
+      m_currentHero(other.m_currentHero),
+      m_currentArmy(other.m_currentArmy),
       m_enemyHero(other.m_enemyHero),
-      m_wallPenalty(other.m_wallPenalty),
-      m_penaltyDistance(other.m_penaltyDistance)
+      m_wallArcheryPenalty(other.m_wallArcheryPenalty),
+      m_wallSpeedLimit(other.m_wallSpeedLimit)
 {
 }
 
 // E:\gamedcs\ai_combat.cpp:1270
-// Residual (94.7945%): INLINER-DEPTH, the same class as simulate_combat.
-// 79.6 -> 94.8 on 2026-08-08 when get_total became a ternary; what is
-// left is a single /Ob2 budget divergence. `kill()` inlines twice here
-// and retail expands get_total inside BOTH copies (depth 2); our CL's
-// budget runs out after the first, so the second arm keeps a real
-// `call ?get_total@...` and every register downstream of it renames.
-// `predict-inline` names exactly that one row: base 5 out-of-line calls
-// vs retail 4, UNDER-inline `get_total` x1 and nothing else.
-// Tried and rejected on the callee: a no-local ternary get_total and an
-// unsigned-cast-free one (both identical here), a doubly-nested
-// ternary (catastrophic, 75.5). Tried and rejected here: moving
-// kill() below the ratio computation (89.30), folding ratio into the
-// argument expression (93.42), and inverting the compare so the else
-// arm leads (93.80).
-//
-// 2026-08-14, THE BUDGET IS TITRATED AND THE SLOT IS BYTE-PROVEN.
-// Dead-store mass ahead of the body is byte-flat 0..38 units and steps to
-// 99.9657 at 40 (plateau through 128, decaying past 192): this body sits on
-// the RE'd budget's LOWER CLAMP, `clamp(2*cb,1000,35000)`, so no small
-// amount of caller mass moves it at all - the step is where 2*cb finally
-// clears 1000. At mass 40 the ONLY surviving row is the `ratio` slot:
-// retail spills it to a fresh [ebp-0x8] while ours reuses the dead
-// `defender` parameter slot [ebp+0x8], and DECLARING `ratio` ONCE AT
-// FUNCTION SCOPE (rather than a fresh one per arm) is exactly the
-// 99.9657 -> 100.0000 step. That spelling is landed below: it is retail's,
-// it costs nothing, and it is +0.0342 on its own (94.7603 -> 94.7945).
-// Position within the function is irrelevant - before the guards or after
-// them both measure 94.7945 at mass 0 and 100.0000 at mass 40 - so the form
-// after the guards is kept. `long damage` named as well is byte-flat;
-// `double ratio` regresses to 94.6747.
-// WHAT THE MASS UNIT IS (new, and it generalises): `int padN = N;` alone is
-// byte-flat to n=80, and `padv = <const>` repeated is byte-flat to n=80 -
-// C1 dead-store-eliminates both BEFORE the inliner measures `cb`. Only the
-// SELF-ASSIGNMENT survives to be counted: `padv = padv;` x80 reaches the
-// same 99.9657, and `int padN = N; padN = padN;` x40 does it with half the
-// statements, so distinct locals and assignment nodes both feed `cb`.
-// Titration scaffolding is NOT landed - the 40 units have no real-source
-// counterpart in a sixteen-statement body, and every realistic spelling
-// measured (naming either damage, float or long, at either scope) is
-// byte-flat at 94.7945. This function is budget-capped, not mis-spelled.
+// Exact after recovering std::vector and its size() owner. The historical
+// 94.7945% "budget-capped" diagnosis was incomplete: the nested get_total
+// call was a falsely named handwritten size() adapter. Both kill expansions
+// now use the real vendor interface and all 50 blocks/eight calls agree.
+// Keep this ordinary helper, its function-scoped float ratio, and its
+// source call in chooseMelee. Do not paste it or add an inline keyword.
+// The pre-owner 12-state guard/ratio/boundary family left the canonical
+// caller at 77.6098%; rejecting that positive source boundary on score alone
+// would have hidden the container error. Branch-scoped ratios, moved kills,
+// folded ratio expressions and invented caller mass did not fix the owner.
 VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
 void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 {
@@ -1401,37 +1295,35 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 
 // E:\gamedcs\ai_combat.cpp:1301
 // EH-bearing (P2.2): push -1 / push 0x627b48 / mov eax,fs:[0].
-// RECONSTRUCTED 2026-08-09 (unscored -> 90.9329%). Retail expands the three
-// small combat helpers but keeps their nested accessors as calls. Spelling
-// those source boundaries restores that /Ob2 depth. The general-melee region
-// is written at this call site with nested inlining disabled because our CL
-// otherwise leaves the outer helper as a call; retail expands the outer body
-// and leaves get_final_melee_value/kill/inflict_damage out of line. The
-// residual is bounded to stack coloring plus constructor/destructor call
-// identity: retail calls the exact type_monster_vector wrapper for both local
-// copies, while this compile expands it to the underlying vector copy call.
-// MEASURED 2026-09-05: `#pragma auto_inline(off)` around the 0x4276c0 wrapper
-// definition DOES restore both retail call edges (census 26 same + 2 real ->
-// 28 same) and is byte-flat at 90.9329 - objdiff scores relocations at
-// function_reloc_diffs=none, so the wrapper and the vector copy ctor it
-// forwards to occupy one call slot either way. Not landed: a pin that buys a
-// name and no bytes is scaffolding. The two teardown rows are the same family
-// (retail calls the shared 0x46a650 vector destructor COMDAT, we expand it to
-// operator delete) and want caller mass, not another pin.
+// Exact after native vector ownership and the ordinary general-melee call
+// replace the fenced pasted copy. DC line 1346 calls do_general_melee;
+// lines 1330/1338/1347/1349 use get_total, which returns combat value, not
+// vector length. The opening creature loop calls the actual vector size().
+// Retail expands general melee while retaining its nested final-value,
+// kill and damage calls; VC6 now chooses that split without an override.
+// All 42 blocks match. Both vector copies name their real 0x4276c0 owner.
+// Two remaining call-name differences are byte-proven shared COMDATs:
+// vector<widget*>::~vector at 0x46a650 equals our 38-byte vector destructor;
+// vector<type_artifact>::_Destroy at 0x404140 equals our three-byte ret 8.
+// Negative control under the old owner: canonical helper alone 77.6098%
+// versus the fenced paste's 90.9329%; removing only the fence scores 0 even
+// though the caller is emitted. Neither justifies the synthetic owner.
+// DC method type 0x5a2b returns primitive 0x20 (unsigned char), not bool.
+// Retail's byte result and both byte-consuming callers corroborate that ABI.
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
-bool type_AI_combat_data::chooseMelee(
+unsigned char type_AI_combat_data::chooseMelee(
     const type_AI_combat_data& enemy,
     // Before normalization (locals): current_round, best_value, best_index, melee_round,
     // local_data, local_enemy.
     type_speed_catagory currentRound) const
 {
     long index;
-    for (index = getTotal(); index-- > 0; ) {
-        if (m_monsters[index].m_catagory > currentRound)
+    for (index = m_creatures.size(); index-- > 0; ) {
+        if (m_creatures[index].m_catagory > currentRound)
             continue;
-        if (m_monsters[index].m_catagory == SPEED_CATAGORY_SHOOTER)
+        if (m_creatures[index].m_catagory == SPEED_CATAGORY_SHOOTER)
             continue;
-        if (m_monsters[index].m_number > 0)
+        if (m_creatures[index].m_number > 0)
             break;
     }
     if (index < 0)
@@ -1448,9 +1340,9 @@ bool type_AI_combat_data::chooseMelee(
 
         long round;
         for (round = currentRound; round < meleeRound; round++) {
-            if (localData.m_totalHitPoints <= 0)
+            if (localData.getTotal() <= 0)
                 break;
-            if (localEnemy.m_totalHitPoints <= 0)
+            if (localEnemy.getTotal() <= 0)
                 break;
             localData.castSpells(
                 localEnemy, (type_speed_catagory)round);
@@ -1458,9 +1350,9 @@ bool type_AI_combat_data::chooseMelee(
         }
 
         for (round = meleeRound; round < const_slow; round++) {
-            if (localData.m_totalHitPoints <= 0)
+            if (localData.getTotal() <= 0)
                 break;
-            if (localEnemy.m_totalHitPoints <= 0)
+            if (localEnemy.getTotal() <= 0)
                 break;
             localData.castSpells(
                 localEnemy, (type_speed_catagory)round);
@@ -1468,28 +1360,10 @@ bool type_AI_combat_data::chooseMelee(
                 (type_speed_catagory)round, localEnemy);
         }
 
-#pragma inline_depth(0)
-        float attacker = static_cast<float>(
-            localData.getFinalMeleeValue());
-        float target = static_cast<float>(
-            localEnemy.getFinalMeleeValue());
-        if (attacker != 0.0 && target != 0.0) {
-            if (attacker > target) {
-                localEnemy.kill();
-                float ratio = target / attacker + 0.05;
-                localData.inflictDamage(
-                    static_cast<long>(ratio * target), 0);
-            } else {
-                localData.kill();
-                float ratio = attacker / target + 0.05;
-                localEnemy.inflictDamage(
-                    static_cast<long>(ratio * attacker), 0);
-            }
-        }
-#pragma inline_depth()
-        long value = localData.m_totalHitPoints;
+        localData.doGeneralMelee(localEnemy);
+        long value = localData.getTotal();
         if (value == 0)
-            value = -localEnemy.m_totalHitPoints;
+            value = -localEnemy.getTotal();
         if (meleeRound == const_slow || bestValue < value) {
             bestValue = value;
             bestIndex = meleeRound;
@@ -1501,7 +1375,7 @@ bool type_AI_combat_data::chooseMelee(
 // E:\gamedcs\ai_combat.cpp:1363
 // EXACT 2026-08-09 (46.8 -> 57.0 -> 100.0). The source calls the
 // inline-only cast/ranged/melee helpers above; VC6 expands each outer helper
-// while leaving its nested get_total, kill and damage calls at retail's
+// while leaving its nested vector size, kill and damage calls at retail's
 // depth. The bool results mean "choose melee", not the former reconstructed
 // "shoot" names. Removing inflict_damage's redundant pre-kill zero then
 // makes all four damage arms and their shared tails byte-identical.
@@ -1509,9 +1383,9 @@ VA(0x00426bc0, 0x224)  // anchor-global, dc 0x2bc40
 void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 {
     for (long round = 1; round < 4; round++) {
-        if (m_totalHitPoints <= 0)
+        if (m_totalCombatValue <= 0)
             break;
-        if (defender.m_totalHitPoints <= 0)
+        if (defender.m_totalCombatValue <= 0)
             break;
         // Before normalization (locals): we_melee, they_melee.
         unsigned char weMelee = chooseMelee(
@@ -1626,13 +1500,13 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
     armyGroup* defeatedArmy = defender->getArmy();
     hero* defeatedHero = defender->getHero();
 
-    if (m_myHero)
-        m_myHero->m_mana = static_cast<short>(m_mana);
+    if (m_currentHero)
+        m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
         defeatedHero->m_mana = static_cast<short>(defender->m_mana);
 
-    if (m_totalHitPoints > 0) {
-        if (m_myHero) {
+    if (m_totalCombatValue > 0) {
+        if (m_currentHero) {
             int experience;
             if (defeatedHero && random(0, 100) < 60) {
                 surrendered = 1;
@@ -1643,29 +1517,29 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
                     defeatedArmy, defeatedHero);
             }
             experience = static_cast<int>(
-                m_myHero->getExperienceBonusFactor() * experience);
-            m_myHero->giveExperience(experience, 1, 1);
+                m_currentHero->getExperienceBonusFactor() * experience);
+            m_currentHero->giveExperience(experience, 1, 1);
 
             if (defeatedHero)
                 defeatedHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
             if (!surrendered && defeatedHero)
-                defeatedHero->transferArtifacts(m_myHero);
+                defeatedHero->transferArtifacts(m_currentHero);
 
             if (enemyTown)
-                g_game->claimTown(enemyTown->m_id, m_myHero->m_owner, 0, 1);
+                g_game->claimTown(enemyTown->m_id, m_currentHero->m_owner, 0, 1);
         }
-    } else if (m_myHero) {
-        m_myHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
+    } else if (m_currentHero) {
+        m_currentHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
     }
 
     adjustArmy(1);
     defender->adjustArmy(1);
 
-    if (m_totalHitPoints > 0 && m_myHero) {
-        createSkeletons(m_myHero, defeatedArmy, m_myArmy);
+    if (m_totalCombatValue > 0 && m_currentHero) {
+        createSkeletons(m_currentHero, defeatedArmy, m_currentArmy);
 
         if (defeatedHero) {
-            hero* victoriousHero = m_myHero;
+            hero* victoriousHero = m_currentHero;
             if (victoriousHero->m_skillLevel[g_secondarySkillEagleEye] > 0
                 && victoriousHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
@@ -1686,8 +1560,8 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
         }
     }
 
-    if (m_myHero)
-        m_myHero->applyBattleWinTemps();
+    if (m_currentHero)
+        m_currentHero->applyBattleWinTemps();
     if (defeatedHero)
         defeatedHero->applyBattleLossTemps();
 }
@@ -1709,7 +1583,7 @@ unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup*
     type_AI_combat_data defender(defendingHero, defendingArmy,
                                  defenderModifier, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
-    if (attacker.m_totalHitPoints > 0) {
+    if (attacker.m_totalCombatValue > 0) {
         attacker.doAftermath(&defender, defendingTown);
         return 1;
     }
@@ -1782,7 +1656,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     type_AI_combat_data defender(defendingHero, &localDefender,
                                  defenderLuck, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
-    if (attacker.m_totalHitPoints == 0)
+    if (attacker.m_totalCombatValue == 0)
         return -1000000000;
 
     attacker.adjustArmy(1);
@@ -1900,45 +1774,17 @@ armyGroup* type_AI_combat_data::getArmy()
 
 #endif  // @carcass
 
-// IDENTITY CORRECTION 2026-08-09: the inherited order map called this a
-// type_AI_combat_data copy ctor, but retail copies only the embedded
-// vector's 16-byte head. The body is the pinned VC6 <vector> copy ctor
-// instruction for instruction; VC6 inlines it into this source-private
-// wrapper, producing all 135 bytes exactly. The displaced Dreamcast class
-// copy-ctor row remains DC_ONLY below.
-VA(0x004276c0, 0x87)  // retail body + pinned VC6 <vector>
-type_monster_vector::type_monster_vector(const type_monster_vector& other)
-    : std::vector<type_monster_data>(other)
-{
-}
+// Retail 0x4276c0 copies the allocator byte, allocates size()*72 and copies
+// the elements: the actual pinned <vector> copy constructor, not a game
+// copy constructor or the former synthetic derived wrapper.
+VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
 
-// E:\gamedcs\ai_combat.h:255
-// EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
-// null test is a `?:` on the return expression, not an early-out `if`.
-// The old `if (first == 0) return 0;` split makes our CL target eax
-// directly for the divide; the ternary merges both arms into one
-// pseudo, which VC6 homes in edx and copies out with the closing
-// `mov eax,edx` retail has - and on the null path the merged pseudo
-// is already the zero _M_start, so no `xor eax,eax` is emitted either.
-// Both deltas were one cause.
-//
-// The payoff is in the ~12 INLINED copies, not here: get_area_value
-// 86.6 -> 100, cast_area_effect 86.0 -> 97.4, do_general_melee
-// 79.6 -> 94.8, adjust_army 89.8 -> 93.4 with no other edit.
-//
-// Tried and rejected: `monsters.size()` through begin()/end() (fixes
-// this function and get_area_value, loses the _M_start CSE in the
-// inlined copies and costs six other functions their exactness), a
-// bare `_M_finish - _M_start` with no local, naming the _M_finish load
-// (`last`), naming the difference (`count`, signed and unsigned), and
-// dropping the unsigned cast - all four leave the split-if shape and
-// score 83.57 unchanged.
-VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
-long type_AI_combat_data::getTotal() const
-{
-    type_monster_data* first = m_monsters._First;
-    return first == 0 ? 0 : (unsigned)(m_monsters._Last - first);
-}
+// Retail 0x427750 guards _First at +4 and divides (_Last-_First) by 72.
+// This is std::vector<type_monster_data>::size(), corresponding to DC
+// stl_vector.h:195 at 0x2c728. The old get_total claim at DC 0x2c6ac was
+// false: that four-byte game accessor returns total_combat_value at +24.
+// The source now calls the canonical vendor size() at every count site.
+VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 
 #if 0  // @carcass
 
