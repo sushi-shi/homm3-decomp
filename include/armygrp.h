@@ -149,6 +149,16 @@ enum TCreatureType {
     CREATURE_BASILISK = 0x6a,
     CREATURE_GREATER_BASILISK = 0x6b,
     CREATURE_WYVERN_MONARCH = 0x6d,
+    // Creature-bank table owners (DC guard_types/reward_types, 0x5601/0x5602).
+    // Complete's 0x6702a0/0x67037c tables corroborate these stored values.
+    // Original DC names: eCreatureCyclops, eCreatureImp, eCreatureNagaSentinel,
+    // eCreatureDragonFly, eCreatureVampire, eCreatureWyvern.
+    CREATURE_CYCLOPS = 94,
+    CREATURE_IMP = 42,
+    CREATURE_NAGA_SENTINEL = 38,
+    CREATURE_DRAGON_FLY = 105,
+    CREATURE_VAMPIRE = 62,
+    CREATURE_WYVERN = 108,
     CREATURE_MUMMY = 0x8d,
     // Retail army::get_mirror_effect floors this creature's backlash chance
     // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
