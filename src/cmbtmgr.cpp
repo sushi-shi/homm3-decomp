@@ -2275,7 +2275,10 @@ void combatManager::setupAndLoadObstacles()
 // retail-gained-a-parameter shape findpath's CalcTerrainCost shows.
 // Goto audit: break + post-loop negative-ID guard scores 83.0899%; an
 // in-loop guard scores 93.7079%, versus 100% here. Both preserve picker RAII
-// and its named calls, but move the search/placement join. Keep this residual.
+// and its named calls, but move the search/placement join. A guarded redraw
+// loop plus positive placement improves that probe to 97.7528%; moving the
+// first pick into do/while gives 88.8764% with an early failure return, and
+// sharing the count result gives at most 85.5955%. Keep the exact join.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)

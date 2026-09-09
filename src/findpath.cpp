@@ -1374,10 +1374,16 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // Earlier artificial preamble extractions and a pinned second mark body
 // reached 87.9780%; they do not establish original source boundaries.
 //
-// The shared found block still needs goto: both check_enemy_armies results
-// enter one retail block, using adjacent/direction outside their loop.
-// A break plus flag adds a frame local. is_moat(short) preserves the
-// retail 16-bit neighbour arithmetic; see its header evidence.
+// The current direction is the search result: both check_enemy_armies
+// successes break the six-direction scan, and direction < 6 admits the
+// shared reached-cell block. Under the restored canonical helpers this
+// removes three gotos and improves 90.2669% to 92.2920%. Direction != 6
+// reaches 92.2779%; a separate bool/byte/int found flag stays at 90.2669%.
+// is_moat(short) preserves the retail 16-bit neighbour arithmetic.
+// The six differently named call references are folded template aliases:
+// pointer copy (37 B), both empty vector destructors (3 B), and pointer
+// insertion (521 B) match the retail int/type_artifact/widget-labelled
+// bodies byte-for-byte after relocation, including their callee references.
 //
 // Historical negative controls at the earlier 73.5149% source state:
 // spelling both vector clears and pop_back as erase fell to 69.5447%;
@@ -1515,13 +1521,13 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 if (enemyCost <= limit && !blocked) {
                     if (checkEnemyArmies(adjacent, enemyCost, currentGroup,
                                            destination))
-                        goto found;
+                        break;
                     if (currentArmy->is(1)) {
                         long tail = adjacent
                             + (currentArmy->offsetToFront(-1));
                         if (checkEnemyArmies(tail, enemyCost,
                                              currentGroup, destination))
-                            goto found;
+                            break;
                     }
                 }
                 if (!(currentArmy->is(2)
@@ -1535,10 +1541,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             pushCombatPoint(adjacent, direction, cost + step, flightCost,
                             limit);
         }
-        goto searched;
-
-    found:
-        {
+        if (direction < 6) {
             pathCell* reached = getHex(adjacent);
             reached->m_point.m_x = static_cast<short>(adjacent);
             reached->m_direction = direction;
@@ -1546,7 +1549,6 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             m_result.push_back(reached);
         }
 
-    searched:
         if (m_result.size() > 0) {
             bestHex = m_result[0]->m_lastPoint.m_x;
             break;

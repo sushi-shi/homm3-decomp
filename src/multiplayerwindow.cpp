@@ -1087,29 +1087,34 @@ inline unsigned char TMultiPlayerWindow::onModem()
 // Flattening is unnecessary. Fully duplicated arm tails score 91.5668%,
 // with either direct returns or breaks; the earlier 15-tail combination
 // probe also lost score (exitFlag/return copies alone reached 96.4714%).
-// Residual: late-arm register scheduling; keep the remaining shared joins.
+// A connectionFailed result removes the cancel/IPX failure joins at the
+// same 98.1199%; bool and byte results emit identical code. Cleanup remains
+// after exitFlag/dialogReturn for those failures, unlike TCP's source order.
+// Seventy-two combined failure/menu/host/exit alternatives were exhausted:
+// a shared menu result with merged cancel/IPX cases reaches only 97.5668%,
+// and copying the host's menu check gives 95.4905%. The remaining five joins
+// retain their common actions; late-arm register scheduling remains open.
 // Before normalization (locals): bExitFlag.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
+    bool connectionFailed = 0;
     switch (id) {
     case CANCEL_ID:
-        if (!m_inSessionList)
-            goto connection_failed;
+        if (!m_inSessionList) {
+            connectionFailed = 1;
+            break;
+        }
         goto return_to_main_menu;
 
     case IPX_ID: {
         goSessionList();
-        if (!onIPX())
-            goto connection_failed;
+        if (!onIPX()) {
+            connectionFailed = 1;
+            break;
+        }
         return 1;
     }
-
-connection_failed:
-    *exitFlag = 1;
-    g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-    remoteCleanup();
-    return 1;
 
     case TCP_ID:
         goSessionList();
@@ -1206,6 +1211,13 @@ check_host_join_screen:
     case GAME_SLIDER_ID:
     case ROLLOVER_ID:
         break;
+    }
+
+    if (connectionFailed) {
+        *exitFlag = 1;
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        remoteCleanup();
+        return 1;
     }
 
     return 1;

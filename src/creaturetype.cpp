@@ -108,26 +108,31 @@ TCreatureType upgradedCreatureType(TCreatureType type)
 // the creature in the same dwelling pair, requires the upgraded half, and
 // returns the entry seven slots earlier. The function has no Dreamcast row;
 // the role name and boundary come from the two table walks in retail.
+// A single lookup scope shares the failure return and reproduces all retail
+// code bytes without three gotos. Direct returns score 75.7895%; moving
+// only one failure return scores 87.7632..87.8947%. Both do and for scopes
+// retain the exact body; this is a failure scope, not a repeated lookup.
 VA(0x0047B220, 0x6D)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
-    int townType = traits.m_townType;
-    int creatureIndex;
-    if (townType == -1)
-        goto noCreature;
+    do {
+        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        int townType = traits.m_townType;
+        int creatureIndex;
+        if (townType == -1)
+            break;
 
-    creatureIndex = traits.m_level;
-    if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
-        creatureIndex += 7;
-        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
-            goto noCreature;
-    }
-    if (creatureIndex < 7)
-        goto noCreature;
-    return g_townDwellingCreatures[
-        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
-noCreature:
+        creatureIndex = traits.m_level;
+        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
+            creatureIndex += 7;
+            if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
+                break;
+        }
+        if (creatureIndex < 7)
+            break;
+        return g_townDwellingCreatures[
+            g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
+    } while (0);
     return CREATURE_NONE;
 }
 

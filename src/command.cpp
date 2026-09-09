@@ -648,80 +648,72 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
 // only when the frame changes.
-// The former note banked 85.8951% as "C1 front-end state": this compile bound
-// `this` to EDI and the hex to ESI where retail transposes them, and why-reg
-// found identical definition slots.  The transpose was a CONSEQUENCE of block
-// layout, not the wall.  Retail keeps the `return 0` block INLINE - reached by
-// fall-through when is_computer_action is true and by `jne 0xe34` from the
-// IsQuickCombat test - and jumps forward to the body (`je 0xe3c`).  Written as
-// one merged `!A && !B` guard with a `goto` past the early return, VC6 sinks
-// the `return 0` instead and emits two `jne`s at it, one branch polarity wrong
-// at each end and one exit short (2 returns against retail's 3).  Splitting the
-// guard and jumping INTO the early-return arm reproduces retail exactly - the
-// same lever that moved combatManager::Main in this TU.
-// Residual (97.6377%): all 25 blocks agree EXACTLY and branches are clean at
-// 13/13 with three returns; what is left is only the ESI/EDI pair the old note
-// described, now the whole delta rather than a symptom.
+// Preserve the separate quick-combat and computer-action checks in one
+// failure scope. Both do/while(0) and for(;;) remove the early join at
+// unchanged 97.6434%; the full cursor body remains after those checks.
+// Positive/negative nested-body guards instead score 85.8951%, and the
+// earlier direct zero return loses 3.9161 points. The canonical nullary
+// isComputerAction wrapper does not recover the required separate checks.
+// Remaining differences are the ESI/EDI register binding, with the same
+// retail CFG and calls; this is not a claim of complete byte equality.
 VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
-// Goto audit: direct return loses 3.9161 points; a combined OR loses 11.7483.
-// The nullary isComputerAction wrapper does not recover those exits here.
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int direction;
     float slope;
 
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
-        goto not_directable;
-    if (isComputerAction(getCurrentArmy())) {
-not_directable:
-        return 0;
-    }
-
-    int xDifference = x - (hex % 17) * 44 - 14;
-    int row = hex / 17;
-    if (!(row & 1))
+    do {
+        if (static_cast<const combatManager*>(this)->isQuickCombat())
+            break;
+        if (isComputerAction(getCurrentArmy()))
+            break;
+        int xDifference = x - (hex % 17) * 44 - 14;
+        int row = hex / 17;
+        if (!(row & 1))
+            xDifference -= 22;
         xDifference -= 22;
-    xDifference -= 22;
-    int yDifference = y - row * 42 - 112;
+        int yDifference = y - row * 42 - 112;
 
-    direction = 0;
-    if (xDifference < 0) {
-        if (yDifference < 0)
-            direction = 9;
-        else
-            direction = 6;
-    } else if (yDifference >= 0) {
-        direction = 3;
-    }
+        direction = 0;
+        if (xDifference < 0) {
+            if (yDifference < 0)
+                direction = 9;
+            else
+                direction = 6;
+        } else if (yDifference >= 0) {
+            direction = 3;
+        }
 
-    if (abs(yDifference) == 0)
-        slope = 100.0f;
-    else {
-        slope = static_cast<float>(abs(xDifference));
-        slope = slope / abs(yDifference);
-    }
+        if (abs(yDifference) == 0)
+            slope = 100.0f;
+        else {
+            slope = static_cast<float>(abs(xDifference));
+            slope = slope / abs(yDifference);
+        }
 
-    if (direction != COMBAT_ATTACK_ANGLE_0
-            && direction != COMBAT_ATTACK_ANGLE_6) {
-        if (slope < 0.58)
-            direction += 2;
-        else if (slope < 1.73)
-            direction++;
-    } else {
-        if (slope > 1.73)
-            direction += 2;
-        else if (slope > 0.58)
-            direction++;
-    }
+        if (direction != COMBAT_ATTACK_ANGLE_0
+                && direction != COMBAT_ATTACK_ANGLE_6) {
+            if (slope < 0.58)
+                direction += 2;
+            else if (slope < 1.73)
+                direction++;
+        } else {
+            if (slope > 1.73)
+                direction += 2;
+            else if (slope > 0.58)
+                direction++;
+        }
 
-    m_lastMoveToIndex = m_combatDirections[1][direction];
-    if (m_combatDirections[0][direction] == m_lastAttackCursor)
-        return 0;
+        m_lastMoveToIndex = m_combatDirections[1][direction];
+        if (m_combatDirections[0][direction] == m_lastAttackCursor)
+            return 0;
 
-    m_lastAttackCursor = m_combatDirections[0][direction];
-    g_mouseManager->setPointer(m_combatDirections[0][direction],
-                               mouseManager::COMBAT_SET);
-    return 1;
+        m_lastAttackCursor = m_combatDirections[0][direction];
+        g_mouseManager->setPointer(m_combatDirections[0][direction],
+                                   mouseManager::COMBAT_SET);
+        return 1;
+    } while (0);
+    return 0;
 }
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.

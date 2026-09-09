@@ -999,7 +999,6 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 
 // CODEVIEW(E:\gamedcs\armygrp.cpp:82, dc 0x4db88) void SplitSliderCallback(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1124, dc 0x4f328) long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);
-// CODEVIEW(E:\gamedcs\SpellDefs.h:345, dc 0x4fd34) unsigned char IsMindSpell(int spell);
 
 // --- TSplitWindow ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:62, dc 0x4db08) void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate);
