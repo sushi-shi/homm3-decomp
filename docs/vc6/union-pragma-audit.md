@@ -12,7 +12,7 @@ lines outside game source; they are experiments, not shipped workarounds.
 
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
-| Union definitions | 78 (47 source, 31 header) | 65 (39 source, 26 header) | Thirteen removed; classify the remainder below |
+| Union definitions | 78 (47 source, 31 header) | 64 (38 source, 26 header) | Fourteen removed; classify the remainder below |
 | Inline override regions | 289 | 227 | 62 removed, including six in disabled negative-example code |
 | `inline_depth(0)` regions | 262 | 220 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
@@ -46,6 +46,7 @@ lifetimes and TU state still need recovery before removing those dependencies.
 | `game::load` / `game::save` | `TGatePairVectorPointerAlias` and its forced wrapper | Restore the common `loadVector` / `saveVector` templates with bool results and native vector references. The long-vector resize restores retail's zero-filled new elements; the point/long retained writers have identical bytes. Six Load fences disappear, both callers improve, and both claimed writers remain exact. |
 | `game::randomizeUniversity` | `TUniversitySkillsPointerAlias` and its forced wrapper | Restore the DC-proven native aggregate. Retail's elemental-school initializer is Conflux-specific, not a generic record constructor. The map local remains 99.7464%, Load improves to 81.2284%, and explicit Conflux initialization preserves the retained body and all four call/expansion sites. Shared-header collateral is measured below. |
 | Marketplace artifact state | `TMarketArtifactList` byte/enum/integer pointer views | DC `DoBlackMarket` takes `TArtifact*`; both actual producers already own seven-element `TArtifact` arrays. Correct the entry signature, pass `TBlackMarket::m_artifacts`, and use one native pointer throughout. All five header consumers preserve their whole raw COFF section bytes, function locations and relocation destinations under the evidenced signature rename. |
+| `NewfullMap::readObjectType` | Full-width integer/enum `convertedType` | Read the four-byte wire value into its native enum local and commit only after the short-read guard. This is a Complete ownership hypothesis, not the DC `int_buffer` spelling. The diagnostic queries the committed record, positively supported by DC row 3619. Only 18 stack-displacement bytes change; the function retains 99.9633% and all other mapcell functions are byte-identical. |
 
 The puzzle control is instructive: flattening row and piece into one short-array
 index scored 96.4516% / 96.6598%. A 36-state family of actual pointer/value
@@ -58,14 +59,14 @@ pins, alternate declarations or dummy operations were introduced.
 
 | Role | Count | Disposition |
 |---|---:|---|
-| Scalar integer/enum adapters | 32 | Encoding/type-boundary debt; not established as necessary compiler interventions |
+| Scalar integer/enum adapters | 31 | Encoding/type-boundary debt; not established as necessary compiler interventions |
 | Enum/raw views of record fields | 3 | Migrate readers and writers together before removing |
 | Pointer adapters/views | 8 | Two intentional ABI views; six adapters requiring owner/call-boundary recovery |
 | Numeric bit/width views | 7 | Intentional representations |
 | Tagged, packed or external-layout unions | 15 | Preserve actual shared-storage representations |
-| **Total** | **65** | **24 intentional representations; 41 reconstruction adapters/workarounds** |
+| **Total** | **64** | **24 intentional representations; 40 reconstruction adapters/workarounds** |
 
-The 32 scalar adapters are accounted for below. A local definition with two
+The 31 scalar adapters are accounted for below. A local definition with two
 declarators (for example `building, bestBuilding`) counts once. Each connects
 an integer, loop ordinal, serialized value or packed field to a recovered enum
 consumer. They should not be advertised as original union declarations.
@@ -83,7 +84,7 @@ consumer. They should not be advertised as original union declarations.
 | `src/events.cpp` | 1 | Creature event/input adapter |
 | `src/game.cpp` | 4 | Creature, hero-class, creature-bank and secondary-skill adapters |
 | `src/hero.cpp` | 1 | Drawn secondary-skill index |
-| `src/mapcell.cpp` | 2 | Serialized adventure-object type reads |
+| `src/mapcell.cpp` | 1 | Narrow serialized adventure-object type read |
 | `src/objecttype.cpp` | 1 | Stream object-type input |
 | `src/philai.cpp` | 3 | Two secondary-skill values and one creature value |
 | `src/seerhut.cpp` | 1 | Serialized quest creature value |
@@ -839,9 +840,25 @@ flatten the helper again. The ordinary `countMarkets` and its recovered
 `HasBuilding` query are whole-object byte-neutral. See the
 [source families](source-families.md#marketplace-ratio-accessor-and-setup-boundaries)
 for complete controls and native contract tests. The full build passes at
-4063/4752 exact, 96.39% linked and 96.12% whole-image. The current census is
+4063/4752 exact, 96.39% linked and 96.12% whole-image. That checkpoint's census is
 **227 inline overrides** (220 depth-zero, seven auto-inline-off) in 33 TUs and
 **65 unions**.
+
+The native full-width object-type read removes one more local union. The
+8-state ownership/query family and 9-state field-lifetime follow-up are
+exhausted; a separate enum local with the original generic integer buffer
+otherwise preserved is adopted. Reading directly into the record is rejected:
+it would partially commit a short read. The actual block passes native tests
+for reports 0..4 across six valid type values at `-O0` and `-O2`, with five
+deliberate faults rejected. The adopted VC6 object reproduces its selected
+candidate; all 419 section layouts, 318 function-symbol locations and 2077
+relocation destinations agree with the old implementation. Only the target's
+18 stack-displacement bytes differ; all other 259 emitted functions are
+byte-identical. Full retail delinking and all gates pass at **4062/4752 exact,
+96.39% linked and 96.12% whole-image**. The one MAX reset is 100% to 99.9633%,
+with HIST held at 100%. The current census is **227 inline overrides** and
+**64 unions** (38 source, 26 header). The neighboring narrow wire fields are
+not candidates for this four-byte read without changing their format contract.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
