@@ -515,11 +515,9 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
         TCreatureType m_creature;
     } shownType;
     shownType.m_value = m_armyType;
-#pragma inline_depth(0)
     m_moraleHelp = group->getMoraleDescription(
         shownType.m_creature, m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
-#pragma inline_depth()
 
     m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
     createLuckWidget(m_luck);

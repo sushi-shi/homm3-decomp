@@ -4719,15 +4719,11 @@ static void drop_aura_links(army* self)
     long i = self->m_auraSources.size();
     while (i-- > 0) {
         std::vector<army*>& clients = self->m_auraSources[i]->m_auraClients;
-#pragma inline_depth(0)
         unsigned n = clients.size();
-#pragma inline_depth()
         while (n-- != 0) {
             if (clients[n] == self) {
                 army** pos = clients.begin() + n;
-#pragma inline_depth(0)
                 clients.erase(pos);
-#pragma inline_depth()
                 break;
             }
         }
@@ -4736,22 +4732,16 @@ static void drop_aura_links(army* self)
         std::vector<army*>& links = self->m_auraSources;
         army** first = links.begin();
         army** last = links.end();
-#pragma inline_depth(0)
         links.erase(first, last);
-#pragma inline_depth()
     }
     long j = self->m_auraClients.size();
     while (j-- > 0) {
         std::vector<army*>& sources = self->m_auraClients[j]->m_auraSources;
-#pragma inline_depth(0)
         unsigned n = sources.size();
-#pragma inline_depth()
         while (n-- != 0) {
             if (sources[n] == self) {
                 army** pos = sources.begin() + n;
-#pragma inline_depth(0)
                 sources.erase(pos);
-#pragma inline_depth()
                 break;
             }
         }
@@ -4760,9 +4750,7 @@ static void drop_aura_links(army* self)
         std::vector<army*>& links = self->m_auraClients;
         army** first = links.begin();
         army** last = links.end();
-#pragma inline_depth(0)
         links.erase(first, last);
-#pragma inline_depth()
     }
 }
 #endif
