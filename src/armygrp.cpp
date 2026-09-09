@@ -538,90 +538,34 @@ const std::bitset<9>& armyGrpFn0044A460()
 }
 
 // E:\gamedcs\armygrp.cpp:341
-// DECODE START 2026-08-06 (head to +0x95): 1326 bytes. STRUCTURAL
-// FINDS: the spell table is reached via a stored-pointer global with
-// a 136-BYTE RECORD STRIDE (spell*17*8 - the akSpellTraits analog of
-// akCreatureTypeTraits; record fields read: +0x10 into a local,
-// +0x18 compared > 4, likely school-mask and level); the creature
-// traits row (29 dwords) is indexed alongside. Artifact gates:
-// target_hero->IsWielding?(0x86 = Orb of Vulnerability) -> jump to a
-// certain-work path (+0x201); spell 0x23 special-cases with another
-// artifact check (0x5c). CHUNK 2 (+0x95..+0x201): float results are
-// .rdata literals via fld (0.0/1.0); spell-record flag bit 0x40
-// (+0x10) crossed with creature traits byte +0xd bit 0x10 = the
-// MIND-IMMUNITY check (creature 0x95 special-cased alongside); then
-// a SPELL switch over 0x11..0x47 (byte table ~+0x45c, jump table
-// ~+0x418 - extract both) with per-spell cases: protection-artifact
-// checks on target_hero (0x64, 0x65, 0x6a seen - the pendant
-// family), spells 0x46/0x47 plus CTA_UNDEAD -> fld 0.0
-// (bless-family dead on undead). CHUNK 3: more pendants (0x66, 0x69,
-// 0x6b), spell-record flag bit 4 gating one family, and the
-// resurrect/animate distinctions reading traits +0x60 crossed with
-// CTA_UNDEAD (living-only vs undead-only; several fld-0.0 returns).
-// CHUNK 4: pendants 0x67/0x68; trait bit 0x20000 ALSO blocks a spell
-// family (so the CTA_NO_MORALE name undersells it - non-living/
-// mindless semantics; consider renaming when this lands); creature
-// pairs 0x46/0x47 and 0x1e/0x1f special-cased; trait flag 0x10
-// gates one family. CHUNK 5 (+0x276..+0x33x): artifact 0x5d on
-// either hero -> +0x3de shared path; spell-record field +0xc bit 10
-// crossed with creature-trait bit 0x400 and target-hero artifact 0x31; trait bit
-// 0x4000 with spell-record byte +0x1c bit 2 -> 0.0. Then the SECOND
-// spell switch (0x10..0x85, tables ~0x4b8/0x494) sets the BASE
-// CHANCE as float literals - 1.0 / 0.8f (0x3f4ccccd) / 0.6f
-// (0x3f19999a) seen - each reduced by a hero-method result via
-// fsubr chains (the Resistance-skill math). CHUNK 6: the second
-// switch is PER-CREATURE immunity keyed on creature-0x10 - cases
-// re-check the SPELL: fire family {0x17,0x3e}, lightning family
-// {0x1a,0x11,0x13,0x39}, ice {0x10,0x14} (elemental immunities from
-// the creature side), and the DRAGON magic immunity as spell-record
-// LEVEL gates (+0x18 <= 3 and <= 4 cases) - each with its own fld
-// literal return. TABLES EXTRACTED: switch1 (spell-0x11, jt 0x4a8e8,
-// bt 0x4a92c, 55 entries, cases 0..15 + default 16): case0={0x11,
-// 0x13}, 1=0x18, 2=0x19, 3=0x26, 4=0x27, 5=0x29, 6=0x2a, 7=0x2c,
-// 8={0x31,0x32}, 9={0x33,0x34,0x37}, 10..13=0x3b..0x3e, 14=0x46,
-// 15=0x47. switch2 (creature-0x10, jt 0x4a964, bt 0x4a988, 118
-// entries, cases 0..7 + default 8): 0={0x10,0x85}, 1=0x11,
-// 2={0x1a,0x52,0x84,0x84?,0x1a..}, 3=0x1b, 4={0x53,0x75,0x79?},
-// 5={0x70,0x7f?}, 6={0x71,0x7d?}, 7={0x73,0x7b?} - write the exact
-// case lists from the raw arrays at implementation time (the byte
-// tables are recorded in the decision log's decode notes if needed:
-// creature upgrades share their base's case, mirroring
-// modify_spell_damage). CLOSING MATH (+0x3de..+0x40c): spell-record
-// field 0 <= 0 -> certain (fld literal); final `if (chance < 0)
-// chance = 0` floor via fcomp; code ends ~+0x40c, the rest of the
-// claim is the four dispatch tables as data-in-text. TRANSCRIPTION
-// COMPLETE; every prerequisite landed (SSpellTraits view in
-// armygrp.h; hero::GetMagicResistanceFactor is the fsubr callee; all
-// fld literals resolved - every immunity returns 0.0, certain-work
-// 1.0, so 0x86 = Power of the Dragon Father and 0x5d = Orb of Vulnerability).
-// FINAL CASE MAP (spell -> pendant/action): 0x3e -> 0x65 + creatures
-// 0x46/0x47 + undead; 0x26 plus the bless/precision family ->
-// undead/[traits +0x60] gates; 0x27 requires undead; 0x3b -> pendant
-// 0x64; {0x11,0x13} -> pendant 0x6a; 0x3c -> 0x69;
-// 0x3d -> 0x6b; 0x2a -> 0x66; 0x29 falls into the {0x33,0x34,0x37}
-// bless-family body; 0x18 -> 0x67 (Death Ripple); 0x19 -> 0x68 +
-// 0x20000 (Destroy Undead needs undead); {0x31,0x32} -> trait
-// 0x20000 (mind on mindless); {0x46,0x47} -> trait-flag 0x10 /
-// creatures 0x1e,0x1f. Chance math: Orb of Vulnerability on either
-// hero bypasses resistance; artifact 0x31 in the field_c bit-10 family
-// when creature trait 0x400 is absent; base
-// chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
-// Residual (88.5071%): the canonical IsWieldingArtifact sites retain the
-// shared pendant call, but retail pushes each constant before joining while
-// VC6 keeps the selector in a register and pushes at the join. Several zero
-// return epilogues also merge here where retail duplicates them.
-// Goto audit: Dispel can return 1.0f directly at the same score. The
-// proposed post-switch artifact selector cannot keep the old Dispel jump
-// across its initialization (VC6 C2362). Splitting declaration/assignment
-// compiles, but with the separate Dwarf resistance expression it scores
-// 83.1607%, so those seven joins remain. Failed compiles are not scores.
-// Historical controls: six separate pendant tests scored 84.9089%, and
-// duplicating only the Berserk/Lightning/Hypnotize tests scored 83.1929%.
-// A synthesized inline artifact-check helper reproduced the lower result;
-// no such helper is retained. Integer selector type/declaration placement
-// alone was neutral. The IsMindSpell wrapper's earlier 88.0464% result is a
-// remaining canonical-boundary lead, not evidence against the DC call.
-// Before normalization (locals): target_army_type, casting_hero, target_hero.
+// Retail's two compressed switch tables are at +0x418/+0x45c (spells)
+// and +0x494/+0x4b8 (creatures). Their shared branch destinations matter:
+// Resurrection only tests undead; Bless adds the damage-high test used by
+// Fortune/Misfortune/Slayer; Precision shares Forgetfulness's shooter test.
+// Stone tests the Troglodyte pair; Poison tests living and the Gargoyle pair.
+// The old transcription grouped these entries by apparent similarity and
+// also treated Diamond Golems as universally immune. The retail table puts
+// them on the normal path, Green/Red/Azure Dragons on level <= 3, Gold on
+// level <= 4, and Black/Magic Elemental on the unconditional zero path.
+//
+// DC lines 505..507 and retail +0x2bd..+0x2d5 make mind immunity a creature
+// trait OR a hero's Badge of Courage. DC 564..565 and retail +0x325 apply
+// GetMagicResistanceFactor after the entire creature switch, including its
+// default arm; it is not confined to Dwarves. The arrow-tower rejection at
+// retail +0xa7 is independent of the siege-weapon trait. These are behavior
+// corrections, verified separately from the byte similarity score.
+//
+// Restore the separate IsWieldingArtifact calls attested by DC 379..486;
+// VC6 merges the shared pendant tail itself. Together with the corrected
+// scopes this removes all seven gotos and improves 88.5071% to 95.8839%.
+// Restoring the header IsMindSpell accessor called at DC 505 raises this
+// further to 96.6018%. Mask and shift accessor expressions emit the same
+// code, and all 95 header consumers were measured without collateral loss.
+// The same corrected behavior with the old pendant join scores 76.8554%;
+// a post-switch artifact selector scores 75.4607%. Initializing chance at
+// function entry gives 95.0429%; keep its assignment after the spell gates.
+// Before normalization: get_spell_work_chance, target_army_type,
+// casting_hero, target_hero.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* castingHero, const hero* targetHero)
 {
@@ -641,10 +585,9 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     if (attrs & g_ctaSiegeWeapon) {
         if (spellRec->m_flags & 0x1000)
             return 0.0f;
-        if (targetArmyType == CREATURE_ARROW_TOWER)
-            return 0.0f;
     }
-    EArtifactId protectionArtifact;
+    if (targetArmyType == CREATURE_ARROW_TOWER)
+        return 0.0f;
     switch (spell) {
     case SPELL_BLIND:
         if (targetHero
@@ -656,28 +599,26 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_BERSERK:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_DISPASSION;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DISPASSION))
+            return 0.0f;
         break;
     case SPELL_LIGHTNING_BOLT:
     case SPELL_CHAIN_LIGHTNING:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_NEGATIVITY;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_NEGATIVITY))
+            return 0.0f;
         break;
     case SPELL_HYPNOTIZE:
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_FREE_WILL;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_FREE_WILL))
+            return 0.0f;
         break;
     case SPELL_FORGETFULNESS:
         if (targetHero
             && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_TOTAL_RECALL))
             return 0.0f;
+    case SPELL_PRECISION:
         if (!(attrs & 0x4))
             return 0.0f;
         break;
@@ -686,19 +627,20 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_HOLINESS;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
+            return 0.0f;
         break;
     case SPELL_RESURRECTION:
+        if (attrs & g_ctaUndead)
+            return 0.0f;
+        break;
     case SPELL_BLESS:
+        if (attrs & g_ctaUndead)
+            return 0.0f;
     case SPELL_FORTUNE:
     case SPELL_MISFORTUNE:
     case SPELL_SLAYER:
-    case SPELL_PRECISION:
-        if (attrs & g_ctaUndead)
-            return 0.0f;
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
         break;
@@ -709,21 +651,15 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     case SPELL_DEATH_RIPPLE:
         if (attrs & g_ctaUndead)
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_LIFE;
-        goto check_protection_artifact;
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
+            return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
         if (!(attrs & g_ctaUndead))
             return 0.0f;
-        if (!targetHero)
-            break;
-        protectionArtifact = ARTIFACT_PENDANT_OF_DEATH;
-        goto check_protection_artifact;
-        break;
-    check_protection_artifact:
-        if (const_cast<hero*>(targetHero)->isWieldingArtifact(protectionArtifact))
+        if (targetHero
+            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
             return 0.0f;
         break;
     case SPELL_MIRTH:
@@ -731,11 +667,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (attrs & g_ctaNoMorale)
             return 0.0f;
         break;
-    case SPELL_POISON:
-        if (targetArmyType == CREATURE_STONE_GARGOYLE || targetArmyType == CREATURE_OBSIDIAN_GARGOYLE)
+    case SPELL_STONE:
+        if (targetArmyType == CREATURE_TROGLODYTE || targetArmyType == CREATURE_INFERNAL_TROGLODYTE)
             return 0.0f;
         break;
-    case SPELL_STONE:
+    case SPELL_POISON:
         if (!(attrs & 0x10))
             return 0.0f;
         if (targetArmyType == CREATURE_STONE_GARGOYLE || targetArmyType == CREATURE_OBSIDIAN_GARGOYLE)
@@ -748,12 +684,10 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 && const_cast<hero*>(castingHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
             && !(targetHero
                 && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
-            unsigned int spellFlags = g_spellTraits[spell].m_flags;
-            spellFlags >>= 10;
-            if (spellFlags & 1) {
-                if (!(attrs & 0x400)
-                    && targetHero
-                    && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE))
+            if (isMindSpell(spell)) {
+                if ((attrs & 0x400)
+                    || (targetHero
+                        && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
                     return 0.0f;
             }
             if ((attrs & 0x4000) && (spellRec->m_school & 0x2))
@@ -762,14 +696,10 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             case CREATURE_DWARF:
             case CREATURE_CRYSTAL_DRAGON:
                 chance = 0.8f;
-            apply_magic_resistance:
-                if (targetHero)
-                    chance -= 1.0f - const_cast<hero*>(targetHero)
-                                         ->getMagicResistanceFactor();
                 break;
             case CREATURE_BATTLE_DWARF:
                 chance = 0.6f;
-                goto apply_magic_resistance;
+                break;
             case CREATURE_AIR_ELEMENTAL:
             case CREATURE_STORM_ELEMENTAL:
                 if (spell == SPELL_METEOR_SHOWER || spell == SPELL_BLIND)
@@ -787,21 +717,23 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
                     return 0.0f;
                 break;
+            case CREATURE_GREEN_DRAGON:
+            case CREATURE_RED_DRAGON:
             case CREATURE_AZURE_DRAGON:
                 if (spellRec->m_level <= 3)
                     return 0.0f;
                 break;
-            case CREATURE_GREEN_DRAGON:
             case CREATURE_GOLD_DRAGON:
-            case CREATURE_RED_DRAGON:
-            case CREATURE_BLACK_DRAGON:
                 if (spellRec->m_level <= 4)
                     return 0.0f;
                 break;
-            case CREATURE_DIAMOND_GOLEM:
+            case CREATURE_BLACK_DRAGON:
             case CREATURE_MAGIC_ELEMENTAL:
                 return 0.0f;
             }
+            if (targetHero)
+                chance -= 1.0f - const_cast<hero*>(targetHero)
+                                         ->getMagicResistanceFactor();
         }
         if (spellRec->m_karma > 0) {
             return 1.0f;
@@ -2262,13 +2194,6 @@ TTerrainType armyGroup::getNativeTerrain() const
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\SpellDefs.h:345
-DC_ONLY(0x4fd34, 0x20)
-unsigned char IsMindSpell(int spell)
-{
-    // @stub
-}
 
 // E:\gamedcs\armygrp.cpp:131
 DC_ONLY(0x4fd54, 0x34)
