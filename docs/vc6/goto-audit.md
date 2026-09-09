@@ -3,9 +3,11 @@
 The completed audit leaves **58 goto statements in 31 functions across 18 files**.
 That is **258 fewer than the initial 316 (81.6%)**, across 106 functions;
 92 functions and 37 files no longer contain gotos. Every surviving statement
-has an individual disposition below. The final nine removals preserve all
-4,752 current scores, maxima and historical peaks, with identical emitted
-function bytes and relocation references/addends relative to their controls.
+has an individual disposition below. The completion pass removes nine more
+original sites, then also removes two PCX sites introduced by parallel work.
+The integrated result preserves all 4,764 incoming current scores, maxima
+and historical peaks. Each removal preserves emitted function bytes and
+relocation references/addends relative to its own reproduced control.
 The preceding source-scope pass removed 31 statements and corrected several
 retail spell-immunity switch routes. These are separate measured checkpoints.
 
@@ -756,3 +758,37 @@ CUR/MAX/HIST triples are unchanged, **4,064** functions are exact, linked
 fuzzy match is **96.40%**, and executable matched bytes are **96.13%**.
 All **220** existing inlining pins are preserved. Integration with later
 workspace changes is checked separately against the incoming baseline.
+
+
+## Final integration and newly introduced PCX sites
+
+The combined tree includes destination `dab178a0`. Its Victor-library work
+introduced two additional gotos after the original inventory. Both received
+the Dreamcast/retail evidence pass and independent source-family controls.
+The palette reader has no Dreamcast counterpart; `loadpcx` has only the older
+public API stub, so retail governs both bodies.
+
+The palette reader replaces `copyPalette` with a positive header-fallback
+scope after the extended-palette read. All seven states (unchanged parent,
+do/for read scopes, bool/byte/int fallback results and the positive scope)
+emit one identical object. The loader replaces `copyRow` with a bool result:
+nibble, indexed and completed RGB rows set it before the common copy; partial
+RGB planes retain their `continue`. A byte result is identical. An owned
+nibble copy scores 76.6737% and moving nibble to the indexed fallthrough scores
+53.9655%, against the retained 78.4456%.
+
+Both adopted functions preserve their incoming instruction/data bytes and
+all relocation kinds, symbols and addends: **315 bytes/eight references** for
+the palette reader at 92.5688%, **1,204 bytes/23 references** for `loadpcx` at
+78.4456%. These two exhausted families add twelve successful states and four
+distinct objects. The full recorded search therefore contains **163 families,
+1,567 states and 1,233 distinct objects**, including controls and rechecks.
+
+The two newly introduced sites are also removed, leaving the same **58**
+survivors from the original inventory; the final Markdown disposition table
+is checked against the integrated source, including repeated-label counts.
+The integration full build passes with **4,764 unchanged CUR/MAX/HIST triples**,
+**4,073 exact functions**, **96.38% linked fuzzy match**, **96.38% executable
+matched bytes**, and **218 existing inlining pins**. The additional functions,
+units and two removed pins belong to the incoming workspace work; this audit
+introduces no inlining controls or function-score loss.

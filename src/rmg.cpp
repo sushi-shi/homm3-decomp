@@ -3036,7 +3036,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // type and preferred terrain. The final reverse scan gives later rows
 // precedence for the same subtype. Names are provisional; RMG is absent
 // from the Dreamcast build. Retail fixes the record stride at 0x4c.
-// Residual (99.7862%): the rule push_back expands single-value insertion
+// Residual (99.5723%): the rule push_back expands single-value insertion
 // into the count overload, adding one push of 1 where retail calls the
 // retained single-value wrapper at 0x536701. The checked bitset subscript
 // recovers the exception string constructor and the rule's stack homes;
@@ -3047,7 +3047,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // push_back yield reader 99.5723%; all three direct insertions give 97.3075%.
 // These ordinary public calls recover the parent and child boundaries
 // without changing a library definition. Bank those unchanged-source MAXs
-// separately, then retain this higher reader peak. A 54-case count-one
+// separately. A 54-case count-one
 // insertion follow-up does not improve either reader form. No pin remains.
 // Earlier source controls: initialize row before the vectors, increment it
 // before rule destruction, and explicitly zero both resize calls. Reuse
@@ -3058,6 +3058,11 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // indices and combined/nested reverse-loop conditions are byte-neutral.
 // Removed inline-depth diagnostics (1 at push_back, 2 at .test) were also
 // byte-neutral at 97.5804%; the canonical library definitions stay in use.
+// The current eight-state JSON batch confirms that any two scalar insert
+// calls retain both uncovered rule fill/copy_backward bodies at 100%.
+// All push_back scores 99.7862% here but emits neither helper; one insert
+// scores 96.2627% and also omits them. Keep two insertions (99.5723%) and
+// the proven helper boundaries, with the former caller peak in history.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -3079,8 +3084,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
         objectType = atoi(values[3]);
         subtype = atoi(values[4]);
         terrain = atoi(values[6]);
-        objectTypes.push_back(objectType);
-        terrains.push_back(terrain);
+        objectTypes.insert(objectTypes.end(), objectType);
+        terrains.insert(terrains.end(), terrain);
         subtypes.push_back(subtype);
         for (terrain = 0; terrain <= eTerrainWater; ++terrain)
             rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
@@ -4980,7 +4985,30 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
 
 // The retained size call in propagation uses zone+0x3e4, and the signed
 // two-byte loads above prove the short element independently of ICF peers.
+// JoinExtraZones retains resize after the distance initializer is exposed as
+// one ordinary source helper. The emitted 0x1e9-byte COMDAT has retail's 31
+// blocks, 19 branches, four returns, raw bytes and relocation positions.
+VA_COMPGEN(0x0054C1E0, 0x1E9, VECTOR_RESIZE, Short)
 VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
+
+// The distance table is one cohesive operation: size every signed-short row,
+// fill it with the 32000 sentinel, then clear an original zone's diagonal.
+// Complete-only source inference. A nine-state JSON family compared whole-set,
+// per-zone and post-resize boundaries. This ordinary helper and the source-
+// inline spelling compile identically, raise JoinExtraZones 68.8871 -> 79.6078,
+// emit the exact retained resize above, and leave every sibling score fixed.
+static void initializeRmgZoneDistances(
+    type_random_map_generator* generator, int originalZones)
+{
+    for (int index = 0; index < generator->m_zones.size(); ++index) {
+        TRmgZone* zone = generator->m_zones[index];
+        zone->m_zoneDistances.resize(originalZones);
+        for (int column = originalZones; column--;)
+            zone->m_zoneDistances[column] = 32000;
+        if (zone->m_slot->m_zoneIndex < originalZones)
+            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
+    }
+}
 
 // BuildZoneBoundaries passes the count from before the radial sites were
 // added and its live Voronoi diagram. Extra-to-extra edges become completed
@@ -4993,9 +5021,17 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // the initial 30.0554%. The final direct single-element insert restores the
 // retained _Construct<TRmgZoneConnection> body; all four push_back calls
 // instead inline two count-insert bodies and omit that construction symbol.
-// Reusing one connection per function or outer loop remains lower. Short
-// vector resizing and the third connection insertion still expand differently
-// from retail; preserve the real operations and their canonical helpers.
+// Reusing one connection per function or outer loop remains lower. The third
+// connection insertion still expands differently from retail; preserve the
+// real operation and its canonical helpers.
+// A sixteen-state connection push_back/insert batch emits no short-vector
+// resize specialization in any object. Its caller peak of 72.7823% does
+// not recover the missing 0x54c1e0 boundary, so no connection edit is retained.
+// Residual 79.6078%: extracting the complete distance initializer as the
+// ordinary helper above recovers that exact boundary and cuts the candidate
+// CFG from 86 to 73 blocks (retail 79). Per-zone helpers reach 79.2772%; moving
+// only the post-resize fill loses at 66.1663%. The two large connection loops,
+// their ring-search exits and final insertion expansion remain to reconcile.
 VA(0x0053DAD0, 0x57F) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
 {
@@ -5030,14 +5066,7 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             }
         }
     }
-    for (index = 0; index < m_zones.size(); ++index) {
-        TRmgZone* zone = m_zones[index];
-        zone->m_zoneDistances.resize(originalZones);
-        for (int column = originalZones; column--;)
-            zone->m_zoneDistances[column] = 32000;
-        if (zone->m_slot->m_zoneIndex < originalZones)
-            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
-    }
+    initializeRmgZoneDistances(this, originalZones);
     for (index = 0; index < originalZones; ++index)
         propagateZoneDistances(m_zones[index]);
 
@@ -8476,6 +8505,10 @@ VA_COMPGEN(0x0054C940, 0x23, VECTOR_DESTROY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
+// The retained insertion calls these value-assignment loops. Both traverse
+// 0x4c-byte rules with the two owned vectors at +0x2c and +0x3c.
+VA_COMPGEN(0x0054DA20, 0x19F, STD_FILL, TRmgObjectPlacementRule)
+VA_COMPGEN(0x0054DBC0, 0x1A0, STD_COPY_BACKWARD, TRmgObjectPlacementRule)
 
 // LoadTemplates calls this single-value insertion at 0x53833e/0x538354
 // for the two directions of a parsed connection. Retail's seven-dword
