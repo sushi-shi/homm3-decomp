@@ -50,7 +50,6 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
-#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
 #include "homm3_limit.h"
 #include <va.h>
 #include <stdio.h>
@@ -1578,21 +1577,31 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
 // The second MapCell.h COMDAT the retail link filed inside advmgr's
 // span; 21 call sites all over the image. 49 B, `ret 0xc` (3 stack
-// args + this), NO calls and no bounds test - which is what separates
-// it from the 82-byte NewfullMap::zCell overload of the same arity.
+// args + this), no calls and no bounds test. The old claim that an
+// 82-byte zCell was a different x86 body confused SH4 and x86 sizes:
+// DC's private zCell arithmetic itself emits the exact 49 retail bytes.
 // The index arithmetic ends `lea edx,[eax+eax*8]; lea eax,[eax+edx*2];
 // lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
 // Moved here from the DC header block to keep retail link order.
 // E:\gamedcs\MapCell.h:895
-#endif  // @carcass
-
-#pragma auto_inline(off)
+// The canonical header now owns this body and its private zCell helper.
+// Its mutable storage verification preserves this exact cell copy; without
+// it VC6 emits the same arithmetic only as zCell. No claim rename is needed.
+// The removed fork/pin had imposed different caller expansion choices:
+// doAdvCommand 83.3621 -> 77.1728, processHover 91.6263 -> 88.1523,
+// drawBoatPart/Shadow 100 -> 98.2619, drawHeroPart 100 -> 99.75 and its
+// shadow 100 -> 99.7524. Other caller changes are in the audit; their
+// MAX/HIST retain the peaks. The canonical boundary recovers
+// processOnMapTowns 94.3642 -> 98.6258 and monster quest text 93.002 -> 98.3426.
+// These score dips do not refute the DC-proven helper calls or method order.
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    return &m_cellData[(z * m_size + y) * m_size + x];
+    // Claim-only mirror; the compiled definition is in game.h.
+    HOMM3_RELEASE_VERIFY(m_cellData != 0);
+    return zCell(x, y, z);
 }
-#pragma auto_inline(on)
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
 // SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
@@ -4245,10 +4254,15 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 // The ninth GetMapExtra bit is the monster-occupancy plane. On a trigger
 // square, the first byte of the canonical 16-byte object-traits row says
 // whether the underlying object blocks landing.
-#pragma auto_inline(off)
+// DC 4531..4532 has no line rows before the cell use. A non-null input
+// verification is a source hypothesis, not recovered ASSERT text. It removes
+// the auto-inline override while preserving all TU section bytes and 4105
+// relocation destinations. Negative control: omit it and getNormalCursor
+// expands in processHover (91.6263 -> 63.9466); its own body stays exact.
 VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
+    HOMM3_RELEASE_VERIFY(currCell != 0);
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
             || !g_adventureObjectLandBlocked[currCell->m_type][0])) {
@@ -4269,7 +4283,6 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     }
     return ADV_WALK_POINTER;
 }
-#pragma auto_inline(on)
 
 // DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
 // (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
@@ -5189,9 +5202,12 @@ static inline NewmapCell* drawGroundCell(advManager* manager, type_point point)
 // and naming the divisor; naming the remainder scored 98.1571%.
 //
 // Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
-// DrawHeroCell keeps Complete's invalid-point arm: retail calls
-// NewfullMap::cell(0, 0, 0), while the older DC GetCell returns cellData.
-// Substituting that older GetCell semantic scored 93.18%. The register
+// DrawHeroCell keeps Complete's invalid-point call to
+// NewfullMap::cell(0, 0, 0). DC GetCell at 0x14b90 also calls that scalar
+// wrapper at line 7028, then the packed-point wrapper at 7029; the prior
+// claim that DC returned cellData directly mistook flattened code for source.
+// The three Draw*Cell copies above remain canonical-helper recovery debt.
+// Substituting the current flattened GetCell scored 93.18%. The register
 // model's lack of binding divergence did not establish correct helper
 // expression shape; see docs/vc6/regalloc.md 6f.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424

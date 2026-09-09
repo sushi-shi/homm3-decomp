@@ -4,7 +4,7 @@ C-style casts	0
 reinterpret_casts	0
 volatile qualifiers	0
 inline-gate artifacts	0
-inline-depth pins	257
+inline-depth pins	236
 cpp extern decls	0
 .cpp-local views	0
 .cpp-local enums	0
@@ -12,4 +12,4 @@ casts to enum types	0
 magic case labels	0
 unnamed domain compares	0
 view preprocessor artifacts	0
-per-TU preprocessor scaffolds	2
+per-TU preprocessor scaffolds	0

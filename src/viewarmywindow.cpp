@@ -33,20 +33,10 @@ inline const T& cppMax(T left, T right)
     return left < right ? right : left;
 }
 
-// Two representation bridges in game.cpp's/ai_combat.cpp's shape - a
-// four-byte copy VC6 reduces to a move - so that neither a
-// reinterpret_cast nor an enum cast appears here:
-//
-//  * army.h models the traits row EVERY stack carries embedded at +0x74
-//    as a handful of sliced ints, `monInfoTownType` first, because
-//    modelling the record itself is a layout change for the whole army
-//    run (army.h says so at the slice). Retail's constructor takes the
-//    row's address once and hands it to three widget builders, so this
-//    TU needs the record view. Draining this belongs to whoever gives
-//    army a real `TCreatureTypeTraits sMonInfo`.
-//  * armyGroup's describers take TCreatureType where army::creatureType
-//    and this window's own ArmyType are both spelled int for the same
-//    header-closure reason.
+// Integer-input adapter, not an original union claim. DC proves the bare
+// constructor's army_type parameter and Upgrade are int, whereas ArmyType
+// and army::creatureType are TCreatureType. Keep the actual input boundaries;
+// displayed member values no longer need local representation bridges.
 inline TCreatureType creatureTypeFromInt(int value)
 {
     union {
@@ -201,79 +191,35 @@ inline void TViewArmyWindow::createRolloverWidget()
 // body just before their icon rows, and Upgrade is never written here
 // at all.
 //
-// Residual (89.6179%): the CFG is EXACT - 31 conditional branches and
-// one return on both sides - and the call multiset agrees on everything
-// except basic_string::_Tidy. Three items, all of them the /Ob2 budget
-// (A7, the OPEN calibration class), not a spelling:
-//   * the TWO `_Tidy(false)` calls the implicit string constructions
-//     make from the MEM-INIT LIST. Retail calls them; our budget still
-//     reaches them and folds each into three stores. The statement
-//     pragma that fixed the temporaries cannot reach a mem-init list -
-//     measured: `#pragma inline_depth(1)` and `(2)` placed before the
-//     declarator with a reset at the top of the body are exact no-ops,
-//     so the pragma is positional over STATEMENTS only.
-//   * `vector<widget*>::_Destroy(first, last)` inside the inlined
-//     reserve. Retail calls it; for `widget*` the loop is empty and our
-//     CL folds it away before any depth rule sees it - `inline_depth`
-//     1, 2 and 3 around the `reserve` statement are all no-ops
-//     (measured; only depth 0 does anything, and that costs the reserve
-//     expansion itself).
-//   * the argument-slot permutation in the two describer set-ups, which
-//     follows from the extra live values the two inlined `_Tidy`s cost.
-// RE-OPENED 2026-08-20 against the numerator lever and STRENGTHENED in
-// three directions: a dead minimal charge (if(0) Widgets.size()) is
-// byte-flat at dose 1 and BACKWARD at dose 20 (90.33); lifting the
-// whole action-slot block into a single-call-site static (the largest
-// goto-free block, the BuyBuild caller-shrink) measures 89.30; and the
-// site-count axis is what the doses moved, not the mem-init fold. The
-// budget knobs do not reach the mem-init _Tidy sites from this body.
-// Tried and rejected: writing all five helper rows longhand in the body
-// (61.42% - the budget then reaches _Tidy AND the [-3, 3] selector at
-// both icon rows), and a defined `_cpp_clamp` template (87.11%).
+// Source-boundary recovery: DC ArmyType is TCreatureType, line 70 calls
+// army::GetName, and lines 98/107 append the help strings. Restoring these
+// together allows both description depth fences and the local enum union
+// to go: 91.2989 -> 92.6780. All other tracked rows in six header consumers
+// stay unchanged except the group constructor's improvement below. A
+// 32-state family independently reproduced the all-corrections/unpinned
+// corner. Retaining only the luck fence gives 93.5871, but keeps an override;
+// deleting both without GetName gives 87.4391 with the typed member.
+// The append correction is score-flat because the report masks relocation
+// names; its evidence is the actual retail calls, not that scalar score.
+// The current call sequence now recovers both mem-init _Tidy calls, reserve's
+// size/_Destroy calls, and the morale temporary's _Tidy. The luck temporary
+// still expands its cleanup (34 conditional branches versus retail's 31).
 //
-// 2026-08-20, TWO CORRECTIONS FROM RETAIL'S OWN RELOCATION SEQUENCE.
-// Reading `sema disasm --verbose | grep IMAGE_REL_I386_REL32` off both
-// sides and normalising the synth names gives the ordered call list, and
-// it settles two things the prose above got wrong:
-//   * THE OWNER/CONTROLLER ASSIGNMENT WAS INVERTED at all three sites.
-//     Retail's sequence is get_controller -> bitmapBorder (the plate),
-//     get_controller -> create_damage_widget, and get_owner ->
-//     get_morale_description. This body had get_owner on the first two
-//     and get_controller on the third, and the comment above the plate
-//     asserted the opposite of the bytes. Byte-flat (both are extern
-//     thiscall `hero*(void) const`, so only the relocation NAME moves,
-//     which objdiff does not score) - but it is what retail wrote, it is
-//     what `predict-inline` reads, and leaving it inverted was costing
-//     every future diagnosis of this row a phantom
-//     `get_controller base x1 vs retail x2`.
-//   * `creature_type_from_int` INSIDE A PINNED STATEMENT IS A CALL.
-//     The two describer set-ups sit under `#pragma inline_depth(0)`, and
-//     the pin de-inlines the enum bridge along with the describer -
-//     retail has no such call at all. Hoisting it into a local union
-//     ahead of the pin (the idiom WindowHandler already uses, and the
-//     standing "hoist what retail keeps inline out of the pinned
-//     statement" rule) is worth 89.9877 -> 90.8074 here and
-//     88.7021 -> 90.4657 on the armyGroup ctor below.
-// What the same reading leaves OPEN, both still budget: retail calls
-// `vector::size()` inside the inlined reserve where we expand it, and at
-// `morale_help = <temp>` retail expands one level MORE than the pin
-// allows - it calls `assign(const&, uint, uint)` and `_Tidy(bool)` where
-// the pin makes us call `operator=` and `~basic_string`. Removing the
-// pin does not fix that (it over-inlines instead): measured on the
-// armyGroup ctor, 90.4657 with the pin against 89.9195 without, so the
-// pin stays as the closest reachable point.
-// A narrow Widgets type view is bounded too (2026-08-21). A layout-identical
-// public vector derivation is byte-flat on every row. Giving that view a
-// one-line forwarding `reserve` wrapper does reach the nested depth, but it
-// selects the wrong phase: this constructor falls 90.8074 -> 88.3837, the
-// armyGroup constructor 90.4657 -> 78.7466, and the delegating constructor
-// loses exactness at 83.8179. The wrapper changes the whole reserve boundary,
-// not only retail's empty `_Destroy` child, so neither spelling is retained.
-// Release VERIFY is distinct from the elided carrier and is now bounded too
-// (2026-08-21). Evaluating `Widgets.size()` immediately before reserve or at
-// the morale assignment, and evaluating `morale_help.size()` at that latter
-// boundary, are all byte-flat at 90.807396%. C1 removes the unused accessor
-// result before it can change either nested inline decision.
+// Remaining nested-inline/lifetime differences are not permission to
+// manufacture compiler work. Earlier bounded controls: mem-init depth 1/2
+// and reserve depth 1/2/3 do not reach the missing nested boundaries;
+// reserve depth 0 instead loses its expansion. Pasting the five widget
+// helpers scores 61.42, an alternate clamp 87.11, and a forwarding vector
+// reserve 88.3837 while also harming the other constructors. Plain vector
+// derivation is byte-flat. Dummy size/capacity expressions and dead calls
+// were rejected, as was extracting an unproven action-slot helper (89.30).
+// Keep the canonical helpers and actual string lifetime boundaries.
+//
+// Retail's named call sequence independently fixes controller for the
+// background and damage, owner for morale. The old assignment/pinned
+// operator= discussion was wrong for this battle constructor; the group
+// constructor really does use assignment. No union is needed to work
+// around a de-inlined enum adapter once the owning member is typed.
 // E:\gamedcs\viewarmywindow.cpp:55
 // Before normalization (locals): this_army, show_ok, stack_traits, type_traits, our_hero,
 // our_town, our_group, enemy_hero, enemy_group, group_alignments, shown_type, this_hero,
@@ -310,19 +256,9 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // (The note that stood here said OWNER; see the correction above.)
     createBackgroundWidget(thisArmy->getController());
 
-    // The singular/plural pair comes off the TABLE row - retail
-    // rematerialises the 0x6747b0 base here instead of reusing the
-    // cached pointer, which is what the indexed spelling gives.
-    const char* name;
-    if (thisArmy->m_creatureType >= 0 && thisArmy->m_creatureType <= 150) {
-        if (thisArmy->m_numTroops == 1)
-            name = g_creatureTypeTraits[thisArmy->m_creatureType].m_name;
-        else
-            name = g_creatureTypeTraits[thisArmy->m_creatureType].m_pluralName;
-    } else {
-        name = g_emptyRolloverText;
-    }
-    createNameWidget(name);
+    // DC line 70 calls army::GetName; its canonical inline definition owns
+    // the singular/plural lookup and invalid-type fallback.
+    createNameWidget(thisArmy->getName());
 
     createPortraitWidget(stackTraits->m_spriteName,
                            stackTraits->m_townType, thisArmy->m_numTroops);
@@ -348,33 +284,18 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
     if (side == 1)
         ourTown = g_combatManager->m_defendingTown;
-    // Both describers return a std::string BY VALUE, and retail calls
-    // basic_string::_Tidy(true) to destroy each temporary where our
-    // budget expands it into the full three-branch refcount block. The
-    // statement pin is ai_player.cpp's idiom for exactly this (the
-    // `warning.append` site) and it is worth 87.11 -> 89.62 here,
-    // closing the branch count to retail's 31 on the nose.
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } shownType;
-    shownType.m_value = m_armyType;
-#pragma inline_depth(0)
-    m_moraleHelp = ourGroup->getMoraleDescription(
-        shownType.m_creature, m_morale, ourHero, ourTown,
+    // DC lines 98/107 append the returned strings, and retail retains the
+    // append calls. Complete reloads ArmyType for each added creature arg.
+    m_moraleHelp += ourGroup->getMoraleDescription(
+        m_armyType, m_morale, ourHero, ourTown,
         enemyHero, enemyGroup, g_combatManager->m_magicTerrain,
         groupAlignments);
-#pragma inline_depth()
 
     m_luck = thisArmy->getLuck(0);
     createLuckWidget(m_luck);
-#pragma inline_depth(0)
-    m_luckHelp = ourGroup->getLuckDescription(
-        shownType.m_creature, m_luck, ourHero, ourTown,
+    m_luckHelp += ourGroup->getLuckDescription(
+        m_armyType, m_luck, ourHero, ourTown,
         enemyHero, enemyGroup, g_combatManager->m_magicTerrain);
-#pragma inline_depth()
 
     createSpellInfluenceWidgets(thisArmy);
     if (showOk)
@@ -446,8 +367,10 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // three homes before the reference selector. This raises the one-army
 // constructor 90.1633 -> 91.2989 and this constructor 90.9521 -> 92.2569.
 // Retail retains tLimit at the morale site and expands it at the luck
-// site; VC6 still retains both here. Keep the source-proven shared
-// helpers while resolving that remaining nested-inlining difference.
+// site. Restoring ArmyType's enum ownership and GetArmyName below recovers
+// that decision too: 93.7569 -> 97.4452, with all CFG edges agreeing. The
+// remaining differences are local scheduling/homing and folded STL labels,
+// not another source helper to paste into this constructor.
 // Bypassing limit and calling tLimit directly at the two widget sites
 // lowers the constructors to 88.5008 and 90.1918, respectively.
 // E:\gamedcs\viewarmywindow.cpp:140
@@ -459,7 +382,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                                  unsigned char showOk,
                                  unsigned char groupAlignments)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      m_armyType(group->m_armies[iarmy]),
+      m_armyType(group->m_armyTypes[iarmy]),
       m_armySize(group->m_numTroops[iarmy]),
       m_showingOkButton(showOk)
 {
@@ -480,12 +403,8 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     createBackgroundWidget(thisHero);
 
-    const char* name;
-    if (m_armyType >= 0 && m_armyType <= 150)
-        name = g_creatureTypeTraits[m_armyType].m_pluralName;
-    else
-        name = g_emptyRolloverText;
-    createNameWidget(name);
+    // DC line 159 passes the literal 2 to GetArmyName for a plural name.
+    createNameWidget(getArmyName(m_armyType, 2));
 
     int townType;
     if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
@@ -508,23 +427,14 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     m_morale = group->getArmyMorale(iarmy, thisHero, thisTown, -1,
                                   groupAlignments, 0);
     createMoraleWidget(m_morale);
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } shownType;
-    shownType.m_value = m_armyType;
-#pragma inline_depth(0)
     m_moraleHelp = group->getMoraleDescription(
-        shownType.m_creature, m_morale, thisHero, thisTown,
+        m_armyType, m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
-#pragma inline_depth()
 
     m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
     createLuckWidget(m_luck);
     m_luckHelp = group->getLuckDescription(
-        creatureTypeFromInt(m_armyType), m_luck, thisHero, thisTown,
+        m_armyType, m_luck, thisHero, thisTown,
         0, 0, -1);
 
     if (showOk)
@@ -559,7 +469,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
         long cost[7];
-        getUpgradeCost(creatureTypeFromInt(m_armyType),
+        getUpgradeCost(m_armyType,
                          creatureTypeFromInt(upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
@@ -631,7 +541,7 @@ VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      m_armyType(armyType),
+      m_armyType(creatureTypeFromInt(armyType)),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
@@ -905,10 +815,9 @@ int TViewArmyWindow::windowHandler(message* msg)
                     int m_value;
                     // Before normalization: creature.
                     TCreatureType m_creature;
-                } armyType, upgradeType;
-                armyType.m_value = m_armyType;
+                } upgradeType;
                 upgradeType.m_value = m_upgrade;
-                getUpgradeCost(armyType.m_creature, upgradeType.m_creature,
+                getUpgradeCost(m_armyType, upgradeType.m_creature,
                                  m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {
@@ -1018,14 +927,7 @@ int TViewArmyWindow::windowHandler(message* msg)
     }
 
     if (GameTime::isPast(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
-        union {
-            // Before normalization: value.
-            int m_value;
-            // Before normalization: creature.
-            TCreatureType m_creature;
-        } shownType;
-        shownType.m_value = m_armyType;
-        if (isSiegeWeapon(shownType.m_creature))
+        if (isSiegeWeapon(m_armyType))
             m_spriteWidget->nextRandomSiegeEngineFrame();
         else
             m_spriteWidget->nextRandomFrame();
