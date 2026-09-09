@@ -875,9 +875,8 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
 // walking `type` by 4 and `population` by 2, which is what fixes
 // population as SHORTS.
 // Retail keeps this byte-exact constructor out of line when vector::resize
-// creates game::Load's default generator. Preserve that VC6 auto-inline
-// decision so the 92-byte temporary occupies the retail stack slot.
-#pragma auto_inline(off)
+// creates game::Load's default generator. The 2026-09-09 whole-TU control
+// preserves that decision and the 92-byte temporary without auto_inline(off).
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
 generator::generator()
     : m_genClass(-1), m_genType(-1)
@@ -892,7 +891,6 @@ generator::generator()
         m_population[i] = 0;
     }
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
@@ -3208,6 +3206,10 @@ static void resetAssignmentSurface()
 // IsHuman adapter is not free enough and remains at the k=0 phase. The
 // byte/dword union spells retail's last stack slot exactly: setne writes its
 // byte view, then the int store reloads and masks the dword view.
+// 2026-09-09 removal control: unsigned-char, bool, int and unsigned-int
+// scalar temporaries all emit the same alternative (98.2888% vs 100%).
+// Keep this as matching debt, not proof of an original union declaration;
+// the older DC Reset has no counterpart of Complete's IsHuman loop.
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 void SavedGameHeader::reset()
 {
@@ -3915,9 +3917,7 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-#pragma inline_depth(0)
             std::bitset<8> poolMap(0);
-#pragma inline_depth()
             infile->read(poolBits, sizeof(poolBits));
             unsigned int player;
             for (player = 0; player < 8; ++player) {
@@ -4958,21 +4958,6 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     }
 }
 
-union TNeutralWeightAddress {
-    // Before normalization: pointer.
-    const int* m_pointer;
-    // Before normalization: address.
-    int m_address;
-};
-
-// Before normalization (function): neutral_weight_address.
-static __forceinline int neutralWeightAddress(const int* pointer)
-{
-    TNeutralWeightAddress value;
-    value.m_pointer = pointer;
-    return value.m_address;
-}
-
 // E:\gamedcs\game.cpp:3953, dc 0xaa3f0.  Neutral towns gain one weighted
 // dwelling's weekly growth.  A full garrison only replaces its weakest
 // stack when the incoming stack is stronger, and a five-percent roll upgrades
@@ -4990,17 +4975,15 @@ void game::giveTroopsToNeutralTown(int townId)
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
 
+    // DC game.cpp:3967 tests monster_level < 6 and level_weight[index]
+    // before subtracting at :3969. VC6 strength-reduces this signed index
+    // into retail's pointer/end comparison; no address-to-int bridge is
+    // needed. Both loop-guard and body-guard controls remain retail-exact.
     long monsterLevel;
-    const int* levelWeight;
-    monsterLevel = 0;
-    levelWeight = g_neutralTownLevelWeights;
-    for (;
-         neutralWeightAddress(levelWeight)
-             < neutralWeightAddress(&g_neutralTownLevelWeightsEnd);
-         ++monsterLevel, ++levelWeight) {
-        if (*levelWeight >= roll)
-            break;
-        roll -= *levelWeight;
+    for (monsterLevel = 0;
+         monsterLevel < 6 && g_neutralTownLevelWeights[monsterLevel] < roll;
+         ++monsterLevel) {
+        roll -= g_neutralTownLevelWeights[monsterLevel];
     }
 
     int townType = currentTown->m_type;
@@ -6815,9 +6798,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
             for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
-#pragma inline_depth(0)
                 disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
-#pragma inline_depth()
             }
         }
 
@@ -6839,6 +6820,11 @@ bool game::loadMap(TAbstractFile* mapFile)
              ++spellBit) {
             std::bitset<70>::reference serializedBit =
                 serializedSpells[spellBit];
+            // Removal controls are non-additive (2026-09-09): deleting this
+            // pin alone improves LoadMap, but deleting it together with the
+            // artifact-copy and serializedSkills pins lowers 63.8664% to
+            // 62.3643%. The two-pin removal kept here is 63.9902%; this last
+            // pin remains matching debt, not a recovered source directive.
 #pragma inline_depth(0)
             serializedBit =
                 (spellBits[spellBit >> 3] & (1 << (spellBit & 7))) != 0;
@@ -6862,9 +6848,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-#pragma inline_depth(0)
         std::bitset<28> serializedSkills(0);
-#pragma inline_depth()
         unsigned char skillBits[4];
         mapFile->read(skillBits, sizeof(skillBits));
         for (unsigned int skillBit = 0; skillBit < sizeof(m_ssDisabled);
@@ -7792,10 +7776,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
 
-#pragma inline_depth(1)
     m_mapName.erase();
     m_mapDescription.erase();
-#pragma inline_depth()
 
     if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
@@ -7915,10 +7897,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         m_availableHeroes.reset();
-#pragma inline_depth(1)
         // Before normalization (locals): AvailableHeroesMask.
         std::bitset<g_mapHeaderLegacyHeroCount> availableHeroesMask;
-#pragma inline_depth()
         unsigned char heroBits[g_mapHeaderLegacyHeroCount / 8];
         infile->read(heroBits, sizeof(heroBits));
         for (unsigned int i = 0; i < g_mapHeaderLegacyHeroCount; ++i) {
@@ -7986,9 +7966,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                     heroId = -1;
 
                 std::string heroName = readLengthPrefixedString(infile);
-#pragma inline_depth(1)
                 std::bitset<8> availability;
-#pragma inline_depth()
                 unsigned char availabilityBits[1];
                 infile->read(availabilityBits, sizeof(availabilityBits));
                 for (unsigned int i = 0; i < g_mapHeaderPlayerCount; ++i) {
@@ -8481,10 +8459,8 @@ int NewSMapHeader::get(const char* path, const char* filename,
                        int campaignMap)
 {
     std::string fullPath(path);
-#pragma inline_depth(1)
     fullPath += DATA_COMPGEN(0x00677dac, newMapGetPathSeparator, "\\");
     fullPath += filename;
-#pragma inline_depth()
 
     try {
         TGzFile infile(
@@ -18721,7 +18697,7 @@ void CObjectType::~CObjectType()
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
 // Retail's real game callers also retain five private `_Tidy` COMDATs after
-// exhausting their inline budgets. These narrow reset specializations keep
+// exhausting their inline budgets. The four remaining reset specializations keep
 // the real Dinkumware helper calls and constrain only those statements. The
 // measured negative controls reject direct expansion, member
 // pointers, volatile carriers, and a TU-wide auto_inline switch.
@@ -18733,13 +18709,12 @@ template<> std::bitset<5>& std::bitset<5>::reset()
     return *this;
 }
 
-template<> std::bitset<8>& std::bitset<8>::reset()
-{
-#pragma inline_depth(0)
-    _Tidy(0);
-#pragma inline_depth()
-    return *this;
-}
+// bitset<8>::reset now uses the canonical vendor definition. Load's real
+// call at +0xb76 keeps _Tidy<8> emitted after removing its poolMap ctor pin.
+// The 2026-09-09 whole-specialization deletion control preserves every one
+// of this TU's 314 tracked scores, including the exact _Tidy<8> body. The
+// former pin only changed an untracked reset wrapper from 9 to 14 bytes;
+// its out-of-line-emission purpose no longer requires a specialization.
 
 template<> std::bitset<28>& std::bitset<28>::reset()
 {

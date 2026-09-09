@@ -4887,11 +4887,9 @@ static __forceinline void checkGatePurchase(type_point point)
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
         // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
-        // Complete expansions retain this call. Flattening it removes the two
-        // retail calls and expands the lookup into AI_AttemptMove.
-#pragma inline_depth(0)
+        // Complete expansions retain this call. The 2026-09-09 whole-TU
+        // control retains the same code without the former depth pin.
         town* currentTown = g_game->getTown(townId);
-#pragma inline_depth()
         if (!currentTown->hasBuilding(EXTRA_1_ID, true))
             currentTown->buyBuilding(EXTRA_1_ID);
     }
@@ -5326,10 +5324,8 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
 
         // Dreamcast retains attempt_teleport as a source-real static helper,
         // and Complete keeps the same out-of-line boundary at 0x00430ab0.
-#pragma inline_depth(0)
         if (attemptTeleport(currentHero, path, step))
             return;
-#pragma inline_depth()
 
         if (path[step].m_flying
             && !checkMoveSpell(currentHero, path, step, SPELL_FLY,
