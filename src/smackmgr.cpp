@@ -286,6 +286,9 @@ void videoRealignBuffers()
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
 int videoPlay(int id, int x, int y, int w, int h)
 {
+    // The existing aborted flag also carries the loop exit: a test after
+    // the event switch replaces the cleanup jump at unchanged 87.1912%.
+    // A combined event condition changes VC6's dispatch and loses matching.
     POINT pos;
     int vw, vh;
     unsigned char result;
@@ -334,15 +337,16 @@ int videoPlay(int id, int x, int y, int w, int h)
                         case MESSAGE_RIGHT_BUTTON_DOWN:
                             if (!g_videoNoSkip) {
                                 aborted = 1;
-                                goto stop_playback;
+                                break;
                             }
                             break;
                     }
+                    if (aborted)
+                        break;
                 }
                 if (videoNeedsUpdate())
                     videoDrawRects();
             }
-stop_playback:
             SmackManager::closeSmacker();
             if (aborted && g_videoDescriptors[id].m_fadeOnAbort)
                 g_windowManager->fadeScreen(1, 4, 0);

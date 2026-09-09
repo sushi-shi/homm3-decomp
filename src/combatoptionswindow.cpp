@@ -358,6 +358,8 @@ __forceinline void updateCombatOptions(unsigned char firstUpdate)
 // allocate the same register here.  This is behaviour-catalog D7 and it is
 // the same class as hero::THeroScreenWindow::WindowHandler's six help arms
 // and game::ValidateVictoryLossConditions' shared `je`.
+// Goto audit: Replacing consume jumps with direct returns scores
+// 81.7140% versus 83.3598%; other dispatch joins are unchanged by this probe.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int combatOptionsWindowHandler(message& msg)
 {

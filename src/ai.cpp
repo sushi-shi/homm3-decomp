@@ -539,6 +539,10 @@ long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowes
 // E:\gamedcs\ai.cpp:397
 // Before normalization (locals): current_army, best_value, best_target, our_group, enemy_group,
 // is_area_effect, best_army, second_value.
+// Goto audit: the incapacitation preference is a guard around the value
+// rejection. Calling the existing IsIncapacitated helper at the DC 453/457
+// boundaries and continuing on rejection removes accept_target at 100%.
+// Keeping the expanded flag expressions is byte-score neutral as a control.
 VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
 long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_parameters* data, long* bestValue)
 {
@@ -584,20 +588,13 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
         }
 
         if (bestArmy) {
-            if ((target->m_spellInfluence[62] || target->m_spellInfluence[70]
-                    || target->m_spellInfluence[74])
-                    && !(bestArmy->m_spellInfluence[62] || bestArmy->m_spellInfluence[70]
-                        || bestArmy->m_spellInfluence[74]))
+            if (target->isIncapacitated()
+                    && !bestArmy->isIncapacitated())
                 continue;
-            if (!(target->m_spellInfluence[62] || target->m_spellInfluence[70]
-                    || target->m_spellInfluence[74])
-                    && (bestArmy->m_spellInfluence[62] || bestArmy->m_spellInfluence[70]
-                        || bestArmy->m_spellInfluence[74]))
-                goto accept_target;
-            if (value < *bestValue)
+            if ((target->isIncapacitated() || !bestArmy->isIncapacitated())
+                    && value < *bestValue)
                 continue;
         }
-accept_target:
         bestArmy = target;
         *bestValue = value;
         bestTarget = hex;

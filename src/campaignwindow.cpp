@@ -402,6 +402,8 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId;
 // key-down site per the two-jump-predecessor recipe (cross-jumper splits it
 // three ways, 32 blocks, 83.9316); inverting the CANCEL nesting to
 // `if (id == CANCEL) { ... } goto consume;` (byte-flat, VC6 canonicalises both).
+// The six consume edges can be ordinary returns: this retains 84.4576%
+// and all sibling scores. The end-dialog join remains a separate residual.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {
@@ -415,13 +417,13 @@ int campaignWindowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_WIDGET) {
         if (msg.m_codeX != widget::WIDGET_DESELECT)
-            goto consume;
+            return MESSAGE_DISPATCH_CONSUME;
         id = msg.m_codeY;
         if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
-            goto consume;
+            return MESSAGE_DISPATCH_CONSUME;
         if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
             if (id != DIALOG_RETURN_CANCEL)
-                goto consume;
+                return MESSAGE_DISPATCH_CONSUME;
 end_dialog:
             msg.m_id = MESSAGE_WIDGET;
             g_windowManager->m_dialogReturn = msg.m_codeY;
@@ -445,18 +447,18 @@ end_dialog:
             msg.m_codeY = DIALOG_RETURN_CANCEL;
             break;
         default:
-            goto consume;
+            return MESSAGE_DISPATCH_CONSUME;
         }
         goto end_dialog;
     }
 
     if (msg.m_id != MESSAGE_MOUSE_MOVE)
-        goto consume;
+        return MESSAGE_DISPATCH_CONSUME;
 
     {
         int hoverID = g_campaignWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID == g_lastCampaignHoverId)
-            goto consume;
+            return MESSAGE_DISPATCH_CONSUME;
         g_lastCampaignHoverId = hoverID;
 
         if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
@@ -495,7 +497,6 @@ end_dialog:
             WINDOW_SCREEN_HEIGHT);
     }
 
-consume:
     return MESSAGE_DISPATCH_CONSUME;
 }
 

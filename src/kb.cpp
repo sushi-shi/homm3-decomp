@@ -608,6 +608,8 @@ void initMainClasses()
 // earlier in retail and lands background->GetMap in EDX where ours uses EAX,
 // and the `new Bitmap16Bit(328, textHeight + fs.height)` block is the same
 // three instructions with EDX/EDI/ECX against our ECX/EBX/EDX.
+// Goto audit: An event-switch completion flag removes stop_credits but
+// scores 99.0393% versus 100%; keep this loop exit for now.
 VA(0x004edda0, 0x407)  // anchor-callee + dc-order-map, dc 0xdfa3c
 void creditsWait()
 {
@@ -937,6 +939,8 @@ static int checkMem()
 // evidence appears. Retail proves the fastcall (videoId, frameName) ABI and
 // keeps this boundary out of line; oldmain calls it for the third intro.
 // Before normalization (function): KbFn_004EE1B0.
+// Goto audit: A combined key/click condition with a loop break removes
+// stop_intro but scores 84.6629% versus 100%; retain the event switch.
 VA(0x004ee1b0, 0xF6)
 static void kbFn004EE1B0(int videoId, const char* frameName)
 {
@@ -990,6 +994,9 @@ stop_intro:
 VA(0x004ee2b0, 0x121)  // anchor-callee + dc-order-map, dc 0xdffe4
 void lostGame()
 {
+    // DC lines 904..911 retain the event switch and completion flag.
+    // Breaking the video loop from that flag preserves all retail bytes;
+    // replacing the switch with a combined condition does not.
     unsigned char done = 0;
     videoOpen(34, 0, 0, 0, 0, 0, 1, 1);
     g_soundManager->startMP3("UltimateLose", 1, 1);
@@ -1014,15 +1021,16 @@ void lostGame()
         case MESSAGE_RIGHT_BUTTON_DOWN:
             if (!g_firstTimeThrough) {
                 done = 1;
-                goto stop_video;
+                break;
             }
             break;
         }
+        if (done)
+            break;
         if (videoNeedsUpdate())
             videoDrawRects();
     }
 
-stop_video:
     videoClose();
     g_windowManager->fadeScreen(1, 4, 0);
     int status;
@@ -4173,6 +4181,8 @@ void fileError(const char* buf)
 // Before normalization (function): CongratsWait.
 // Before normalization (locals): iBase, iScore, iDayz, pFont, cTemp, msg,
 // WinText, smk.
+// Goto audit: A combined key/click condition with a loop break removes
+// stop_congrats but scores 73.4633% versus 100%; retain the event switch.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {

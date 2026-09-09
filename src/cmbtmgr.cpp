@@ -1466,11 +1466,10 @@ unsigned char combatManager::unnamed464f50(
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2152
-// The turn scan. Two structural facts are forced by the encoding rather
-// than chosen: the outer pass loop is a GOTO loop - five separate sites
-// jump back to the top of the BODY without touching the pass counter, so
-// the restart is a `goto`, not a `continue` (a `while` would have been
-// rotated) - and the whole scan re-runs from scratch on every restart.
+// The turn scan retries the current pass after a disabled stack or bad morale.
+// A nested while (1) with continue preserves all 674 retail bytes, as does
+// for (;;). Five assembly back edges therefore do not establish source gotos;
+// the prior claim that a structured retry necessarily rotates was incorrect.
 // The stack rows are reached as `armies[side][i]`; VC6's own strength
 // reduction is what biases the induction pointer by +0x290 and steps it
 // by sizeof(army).
@@ -1490,56 +1489,58 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
         m_actingSlot = 0;
     }
     for (int pass = (m_inSecondPhase != 0) + 1; pass <= 2; pass++) {
-    restart:
-        army* best = 0;
-        for (int side = 0; side < 2; side++) {
-            for (int i = 0; i < m_numArmies[side]; i++) {
-                army* stack = &m_armies[side][i];
-                if (stack->is(1u << 26))
+        while (1) {
+            army* best = 0;
+            for (int side = 0; side < 2; side++) {
+                for (int i = 0; i < m_numArmies[side]; i++) {
+                    army* stack = &m_armies[side][i];
+                    if (stack->is(1u << 26))
+                        continue;
+                    if (stack->is(1u << 21))
+                        continue;
+                    if (stack->is(1u << 25))
+                        continue;
+                    if (stack->m_resetThisRound && stack->isIncapacitated())
+                        continue;
+                    if (m_creaturePlacement) {
+                        if (!stack->m_monInfo.m_speed)
+                            continue;
+                    }
+                    if (m_creaturePlacement) {
+                        if (m_placementBoundaryDepth > 0 && side != 0)
+                            continue;
+                        if (m_placementBoundaryDepth < 0 && side != 1)
+                            continue;
+                    }
+                    if (stack->m_creatureType == CREATURE_AMMO_CART)
+                        continue;
+                    if (m_creaturePlacement && (stack->is(1u << 6)))
+                        continue;
+                    if (best && unnamed464f50(best, stack))
+                        continue;
+                    best = stack;
+                }
+            }
+            if (best) {
+                if (!m_inSecondPhase)
+                    best->newTurn();
+                if (best->m_spellInfluence[62])
                     continue;
-                if (stack->is(1u << 21))
+                if (best->m_spellInfluence[70])
                     continue;
-                if (stack->is(1u << 25))
+                if (best->m_spellInfluence[74])
                     continue;
-                if (stack->m_resetThisRound && stack->isIncapacitated())
-                    continue;
-                if (m_creaturePlacement) {
-                    if (!stack->m_monInfo.m_speed)
+                if (checkingForBadMorale && !m_creaturePlacement
+                    && !m_inSecondPhase) {
+                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
+                        continue;
+                    if (unnamed464d40(best))
                         continue;
                 }
-                if (m_creaturePlacement) {
-                    if (m_placementBoundaryDepth > 0 && side != 0)
-                        continue;
-                    if (m_placementBoundaryDepth < 0 && side != 1)
-                        continue;
-                }
-                if (stack->m_creatureType == CREATURE_AMMO_CART)
-                    continue;
-                if (m_creaturePlacement && (stack->is(1u << 6)))
-                    continue;
-                if (best && unnamed464f50(best, stack))
-                    continue;
-                best = stack;
+                setNextArmy(best->m_combatSide, best->m_bitIndex);
+                return 1;
             }
-        }
-        if (best) {
-            if (!m_inSecondPhase)
-                best->newTurn();
-            if (best->m_spellInfluence[62])
-                goto restart;
-            if (best->m_spellInfluence[70])
-                goto restart;
-            if (best->m_spellInfluence[74])
-                goto restart;
-            if (checkingForBadMorale && !m_creaturePlacement
-                && !m_inSecondPhase) {
-                if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
-                    goto restart;
-                if (unnamed464d40(best))
-                    goto restart;
-            }
-            setNextArmy(best->m_combatSide, best->m_bitIndex);
-            return 1;
+            break;
         }
         if (pass == 1) {
             m_inSecondPhase = 1;
@@ -1774,6 +1775,8 @@ unsigned char combatManager::combatIsOver()
 
 // E:\gamedcs\cmbtmgr.cpp:2465
 // Before normalization (locals): this_side, other_side.
+// Goto audit: Direct returns at the won label's two incoming jumps score
+// 81.9178% versus 100%; the shared winner exit remains.
 VA(0x004658b0, 0xBC)  // anchor-global, dc 0x5fc00
 unsigned char combatManager::isWinner(int thisSide) const
 {
@@ -2104,8 +2107,8 @@ void combatManager::resetHitByCreature()
 // Dreamcast proves the const byte base_row_is_odd, bOverlap rejection flag,
 // GridX/GridY/RowIsOdd calls, and push_back at line 2848. Retail keeps the
 // signed extra-hex offset plus hex as an int (movsx/add, no byte truncation).
-// The forward retry label at the end of the while body preserves its single
-// Pick call; a label at the loop header made VC6 duplicate the call.
+// Retry with continue in the while body: this preserves the single Pick
+// call and all retail bytes. A label at the loop header duplicated Pick.
 // Restoring the pinned VC6 vector's push_back -> insert(one) -> insert(count)
 // boundaries naturally retains the counted-insert call and expands only the
 // outer picker destructor on failure: the vector receiver is picker + 8.
@@ -2127,14 +2130,14 @@ unsigned char combatManager::placeObstacle(int obstacleId)
         {
             int row = gridY(hex);
             if (shape->m_minRow > row)
-                goto next_hex;
+                continue;
             int column = gridX(hex);
             if (column == 0)
-                goto next_hex;
+                continue;
             if (shape->m_width + column > 15)
-                goto next_hex;
+                continue;
             if (m_cells[hex].m_attributes & 0x3f)
-                goto next_hex;
+                continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
             for (int i = 0; i < shape->m_extraHexCount; i++) {
@@ -2149,7 +2152,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 }
             }
             if (overlap)
-                goto next_hex;
+                continue;
 
             if (g_game->m_f1f698 < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
@@ -2157,7 +2160,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 if (wallColumn == COMBAT_HEX_GATE)
                     wallColumn = 0x5d;
                 if (shape->m_width + hex >= wallColumn - 2)
-                    goto next_hex;
+                    continue;
             }
 
             TObstacle obstacle;
@@ -2180,8 +2183,6 @@ unsigned char combatManager::placeObstacle(int obstacleId)
 #pragma inline_depth()
             return 1;
         }
-    next_hex:
-        ;
     }
 }
 
@@ -2548,6 +2549,9 @@ void combatManager::setupAndLoadObstacles()
 // which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` proves
 // two explicit masks where the DC signature has one, the same
 // retail-gained-a-parameter shape findpath's CalcTerrainCost shows.
+// Goto audit: break + post-loop negative-ID guard scores 83.0899%; an
+// in-loop guard scores 93.7079%, versus 100% here. Both preserve picker RAII
+// and its named calls, but move the search/placement join. Keep this residual.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
@@ -3777,6 +3781,9 @@ static const long& maxOf(const long& x, const long& y)
 // likewise measured +0 or worse.
 // Before normalization (locals): bResetLimitCreature, bShowSomePowEffect, attack_frames,
 // wince_frames, wince_start_offset, bFramesChanged.
+// Goto audit: replacing play_frame with the inverted frameCount continue
+// guard changes 96.2927% to 96.2378%. Keep the existing join pending a source
+// boundary/lifetime explanation for that instruction-layout difference.
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -4229,6 +4236,8 @@ unsigned char combatManager::DoorCanBeLowered()
 // moat hex and the one outside it - byte-proven by the manager offsets
 // 0x2b6c/0x2b70 and 0x2afc/0x2b00 landing exactly on cells[95].armySide
 // / .iBodiesInHex and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
+// Goto audit: Direct zero returns instead of not_blocked jumps score
+// 75.6098% versus 100%; retain the shared gate/moat rejection exit.
 VA(0x00469a10, 0x80)  // anchor-global, dc 0x632c4
 unsigned char combatManager::hexIsBlocked(int index) const
 {

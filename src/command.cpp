@@ -275,6 +275,9 @@ void combatManager::doAnimations()
 // mismatch.  What is left is 24 instruction rows of scratch-register naming
 // (eax/ecx and ecx/edx transposed around get_current_army's index chain and
 // the ProcessNextAction argument push).
+// DC line 448 calls the ordinary nullary IsComputerAction adapter. Its
+// canonical call removes ai_move while preserving 97.6611%; copying its
+// quick-combat OR policy condition into this caller measures 96.2267%.
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
 {
@@ -421,10 +424,7 @@ int combatManager::main(message& msg)
 
 process_action:
     if (m_nextAction == 0) {
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            goto ai_move;
-        if (isComputerAction(getCurrentArmy())) {
-ai_move:
+        if (isComputerAction()) {
             checkGetAIMove();
         } else {
             result = processCombatMsg(msg);
@@ -2607,6 +2607,10 @@ void combatManager::checkGetAIMove()
 // button updates stay nested under the non-placement arm, and duplicating
 // the final tail (69.56%) and named player/hero locals (79.98%/86.46%)
 // remain rejected.
+// DC line 3171 calls the nullary is_computer_action. Complete's
+// retained adapter includes the quick-combat test. Calling it here
+// removes both control labels with unchanged 98.2830%; spelling its
+// condition in this caller instead changes expansion and gives 87.7747%.
 VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
 void combatManager::getControl()
 {
@@ -2639,24 +2643,17 @@ void combatManager::getControl()
         m_thisNetHasControl = 1;
 
     if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
-        if (m_autoCombatOn != zero || g_unk691209) {
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                goto automated_control;
-            if (isComputerAction(getCurrentArmy())) {
-automated_control:
-                static_cast<type_combat_sub_window*>(
-                    m_combatWindow->m_controlSubWindow)->disableAllButtons();
-                if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
-                    m_combatWindow->widgetClearStatus(
-                        0x7d4, 0x1000);
-                    m_combatWindow->widgetSetStatus(
-                        0x7d4, 0x10);
-                }
-                goto control_done;
+        if ((m_autoCombatOn != zero || g_unk691209)
+                && isComputerAction()) {
+            static_cast<type_combat_sub_window*>(
+                m_combatWindow->m_controlSubWindow)->disableAllButtons();
+            if (m_autoCombatOn && m_sideIsAi[m_currentSide]) {
+                m_combatWindow->widgetClearStatus(
+                    0x7d4, 0x1000);
+                m_combatWindow->widgetSetStatus(
+                    0x7d4, 0x10);
             }
-        }
-
-        if (m_playerIds[m_currentSide] >= zero
+        } else if (m_playerIds[m_currentSide] >= zero
                 && g_game->isLocalHuman(m_playerIds[m_currentSide])) {
             m_combatWindow->broadcastMessage(
                 MESSAGE_WIDGET, 0x0d,
@@ -2736,7 +2733,6 @@ automated_control:
             static_cast<type_combat_sub_window*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();
         }
-control_done:;
     }
 
     resetMouse();

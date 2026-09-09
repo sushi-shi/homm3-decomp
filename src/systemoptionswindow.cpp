@@ -530,6 +530,8 @@ __forceinline void TSystemOptionsWindow::updateSystemOptions(
 // the recovered constructor is the positive source fact. The final findWidget
 // and click-sample deltas are register rotations over the same loads/stores
 // and calls.
+// Goto audit: Replacing consume jumps with direct returns scores
+// 92.3189% versus 94.3957%; retain the shared dispatch epilogue.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message* msg)
 {
