@@ -34,15 +34,11 @@ DATA(0x0069ca18) unsigned long g_mouseUpdateDeadline;
 DATA(0x0069ca1c) unsigned long g_mouseFrameDeadline;
 DATA(0x0069ca22) unsigned char g_mouseInUpdate;
 
-// LoadFrame's DirectDraw target and the two live channel masks. Their
-// storage addresses and widths are direct retail operands; names remain
-// house descriptions because no retail symbol survives for them.
+// LoadFrame's DirectDraw targets. Its channel masks belong to wingraph's
+// complete DDPIXELFORMAT object, shared through the RGBto16 helper.
 DATA(0x006aacc4) IDirectDrawSurface4* g_ddsMouseSurface;
 DATA(0x006aacc8) IDirectDrawSurface4* g_ddsMouseSaveSurface;
 DATA(0x006aaccc) IDirectDrawSurface4* g_ddsMouseScratchSurface;
-DATA(0x0068c860) unsigned long g_colorMask68c860;
-DATA(0x0068c864) unsigned long g_colorMask68c864;
-DATA(0x0068c868) unsigned long g_colorMask68c868;
 
 // The pointer-set sprite table SetPointer indexes with field_4c: five
 // .DEF names in EPointerSet order (.data 0x67ff38).

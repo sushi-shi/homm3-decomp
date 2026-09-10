@@ -518,38 +518,48 @@ town::town()
 // Turns each horde effect's creature into its dwelling index: for every
 // town row, walk the two horde pairs and look the base creature up in
 // gTownDwellingCreatures, then synthesise the upgraded twin from the
-// same slot + 7. `effect[1]` is the pair's upgrade entry - retail steps
-// the cursor by 0x10 (two entries) exactly twice per row, nine rows.
-// Exact closure (2026-08-30): Dreamcast line rows 958/959/960 prove the
+// same slot + 7. `upgrade` is the pair's upgrade entry. Dreamcast rows
+// 938/943/945 select a town row and an even entry within that row; keep
+// the pointer inside that row instead of walking past its four entries.
+// Former flat-walk exact checkpoint (2026-08-30): Dreamcast rows 958/959/960 prove the
 // final source order is creature, dwelling, bonus.  The former 99.7778%
 // local maximum reversed the last two statements merely because that made
 // SP3 schedule them closer to retail; restoring the positive source fact
 // first dipped to 96.8444%.  Keeping the bonus source address in a const
 // pointer after the dwelling statement prevents that load crossing the
-// creature store, and produces all 118 retail bytes exactly.  A direct
+// creature store, and produced all 118 retail bytes exactly. A direct
 // post-dwelling short local is byte-identical to the 96.8444% control; an
 // upgraded-entry reference falls to 85.9778%.
+// EXACT row-bounded reconstruction (2026-09-10): DC rows 938/943 use short
+// town/even-entry indices (exts.w at both backedges); rows 946/949 capture
+// the creature and upgraded-entry address. The short town index restores
+// retail's stack-homed countdown naturally. An int town index scores 78%
+// with either pair/even-entry indexing; within-row cursor forms score
+// 81.4222% (int town) / 88.0667% (short town). Creature snapshots and a
+// separate upgrade pointer are score-neutral. The 24-state row family
+// reproduces 100% without crossing subarrays or changing the store order.
 VA(0x005bdf60, 0x76)  // linkorder, dc 0x1664b0
 void town::initializeHordes()
 {
     int creatureBase = 0;
-    type_horde_effect* effect = &s_constHordeEffects[0][0];
-    for (int townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
-        for (int pair = 0; pair < 2; pair++) {
+    for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
+        for (short entry = 0; entry < 4; entry += 2) {
+            type_horde_effect* effect = &s_constHordeEffects[townType][entry];
+            TCreatureType creature = effect->m_creature;
+            type_horde_effect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
-                if (effect->m_creature == g_townDwellingCreatures[creatureBase + slot])
+                if (creature == g_townDwellingCreatures[creatureBase + slot])
                     break;
             }
             if (slot <= TOWN_DWELLING_COUNT) {
                 effect->m_dwelling = slot;
                 slot += TOWN_DWELLING_COUNT;
-                effect[1].m_creature = g_townDwellingCreatures[creatureBase + slot];
-                effect[1].m_dwelling = slot;
+                upgrade->m_creature = g_townDwellingCreatures[creatureBase + slot];
+                upgrade->m_dwelling = slot;
                 const short* bonus = &effect->m_bonus;
-                effect[1].m_bonus = *bonus;
+                upgrade->m_bonus = *bonus;
             }
-            effect += 2;
         }
         creatureBase += 2 * TOWN_DWELLING_COUNT;
     }
@@ -2000,27 +2010,6 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 // edx and [ebp+8] against the two map-extent globals 0x6783c8 /
 // 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
 
-// NewmapCell's +0xc flags word, read WHOLE. mapcell.h models those 16
-// bits as three bitfields, because mapcell.cpp's cell_is_trigger and
-// ai_player.cpp both read is_trigger by name - but retail's
-// check_shipyard_square loads the entire field (`mov si, word ptr
-// [cell+0xc]`) and then tests it twice with 32-bit immediates, which
-// is the shape a plain `unsigned short` read produces and a bitfield
-// read cannot (a bitfield emits a masked byte test). Overlaying a
-// union in mapcell.h DOES reproduce it, and was measured: it costs
-// initialize_game_data 100.0 -> 96.09 via the include-set sensitivity
-// class, so it is rejected. Taking the word view here has no closure
-// cost at all. The offset is the one the bitfields occupy.
-// The two-step cast through `const void*` is deliberate: it makes the
-// re-view a legal static_cast, so this costs no reinterpret_cast debt
-// (which the cleanliness board only ever drains).
-// Before normalization (function): cell_flags_word.
-static unsigned short cellFlagsWord(const NewmapCell* cell)
-{
-    return static_cast<const unsigned short*>(
-        static_cast<const void*>(cell))[6];
-}
-
 // MERGED FAIL BLOCK, the same shape can_build needed above: every gate
 // is a nested `if` and there is exactly ONE `return 0`, at the end.
 // Retail has 8 branches but only 2 rets - all seven failure paths jump
@@ -2047,7 +2036,10 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
                     // source constants (eTerrainWater and BOAT) that
                     // happen to share a value, CSE'd by VC6.
                     if (cell->m_groundSet == eTerrainWater) {
-                        unsigned short flags = cellFlagsWord(cell);
+                        // Retail loads the whole +0xc word into SI before
+                        // the two mask tests. The canonical cellFlags overlay
+                        // replaces the former cell_flags_word cast/subscript.
+                        unsigned short flags = cell->m_cellFlags;
                         if (!(flags & 0x100)) {
                             if (!(flags & 0x1000) || cell->m_type == BOAT) {
                                 currentTown->m_dockSite =
@@ -2433,8 +2425,7 @@ static void initializeBuildingCosts(int* costs,
 // is the compiland that fills them - which settles the "not yet located in
 // retail" caveat that header carried. Their .bss extents chain exactly
 // (0x6a80f8 + 17*7*4 = 0x6a82dc, + 9*9*7*4 = 0x6a8bb8 = included_buildings,
-// + 9*44*8 = 0x6a9818, + 9*14*7*4 = 0x6aa5e0), and the reader below walks
-// each one to its neighbour's address.
+// + 9*44*8 = 0x6a9818, + 9*14*7*4 = 0x6aa5e0).
 DATA(0x006a80f8)
 int town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
 DATA(0x006a82dc)
@@ -2450,23 +2441,14 @@ int town::s_dwellingCosts[9][14][NUM_RESOURCES];
 // numbers: nine special-building blocks of nine rows, then the seventeen
 // neutral buildings in one run, then nine dwelling blocks of fourteen.
 //
-// Residual (91.05%): 11 of 13 blocks byte-exact, all 23 calls and all 6
-// branches present, and what is left is ONE fact - retail's two outer
-// loops end on `cmp esi, <end address> / jl`, a SIGNED compare against an
-// address, and its cost pointer is biased +8 so the seven stores address
-// [esi-8] .. [esi+0x10]. The pointer bound written here gives the right
-// registers and the right block shape but an UNSIGNED `jb` and an
-// unbiased pointer. Three spellings of the outer bound were measured and
-// all are worse, each for its own reason:
-//   `for (int type = 0; type < TOWN_TYPE_COUNT; ++type)` over
-//     &SpecialBuildingCosts[type][0][0]                        86.24
-//   the same with a flat `slot += 9 * NUM_RESOURCES` index       83.87
-//   `while (costs - base < TOWN_TYPE_COUNT * 9 * NUM_RESOURCES)` 84.48
-//     (this one adds two branches - VC6 materialises the
-//      difference instead of folding it into the compare)
-// The first two keep a SECOND loop counter in the frame, which is the
-// tell that VC6 did not strength-reduce them; whatever retail wrote, it
-// left one induction variable with a signed bound.
+// Exact closure (2026-09-10): Dreamcast dc 0x168c3c proves signed indexed
+// town/building loops (eight towns there, nine in retail). Index every
+// dimension of the declared tables and leave strength reduction to VC6:
+// it emits retail's biased cost pointer and signed address bound exactly.
+// The former flattened int* walk was 91.05% (unsigned jb, unbiased pointer).
+// Earlier probes indexing only the outer loop (86.24%), a flattened scalar
+// slot (83.87%), and a pointer-difference bound (84.48%) did not recover the
+// nested indexed source; they are not evidence against these signed loops.
 VA(0x005c14c0, 0x1F6)  // anchor-global building.txt 0x688fb4; anchor-caller kb's table run
 unsigned char town::initializeBuildingCostsTables()
 {
@@ -2476,32 +2458,28 @@ unsigned char town::initializeBuildingCostsTables()
         return 0;
 
     int row = 2;
-    int* costs = &s_specialBuildingCosts[0][0][0];
-    while (costs < &s_specialBuildingCosts[TOWN_TYPE_COUNT][0][0]) {
+    for (int type = 0; type < TOWN_TYPE_COUNT; ++type) {
         row += 2;
         for (int special = 0; special < 9; ++special) {
-            initializeBuildingCosts(costs, sheet->getRow(row));
+            initializeBuildingCosts(s_specialBuildingCosts[type][special],
+                                    sheet->getRow(row));
             ++row;
-            costs += NUM_RESOURCES;
         }
     }
 
     row += 3;
-    costs = &s_neutralBuildingCosts[0][0];
     for (int neutral = 0; neutral < SPECIAL_BUILDING_ID; ++neutral) {
-        initializeBuildingCosts(costs, sheet->getRow(row));
+        initializeBuildingCosts(s_neutralBuildingCosts[neutral], sheet->getRow(row));
         ++row;
-        costs += NUM_RESOURCES;
     }
 
     row += 2;
-    costs = &s_dwellingCosts[0][0][0];
-    while (costs < &s_dwellingCosts[TOWN_TYPE_COUNT][0][0]) {
+    for (int dwellingType = 0; dwellingType < TOWN_TYPE_COUNT; ++dwellingType) {
         row += 2;
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
-            initializeBuildingCosts(costs, sheet->getRow(row));
+            initializeBuildingCosts(s_dwellingCosts[dwellingType][dwelling],
+                                    sheet->getRow(row));
             ++row;
-            costs += NUM_RESOURCES;
         }
     }
 

@@ -86,8 +86,11 @@ DATA(0x006a7568) extern const char* g_recruitCancelRolloverText;
 VA(0x0054e750, 0x64)  // anchor-global, dc 0x118adc
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
 {
-    int* toCost = &g_creatureRecords[upgrade * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD];
-    int* fromCost = &g_creatureRecords[creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD];
+    // Retail loads the akCreatureTypeTraits reference at 0x6747b0 and
+    // addresses each 116-byte row's seven costs at +0x20. The former
+    // gCreatureRecords dword view duplicated this canonical owner.
+    const int* toCost = g_creatureTypeTraits[upgrade].m_cost;
+    const int* fromCost = g_creatureTypeTraits[creature].m_cost;
 
     for (int i = 0; i < 7; i++) {
         if (toCost[i] > fromCost[i])
@@ -102,18 +105,16 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
 #endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:172
-// The source-level indexed loop matters. VC6 strength-reduces its repeated
-// `29 * monId + 8 + resource` subscript into retail's two-LEA multiply,
-// keeps the product in ECX, then lowers the loop itself to the exact paired
-// source/destination pointer walk with a seven-element countdown. Manually
-// spelling that lowered pointer walk instead changes the product register.
+// DC :175/:177 has a seven-resource indexed loop. Retail's two-LEA
+// multiply is the 116-byte TCreatureTypeTraits stride, and +0x20 is cost.
+// Keep those accesses on the canonical record rather than reproducing the
+// optimizer's arithmetic through the former gCreatureRecords dword view.
 VA(0x0054e7c0, 0x31)  // anchor-global, dc 0x118b38
 void getMonsterCost(int monId, int* resCost)
 {
     for (int resource = 0; resource < 7; resource++)
         resCost[resource] =
-            g_creatureRecords[monId * CREATURE_RECORD_DWORDS
-                             + CREATURE_RECORD_COST_DWORD + resource];
+            g_creatureTypeTraits[monId].m_cost[resource];
 }
 
 // E:\gamedcs\recruit.cpp:1082

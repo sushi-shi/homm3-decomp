@@ -32,8 +32,7 @@
 // `_Nilrefs` statics live at 0x696d8c/0x696d90.
 DATA(0x00696d60)
 std::map<CImmEnclosure*, RECT> g_immEffectEntries;
-DATA(0x00696d70) long g_immWindowX;
-DATA(0x00696d74) long g_immWindowY;
+DATA(0x00696d70) POINT g_immWindowOrigin;
 DATA(0x00696d7c) HWND g_immWindow;
 DATA(0x00696d80) CImmDevice* g_immDevice;
 DATA(0x00696d84) CImmProject* g_immProject;
@@ -59,10 +58,9 @@ VA(0x004b6260, 0x462)  // anchor-import (CImmMouse::Initialize) + anchor-rtti, r
 TImmMouseRuntime::TImmMouseRuntime(void* instance, void* hwnd)
 {
     g_immWindow = static_cast<HWND>(hwnd);
-    g_immWindowX = 0;
-    g_immWindowY = 0;
-    ClientToScreen(static_cast<HWND>(hwnd),
-                   static_cast<POINT*>(static_cast<void*>(&g_immWindowX)));
+    g_immWindowOrigin.x = 0;
+    g_immWindowOrigin.y = 0;
+    ClientToScreen(static_cast<HWND>(hwnd), &g_immWindowOrigin);
     CIFCErrors::m_dwErrHandlingFlags = 1;
 
     std::auto_ptr<CImmMouse> mouse(new CImmMouse);
@@ -137,7 +135,7 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     : m_enclosure(new CImmEnclosure)
 {
     RECT bounds = *rect;
-    OffsetRect(&bounds, g_immWindowX, g_immWindowY);
+    OffsetRect(&bounds, g_immWindowOrigin.x, g_immWindowOrigin.y);
     if (!m_enclosure->Initialize(g_immDevice, &bounds, a, a, b, b, c, c,
                                  (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
         throw t_create_failure();

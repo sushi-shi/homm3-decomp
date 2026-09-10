@@ -3837,6 +3837,16 @@ ICF twin, not an absent call or a replacement helper. The census is **213
 overrides across 27 TUs** (208 depth-zero, five auto-inline-off), with the
 **63 unions** unchanged.
 
+Integration with the independently landed ownership cleanup (`4b75e8ce`)
+is separately full-built at **4086/4764 exact**, **96.44% linked** and
+**96.43% whole-image**. Its two newly exact functions remain exact; all
+incoming MAX/HIST peaks and RVA rows survive. Compared with that incoming
+branch, only the same RMG/focus-handler current scores above move. Callback,
+owner-payload, horde-row and DrawBolt native/negative controls pass on the
+combined source. The original four-state experiment remains evidence for
+its frozen pre-integration inputs, not a claim to have searched this new
+header context.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the

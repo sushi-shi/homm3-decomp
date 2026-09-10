@@ -21,7 +21,9 @@ public:
     // Before normalization (function): CDiffHeader::GetData.
     unsigned char* getData()
     {
-        return m_tailPadding + 3;
+        // The payload follows the serialized 12-byte header, not a field
+        // whose padding length happens to reach the same address.
+        return static_cast<unsigned char*>(static_cast<void*>(this + 1));
     }
 };
 
@@ -34,18 +36,22 @@ private:
 
 public:
     unsigned int m_numBytes;
-    unsigned char m_data[1];
 
     // Before normalization (function): CDiffFile::GetData.
     unsigned char* getData()
     {
-        return m_data;
+        // DC diff.cpp:58 returns this + 4; MakeDiff allocates a byte
+        // buffer with a size word followed by variable-length records.
+        // There is no one-byte payload array to walk beyond.
+        return getBase() + sizeof(m_numBytes);
     }
 
     // Before normalization (function): CDiffFile::GetBase.
     unsigned char* getBase()
     {
-        return m_data - sizeof(m_numBytes);
+        // MakeDiff writes offsets from the allocation/header base (retail
+        // 0x491140; DC diff.cpp:204/211), which is already this.
+        return static_cast<unsigned char*>(static_cast<void*>(this));
     }
 
     // Before normalization (function): CDiffFile::Apply.
