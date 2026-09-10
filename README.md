@@ -14,13 +14,13 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 **Executable matched: 96.42%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 4,084 / 4,764 functions exact (85.7%) across the full engine (4764 in linked units).
+**Match score** — 4,087 / 4,764 functions exact (85.8%) across the full engine (4764 in linked units).
 
-**Function exact MAX** — 4,106 / 4,764 current implementations (86.2%) have reached 100%.
+**Function exact MAX** — 4,109 / 4,764 current implementations (86.3%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4015 / 4695 (85.5%) | 4037 / 4695 (86.0%) |  96.38% |    96.61% |
+| `game`       |   138 | 4018 / 4695 (85.6%) | 4040 / 4695 (86.0%) |  96.38% |    96.60% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -134,6 +134,21 @@ Generate a browsable Dreamcast source tree from the embedded debug symbols:
 homm3 dreamcast structure                         # all modules
 homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
 ```
+
+Inspect source-line geometry for one function or across the corpus:
+
+```sh
+homm3 dreamcast lines 0x00524dd0
+homm3 dreamcast lines --module cursor --module town --json
+homm3 dreamcast lines --all --json > /tmp/dc-lines.json
+homm3 dreamcast show --module cursor --json > /tmp/dc-cursor-dossiers.json
+```
+
+`lines` preserves recorded positions, repeated attributions, and internal gaps
+with their line counts. It shows the approximate source shape for educated
+hypotheses; absent rows do not identify empty lines or recover source text.
+Total function length and trailing lines remain unknown. The same layout
+evidence appears in `show` and `structure`, without an MSVC shape comparison.
 
 The default output is `evidence/dreamcast/structure/README.md`, with annotated
 C++ stubs and JSON for each compiland, plus a type catalogue. It includes decoded
