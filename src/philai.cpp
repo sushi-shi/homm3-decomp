@@ -31,9 +31,6 @@ double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  // Before normalization (locals): player_id.
-                                  long playerId);
 // Before normalization (locals): our_hero.
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
@@ -650,7 +647,7 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     type_artifact artifact(cell->getArtifactIndex());
-    int value = aiGetArtifactPlayerValue(artifact, currentHero->m_owner);
+    int value = aiGetValueOfArtifact(artifact, currentHero->m_owner);
     if (value < 10)
         value = 10;
 
@@ -1245,7 +1242,7 @@ long getArtifactPurchaseValue(
 
     type_artifact artifact(artifactId, -1);
     long value = static_cast<long>(
-        static_cast<double>(aiGetArtifactPlayerValue(
+        static_cast<double>(aiGetValueOfArtifact(
             artifact, g_netLocalGamePos))
         - static_cast<double>(price)
             * g_currentPlayer->m_ai.m_resourceValue[resource]);
@@ -3186,7 +3183,7 @@ void philAI::getTurnAIVars(int whichPlayer)
             ++artifactCount;
             type_artifact artifact(artifactFromInt(artifactId), -1);
             totalArtifactValue +=
-                aiGetArtifactPlayerValue(artifact, whichPlayer);
+                aiGetValueOfArtifact(artifact, whichPlayer);
         }
     }
     g_currentPlayer->m_ai.m_turnValueOfAvgArtifact =
@@ -4316,7 +4313,7 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
 
     type_artifact grailArtifact(ARTIFACT_HOLY_GRAIL, -1);
     // field_4e3e8 is the DC-named numObelisks (see its game.h note).
-    return aiGetArtifactPlayerValue(grailArtifact, playerId)
+    return aiGetValueOfArtifact(grailArtifact, playerId)
         / g_game->m_numObelisks;
 }
 
@@ -4683,7 +4680,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
             }
         } else {
             type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
-            value += aiGetArtifactPlayerValue(grail,
+            value += aiGetValueOfArtifact(grail,
                                                    currentHero->m_owner);
         }
     }
