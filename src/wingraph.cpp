@@ -212,7 +212,7 @@ void setPlayerPaletteColors(palette* pal, int whichPlayer)
 VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
 void setPlayerPaletteColors(TPalette24* pal, int whichPlayer)
 {
-    memcpy(pal->m_colors.m_data[224], g_playerPalette24->m_colors.m_data[whichPlayer * 32],
+    memcpy(pal->m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
            32 * 3);
 }
 
