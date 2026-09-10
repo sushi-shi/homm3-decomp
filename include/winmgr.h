@@ -7,6 +7,7 @@
 
 #include "basemgr.h"
 #include "message.h"
+#include "struct.h"
 
 class Bitmap16Bit;
 class heroWindow;
@@ -135,7 +136,7 @@ public:
     // heroWindowManager::SaveFizzleSourceX and ::FizzleForwardX as its
     // own header-inline COMDATs (winmgr.h:193/198) - i.e. command.cpp is
     // a caller of the X pair specifically - and AddArmy is the command.obj
-    // body that does this. Those DC inlines take a `const SLimitData*`;
+    // body that does this. Those DC inlines take a `const SLimitData&`;
     // retail passes the four ints, and combatManager's own
     // TDrawbridgeBounds quadruple is what it passes them from.
     // Before normalization (function): heroWindowManager::SaveFizzleSourceX.
@@ -144,6 +145,20 @@ public:
     void fizzleForwardX(int startX, int startY, int width, int height,
                         // Before normalization (locals): iFadeTime.
                         int fadeTime);
+    // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
+    // rectangle overloads and their Width/Height calls. Complete uses the X
+    // pixel path at the adventure-spell sites as well as in combat drawing.
+    // Original spellings FizzleForwardX and SaveFizzleSourceX.
+    void fizzleForwardX(const SLimitData& limits, int fadeTime)
+    {
+        fizzleForwardX(limits.m_minX, limits.m_minY,
+                       limits.width(), limits.height(), fadeTime);
+    }
+    void saveFizzleSourceX(const SLimitData& limits)
+    {
+        saveFizzleSourceX(limits.m_minX, limits.m_minY,
+                          limits.width(), limits.height());
+    }
     // 0x6030c0, the fizzle buffer's release. Order-mapped between
     // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
     // field_4C through the virtual slot-0 tail and nulls it.

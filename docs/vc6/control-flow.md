@@ -855,3 +855,124 @@ Their canonical calls are preserved; the discarded results compile away and
 leave the 100% bytes unchanged. Read these tiny bodies before assuming their
 names imply mutations. The PC sprite disposal remains independently proven
 by retail.
+
+## Separate bounds exits and loop scopes can determine epilogue order
+
+`CDiffMaker::findNextSame` (0x491050) reaches 100% from 84.1667% by
+restoring the nested `for` scopes from DC diff.cpp:142/144 together with
+the separate failure checks at 146..150. Either change alone leaves the
+old result. Together they put the failure epilogue before success, matching
+retail. An earlier family varied return labels while retaining the combined
+bounds expression and therefore did not establish a compiler limitation.
+The 24-state family emitted 12 distinct objects and reproduced ten elites.
+Moving `CountSameBytes` back to its ordinary TU definition and restoring its
+in-loop bounds checks is independently byte-neutral in `MakeDiff`.
+
+`iconWidget::nextRandomSiegeEngineFrame` (0x4eb250) independently confirms
+the table-lifetime result of `nextRandomFrame` (0x4eb060). DC ends the
+`sequenceList[4]` scope before the retry condition at iconwdgt.cpp:614.
+A `do/while` restores that boundary and reaches 100% from 89.4667%: VC6
+keeps the table stores inside the loop and naturally homes `this` on the
+stack. Both `for(;;)/break` controls, including an explicit inner table
+scope, still hoist the stores. Three source candidates produced two distinct,
+reproduced objects. No volatile data or artificial inliner input is needed.
+
+## A conditional return can restore delayed register saves
+
+`armyGroup::getMorale` (0x44ae60) and `getArmyMorale` (0x44b100) reach
+100% from 98.5654% and 96.5625% with
+`return applyLimits ? limit(-3, morale, 3) : morale;`. DC armygrp.cpp:1021
+and 1062 each place the condition and helper call in one final statement.
+The expression restores retail's delayed callee-saved register pushes and
+subsequent pop order. Separate returns retain the old scores; assigning the
+clamped value first scores 95.4430% and 92.5625%. All nine joint candidates
+produce distinct, reproduced objects. The effect independently confirms the
+same source lifetime recovered in `hero::getMorale`.
+
+### Short player scan and max argument lifetime
+
+`fillProhibitedArray` (0x429d50) reaches exact when DC line 966's short
+`for` counter and the existing includes.h value-taking `max` boundary are
+restored together. The counter restores retail's playerDisabled SIB order;
+the wrapper copies both operands into the temporary homes used at line 969.
+Either alone leaves 99.6752% or 99.9678%. The ordinary adjacent
+`sumPlayerDwellings(long)` naturally expands at both calls without forceinline.
+All 64 source states were measured and no AI-player sibling moved.
+
+### Shared fallback after a backtracking loop
+
+`font::lineLength` (0x4b5820) was 91.7423% with a separate candidate
+fallback inside each backtracking exit. Dreamcast lines 465 and 479/480
+place one fallback after the loop. Restoring it reaches exact and restores
+the retail boxWidth lifetime that earlier notes called an optimizer limit.
+All eight variants with that boundary are exact; all eight without it retain
+91.7423%. The loop-head decrement, combined forward guard, and meaningful
+trailing-space width correction are independently neutral source facts.
+
+`Bitmap16Bit::grab` (0x44e3f0) likewise needed the saved local dimensions
+updated during clipping. Reloading the members caused its entry-register
+cascade. The corrected clipping reaches 99.8488%; grouping the two destination
+origin initializations before the saved dimensions closes the last store order.
+The 72-state initialization family changed no bitmap sibling.
+
+### Updated parameters versus duplicate start values
+
+`type_AI_combat_parameters::getSimpleAttackEffect` (0x435b90) reaches
+exact from 99.1053% when the simulated-damage adjustments update the two
+by-value total parameters, as DC lines 300/304 show. Only the simulation
+output hit counters need separate locals. The old duplicate start pair and
+its else assignments changed register ownership. Both plausible declaration
+positions for the real hit locals are exact; no AI-tactical sibling moves.
+
+### Army merge: duplicated success statements and commit order
+
+`armyGroup::merge` (0x44b620) closes from 84.8547% to 100% after restoring
+DC's indexed while loops and failure-only duplicate-search index increment.
+Each successful destination arm clears the source count/type and advances its
+index. SH4 shares those emitted statements, while the gap at 1209–1212 leaves
+room for the first source copy. Retail VC6 distinguishes the source models:
+hoisting a common clear with a retry `continue` gives 94.5531%. With duplicated
+clears, the final copy order of DC 1263–1266 is independently necessary:
+`this` types/counts then `ag` types/counts gives 100%; the old interleaving gives
+97.7598%. Seventeen states produce five reproduced objects and no sibling
+changes. The previous pointer aggregate only steered allocation and is removed.
+
+### Colorize: conditional initialization and a separate final normalization
+
+The integer-color overload (0x44e780) reaches 100% from 92.0385% with the
+conditional top initializer, the nonzero saturation conditional at DC line837,
+and `hue /= 360.0f` at861 before the call at862. Independently these changes
+score 93.5833%, 94.9872% and 95.5064%; together they close. The conditional
+minimum initializer at830 is neutral. Sixteen states produce sixteen objects
+and ten reproduced elites, with no sibling changes. The mask load order stays
+retail-correct; no register-steering channel permutation is required.
+
+### Attack timing and Chain Lightning: helper and statement boundaries
+
+`type_AI_spellcaster::shouldAttackNow` (0x436c60) closes 94.2671% to 100%
+by restoring DC's `Is(1u << 16)` after the target-time and shooting calls,
+removing an early flags cache. The single compound condition at DC880 reaches
+the same bytes independently. Canonical `Is`/`IsIncapacitated` calls preserve
+the ordinary `isLastAction` helper's natural expansion in all three callers;
+partial restoration can de-inline two callers, as the 64-state controls show.
+
+`combatManager::getNextChainLightningTarget` (0x5a61f0) closes 91.1017% to
+100% by computing the first coordinate's absolute distance at DC4234 before
+calling MidY at4235. Deferring abs into sqrt was the source of the register
+rotation. The real ordinary `spellCastWorks` call also expands exactly with
+its retained body later in the TU. Eight states produce four reproduced
+objects, with no other spells score changes.
+
+### Integer-return branches inside an ordinary helper
+
+`combatManager::getAttackChange` (0x41f3b0) reaches 100% from 96.3533%
+when the canonical file-static `getAttackValue` is restored at DC line696,
+before its caller at731, with the proven data reference. Its kills-only and
+ordinary branches each return their floating expression directly as a long.
+A shared named double followed by one integer return forces an extra /Op
+spill/reload and changes the caller's register allocation. All four direct
+return controls are exact; all four shared-double controls remain 96.3533%.
+The DC spell-time accessor and separate retaliation guard are independently
+neutral. Eight states produce eight reproduced objects, with no sibling
+movement. The former register-allocation plateau was a missing helper and
+return boundary, not an exhausted compiler limit.

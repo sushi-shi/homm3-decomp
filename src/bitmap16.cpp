@@ -14,30 +14,20 @@
 // Before normalization (locals): _P.
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
-union TFloatLongBits {
-    unsigned long m_bits;
-    float m_value;
-};
-
-union TDoubleLongBits {
-    double m_value;
-    long m_words[2];
-};
-
 // E:\gamedcs\bitmap16.cpp:59. bitmap16.obj carries its own copy of the
 // magic-constant float->long helper palette.obj also defines; retail has no
 // out-of-line body because VC6 /Ob2 expands every call into the float
 // Colorize below, which is the only consumer left in this TU.
-static __forceinline long ftol(double d)
+// DC 0x50a9c line 62 updates the by-value double parameter; line 63 reads
+// its low word. Preserve that owner, as in bitmap24.cpp's ftol. A separate
+// result union makes eighteen expansion-local scratch slots and leaves
+// Colorize at 98.8301%; updating d allows reuse and gives 100%. The ordinary
+// static helper auto-inlines naturally; no forceinline declaration is needed.
+static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
-    // Before normalization (locals): magic_value.
-    TFloatLongBits magicValue;
-    TDoubleLongBits result;
-    result.m_value = d;
-    magicValue.m_bits = magic;
-    result.m_value += magicValue.m_value;
-    return result.m_words[0];
+    d += *static_cast<const float*>(static_cast<const void*>(&magic));
+    return *static_cast<long*>(static_cast<void*>(&d));
 }
 
 #if 0  // @carcass
@@ -323,23 +313,28 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 // Row-boundary residual (82.5698%): independent integral byte displacements
 // in the for header form pointers only for visited rows. Final guards score
 // 75.4186%, next-row guards 56.7442%; unchecked 97.7093% is not a safe parent.
+// DC 635/636 and 644/645 adjust saved dimensions during negative clipping;
+// reloading m_width/m_height instead created the old register cascade.
+// Correcting that arithmetic and grouping the origin initializations before
+// w/h gives exact retail bytes in the unchecked row-walk control. The bounded
+// cursor below retains the source facts while avoiding a final end+x pointer.
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
 void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
 {
     int dstX = 0;
-    int w = m_width;
     int dstY = 0;
+    int w = m_width;
     int h = m_height;
 
     if (srcX < 0) {
-        dstX = -srcX;
-        w = m_width + srcX;
+        dstX -= srcX;
+        w += srcX;
         srcX = 0;
     }
     if (srcY < 0) {
-        dstY = -srcY;
-        h = m_height + srcY;
+        dstY -= srcY;
+        h += srcY;
         srcY = 0;
     }
     if (w > srcWidth - srcX)
@@ -527,15 +522,13 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
 // treats the BLUE-masked level as the formula's red - the argument rotation
 // is retail's, and the sextant constants (2.0f / 4.0f, *60, +360, /360) are
 // read straight off 0x63b9dc / 0x63b9e0 / 0x63b9d8 / 0x63b9d4.
-// Residual (92.0%): a three-way register rename (EBX/ESI/EDI) and one
-// hoisted reload, from the first level onwards; every block, branch and
-// frame slot pairs and the prologue is byte-identical through +0x4b.
-// The declaration order of the three levels is LOAD-BEARING and is fixed by
-// the masks, not by the score: VC6 emits them in declaration order, and
-// only (blue, green, red) reproduces retail's 0x694d68 / 0x694d60 / 0x694d64
-// sequence. All six permutations were swept - (green, blue, red) scores
-// 93.30, higher, but emits the masks in the wrong order, so it is scoring a
-// DIFFERENT function and is rejected.
+// EXACT: DC's conditional top initializer, nonzero saturation initializer
+// (line 837, no branch scopes), and separate hue normalization (861 before
+// the call at 862) are all necessary. Their individual controls are 93.5833%,
+// 94.9872%, and 95.5064%; all three give 100%. The conditional minimum
+// initializer at 830 is independently flat and preserved. Sixteen states
+// give sixteen objects / ten reproduced elites, with no sibling changes.
+// The former register-allocation wall came from conflating source statements.
 VA(0x0044e780, 0x1BF)  // anchor-callee(the float Colorize) + order-map(DC bitmap16.obj), dc 0x5177c
 void Bitmap16Bit::colorize(int x, int y, int width, int height,
                            unsigned short color)
@@ -549,23 +542,15 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
     float redLevel = static_cast<float>(color & g_colorMaskRed)
                       / static_cast<float>(g_colorMaskRed);
 
-    float top = blueLevel;
-    if (blueLevel <= greenLevel)
-        top = greenLevel;
+    float top = blueLevel > greenLevel ? blueLevel : greenLevel;
     if (top < redLevel)
         top = redLevel;
 
-    float bottom = greenLevel;
-    if (blueLevel <= greenLevel)
-        bottom = blueLevel;
+    float bottom = blueLevel > greenLevel ? greenLevel : blueLevel;
     if (bottom > redLevel)
         bottom = redLevel;
 
-    float saturation;
-    if (top == 0.0)
-        saturation = 0.0f;
-    else
-        saturation = (top - bottom) / top;
+    float saturation = top != 0.0 ? (top - bottom) / top : 0.0f;
 
     float hue;
     if (saturation == 0.0) {
@@ -582,7 +567,8 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
         if (hue < 0.0)
             hue += 360.0f;
     }
-    colorize(x, y, width, height, hue / 360.0f, saturation);
+    hue /= 360.0f;
+    colorize(x, y, width, height, hue, saturation);
 }
 
 // E:\gamedcs\bitmap16.cpp:873. The float Colorize, tail-called by the
@@ -596,17 +582,14 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
 // double conversion are all loop-invariant and land in the inner loop's
 // preheader; only the fmod call itself stays per-pixel, because VC6 will not
 // hoist an opaque call.
-// Residual (98.83%): C2 gives each of the eighteen inlined ftol expansions
-// its own 8-byte stack temp (frame 0xcc) where retail packs them onto two
-// slots (0x48), which also transposes `mov <reg>,[temp]` against the next
-// expansion's magic store in five arms. Nothing local reaches it - the ftol
-// spelling is the one palette.obj's HSVToRGB is EXACT with, and dropping the
-// named `max`, taking ftol off __forceinline and swapping <limits> for
-// <limits.h>/INT_MAX are each byte-flat to the digit.
 // Row-boundary residual (96.5654%): integral relative byte offsets avoid the
 // final end+x pointer. Next/last guards score 94.6013/94.5490%; unchecked
-// 98.8301% is not safe. The DC channel/helper scopes and FP residual remain;
-// native one-row differential tests cover all six hue sectors.
+// row walks are not safe. Native one-row differential tests cover all six
+// hue sectors.
+// EXACT: the helper's by-value parameter owns the double scratch storage.
+// Sixteen source states / eight reproduced objects isolate this from the
+// caller's early-return scope (DC 884/885), plain ushort row/pixel pointers,
+// and the helper's ordinary declaration; those source restorations are flat.
 VA(0x0044e940, 0x3B8)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
 void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                            float saturation)
@@ -616,81 +599,81 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
     if (h > m_height - y)
         h = m_height - y;
 
-    if (w && h) {
-        const unsigned int blueNorm =
-            std::numeric_limits<int>::max() / g_colorMaskBlue;
-        const unsigned int greenNorm =
-            std::numeric_limits<int>::max() / g_colorMaskGreen;
-        const unsigned int redNorm =
-            std::numeric_limits<int>::max() / g_colorMaskRed;
+    if (!w || !h)
+        return;
 
-        Bitmap16MapPointer row;
-        row.m_pixels = getMap(x, y);
+    const unsigned int blueNorm =
+        std::numeric_limits<int>::max() / g_colorMaskBlue;
+    const unsigned int greenNorm =
+        std::numeric_limits<int>::max() / g_colorMaskGreen;
+    const unsigned int redNorm =
+        std::numeric_limits<int>::max() / g_colorMaskRed;
 
-        unsigned char* rowRowBase = row.m_bytes;
-        int rowRowOffset = 0;
-        for (int iy = 0; iy < h; ++iy) {
-            row.m_bytes = rowRowBase + rowRowOffset;
-            Bitmap16MapPointer pixel = row;
-            for (int ix = 0; ix < w; ++ix) {
-                unsigned int b =
-                    (*pixel.m_pixels & g_colorMaskBlue) * blueNorm;
-                unsigned int g =
-                    (*pixel.m_pixels & g_colorMaskGreen) * greenNorm;
-                unsigned int r =
-                    (*pixel.m_pixels & g_colorMaskRed) * redNorm;
+    Bitmap16MapPointer row;
+    row.m_pixels = getMap(x, y);
+    unsigned char* rowRowBase = row.m_bytes;
+    int rowRowOffset = 0;
 
-                const unsigned int max =
-                    (b > g ? b : g) > r ? (b > g ? b : g) : r;
-                const float v = static_cast<float>(max);
-                const float f =
-                    static_cast<float>(fmod(hue * 6.0f, 1.0));
-                const float p = v * (1.0f - saturation);
-                const float q = v * (1.0f - saturation * f);
-                const float t = v * (1.0f - saturation * (1.0f - f));
+    for (int iy = 0; iy < h; ++iy) {
+        row.m_bytes = rowRowBase + rowRowOffset;
+        Bitmap16MapPointer pixel = row;
+        for (int ix = 0; ix < w; ++ix) {
+            unsigned int b =
+                (*pixel.m_pixels & g_colorMaskBlue) * blueNorm;
+            unsigned int g =
+                (*pixel.m_pixels & g_colorMaskGreen) * greenNorm;
+            unsigned int r =
+                (*pixel.m_pixels & g_colorMaskRed) * redNorm;
 
-                switch (static_cast<int>(hue * 6.0f)) {
-                case HSV_RED_SECTOR:
-                    b = ftol(v);
-                    g = ftol(t);
-                    r = ftol(p);
-                    break;
-                case HSV_YELLOW_SECTOR:
-                    b = ftol(q);
-                    g = ftol(v);
-                    r = ftol(p);
-                    break;
-                case HSV_GREEN_SECTOR:
-                    b = ftol(p);
-                    g = ftol(v);
-                    r = ftol(t);
-                    break;
-                case HSV_CYAN_SECTOR:
-                    b = ftol(p);
-                    g = ftol(q);
-                    r = ftol(v);
-                    break;
-                case HSV_BLUE_SECTOR:
-                    b = ftol(t);
-                    g = ftol(p);
-                    r = ftol(v);
-                    break;
-                case HSV_MAGENTA_SECTOR:
-                    b = ftol(v);
-                    g = ftol(p);
-                    r = ftol(q);
-                    break;
-                }
+            const unsigned int max =
+                (b > g ? b : g) > r ? (b > g ? b : g) : r;
+            const float v = static_cast<float>(max);
+            const float f =
+                static_cast<float>(fmod(hue * 6.0f, 1.0));
+            const float p = v * (1.0f - saturation);
+            const float q = v * (1.0f - saturation * f);
+            const float t = v * (1.0f - saturation * (1.0f - f));
 
-                *pixel.m_pixels = static_cast<unsigned short>(
-                    ((r / redNorm) & g_colorMaskRed)
-                    | ((g / greenNorm) & g_colorMaskGreen)
-                    | ((b / blueNorm) & g_colorMaskBlue));
-                ++pixel.m_pixels;
+            switch (static_cast<int>(hue * 6.0f)) {
+            case HSV_RED_SECTOR:
+                b = ftol(v);
+                g = ftol(t);
+                r = ftol(p);
+                break;
+            case HSV_YELLOW_SECTOR:
+                b = ftol(q);
+                g = ftol(v);
+                r = ftol(p);
+                break;
+            case HSV_GREEN_SECTOR:
+                b = ftol(p);
+                g = ftol(v);
+                r = ftol(t);
+                break;
+            case HSV_CYAN_SECTOR:
+                b = ftol(p);
+                g = ftol(q);
+                r = ftol(v);
+                break;
+            case HSV_BLUE_SECTOR:
+                b = ftol(t);
+                g = ftol(p);
+                r = ftol(v);
+                break;
+            case HSV_MAGENTA_SECTOR:
+                b = ftol(v);
+                g = ftol(p);
+                r = ftol(q);
+                break;
             }
 
-            rowRowOffset += m_pitch;
+            *pixel.m_pixels = static_cast<unsigned short>(
+                ((r / redNorm) & g_colorMaskRed)
+                | ((g / greenNorm) & g_colorMaskGreen)
+                | ((b / blueNorm) & g_colorMaskBlue));
+            ++pixel.m_pixels;
         }
+        rowRowOffset += m_pitch;
     }
 }
 

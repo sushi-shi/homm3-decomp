@@ -377,7 +377,7 @@ int textEntryWidget::onKeyPress(message* msg)
 // runs in 16-bit arithmetic because both the local and every widget
 // bound are short; only the `x + width` sums promote.
 VA(0x005bb150, 0x2A6)  // anchor-vtable slot 2, dc 0x162f2c
-int textEntryWidget::main(message* msg)
+int textEntryWidget::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -387,12 +387,12 @@ int textEntryWidget::main(message* msg)
     if (m_status & WIDGET_DISABLED)
         disabled = 1;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (disabled)
                 return 0;
             if ((m_status & WIDGET_DRAWN) && !(m_status & WIDGET_DIMMED))
-                return onKeyPress(msg);
+                return onKeyPress(&msg);
             break;
 
         case MESSAGE_LEFT_BUTTON_DOWN:
@@ -403,51 +403,51 @@ int textEntryWidget::main(message* msg)
             if (!(m_status & WIDGET_DRAWN))
                 return 0;
             {
-                short hitX = msg->m_codeX - m_parentWindow->m_x;
-                short hitY = msg->m_codeY - m_parentWindow->m_y;
-                if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                short hitX = msg.m_codeX - m_parentWindow->m_x;
+                short hitY = msg.m_codeY - m_parentWindow->m_y;
+                if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
                     if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
                         && hitY < m_y + m_height) {
-                        msg->m_id = MESSAGE_WIDGET;
-                        msg->m_codeX = WIDGET_RIGHT_SELECT;
-                        msg->m_codeY = m_id;
-                        msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                        msg.m_id = MESSAGE_WIDGET;
+                        msg.m_codeX = WIDGET_RIGHT_SELECT;
+                        msg.m_codeY = m_id;
+                        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
                         return MESSAGE_DISPATCH_FORWARD;
                     }
                 } else if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
                     && hitY < m_y + m_height) {
                     if (!m_hasFocus && m_parentWindow)
                         m_parentWindow->setFocus(m_id);
-                    msg->m_id = MESSAGE_WIDGET;
-                    msg->m_codeX = WIDGET_SELECT;
-                    msg->m_codeY = m_id;
+                    msg.m_id = MESSAGE_WIDGET;
+                    msg.m_codeX = WIDGET_SELECT;
+                    msg.m_codeY = m_id;
                     return MESSAGE_DISPATCH_FORWARD;
                 }
             }
             return 0;
 
         case MESSAGE_WIDGET:
-            switch (msg->m_codeX) {
+            switch (msg.m_codeX) {
                 case WIDGET_SET_TEXT_LEN:
-                    if (msg->m_codeY == m_id) {
-                        m_maxLength = static_cast<unsigned short>(msg->m_extra);
+                    if (msg.m_codeY == m_id) {
+                        m_maxLength = static_cast<unsigned short>(msg.m_extra);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_SET_TEXT:
-                    if (msg->m_codeY == m_id) {
-                        setText(msg->m_extraText);
+                    if (msg.m_codeY == m_id) {
+                        setText(msg.m_extraText);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_GET_TEXT:
-                    if (msg->m_codeY == m_id) {
-                        msg->m_extraText = const_cast<char*>(m_text.c_str());
+                    if (msg.m_codeY == m_id) {
+                        msg.m_extraText = const_cast<char*>(m_text.c_str());
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_SET_FOCUS:
-                    if (msg->m_codeY == m_id) {
+                    if (msg.m_codeY == m_id) {
                         if (!m_hasFocus)
                             setFocus(1);
                     } else if (m_hasFocus) {

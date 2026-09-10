@@ -2576,6 +2576,9 @@ void computeUALoc(int whichPlayer)
 // The 2026-09-01 structure pass reconfirmed 43/43 exact blocks; why-reg v2
 // diagnoses no register-binding divergence, independently closing the
 // B-family search without disturbing the recovered local roster.
+// Further float-lifetime controls: split percentage assignment/division,
+// explicit float casts and a named numerator all remain 98.9637%; a named
+// denominator gives 95.5130% (six states, four emitted objects).
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
 int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 {
@@ -5394,6 +5397,9 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 // try-state zero at ebp-4: retail reuses the already-zero EAX (`mov [ebp-4],
 // eax`), while rebuilding the same source emits the equivalent immediate-zero
 // store.  This is compiler EH bookkeeping, not an unrecovered source action.
+// Four stream/exit-lifetime candidates produced three reproduced objects:
+// a separate stream scope and success after try remain 99.4000%; a shared
+// success local drops to 85.4000%. No source alternative is adopted.
 VA(0x004c0520, 0x106)  // anchor-callers + contiguous catch funclets, retail-only
 unsigned char game::newMap(const char* mapPath, const char* mapName,
                            int* playerHeroFaces, int gameVersion)
@@ -8953,7 +8959,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                                      .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
         else
             hasAngelicAlliance =
-                const_cast<hero*>(thisHero)->isWieldingArtifact(
+                thisHero->isWieldingArtifact(
                     ARTIFACT_ANGELIC_ALLIANCE);
     }
 

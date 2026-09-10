@@ -1064,11 +1064,13 @@ void type_AI_player::calculateReserve()
     }
 }
 
-// Dreamcast emits this adjacent helper out of line in its debug-oriented
-// build. Retail's /O2 build instead expands both calls into the purchaser.
+// DC ai_player.cpp:895..919 proves this ordinary adjacent helper and its
+// long parameter. Complete naturally expands both calls in fillProhibitedArray;
+// the forceinline removal and short-loop family preserve both expansions and
+// the exact caller. Do not add an inline keyword to steer that decision.
 // Before normalization (function): sum_player_dwellings.
 // Before normalization (locals): player_id, town_index, current_town.
-static __forceinline long sumPlayerDwellings(int playerId)
+static long sumPlayerDwellings(long playerId)
 {
     long value = 0;
     playerData* player = &g_game->m_players[playerId];
@@ -1092,20 +1094,14 @@ static __forceinline long sumPlayerDwellings(int playerId)
 // strongest human player's projected creature value. Gold is deliberately
 // excluded from the final affordability veto; the other six resources and
 // the top creature tier can mark each of the 145 creature ids prohibited.
-// Residual wall (99.97%): all 76 blocks and their flow match. Direct uses of
-// gNetLocalGamePos reproduce retail's SIB choice in both Complete-only team
-// reads. The only remaining byte is the commutative SIB encoding of
-// `game + player_index` in playerDisabled. Naming that load or its game
-// pointer and reversing the subscript were byte-flat; this is a post-RA
-// address-encoding distinction, not missing game behavior.
-// 2026-09-06 (docs/vc6/regalloc.md 6b, the B18 corpus): the class IS source-
-// reachable when both operands are locals whose birth order can move - that
-// closed philai value_of_enemy_town - but not here. The pair is (a freshly
-// loaded global pointer, an unscaled counter) at its first occurrence in the
-// function, where our CL always encodes base=pointer. Declaring
-// `game* current_game = gpGame;` ahead of `player_index` (the shape the
-// lever predicts) keeps base=pointer and costs 1.66 points plus a frame
-// dword: 99.9678 -> 98.31.
+// DC line 966 uses the function's short i for the player scan; restoring
+// that for-loop fixes the playerDisabled SIB operand order. Line 969's
+// nested sum/max expression uses the existing includes.h value wrapper in
+// Complete: retail stores both max operands in fresh homes. Together these
+// restore all bytes. Neither change alone is sufficient: the short loop
+// with reference max is 99.6752%, value max with the counted do-loop 99.9678%.
+// The full 64-state family changed no sibling score. Short income/resource
+// loops and the direct sum call are neutral positive source restorations.
 VA(0x00429d50, 0x3F9)  // DC identity/caller + retail body; dc 0x2f694
 void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 {
@@ -1116,9 +1112,8 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
     short i;
     int resources[7];
 
-    for (int resource = 0; resource < 7; ++resource)
-        income[resource] =
-            player->m_ai.m_turnProductionResource[resource] * 7;
+    for (i = 0; i < 7; ++i)
+        income[i] = player->m_ai.m_turnProductionResource[i] * 7;
 
     for (i = 0; i < player->m_numTowns; ++i) {
         town* currentTown = g_game->getTown(player->m_townIds[i]);
@@ -1129,12 +1124,9 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
                 TCreatureType creature = g_townDwellingCreatures[
                     currentTown->m_type * 14 + dwelling];
                 getMonsterCost(creature, resources);
-                int resource = 0;
-                int resourcesLeft = 7;
-                do {
+                for (short resource = 0; resource < 7; ++resource) {
                     income[resource] -= resources[resource] * growth;
-                    ++resource;
-                } while (--resourcesLeft);
+                }
             }
         }
     }
@@ -1146,16 +1138,12 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
             ? g_netLocalGamePos
             : g_game->m_mapHeader.m_teamInfo[g_netLocalGamePos];
         if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
-            int playerIndex = 0;
-            int playersLeft = 8;
-            do {
-                if (!g_game->m_playerDisabled[playerIndex]
-                    && g_game->isHuman(playerIndex)) {
-                    long growthValue = sumPlayerDwellings(playerIndex);
-                    humanStrength = cppMax(humanStrength, growthValue);
+            for (i = 0; i < 8; ++i) {
+                if (!g_game->m_playerDisabled[i]
+                    && g_game->isHuman(i)) {
+                    humanStrength = max(humanStrength, sumPlayerDwellings(i));
                 }
-                ++playerIndex;
-            } while (--playersLeft);
+            }
 
             localGrowth = sumPlayerDwellings(g_netLocalGamePos);
         }
@@ -1164,13 +1152,10 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
     for (int creature = 0; creature < 145; ++creature) {
         prohibited[creature] = 0;
         getMonsterCost(creature, resources);
-        int resource = 0;
-        int resourcesLeft = 6;
-        do {
+        for (short resource = 0; resource < 6; ++resource) {
             if (resources[resource] > 0 && income[resource] <= 0)
                 prohibited[creature] = 1;
-            ++resource;
-        } while (--resourcesLeft);
+        }
 
         if (g_game->m_setup.m_difficulty == 0) {
             int localTeam = g_netLocalGamePos < 0
@@ -2363,14 +2348,14 @@ long type_AI_creature_purchaser::getPurchaseValue(const armyGroup* new_army, sho
 
 // E:\gamedcs\ai_player.cpp:2692
 DC_ONLY(0x323bc, 0x72)
-void aiConsolidateArmy(armyGroup* current_army)
+void aiConsolidateArmy(armyGroup& current_army)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2718
 DC_ONLY(0x32430, 0x18A)
-void aiArrangeArmy(armyGroup* current_army)
+void aiArrangeArmy(armyGroup& current_army)
 {
     // @stub
 }
@@ -3032,35 +3017,38 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     return bestValue;
 }
 
-// Before normalization (function): AI_consolidate_army_impl.
-// Before normalization (locals): current_army.
-static __forceinline void aiConsolidateArmyImpl(armyGroup* currentArmy);
-
 // E:\gamedcs\ai_player.cpp:2171. Dreamcast retains this source helper;
 // Complete's /Ob2 folds it into both swap entry points. Retail independently
 // proves the two short totals, optional subtraction, and zero floor.
+// DC declares an ordinary static helper with const hero receivers; retain it.
+// Forced inlining was byte-neutral in both standalone swaps but changed the
+// buy_creatures expansion (97.7723 versus 95.2939 without the override).
+// That caller residual must be recovered through its natural compiler state.
 // Before normalization (function): calculate_improvement.
-static __forceinline short calculateImprovement(
+static short calculateImprovement(
     // Before normalization (locals): current_hero, second_hero.
     const hero* currentHero, const hero* secondHero)
 {
     short improvement =
-        const_cast<hero*>(currentHero)->getPrimarySkillTotal();
+        currentHero->getPrimarySkillTotal();
     if (secondHero)
         improvement -=
-            const_cast<hero*>(secondHero)->getPrimarySkillTotal();
+            secondHero->getPrimarySkillTotal();
     if (improvement < 0)
         improvement = 0;
     return improvement;
 }
 
+// DC do_swap is an ordinary member. Removing its false inline keyword and
+// synthetic member-address emission global is byte-neutral for this body and
+// its callers; ordinary emission retains the claimed retail body naturally.
 // Complete widens the DC do_swap (0x31808, 92 B) with the Angelic-Alliance
 // flag its philai callers pass, inlines calculate_improvement (dc 0x317d4)
 // and AI_consolidate_army, and arranges the merged army out of line.
 // Before normalization (locals): current_hero, source_army, second_hero,
 // new_has_angelic_alliance.
 VA(0x0042c3b0, 0xe3)  // anchor-callee (philai 0x524370/0x52539f/0x525e53 + dump/do_best_swap/AI_arrange_army), dc 0x31808
-inline void type_AI_creature_swapper::doSwap(hero* currentHero,
+void type_AI_creature_swapper::doSwap(hero* currentHero,
                                        armyGroup* sourceArmy,
                                        hero* secondHero,
                                        unsigned char newHasAngelicAlliance)
@@ -3074,23 +3062,12 @@ inline void type_AI_creature_swapper::doSwap(hero* currentHero,
     // inside buy_creatures, as retail requires. After restoring that caller's
     // early exits and local lifetimes, the old inline_depth(1) pin is byte-flat
     // (2026-09-06); removing it preserves the exact standalone body.
-    aiConsolidateArmy(m_army);
+    aiConsolidateArmy(*m_army);
     dumpExtraCreature();
     do {
     } while (doBestSwap(m_adjacentArmy->getNumArmies() > 1) > 0);
-    aiArrangeArmy(m_army);
+    aiArrangeArmy(*m_army);
 }
-
-// The definition above is `inline` so /Ob2 expands it into buy_creatures (a
-// plain out-of-class definition of this size is never an auto-inline
-// candidate - the 740 B TObstacleVector::insert precedent); the philai
-// callers still emit retail's out-of-line call because their small bodies
-// sit at the 1000 budget floor. The address-take forces the COMDAT emission
-// the claimed 0x42c3b0 row diffs against.
-// Before normalization: g_emit_do_swap.
-void (type_AI_creature_swapper::* g_emitDoSwap)(
-    hero*, armyGroup*, hero*, unsigned char) =
-    &type_AI_creature_swapper::doSwap;
 
 // E:\gamedcs\ai_player.cpp:2209. The two 56-byte locals, six helper
 // boundaries, and positive-value loop come from the Dreamcast dossier.
@@ -3116,10 +3093,10 @@ long type_AI_creature_swapper::getSwapValue(
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
     m_adjacentArmy = &localSource;
-    m_morale = const_cast<hero*>(currentHero)->getMorale(0, 0, 1);
+    m_morale = currentHero->getMorale(0, 0, 1);
     m_improvement = calculateImprovement(currentHero, secondHero);
 
-    aiConsolidateArmy(&localArmy);
+    aiConsolidateArmy(localArmy);
     dumpExtraCreature();
 
     long swapValue;
@@ -3388,9 +3365,6 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         * m_army->m_numTroops[slot];
 }
 
-// Shared source for the retail out-of-line body and the copy expanded inside
-// get_purchase_value. Keeping the unclaimed helper here preserves the inline
-// context while the two claimed functions remain in retail address order.
 // E:\\gamedcs\\ai_player.cpp:2461. Dreamcast fixes the three scalar
 // initializers and the type/amount/free tuple pushed for every available
 // generator creature. Complete's generator has four slots rather than the
@@ -3413,24 +3387,6 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     }
 }
 
-static __forceinline void aiConsolidateArmyImpl(armyGroup* currentArmy)
-{
-    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
-         ++first) {
-        TCreatureType type = currentArmy->m_armyTypes[first];
-        if (type != CREATURE_NONE) {
-            for (int duplicate = first + 1;
-                duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                ++duplicate) {
-                if (currentArmy->m_armyTypes[duplicate] == type) {
-                    currentArmy->m_numTroops[first] +=
-                        currentArmy->m_numTroops[duplicate];
-                    currentArmy->dismiss(duplicate);
-                }
-            }
-        }
-    }
-}
 
 // This is the town overload attested at DC ai_player.cpp:2483. Retail's
 // Dinkumware vector widens the DC class from 56 to 60 bytes, but the scalar
@@ -3635,7 +3591,7 @@ void type_AI_creature_purchaser::doPurchase(
     m_funds = newFunds;
     m_hasAngelicAlliance = newHasAngelicAlliance;
 
-    aiConsolidateArmy(newArmy);
+    aiConsolidateArmy(*newArmy);
 
     dumpExtraCreature();
     do {
@@ -3681,7 +3637,7 @@ long type_AI_creature_purchaser::getPurchaseValue(
     }
     m_adjacentArmy = localAdjacent;
 
-    aiConsolidateArmyImpl(m_army);
+    aiConsolidateArmy(*m_army);
     dumpExtraCreature();
     long purchase;
     do {
@@ -3694,26 +3650,24 @@ long type_AI_creature_purchaser::getPurchaseValue(
 // DC proves the function and its nested merge walk. Retail's /Gr profile
 // carries the sole army pointer in ECX; every duplicate stack is folded into
 // the first occurrence and then dismissed in place.
-// Written as the literal loop, NOT as an AI_consolidate_army_impl call: the
-// /Ob2 inliner prices the WRAPPER (one statement, free) before forceinline
-// substitutes the loop, so the wrapper form got this body nested-inlined
-// into buy_creatures' do_swap copy where retail's real-cost body is refused
-// and stays a call.
+// DC AI_consolidate_army takes armyGroup&; retain the canonical ordinary
+// helper and source calls, including get_purchase_value. The former synthetic
+// forceinline duplicate was byte-neutral there and is removed.
 // Before normalization (locals): current_army.
 VA(0x0042d870, 0x67)  // DC function/body + retail caller bracket; dc 0x323bc
-void aiConsolidateArmy(armyGroup* currentArmy)
+void aiConsolidateArmy(armyGroup& currentArmy)
 {
     for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
          ++first) {
-        TCreatureType type = currentArmy->m_armyTypes[first];
+        TCreatureType type = currentArmy.m_armyTypes[first];
         if (type != CREATURE_NONE) {
             for (int duplicate = first + 1;
                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
                 ++duplicate) {
-                if (currentArmy->m_armyTypes[duplicate] == type) {
-                    currentArmy->m_numTroops[first] +=
-                        currentArmy->m_numTroops[duplicate];
-                    currentArmy->dismiss(duplicate);
+                if (currentArmy.m_armyTypes[duplicate] == type) {
+                    currentArmy.m_numTroops[first] +=
+                        currentArmy.m_numTroops[duplicate];
+                    currentArmy.dismiss(duplicate);
                 }
             }
         }
@@ -3726,9 +3680,10 @@ void aiConsolidateArmy(armyGroup* currentArmy)
 // ascending, then deals shooters from the fast end into slots 0/2/4/6
 // (wrapping to 1) and finally packs the non-shooters into the first free
 // slots with a persistent forward scan.
+// DC AI_arrange_army takes armyGroup& (ai_player.cpp:2718).
 // Before normalization (locals): current_army, free_slot.
 VA(0x0042d8e0, 0x239)  // anchor-callee (do_swap tail 0x42c485, buy_creatures 0x42bbae, split_armies x2, 0x431d9d), dc 0x32430
-void aiArrangeArmy(armyGroup* currentArmy)
+void aiArrangeArmy(armyGroup& currentArmy)
 {
     std::vector<type_creature_value> values;
     // One function-scoped record serves all three passes: push_back takes
@@ -3736,13 +3691,13 @@ void aiArrangeArmy(armyGroup* currentArmy)
     // materialise all three fields into the same frame slots as retail.
     type_creature_value entry;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        TCreatureType type = currentArmy->m_armyTypes[i];
+        TCreatureType type = currentArmy.m_armyTypes[i];
         if (type != CREATURE_NONE) {
             entry.m_type = type;
-            entry.m_amount = static_cast<short>(currentArmy->m_numTroops[i]);
+            entry.m_amount = static_cast<short>(currentArmy.m_numTroops[i]);
             entry.m_value = g_creatureTypeTraits[type].m_speed;
             values.push_back(entry);
-            currentArmy->dismiss(i);
+            currentArmy.dismiss(i);
         }
     }
     std::sort(values.begin(), values.end());
@@ -3752,7 +3707,7 @@ void aiArrangeArmy(armyGroup* currentArmy)
          --shooter) {
         entry = values[shooter];
         if (g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter) {
-            currentArmy->add(entry.m_type, entry.m_amount, slot);
+            currentArmy.add(entry.m_type, entry.m_amount, slot);
             slot += 2;
             if (slot >= armyGroup::ARMY_GROUP_SLOT_COUNT)
                 slot = 1;
@@ -3763,9 +3718,9 @@ void aiArrangeArmy(armyGroup* currentArmy)
     for (unsigned int walker = 0; walker < values.size(); ++walker) {
         entry = values[walker];
         if (!(g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter)) {
-            while (currentArmy->m_armyTypes[freeSlot] != CREATURE_NONE)
+            while (currentArmy.m_armyTypes[freeSlot] != CREATURE_NONE)
                 ++freeSlot;
-            currentArmy->add(entry.m_type, entry.m_amount, freeSlot);
+            currentArmy.add(entry.m_type, entry.m_amount, freeSlot);
         }
     }
 }
@@ -3807,7 +3762,7 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 {
     // Before normalization (locals): current_army, walker_count.
     armyGroup& currentArmy = currentHero->m_army;
-    aiConsolidateArmy(&currentArmy);
+    aiConsolidateArmy(currentArmy);
 
     do {
         int openSlots = 7 - currentArmy.getNumArmies();
@@ -3898,10 +3853,10 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
         }
         if (openSlots == 0)
             break;
-        aiArrangeArmy(&currentArmy);
+        aiArrangeArmy(currentArmy);
         return;
     } while (0);
-    aiArrangeArmy(&currentArmy);
+    aiArrangeArmy(currentArmy);
 }
 
 // E:\gamedcs\ai_player.cpp:2778
@@ -4495,7 +4450,7 @@ static void checkHolyGrail(
             if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
                 || mapCell->m_extraInfo
                     == static_cast<unsigned long>(currentHero->m_id)) {
-                if (const_cast<hero*>(currentHero)->isInPatrolRadius(
+                if (currentHero->isInPatrolRadius(
                         point.m_point)) {
                     point.m_moveCost = guessCell->m_cost;
                     unsigned short friendlyCost = friendlyDistances[
@@ -4514,7 +4469,7 @@ static void checkHolyGrail(
                         }
                         point.m_moveCost = max(
                             point.m_moveCost,
-                            const_cast<hero*>(currentHero)->getMobility()
+                            currentHero->getMobility()
                                 + currentHero->m_movePoints);
                         if (point.m_value > 0)
                             destinations.push_back(point);
@@ -5415,7 +5370,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 VA(0x00430f80, 0x1d2)  // unique CreateBoat + belongs_to_human callees, dc 0x35910
 void aiBuildShip(const hero* ourHero, long x, long y, long z)
 {
-    if (const_cast<hero*>(ourHero)->belongsToHuman() && !g_unk691209)
+    if (ourHero->belongsToHuman() && !g_unk691209)
         return;
 
     playerData* player = &g_game->m_players[ourHero->m_owner];
@@ -5901,6 +5856,10 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
 // and spills effect before the equipped branch; direct reference arguments
 // give 79.92% and omit retail's bonus copy. The previous int necro plus two
 // converted std::_cpp_min<long> arguments was byte-identical to the wrapper.
+// A 15-state effect/product-lifetime family (two emitted objects) also
+// leaves 85.8871%: function/block effect scopes, reversed multiplication,
+// named product/quotient, and reusing effect do not reproduce the late ESI
+// save. Both DC-proven early guards and the long effect local remain.
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
@@ -5908,7 +5867,7 @@ long type_necromancy_artifact::getValue(const hero* owner, unsigned char equippe
     if (owner->m_skillLevel[12] == 0)
         return 0;
     long effect = static_cast<long>(
-        (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
+        (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
         if (effect > 0)
             effect = 0;
@@ -5952,7 +5911,7 @@ long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, u
 {
     if (exact)
         return 0;
-    int morale = const_cast<hero*>(owner)->getMorale(0, 0, 0);
+    int morale = owner->getMorale(0, 0, 0);
     if (equipped)
         morale -= m_bonus;
     return static_cast<long>(aiValueOfMorale(morale, m_bonus)
@@ -5965,7 +5924,7 @@ long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, uns
 {
     if (exact)
         return 0;
-    int luck = const_cast<hero*>(owner)->getLuck(0, 0, 0);
+    int luck = owner->getLuck(0, 0, 0);
     if (equipped)
         luck -= m_bonus;
     return static_cast<long>(aiValueOfLuck(luck, m_bonus)
@@ -5982,6 +5941,11 @@ long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned
 }
 
 // E:\gamedcs\ai_player.cpp:5293
+// DC ai_player.cpp:5305 calls GetPrimarySkill; 5323/5326/5329 are
+// separate continue statements. Retail copies both min/max arguments into
+// temporary homes at each branch. The existing includes.h value wrappers
+// reproduce those stores and close 96.5897 -> 100%; direct cppMin/cppMax
+// references retain the wrong spill lifetimes. Keep the canonical accessor.
 VA(0x00432890, 0x1b2)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x3687c
 long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
                                      unsigned char exact) const
@@ -5994,15 +5958,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
         return 0;
 
     // Before normalization (locals): spell_power, best_value, base_value.
-    signed char spellPower = owner->m_stats[2];
-    long power;
-    if (spellPower > 99)
-        power = 99;
-    else {
-        power = spellPower;
-        if (spellPower <= 0)
-            power = 1;
-    }
+    long power = owner->getPrimarySkill(2);
 
     long bestValue = 0;
     long baseValue;
@@ -6014,9 +5970,11 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
     }
 
     for (SpellID spell = 0; spell < 70; spell++) {
-        if (!owner->spellIsAvailable(spell)
-            || !(g_spellTraits[spell].m_schoolBits & m_school)
-            || !(g_spellTraits[spell].m_flags & 0x200))
+        if (!owner->spellIsAvailable(spell))
+            continue;
+        if (!(g_spellTraits[spell].m_schoolBits & m_school))
+            continue;
+        if (!(g_spellTraits[spell].m_flags & 0x200))
             continue;
 
         caster.setPower(power);
@@ -6024,9 +5982,9 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
         caster.setPower(baseValue);
         value = caster.getRawSpellValue(spell) - value;
         if (m_bonus < 0)
-            bestValue = cppMin(value, bestValue);
+            bestValue = min(value, bestValue);
         else
-            bestValue = cppMax(value, bestValue);
+            bestValue = max(value, bestValue);
     }
     return bestValue;
 }
@@ -6079,7 +6037,7 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
     if (exact)
         return result;
-    int morale = const_cast<hero*>(owner)->getMorale(0, 0, 1);
+    int morale = owner->getMorale(0, 0, 1);
     if (morale > 0)
         result = static_cast<long>(aiValueOfMorale(morale, -morale) * army + result);
     return result;
@@ -6098,13 +6056,18 @@ long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
     if (exact)
         return result;
-    int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
+    int luck = owner->getLuck(0, 0, 1);
     if (luck > 0)
         result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
 }
 
 // E:\gamedcs\ai_player.cpp:5441
+// DC ai_player.cpp:5458/5461 names is_in_spellbook and SpellIsAvailable.
+// Retail stores best_value immediately before get_raw_spell_value, then
+// selects temporary min/max argument homes. The includes.h max wrapper
+// restores that lifetime (95.8621 -> 100%); direct cppMax references spill
+// the accumulator at initialization and again after every iteration.
 VA(0x00432c20, 0xf5)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x36e28
 long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
                                    unsigned char exact) const
@@ -6119,15 +6082,15 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
     // Before normalization (locals): best_value.
     long bestValue = 0;
     for (SpellID spell = 0; spell < 70; spell++) {
-        if (owner->m_inSpellbook[spell])
+        if (owner->isInSpellbook(spell))
             continue;
-        if (!equipped && owner->m_availableSpells[spell])
+        if (!equipped && owner->spellIsAvailable(spell))
             continue;
         if (!(g_spellTraits[spell].m_schoolBits & m_school))
             continue;
 
         long value = caster.getRawSpellValue(spell);
-        bestValue = cppMax(value, bestValue);
+        bestValue = max(value, bestValue);
     }
     return bestValue;
 }
@@ -6146,13 +6109,17 @@ long type_income_artifact::getValue(const hero* owner, unsigned char,
 }
 
 // E:\gamedcs\ai_player.cpp:5505
+// DC names player as const playerData&, and 5540/5541 records a failed
+// dwelling check followed by continue. Retail copies the running value
+// into the max argument home before selection; includes.h max supplies
+// that store naturally (99.4253 -> 100%). Direct cppMax omits it.
 VA(0x00432d70, 0x219)  // artifact get_value cluster order-map, dc 0x3704c
 long type_creature_growth_artifact::getValue(const hero* owner,
                                                unsigned char,
                                                unsigned char exact) const
 {
     long value = 0;
-    playerData* player = &g_game->m_players[owner->m_owner];
+    const playerData& player = g_game->m_players[owner->m_owner];
 
     if (exact) {
         int townId = g_game->getTownId(owner->m_x, owner->m_y, owner->m_z);
@@ -6173,17 +6140,17 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         return g_creatureTypeTraits[creature].m_aiValue * m_growthBonus;
     }
 
-    for (int i = 0; i < player->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player->m_townIds[i]);
-        if (currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1)) {
-            int dwelling = m_bonus;
-            if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
-                dwelling += TOWN_DWELLING_COUNT;
-            TCreatureType creature = g_townDwellingCreatures[
-                currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
-            value = cppMax(
-                value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
-        }
+    for (int i = 0; i < player.m_numTowns; ++i) {
+        town* currentTown = g_game->getTown(player.m_townIds[i]);
+        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
+            continue;
+        int dwelling = m_bonus;
+        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
+            dwelling += TOWN_DWELLING_COUNT;
+        TCreatureType creature = g_townDwellingCreatures[
+            currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
+        value = max(
+            value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
     }
     return value;
 }
@@ -6325,7 +6292,7 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
     int necromancy;
     if (owner->m_skillLevel[12] == 0) {
         necromancy = static_cast<int>(
-            (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
+            (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
         if (equipped) {
             if (necromancy > 0)
                 necromancy = 0;
@@ -6356,7 +6323,7 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
          static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue)) /
         static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue);
     necromancy = static_cast<int>(
-        (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
+        (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
         if (necromancy > 0)
             necromancy = 0;
@@ -6471,7 +6438,7 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
 
     case ARTIFACT_FIRST_AID_TENT: {
         int firstAid = static_cast<int>(
-            const_cast<hero*>(owner)->getFirstAidFactor() * 25.0f);
+            owner->getFirstAidFactor() * 25.0f);
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             TCreatureType creature = owner->m_army.m_armyTypes[i];
             if (creature != CREATURE_NONE) {
@@ -6663,7 +6630,7 @@ long getFullValue(const hero* ourHero)
                 hasAlliance = g_game->m_players[ourHero->m_owner]
                                   .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
             else
-                hasAlliance = const_cast<hero*>(ourHero)->isWieldingArtifact(
+                hasAlliance = ourHero->isWieldingArtifact(
                     ARTIFACT_ANGELIC_ALLIANCE);
 
             int morale = ourHero->m_army.getArmyMorale(
@@ -6680,7 +6647,7 @@ long getFullValue(const hero* ourHero)
     }
 
     value = static_cast<long>(
-        value * const_cast<hero*>(ourHero)->getCombatValueModifier());
+        value * ourHero->getCombatValueModifier());
     value += caster.getBestSpellValue(
         SPELL_VALUE_CLASS_MASK ^ SPELL_VALUE_SPECIAL);
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);

@@ -200,16 +200,16 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 // relocation names/addends unchanged. Its direct return control still costs
 // 0.0123 points; the ordinary setState/setResolution calls stay canonical.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
-int slider::main(message* msg)
+int slider::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
         if (static_cast<int>(GameTime::get() - repeatTime) > 0)
-            return deselect(msg);
+            return deselect(&msg);
     }
 
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
         return widget::main(msg);
     }
@@ -218,7 +218,7 @@ int slider::main(message* msg)
     if (m_status & WIDGET_DISABLED)
         isDisabled = 1;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_KEY_UP:
         if (isDisabled)
             return 0;
@@ -226,7 +226,7 @@ int slider::main(message* msg)
             break;
         if (!m_hotKeys)
             return 0;
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case KEYCODE_KP_9:
             keyAccel(1, 2, 0, 4, KEYCODE_KP_9);
             break;
@@ -251,24 +251,24 @@ int slider::main(message* msg)
             break;
         if (isDisabled)
             return 0;
-        m_clickX = msg->m_codeX - m_parentWindow->m_x;
-        m_clickY = msg->m_codeY - m_parentWindow->m_y;
+        m_clickX = msg.m_codeX - m_parentWindow->m_x;
+        m_clickY = msg.m_codeY - m_parentWindow->m_y;
         if (m_status & WIDGET_DIMMED)
             return 0;
         if (m_clickX < m_x || m_clickY < m_y || m_clickX >= m_x + m_width
             || m_clickY >= m_y + m_height)
             return 0;
 
-        select(msg, 0);
+        select(&msg, 0);
         for (;;) {
-            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP
-                || msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
+            if (msg.m_id == MESSAGE_LEFT_BUTTON_UP
+                || msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
                 break;
             pollSound();
-            g_mouseManager->main(*msg);
-            if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-                m_clickX = msg->m_codeX - m_parentWindow->m_x;
-                m_clickY = msg->m_codeY - m_parentWindow->m_y;
+            g_mouseManager->main(msg);
+            if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+                m_clickX = msg.m_codeX - m_parentWindow->m_x;
+                m_clickY = msg.m_codeY - m_parentWindow->m_y;
                 if (m_width > m_height) {
                     int distance = m_y - m_clickY;
                     if (distance < 40 && distance > 0)
@@ -279,7 +279,7 @@ int slider::main(message* msg)
                     if (m_clickX >= m_x + m_knobStart
                         && m_clickX < m_x + m_width - m_knobStart
                         && m_clickY >= m_y && m_clickY < m_y + m_height)
-                        select(msg, 1);
+                        select(&msg, 1);
                 } else {
                     int distance = m_x - m_clickX;
                     if (distance < 40 && distance > 0)
@@ -290,16 +290,16 @@ int slider::main(message* msg)
                     if (m_clickX >= m_x && m_clickY >= m_y + m_knobStart
                         && m_clickX < m_x + m_width
                         && m_clickY < m_y + m_height - m_knobStart)
-                        select(msg, 1);
+                        select(&msg, 1);
                 }
             }
             process1WindowsMessage();
-            *msg = g_inputManager->getEvent();
-            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP)
+            msg = g_inputManager->getEvent();
+            if (msg.m_id == MESSAGE_LEFT_BUTTON_UP)
                 break;
         }
         if (m_status & WIDGET_SELECTED) {
-            deselect(msg);
+            deselect(&msg);
             return 2;
         }
         return 1;
@@ -309,35 +309,35 @@ int slider::main(message* msg)
             return 0;
         if (!(m_status & WIDGET_DRAWN) || !(m_status & WIDGET_SELECTED))
             break;
-        return deselect(msg);
+        return deselect(&msg);
 
     case MESSAGE_RIGHT_BUTTON_DOWN:
         if (!(m_status & WIDGET_DRAWN))
             break;
-        m_clickX = msg->m_codeX - m_parentWindow->m_x;
-        m_clickY = msg->m_codeY - m_parentWindow->m_y;
+        m_clickX = msg.m_codeX - m_parentWindow->m_x;
+        m_clickY = msg.m_codeY - m_parentWindow->m_y;
         if (m_clickX < m_x || m_clickY < m_y || m_clickX >= m_x + m_width
             || m_clickY >= m_y + m_height)
             return 0;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = WIDGET_RIGHT_SELECT;
-        msg->m_codeY = m_id;
-        msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = WIDGET_RIGHT_SELECT;
+        msg.m_codeY = m_id;
+        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
         return 2;
 
     case MESSAGE_WIDGET: {
         bool handled = 0;
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case WIDGET_SET_SLIDER_STATE:
-            if (msg->m_codeY == m_id) {
-                setState(msg->m_extra);
+            if (msg.m_codeY == m_id) {
+                setState(msg.m_extra);
                 handled = 1;
                 break;
             }
             break;
         case WIDGET_SET_SLIDER_RESOLUTION:
-            if (msg->m_codeY == m_id) {
-                setResolution(msg->m_extra);
+            if (msg.m_codeY == m_id) {
+                setResolution(msg.m_extra);
                 return 1;
             }
             break;

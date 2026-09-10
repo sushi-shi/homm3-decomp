@@ -133,7 +133,7 @@ struct func_moves_before {
 long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup,
                            type_AI_combat_parameters* data);
 // CODEVIEW(E:\gamedcs\ai.cpp:610, dc 0x24604) long get_move_order(const army* current_army);
-// CODEVIEW(E:\gamedcs\ai.cpp:696, dc 0x248b4) long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters* data);
+// CODEVIEW(E:\gamedcs\ai.cpp:696, dc 0x248b4) long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters& data);
 // CODEVIEW(E:\gamedcs\ai.cpp:1000, dc 0x250e0) long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate);
 // CODEVIEW(E:\gamedcs\ai.cpp:1097, dc 0x25308) void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long,std::allocator<long>* result);
 // CODEVIEW(E:\gamedcs\ai.cpp:1121, dc 0x253a8) void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long,std::allocator<long>* result);

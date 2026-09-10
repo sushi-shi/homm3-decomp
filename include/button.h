@@ -135,7 +135,7 @@ public:
     void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
 
     // Before normalization (function): button::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x456190
+    virtual int main(message& msg);  // slot 2, retail 0x456190
 
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): button::Draw.
@@ -184,7 +184,7 @@ public:
                      const char* image, handler_type newHandler,
                      int normal, int selected);
     // Before normalization (function): type_func_button::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x456e50
+    virtual int main(message& msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0
 };

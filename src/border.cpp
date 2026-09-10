@@ -88,41 +88,41 @@ border::~border()
 // 76.7079%; a direct inactive return gives 96.0396%. Earlier all-direct
 // zero returns (91.7822%) missed the coupled scope, not a compiler limit.
 VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
-int border::main(message* msg)
+int border::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
 
     {
         if (!(m_status & WIDGET_ACTIVE)) {
-            if (msg->m_id == MESSAGE_WIDGET)
+            if (msg.m_id == MESSAGE_WIDGET)
                 return widget::main(msg);
         } else {
             unsigned char isDisabled = 0;
             if (m_status & WIDGET_DISABLED)
                 isDisabled = 1;
 
-            switch (msg->m_id) {
+            switch (msg.m_id) {
             case MESSAGE_LEFT_BUTTON_DOWN:
                 if (isDisabled)
                     return widget::main(msg);
                 // fall through
             case MESSAGE_RIGHT_BUTTON_DOWN: {
-                short mouseX = msg->m_codeX - m_parentWindow->m_x;
-                short mouseY = msg->m_codeY - m_parentWindow->m_y;
+                short mouseX = msg.m_codeX - m_parentWindow->m_x;
+                short mouseY = msg.m_codeY - m_parentWindow->m_y;
                 if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
                     && mouseY < m_y + m_height) {
-                    if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                        msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                        msg->m_codeX = WIDGET_RIGHT_SELECT;
+                    if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                        msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                        msg.m_codeX = WIDGET_RIGHT_SELECT;
                     } else {
                         m_status |= WIDGET_SELECTED;
-                        msg->m_codeX = WIDGET_SELECT;
+                        msg.m_codeX = WIDGET_SELECT;
                     }
-                    if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+                    if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
                         return 1;
-                    msg->m_id = MESSAGE_WIDGET;
-                    msg->m_codeY = m_id;
+                    msg.m_id = MESSAGE_WIDGET;
+                    msg.m_codeY = m_id;
                     return 2;
                 }
                 break;
@@ -135,11 +135,11 @@ int border::main(message* msg)
             case MESSAGE_RIGHT_BUTTON_UP:
                 if (m_status & WIDGET_SELECTED) {
                     m_status &= ~WIDGET_SELECTED;
-                    if (handleClick(0, msg->m_id == MESSAGE_RIGHT_BUTTON_UP))
+                    if (handleClick(0, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                         return 1;
-                    msg->m_id = MESSAGE_WIDGET;
-                    msg->m_codeX = WIDGET_DESELECT;
-                    msg->m_codeY = m_id;
+                    msg.m_id = MESSAGE_WIDGET;
+                    msg.m_codeX = WIDGET_DESELECT;
+                    msg.m_codeY = m_id;
                     return 2;
                 }
                 break;
@@ -222,24 +222,24 @@ void coloredBorderFrame::draw()
 // precedent). The inactive arm is the fallthrough, so the guard is
 // spelled negated.
 VA(0x00450240, 0x82)  // anchor-vtable (slot 2 of 0x63ba5c), dc 0x54744
-int coloredBorderFrame::main(message* msg)
+int coloredBorderFrame::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case WIDGET_SET_COLOR:
-            if (msg->m_codeY == m_id) {
-                m_color = msg->m_extra & 0xFFFF;
+            if (msg.m_codeY == m_id) {
+                m_color = msg.m_extra & 0xFFFF;
                 return 1;
             }
             break;
         case WIDGET_SET_COLORIZE:
-            if (msg->m_codeY == m_id) {
-                m_colorize = msg->m_extra != 0;
+            if (msg.m_codeY == m_id) {
+                m_colorize = msg.m_extra != 0;
                 return 1;
             }
             break;
@@ -444,20 +444,20 @@ void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 // NO bitmapBorder::SetPalette row at all - the rows either side of it
 // (GetRealWidth 0x4504a0, GetRealHeight 0x4504b0) are adjacent.
 VA(0x00450550, 0x132)  // anchor-vtable (slot 2 of 0x63ba94), dc 0x54a20
-int bitmapBorder::main(message* msg)
+int bitmapBorder::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
+        switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE: {
             // The name is read BEFORE the image test - retail hoists
             // `mov eax,[eax+0x18]` above the `test ecx,ecx`, which is what
-            // an inlined SetPalette(msg->extraText) does to its argument.
-            const char* paletteName = msg->m_extraText;
+            // an inlined SetPalette(msg.extraText) does to its argument.
+            const char* paletteName = msg.m_extraText;
             if (m_image) {
                 TPalette16* newPalette =
                     ResourceManager::getPalette(paletteName);
@@ -469,10 +469,10 @@ int bitmapBorder::main(message* msg)
             return 1;
         }
         case WIDGET_SET_IMAGE:
-            setImage(msg->m_extraText);
+            setImage(msg.m_extraText);
             return 1;
         case WIDGET_SET_PLAYER_PALETTE_COLORS:
-            setPlayerPaletteColors(msg->m_extra);
+            setPlayerPaletteColors(msg.m_extra);
             return 1;
         }
     }
@@ -584,19 +584,19 @@ void bitmapBorder16::setImage(const char* bitmapName)
 }
 
 VA(0x00450860, 0xC6)  // anchor-vtable (slot 2 of 0x63bacc), dc 0x54c98
-int bitmapBorder16::main(message* msg)
+int bitmapBorder16::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
+        switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE:
             return 1;
         case WIDGET_SET_IMAGE:
-            setImage(msg->m_extraText);
+            setImage(msg.m_extraText);
             return 1;
         }
     }

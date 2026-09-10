@@ -65,11 +65,12 @@ struct type_point {
     // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
+    // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
     // Before normalization (function): type_point::DistanceSquared.
-    int distanceSquared(const type_point* p2) const
+    int distanceSquared(const type_point& p2) const
     {
-        int dy = m_y - p2->m_y;
-        int dx = m_x - p2->m_x;
+        int dy = m_y - p2.m_y;
+        int dx = m_x - p2.m_x;
         return dx * dx + dy * dy;
     }
 };

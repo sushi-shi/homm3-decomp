@@ -101,7 +101,7 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // it to 90.06 - the `--branches` DUP-EXIT with the guard block moved. Not
 // source-reachable, same as border::Main.
 VA(0x00575290, 0x179)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4, dc 0x12dea8
-int CHotspotWidget::main(message* msg)
+int CHotspotWidget::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
@@ -113,26 +113,26 @@ int CHotspotWidget::main(message* msg)
     if (m_status & WIDGET_DISABLED)
         isDisabled = 1;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
             break;
         // fall through
     case MESSAGE_RIGHT_BUTTON_DOWN: {
-        int mouseX = msg->m_codeX - m_parentWindow->m_x;
-        int mouseY = msg->m_codeY - m_parentWindow->m_y;
+        int mouseX = msg.m_codeX - m_parentWindow->m_x;
+        int mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
             || mouseY >= m_y + m_height)
             return 0;
-        if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg->m_codeX = WIDGET_RIGHT_SELECT;
+        if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg.m_codeX = WIDGET_RIGHT_SELECT;
         } else {
             m_status |= WIDGET_SELECTED;
-            msg->m_codeX = WIDGET_SELECT;
+            msg.m_codeX = WIDGET_SELECT;
         }
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeY = m_id;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = m_id;
         return 2;
     }
 
@@ -144,9 +144,9 @@ int CHotspotWidget::main(message* msg)
         if (!(m_status & WIDGET_SELECTED))
             return 0;
         m_status &= ~WIDGET_SELECTED;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = WIDGET_DESELECT;
-        msg->m_codeY = m_id;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = WIDGET_DESELECT;
+        msg.m_codeY = m_id;
         return 2;
     }
     return widget::main(msg);
@@ -295,7 +295,7 @@ unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const ch
 
 // E:\gamedcs\singleselectionpopups.cpp:61
 VA(0x00575a10, 0x10)  // anchor-vtable CSpriteWidget vtbl 0x641a00 slot2 (Main override; ICF folds CBitmapWidget::Main), dc 0x12f0ac
-int CSpriteWidget::main(message* msg)
+int CSpriteWidget::main(message& msg)
 {
     return widget::main(msg);
 }
@@ -628,7 +628,7 @@ void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
 // --- CBitmapWidget::Main: ICF-folded onto CSpriteWidget::Main (0x575a10). ---
 // E:\gamedcs\singleselectionpopups.cpp:93
 DC_ONLY(0x12f1e0, 0x18)   // folds -> 0x575a10 (return widget::Main)
-int CBitmapWidget::main(message* msg)
+int CBitmapWidget::main(message& msg)
 {
     // @stub
 }

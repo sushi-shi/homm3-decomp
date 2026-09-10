@@ -791,9 +791,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 {
     int value = 0;
     if (magicTerrain != MAGIC_TERRAIN_CURSED_GROUND
-        && (!ownerHero || !const_cast<hero*>(ownerHero)->isWieldingArtifact(
+        && (!ownerHero || !ownerHero->isWieldingArtifact(
             ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
-        && (!otherHero || !const_cast<hero*>(otherHero)->isWieldingArtifact(
+        && (!otherHero || !otherHero->isWieldingArtifact(
             ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
         if (ownerGroup) {
             value = ownerGroup->getLuck(
@@ -922,13 +922,13 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
             value = 1;
         }
         if (ownerHero
-            && const_cast<hero*>(ownerHero)->isWieldingArtifact(
+            && ownerHero->isWieldingArtifact(
                 ARTIFACT_SPIRIT_OF_OPPRESSION)
             && value > 0) {
             value = 0;
         }
         if (otherHero
-            && const_cast<hero*>(otherHero)->isWieldingArtifact(
+            && otherHero->isWieldingArtifact(
                 ARTIFACT_SPIRIT_OF_OPPRESSION)
             && value > 0) {
             value = 0;
@@ -4248,6 +4248,9 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
 // `amount` is assigned back into its own parameter slot [ebp+0xc]
 // three times over, so the source updates the parameter rather than
 // introducing locals.
+// A 17-state original-damage capture family (two emitted objects) also
+// does not improve 98.5227%: int/long captures, const qualifiers, block
+// lifetimes and return-then-add all leave the add-register choice unresolved.
 VA(0x00443e30, 0x101)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
 long army::getEstimatedDamage(const army* target, long amount,
