@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 212 | 77 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 207 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 209 | 80 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 204 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 446 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 440 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 71 active inline overrides were removed; counting
-all 77 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 74 active inline overrides were removed; counting
+all 80 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1201,6 +1201,43 @@ levels. The census is **212 overrides in 27 TUs** (207 depth-zero, five
 auto-inline-off), **424 source pragma directives** plus 22 header packing
 directives, and **63 unions**. Relative to the user's 253/72 checkpoint,
 **41 overrides and nine unions have been removed**.
+
+### Lobby player helpers and dispatcher wall
+
+DC line 6488 proves two short-circuited ordinary `getThisPlayer` calls;
+line 6511 calls ordinary `onPlayerDroppedMsg`, whose definition at line 6937
+owns a `CNetPlayerInfo*` local and returns bool. Restoring those boundaries
+removes the two transfer-query pins and the drop arm's four-call pin. Complete
+adds the common-version recomputation after deletion and uses no-argument
+`update`; the older DC message local is not manufactured as compiler mass.
+
+The [eight-state helper family and 26-state deletion follow-up](source-families.md#lobby-player-helpers-and-the-nested-getplayer-wall)
+reproduce their retained controls. Only the dispatcher's tracked score moves
+in the adopted state: **90.0449% to 85.9516%**. Its source edit resets MAX to
+the new current value; **HIST 90.2212%** remains banked. No exact function is
+lost. The full pre-integration checkpoint passes at **4087/4764 exact** and
+**96.43% linked/whole-image**. Header-consumer collateral is checked, including
+four score-flat spill/reload bytes in `kb::oldmain`.
+
+The wall is specific: retail keeps three nested `getPlayer` calls, but the
+byte-verified compiler trace permits all three expansions (cost 75 against
+budgets 115/114/118). The canonical lookup already matches retail standalone
+and its DC loop/local/return evidence; no missing invariant or lifetime is
+supported at this first mismatch. Later handler boundaries remain incomplete.
+No replacement override, false inline keyword, dummy operation or fabricated
+assertion was added. The changed compiler context now correctly retains the
+map-header destructor, closing that entire 80-byte arm before its tail jump.
+None of the eleven remaining single-pin removals, their combined removal,
+or their combinations with auto-inline removal recovers the dispatcher score.
+
+The actual player helper/transfer bodies pass **146 behavior cases** and six
+negative controls at `-O0` and `-O2`. All four production objects reproduce
+the adopted candidate's **1,449 sections and 15,092 relocation destinations**.
+The census is **209 overrides in 27 TUs** (204 depth-zero, five auto-inline-off),
+**418 source pragma directives** plus 22 packing directives, and **63 unions**.
+Relative to the user's 253/72 checkpoint, **44 overrides and nine unions have
+been removed**. The requested stopping point is a documented function wall,
+not a claim that the dispatcher or TU is finished.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

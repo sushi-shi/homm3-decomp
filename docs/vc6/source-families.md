@@ -3931,6 +3931,73 @@ census is **212 overrides** (207 depth-zero, five auto-inline-off), across
 27 TUs, with **63 unions** unchanged. Remaining destructor/inliner and
 flattened-helper differences are open reconstruction work, not TU closure.
 
+## Lobby player helpers and the nested GetPlayer wall
+
+`generate-lobby-player-helpers-family.py` crosses three binary decisions:
+restore both ordinary `getThisPlayer` calls, restore ordinary bool
+`onPlayerDroppedMsg`, and remove the existing `HeaderRequested` auto-inline
+override. The first two recover positive DC facts at caller lines 6488/6511,
+with definitions at 7323/6937. Complete's dropped-player expansion adds version
+recomputation and uses no-argument `update`; its older DC `message junk` local
+is not copied into the newer implementation.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-player-helpers-family.py build/lobby-player-helpers.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-player-helpers.json --width 60 --keep 8 --jobs 4 --generations 1
+```
+
+All **eight states emit distinct objects and reproduce**, scoring **416 rows
+across four header consumers**. Dispatcher percentages with the adjacent
+auto-inline override retained/removed are: old flattened control
+**90.0449/86.1394**, transfer helper only **87.0841/83.4366**, drop helper only
+**87.6740/83.4136**, and both recovered helpers **85.9516/82.2074**. The two
+drop-only states also move `onKeyPress` from 99.8868% to 100%; that gain does
+not justify retaining the flattened transfer arm. The adopted both-helper
+state changes no other tracked score and removes three depth-zero regions.
+
+The header consumers `advmgr` and `scenarioinfo` are wholly byte/relocation
+identical to control. `kb::oldmain` has only four changed bytes: EDI and EBX
+swap their -0x10/-0x20 spill homes and corresponding reloads. Its score is
+unchanged. All four production objects strictly reproduce the selected
+candidate's 1,449 sections, function locations and 15,092 relocation targets.
+
+The extended `generate-lobby-dispatch-pins-family.py` accepts the completed
+player-helper parent and verifies its exact authored source/header identity.
+It retains both fully recovered parent corners and tests each of the eleven
+remaining depth regions, plus all together, crossed with auto-inline removal.
+All **26 states emit distinct objects**, and **ten elites reproduce**. All 223
+TU rows are scored; only the dispatcher changes. Singles span **80.7489% to
+84.8906%**; all-depth removal gives **60.9862%**, or **58.8618%** with auto-inline
+removal too. No follow-up deletion is adopted. Frozen contexts are
+`3a8df6d3328901340da9` and `1cb1c3134c84c99aa949`; the generators deliberately
+reject incompatible future source anchors.
+
+The passive trace reproduces **390,608 COFF bytes** outside the timestamp and
+all **2,720 dispatcher bytes**. Caller cost is 1791 and initial budget 3582.
+The two `getThisPlayer` expansions and the drop helper each expose `getPlayer`
+at depth two: its cost 75 fits budgets **115, 114 and 118**. Retail keeps
+these three calls at **+0x141, +0x160 and +0x22a**. The remaining drop callees
+already stay out of line naturally: costs 61/138/122 exceed remaining budget
+43. The map-header cleanup now retains `~NewSMapHeader` (cost 68, budget 57),
+and its entire **80-byte** arm matches the retail instruction sequence.
+
+The first unresolved boundary is therefore a nested-inlining/compiler-state
+wall under the recovered source, not evidence against the helpers. DC lookup
+rows 1157/1159/1160/1163 confirm its current loop, `i` local, found-pointer
+return and null return. No supported missing invariant/lifetime was found;
+adding source mass or a new suppression pin would not be recovery. Later
+flattened handler boundaries and allocation choices remain open. This bounded
+pass does not prove no future source model can improve the function.
+
+`test-lobby-player-helpers.py` extracts the actual two helper definitions and
+transfer arm. Its **146 cases** check local/network mode, null lookup, two
+fresh query results, rejection, successful/failed transfer, cancel preservation
+and dropped-player update order. Six controls fail: caching the first query,
+omitting the version store, recomputing before deletion, skipping manager
+notification, skipping cancel, and returning the wrong helper result. Both
+frozen and adopted bodies pass at `-O0` and `-O2`; this is behavior testing,
+not an ABI or inlining oracle.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the

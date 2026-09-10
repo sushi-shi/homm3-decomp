@@ -3984,7 +3984,7 @@ singleselectionwindow	?go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.000
 singleselectionwindow	?go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70	4535974f534d
 singleselectionwindow	?handleMessage@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0	4008f2ef8b30
 singleselectionwindow	?handleNetMsg@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x18e340	04f2428959f8
-singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z	90.0449	90.0449	90.2212	0x1887a0	6301f3649bfa
+singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z	85.9516	85.9516	90.2212	0x1887a0	d71b737c6ad3
 singleselectionwindow	?handleRequests@CNewPlayerUpdateProc@@QAEXXZ	100.0000	100.0000	100.0000	0x178010	1972e301cd66
 singleselectionwindow	?hasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70	cdf0d8b9fa40
 singleselectionwindow	?headerConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270	b4c13180ad59

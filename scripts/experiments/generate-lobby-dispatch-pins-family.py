@@ -1,8 +1,9 @@
 """Recheck every existing dispatcher pin after restoring its receive helper.
 
-The parent must be the completed lobby-map-header family, and the authored
-source/header must exactly equal its reproduced ordinary-receiver/pinned-
-HeaderRequested candidate. Preserve that evidenced helper in every child.
+The parent must be the completed lobby-map-header or lobby-player-helpers
+family, and the authored source/header must exactly equal its reproduced
+recovered-helpers/pinned-HeaderRequested candidate. Preserve those evidenced
+helpers in every child.
 Try each remaining HandleNetMsg depth-zero region separately, plus all at
 once, crossed with the existing HeaderRequested auto-inline override.
 This retains both complete-receiver parent choices while excluding the
@@ -28,12 +29,16 @@ def make_manifest(parent):
     checkpoint = json.loads(parent.read_text())
     input_payload = json.loads((parent.parent / "input.json").read_text())
     axes = [axis["name"] for axis in input_payload["axes"]]
-    if axes != ["map-header-receive-owner", "header-requested-override"]:
-        raise ValueError("Expected the lobby-map-header parent family")
+    if axes == ["map-header-receive-owner", "header-requested-override"]:
+        parent_choices = ((1, 0), (1, 1))
+    elif axes == ["transfer-player-helper", "dropped-player-helper", "header-requested-override"]:
+        parent_choices = ((1, 1, 0), (1, 1, 1))
+    else:
+        raise ValueError("Expected a completed lobby helper parent family")
     retained = {tuple(row["choices"]): row for row in checkpoint["elites"]}
-    if not {(1, 0), (1, 1)} <= set(retained):
-        raise ValueError("Both complete-receiver parents must have reproduced")
-    selected = retained[(1, 0)]
+    if not set(parent_choices) <= set(retained):
+        raise ValueError("Both recovered-helper parents must have reproduced")
+    selected = retained[parent_choices[0]]
     tree = parent.parent / "candidates" / selected["id"] / "first/tree"
     for relative in (SOURCE, "include/singleselectionwindow.h"):
         if (HOMM3_DIR / relative).read_bytes() != (tree / relative).read_bytes():
@@ -61,7 +66,7 @@ def make_manifest(parent):
     ordinary = ordinary.replace("\n#pragma auto_inline(on)", "")
     return {"schema": 1, "source": SOURCE, "units": ["singleselectionwindow"],
             "evidence": __doc__, "parent_context": parent.parent.name,
-            "parent_objects": {str(key): retained[key]["object_hash"] for key in ((1, 0), (1, 1))},
+            "parent_objects": {str(key): retained[key]["object_hash"] for key in parent_choices},
             "region_statements": [p.group() for p in pairs], "axes": [
                 {"name": "dispatcher-existing-depth-regions", "find": function, "options": options},
                 {"name": "header-requested-override", "find": pinned, "options": [
