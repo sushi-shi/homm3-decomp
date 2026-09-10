@@ -58,6 +58,11 @@ Subcommands
   stats [--json]
         Corpus coverage and bridge counts.
 
+  audit [SELECTOR ... | --module MODULE | --all] [--json]
+        Review named C++ declarations, cv/ref types, helper boundaries and
+        reliable source-call order against positive Dreamcast facts. Reports
+        coverage gaps separately; never compares SH4 and x86 structure.
+
   structure [--module MODULE ...] [--output PATH] [--asm]
         Generate C++ browsing stubs and JSON with signatures, typed locals,
         lexical scope trees, source rows, inline evidence and SH4 control flow.
@@ -69,6 +74,8 @@ requires corroboration from the pinned Complete executable.
 
 rc: 0 = rendered, 1 = answered-NO (nothing in the corpus matches the
 selector, an empty `find`), 2 = error (bad selector syntax, missing corpus).
+`audit` instead returns 0 for no findings/gaps, 1 for review findings, and
+2 for coverage gaps or input errors; zero does not certify source recovery.
 Every invocation appends one line to build/homm3_dreamcast.log.
 """
 from __future__ import annotations
@@ -1327,6 +1334,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     stats = sub.add_parser("stats", help="corpus and retail-bridge coverage")
     stats.add_argument("--json", action="store_true", help="machine-readable output")
+    audit = sub.add_parser("audit", help="review typed source facts against authored C++")
+    audit.add_argument("selectors", nargs="*", help="retail/DC selectors, as for show")
+    audit.add_argument("--module", help="review source-claimed functions in one module[.obj]")
+    audit.add_argument("--all", action="store_true", help="review all source-claimed Dreamcast counterparts")
+    audit.add_argument("--json", action="store_true", help="machine-readable review and coverage")
     structure = sub.add_parser("structure", help="export annotated C++ stubs and debug records")
     structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
                            help="module[.obj] to export; repeatable (default all)")
@@ -1378,7 +1390,7 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
               f"{row['offset']} {row['name']} ====")
 
 
-COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure")
+COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure", "audit")
 
 # Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
 # each with its real home.
@@ -1410,7 +1422,21 @@ def _dispatch(argv: list[str]) -> int:
         _redirect(argv)
         args = parser.parse_args(argv)
         corpus = Corpus()
-        if args.command == "structure":
+        if args.command == "audit":
+            from homm3.analysis import source_facts
+            if sum((bool(args.selectors), bool(args.module), args.all)) != 1:
+                raise DreamcastError("audit needs selectors, --module, or --all (exactly one)")
+            if args.selectors:
+                rows = [row for selector in args.selectors for row in _matches(corpus, selector)]
+            else:
+                module = args.module.removesuffix(".obj") + ".obj" if args.module else None
+                rows = [row for key, row in corpus.by_key.items()
+                        if corpus.claims_by_key.get(key) and (module is None or key[0] == module)]
+            rows = list({corpus.key(row): row for row in rows}.values())
+            if not rows:
+                raise NoMatch("audit selection has no source-claimed Dreamcast functions")
+            rc = source_facts.run(corpus, rows, as_json=args.json)
+        elif args.command == "structure":
             from homm3.analysis import dc_structure
             try:
                 index = dc_structure.export(corpus, modules=args.modules,

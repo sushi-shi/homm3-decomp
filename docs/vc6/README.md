@@ -70,6 +70,8 @@ model cannot rot.
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
 | `docs/vc6/debug-lines.md` | classic COFF source-line encoding and verified `/Z7` controls |
 | `docs/vc6/union-pragma-audit.md` | complete union/inline-override census, deletion controls, retained layout contracts and reconstruction debt |
+| `docs/vc6/preprocessor-audit.md` | source macro dispositions, common-code expansion, diagnostic-padding removal and retained palette control |
+| `docs/source-facts.md` | `dreamcast audit`: typed authored-source review with explicit findings and coverage gaps |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 

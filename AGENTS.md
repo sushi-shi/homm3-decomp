@@ -49,6 +49,7 @@ homm3 dreamcast show 0x00524dd0
 homm3 dreamcast lines 0x00524dd0
 homm3 dreamcast asm 0x00524dd0 --blocks
 homm3 dreamcast inline-clues 0x00524dd0
+homm3 dreamcast audit 0x00524dd0
 homm3 sema diff 0x00524dd0 --summary
 homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
@@ -79,6 +80,15 @@ standalone helper does not disprove an inline copy. Do not compare SH4 shape wit
 candidate `/Z7` shape, build regex rosters/automated source-structure comparators,
 or demand equal instruction, block, call, statement, local, or scope counts.
 See [docs/dc-line-tables.md](docs/dc-line-tables.md) for interpretation.
+
+`dreamcast audit` checks positive typed declarations and named source-call
+anchors against the authored Clang AST. It reports cv/ref layers, array/base
+types, member qualifiers, helper calls and unambiguous source-order leads;
+this is not an SH4-versus-C++ structure comparison. Review each finding with
+retail evidence, restore supported facts, then rerun the audit and VC6 build.
+Keep justified platform differences in owning source comments. Coverage gaps
+are not zero differences: missing names, unsupported types and Clang errors
+remain explicit. See [docs/source-facts.md](docs/source-facts.md).
 
 Reject Dreamcast shape only when retail semantics, ABI, layout, or CFG contradict
 it. A lower similarity score is insufficient. Preserve proven classes, interfaces,

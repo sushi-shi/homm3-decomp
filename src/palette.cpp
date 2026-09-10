@@ -456,6 +456,11 @@ void TPalette16::adjustHSV(float hue, float hueAdjust,
 // a hand-flattened maximum. The original include state supplied this macro;
 // the minimal TU restores it only after the three numeric_limits::max calls
 // and removes it immediately after the reconstructed body.
+// Preprocessor-audit negative control: nested std::_cpp_max<unsigned int>
+// selects operand addresses and collapses the repeated comparison. Retail
+// has the red/green retest after the blue comparison (B5); that block is
+// absent in the selector candidate. Keep this source macro and its narrow
+// lifetime; the control's CFG has eight blocks against retail's ten.
 VA(0x00522d50, 0xD6)  // anchor-global, dc 0x10b7ac
 void TPalette16::gray()
 {

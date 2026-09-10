@@ -256,10 +256,13 @@ public:
     // with 0x5741b0 taking " " (SetRolloverText) and 0x5743e0 taking "\n\n"
     // (QuickInfo). Same carve-name evidence: `game_b150_sub08_1741b0`
     // against `game_137c0_sub01_1743e0`.
+    // The owning advmgr callers' DC locals are const TSeerHut&. Both retail
+    // methods only read the receiver's fields (their bodies match exactly),
+    // so keep const on these source interfaces as well as the references.
     // Before normalization (function): TSeerHut::SeerHutFn_005741B0.
-    std::string seerHutFn005741B0(int player);
+    std::string seerHutFn005741B0(int player) const;
     // Before normalization (function): TSeerHut::SeerHutFn_005743E0.
-    std::string seerHutFn005743E0(int player);
+    std::string seerHutFn005743E0(int player) const;
     // The SeerHutList twin of TQuestGuard::QuestGuardFn_00572D60, reached
     // from the other arm of the quest log's list split. The exact HD
     // structural twin supplies the later method name after retail fixes the

@@ -66,25 +66,32 @@
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
-#define DIALOG_ICON_MAX_TEXT_WIDTH 110
+// Before normalization: DIALOG_ICON_MAX_TEXT_WIDTH.
+static const int g_dialogIconMaxTextWidth = 110;
 
-// The icon grid CalculateNormalDialogSize lays out: at most two rows of at
-// most four, and retail dispatches each row's centring through a four-entry
-// jump table on the row's icon count.
 // The eight fixed player seats CheckEndGame and its callers walk.
-#define GAME_PLAYER_COUNT 8
+// Before normalization: GAME_PLAYER_COUNT.
+static const int g_gamePlayerCount = 8;
 
 // The dialog reply the close button answers with. winmgr.h's
 // EDialogReturnType has no enumerator for it yet (armygrp_split.h spells
 // the same value DIALOG_RETURN_SPLIT_CLOSE for its own window), so the
-// name is local until a lane can price the shared header.
-#define DIALOG_RETURN_CLOSE 0x7800
+// constant stays with this consumer.
+// Before normalization: DIALOG_RETURN_CLOSE.
+static const int g_dialogReturnClose = 0x7800;
 
-#define DIALOG_ICON_MAX_ROWS 2
-#define DIALOG_ICON_ROW_SINGLE 1
-#define DIALOG_ICON_ROW_PAIR 2
-#define DIALOG_ICON_ROW_TRIPLE 3
-#define DIALOG_ICON_ROW_QUAD 4
+// CalculateNormalDialogSize lays out at most two rows of four icons.
+// Retail dispatches centring through four cases on each row's icon count.
+// Before normalization: DIALOG_ICON_MAX_ROWS.
+static const int g_dialogIconMaxRows = 2;
+// Before normalization: DIALOG_ICON_ROW_SINGLE.
+static const int g_dialogIconRowSingle = 1;
+// Before normalization: DIALOG_ICON_ROW_PAIR.
+static const int g_dialogIconRowPair = 2;
+// Before normalization: DIALOG_ICON_ROW_TRIPLE.
+static const int g_dialogIconRowTriple = 3;
+// Before normalization: DIALOG_ICON_ROW_QUAD.
+static const int g_dialogIconRowQuad = 4;
 
 // The re-entrancy latch PollSound holds while it runs; DC ?gbInPollSound@@3HA,
 // retail .bss 0x699578, kb.obj's own.
@@ -841,12 +848,7 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
 
 // E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:2720
-DC_ONLY(0xe24a0, 0x366)
-void check_player_loss()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2720 - ordinary static helper reconstructed below.
 
 // E:\gamedcs\kb.cpp:2811
 DC_ONLY(0xe2808, 0x128)
@@ -872,12 +874,7 @@ unsigned char displayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bG
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:3419
-DC_ONLY(0xe34c4, 0x92)
-int GetEnemyCount()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:3419 - ordinary helper reconstructed below.
 
 // E:\gamedcs\kb.cpp:3440 - promoted to a live claim (see below).
 
@@ -2383,7 +2380,7 @@ int normalDialogHandler(message& msg)
             }
         }
     }
-    return eventWindowHandler(&msg);
+    return eventWindowHandler(msg);
 }
 
 // E:\gamedcs\kb.cpp:2445, both promoted from DC_ONLY on body evidence.
@@ -2521,38 +2518,43 @@ unsigned char type_normal_dialog_frame::handleClick(unsigned char downClick,
 // answers with the remembered choice rather than with its own id.  Every
 // answering path rewrites the message into the forwarded shape and
 // disarms the deadline.
-// Residual (99.3701%): write each answer's message/deadline stores and
-// return at that answer. This removes three joins and improves 91.7323%;
-// a shared forwardAnswer flag also removes them but stays at 91.7323%.
-// DC 0xe206c supports the answer paths, radio-button order and stores.
-// Retail falls through from a non-choice OK arm into the plain replies.
-// Keep codeY before codeX; the older chained-store probe was byte-flat.
+// Exact after restoring the OK arm's source scope. DC 2593..2603
+// records an if/else with two dialogReturn assignments, followed by shared
+// message/deadline stores. Retail merges the non-choice assignment with
+// the plain replies; that machine fallthrough did not prove source-level
+// fallthrough. The explicit source if/else gives retail's EDX manager and
+// EAX selection instead of the old ECX/EDX pair.
+// A 12-state answer/predicate-scope family produced ten objects and ten
+// reproduced elites; the minimal explicit-if/else parent is exact. The
+// earlier 54 receiver/result states were flat at 99.3701%; reusing a
+// forwardAnswer flag was 91.7323%. Keep the canonical dialog/visibility
+// helpers, codeY before codeX, and the shared OK-arm completion stores.
 VA(0x004f0fc0, 0x1C3)  // decorated identity (kb.h) + dialog-global shape, dc 0xe206c
-int eventWindowHandler(message* msg)
+int eventWindowHandler(message& msg)
 {
     if (g_dialogDeadline697784 && GameTime::isPast(g_dialogDeadline697784)) {
-        msg->m_id = MESSAGE_WIDGET;
+        msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_TIMEOUT;
-        msg->m_codeY = 10;
-        msg->m_codeX = 10;
+        msg.m_codeY = 10;
+        msg.m_codeX = 10;
         g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
-    if (msg->m_id == MESSAGE_WIDGET
-        && msg->m_codeX == widget::WIDGET_DESELECT) {
-        switch (msg->m_codeY) {
+    if (msg.m_id == MESSAGE_WIDGET
+        && msg.m_codeX == widget::WIDGET_DESELECT) {
+        switch (msg.m_codeY) {
         case DIALOG_RETURN_CHOICE_1:
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 widget* first =
-                    g_normalDialogWindow->getWidget(DIALOG_RETURN_CHOICE_1);
-                first->sendMessage(widget::WIDGET_SET_STATUS, 4);
+                    getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
+                first->setVisible(1);
                 widget* second =
-                    g_normalDialogWindow->getWidget(DIALOG_RETURN_CHOICE_2);
-                second->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
-                g_normalDialogWindow->getWidget(DIALOG_RETURN_OK)->enable(1);
+                    getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
+                second->setVisible(0);
+                getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
                 g_normalDialogSelection = DIALOG_RETURN_CHOICE_1;
-                g_normalDialogWindow->drawWindow(1, -65535, 65535);
+                getCurrentNormalDialog()->drawWindow(1, -65535, 65535);
             }
             break;
 
@@ -2560,34 +2562,36 @@ int eventWindowHandler(message* msg)
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 widget* first =
-                    g_normalDialogWindow->getWidget(DIALOG_RETURN_CHOICE_1);
-                first->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
+                    getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_1);
+                first->setVisible(0);
                 widget* second =
-                    g_normalDialogWindow->getWidget(DIALOG_RETURN_CHOICE_2);
-                second->sendMessage(widget::WIDGET_SET_STATUS, 4);
-                g_normalDialogWindow->getWidget(DIALOG_RETURN_OK)->enable(1);
+                    getCurrentNormalDialog()->getWidget(DIALOG_RETURN_CHOICE_2);
+                second->setVisible(1);
+                getCurrentNormalDialog()->getWidget(DIALOG_RETURN_OK)->enable(1);
                 g_normalDialogSelection = DIALOG_RETURN_CHOICE_2;
-                g_normalDialogWindow->drawWindow(1, -65535, 65535);
+                getCurrentNormalDialog()->drawWindow(1, -65535, 65535);
             }
             break;
 
-        case DIALOG_RETURN_OK:
+        case DIALOG_RETURN_OK: {
             if (g_normalDialogMbType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || g_normalDialogMbType == NORMAL_DIALOG_CHOOSE) {
                 g_windowManager->m_dialogReturn = g_normalDialogSelection;
-                msg->m_codeY = 10;
-                msg->m_codeX = 10;
-                g_dialogDeadline697784 = 0;
-                return MESSAGE_DISPATCH_FORWARD;
+            } else {
+                g_windowManager->m_dialogReturn = msg.m_codeY;
             }
-            // fall through
-        case DIALOG_RETURN_CLOSE:
+            msg.m_codeY = 10;
+            msg.m_codeX = 10;
+            g_dialogDeadline697784 = 0;
+            return MESSAGE_DISPATCH_FORWARD;
+        }
+        case g_dialogReturnClose:
         case DIALOG_RETURN_CANCEL:
         case DIALOG_RETURN_ACCEPT:
         case DIALOG_RETURN_DECLINE:
-            g_windowManager->m_dialogReturn = msg->m_codeY;
-            msg->m_codeY = 10;
-            msg->m_codeX = 10;
+            g_windowManager->m_dialogReturn = msg.m_codeY;
+            msg.m_codeY = 10;
+            msg.m_codeX = 10;
             g_dialogDeadline697784 = 0;
             return MESSAGE_DISPATCH_FORWARD;
         }
@@ -2603,7 +2607,7 @@ int eventWindowHandler(message* msg)
 VA(0x004f1190, 0x5)  // anchor-caller (TQuestLogWindow::WindowHandler) + tail-jump target, dc 0xe225c
 int trueFalseDialogHandler(message* msg)
 {
-    return eventWindowHandler(msg);
+    return eventWindowHandler(*msg);
 }
 
 // E:\gamedcs\kb.cpp:2636. Promoted from DC_ONLY on body evidence: one
@@ -2684,6 +2688,89 @@ void playerDead(int whichPlayer)
             CMCDeadPlayer deadMsg(whichPlayer);
             sendMapChange(&deadMsg);
         }
+    }
+}
+
+// DC kb.cpp:2720..2808 names this source-static helper, its three entry
+// guards, temporary local control and seat/countdown walk. Retail 0x4f2ce0
+// expands that walk inside checkEndGame. Keep the ordinary helper boundary
+// and let VC6 eliminate its repeated guards in the guarded caller.
+// DC 2750 computes the player-record address before the 2752 joined
+// heroes/towns predicate, and retains that record through the 2776
+// countdown store. Retail likewise retains the countdown address across
+// the warning dialog. Keep the actual player reference through the loop.
+// The 24-state record/predicate/guard/counter family produced four objects
+// and four reproduced elites; this reference raises checkEndGame to
+// 93.4214% while preserving all 44 exact kb siblings. Direct repeated
+// g_game indexing was 88.5571%; pointer/reference forms agree. The joined
+// predicate follows the DC scopes even where its score is byte-flat.
+// Before normalization (function): check_player_loss.
+DC_ONLY(0xe24a0, 0x366)
+static void checkPlayerLoss()
+{
+    if (!g_thisNetGotAdventureControl)
+        return;
+    if (g_inSetup698400)
+        return;
+    if (g_gameOver)
+        return;
+    unsigned char tookLocalControl;
+    tookLocalControl = 0;
+    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+        && !g_game->m_players[g_unnamed69120c].m_isLocal) {
+        g_game->m_players[g_unnamed69120c].m_isHuman = 1;
+        tookLocalControl = 1;
+        g_game->m_players[g_unnamed69120c].m_isLocal = 1;
+    }
+
+    for (int i = 0; i < g_gamePlayerCount; i++) {
+        if (g_game->m_playerDisabled[i])
+            continue;
+        playerData& player = g_game->m_players[i];
+        if (player.m_numHeroes == 0
+            && player.m_numTowns == 0) {
+            playerDead(i);
+            if (i == g_game->getLocalPlayerGamePos()) {
+                g_unnamed691209 = 0;
+                normalDialog((*g_generalText)[96], NORMAL_DIALOG_DEFAULT,
+                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            } else {
+                const char* deadFormat = (*g_generalText)[6];
+                sprintf(g_text, deadFormat, g_game->getPlayerName(i));
+                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, -1, -1, 5000, -1, 0);
+            }
+        } else if (player.m_numTowns == 0) {
+            if (player.m_deathCountDown == -1) {
+                if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
+                    const char* warnFormat = (*g_generalText)[7];
+                    sprintf(g_text, warnFormat, g_game->getPlayerName(i));
+                    normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                                 -1, 0, -1, 0, -1, 0);
+                }
+                player.m_deathCountDown = 7;
+            } else if (player.m_deathCountDown == 0) {
+                playerDead(i);
+                if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
+                    const char* localFormat = (*g_generalText)[8];
+                    sprintf(g_text, localFormat, g_game->getPlayerName(i));
+                    g_unnamed691209 = 0;
+                } else {
+                    const char* otherFormat = (*g_generalText)[9];
+                    sprintf(g_text, otherFormat, g_game->getPlayerName(i));
+                }
+                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
+                             -1, 0, -1, 0, -1, 0);
+            }
+        } else {
+            player.m_deathCountDown = -1;
+        }
+    }
+
+    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+        && tookLocalControl) {
+        g_game->m_players[g_unnamed69120c].m_isHuman = 0;
+        g_game->m_players[g_unnamed69120c].m_isLocal = 0;
     }
 }
 
@@ -3215,6 +3302,29 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 }
 #endif
 
+// DC kb.cpp:3419..3436 names this ordinary function and its nested
+// GetLocalPlayerGamePos/GetTeamMask calls. Retail expands the enemy scan in
+// checkEndGame. Retail initializes the counter before the team lookup,
+// reloads g_game after GetLocalPlayerGamePos, and tests a zero-extended
+// full-width mask. Keep the canonical GetTeamMask byte return and consume
+// it as int here; caching the receiver or keeping a byte local loses those
+// homes. No local type was recorded for this older DC helper.
+// Before normalization (function): GetEnemyCount.
+DC_ONLY(0xe34c4, 0x92)
+int getEnemyCount()
+{
+    int enemyCount = 0;
+    int teamMask = g_game->getTeamMask(g_game->getLocalPlayerGamePos());
+    for (int i = 0; i < g_gamePlayerCount; ++i) {
+        if (!g_game->m_playerDisabled[i]) {
+            int playerBit = 1 << i;
+            if (!(teamMask & playerBit))
+                ++enemyCount;
+        }
+    }
+    return enemyCount;
+}
+
 // E:\gamedcs\kb.cpp:3440. Dreamcast proves the reference parameters,
 // entry-time GetLocalPlayerGamePos (3442), separate town lookup (3460)
 // before formatting (3461), and explicit return branch (3559/3560).
@@ -3329,33 +3439,37 @@ void playerDead(int gamePos);
 // argument overrides everything.  The `gosolo` latch pair is honoured
 // three times over: the acting seat is temporarily made local so the
 // dialogs address it, and put back on the way out.
-// Residual (90.6247%): blocks 85 = 85 and the branch view is clean; two
-// codegen decisions are left. (1) Our CL CROSS-JUMPS the two per-seat
-// NormalDialog calls - the dead-seat notice and the countdown-expiry
-// notice share their last five pushes - into one site where retail
-// keeps both; there is no source difference to break the merge, the
-// argument lists already differ in the middle. (2) Retail CALLS
-// game::GetTeam inside its GetTeamMask expansion where we expand it at
-// depth 2, and the frame is 0x2c against retail's 0x30 - one named
-// local short. Tried and rejected: promoting bStandardVictoryAllowed
-// and teamMask to function scope (byte-flat, and the frame does not
-// move).
-// Tried and rejected 2026-09-06 for (2): naming GetLocalPlayerGamePos's
-// result in an `int` local before the GetTeamMask call is byte-flat at
-// 90.6247 and does not move the frame.
-// Tried and rejected 2026-09-07: changing the retail byte latch to the
-// Dreamcast roster's older `int bRemoteWasOn` drops to 86.60; Complete's
-// target explicitly stores/tests [ebp-1]. Removing the four retained
-// formatting-pointer temporaries recreates the older 89.45 plateau and
-// worsens register allocation throughout the player loop.
+// Exact after restoring helper boundaries and DC source statement groups.
+// DC2750 owns the player-record lifetime across the loss checks and warning
+// dialog; the 24-state record family raised 88.5571% to 93.4214%.
+// DC e37c8/3634/3637 records the handled flag; 3728/3735 updates forced
+// outcomes and 3742/3747 synchronizes them from the global end sequence.
+// The complete nine-state outcome family recovered the nested GetTeamMask
+// expansion at 96.0524%; partial forms stayed at 93.4214%. These recorded
+// operations remain even where VC6 eliminates their stores.
+// The 32-state enemy family produced 18 objects and ten reproduced elites.
+// Initializing the counter before the lookup, reloading the game receiver,
+// and consuming the byte-returned team mask as int raised the score to
+// 99.7119%. All 25 named calls and the helper expansions then agreed.
+// DC3628/3629 supports the final initialization family: separate gameWon
+// and gameLost zero assignments before standardVictoryAllowed=1 are exact;
+// chained zeros reach 99.9952%, interleaving 99.7143%, standard first
+// 99.7119%. All 44 previously exact kb siblings remain exact.
+// Retain the byte bRemoteWasOn home proved by retail even though DC calls
+// the older local int. No synthetic operations or inline pins are needed.
 // Before normalization (locals): bForceWin, bGameWon, bGameLost, iLiveOpponents,
 // bTookLocalControl, bStandardVictoryAllowed.
 VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
 void checkEndGame(int forceWin)
 {
+    // Before normalization: bGameWon.
     int gameWon;
+    // Before normalization: bGameLost.
     int gameLost;
+    // Before normalization: enemyCount.
     int liveOpponents;
+    // Before normalization: bRemoteWasOn.
+    // Retail stores this local as one byte; DC recorded an older int.
     unsigned char tookLocalControl;
     int i;
 
@@ -3368,72 +3482,9 @@ void checkEndGame(int forceWin)
     if (g_inCheckEndGame)
         return;
     g_inCheckEndGame = 1;
-    tookLocalControl = 0;
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
-        && !g_game->m_players[g_unnamed69120c].m_isLocal) {
-        g_game->m_players[g_unnamed69120c].m_isHuman = 1;
-        tookLocalControl = 1;
-        g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-    }
-
-    for (i = 0; i < GAME_PLAYER_COUNT; i++) {
-        if (g_game->m_playerDisabled[i])
-            continue;
-        if (g_game->m_players[i].m_numHeroes == 0) {
-            if (g_game->m_players[i].m_numTowns != 0) {
-                g_game->m_players[i].m_deathCountDown = -1;
-                continue;
-            }
-            playerDead(i);
-            if (i == g_game->getLocalPlayerGamePos()) {
-                g_unnamed691209 = 0;
-                normalDialog(g_generalText->m_text[96], NORMAL_DIALOG_DEFAULT,
-                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            } else {
-                const char* deadFormat = g_generalText->m_text[6];
-                sprintf(g_text, deadFormat, g_game->getPlayerName(i));
-                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
-                             -1, -1, -1, 5000, -1, 0);
-            }
-        } else if (g_game->m_players[i].m_numTowns == 0) {
-            if (g_game->m_players[i].m_deathCountDown == -1) {
-                if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* warnFormat = g_generalText->m_text[7];
-                    sprintf(g_text, warnFormat, g_game->getPlayerName(i));
-                    normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
-                                 -1, 0, -1, 0, -1, 0);
-                }
-                g_game->m_players[i].m_deathCountDown = 7;
-            } else if (g_game->m_players[i].m_deathCountDown == 0) {
-                playerDead(i);
-                if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* localFormat = g_generalText->m_text[8];
-                    sprintf(g_text, localFormat, g_game->getPlayerName(i));
-                    g_unnamed691209 = 0;
-                } else {
-                    const char* otherFormat = g_generalText->m_text[9];
-                    sprintf(g_text, otherFormat, g_game->getPlayerName(i));
-                }
-                normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
-                             -1, 0, -1, 0, -1, 0);
-            }
-        } else {
-            g_game->m_players[i].m_deathCountDown = -1;
-        }
-    }
-
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
-        && tookLocalControl) {
-        g_game->m_players[g_unnamed69120c].m_isHuman = 0;
-        g_game->m_players[g_unnamed69120c].m_isLocal = 0;
-    }
-
-    liveOpponents = 0;
-    unsigned char teamMask =
-        g_game->getTeamMask(g_game->getLocalPlayerGamePos());
-    for (i = 0; i < GAME_PLAYER_COUNT; i++)
-        if (!g_game->m_playerDisabled[i] && !(teamMask & (1 << i)))
-            liveOpponents++;
+    bool conditionHandled = 0;
+    checkPlayerLoss();
+    liveOpponents = getEnemyCount();
 
     tookLocalControl = 0;
     if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
@@ -3443,13 +3494,17 @@ void checkEndGame(int forceWin)
         g_currentPlayer->m_isHuman = 1;
     }
 
-    int standardVictoryAllowed = 1;
     gameWon = 0;
     gameLost = 0;
-    if (!displayVCWinLoss(g_game->m_mapHeader.m_victoryCondition, gameWon,
-                          gameLost, 0))
+    int standardVictoryAllowed = 1;
+    if (displayVCWinLoss(g_game->m_mapHeader.m_victoryCondition, gameWon,
+                         gameLost, 0)) {
+        conditionHandled = 1;
+    }
+    if (!conditionHandled) {
         displayLCWinLoss(g_game->m_mapHeader.m_lossCondition, gameWon,
                          gameLost, 0);
+    }
     if (g_game->m_mapHeader.m_victoryCondition.m_type != -1
         && !g_game->m_mapHeader.m_victoryCondition.m_allowNormalVictory)
         standardVictoryAllowed = 0;
@@ -3467,31 +3522,44 @@ void checkEndGame(int forceWin)
         gameWon = 1;
         g_defeatedAllPlayers = 1;
         if (g_networkActive69954c) {
+            // Before normalization: msg.
             CNormalWinMsg winMsg(g_game->getLocalPlayerGamePos());
             transmitRemoteData(&winMsg, 127, false, true);
         }
-        normalDialog(g_generalText->m_text[660], NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog((*g_generalText)[660], NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
-        for (i = 0; i < GAME_PLAYER_COUNT; i++)
+        for (i = 0; i < g_gamePlayerCount; i++)
             if (!g_game->m_playerDisabled[i] && g_game->isLocalHuman(i))
                 break;
-        if (i == GAME_PLAYER_COUNT) {
+        if (i == g_gamePlayerCount) {
             g_gameOver = 1;
             g_defeatedAllPlayers = 0;
         }
     }
 
     if (forceWin == END_GAME_FORCE_VICTORY) {
+        gameWon = 1;
         g_gameOver = 1;
         g_defeatedAllPlayers = 1;
-    } else if (forceWin == END_GAME_FORCE_DEFEAT) {
-        g_defeatedAllPlayers = 0;
+    }
+    if (forceWin == END_GAME_FORCE_DEFEAT) {
+        gameLost = 1;
         g_gameOver = 1;
-    } else if (!g_gameOver && g_unnamed691209
-               && g_netLocalGamePos == g_unnamed69120c && tookLocalControl) {
-        g_currentPlayer->m_isLocal = 0;
-        g_currentPlayer->m_isHuman = 0;
+        g_defeatedAllPlayers = 0;
+    }
+    if (g_defeatedAllPlayers == 1 && g_gameOver) {
+        gameWon = 1;
+    }
+    if (g_defeatedAllPlayers == 0 && g_gameOver) {
+        gameLost = 1;
+    }
+    if (!g_gameOver) {
+        if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+            && tookLocalControl) {
+            g_currentPlayer->m_isLocal = 0;
+            g_currentPlayer->m_isHuman = 0;
+        }
     }
     g_inCheckEndGame = 0;
 }
@@ -3756,12 +3824,7 @@ int checkMem()
 
 // E:\gamedcs\kb.cpp:5206 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:5478
-DC_ONLY(0xe5f60, 0x6)
-TDialogBox* GetCurrentNormalDialog()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:5478 - canonical definition follows getQuickviewSize below.
 
 // E:\gamedcs\kb.cpp:5488 - promoted to a live claim (see below).
 
@@ -4839,6 +4902,23 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     // de-inlines operator=, grows the CFG to 135 blocks, and scores 94.9238%.
     // The predictor's depth-1 midpoint, explicit assign(const char*), and
     // branch-local const-char-pointer lifetimes are all byte-flat at 99.1667%.
+    // A fresh nine-state receiver/result family produced eight objects and
+    // reproduced all eight elites without improving either nested _Eos site.
+    // DC5089/5090's empty-label scope closes before max and both text
+    // loops. The two-state early-return control reproduces identical bytes
+    // and preserves that scope; it does not change either _Eos decision.
+    // DC5106 groups character width, increment and accumulation. Twelve
+    // increment/accumulation/word-width-lifetime states emitted two objects;
+    // both reproduced elites failed to improve the two _Eos sites. The
+    // postincrement argument with an outer width local fell to 98.6218%.
+    // Eight morale/luck frame-before-name negative controls emitted eight
+    // objects (96.3289..98.5486%); none preserves the current 99.1667% peak.
+    // DC5046/5051/5056 loads the filename, not the frame. Keep name before
+    // frame; the following shared string assignments precede frame stores.
+    // Eight sprite pointer/reference and signed line-count type/declaration
+    // states emitted one reproduced object, still 99.1667%. The verified
+    // inline trace leaves both EXPERIENCE _Eos sites at budget 47/cost 46;
+    // these result lifetimes do not recover the retained retail calls.
     // Rejected source families: signed/unsigned relational count tests,
     // zero-first monster arms, repeated direct LOWORD/HIWORD expressions,
     // and division-based high-word extraction. The quantity-first unsigned
@@ -5047,37 +5127,38 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     m_spriteHeight = image->getHeight() + 2;
     image->dispose();
 
-    if (m_text.length()) {
-        m_textWidth = max(m_spriteWidth, 50);
+    if (!m_text.length())
+        return;
 
-        const char* current = m_text.c_str();
-        while (*current) {
-            while (*current == ' ')
-                ++current;
+    m_textWidth = max(m_spriteWidth, 50);
 
-            int wordWidth = 2;
-            while (*current && *current != ' ') {
-                wordWidth += g_unnamed698a08->getCharacterWidth(*current);
-                ++current;
-            }
-            if (wordWidth > m_textWidth)
-                m_textWidth = wordWidth;
+    const char* current = m_text.c_str();
+    while (*current) {
+        while (*current == ' ')
+            ++current;
+
+        int wordWidth = 2;
+        while (*current && *current != ' ') {
+            wordWidth += g_unnamed698a08->getCharacterWidth(*current);
+            ++current;
         }
+        if (wordWidth > m_textWidth)
+            m_textWidth = wordWidth;
+    }
 
-        m_textWidth = min(m_textWidth, DIALOG_ICON_MAX_TEXT_WIDTH);
-        int lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
+    m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
+    int lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
+    m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
+
+    while (lines > 1 && m_textHeight > m_textWidth * 2 / 3) {
+        // Both retail and the Dreamcast delay slot store the grown width
+        // before entering min; the clamp is a second assignment.
+        m_textWidth = m_textWidth * 3 / 2;
+        m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
+        lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
         m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
-
-        while (lines > 1 && m_textHeight > m_textWidth * 2 / 3) {
-            // Both retail and the Dreamcast delay slot store the grown width
-            // before entering min; the clamp is a second assignment.
-            m_textWidth = m_textWidth * 3 / 2;
-            m_textWidth = min(m_textWidth, DIALOG_ICON_MAX_TEXT_WIDTH);
-            lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
-            m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
-            if (m_textWidth == DIALOG_ICON_MAX_TEXT_WIDTH)
-                break;
-        }
+        if (m_textWidth == g_dialogIconMaxTextWidth)
+            break;
     }
 }
 
@@ -5096,180 +5177,216 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // its origin is unset or it would run off the 800x600 screen.  (4) Icon
 // placement: each row is centred by a four-arm jump table on its icon
 // count, then every icon's caption is centred under its sprite.
-// Residual (92.17%): three register/scheduling classes, all downstream of
-// one another - retail materialises the 128 floor in EDX and keeps it live
-// from the width clamp to the height max where we use immediates; retail
-// re-reads dialog_info->width at the two centring tests where our compile
-// keeps it in EBX across the row-height loop; and the LineLength product
-// lands in the zero-extended byte register with the width reloaded after
-// it rather than before.  Tried and rejected: the chained
-// `sprite[0] = sprite[1] = text[0] = text[1] = 0` zeroing (92.14, and it
-// does not reproduce the descending store order either), and swapping the
-// LineLength/fs.height multiply operands (byte-flat - VC6 canonicalises).
+// The later 27-state counter/128/width-reference lifetime family produced
+// eight objects and eight reproduced elites without improving 93.8074%.
+// Intermediate after the DC line-layout audit: 93.8074%. DC 5207/5209
+// initializes widest_icon before spacing; 5219/5220 owns the row-array loop;
+// 5223 begins the count; 5284/5285 separates the line count and pixel height.
+// The 72-state family produced 21 objects and ten reproduced elites,
+// recovering 93.6558% from 87.1948% while preserving the seven local types.
+// DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
+// copies BOTH operands to fresh stack homes before selecting a reference:
+// the canonical by-value max wrapper in homm3_minmax.h supplies those homes.
+// Direct std::_cpp_max is the negative control and does not reproduce that
+// boundary. Keep the long locals; the audit intentionally reports std::max.
+// DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past
+// the second predicate after the popup store. The 48-state follow-up has
+// two objects/two reproduced elites; the adopted equivalent also reproduced
+// separately. It keeps distinct 5312/5315 maximum/rounding groups and
+// 5328/5329 base-height/text additions. Array declaration order, those value
+// stages and the factored inter-row gap were byte-flat; else-if adds 0.15.
+// DC5430 at 0xe5ea8 advances firstInRow inside the placement loop,
+// independently of its inner counter. Restoring that cursor lifetime
+// raised 93.8074% to 99.9719%; the two-state family emitted two objects
+// and reproduced both. Retail's pre-loop ECX += inRow is VC6 strength
+// reduction of the per-element cursor, not evidence for a bulk source step.
+// Residual (99.9762%): raw objdiff retains nine row-array address differences
+// and two exchanged x/width load operands at +0x435/+0x43b. All 87 CFG block
+// sizes/flows and all branch destinations agree. The jump table agrees too.
+// A four-state array-declaration/triple-addition-order follow-up emitted one
+// reproduced object at 99.9719%. An 18-state actual-element/center-icon
+// lifetime and chained-zero family emitted eight reproduced objects. The
+// chained zero assignment preserves DC5219/5220's icon-then-label stores
+// and improves to 99.9762% by fixing the height-sum operands at +0x2a0/+0x2a4.
+// Element references/pointers fall to 99.7143/99.7186%; center-icon bindings
+// do not help. All 45 exact kb siblings stayed exact.
 // Before normalization (locals): dialog_info, iRow, pFont.
 VA(0x004f5d80, 0x51C)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
-void calculateNormalDialogSize(TNormalDialogInfo* dialogInfo)
+void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
-    int spriteRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
-    int textRowHeight[DIALOG_ICON_MAX_ROWS] = {0, 0};
-    int maxIconOverhang = 0;
-    int numIcons = 0;
+    // Before normalization: widest_icon.
+    long widestIcon = 0;
+    // Before normalization: spacing.
+    long spacing = 0;
+    // Before normalization: label_height.
+    int labelHeight[g_dialogIconMaxRows];
+    // Before normalization: icon_height.
+    int iconHeight[g_dialogIconMaxRows];
     int iconRows;
     int i;
-    int iconsPerRow;
-    int maxIconWidth = 0;
+    // Before normalization: icons_per_line.
+    int iconsPerLine;
 
+    // DC 5219/5220 stores icon then label; chaining preserves that order.
+    for (i = 0; i < g_dialogIconMaxRows; ++i) {
+        labelHeight[i] = iconHeight[i] = 0;
+    }
+
+    int numIcons = 0;
     for (i = 0; i < 8; i++)
-        if (dialogInfo->m_icons[i].m_resource != -1)
+        if (dialogInfo.m_icons[i].m_resource != -1)
             numIcons++;
     iconRows = (numIcons + 3) / 4;
     if (iconRows > 0)
-        iconsPerRow = (numIcons + iconRows - 1) / iconRows;
+        iconsPerLine = (numIcons + iconRows - 1) / iconRows;
     for (i = 0; i < 8; i++) {
-        if (dialogInfo->m_icons[i].m_resource != -1) {
-            int row = i / iconsPerRow;
-            maxIconWidth = max(dialogInfo->m_icons[i].m_spriteWidth,
-                               maxIconWidth);
-            maxIconWidth = max(dialogInfo->m_icons[i].m_textWidth, maxIconWidth);
-            maxIconOverhang = max(maxIconOverhang,
-                                  dialogInfo->m_icons[i].m_textWidth
-                                      - dialogInfo->m_icons[i].m_spriteWidth);
-            spriteRowHeight[row] = max(spriteRowHeight[row],
-                                        dialogInfo->m_icons[i].m_spriteHeight);
-            textRowHeight[row] = max(textRowHeight[row],
-                                      dialogInfo->m_icons[i].m_textHeight);
+        if (dialogInfo.m_icons[i].m_resource != -1) {
+            int row = i / iconsPerLine;
+            widestIcon = max(dialogInfo.m_icons[i].m_spriteWidth, widestIcon);
+            widestIcon = max(dialogInfo.m_icons[i].m_textWidth, widestIcon);
+            spacing = max(spacing, dialogInfo.m_icons[i].m_textWidth
+                                      - dialogInfo.m_icons[i].m_spriteWidth);
+            iconHeight[row] = max(iconHeight[row],
+                                        dialogInfo.m_icons[i].m_spriteHeight);
+            labelHeight[row] = max(labelHeight[row],
+                                      dialogInfo.m_icons[i].m_textHeight);
         }
     }
 
-    dialogInfo->m_width = 40;
+    dialogInfo.m_width = 40;
     if (numIcons > 0) {
         int perRow = (numIcons + iconRows - 1) / iconRows;
-        dialogInfo->m_width = max(40, (perRow - 1) * (maxIconOverhang + 40)
-                                         + perRow * maxIconWidth + 40);
+        dialogInfo.m_width = max(40, (perRow - 1) * (spacing + 40)
+                                         + perRow * widestIcon + 40);
     }
 
     font* currentFont = g_mediumFont;
-    dialogInfo->m_textExpansion = false;
-    dialogInfo->m_textWidgetWidth = max(
-        256, currentFont->longestWordLength(dialogInfo->m_dialogText.c_str()));
-    int longestLine =
-        currentFont->longestLineWidth(dialogInfo->m_dialogText.c_str());
-    for (;;) {
-        dialogInfo->m_textWidgetHeight =
-            currentFont->lineLength(dialogInfo->m_dialogText.c_str(),
-                              dialogInfo->m_textWidgetWidth)
-            * currentFont->m_fs.m_height;
-        if (longestLine > dialogInfo->m_textWidgetWidth) {
-            if (dialogInfo->m_textWidgetWidth < 578
-                && (dialogInfo->m_textWidgetHeight > 200
-                    || 3 * dialogInfo->m_textWidgetHeight
-                           > 2 * dialogInfo->m_textWidgetWidth)) {
-                dialogInfo->m_textWidgetWidth =
-                    min(3 * dialogInfo->m_textWidgetWidth / 2, 578);
-                continue;
-            }
-            dialogInfo->m_textWidgetWidth =
-                currentFont->longestWrappedLineWidth(
-                    dialogInfo->m_dialogText.c_str(),
-                    dialogInfo->m_textWidgetWidth);
+    dialogInfo.m_textExpansion = false;
+    dialogInfo.m_textWidgetWidth = max(
+        256, currentFont->longestWordLength(dialogInfo.m_dialogText.c_str()));
+    // Before normalization: maximum_width.
+    int maximumWidth =
+        currentFont->longestLineWidth(dialogInfo.m_dialogText.c_str());
+    // Before normalization: width_changed.
+    // DC 5282 clears this byte; 5300 sets it after growth and 5308 tests it.
+    unsigned char widthChanged;
+    do {
+        widthChanged = 0;
+        int lines = currentFont->lineLength(dialogInfo.m_dialogText.c_str(),
+                                    dialogInfo.m_textWidgetWidth);
+        dialogInfo.m_textWidgetHeight = currentFont->m_fs.m_height * lines;
+        if (maximumWidth <= dialogInfo.m_textWidgetWidth) {
+            dialogInfo.m_textWidgetWidth = maximumWidth;
             break;
         }
-        dialogInfo->m_textWidgetWidth = longestLine;
-        break;
-    }
-    if (dialogInfo->m_textWidgetHeight > 200) {
-        dialogInfo->m_textWidgetHeight = 200;
-        dialogInfo->m_textExpansion = true;
+        if (dialogInfo.m_textWidgetWidth < 578
+            && (dialogInfo.m_textWidgetHeight > 200
+                || 3 * dialogInfo.m_textWidgetHeight
+                       > 2 * dialogInfo.m_textWidgetWidth)) {
+            dialogInfo.m_textWidgetWidth =
+                min(3 * dialogInfo.m_textWidgetWidth / 2, 578);
+            widthChanged = 1;
+        } else {
+            dialogInfo.m_textWidgetWidth =
+                currentFont->longestWrappedLineWidth(
+                    dialogInfo.m_dialogText.c_str(),
+                    dialogInfo.m_textWidgetWidth);
+        }
+    } while (widthChanged);
+    if (dialogInfo.m_textWidgetHeight > 200) {
+        dialogInfo.m_textWidgetHeight = 200;
+        dialogInfo.m_textExpansion = true;
     }
 
-    dialogInfo->m_width =
-        (max(dialogInfo->m_width, dialogInfo->m_textWidgetWidth + 50) + 63)
-        & ~63;
-    if (dialogInfo->m_mbType == NORMAL_DIALOG_POPUP
-        && dialogInfo->m_width < 128)
-        dialogInfo->m_width = 128;
-    if (dialogInfo->m_mbType != NORMAL_DIALOG_POPUP
-        && dialogInfo->m_width < 256)
-        dialogInfo->m_width = 256;
-    dialogInfo->m_textWidgetWidth = dialogInfo->m_width - 50;
+    dialogInfo.m_width = max(dialogInfo.m_width, dialogInfo.m_textWidgetWidth + 50);
+    dialogInfo.m_width = (dialogInfo.m_width + 63) & ~63;
+    if (dialogInfo.m_mbType == NORMAL_DIALOG_POPUP
+        && dialogInfo.m_width < 128)
+        dialogInfo.m_width = 128;
+    else if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP
+        && dialogInfo.m_width < 256)
+        dialogInfo.m_width = 256;
+    dialogInfo.m_textWidgetWidth = dialogInfo.m_width - 50;
 
-    int boxHeight = dialogInfo->m_textWidgetHeight + 60;
+    int boxHeight = 60;
+    boxHeight += dialogInfo.m_textWidgetHeight;
     if (numIcons > 0) {
         boxHeight += 20;
         for (i = 0; i < iconRows; i++)
-            boxHeight += textRowHeight[i] + spriteRowHeight[i];
-        boxHeight += 20 * iconRows - 20;
+            boxHeight += labelHeight[i] + iconHeight[i];
+        boxHeight += 20 * (iconRows - 1);
     }
-    if (dialogInfo->m_mbType != NORMAL_DIALOG_POPUP)
+    if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
         boxHeight += 50;
-    dialogInfo->m_height = (boxHeight + 63) & ~63;
-    dialogInfo->m_height = max(dialogInfo->m_height, 128);
-    dialogInfo->m_textWidgetY += (dialogInfo->m_height - boxHeight) / 2;
-    if (dialogInfo->m_x == -1 || dialogInfo->m_x + dialogInfo->m_width >= 799)
-        dialogInfo->m_x = (800 - dialogInfo->m_width) / 2;
-    if (dialogInfo->m_y == -1 || dialogInfo->m_y + dialogInfo->m_height >= 599)
-        dialogInfo->m_y = (600 - dialogInfo->m_height) / 2;
+    dialogInfo.m_height = (boxHeight + 63) & ~63;
+    dialogInfo.m_height = max(dialogInfo.m_height, 128);
+    dialogInfo.m_textWidgetY += (dialogInfo.m_height - boxHeight) / 2;
+    if (dialogInfo.m_x == -1 || dialogInfo.m_x + dialogInfo.m_width >= 799)
+        dialogInfo.m_x = (800 - dialogInfo.m_width) / 2;
+    if (dialogInfo.m_y == -1 || dialogInfo.m_y + dialogInfo.m_height >= 599)
+        dialogInfo.m_y = (600 - dialogInfo.m_height) / 2;
     if (numIcons == 0)
         return;
 
-    int iconY = dialogInfo->m_height - textRowHeight[0] - 30;
-    if (dialogInfo->m_mbType != NORMAL_DIALOG_POPUP)
+    int iconY = dialogInfo.m_height - labelHeight[0] - 30;
+    if (dialogInfo.m_mbType != NORMAL_DIALOG_POPUP)
         iconY -= 50;
-    if (iconRows == DIALOG_ICON_MAX_ROWS)
-        iconY -= textRowHeight[1] + spriteRowHeight[1] + 20;
+    if (iconRows == g_dialogIconMaxRows)
+        iconY -= labelHeight[1] + iconHeight[1] + 20;
     int firstInRow = 0;
     for (i = 0; i < iconRows; i++) {
         int rowsLeft = iconRows - i;
         int inRow = (numIcons - firstInRow + rowsLeft - 1) / rowsLeft;
         switch (inRow) {
-        case DIALOG_ICON_ROW_SINGLE:
-            dialogInfo->m_icons[firstInRow].m_spriteX =
-                (dialogInfo->m_width
-                 - dialogInfo->m_icons[firstInRow].m_spriteWidth) / 2;
+        case g_dialogIconRowSingle:
+            dialogInfo.m_icons[firstInRow].m_spriteX =
+                (dialogInfo.m_width
+                 - dialogInfo.m_icons[firstInRow].m_spriteWidth) / 2;
             break;
-        case DIALOG_ICON_ROW_PAIR:
-            dialogInfo->m_icons[firstInRow].m_spriteX =
-                (dialogInfo->m_width - maxIconOverhang - 40) / 2
-                - dialogInfo->m_icons[firstInRow].m_spriteWidth;
-            dialogInfo->m_icons[firstInRow + 1].m_spriteX =
-                (dialogInfo->m_width + maxIconOverhang + 40) / 2;
+        case g_dialogIconRowPair:
+            dialogInfo.m_icons[firstInRow].m_spriteX =
+                (dialogInfo.m_width - spacing - 40) / 2
+                - dialogInfo.m_icons[firstInRow].m_spriteWidth;
+            dialogInfo.m_icons[firstInRow + 1].m_spriteX =
+                (dialogInfo.m_width + spacing + 40) / 2;
             break;
-        case DIALOG_ICON_ROW_TRIPLE:
-            dialogInfo->m_icons[firstInRow + 1].m_spriteX =
-                (dialogInfo->m_width
-                 - dialogInfo->m_icons[firstInRow + 1].m_spriteWidth) / 2;
-            dialogInfo->m_icons[firstInRow].m_spriteX =
-                dialogInfo->m_icons[firstInRow + 1].m_spriteX
-                - dialogInfo->m_icons[firstInRow].m_spriteWidth - 40;
-            dialogInfo->m_icons[firstInRow + 2].m_spriteX =
-                dialogInfo->m_icons[firstInRow + 1].m_spriteX
-                + dialogInfo->m_icons[firstInRow + 1].m_spriteWidth + 40;
+        case g_dialogIconRowTriple:
+            dialogInfo.m_icons[firstInRow + 1].m_spriteX =
+                (dialogInfo.m_width
+                 - dialogInfo.m_icons[firstInRow + 1].m_spriteWidth) / 2;
+            dialogInfo.m_icons[firstInRow].m_spriteX =
+                dialogInfo.m_icons[firstInRow + 1].m_spriteX
+                - dialogInfo.m_icons[firstInRow].m_spriteWidth - 40;
+            dialogInfo.m_icons[firstInRow + 2].m_spriteX =
+                dialogInfo.m_icons[firstInRow + 1].m_spriteX
+                + dialogInfo.m_icons[firstInRow + 1].m_spriteWidth + 40;
             break;
-        case DIALOG_ICON_ROW_QUAD:
-            dialogInfo->m_icons[firstInRow + 1].m_spriteX =
-                (dialogInfo->m_width - maxIconOverhang - 40) / 2
-                - dialogInfo->m_icons[firstInRow + 1].m_spriteWidth;
-            dialogInfo->m_icons[firstInRow].m_spriteX =
-                dialogInfo->m_icons[firstInRow + 1].m_spriteX
-                - dialogInfo->m_icons[firstInRow].m_spriteWidth - 40;
-            dialogInfo->m_icons[firstInRow + 2].m_spriteX =
-                (dialogInfo->m_width + maxIconOverhang + 40) / 2;
-            dialogInfo->m_icons[firstInRow + 3].m_spriteX =
-                dialogInfo->m_icons[firstInRow + 2].m_spriteX
-                + dialogInfo->m_icons[firstInRow + 2].m_spriteWidth + 40;
+        case g_dialogIconRowQuad:
+            dialogInfo.m_icons[firstInRow + 1].m_spriteX =
+                (dialogInfo.m_width - spacing - 40) / 2
+                - dialogInfo.m_icons[firstInRow + 1].m_spriteWidth;
+            dialogInfo.m_icons[firstInRow].m_spriteX =
+                dialogInfo.m_icons[firstInRow + 1].m_spriteX
+                - dialogInfo.m_icons[firstInRow].m_spriteWidth - 40;
+            dialogInfo.m_icons[firstInRow + 2].m_spriteX =
+                (dialogInfo.m_width + spacing + 40) / 2;
+            dialogInfo.m_icons[firstInRow + 3].m_spriteX =
+                dialogInfo.m_icons[firstInRow + 2].m_spriteX
+                + dialogInfo.m_icons[firstInRow + 2].m_spriteWidth + 40;
             break;
         }
         for (int k = 0; k < inRow; k++) {
-            dialogInfo->m_icons[firstInRow + k].m_textY = iconY;
-            dialogInfo->m_icons[firstInRow + k].m_spriteY =
-                iconY - dialogInfo->m_icons[firstInRow + k].m_spriteHeight;
-            dialogInfo->m_icons[firstInRow + k].m_textX =
-                dialogInfo->m_icons[firstInRow + k].m_spriteX
-                + (dialogInfo->m_icons[firstInRow + k].m_spriteWidth
-                   - dialogInfo->m_icons[firstInRow + k].m_textWidth) / 2;
+            dialogInfo.m_icons[firstInRow].m_textY = iconY;
+            dialogInfo.m_icons[firstInRow].m_spriteY =
+                iconY - dialogInfo.m_icons[firstInRow].m_spriteHeight;
+            dialogInfo.m_icons[firstInRow].m_textX =
+                dialogInfo.m_icons[firstInRow].m_spriteX
+                + (dialogInfo.m_icons[firstInRow].m_spriteWidth
+                   - dialogInfo.m_icons[firstInRow].m_textWidth) / 2;
+            // DC5430 advances the current icon before the inner backedge.
+            ++firstInRow;
         }
-        firstInRow += inRow;
-        iconY += textRowHeight[1] + spriteRowHeight[1] + 20;
+        iconY += labelHeight[1] + iconHeight[1] + 20;
     }
 }
 
@@ -5289,9 +5406,19 @@ void getQuickviewSize(const char* text, int* width, int* height)
     dialogInfo.m_y = -1;
     for (int i = 0; i < 8; i++)
         dialogInfo.m_icons[i].set(const_no_resource, 0);
-    calculateNormalDialogSize(&dialogInfo);
+    calculateNormalDialogSize(dialogInfo);
     *width = dialogInfo.m_width;
     *height = dialogInfo.m_height;
+}
+
+// DC kb.cpp:5478..5479 returns gpNormalDialogWindow. EventWindowHandler's
+// retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
+// ordinary helper in its owning TU and the DC source order after sizing.
+// Before normalization (function): GetCurrentNormalDialog.
+DC_ONLY(0xe5f60, 0x6)
+TDialogBox* getCurrentNormalDialog()
+{
+    return g_normalDialogWindow;
 }
 
 // TNormalDialogInfo's implicit destructor, which NormalDialog's by-value
@@ -5362,7 +5489,7 @@ void normalDialog(const char* text, int mbType, int x, int y,
     dialogInfo.m_icons[2].set(static_cast<EGameResource>(resType3) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra3);
     for (int i = 3; i < 8; i++)
         dialogInfo.m_icons[i].set(const_no_resource, -1);
-    calculateNormalDialogSize(&dialogInfo);
+    calculateNormalDialogSize(dialogInfo);
     doNormalDialog(dialogInfo);
 }
 
@@ -5751,7 +5878,7 @@ void extendedDialog(const char* text,
         for (; icon < 8; ++icon)
             dialogInfo.m_icons[icon].set(const_no_resource, -1);
 
-        calculateNormalDialogSize(&dialogInfo);
+        calculateNormalDialogSize(dialogInfo);
         doNormalDialog(dialogInfo);
     } while (shown < resources.size());
 }
