@@ -3887,6 +3887,11 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // Canonical BlackMarkets, TownPool and generator-vector writers remove the
 // remaining shared failure labels. Together with the readers, they raise Save
 // from 80.2448% to 96.5761%; older flattened/pinned observations above are historical.
+// Recovery bound: a 48-state local-type/lifetime family (six emitted objects)
+// leaves SavedGameHeader::reset/save expanded: Save spans 59.2838--59.6005%.
+// Reusing or scoping the byte buffer, the DC unsigned word/int size types,
+// early i and the native-bool writer result do not recover the retained calls.
+// The tiny peak does not fix the 0x750 versus 0x5c0 frame; source is unchanged.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
@@ -12650,7 +12655,8 @@ VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
 VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
-VA_COMPGEN(0x004cf960, 0x34, BITSET_TEST, Bitset4)
+// The shared bitset<4>::test at 0x4cf960 now expands here and remains
+// emitted in singleselectionwindow, alongside its retained _Xran body.
 VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 
 // Retail keeps this run of Dinkumware vector COMDATs between ResetGame and
@@ -12705,7 +12711,8 @@ VA_COMPGEN(0x004d1810, 0x15, BITSET_ANY, Bitset28)
 // Each retained _Xran body has a three-pop unreachable epilogue after its
 // noreturn throw call. Retail preserves those bytes before alignment; the
 // hand-admitted extents include them just as VC6's public symbols do.
-VA_COMPGEN(0x004d1850, 0xCB, BITSET_XRAN, Bitset4)
+// The bitset<4> copy at 0x4d1850 is enrolled in singleselectionwindow,
+// whose real retail feature-test callers retain the same specialization.
 // The 0x44-byte stride and calls into the generated CObjectType copy helpers
 // distinguish this specialization from the smaller CObject record.
 VA_COMPGEN(0x004d1920, 0x359, VECTOR_INSERT, CObjectType)
@@ -18010,7 +18017,8 @@ void CObjectType::~CObjectType()
 // Retained library bodies keep their canonical VA enrollments. Emission
 // must come from recovered callers and compiler state; the former dummy
 // class/STL callers and their inline-depth pin supplied no game behavior.
-VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
+// The bitset<70> cleanup at 0x4cfa10 still emits in hero and mapcell;
+// hero's markArtifactSpells also calls that retained address in retail.
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)

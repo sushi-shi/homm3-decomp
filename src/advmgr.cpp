@@ -11596,6 +11596,12 @@ VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 
+// <string>'s pointer/count assignment is shared with SendChat (0x4022e0).
+// Retail's hero assignment (0x406480) and getArmyHelpText (0x40abe0) call
+// it too. It expands in adventuremapwindow but remains naturally emitted
+// here: all 161 bytes agree outside four matching named call relocations.
+VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
+
 // COMDAT pairing: `logic_error::what`, byte-identical to this object's own
 // COMDAT over all five instructions - `mov eax,[ecx+0x10] / test / jne` and
 // the empty-string fall-through, which is `_Str.c_str()` on a string whose

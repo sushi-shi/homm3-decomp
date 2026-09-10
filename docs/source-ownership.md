@@ -67,6 +67,12 @@ remain visible; the private
 Editor-only alternatives are excluded, and ordinary inactive carcasses stay
 inactive. A compiler guard cannot exempt a written constructor, destructor or
 template specialization from ownership review.
+An explicit `@stub` placeholder comment inside an active definition is also
+fatal (`ACTIVE-STUB`), including unannotated helpers and header bodies.
+Inactive reference stubs remain allowed. Literal strings containing the marker
+and real empty constructors are not placeholders. This catches an integrated
+carcass stub even when its name, signature and source owner are all correct.
+
 Clang skips body semantics so
 its handling of VC6 local-variable lookup cannot change the source inventory;
 it supplies active declaration locations, and the scanner checks the following

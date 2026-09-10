@@ -183,12 +183,13 @@ DATA(0x0069e5ac) int g_soundCountCampaign;
 // Complete's retained call in ShowVideo's third close loads ECX=1 at
 // 0x598d6f before calling 0x5971b0. The body ignores that integer argument;
 // Dreamcast's no-argument four-byte stub cannot describe this later ABI.
+// Retail shares one serviceSounds tail across all four handle guards.
+// Combining the equivalent conditions avoids two source copies of the
+// now-visible header inline; its standalone retained-call residual remains.
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
 void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2)
-        g_soundManager->serviceSounds();
-    else if (g_binkVideo || g_binkVideo2)
+    if (g_smackVideo || g_smackVideo2 || g_binkVideo || g_binkVideo2)
         g_soundManager->serviceSounds();
 }
 
@@ -359,7 +360,7 @@ int videoPlay(int id, int x, int y, int w, int h)
         g_smackFrameReady = 0;
         return result;
     }
-    return playBinkVideo(id, x, y, w, h);
+    return BinkManager::playBink(id, x, y, w, h);
 }
 
 // E:\gamedcs\smackmgr.cpp:143
@@ -375,11 +376,11 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
         showVideo(id, x, y, w, h, a6, a7, a8);
     else
-        openBinkVideo(id, x, y, w, h, a6, a7);
+        BinkManager::openBink(id, x, y, w, h, a6, a7);
 }
 
 // E:\gamedcs\smackmgr.cpp:156
-// Retail's 225-byte body closes exactly with the canonical helper chain:
+// Retail's 225-byte body follows this canonical helper chain:
 // drain through VideoResume, service sound, CloseSmacker, then CloseBinkVideo.
 // Keep those ordinary source calls even where VC6 expands them. VideoResume
 // itself calls VideoSoundOnOff; the retained retail helpers and ShowVideo's
@@ -390,7 +391,9 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // Negative control: the former hand-expanded resume/close bodies capped this
 // row at 95.9231. Loop-spelling, cached-count, goto and guard permutations
 // could not recover the extra top test; restoring the calls does. No inline
-// keyword or per-site pragma is needed for this standalone exact body.
+// keyword or per-site pragma was needed at that earlier exact checkpoint.
+// With the canonical sound header visible, the shared guard recovery below
+// reaches 38.1538%; serviceSounds still expands where retail retains calls.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void videoClose()
 {
@@ -398,7 +401,7 @@ void videoClose()
         videoResume();
     g_soundManager->serviceSounds();
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
 }
 
 // E:\gamedcs\smackmgr.cpp:176
@@ -414,7 +417,7 @@ void videoNextFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            nextBinkFrame();
+            BinkManager::nextBinkFrame();
     }
     g_inVideoNextFrame = 0;
 }
@@ -429,7 +432,7 @@ void videoDrawCurrentFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            drawCurrentBinkFrame();
+            BinkManager::drawCurrentBinkFrame();
     }
 }
 
@@ -457,15 +460,21 @@ void videoPause()
 // VideoClose expansion (0x598af0 +0x284) expands this body and reaches
 // `call ?VideoSoundOnOff@@YIXH@Z` at 0x598d74, one level inside the
 // expansion, which a longhand `if (smk) sounds(); else if (bink) sounds();`
-// here could not produce. VideoSoundOnOff expands in this retained body,
-// which stays exact, but remains a call in ShowVideo's third close. Its
-// measured C1 cost is 57, above the free-inline threshold of 40.
+// here could not produce. At the earlier exact checkpoint VideoSoundOnOff
+// expanded in this retained body but remained a call in ShowVideo's third
+// close; its measured C1 cost was 57. Canonical sound-header visibility
+// changes the nested expansions; retain the ordinary source call here.
+// Recovery: combine the two early-outs while retaining short-circuit
+// evaluation, so a zero count is never decremented. Together with the shared
+// VideoSoundOnOff guard this raises VideoClose 7.6923 -> 38.1538 and
+// ShowVideo 39.1274 -> 67.8147; every other smackmgr score holds.
+// A 48-state family also tests nested guards and four drain-loop forms.
+// Those retain ten reproduced candidates but do not recover serviceSounds
+// as a call. The header helper and ordinary resume/close boundaries stay.
 VA(0x00597850, 0xAB)  // anchor-global, dc 0x14ac50
 void videoResume()
 {
-    if (g_videoPauseCount == 0)
-        return;
-    if (--g_videoPauseCount != 0)
+    if (g_videoPauseCount == 0 || --g_videoPauseCount != 0)
         return;
     if (g_smackVideo || g_smackVideo2)
         g_smackPaused = 0;
@@ -488,7 +497,7 @@ void videoRestart()
         SmackGoto(g_smackVideo, 1);
         SmackDoFrame(g_smackVideo);
     }
-    restartBinkVideo();
+    BinkManager::restartBink();
 }
 
 // E:\gamedcs\smackmgr.cpp:274
@@ -629,7 +638,7 @@ VA(0x00597c70, 0x84)  // anchor-global, dc 0x14ac64
 void videoShutDown()
 {
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
     if (g_videoFile3)
         CloseHandle(g_videoFile3);
     if (g_videoFile2)

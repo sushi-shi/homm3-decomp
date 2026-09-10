@@ -162,8 +162,10 @@ public:
                                unsigned long greenMask,
                                unsigned long blueMask);
     // Before normalization (function): BinkManager::OpenBink.
-    static void openBink(int id, int x, int y, int w, int h, int flags,
-                         bool updateScreen);
+    // DC dc:0x50a84 gives six ints followed by unsigned char, not bool.
+    // Retail stores the final low byte in the dirty-rectangle flag.
+    static void openBink(int id, int x, int y, int w, int h, int loop,
+                         unsigned char useDirtyRects);
     // Before normalization (function): BinkManager::DrawCurrentBinkFrame.
     static void drawCurrentBinkFrame();
     // Before normalization (function): BinkManager::RestartBink.
@@ -175,22 +177,6 @@ public:
     // Before normalization (function): BinkManager::PlayBink.
     static int playBink(int id, int x, int y, int w, int h);
 };
-
-// The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
-// smack set in smackmgr.cpp): the VideoPlay/VideoOpen bink arms and
-// the per-frame advance/draw/close/restart quartet.
-// Before normalization (function): PlayBinkVideo.
-int playBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
-// Before normalization (function): OpenBinkVideo.
-void openBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
-// Before normalization (function): NextBinkFrame.
-void nextBinkFrame();           // 0x44daa0
-// Before normalization (function): DrawCurrentBinkFrame.
-void drawCurrentBinkFrame();    // 0x44d9e0
-// Before normalization (function): CloseBinkVideo.
-void closeBinkVideo();          // 0x44dcc0
-// Before normalization (function): RestartBinkVideo.
-void restartBinkVideo();        // 0x44da50
 
 // Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
 // names provisional, mirrored from smackmgr.cpp's smack set).

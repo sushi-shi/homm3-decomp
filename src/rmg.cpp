@@ -8783,6 +8783,15 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
+// Canonical int-copy overloads shared with mapcell's BlackBoxData paths.
+// They expand there but remain naturally emitted by this TU's int vectors.
+// Retail addObject (0x5402a0) calls the mutable form from its costs worklist;
+// BlackBoxData assignment and the RMG helper cluster call the const form.
+// Each native overload matches all 37 admitted bytes without relocations.
+// Keep their distinct retained RVAs even though their machine code agrees.
+VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
+VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
+
 // Group placement transfers its contents at a chosen three-coordinate
 // offset. The retained routine updates object positions and map-cell state.
 // Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked

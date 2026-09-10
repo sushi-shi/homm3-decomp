@@ -570,14 +570,30 @@ extern soundManager* g_soundManager;
 // The prior ordinary .cpp definition retained the call decisions, but
 // contradicted the CodeView header owner; recover the natural caller/TU
 // inlining state without moving this body back or forcing its emission.
+// Recovery, 2026-09-09: the exact retained body is currently emitted in
+// singleselectionwindow.obj. Capture the stream after AIL_serve, as retail
+// does, and preserve its three ordered guards as nested scopes. This keeps
+// the retained member exact and recovers showVideo 67.8147 -> 94.1120;
+// every other tracked score holds across all 51 dependent TUs. The combined
+// guard control stays at 67.8147. No declaration or helper owner changes.
+// Definition-placement control: moving the existing Miles/global dependencies
+// before this class is code-identical; defining this same inline body inside
+// the class produces a second object identity but changes no tracked score
+// across all 51 consumers. NextBinkFrame still expands serviceSounds where
+// retail 0x44daa0 calls 0x59a7d0. Keep this placement and its proven guards.
 // Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
 VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
 inline void soundManager::serviceSounds()
 {
     EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();
-    if (g_mp3Stream && g_soundManager->m_mp3Playing && !g_shutDownDone)
-        AIL_service_stream(g_mp3Stream, 1);
+    void* stream = g_mp3Stream;
+    if (stream) {
+        if (g_soundManager->m_mp3Playing) {
+            if (!g_shutDownDone)
+                AIL_service_stream(stream, 1);
+        }
+    }
     Sleep(1);
     LeaveCriticalSection(&m_sectionSoundCall);
 }

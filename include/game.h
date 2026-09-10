@@ -900,6 +900,11 @@ enum EGameVersion {
     GAME_VERSION_SOD = 2
 };
 
+// Placement recovery control: moving this class beside its inline bodies,
+// or embedding the same bodies inside it there, does not recover the
+// retained Reset/Save calls in game::save. The three-state 64-TU family
+// preserves every field and helper; the embedded form only perturbs two
+// unrelated callers slightly downward. Keep the existing header structure.
 class SavedGameHeader {
 public:
     // Before normalization: id.

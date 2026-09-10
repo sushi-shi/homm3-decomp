@@ -8412,3 +8412,9 @@ VA_COMPGEN(0x0048d940, 0x26, VECTOR_UFILL, int)
 // COMDAT pairing: bitset<144>::test, agreement 1.000 at an exactly equal
 // 55-byte extent.
 VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
+
+// Retail loadMap, markArtifactSpells (0x4d9350) and readTownData share this
+// bitset<70> cleanup. It expands in game but remains naturally emitted here
+// and in mapcell. All 37 bytes agree, including the three-word fill and
+// six-bit high-word mask; there are no relocations or added source calls.
+VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)

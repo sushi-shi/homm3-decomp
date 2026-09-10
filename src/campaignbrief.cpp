@@ -1568,3 +1568,10 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
     m_scenarios.clear();
     freeData();
 }
+
+// This delete loop naturally retains ScenarioStruct's compiler-generated
+// deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign
+// call the shared 0x488eb0 copy. All 33 bytes and both calls agree: the
+// ordinary destructor stays at 0x485fe0 in customcampaign, then flags&1
+// gates operator delete. Move only the enrollment from the inlining consumer.
+VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)

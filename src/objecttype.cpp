@@ -1202,14 +1202,13 @@ VA_COMPGEN(0x00404660, 0x21, SCALAR_DELETING_DTOR, logic_error)
 VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
 VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 
-// COMDAT pairing: vector<TObjectType::TImageInfo>::insert(ptr, count,
-// const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
-// is this header's nested type and no other object instantiates the vector,
-// which is why the sizes agree to the byte.
-// GetIndex leaves only the two-argument overload emitted. The explicit
-// count claim stays unpaired then: that other body's ret 8 cannot name
-// this retail ret-12 body or inherit its exact-match identity.
-VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
+// The old count-insert claim at 0x46aeb0 named TImageInfo only because
+// its trivial 24-byte record produced the same generic vector code. Retail
+// callers are combatManager::placeObstacle and castSpell, both operating
+// on TObstacle. Their native count-insert bodies match all 740 retail bytes
+// outside the two verified new/delete relocations. The retained claim now
+// belongs to cmbtmgr's TObstacle specialization; no image-cache count-insert
+// call or explicit instantiation is introduced just to emit another copy.
 
 // SetImageName's insertion at 0x514760 retains the single-value overload.
 // Its six-dword elements, returned insertion position and ret 8 distinguish
@@ -1220,6 +1219,12 @@ VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
 // with TObstacleVector at 0x46b1a0/0x46b1e0/0x517750, and _Destroy agrees
 // with type_artifact at 0x404140. All four comparisons agree in every view.
 VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
+
+// This insertion and setupAndLoadObstacles (0x466290) both call 0x517750.
+// Retail retains the folded size helper here in the objecttype cluster.
+// The TObstacle copy expands in cmbtmgr; this native TImageInfo instance
+// matches all 33 retail bytes, with no relocations or added instantiation.
+VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.
