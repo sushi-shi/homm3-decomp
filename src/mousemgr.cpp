@@ -47,6 +47,22 @@ DATA(0x0067ff38) const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS]
 // Before normalization: gMouseHotSpots.
 DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 
+// DC mousemgr.cpp:291/298 attributes these bodies before the
+// manager's constructor. Retail retains both bodies while auto-inlining
+// their source calls. The four-form boundary family is caller-byte-flat;
+// ordinary ctor visibility also emits its previously missing retained body.
+// No explicit-inline proof supports the former in-class definitions.
+TCSLock::TCSLock(CRITICAL_SECTION* criticalSection)
+    : m_section(criticalSection)
+{
+    EnterCriticalSection(m_section);
+}
+
+TCSLock::~TCSLock()
+{
+    LeaveCriticalSection(m_section);
+}
+
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
 mouseManager::mouseManager()
@@ -204,7 +220,7 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 // The ??1TCSLock COMDAT, byte-identified: the whole body is
 // `mov eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`
 // - LeaveCriticalSection(this->section) with section at offset 0,
-// exactly the class-inline definition in mousemgr.h. Retail flushes
+// exactly the ordinary definition above. Retail flushes
 // the COMDAT here, right after SetPointer (its first user), not at the
 // DC tail position 0xff800; the ctor's copy lands later at 0x50d890 by
 // the same first-out-of-line-need rule. Our object already emits
@@ -212,7 +228,7 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
 void TCSLock::~TCSLock()
 {
-    // @stub - the definition lives inline in mousemgr.h
+    // @stub - the ordinary definition precedes mouseManager's constructor
 }
 
 #endif  // @carcass
@@ -578,6 +594,12 @@ void mouseManager::getPointerPosition()
 // function, following DC's ctor/dtor source rows 291/298) also emits one
 // object. Retain the canonical header under the project's single-view rule;
 // neither placement recovers the natural inline decision.
+// Follow-up: ordinary ctor/dtor definitions at DC source lines 291/298
+// retain every caller's bytes and emit the ctor body naturally. CheckUpdate
+// still over-expands that ctor at the nested HidePointer site.
+// The 16-state constructor/hotspot family emits six objects: body assignment
+// is byte-flat, while passing the parameter instead of m_section to Enter
+// drops CheckUpdate to 89.3669%. No variant restores the nested ctor call.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::checkUpdate()
 {
@@ -633,19 +655,19 @@ void mouseManager::checkUpdate()
 // E:\gamedcs\mousemgr.cpp:291
 // Byte-identified: the 25-byte body at 0x50d890 stores the CS* at
 // [this], EnterCriticalSection's it, and returns this - the
-// out-of-line copy of the inline ctor in mousemgr.h, which
+// retained body of the ordinary ctor above, which
 // CheckUpdate (+0x141) calls for its inner lock instead of inlining.
 // Retail emits it here, between CheckUpdate and LoadFrame, not at the
 // DC tail position (0xff7e0).
 // Historical 100% required CheckUpdate's block-scoped inline-depth pin.
 // With canonical ShowSystemCursor/HidePointer calls restored and the pin
-// removed, VC6 inlines every ctor use and emits no retained copy. Keep the
-// retail claim and its MAX/HIST rather than inventing a dummy reference or
-// another inline override; CheckUpdate documents the unresolved boundary.
+// removed, VC6 inlines every ctor use. The ordinary definition at its DC
+// source boundary now retains this body without a dummy reference or inline
+// override; CheckUpdate still documents the unresolved nested call decision.
 VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
 void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 {
-    // @stub - the definition lives inline in mousemgr.h
+    // @stub - the ordinary definition precedes mouseManager's constructor
 }
 
 #endif  // @carcass

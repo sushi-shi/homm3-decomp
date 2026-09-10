@@ -38,10 +38,16 @@ step_re = re.compile(r'(?P<var>lineDst|dst) =\s*'
     r'(?P<sign>[+-])\s*dpitch\)\);')
 
 
-def instrument(candidate):
+def instrument(candidate, extra_step=False):
     candidate, count = step_re.subn(lambda m: m['var'] + ' = checkedStep('
         + m['var'] + ', ' + ('-' if m['sign'] == '-' else '') + 'dpitch);', candidate)
-    assert count == 24, count
+    candidate, offsets = re.subn(r'(lineDst|dst) = static_cast<unsigned short\*>\('
+        r'static_cast<void\*>\(rowBase ([+-]) (.*?)\)\);',
+        lambda m: m[1] + ' = static_cast<unsigned short*>(static_cast<void*>(checkedStep('
+        + 'rowBase, ' + ('-' if m[2] == '-' else '') + '(' + m[3] + '))));', candidate)
+    assert count + offsets == 24 + extra_step, (count, offsets, extra_step)
+    candidate = re.sub(r'line = sourceRowBase \+ (.*?);',
+        r'line = checkedStep(sourceRowBase, \1);', candidate)
     return candidate.replace('line += m_pitch;', 'line = checkedStep(line, m_pitch);')
 
 
@@ -208,20 +214,25 @@ int main() {
 }
 '''.replace('@ADAPTER@', adapter)
 
-# Restore the old destination step in Draw alone for a precise negative
-# control: valid pixels are identical, but the unused final pointer is not.
-start = source.index('void CSpriteFrame::draw(', source.index('VA(0x0047c570'))
-end = source.index('\n}', start)+2
-draw = source[start:end]
-old_draw, count = re.subn(r'                if \(y \+ 1 == sy \+ sh\)\n                    break;\n', '', draw)
-assert count == 2, 'negative control expects the reviewed break-before-step draw'
-unguarded = source[:start]+old_draw+source[end:]
-reverse_pattern = re.compile(r'(?P<indent>^[ ]*)if \(y \+ 1 == sy \+ sh\)\n'
-    r'[ ]+break;\n(?P<step>[ ]*lineDst =\s*static_cast<unsigned short\*>\('
-    r'static_cast<void\*>\(\s*static_cast<unsigned char\*>\(\s*'
-    r'static_cast<void\*>\(lineDst\)\)\s*-\s*dpitch\)\);)', re.M)
-reverse_unguarded, reverse_count = reverse_pattern.subn(r'\g<step>', source)
-assert reverse_count == 2, reverse_count
+# Add one unused destination step after a completed forward/reverse loop.
+# The negative controls do not depend on the guard/offset representation.
+def final_step(name, loop_index, sign):
+    start = source.index('void CSpriteFrame::' + name + '(', source.index('VA(0x0047c570'))
+    end = source.index('\n}', start)+2
+    body = source[start:end]
+    loops = list(re.finditer(r'for \(int y = sy; y < sy \+ sh; \+\+y\) \{', body))
+    loop = loops[loop_index]
+    opening = body.index('{', loop.start())
+    depth, closing = 1, opening+1
+    while depth:
+        depth += (body[closing] == '{') - (body[closing] == '}')
+        closing += 1
+    statement = ('\n                lineDst = static_cast<unsigned short*>(static_cast<void*>('
+        'static_cast<unsigned char*>(static_cast<void*>(lineDst)) ' + sign + ' dpitch));')
+    return source[:start] + body[:closing] + statement + body[closing:] + source[end:]
+
+unguarded = final_step('draw', 0, '+')
+reverse_unguarded = final_step('drawTileShadow', 2, '-')
 variants = [('actual', source, 0), ('original-final-draw-step', unguarded, 2),
     ('original-final-reverse-step', reverse_unguarded, 2),
     ('wrong-palette-index', source.replace('palette[*src++]', 'palette[0]'), 1),
@@ -231,7 +242,7 @@ with tempfile.TemporaryDirectory(prefix='homm3-sprite-rows-') as directory:
     for opt in ('-O0', '-O2'):
         for name, candidate, expected in variants:
             implementation = scratch / (name + '.inc')
-            implementation.write_text(instrument(candidate))
+            implementation.write_text(instrument(candidate, name.startswith('original-final-')))
             path = scratch / (name + '.cpp')
             path.write_text(fixture.replace('@IMPLEMENTATION@', '#include "'+str(implementation)+'"'))
             binary = scratch / name

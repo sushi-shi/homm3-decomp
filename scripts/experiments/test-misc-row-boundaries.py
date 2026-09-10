@@ -5,16 +5,30 @@ kernels. This tests row/control plumbing, not malformed PCX streams or the
 Win32 ABI. Both independent pixel allocations and combined header/palette/
 pixel allocations are registered at their complete allocation boundaries.
 """
+import argparse
+import json
 from pathlib import Path
 import re
 import subprocess
 import tempfile
 
 root = Path(__file__).resolve().parents[2]
+parser = argparse.ArgumentParser()
+parser.add_argument('--variant', nargs=2, action='append', default=[], metavar=('MANIFEST', 'CHOICE'))
+args = parser.parse_args()
+sources = {}
+for manifest_path, choice in args.variant:
+    manifest = json.loads(Path(manifest_path).read_text())
+    path = manifest['source']
+    source = sources.get(path, (root / path).read_text())
+    assert len(manifest['axes']) == 1
+    axis = manifest['axes'][0]
+    assert source.count(axis['find']) == 1
+    sources[path] = source.replace(axis['find'], axis['options'][int(choice)].get('replace', axis['find']))
 
 
 def body(path, signature):
-    source = (root / path).read_text()
+    source = sources.get(path, (root / path).read_text())
     start = source.index(signature)
     return source[start:source.index('\n}', start) + 2]
 
@@ -30,8 +44,19 @@ enums = '\n'.join(re.findall(r'enum[^;]+;', victor, re.S))
 
 
 def instrument(source):
+    source = re.sub(r'\b(source|destination|sourceTop|sourceBottom|destinationTop|destinationBottom) = (\w+RowBase) ([+-]) ([^;]+);',
+        lambda m: f'{m[1]} = step({m[2]}, {"-" if m[3] == "-" else ""}ptrdiff_t({m[4]}));', source)
     return re.sub(r'(\b(?:sourceBlock|source|destination|sourceTop|sourceBottom|destinationTop|destinationBottom)) ([+-])= ([^;]+);',
                   lambda m: f'{m[1]} = step({m[1]}, {"-" if m[2] == "-" else ""}ptrdiff_t({m[3]}));', source)
+
+
+def after_loop(source, loop, statement):
+    opening = source.index('{', source.index(loop))
+    depth, end = 1, opening + 1
+    while depth:
+        depth += (source[end] == '{') - (source[end] == '}')
+        end += 1
+    return source[:end] + '\n' + statement + source[end:]
 
 
 fixture = r'''
@@ -214,9 +239,9 @@ int main() {
 '''
 fixture = fixture.replace('@ENUMS@', enums).replace('@CONSTANTS@', constants)
 variants = {'actual': puzzle + '\n' + flip + '\n' + pcx,
-    'unchecked-puzzle': puzzle.replace('            if (x + 32 < width)\n', '') + '\n' + flip + '\n' + pcx,
-    'unchecked-flip': puzzle + '\n' + flip.replace('                        if (!rows)\n                            break;\n', '') + '\n' + pcx,
-    'unchecked-pcx': puzzle + '\n' + flip + '\n' + pcx.replace('                if (rowsRemaining > 1)\n', ''),
+    'unchecked-puzzle': after_loop(puzzle, 'for (int y = 0;', '    source += m_pitch * 32;') + '\n' + flip + '\n' + pcx,
+    'unchecked-flip': puzzle + '\n' + after_loop(flip, 'while (rows--)', '                    sourceTop -= source->m_buffwidth;') + '\n' + pcx,
+    'unchecked-pcx': puzzle + '\n' + flip + '\n' + after_loop(pcx, 'while (rowsRemaining)', '            destination -= image->m_buffwidth;'),
     'wrong-puzzle-cell': puzzle.replace('*destinationBlock = 0;', '*destinationBlock = 1;') + '\n' + flip + '\n' + pcx,
     'wrong-flip-row': puzzle + '\n' + flip.replace('memcpy(destinationTop, sourceBottom, rowBytes)', 'memcpy(destinationTop, sourceTop, rowBytes)') + '\n' + pcx}
 with tempfile.TemporaryDirectory(prefix='homm3-misc-rows-') as directory:

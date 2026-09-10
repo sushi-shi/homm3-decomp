@@ -17,11 +17,8 @@ struct IDirectDrawSurface;
 class TCSLock {
 public:
     // Before normalization (locals): lpCriticalSection.
-    TCSLock(CRITICAL_SECTION* criticalSection)
-        : m_section(criticalSection) {
-        EnterCriticalSection(m_section);
-    }
-    ~TCSLock() { LeaveCriticalSection(m_section); }
+    TCSLock(CRITICAL_SECTION* criticalSection);
+    ~TCSLock();
 
     // Before normalization: section.
     CRITICAL_SECTION* m_section;

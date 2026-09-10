@@ -320,9 +320,9 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 // the zero in EBX across both tests (`cmp ecx,ebx`). Every block, branch and
 // frame slot pairs. All 24 declaration permutations of the four locals were
 // swept: the spread is 97.65 .. 97.71 and none reaches 100.
-// Row-boundary residual (75.4186%): guard both independent pitches before
-// forming the next row. Next-row guard 56.7442%, visited-row offset 69.7674%;
-// unchecked 97.7093% retained only as a search/negative control.
+// Row-boundary residual (82.5698%): independent integral byte displacements
+// in the for header form pointers only for visited rows. Final guards score
+// 75.4186%, next-row guards 56.7442%; unchecked 97.7093% is not a safe parent.
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
 void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
@@ -353,12 +353,15 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
         Bitmap16ConstMapPointer source;
         source.m_pixels = src;
         source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
-        for (int row = 0; row < h; ++row) {
+        unsigned char* dstRowBase = dst.m_bytes;
+        int dstRowOffset = 0;
+        const unsigned char* sourceRowBase = source.m_bytes;
+        int sourceRowOffset = 0;
+        for (int row = 0; row < h;
+             dstRowOffset += m_pitch, sourceRowOffset += srcPitch, ++row) {
+            dst.m_bytes = dstRowBase + dstRowOffset;
+            source.m_bytes = sourceRowBase + sourceRowOffset;
             memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-            if (row + 1 < h) {
-                dst.m_bytes += m_pitch;
-                source.m_bytes += srcPitch;
-            }
         }
     }
 }
@@ -434,9 +437,9 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
 // rectangle, one GetMap expression, RGB shift-mask construction, and nested
 // row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
 // a byte stride; the earlier unchecked 0xA4-byte body was exact.
-// Row-boundary residual (77.4203%): advance before a following row, preserving
-// the DC pixel loop/mask computation. Last-row guard 64.5072%, visited-row
-// offsets 64.3333%; the original final advance is deliberately not retained.
+// Row-boundary residual (82.6377%): an integral byte displacement advances
+// after each row, but the pointer is formed only on a visit. Next-row guards
+// score 77.4203%, last-row guards 64.5072%; the DC pixel/mask work is retained.
 VA(0x0044E5F0, 0xA4)
 void Bitmap16Bit::darken(int x, int y, int w, int h)
 {
@@ -454,15 +457,18 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
+        unsigned char* rowRowBase = row.m_bytes;
+        int rowRowOffset = 0;
         for (int iy = 0; iy < h; ++iy) {
-            if (iy)
-                row.m_bytes += m_pitch;
+            row.m_bytes = rowRowBase + rowRowOffset;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 *pixel.m_pixels = static_cast<unsigned short>(
                     (*pixel.m_pixels >> 1) & shiftMask);
                 ++pixel.m_pixels;
             }
+
+            rowRowOffset += m_pitch;
         }
     }
 }
@@ -597,9 +603,9 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
 // spelling is the one palette.obj's HSVToRGB is EXACT with, and dropping the
 // named `max`, taking ftol off __forceinline and swapping <limits> for
 // <limits.h>/INT_MAX are each byte-flat to the digit.
-// Row-boundary residual (94.6013%): next-row guard avoids the unused end+x
-// cursor. Last-row guard 94.5490%, visited-row offsets 92.7091%, unchecked
-// 98.8301%. The DC channel/helper scopes and existing FP residual remain;
+// Row-boundary residual (96.5654%): integral relative byte offsets avoid the
+// final end+x pointer. Next/last guards score 94.6013/94.5490%; unchecked
+// 98.8301% is not safe. The DC channel/helper scopes and FP residual remain;
 // native one-row differential tests cover all six hue sectors.
 VA(0x0044e940, 0x3B8)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
 void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
@@ -621,9 +627,10 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
+        unsigned char* rowRowBase = row.m_bytes;
+        int rowRowOffset = 0;
         for (int iy = 0; iy < h; ++iy) {
-            if (iy)
-                row.m_bytes += m_pitch;
+            row.m_bytes = rowRowBase + rowRowOffset;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 unsigned int b =
@@ -681,6 +688,8 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                     | ((b / blueNorm) & g_colorMaskBlue));
                 ++pixel.m_pixels;
             }
+
+            rowRowOffset += m_pitch;
         }
     }
 }

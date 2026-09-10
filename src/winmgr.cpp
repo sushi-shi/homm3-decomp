@@ -805,6 +805,8 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
 // its unused final row advance; the two zero-origin temporary walks may
 // end one-past. Four-form family: final guard 84.7843%, next-row guard
 // 84.6392%, screen-row origin 82.8078%, unchecked control 84.1098%.
+// Three fresh relative-row forms reproduce three objects: integral byte
+// offsets score 82.0667%, multiplied row indices 77.6471%; retain the guard.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        // Before normalization (locals): iFadeTime.

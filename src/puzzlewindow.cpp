@@ -246,6 +246,8 @@ unsigned char type_AI_puzzle_tile::operator==(
 // 32 bytes/rows allocated. The four-form family favors final guards (60.63%)
 // over next-sample guards (50.28%) and visited offsets (53.69%); retail's
 // unchecked 100% remains HIST, not a safe traversal alternative.
+// A fresh three-state relative-row family reproduces three objects: integral
+// byte offsets score 48.96%, multiplied row indices 33.43%; retain the guards.
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
@@ -290,23 +292,60 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
     }
 }
 
-#if 0  // @carcass: remaining AI/puzzle helpers are not reconstructed yet
-
-// E:\gamedcs\puzzlewindow.cpp:403
+// E:\gamedcs\puzzlewindow.cpp:403. Before normalization: mark_AI_puzzle.
+// Complete reads setup alignment directly and disposes through the bitmap
+// vtable; those retail operations override the older DC callees.
 DC_ONLY(0x115838, 0x10A)
-unsigned char mark_AI_puzzle(long player, unsigned char* visible)
+static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
-    // @stub
+    long puzzle;
+    if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
+        puzzle = 0;
+    if (g_game->m_ultimateArtifactX < 0 || !g_game->m_ultimateArtifactPresent)
+        return 0;
+    if (!g_game->setupPuzzlePieces(player, 0))
+        return 0;
+    memset(visible, 1, 17 * 19);
+    for (int i = 0; i < 48; ++i) {
+        if (g_puzzlePiecesRemoved[i])
+            continue;
+        int piece = g_puzzlePieceOrder[puzzle * 48 + i];
+        Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
+        // The same signed-word rows as UpdatePuzzle. In the historical
+        // pasted-body caller, separate row/piece indexing scored 97.1621%
+        // versus 96.6598% for flattened indices; retain that source evidence.
+        const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
+        const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
+        bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
+                            yCoordinate[piece] - 8);
+        bitmap->dispose();
+    }
+    return 1;
 }
 
-// E:\gamedcs\puzzlewindow.cpp:445
+// E:\gamedcs\puzzlewindow.cpp:445. Before normalization: create_AI_puzzle_map,
+// puzzle_x, puzzle_y, puzzle_map. DC proves the array reference and point local.
+// Complete's tile dimensions are 19x17, independently fixed by retail strides.
 DC_ONLY(0x115944, 0x12C)
-void create_AI_puzzle_map(long player, unsigned char* visible, long puzzle_x, long puzzle_y, []* puzzle_map)
+static void createAIPuzzleMap(long player, unsigned char* visible,
+                            long puzzleX, long puzzleY,
+                            type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
-    // @stub
-}
+    type_point point;
+    point.m_z = g_game->m_ultimateArtifactZ;
 
-#endif  // @carcass
+    for (int row = 0; row < 17; ++row) {
+        point.m_y = puzzleY + row;
+        for (int col = 0; col < 19; ++col) {
+            point.m_x = puzzleX + col;
+            if (point.isValid() && visible[row * 19 + col]) {
+                NewmapCell* mapCell = g_game->getCell(point);
+                puzzleMap[col][row] =
+                    type_AI_puzzle_tile(mapCell, point);
+            }
+        }
+    }
+}
 
 // E:\gamedcs\puzzlewindow.cpp:614
 // Retail expands the Dreamcast roster's mark_AI_puzzle (dc 0x115838) and
@@ -316,19 +355,18 @@ void create_AI_puzzle_map(long player, unsigned char* visible, long puzzle_x, lo
 // arrays: 19x17 sixteen-byte tiles at ebp-0x15d4 (0x1430) followed by the
 // 17x19 visibility mask at ebp-0x1a4 (0x143) and get_puzzle_bitmap's
 // forty-byte name buffer at ebp-0x60.
-// Residual (97.1621%): a FOUR-BYTE frame surplus - 0x15d8 against retail's
-// 0x15d4 - and nothing else. Every named local already lands on retail's
-// own slot (result -0xc, current -8, best/player -0x24, guess/index/origin
-// and the double temp all coalesced onto -0x2c, the two loop-invariant
-// bitfield temps on -0x20/-0x1c); the surplus is the hidden UDT return
-// slot, which retail folds onto `point` (both at -0x14, .z written at
-// -0x12) and our CL keeps separate at -0x38, pushing point to -0x18 and
-// the two word temps off by four. Tried and rejected: initialising `point`
-// FROM the call and copying origin out of it (95.1416), declaring `point`
-// ahead of `origin` (97.1621, declaration order is canonicalised as
-// recorded), and dropping the named NewmapCell* so the cell lookup feeds
-// the constructor directly (95.3630 - and the frame stayed 0x15d8, so the
-// named local is not the surplus either).
+// Residual (89.3151%): the recovered ordinary helpers expose nested
+// bitset::test and NewfullMap::cell expansions where retail retains calls.
+// The six-state boundary family scores flattened control 97.1621%, mark
+// alone 95.2785%, create alone 91.2100% (named cell) / 88.8128% (direct),
+// both 89.3151% / 86.9292%. Preserve the positive helper/array-reference
+// evidence and remove the two old caller pins rather than pasting bodies.
+// The frame is now 0x15dc versus retail 0x15d4. Twelve subsequent flat-visible
+// owner/compound-guard/origin-construction states emit four objects; neither
+// compound guards nor direct initialization improve it, and assignment loses
+// to 86.79%. The historical flattened 97.1621% remains in HIST.
+// DC proves visible is a flat unsigned char[156] in its 13x12 revision;
+// Complete retains that ownership with 19*17 bytes, not row subobjects.
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {
@@ -338,56 +376,12 @@ type_point aiAttemptPuzzleGuess(long player)
     double uncovered =
         found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
     if (g_puzzleGuessThreshold[g_game->m_setup.m_difficulty] <= uncovered) {
-        long puzzle;
-        if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
-            puzzle = 0;
-
-        if (g_game->m_ultimateArtifactX >= 0 &&
-            g_game->m_ultimateArtifactPresent &&
-            g_game->setupPuzzlePieces(player, 0)) {
-            // DC 0x115f64: visible is a flat unsigned char[156] (13*12
-            // there, 19*17 in Complete), not an array of row subobjects.
-            // Flat ownership is byte-identical; a named row view is 97.1552%.
-            unsigned char visible[17 * 19];
-            memset(visible, 1, sizeof(visible));
-
-            for (int i = 0; i < 48; ++i) {
-#pragma inline_depth(0)
-                if (g_puzzlePiecesRemoved.test(i))
-                    continue;
-#pragma inline_depth()
-                int piece = g_puzzlePieceOrder[puzzle * 48 + i];
-                Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
-                // The same signed-word rows as UpdatePuzzle. Keeping row
-                // and piece indexing separate preserves the prior 97.1621%
-                // peak; the flattened-index control is 96.6598%.
-                const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
-                const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
-                bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
-                                    yCoordinate[piece] - 8);
-                bitmap->dispose();
-            }
-
+        unsigned char visible[17 * 19];
+        if (markAIPuzzle(player, visible)) {
             type_point origin = g_game->getPuzzleOrigin();
             type_AI_puzzle_tile puzzleMap[19][17];
 
-            type_point point;
-            point.m_z = g_game->m_ultimateArtifactZ;
-
-            for (int row = 0; row < 17; ++row) {
-                point.m_y = origin.m_y + row;
-                for (int col = 0; col < 19; ++col) {
-                    point.m_x = origin.m_x + col;
-                    if (point.isValid() && visible[row * 19 + col]) {
-#pragma inline_depth(0)
-                        NewmapCell* mapCell = g_game->m_worldMap.cell(
-                            point.m_x, point.m_y, point.m_z);
-#pragma inline_depth()
-                        puzzleMap[col][row] =
-                            type_AI_puzzle_tile(mapCell, point);
-                    }
-                }
-            }
+            createAIPuzzleMap(player, visible, origin.m_x, origin.m_y, puzzleMap);
 
             type_point guess = matchPuzzle(player, puzzleMap);
             if (guess.m_x < 0)
