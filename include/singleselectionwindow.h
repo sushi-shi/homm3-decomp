@@ -692,7 +692,9 @@ public:
     unsigned char isVersionCompatible(const char* otherVersion);
     // Before normalization (function): TSingleSelectionWindow::HandleNetMsg.
     // Before normalization (locals): pNetMsg.
-    unsigned char handleNetMsg(CNetMsg* netMsg, unsigned char* cancel);
+    // DC public QAA_NPAVCNetMsg@@AA_N proves bool return / bool& cancel;
+    // its byte-valued CodeView storage does not imply a pointer interface.
+    bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
     // Before normalization (function): TSingleSelectionWindow::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     int onWidgetDeselect(message* msg, unsigned char* exitFlag,
@@ -729,6 +731,8 @@ public:
     // Before normalization (function): TSingleSelectionWindow::OnNewPlayerMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
+    // DC ordinary OnNewMapHeaderInfo, source line 6968; QAA_N return.
+    bool onNewMapHeaderInfo(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoInitMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onGameHeaderInfoInitMsg(CNetMsg* netMsg);

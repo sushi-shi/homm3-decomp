@@ -3984,7 +3984,7 @@ singleselectionwindow	?go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.000
 singleselectionwindow	?go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70	4535974f534d
 singleselectionwindow	?handleMessage@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0	4008f2ef8b30
 singleselectionwindow	?handleNetMsg@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x18e340	04f2428959f8
-singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@PAE@Z	89.7408	89.7408	90.2212	0x1887a0	56142e2c61ff
+singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z	90.0449	90.0449	90.2212	0x1887a0	6301f3649bfa
 singleselectionwindow	?handleRequests@CNewPlayerUpdateProc@@QAEXXZ	100.0000	100.0000	100.0000	0x178010	1972e301cd66
 singleselectionwindow	?hasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70	cdf0d8b9fa40
 singleselectionwindow	?headerConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270	b4c13180ad59
@@ -4011,7 +4011,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
@@ -4072,7 +4072,7 @@ singleselectionwindow	?updateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	1
 singleselectionwindow	?updatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x188330	89229e6a2847
 singleselectionwindow	?updateTown@TSingleSelectionWindow@@QAEXHW4TTownType@@E@Z	100.0000	100.0000	100.0000	0x18cd50	e6d027e7d4eb
 singleselectionwindow	?windowFn00582e90@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90	2ce927fe4fff
-singleselectionwindow	?windowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187d00	ac91b20eacd5
+singleselectionwindow	?windowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187d00	da44cd453696
 singleselectionwindow	?write@CGameHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177950	84d12e0b8d8b
 singleselectionwindow	?write@CNewMapHeaderInfoMsg@@UBEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a30	34e6c0a3e99b
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpdateTask	0.0000	0.0000	0.0000	0x183ec0	-

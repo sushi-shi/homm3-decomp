@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 213 | 76 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 208 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 212 | 77 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 207 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 448 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 446 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 70 active inline overrides were removed; counting
-all 76 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 71 active inline overrides were removed; counting
+all 77 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1169,6 +1169,38 @@ and every incoming MAX/HIST peak. Relative to that branch, this change still
 has only the two disclosed current-score movements. Callback, owner-payload,
 horde-row and DrawBolt behavioral/negative tests pass on the combined tree;
 the override and union counts remain 213 and 63.
+
+### Lobby map-header receive ownership
+
+`TSingleSelectionWindow::handleNetMsg` now calls the ordinary
+`onNewMapHeaderInfo` helper attested at DC line 6529 / definition line 6968.
+Complete's later serialized receiver uses the already modeled
+`CNewMapHeaderInfoMsg`: construct, receive, call `setupOrigData`, and clean up.
+The former flattened arm omitted the receive entirely and pinned only a bare
+header constructor. Recovering the real owner removes that depth-zero region.
+The dispatcher and its caller also recover DC's `bool` / `bool&` interface;
+that atomic interface edit is byte-identical in all four header consumers.
+
+The [four-state receive family and 32-state deletion follow-up](source-families.md#lobby-map-header-receiver-and-dispatcher-overrides)
+reproduce every state. The helper recovery raises the dispatcher **89.7408%
+to 90.0449%**, restores `CEnterNameEdit::onKillFocus` **99.871% to 100%**, and
+leaves all other tracked current scores unchanged. The ordinary helper
+expands naturally and its first **62 instruction bytes** agree with retail;
+the remaining destructor expansion is documented beside the dispatcher.
+None of the 14 other individual depth-region deletions, their all-removed
+control, or their combinations with the adjacent auto-inline deletion
+preserves the new score. Those are bounded negative controls, not proof that
+the remaining overrides are necessary in the original source.
+
+The full build and gates pass at **4087/4764 exact**, **96.44% linked** and
+**96.43% whole-image**. No MAX/HIST value falls. All four production objects
+reproduce the selected source family's bytes and relocation destinations.
+The actual helper, receive bridge and virtual reader pass **1,920 native
+receive/lifetime cases** and six negative controls at both optimization
+levels. The census is **212 overrides in 27 TUs** (207 depth-zero, five
+auto-inline-off), **424 source pragma directives** plus 22 header packing
+directives, and **63 unions**. Relative to the user's 253/72 checkpoint,
+**41 overrides and nine unions have been removed**.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
