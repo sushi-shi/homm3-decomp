@@ -59,6 +59,7 @@ model cannot rot.
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
 | `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
+| `docs/vc6/variadic-members.md` | byte-proven variadic member ABI; stack receivers do not imply free functions |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
 | `docs/vc6/goto-audit.md` | [goto audit](goto-audit.md): source census, canonical-helper/structured-loop reductions, and measured limits |
 | `docs/vc6/address-arithmetic-audit.md` | [address-arithmetic audit](address-arithmetic-audit.md): canonical member/array access, retained byte-stream arithmetic, and measured collateral |

@@ -32,11 +32,19 @@ struct Players {
     void deletePlayer(int id) {events.push_back(2);valid &= id==91;m_humanPlayers[0].m_playerPos=-1;}
 };
 struct Manager {void playerDropped(int id) {events.push_back(4);valid &= id==91;}} manager;
-struct Text {const char* getText(int id) {events.push_back(id);return "text";}} text;
+struct Text {
+    const char* getText(int id) {events.push_back(id);return "text";}
+    const char* operator[](int id) {return getText(id);}
+} text;
 Text* g_generalText=&text;
-int g_chatMan;
-void playerDropMsg(int* chat,const char* message,const char* name) {
-    events.push_back(5);valid &= chat==&g_chatMan && std::strcmp(message,"text")==0 && std::strcmp(name,"Alice")==0;
+struct Chat {void playerDropMsg(const char* message,const char* name);} g_chatMan;
+void Chat::playerDropMsg(const char* message,const char* name) {
+    events.push_back(5);valid &= this==&g_chatMan && std::strcmp(message,"text")==0 && std::strcmp(name,"Alice")==0;
+}
+// Historical frozen source used an explicit receiver. Keep that test adapter
+// so --source can still validate the original controls after interface recovery.
+void playerDropMsg(Chat* chat,const char* message,const char* name) {
+    chat->playerDropMsg(message,name);
 }
 void destroyMsg(CNetMsg* msg) {events.push_back(10);valid &= msg->m_dpidFrom==91;}
 void normalDialog(const char*,int kind,int x,int y,int a,int b,int c,int d,int e,int f,int g,int h) {

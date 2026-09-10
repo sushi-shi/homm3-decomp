@@ -585,7 +585,7 @@ void CChatManager::playerEnterMsg(const char* cChatMsg)
 // SendIt tail survives; RemoteCleanup arrives as the ClearChat fill loop
 // over twenty 0x88-byte CChatStr records and the DirectPlay teardown.
 //
-// EXACT (2026-09-06). Two recovered source boundaries close the old 50.55%
+// Historical EXACT (2026-09-06). Two recovered source boundaries close the old 50.55%
 // residual without changing the Dreamcast switch order:
 // - RemoteCleanup calls the ordinary CChatManager::ClearChat (DC line 1412),
 //   rather than flattening it into a synthetic force-inline forwarding helper.
@@ -601,6 +601,13 @@ void CChatManager::playerEnterMsg(const char* cChatMsg)
 //   stack/frame operands are the entire 99.9543% residual. The temporary
 //   restores all ten. Taking its address is accepted by the retail VC6
 //   dialect; the object lives through TransmitRemoteDataDPID's full expression.
+// Current collateral (2026-09-10): restoring the DC-proven variadic members
+// AddChat/PlayerDropMsg makes AddChat exact but moves this unchanged body's
+// CUR to 82.7580%; MAX/HIST retain 100%. Both sides still have the same 13
+// direct and three indirect calls. The candidate now homes this on the stack
+// (frame 0x13c versus 0x138) and changes cleanup store/deque CFG lowering
+// (24 versus 26 blocks); this is not a missing AddChat call. Keep the proven
+// member interfaces; see docs/vc6/variadic-members.md for the ABI control.
 // Before normalization (locals): pNetMsg, sTemp.
 VA(0x00552db0, 0x28F)  // anchor-caller(PollRemote 0x552b60) + anchor-callee(SendIt/AddChat/ShutDown) + dc-order-map, dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
@@ -1005,20 +1012,18 @@ void CChatManager::shutDown()
 }
 
 // E:\gamedcs\remote.cpp:857
-// Retail PC lowers the DC member formatter to a cdecl free function with the
-// manager explicit. Besides maintaining the twenty-entry ring, it restarts
-// chat.wav only when the previous Miles handle has stopped.
-// Residual (96.63%): semantics, all blocks/branches and the sound tail agree;
-// only the msgArray base is scheduled one instruction later around strncpy,
-// which then swaps equivalent base/index encodings on the two following
-// stores. Tried a named base pointer, a named destination pointer, keeping
-// the base live across all three accesses, and repeating the full ring index;
-// 96.63% is the plateau (the latter two fall to 89.74% and 70.99%). The
-// model-backed register pass agrees that ESI/EDI first definitions already
-// match retail and classifies the residual after them as an address-folding
-// schedule, not a source-nameable allocation lever.
+// DC proves member ownership and ellipsis. VC6's variadic member ABI puts
+// this at [ebp+8], just like the former free-function model; the byte-proven
+// ABI control is documented in docs/vc6/variadic-members.md. Besides the
+// twenty-entry ring, this restarts chat.wav when the Miles handle has stopped.
+// Exact with member ownership and the canonical GetNextFreeMsgNbr call.
+// The former free/flattened model stopped at 96.6326%, scheduling msgArray
+// one instruction late and changing its following base/index encodings.
+// Named base/destination probes did not fix that model; keeping the base
+// live or repeating the ring expression fell to 89.74%/70.99%. The recovered
+// source interface/helper resolves that apparent address-folding wall.
 VA(0x00553840, 0x11B)  // anchor-callees + arity/order-map, dc 0x11c3a8
-void __cdecl addChat(CChatManager* manager, const char* format, ...)
+void CChatManager::addChat(const char* format, ...)
 {
     char chatText[1024];
     va_list args;
@@ -1026,37 +1031,35 @@ void __cdecl addChat(CChatManager* manager, const char* format, ...)
     vsprintf(chatText, format, args);
 
     bool atNewestMessage = false;
-    if (manager->m_position == manager->m_msgCount - 1)
+    if (m_position == m_msgCount - 1)
         atNewestMessage = true;
 
-    if (manager->m_msgCount >= 20) {
-        manager->m_msgArray[manager->m_currMsg].m_killTime = 0;
-        manager->m_currMsg = (manager->m_currMsg + 1) % manager->m_maxLines;
-        --manager->m_msgCount;
+    if (m_msgCount >= 20) {
+        m_msgArray[m_currMsg].m_killTime = 0;
+        m_currMsg = (m_currMsg + 1) % m_maxLines;
+        --m_msgCount;
     }
 
-    // Complete changed DC's member formatter into this free function, so its
-    // private GetNextFreeMsgNbr call necessarily became the proven equivalent
-    // expression when `manager` became explicit.
-    int msgNbr = (manager->m_currMsg + manager->m_msgCount) % manager->m_maxLines;
-    strncpy(manager->m_msgArray[msgNbr].m_text, chatText, 127);
-    manager->m_msgArray[msgNbr].m_killTime = 0;
-    manager->m_msgArray[msgNbr].m_isSystem = manager->m_isSysMsg;
-    ++manager->m_msgCount;
+    // DC line 880 calls the protected canonical helper; retail expands it.
+    int msgNbr = getNextFreeMsgNbr();
+    strncpy(m_msgArray[msgNbr].m_text, chatText, 127);
+    m_msgArray[msgNbr].m_killTime = 0;
+    m_msgArray[msgNbr].m_isSystem = m_isSysMsg;
+    ++m_msgCount;
     if (atNewestMessage)
-        manager->m_position = manager->m_msgCount - 1;
-    manager->m_changed = 1;
+        m_position = m_msgCount - 1;
+    m_changed = 1;
 
-    if (!manager->m_isSysMsg) {
-        if (manager->m_chatMemSample
+    if (!m_isSysMsg) {
+        if (m_chatMemSample
             && g_soundManager->getSampleInfo(
-                manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+                m_chatMemSample, AIL_SAMPLE_PLAYING))
             return;
-        sample* chatSample = manager->m_chatSample;
+        sample* chatSample = m_chatSample;
         if (chatSample) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(chatSample);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
@@ -1064,8 +1067,8 @@ void __cdecl addChat(CChatManager* manager, const char* format, ...)
 }
 
 // E:\gamedcs\remote.cpp:904
-// Retail PC again lowers the DC member varargs function to a free cdecl
-// formatter. The display guard is IsClose(59000) inlined together with the
+// Legacy explicit-receiver declaration, not proven free ownership (see
+// docs/vc6/variadic-members.md). The display guard is IsClose(59000) with the
 // adventure-suspended and popup checks; the sound tail prefers timeover.wav
 // and falls back to chat.wav. A positive display scope removes the
 // skip-chat goto with identical VC6 scores throughout this TU, retaining
@@ -1105,7 +1108,7 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
             g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
             chatText);
         manager->m_isSysMsg = 1;
-        addChat(manager, finalText);
+        manager->addChat(finalText);
         manager->m_isSysMsg = 0;
     }
 
@@ -1142,7 +1145,7 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
         chatText);
 
     manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
+    manager->addChat(finalText);
     sample* sampleToPlay = manager->m_sysMsgSample;
     manager->m_isSysMsg = 0;
 
@@ -1164,7 +1167,7 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
 // Same formatter/ring path, with playexit.wav and a deliberately late
 // isSysMsg clear shared by every sound-path exit.
 VA(0x00553b60, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c5bc
-void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...)
+void CChatManager::playerDropMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1177,24 +1180,24 @@ void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
-    sample* sampleToPlay = manager->m_playerDropSample;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_playerDropSample;
 
-    if (!(manager->m_chatMemSample
+    if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
-              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
+              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->m_chatSample;
+            sampleToPlay = m_chatSample;
         if (sampleToPlay) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(sampleToPlay);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:990
@@ -1214,7 +1217,7 @@ void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
         chatText);
 
     manager->m_isSysMsg = 1;
-    addChat(manager, finalText);
+    manager->addChat(finalText);
     sample* sampleToPlay = manager->m_playerEnterSample;
 
     if (!(manager->m_chatMemSample
@@ -1274,8 +1277,8 @@ int CChatManager::getNextMsgNbr(int msgNbr)
 #endif  // @carcass
 
 // E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
-// Complete's free AddChat retains the first one's equivalent expression;
-// retail /Ob2 expands the second at both surviving KillOldChat call sites.
+// AddChat uses the first canonical helper; retail /Ob2 also expands the
+// second at both surviving KillOldChat call sites.
 inline int CChatManager::getNextFreeMsgNbr()
 {
     return (m_currMsg + m_msgCount) % m_maxLines;
@@ -1773,8 +1776,7 @@ void sendChat(const char* chatString, int toWho)
             recipientName = DATA_COMPGEN(
                 0x00682b54, chatUnknownRecipient, "???");
 
-        addChat(
-            &g_chatMan,
+        g_chatMan.addChat(
             DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
                          "%s: (%s:%s) %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
@@ -1788,8 +1790,7 @@ void sendChat(const char* chatString, int toWho)
             chatString);
         outgoingChat = transformedChat;
     } else {
-        addChat(
-            &g_chatMan,
+        g_chatMan.addChat(
             DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
             chatString);
@@ -1807,7 +1808,7 @@ void sendChat(const char* chatString, int toWho)
 VA(0x00554a20, 0x21)  // anchor-callee (AddChat 0x553840), dc 0x11d1c8
 void receiveChat(char* chatString, int fromPlayer)
 {
-    addChat(&g_chatMan, DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+    g_chatMan.addChat(DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
         g_game->getPlayerName(fromPlayer), chatString);
 }
 
@@ -2646,7 +2647,7 @@ void handlePlayerDrop(unsigned long dpid)
     g_logFile.log(DATA_COMPGEN(0x00682df8, handlingPlayerDropLog,
                             "Handling player drop [%d]"),
                 dpid);
-    playerDropMsg(&g_chatMan,
+    g_chatMan.playerDropMsg(
                   g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED),
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();

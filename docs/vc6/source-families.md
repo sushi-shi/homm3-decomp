@@ -3933,6 +3933,9 @@ flattened-helper differences are open reconstruction work, not TU closure.
 
 ## Lobby player helpers and the nested GetPlayer wall
 
+The bounded wall below is superseded by [the exact dispatcher recovery](#lobby-dispatcher-exact-recovery).
+Its measurements remain valid for the frozen, partially flattened source.
+
 `generate-lobby-player-helpers-family.py` crosses three binary decisions:
 restore both ordinary `getThisPlayer` calls, restore ordinary bool
 `onPlayerDroppedMsg`, and remove the existing `HeaderRequested` auto-inline
@@ -4005,6 +4008,92 @@ normal checkpoint and README. This preserves `CUR <= MAX <= HIST` and keeps
 historical peaks separate from the current implementation's MAX. Completing a
 family or getting every currently tracked row exact does not prove whole-TU
 source completeness.
+
+## Lobby dispatcher exact recovery
+
+`TSingleSelectionWindow::handleNetMsg` (`0x5887a0`, 2541 retail bytes) reaches
+**100% from 85.9516%** using the recovered ordinary helper interfaces and
+natural VC6 inlining. All eleven remaining dispatcher depth-zero regions and
+the adjacent `HeaderRequested` auto-inline override are removed. This is a
+function match, not closure of `singleselectionwindow`.
+
+The `generate-netmsg-*-family.py` experiments exhaust 235 meaningful source
+states, with successful unchanged/opposite-corner controls and reproduced
+elites. Object counts below are within each context, not distinct across the
+whole campaign. Header families score all four consumers (416 rows); local
+families score the entire owning TU.
+
+| Family | Frozen context | States | Objects | Reproduced elites |
+| --- | --- | ---: | ---: | ---: |
+| handlers | `b4ce1465164a776c371e` | 64 | 64 | 10 |
+| counts | `199f00d289c8576af6df` | 64 | 64 | 10 |
+| host | `32622357a6e52e423acc` | 4 | 4 | 4 |
+| transfer-owner | `db87d2dd3025b5b79268` | 8 | 8 | 8 |
+| access | `897bef01d8c7a53db259` | 64 | 8 | 8 |
+| lifetimes | `8f4fee6ebe53302522fc` | 27 | 1 | 1 |
+| delete-owner | `27626b887f8aeb6daeaa` | 4 | 2 | 2 |
+
+Positive DC evidence restores the scroll, header-end, confirmation/request,
+click and hero-handler calls, their bool interfaces and guarded lifetimes.
+The initial handlers manifest accidentally changed the disabled ReceiveChat
+carcass rather than its active definition; its score therefore does not
+demonstrate the active chat early-return form. The follow-up corrects that
+anchor and tests the active definition. Canonical text-resource `operator[]`
+calls and protected manager query methods also survive, even where byte-flat.
+
+The Complete-only header request is modelled as a manager operation, matching
+the existing NewPlayer ownership pattern: the manager chooses a free slot,
+constructs its specialization, publishes the pointer and starts that job.
+`requestMapHeaders` is explicitly a provisional name/ownership inference;
+the protected DC `GetFirstAvailable` signature corroborates manager ownership.
+The chosen form retains the retail specialization constructor and all three
+nested `GetPlayer` calls without pins, at 96.4597%.
+
+Variadic `CChatManager::AddChat` and `PlayerDropMsg` retain their DC member
+interfaces; stack-passed `this` does not imply a free function. The isolated
+[VC6 ABI control](variadic-members.md) verifies this. Restoring AddChat's
+canonical `GetNextFreeMsgNbr` call also takes its own body from 96.6326% to
+100%. Both host-query interfaces and the DirectPlay boolean storage match the
+DC mangling and retail's byte-return body. Reply-construction, query-local and
+sort-boolean alternatives in the 27-state lifetime family emit one identical
+object; none is adopted merely to change the compiler budget.
+
+The used selected-record binding in DeletePlayer is a **Complete-era lifetime
+hypothesis**, not a recovered DC local. Direct indexing, pointer, reference
+and const-pointer forms all reproduce its standalone body. The latter three
+produce one identical caller object, retaining DeletePlayer and raising the
+dispatcher to 99.9885%; direct indexing leaves 96.4597%. No dummy operation,
+false inline declaration or invented assertion is involved.
+
+The last 0.0115% is a semantic jump-table error: every one of the 85 instruction
+blocks already agrees. Decode the byte index at function `+0x998` and the
+dword table at `+0x914`: subtype 1045 (`RS_LAUNCHING_GAME`) selects entry
+`+0x974`, destination `+0x795`, title 534; subtype 1082
+(`RS_GAME_TRANSMIT_PENDING`) selects entry `+0x988`, destination `+0x6d4`,
+title 731. The old source swapped these labels. Correcting just the labels,
+preserving both bodies and their physical order, closes the match.
+
+Native extracted-source tests pass at both `-O0` and `-O2`:
+
+- `test-netmsg-transfer-owner.py`: 288 cases across the eight frozen forms,
+  36 in the adopted source, five rejected negative controls.
+- `test-netmsg-delete-owner.py`: 192 cases across four forms, 48 in the
+  adopted source, five rejected controls.
+- `test-netmsg-wait-arms.py`: 32 sender/cancel/lifetime cases, four rejected
+  controls including the old swapped labels.
+- `test-chat-member-interfaces.py`: 12,288 ring/format/flag/sound cases,
+  six rejected controls.
+- Existing player-helper and map-header tests: 146 and 1,920 cases,
+  six rejected controls each.
+
+These are reduced behavioral fixtures, not x86 ABI or complete protocol tests.
+The full VC6 build passes every gate at **4091/4764 exact**, **96.45% linked**,
+**96.44% whole-image**, with 193 depth-zero regions and four auto-inline-off
+regions remaining project-wide. Current collateral is recorded, not hidden:
+`handleLowLevelMsg` falls 100% to 82.7580% after the member-interface recovery;
+its call stream agrees but frame/cleanup/deque lowering differs. The unchanged
+`CEnterNameEdit::onKeyPress` recovers 99.8868% to 100%, while `onKillFocus`
+moves 100% to 99.8710%. MAX/HIST retain both collateral 100% peaks.
 
 ## Palette channel lifetimes from DC line layout
 
