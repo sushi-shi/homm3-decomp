@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.43%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 96.36%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 4,086 / 4,764 functions exact (85.8%) across the full engine (4764 in linked units).
+**Match score** — 4,073 / 4,764 functions exact (85.5%) across the full engine (4764 in linked units).
 
-**Function exact MAX** — 4,108 / 4,764 current implementations (86.2%) have reached 100%.
+**Function exact MAX** — 4,094 / 4,764 current implementations (85.9%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4017 / 4695 (85.6%) | 4039 / 4695 (86.0%) |  96.39% |    96.62% |
+| `game`       |   138 | 4004 / 4695 (85.3%) | 4025 / 4695 (85.7%) |  96.32% |    96.54% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -54,7 +54,7 @@ Manually maintained cleanup checklist:
 - [x] Review owner recovery from member pointers; see the
   [owner-pointer audit](docs/vc6/owner-pointer-audit.md).
 - [x] Review out-of-object pointers; see the
-  [fixes and retained retail exceptions](docs/vc6/owner-pointer-audit.md).
+  [backlog repairs and allocation proofs](docs/vc6/pointer-boundary-repairs.md).
 - [ ] Review manual varargs.
 - [ ] Review unrelated variable reuse.
 - [ ] Review stack aggregates and unused members.
@@ -62,8 +62,8 @@ Manually maintained cleanup checklist:
 - [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
-- [ ] Review pragma debt in `src/`: **428 `#pragma` directives**, all for inlining
-  (**209 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Review pragma debt in `src/`: **426 `#pragma` directives**, all for inlining
+  (**208 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 

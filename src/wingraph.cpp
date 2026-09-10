@@ -263,8 +263,8 @@ void robAppBlit(tagRECT* combRect)
             sourceRect = pointerRect;
             OffsetRect(&sourceRect, -g_mouseManager->m_savedRect.left,
                        -g_mouseManager->m_savedRect.top);
-            ddBlit(g_ddsMouseSaveSurface, &sourceRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)),
-                   &pointerRect, DDBLT_WAIT);
+            ddBlit(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
+                   pointerRect, DDBLT_WAIT);
             if (g_mouseManager->m_hideCount == 0 && g_mouseManager->m_sprite
                 && g_mouseManager->m_frame >= 0) {
                 DDSURFACEDESC surfaceDesc;
@@ -290,15 +290,15 @@ void robAppBlit(tagRECT* combRect)
             }
         }
 
-        ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), combRect, DDBLT_WAIT);
+        ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
 
         if (g_mouseManager && g_mouseManager->m_hideCount == 0
             && g_mouseManager->m_sprite && g_mouseManager->m_frame >= 0) {
-            ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), &pointerRect, g_ddsMouseSaveSurface,
-                   &sourceRect, DDBLT_WAIT);
+            ddBlit(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
+                   sourceRect, DDBLT_WAIT);
         }
     } else {
-        ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), combRect, DDBLT_WAIT);
+        ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
     }
 
     DDSURFACEDESC surfaceDesc;
@@ -333,12 +333,13 @@ void robAppBlit(tagRECT* combRect)
 // when the mode changed underneath. The discarded GameTime::Get() before
 // each loop is retail's, not an artifact.
 //
-// The two surface interface generations meet here: the roster types this
-// function's parameters IDirectDrawSurface4 (mousemgr's three globals agree)
-// while the primary is the v1 interface DirectDrawCreate returns, so the
-// primary is bridged through void* at each use exactly as mousemgr already
-// bridges DDSURFACEDESC. The vtable prefix through Restore is identical in
-// both generations, so no byte depends on the choice.
+// DC's interface is IDirectDrawSurface4. Complete's DirectDrawCreate returns
+// IDirectDraw v1, and ddInitGraphics creates every primary/back/mouse surface
+// through its v1 CreateSurface without QueryInterface. Preserve DDBlit's
+// source interface and retry scopes, with the proven Windows surface type;
+// compatible vtable-prefix offsets do not justify casting COM interfaces.
+// DC 0x199170's signature also proves both rectangles are const references
+// (udst_rect/usrc_rect), not nullable pointers. All callers pass real RECTs.
 //
 // EXACT (100.0000%, 2026-09-05). The three retry arms are
 // `while (1) { if (Blt(...) != LOST) goto done; <recovery> }` - an infinite
@@ -358,23 +359,20 @@ void robAppBlit(tagRECT* combRect)
 // and remain exact; no forward done label is needed.
 // E:\gamedcs\wingraph.cpp:931
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
-void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
-            IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
+void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
+            IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags)
 {
-    if (IsRectEmpty(srcRect))
+    if (IsRectEmpty(&srcRect))
         return;
 
-    if (dstSurface
-        == static_cast<IDirectDrawSurface4*>(
-               static_cast<void*>(g_ddsPrimary))) {
-        RECT region = *dstRect;
+    if (dstSurface == g_ddsPrimary) {
+        RECT region = dstRect;
         GameTime::get();
         while (1) {
             if (g_ddsPrimary->Blt(&region,
-                    static_cast<IDirectDrawSurface*>(
-                        static_cast<void*>(srcSurface)),
-                    const_cast<RECT*>(srcRect), flags, 0)
+                    srcSurface,
+                    const_cast<RECT*>(&srcRect), flags, 0)
                 != DDERR_SURFACELOST) {
                 return;
             }
@@ -395,15 +393,12 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
         }
     }
 
-    if (srcSurface
-        == static_cast<IDirectDrawSurface4*>(
-               static_cast<void*>(g_ddsPrimary))) {
-        RECT region = *srcRect;
+    if (srcSurface == g_ddsPrimary) {
+        RECT region = srcRect;
         GameTime::get();
         while (1) {
-            if (dstSurface->Blt(const_cast<RECT*>(dstRect),
-                    static_cast<IDirectDrawSurface4*>(
-                        static_cast<void*>(g_ddsPrimary)),
+            if (dstSurface->Blt(const_cast<RECT*>(&dstRect),
+                    g_ddsPrimary,
                     &region, flags, 0)
                 != DDERR_SURFACELOST) {
                 return;
@@ -427,8 +422,8 @@ void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
 
     GameTime::get();
     while (1) {
-        if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
-                const_cast<RECT*>(srcRect), flags, 0)
+        if (dstSurface->Blt(const_cast<RECT*>(&dstRect), srcSurface,
+                const_cast<RECT*>(&srcRect), flags, 0)
             != DDERR_SURFACELOST) {
             return;
         }
@@ -1314,8 +1309,7 @@ void ddInitGraphics()
     surfaceDesc.dwWidth = 64;
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
-        static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&g_ddsMouseSurface)),
+        &g_ddsMouseSurface,
         0);
     if (result != DD_OK)
         ddsd(result,
@@ -1338,8 +1332,7 @@ void ddInitGraphics()
     surfaceDesc.dwWidth = 64;
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
-        static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&g_ddsMouseSaveSurface)),
+        &g_ddsMouseSaveSurface,
         0);
     if (result != DD_OK)
         ddsd(result,
@@ -1356,8 +1349,7 @@ void ddInitGraphics()
     surfaceDesc.dwWidth = 128;
     result = g_directDraw->CreateSurface(
         &surfaceDesc,
-        static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&g_ddsMouseScratchSurface)),
+        &g_ddsMouseScratchSurface,
         0);
     if (result != DD_OK)
         ddsd(result,

@@ -42,6 +42,7 @@
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
+#include <stdexcept>
 
 // Before normalization (function): get_team.
 static int getTeam(game* thisGame, int playerNum)
@@ -5664,13 +5665,28 @@ void NewfullMap::newfullMapFn00505DA0()
     }
 }
 
+// Safety failure shared by the two required-definition searches below.
+// Their callers immediately consume the result; throwing leaves them no null
+// or invalid record to dereference. This path is absent in retail.
+static void missingMapObjectDefinition()
+{
+    throw std::out_of_range("Map object definition not found");
+}
+
 // 0x505ea0 (game::ConvertObject's helper, declared game.h:475) reverse-scans
 // objectTypeIndex[objectType] for the record whose `extra` (CObjectType+0x3c)
-// equals `extra` and returns &objectTypeIndex[objectType][i], with i == -1 as
-// the not-found sentinel (return &...[-1]).  The size()-1..0 reverse-scan tell
+// equals `extra`. Retail returns &objectTypeIndex[objectType][-1] on a miss.
+// The size()-1..0 reverse-scan tell
 // with _First re-read per pass; same idiom as NewfullMapFn_005042C0 above.
-// Not in the DC mapcell.cpp roster (DC inlined it); retail-only body.
-VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only (DC-inlined)
+// No direct DC counterpart: older game::InsertObject uses a flat forward
+// search, not proof of an inline copy of this Complete per-class helper.
+// Safety correction: convertObject and both high-score window paths require
+// an existing definition and dereference the result. Throw on a miss before
+// forming a pointer; returning null alone would leave those callers unsafe.
+// Residual (84.0566%): the deliberate failure branch/call is absent in retail.
+// Checked vector::at measured 45.2642%; the ordinary shared throw preserves
+// the reverse loop and caller contract without inliner directives.
+VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
 CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 {
     int i = m_objectTypeIndex[objectType].size();
@@ -5678,6 +5694,8 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
         if (m_objectTypeIndex[objectType][i].m_extra == extra)
             break;
     }
+    if (i < 0)
+        missingMapObjectDefinition();
     return &m_objectTypeIndex[objectType][i];
 }
 
@@ -5687,7 +5705,14 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 // If the matched record has no resolved objectTypes index yet (field_42 < 0),
 // it appends a copy to objectTypes and its sprite to sprites and records the
 // new index, then writes the resolved index into object->typeIndex.
-// Not in the DC mapcell.cpp roster (DC inlined it); retail-only body.
+// No direct DC counterpart; this is a Complete per-class helper, not a
+// proven DC inline. A missing definition now throws through the same failure
+// helper as 0x505ea0, before publishing an index, adding records or acquiring
+// a sprite. insertObject and SoD_transformRandomDwellings require that result.
+// Residual (97.7099%): intentional failure branch/call absent in retail;
+// vector::at measured 63.1832%, local throw 51.1908%. Actual-body native tests
+// cover reverse precedence, terrain filters, empty/missing classes, cached
+// indices and no publication on failure, with three rejected negative controls.
 // MATCHING_DEBT: the two vector inserts are pinned with inline_depth(0) (the
 // randomDwellings idiom) with end() and the value hoisted out so operator[]
 // and end() stay inline; sprites is named as a reference so its _Last is read
@@ -5699,7 +5724,7 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 // reloc-name rows are cosmetic cross-TU unclaimed STL/data identities and do
 // not score.  A 316-candidate generated declaration/name search was flat;
 // the older reference/push_back hypothesis over-inlines (21 vs 10 branches).
-VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
+VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only
 void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
                                        int objectIndex, int terrain)
 {
@@ -5712,6 +5737,9 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
                 break;
         }
     }
+
+    if (i < 0)
+        missingMapObjectDefinition();
 
     if (static_cast<short>(m_objectTypeIndex[objectType][i].m_objectTypeIndex) < 0) {
         m_objectTypeIndex[objectType][i].m_objectTypeIndex =

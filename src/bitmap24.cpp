@@ -296,6 +296,10 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // two GetPitch boundaries. Retail independently fixes the 24-bit-to-16-bit
 // channel conversion and brackets this 353-byte body immediately after the
 // Bitmap16Bit wrapper above.
+// Row-boundary residual (85.0312%): advance source/destination only before
+// a following row; final-row guards score 72.2734%, unchecked control 100%.
+// DC's separate GetPitch/dpitch and channel work are retained. Native tests
+// use different pitches and clipped origins at the last allocation row.
 VA(0x0044f010, 0x161)  // source-order bracket + RGB mask/data flow, dc 0x52968
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
@@ -328,6 +332,12 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         unsigned int rm1 = (g_colorMaskRed << 1) & ~g_colorMaskRed;
 
         for (int y = 0; y < sh; ++y) {
+            if (y) {
+                dst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                    + dpitch));
+                src += getPitch();
+            }
             unsigned char* in = src;
             unsigned short* out = dst;
             for (int x = 0; x < sw; ++x) {
@@ -342,10 +352,6 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 *out++ = static_cast<unsigned short>(red | blue | green);
                 in += 3;
             }
-            dst = static_cast<unsigned short*>(static_cast<void*>(
-                static_cast<unsigned char*>(static_cast<void*>(dst))
-                + dpitch));
-            src += getPitch();
         }
     }
 }
@@ -368,6 +374,10 @@ unsigned int Bitmap24Bit::getSize() const
 // 2026-09-01: all 65 blocks, 1,528 bytes and stack homes match. The negative
 // control with named float/double union temporaries expands the frame from
 // retail's 0x60 to 0xec and falls to 99.57085%.
+// Row-boundary residual (94.0790%): a next-row guard removes the unused end+x
+// cursor. Last-row guard 93.2895%, original unchecked 100%; helper calls and
+// DC's hue/value/saturation scopes are unchanged. Actual-body native tests
+// compare the full rectangle against independently indexed one-row visits.
 VA(0x0044f190, 0x5F8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
 void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
                             // Before normalization (locals): hue_adjust, saturation_adjust,
@@ -384,6 +394,8 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
 
     unsigned char* src = m_data + y * getPitch() + x * 3;
     for (int row = 0; row < h; ++row) {
+        if (row)
+            src += getPitch();
         unsigned char* pixel = src;
         for (int column = 0; column < w; ++column) {
             unsigned int r = pixel[2] * redNorm;
@@ -434,7 +446,6 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
             pixel[0] = static_cast<unsigned char>(b / blueNorm);
             pixel += 3;
         }
-        src += getPitch();
     }
 }
 

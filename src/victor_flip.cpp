@@ -20,6 +20,10 @@
 // return scheduling still differ. JSON-batched status, pointer, row-distance,
 // declaration-order and register-hint families leave the nested scopes best;
 // early validation and allocation returns score 76.21%.
+// Boundary repair: a one-row region can otherwise step its top pointer
+// before separate DIB storage. Stop after the last paired copy, in both
+// depth branches. Three-form family: break 73.8105%, remaining-pair guard
+// 69.2661%, unchecked 77.8629% (retained in HIST).
 VA(0x00603b20, 0x2d2)  // anchor-caller PCX importers + paired row/bit helper calls
 int __stdcall flipimage(imgdes* source, imgdes* destination)
 {
@@ -65,6 +69,8 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
                         memcpy(temporary, sourceTop, rowBytes);
                         memcpy(destinationTop, sourceBottom, rowBytes);
                         memcpy(destinationBottom, temporary, rowBytes);
+                        if (!rows)
+                            break;
                         sourceTop -= source->m_buffwidth;
                         destinationTop -= destination->m_buffwidth;
                         sourceBottom += source->m_buffwidth;
@@ -77,6 +83,8 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
                         victorExtractBits(secondTemporary, sourceTop, source->m_stx, width);
                         victorInsertBits(destinationTop, temporary, destination->m_stx, width);
                         victorInsertBits(destinationBottom, secondTemporary, destination->m_stx, width);
+                        if (!rows)
+                            break;
                         sourceTop -= source->m_buffwidth;
                         destinationTop -= destination->m_buffwidth;
                         sourceBottom += source->m_buffwidth;

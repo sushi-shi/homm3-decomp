@@ -33,6 +33,14 @@ public:
     int m_height;  // +0x28
     // Before normalization: Pitch.
     int m_pitch;   // +0x2c
+    // DC Bitmap816.h:71 (0x5256c) returns Width, while GetMap below
+    // addresses rows through Pitch. Masked Darken's retail loads independently
+    // confirm that distinction; do not replace this helper with m_pitch.
+    // Before normalization (function): Bitmap816::GetPitch.
+    int getPitch() const { return m_width; }
+    // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
+    // Before normalization (function): Bitmap816::GetMap.
+    unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
     // Before normalization: map.
     unsigned char* m_map;  // +0x30
     // Before normalization: p16.

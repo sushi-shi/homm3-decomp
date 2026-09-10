@@ -33,6 +33,11 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // fall through into indexed copy scores 53.9655%; keep the shared copy result.
 // Hoisting and reordering all prelude, decode-state and allocation-success
 // declarations across a complete 64-state old-C family emits one object.
+// Boundary repair: a separate DIB has no preceding header/palette to absorb
+// the unused final bottom-up decrement. Guard only completed rows; partial
+// RGB planes still continue without advancing. Four-form family: final-row
+// guard 80.2679%, predecrement count 79.6207%, visited offset 78.8409%,
+// unchecked control 78.4456%. No input-decoder or error contract is changed.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
@@ -140,7 +145,8 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                 }
                 if (copyDecoded)
                     memcpy(destination, decoded, copyBytes);
-                destination -= image->m_buffwidth;
+                if (rowsRemaining > 1)
+                    destination -= image->m_buffwidth;
                 --rowsRemaining;
             }
             free(input);

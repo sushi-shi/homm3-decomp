@@ -235,7 +235,7 @@ void Bitmap16Bit::clear()
 // the destination extent, then copy row by row. The last parameter selects
 // the keyed path - pixels equal to it are left alone - and the plain path
 // goes through the inline memcpy intrinsic.
-// Residual (83.5794%): the source width must be a LOCAL - as a modified
+// Earlier residual (83.5794%): the source width must be a LOCAL - as a modified
 // parameter the body scores 45.22, because retail keeps that value live in
 // EDI across both clips while the height stays in its parameter slot and is
 // reloaded. The one block still unpaired is retail's else-arm that
@@ -249,7 +249,13 @@ void Bitmap16Bit::clear()
 // Rechecked after the const-reference pixel recovery: both `w = srcWidth +
 // dstX` and split `w = srcWidth; w += dstX` spellings remain byte-identical
 // at 83.17. They pair all 26 blocks (21 exact, five size-only) but worsen the
-// current 83.5794 score, so the natural Dreamcast-shaped initialization stays.
+// then-current 83.5794 score, so the natural Dreamcast-shaped initialization stays.
+// Row-boundary repair: cursors now denote allocation row starts; column
+// offsets are applied only to visited pixels/copies. Their final step is at
+// most one-past, never end+srcX/dstX. DC's GetMap, loops and keyed const-ref
+// pixel remain. Residual (75.0079%): changed column addressing plus the prior
+// clip/register delta. Last-row guards 56.0635%, next-row guards 51.1270%,
+// visited-row offsets 68.3413%; all reproduced with the other safe row fixes.
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
@@ -274,10 +280,10 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 
     if (w > 0 && srcHeight > 0) {
         Bitmap16ConstMapPointer source;
-        source.m_pixels = getMap(srcX, srcY);
+        source.m_pixels = getMap(0, srcY);
         Bitmap16MapPointer target;
         target.m_pixels = dst;
-        target.m_bytes += dstY * dstPitch + dstX * sizeof(unsigned short);
+        target.m_bytes += dstY * dstPitch;
 
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
@@ -286,16 +292,16 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                     // source pixel twice - once for the key compare and once
                     // for the store - rather than keeping it in a register.
                     // 81.3095 -> 83.5794.
-                    const unsigned short& pixel = source.m_pixels[col];
+                    const unsigned short& pixel = source.m_pixels[srcX + col];
                     if (pixel != static_cast<unsigned short>(flipped))
-                        target.m_pixels[col] = pixel;
+                        target.m_pixels[dstX + col] = pixel;
                 }
                 source.m_bytes += m_pitch;
                 target.m_bytes += dstPitch;
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
-                memcpy(target.m_pixels, source.m_pixels,
+                memcpy(target.m_pixels + dstX, source.m_pixels + srcX,
                        w * sizeof(unsigned short));
                 source.m_bytes += m_pitch;
                 target.m_bytes += dstPitch;
@@ -308,12 +314,15 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 // this bitmap, clipping a negative origin by walking the destination in
 // instead. Rows go through the inline memcpy intrinsic with the byte count
 // (2*w) held in a loop-invariant slot.
-// Residual (97.7%): one register-allocation bit at entry, cascading.
+// Earlier residual (97.7%): one register-allocation bit at entry, cascading.
 // Retail keeps `w` in EBX and materializes the zero in ECX, which the second
 // clip test then consumes (`test ecx,ecx`); ours holds `w` in EAX and keeps
 // the zero in EBX across both tests (`cmp ecx,ebx`). Every block, branch and
 // frame slot pairs. All 24 declaration permutations of the four locals were
 // swept: the spread is 97.65 .. 97.71 and none reaches 100.
+// Row-boundary residual (75.4186%): guard both independent pitches before
+// forming the next row. Next-row guard 56.7442%, visited-row offset 69.7674%;
+// unchecked 97.7093% retained only as a search/negative control.
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
 void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
@@ -346,8 +355,10 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
         source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
         for (int row = 0; row < h; ++row) {
             memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-            dst.m_bytes += m_pitch;
-            source.m_bytes += srcPitch;
+            if (row + 1 < h) {
+                dst.m_bytes += m_pitch;
+                source.m_bytes += srcPitch;
+            }
         }
     }
 }
@@ -356,12 +367,16 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
 // rectangle walk with the interior filled instead of outlined: VC6 turns
 // the inner store loop into its word-fill idiom (duplicate the colour into
 // a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
-// Out-of-object review: the final pitch update can form end+x at the
-// image bottom. DC bitmap16.cpp:679..703 and retail retain this row walk.
-// Bounded source-family controls: GetMap per row 53.8929%, byte-offset
-// cursor 73.7857%, row*pitch 64.2143%, last-row guard 69.625%, versus
-// 100% here. Retained retail edge case under the no-match-loss constraint;
-// do not disguise it with an integer address or an oversized allocation.
+// Bound the row cursor: advance only when another row is actually visited,
+// avoiding retail's unused end+x pointer after a bottom-edge rectangle.
+// DC bitmap16.cpp:679..703 supplies the one GetMap and nested pixel loops.
+// Residual (82.1964%): deliberate row-boundary check absent in retail.
+// Ten source forms / nine distinct objects: GetMap per row 53.8929%, byte
+// offset 73.7857%, product 64.2143%, final-row guard 69.625%, allocation-row
+// base 63.625%, break-before-step 68.7857%; unchecked control remains 100%.
+// Actual-body native tests check output and every pointer step before it is
+// formed, including padding/nonzero origins/bottom edges and the old defect
+// as a failing control. No integer address or oversized allocation is used.
 VA(0x0044e4c0, 0x7D)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
 void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
@@ -374,9 +389,10 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
         Bitmap16MapPointer dst;
         dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
+            if (row)
+                dst.m_bytes += m_pitch;
             for (int col = 0; col < w; ++col)
                 dst.m_pixels[col] = color;
-            dst.m_bytes += m_pitch;
         }
     }
 }
@@ -385,6 +401,9 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 // proves the clipped width/height, one GetMap call, row loop, full top/bottom
 // rows, and two endpoint stores on interior rows. Retail independently fixes
 // Pitch as a byte stride and preserves this 18-block source shape.
+// Row-boundary residual (95.2113%): step only on a visited following row.
+// The last-row guard scores 94.3662%, visited-row offsets 70.2113%; original
+// 100% forms end+x at the bottom edge and fails the native pointer control.
 VA(0x0044e540, 0xA3)
 void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                             unsigned short color)
@@ -398,6 +417,8 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
         Bitmap16MapPointer dst;
         dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
+            if (row)
+                dst.m_bytes += m_pitch;
             if (row == 0 || row == h - 1) {
                 for (int col = 0; col < w; ++col)
                     dst.m_pixels[col] = color;
@@ -405,7 +426,6 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                 dst.m_pixels[0] = color;
                 dst.m_pixels[w - 1] = color;
             }
-            dst.m_bytes += m_pitch;
         }
     }
 }
@@ -413,7 +433,10 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
 // E:\gamedcs\bitmap16.cpp:742. Dreamcast (dc 0x51614) proves the clipped
 // rectangle, one GetMap expression, RGB shift-mask construction, and nested
 // row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
-// a byte stride; the resulting 0xA4-byte body is exact.
+// a byte stride; the earlier unchecked 0xA4-byte body was exact.
+// Row-boundary residual (77.4203%): advance before a following row, preserving
+// the DC pixel loop/mask computation. Last-row guard 64.5072%, visited-row
+// offsets 64.3333%; the original final advance is deliberately not retained.
 VA(0x0044E5F0, 0xA4)
 void Bitmap16Bit::darken(int x, int y, int w, int h)
 {
@@ -432,13 +455,14 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
         row.m_pixels = getMap(x, y);
 
         for (int iy = 0; iy < h; ++iy) {
+            if (iy)
+                row.m_bytes += m_pitch;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 *pixel.m_pixels = static_cast<unsigned short>(
                     (*pixel.m_pixels >> 1) & shiftMask);
                 ++pixel.m_pixels;
             }
-            row.m_bytes += m_pitch;
         }
     }
 }
@@ -448,6 +472,11 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 // bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
 // Pitch - retail adds [mask+0x24] at the foot of every row - while the
 // starting row is still taken through Pitch.
+// Row-boundary residual (86.8791%): both map and mask step only when another
+// row exists; next-row guards score 67.6374%. Keep DC GetMap/GetPitch and
+// their different pitch meanings (dc 0x52570/0x5256c), not a width->pitch fix.
+// Native actual-body tests cover output, independent pitches and the old
+// final-row defect; changing GetPitch to the storage pitch fails the oracle.
 VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
 void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
@@ -462,7 +491,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
             ((g_colorMaskRed >> 1) & g_colorMaskRed)
             | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
             | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
-        unsigned char* maskRow = mask->m_map + mask->m_pitch * sy + sx;
+        unsigned char* maskRow = mask->getMap(sx, sy);
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
@@ -477,8 +506,10 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                 ++maskPixel;
                 ++pixel.m_pixels;
             }
-            maskRow += mask->m_width;
-            row.m_bytes += m_pitch;
+            if (iy + 1 < h) {
+                maskRow += mask->getPitch();
+                row.m_bytes += m_pitch;
+            }
         }
     }
 }
@@ -566,6 +597,10 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
 // spelling is the one palette.obj's HSVToRGB is EXACT with, and dropping the
 // named `max`, taking ftol off __forceinline and swapping <limits> for
 // <limits.h>/INT_MAX are each byte-flat to the digit.
+// Row-boundary residual (94.6013%): next-row guard avoids the unused end+x
+// cursor. Last-row guard 94.5490%, visited-row offsets 92.7091%, unchecked
+// 98.8301%. The DC channel/helper scopes and existing FP residual remain;
+// native one-row differential tests cover all six hue sectors.
 VA(0x0044e940, 0x3B8)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
 void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                            float saturation)
@@ -587,6 +622,8 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
         row.m_pixels = getMap(x, y);
 
         for (int iy = 0; iy < h; ++iy) {
+            if (iy)
+                row.m_bytes += m_pitch;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 unsigned int b =
@@ -644,7 +681,6 @@ void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                     | ((b / blueNorm) & g_colorMaskBlue));
                 ++pixel.m_pixels;
             }
-            row.m_bytes += m_pitch;
         }
     }
 }

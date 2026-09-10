@@ -798,14 +798,20 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
 // `homm3 vc6 why-reg` runs its whole 26-mutation catalog here (every decl
 // move, decl swap and un-naming in the blend loop) and NONE reduces the
 // 134-slot register distance - the best are +0, the rest +2..+287.  The one
-// DC name still absent is `DEFAULT_FADE_TIME` (a `const int` for the 33);
+// DC name previously absent was `DEFAULT_FADE_TIME` (a `const int` for the 33);
 // retail materialises it as the immediate 0x21, so it is constant-propagated
 // exactly like SetEnvironmentOrigin's MAX_RANGE and is not reachable.
+// Boundary repair: only the screen has a nonzero horizontal origin. Skip
+// its unused final row advance; the two zero-origin temporary walks may
+// end one-past. Four-form family: final guard 84.7843%, next-row guard
+// 84.6392%, screen-row origin 82.8078%, unchecked control 84.1098%.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        // Before normalization (locals): iFadeTime.
                                        int height, int fadeTime)
 {
+    // DC locals: DEFAULT_FADE_TIME, src/odst (read-only row pointers).
+    const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
             width += startX;
@@ -824,7 +830,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
             int savedColorCycling = m_colorCyclingOn;
             m_colorCyclingOn = 0;
             if (fadeTime == -1)
-                fadeTime = 33;
+                fadeTime = defaultFadeTime;
 
             RECT rect;
             Bitmap16Bit destination(width, height);
@@ -836,9 +842,9 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                 unsigned long deadline = GameTime::get() + fadeTime;
                 int alpha = (frame << 16) / 8;
 
-                Bitmap16MapPointer source;
+                Bitmap16ConstMapPointer source;
                 source.m_pixels = m_bmpFizzleSource->getMap(0, 0);
-                Bitmap16MapPointer target;
+                Bitmap16ConstMapPointer target;
                 target.m_pixels = destination.getMap(0, 0);
                 Bitmap16MapPointer screen;
                 screen.m_pixels = m_screenBitmap->getMap(startX, startY);
@@ -868,9 +874,11 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                         s++;
                         od++;
                     }
-                    screen.m_bytes += m_screenBitmap->m_pitch;
-                    target.m_bytes += destination.m_pitch;
-                    source.m_bytes += m_bmpFizzleSource->m_pitch;
+                    // Canonical DC GetPitch boundaries (lines 1407/1409).
+                    if (row + 1 < height)
+                        screen.m_bytes += m_screenBitmap->getPitch();
+                    target.m_bytes += destination.getPitch();
+                    source.m_bytes += m_bmpFizzleSource->getPitch();
                 }
 
                 pollSound();
@@ -893,16 +901,17 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
             robAppBlit(&rect);
 
             m_colorCyclingOn = savedColorCycling;
-            delete m_bmpFizzleSource;
-            m_bmpFizzleSource = 0;
+            // DC line 1434 calls the ordinary helper; Complete expands it.
+            releaseFizzleSource();
         }
     }
 }
 
 // E:\gamedcs\winmgr.cpp:1447. The fizzle buffer is released through the
 // same virtual slot-0 + flag-1 tail Close uses on the manager's two
-// owned bitmaps. Its only caller is 0x41aa20, the same body that calls
-// SaveFizzleSourceX (0x41a8d5) and FizzleForwardX (0x41aa13).
+// owned bitmaps. Retail's retained caller is 0x41aa20, the same body that
+// calls SaveFizzleSourceX (0x41a8d5) and FizzleForwardX (0x41aa13). DC also
+// proves the source call in FizzleForwardX at line 1434; retail expands it.
 VA(0x006030c0, 0x19)  // anchor-caller + dc order, dc 0x19bba8
 void heroWindowManager::releaseFizzleSource()
 {

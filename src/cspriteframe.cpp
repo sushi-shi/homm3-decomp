@@ -389,10 +389,13 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
 //
-// Exact (1125 B): the DC-attested dword line table is declared at function
+// Earlier exact (1125 B): the DC-attested dword line table is declared at function
 // scope but assigned only inside the positive render guard.  Together with a
 // block-scoped row destination, this gives retail's one-slot frame, delayed
 // map load, parameter-home reuse, and all 88 exact CFG blocks.
+// Row-boundary residual (91.6247%): break after the last decoded row before
+// forming end+dx (or end+dx+sw for hflip). Last-row guards score 90.7461%,
+// next-row guards 86.4702%. DC decoder scopes/helper calls stay intact.
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -468,6 +471,8 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
+                if (y + 1 == sy + sh)
+                    break;
                 lineDst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
@@ -522,6 +527,8 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
+                if (y + 1 == sy + sh)
+                    break;
                 lineDst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
@@ -557,6 +564,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
 // lower. `why-reg --model --il-order` still finds identical first definitions
 // (EDI=sw, ESI=sx, EBX=sh), bounding the residual past the minimum source-order
 // slice.
+// Row-boundary residual (91.9365%): both directions guard the next row;
+// next-row guards 82.6254%, break-before-step 91.8555%, unchecked 95.9000%.
+// Existing clip/blend residual remains; the final pointer fix is intentional.
 VA(0x0047c9e0, 0x6BC)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
@@ -699,9 +709,11 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
-                    + dpitch));
+                if (y + 1 < sy + sh) {
+                    dst = static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst))
+                        + dpitch));
+                }
             }
         } else {
             dst = static_cast<unsigned short*>(static_cast<void*>(
@@ -812,9 +824,11 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
-                    + dpitch));
+                if (y + 1 < sy + sh) {
+                    dst = static_cast<unsigned short*>(static_cast<void*>(
+                        static_cast<unsigned char*>(static_cast<void*>(dst))
+                        + dpitch));
+                }
             }
         }
     }
@@ -826,11 +840,15 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // literal palette indexes; control five optionally draws the caller's flag
 // colour, and the remaining controls are transparent in this renderer.
 //
-// Exact (1099 B): unsigned cell-line arithmetic, split packet load/increment,
+// Earlier exact (1099 B): unsigned cell-line arithmetic, split packet load/increment,
 // and a block-scoped row destination reproduce retail's logical shift,
 // packet schedule, and dead-hflip parameter-home reuse in both direction arms.
+// DC locals retain read-only palette/aCellOffset views (0x76060 dossier).
 // The Rust gate also compiles this body directly and differentials generated
 // and installed DEF streams; retail bytes remain the match verdict.
+// Row-boundary residual (84.9227%): break after the final row, retaining both
+// canonical dispatch helpers and packed-cell decoding. Last-row guards
+// score 81.2428%, next-row guards 78.1126%; unchecked control remains 100%.
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -838,10 +856,10 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned char hflip,
                                   unsigned short flagcolor) const
 {
-    unsigned short* palette;
+    const unsigned short* palette;
     unsigned int cellsPerLine;
     // Before normalization (locals): aCellOffset.
-    unsigned short* cellOffset;
+    const unsigned short* cellOffset;
 
     if (m_encodingMethod == eEncodeGeneralRLE) {
         // Retail passes sw in the first source-coordinate slot at 0x47d0e6.
@@ -859,7 +877,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
         if (sh > 0) {
 
             cellsPerLine = static_cast<unsigned int>(m_croppedWidth) >> 5;
-            cellOffset = static_cast<unsigned short*>(static_cast<void*>(m_map));
+            cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
             palette = pal.m_data;
 
             if (!hflip) {
@@ -919,6 +937,8 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -982,6 +1002,8 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -1014,6 +1036,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
 // ECX where this compile uses the two the other way round - which is B-family
 // homing on values that arrive as parameters, the same class DrawTileShadow
 // left behind two rows up.
+// DC 0x76384 records palette and aCellOffset as read-only pointers; lines
+// 2462/2463 load the map table and bind pal+0x1c before either row loop.
+// Row-boundary residual (90.3017%): break-before-step; last-row guards
+// 86.0903%, next-row guards 83.9644%, unchecked 98.0000%. Palette binding
+// and DC alpha/flag scopes are retained independently of the score.
 VA(0x0047d4f0, 0x43C)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
 void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            unsigned short* dst, int dx, int dy,
@@ -1022,16 +1049,19 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            unsigned short flagcolor,
                                            unsigned char hflip) const
 {
+    const unsigned short* palette;
     unsigned int cellsPerLine;
     // Before normalization (locals): aCellOffset.
-    unsigned short* cellOffset;
+    const unsigned short* cellOffset;
 
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
     if (sw > 0) {
         if (sh > 0) {
 
             cellsPerLine = static_cast<unsigned int>(m_croppedWidth) >> 5;
-            cellOffset = static_cast<unsigned short*>(static_cast<void*>(m_map));
+            cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+
+            palette = pal.m_data;
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1072,7 +1102,7 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 *out = (s_div2mask.m_dword
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (palette[*src++] >> 1))
                                      + (s_div2mask.m_dword & (*out >> 1));
                                 ++out;
                             } while (--count);
@@ -1095,6 +1125,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -1141,7 +1173,7 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                             do {
                                 --out;
                                 *out = (s_div2mask.m_dword
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (palette[*src++] >> 1))
                                      + (s_div2mask.m_dword & (*out >> 1));
                             } while (--count);
                         } else if (code == eRleControlOutline5 && flagcolor) {
@@ -1163,6 +1195,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -1198,6 +1232,9 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // half blend DID have a source cause: the widening `unsigned int color =
 // out[-1]` spelling cost nine flow-kind blocks and a whole missing block, and
 // dropping it took this row 98.5765 -> 99.9400 on one line.
+// Row-boundary residual (79.4119%): break-before-step; last-row guard
+// 75.7097%, next-row guard 76.5310%, unchecked 99.9404%. The existing
+// per-direction blend spellings and read-only cell table stay canonical.
 VA(0x0047d930, 0x40F)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
 void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
@@ -1207,14 +1244,14 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 {
     unsigned int cellsPerLine;
     // Before normalization (locals): aCellOffset.
-    unsigned short* cellOffset;
+    const unsigned short* cellOffset;
 
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
     if (sw > 0) {
         if (sh > 0) {
 
             cellsPerLine = static_cast<unsigned int>(m_croppedWidth) >> 5;
-            cellOffset = static_cast<unsigned short*>(static_cast<void*>(m_map));
+            cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1288,6 +1325,8 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -1365,6 +1404,8 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
+                    if (y + 1 == sy + sh)
+                        break;
                     lineDst =
                         static_cast<unsigned short*>(static_cast<void*>(
                             static_cast<unsigned char*>(
@@ -1393,6 +1434,11 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // code-7 enumerator are byte-flat paired probes.  The proven call spelling is
 // retained despite that expected checkpoint dip while the surrounding source
 // shape needed to restore retail's EDX home remains under reconstruction.
+// Row-boundary residual (77.5881%): guard each destination pitch and each raw
+// source pitch; raw sh-decrement/Duff loops remain DC-shaped. The vertical
+// reverse arms must also avoid stepping before the allocation. Next-row and
+// break variants score 77.4332/77.3803%, unchecked 81.4249%. Horizontal
+// predecrement starts at the span end and remains valid; it is not removed.
 VA(0x0047dd40, 0xAD8) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
@@ -1459,12 +1505,14 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-                            line += m_pitch;
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) +
-                                    dpitch));
+                            if (sh > 1) {
+                                line += m_pitch;
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) +
+                                        dpitch));
+                            }
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1511,11 +1559,13 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 ++src;
                             } while (remaining);
 
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) +
-                                    dpitch));
+                            if (y + 1 < sy + sh) {
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) +
+                                        dpitch));
+                            }
                         }
                     }
                 } else {
@@ -1558,12 +1608,14 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-                            line += m_pitch;
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) +
-                                    dpitch));
+                            if (sh > 1) {
+                                line += m_pitch;
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) +
+                                        dpitch));
+                            }
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1610,11 +1662,13 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 ++src;
                             } while (remaining);
 
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) +
-                                    dpitch));
+                            if (y + 1 < sy + sh) {
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) +
+                                        dpitch));
+                            }
                         }
                     }
                 }
@@ -1659,12 +1713,14 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-                            line += m_pitch;
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) -
-                                    dpitch));
+                            if (sh > 1) {
+                                line += m_pitch;
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) -
+                                        dpitch));
+                            }
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1711,11 +1767,13 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 ++src;
                             } while (remaining);
 
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) -
-                                    dpitch));
+                            if (y + 1 < sy + sh) {
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) -
+                                        dpitch));
+                            }
                         }
                     }
                 } else {
@@ -1758,12 +1816,14 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-                            line += m_pitch;
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) -
-                                    dpitch));
+                            if (sh > 1) {
+                                line += m_pitch;
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) -
+                                        dpitch));
+                            }
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1810,11 +1870,13 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 ++src;
                             } while (remaining);
 
-                            lineDst =
-                                static_cast<unsigned short*>(static_cast<void*>(
-                                    static_cast<unsigned char*>(
-                                        static_cast<void*>(lineDst)) -
-                                    dpitch));
+                            if (y + 1 < sy + sh) {
+                                lineDst =
+                                    static_cast<unsigned short*>(static_cast<void*>(
+                                        static_cast<unsigned char*>(
+                                            static_cast<void*>(lineDst)) -
+                                        dpitch));
+                            }
                         }
                     }
                 }
@@ -1850,6 +1912,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // emits a widening `xor eax,eax / mov ax,` pair retail does not have.
 // `--out; *out = (*out >> 1) & mask;` reads the same location AFTER the
 // decrement, which is what retail spells: 97.8963 -> 99.9300 here.
+// Row-boundary residual (82.7464%): break before the final positive/negative
+// pitch in all four flip arms. Last-row guards 82.5144%, next-row guards
+// 76.7637%, unchecked 99.9308%; the shadow arithmetic is unchanged.
 VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -1942,6 +2007,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
+                        if (y + 1 == sy + sh)
+                            break;
                         lineDst =
                             static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(
@@ -2018,6 +2085,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
+                        if (y + 1 == sy + sh)
+                            break;
                         lineDst =
                             static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(
@@ -2097,6 +2166,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
+                        if (y + 1 == sy + sh)
+                            break;
                         lineDst =
                             static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(
@@ -2173,6 +2244,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
+                        if (y + 1 == sy + sh)
+                            break;
                         lineDst =
                             static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(
@@ -2197,6 +2270,13 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
 // color 0 in slot 12 and hflip in slot 13, which is DrawAdvObjWithFlagAlpha's
 // signature and no other in this class - DrawAdvObjImpl takes hflip in slot 12
 // and its flag color last.
+// Row-boundary residual (94.0235%): break-before-step; last-row guards
+// 81.9615%, next-row guards 83.8974%, unchecked 100%. The DC DrawHeroAlpha
+// wrapper, palette local and blend scopes survive this intentional repair.
+// The eight-renderer family scored 60 distinct objects plus five reproduced
+// whole-TU parents. Actual-body tests compare 42,112 cases against a pixel
+// oracle and check row steps before forming pointers; restoring either a
+// forward or reverse final step is a failing control.
 VA(0x0047ef60, 0x47C)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
 void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    unsigned short* dst, int dx, int dy, int dw,
@@ -2215,19 +2295,21 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
         return;
     }
     else if (m_encodingMethod == eEncodeAdvObjRLE) {
-        drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-                                pal, 0, hflip);
+        drawHeroAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
         return;
     }
 
     // Before normalization (locals): aLineOffset, kOpaqueRunCode.
     const unsigned int* lineOffset;
+    // DC 0x77664 local palette, bound after the line table at line 3811.
+    const unsigned short* palette;
     static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     if (sw > 0 && sh > 0) {
         lineOffset =
             static_cast<const unsigned int*>(static_cast<const void*>(m_map));
+        palette = pal.m_data;
         if (!hflip) {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
@@ -2261,7 +2343,7 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         do {
                             *out = (s_div2mask.m_dword
-                                    & (pal.m_data[*src++] >> 1))
+                                    & (palette[*src++] >> 1))
                                  + (s_div2mask.m_dword & (*out >> 1));
                             ++out;
                         } while (--count);
@@ -2275,6 +2357,8 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
+                if (y + 1 == sy + sh)
+                    break;
                 lineDst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
@@ -2313,7 +2397,7 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                         do {
                             --out;
                             *out = (s_div2mask.m_dword
-                                    & (pal.m_data[*src++] >> 1))
+                                    & (palette[*src++] >> 1))
                                  + (s_div2mask.m_dword & (*out >> 1));
                         } while (--count);
                     } else {
@@ -2326,6 +2410,8 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
+                if (y + 1 == sy + sh)
+                    break;
                 lineDst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(lineDst))
                     + dpitch));
