@@ -8815,13 +8815,16 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 // Before normalization: NET_COMBAT_SAVE_VERSION.
 const int g_netCombatSaveVersion = 42;
 
-// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries NO
+// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries no
 // frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
 // [ebp+8], overlapping inside the dead `infile` parameter slot once that
 // pointer is live in ESI. Block-scoping the pair and swapping their
 // declaration order are both byte-flat, measured. Moving int_buffer's
 // declaration to its first assignment, and delaying write's const-cast
 // alias until its tail calls, are byte-flat as well (2026-09-07).
+// Eight paired scratch-type/lifetime controls (plain/signed char, int/long,
+// shared/per-field dword scopes) produce two distinct objects and leave both
+// scores unchanged. None recovers the overlapping dead parameter home.
 VA(0x004ad1f0, 0x148)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
 unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 {

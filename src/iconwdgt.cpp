@@ -102,14 +102,14 @@ iconWidget::~iconWidget()
 // moving default/base delegation into separate switch arms gives at most
 // 91.8050%. Neither failed form establishes an unavoidable source goto.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
-int iconWidget::main(message* msg)
+int iconWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
         return 0;
     }
 
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
         return widget::main(msg);
     }
@@ -118,28 +118,28 @@ int iconWidget::main(message* msg)
     if (m_status & WIDGET_DISABLED)
         isDisabled = 1;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        if (msg->m_codeY != m_id)
+        if (msg.m_codeY != m_id)
             break;
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case WIDGET_SET_ICON_NAME:
-            setSprite(msg->m_extraText);
+            setSprite(msg.m_extraText);
             return 1;
         case WIDGET_SET_ICON_FRAME:
-            setIconFrame(msg->m_extra & 0xFFFF);
+            setIconFrame(msg.m_extra & 0xFFFF);
             return 1;
         case WIDGET_SET_ICON_SEQUENCE:
-            setIconSequence(msg->m_extra & 0xFFFF);
+            setIconSequence(msg.m_extra & 0xFFFF);
             return 1;
         case WIDGET_SET_ICON_COLOR:
-            m_backColor = static_cast<unsigned short>(msg->m_extra);
+            m_backColor = static_cast<unsigned short>(msg.m_extra);
             return 1;
         case WIDGET_SET_PALETTE:
-            setPalette(msg->m_extraText);
+            setPalette(msg.m_extraText);
             return 1;
         case WIDGET_SET_PLAYER_PALETTE_COLORS:
-            setPlayerPaletteColors(msg->m_extra);
+            setPlayerPaletteColors(msg.m_extra);
             return 1;
         }
         break;
@@ -154,23 +154,23 @@ int iconWidget::main(message* msg)
             return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_DOWN: {
-        short mouseX = msg->m_codeX - m_parentWindow->m_x;
-        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        short mouseX = msg.m_codeX - m_parentWindow->m_x;
+        short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
             && mouseY < m_y + m_height) {
-            if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+            if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
                 return 1;
-            if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-                msg->m_codeX = WIDGET_RIGHT_SELECT;
-                msg->m_id = MESSAGE_WIDGET;
-                msg->m_codeY = m_id;
+            if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                msg.m_codeX = WIDGET_RIGHT_SELECT;
+                msg.m_id = MESSAGE_WIDGET;
+                msg.m_codeY = m_id;
                 return 2;
             }
             m_status |= WIDGET_SELECTED;
-            msg->m_codeX = WIDGET_SELECT;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeY = m_id;
+            msg.m_codeX = WIDGET_SELECT;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeY = m_id;
             return 2;
         }
         return 0;
@@ -183,13 +183,13 @@ int iconWidget::main(message* msg)
     case MESSAGE_RIGHT_BUTTON_UP:
         if (m_status & WIDGET_SELECTED) {
             m_status &= ~WIDGET_SELECTED;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeX = WIDGET_DESELECT;
-            msg->m_codeY = m_id;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = WIDGET_DESELECT;
+            msg.m_codeY = m_id;
             if (handleClick(0, 0))
                 return 1;
-            if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
-                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
+                msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
             return 2;
         }
         return 0;
@@ -607,89 +607,14 @@ void iconWidget::nextRandomFrame()
 
 #endif  // @carcass
 
-// E:\gamedcs\iconwdgt.cpp:572
-// The siege-engine variant of NextRandomFrame: four-pair odds table
-// (2:94%, fidgets 14-16 2% each), no transition sequences.
-// Residual (89.4667%): retail HOMES `this` at [ebp-4] - its frame is
-// 0x24 where ours is 0x20 - because it burns EDI on the CSE'd literal
-// 2 inside the table stores and has to reload `this` from the home
-// after each Random(). This compile keeps `this` in EDI for the whole
-// body and materialises the 2 in EAX, so the table sits one dword
-// higher ([ebp-0x20] vs [ebp-0x24]) and every table store's
-// displacement differs. Dreamcast's SetIconFrame fast path and single
-// SetIconSequence tail, plus the helper's seqId-then-Frame statement order,
-// make B1-B8 exact; control flow agrees across all 17 blocks, with only the
-// five size-only B0/B9/B10/B13/B16 rows remaining.
-// Tried and rejected: caching `Sprite` in a local (74.02 - it also
-// stops the per-iteration [this+0x30] reload retail does), folding
-// the frame count into the `if` condition while retaining a direct Frame
-// store (83.74); the same guard with the DC helper call is the retained win.
-// ROOT CAUSE identified 2026-08-08 (closeout lane) from the branch
-// targets: the re-roll loop's back edge lands on `mov edx,0x64` in
-// BOTH builds, but retail's odds-table stores sit AFTER that label
-// (inside the loop) and ours sit BEFORE it - our CL hoists the whole
-// loop-invariant table initialisation into the preheader. With the
-// stores outside the loop the literal 2 is needed exactly once, so it
-// takes a volatile EAX and `this` keeps EDI; retail needs it every
-// iteration, hoists it into callee-saved EDI, and homes `this` at
-// [ebp-4] - hence the 0x24-vs-0x20 frame and every table
-// displacement. Also tried and rejected: rewriting the re-roll as a
-// `goto retry` bottom-tested loop (byte-identical output - VC6
-// recognises it as the same natural loop and still hoists). Dreamcast
-// CodeView's exact local type is a const anonymous
-// {creature_seqid sequence_id; int chance;} sequenceList[4]; restoring it is
-// also byte-identical, so const qualification is not the missing hoist lever.
-// A named `const int fidgetChance = 2` outside the retry loop, reused by all
-// three fidget rows, was tested 2026-08-11 and is likewise byte-identical:
-// VC6 folds the name away before allocation and still hoists the table.
-//
-// THE ACCOUNTING, closed 2026-08-14 - the whole residual is those eight
-// stores and three `this` home/reloads. The skeleton diff is 17 vs 17 blocks, ZERO
-// flow divergence, five size-only rows, and they sum to zero:
-//   B9  preheader  base 9i (mov eax,2 + the 8 table stores) vs target 1i
-//                  (mov edi,2 alone)
-//   B10 loop head  base 6i vs target 14i (the same 8 stores, inside)
-//   B0/B13/B16     base 1i short each - exactly the `mov [ebp-4],ecx`
-//                  home and its two `mov eax,[ebp-4]` reloads
-// so closing the hoist closes the function. FOUR MORE SPELLINGS measured
-// against it 2026-08-14, all BYTE-IDENTICAL at 86.4111 (and 72.0056 for
-// NextRandomFrame), which is worth knowing because each was a different
-// theory of why VC6 hoists:
-//   - the initializer list replaced by eight element-wise assignments
-//     (so it is loop-invariant STORE motion, not aggregate-initializer
-//     materialisation - that was the leading theory);
-//   - the pick loop walking an explicit `const int* chancePtr` stepped
-//     by 2 instead of indexing sequenceList[pick] (so it is not an
-//     address-taken/aliasing question - VC6 folds the pointer back into
-//     the same strength-reduced form);
-//   - the whole table + roll + pick loop moved into a file-static helper
-//     with ONE call site, relying on /Ob2 to inline it back (the inliner
-//     runs first and the hoist happens afterwards, identically).
-// `volatile` on the table is the one probe that MOVES anything, and it
-// moves the right things for the wrong price: `const volatile` (and
-// plain `volatile`, identical) grows the frame to retail's 0x24, homes
-// `this` at [ebp-4] and makes B0 11i and B16 8i AGREE - but it still
-// does not stop the hoist, and it costs two instructions in the modulo
-// tails and one in the pick loop, netting 80.29 (and 71.43). Recorded
-// because it proves the frame/homing half is reachable; the hoist half
-// is what nothing reaches.
-// `homm3 vc6 why-reg` was run over it the same day: 20 mutations, best
-// is `volatile int cumulative` at 58 slots against 59, not exact.
-// RE-TESTED ON THE /Ob2 AXES 2026-08-14. A sibling lane found two
-// functions that only close at a specific (statement mass, candidate
-// site count) PAIR after each axis alone had been measured byte-flat, so
-// the frame/homing half was swept over the whole grid rather than one
-// axis: byte-inert statement mass m = 0,1,2,3,4,6,8,20,60,120,200
-// crossed with k = 0,1,2,3,8,12,20,40 tail `xx_nop()` candidate sites
-// (an empty file static, so each call inlines to nothing yet still
-// counts in the remaining/sites-to-come divisor). Every cell is 86.4111
-// here and 72.0056 for NextRandomFrame, to four decimals. The probe is
-// not inert by construction - the identical harness with a single
-// `volatile int` mass statement moves winmgr's FadeToBlack 88.51 ->
-// 82.80 - so the flat grid is a real negative. Neither half of this
-// residual is on an /Ob2 axis: the inliner is not what places the
-// odds-table stores, the loop-invariant store motion that runs after it
-// is.
+// Dreamcast iconwdgt.cpp:572. The const anonymous sequenceList[4] scope
+// ends at dc 0xd9f66 before the line 614 GetNumFrames retry condition.
+// A do/while preserves that boundary and closes 89.4667% to 100%, exactly
+// as in NextRandomFrame above. Its table stores stay inside the retry loop,
+// naturally keeping the repeated literal in EDI and this at [ebp-4].
+// The three-state family reproduced two distinct objects: both for/break
+// forms (with or without an inner table scope) still hoist the stores and
+// score 89.4667%. No volatile table, dummy call, or copied helper is needed.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::nextRandomSiegeEngineFrame()
 {
@@ -701,7 +626,7 @@ void iconWidget::nextRandomSiegeEngineFrame()
         return;
     }
     int chosen;
-    for (;;) {
+    do {
         const struct {
             // Before normalization: sequence_id.
             creature_seqid m_sequenceId;
@@ -722,9 +647,7 @@ void iconWidget::nextRandomSiegeEngineFrame()
                 break;
         }
         chosen = sequenceList[pick].m_sequenceId;
-        if (m_sprite->getNumFrames(chosen) > 0)
-            break;
-    }
+    } while (m_sprite->getNumFrames(chosen) <= 0);
     setIconSequence(chosen);
 }
 

@@ -140,31 +140,35 @@ struct type_AI_combat_parameters {
     long getGroup() const { return m_ourGroup; }
 
     type_AI_combat_parameters(const combatManager* combat, long side);
+    // DC ai_tactical.cpp:200..390 proves const army references, referenced
+    // hit outputs, and const combat-query receivers across this family.
+    // Retail uses those same pointer-width ABI slots and writes only the hit
+    // outputs, so preserve the canonical interfaces at every source call.
     // Before normalization (function): type_AI_combat_parameters::simulate_single_attack.
     // Before normalization (locals): current_army, our_hits, enemy_hits.
-    void simulateSingleAttack(const army* currentArmy, long* ourHits,
-                                const army* enemy, long* enemyHits,
-                                unsigned char ranged, long distance);
+    void simulateSingleAttack(const army& currentArmy, long& ourHits,
+                                const army& enemy, long& enemyHits,
+                                unsigned char ranged, long distance) const;
     // Before normalization (function): type_AI_combat_parameters::simulate_attack.
     // Before normalization (locals): current_army, our_hits, enemy_hits.
-    void simulateAttack(const army* currentArmy, long* ourHits,
-                         const army* enemy, long* enemyHits,
-                         unsigned char ranged, long distance);
+    void simulateAttack(const army& currentArmy, long& ourHits,
+                         const army& enemy, long& enemyHits,
+                         unsigned char ranged, long distance) const;
     // Before normalization (function): type_AI_combat_parameters::get_simple_attack_effect.
     // Before normalization (locals): current_army, our_total, enemy_total.
-    long getSimpleAttackEffect(const army* currentArmy, long ourTotal,
-                                  const army* enemy, long enemyTotal,
-                                  unsigned char ranged, long distance);
+    long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
+                                  const army& enemy, long enemyTotal,
+                                  unsigned char ranged, long distance) const;
     // Before normalization (function): type_AI_combat_parameters::get_simple_attack_effect.
-    long getSimpleAttackEffect(const army* currentArmy, const army* enemy,
-                                  unsigned char ranged, long distance);
+    long getSimpleAttackEffect(const army& currentArmy, const army& enemy,
+                                  unsigned char ranged, long distance) const;
     // Before normalization (function): type_AI_combat_parameters::get_ranged_attack_value.
     // Before normalization (locals): current_army.
-    long getRangedAttackValue(const army* currentArmy, const army* enemy);
+    long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
     // Before normalization (function): type_AI_combat_parameters::get_exchange_effect.
     // Before normalization (locals): current_army.
-    long getExchangeEffect(const army* currentArmy, const army* enemy,
-                             long distance);
+    long getExchangeEffect(const army& currentArmy, const army& enemy,
+                             long distance) const;
 };
 SIZE(type_AI_combat_parameters, 0x28);
 
@@ -310,7 +314,7 @@ struct type_AI_spellcaster {
     // act?" - inlined into consider_teleport, consider_resurrect and
     // consider_single_enchantment, with no retail body of its own.
     // Before normalization (function): type_AI_spellcaster::is_last_action.
-    unsigned char isLastAction();
+    unsigned char isLastAction() const;
 
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
@@ -351,9 +355,14 @@ struct type_AI_spellcaster {
     // Before normalization (locals): our_army.
     long getSpeedValue(const army* ourArmy, long increase, long duration);
     // Before normalization (function): type_AI_spellcaster::should_attack_now.
-    unsigned char shouldAttackNow(const army* enemy);
+    unsigned char shouldAttackNow(const army& enemy) const;
     // Before normalization (function): type_AI_spellcaster::get_defense_boost_value.
     // Before normalization (locals): our_army.
+    // DC ai_tactical.cpp:1158/1186: get_attack_boost_value, const overloads.
+    long getAttackBoostValue(const army* ourArmy, const army* enemy,
+                            long oldDamage, long duration, double increase) const;
+    long getAttackBoostValue(const army* ourArmy, const army* enemy,
+                            long duration, double increase) const;
     long getDefenseBoostValue(const army* ourArmy, const army* enemy,
                                  long duration, double increase);
     // Before normalization (function): type_AI_spellcaster::get_defense_skill_value.
@@ -566,8 +575,8 @@ double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 // Before normalization (function): AI_get_attack_damage.
 // Before normalization (locals): current_army, our_hits.
-long aiGetAttackDamage(const army* currentArmy, long ourHits,
-                          const army* enemy, unsigned char ranged,
+long aiGetAttackDamage(const army& currentArmy, long ourHits,
+                          const army& enemy, unsigned char ranged,
                           long distance);
 // The two seven-parameter statics. DECLARED rather than left as
 // CODEVIEW rows because check_adjacent_hexes (0x436300) calls both and

@@ -166,24 +166,24 @@ inline int button::deselectSelected(message* msg)
 // load falls back to reloading the icon sprite by the same name.
 // E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
-int button::main(message* msg)
+int button::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
         if (static_cast<int>(GameTime::get() - repeatTime) > 0)
-            return deselectSelected(msg);
+            return deselectSelected(&msg);
     }
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
         return widget::main(msg);
     }
     unsigned char isDisabled = 0;
     if (m_status & WIDGET_DISABLED)
         isDisabled = 1;
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_KEY_DOWN: {
         if (isDisabled)
             return 0;
@@ -192,8 +192,8 @@ int button::main(message* msg)
         if (m_status & WIDGET_DIMMED)
             break;
         for (unsigned int key = 0; key < m_hotKeyCodes.size(); key++) {
-            if (m_hotKeyCodes[key] == msg->m_codeX)
-                return select(msg);
+            if (m_hotKeyCodes[key] == msg.m_codeX)
+                return select(&msg);
         }
         return 0;
     }
@@ -205,8 +205,8 @@ int button::main(message* msg)
         if (m_status & WIDGET_DIMMED)
             break;
         for (unsigned int key = 0; key < m_hotKeyCodes.size(); key++) {
-            if (m_hotKeyCodes[key] == msg->m_codeX)
-                return deselectSelected(msg);
+            if (m_hotKeyCodes[key] == msg.m_codeX)
+                return deselectSelected(&msg);
         }
         return 0;
     }
@@ -215,41 +215,41 @@ int button::main(message* msg)
             return 0;
         if (!(m_status & WIDGET_DRAWN))
             break;
-        short mouseX = msg->m_codeX - m_parentWindow->m_x;
-        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        short mouseX = msg.m_codeX - m_parentWindow->m_x;
+        short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (m_status & WIDGET_DIMMED)
             return 0;
         if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
             || mouseY >= m_y + m_height)
             return 0;
-        select(msg);
+        select(&msg);
         // Both exits BREAK to one shared `return DeselectSelected(msg)`
         // below: DeselectSelected is /Ob2-inlined, so spelling either
         // exit as its own `return` expands the whole 139-byte deselect
         // body twice where retail expands it once (67.38 -> ...).
         for (;;) {
-            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP
-                || msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
+            if (msg.m_id == MESSAGE_LEFT_BUTTON_UP
+                || msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
                 break;
-            g_mouseManager->main(*msg);
-            if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-                short moveX = msg->m_codeX - m_parentWindow->m_x;
-                short moveY = msg->m_codeY - m_parentWindow->m_y;
+            g_mouseManager->main(msg);
+            if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+                short moveX = msg.m_codeX - m_parentWindow->m_x;
+                short moveY = msg.m_codeY - m_parentWindow->m_y;
                 if (moveX >= m_x && moveY >= m_y && moveX < m_x + m_width
                     && moveY < m_y + m_height) {
                     if (!(m_status & WIDGET_SELECTED))
-                        select(msg);
+                        select(&msg);
                 } else {
-                    deselectSelected(msg);
+                    deselectSelected(&msg);
                 }
             }
             process1WindowsMessage();
             pollSound();
-            *msg = g_inputManager->getEvent();
-            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP)
+            msg = g_inputManager->getEvent();
+            if (msg.m_id == MESSAGE_LEFT_BUTTON_UP)
                 break;
         }
-        return deselectSelected(msg);
+        return deselectSelected(&msg);
     }
     case MESSAGE_LEFT_BUTTON_UP: {
         if (isDisabled)
@@ -258,16 +258,16 @@ int button::main(message* msg)
             break;
         if (!(m_status & WIDGET_SELECTED))
             break;
-        return deselectSelected(msg);
+        return deselectSelected(&msg);
     }
     case MESSAGE_RIGHT_BUTTON_DOWN:
         break;
     case MESSAGE_WIDGET: {
-        if (msg->m_codeY != m_id)
+        if (msg.m_codeY != m_id)
             break;
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SET_PALETTE: {
-            TPalette16* newPalette = ResourceManager::getPalette(msg->m_extraText);
+            TPalette16* newPalette = ResourceManager::getPalette(msg.m_extraText);
             if (newPalette) {
                 m_buttonIcon->setPalette(newPalette->m_data);
                 newPalette->dispose();
@@ -275,17 +275,17 @@ int button::main(message* msg)
             }
             if (m_buttonIcon)
                 m_buttonIcon->dispose();
-            m_buttonIcon = ResourceManager::getSprite(msg->m_extraText);
+            m_buttonIcon = ResourceManager::getSprite(msg.m_extraText);
             return 1;
         }
         case widget::WIDGET_SET_ICON_NAME:
-            m_buttonIcon = ResourceManager::getSprite(msg->m_extraText);
+            m_buttonIcon = ResourceManager::getSprite(msg.m_extraText);
             return 1;
         case widget::WIDGET_SET_TEXT:
-            setText(msg->m_extraText);
+            setText(msg.m_extraText);
             return 1;
         case widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
-            setPlayerPaletteColors(msg->m_extra);
+            setPlayerPaletteColors(msg.m_extra);
             return 1;
         }
         break;
@@ -297,15 +297,15 @@ int button::main(message* msg)
     }
     if (!(m_status & WIDGET_DRAWN))
         return widget::main(msg);
-    short rightX = msg->m_codeX - m_parentWindow->m_x;
-    short rightY = msg->m_codeY - m_parentWindow->m_y;
+    short rightX = msg.m_codeX - m_parentWindow->m_x;
+    short rightY = msg.m_codeY - m_parentWindow->m_y;
     if (rightX < m_x || rightY < m_y || rightX >= m_x + m_width
         || rightY >= m_y + m_height)
         return 0;
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = widget::WIDGET_RIGHT_SELECT;
-    msg->m_codeY = m_id;
-    msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_RIGHT_SELECT;
+    msg.m_codeY = m_id;
+    msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
     return 2;
 }
 
@@ -594,13 +594,13 @@ type_func_button::~type_func_button()
 
 // E:\gamedcs\button.cpp:574
 VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d48
-int type_func_button::main(message* msg)
+int type_func_button::main(message& msg)
 {
     int result = button::main(msg);
     if (result != 1 && (m_status & WIDGET_ACTIVE) && m_sleepCount <= 0
-        && msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
-        msg->m_window = m_parentWindow;
-        return m_handler(*msg);
+        && msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
+        msg.m_window = m_parentWindow;
+        return m_handler(msg);
     }
     return result;
 }

@@ -126,28 +126,31 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // The apply-to-human flag is version-gated at save version 28, the same
 // boundary game::LoadGarrisonPool uses for its removable-units flag; below it
 // the flag is forced on rather than read.
+// DC locals prove int count, string throwAway, and char padding[16]. The
+// read/guard pairs and failure scopes are separate at mapcell.cpp:93..120.
+// The 24-state family emitted four reproduced code results: recovered count
+// placement, char padding and error braces keep 99.4737%. Removing the old
+// cleanup pin gives 72.9210% in every corresponding control. That retained
+// site still calls the string destructor where retail calls _Tidy(true);
+// default depth expands the child too, so this boundary remains unresolved.
 VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
 int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
-    std::string ignored;
-    NewSMapHeader::readString(infile, ignored);
+    int count;
+    std::string throwAway;
+    NewSMapHeader::readString(infile, throwAway);
     NewSMapHeader::readString(infile, m_message);
 
-    if (infile->read(m_resQty, sizeof(m_resQty)) < sizeof(m_resQty))
+    count = infile->read(m_resQty, sizeof(m_resQty));
+    if (count < sizeof(m_resQty)) {
         return -1;
-    // THE PIN GOES HERE, NOT ON THE TAIL `return 0` (72.9210 -> 99.4737,
-    // 2026-08-20).  The note at the bottom of this body had the census right
-    // - retail CALLS `basic_string::_Tidy` at three cleanup sites and we
-    // called it at two - and pinned the wrong one.  Read the sites in order:
-    // retail calls `_Tidy` after the ResQty read and again after the
-    // PlayerFlags read, and only at the THIRD (ApplyToComputer) does it
-    // expand the refcount-decrement chain in place.  Ours matched sites one
-    // and three and expanded site TWO, so exactly one `return -1` was over-
-    // inlined.  `#pragma inline_depth(0)` on that statement alone, +26.55.
-    if (infile->read(&m_playerFlags, sizeof(m_playerFlags)) < sizeof(m_playerFlags))
+    }
+    count = infile->read(&m_playerFlags, sizeof(m_playerFlags));
+    if (count < sizeof(m_playerFlags)) {
 #pragma inline_depth(0)
         return -1;
 #pragma inline_depth()
+    }
 
     if (saveVersion >= 28) {
         unsigned char value;
@@ -157,29 +160,25 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
         m_applyToHuman = 1;
     }
 
-    if (infile->read(&m_applyToComputer, sizeof(m_applyToComputer))
-        < sizeof(m_applyToComputer))
+    count = infile->read(&m_applyToComputer, sizeof(m_applyToComputer));
+    if (count < sizeof(m_applyToComputer)) {
         return -1;
-    if (infile->read(&m_firstTime, sizeof(m_firstTime)) < sizeof(m_firstTime))
+    }
+    count = infile->read(&m_firstTime, sizeof(m_firstTime));
+    if (count < sizeof(m_firstTime)) {
         return -1;
+    }
     ++m_firstTime;
-    if (infile->read(&m_interval, sizeof(m_interval)) < sizeof(m_interval))
+    count = infile->read(&m_interval, sizeof(m_interval));
+    if (count < sizeof(m_interval)) {
         return -1;
+    }
 
-    unsigned char padding[16];
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    char padding[16];
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding)) {
         return -1;
-    // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`,
-    // 72.9210 -> 67.0263.  It was the right lever at the wrong site - see
-    // the PlayerFlags guard above, where the same pragma is worth +26.55.
-    //
-    // Residual (99.4737%): ONE relocation.  At the pinned site retail calls
-    // `_Tidy(true)` where we call `~basic_string()` - retail expands the
-    // destructor and leaves its child out of line, and `inline_depth(N)` has
-    // no N that spells "inline the parent, call the child".  Measured here
-    // too: `inline_depth(1)` at that site is byte-flat with NO pin at all
-    // (72.9210 to the digit), which is a clean confirmation of the standing
-    // "only N=0 bites" bound on a body where N=0 moves 26 points.
+    }
     return 0;
 }
 
@@ -4565,20 +4564,27 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // the latter's best 99.9673% requires splitting the proven generic buffer
 // and adding phase scopes, so retain the simpler native local. No dummy
 // lifetime operations or substitute representation casts are introduced.
+// DC's CObjectType reference, separate int count, and char dummy[2] are
+// restored as canonical source facts. Twelve source candidates produced four
+// reproduced objects; these locals and the reference call leave the retained
+// reader/caller bytes unchanged. A short or byte buffer does not explain the
+// remaining int_buffer/enum-owner stack displacements.
 VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(TAbstractFile* infile,
-                               CObjectType* tempObjectType)
+                               CObjectType& tempObjectType)
 {
     char imageName[100] = { 0 };
     int value;
+    int count;
     char byteValue;
     unsigned char packed[6];
     int i;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
     infile->read(imageName, value);
-    tempObjectType->m_imageName = imageName;
+    tempObjectType.m_imageName = imageName;
 
     _strrev(imageName);
     imageName[0] = 'k';
@@ -4599,72 +4605,81 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
     ResourceManager::readFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
-    tempObjectType->m_width = byteValue;
+    tempObjectType.m_width = byteValue;
     ResourceManager::readFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
-    tempObjectType->m_height = byteValue;
+    tempObjectType.m_height = byteValue;
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_drawCells.set(i,
+        tempObjectType.m_drawCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
+    count = infile->read(packed, sizeof(packed));
+    if (count < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_passableCells.set(i,
+        tempObjectType.m_passableCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_shadowCells.set(i,
+        tempObjectType.m_shadowCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
+    count = infile->read(packed, sizeof(packed));
+    if (count < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_triggerCells.set(i,
+        tempObjectType.m_triggerCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    short landscape;
-    if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
+    char dummy[2];
+    count = infile->read(dummy, sizeof(dummy));
+    if (count < sizeof(dummy))
         return -1;
-    if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
+    count = infile->read(dummy, sizeof(dummy));
+    if (count < sizeof(dummy))
         return -1;
 
     TAdventureObjectType objectTypeRead;
-    if (infile->read(&objectTypeRead, sizeof(objectTypeRead)) < sizeof(objectTypeRead))
+    count = infile->read(&objectTypeRead, sizeof(objectTypeRead));
+    if (count < sizeof(objectTypeRead))
         return -1;
-    tempObjectType->m_objectType = objectTypeRead;
+    tempObjectType.m_objectType = objectTypeRead;
     if (usedDefaultMask) {
         sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
-                tempObjectType->m_imageName.c_str(),
-                g_adventureObjectNames[tempObjectType->m_objectType]);
+                tempObjectType.m_imageName.c_str(),
+                g_adventureObjectNames[tempObjectType.m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
-    memcpy(&tempObjectType->m_objectType,
-           &g_adventureObjectTraits[tempObjectType->m_objectType][8],
-           sizeof(tempObjectType->m_objectType));
+    memcpy(&tempObjectType.m_objectType,
+           &g_adventureObjectTraits[tempObjectType.m_objectType][8],
+           sizeof(tempObjectType.m_objectType));
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
-    tempObjectType->m_extra = value;
+    tempObjectType.m_extra = value;
 
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
-    tempObjectType->m_suppressDraw = byteValue != 0;
+    tempObjectType.m_suppressDraw = byteValue != 0;
 
     char unused[16];
-    if (infile->read(unused, sizeof(unused)) < sizeof(unused))
+    count = infile->read(unused, sizeof(unused));
+    if (count < sizeof(unused))
         return -1;
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
@@ -5015,7 +5030,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     int i;
     for (i = 0; i < m_objectTypes.size(); ++i) {
-        int status = readObjectType(infile, &m_objectTypes[i]);
+        int status = readObjectType(infile, m_objectTypes[i]);
         if (status < 0)
             return -1;
         if (i == m_objectTypes.size() / 2)

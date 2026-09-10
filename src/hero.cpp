@@ -1519,8 +1519,9 @@ const char* hero::heroFn004D8FB0()
 // hero model already carries, widened with movsx into the claimed
 // game::IsHuman at 0x4ce940, then normalised with neg/sbb/neg to the
 // unsigned char DC declares.
+// DC hero.cpp:1303 proves the const receiver; the body only reads this hero.
 VA(0x004d9050, 0x20)  // anchor-callee (game::IsHuman), dc 0xcc0bc
-unsigned char hero::belongsToHuman()
+unsigned char hero::belongsToHuman() const
 {
     if (m_owner < 0)
         return 0;
@@ -1612,8 +1613,9 @@ hero_seqid boat::getStandSequence()
 }
 
 // E:\gamedcs\hero.cpp:1422
+// DC hero.cpp:1422 proves the const receiver; the body only reads this hero.
 VA(0x004d91b0, 0x3F)  // anchor-global, dc 0xcc220
-unsigned char hero::hasArtifact(int whichArtifact)
+unsigned char hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
@@ -1636,7 +1638,7 @@ unsigned char hero::hasArtifact(int whichArtifact)
 // on the COMBINATION artifact this piece belongs to - so wearing an
 // assembled combo counts as wearing each of its components.
 VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
-unsigned char hero::isWieldingArtifact(int whichArtifact)
+unsigned char hero::isWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK)
         return m_equipped[17].m_artifactId == ARTIFACT_SPELLBOOK;
@@ -2245,26 +2247,23 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 // object (see the note over the array), and the Dreamcast row lists
 // iLevel as the only parameter - a STATIC member, which /Gr makes
 // fastcall.
-// Spelling notes, both measured: declaring `total` FIRST and deriving
-// the increment from it is what puts iLevel in EDI and the running sum
-// in ESI the way retail allocates them (the other order swaps the two,
-// 96.9); and the extrapolation loop must be the ASCENDING
-// `for (i = 13; i < iLevel; i++)` - VC6's own induction-variable
-// downcount then rewrites it in place as `add edi,-0xd` / `dec edi` /
-// `jne`, which is retail exactly. Writing that rewrite by hand
-// (`iLevel -= 13; do {...} while (--iLevel);`) emits `sub edi,0xd`
-// instead and costs the last byte (98.6), and
-// `for (i = iLevel - 13; i > 0; i--)` costs three more (87.0).
+// DC line1843 computes the scaled initial step and its accumulated total
+// before the ascending loop. Form the step first, then initialize total with
+// the table threshold plus that step. This preserves the standalone body at
+// 100% and makes GetExperienceIncrement's first expansion exact as well.
+// The older total-first spelling is still exact here but gives that caller
+// 98.1013%. The 35-state helper/caller lifetime family reproduces 15 distinct
+// objects; naming only caller arguments/results or changing the loop-index
+// lifetime does not recover the caller. Keep the ordinary canonical helper.
 // Before normalization (locals): iLevel.
 VA(0x004da3a0, 0x76)  // anchor-global, dc 0xccb80
 int hero::getExperience(int level)
 {
     if (level <= 12)
         return g_experienceForLevel[level - 1];
-    int total = g_experienceForLevel[11];
-    int increment =
-        static_cast<int>((total - g_experienceForLevel[10]) * 1.2);
-    total += increment;
+    int increment = static_cast<int>(
+        (g_experienceForLevel[11] - g_experienceForLevel[10]) * 1.2);
+    int total = g_experienceForLevel[11] + increment;
     for (int i = 13; i < level; i++) {
         increment = static_cast<int>(increment * 1.2);
         total += increment;
@@ -2278,16 +2277,11 @@ int hero::getExperience(int level)
 // `cmp ebx,0xc` / `add ebx,-0xd` mirror the first's on `esi`. Also
 // STATIC (the Dreamcast row lists only `level`), and the +1 side is
 // evaluated FIRST.
-// Residual (98.1%): four rows, all one register swap in the FIRST
-// inlined copy. Retail keeps the inlined `iLevel` (level+1) in ESI and
-// that copy's running total in EDI; our CL reuses EDI for both, so the
-// `lea`, the `cmp`, the indexed load and the `mov ecx,` name the other
-// register. The second copy, the whole float chain and both loops are
-// identical. Tried and rejected: binding `level + 1` to a named local
-// before the call (98.1, no change); binding the first RESULT to a
-// named local (98.1, no change); reversing the expression tree as
-// `-(GetExperience(level) - GetExperience(level + 1))` (45.94%, the two
-// inline copies no longer retain retail's schedule).
+// Exact with the step-before-total initialization in the canonical
+// GetExperience helper. Keep the single source expression and both helper
+// calls recorded at DC line1858. Caller-only named argument/result forms
+// remain98.1013 with the old helper; the matching helper also preserves the
+// standalone GetExperience and GiveExperience bodies at100%.
 VA(0x004da420, 0xE4)  // anchor-bracket, dc 0xccc68
 int hero::getExperienceIncrement(int level)
 {
@@ -3660,23 +3654,23 @@ std::string hero::getMoraleDescription() const
         morale = 500;
     }
 
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x6c)) {
+    if (this->isWieldingArtifact(0x6c)) {
         result += g_moraleTexts[26];
         morale += 3;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x2d)) {
+    if (this->isWieldingArtifact(0x2d)) {
         result += g_moraleTexts[4];
         morale++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x31)) {
+    if (this->isWieldingArtifact(0x31)) {
         result += g_moraleTexts[5];
         morale++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x32)) {
+    if (this->isWieldingArtifact(0x32)) {
         result += g_moraleTexts[6];
         morale++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x33)) {
+    if (this->isWieldingArtifact(0x33)) {
         result += g_moraleTexts[7];
         morale++;
     }
@@ -3791,7 +3785,7 @@ std::string hero::getMoraleDescription() const
     }
 
     int otherModifier =
-        const_cast<hero*>(this)->getMorale(0, 0, 0) - morale;
+        this->getMorale(0, 0, 0) - morale;
     if (otherModifier < 0)
         result += formatString(g_moraleTexts[24], abs(otherModifier));
     else if (otherModifier > 0)
@@ -3836,23 +3830,23 @@ std::string hero::getLuckDescription() const
         luck = 500;
     }
 
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x6c)) {
+    if (this->isWieldingArtifact(0x6c)) {
         result += g_luckTexts[21];
         luck += 3;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x2d)) {
+    if (this->isWieldingArtifact(0x2d)) {
         result += g_luckTexts[4];
         luck++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x2e)) {
+    if (this->isWieldingArtifact(0x2e)) {
         result += g_luckTexts[5];
         luck++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x2f)) {
+    if (this->isWieldingArtifact(0x2f)) {
         result += g_luckTexts[6];
         luck++;
     }
-    if (const_cast<hero*>(this)->isWieldingArtifact(0x30)) {
+    if (this->isWieldingArtifact(0x30)) {
         result += g_luckTexts[7];
         luck++;
     }
@@ -3946,7 +3940,7 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    int otherModifier = const_cast<hero*>(this)->getLuck(0, 0, 0) - luck;
+    int otherModifier = this->getLuck(0, 0, 0) - luck;
     if (otherModifier < 0)
         result += formatString(g_luckTexts[19], abs(otherModifier));
     else if (otherModifier > 0)
@@ -6512,21 +6506,24 @@ void hero::giveResource(int whichRes, int howMuch)
 // A direct tLimit(-3, luck, 3) negative control scores 87.7439: its
 // reference binds luck itself instead of the by-value wrapper copy.
 //
+// DC 5241 likewise records one conditional-expression return. Restoring
+// it preserves 88.0650%; a function-scope luck declaration drops to 86.3496.
 // Residual (88.0650%): retail keeps luck in the dead onCursedGround
 // parameter home and saves EBX only when the town loop needs it. VC6
 // promotes luck to EBX and saves it in the prologue. Separate Hourglass
 // early-outs gave 71.67%; keep the combined condition and shared return.
 // Before normalization (locals): on_cursed_ground, apply_limits.
+// DC hero.cpp:5165 proves the const receiver; the body only reads this hero.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
 int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
-                  unsigned char applyLimits)
+                  unsigned char applyLimits) const
 {
     if (!(m_flags & 0x400000)) {
         if (onCursedGround)
             return 0;
         if (isWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR) ||
             (otherHero &&
-             const_cast<hero*>(otherHero)->isWieldingArtifact(
+             otherHero->isWieldingArtifact(
                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR)))
             return 0;
     }
@@ -6584,9 +6581,7 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
     luck += m_luckBonus;
     if (m_flags & 0x400000)
         luck += 500;
-    if (applyLimits)
-        return limit(-3, luck, 3);
-    return luck;
+    return applyLimits ? limit(-3, luck, 3) : luck;
 }
 
 #if 0  // @carcass
@@ -6603,23 +6598,19 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
 // The Grail arm reads `active`, not `built` - the field town::HasBuilding
 // selects for check_included != 0 - and gates on TOWN_CASTLE.
 //
-// Restoring the Dreamcast-proven ordinary `limit(-3, morale, 3)` source
-// call raises 94.7974 -> 98.53, makes all 34 branches clean, and makes the
-// clamp blocks byte-identical. Negative controls: spelling the clamp as
-// nested cppMin/cppMax with the inner arguments reversed reaches 95.28;
-// reversing the outer arguments reaches only 90.70/95.04. Separating the
-// function-scope `morale` declaration from its later assignment is byte-flat
-// at 98.5345 and fits the two leading zero-emission Dreamcast source lines.
-//
-// Residual (98.53%): two cosmetic items. Retail sinks `push ebx` past
-// the cursed-ground early return while this compile saves it in the
-// prologue; and the bitNumber reference is one relocation ADDEND - retail's
-// `bitNumber + 0xd0` is carved as its own data symbol, ours is the base
-// plus a displacement, which is a naming difference and not a byte one.
+// DC 5306 calls HasBuilding; preserve that source boundary even though
+// its expansion here is byte-flat. DC 5322 combines apply_limits and limit
+// into one final conditional-expression return, with no new lexical scope.
+// Restoring that return resolves the delayed EBX save: 98.5345 -> 100.0000.
+// Negative controls: separate if/return retains 98.5345; assigning the clamp
+// back to morale before returning gives 95.3448. Moving morale's declaration
+// after the cursed-ground guard is byte-flat in each form. The canonical
+// limit -> tLimit wrapper chain and its by-value temporaries remain intact.
 // Before normalization (locals): on_cursed_ground, apply_limits.
+// DC hero.cpp:5254 proves the const receiver; the body only reads this hero.
 VA(0x004e39b0, 0x2A9)  // anchor-global, dc 0xd41fc
 int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
-                    unsigned char applyLimits)
+                    unsigned char applyLimits) const
 {
     int morale;
 
@@ -6649,7 +6640,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if ((ownedTown->m_active & g_bitNumber[HOLY_GRAIL_ID]) != 0 &&
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1) &&
                 ownedTown->m_type == TOWN_CASTLE) {
                 morale += 2;
                 break;
@@ -6660,9 +6651,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
     morale += m_moraleBonus;
     if (m_flags & 0x800000)
         morale += 500;
-    if (applyLimits)
-        return limit(-3, morale, 3);
-    return morale;
+    return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
 #if 0  // @carcass
@@ -6709,7 +6698,7 @@ TCreatureType hero::getNecromancyCreature()
 // are an if/else and not an early return.
 // Before normalization (locals): apply_limit.
 VA(0x004e3cd0, 0x268)  // anchor-global, dc 0xd4390
-float hero::getNecromancyFactor(unsigned char applyLimit)
+float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
     float factor = g_necromancyFactors[m_skillLevel[eSecSkillNecromancy]];
     if (m_skillLevel[eSecSkillNecromancy] > 0) {
@@ -7030,8 +7019,9 @@ float hero::getIntelligenceFactor()
 }
 
 // E:\gamedcs\hero.cpp:5808
+// DC hero.cpp:5808 proves the const receiver; the body only reads this hero.
 VA(0x004e4920, 0x66)  // anchor-global, dc 0xd4b08
-float hero::getFirstAidFactor()
+float hero::getFirstAidFactor() const
 {
     float factor = g_firstAidFactors[m_skillLevel[eSecSkillFirstAid]];
     if (m_skillLevel[eSecSkillFirstAid] > 0) {
@@ -7096,8 +7086,9 @@ static TCreatureType getUpgradedCreature(TCreatureType type)
 // helper boundaries. The navigation specialty divides by twenty in both
 // retail and Dreamcast (hero.cpp:5744); no release-elided carrier is needed.
 // Before normalization (locals): sea_movement.
+// DC hero.cpp:5833 proves the const receiver; the body only reads this hero.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
-int hero::getMobility(unsigned char seaMovement)
+int hero::getMobility(unsigned char seaMovement) const
 {
     if (m_flags & 0x1000000)
         return 1000000;
@@ -7162,8 +7153,9 @@ int hero::getMobility(unsigned char seaMovement)
 }
 
 // E:\gamedcs\hero.cpp:5932
+// DC hero.cpp:5932 proves the const receiver; the body only reads this hero.
 VA(0x004e4d90, 0x12)  // corroborates, dc 0xd4d60
-int hero::getMobility()
+int hero::getMobility() const
 {
     return getMobility((m_flags >> 18) & 1);
 }
@@ -7173,8 +7165,9 @@ int hero::getMobility()
 #endif  // @carcass
 
 // E:\gamedcs\hero.cpp:5943
+// DC hero.cpp:5943 proves the const receiver; the body only reads this hero.
 VA(0x004e4db0, 0x10D)  // anchor-global, dc 0xd4db0
-int hero::getSpellDurationBonus()
+int hero::getSpellDurationBonus() const
 {
     int bonus = 0;
     if (isWieldingArtifact(ARTIFACT_COLLAR_OF_CONJURING))
@@ -7224,7 +7217,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
 
 // E:\gamedcs\hero.cpp:5962
 VA(0x004e4fa0, 0xD7)  // exact packed-point/map-cell lookup, dc 0xd4df0
-inline int hero::getSpecialTerrain()
+inline int hero::getSpecialTerrain() const
 {
     type_point location = getLocation();
     if (location == type_point(-1, -1, -1))
@@ -7242,8 +7235,9 @@ inline int hero::getSpecialTerrain()
 // scan, and leaves only the combination recursion as a call, which is
 // byte-for-byte what retail emits here and in GetManaCost below.
 // Before normalization (locals): magic_terrain.
+// DC hero.cpp:5977 proves the const receiver; the body only reads this hero.
 VA(0x004e5080, 0x7D)  // anchor-bracket, dc 0xd4e4c
-TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain)
+TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
 {
     if (spell == SPELL_ARMAGEDDON
         && isWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
@@ -7319,6 +7313,9 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
 // dword load.
 // The `&&` + else form sinks the fallback into the air arm as retail
 // does; hoisting `best_school = school_mask` measured only 77.1%.
+// DC 6043/6049/6055 places each pair of school/level tests in one condition.
+// The eight independent combined-guard controls produce four reproduced code
+// results, all 98.3750%; preserve the combined guards without a byte alias.
 // Before normalization (locals): school_mask, best_school, best_level.
 VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
 TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
@@ -7332,23 +7329,20 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     } else {
         bestSchool = schoolMask;
     }
-    if (schoolMask & eSchoolFire) {
-        if (m_skillLevel[eSecSkillSchoolOfFireMagic] > bestLevel) {
-            bestLevel = m_skillLevel[eSecSkillSchoolOfFireMagic];
-            bestSchool = eSchoolFire;
-        }
+    if ((schoolMask & eSchoolFire)
+        && m_skillLevel[eSecSkillSchoolOfFireMagic] > bestLevel) {
+        bestLevel = m_skillLevel[eSecSkillSchoolOfFireMagic];
+        bestSchool = eSchoolFire;
     }
-    if (schoolMask & eSchoolEarth) {
-        if (m_skillLevel[eSecSkillSchoolOfEarthMagic] > bestLevel) {
-            bestLevel = m_skillLevel[eSecSkillSchoolOfEarthMagic];
-            bestSchool = eSchoolEarth;
-        }
+    if ((schoolMask & eSchoolEarth)
+        && m_skillLevel[eSecSkillSchoolOfEarthMagic] > bestLevel) {
+        bestLevel = m_skillLevel[eSecSkillSchoolOfEarthMagic];
+        bestSchool = eSchoolEarth;
     }
-    if (schoolMask & eSchoolWater) {
-        if (m_skillLevel[eSecSkillSchoolOfWaterMagic] > bestLevel) {
-            bestLevel = m_skillLevel[eSecSkillSchoolOfWaterMagic];
-            bestSchool = eSchoolWater;
-        }
+    if ((schoolMask & eSchoolWater)
+        && m_skillLevel[eSecSkillSchoolOfWaterMagic] > bestLevel) {
+        bestLevel = m_skillLevel[eSecSkillSchoolOfWaterMagic];
+        bestSchool = eSchoolWater;
     }
     return bestSchool;
 }
@@ -7373,7 +7367,7 @@ int hero::getManaCost(int whichSpell, const armyGroup* enemy,
 {
     if (whichSpell == SPELL_TITANS_LIGHTNING_BOLT)
         return 0;
-    TSkillMastery mastery = const_cast<hero*>(this)->getSpellLevel(whichSpell, magicTerrain);
+    TSkillMastery mastery = this->getSpellLevel(whichSpell, magicTerrain);
     int cost = g_spellTraits[whichSpell].m_manaCost[mastery];
     if (enemy) {
         if (enemy->isMember(CREATURE_PEGASUS)
@@ -7462,8 +7456,9 @@ void hero::setVisitedArena(const NewmapCell* cell)
 // what one shared literal in two adjacent clamps produces.
 // The attack term is written FIRST: VC6 evaluates `A * B` right to
 // left, and retail pushes the defense factor onto the stack first.
+// DC hero.cpp:6171 proves the const receiver; the body only reads this hero.
 VA(0x004e5400, 0x93)  // linkorder, dc 0xd50a0
-float hero::getCombatValueModifier()
+float hero::getCombatValueModifier() const
 {
     signed char attack = m_stats[0];
     // Before normalization (locals): attack_value, defense_value.
@@ -7510,60 +7505,24 @@ boat* hero::findSummonableBoat() const
     return result;
 }
 
-// E:\gamedcs\hero.cpp:6219
-// Requires Summon Boat availability and mana at the effective local magic
-// terrain. An existing reachable boat wins; otherwise Advanced mastery can
-// summon one only when the global boat pool still has a free slot.
-//
-// 75.23 -> 85.70 (2026-08-20) on one `#pragma inline_depth(0)` at the
-// worldMap.cell() site: retail CALLS NewfullMap::cell(int,int,int) there
-// (predict-inline base x0 vs retail x1) where our CL expanded its index
-// arithmetic inline.
-// Residual (86.9922%, register homing): naming that call's NewmapCell result
-// raises the retained spelling another 1.29 points, but flow-distance is
-// already zero and why-reg reports identical first definitions.  Retail
-// keeps EBX live through the packed-point comparison; this compile borrows
-// it with a push/pop and rotates the subsequent ECX/EDX scratches.  Reversing
-// the point/invalid declaration order regresses to 82.87%; leaving the cell
-// result unnamed is 85.70%, and removing the call-site pin returns 75.23%.
+// Dreamcast hero.cpp:6220..6225 calls SpellIsAvailable, get_spell_level
+// with no terrain, and the one-argument GetManaCost facade. Their canonical
+// calls reproduce all retail bytes and remove the former cell-site pin.
+// Eight source candidates and eight distinct objects reproduced: spell-level
+// restoration alone is 86.9922%, mana-cost alone is 76.3516%, and both together
+// are 100%. Availability is independently byte-neutral. No hero sibling moves.
+// Retail's terrain lookup and mana calculation are expansions of these
+// source helpers; the flattened copy had the wrong register lifetimes.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
 unsigned char hero::canSummonBoat() const
 {
-    if (!m_availableSpells[SPELL_SUMMON_BOAT])
+    if (!spellIsAvailable(SPELL_SUMMON_BOAT))
         return 0;
 
-    int baseMastery = getSpellSchoolLevel(
-        g_spellTraits[SPELL_SUMMON_BOAT].m_school, kMagicTerrainNone);
+    TSkillMastery baseMastery = getSpellLevel(
+        SPELL_SUMMON_BOAT, kMagicTerrainNone);
 
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
-    type_point invalid;
-    invalid.m_x = -1;
-    invalid.m_y = -1;
-    invalid.m_z = -1;
-
-    int magicTerrain;
-    if (invalid.m_x == point.m_x && invalid.m_y == point.m_y
-        && invalid.m_z == point.m_z) {
-        magicTerrain = kMagicTerrainNone;
-    } else {
-        // Site-pinned: retail CALLS NewfullMap::cell(int,int,int) here
-        // (base x0 vs retail x1) where our CL expanded its index
-        // arithmetic inline.
-#pragma inline_depth(0)
-        NewmapCell* magicCell = g_game->m_worldMap.cell(
-            point.m_x, point.m_y, point.m_z);
-#pragma inline_depth()
-        magicTerrain = magicCell->getMagicTerrainType();
-    }
-
-    int mastery = getSpellSchoolLevel(
-        g_spellTraits[SPELL_SUMMON_BOAT].m_school, magicTerrain);
-    int cost = g_spellTraits[SPELL_SUMMON_BOAT].m_manaCost[mastery];
-    if (cost < 1)
-        cost = 1;
+    int cost = getManaCost(SPELL_SUMMON_BOAT);
     if (m_mana < cost)
         return 0;
     if (findSummonableBoat())
@@ -7574,8 +7533,9 @@ unsigned char hero::canSummonBoat() const
 }
 
 // E:\gamedcs\hero.cpp:6241
+// DC hero.cpp:6241 proves the const receiver; the body only reads this hero.
 VA(0x004e56b0, 0x21)  // linkorder, dc 0xd52b0
-playerData* hero::getPlayer()
+playerData* hero::getPlayer() const
 {
     if (m_owner < 0)
         return 0;
@@ -7587,8 +7547,9 @@ playerData* hero::getPlayer()
 // SPLIT (retail duplicates the `mov al,1` tail rather than sinking a
 // shared block), and the sum is spelled x-term FIRST: VC6 evaluates
 // `a + b` right to left, and retail computes the y difference first.
+// DC hero.cpp:6251 proves the const receiver; the body only reads this hero.
 VA(0x004e56e0, 0x7C)  // anchor-global, dc 0xd52d0
-unsigned char hero::isInPatrolRadius(type_point point)
+unsigned char hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
         return 1;
@@ -7642,47 +7603,23 @@ long hero::modifySpellDamage(SpellID spell, int damage,
 }
 
 // E:\gamedcs\hero.cpp:6296
-// Residual (99.5833%): the natural inline GetPrimarySkill call plus separate
-// four-iteration countdown reproduces retail's ESI index / EDI counter and
-// makes every instruction agree. The sole byte delta is the commutative
-// scale-1 SIB encoding of `stats[skill]`: retail encodes ESI as the base and
-// ECX as the index; this compile encodes ECX as the base and ESI as the
-// index. Direct indexing, reversed indexing and pointer-arithmetic spellings
-// are byte-identical. The earlier single-index `for` form scored 75.5833%.
-// 2026-09-06, the HEADER side of the same subscript, all three byte-flat at
-// 99.5833: `*(stats + skill)`, a `const signed char* skills = stats;` hoist,
-// and an explicit `this->stats[skill]` in hero.h's GetPrimarySkill. So the
-// SIB base/index choice is unreachable from the accessor as well as from the
-// caller. philai value_of_enemy_town, which carried the same residual, is now
-// EXACT - see docs/vc6/regalloc.md 6b: for a two-LOCAL sum the base slot goes
-// to the local born later, so hoisting the other one's first assignment flips
-// the byte. That lever cannot reach THIS row: one operand is `this`, born at
-// entry, and the pair's first (and only) occurrence in the function always
-// encodes base=pointer. Sixteen further spellings measured 99.5833 in an
-// exact standalone replica of this body (build/p30/sibprobe9/10/12.cpp): all
-// six declaration permutations of total/skill/remaining, `unsigned`/`short`
-// skill, increment-before-call, `GetPrimarySkill(skill++)`, a plain `for`,
-// naming the call result, a `short` accumulator, all four accessor spellings
-// and a dead duplicate read. Three rows still carry this residual
-// (ai_player::fill_prohibited_array 99.9678, seerhuttext
-// LoadSeerHutTextColumn 99.9621, diff CDiffFile::Apply 99.6429, 3 swaps).
-// A 16-source batch also tests named pointer/reference receivers born before
-// or after the loop locals with int/short/long accumulators: all byte-flat
-// at 99.5833%. The canonical getPrimarySkill accessor remains intact.
-// DC hero.cpp:6296 also proves the const receiver. A 36-state accumulator,
-// declaration-order and loop-form batch preserves the 99.5833% peak; short
-// accumulators/for-loop forms can drop to 98.75% without fixing the SIB byte.
+// DC hero.cpp:6298/6301 keeps a four-skill counted loop, with sign-word
+// extension of the incremented index and the accumulated result. Restoring
+// a short index and a short total closes the remaining SIB operand byte at
+// 100%, with the canonical const getPrimarySkill call intact.
+// The 37-state family produced 13 distinct objects and ten reproduced
+// finalists. Named returned-value controls also close with a short index;
+// changing only accumulator/receiver bindings had left 99.5833%. The prior
+// int-index plus separate remaining counter, reversed accessor indexing,
+// and header pointer spellings all retained that residual. No synthetic
+// countdown or helper-body expansion is needed.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::getPrimarySkillTotal() const
 {
-    int total = 0;
-    int skill = 0;
-    int remaining = 4;
-    do {
+    short total = 0;
+    for (short skill = 0; skill < 4; ++skill) {
         total += getPrimarySkill(skill);
-        skill++;
-        remaining--;
-    } while (remaining);
+    }
     return total;
 }
 

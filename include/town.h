@@ -458,7 +458,7 @@ public:
 
     // Before normalization (function): town::CanBuildDock.
     unsigned char canBuildDock();
-    // DC Town.h:299 / :305 header inlines, declaration-only here
+    // DC Town.h:299 / :305 header inlines; getBuildingMask defined here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
     // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
     // townmgr.obj). Declared 2026-08-27 with IsCastle/IsCapitol below:
@@ -468,7 +468,9 @@ public:
     // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
     // quirk in a textWidget arm; count restored, the row returns).
     // Before normalization (function): town::get_building_mask.
-    __int64 getBuildingMask() const;
+    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
+    // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    __int64 getBuildingMask() const { return m_active; }
     // Before normalization (function): town::get_generator_bonus.
     long getGeneratorBonus(long dwelling) const;
     // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast

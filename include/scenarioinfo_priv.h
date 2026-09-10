@@ -63,7 +63,7 @@ public:
 
     virtual ~CScenarioPlayerInfoWidget();
     // Before normalization (function): CScenarioPlayerInfoWidget::Main.
-    virtual int main(message* msg) { return widget::main(msg); }
+    virtual int main(message& msg) { return widget::main(msg); }
     virtual void zBufferDraw(unsigned short*, int) const {}
     // Before normalization (function): CScenarioPlayerInfoWidget::Draw.
     virtual void draw();

@@ -2066,6 +2066,10 @@ static int doSinglePlayerWindow()
     // both as a compact predicate and as nested guards, add a redundant TEST
     // and fall to 95.76%; an early-return spelling adds a block and falls to
     // 83.31%. Keep the source-proven non-mutating comparison.
+    // A four-state switch family also fails: an explicit cancel/okay switch
+    // and an okay-only switch score94.9296, while switching the normalized
+    // result scores98.5915. The two line2003 branch rows therefore support
+    // a dispatch hypothesis but do not identify a matching switch spelling.
     int dialogResult =
         g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
     if (dialogResult && dialogResult == 1) {

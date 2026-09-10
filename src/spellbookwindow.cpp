@@ -178,7 +178,7 @@ std::string TSpellbookWindow::getSpellDescription(
     std::string result;
     int mastery = 0;
     if (currentHero)
-        mastery = const_cast<hero*>(currentHero)->getSpellLevel(
+        mastery = currentHero->getSpellLevel(
             spell, m_onMagicPlains);
     result = traits->m_levelDescriptions[mastery];
 
@@ -476,7 +476,7 @@ void TSpellbookWindow::gotoPage(int page)
             TSpellSchool school = m_school;
             if (school == eSchoolAll)
                 school = highestSchool;
-            int mastery = const_cast<hero*>(m_hero)->getSpellLevel(
+            int mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
             spells.insert(spells.end(),
                           TSpellbookEntry(spell, school, mastery));

@@ -256,13 +256,13 @@ int heroWindow::broadcastMessage(message* msg)
         while (focused && focused->m_id != m_focusId)
             focused = focused->m_prevWidget;
         if (focused) {
-            result = focused->main(msg);
+            result = focused->main(*msg);
             if (result)
                 return result;
         }
     }
     while (current) {
-        result = current->main(msg);
+        result = current->main(*msg);
         if (result > 0 && result <= 2)
             return result;
         current = current->m_prevWidget;
@@ -349,9 +349,9 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
     while (current) {
         pollSound();
         if (lowID == WINDOW_ALL_WIDGETS_LOW && highID == WINDOW_ALL_WIDGETS_HIGH)
-            current->main(&msg);
+            current->main(msg);
         else if (lowID <= current->m_id && current->m_id <= highID)
-            current->main(&msg);
+            current->main(msg);
         current = current->m_nextWidget;
     }
     if (update && !(m_type & WINDOW_FLAG_FIXED_LAYER)) {
@@ -420,82 +420,18 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 #endif  // @carcass
 
 // E:\gamedcs\window.cpp:778
-// Residual (92.88%): a whole-body ebx/edi role swap - retail pins
-// centerX in EBX and centerY in EDI (loading centerX into ebx before
-// it even pushes esi/edi), this compile the other way round. VERIFIED
-// not a control flow difference: `homm3 sema diff --branches` reports
-// 9/9 branches and 2/2 rets with the sequences AGREEING, and the
-// instruction SCHEDULE is identical throughout - the member loads come
-// out y/x/height/width and the homing stores y/x/width/height on both
-// sides. Everything else is downstream of the one register decision:
-//   * the stack-slot permutation (retail -4/-8/-0xc/-0x10 = oldX/oldY/
-//     oldWidth/oldHeight; ours -8/-0xc/-0x10/-4) is a CONSEQUENCE, not
-//     a cause - with centerX in edi the `height` CSE temp has no
-//     callee-saved register left, so it takes a slot of its own at -4
-//     and oldHeight coalesces onto it, rotating the other three down.
-//     Retail keeps that temp in edi across the centerX default block
-//     (`sub eax,edi` with no reload), which is exactly why edi is
-//     unavailable for centerX there and ebx gets it instead;
-//   * the two member stores in the !background arm come out in
-//     REGISTER order on both sides, so their source order is not
-//     recoverable from the bytes and writing x-then-y there is
-//     byte-identical (measured).
-// NOT reachable from source (measured 2026-08-08, 792 compiles):
-//   * a 768-variant out-of-tree sweep of this exact body - all 24
-//     declaration orders x every combination of {early-arm store
-//     order} x {main-arm store order} x {old-local vs member operand
-//     in the -1 defaults} x {same in the clamps} x {width+centerX vs
-//     centerX+width} - produced `mov edi,[ebp+8]` in EVERY ONE; not a
-//     single variant put centerX in ebx;
-//   * in-tree, all 24 declaration orders score 92.71-92.88 with the
-//     current startX/startY/startW/startH the best; comma-form,
-//     declare-then-assign, four
-//     assignment orders, `this->`-qualified reads and the if/else form
-//     instead of the early return all keep centerX in edi;
-//   * the ONLY shapes that flip it to ebx drop oldHeight (locals
-//     {x,y} or {x,y,w} -> ebx), and retail demonstrably HAS oldHeight:
-//     it reads that slot back at +0x130 for `oldHeight += abs(...)`
-//     after three calls, which a member re-read could not do;
-//   * NOT the include-set-sensitivity class either - a 0..8 dummy
-//     struct sweep over this TU left the score at 92.8767 flat.
-// Filed as the register-allocation tie-break between two symmetric
-// enregistered parameters, resolved the other way in retail's object.
-// (It is NOT the CL generation: see the cross-TU note below.) Also tried
-// and rejected (2026-08-08, the
-// earlier 13 spellings): old*-vs-member operands in the -1 defaults
-// and in the clamps (all 92.88), the declarations moved below the
-// defaults (82.55) or below the clamps (72.85), split between them
-// (88.24), the two clamps merged into if/else-if (88.53), and the
-// x-clamps grouped ahead of the y-clamps (87.49). One spelling scores
-// HIGHER and is REJECTED: swapping the main arm to `y = centerY;
-// x = centerX;` reads 92.93 purely because the reversed registers then
-// line up with retail's, which is a masking accident, not a match.
-// CROSS-TU SIGNATURE (2026-08-08, closeout lane): this is not a
-// one-off. An instruction-level sweep found the SAME shape - two
-// symmetric enregistered values whose callee-saved registers are
-// swapped, everything else instruction-identical - in button::Main
-// (retail esi=msg / edi=parentWindow, ours reversed, 84.7%) and
-// TPickANumber::TPickANumber (retail esi=this / edi=span, ours
-// reversed, 72.2%), plus the same allocator running out one register
-// earlier in iconWidget::NextRandomFrame and
-// NextRandomSiegeEngineFrame (retail homes `this`, we do not). In
-// every case retail hands the LOWER register to the value used FIRST
-// and ours hands it to the second. Four TUs, six functions, no source
-// handle in any of them.
-//
-// THE GENERATION IS RULED OUT FOR THE WHOLE SIGNATURE (2026-09-06).
-// Track R's front-end A/B (C1XX 12.00.8168 + C2 12.00.8168, all 146
-// units) reports sp3_vs_rtm 0 on every member of it: CenterWindow 79+0,
-// button::Main 245+48, TPickANumber 0+0 (exact), NextRandomFrame 130+0,
-// NextRandomSiegeEngineFrame 33+0 - identical bytes under both
-// generations, in both passes. The register swap is a model gap in the
-// allocator, not a vintage (docs/vc6/rtm-generation.md §6).
-// The v2 allocator model was rerun 2026-08-11 after restoring CodeView's
-// exact four local names. The names are byte-neutral. Its best proposal,
-// aliasing centerX into a new earliest-created local, reduces the register
-// distance from 79 to 61 slots but does not match and invents a fifth local
-// absent from the DC roster; adjacent-declaration proposals leave 77/81.
-// Thus no evidence-compatible source handle remains.
+// DC 825 calls GetWidth/GetHeight and the bitmap-pointer Draw overload;
+// 836 calls the bitmap-pointer Grab overload. The null-background arm stores
+// X then Y at 814/815, and the drawing arm is an else scope ending at 852.
+// These canonical calls and scopes are restored. The 32-state family emits
+// 14 distinct objects; ten retained candidates reproduce, with every window
+// score unchanged. CenterWindow retains a whole-body EBX/EDI role swap at
+// 92.8767%: retail keeps centerX in EBX, this compile in EDI. The resulting
+// height spill also rotates the four saved local homes.
+// Earlier local-order/default/clamp/store variants (792 source candidates)
+// did not close that swap. RTM and SP3 emit the same bytes, so compiler age
+// is not the explanation. Do not invent a fifth local or remove the proven
+// saved height to steer allocation; helper/scope restoration is not closure.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
 void heroWindow::centerWindow(int centerX, int centerY)
 {
@@ -516,29 +452,23 @@ void heroWindow::centerWindow(int centerX, int centerY)
     if (m_height + centerY > WINDOW_SCREEN_HEIGHT)
         centerY = WINDOW_SCREEN_HEIGHT - m_height;
     if (!m_background) {
-        m_y = centerY;
         m_x = centerX;
-        return;
+        m_y = centerY;
+    } else {
+        m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+                           g_windowManager->m_screenBitmap, m_x, m_y, false);
+        m_x = centerX;
+        m_y = centerY;
+        m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        startW += abs(m_x - startX);
+        startH += abs(m_y - startY);
+        if (m_x < startX)
+            startX = m_x;
+        if (m_y < startY)
+            startY = m_y;
+        g_windowManager->updateScreen(startX, startY, startW, startH);
     }
-    m_background->draw(0, 0, m_background->m_width, m_background->m_height,
-                     g_windowManager->m_screenBitmap->m_map, m_x, m_y,
-                     g_windowManager->m_screenBitmap->m_width,
-                     g_windowManager->m_screenBitmap->m_height,
-                     g_windowManager->m_screenBitmap->m_pitch, 0);
-    m_x = centerX;
-    m_y = centerY;
-    m_background->grab(g_windowManager->m_screenBitmap->m_map, m_x, m_y,
-                     g_windowManager->m_screenBitmap->m_width,
-                     g_windowManager->m_screenBitmap->m_height,
-                     g_windowManager->m_screenBitmap->m_pitch);
-    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    startW += abs(m_x - startX);
-    startH += abs(m_y - startY);
-    if (m_x < startX)
-        startX = m_x;
-    if (m_y < startY)
-        startY = m_y;
-    g_windowManager->updateScreen(startX, startY, startW, startH);
 }
 
 // E:\gamedcs\window.cpp:855

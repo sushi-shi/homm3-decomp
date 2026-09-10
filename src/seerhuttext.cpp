@@ -42,6 +42,12 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // instruction with the SIB base and index exchanged. The other three
 // expansions of the same statement already agree, so this is the bounded
 // B18 class, not a source fact.
+// The recovered spreadsheet cell accessor is not interchangeable with this
+// caller's row-access model: replacing all seven getRow(row)[column] sites
+// with getSpreadsheet(row,column) scores53.0833 and changes the call stream.
+// The four-state caller/sibling family reproduces all four objects; changing
+// initializeSeerHutText alone also loses its exact body (99.7101). No
+// Dreamcast counterpart proves either replacement in this Complete-only TU.
 VA(0x0056c120, 0x2A3)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col)

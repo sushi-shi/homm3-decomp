@@ -2099,12 +2099,13 @@ int handleCastSacrifice(message& msg)
 // below, expanded here by /Ob2 (the sete/inc radius and setne centre
 // flag are its body); the hex-side one is written out longhand, as the
 // Dreamcast lines 2094..2102 have it.
-// RESIDUAL (98.5000%): all 37 CFG blocks, 19 branches, and 11 calls match.
-// The remaining rows are one scratch-register rotation shared by the army-call
-// arguments and the hex-vector construction. Declaring the outer counter
-// before its loop is byte-flat; moving `changed` before the first vector drops
-// to 96.81% by perturbing its EH setup. why-reg's six natural expression/local
-// probes were flat or worse.
+// Residual (98.5000%): a scratch-register rotation spans the chance call,
+// effect-byte argument and hex-vector construction. DC 2081/2082 and
+// 2109/2110 prove independent rejection/invalid-hex continue scopes. Restoring
+// both is flat; recomputing thisArmy from indices loses 85.8304% versus the
+// retained pointer walk. Eight states / two reproduced objects isolate these
+// choices. Complete's chance test still rejects unordered results as retail
+// does, so the negative guard is !(chance > 0), not chance <= 0.
 void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 {
     std::vector<army*> targets;
@@ -2117,13 +2118,13 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
              i++, thisArmy++) {
             if (thisArmy->is(1u << 21))
                 continue;
-            if (g_combatManager->spellCastWorkChance(
+            if (!(g_combatManager->spellCastWorkChance(
                     spell, g_combatManager->m_currentSide, thisArmy, 0, 1, 0)
-                > 0.0) {
-                if (thisArmy->setInsideAreaEffect(
-                        g_combatManager->m_effected[side][i]))
-                    changed = 1;
-            }
+                > 0.0))
+                continue;
+            if (thisArmy->setInsideAreaEffect(
+                    g_combatManager->m_effected[side][i]))
+                changed = 1;
         }
     }
     if (g_unnamed698758.m_showCombatMouseHex) {
@@ -2138,9 +2139,9 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
         }
         int i = hexes.size();
         while (i--) {
-            army* target = 0;
-            if (combatManager::validHex(hexes[i]))
-                target = g_combatManager->m_cells[hexes[i]].getArmy();
+            if (!combatManager::validHex(hexes[i]))
+                continue;
+            army* target = g_combatManager->m_cells[hexes[i]].getArmy();
             if (target && !target->isInAreaHighlight())
                 hexes.erase(hexes.begin() + i);
         }
@@ -3478,85 +3479,31 @@ void combatManager::armageddon(int level, int power)
     checkRebirth();
 }
 
-// The per-step recompute of one bolt segment: how far it still has to
-// travel, how thick it should be at that point, which way it is pointing
-// and how far off that heading this step should wander. AddBolt calls it
-// once to seed a fresh bolt and DoBolt once per drawn step.
-//
-// The RECORD IS THE EVIDENCE HERE - see cmbtmgr.h's SBolt note. Nothing
-// in the Dreamcast dump describes this type; every field this body reads
-// is either one AddBolt stored a named parameter into or one this body
-// is the only writer of.
-//
-// TWO CASTS TO `float`, NOT double, in the progress division: retail
-// spills BOTH operands back through 32-bit slots (`fild / fstp dword /
-// fld dword`) before the divide, which is what an explicit (float) on
-// each side produces and what a plain integer division promoted to
-// double does not. The same rule runs through the whole tail: every
-// float-typed intermediate retail rounds through a dword slot is a
-// named float LOCAL here (`travelled`, `distortAvg`, `wobble`,
-// `scaled`, `step`), and writing any of them as one long expression
-// instead leaves the value in the x87 stack at extended precision,
-// which is a different instruction at every step. That single reading
-// is worth 82.30 -> 94.82.
-//
-// atan2's ARGUMENT ORDER IS (dx, dy), which is NOT the usual (y, x), and
-// the stack says so with no ambiguity: retail pushes the dy double
-// FIRST, so it lands at [esp+8] and dx at [esp+0]. The callee is atan2 -
-// 0x61a0f0 is `mov edx, 0x690460 / jmp __ctrandisp2`, the CRT's
-// two-argument transcendental dispatcher. Transcribed as retail has it;
-// DrawBolt reads the heading back with the matching convention.
-//
-// TWO LOCALS ARE COMPUTED IN REVERSE DECLARATION ORDER by this CL, and
-// that is a lever, not noise: `toX` is declared first so that `toY` is
-// the delta retail computes first. Declaring them the other way round
-// measured 88.19 against 94.82.
-//
-// THE SEGMENT TEST IS SPELLED `remaining > segment * 1.5`, NOT the other
-// way round: whichever side is written LEFT has its (double) conversion
-// emitted first, and retail converts `remaining` first. Worth 94.82 ->
-// 97.29 on the operand order alone.
-//
-// Residual (97.31%): the explicit squared-delta inline helper breaks C1's
-// commutative canonicalisation and gives the sqrt retail's x-then-y delta
-// order. Direct `+` operand order is byte-flat, while hoisting the deltas into
-// locals is worse in both declaration orders (93.98 / 88.19).
-//   * The progress divide uses two temp slots where retail reuses one:
-//     retail loads the numerator to st0 BEFORE materialising the
-//     denominator, so the numerator's slot is free again. Making the
-//     numerator a named float local (`travelled`) was needed for the
-//     rest of the shape but does not move this.
-// Before normalization (function): BoltDeltaSquared.
-static inline long boltDeltaSquared(long destination, long current)
-{
-    long delta = abs(destination - current);
-    return delta * delta;
-}
-
-// Residual (97.32%): the two FP scratch slots are transposed - retail loads
-// `travelled` off [ebp+8] the instant it is stored and reuses that slot for
-// the divisor's float temp, so its later temps land in [ebp-4] and ours in
-// [ebp+8]; the instruction stream is otherwise identical. Tried and rejected,
-// all byte-flat at 97.3158: dropping the named `travelled` local entirely,
-// an implicit (uncast) divisor, and a second named `float total` declared
-// after `travelled`. Declaring `total` BEFORE the division measured 96.1467.
-// Before normalization (locals): psBolt.
+// E:\gamedcs\spells.cpp:3572, original ResetBoltAngle.
+// Recomputes remaining distance, thickness and angular distortion. Retail
+// proves float rounding of both progress operands and the unusual atan2
+// argument order (x delta, y delta). DC 3582/3583 owns the absolute-distance
+// locals, followed by sqrt at 3584; 3629/3630 is a zero-distortion early return.
+// Restore those facts and remove the invented squared-delta inline helper.
+// Residual (97.3158%): progress numerator/divisor scratch reuse and the
+// distortion branch's float-store merge differ. Nineteen source states show
+// natural distance locals, their lifetime/reuse, direct float-cast ratio and
+// early return are all flat; a separate compound ratio assignment is 91.0292%.
+// The former claim that explicit locals could not reach this score is false.
+// All other spells scores stayed fixed through the reproduced family.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
     if (bolt->m_done)
         return;
 
-    long remaining = static_cast<long>(
-        sqrt(static_cast<double>(
-            boltDeltaSquared(bolt->m_destX, bolt->m_pixelX)
-            + boltDeltaSquared(bolt->m_destY, bolt->m_pixelY))));
+    long dx = abs(bolt->m_destX - bolt->m_pixelX);
+    long dy = abs(bolt->m_destY - bolt->m_pixelY);
+    long remaining = static_cast<long>(sqrt(static_cast<double>(dx * dx + dy * dy)));
     if (remaining > bolt->m_totalLength) {
         bolt->m_progress = 0;
     } else {
-        float travelled =
-            static_cast<float>(bolt->m_totalLength - remaining);
-        bolt->m_progress = travelled
+        bolt->m_progress = static_cast<float>(bolt->m_totalLength - remaining)
             / static_cast<float>(bolt->m_totalLength);
     }
 
@@ -3589,23 +3536,24 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     float wobble = (2.5 - bolt->m_progress) / 2.0 * distortAvg;
     bolt->m_distortedAngle = angle + wobble;
 
-    if (bolt->m_angleDistortMin != 0 || bolt->m_angleDistortMax != 0) {
-        // A bolt only wanders once it has further to go than one and a
-        // half segments - unless it was asked to wander always.
-        if (static_cast<double>(remaining)
-                > static_cast<double>(bolt->m_segmentLength) * 1.5
-            || bolt->m_distortAlways) {
-            float distortion;
-            if (bolt->m_angleDistortMin == bolt->m_angleDistortMax)
-                distortion = static_cast<float>(bolt->m_angleDistortMin);
-            else
-                distortion = static_cast<float>(
-                    random(bolt->m_angleDistortMin,
-                           bolt->m_angleDistortMax));
-            float scaled = distortion / 100.0f;
-            float step = (2.0f - bolt->m_progress) / 1.5 * scaled;
-            bolt->m_angle = step + bolt->m_angle;
-        }
+    if (bolt->m_angleDistortMin == 0 && bolt->m_angleDistortMax == 0)
+        return;
+
+    // A bolt only wanders once it has further to go than one and a
+    // half segments - unless it was asked to wander always.
+    if (static_cast<double>(remaining)
+            > static_cast<double>(bolt->m_segmentLength) * 1.5
+        || bolt->m_distortAlways) {
+        float distortion;
+        if (bolt->m_angleDistortMin == bolt->m_angleDistortMax)
+            distortion = static_cast<float>(bolt->m_angleDistortMin);
+        else
+            distortion = static_cast<float>(
+                random(bolt->m_angleDistortMin,
+                       bolt->m_angleDistortMax));
+        float scaled = distortion / 100.0f;
+        float step = (2.0f - bolt->m_progress) / 1.5 * scaled;
+        bolt->m_angle = step + bolt->m_angle;
     }
 }
 
@@ -4266,81 +4214,44 @@ done:
     }
 }
 
-// Chain Lightning's bounce search: of every stack the `effected` row has
-// not already recorded, take the one nearest the stack the bolt just
-// left. The distance is a real EUCLIDEAN one on SCREEN midpoints -
-// `sqrt((double)(dx*dx + dy*dy))` truncated by __ftol - not the axial
-// hex metric the area sweeps use, which is why the bolt visibly jumps to
-// the closest stack on screen rather than the closest by hex.
-//
-// The two accessors are army::MidX (0x446660) and army::MidY (0x446630).
-// NOTE FOR THE NAME MAP: build/gen/symbol_names.csv carries 0x46660 as a
-// working label `army_PlayAnimation`, which is REFUTED here - this call
-// site passes no stack arguments and consumes the return value, while
-// army::PlayAnimation takes three and returns void, and its real body is
-// already claimed at 0x446940. army.h has had 0x446660 as MidX since the
-// KeepAttack lane.
-//
-// THE WORK-CHANCE TEST IS WRITTEN TWICE, once per arm, and retail HOISTS
-// THE SHARED ARGUMENT PUSHES above the branch: the six pushes appear
-// once and each arm has its own `call`. The two arms also leave by
-// different paths because only the random one clobbers `this`.
-//
-// The zero compare is a FLOAT (`fcomp dword`), where
-// ValidSpellTargetArmy's is a double (`fcomp qword`) - the same
-// predicate spelled against a differently-typed literal in two places.
-//
-// NAMING THE STACK POINTER IS LOAD-BEARING, AND SO IS DECLARING IT
-// BEFORE THE `effected` TEST (49.22 -> 74.18 -> 91.10). With
-// `armies[side][i]` written out at each of the four uses, VC6 keeps only
-// `21*side` as an induction variable and recomputes the `*0x548` product
-// inside the body, and the two work-chance arms each build their own
-// argument list; naming the pointer merges the two arms' pushes as
-// retail has them, and hoisting the declaration ABOVE the `effected`
-// early-out makes it unconditional, which is what lets VC6 strength-
-// reduce it to retail's `add edi, 0x548` on the back edge. A pointer
-// computed after a `continue` cannot become an induction variable.
-//
-// Residual (91.1%): a whole-body ESI/EDI role swap and nothing else -
-// retail binds `this` to ESI and `last_target` to EDI, we bind them the
-// other way round, and the schedule is otherwise instruction-for-
-// instruction identical. This is the catalog's B1 with the transposed
-// pair being `this` against a PARAMETER, which docs/vc6/regalloc.md
-// records as the C1 handle-state class: no statement-local spelling
-// reaches it. `homm3 vc6 why-reg` enumerated sixteen catalog mutations
-// here and every one measured neutral or worse (best: three at +0,
-// thirteen from +1 to +83).
-// Before normalization (locals): last_target, use_random, best_index, from_x, from_y.
+// E:\gamedcs\spells.cpp:4202, original GetNextChainLightningTarget.
+// DC names lastTargetArmy, bUseSRandom, iCurX, iCurY and iBestDist, with
+// int return/coordinates and a mutable army pointer. Retail corroborates
+// their widths, the screen midpoint accessors, and truncated sqrt distance.
+// EXACT: DC 4234 computes MidX then abs BEFORE 4235's MidY/abs. Deferring
+// both absolute values into sqrt caused 91.1017%; restoring their statement
+// owners gives 100%. The original ordinary SpellCastWorks call at 4224 also
+// expands exactly, despite its retained definition occurring later in this
+// TU; no inline declaration or body duplication is needed. The else scope
+// at 4231 is restored too. Eight states / four reproduced objects isolate
+// the distance correction, with every other spells score unchanged.
 VA(0x005a61f0, 0x163)  // order-map+arity, dc 0x15547c
-long combatManager::getNextChainLightningTarget(const army* lastTarget,
-                                                long useRandom)
+int combatManager::getNextChainLightningTarget(army* lastTargetArmy,
+                                                int useSRandom)
 {
-    long best = 999999;
-    long bestIndex = -1;
-    long fromX = lastTarget->midX();
-    long fromY = lastTarget->midY();
+    int bestDist = 999999;
+    int bestIndex = -1;
+    int curX = lastTargetArmy->midX();
+    int curY = lastTargetArmy->midY();
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
             army* target = &m_armies[side][i];
             if (m_effected[side][i])
                 continue;
-            if (useRandom) {
-                int chance = spellCastWorkChance(SPELL_CHAIN_LIGHTNING,
-                                                 1 - side, target, 0, 1, 0)
-                    * 100.0f;
-                if (random(1, 100) > chance)
+            if (useSRandom) {
+                if (!spellCastWorks(SPELL_CHAIN_LIGHTNING, 1 - side, target, 0, 0))
                     continue;
-            } else if (spellCastWorkChance(SPELL_CHAIN_LIGHTNING, 1 - side,
-                                           target, 0, 1, 0) <= 0.0f) {
-                continue;
+            } else {
+                if (spellCastWorkChance(SPELL_CHAIN_LIGHTNING, 1 - side,
+                                       target, 0, 1, 0) <= 0.0f)
+                    continue;
             }
-            long dx = target->midX() - fromX;
-            long dy = target->midY() - fromY;
-            long distance = static_cast<long>(
-                sqrt(static_cast<double>(abs(dy) * abs(dy)
-                                         + abs(dx) * abs(dx))));
-            if (distance < best) {
-                best = distance;
+            int dx = abs(target->midX() - curX);
+            int dy = abs(target->midY() - curY);
+            int distance = static_cast<int>(
+                sqrt(static_cast<double>(dy * dy + dx * dx)));
+            if (distance < bestDist) {
+                bestDist = distance;
                 bestIndex = target->m_gridIndex;
             }
         }

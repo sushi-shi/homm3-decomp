@@ -2151,34 +2151,17 @@ unsigned char town::canEverBuild(int buildingId) const
 }
 
 // E:\gamedcs\town.cpp:2168
-// The whole can_build answer as one mask: accumulate every slot whose
-// requirements are met and which is not already active, then intersect
-// with the legal mask and knock out the dock and the capitol.
-// Residual (89.5893%): 81.2143 -> 89.5893 on 2026-08-20. The note that
-// stood here read the delta correctly - "retail loads `active` before it
-// touches gpGame, ours after" - and then filed it as register-homing.
-// It is DECLARATION ORDER, and it is spellable: giving `active` an
-// explicit `__int64 activeMask = active;` local declared ahead of
-// `townType` puts the two `[ecx+0x158]/[ecx+0x15c]` loads first, exactly
-// where retail has them, and the WHOLE loop body then falls into line -
-// what remains after the edit is the reloc-addend cosmetic on the
-// bitNumber/gHierarchyMask rows and nothing else inside the loop.
-// The compiler was already LICM-ing the member read to the same
-// [ebp-0x1c]/[ebp-0x18] pair; naming it changes only WHEN the read is
-// scheduled, not what it costs. (Standing rule to reuse: when a member
-// read is hoisted to the preheader on both sides but the PROLOGUE order
-// differs, the fix is a named local at retail's position, not a register
-// lever.)
-// What is left is prologue scheduling only: retail defers the
-// `gpGame->field_1f69d` load until after the 44*type expression, ours
-// issues it with the first pair. Measured and rejected against that: a
-// split declaration (`char castleGriffinException;` + a separate
-// assignment) with the loop index hoisted - byte-flat.
+// DC line 2169 reads get_building_mask before line 2171 initializes the
+// result (original local built_mask). Restore the Town.h:299 accessor
+// and that lifetime order: 99.8839 -> 100.0000 under retail VC6.
+// Negative controls: initializing the result first or reading townType
+// before the result both retain 99.8839. Moving the loop-index declaration
+// or tutorial-flag reference scope is byte-flat.
 VA(0x005c0f20, 0x156)  // anchor-global, dc 0x168714
 __int64 town::getBuildableMask() const
 {
+    __int64 activeMask = getBuildingMask();
     __int64 mask = 0;
-    __int64 activeMask = m_active;
     char townType = m_type;
     // BOUND BY `const char&`: retail re-reads the global flag inside the
     // loop instead of hoisting a copy.  89.5893 -> 99.8839.  Measured on top

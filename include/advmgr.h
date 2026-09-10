@@ -9,6 +9,7 @@
 #include "sskilltraits.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
+#include "herospec.h"
 #include "struct.h"
 // EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
 // `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
@@ -2633,17 +2634,17 @@ public:
     void castSpell(int whichSpell);
     // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
     // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
-    // 0x22510). The mastery is spelled `int` throughout for the reason
-    // ViewWorld's is (see below); the Dreamcast roster types the same
-    // parameter TSkillMastery, which is CONTRADICTED here (note below).
+    // 0x22510). SkuttleBoat and TownGate retain the DC-proven mastery enum.
+    // Its former AI int typedef has been removed; there is one canonical
+    // TSkillMastery definition in herospec.h.
     // Before normalization (function): advManager::SummonBoat.
     void summonBoat(int level);
     // Before normalization (function): advManager::SkuttleBoat.
-    void skuttleBoat(int level);
+    void skuttleBoat(TSkillMastery level);
     // Before normalization (function): advManager::DimensionDoor.
     void dimensionDoor(int level);
     // Before normalization (function): advManager::TownGate.
-    void townGate(int level);
+    void townGate(TSkillMastery level);
     // The four handlers RETAIL HAS NO BODY FOR. Dreamcast keeps each one out
     // of line (advspells.cpp:605 / 629 / 654 / 674, dc 0x228e8 / 0x229c4 /
     // 0x22a40 / 0x22a9c); every one has exactly one call site - its own arm

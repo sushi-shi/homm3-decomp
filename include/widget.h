@@ -256,7 +256,12 @@ public:
     // Before normalization (function): widget::Open.
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Before normalization (function): widget::Main.
-    virtual int main(message* msg) = 0;                     // slot 2
+    // Dreamcast Main(message&) is shared by widget and every recorded
+    // override (button, border, icon, slider and text families). Retail slot2
+    // passes the same message address. Keep the reference interface coherent
+    // across overrides and dispatches; the former pointer declarations were
+    // source-inaccurate even where their machine bytes agreed.
+    virtual int main(message& msg) = 0;                     // slot 2
     // Dreamcast records this const two-argument interface, including the
     // textWidget and bitmapBorder overrides. Retail corroborates it with
     // TCampaignBrief's dispatch and the shared `ret 8` at 0x5bc7e0.
