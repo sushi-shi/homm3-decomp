@@ -3847,6 +3847,90 @@ combined source. The original four-state experiment remains evidence for
 its frozen pre-integration inputs, not a claim to have searched this new
 header context.
 
+## Lobby map-header receiver and dispatcher overrides
+
+The dispatcher at `0x5887a0` formerly constructed a bare `NewSMapHeader`
+under a depth-zero fence but never read the incoming message. DC source line
+6529 calls the ordinary `OnNewMapHeaderInfo` helper, with its definition at
+line 6968 (`0x140d50`). That older helper already calls `SetupOrigData` and
+returns true; Complete's arm adds the serialized receiver and its lifetime.
+Retail `+0x310..+0x365` calls the base constructor, constructs the header at
+offset `+0x18`, installs vtable `0x641d30`, calls the receive bridge at
+`0x512e00`, calls `SetupOrigData`, and destroys the header. The previously
+modeled `CNewMapHeaderInfoMsg` owns exactly this base and member.
+
+First restore the dispatcher's original public `QAA_N...AA_N` signature as
+`bool handleNetMsg(CNetMsg*, bool&)`, including its caller's local and all
+cancel assignments. The whole interface edit preserves every section byte,
+function location and relocation destination across its four consuming TUs;
+only the independently evidenced symbol rename is admitted. The full
+checkpoint has no score movement before searching.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-map-header-family.py build/lobby-map-header-family.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-map-header-family.json --width 60 --keep 4 --jobs 4 --generations 1
+```
+
+The two axes cross the incomplete/pinned arm with the ordinary complete
+receiver, and the existing `HeaderRequested` auto-inline override with its
+removal. All **four states emit distinct code and reproduce**; all **416
+tracked functions across four header consumers** are scored. The receiver
+with the adjacent override retained raises `HandleNetMsg` **89.7408% to
+90.0449%**. Removing that auto-inline override scores **85.9113%** with the
+old arm and **86.1394%** with the recovered arm. Both complete-receiver
+states restore `CEnterNameEdit::onKillFocus` **99.871% to 100%**. No other
+tracked score moves. The retained ordinary helper has no false `inline`
+keyword, copied caller body or replacement override.
+
+The recovered arm's first **62 raw bytes** (`+0x310..+0x34e`) match retail,
+including its named constructor, receive and setup calls. The vtable and
+game-global relocation spellings differ only by their existing source-owned
+identities. Cleanup still expands two string `_Tidy` calls and
+`~CMapHeaderData`, whereas retail calls `~NewSMapHeader`. Across the four
+units, **811 existing executable sections are byte-identical**; the changed
+ones are the dispatcher and its EH cleanup plus four spill/reload operand
+bytes each in `onKillFocus` and the score-flat `kb::oldmain`. The latter
+changes swap stack homes while preserving the corresponding reloads. The
+ordinary helper adds its own body and EH cleanup, not a duplicate retail
+claim. All four adopted production objects reproduce the selected candidate
+across **1,448 sections and 15,089 relocation destinations**.
+
+After adopting that model and running a fresh full build, the follow-up
+verifies exact parent source/header identity and carries both reproduced
+complete-receiver parents. It tests each of the remaining 14 dispatcher
+depth-zero regions separately and all together, crossed with the adjacent
+auto-inline override:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-dispatch-pins-family.py build/source-families/PARENT_CONTEXT/checkpoint.json build/lobby-dispatch-pins-family.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-dispatch-pins-family.json --width 60 --keep 10 --jobs 4 --generations 1
+```
+
+All **32 states produce distinct objects**, with **ten reproduced elites**.
+All **223 TU score rows** are checked; only the dispatcher moves. No deletion
+preserves 90.0449%: single-region deletions span **79.9839% to 88.9839%**;
+all depth regions removed scores **41.8479%**, or **38.2972%** with the
+auto-inline override also removed. No follow-up deletion is adopted. This
+does not exhaust combinations of arbitrary depth regions or other recovered
+helper models. Contexts `e95ac2ee39002ff3643c` and `5d5ccc52816c48107f9d`
+identify the frozen four-state and follow-up inputs. Their generators are
+historical pre-adoption controls and deliberately reject changed anchors.
+
+`test-lobby-map-header.py` extracts the actual helper, receive bridge and
+virtual-reader bodies. Its reduced fixture checks **1,920 cases** spanning
+sender identities, short-message lengths, read results and exceptional exit
+paths, preserving construction/read/setup/destruction order and the input
+message. Six controls must fail: skipped receive, skipped setup, reversed
+receive/setup order, wrongly rejecting a read failure, wrong header version,
+and wrong helper result. Both the frozen candidate and adopted source pass
+at `-O0` and `-O2`. This is not a retail ABI or complete wire-format test.
+
+The full checkpoint passes at **4087/4764 exact**, **96.44% linked** and
+**96.43% whole-image**, with every RVA and MAX/HIST peak retained. The fresh
+census is **212 overrides** (207 depth-zero, five auto-inline-off), across
+27 TUs, with **63 unions** unchanged. Remaining destructor/inliner and
+flattened-helper differences are open reconstruction work, not TU closure.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
