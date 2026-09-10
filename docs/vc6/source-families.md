@@ -3752,6 +3752,91 @@ and **63 unions**. Neither Grail pin remains, and ai_player has no inline
 override left. This is not a claim that its source or remaining functions
 are complete.
 
+### Scenario deselection: ordinary body ownership, not an inline fence
+
+`generate-scenario-deselect-family.py` crosses the base handler's current
+header definition / recovered ordinary definition with the scenario caller's
+existing fence / natural call. The source fact is **window.cpp:1122/1123,
+dc 0x197f48**, not the existence of a folded retail body. Dreamcast's public
+`?OnWidgetDeselect@CHeroWindowEx@@MAAHHAA_N@Z` also proves protected virtual
+access and `bool&`; five override publics carry the same reference type.
+Complete's custom-campaign override shares the independently proven slot 12.
+Restore that entire interface, including WindowHandler's local flag and
+reference call, before taking the search checkpoint. This avoids scoring
+newly mangled methods against stale names.
+
+The interface-only full build migrates six claimed symbols with every score
+unchanged. Across all 152 raw objects, **9949 executable sections** retain
+their bytes and function locations; relocation names change only by the
+seven explicit callback signatures and existing anonymous-namespace nonces.
+The herodefs zero-filled BSS's anonymous-static permutation changes its
+padding/extent (1156 to 1152 bytes), not executable instructions.
+
+Context `ea8854cffaf04c674e5d` exhausts **four successful source states** and
+produces **three distinct whole-consumer code identities**. It scores all
+**90 configured window.h consumers / 3964 rows**, determined from the fresh
+Ninja dependency closure. All three retained identities reproduce their
+scores and code independently; the watched authored source stays unchanged
+throughout the run. The scenario callback at 0x5698a0 gives:
+
+| Base handler definition | Existing fence | Natural call |
+|---|---:|---:|
+| Current implicit-inline header body | 100% | 58.25% |
+| Ordinary window.cpp body, in original source order | 100% | 100% |
+
+The ordinary body's two caller forms produce identical objects. The chosen
+natural call preserves all 30 retail instruction bytes and the sole call at
++0x15 (relocation +0x16). Its callee emits `33 c0 c2 08 00`, independently
+identical to the five bytes at retail 0x559140. That address already belongs
+to `ResourceManager::t_stdio_file_adapter::write`; retain the existing single
+claim, with a documented `DC_ONLY` definition for the folded base handler.
+The same body need not remain implicitly inline merely because ICF selected
+another owner. Its source position is after WindowHandler and before
+GetRolloverWidget.
+
+Shared-header collateral is small but real: quest-creature `generate` in
+rmg goes **99.7349% to 100%**, and `CEnterNameEdit::onKillFocus` goes **100%
+to 99.871%**. Both already have MAX/HIST 100%; their own source hashes are
+unchanged. Every other scored row is unchanged. The RMG change swaps two
+independent loads at +0xca/+0xcd; the focus handler exchanges EDI/ESI spill
+homes and their corresponding reload order. kb's score-flat `oldmain` also
+changes four bytes, exchanging EDI/EBX spill homes at +0x129a/+0x129d and
+reload order at +0x1372/+0x1375, without an intervening access to those homes.
+
+The raw-object review accounts for **13,116 retained sections and 94,778
+relocations**. Apart from those twelve instruction bytes, section bytes,
+function offsets and named relocation destinations agree after the observed
+section-index translation. Twenty consuming TUs stop emitting the base's
+header COMDAT and associated `.debug$F`; window.cpp retains the same body at
+its proper source position. Compiler-generated EH/branch labels are compared
+by their actual section/offset destinations, including the four renumbered
+`hero_rollover`, `town_rollover`, `generic_help` and `ignore` labels. No new
+score normalization or second symbol ledger is involved.
+
+`test-scenario-deselect.py` extracts the actual base, scenario callback and
+WindowHandler bodies. At native `-O0` and `-O2`, **262,160 direct callback
+checks** cover both initial flag values, all signed-16-bit IDs and four
+outlying IDs; **864 dispatcher cases** check message priority, callback
+arguments, flag initialization and end-dialog message mutation. Five wrong
+controls must fail: wrong base return, wrong acceptance ID, dropped flag,
+skipped callback, and wrong end-dialog return. The current interface and
+selected frozen body both pass. This reduced fixture tests semantics, not
+VC6 object layout or inlining; `--source` selects a frozen source tree.
+
+The full adopted build passes every gate at **4084/4764 exact**, **96.43%
+linked** and **96.42% whole-image** (rounded). All 4764 RVA rows survive;
+the only two current-score changes are the collateral described above,
+and no MAX/HIST value falls. All **90 production objects** reproduce the
+selected independent recompile's executable bytes, function locations and
+**94,779 relocation destinations** across **13,118 sections**. The only
+raw non-executable layout difference is herodefs's zero-filled anonymous-
+static BSS permutation/padding (1148 versus 1156 bytes). Fresh source and
+structure diagnostics confirm all three scenario blocks and statements
+agree; the named-call difference is precisely the independently byte-proven
+ICF twin, not an absent call or a replacement helper. The census is **213
+overrides across 27 TUs** (208 depth-zero, five auto-inline-off), with the
+**63 unions** unchanged.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
