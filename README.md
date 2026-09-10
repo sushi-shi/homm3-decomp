@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.39%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 96.40%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 4,077 / 4,764 functions exact (85.6%) across the full engine (4764 in linked units).
+**Match score** — 4,078 / 4,764 functions exact (85.6%) across the full engine (4764 in linked units).
 
-**Function exact MAX** — 4,098 / 4,764 current implementations (86.0%) have reached 100%.
+**Function exact MAX** — 4,100 / 4,764 current implementations (86.1%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4008 / 4695 (85.4%) | 4029 / 4695 (85.8%) |  96.35% |    96.57% |
+| `game`       |   138 | 4009 / 4695 (85.4%) | 4031 / 4695 (85.9%) |  96.36% |    96.59% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -62,8 +62,8 @@ Manually maintained cleanup checklist:
 - [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
-- [ ] Review pragma debt in `src/`: **412 `#pragma` directives**, all for inlining
-  (**201 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Review pragma debt in `src/`: **388 `#pragma` directives**, all for inlining
+  (**190 `inline_depth(0)` and 4 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 

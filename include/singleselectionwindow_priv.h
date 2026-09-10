@@ -878,6 +878,7 @@ public:
         return 0;
     }
 
+protected:
     // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
     // Before normalization (function): CNewPlayerUpdateMan::GetFirstAvailable.
     int getFirstAvailable()
@@ -892,6 +893,7 @@ public:
     // Before normalization (function): CNewPlayerUpdateMan::GetProc.
     CNewPlayerUpdateProc* getProc(unsigned long dpid);
 
+public:
     // Before normalization (function): CNewPlayerUpdateMan::Tick.
     void tick();
     // Before normalization (function): CNewPlayerUpdateMan::PlayerDropped.
@@ -908,6 +910,8 @@ public:
     // joining dpid.
     // Before normalization (function): CNewPlayerUpdateMan::NewPlayer.
     void newPlayer(unsigned long dpid);  // retail 0x58a280
+    // Provisional retail-role name; Complete-only map-list transfer.
+    void requestMapHeaders(unsigned long dpid);
 };
 
 // RESOLVED (round 2): the round-1 "LoadHeadersList" at 0x58eab0 is the
