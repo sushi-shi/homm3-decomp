@@ -5686,6 +5686,9 @@ static void missingMapObjectDefinition()
 // Residual (84.0566%): the deliberate failure branch/call is absent in retail.
 // Checked vector::at measured 45.2642%; the ordinary shared throw preserves
 // the reverse loop and caller contract without inliner directives.
+// A further 16-state paired failure-boundary family reproduces all objects:
+// reverse-index/exit, postdecrement failure and predecrement failure score
+// 69.4340%, 48.3962% and 43.4906%; the retained shared-throw form stays best.
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
 CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 {
@@ -5713,6 +5716,9 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 // vector::at measured 63.1832%, local throw 51.1908%. Actual-body native tests
 // cover reverse precedence, terrain filters, empty/missing classes, cached
 // indices and no publication on failure, with three rejected negative controls.
+// The paired 16-state failure-boundary family also leaves this form best:
+// reverse-index/exit 71.7557%, postdecrement failure 66.5802%, predecrement
+// failure 69.2824%, all independently reproduced with the canonical throw.
 // MATCHING_DEBT: the two vector inserts are pinned with inline_depth(0) (the
 // randomDwellings idiom) with end() and the value hoisted out so operator[]
 // and end() stay inline; sprites is named as a reference so its _Last is read

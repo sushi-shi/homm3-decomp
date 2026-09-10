@@ -4,6 +4,8 @@ The fixture supplies bitmap ownership, pixel-indexed grab/draw, blit/time
 stubs, and Win32 unsigned-long width. It checks the supported 800x600,
 positive-pitch contract, not DirectDraw itself or aliasing/lifetime debt.
 """
+import argparse
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -11,6 +13,15 @@ import tempfile
 
 root = Path(__file__).resolve().parents[2]
 source = (root / 'src/winmgr.cpp').read_text()
+parser = argparse.ArgumentParser()
+parser.add_argument('--variant', nargs=2, metavar=('MANIFEST', 'CHOICE'))
+args = parser.parse_args()
+if args.variant:
+    manifest = json.loads(Path(args.variant[0]).read_text())
+    assert manifest['source'] == 'src/winmgr.cpp' and len(manifest['axes']) == 1
+    axis = manifest['axes'][0]
+    assert source.count(axis['find']) == 1
+    source = source.replace(axis['find'], axis['options'][int(args.variant[1])].get('replace', axis['find']))
 
 
 def body(name):
@@ -24,6 +35,8 @@ bodies = bodies.replace('unsigned long', 'uint32_t')
 
 
 def instrument(text):
+    text = re.sub(r'(\w+\.m_bytes) = (\w+RowBase) \+ ([^;]+);',
+                  r'\1 = step(\2, \3);', text)
     return re.sub(r'(\b(?:\w+\.m_bytes|sourceBytes|destinationBytes)) \+= ([^;]+);',
                   r'\1 = step(\1, \2);', text)
 
@@ -182,8 +195,14 @@ int main() {
       catch(const std::exception& e){std::fprintf(stderr,"%s\n",e.what());return 1;}
 }
 '''
+opening = bodies.index('{', bodies.index('for (int row = 0; row < height; row++)'))
+depth, end = 1, opening + 1
+while depth:
+    depth += (bodies[end] == '{') - (bodies[end] == '}')
+    end += 1
+unchecked = bodies[:end] + '\n                screen.m_bytes += m_screenBitmap->getPitch();' + bodies[end:]
 variants = {'actual': bodies,
-    'unchecked-fizzle': bodies.replace('                    if (row + 1 < height)\n', ''),
+    'unchecked-fizzle': unchecked,
     'wrong-blend': bodies.replace('int alpha = (frame << 16) / 8;', 'int alpha = (frame << 16) / 9;'),
     'missing-release': bodies.replace('            releaseFizzleSource();', '')}
 with tempfile.TemporaryDirectory(prefix='homm3-window-rows-') as directory:

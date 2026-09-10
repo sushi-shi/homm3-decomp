@@ -374,10 +374,10 @@ unsigned int Bitmap24Bit::getSize() const
 // 2026-09-01: all 65 blocks, 1,528 bytes and stack homes match. The negative
 // control with named float/double union temporaries expands the frame from
 // retail's 0x60 to 0xec and falls to 99.57085%.
-// Row-boundary residual (94.0790%): a next-row guard removes the unused end+x
-// cursor. Last-row guard 93.2895%, original unchecked 100%; helper calls and
-// DC's hue/value/saturation scopes are unchanged. Actual-body native tests
-// compare the full rectangle against independently indexed one-row visits.
+// Row-boundary residual (95.7470%): a relative byte displacement advances
+// after each row; only visited pointers are formed. Next/last guards score
+// 94.0790/93.2895%, unchecked 100%. DC hue/value/saturation scopes remain;
+// native tests compare the rectangle with independently indexed row visits.
 VA(0x0044f190, 0x5F8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
 void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
                             // Before normalization (locals): hue_adjust, saturation_adjust,
@@ -393,9 +393,10 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
         std::numeric_limits<int>::max() / 255;
 
     unsigned char* src = m_data + y * getPitch() + x * 3;
+    unsigned char* srcRowBase = src;
+    int srcRowOffset = 0;
     for (int row = 0; row < h; ++row) {
-        if (row)
-            src += getPitch();
+        src = srcRowBase + srcRowOffset;
         unsigned char* pixel = src;
         for (int column = 0; column < w; ++column) {
             unsigned int r = pixel[2] * redNorm;
@@ -446,6 +447,8 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
             pixel[0] = static_cast<unsigned char>(b / blueNorm);
             pixel += 3;
         }
+
+        srcRowOffset += getPitch();
     }
 }
 

@@ -52,6 +52,11 @@ def instrument(source):
                     r'\1 = checkedStep(\1, \2);', source)
     source = re.sub(r'(\w+\.m_bytes) = (\w+Base) \+ ([^;]+);',
                     r'\1 = checkedStep(\2, \3);', source)
+    source = re.sub(r'(src|maskRow) = (\w+RowBase) \+ (\w+RowOffset);',
+                    r'\1 = checkedStep(\2, \3);', source)
+    source = re.sub(r'(dst) = static_cast<unsigned short\*>\(static_cast<void\*>\('
+                    r'(\w+RowBase) \+ (\w+RowOffset)\)\);',
+                    r'\1 = static_cast<unsigned short*>(static_cast<void*>(checkedStep(\2, \3)));', source)
     source = re.sub(
         r'dst = static_cast<unsigned short\*>\(static_cast<void\*>\(\s*'
         r'static_cast<unsigned char\*>\(static_cast<void\*>\(dst\)\)\s*'
@@ -60,6 +65,7 @@ def instrument(source):
 
 
 signatures16 = ['void Bitmap16Bit::draw(', 'void Bitmap16Bit::grab(',
+    'void Bitmap16Bit::fillRect(',
     'void Bitmap16Bit::frameRect(',
     'void Bitmap16Bit::darken(int x, int y, int w, int h)\n',
     'void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816*',
@@ -117,6 +123,7 @@ struct Bitmap16Bit {
     unsigned short* getMap(int x,int y) const { return m_map + y*(m_pitch/2) + x; }
     void draw(int,int,int,int,unsigned short*,int,int,int,int,int,bool) const;
     void grab(const unsigned short*,int,int,int,int,int);
+    void fillRect(int,int,int,int,unsigned short);
     void frameRect(int,int,int,int,unsigned short);
     void darken(int,int,int,int);
     void darken(int,int,int,int,Bitmap816*,int,int);
@@ -166,16 +173,18 @@ int main() {
           for (int x=0;x<width;++x) for(int y=0;y<height;++y)
           for(int w : {1,width-x,width+1}) for(int h : {1,height-y,height+1}) {
             const int cw=std::min(w,width-x), ch=std::min(h,height-y);
-            for(int operation=0;operation<3;++operation) {
+            for(int operation=0;operation<4;++operation) {
               image=seed; expected=seed;
               for(int iy=0;iy<ch;++iy) for(int ix=0;ix<cw;++ix) {
                 auto& pixel=expected[(y+iy)*stride+x+ix];
                 if(operation==0) { if(iy==0||iy==ch-1||ix==0||ix==cw-1) pixel=0xace1; }
+                else if(operation==3) pixel=0xace1;
                 else if(operation==1||maskData[iy*width+ix]) pixel=(pixel>>1)&shiftMask;
               }
               if(operation==0) bitmap.frameRect(x,y,w,h,0xace1);
               if(operation==1) bitmap.darken(x,y,w,h);
               if(operation==2) bitmap.darken(x,y,w,h,&mask,0,0);
+              if(operation==3) bitmap.fillRect(x,y,w,h,0xace1);
               same(image,expected); ++cases;
             }
           }
@@ -244,10 +253,11 @@ for name, value in replacements.items():
     fixture = fixture.replace('@' + name + '@', value)
 
 frame = body(bodies16, 'void Bitmap16Bit::frameRect(')
-frameStep = '            if (row)\n                dst.m_bytes += m_pitch;\n'
-assert frameStep in frame, 'negative control expects selected next-row frame'
-unguardedFrame = frame.replace(frameStep, '').replace('        }\n    }\n}',
-    '            dst.m_bytes += m_pitch;\n        }\n    }\n}')
+# All supported row representations leave dst at the last visited row.
+# Form the same erroneous final end+x pointer after the loop so the control
+# remains effective when a family uses integral offsets instead of guards.
+tail = frame.rindex('    }\n}')
+unguardedFrame = frame[:tail] + '        dst.m_bytes += m_pitch;\n' + frame[tail:]
 variants = [('actual', fixture, 0),
     ('wrong-frame-color', fixture.replace('dst.m_pixels[col] = color;',
                                          'dst.m_pixels[col] = color ^ 1;'), 1),

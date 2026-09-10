@@ -38,6 +38,8 @@ DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // RGB planes still continue without advancing. Four-form family: final-row
 // guard 80.2679%, predecrement count 79.6207%, visited offset 78.8409%,
 // unchecked control 78.4456%. No input-decoder or error contract is changed.
+// Three fresh relative-row forms reproduce three objects: integral byte
+// offsets score 79.9470%, multiplied row indices 76.5172%; retain the guard.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
