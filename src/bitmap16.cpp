@@ -356,6 +356,12 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
 // rectangle walk with the interior filled instead of outlined: VC6 turns
 // the inner store loop into its word-fill idiom (duplicate the colour into
 // a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
+// Out-of-object review: the final pitch update can form end+x at the
+// image bottom. DC bitmap16.cpp:679..703 and retail retain this row walk.
+// Bounded source-family controls: GetMap per row 53.8929%, byte-offset
+// cursor 73.7857%, row*pitch 64.2143%, last-row guard 69.625%, versus
+// 100% here. Retained retail edge case under the no-match-loss constraint;
+// do not disguise it with an integer address or an oversized allocation.
 VA(0x0044e4c0, 0x7D)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
 void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {

@@ -61,6 +61,8 @@ model cannot rot.
 | `docs/vc6/victor-library.md` | external-library ABI/profile evidence and compiler frames around recovered assembly kernels |
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
 | `docs/vc6/goto-audit.md` | [goto audit](goto-audit.md): source census, canonical-helper/structured-loop reductions, and measured limits |
+| `docs/vc6/address-arithmetic-audit.md` | [address-arithmetic audit](address-arithmetic-audit.md): canonical member/array access, retained byte-stream arithmetic, and measured collateral |
+| `docs/vc6/owner-pointer-audit.md` | [owner-pointer audit](owner-pointer-audit.md): complete SDK owners, bounded palette rows, serialized payload views, and retained retail pointer edge cases |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |

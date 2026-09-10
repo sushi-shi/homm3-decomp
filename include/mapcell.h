@@ -643,17 +643,11 @@ public:
     // when only the latter had been measured. findpath spells the test
     // `cell->flags_00_11 & 0x40` instead, which compiles to retail's
     // `test byte ptr [cell+0xc], 0x40` unchanged.
-    // NOT overlaid with a plain-word union, though retail's
-    // check_shipyard_square reads this field as a whole word: adding
-    // the union here is a type DEFINITION in this header's closure and
-    // costs initialize.obj's initialize_game_data 100.0 -> 96.09
-    // through the include-set sensitivity class (measured 2026-08-08,
-    // the same 96.09 that class produces for a bare probe struct). The
-    // word view is taken locally in town.cpp instead - see
-    // cell_flags_word there.
-    // mapcell.obj also needs the whole-word spelling used by retail's
-    // get_special_terrain (`test word ptr [cell+0xc], 0x1000`). Keep it as
-    // the canonical overlay of the same proven flag word, not a cast/view.
+    // Retail check_shipyard_square reads this field as a whole word
+    // (`mov si, word ptr [cell+0xc]`), and get_special_terrain tests it
+    // with `test word ptr [cell+0xc], 0x1000`. Both use the canonical
+    // cellFlags overlay below. Earlier include-set experiments predated
+    // this shared representation and no longer justify a local offset view.
     union {
         struct {
             // Before normalization: flags_00_11.

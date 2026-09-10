@@ -1089,6 +1089,8 @@ static const int g_townArmyCoords[7][2] = {
 // operator=. The DC xref graph corroborates - this compiland reaches
 // basic_string's CONSTRUCTOR (plus an allocator<char> temporary) and no
 // assignment operator.
+// Address-arithmetic review (2026-09-10): indexing army_pos by the packed
+// display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
 VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
 TBottomViewTown::TBottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -1161,13 +1163,16 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 
     if (which->getArmy().getNumArmies() > 0) {
         int id = 0x7d9;
-        const int* coordinates = &g_townArmyCoords[0][0];
+        // DC lines 452/457/476 distinguish army slots from packed display
+        // positions. Keep the two-dimensional army_pos table's row boundary.
+        int displaySlot = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             int creature = which->getArmy().m_armies[i];
             if (creature == -1)
                 continue;
 
-            m_widgets.push_back(new iconWidget(coordinates[0], coordinates[1],
+            m_widgets.push_back(new iconWidget(g_townArmyCoords[displaySlot][0],
+                g_townArmyCoords[displaySlot][1],
                 32, 32, id++, "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
             std::ostrstream quantityText;
@@ -1177,12 +1182,13 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
                 quantityText << which->getArmy().m_numTroops[i] / 1000 << "k"
                               << std::ends;
 
-            m_widgets.push_back(new textWidget(coordinates[0],
-                coordinates[1] + 34, 32, 13, quantityText.str(), "tiny.fnt",
+            m_widgets.push_back(new textWidget(g_townArmyCoords[displaySlot][0],
+                g_townArmyCoords[displaySlot][1] + 34, 32, 13,
+                quantityText.str(), "tiny.fnt",
                 font::WHITE, id++, 1, 0, 8));
 
             quantityText.freeze(false);
-            coordinates += 2;
+            ++displaySlot;
         }
     }
 
