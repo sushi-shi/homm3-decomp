@@ -8,6 +8,7 @@
 #include <string.h>
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "seerhut.h"
+#include "ai_player.h"  // shared artifact valuation overloads
 #include "hero.h"
 #include "quest.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
@@ -239,11 +240,6 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 // slot 12 as the h3m reader.
 //
 // Retail-only rows: no Dreamcast roster entry corresponds to any of them.
-
-// ai.obj's per-artifact valuation, 0x433aa0: an 8-byte type_artifact record
-// by const reference in ecx and the player index in edx.
-// Before normalization (function): AI_get_artifact_player_value.
-int aiGetArtifactPlayerValue(const type_artifact& artifact, int player);
 
 // The AI's resource valuation, 0x526cc0: player index in ecx, a seven-entry
 // cost vector in edx, summed against the per-player multiplier table the
@@ -1411,7 +1407,7 @@ int type_artifact_quest::getAIValue(int player)
         // dead initialisation, and needs no header edit.
         type_artifact wanted(m_artifacts[i], -1);
 
-        total += aiGetArtifactPlayerValue(wanted, player);
+        total += aiGetValueOfArtifact(wanted, player);
     }
     return total;
 }
@@ -2991,7 +2987,7 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardArtifact: {
         if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
             return 0;
-        return aiGetArtifactPlayerValue(
+        return aiGetValueOfArtifact(
             type_artifact(m_value.m_dwords[0], -1), currentHero->m_owner);
     }
 

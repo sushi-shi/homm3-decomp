@@ -2866,6 +2866,16 @@ public:
                        type_point point, bool humanPlayer);
 };
 
+// AdvMgr.h:1254, dc 0x1f084. The by-value point overload forwards all
+// three coordinates to kb.cpp's retained scalar accessor (0x4f79b0).
+// The scalar declaration also remains in kb.h for its scalar-only users.
+// Before normalization (function): GetMapExtra.
+unsigned short getMapExtra(int x, int y, int z);
+inline int getMapExtra(type_point point)
+{
+    return ::getMapExtra(point.m_x, point.m_y, point.m_z);
+}
+
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 // Before normalization: gpAdvManager.
 extern advManager* g_advManager;

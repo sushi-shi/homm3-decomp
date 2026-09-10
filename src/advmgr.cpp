@@ -4120,15 +4120,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
     }
 }
 
-// The DC header overload survives here only through /Ob2 expansion. The
-// retail instruction stream independently proves its by-value forwarding
-// shape.
-// Before normalization (function): GetMapExtra.
-inline int getMapExtra(type_point point)
-{
-    return ::getMapExtra(point.m_x, point.m_y, point.m_z);
-}
-
 // The DC header names this expression type_point::operator==. Keeping the
 // retail-proven inline body local avoids changing unrelated compilands while
 // reproducing the packed bitfield comparison in ProcessHover.
