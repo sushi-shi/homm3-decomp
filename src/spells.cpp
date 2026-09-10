@@ -3692,7 +3692,7 @@ void combatManager::resetBoltAngle(SBolt* bolt)
 // owns the raster loop plus arrival latch is byte-flat at that same checkpoint;
 // it stays because Dreamcast's scopes and the exact HoMM2 source agree on it.
 //
-// Current residual: all 27 conditional branches and both returns agree. The
+// Earlier residual: all 27 conditional branches and both returns agree. The
 // first EBX/EDI/ESI definitions agree, but the candidate has 62 CFG blocks
 // versus retail's 59 and reloads psBolt after the switch where retail keeps
 // EBX live. The four persistent frame homes are also one cycle apart: base assigns
@@ -3717,6 +3717,15 @@ void combatManager::resetBoltAngle(SBolt* bolt)
 // sites, and 0..8 added file-scope type definitions are all byte-flat.
 // Those source classes are real possibilities, but none selects this
 // function's remaining frame layout.
+// Exact 2026-09-10: DC spells.cpp:3781/3788 computes a palette-row address
+// before the following RGBto16/pixel statements. Binding that row once in
+// each table arm removes repeated index temporaries and restores the bolt
+// pointer and frame homes: 94.90726% -> 100%. No declaration shuffle is needed.
+// DC 3755 also calls InCombatArea; the stores call GetMap(0,0) before applying
+// their fixed-width row offset. Those source calls are restored too.
+// The 32-form family has 12 distinct objects and ten reproduced elites.
+// Local, const-local and shared RGB row pointers reach 100%; helpers alone
+// with repeated channel subscripts do not. No new pins or dummy operations.
 // Before normalization (locals): psBolt, iDrawLength, iUseThicknessStopOffset, iRemaining, iX,
 // iY, iSpanFirst, iLastX, iLastY, iSpanLast, iFromEdge.
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
@@ -3781,7 +3790,7 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
                     y = bolt->m_pixelY + k;
                 else
                     x = bolt->m_pixelX + k;
-                if (x < 0 || x >= 800 || y < 0 || y >= 556)
+                if (!inCombatArea(x, y))
                     continue;
                 {
                     if (k < 0)
@@ -3790,34 +3799,34 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
                         fromEdge = spanLast - k;
 
                     switch (bolt->m_color) {
-                    case BOLT_COLOR_4:
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] =
+                    case BOLT_COLOR_4: {
+                        unsigned char* rgb = g_boltWhiteSpanColors[fromEdge];
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(
-                                rgBto16(g_boltWhiteSpanColors[fromEdge][0],
-                                        g_boltWhiteSpanColors[fromEdge][1],
-                                        g_boltWhiteSpanColors[fromEdge][2]));
+                                rgBto16(rgb[0], rgb[1], rgb[2]));
                         break;
-                    case BOLT_COLOR_2:
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] =
+                    }
+                    case BOLT_COLOR_2: {
+                        unsigned char* rgb = g_boltGreenSpanColors[fromEdge];
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(
-                                rgBto16(g_boltGreenSpanColors[fromEdge][0],
-                                        g_boltGreenSpanColors[fromEdge][1],
-                                        g_boltGreenSpanColors[fromEdge][2]));
+                                rgBto16(rgb[0], rgb[1], rgb[2]));
                         break;
-                    case BOLT_COLOR_0:
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] =
+                    }
+                    case BOLT_COLOR_0: {
+                        unsigned char* rgb = g_boltSpectrumColors[k - spanFirst];
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(rgBto16(
-                                g_boltSpectrumColors[k - spanFirst][0],
-                                g_boltSpectrumColors[k - spanFirst][1],
-                                g_boltSpectrumColors[k - spanFirst][2]));
+                                rgb[0], rgb[1], rgb[2]));
                         break;
-                    case BOLT_COLOR_3:
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] =
+                    }
+                    case BOLT_COLOR_3: {
+                        unsigned char* rgb = g_boltSpectrumColors[14 - (k - spanFirst)];
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(rgBto16(
-                                g_boltSpectrumColors[14 - (k - spanFirst)][0],
-                                g_boltSpectrumColors[14 - (k - spanFirst)][1],
-                                g_boltSpectrumColors[14 - (k - spanFirst)][2]));
+                                rgb[0], rgb[1], rgb[2]));
                         break;
+                    }
                     case BOLT_COLOR_CHAIN_LIGHTNING:
                         // Six hand-written shades rather than a table. The SH4
                         // compiler tail-merges their calls and attributes the
@@ -3836,12 +3845,12 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
                             color = rgBto16(200, 200, 255);
                         else
                             color = rgBto16(192, 192, 255);
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] = color;
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] = color;
                         break;
                     default:
                         // Anything outside the six special values is a raw
                         // 16-bit pixel, written straight through.
-                        g_windowManager->m_screenBitmap->m_map[y * 800 + x] =
+                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(bolt->m_color);
                         break;
                     }

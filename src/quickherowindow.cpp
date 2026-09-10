@@ -157,25 +157,27 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         }
 
         int widgetId = ARMY_1_SPRITE_ID;
-        int* coordinates = &g_quickHeroArmyPositions[0][0];
-        const int* currentCount = thisHero->m_army.m_numTroops;
-        for (int remaining = armyGroup::ARMY_GROUP_SLOT_COUNT; remaining;
-             --remaining, ++currentCount) {
-            int creature = currentCount[-armyGroup::ARMY_GROUP_SLOT_COUNT];
+        // DC lines 144/159/163 index the army and its packed army_pos
+        // display separately. Do not recover armies by indexing backwards
+        // out of the neighboring numTroops member.
+        int displaySlot = 0;
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            int creature = thisHero->m_army.m_armies[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)
                 creature = disguiseCreature;
 
             m_widgets.push_back(new iconWidget(
-                coordinates[0], coordinates[1], 32, 32, widgetId++,
+                g_quickHeroArmyPositions[displaySlot][0],
+                g_quickHeroArmyPositions[displaySlot][1], 32, 32, widgetId++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
             int count;
             if (thisHero->m_disguiseLevel >= DisguiseAdvanced)
                 count = 0;
             else
-                count = *currentCount;
+                count = thisHero->m_army.m_numTroops[slot];
             std::ostrstream quantityText;
             if (viewLevel >= ViewAll) {
                 if (count < 10000)
@@ -184,19 +186,21 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     quantityText << count / 1000 << "k" << std::ends;
 
                 m_widgets.push_back(new textWidget(
-                    coordinates[0], coordinates[1] + 34, 32, 11,
+                    g_quickHeroArmyPositions[displaySlot][0],
+                    g_quickHeroArmyPositions[displaySlot][1] + 34, 32, 11,
                     quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             } else {
                 quantityText << armyGroup::getArmySizeName(count, 0)
                               << std::ends;
                 m_widgets.push_back(new textWidget(
-                    coordinates[0], coordinates[1] + 34, 32, 11,
+                    g_quickHeroArmyPositions[displaySlot][0],
+                    g_quickHeroArmyPositions[displaySlot][1] + 34, 32, 11,
                     quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
-            coordinates += 2;
+            ++displaySlot;
         }
     }
 

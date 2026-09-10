@@ -19,21 +19,6 @@ class iconWidget;
 class recruitUnit;
 class town;
 
-// Creature-record table POINTER at 0x6747b0 - armygrp.h's
-// akCreatureTypeTraits seen as the flat dword table retail's index
-// register walks (stride 0x74 = 29 dwords, the seven costs at dword
-// 8). The struct-field spelling was tried 2026-08-06 and scores WORSE
-// (69.0 vs 82.7): retail keeps base and byte-offset in separate
-// registers through the loop, a shape only the forbidden pointer cast
-// reproduces exactly - this dword-index view is the admissible max.
-enum ECreatureRecord {
-    CREATURE_RECORD_DWORDS = 29,
-    CREATURE_RECORD_COST_DWORD = 8
-};
-
-// Before normalization: gCreatureRecords.
-extern int* g_creatureRecords;
-
 // Before normalization (function): GetMonsterCost.
 void getMonsterCost(int monId, int* resCost);
 // Retail is four-arg (both creature rows in ecx/edx); the DC

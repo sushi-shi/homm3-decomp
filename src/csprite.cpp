@@ -84,7 +84,10 @@ inline void CSprite::setPalette(TPalette16& pal)
 VA(0x0047bc00, 0xb8)  // anchor-global, dc 0x72538
 void CSprite::resetPalette()
 {
-    TPalette24 palette24(&m_p24->m_colors.m_data[0][0]);
+    // The raw constructor copies the whole RGB table (DC csprite.cpp:222),
+    // not just the three-byte first entry.
+    TPalette24 palette24(static_cast<const unsigned char*>(
+        static_cast<const void*>(&m_p24->m_colors)));
 #ifdef __clang__
     // VC6 accepts the temporary directly as a non-const reference.  Give the
     // analysis compiler an lvalue so it can recover the VA annotations; this

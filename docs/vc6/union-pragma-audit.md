@@ -1162,6 +1162,14 @@ directives**. The **63 unions** and their classifications are unchanged.
 Relative to the user's 253/72 checkpoint, **40 overrides and nine unions
 have been removed**. Scenarioinfo, like ai_player, now has no inline override.
 
+The subsequent integration with the independently landed ownership cleanup
+(`4b75e8ce`) passes a separate full build at **4086/4764 exact**, **96.44%
+linked** and **96.43% whole-image**, preserving its two new exact functions
+and every incoming MAX/HIST peak. Relative to that branch, this change still
+has only the two disclosed current-score movements. Callback, owner-payload,
+horde-row and DrawBolt behavioral/negative tests pass on the combined tree;
+the override and union counts remain 213 and 63.
+
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
 what must be recovered; they are not permissions to add new suppression pins.
