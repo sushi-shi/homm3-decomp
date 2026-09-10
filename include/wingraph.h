@@ -6,48 +6,31 @@
 #define HOMM3_WINGRAPH_H
 
 #include <va.h>
+#include <ddraw.h>
 
 // E:\gamedcs\WinGraph.h:55.  Dreamcast keeps this header helper out of
 // line, and its xref graph proves calls from mousemgr, spells, and wingraph.
 // Retail VC6 /Ob2 expands every observed Windows use instead.  Keep the
-// channel declarations with the helper so each consumer sees the same public
+// pixel-format declaration with the helper so each consumer sees the same public
 // source boundary rather than a TU-local facsimile.  Retail DrawBolt fixes
 // their order as R/G/B: its green ramp selects only 0x68c864, while Chain
 // Lightning keeps 0x68c868 saturated as its other two components fade.
-// Before normalization: gColorMask68c860.
-extern unsigned long g_colorMask68c860;
-// Before normalization: gColorMask68c864.
-extern unsigned long g_colorMask68c864;
-// Before normalization: gColorMask68c868.
-extern unsigned long g_colorMask68c868;
+// DC wingraph.cpp:235 names PixelFormat as _DDPIXELFORMAT; line 239 reads
+// its RGB mask members. Retail 0x6014f0 passes this complete 32-byte SDK
+// object at 0x68c850 to GetPixelFormat, then reads masks at +0x10/+0x14/+0x18.
+// Former split names: gPixelFormatPrefix, gColorMask68c860/864/868.
+DATA(0x0068c850) extern DDPIXELFORMAT g_pixelFormat;
 
 // Before normalization (function): RGBto16.
 inline unsigned rgBto16(int r, int g, int b)
 {
     unsigned color;
-    color = (r * g_colorMask68c860 / 255) & g_colorMask68c860;
-    color |= (g * g_colorMask68c864 / 255) & g_colorMask68c864;
-    color |= (b * g_colorMask68c868 / 255) & g_colorMask68c868;
+    color = (r * g_pixelFormat.dwRBitMask / 255) & g_pixelFormat.dwRBitMask;
+    color |= (g * g_pixelFormat.dwGBitMask / 255) & g_pixelFormat.dwGBitMask;
+    color |= (b * g_pixelFormat.dwBBitMask / 255) & g_pixelFormat.dwBBitMask;
 
     return color;
 }
-
-// The prefix of DirectDraw's 32-byte pixel-format record at 0x68c850.
-// The three channel masks immediately following it are declared above with
-// their recovered helper; mousemgr.cpp owns their reviewed DATA definitions.
-struct TPixelFormatPrefix {
-    // Before normalization: size.
-    unsigned long m_size;
-    // Before normalization: flags.
-    unsigned long m_flags;
-    // Former pad_08: the VC6 DirectDraw SDK's DDPIXELFORMAT declares
-    // dwFourCC at +8 and its dwRGBBitCount union arm at +0xc. Retail's
-    // DDPF_RGB prefix is passed to GetPixelFormat; the RGB masks follow
-    // at +0x10. These are output fields, not padding.
-    unsigned long m_fourCc;
-    unsigned long m_rgbBitCount;
-};
-SIZE(TPixelFormatPrefix, 0x10);
 
 // Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
 // AppCommand fullscreen arm, AppExit, WM_PAINT and WinMain).

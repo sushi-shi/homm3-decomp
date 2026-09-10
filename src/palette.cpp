@@ -161,7 +161,11 @@ TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
+    // Convert24to16 (DC palette.cpp:210) consumes all 768 palette bytes;
+    // give its byte interface the complete RGB table, not its first row.
+    convert24to16(static_cast<const unsigned char*>(
+                      static_cast<const void*>(&p24->m_colors)),
+                  rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
@@ -171,7 +175,9 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
                        int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_PALETTE)
 {
-    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
+    convert24to16(static_cast<const unsigned char*>(
+                      static_cast<const void*>(&p24->m_colors)),
+                  rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
@@ -219,14 +225,18 @@ TPalette16::TPalette16(const TPalette24* p24)
     const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
     const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
     unsigned short* dst = m_data;
-    const unsigned char* src = p24->m_colors.m_data[0];
+    // Step through the array of RGB rows, not beyond its first byte row.
+    // DC palette.cpp:95..109 supplies entry-wise RGB access. A row pointer
+    // preserves 98.9155%; recomputing a byte pointer from each index gives
+    // 75.2535%. The whole-palette byte view is also flat but needs two casts.
+    const unsigned char (*src)[3] = p24->m_colors.m_data;
     for (int index = 0; index < 256; ++index) {
         *dst = static_cast<unsigned short>(
-            (((src[2] * blueScale) >> 8) & s_blueMask)
-            | (((src[0] * redScale) >> 8) & s_redMask)
-            | (((src[1] * greenScale) >> 8) & s_greenMask));
+            ((((*src)[2] * blueScale) >> 8) & s_blueMask)
+            | ((((*src)[0] * redScale) >> 8) & s_redMask)
+            | ((((*src)[1] * greenScale) >> 8) & s_greenMask));
         ++dst;
-        src += 3;
+        ++src;
     }
 }
 

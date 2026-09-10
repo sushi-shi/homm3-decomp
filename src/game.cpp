@@ -729,13 +729,13 @@ void immMouseWindowMoved()
     POINT origin = { 0, 0 };
     ClientToScreen(g_immWindow, &origin);
 
-    long dx = origin.x - g_immWindowX;
-    long dy = origin.y - g_immWindowY;
+    long dx = origin.x - g_immWindowOrigin.x;
+    long dy = origin.y - g_immWindowOrigin.y;
     if (dx == 0 && dy == 0)
         return;
 
-    g_immWindowX = origin.x;
-    g_immWindowY = origin.y;
+    g_immWindowOrigin.x = origin.x;
+    g_immWindowOrigin.y = origin.y;
     for (std::map<CImmEnclosure*, RECT>::iterator it = g_immEffectEntries.begin();
          it != g_immEffectEntries.end(); ++it) {
         CImmEnclosure* enclosure = it->first;

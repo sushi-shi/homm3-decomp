@@ -56,11 +56,9 @@ DATA(0x006aacd4) static unsigned char g_inDirectDrawError;
 // Before normalization: gDDSurfaceBitmap.
 DATA(0x006aac70) static Bitmap16Bit g_ddSurfaceBitmap(0, 0);
 
-// The first 16 bytes of the old DirectDraw pixel-format record. Its three
-// live channel masks are separately owned at 0x68c860..68 by mousemgr.cpp,
-// whose renderer consumes them. The split avoids overlapping DATA claims.
-// Before normalization: gPixelFormatPrefix.
-DATA(0x0068c850) static TPixelFormatPrefix g_pixelFormatPrefix = {
+// DC's PixelFormat, one complete SDK object. GetPixelFormat writes all
+// 32 bytes; its masks are members, not separate mousemgr-owned globals.
+DATA(0x0068c850) DDPIXELFORMAT g_pixelFormat = {
     sizeof(DDPIXELFORMAT), DDPF_RGB
 };
 
@@ -1276,13 +1274,12 @@ void ddInitGraphics()
         g_ddClipper->Release();
         g_ddClipper = 0;
     }
-    g_ddsPrimary->GetPixelFormat(
-        static_cast<DDPIXELFORMAT*>(static_cast<void*>(&g_pixelFormatPrefix)));
+    g_ddsPrimary->GetPixelFormat(&g_pixelFormat);
 
     ResourceManager::setPixelFormat(
-        g_colorMask68c860, g_colorMask68c864, g_colorMask68c868);
+        g_pixelFormat.dwRBitMask, g_pixelFormat.dwGBitMask, g_pixelFormat.dwBBitMask);
     SmackManager::setPixelFormat(
-        g_colorMask68c860, g_colorMask68c864, g_colorMask68c868);
+        g_pixelFormat.dwRBitMask, g_pixelFormat.dwGBitMask, g_pixelFormat.dwBBitMask);
 
     if (!g_windowedMode) {
         result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);

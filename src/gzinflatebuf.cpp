@@ -325,6 +325,11 @@ int TGzInflateBuf::underflow()
                         throw TAllocationFailure();
                     if (status == Z_DATA_ERROR)
                         throw TDataError();
+                    // This is the live z_stream output window's beginning.
+                    // Retail +0x9b..+0xb3 loads next_out/avail_out and forms
+                    // their sum minus 512, rather than loading m_outBuffer.
+                    // Preserve that stream-state dependency, not a guessed
+                    // cancellation through the separately cached pointer.
                     m_crc = crc32(m_crc,
                                 m_stream.next_out + m_stream.avail_out - 0x200,
                                 0x200 - m_stream.avail_out);
