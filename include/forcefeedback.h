@@ -246,11 +246,11 @@ private:
 // Before normalization: gImmEffectEntries.
 DATA(0x00696d60)
 extern std::map<CImmEnclosure*, RECT> g_immEffectEntries;
-// Before normalization: gImmWindowX.
-// Before normalization: gImmWindowY.
-DATA(0x00696d70) extern long g_immWindowX;
+// Retail 0x4b6260 passes 0x696d70 to ClientToScreen, which owns both
+// LONG coordinates. 0x4b6950 and 0x4b6a50 consume its x/y at +0/+4.
+// Former split names: gImmWindowX / gImmWindowY (g_immWindowX/Y).
+DATA(0x00696d70) extern POINT g_immWindowOrigin;
 // Before normalization: gImmWindow.
-DATA(0x00696d74) extern long g_immWindowY;
 DATA(0x00696d7c) extern HWND g_immWindow;
 
 // The three singletons the initializer publishes: the mouse (handed out

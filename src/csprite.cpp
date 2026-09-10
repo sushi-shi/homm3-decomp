@@ -84,6 +84,8 @@ inline void CSprite::setPalette(TPalette16& pal)
 VA(0x0047bc00, 0xb8)  // anchor-global, dc 0x72538
 void CSprite::resetPalette()
 {
+    // DC csprite.cpp:222 copies the full RGB table. The recovered native
+    // 768-byte array keeps every byte within the same array object.
     TPalette24 palette24(m_p24->m_palette);
 #ifdef __clang__
     // VC6 accepts the temporary directly as a non-const reference.  Give the

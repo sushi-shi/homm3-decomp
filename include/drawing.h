@@ -26,17 +26,6 @@ enum ECombatWallDrawingConstants {
     COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE = 1
 };
 
-// The effect-latch tail lies beyond the currently materialized
-// combatManager prefix. These offsets are retail-byte-proven by
-// ResetLimitCreature; naming them avoids a second access-layout class.
-enum ECombatDrawingOffsets {
-    COMBAT_DRAWING_EXTENT_OFFSET = 0x13d38,
-    COMBAT_CREATURE_EFFECT_OFFSET = 0x14000,
-    COMBAT_HERO_EFFECT_OFFSET = 0x14028,
-    COMBAT_FLAG_EFFECT_OFFSET = 0x1402a,
-    COMBAT_ARCHER_EFFECT_OFFSET = 0x1402c
-};
-
 // Retail's battlefield indexing: eleven rows of seventeen cells, with the
 // first and last column reserved as off-grid borders.
 enum ECombatGridDimensions {
