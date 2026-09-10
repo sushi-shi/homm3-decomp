@@ -4005,3 +4005,34 @@ normal checkpoint and README. This preserves `CUR <= MAX <= HIST` and keeps
 historical peaks separate from the current implementation's MAX. Completing a
 family or getting every currently tracked row exact does not prove whole-TU
 source completeness.
+
+## Palette channel lifetimes from DC line layout
+
+The palette constructor families show why a compiler-sized arithmetic residual
+can originate in the lifetime of a result farther down the expression. DC's
+ordinary `Convert24to16` helper has three separately attributed channel
+calculations at lines 224–226, each truncated to a word, then OR/store at 228 and
+destination advance at 229. Named `unsigned short` channel values reproduce the
+byte-wide shift-count hoists in retail callers `0x5226d0` and `0x522770`, taking
+94.8548% / 94.9365% to 100%. Casting each channel inside the combined expression
+leaves those older scores. The all-int helper signature and ordinary helper
+boundary remain intact; no parameter narrowing or inlining directive is needed.
+That 72-state family produced 20 distinct objects.
+
+The mask constructor `0x522810` similarly separates channel lines 101–103 from
+OR/store at 108, with four intervening unrecorded lines whose contents are
+unknown. This supports a channel-lifetime hypothesis without inventing source
+text. A 73-state scale/operand/pointer-order family produced six objects and
+reached 99.2676% from 98.9155%, but retained the wrong channel evaluation order.
+A subsequent 61-state lifetime family produced eight objects, all reproduced:
+indexed RGB reads, named `unsigned int` channel values and an early destination
+pointer close at 100%. Both ordinary and const channel locals work. Advancing
+the source pointer or narrowing the channel locals to words does not close.
+All 25 tracked palette functions are exact together with the selected forms.
+
+The matching source also restores the DC `const TPalette24&` constructor
+interfaces and its native `unsigned char Palette[768]` member. Update every
+caller when correcting such interfaces: the pointer-taking `TPalette24` copy
+constructor otherwise permits an old pointer argument to create an unintended
+temporary before reference binding. Full-build caller scores confirm unchanged
+current results after the calls are corrected.

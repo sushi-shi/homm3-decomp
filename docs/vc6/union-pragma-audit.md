@@ -1239,6 +1239,15 @@ Relative to the user's 253/72 checkpoint, **44 overrides and nine unions have
 been removed**. The requested stopping point is a documented function wall,
 not a claim that the dispatcher or TU is finished.
 
+Integration with main's source-layout tooling and three exact palette
+constructors (`90ec3028`) passes another full build at **4090/4764 exact**,
+**96.44% linked** and **96.43% whole-image**. Relative to incoming main, the
+dispatcher is the sole CUR/MAX change, no exact function or HIST peak is lost,
+and all four consumer objects still strictly reproduce the selected candidate.
+The whole-image rounded score moves from 96.44% to 96.43%. The native lobby,
+map-header, owner-payload and scenario-deselection controls pass on the combined
+tree, as do the 18 source-layout/source-family unit tests.
+
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
 what must be recovered; they are not permissions to add new suppression pins.
