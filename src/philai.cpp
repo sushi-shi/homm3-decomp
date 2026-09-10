@@ -762,7 +762,7 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         + static_cast<float>(blackBox->m_artifacts.size())
             * g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
 
-    if (const_cast<hero*>(currentHero)->isWieldingArtifact(
+    if (currentHero->isWieldingArtifact(
             ARTIFACT_SPELLBOOK)) {
         for (unsigned int spell = 0;
              spell < blackBox->m_spells.size(); ++spell) {
@@ -922,16 +922,16 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
     if (g_game->m_day == DAY_OF_WEEK_SUNDAY) {
         return static_cast<long>(
             aiValueOfMorale(
-                const_cast<hero*>(currentHero)->getMorale(0, 0, 1), 1)
+                currentHero->getMorale(0, 0, 1), 1)
             + aiValueOfLuck(
-                const_cast<hero*>(currentHero)->getLuck(0, 0, 1), 1));
+                currentHero->getLuck(0, 0, 1), 1));
     }
     if (currentHero->m_flags & 1) {
         return static_cast<long>(aiValueOfLuck(
-            const_cast<hero*>(currentHero)->getLuck(0, 0, 1), 1));
+            currentHero->getLuck(0, 0, 1), 1));
     }
     return static_cast<long>(aiValueOfMorale(
-        const_cast<hero*>(currentHero)->getMorale(0, 0, 1), 1));
+        currentHero->getMorale(0, 0, 1), 1));
 }
 
 // E:\\gamedcs\\philai.cpp:2392. Dreamcast recovers the complete meeting
@@ -965,7 +965,7 @@ __forceinline long valueOfHeroEvent(const hero* currentHero,
             return value;
         town* currentTown = g_game->getTown(townId);
         if (value <= -500000000) {
-            if (const_cast<hero*>(currentHero)->getPlayer()->m_numTowns > 0)
+            if (currentHero->getPlayer()->m_numTowns > 0)
                 return value;
             value = -1250000;
         }
@@ -1192,7 +1192,7 @@ inline int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
     if (g_currentPlayer->m_deadGuyFlags & visited)
         return 0;
 
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
             < HERO_BACKPACK_CAPACITY)
         return static_cast<int>(player->m_ai.m_turnValueOfAvgArtifact / 5.0f);
@@ -1565,7 +1565,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         return armyValue / 50;
     case eSecSkillBattlefieldBallistics:
         if (complexChoice
-            && !const_cast<hero*>(ourHero)->isWieldingArtifact(
+            && !ourHero->isWieldingArtifact(
                    ARTIFACT_BALLISTA))
             return 0;
         return ourHero->getPrimarySkill(0) * 10;
@@ -1589,7 +1589,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         return armyValue / 40;
     case eSecSkillFirstAid:
         if (complexChoice
-            && !const_cast<hero*>(ourHero)->isWieldingArtifact(
+            && !ourHero->isWieldingArtifact(
                    ARTIFACT_FIRST_AID_TENT))
             return 0;
         return 250;
@@ -1766,40 +1766,39 @@ void aiVisitWarFactory(hero* currentHero)
 }
 
 // Retail keeps this helper out of all three expansions of visit_war_factory.
-// The 2026-09-09 whole-TU control reproduces that decision without the
-// former auto_inline(off) override.
-// CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
-// creature-cost row before the accumulator. Retail additionally proves a
-// cached ai.resource_value row. All blocks, branches and bytes through the funds
-// test are exact; the residual is only the order of six loop-tail induction
-// updates after __ftol (same instruction multiset, registers and total size).
-// Swapping the resource_values / costs declarations is byte-flat; the tail's
-// only remaining delta is EAX-vs-EDX for the reloaded costs pointer, which
-// forces the __ftol result to move out of EAX one instruction earlier.
+// The whole-TU control reproduces that decision without auto_inline(off).
+// DC 521/522 refuses before the remaining body, 525/526 forms the creature
+// cost row before the value accumulator at 530, and 541/542 refuses excess
+// cost. Preserve those boundaries and the canonical type_artifact constructor.
+// Indexed costs score 96.5185%; walking the cost row raises this to 99.4198%.
+// An explicit sum or index declaration move is neutral; 78 traversal states
+// (14 objects) leave the funds/value increment ordering unresolved. A further
+// six distinct source states restore the early refusal and cost-row order;
+// three reproduced objects retain 99.4198% with no sibling changes.
 VA(0x00525120, 0xE0)
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
 {
-    if (!const_cast<hero*>(currentHero)->hasArtifact(engine)
-            && g_game->m_setup.m_difficulty) {
-        long artifactValue = aiGetValueOfArtifact(
-            type_artifact(engine), currentHero, false, true);
-        TCreatureType creature = siegeArtifactToCreature(engine);
-        const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
-        const int* costs = g_creatureTypeTraits[creature].m_cost;
-        long resourceCost = 0;
-        for (int resource = 0; resource < 7; ++resource) {
-            if (g_currentPlayer->m_resources[resource] < costs[resource])
-                return 0;
-            resourceCost += costs[resource] * resourceValues[resource];
-        }
+    if (currentHero->hasArtifact(engine) || !g_game->m_setup.m_difficulty)
+        return 0;
 
-        if (moveCost <= 500)
-            resourceCost = 0;
-        if (resourceCost <= artifactValue)
-            return artifactValue - resourceCost;
+    long artifactValue = aiGetValueOfArtifact(
+        type_artifact(engine), currentHero, false, true);
+    TCreatureType creature = siegeArtifactToCreature(engine);
+    const int* costs = g_creatureTypeTraits[creature].m_cost;
+    const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
+    long resourceCost = 0;
+    for (int resource = 0; resource < 7; ++resource, ++costs) {
+        if (g_currentPlayer->m_resources[resource] < *costs)
+            return 0;
+        resourceCost += *costs * resourceValues[resource];
     }
-    return 0;
+
+    if (moveCost <= 500)
+        resourceCost = 0;
+    if (resourceCost > artifactValue)
+        return 0;
+    return artifactValue - resourceCost;
 }
 
 // E:\gamedcs\philai.cpp:687.  The unique DC callee set
@@ -2737,9 +2736,9 @@ VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
 type_spellvalue::type_spellvalue(const hero* newHero)
 {
     m_ourHero = newHero;
-    if (!const_cast<hero*>(newHero)->isWieldingArtifact(
+    if (!newHero->isWieldingArtifact(
             ARTIFACT_SPELLBOOK)
-        || const_cast<hero*>(m_ourHero)->isWieldingArtifact(
+        || m_ourHero->isWieldingArtifact(
             ARTIFACT_ORB_OF_INHIBITION)) {
         m_power = 0;
         m_duration = 0;
@@ -2749,7 +2748,7 @@ type_spellvalue::type_spellvalue(const hero* newHero)
         m_stackValue = m_ourHero->m_army.getAIValue();
         m_power = m_ourHero->getPrimarySkill(2);
         m_duration = m_power
-            + const_cast<hero*>(m_ourHero)->getSpellDurationBonus();
+            + m_ourHero->getSpellDurationBonus();
         m_mana = const_cast<hero*>(m_ourHero)->getMaxMana();
         fillCreatureValueList();
     }
@@ -3010,7 +3009,7 @@ long type_spellvalue::getBestSpellValue(long bits) const
 {
     long best = 0;
     unsigned char capped = 0;
-    if (const_cast<hero*>(m_ourHero)->isWieldingArtifact(
+    if (m_ourHero->isWieldingArtifact(
             g_artifactRecantersCloak))
         capped = 1;
     if (m_power == 0)
@@ -3207,7 +3206,7 @@ int hero::valueOfSpell(SpellID spell) const
 {
     if (g_spellTraits[spell].m_level <= m_skillLevel[eSecSkillWisdom] + 2
         && !m_inSpellbook[spell]
-        && const_cast<hero*>(this)->isWieldingArtifact(ARTIFACT_SPELLBOOK))
+        && this->isWieldingArtifact(ARTIFACT_SPELLBOOK))
         return aiGetSpellValue(this, spell);
     return 0;
 }
@@ -3546,7 +3545,7 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     TCreatureType type, short amount, long goldCost)
 {
     armyGroup monsterArmy(type, amount);
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     long bribeWorth = static_cast<long>(monsterArmy.getAIValue()
         - goldCost * player->m_ai.m_resourceValue[GOLD]);
     long fightWorth = aiValueOfCombat(currentHero, 0, monsterArmy, 0, cell);
@@ -3567,7 +3566,7 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
     long experienceValue = static_cast<long>(
         static_cast<float>(experience)
         * currentHero->m_turnExperienceToRvRatio);
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     long resourceValue = static_cast<long>(
         static_cast<double>(amount) * player->m_ai.m_resourceValue[resource]);
     return resourceValue > experienceValue;
@@ -3583,7 +3582,7 @@ VA(0x00528040, 0x1648)  // anchor-callee + 100-row DC statement shape, dc 0x113e
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)
 {
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     NewmapCell* cell = g_advManager->getCell(point);
     if (!cell->m_isTrigger)
         return 0;
@@ -3658,11 +3657,11 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
                 static_cast<const ExtraInfoUnion*>(
                     static_cast<const void*>(cell));
             return static_cast<int>(aiValueOfLuck(
-                const_cast<hero*>(currentHero)->getLuck(0, 0, 1),
+                currentHero->getLuck(0, 0, 1),
                 info->m_fountainInfo.m_luck));
         }
         return static_cast<int>(aiValueOfLuck(
-            const_cast<hero*>(currentHero)->getLuck(0, 0, 1), 1));
+            currentHero->getLuck(0, 0, 1), 1));
     case FOUNTAIN_OF_YOUTH:
         return valueOfMoveSource(
             currentHero, 0x4000, 200, &moveCost);
@@ -4018,7 +4017,7 @@ long valueOfLearning(const hero* currentHero, SpellID spell)
 {
     if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
         || currentHero->m_inSpellbook[spell]
-        || !const_cast<hero*>(currentHero)->isWieldingArtifact(
+        || !currentHero->isWieldingArtifact(
                ARTIFACT_SPELLBOOK))
         return 0;
     return aiGetSpellValue(currentHero, spell);
@@ -4072,7 +4071,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
             ARTIFACT_ANGELIC_ALLIANCE);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army,
-        const_cast<hero*>(currentHero)->getMorale(0, 0, 1), 0,
+        currentHero->getMorale(0, 0, 1), 0,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 
     if (moveCost >= 400
@@ -4121,7 +4120,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
     unsigned char includeGrowth;
     TCreatureType creature;
     hero* defendingHero;
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     defendingHero = 0;
     if (enemyTown->m_garrisonHeroId >= 0)
         defendingHero = g_game->getHero(enemyTown->m_garrisonHeroId);
@@ -4196,7 +4195,7 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
         return 0;
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
         return 0;
 
@@ -4234,7 +4233,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
             return value;
     }
 
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     int income = static_cast<int>(
         static_cast<double>(g_mineCharacteristics[mineType])
         * player->m_ai.m_resourceValue[mineType] * 2.0);
@@ -4377,7 +4376,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
                     long spellValue;
                     if (currentHero->m_inSpellbook[spell])
                         spellValue = 0;
-                    else if (const_cast<hero*>(currentHero)->isWieldingArtifact(
+                    else if (currentHero->isWieldingArtifact(
                                  ARTIFACT_SPELLBOOK))
                         spellValue = aiGetSpellValue(currentHero, spell);
                     else
@@ -4434,9 +4433,9 @@ int valueOfRallyFlag(const hero* currentHero, long* moveCost)
     return static_cast<int>(
         valueOfMoveSource(currentHero, 0x10000, 200, moveCost)
         + aiValueOfLuck(
-            const_cast<hero*>(currentHero)->getLuck(0, 0, 1), 1)
+            currentHero->getLuck(0, 0, 1), 1)
         + aiValueOfMorale(
-            const_cast<hero*>(currentHero)->getMorale(0, 0, 1), 1));
+            currentHero->getMorale(0, 0, 1), 1));
 }
 
 // Before normalization (function): value_of_recruiting.
@@ -4482,7 +4481,7 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
             ARTIFACT_ANGELIC_ALLIANCE);
     return purchaser.getPurchaseValue(
         &currentHero->m_army,
-        const_cast<hero*>(currentHero)->getMorale(0, 0, 1), 0,
+        currentHero->getMorale(0, 0, 1), 0,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 }
 
@@ -4533,7 +4532,7 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* play
 VA(0x0052a870, 0x4F)  // anchor-callee, dc 0x1123ac
 int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
             < HERO_BACKPACK_CAPACITY)
         return static_cast<int>(player->m_ai.m_turnValueOfAvgArtifact / 10.0f
@@ -4669,7 +4668,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     value += valueOfTownBuildings(currentHero, currentTown);
 
     VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
-    if (const_cast<hero*>(currentHero)->hasArtifact(ARTIFACT_HOLY_GRAIL)
+    if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
         && currentTown->isLegalBuilding(HOLY_GRAIL_ID)
         && !currentTown->hasBuilding(HOLY_GRAIL_ID, 0)) {
         if (victory.m_type == VICTORY_CONDITION_BUILD_GRAIL) {
@@ -4691,7 +4690,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
         && victory.m_townX == currentTown->m_mapX
         && victory.m_townY == currentTown->m_mapY
         && victory.m_townZ == currentTown->m_mapZ
-        && const_cast<hero*>(currentHero)->hasArtifact(
+        && currentHero->hasArtifact(
                victory.m_artifactNum)) {
         value += 5000000;
     }
@@ -4713,7 +4712,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 
     if (garrisonHero) {
         for (int i = 0; i < 5; ++i) {
-            if (const_cast<hero*>(currentHero)->hasArtifact(
+            if (currentHero->hasArtifact(
                     g_legionArtifacts[i])) {
                 type_artifact artifact(g_legionArtifacts[i]);
                 value += aiGetEquipValue(artifact, garrisonHero, 1);
@@ -4796,7 +4795,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     }
 
     if (currentTown->hasBuilding(MAGE_GUILD_ID, 1)) {
-        if (!const_cast<hero*>(currentHero)->isWieldingArtifact(
+        if (!currentHero->isWieldingArtifact(
                 ARTIFACT_SPELLBOOK)) {
             if (g_currentPlayer->m_resources[GOLD] >= 500)
                 value += 1000;
@@ -4868,7 +4867,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + ai.turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
 int valueOfTreasure(const hero* currentHero)
 {
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     int experiencePart = static_cast<int>(
         currentHero->m_turnExperienceToRvRatio * 160.0f);
     int goldPart =
@@ -4922,7 +4921,7 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     int increment = hero::getExperienceIncrement(currentHero->m_level);
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     int levelValue = static_cast<int>(static_cast<float>(increment)
         * currentHero->m_turnExperienceToRvRatio);
 
@@ -4979,7 +4978,7 @@ int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
         return 0;
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
         return 0;
     return static_cast<int>(

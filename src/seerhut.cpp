@@ -2958,7 +2958,7 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardResource:
     {
         double quantity;
-        playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+        playerData* player = currentHero->getPlayer();
         quantity = m_value.m_resource.m_quantity;
         return static_cast<int>(
             quantity * player->m_ai.m_resourceValue[m_value.m_resource.m_resourceType]);

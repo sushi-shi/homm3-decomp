@@ -578,7 +578,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         if (!target.operator==(&townLoc))
             return 0;
 
-        if (const_cast<hero*>(thisHero)->hasArtifact(m_artifactNum)) {
+        if (thisHero->hasArtifact(m_artifactNum)) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
             return 1;
@@ -592,7 +592,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         int remaining = components.count();
         for (int i = 0;; ++i) {
             if (components.test(i)) {
-                if (!const_cast<hero*>(thisHero)->hasArtifact(i))
+                if (!thisHero->hasArtifact(i))
                     return 0;
                 if (--remaining == 0) {
                     m_playerWinner = static_cast<signed char>(g_netLocalGamePos);

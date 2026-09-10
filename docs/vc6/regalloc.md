@@ -602,18 +602,28 @@ in a local; declaring that local before or after the counter; a local copy of
 `this`; `unsigned`/`short`/`char` index; do-while vs for vs goto loop form; a
 dead duplicate read of the same member.
 
-What this leaves: the four rows whose pair is (entry-live `this` or a global
-pointer, UNSCALED int) at the FIRST occurrence of that pair in the function.
-Our CL encodes base=pointer there and retail encodes base=int, and no
-spelling reaches it because the levers above need either a second occurrence
-of the pair or two locals whose birth order can move - `this` is born before
-everything and cannot be made later. `hero::get_primary_skill_total`
-(16 spellings measured this lane, all 99.5833), `diff CDiffFile::Apply`
-(3 swaps), `ai_player::fill_prohibited_array` (naming the game pointer ahead
-of the counter costs 1.66 and a frame dword), `seerhuttext
-LoadSeerHutTextColumn` (the pair is inside a Dinkumware `<string>` inline we
-may not edit). Those four are terminal for now; a lone SIB transposition on
-an int-int pair is NOT.
+The first occurrence of an entry-live pointer plus an unscaled index was a
+measured frontier for those particular source models, not a proof that no
+source reconstruction can match. `hero::getPrimarySkillTotal` and
+`CDiffFile::apply` are now exact after recovering source facts. In `apply`,
+Dreamcast line 63 obtains the payload pointer immediately after allocation,
+before the three offset initializers. Caching that pointer recovers all three
+SIB operands at 100%; repeated `getData()` calls score 99.6429%. Restoring the
+ordinary accessor to its original `.cpp` position is independently byte-neutral.
+Older cached-pointer controls were flat in their then-current source state.
+
+Two further controls make the same limit concrete. Restoring the canonical
+`TSpreadsheetResource::getSpreadsheet(row, column)` calls in
+`initializeHighScoreDefaults` closes four first-loop SIB transpositions
+(99.3846% to 100%). Removing the extra `bankGuardTypes` pointer view from
+`initializeCreatureBankTraits` restores the two-cursor copy and the string
+terminator's SIB order (97.5355% to 100%). Each result was reproduced with a
+negative control and checked across the owning TU. These are recovered
+interfaces and lifetimes, not arbitrary handle-population changes.
+
+`ai_player::fillProhibitedArray` and `seerhuttext::loadSeerHutTextColumn`
+retain their documented residuals. Do not extend the outcomes of exhausted
+spelling families to untested canonical helpers or newly recovered lifetimes.
 
 Honest accuracy statement: the model predicts the pinned compiler's
 callee-saved assignment from creation order in 5/5 standalone probes,
@@ -1478,3 +1488,14 @@ vector-insertion relocation spellings remain the existing eight-byte-element
 ICF aliases; their positions and overload arities do not change. This is not
 evidence that arbitrary helper edits improve scheduling: it is a controlled
 example where identical standalone code did not imply identical expansions.
+
+### Float conversion parameter storage
+
+`Bitmap16Bit::colorize` (0x44e940) reaches 100% from 98.8301% when its
+ordinary file-static `ftol` updates its by-value `double d` and reads that
+parameter's low word, matching DC 0x50a9c lines 62–63 and the existing bitmap24
+source. The invented result union caused eighteen separate inlined scratch
+slots (0xcc frame); parameter ownership restores retail's 0x48 frame and
+load/store order. Sixteen source states produce eight reproduced objects;
+removing `__forceinline`, restoring plain pixel pointers, and moving the
+zero-area check to an early return independently leave scores unchanged.

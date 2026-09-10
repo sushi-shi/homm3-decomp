@@ -38,13 +38,7 @@ public:
     unsigned int m_numBytes;
 
     // Before normalization (function): CDiffFile::GetData.
-    unsigned char* getData()
-    {
-        // DC diff.cpp:58 returns this + 4; MakeDiff allocates a byte
-        // buffer with a size word followed by variable-length records.
-        // There is no one-byte payload array to walk beyond.
-        return getBase() + sizeof(m_numBytes);
-    }
+    unsigned char* getData();
 
     // Before normalization (function): CDiffFile::GetBase.
     unsigned char* getBase()
@@ -71,17 +65,7 @@ public:
 
 protected:
     // Before normalization (function): CDiffMaker::CountSameBytes.
-    int countSameBytes(int oldOffset, int newOffset)
-    {
-        int count = 0;
-        while (m_oldData[oldOffset + count] ==
-                   m_newData[newOffset + count] &&
-               oldOffset + count < m_oldSize &&
-               newOffset + count < m_newSize) {
-            ++count;
-        }
-        return count;
-    }
+    int countSameBytes(int oldOffset, int newOffset);
     // Before normalization (function): CDiffMaker::FindNextSame.
     bool findNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);

@@ -1431,7 +1431,7 @@ void do_eagle_eye(hero* winner, hero* loser)
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
 void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup* destination)
 {
-    float factor = const_cast<hero*>(currentHero)->getNecromancyFactor(1);
+    float factor = currentHero->getNecromancyFactor(1);
     if (factor <= 0.0f)
         return;
     factor += 0.02f;
@@ -1643,10 +1643,10 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
         aggression *= 0.5;
 
     if (attackingHero
-        && const_cast<hero*>(attackingHero)->belongsToHuman())
+        && attackingHero->belongsToHuman())
         humanCombat = 1;
     if (defendingHero
-        && const_cast<hero*>(defendingHero)->belongsToHuman())
+        && defendingHero->belongsToHuman())
         humanCombat = 1;
     if ((defendingTown && defendingTown->m_owner >= 0
          && g_game->isHuman(defendingTown->m_owner))
@@ -1734,7 +1734,7 @@ long aiApproximateStrength(const hero* currentHero, const armyGroup* currentArmy
     long value = currentArmy->getAIValue();
     if (currentHero == 0)
         return value;
-    return static_cast<long>(const_cast<hero*>(currentHero)->getCombatValueModifier() * value);
+    return static_cast<long>(currentHero->getCombatValueModifier() * value);
 }
 
 #if 0  // @carcass

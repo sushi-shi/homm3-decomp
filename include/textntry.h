@@ -137,7 +137,7 @@ public:
                     int style, int readType, int insetX, int insetY);
     virtual ~textEntryWidget();  // retail 0x5baae0
     // Before normalization (function): textEntryWidget::Main.
-    virtual int main(message* msg);              // slot 2, retail 0x5bb150
+    virtual int main(message& msg);              // slot 2, retail 0x5bb150
     // Before normalization (function): textEntryWidget::Draw.
     virtual void draw();                         // slot 4, retail 0x5bb400
     // Before normalization (function): textEntryWidget::OnSetFocus.

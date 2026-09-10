@@ -103,7 +103,7 @@ public:
                unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     // Before normalization (function): iconWidget::Main.
-    virtual int main(message* msg);
+    virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): iconWidget::Draw.
     virtual void draw();

@@ -274,7 +274,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
     long barrierValue = 0;
     int gates = 0;
     int* cost = ourTown->getBuildCostArray(EXTRA_1_ID);
-    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    playerData* player = currentHero->getPlayer();
     if (searchType == const_AI_search) {
         gates = 2;
         for (int i = 0; i < 7; i++) {

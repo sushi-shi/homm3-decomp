@@ -577,7 +577,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
             if (value < 0)
                 continue;
         } else {
-            value = data->getRangedAttackValue(currentArmy, target);
+            value = data->getRangedAttackValue(*(currentArmy), *(target));
         }
 
         if (bestArmy) {
@@ -645,9 +645,9 @@ long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_A
                 && target->getSecondGridIndex() != hex)
             continue;
         if (target->m_combatSide == ourGroup)
-            total -= data->getSimpleAttackEffect(currentArmy, target, 1, 0);
+            total -= data->getSimpleAttackEffect(*(currentArmy), *(target), 1, 0);
         else
-            total += data->getRangedAttackValue(currentArmy, target);
+            total += data->getRangedAttackValue(*(currentArmy), *(target));
     }
     return total;
 }
@@ -870,21 +870,29 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:696 - the 0x41f380 slot the previous lane claimed
-// for it is NOT this function: that body is 39 bytes, takes ONE
-// register argument and returns with a bare `ret`, which a four-
-// argument /Gr free function (ret 8) cannot produce, and the 0.10 size
-// ratio is far outside the SH4->x86 band. get_attack_value has no
-// retail home yet - most likely inlined into its caller.
+// E:\gamedcs\ai.cpp:696, original get_attack_value.
+// DC 0x248b4 proves this ordinary file-static helper, its data reference,
+// named double combat_value, and separate integer-return branches. Retail's
+// expansion belongs to getAttackChange below; this helper has no retained
+// standalone retail row. The neighboring 0x41f380 is IsIncapacitated.
 DC_ONLY(0x248b4, 0x180)
-long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters* data)
+static long getAttackValue(const army* currentArmy, const army* enemy,
+                           long enemyHitPoints, type_AI_combat_parameters& data)
 {
-    // @stub
+    if (enemyHitPoints <= 0)
+        return 0;
+    long currentHits = currentArmy->getTotalHitPoints(data.m_simulated);
+    long damage = aiGetAttackDamage(*currentArmy, currentHits, *enemy, 0, 0);
+    if (damage > enemyHitPoints)
+        damage = enemyHitPoints;
+    double combatValue = enemy->getUnitCombatValue(data.m_lowestAttack,
+                                                   data.m_lowestDefense, 0, 0);
+    if (data.m_killsOnly) {
+        return ((enemyHitPoints % enemy->m_monInfo.m_hitPoints + damage)
+                / enemy->m_monInfo.m_hitPoints) * combatValue;
+    }
+    return damage * combatValue / enemy->m_monInfo.m_hitPoints;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\Army.h:840. The retail slot between find_move_order and
 // get_attack_change holds a 39-byte `ret`-terminated leaf that reads
@@ -917,47 +925,28 @@ bool army::isIncapacitated() const
 // and splits the result two ways: stacks already aimed at this enemy
 // accumulate, everyone else contributes only their best single change.
 //
-// Residual (96.4%): register-homing family - every instruction matches
-// but ESI and EDI are swapped throughout. Retail gives ESI to `enemy`
-// and coalesces EDI across {enemy_hits, the loop pointer}; our CL makes
-// the opposite choice, which is the allocator ranking the loop-heavy
-// class first. Tried and rejected: hoisting `committed`/`best_other`
-// above `enemy_hits` (88.7% - it also disturbs the accumulator homing);
-// inlining `our_hits` into the AI_get_attack_damage call (moves the
-// second get_total_hit_points AFTER the stack pushes, which retail does
-// not do); `&armies[currentSide][i]` in place of the hoisted row
-// pointer (that is what get_total_combat_value proved biases the
-// induction variable and sinks the loop base past the guard).
-// Re-swept 2026-08-08 (96.35): the delta is exactly an esi<->edi swap
-// between the `enemy` parameter and `enemy_hits` - both callee-saved,
-// same live pattern, and retail creates `enemy`'s pseudo second where
-// ours creates `enemy_hits`' second. Tried and rejected: the counters
-// after the guard (89.2) or before the hit points (88.7), inlining
-// our_hits (90.8), hoisting the armies row first (82.4), and swapping
-// the two get_total_hit_points declarations (79.6). Symmetric-
-// enregistered-parameter tie-break; capped.
-// Instruction census 2026-09-04: base 152 vs retail 150, and the two surplus
-// rows are ONE `fstp qword [ebp-0x1c]` / `fld qword [ebp-0x1c]` pair at the
-// kills_only join - retail keeps the product/quotient in st(0) across the
-// merge and calls __ftol straight from it, while /Op gives our `double value`
-// a home. Collapsing the if/else into one `static_cast<long>(cond ? A : B)`
-// is byte-flat at 96.3533: VC6 rounds the conditional's own temporary the
-// same way. Nothing else in the census differs, which confirms the esi<->edi
-// mirror above as the rest of the residual.
-// E:\gamedcs\ai.cpp:731
-// Before normalization (locals): current_army, enemy_hits, our_hits, best_other, friendly_hits,
-// unit_value.
+// Exact after restoring the ordinary get_attack_value helper (DC 0x248b4,
+// lines 696..729) before this caller and its data reference. Its two direct
+// integer-return expressions let VC6 keep the floating result in st(0)
+// until __ftol; a shared double value adds a spill/reload and rotates the
+// caller's registers (96.3533%). The eight-state control family reproduces
+// that loss with either spelling of the spell-time/retaliation guards.
+// DC 734..739 independently proves get_spell_time and the separate >1 guard;
+// DC 758/759 separates the helper result from the target-value subtraction.
+// Before normalization (locals): current_army, enemy_hits, our_hits,
+// best_other, friendly_hits, unit_value.
 VA(0x0041f3b0, 0x1C2)  // linkorder, dc 0x24a34
-long combatManager::getAttackChange(const army* currentArmy, const army* enemy, const type_AI_combat_parameters* data)
+long combatManager::getAttackChange(const army* currentArmy, const army* enemy, type_AI_combat_parameters& data)
 {
-    if (enemy->m_spellInfluence[70] || enemy->m_retaliationCount == 0
-            || enemy->m_retaliationCount > 1)
+    if (enemy->getSpellTime(70) || enemy->m_retaliationCount == 0)
         return 0;
-    long enemyHits = enemy->getTotalHitPoints(data->m_simulated);
-    long ourHits = currentArmy->getTotalHitPoints(data->m_simulated);
+    if (enemy->m_retaliationCount > 1)
+        return 0;
+    long enemyHits = enemy->getTotalHitPoints(data.m_simulated);
+    long ourHits = currentArmy->getTotalHitPoints(data.m_simulated);
     long committed = 0;
     long bestOther = 0;
-    enemyHits -= aiGetAttackDamage(currentArmy, ourHits, enemy, 0, 0);
+    enemyHits -= aiGetAttackDamage(*currentArmy, ourHits, *enemy, 0, 0);
     if (enemyHits <= 0)
         return 0;
     const army* friendly = m_armies[m_currentSide];
@@ -966,20 +955,8 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
             continue;
         if ((friendly->getAIPossibleTargets() & (1 << enemy->m_bitIndex)) == 0)
             continue;
-        long friendlyHits = friendly->getTotalHitPoints(data->m_simulated);
-        long damage = aiGetAttackDamage(friendly, friendlyHits, enemy, 0, 0);
-        if (damage > enemyHits)
-            damage = enemyHits;
-        double unitValue = enemy->getUnitCombatValue(data->m_lowestAttack,
-                                                         data->m_lowestDefense, 0, 0);
-        double value;
-        if (data->m_killsOnly) {
-            damage = (enemyHits % enemy->m_monInfo.m_hitPoints + damage) / enemy->m_monInfo.m_hitPoints;
-            value = damage * unitValue;
-        } else {
-            value = damage * unitValue / enemy->m_monInfo.m_hitPoints;
-        }
-        long change = static_cast<long>(value) - friendly->getAITargetValue();
+        long change = getAttackValue(friendly, enemy, enemyHits, data);
+        change -= friendly->getAITargetValue();
         if (friendly->getAITarget() == enemy && change > 0)
             committed += change;
         else if (change > bestOther)
@@ -1426,7 +1403,7 @@ VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
 void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate)
 {
     const army* other = m_armies[estimate->m_ourGroup];
-    long value = -estimate->getSimpleAttackEffect(enemy, ourArmy, 0, 0);
+    long value = -estimate->getSimpleAttackEffect(*(enemy), *(ourArmy), 0, 0);
     std::vector<long> hexes;
     unsigned char priced[COMBAT_GRID_CELLS];
     memset(priced, 0, COMBAT_GRID_CELLS);
@@ -1591,7 +1568,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
                                        floorValue, g_searchArray, estimate);
             continue;
         }
-        long value = -estimate->getSimpleAttackEffect(enemy, ourArmy, 0, 0);
+        long value = -estimate->getSimpleAttackEffect(*(enemy), *(ourArmy), 0, 0);
         if (value >= 0)
             continue;
         for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
@@ -2596,7 +2573,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                     ? 0
                     : &g_searchArray->m_cellData[enemy->m_gridIndex];
             if (reach->m_cost <= currentArmy->getSpeed())
-                change = getAttackChange(currentArmy, enemy, estimate);
+                change = getAttackChange(currentArmy, enemy, *estimate);
         }
 
         type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
@@ -2615,8 +2592,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                         : &g_searchArray->m_cellData[chooser.m_bestHex];
                 distance = attackCell->m_cost;
             }
-            change += estimate->getSimpleAttackEffect(currentArmy, enemy, 0,
-                                                         distance);
+            change += estimate->getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
         }
 
         if (chooser.m_bestValue <= 0 || (currentArmy->is(1u << 22))
@@ -3057,8 +3033,7 @@ static void simulateSimpleAttack(army* currentArmy, army* target,
     long hits = currentArmy->getTotalHitPoints(1);
     if (hits <= 0)
         return;
-    long damage = aiGetAttackDamage(currentArmy, hits, target, ranged,
-                                       distance);
+    long damage = aiGetAttackDamage(*(currentArmy), hits, *(target), ranged, distance);
     if (!ranged && !breathAttack) {
         long targetHits = target->getTotalHitPoints(1);
         long burn = g_combatManager->computeFireShieldDamage(
@@ -3216,8 +3191,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
             long hits = currentArmy->getTotalHitPoints(1);
             if (hits <= 0)
                 continue;
-            long damage = aiGetAttackDamage(currentArmy, hits, target,
-                                               1, 0);
+            long damage = aiGetAttackDamage(*(currentArmy), hits, *(target), 1, 0);
             target->setAIExpectedDamage(target->m_aiExpectedDamage
                                            + damage);
         } else {
@@ -3370,11 +3344,9 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
             }
             long effect;
             if (time > ours->getSpeed())
-                effect = data->getSimpleAttackEffect(ours, theirs,
-                                                        shooter, 0);
+                effect = data->getSimpleAttackEffect(*(ours), *(theirs), shooter, 0);
             else
-                effect = data->getSimpleAttackEffect(ours, theirs,
-                                                        shooter, time);
+                effect = data->getSimpleAttackEffect(*(ours), *(theirs), shooter, time);
             ours->considerAttack(theirs, effect, time);
         }
     }

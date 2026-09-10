@@ -81,29 +81,16 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
 //
 // Zero counts clear guard slots 1..3 (not slot 0) and the reward creature;
 // the reward test reads the stored signed byte, not atoi's full-width result.
-// Residual (97.5355%): all 12 branches and 15 named calls agree. Restoring
-// the ordinary level-reader boundary and its real column cursor recovers
-// `_Eos`'s expansion and the parser's registers; 22 of 24 CFG blocks have
-// matching structure/size. The two size differences are the guard copy:
-// VC6 fuses its walks into an induction plus a dest-src bias, while retail
-// keeps source/destination cursors and a signed counter. The string's final
-// byte store also swaps commutative address operands. Claimed table/traits
-// relocation names and +4 symbol biases are not new helper-call mismatches.
-// The ten-state family exhausts four ordinary-reader column lifetimes and
-// unsigned/signed guard indices plus both pasted controls. The best retains
-// DC's cursor from column 2 and advances past each count before testing it.
-// Pasting the parser back gives 89.4550%; changing only the guard index to
-// signed gives 88.8910%. A lower isolated score does not refute that signed
-// index: retail's guard-copy back edge is jl. No inline keyword or override
-// substitutes for the canonical static reference-taking reader above.
-//
-// MEASURED AND REJECTED: a `do/while` over an advancing `traits` pointer
-// (89.4340) - it scores higher and it is WRONG, because a pointer relational
-// compare is unsigned and emits `jb` where retail ends this loop on `jl`.
-// The signed compare is the tell that the outer loop is an INT INDEX that
-// VC6 strength-reduces onto the traits pointer, which is what the subscript
-// form below produces. Also rejected: pointer inductions carried across the
-// int counter (88.5136).
+// Exact with direct guardTypes[bank][slot] indexing, preserving the signed
+// slot induction and the separate break recorded at DC lines 130/131. The
+// former bankGuardTypes pointer local scores 97.5355: it makes VC6 combine
+// the source/destination walks into a destination-minus-source bias and also
+// changes the string terminator's SIB operand order. DC line119 obtains the
+// row reference before the line121 name assignment; that local and the
+// explicit break are individually byte-neutral and retained as source facts.
+// The eight-state row-reference/break/pointer-view family reproduced all
+// candidates; all four direct-table forms match, all pointer-view forms do
+// not. The ordinary reference-taking level reader remains canonical.
 // Before normalization (function): initialize_creature_bank_traits.
 VA(0x0047ab30, 0x254)  // anchor-global crbanks.txt + dc order-map, dc 0x7112c
 unsigned char initializeCreatureBankTraits()
@@ -147,15 +134,18 @@ unsigned char initializeCreatureBankTraits()
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
         type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
-        const TCreatureType* bankGuardTypes = guardTypes[bank];
-        traits->m_name = sheet->getRow(row)[0];
+        const TSpreadsheetResource::TStringVector& resource = sheet->getRow(row);
+        traits->m_name = resource[0];
 
         type_creature_bank_level* level = traits->m_levels;
         int levelsLeft = 4;
         do {
             level->m_guards.initialize();
-            for (int slot = 0; slot < 5 && bankGuardTypes[slot] != CREATURE_NONE; ++slot)
-                level->m_guards.m_armyTypes[slot] = bankGuardTypes[slot];
+            for (int slot = 0; slot < 5; ++slot) {
+                if (guardTypes[bank][slot] == CREATURE_NONE)
+                    break;
+                level->m_guards.m_armyTypes[slot] = guardTypes[bank][slot];
+            }
             level->m_rewardCreature = rewardTypes[bank];
 
             initializeCreatureBankLevel(*level, sheet->getRow(row));

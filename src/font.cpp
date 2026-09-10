@@ -580,7 +580,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 #endif  // @carcass
 
 VA(0x004b57a0, 0x25)  // linkorder, dc 0xa2420
-int font::getCharacterWidth(unsigned char currChar)
+int font::getCharacterWidth(unsigned char currChar) const
 {
     const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
     return record->m_abcB + record->m_abcC + record->m_abcA;
@@ -599,89 +599,20 @@ long font::getStringWidth(const char* arg)
 }
 
 // E:\gamedcs\font.cpp:435
-// The measuring-family shape, byte-proven here and in
-// LongestWrappedLineWidth (both were ~82% under the earlier
-// goto-into-a-wrap-label transcription):
-//   * NEVER name the scanned character. `char c = str[pos];` earns a
-//     stack home and reloads at every use; writing `str[pos]` keeps
-//     the load in DL exactly as retail does, and it also lets VC6 drop
-//     the redundant null re-test the outer `while` already proved.
-//   * the forward scan is `while (str[pos] != 0) { if newline break;
-//     if (width > boxWidth) break; ... }` - the null test as the LOOP
-//     CONDITION (rotated to the bottom, tested once) and the other two
-//     as breaks. Spelling the newline test as a loop condition too
-//     duplicates it at the bottom (87.5%).
-//   * newline is NOT an unconditional line end: all three exits fall
-//     into one `if (width > boxWidth) { backtrack }` after the loop.
-//   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
-// Dreamcast records only the stack local `limit`; the source-faithful
-// plain `lineStart` is therefore retained at 91.7423. A prior volatile
-// probe homes the boundary and raises the banked MAX to 92.6804, but adds
-// a non-retail load at the folded space-exit comparison. Earlier rejected
-// forms: `count` declared first (86.4), declared last
-// (identical), split declaration + assignment (identical), `pos` declared
-// first (identical), `str[pos] != 0 && pos < len` outer order (68.6),
-// `lineStart` before `width` (91.3), and `width` hoisted (91.3).
-//
-// HISTORICAL NEGATIVE CONTROL: what `volatile` buys and costs, measured
-// 2026-08-14 by
-// diffing BOTH spellings against retail instruction-for-instruction
-// instead of reading their scores. The two spellings are exact in
-// COMPLEMENTARY halves of the function, and each half is the other's
-// whole residual:
-//   * PLAIN `int lineStart` (91.74, 94 instructions) reproduces the
-//     entire BACKTRACK LOOP byte-for-byte - `mov eax,[ebp+8]` for str,
-//     retail's `lea edx,[edx+2*edx] / mov eax,[ebx+4*edx+8] /
-//     lea edx,[ebx+4*edx]` scratch order, `cmp edi,[ebp+0xc]` as a
-//     memory operand, and the FOLDED `cmp esi,[ebp-4]` at the space
-//     exit. So volatile is exactly what blocks that fold: it splits the
-//     one compare into `mov edx,[ebp-4]; cmp esi,edx`.
-//   * VOLATILE (92.68, 98 instructions against retail's 97) reproduces
-//     everything ELSE: `xor edi,edi` + `mov [ebp-8],edi` at entry,
-//     boxWidth HOISTED into EAX in the outer preheader (the back edge
-//     lands past it, at `mov ecx,[ebp+8]`), `cmp edi,eax` twice, ECX as
-//     the forward-loop width scratch, and `mov eax,edi` at the return.
-//     The plain spelling loses all of that: with EAX free it gives count
-//     EAX (saving retail's two instructions) and re-loads boxWidth into
-//     ECX at the loop HEAD instead of hoisting it.
-// The volatile residual is therefore ONE optimizer decision and its nine
-// rows: retail SPLITS the boxWidth pseudo's EAX live range across the
-// backtrack region - EAX is dead there (so str takes it and the width
-// scratch takes it) and is reloaded once at the backtrack EXIT
-// (`mov eax,[ebp+0xc]` at retail+0xd1). Our C2 keeps the pseudo live
-// through the loop and rematerialises it INSIDE, right after the `sub
-// edi,eax` that clobbers it. Live-range splitting, not a binding.
-// Measured against that and all byte-identical or worse, 2026-08-14:
-//   - all six declaration orders of len/count/pos, each crossed with
-//     `lineStart` before/after `width` (the three orders that keep
-//     `len` first are 91.7423 to four decimals; putting count or pos
-//     first costs the shared `xor eax,eax` and drops to 80-86);
-//   - a `const int limit = boxWidth` copy used in all three compares,
-//     and one used only in the backtrack compare, and one used only in
-//     the forward compares - VC6 folds the name away every time, 0 of
-//     the 3 changed a byte or the frame;
-//   - `const int boxWidth` parameter, outer loop as `for(;;)`+breaks,
-//     `count++` before `pos++`, `width`/`lineStart`/`candidate` hoisted
-//     to function scope (all 91.7423);
-//   - the space exit as `if (lineStart >= pos)` (92.06, worse), as
-//     `if (!(pos > lineStart))` and as an INVERTED guard `if (pos >
-//     lineStart) break; pos = candidate; break;` - the latter is
-//     retail's exact block layout and is byte-identical to the current
-//     spelling, so VC6 normalises it;
-//   - volatile moved to count / len / pos / width / candidate on the
-//     plain base (86.4 / 81.2 / 46.7 / 75.2 / 84.7 - all worse);
-//   - `homm3 vc6 why-reg --model` declines on both bases (bindings
-//     agree at every first definition), and its 16-mutation guided
-//     sweep on the volatile base reports no mutation moving the
-//     divergence toward the reference;
-//   - the /Ob2 two-axis probe (byte-inert statement mass 0..32 crossed
-//     with 0..8 tail `xx_nop()` candidate sites) is FLAT to four
-//     decimals in every cell, with a `volatile` mass control proving
-//     the probe reaches the function.
-// Next lever would be a loop-optimizer solver that can express "split
-// this pseudo's live range across the inner region", not a spelling.
+// DC 465 ends backtracking on space or the line-start boundary, then
+// 479/480 applies ONE shared candidate fallback after the loop. Restoring
+// that scope closes 91.7423% -> 100%; duplicating fallback assignments in
+// the two exit arms was the cause of the old boxWidth live-range mismatch.
+// All 16 source states reproduced their measured score; ten retained objects
+// reproduced independently and no font sibling changed. The shared fallback
+// alone is sufficient. The DC 449 combined forward guard, 463 loop-head
+// decrement and 482/483 trailing-space exclusion are neutral positive facts.
+// The width correction is also present in DrawBoundedString and
+// LongestWrappedLineWidth; it becomes dead after inlining here. Preserve the
+// meaningful shared wrapping arithmetic, without forcing the width helper
+// out of line. The receiver and GetCharacterWidth are const in DC.
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
-int font::lineLength(const char* str, int boxWidth)
+int font::lineLength(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int count = 0;
@@ -689,35 +620,29 @@ int font::lineLength(const char* str, int boxWidth)
     while (pos < limit && str[pos] != 0) {
         int width = 0;
         int lineStart = pos;
-        while (str[pos] != 0) {
-            if (str[pos] == '\n')
-                break;
-            if (width > boxWidth)
-                break;
+        while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
             if (str[pos] != '{' && str[pos] != '}')
                 width += getCharacterWidth(str[pos]);
             pos++;
         }
         if (width > boxWidth) {
             int candidate = 0;
-            pos--;
             for (;;) {
-                if (str[pos] == ' ') {
-                    if (pos <= lineStart)
-                        pos = candidate;
+                pos--;
+                if (str[pos] == ' ')
                     break;
-                }
-                if (pos < lineStart) {
-                    pos = candidate;
+                if (pos < lineStart)
                     break;
-                }
                 if (str[pos] != '{' && str[pos] != '}') {
                     width -= getCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)
                         candidate = pos;
                 }
-                pos--;
             }
+            if (pos <= lineStart)
+                pos = candidate;
+            if (str[pos] == ' ')
+                width -= getCharacterWidth(' ');
         }
         pos++;
         count++;

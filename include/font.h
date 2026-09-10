@@ -161,7 +161,7 @@ public:
     // Before normalization (locals): color_scheme.
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
     // Before normalization (function): font::GetCharacterWidth.
-    int getCharacterWidth(unsigned char currChar);
+    int getCharacterWidth(unsigned char currChar) const;
     // Before normalization (function): font::SetPalette.
     // Before normalization (locals): new_palette.
     void setPalette(const TPalette16* newPalette);
@@ -170,7 +170,9 @@ public:
     // Before normalization (function): font::get_string_width.
     long getStringWidth(const char* arg);
     // Before normalization (function): font::LineLength.
-    int lineLength(const char* str, int boxWidth);
+    // DC 0xa246c/0xa2420 proves const LineLength and GetCharacterWidth.
+    // Both only inspect font metrics; retail preserves that read-only body.
+    int lineLength(const char* str, int boxWidth) const;
     // Before normalization (function): font::LongestWrappedLineWidth.
     int longestWrappedLineWidth(const char* str, int boxWidth);
     // Before normalization (function): font::LineWidth.

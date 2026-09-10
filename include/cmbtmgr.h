@@ -2116,7 +2116,7 @@ public:
     // Before normalization (function): combatManager::get_attack_change.
     // Before normalization (locals): current_army.
     long getAttackChange(const army* currentArmy, const army* enemy,
-                           const type_AI_combat_parameters* data);
+                           type_AI_combat_parameters& data);
                                                               // 0x41f3b0
     // Before normalization (function): combatManager::move_toward.
     // Before normalization (locals): current_army, target_hex, enemy_attacks, consider_waiting.
@@ -2329,12 +2329,12 @@ public:
     // Chain Lightning's bounce search: the nearest stack, by straight-line
     // screen distance from the stack the bolt just left, that the
     // `effected` row has not already recorded. Answers a gridIndex, or -1
-    // when nothing qualifies. Parameter names are from the reconstructed
-    // body (0x5a61f0 at 91.10%), not from the xref graph's guess.
+    // when nothing qualifies. DC 0x15547c proves the original int return,
+    // army* lastTargetArmy and int bUseSRandom interface.
     // Before normalization (function): combatManager::GetNextChainLightningTarget.
-    // Before normalization (locals): last_target, use_random.
-    long getNextChainLightningTarget(const army* lastTarget,
-                                     long useRandom);         // 0x5a61f0
+    // Before normalization (locals): lastTargetArmy, bUseSRandom.
+    int getNextChainLightningTarget(army* lastTargetArmy,
+                                    int useSRandom);         // 0x5a61f0
     // Before normalization (function): combatManager::ClearEffects.
     void clearEffects();                                      // 0x5a66b0
     // Before normalization (function): combatManager::has_ranged_advantage.

@@ -124,10 +124,10 @@ type_text_scroller::~type_text_scroller()
 // backdrop once, WIDGET_SET_STATUS / WIDGET_CLEAR_STATUS are relayed to
 // every line and, when the text overflows, to the slider.
 VA(0x005BA4C0, 0x13D)  // anchor-vtable 0x642d0c slot 2 + Grab, retail-only
-int type_text_scroller::main(message* msg)
+int type_text_scroller::main(message& msg)
 {
-    if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case WIDGET_DRAW:
             if (!m_background) {
                 m_background = new Bitmap16Bit(m_width, m_height);
@@ -142,10 +142,10 @@ int type_text_scroller::main(message* msg)
         case WIDGET_CLEAR_STATUS:
             for (unsigned int i = 0; i < m_lineImages.size(); i++)
                 m_lineImages[i]->sendMessage(
-                    static_cast<widget::ECommands>(msg->m_codeX), msg->m_extra);
+                    static_cast<widget::ECommands>(msg.m_codeX), msg.m_extra);
             if (m_textLines.size() > m_lineImages.size())
                 m_textSlider->sendMessage(
-                    static_cast<widget::ECommands>(msg->m_codeX), msg->m_extra);
+                    static_cast<widget::ECommands>(msg.m_codeX), msg.m_extra);
             break;
         }
     }
@@ -190,10 +190,14 @@ void type_text_scroller::refresh(int firstLine)
 // (`text_lines.insert(text_lines.end(), std::string(""))`) is MEASURED AND
 // REJECTED 2026-09-06 at 97.0339 against 99.4361: it produces retail's callee
 // but loses the surrounding block.  push_back stays.
-// Retail builds the padding temp through basic_string's DEFAULT ctor
-// (`_Tidy(false)` with the byte copied off [ebp+0xb]) where we run
-// `assign("", 0)`; spelling the argument `std::string()` instead of
-// `std::string("")` is MEASURED AND REJECTED 2026-09-06 at 89.7838.
+// The verified retail body constructs the padding temp, scans the empty
+// literal and assigns it before insertion, then destroys it each iteration.
+// The older default-constructor-only interpretation was incorrect; its probe
+// lost that real assign path (89.7838%). Thirteen further source states
+// (six objects, all independently reproduced) test implicit empty-string
+// conversion, a named per-iteration string, and signed padding indices.
+// push_back remains 99.4444%; direct insert remains 97.0317%, with no sibling
+// movement. No source change from this family is retained.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {

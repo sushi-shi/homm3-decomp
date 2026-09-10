@@ -22,53 +22,32 @@ void CDiffFile::CDiffFile()
 {
 }
 
+#endif
+
+// DC diff.cpp:57/58: GetData is defined in this TU before Apply.
+// The payload follows the four-byte size word in the serialized allocation.
 DC_ONLY(0x822e4, 0x6)
 unsigned char* CDiffFile::getData()
 {
-    return 0;
+    return static_cast<unsigned char*>(static_cast<void*>(this + 1));
 }
-#endif
 
-// Residual (99.6429%): B18 commutative scale-1 SIB base/index swap on the three
-// `this + diffOffset` addresses - retail encodes base=EAX(diffOffset),
-// index=ESI(this) (SIB 0x30), our CL the reverse (SIB 0x06). Everything else is
-// byte-exact. Tried and rejected (all byte-identical): `diffOffset + GetData()`,
-// `&GetData()[diffOffset]`. Same class as hero.cpp:2162.
-// The Dreamcast dossier corroborates the seven-block loop, its two memcpy
-// arms, and the single newSaveGame pointer local.  A fresh why-reg catalog
-// sweep leaves six masked slots (the three reciprocal EAX/ESI SIB pairs):
-// zero-hoisting and oldOffset/diffOffset declaration swaps are flat, while
-// every other naming/order/volatile probe is worse.  This remains a measured
-// B1 encoding wall, not a missing source statement.
-// 2026-08-14 two-axis /Ob2 re-test (the campaign rule that a one-axis "flat"
-// verdict is not a verdict): HELD. Pad statements ahead of `resultOffset` x
-// xx_nop sites before the return are 99.6429 in all twelve cells of
-// M in {0,2,4,8} x k in {0,1,2}. Four further spellings measured byte-identical
-// as well: `int diffOffset`, a hoisted `GetData()` pointer local, a named
-// `diffCursor` for the header cast, and an extra unused local. The SIB
-// base/index choice is not source-reachable here.
-// 2026-09-06, two more spellings for the same three SIB bytes, both
-// byte-flat at 99.6429: writing the addition offset-first
-// (`diffOffset + GetData()`, which VC6 canonicalises exactly like `&`) and
-// `&GetData()[diffOffset]`.  A tree-wide census puts 42 rows in this class,
-// this one alone with SIB swaps as its ONLY residual; the other 41 carry it
-// alongside larger deltas.
-// 2026-09-06: the class is now understood (docs/vc6/regalloc.md 6b). A
-// two-LOCAL sum is reachable - the base slot goes to the local born later,
-// which closed philai value_of_enemy_town - but this site's pair is
-// (`this`, diffOffset). `this` is born at entry and cannot be made later,
-// and all three sites are the same register pair in separate blocks, so the
-// second-occurrence flip does not fire either. Terminal until a compiler-
-// generation probe explains retail's first-occurrence order.
-// The 68.96% plateau was structural, not register coloring: retail advances
-// diffOffset PAST the header before the payload memcpy and re-derives the source
-// as GetData() + diffOffset, which is what keeps diffOffset in a register and
-// homes resultOffset instead.
+// Exact with the payload pointer captured once immediately after allocation,
+// as DC line63 emits GetData before the three offset initializers at65..67.
+// The raw named result local is newSaveGame. Repeated GetData calls inside
+// the loop score99.6429: three scale-one addresses choose the opposite SIB
+// base/index order. The cached source lifetime fixes all three, without a
+// qualifier or optimizer pin. Restoring the ordinary GetData body to its
+// original source order is independently byte-neutral; both facts are kept.
+// Four source-family controls reproduced: uncached99.6429, cached100 with
+// either helper placement. Older cached-pointer/why-reg controls were flat
+// in their then-current source state; they do not bound this reconstruction.
 // E:\gamedcs\diff.cpp:62
 VA(0x00490f60, 0xc5)  // linkorder + body: allocated output size and 12-byte copy/reference records, dc 0x822ec
 void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
-    unsigned char* result = new unsigned char[m_numBytes];
+    unsigned char* newSaveGame = new unsigned char[m_numBytes];
+    unsigned char* diffData = getData();
     unsigned int resultOffset = 0;
     int oldOffset = 0;
     unsigned int diffOffset = 0;
@@ -76,25 +55,25 @@ void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     while (resultOffset < m_numBytes) {
         CDiffHeader* header =
             static_cast<CDiffHeader*>(
-                static_cast<void*>(getData() + diffOffset));
+                static_cast<void*>(diffData + diffOffset));
         if (header->m_copy) {
             diffOffset += sizeof(CDiffHeader);
-            memcpy(result + resultOffset,
-                   getData() + diffOffset,
+            memcpy(newSaveGame + resultOffset,
+                   diffData + diffOffset,
                    header->m_numBytes);
             diffOffset += header->m_numBytes;
             resultOffset += header->m_numBytes;
             oldOffset += header->m_oldNumBytes;
         } else {
             diffOffset += sizeof(CDiffHeader);
-            memcpy(result + resultOffset, oldSaveGame + oldOffset,
+            memcpy(newSaveGame + resultOffset, oldSaveGame + oldOffset,
                    header->m_numBytes);
             resultOffset += header->m_numBytes;
             oldOffset += header->m_numBytes;
         }
     }
 
-    return result;
+    return newSaveGame;
 }
 
 // E:\gamedcs\diff.cpp:107
@@ -106,30 +85,31 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 {
 }
 
-#if 0 // @carcass: retail inlined into MakeDiff
+// DC diff.cpp:115, defined here before FindNextSame.
 DC_ONLY(0x8238c, 0x4c)
 int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
 {
-    return 0;
+    int count = 0;
+    while (m_oldData[oldOffset + count] ==
+           m_newData[newOffset + count]) {
+        if (oldOffset + count >= m_oldSize)
+            break;
+        if (newOffset + count >= m_newSize)
+            break;
+        ++count;
+    }
+    return count;
 }
-#endif
 
-// Residual (84.1667%): everything up to the two epilogues is now byte-identical
-// (retail's success block updates newCount BEFORE oldCount - the reverse of the
-// obvious source order - which this body now does). The sole remaining delta is
-// EPILOGUE EMISSION ORDER: retail lays the failure return (`xor al,al`) first
-// and the success return second; our CL always emits success first. Proven not
-// source-addressable - five exit shapes (goto/goto, direct `return 0` guard,
-// inlined success return, both inlined, and swapped label order) ALL compile to
-// the identical 84.1667 layout. Merged-return / block-layout generation family.
-// Earlier rejects: nested-scope counters, pointer-parameter spelling, memcmp's
-// symmetric operand order; why-branch distance 0.  The Dreamcast dossier
-// corroborates the nested 64x64 search, 16-byte memcmp, loop-local `i` scopes,
-// and the two early-failure exits.  A fresh why-reg sweep leaves 14 schedule slots:
-// zero-hoisting, delta declaration swaps, and one chained assignment are flat;
-// the reverse chain/store order and volatile deltas are worse.
-// Early returns at the DC failure and success scopes remove both labels
-// without moving the 84.1667% residual; all four exit combinations are neutral.
+// Dreamcast diff.cpp:142/144 has nested for-loop scopes; 146..150 has two
+// separate early-failure checks before memcmp. Restoring both source facts
+// closes 84.1667% to 100%: VC6 now emits the failure epilogue before success,
+// exactly as retail does. Changing either alone leaves the old layout.
+// The 24-state family produced 12 distinct objects and ten reproduced elites.
+// CountSameBytes' ordinary TU placement and bounds-break body are independently
+// byte-neutral in MakeDiff, so the canonical definition is retained above.
+// Dreamcast's decorated _N return proves bool despite the dossier rendering
+// that type as unsigned char. The byte-return alternatives are not adopted.
 // E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
 bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
@@ -140,15 +120,12 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
     ++oldOffset;
     ++newOffset;
 
-    int oldDelta;
-    int newDelta;
     for (;;) {
-        newDelta = 0;
-        while (newDelta < 64) {
-            oldDelta = 0;
-            while (oldDelta < 64) {
-                if (oldOffset + oldDelta + 16 >= m_oldSize ||
-                    newOffset + newDelta + 16 >= m_newSize)
+        for (int newDelta = 0; newDelta < 64; ++newDelta) {
+            for (int oldDelta = 0; oldDelta < 64; ++oldDelta) {
+                if (oldOffset + oldDelta + 16 >= m_oldSize)
+                    return 0;
+                if (newOffset + newDelta + 16 >= m_newSize)
                     return 0;
 
                 if (memcmp(m_newData + newOffset + newDelta,
@@ -157,9 +134,7 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
                     oldCount += oldDelta;
                     return 1;
                 }
-                ++oldDelta;
             }
-            ++newDelta;
         }
 
         oldOffset += 64;

@@ -7,6 +7,7 @@ carcass	740	0x6aeb0	bracketed	objecttype	objecttype	__h3cg$objecttype$vector_ins
 carcass	710	0x8e220	bracketed	singleselectionwindow	singleselectionwindow	std_copy	enable the existing VA claim and reconstruct its body
 carcass	429	0x8bf00	bracketed	customcampaign	customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	enable the existing VA claim and reconstruct its body
 carcass	396	0xd2e50	bracketed	game	game	__h3cg$game$std_copy$type_map_hero_identity	enable the existing VA claim and reconstruct its body
+carcass	100	0x27c30	bracketed	ai_combat	ai_combat	__h3cg$ai_combat$std_unguarded_partition$type_monster_data	enable the existing VA claim and reconstruct its body
 bracketed	97	0x1154a0	bracketed	newgame..overview	newgame,overview	game_114d80_sub02_1154a0	resolve the owner, then add its VA claim and body
 bracketed	69	0x14d0a0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_143e20_sub05_14d0a0	resolve the owner, then add its VA claim and body
 carcass	63	0x1095e0	bracketed	mapcell	mapcell	__h3cg$mapcell$std_copy$type_university	enable the existing VA claim and reconstruct its body

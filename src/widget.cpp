@@ -120,20 +120,20 @@ void widget::Close()
 // (names unattested).
 // E:\gamedcs\widget.cpp:249
 VA(0x005fe4f0, 0x2C8)  // linkorder bracket; Draw/Dim/process_hover slots and UpdateScreen callee byte-proven, dc 0x196cd0
-int widget::main(message* msg)
+int widget::main(message& msg)
 {
     if (m_sleepCount > 0)
         return 0;
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {
         if (!(m_status & WIDGET_ACTIVE))
             break;
-        short mouseX = msg->m_codeX - m_parentWindow->m_x;
-        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        short mouseX = msg.m_codeX - m_parentWindow->m_x;
+        short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
             || mouseY >= m_y + m_height)
             break;
-        msg->m_codeY = m_id;
+        msg.m_codeY = m_id;
         if (s_lastHoverWidget != this) {
             s_lastHoverWidget = this;
             processHover();
@@ -141,7 +141,7 @@ int widget::main(message* msg)
         return 2;
     }
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case WIDGET_DRAW:
             if (m_status & WIDGET_DRAWN)
                 draw();
@@ -150,14 +150,14 @@ int widget::main(message* msg)
                 dim();
             break;
         case WIDGET_SET_STATUS:
-            if (msg->m_codeY != m_id)
+            if (msg.m_codeY != m_id)
                 break;
-            if (msg->m_extra == WIDGET_DIMMED_NODRAW) {
+            if (msg.m_extra == WIDGET_DIMMED_NODRAW) {
                 m_status |= WIDGET_DIMMED;
                 return 1;
             }
-            m_status |= msg->m_extra;
-            if (msg->m_extra == WIDGET_DISABLED)
+            m_status |= msg.m_extra;
+            if (msg.m_extra == WIDGET_DISABLED)
                 return 1;
             if (m_status & WIDGET_DIMMED) {
                 draw();
@@ -170,10 +170,10 @@ int widget::main(message* msg)
             }
             return 1;
         case WIDGET_CLEAR_STATUS: {
-            if (msg->m_codeY != m_id)
+            if (msg.m_codeY != m_id)
                 break;
-            short flags = msg->m_extra;
-            if (msg->m_extra == WIDGET_DIMMED_NODRAW) {
+            short flags = msg.m_extra;
+            if (msg.m_extra == WIDGET_DIMMED_NODRAW) {
                 m_status &= ~WIDGET_DIMMED;
                 return 1;
             }
@@ -186,19 +186,19 @@ int widget::main(message* msg)
             return 1;
         }
         case WIDGET_SET_X:
-            if (msg->m_codeY != m_id)
+            if (msg.m_codeY != m_id)
                 break;
-            m_x = msg->m_extra;
+            m_x = msg.m_extra;
             return 1;
         case WIDGET_SET_Y:
-            if (msg->m_codeY != m_id)
+            if (msg.m_codeY != m_id)
                 break;
-            m_y = msg->m_extra;
+            m_y = msg.m_extra;
             return 1;
         case WIDGET_SET_WIDTH:
-            if (msg->m_codeY != m_id)
+            if (msg.m_codeY != m_id)
                 break;
-            m_width = msg->m_extra;
+            m_width = msg.m_extra;
             return 1;
         }
         break;
@@ -228,7 +228,7 @@ int widget::sendMessage(widget::ECommands command, int extra)
     msg.m_codeY = m_id;
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
-    return main(&msg);
+    return main(msg);
 }
 
 // E:\gamedcs\widget.cpp:494
@@ -298,7 +298,7 @@ void widget::enable(unsigned char arg)
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = WIDGET_CLEAR_STATUS;
         msg.m_extra = WIDGET_DISABLED;
-        main(&msg);
+        main(msg);
     } else {
         message msg;
         msg.m_qualifier = 0;
@@ -309,7 +309,7 @@ void widget::enable(unsigned char arg)
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = WIDGET_SET_STATUS;
         msg.m_extra = WIDGET_DISABLED;
-        main(&msg);
+        main(msg);
     }
 }
 

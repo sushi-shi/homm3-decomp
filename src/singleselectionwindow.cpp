@@ -4924,7 +4924,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
         deselect.m_extra = 0x10;
         for (i = 107; i <= 111; ++i) {
             deselect.m_codeY = i;
-            getWidget(i)->main(&deselect);
+            getWidget(i)->main(deselect);
         }
         deselect.m_codeX = 5;
         deselect.m_codeY = 107 + g_game->m_setup.m_difficulty;
@@ -5064,7 +5064,7 @@ void TSingleSelectionWindow::setDifficultyHiLite()
     select.m_extra = widget::WIDGET_HIGHLIGHTED;
     for (int i = SSW_DIFFICULTY_FIRST; i <= SSW_DIFFICULTY_LAST; ++i) {
         select.m_codeY = i;
-        getWidget(i)->main(&select);
+        getWidget(i)->main(select);
     }
     select.m_codeX = widget::WIDGET_SET_STATUS;
     select.m_codeY = SSW_DIFFICULTY_FIRST + g_game->m_setup.m_difficulty;
