@@ -1391,7 +1391,7 @@ customcampaignwindow	?customCampaignBeginHandler@@YIHAAVmessage@@@Z	100.0000	100
 customcampaignwindow	?customCampaignSliderHandler@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x838f0	bb405f153f1b
 customcampaignwindow	?getFileName@CampaignHeaderStruct@TCampaignBrief@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x83740	4d04f1f491d9
 customcampaignwindow	?loadCampaignList@TCustomCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x82fd0	af5e471e8a00
-customcampaignwindow	?onWidgetDeselect@TCustomCampaignWindow@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x835c0	291cc4df55eb
+customcampaignwindow	?onWidgetDeselect@TCustomCampaignWindow@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x835c0	697d5ff67497
 customcampaignwindow	?updateList@TCustomCampaignWindow@@QAEXXZ	93.8038	93.8038	93.8038	0x83330	fa3a64c42905
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x204ac0	-
 deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x204e10	-
@@ -2346,7 +2346,7 @@ hiscore	?getMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830
 hiscore	?getRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0	0dd61db140a3
 hiscore	?highScoreWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xea1d0	5526a9e18064
 hiscore	?onKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xe9710	3b3b87b6e711
-hiscore	?onWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe9790	689cf717dbd9
+hiscore	?onWidgetDeselect@CHSInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0xe9790	121d831b3a6f
 hiscore	?open@highScoreManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xe90a0	756d941be14e
 hiscore	?reserve@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0xea630	-
 hiscore	?resetHighScores@highScoreManager@@QAEXXZ	100.0000	100.0000	100.0000	0xe8fb0	d1aaec613ca1
@@ -2711,9 +2711,9 @@ multiplayerwindow	?onOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	
 multiplayerwindow	?onPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	8b9da623d420
 multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAEEXZ	94.1892	94.1892	94.1892	0x111660	a9f82c6cfda3
 multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x1113f0	c492044a0467
-multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420	78e4f1d865cd
-multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1108f0	806e1f5cc2a6
-multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	98.1199	98.1199	98.1199	0x10f4e0	15f30574100d
+multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x112420	12876aadd958
+multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1108f0	c6064aa8e600
+multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHAA_N@Z	98.1199	98.1199	98.1199	0x10f4e0	05855eb14843
 multiplayerwindow	?setFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890	fc5ec9d2bd2b
 multiplayerwindow	?update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	c1311c2c164d
 multiplayerwindow	?updateOK@CMPInputDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x110980	49605d430200
@@ -3377,7 +3377,7 @@ rmg	?generate@type_black_box_spells_def@@UAEPAVtype_object@@PAUTRmgObjectPropert
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	a4863c60ac59
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	64ccd4bf338d
 rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	95.1754	95.1754	95.1754	0x1348d0	89e3be34b370
-rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	99.7349	100.0000	100.0000	0x134b90	187602baefdf
+rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134b90	187602baefdf
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	eb1bf6a35a59
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	09167083d057
 rmg	?generate@type_random_map_generator@@QAEEXZ	99.9228	99.9228	99.9228	0x149930	7414f6ae3a9b
@@ -3673,7 +3673,7 @@ scenarioinfo	??1CScenarioPlayerInfoWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1
 scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0	-
 scenarioinfo	??_GCScenarioPlayerInfoWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x169740	-
 scenarioinfo	?draw@CScenarioPlayerInfoWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1693a0	f663587f1080
-scenarioinfo	?onWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1698a0	0e5f12b9c712
+scenarioinfo	?onWidgetDeselect@CScenarioInfoDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1698a0	60e57b661264
 scenarioinfo	?processRightSelect@CScenarioInfoDlg@@UAEEH@Z	100.0000	100.0000	100.0000	0x1699c0	996afc9e1fc2
 scenarioinfo	?updateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0	b234cab622df
 search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	81.4143	81.4143	86.3333	0x16a0d0	7acce3143021
@@ -4011,7 +4011,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
@@ -4724,7 +4724,7 @@ window	?sleepAllWidgets@heroWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ff5b0	
 window	?vslot8@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1ff5f0	354836acc882
 window	?widgetClearStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1fef60	d59f132df674
 window	?widgetSetStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1feed0	cf836083bd15
-window	?windowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff820	be7443a39bb8
+window	?windowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff820	e5b20abbddd9
 winfile	??0File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb20	806b67e05ae8
 winfile	??1File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb40	5c7ac1c22700
 winfile	?close@File@@UAEEXZ	100.0000	100.0000	100.0000	0x1ffb70	ceec31588031

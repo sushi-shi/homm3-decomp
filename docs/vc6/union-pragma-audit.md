@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 214 | 75 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 209 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 213 | 76 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 208 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 450 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 448 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 69 active inline overrides were removed; counting
-all 75 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 70 active inline overrides were removed; counting
+all 76 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1131,6 +1131,36 @@ five auto-inline-off**, or **428 source pragma directives** plus the 22
 header packing directives. The **63 unions** and their classifications are
 unchanged. Relative to the user's 253/72 checkpoint, **39 overrides and nine
 unions have been removed**; auto-inline-off regions fall from seven to five.
+
+### Scenario callback ownership
+
+The scenario-dialog fence is removed by restoring the base callback's
+ordinary window.cpp definition, not by flattening the call. DC's source
+position and protected `bool&` virtual signature correct both the erroneous
+header-inline inference and the byte-pointer interface. All six overrides
+and the dispatcher's local/call migrate together. The existing folded retail
+owner at 0x559140 remains the sole address claim.
+
+The [four-state controls](source-families.md#scenario-deselection-ordinary-body-ownership-not-an-inline-fence)
+cover all 90 window-header consumers and preserve the scenario handler's
+100% match. Removing only the fence with the old header body gives 58.25%.
+The recovered ordinary body also restores an RMG generator to 100%, while
+the focus-loss handler's allocator homes move its current score to 99.871%;
+both retain MAX/HIST 100%. A score-flat four-byte change in kb is explicitly
+reviewed too. These are measured collateral, not reasons to retain a
+disproved helper definition.
+
+The full build and all gates pass at **4084/4764 exact**, **96.43% linked**
+and **96.42% whole-image**. No MAX/HIST value falls and all 4764 RVA rows
+survive. All 90 production objects reproduce the selected code and relocation
+destinations; the native callback/dispatcher oracle and five negative
+controls pass at both optimization levels.
+
+The current census is **213 overrides across 27 TUs**: **208 depth-zero and
+five auto-inline-off**, or **426 source directives** plus **22 header packing
+directives**. The **63 unions** and their classifications are unchanged.
+Relative to the user's 253/72 checkpoint, **40 overrides and nine unions
+have been removed**. Scenarioinfo, like ai_player, now has no inline override.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
