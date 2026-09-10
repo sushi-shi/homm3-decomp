@@ -72,7 +72,7 @@ GUID* CDPlay::getGuid()
 
 // E:\gamedcs\dxplay.h:403
 VA(0x00496cb0, 0x4)  // anchor-vtable CDPlay slot36 +0x90, dc 0x8bf0c
-unsigned char CDPlay::isHost()
+bool CDPlay::isHost()
 {
     return m_isHost;
 }

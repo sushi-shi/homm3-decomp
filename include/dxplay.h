@@ -296,7 +296,9 @@ public:
     // Before normalization (function): CDPlay::GetErrorDesc.
     virtual void getErrorDesc(long error, char* description);
     // Before normalization (function): CDPlay::IsHost.
-    virtual unsigned char isHost();
+    // DC public UAA_NXZ proves bool. Retail's four-byte body returns the
+    // stored flag without normalization, fixing the flag's bool type too.
+    virtual bool isHost();
     // Before normalization (function): CDPlay::FlushReceiveQueue.
     virtual unsigned char flushReceiveQueue();
     // Before normalization (function): CDPlay::GetPlayerAddress.
@@ -405,7 +407,7 @@ protected:
     CAutoArray<CDPlayPlayer>* m_playerArray;          // +0x50
     unsigned char m_connected;          // +0x54
     unsigned char m_inSession;          // +0x55
-    unsigned char m_isHost;             // +0x56
+    bool m_isHost;                      // +0x56 (original m_isHost)
     // Before normalization: pad_57.
     // Dreamcast CDPlay ends with connected/inSession/isHost at
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
