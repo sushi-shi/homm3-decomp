@@ -731,6 +731,8 @@ public:
     // Before normalization (function): TSingleSelectionWindow::OnNewPlayerMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
+    // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
+    bool onPlayerDroppedMsg(CNetMsg* netMsg);
     // DC ordinary OnNewMapHeaderInfo, source line 6968; QAA_N return.
     bool onNewMapHeaderInfo(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoInitMsg.
