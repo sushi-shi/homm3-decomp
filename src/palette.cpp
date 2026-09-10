@@ -74,7 +74,7 @@ void TPalette16::TPalette16(const tagRGBQUAD* quad)
 
 // E:\gamedcs\palette.cpp:165
 DC_ONLY(0x10a77c, 0xD6)
-void TPalette16::TPalette16(const char* name, const TPalette24* p24)
+void TPalette16::TPalette16(const char* name, const TPalette24& p24)
 {
     // @stub
 }
@@ -120,21 +120,8 @@ TPalette16::TPalette16(const unsigned short* newData)
 // are 157 and 159 bytes rather than a call apiece. The pair differs only in
 // the resource base - the second names the palette and passes
 // RESOURCE_TYPE_PALETTE - so it is a free in-compile A/B on one loop.
-void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
-                               int gbits, int gshift, int bbits, int bshift)
-{
-    for (int index = 0; index < 256; ++index) {
-        m_data[index] = static_cast<unsigned short>(
-            ((p24[3 * index] >> (8 - rbits))
-             << rshift)
-            | ((p24[3 * index + 1] >> (8 - gbits))
-               << gshift)
-            | ((p24[3 * index + 2] >> (8 - bbits))
-               << bshift));
-    }
-}
 
-// Residual (94.85% / 94.94%): the loop bodies are byte-identical - same
+// Earlier single-expression reconstruction (94.85% / 94.94%): same
 // `p24 + 0x1e` induction bias, same [eax-1]/[eax-5]/[eax-3] read order, same
 // `movzx di,bl` pair and same countdown - and the whole delta is the
 // loop-invariant hoist ahead of them: retail loads the three bit-widths as
@@ -156,22 +143,25 @@ void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
 // therefore NOT reachable through the local's type here. Retyping the three
 // helper parameters themselves to `unsigned char` is worse still
 // (94.85/94.94 -> 89.16/87.75); DC's all-int Convert24to16 signature stays.
+// Resolved by restoring the helper's channel-value lifetimes: named ushort
+// red/green/blue values before the OR close both constructors at 100%.
+// The parameter arithmetic narrows naturally without a cast on the shifts.
 VA(0x005226d0, 0x9D)  // dc-order-map + six-field conversion loop, dc 0x10a338
-TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
+TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
+    convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
 VA(0x00522770, 0x9F)  // dc-order-map + named resource ctor (0x60 = RESOURCE_TYPE_PALETTE), dc 0x10a498
-TPalette16::TPalette16(const char* name, const TPalette24* p24,
+TPalette16::TPalette16(const char* name, const TPalette24& p24,
                        int rbits, int rshift, int gbits, int gshift,
                        int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_PALETTE)
 {
-    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
+    convert24to16(p24.m_palette, rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
@@ -182,51 +172,37 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
 // in its field for any of the 555/565 layouts SetPixelFormat installs. The
 // three scales are hoisted; the three MASKS are re-read from their statics at
 // every use, two of them inside the loop.
-// Three levers are decisive and all three contradict a standing note:
-// (1) the three scale factors MUST be named locals, 44.86 -> 75.99 - written
-// inline in the expression VC6 refuses to hoist them out of the loop, where
-// retail computes all three once; (2) the `|` operand order is NOT
-// canonicalised here - five of the six orders sit at exactly 75.99/76.17 and
-// `blue | red | green` alone reaches the peak, re-measured on top of (3);
-// (3) DECLARATION ORDER: `dst` must be declared BEFORE `src`, 88.72 ->
-// 98.92 (2026-09-05). The two pointers compete for the dead `p24` parameter
-// home at [ebp+8], and retail spends that slot on the loop COUNTER while
-// keeping dst at [ebp-4]; declaring dst first is what hands the recycled
-// home to the counter instead of to dst. The masks themselves stay unhoisted
-// on purpose: retail re-reads green_mask and blue_mask from their statics on
-// every iteration.
-// Residual (98.92%): the loop evaluates green, blue, red where retail
-// evaluates red, blue, green, which also costs the induction pointer's bias
-// (our 0x1c with a [+1] first read against retail's 0x1d with [-1]). The
-// evaluation order is NOT reachable from the source here - measured and
-// rejected on top of the declaration fix: all six `|` permutations (76.17
-// except the kept one), per-channel named locals in retail's r/b/g order
-// (76.17), naming red alone (76.17), `+` for `|` (97.23), explicit
-// `blue | (red | green)` parenthesisation (98.92, byte-flat), `*dst++`
-// (98.92, byte-flat), an `unsigned` counter (98.92, byte-flat), advancing
-// src before dst (98.92, byte-flat), and biasing src by +1 with [-1]/[0]/[1]
-// subscripts to reproduce the 0x1d pointer directly (73.92). Dreamcast's
-// lower-bound local table retains `const unsigned int rm1` and `gm1`; adding
-// const to all three scale locals is byte-flat at the peak. Removing the
-// third named scale and spelling blue inline is not the missing source shape:
-// VC6 stops hoisting that invariant and the function falls to 61.58%.
+// DC lines 101/102/103 separately attribute the RGB calculations, followed
+// by four unrecorded lines of unknown contents and OR/store at line 108.
+// That layout supports named channel values; it does not identify the gap's
+// text. DC also retains function-scope const unsigned int rm1/gm1 and uses
+// indexed RGB reads with an advancing destination pointer.
+// Restoring those value lifetimes and indexed reads closes this body at 100%.
+// Keep dst before the scales: it gives retail's destination spill at [ebp-4]
+// and the countdown in the recycled parameter home. The 61-state family
+// produced eight distinct objects, with all eight retained objects reproduced;
+// named uint channels (const or ordinary) match with either destination-first
+// or pointers-first declarations. Named ushort channels and pointer-advancing
+// source reads do not close. The earlier single-expression pointer form was
+// 98.9155%; scale/OR permutations and pointer declaration order alone reached
+// 99.2676%, still evaluating green first instead of retail's red/blue/green.
+// Inlining the third scale into the channel expression loses its hoist (61.58%).
+// Before normalization (DC locals): rm1 -> redScale, gm1 -> greenScale.
 VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x10a508
-TPalette16::TPalette16(const TPalette24* p24)
+TPalette16::TPalette16(const TPalette24& p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    // Before normalization (locals): red_scale, green_scale, blue_scale.
+    unsigned short* dst = m_data;
     const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
     const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
     const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
-    unsigned short* dst = m_data;
-    const unsigned char* src = p24->m_colors.m_data[0];
+    const unsigned char* src = p24.m_palette;
     for (int index = 0; index < 256; ++index) {
-        *dst = static_cast<unsigned short>(
-            (((src[2] * blueScale) >> 8) & s_blueMask)
-            | (((src[0] * redScale) >> 8) & s_redMask)
-            | (((src[1] * greenScale) >> 8) & s_greenMask));
+        unsigned int red = ((src[3 * index] * redScale) >> 8) & s_redMask;
+        unsigned int green = ((src[3 * index + 1] * greenScale) >> 8) & s_greenMask;
+        unsigned int blue = ((src[3 * index + 2] * blueScale) >> 8) & s_blueMask;
+        *dst = static_cast<unsigned short>(red | green | blue);
         ++dst;
-        src += 3;
     }
 }
 
@@ -251,6 +227,31 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
 {
+}
+
+// DC palette.cpp:210 places the ordinary Convert24to16 body after the
+// destructor and before Cycle; its earlier constructors call this helper.
+// Preserve that source order while matching the retail inline expansions.
+// DC lines 211/224-226/228-229 retain the p16 destination pointer, indexed
+// RGB reads, and three independent extu.w truncations before the final OR.
+// The 72-state family distinguishes actual channel-value lifetimes from casts:
+// named ushort channels give both callers 100%; inline casts alone leave
+// 94.8548/94.9365. The destination-pointer form preserves the recorded p16.
+// Before normalization (local): p16 -> destination.
+void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
+                               int gbits, int gshift, int bbits, int bshift)
+{
+    unsigned short* destination = m_data;
+    for (int index = 0; index < 256; ++index) {
+        unsigned short red = static_cast<unsigned short>(
+            (p24[3 * index] >> (8 - rbits)) << rshift);
+        unsigned short green = static_cast<unsigned short>(
+            (p24[3 * index + 1] >> (8 - gbits)) << gshift);
+        unsigned short blue = static_cast<unsigned short>(
+            (p24[3 * index + 2] >> (8 - bbits)) << bshift);
+        *destination = static_cast<unsigned short>(red | green | blue);
+        ++destination;
+    }
 }
 
 // Dreamcast supplies the positive/negative two-arm rotation shape, with one
@@ -498,7 +499,7 @@ VA(0x00522e80, 0x2D)  // exact 0x300-byte payload copy, dc 0x10b904
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(&m_colors, data, sizeof(m_colors));
+    memcpy(m_palette, data, sizeof(m_palette));
 }
 
 // Retail walks 256 four-byte RGBA records and copies RGB into the packed
@@ -514,9 +515,9 @@ TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
-        m_colors.m_data[index][0] = rgba->m_red;
-        m_colors.m_data[index][1] = rgba->m_green;
-        m_colors.m_data[index][2] = rgba->m_blue;
+        m_palette[3 * index + 0] = rgba->m_red;
+        m_palette[3 * index + 1] = rgba->m_green;
+        m_palette[3 * index + 2] = rgba->m_blue;
         ++rgba;
     }
 }
@@ -528,14 +529,14 @@ VA(0x00522f00, 0x30)  // dc-bracket + exact payload extent, dc 0x10ba3c
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(&m_colors, &copy->m_colors, sizeof(m_colors));
+    memcpy(m_palette, copy->m_palette, sizeof(m_palette));
 }
 
 VA(0x00522f30, 0x21)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {
     if (this != &from)
-        memcpy(&m_colors, &from.m_colors, sizeof(m_colors));
+        memcpy(m_palette, from.m_palette, sizeof(m_palette));
     return *this;
 }
 
@@ -568,9 +569,9 @@ void TPalette24::adjustHSV(float hue, float hueAdjust,
         std::numeric_limits<int>::max() / 255;
 
     for (int i = 10; i < 256; ++i) {
-        unsigned int r = m_colors.m_data[i][0] * redNorm;
-        unsigned int g = m_colors.m_data[i][1] * greenNorm;
-        unsigned int b = m_colors.m_data[i][2] * blueNorm;
+        unsigned int r = m_palette[3 * i + 0] * redNorm;
+        unsigned int g = m_palette[3 * i + 1] * greenNorm;
+        unsigned int b = m_palette[3 * i + 2] * blueNorm;
 
         float h;
         float s;
@@ -612,9 +613,9 @@ void TPalette24::adjustHSV(float hue, float hueAdjust,
 
         hsvToRGB(h, s, v, &r, &g, &b);
 
-        m_colors.m_data[i][0] = static_cast<unsigned char>(r / redNorm);
-        m_colors.m_data[i][1] = static_cast<unsigned char>(g / greenNorm);
-        m_colors.m_data[i][2] = static_cast<unsigned char>(b / blueNorm);
+        m_palette[3 * i + 0] = static_cast<unsigned char>(r / redNorm);
+        m_palette[3 * i + 1] = static_cast<unsigned char>(g / greenNorm);
+        m_palette[3 * i + 2] = static_cast<unsigned char>(b / blueNorm);
     }
 }
 

@@ -40,6 +40,49 @@ debug inventory alone does not prove that the original source used
 
 ## Reading it
 
+### Source-line geometry across functions
+
+Use `homm3 dreamcast lines <selector>` for a numbered source outline. Repeated
+selectors select several functions; `--module <name>` is repeatable, and
+`--all` explicitly selects the complete DC corpus. Module selection is not
+limited to retail claims, non-exact functions, or the eight-match guard on an
+ambiguous interactive selector. `show` supports the same batch selection.
+
+```sh
+homm3 dreamcast lines dc:0x55df4
+homm3 dreamcast lines --module cursor --module town
+homm3 dreamcast lines --all --json > /tmp/dc-lines.json
+homm3 dreamcast show --module cursor --json > /tmp/dc-dossiers.json
+```
+
+The `homm3.dreamcast-lines.v1` JSON contains `functions`, each with the existing
+function identity/gap facts and a `source_layout`. The layout records every
+line attribution inside the procedure's end-exclusive byte extent, preserving
+equal addresses, repeated rows, backwards line jumps, and source-file switches.
+Per-file summaries expose the first/last recorded line, inclusive observed span,
+distinct recorded lines, total line rows, and every intervening unrecorded
+interval with its length. Full normalized paths keep separate headers distinct.
+The text outline shows both lexical line order and the address-ordered sequence.
+`show` and generated `structure` C++/JSON include the same layout evidence.
+
+For example, recorded lines 10, 14, 14, and 20 occupy an observed span of 11
+lines: three distinct recorded lines, four rows, and eight unrecorded positions
+(11–13 and 15–19). These gaps matter when forming an educated guess about
+declarations, scopes, formatting, or release-elided operations. They do not
+tell us which positions were empty or what text occupied them. A hypothesis
+still needs corroboration and a VC6 test against retail bytes.
+
+The observed span is deliberately **not** the original function's line count:
+foreign-file inline rows and earlier same-file rows are labelled, same-file
+inline attributions can extend the envelope, the boundary can be borrowed from
+the preceding procedure, and the closing brace/trailing lines are not known.
+`function_line_count`, `blank_line_count`, and `trailing_line_count` therefore
+remain null. Minimal four-byte SH4 bodies retain their raw observations without
+inferring a body span. No original whitespace is synthesized and no MSVC source
+structure is compared or required to have equal line counts.
+
+### Raw source records
+
 The dump is `../homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt`.
 
 ```
@@ -368,15 +411,14 @@ inline 64-bit mask test).
 
 So the two directions are asymmetric, and both are useful:
 
-* **DC has a structure, retail's bytes agree with it** → that is retail's
-  source too, and the DC line table is proof of the SPELLING (the
-  `for (i = 0; i < 3; i++) Influence[i] = -1;` case).
-* **retail's bytes have code DC has no line for** → that code is a later
-  edit, and it is exactly where a source-level element retail has and DC does
-  not must live. On `TViewArmyWindow(int,int,int,unsigned char)` that
-  argument is what identified the one missing /Ob2 candidate site: every
-  other statement in retail's body has a DC line carrying the same call, so
-  the post-DC version gate was the only place left for it.
+* **DC has a structure, retail's bytes agree with it** → the structure is a
+  supported reconstruction hypothesis (for example, the counted initialization
+  of `Influence`). Agreement does not uniquely recover source spelling.
+* **retail's bytes have code DC has no line for** → inspect the operations in
+  both builds. Missing metadata alone does not prove a later edit. On
+  `TViewArmyWindow(int,int,int,unsigned char)`, the actual version gate and
+  elemental test provide semantic evidence of a revision difference; the gap
+  helps locate the investigation.
 
 Never read a *missing* DC call as evidence that retail has no call there.
 `dc 0x19148c` does not reference `operator new` at all even though its body

@@ -911,12 +911,12 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             lodFile->read(data.get(), bmpHeader.m_dataSize);
 
             TPalette24 palette24;
-            lodFile->read(&palette24.m_colors, sizeof(palette24.m_colors));
+            lodFile->read(palette24.m_palette, sizeof(palette24.m_palette));
             if (g_graphicsSaturated)
                 palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
             TPalette16 palette16(
-                &palette24,
+                palette24,
                 g_firstMaskBits, g_firstMaskShift,
                 g_greenMaskBits, g_greenMaskShift,
                 g_lastMaskBits, g_lastMaskShift);
@@ -1127,7 +1127,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
                     palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
                 result = new TPalette16(
-                    name, &palette24,
+                    name, palette24,
                     g_firstMaskBits, g_firstMaskShift,
                     g_greenMaskBits, g_greenMaskShift,
                     g_lastMaskBits, g_lastMaskShift);
@@ -1198,7 +1198,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
         return new TPalette16(
-            name, &palette24,
+            name, palette24,
             g_firstMaskBits, g_firstMaskShift,
             g_greenMaskBits, g_greenMaskShift,
             g_lastMaskBits, g_lastMaskShift);
@@ -2614,7 +2614,7 @@ CSprite* ResourceManager::getSprite(const char* name)
         palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
     TPalette16 palette16(
-        &palette24,
+        palette24,
         g_firstMaskBits, g_firstMaskShift,
         g_greenMaskBits, g_greenMaskShift,
         g_lastMaskBits, g_lastMaskShift);

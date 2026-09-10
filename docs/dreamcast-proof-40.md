@@ -2,6 +2,14 @@
 
 *Run 2026-08-28 against English GOG Complete 4.0.*
 
+**Interpretation correction:** this is a historical experiment, not the current
+admission rule. Its score-based reverts and row 34's inferred version difference
+do not by themselves disprove Dreamcast source facts. Preserve supported facts
+unless retail semantics, ABI, layout, or CFG contradict them. Source-line spans
+and gaps support educated hypotheses; neither DC structure nor line counts are
+an equality target for MSVC source structure. See
+[the current line-layout guidance](dc-line-tables.md#source-line-geometry-across-functions).
+
 This is the first bounded test of whether `homm3 dreamcast` produces useful
 matching evidence rather than merely nicer disassembly. The cohort was locked
 before reconstruction: the 40 highest-scoring non-exact retail functions that
@@ -98,8 +106,8 @@ That is a stop signal against unproductive semantic rewrites. Row 34 proves
 the essential guardrail: when older Dreamcast source shape conflicts with
 retail Complete bytes, retail wins.
 
-The practical policy is therefore to use Dreamcast as a second structural
-target, not a second byte target: query signatures, locals, scopes and
+The practical policy is to use Dreamcast as positive source evidence:
+query signatures, locals, scopes, source-line positions and gaps, and
 per-statement call/branch groups first; formulate a VC6 source hypothesis;
 then test it against retail x86. The score is a checkpoint, not a veto: keep
 positive Dreamcast facts through a temporary local dip unless retail bytes
