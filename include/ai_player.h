@@ -27,6 +27,11 @@ DATA(0x0066052c) extern int g_globalLimits[5];
 // Before normalization (function): AI_get_value_of_artifact.
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
+// The player-level overload is DC ai_player.cpp:5684, dc 0x37514.
+// Retail 0x433aa0 has the same artifact reference and long player id.
+// Before normalization (function): AI_get_value_of_artifact.
+// Before normalization (parameter): player_id.
+long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 // Before normalization (function): AI_swap_artifacts.
 void aiSwapArtifacts(hero* source, hero* destination);
 // Before normalization (function): AI_get_equip_value.
@@ -304,7 +309,7 @@ struct HeroDestination {
 // Before normalization (locals): current_hero, search_array, max_distance, hiring_hero,
 // allow_spells, explore_mode.
 long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
-                           std::vector<HeroDestination>* destinations,
+                           std::vector<HeroDestination>& destinations,
                            long maxDistance, unsigned char hiringHero,
                            unsigned char allowSpells,
                            unsigned char exploreMode);

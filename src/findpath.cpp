@@ -595,20 +595,6 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     *cell = point;
 }
 
-// AdvMgr.h:1254 in the Dreamcast roster (dc 0x1f084): `int
-// GetMapExtra(type_point point)`, the BY-VALUE overload of kb.h's
-// three-argument reader.  TestPossibleDirections' SECOND fog test is the one
-// site in this TU that needs it - retail loads `source->point` there as one
-// dword (`mov eax,[edi]` plus a frame copy) and pulls all three coordinates
-// out of the register, where three separate member reads give two 16-bit
-// loads instead.  Spelled file-local because no retail body has been located
-// for it and the DC roster puts it in a header this TU does not need.
-// Before normalization (function): GetMapExtra.
-static int getMapExtra(type_point point)
-{
-    return getMapExtra(point.m_x, point.m_y, point.m_z);
-}
-
 // E:\gamedcs\findpath.cpp:461
 // `ret 0x24` = nine stack arguments over `this`, the DC count exactly.
 // The opening three instructions corroborate the second parameter:

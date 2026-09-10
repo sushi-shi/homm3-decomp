@@ -19,9 +19,8 @@
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.
-// find_all_destinations' grail-spot tail calls NewfullMap::cell out of line;
-// that single statement is pinned below instead of hiding the real header
-// inline from this entire compiland.
+// find_all_destinations' grail-spot tail expands the canonical game::getCell
+// wrapper and naturally retains its nested NewfullMap::cell call.
 #include <va.h>
 #include <algorithm>
 #include <functional>
@@ -114,9 +113,6 @@ int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 // Before normalization (locals): our_hero.
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  // Before normalization (locals): player_id, best_hero.
-                                  long playerId);
 // Before normalization (function): consider_hiring.
 // Before normalization (locals): player_id, search_array, best_value, best_town, current_town.
 bool considerHiring(long playerId, hero* candidate);
@@ -4180,7 +4176,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 
     long mapCells = g_game->getNumMapLevels() * g_mapWidth * g_mapHeight;
     rawValue = findAllDestinations(currentHero, g_searchArray,
-                                      &destinations, maxDistance, 0,
+                                      destinations, maxDistance, 0,
                                       allowSpells, exploreMode);
     long* strategicMap = new long[mapCells];
     memset(strategicMap, 0, mapCells * sizeof(long));
@@ -4468,71 +4464,60 @@ long markDestinations(hero* currentHero, long maxDistance,
 // Before normalization (locals): current_hero, move_cost.
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost);
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  long playerId);
 
 // E:\gamedcs\ai_player.cpp:3164, dc 0x32e30. Dreamcast preserves this
-// static helper boundary and its one local `point`; Complete adds the
-// build-grail value change but expands the helper into its sole caller.
+// static helper boundary, vector-reference parameter and local `point`;
+// Complete adds the build-grail value change but expands the helper into
+// its sole caller. DC lines 3181/3205 call game::get_cell and construct the
+// typed artifact temporary for AI_get_value_of_artifact. Restoring those
+// boundaries plus the caller's two GetMapExtra(point) uses naturally retains
+// both retail calls (findAllDestinations +0x694/+0x73f), without either old
+// depth pin. Before the point-overload recovery, direct-map/no-pin measured
+// 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
 // Before normalization (function): check_holy_grail.
 static void checkHolyGrail(
     // Before normalization (locals): current_hero, search_array, friendly_distances, guess_cell,
     // map_cell, friendly_cost.
     const hero* currentHero, const searchArray* currentSearchArray,
-    std::vector<HeroDestination>* destinations,
+    std::vector<HeroDestination>& destinations,
     const unsigned short* friendlyDistances)
 {
     playerData* player = &g_game->m_players[currentHero->m_owner];
     if (player->m_puzzleGuess.m_x >= 0) {
-        HeroDestination destination;
-        destination.m_point.m_x = player->m_puzzleGuess.m_x;
-        destination.m_point.m_y = player->m_puzzleGuess.m_y;
-        destination.m_point.m_z = player->m_puzzleGuess.m_z;
-        destination.m_isCritical = 0;
-        pathCell* guessCell = currentSearchArray->getCell(destination.m_point, 0);
+        HeroDestination point;
+        point.m_point.m_x = player->m_puzzleGuess.m_x;
+        point.m_point.m_y = player->m_puzzleGuess.m_y;
+        point.m_point.m_z = player->m_puzzleGuess.m_z;
+        point.m_isCritical = 0;
+        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
         if (guessCell->m_visited) {
-            // Dreamcast calls game::get_cell here, but Complete retail calls
-            // NewfullMap::cell directly; expanding this TU's retained
-            // game::get_cell body would instead calculate cellData in place.
-            // Site-pinned check_holy_grail -> NewfullMap::cell boundary:
-            // Complete retail keeps this call while the surrounding helper
-            // expands. Removing only this gate measures find_all_destinations
-            // 96.3651% -> 92.3064%; the former TU-wide view is unnecessary.
-#pragma inline_depth(0)
-            NewmapCell* mapCell = g_game->m_worldMap.cell(
-                destination.m_point.m_x, destination.m_point.m_y,
-                destination.m_point.m_z);
-#pragma inline_depth()
+            NewmapCell* mapCell = g_game->getCell(point.m_point);
             if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
                 || mapCell->m_extraInfo
                     == static_cast<unsigned long>(currentHero->m_id)) {
                 if (const_cast<hero*>(currentHero)->isInPatrolRadius(
-                        destination.m_point)) {
-                    destination.m_moveCost = guessCell->m_cost;
+                        point.m_point)) {
+                    point.m_moveCost = guessCell->m_cost;
                     unsigned short friendlyCost = friendlyDistances[
-                        (destination.m_point.m_z * g_mapHeight
-                         + destination.m_point.m_y)
+                        (point.m_point.m_z * g_mapHeight
+                         + point.m_point.m_y)
                             * g_mapWidth
-                        + destination.m_point.m_x];
-                    if (destination.m_moveCost <= friendlyCost) {
+                        + point.m_point.m_x];
+                    if (point.m_moveCost <= friendlyCost) {
                         if (g_game->m_mapHeader.m_victoryCondition.m_type
                             == VICTORY_CONDITION_BUILD_GRAIL) {
-                            destination.m_value = 1968;
+                            point.m_value = 1968;
                         } else {
-                            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
-                            // Retail calls the helper here (it expands it in
-                            // consider_hiring's backpack loop).
-#pragma inline_depth(0)
-                            destination.m_value = aiGetArtifactPlayerValue(
-                                grail, currentHero->m_owner);
-#pragma inline_depth()
+                            point.m_value = aiGetValueOfArtifact(
+                                type_artifact(ARTIFACT_HOLY_GRAIL),
+                                currentHero->m_owner);
                         }
-                        destination.m_moveCost = max(
-                            destination.m_moveCost,
+                        point.m_moveCost = max(
+                            point.m_moveCost,
                             const_cast<hero*>(currentHero)->getMobility()
                                 + currentHero->m_movePoints);
-                        if (destination.m_value > 0)
-                            destinations->push_back(destination);
+                        if (point.m_value > 0)
+                            destinations.push_back(point);
                     }
                 }
             }
@@ -4540,21 +4525,22 @@ static void checkHolyGrail(
     }
 }
 
-// Residual (96.3651%, polish-45): ONE target-only reference and nothing
-// structural - retail keeps a second `vector::size()` CALL inside the
-// `destinations->push_back(destination)` grow path (retail fn+0x3fd, where
-// this compile has only the one at +0x407 and inlines the other).  Same /Ob2
-// sequential-budget family as ai.cpp's find_attack_hexes, which loses its
-// 65 B to exactly the same `size()` decision one level down inside insert:
-// the direction is OVER-inline, so the admissible levers are caller mass or
-// candidate-site count, not a spelling of push_back (`insert(end(), x)` by
-// hand is byte-flat there).  Blocks 80 vs 81, branches 54/54.
+// Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
+// 29 call sites align, including vector::size at +0x3fd and both Grail
+// calls. Remaining differences are register allocation/bitfield scheduling and folded
+// template target identities. DC lines 3300/3359 call GetMapExtra(point),
+// not pasted coordinate extraction. Their canonical header overload removes
+// the old missing-size-call mismatch and permits both Grail pins to retire.
+// Controls in the 24-state boundary family: only one point call restored
+// leaves the unpinned caller at 91.0238..91.3555%; a named first-point copy
+// with the typed Grail temporary gives 91.0238%. The original two direct
+// point calls and typed temporary together give the current 96.9365%.
 // Before normalization (locals): current_hero, search_array, max_distance, hiring_hero,
 // allow_spells, explore_mode, current_value, protecting_town, level_size, level_cells,
 // friendly_distances, search_type, town_id, current_town, map_cell.
 VA(0x0042edd0, 0x79b)  // anchor-callee + arity, dc 0x33038
 long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
-                           std::vector<HeroDestination>* destinations,
+                           std::vector<HeroDestination>& destinations,
                            long maxDistance, unsigned char hiringHero,
                            unsigned char allowSpells,
                            unsigned char exploreMode)
@@ -4565,7 +4551,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
     long levelSize;
 
     levelSize = g_mapWidth * g_mapHeight;
-    int levelCells = g_game->m_worldMap.getNumLevels() * levelSize;
+    int levelCells = g_game->getNumMapLevels() * levelSize;
     unsigned short* friendlyDistances = new unsigned short[levelCells];
     memset(friendlyDistances, -1, levelCells * sizeof(unsigned short));
 
@@ -4599,8 +4585,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
         if (!mapCell->m_isTrigger) {
-            type_point probe = cell->m_point;
-            if ((getMapExtra(probe.m_x, probe.m_y, probe.m_z) & g_unnamed69ccc4)
+            if ((getMapExtra(cell->m_point) & g_unnamed69ccc4)
                 || g_currentPlayer->m_numTowns == 0)
                 continue;
         }
@@ -4636,8 +4621,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point.m_x, point.m_point.m_y, point.m_point.m_z)
-              & g_unnamed69ccc4)
+        if (!(getMapExtra(point.m_point) & g_unnamed69ccc4)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -4651,7 +4635,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
                 && (point.m_value != 0 || currentValue >= 0))
                 continue;
         }
-        destinations->push_back(point);
+        destinations.push_back(point);
     }
 
     if (!protectingTown)
@@ -5496,12 +5480,12 @@ static long totalArtifactValue(hero* candidate, long playerId)
     for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
         type_artifact backpackArtifact(
             candidate->getBackpack(slot).m_artifactId);
-        total += aiGetArtifactPlayerValue(backpackArtifact, playerId);
+        total += aiGetValueOfArtifact(backpackArtifact, playerId);
     }
     for (slot = 0; slot < 19; ++slot) {
         type_artifact equippedArtifact(
             candidate->getArtifact(slot).m_artifactId);
-        total += aiGetArtifactPlayerValue(equippedArtifact, playerId);
+        total += aiGetValueOfArtifact(equippedArtifact, playerId);
     }
     return total;
 }
@@ -5597,14 +5581,12 @@ long valueOfHiring(town* currentTown, hero* candidate,
                      searchArray* currentSearchArray);
 int aiResourceCost(long playerId, const int* resources);
 int canBuy(const town* currTown, int buildingId);
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  long playerId);
 
 // E:\gamedcs\ai_player.cpp:4476. Dreamcast names the player reference,
 // creature_cost row, search_array and total_artifact_value call. Restore
 // that canonical helper instead of duplicating its two artifact loops here:
 // VC6 naturally retains getHero in the backpack expansion and calls
-// aiGetArtifactPlayerValue for equipped slots, without the old statement pin.
+// aiGetValueOfArtifact for equipped slots, without the old statement pin.
 // The creature cost row is int-width in retail (DC uses short); define it
 // before converting the troop count, initialize bestTown before searchArray,
 // and carry the initial hiring threshold in the same bestValue updated by
@@ -5729,7 +5711,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     candidate->m_x = currentTown->m_mapX;
     candidate->m_y = currentTown->m_mapY;
     candidate->m_z = currentTown->m_mapZ;
-    findAllDestinations(candidate, currentSearchArray, &destinations, 0x7fff,
+    findAllDestinations(candidate, currentSearchArray, destinations, 0x7fff,
                           1, 0, 0);
 
     std::vector<pathCell*> monsters;
@@ -6577,14 +6559,18 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
     return value;
 }
 
-// Retail-only helper (name provisional - no DC row): the best value this
-// artifact would have on any of the player's heroes, floored at 10.
+// E:\gamedcs\ai_player.cpp:5684, dc 0x37514. This is the player overload
+// of AI_get_value_of_artifact, formerly given the provisional name
+// aiGetArtifactPlayerValue. DC and retail both reject ARTIFACT_NONE, floor
+// the result at 10, walk the player's heroes, and call AI_get_equip_value
+// with exact=false. The reference/long signature agrees with retail /Gr.
 // consider_hiring (0x431800) expands it per backpack slot and calls it per
-// worn slot; the by-reference artifact is what makes ECX carry a pointer
-// where AI_get_equip_value takes the 8-byte record by value.
-VA(0x00433aa0, 0x9e)  // anchor-callee (consider_hiring 0x432a25 call + inline twin), retail-only
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  long playerId)
+// worn slot; ECX carries the artifact pointer, unlike the by-value equip
+// helper. Keep the single ordinary body and its canonical header overload.
+// Before normalization (function): AI_get_value_of_artifact.
+// Before normalization (parameter): player_id.
+VA(0x00433aa0, 0x9e)  // anchor-callee + retained/expanded bodies; dc 0x37514
+long aiGetValueOfArtifact(const type_artifact& artifact, long playerId)
 {
     if (artifact.m_artifactId == -1)
         return 0;

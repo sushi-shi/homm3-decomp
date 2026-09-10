@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 216 | 73 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 211 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 214 | 75 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 209 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 454 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 450 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 67 active inline overrides were removed; counting
-all 73 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 69 active inline overrides were removed; counting
+all 75 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1108,6 +1108,29 @@ MAX and no banked RVA is lost. The current inventory is **216 overrides across
 directives** plus the 22 header packing directives. The **63 unions** and their
 classifications are unchanged. Against the user's 253/72 checkpoint, this is
 **37 overrides and nine unions removed**; two overrides remain in ai_player.
+
+The Grail destination recovery removes ai_player's last two depth overrides.
+Restore the vector-reference interfaces, canonical game accessors, real
+player-level artifact overload, typed temporary, and the two
+`GetMapExtra(type_point)` calls. Move that inline overload into its evidenced
+AdvMgr.h owner and remove both TU-local copies. Together these changes raise
+**findAllDestinations from 96.3651% to 96.9365%**, naturally restoring the
+missing vector-size call and both formerly forced Grail calls. The
+[Grail controls](source-families.md#grail-destination-and-shared-map-extra-boundaries)
+document all 24 final states, ten reproduced elites, 2340 scores across 34
+header consumers, behavioral/negative tests and raw-object collateral.
+
+The focus-loss handler also returns to 100%, with no other score changes.
+kb's score-flat four-byte spill/reload change is explicitly reviewed, not
+hidden behind aggregate scores. All 34 adopted objects reproduce the chosen
+independent recompile. Full retail delinking and all gates pass at
+**4084/4764 exact**, **96.43% linked** and **96.42% whole-image** (rounded),
+with one checkpoint raised, no source MAX reset and no lost banked RVA.
+The current census is **214 overrides across 28 TUs**: **209 depth-zero and
+five auto-inline-off**, or **428 source pragma directives** plus the 22
+header packing directives. The **63 unions** and their classifications are
+unchanged. Relative to the user's 253/72 checkpoint, **39 overrides and nine
+unions have been removed**; auto-inline-off regions fall from seven to five.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify
