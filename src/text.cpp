@@ -501,30 +501,25 @@ unsigned char initializeHighScoreDefaults()
         return 0;
     int i;
     for (i = 0; i < 11; i++) {
-        g_highScoreStandardDefault[i][0] = g_highScoreDefaults->getRow(i + 1)[1];
-        g_highScoreStandardDefault[i][1] = g_highScoreDefaults->getRow(i + 1)[2];
-        g_highScoreStandardDefault[i][2] = g_highScoreDefaults->getRow(i + 1)[3];
-        g_highScoreStandardDefault[i][3] = g_highScoreDefaults->getRow(i + 1)[4];
+        g_highScoreStandardDefault[i][0] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 1));
+        g_highScoreStandardDefault[i][1] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 2));
+        g_highScoreStandardDefault[i][2] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 3));
+        g_highScoreStandardDefault[i][3] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 4));
     }
     for (i = 0; i < 11; i++) {
-        g_highScoreCampaignDefault[i][0] = g_highScoreDefaults->getRow(i + 13)[1];
-        g_highScoreCampaignDefault[i][1] = g_highScoreDefaults->getRow(i + 13)[2];
-        g_highScoreCampaignDefault[i][2] = g_highScoreDefaults->getRow(i + 13)[3];
-        g_highScoreCampaignDefault[i][3] = g_highScoreDefaults->getRow(i + 13)[4];
+        g_highScoreCampaignDefault[i][0] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 1));
+        g_highScoreCampaignDefault[i][1] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 2));
+        g_highScoreCampaignDefault[i][2] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 3));
+        g_highScoreCampaignDefault[i][3] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 4));
     }
     g_highScoreManager->resetHighScores();
     return 1;
 }
-// Residual (99.3846%): the FIRST loop's row load is `mov esi,[esi+ecx-4]`
-// where retail has `mov esi,[ecx+esi-4]` - the same address with the SIB
-// base and index exchanged, four instructions.  The two loops here are an
-// in-compile A/B twin: the SECOND one already emits retail's form from the
-// identical spelling, and swapping loop 1's constant to 13 leaves it on
-// `[esi+ecx]`, so the choice is POSITIONAL (first loop in the body), not
-// constant-driven, and no source lever reached it.  Tried and rejected:
-// `1 + i` (byte-flat), a named `int row = i + 1` (98.54), `i` from 1 with
-// `[i - 1]` destinations (87.51), a named `const TStringVector& row`
-// (82.58), and one shared `int i` across both loops (byte-flat).
+// Exact with the canonical GetSpreadsheet(row, column) source calls seen
+// at DC text.cpp:189..192/198..201. Flattening them into getRow(row)[column]
+// scores 99.3846 and reverses the first loop's SIB base/index operands.
+// Loop-index lifetime and row-offset rewrites did not recover those bytes;
+// the recovered header accessor does, with the char* tables preserved.
 
 // E:\gamedcs\text.cpp:213
 VA(0x005b92a0, 0x30)  // terrname.txt literal + 10-row copy, dc 0x161230

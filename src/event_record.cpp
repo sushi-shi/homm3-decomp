@@ -114,12 +114,10 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
 
 #endif  // @carcass
 
-// E:\gamedcs\event_record.cpp:65. NO RETAIL BODY: a file-scope static VC6
-// expands at its call site and then drops. Its `char` parameter is what
-// narrows play_recorded_events' saved seat back to a byte
-// (`movsx esi, byte ptr [ebp-0x18]` off an int local); the four record
-// replay bodies spell the same three stores out in line, which is what
-// their exact bytes show.
+// E:\gamedcs\event_record.cpp:65. Ordinary static helper, expanded
+// into the four replay bodies and playRecordedEvents. The char parameter
+// narrows the saved seat at the latter call; each replay passes m_playerId.
+// Preserve these DC-proven source calls instead of copying the helper body.
 // Before normalization (function): set_player.
 // Before normalization (locals): new_player.
 static void setPlayer(char newPlayer)
@@ -239,26 +237,18 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\event_record.cpp:161
-// Residual (94.58%): retail SINKS the `gCompleteDrawEnabled = 0` arm past
-// the tail and jumps back into the join; we lay it inline behind a jmp.
-// Tried and rejected: duplicating the store into both guard arms so the
-// cross-jumper merges them, the two-jump-predecessor recipe (92.50).
-// Slot 4 of type_record_move_hero's retail vtable (0x63de8c). The tail is
-// cursor.obj's animate_move with the step deltas computed from the two
-// packed points; gCompleteDrawEnabled and advManager::drawCursor are the
-// pair the sunk else-arm zeroes.
+// DC 162 calls set_player; DC 170 assigns draw && GetMoveShowIt to
+// bShowIt as one Boolean expression with no conditional lexical scope.
+// Complete additionally sets drawCursor when that expression is true.
+// Restoring the assignment and canonical helper gives 100.0000% from
+// 94.5833, including retail's cold zero-store block after the return.
+// Negative controls: separate true/false stores remain 94.5833; a named
+// bool gives 85.9896 and a ?: expression gives 93.5417. The helper call
+// alone is byte-flat; its source boundary is independently proven.
 VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
 void type_record_move_hero::replay(unsigned char draw)
 {
-    int player = m_playerId;
-    if (g_netLocalGamePos != player) {
-        g_advManager->deactivateCurrTown(0);
-        g_advManager->deactivateCurrHero(0);
-    }
-
-    g_netLocalGamePos = player;
-    g_currentPlayer = &g_game->m_players[player];
-    g_unnamed69ccc4 = 1 << player;
+    setPlayer(m_playerId);
 
     if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
         || !g_advManager->m_curHeroMobile) {
@@ -266,12 +256,9 @@ void type_record_move_hero::replay(unsigned char draw)
     }
 
     m_currentHero->m_facing = m_direction;
-    if (draw && g_advManager->getMoveShowIt(m_currentHero, m_direction)) {
-        g_completeDrawEnabled = 1;
+    g_completeDrawEnabled = draw && g_advManager->getMoveShowIt(m_currentHero, m_direction);
+    if (g_completeDrawEnabled)
         g_advManager->m_drawCursor = 1;
-    } else {
-        g_completeDrawEnabled = 0;
-    }
 
     if (g_advManager->m_cursorDirection != m_direction)
         g_advManager->turnTo(m_direction);
@@ -347,15 +334,7 @@ type_event_record_type type_record_teleport::getType()
 VA(0x0049a9c0, 0x7B)  // anchor-vtable, dc 0x8caf0
 void type_record_teleport::replay(unsigned char draw)
 {
-    int player = m_playerId;
-    if (g_netLocalGamePos != player) {
-        g_advManager->deactivateCurrTown(0);
-        g_advManager->deactivateCurrHero(0);
-    }
-
-    g_netLocalGamePos = player;
-    g_currentPlayer = &g_game->m_players[player];
-    g_unnamed69ccc4 = 1 << player;
+    setPlayer(m_playerId);
 
     g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
 }
@@ -952,21 +931,17 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 // restore_cell TWICE on the non-garrison path - the guarded one falls
 // straight into the unconditional one - and clears the two advManager
 // latches only when the acting seat is the hero's PREVIOUS owner.
+// Complete's added previous-owner guard reads the current-player global
+// just assigned by setPlayer; VC6 forwards that value from the inline helper.
+// This retains 100%. Re-reading m_playerId gives 97.8481; separate cached
+// int/char locals give 87.8481/85.4810. Keep the canonical helper call.
 VA(0x0049b570, 0x102)  // anchor-vtable, dc 0x8d5f0
 void type_record_hide_hero::replay(unsigned char draw)
 {
-    int player = m_playerId;
-    if (g_netLocalGamePos != player) {
-        g_advManager->deactivateCurrTown(0);
-        g_advManager->deactivateCurrHero(0);
-    }
-
-    g_netLocalGamePos = player;
-    g_currentPlayer = &g_game->m_players[player];
-    g_unnamed69ccc4 = 1 << player;
+    setPlayer(m_playerId);
 
     if (!m_townGarrison) {
-        if (player == m_prevOwner) {
+        if (g_netLocalGamePos == m_prevOwner) {
             if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
                 || !g_advManager->m_curHeroMobile) {
                 g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
@@ -1066,15 +1041,7 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 VA(0x0049b800, 0x15E)  // complete retail replay path, dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
-    int player = m_playerId;
-    if (g_netLocalGamePos != player) {
-        g_advManager->deactivateCurrTown(0);
-        g_advManager->deactivateCurrHero(0);
-    }
-
-    g_netLocalGamePos = player;
-    g_currentPlayer = &g_game->m_players[player];
-    g_unnamed69ccc4 = 1 << player;
+    setPlayer(m_playerId);
 
     m_currentHero->m_x = m_location.m_x;
     m_currentHero->m_y = m_location.m_y;

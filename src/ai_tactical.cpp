@@ -250,117 +250,106 @@ VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
 // E:\gamedcs\ai_tactical.cpp:200
 // Before normalization (locals): current_army, our_hits.
 VA(0x00435980, 0x2A)  // anchor-global, dc 0x3c810
-long aiGetAttackDamage(const army* currentArmy, long ourHits, const army* enemy, unsigned char ranged, long distance)
+long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, unsigned char ranged, long distance)
 {
-    long troops = (currentArmy->m_monInfo.m_hitPoints + ourHits - 1)
-                  / currentArmy->m_monInfo.m_hitPoints;
-    return currentArmy->getAverageDamage(enemy, ranged, troops, 1, distance);
+    long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
+                  / currentArmy.m_monInfo.m_hitPoints;
+    return currentArmy.getAverageDamage(&enemy, ranged, troops, 1, distance);
 }
 
 // E:\gamedcs\ai_tactical.cpp:215 - dc 0x3c854. No retail slot of its
 // own: simulate_attack (0x4359b0) carries it inlined three times, so
 // /OPT:REF dropped the out-of-line copy.
 // Before normalization (locals): current_army, our_hits, enemy_hits.
-void type_AI_combat_parameters::simulateSingleAttack(const army* currentArmy, long* ourHits, const army* enemy, long* enemyHits, unsigned char ranged, long distance)
+void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
-    long troops = (currentArmy->m_monInfo.m_hitPoints + *ourHits - 1)
-                  / currentArmy->m_monInfo.m_hitPoints;
-    long damage = currentArmy->getAverageDamage(enemy, ranged, troops, 1,
+    long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
+                  / currentArmy.m_monInfo.m_hitPoints;
+    long damage = currentArmy.getAverageDamage(&enemy, ranged, troops, 1,
                                                    distance);
     if (!ranged) {
         long fire = g_combatManager->computeFireShieldDamage(
-            damage, currentArmy, enemy, *enemyHits);
+            damage, &currentArmy, &enemy, enemyHits);
         if (fire > 0) {
-            *ourHits -= fire;
-            if (*ourHits < 0)
-                *ourHits = 0;
+            ourHits -= fire;
+            if (ourHits < 0)
+                ourHits = 0;
         }
     }
-    *enemyHits -= damage;
-    if (*enemyHits < 0)
-        *enemyHits = 0;
+    enemyHits -= damage;
+    if (enemyHits < 0)
+        enemyHits = 0;
 }
 
 // E:\gamedcs\ai_tactical.cpp:249
 // Before normalization (locals): current_army, our_hits, enemy_hits, no_retaliation,
 // double_attack.
 VA(0x004359b0, 0x1D5)  // anchor-global, dc 0x3c8dc
-void type_AI_combat_parameters::simulateAttack(const army* currentArmy, long* ourHits, const army* enemy, long* enemyHits, unsigned char ranged, long distance)
+void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
     if (ranged)
-        ranged = currentArmy->canShoot(0);
+        ranged = currentArmy.canShoot(0);
     simulateSingleAttack(currentArmy, ourHits, enemy, enemyHits, ranged, distance);
-    if (*ourHits == 0 || *enemyHits <= 0 || ranged)
+    if (ourHits == 0 || enemyHits <= 0 || ranged)
         return;
-    unsigned char noRetaliation = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 16);
-    if ((noRetaliation & 1) == 0 && enemy->m_spellInfluence[70] == 0
-            && enemy->m_retaliationCount > 0
+    unsigned char noRetaliation = static_cast<unsigned char>(static_cast<unsigned>(currentArmy.m_monInfo.m_attributes) >> 16);
+    if ((noRetaliation & 1) == 0 && enemy.m_spellInfluence[70] == 0
+            && enemy.m_retaliationCount > 0
             && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[m_ourGroup])) {
         simulateSingleAttack(enemy, enemyHits, currentArmy, ourHits, 0, 0);
-        if (*ourHits == 0 || *enemyHits == 0)
+        if (ourHits == 0 || enemyHits == 0)
             return;
     }
-    unsigned char doubleAttack = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 15);
+    unsigned char doubleAttack = static_cast<unsigned char>(static_cast<unsigned>(currentArmy.m_monInfo.m_attributes) >> 15);
     if (doubleAttack & 1)
         simulateSingleAttack(currentArmy, ourHits, enemy, enemyHits, 0, 0);
 }
 
 // E:\gamedcs\ai_tactical.cpp:290
-// Residual (99.1%): pure register assignment - retail homes `this` in
-// esi and the pre-simulation our_hits copy in edi, our CL swaps the
-// two (start_enemy takes ebx in both). Tried and rejected: swapping
-// the start_our/start_enemy declaration order, swapping the else-arm
-// assignment order, folding the copies back into the address-taken
-// locals (91.5%), and swapping the our_hits/enemy_hits copy order
-// (99.03, measured 2026-08-08 - the naming lever that closed the
-// SpellCastWorkChance family does not reach this pair). Moving the DC-named
-// our_hits/enemy_hits declarations, together with the two optimized start
-// scalars, into the four-line leading source gap is byte-flat and retained.
-// Preinitializing the start pair and removing the false-arm assignments is
-// not equivalent codegen: it collapses the flow to 10 blocks and falls to
-// 79.2211%, so that spelling is rejected. Register-homing family.
-// Before normalization (locals): current_army, our_total, enemy_total, our_hits, enemy_hits,
-// start_our, start_enemy.
+// DC 300/304 updates the by-value our_total/enemy_total parameters;
+// only our_hits/enemy_hits are separate address-taken simulation locals.
+// Removing the invented startOur/startEnemy copies and their else arm
+// restores the retail register ownership: 99.1053% -> 100%. Declaring the
+// hit copies in the leading gap or at their assignments produces the same
+// exact object. All three source states were measured, two objects reproduced,
+// and no AI-tactical sibling changed. The old register-only diagnosis was
+// caused by source ownership, not an allocator limitation.
+// Original names: get_simple_attack_effect, current_army, our_total,
+// enemy_total, our_hits, enemy_hits.
 VA(0x00435b90, 0xD2)  // corroborates, dc 0x3c9ac
-long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, long ourTotal, const army* enemy, long enemyTotal, unsigned char ranged, long distance)
+long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, long ourTotal, const army& enemy, long enemyTotal, unsigned char ranged, long distance) const
 {
     long ourHits;
     long enemyHits;
-    long startOur;
-    long startEnemy;
 
     if (ranged)
-        ranged = currentArmy->canShoot(0);
+        ranged = currentArmy.canShoot(0);
     if (m_simulated) {
-        startOur = ourTotal - currentArmy->getAIExpectedDamage();
-        if (startOur <= 0)
+        ourTotal -= currentArmy.getAIExpectedDamage();
+        if (ourTotal <= 0)
             return 0;
-        startEnemy = enemyTotal - enemy->getAIExpectedDamage();
-        if (startEnemy <= 0)
+        enemyTotal -= enemy.getAIExpectedDamage();
+        if (enemyTotal <= 0)
             return 0;
-    } else {
-        startEnemy = enemyTotal;
-        startOur = ourTotal;
     }
-    ourHits = startOur;
-    enemyHits = startEnemy;
-    simulateAttack(currentArmy, &ourHits, enemy, &enemyHits, ranged, distance);
-    long value = enemy->getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
-                                              startEnemy - enemyHits, m_killsOnly);
-    if (startOur > ourHits)
-        value -= currentArmy->getLossCombatValue(m_lowestAttack, m_lowestDefense,
-                                                     ranged, startOur - ourHits, 0);
+    ourHits = ourTotal;
+    enemyHits = enemyTotal;
+    simulateAttack(currentArmy, ourHits, enemy, enemyHits, ranged, distance);
+    long value = enemy.getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
+                                              enemyTotal - enemyHits, m_killsOnly);
+    if (ourTotal > ourHits)
+        value -= currentArmy.getLossCombatValue(m_lowestAttack, m_lowestDefense,
+                                                     ranged, ourTotal - ourHits, 0);
     return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:329
 VA(0x00435c70, 0x3D)  // corroborates, dc 0x3ca94
-long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, const army* enemy, unsigned char ranged, long distance)
+long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, const army& enemy, unsigned char ranged, long distance) const
 {
-    long ourTotal = currentArmy->getTotalHitPoints(0);
-    long enemyTotal = enemy->getTotalHitPoints(0);
-    return getSimpleAttackEffect(currentArmy, ourTotal, enemy, enemyTotal,
-                                    ranged, distance);
+    long ourTotal = currentArmy.getTotalHitPoints(0);
+    long enemyTotal = enemy.getTotalHitPoints(0);
+    return getSimpleAttackEffect(currentArmy, ourTotal, enemy, enemyTotal, ranged, distance);
 }
 
 // E:\gamedcs\ai_tactical.cpp:342
@@ -373,38 +362,38 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army* currentArmy, c
 // the historical if/return tail control only reached 95.9%.
 // Before normalization (locals): current_army, our_total, enemy_total, enemy_flags.
 VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
-long type_AI_combat_parameters::getRangedAttackValue(const army* currentArmy, const army* enemy)
+long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
     if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
         return value;
-    if (enemy->isIncapacitated())
+    if (enemy.isIncapacitated())
         return value / 10;
-    return (!enemy->cannotAttack()
-                    && enemy->getAITarget() != 0
-                    && enemy->getAITargetTime(enemy->getSpeed()) <= 5)
-            ? value / enemy->getAITargetTime(enemy->getSpeed())
+    return (!enemy.cannotAttack()
+                    && enemy.getAITarget() != 0
+                    && enemy.getAITargetTime(enemy.getSpeed()) <= 5)
+            ? value / enemy.getAITargetTime(enemy.getSpeed())
             : value / 5;
 }
 
 // E:\gamedcs\ai_tactical.cpp:367
 // Before normalization (locals): current_army, our_hits, enemy_hits, our_left, enemy_left.
 VA(0x00435dc0, 0xF3)  // anchor-global, dc 0x3cba0
-long type_AI_combat_parameters::getExchangeEffect(const army* currentArmy, const army* enemy, long distance)
+long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
 {
-    unsigned char ranged = currentArmy->canShoot(0);
-    long ourHits = currentArmy->getTotalHitPoints(m_simulated);
-    long enemyHits = enemy->getTotalHitPoints(m_simulated);
+    unsigned char ranged = currentArmy.canShoot(0);
+    long ourHits = currentArmy.getTotalHitPoints(m_simulated);
+    long enemyHits = enemy.getTotalHitPoints(m_simulated);
     long ourLeft = ourHits;
     long enemyLeft = enemyHits;
-    simulateAttack(currentArmy, &ourLeft, enemy, &enemyLeft, ranged, distance);
+    simulateAttack(currentArmy, ourLeft, enemy, enemyLeft, ranged, distance);
     if (enemyLeft > 0)
-        simulateAttack(enemy, &enemyLeft, currentArmy, &ourLeft, ranged, 0);
-    long value = enemy->getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
+        simulateAttack(enemy, enemyLeft, currentArmy, ourLeft, ranged, 0);
+    long value = enemy.getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
                                               enemyHits - enemyLeft,
                                               static_cast<unsigned char>(m_killsOnly && !m_simulated));
     if (ourHits > ourLeft)
-        value -= currentArmy->getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
+        value -= currentArmy.getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
                                                      ourHits - ourLeft,
                                                      static_cast<unsigned char>(m_killsOnly && !m_simulated));
     return value;
@@ -534,24 +523,12 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 }
 
 // E:\gamedcs\ai_tactical.cpp:511
-// Residual (84.375%): the CFG is exact (12 branches, two returns). Retail
-// keeps the `checked` reference in EBX (pushing it only after the AI-control
-// early-out) and re-reads this->data before each get_unit_combat_value call;
-// our CL enregisters `this` in EBX instead and CSEs data into a spill slot,
-// costing one extra frame word. The first callee-saved choice is the root:
-// retail pushes EDI and parks `this` there, while this compiler pushes EBX.
-// The loop-entry jump we emit is a consequence of that allocation, not a
-// separate rotation.
-//
-// Source audit 2026-08-21 closes the remaining honest levers. Dreamcast type
-// 0x1c37 and public `...IAAJJAAJ` prove `checked` is a long reference and the
-// method is protected; its locals prove one function-scoped double named
-// combat_value beside value. Restoring all three facts is byte-flat, as are
-// its attested get_group/ValidHex inline boundaries. A conventional release
-// `VERIFY(gpCombatManager->ValidHex(hex))` carrier at entry is also byte-flat.
-// Earlier rejected forms remain bounded: two separate combat-value doubles
-// and hoisted lowest_attack/lowest_defense locals. This is register homing,
-// not missing control flow or a compiled-out diagnostic.
+// DC 557 assigns the shooting combat value, then 560 subtracts the
+// non-shooting value into the same function-scope double combat_value.
+// Splitting the former combined expression restores that ownership and raises
+// 84.3750% to 92.6167%. Compound and explicit self-subtraction are identical;
+// all sibling scores stay fixed. The remaining allocation/CFG delta is open.
+// Prior local hoists and separate doubles did not test this statement boundary.
 VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
 long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 {
@@ -583,8 +560,8 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
             continue;
         combatValue = enemy->getUnitCombatValue(
                            m_data->m_lowestAttack, m_data->m_lowestDefense, 1,
-                           m_attackArmy)
-                       - enemy->getUnitCombatValue(
+                           m_attackArmy);
+        combatValue -= enemy->getUnitCombatValue(
                            m_data->m_lowestAttack, m_data->m_lowestDefense, 0, 0);
         long share = static_cast<long>(static_cast<double>(hits) * combatValue
                                        / static_cast<double>(enemy->m_monInfo.m_hitPoints));
@@ -1034,32 +1011,20 @@ type_AI_spellcaster::~type_AI_spellcaster()
 }
 
 // E:\gamedcs\ai_tactical.cpp:837
-// "Is this the last stack on our side that can still act this round?"
-// No retail body - the carve cuts nothing between the destructor at
-// 0x436c30 and should_attack_now at 0x436c60 - so it is `inline`, and
-// its three callers all reach it the same way: compute the acting
-// stack once, and ask only when the stack being priced is not itself
-// the acting one. VC6 CSEs the two `armies[actingSide][actingSlot]`
-// computations back into one.
+// DC's ordinary const helper precedes should_attack_now in this TU. Its
+// GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
+// the helper naturally at its three callers. Absence of a retained retail
+// body does not justify an explicit inline keyword.
 DC_ONLY(0x3d7b0, 0x86)
-inline unsigned char type_AI_spellcaster::isLastAction()
+unsigned char type_AI_spellcaster::isLastAction() const
 {
-    const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                  [g_combatManager->m_actingSlot];
+    const army* current = g_combatManager->getCurrentArmy();
     long total = g_combatManager->m_numArmies[m_side];
     for (long j = 0; j < total; j++) {
         const army* other = &g_combatManager->m_armies[m_side][j];
-        if (other->m_monInfo.m_attributes & 0x200040)
+        if (other->is(0x200040) || other->isIncapacitated())
             continue;
-        if (other->m_spellInfluence[62])
-            continue;
-        if (other->m_spellInfluence[70])
-            continue;
-        if (other->m_spellInfluence[74])
-            continue;
-        unsigned char idle = static_cast<unsigned char>(
-            static_cast<unsigned>(other->m_monInfo.m_attributes) >> 26);
-        if (idle & 1)
+        if (other->is(1u << 26))
             continue;
         if (other != current)
             return 0;
@@ -1068,48 +1033,42 @@ inline unsigned char type_AI_spellcaster::isLastAction()
 }
 
 // E:\gamedcs\ai_tactical.cpp:862
-// DC line 864 calls is_last_action (dc 0x3d7b0), then obtains GetCurrentArmy.
-// Restoring the canonical helper removes the copied search's goto and raises
-// 86.6781% to 94.2671%, with no sibling score changes. The existing inline
-// helper's local lifetimes recover most of the first loop's retail allocation.
-// Flattening it again returns to 86.6781%; break + a post-loop counter test
-// previously measured 83.9%. GetCurrentArmy versus its indexed expression is
-// byte-score neutral. The remaining register and instruction-order delta is
-// still open; the prior claim that this caller needed no helper was incorrect.
+// DC proves a const method taking const army& enemy. Its current-army
+// predicate is one compound condition at line 880, with Is(1u<<16) after
+// get_AI_target_time and can_shoot. Replacing the premature cached flags
+// with that canonical query closes 94.2671% to 100%; the combined condition
+// independently reaches the same bytes. Restore both, plus the Is and
+// IsIncapacitated calls in this loop (894) and is_last_action (846).
+// The 64-state family also tests ordinary versus explicit inline helper
+// ownership: all recovered helper calls with the ordinary declaration keep
+// other callers' scores. Partial helper restoration can de-inline callers
+// (considerSingleEnchantment 75.0144%, considerResurrect 70.4935%); those
+// negative controls do not justify retaining a false inline declaration.
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
-unsigned char type_AI_spellcaster::shouldAttackNow(const army* enemy)
+unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
         return 1;
     if (isLastAction())
         return 1;
     const army* current = g_combatManager->getCurrentArmy();
-    if (current->m_combatSide == m_side && current->getAITarget() == enemy) {
-        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(current->m_monInfo.m_attributes) >> 16);
-        if (current->getAITargetTime(current->getSpeed()) == 1
-                && !current->canShoot(0)
-                && (flags & 1) == 0)
-            return 1;
-    }
-    if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
+    if (current->m_combatSide == m_side && current->getAITarget() == &enemy
+        && current->getAITargetTime(current->getSpeed()) == 1
+        && !current->canShoot(0)
+        && !current->is(1u << 16))
+        return 1;
+    if ((m_enemyCanAttack & (1 << enemy.m_bitIndex)) == 0)
         return 0;
     long total = g_combatManager->m_numArmies[m_side];
     for (long j = 0; j < total; j++) {
         const army* ourArmy = &g_combatManager->m_armies[m_side][j];
-        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
-        if (flags & 1)
-            continue;
-        if (ourArmy->m_spellInfluence[62])
-            continue;
-        if (ourArmy->m_spellInfluence[70])
-            continue;
-        if (ourArmy->m_spellInfluence[74])
+        if (ourArmy->is(1u << 21) || ourArmy->isIncapacitated())
             continue;
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
         if (ourArmy == current)
             continue;
-        if (ourArmy->m_expectedMoveOrder > enemy->m_expectedMoveOrder)
+        if (ourArmy->m_expectedMoveOrder > enemy.m_expectedMoveOrder)
             return 0;
     }
     return 1;
@@ -1404,23 +1363,33 @@ long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caste
                                          m_estimate.m_lowestDefense) / 3;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:1158
-DC_ONLY(0x3df5c, 0x1C4)
-long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long old_damage, long duration, double increase)
+// DC ai_tactical.cpp:1158/1186. Original name: get_attack_boost_value.
+// Ordinary const overloads: callers expand them in retail; /OPT:REF drops
+// unreferenced retained bodies. Keep their source order before the callers.
+long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
+    const army* enemy, long oldDamage, long duration, double increase) const
 {
-    // @stub
+    long newDamage = static_cast<long>(oldDamage * increase);
+    long enemyHits = enemy->getTotalHitPoints(0);
+    if (newDamage > enemyHits) {
+        newDamage = enemyHits;
+        increase = static_cast<double>(enemyHits) / oldDamage;
+    }
+    if (newDamage <= oldDamage)
+        return 0;
+    double modifier = getDuration(duration, ourArmy->is(1u << 26));
+    double total = static_cast<double>(ourArmy->getTotalCombatValue(
+        m_estimate.m_lowestAttack, m_estimate.m_lowestDefense));
+    return static_cast<long>((sqrt(increase) - 1.0) * total * modifier);
 }
 
-// E:\gamedcs\ai_tactical.cpp:1186
-DC_ONLY(0x3e120, 0x5C)
-long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long duration, double increase)
+long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
+    const army* enemy, long duration, double increase) const
 {
-    // @stub
+    long oldDamage = ourArmy->getAverageDamage(enemy, ourArmy->canShoot(0),
+        ourArmy->m_numTroops, 1, 0);
+    return getAttackBoostValue(ourArmy, enemy, oldDamage, duration, increase);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1197
 // Bless is priced as the damage RATIO it buys: the stack's top damage
@@ -1431,49 +1400,22 @@ long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const arm
 // army::maxDamage, which is what pins that field.
 // Traits row +0x15fc = 41*136 + 0x34 pins SPELL_BLESS.
 //
-// The DC roster's two get_attack_boost_value overloads (dc 0x3df5c /
-// 0x3e120) have NO retail slot, and the whole ladder stands open both
-// here and in get_frenzy_value - so retail's source spells it out at
-// each site. Writing it as a shared helper would put a body in the
-// image that retail does not carry.
+// The ordinary overloads are reconstructed above in DC source order. Retail
+// expands them and /OPT:REF drops their unused standalone bodies; the absence
+// of a retained body does not establish pasted source. This caller's original
+// helper boundary is being recovered independently of its existing byte peak.
 // Before normalization (locals): our_army, enemy_hits, slow_flag.
 VA(0x00437430, 0x198)  // anchor-vtable, dc 0x3e17c
 long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data caster)
 {
     const army* target = ourArmy->getAITarget();
-    if (target != 0 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
-        double average = ourArmy->getAverageDamage();
-        long blessed = g_spellTraits[SPELL_BLESS].m_masteryBonus[caster.m_mastery]
-                       + ourArmy->m_monInfo.m_damageHighBound;
-        double increase = blessed / average;
-        long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
-                                                   ourArmy->m_numTroops, 1, 0);
-        double factor = increase;
-        long boosted = static_cast<long>(damage * increase);
-        long enemyHits = target->getTotalHitPoints(0);
-        if (boosted > enemyHits) {
-            factor = static_cast<double>(enemyHits) / static_cast<double>(damage);
-            boosted = enemyHits;
-        }
-        if (boosted > damage) {
-            double portion;
-            if (caster.m_duration >= m_estimate.m_roundsLeft)
-                portion = 1.0;
-            else
-                portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-            unsigned char slowFlag = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-            double scale;
-            if ((slowFlag & 1)
-                    && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-                scale = 0.0;
-            else
-                scale = portion;
-            double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                                m_estimate.m_lowestDefense));
-            return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
-        }
-    }
-    return 0;
+    if (target == 0 || ourArmy->getAITargetTime() > 1)
+        return 0;
+    double average = ourArmy->getAverageDamage();
+    long blessed = g_spellTraits[SPELL_BLESS].m_masteryBonus[caster.m_mastery]
+                   + ourArmy->m_monInfo.m_damageHighBound;
+    double increase = blessed / average;
+    return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
 // E:\gamedcs\ai_tactical.cpp:1218
@@ -1504,77 +1446,41 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // retail's single reused slot, because retail's `fld` of the numerator
 // happens BEFORE the divisor's fild and no source order we can write
 // makes our CL emit that fld early.
+// With the canonical boost helper restored, direct ratio arguments,
+// meaningful reuse of newDamage, a reference-bound ratio and a named return
+// value also fail to reuse retail's divisor scratch (seven states, five
+// emitted objects). The named ratio and both early guards stay intact.
 // Before normalization (locals): our_army, our_hits, enemy_hits, old_damage, new_damage,
 // double_attack, target_hits, slow_flag.
 VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster)
 {
     const army* target = ourArmy->getAITarget();
-    if (target != 0 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
-        unsigned char ranged = ourArmy->canShoot(0);
-        long ourHits = ourArmy->getTotalHitPoints(0);
-        long enemyHits = target->getTotalHitPoints(0);
-        long oldDamage = ourArmy->getAverageDamage(
-            target, ranged,
-            (ourArmy->m_monInfo.m_hitPoints + ourHits - 1) / ourArmy->m_monInfo.m_hitPoints, 1, 0);
-        m_estimate.simulateAttack(ourArmy, &ourHits, target, &enemyHits, ranged, 0);
-        if (ourHits != 0) {
-            long newDamage = ourArmy->getAverageDamage(
-                target, ranged,
-                (ourArmy->m_monInfo.m_hitPoints + ourHits - 1) / ourArmy->m_monInfo.m_hitPoints, 1, 0);
-            unsigned char doubleAttack = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 15);
-            if (ranged && (doubleAttack & 1))
-                newDamage /= 2;
-            long combined = newDamage + oldDamage;
-            double increase = static_cast<double>(combined) / static_cast<double>(oldDamage);
-            long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
-                                                       ourArmy->m_numTroops, 1, 0);
-            double factor = increase;
-            long boosted = static_cast<long>(damage * increase);
-            long targetHits = target->getTotalHitPoints(0);
-            if (boosted > targetHits) {
-                factor = static_cast<double>(targetHits) / static_cast<double>(damage);
-                boosted = targetHits;
-            }
-            if (boosted > damage) {
-                double portion;
-                if (caster.m_duration >= m_estimate.m_roundsLeft)
-                    portion = 1.0;
-                else
-                    portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-                unsigned char slowFlag = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-                double scale;
-                if ((slowFlag & 1)
-                        && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-                    scale = 0.0;
-                else
-                    scale = portion;
-                double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                                    m_estimate.m_lowestDefense));
-                return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
-            }
-        }
-    }
-    return 0;
+    if (target == 0 || ourArmy->getAITargetTime() > 1)
+        return 0;
+    unsigned char ranged = ourArmy->canShoot(0);
+    long ourHits = ourArmy->getTotalHitPoints(0);
+    long enemyHits = target->getTotalHitPoints(0);
+    long oldDamage = aiGetAttackDamage(*(ourArmy), ourHits, *(target), ranged, 0);
+    m_estimate.simulateAttack(*(ourArmy), ourHits, *(target), enemyHits, ranged, 0);
+    if (ourHits == 0)
+        return 0;
+    long newDamage = aiGetAttackDamage(*(ourArmy), ourHits, *(target), ranged, 0);
+    if (ranged && ourArmy->is(1u << 15))
+        newDamage /= 2;
+    double increase = static_cast<double>(newDamage + oldDamage)
+                      / static_cast<double>(oldDamage);
+    return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
 // E:\gamedcs\ai_tactical.cpp:1256
-// Residual (99.9%): FRAME-SLOT COLOURING ONLY - every instruction and
-// every reloc matches; the four 8-byte double slots are permuted.
-// Retail colours old_damage/increase/weight into the topmost slot
-// (ebp-0x14) and scale into ebp-0x24 (so the spilled `this` shares
-// scale's high half at ebp-0x20); our CL colours old_damage together
-// with factor at the bottom (ebp-0x2c) and scale at ebp-0x1c. Tried
-// and rejected: hoisting the factor/scale declarations to the top of
-// the body (identical output - VC6 orders these slots by live range,
-// not by declaration), and dropping the two named damage locals for
-// one inlined division (99.1%). Register-homing family.
-// The attack twin of get_defense_skill_value: same copy-and-re-price
-// opening, then get_defense_boost_value's own tail inlined by hand -
-// the odds-scaled `(sqrt(factor) - 1) * total * weight` ladder. The
-// only new step is the creatureId bit-26 stack (the same flag
-// get_speed_value reads), which docks one turn's worth of the odds
-// window off the scale and floors it at zero.
+// Exact: DC1273 calls the ordinary get_attack_boost_value overload. Restoring
+// both overloads and the inner early return at DC1168/1169 recovers retail's
+// double-slot lifetimes (99.8503 -> 100%). Keeping the helper's work nested
+// measures 97.2455%; the formerly pasted tail's named factor was not the
+// source-level owner of that value. No inlining directives are needed.
+// Complete changes the front-end to an army copy and two getEstimatedDamage
+// calls; those retail calls contradict DC's adjusted-attack/modifier route.
 // Before normalization (locals): our_army, test_army, old_damage, new_damage, enemy_hits,
 // slow_flag.
 VA(0x00437800, 0x1F5)  // anchor-global, dc 0x3e3bc
@@ -1588,41 +1494,7 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
     double oldDamage = ourArmy->getEstimatedDamage(enemy, 100, ranged, 0);
     double newDamage = testArmy.getEstimatedDamage(enemy, 100, ranged, 0);
     double increase = newDamage / oldDamage;
-    long damage = ourArmy->getAverageDamage(enemy, ourArmy->canShoot(0),
-                                               ourArmy->m_numTroops, 1, 0);
-    double factor = increase;
-    long boosted = static_cast<long>(damage * increase);
-    long enemyHits = enemy->getTotalHitPoints(0);
-    if (boosted > enemyHits) {
-        factor = static_cast<double>(enemyHits) / static_cast<double>(damage);
-        boosted = enemyHits;
-    }
-    long value;
-    if (boosted <= damage) {
-        value = 0;
-    } else {
-        long odds = m_estimate.m_roundsLeft;
-        double scale;
-        if (duration >= odds)
-            scale = 1.0;
-        else
-            scale = static_cast<double>(duration) / static_cast<double>(odds);
-        double weight;
-        unsigned char slowFlag = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-        if (slowFlag & 1) {
-            scale -= 1.0 / static_cast<double>(odds);
-            if (scale < 0.0)
-                weight = 0.0;
-            else
-                weight = scale;
-        } else {
-            weight = scale;
-        }
-        double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                            m_estimate.m_lowestDefense));
-        value = static_cast<long>((sqrt(factor) - 1.0) * total * weight);
-    }
-    return value;
+    return getAttackBoostValue(ourArmy, enemy, duration, increase);
 }
 
 // E:\gamedcs\ai_tactical.cpp:1281
@@ -1784,111 +1656,48 @@ long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data ca
 // to the zero and jumps to the work); and `luck` is read before the
 // traits row, not after the damage call.
 //
-// Residual (96.06%): the ZERO REGISTER. Retail materialises 0 into EDX
-// once and spends it on the `value = 0` store and both `< 0` / `> 0`
-// compares (`cmp ebx,edx`); ours stores the immediate and uses
-// `test ebx,ebx`, which also flips the `lea ecx,[luck+bonus]` operand
-// order and moves one slot of the second block into a parameter slot.
+// Exact: restore DC1405/1419's ordinary get_attack_boost_value calls,
+// the early guards, and one strike-count local shared by the two branches.
+// Retail reuses its strike home at [ebp-0xc] across both; the shared lifetime
+// restores its 0x38-byte frame (separate block locals used 0x30 bytes and
+// measured 99.6341%). Both direct helper expressions and named gain locals
+// reproduce 100%. Bless keeps its own exact bytes through this recovery.
 // Before normalization (locals): our_army, enemy_hits, slow_flag.
 VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
 long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data caster)
 {
     const army* target = ourArmy->getAITarget();
-    if (target != 0
-            && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
-        long luck = ourArmy->getLuck(0);
-        long bonus = g_spellTraits[SPELL_FORTUNE].m_masteryBonus[caster.m_mastery];
-        long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
-                                                   ourArmy->m_numTroops, 0, 0);
-        long value = 0;
-        if (luck < 3 && bonus + luck > -3) {
-            if (bonus + luck > 3)
-                bonus = 3 - luck;
-            if (luck < 0) {
-                long strikes;
-                if (bonus + luck > 0)
-                    strikes = -luck;
-                else
-                    strikes = bonus;
-                long unlucky = damage / 2;
-                double factor = 2.0;
-                long boosted = static_cast<long>(unlucky * factor);
-                long enemyHits = target->getTotalHitPoints(0);
-                if (boosted > enemyHits) {
-                    factor = static_cast<double>(enemyHits)
-                             / static_cast<double>(unlucky);
-                    boosted = enemyHits;
-                }
-                long gain;
-                if (boosted <= unlucky) {
-                    gain = 0;
-                } else {
-                    double portion;
-                    if (caster.m_duration >= m_estimate.m_roundsLeft)
-                        portion = 1.0;
-                    else
-                        portion = static_cast<double>(caster.m_duration)
-                                  / static_cast<double>(m_estimate.m_roundsLeft);
-                    unsigned char slowFlag = static_cast<unsigned char>(
-                        static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-                    double scale;
-                    if ((slowFlag & 1)
-                            && (portion = portion
-                                          - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-                        scale = 0.0;
-                    else
-                        scale = portion;
-                    double total = static_cast<double>(
-                        ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                         m_estimate.m_lowestDefense));
-                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
-                }
-                value = gain * strikes / 24;
-            }
-            if (bonus + luck > 0) {
-                long strikes;
-                if (luck < 0)
-                    strikes = bonus + luck;
-                else
-                    strikes = bonus;
-                double factor = 2.0;
-                long boosted = static_cast<long>(damage * factor);
-                long enemyHits = target->getTotalHitPoints(0);
-                if (boosted > enemyHits) {
-                    factor = static_cast<double>(enemyHits)
-                             / static_cast<double>(damage);
-                    boosted = enemyHits;
-                }
-                long gain;
-                if (boosted <= damage) {
-                    gain = 0;
-                } else {
-                    double portion;
-                    if (caster.m_duration >= m_estimate.m_roundsLeft)
-                        portion = 1.0;
-                    else
-                        portion = static_cast<double>(caster.m_duration)
-                                  / static_cast<double>(m_estimate.m_roundsLeft);
-                    unsigned char slowFlag = static_cast<unsigned char>(
-                        static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-                    double scale;
-                    if ((slowFlag & 1)
-                            && (portion = portion
-                                          - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-                        scale = 0.0;
-                    else
-                        scale = portion;
-                    double total = static_cast<double>(
-                        ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                         m_estimate.m_lowestDefense));
-                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
-                }
-                value += gain * strikes / 24;
-            }
-            return value;
-        }
+    if (target == 0 || ourArmy->getAITargetTime() > 1)
+        return 0;
+    long bonus = g_spellTraits[SPELL_FORTUNE].m_masteryBonus[caster.m_mastery];
+    long luck = ourArmy->getLuck(0);
+    long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
+                                               ourArmy->m_numTroops, 0, 0);
+    long strikes;
+    long value = 0;
+    if (luck >= 3)
+        return 0;
+    if (bonus + luck <= -3)
+        return 0;
+    if (bonus + luck > 3)
+        bonus = 3 - luck;
+    if (luck < 0) {
+        if (bonus + luck > 0)
+            strikes = -luck;
+        else
+            strikes = bonus;
+        value = getAttackBoostValue(ourArmy, target,
+            damage / 2, caster.m_duration, 2.0) * strikes / 24;
     }
-    return 0;
+    if (bonus + luck > 0) {
+        if (luck < 0)
+            strikes = bonus + luck;
+        else
+            strikes = bonus;
+        value += getAttackBoostValue(ourArmy, target,
+            damage, caster.m_duration, 2.0) * strikes / 24;
+    }
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1429
@@ -2440,8 +2249,8 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
             if (target == 0) {
                 effect = 0;
             } else {
-                long ours = m_estimate.getExchangeEffect(ourArmy, target, 0);
-                effect = m_estimate.getExchangeEffect(target, ourArmy, 0) + ours;
+                long ours = m_estimate.getExchangeEffect(*(ourArmy), *(target), 0);
+                effect = m_estimate.getExchangeEffect(*(target), *(ourArmy), 0) + ours;
             }
             if (effect > value)
                 value = effect;
@@ -2533,8 +2342,8 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
         if (target->getSpeed() >= oldSpeed && target->getSpeed() < newSpeed) {
             const army* enemy = ourArmy->getAITarget();
             if (enemy) {
-                long ours = m_estimate.getExchangeEffect(ourArmy, enemy, 0);
-                value = m_estimate.getExchangeEffect(enemy, ourArmy, 0) + ours;
+                long ours = m_estimate.getExchangeEffect(*(ourArmy), *(enemy), 0);
+                value = m_estimate.getExchangeEffect(*(enemy), *(ourArmy), 0) + ours;
                 if (value < 0)
                     value = 0;
             } else {
@@ -3094,7 +2903,7 @@ long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target)
     long enemyDamage = enemyHits;
     long targetHits = target->getTotalHitPoints(0);
     long targetDamage = targetHits;
-    m_estimate.simulateAttack(enemy, &enemyHits, target, &targetHits, ranged, 0);
+    m_estimate.simulateAttack(*(enemy), enemyHits, *(target), targetHits, ranged, 0);
     enemyDamage -= enemyHits;
     targetDamage -= targetHits;
     long value = enemy->getLossCombatValue(m_estimate.m_lowestAttack, m_estimate.m_lowestDefense,
@@ -3314,7 +3123,7 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
                 || isLastAction()
                 || (g_spellTraits[choice->m_spell].m_flags & 0x4000);
     } else {
-        choice->m_castNow = shouldAttackNow(best);
+        choice->m_castNow = shouldAttackNow(*best);
     }
     if (choice->m_spell == SPELL_HASTE)
         choice->m_castNow = 1;
@@ -4168,18 +3977,15 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice)
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
-// Residual (95.3%): register assignment inside the census loop -
-// retail colours our_army/target/record as esi/edi/ebx and pushes ebx
-// only after the empty-side early-out, ours as ebx/esi/edi. Tried and
-// rejected: walking the census with an explicit type_AI_enemy_data*
-// cursor (84.6%), the memset ahead of the row local (77.0), the row
-// read inside the loop (69.3), the damage computed before the enemy
-// store (89.7), and a cached numArmies count (84.5) - swept again
-// 2026-08-08 after the cached-member lever closed get_speed_value and
-// get_defense_boost_value; it does not reach this shape. NOTE the loop
-// body is loop-INVARIANT in retail: esi
-// is never advanced, so every iteration re-examines armies[side][0] -
-// transcribed as written.
+// DC3201/3202 calls cannot_attack and get_spell_time before one continue;
+// DC3206/3207 likewise groups target/can_shoot/target_time before continuing.
+// Preserve those canonical helpers and their source scopes. This lowers the
+// former pasted-check body's 95.2778% to 91.3222%; the residual remains the
+// census loop's register assignment, not a semantic difference. Separate
+// guards are byte-flat. A current-record pointer/reference gives 90.0222%;
+// row/index lifetime and for/while controls give no improvement. Retain the
+// before-memset fixed first-army pointer: retail never advances it, so every
+// iteration deliberately re-examines armies[side][0].
 VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
 void type_AI_spellcaster::setMeleeEnemies()
 {
@@ -4187,21 +3993,10 @@ void type_AI_spellcaster::setMeleeEnemies()
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
     memset(m_meleeEnemies, 0, sizeof(m_meleeEnemies));
     for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
-        if (ourArmy->m_spellInfluence[62] || ourArmy->m_spellInfluence[70] || ourArmy->m_spellInfluence[74])
-            continue;
-        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 21);
-        if (flags & 1)
-            continue;
-        if (ourArmy->m_creatureType == CREATURE_FIRST_AID_TENT || ourArmy->m_creatureType == CREATURE_AMMO_CART)
-            continue;
-        if (ourArmy->m_spellInfluence[60])
+        if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_BLIND))
             continue;
         const army* target = ourArmy->getAITarget();
-        if (!target)
-            continue;
-        if (ourArmy->canShoot(0))
-            continue;
-        if (target->getAITargetTime(target->getSpeed()) > 1)
+        if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)
             continue;
         m_meleeEnemies[i].m_enemy = target;
         long damage = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 0, 0);

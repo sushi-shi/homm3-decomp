@@ -574,11 +574,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     const SSpellTraits* spellRec = &g_spellTraits[spell];
     unsigned int attrs = creatureRec->m_attributes;
     if (targetHero && spellRec->m_level <= 4
-        && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
+        && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
         return 0.0f;  // Power of the Dragon Father
     if (spell == SPELL_DISPEL) {
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
+            && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         return 1.0f;
     }
@@ -591,7 +591,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     switch (spell) {
     case SPELL_BLIND:
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
             return 0.0f;
         if (targetArmyType == CREATURE_TROGLODYTE || targetArmyType == CREATURE_INFERNAL_TROGLODYTE)
             return 0.0f;
@@ -600,23 +600,23 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         break;
     case SPELL_BERSERK:
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DISPASSION))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DISPASSION))
             return 0.0f;
         break;
     case SPELL_LIGHTNING_BOLT:
     case SPELL_CHAIN_LIGHTNING:
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_NEGATIVITY))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_NEGATIVITY))
             return 0.0f;
         break;
     case SPELL_HYPNOTIZE:
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_FREE_WILL))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_FREE_WILL))
             return 0.0f;
         break;
     case SPELL_FORGETFULNESS:
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_TOTAL_RECALL))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_TOTAL_RECALL))
             return 0.0f;
     case SPELL_PRECISION:
         if (!(attrs & 0x4))
@@ -628,7 +628,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
             return 0.0f;
         break;
     case SPELL_RESURRECTION:
@@ -652,14 +652,14 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         if (attrs & g_ctaUndead)
             return 0.0f;
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
             return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
         if (!(attrs & g_ctaUndead))
             return 0.0f;
         if (targetHero
-            && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
+            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
             return 0.0f;
         break;
     case SPELL_MIRTH:
@@ -681,13 +681,13 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     {
         chance = 1.0f;
         if (!(castingHero
-                && const_cast<hero*>(castingHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
+                && castingHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
             && !(targetHero
-                && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
+                && targetHero->isWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))) {
             if (isMindSpell(spell)) {
                 if ((attrs & 0x400)
                     || (targetHero
-                        && const_cast<hero*>(targetHero)->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
+                        && targetHero->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)))
                     return 0.0f;
             }
             if ((attrs & 0x4000) && (spellRec->m_school & 0x2))
@@ -1083,72 +1083,20 @@ const char* armyGroup::getArmySizeName(int howMany, int nameSet)
     return g_apszArmySizeNames[8][nameSet];
 }
 
-// E:\gamedcs\armygrp.cpp:977
-// The 2026-08-06 decode note called this BLOCKED on STLport vendoring.
-// That premise is dead (P2.3): retail links VC6's own Dinkumware, and
-// every one of the four helper calls below matches a Dinkumware
-// <bitset> member exactly - 0x44c6e0 is `_Tidy(unsigned long)` (the
-// _Nw==0 store plus the 0x1ff _Trim), 0x44c680 is `set(size_t,bool)`,
-// 0x4cef80 is `operator[](size_t)` building the two-word `reference`,
-// 0x44c610 is `reference::operator=(bool)` with the `set` call
-// inlined. `test()` is inlined at 0x44b06b; the thrower at 0x434ad0 is
-// `_Xran`. The guard byte at 0x69385c bit 0 + the empty (one-byte
-// `ret` at 0x44a4c0) atexit thunk are VC6's FUNCTION-LOCAL static
-// pattern - and the whole block is the INLINE EXPANSION of the
-// accessor claimed at 0x44a460 above, which is why it does not appear
-// here as source.
-// Residual (98.5654%): the (low,value,high) `limit` form both
-// closes the address-selecting tail and shifts /Ob2's budget so the set()
-// plus all four operator[]/reference assignments now match. All 57 block
-// flows agree. Retail still shrink-wraps EBX past the cursed-ground return
-// while this compile saves it in the prologue, producing the remaining
-// ESI/EBX pop-order mirror. The other delta is relocation representation:
-// retail's atexit argument names the empty thunk as
-// ArmyGrpFn_0044A460+0x60; the base COFF names the equivalent _$E20 COMDAT
-// at addend zero. No source statement differs there.
-// DC-census verdict (2026-08-14): the census's `armyGroup::HasSomeUndead` x1
-// (dc 0x4eb88 - the member retail inlined and /OPT:REF then removed) is now
-// restored as the real const member declaration, definition and call. The
-// change is byte-EXACTLY flat at 98.5654, and source-labelled comparison
-// assigns the complete exact seven-slot expansion to `if (HasSomeUndead())`.
-// The older `GetHomogeneityMoraleAdjust()` factoring is not retained here:
-// its DC body calls GetAlignments(NULL), while Complete's byte-proven grouped-
-// alignment extension needs the returned array and performs only one census.
-// `limit` x1 is the
-// clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
-// against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
-// HasBuilding declaration - and when town.h opened on 2026-08-14 that
-// promotion turned out to be CONTRA-INDICATED BY RETAIL BYTES, so it is closed
-// here rather than left as a standing follow-up. Two functions carry the same
-// DC `town::HasBuilding` census row and are ALREADY BYTE-EXACT with the
-// predicate spelled inline: armygrp::GetLuck (0x44b2d0, 100.0000,
-// `ownerTown->active & bitNumber[EXTRA_0_ID]`) and
-// ai_combat::check_wall_archery_penalty (0x424790, 100.0000). Retail x86
-// therefore inlined HasBuilding to exactly the form already spelled at all six
-// armygrp/ai_player sites; the census row is a DREAMCAST SOURCE FACTORING, not
-// a missing construct, and adding the declarator to a wide header can only put
-// two exact functions at risk. The remaining armygrp rows (this body,
-// get_morale_description, get_luck_description) have residuals in a different
-// class entirely - see the ranker verdict below.
-// RANKED 2026-08-14 (normalized disasm, real-vs-artefact split): 98.5654 is
-// 10 real rows of 237 and 5 artefact, and ALL TEN ARE THE ONE CLASS ALREADY
-// NAMED - retail's `push ebx` sits AFTER the on-cursed-ground return (first
-// def order: esi in the prologue, ebx at `xor ebx,ebx`), ours emits both in
-// the prologue in canonical ebx,esi order, and the four later exits mirror
-// `pop ebx / pop esi`. Nothing else differs: the five artefacts are the
-// unwind-label push, a `push 0x60` and three relocation addend splits. Five
-// more spellings measured against it this round, all negative or flat:
-// `int morale;` with an if/else 95.8861, the ternary initializer 95.8861,
-// declaring `alignments[10]` ahead of `morale` 98.5654 (flat), moving
-// `morale` below `GetAlignments` 87.2743, and `short morale` 90.9451. The
-// landed spelling is a local maximum in every direction tested.
-// Residual (98.5654%) narrowed 2026-09-04: EVERY other row is relocation-name
-// only (the bitset<9> helpers ICF-fold onto retail's unclaimed 0x4c6e0/0x4c680/
-// 0x4c610 and bitset<145>::operator[]). The whole code delta is that retail
-// SHRINK-WRAPS `push ebx` to `morale`'s first definition - after the
-// on_cursed_ground return, which pops ESI alone - while this compile saves EBX
-// in the prologue and pops it on that path; the three epilogues then pop
-// esi/ebx in the opposite order. Same phenomenon as GetArmyMorale below.
+// Dreamcast armygrp.cpp:977. Complete adds the grouped-alignment flag and
+// bitset census; retail independently proves all seven arguments and the
+// function-local alignment bitset/accessor expansion. The older DC body calls
+// GetHomogeneityMoraleAdjust without the new grouping input, so its Complete
+// helper interface remains unresolved. HasSomeUndead, IsMember, hero::GetMorale,
+// town::HasBuilding and limit retain their canonical source calls.
+//
+// DC line 1021 places apply_limits and limit in one final conditional return.
+// Restoring it closes 98.5654% to 100%: VC6 delays EBX's save until after the
+// cursed-ground return and emits the retail pop order. The nine-state family
+// jointly tested this member and GetArmyMorale, producing nine reproduced code
+// results. Separate returns retain 98.5654%; assigning the clamped value first
+// gives 95.4430%. These are source-lifetime effects, not compiler-generation
+// differences or evidence for a volatile local.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
@@ -1162,7 +1110,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
         return 0;
     int morale = 0;
     if (ownerHero)
-        morale = const_cast<hero*>(ownerHero)->getMorale(otherHero, 0, 0);
+        morale = ownerHero->getMorale(otherHero, 0, 0);
     unsigned char alignments[10];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
@@ -1194,9 +1142,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     }
     // The by-value wrapper over the reference-returning selector preserves
     // EBX until this site and reproduces retail's three operand homes.
-    if (applyLimits)
-        return limit(-3, morale, 3);
-    return morale;
+    return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
 // E:\gamedcs\armygrp.cpp:1030
@@ -1213,24 +1159,16 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // Minotaur/Minotaur King (0x4e/0x4f) clamp morale to min 1; if
 // (ownerHero && ownerHero->HasArtifact(0x54 Spirit of Oppression) &&
 // morale > 0) morale = 0; apply_limits -> the same [-3,3]
-// Residual (96.5625%): explicitly routing Stronghold/Fortress/Conflux to
-// named no-op exits keeps all nine town values visible to VC6 switch
-// lowering, producing retail's two compressed byte-selector tables exactly.
-// Empty `break` cases are folded into default too early and remain at 80.56%.
-// All 38 block flows now agree; the remainder is an ESI/EDI whole-body
-// allocation mirror (retail homes `this` in EDI and shrink-wraps ESI for
-// morale after the early returns). `register` hints on either value are inert.
+// The two Complete terrain switches keep all nine town values, including
+// their neutral exits, visible during lowering. Plain no-op breaks score
+// 80.5625%; replacing only Holy Ground's exit gives 85.7784%, only Evil Fog's
+// gives 89.2727%. Both switch-only do/while scopes give 67.0170%; Evil Fog's
+// retained scope encloses its terrain and elemental guards.
+// DC line 1062 puts apply_limits and limit into one final conditional return.
+// Restoring that return closes 96.5625% to 100%, including the delayed ESI save
+// and whole-body register assignment. A prior assignment gives 92.5625%.
+// The joint nine-state GetMorale/GetArmyMorale family reproduced every state.
 // Before normalization (locals): apply_limits.
-// Fresh partial-scope controls confirm 80.5625% for plain no-op breaks.
-// Wrapping only the terrain switches in do/while(0) scopes with continue
-// is lower still (67.0170%); the outer Evil Fog scope below is different.
-// Independent neutral-arm break controls: Holy Ground 85.7784%, Evil Fog
-// 89.2727%, both 80.5625%, versus 96.5625%. Each changes its selector table;
-// keep both exits while preserving the canonical morale and artifact calls.
-// Both neutral-town joins are replaced by continue. Holy Ground encloses
-// only its switch, while Evil Fog encloses the terrain and elemental guards.
-// This preserves 460 compiled bytes and 17 references/addends at 96.5625%;
-// putting both scopes around only their switches scores 67.0170%.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1291,12 +1229,10 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
         && morale < 1)
         morale = 1;
     if (ownerHero
-        && const_cast<hero*>(ownerHero)->isWieldingArtifact(ARTIFACT_SPIRIT_OF_OPPRESSION)
+        && ownerHero->isWieldingArtifact(ARTIFACT_SPIRIT_OF_OPPRESSION)
         && morale > 0)
         morale = 0;
-    if (applyLimits)
-        return limit(-3, morale, 3);
-    return morale;
+    return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
 // E:\gamedcs\armygrp.cpp:1072
@@ -1319,7 +1255,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
         return 0;
     int luck = 0;
     if (ownerHero)
-        luck = const_cast<hero*>(ownerHero)->getLuck(otherHero, 0, 0);
+        luck = ownerHero->getLuck(otherHero, 0, 0);
     if (otherGroup
         && (otherGroup->isMember(CREATURE_DEVIL)
             || otherGroup->isMember(CREATURE_ARCH_DEVIL)))
@@ -1449,68 +1385,24 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
     return damage;
 }
 
-// E:\gamedcs\armygrp.cpp:1182
-// DECODE START 2026-08-06: TRANSACTIONAL - builds two local armyGroup
-// copies on the stack (this-copy at ebp-0x54/-0x38, source-copy at
-// ebp-0x8c/-0x70, both init to -1 types / 0 troops via rep stosd),
-// then copies both groups in via pointer-difference indexed loops
-// (base-minus-base addressing, the VC6 parallel-array copy idiom).
-// Merge loop (+0xb9): per source-copy slot (skip type -1 / troops<=0):
-// same-type slot in this-copy -> troops += ; else empty (troops==0)
-// -> place type+troops; else -> bail to +0x12e; on success clear the
-// source slot (troops=0, type=-1), ++mergedCount (reuses [ebp+8]).
-// +0x12e: DEDUP fixed point over this-copy - for i in 1..6 scan j for
-// equal types, merge duplicates (troops add, retry flag bl), loop
-// until no merge; then `if (mergedCount < 7) goto merge loop` retry.
-// FULLY TRANSCRIBED: dedup-no-progress -> return 0 (+0x15a xor al);
-// after dedup progress the merge scan RESUMES mid-slot (walker regs
-// restored from ebp-0x8/-0x4, gated on mergedCount < 7); when all 7
-// source slots clear -> commit BOTH working copies back (same fused
-// pointer-difference loop, this AND ag) -> return 1. Implementation
-// notes: Dreamcast CodeView names two local armyGroup objects, ag1 and ag2,
-// at the expected 56-byte stack spans. Their ordinary constructors inline
-// into retail's four rep-stosd fill loops; the natural indexed copy then
-// reproduces retail's fused pointer-difference copy shape. No homm2 template
-// exists (buka ARMYGRP carries no Merge; renamed or absorbed).
-// An empty-body duplicate search followed by `if (b < 7)` reproduces the
-// retail post-search continuation and raises the body another 1.2290 points.
-// Residual (79.5363%): retail keeps distinct type/troop walkers and one more
-// stack slot (0x8c frame versus 0x88 here), while this VC6 compile coalesces
-// the walkers and colors the processed count differently. Its dedup loop
-// retains one extra top-of-loop progress test.
-// That extra test is a LOOP-ROTATION difference and the goto lever does not
-// reach it (measured 2026-08-20): respelling the `!progress && a < 7` scan as
-// an explicit `dedup_scan:` label with `++a; goto dedup_scan;` at the foot -
-// the un-rotated top-tested form retail emits - is BYTE-FLAT at 79.5363. VC6
-// rotates it back. Artificial volatile qualifiers,
-// alternate outer-loop indices and goto rewrites worsened the comparison and
-// were reverted.
-// WHAT DOES REACH IT IS LIFTING THE TEST OUT OF THE CONDITION (79.5363 ->
-// 80.0168, 2026-08-20).  `for (a = 1; a < 7; ++a) { if (progress) break; ... }`
-// gives retail's eighteenth conditional branch where `!progress && a < 7`
-// gives seventeen: VC6 rotates a compound loop CONDITION and cannot rotate
-// away a `break` statement that is the loop's first statement.  The goto
-// rewrite failed because it moved the same test, not because the shape was
-// unreachable.
-// 2026-08-21: making the merge scan bottom-tested raises 80.0168 -> 81.1899
-// and gives the retail 36-block skeleton.  Grouping the two walkers in a
-// tiny aggregate prevents VC6 from folding their fixed displacement into
-// one induction variable: the frame becomes retail's 0x8c and the score
-// rises to 84.0950.  Initializing type-walker, then troop-walker, in retail
-// order raises that to 84.8268.
-// Residual (84.8268%): the opening scan is structurally exact through both
-// walker homes, but our CL assigns type/count to edx/esi where retail uses
-// esi/edx.  The dedup tail still routes three adjacent tests differently.
-// The source-looking zero-based forms (`a=0`, `b=a+1`) were tested both with
-// the explicit progress break (77.0559) and with
-// `!progress && a < SLOT_COUNT-1` (78.5251), so the retained one-based view
-// is the closest compiler spelling.  Declaration swap (79.9609), volatile,
-// alternate indices and goto forms were already lower; this register/CFG
-// family is bounded after four fresh hypotheses.
-// [2026-08-26] The bounded AST tree orders the searched `type` before the
-// indexed slot in the equality, raising 84.8268 -> 84.8548. Both sides still
-// have 36 blocks, 18 conditional branches and two returns; the residual is
-// the already-recorded dedup-tail routing family.
+// E:\gamedcs\armygrp.cpp:1182, original Merge.
+// EXACT: DC 1196/1197 supplies the indexed source while, 1201..1203 and
+// 1215..1217 the two destination searches, and 1231..1249 the duplicate
+// search whose outer index advances only in the failure else. The inner
+// search preincrements b before its condition (dc 0x4f504, line 1236).
+// The successful existing/new stack arms each clear their source slot and
+// advance i. DC's gap 1209..1212 is compatible with those statements being
+// merged into the emitted clear block at 1224..1226; retail VC6 proves this
+// duplicated source form. Hoisting the clear after the two arms with a retry
+// continue gives 94.5531%, even with the recovered loops. The final copy is
+// this armies/count followed by ag armies/count (DC 1263..1266); retaining
+// the old interleaved order gives 97.7598%. Both source facts give 100%.
+// All 17 family states were scored, five distinct objects reproduced, and
+// every other armygrp score stayed fixed. Search-index declaration lifetime
+// and preincrement versus initialized b are neutral. The former walker
+// aggregate and register/loop-rotation workaround were unsupported source.
+// Complete's positive troop-count guard is retail-proven; the older SH4
+// second guard at line 1199 instead tests the count-array address.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::merge(armyGroup* ag)
 {
@@ -1523,63 +1415,56 @@ unsigned char armyGroup::merge(armyGroup* ag)
         ag2.m_armies[i] = ag->m_armies[i];
         ag2.m_numTroops[i] = ag->m_numTroops[i];
     }
-    int* walkers[2];
-    int processed = 0;
-    walkers[1] = ag2.m_armies;
-    walkers[0] = ag2.m_numTroops;
-    do {
-        int type = *walkers[1];
-        if (type != -1) {
-            int count = *walkers[0];
-            if (count > 0) {
-                for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-                    if (type == ag1.m_armies[i])
-                        break;
-                }
-                if (i < ARMY_GROUP_SLOT_COUNT)
-                    ag1.m_numTroops[i] += count;
-                else {
-                    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-                        if (ag1.m_numTroops[i] == 0)
-                            break;
-                    }
-                    if (i < ARMY_GROUP_SLOT_COUNT) {
-                        ag1.m_numTroops[i] = count;
-                        ag1.m_armies[i] = type;
-                    } else {
-                        unsigned char progress = 0;
-                        for (int a = 1; a < ARMY_GROUP_SLOT_COUNT; ++a) {
-                            if (progress)
-                                break;
-                            int b;
-                            for (b = a;
-                                 b < ARMY_GROUP_SLOT_COUNT
-                                 && ag1.m_armies[a - 1] != ag1.m_armies[b]; ++b) {
-                            }
-                            if (b < ARMY_GROUP_SLOT_COUNT) {
-                                ag1.m_numTroops[a - 1] += ag1.m_numTroops[b];
-                                ag1.m_numTroops[b] = 0;
-                                ag1.m_armies[b] = -1;
-                                progress = 1;
-                            }
+    i = 0;
+    while (i < ARMY_GROUP_SLOT_COUNT) {
+        if (ag2.m_armies[i] != CREATURE_NONE && ag2.m_numTroops[i] > 0) {
+            int j = 0;
+            while (j < ARMY_GROUP_SLOT_COUNT && ag2.m_armies[i] != ag1.m_armies[j])
+                ++j;
+            if (j < ARMY_GROUP_SLOT_COUNT) {
+                ag1.m_numTroops[j] += ag2.m_numTroops[i];
+                ag2.m_numTroops[i] = 0;
+                ag2.m_armies[i] = CREATURE_NONE;
+                ++i;
+            } else {
+                j = 0;
+                while (j < ARMY_GROUP_SLOT_COUNT && ag1.m_numTroops[j] != 0)
+                    ++j;
+                if (j < ARMY_GROUP_SLOT_COUNT) {
+                    ag1.m_numTroops[j] = ag2.m_numTroops[i];
+                    ag1.m_armies[j] = ag2.m_armies[i];
+                    ag2.m_numTroops[i] = 0;
+                    ag2.m_armies[i] = CREATURE_NONE;
+                    ++i;
+                } else {
+                    int a = 0;
+                    unsigned char progress = 0;
+                    while (a < ARMY_GROUP_SLOT_COUNT - 1 && !progress) {
+                        int b = a;
+                        while (++b < ARMY_GROUP_SLOT_COUNT && ag1.m_armies[a] != ag1.m_armies[b]) {
                         }
-                        if (!progress)
-                            return 0;
-                        continue;
+                        if (b < ARMY_GROUP_SLOT_COUNT) {
+                            ag1.m_numTroops[a] += ag1.m_numTroops[b];
+                            ag1.m_numTroops[b] = 0;
+                            ag1.m_armies[b] = CREATURE_NONE;
+                            progress = 1;
+                        } else {
+                            ++a;
+                        }
                     }
+                    if (!progress)
+                        return 0;
+
                 }
-                *walkers[0] = 0;
-                *walkers[1] = CREATURE_NONE;
             }
+        } else {
+            ++i;
         }
-        processed++;
-        walkers[0]++;
-        walkers[1]++;
-    } while (processed < ARMY_GROUP_SLOT_COUNT);
+    }
     for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         m_armies[i] = ag1.m_armies[i];
-        ag->m_armies[i] = ag2.m_armies[i];
         m_numTroops[i] = ag1.m_numTroops[i];
+        ag->m_armies[i] = ag2.m_armies[i];
         ag->m_numTroops[i] = ag2.m_numTroops[i];
     }
     return 1;
@@ -1957,9 +1842,9 @@ std::string armyGroup::getMoraleDescription(
         currentMorale = 1;
     }
 
-    if (((ownerHero && const_cast<hero*>(ownerHero)->isWieldingArtifact(
+    if (((ownerHero && ownerHero->isWieldingArtifact(
                            ARTIFACT_SPIRIT_OF_OPPRESSION))
-         || (otherHero && const_cast<hero*>(otherHero)->isWieldingArtifact(
+         || (otherHero && otherHero->isWieldingArtifact(
                               ARTIFACT_SPIRIT_OF_OPPRESSION)))
         && currentMorale > 0) {
         result = formatString(
@@ -2138,9 +2023,9 @@ std::string armyGroup::getLuckDescription(
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
         return g_cursedGroundLuckText;
 
-    if ((ourHero && const_cast<hero*>(ourHero)->isWieldingArtifact(
+    if ((ourHero && ourHero->isWieldingArtifact(
                         ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
-        || (enemyHero && const_cast<hero*>(enemyHero)->isWieldingArtifact(
+        || (enemyHero && enemyHero->isWieldingArtifact(
                            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
         return formatString(g_hourglassLuckFormat,
                              g_artifactTraits[

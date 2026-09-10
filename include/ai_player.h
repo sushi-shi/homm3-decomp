@@ -257,12 +257,12 @@ SIZE(type_AI_creature_purchaser, 0x3c);
 
 // Before normalization (function): AI_consolidate_army.
 // Before normalization (locals): current_army.
-void aiConsolidateArmy(armyGroup* currentArmy);
+void aiConsolidateArmy(armyGroup& currentArmy);
 // 0x42d8e0 - do_swap's tail call (0x42c485), also reached from
 // buy_creatures (0x42bbae), split_armies (0x42dd47/5b) and 0x431d9d.
 // Before normalization (function): AI_arrange_army.
 // Before normalization (locals): current_army.
-void aiArrangeArmy(armyGroup* currentArmy);
+void aiArrangeArmy(armyGroup& currentArmy);
 
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.

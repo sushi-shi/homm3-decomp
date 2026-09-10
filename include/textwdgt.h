@@ -36,7 +36,7 @@ public:
                unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     // Before normalization (function): textWidget::Main.
-    virtual int main(message* msg);
+    virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): textWidget::Draw.
     virtual void draw();
@@ -59,7 +59,14 @@ public:
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.
     // Before normalization (function): textWidget::GetText.
-    __forceinline const char* getText() { return m_text.c_str(); }
+    // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
+    // qualifier is byte-neutral across the affected widget/name-edit callers.
+    const char* getText() { return m_text.c_str(); }
+
+    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
+    // Main calls this canonical header helper at textwdgt.cpp:152; retail
+    // expands its single member store in the WIDGET_SET_COLOR arm.
+    void setColor(font::TColor newColor) { m_color = newColor; }
 };
 
 class Bitmap816;
@@ -78,7 +85,7 @@ public:
     // Before normalization (function): type_text_scroller::Open.
     virtual int open(int priority, heroWindow* parent);
     // Before normalization (function): type_text_scroller::Main.
-    virtual int main(message* msg);
+    virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): type_text_scroller::Draw.
     virtual void draw();

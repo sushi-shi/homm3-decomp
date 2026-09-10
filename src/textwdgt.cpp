@@ -106,7 +106,7 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style, const
 
 // E:\gamedcs\textwdgt.cpp:120
 DC_ONLY(0x164dd4, 0x1A8)
-int textWidget::main(message* msg)
+int textWidget::main(message& msg)
 {
     // @stub
 }
@@ -121,62 +121,72 @@ int textWidget::main(message* msg)
 // deselect translate mouse messages in place, while widget commands 3 and 8
 // set Text and Color.
 //
-// WALL 2026-08-22 (98.49315%, 429 bytes): semantic/CFG reconstruction is
-// complete. The candidate and retail have the same 146 aligned instructions,
-// 25/25 conditional branches, seven returns, and branch sequence. The entire
-// residual is one VC6 register-colouring permutation: candidate keeps status
-// in EDX, disabled in BL, parentWindow in EBX, mouseX in ESI, and mouseY in
-// EDI; retail assigns those roles to EBX, DL, EDI, EDX, and ESI. why-reg's
-// bounded probes (volatile/named/unnamed coordinates, swapped declaration
-// order, disabled/status materialization, and register hints) either leave the
-// allocation unchanged or regress it; its best edit, volatile mouseX, falls
-// to 92.39041% under the byte verdict. No semantic or control-flow delta is
-// left to justify further source distortion.
-// The shared zero epilogue needs no source label: ordinary early returns
-// preserve the 98.4932% score and the complete retail CFG in this TU.
+// Dreamcast textwdgt.cpp:140..160 places widget commands first; line 152
+// calls the canonical SetColor header helper, lines 169..173 compute X then
+// Y, and lines 187/210 update Status directly. Preserve those source facts.
+// The 32-state source family also checked cached status, byte/bool disabled
+// locals, case order, coordinate order and the flattened color store: four
+// distinct code results reproduced, all at 98.4931%. The remaining retail
+// difference is register assignment; no artificial local or inline qualifier
+// is needed to retain this score and the retail control flow.
 VA(0x005bc440, 0x1AD)
-int textWidget::main(message* msg)
+int textWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
         return 0;
     }
 
-    short widgetStatus = m_status;
-    if (!(widgetStatus & WIDGET_ACTIVE)) {
-        if (msg->m_id != MESSAGE_WIDGET)
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg.m_id != MESSAGE_WIDGET)
             return 0;
         return widget::main(msg);
     }
 
     bool isDisabled = false;
-    if (widgetStatus & WIDGET_DISABLED)
+    if (m_status & WIDGET_DISABLED)
         isDisabled = true;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
+    case MESSAGE_WIDGET:
+        switch (msg.m_codeX) {
+        case WIDGET_SET_TEXT:
+            if (msg.m_codeY == m_id) {
+                setText(msg.m_extraText);
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+        case WIDGET_SET_COLOR:
+            if (msg.m_codeY == m_id) {
+                setColor(font::TColor(msg.m_extra));
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+        }
+        break;
+
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
             return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_DOWN: {
-        if (!(widgetStatus & WIDGET_DRAWN))
+        if (!(m_status & WIDGET_DRAWN))
             return 0;
-        short mouseY = msg->m_codeY - m_parentWindow->m_y;
-        short mouseX = msg->m_codeX - m_parentWindow->m_x;
+        short mouseX = msg.m_codeX - m_parentWindow->m_x;
+        short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
             || mouseY >= m_y + m_height)
             return 0;
-        if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg->m_codeX = WIDGET_RIGHT_SELECT;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeY = m_id;
+        if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg.m_codeX = WIDGET_RIGHT_SELECT;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeY = m_id;
             return MESSAGE_DISPATCH_FORWARD;
         }
-        widgetStatus |= WIDGET_SELECTED;
-        m_status = widgetStatus;
-        msg->m_codeX = WIDGET_SELECT;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeY = m_id;
+        m_status |= WIDGET_SELECTED;
+        msg.m_codeX = WIDGET_SELECT;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = m_id;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -185,34 +195,18 @@ int textWidget::main(message* msg)
             return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(widgetStatus & WIDGET_DRAWN)
-            || !(widgetStatus & WIDGET_SELECTED))
+        if (!(m_status & WIDGET_DRAWN)
+            || !(m_status & WIDGET_SELECTED))
             return 0;
-        widgetStatus &= ~WIDGET_SELECTED;
-        m_status = widgetStatus;
-        if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
-            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = WIDGET_DESELECT;
-        msg->m_codeY = m_id;
+        m_status &= ~WIDGET_SELECTED;
+        if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
+            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = WIDGET_DESELECT;
+        msg.m_codeY = m_id;
         return MESSAGE_DISPATCH_FORWARD;
 
-    case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
-        case WIDGET_SET_TEXT:
-            if (msg->m_codeY == m_id) {
-                setText(msg->m_extraText);
-                return MESSAGE_DISPATCH_CONSUME;
-            }
-            break;
-        case WIDGET_SET_COLOR:
-            if (msg->m_codeY == m_id) {
-                m_color = msg->m_extra;
-                return MESSAGE_DISPATCH_CONSUME;
-            }
-            break;
-        }
-        break;
+
     }
 
     return widget::main(msg);

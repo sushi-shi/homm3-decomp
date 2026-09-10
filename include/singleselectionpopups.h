@@ -37,7 +37,7 @@ public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
     virtual ~CHotspotWidget();
     // Before normalization (function): CHotspotWidget::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x575290
+    virtual int main(message& msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CHotspotWidget::Draw.
     virtual void draw();             // slot 4, folded onto 0x404df0
@@ -57,7 +57,7 @@ public:
     CSpriteWidget(int xPos, int yPos, CSprite* sprite, int spriteFrame);
     virtual ~CSpriteWidget();
     // Before normalization (function): CSpriteWidget::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x575a10
+    virtual int main(message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CSpriteWidget::Draw.
     virtual void draw();             // slot 4, retail 0x575750
@@ -76,7 +76,7 @@ public:
     // Before normalization (locals): pImage.
     CBitmapWidget(int xPos, int yPos, Bitmap816* image);
     // Before normalization (function): CBitmapWidget::Main.
-    virtual int main(message* msg);  // slot 2, folds onto 0x575a10
+    virtual int main(message& msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CBitmapWidget::Draw.
     virtual void draw();             // slot 4, retail 0x575a20

@@ -303,65 +303,27 @@ static void addToIncludedMask(const int* includeList, __int64* includedBuildings
     } while (*++includeList >= 0);
 }
 
-// E:\gamedcs\initialize.cpp:524
-// The zero fill is the retail overlap idiom verbatim: store slot 0,
-// then a forward memcpy from slot 0 into slot 1 propagates the zero
-// qword through the remaining 43 slots (rep movsd, ecx = 0x56).
-//
-// The two const locals and the repeated slot-0 store are load-bearing:
-// they reproduce retail's /Ob2 inline-cost estimate for this function,
-// which is what makes initialize_game_data expand exactly four copies
-// (rows 0/1/3/2) and call the other five - drop any of them and the
-// inliner expands five or six copies (measured 2026-08-07). The
-// duplicate store is optimized away; no byte of this body changes.
-// Residual (93.9%): retail schedules the memcpy setup count/src/dst
-// (mov ecx / mov esi / lea edi) where our CL hoists the lea two slots
-// earlier - one transposed instruction, IDENTICAL byte multiset, and
-// the only real delta in the function (the `bitNumber+4` and
-// `kCommonIncludeList` rows the masked diff shows are reloc-name-only
-// and cost nothing - add_to_included_mask carries the same two rows
-// at 100.00).
-// Corrected 2026-08-08: the earlier note here claimed "every spelling
-// that fixes it costs initialize_game_data its exact match". NO
-// spelling fixes it. 93.8667 is invariant under all of: dropping both
-// const locals and the duplicate store (the plain body - which also
-// drops initialize_game_data to 88.6), &arr[1]/&arr[0], a dst pointer
-// local, a base-pointer local, a *deref store, locals after the
-// stores, signed/unsigned/slot-count spellings of the byte count, a
-// third const local, and a triple store. memset(,0,8) for the zero
-// fill (85.7) and two explicit dword stores (91.2) are strictly
-// worse. It is ALSO not include-set sensitivity: a 0..8 dummy-struct
-// sweep leaves this function at 93.8667 at every count while
-// initialize_game_data swings 100/100/100/94.07/94.07/100/100/100/100
-// over the same sweep. Nor is it the scheduler target: /G5 and the
-// default /GB are byte-identical here and /G6 also scores 93.8667.
-// Treat as a post-RA scheduling difference with no source handle.
-// 2026-08-14 - the residual is now fully accounted for and is MOSTLY NOT REAL:
-// of the ~12 mismatched bytes, 8 are the two `mov ebx,[8*ecx+4]` loads of
-// bitNumber's HIGH dword. Our object encodes disp32=4 with a reloc to
-// ?bitNumber@@3PA_JA; the delinked target encodes disp32=0 with a reloc to a
-// synthesized interior symbol (data_26cd9c = bitNumber+4). Both LINK to the
-// same address, so the retail image agrees with us byte for byte - the split
-// of `symbol + addend` is a delinker naming choice, not a codegen difference.
-// config/delink-reloc-aliases.tsv is the mechanism that would fix the target
-// side (owner=?bitNumber@@3PA_JA, addend=0x4); that is a reviewed-table change
-// and is deliberately left for the pipeline owner. The only real divergence
-// left is the position of the single `lea edi,[edx+8]` (3 bytes).
-// Rechecked 2026-09-01 against the exact add_to_included_mask and
-// create_requirement_masks siblings: all three have exact retail CFGs and
-// the same cosmetic high-dword relocation split. Moving the duplicate zero
-// store into memcpy's destination comma-expression and naming BOTH the source
-// and destination pointers are byte-flat at 93.8667; neither delays the LEA.
-// Before normalization (function): create_included_mask.
-// Before normalization (locals): include_list, included_buildings, common_list, tail_bytes.
+// E:\gamedcs\initialize.cpp:524. DC lines527/528 explicitly clear all
+// 44 int64 slots in an ascending counted loop, then lines530/531 call the
+// canonical addToIncludedMask helper twice. The compiler emits retail's
+// first-element seed and propagation copy from this loop; do not spell that
+// expansion as overlapping memcpy or add a duplicate zero store.
+// The 13-state loop family produces five distinct reproduced objects and
+// closes the retained helper at 100%. A 39-state index-scope follow-up keeps
+// that match. int/long and indexed/pointer forms agree on the retained body;
+// a named common-list binding affects the first requirements-row address CSE
+// in initializeGameData, so that caller is checked separately.
+// Earlier direct memcpy and zero-store permutations left 93.8667%; memset
+// and explicit dword-store reconstructions were worse. They did not test the
+// counted int64 source operation retained by Dreamcast.
+// Before normalization: create_included_mask, include_list, included_buildings.
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
 static void createIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     const int* const commonList = g_commonIncludeList;
-    const unsigned int tailBytes = (TOWN_BUILDING_SLOTS - 1) * sizeof(__int64);
-    includedBuildings[0] = 0;
-    includedBuildings[0] = 0;
-    memcpy(includedBuildings + 1, includedBuildings, tailBytes);
+    for (int index = 0; index < TOWN_BUILDING_SLOTS; ++index) {
+        includedBuildings[index] = 0;
+    }
     addToIncludedMask(commonList, includedBuildings);
     addToIncludedMask(includeList, includedBuildings);
 }
@@ -390,16 +352,18 @@ static void createIncludedMasks()
 // E:\gamedcs\initialize.cpp:565
 // Kept out-of-line for the six non-inlined call sites in
 // initialize_game_data (rows 3..8; rows 0..2 are inline copies).
+// DC signature at initialize.cpp:565 takes the final
+// __int64 legal_buildings by reference; retail passes that same address.
 // Before normalization (function): create_requirement_masks.
 // Before normalization (locals): town_buildings, legal_buildings.
 VA(0x004ebc50, 0x99)  // linkorder+body (legal-mask accumulate), dc 0xdc4a4
-static void createRequirementMasks(const int* townBuildings, __int64* requirements, __int64* legalBuildings)
+static void createRequirementMasks(const int* townBuildings, __int64* requirements, __int64& legalBuildings)
 {
-    *legalBuildings = 0;
+    legalBuildings = 0;
     do {
         int building = *townBuildings++;
         int required;
-        *legalBuildings |= g_bitNumber[building];
+        legalBuildings |= g_bitNumber[building];
         requirements[building] = 0;
         while ((required = *townBuildings) >= 0) {
             requirements[building] |= g_bitNumber[required];
@@ -418,23 +382,23 @@ DC_ONLY(0xdc534, 0xE0)
 static void createBuildingMasks()
 {
     createRequirementMasks(g_town0Buildings, g_hierarchyMask[0],
-                             &g_townEligibleBuildMask[0]);
+                             g_townEligibleBuildMask[0]);
     createRequirementMasks(g_town1Buildings, g_hierarchyMask[1],
-                             &g_townEligibleBuildMask[1]);
+                             g_townEligibleBuildMask[1]);
     createRequirementMasks(g_town2Buildings, g_hierarchyMask[2],
-                             &g_townEligibleBuildMask[2]);
+                             g_townEligibleBuildMask[2]);
     createRequirementMasks(g_town3Buildings, g_hierarchyMask[3],
-                             &g_townEligibleBuildMask[3]);
+                             g_townEligibleBuildMask[3]);
     createRequirementMasks(g_town4Buildings, g_hierarchyMask[4],
-                             &g_townEligibleBuildMask[4]);
+                             g_townEligibleBuildMask[4]);
     createRequirementMasks(g_town5Buildings, g_hierarchyMask[5],
-                             &g_townEligibleBuildMask[5]);
+                             g_townEligibleBuildMask[5]);
     createRequirementMasks(g_town6Buildings, g_hierarchyMask[6],
-                             &g_townEligibleBuildMask[6]);
+                             g_townEligibleBuildMask[6]);
     createRequirementMasks(g_town7Buildings, g_hierarchyMask[7],
-                             &g_townEligibleBuildMask[7]);
+                             g_townEligibleBuildMask[7]);
     createRequirementMasks(g_town8Buildings, g_hierarchyMask[8],
-                             &g_townEligibleBuildMask[8]);
+                             g_townEligibleBuildMask[8]);
 }
 
 // E:\gamedcs\initialize.cpp:625

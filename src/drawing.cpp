@@ -428,8 +428,7 @@ void combatManager::combatMessage(int command)
                                 targetArmy->m_gridIndex);
         long targetHits = targetArmy->getTotalHitPoints(0);
         long currentHits = currentArmy->getTotalHitPoints(0);
-        long expectedDamage = aiGetAttackDamage(
-            currentArmy, currentHits, targetArmy, 1, distance);
+        long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), 1, distance);
         if (!g_unnamed698758.m_combatArmyInfoLevel) {
             sprintf(g_text, (*g_generalText)[221], getArmyName(targetArmy->m_creatureType, targetArmy->m_numTroops));
         } else if (currentArmy->m_monInfo.m_numShots == 1) {

@@ -28,7 +28,7 @@ public:
     // border.cpp without /Ob2.
     border() {}
     // Before normalization (function): border::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x44ff60
+    virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): border::Draw.
     virtual void draw();             // slot 4
@@ -74,7 +74,7 @@ public:
                        int color, int style);
     virtual ~coloredBorderFrame();  // retail 0x4501d0
     // Before normalization (function): coloredBorderFrame::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x450240
+    virtual int main(message& msg);  // slot 2, retail 0x450240
     // Before normalization (function): coloredBorderFrame::Draw.
     virtual void draw();             // slot 4, retail 0x4501e0
 };
@@ -111,7 +111,7 @@ public:
     // Before normalization (function): bitmapBorder::SetPlayerPaletteColors.
     void setPlayerPaletteColors(int whichPlayer);
     // Before normalization (function): bitmapBorder::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x450550
+    virtual int main(message& msg);  // slot 2, retail 0x450550
 };
 
 class Bitmap16Bit;
@@ -140,7 +140,7 @@ public:
     // Before normalization (locals): bitmap_name.
     void setImage(const char* bitmapName);
     // Before normalization (function): bitmapBorder16::Main.
-    virtual int main(message* msg);  // slot 2, retail 0x450860
+    virtual int main(message& msg);  // slot 2, retail 0x450860
 };
 
 // The free palette painters (declared for button.cpp in button.h;
