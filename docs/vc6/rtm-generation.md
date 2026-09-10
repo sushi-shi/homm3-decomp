@@ -184,6 +184,9 @@ Consequences:
   VideoRealignBuffers) are all invariant under the C2 generation swap.
   They are real model gaps for the vc6 area's inliner/allocator phases,
   or front-end differences - not back-end vintage.
+  Follow-up (2026-09-10): `VideoRealignBuffers` closed at 100% by restoring
+  its existing bitmap `getMap(x,y)` accessor call. See behavior catalog B20;
+  the generation invariance remains valid, but its source residual is solved.
 - **Residual comments citing "CL generation" should be re-worded** (a
   deliberate edit, not part of this track): the measured fact is now
   "invariant under C2 8168/8447", which is stronger and narrower than

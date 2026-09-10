@@ -302,7 +302,6 @@ is a two-compiler diff, not a standalone observable".
 | `armygrp::GetArmyMorale` | 96.56 | mirror; retail homes `this` in EDI, shrink-wraps ESI |
 | `ai_player::calculate_reserve` | 96.46 | retail ESI/EBX/EDI for {finish, dwelling, population}; ours ECX/EDI/ESI |
 | `ai_combat::do_aftermath` | 79.73 | retail EDI/EBX for {defender, defeated hero}; ours opposite |
-| `smackmgr::VideoPlay` | 87.2 | retail ebx,esi,edi = (x, vw, vh); ours edi,esi,ebx — cascade mechanistic: `x` in EBX forces `pos.x` into EAX and a `[ebp-0xc]` spill, freeing EBX for the loop's zero |
 - status: open-residual (the flagship allocator class)
 - probe: none (retail-vs-ours divergence)
 
@@ -515,12 +514,27 @@ strength-reduced loops); `armygrp::Merge` 79.54 (retail keeps distinct
 type/troop walkers, frame 0x8c vs 0x88; ours coalesces).
 - status: open-residual — probe: none
 
-### B20. Address reassociation with no source handle — `smackmgr:78`, 88.9%
-Retail adds `(Pitch*gBinkY + 2*gBinkX)` first and the map pointer last; our
-CL reassociates EVERY spelling into `(Pitch*gBinkY + map) + scaled-2*gBinkX`.
-Tried and rejected, all compiling identical: term orders, `&map[..]`,
-integer-cast arithmetic, `x+x`.
-- status: OPEN, no source handle — probe: none (that is the finding)
+### B20. Address reassociation can expose a flattened accessor — `videoRealignBuffers`, exact
+Retail adds `(pitch*y + 2*x)` before the map pointer. Pasted field arithmetic
+remained at 88.92538% across term orders, indexing, casts, shifts and named
+offsets. That did not establish a compiler ceiling: on 2026-09-10, calling
+the existing `Bitmap16Bit::getMap(x,y)` through the direct screen receiver
+reproduced every instruction at 100%. Caching the bitmap receiver lost the
+match; using its width/height accessors after the map call was byte-flat.
+
+The 12-state interface/lifetime family produced eight distinct objects and
+reproduced all eight retained candidates. Both exact candidates preserve the
+direct receiver and canonical map call, with all 29 sibling scores unchanged.
+The accessor is an existing Dreamcast-proven header member; the video function
+itself has only a DC platform stub. The retail result supports the caller's
+source hypothesis independently of the stub.
+
+- status: explained-lever — restore the real accessor and receiver lifetime
+  before attributing flattened arithmetic to a reassociation limit.
+- evidence: `src/smackmgr.cpp` at 0x5971f0, `include/bitmap16.h`,
+  `scripts/experiments/generate-dialog-video-source-family.py video`;
+  full VC6 build passed, five exact CFG blocks and zero instruction deltas.
+- probe: full TU source family; no standalone reduction claimed.
 
 ### B21. Dinkumware `min`/`max` reference shape as an allocation constraint
 `cmbtmgr::MaxOf`: retail's max arm homes both operands to the frame, selects
@@ -557,6 +571,19 @@ mutations even when they would lower its abstract instruction distance. Recover
 the real helper, type, lifetime, aliasing obligation, or statement order.
 - status: REJECTED as source-false; detection remains fatal in cleanliness
 - negative control: `test_reg_mutations.py` proves `why-reg` cannot offer it
+
+### B24. Separate persistent globals from a deferred local aggregate — `videoPlay`, exact
+Retail stores both centered coordinates in `gSmackX`/`gSmackY`, then copies
+them into the `POINT` needed after the playback loop. Computing the `POINT`
+first kept `pos.x` in EBX and capped the row at 87.1912%; direct mutable x/y
+removed the required POINT homes. The global-first source boundary reproduces
+all 669 bytes and the retail EBX/ESI/EDI roles for x/width/height. It also frees
+EBX for the zero shared by the loop tests.
+- evidence: `src/smackmgr.cpp` at 0x5972d0 and the six-state
+  `generate-video-play-immediate-global-family.py`; 41 exact CFG blocks,
+  27 matching branches, two returns and 14 agreed calls.
+- status: explained-lever — preserve the persistent global stores separately
+  from the local aggregate whose lifetime crosses the loop.
 
 ---
 
@@ -813,20 +840,17 @@ the loop form banks 76.5058% -> 79.8160% for the river and 75.6686% ->
 81.8701% for the road. `while (true)` and moving the inserts into the loop's
 exit arm are byte-identical to `while (1)`.
 
-### D3. LICM legality forces a duplicated guard, then jump-threading removes ours — `VideoClose`, 95.9%
-Retail has THREE test sites, we have two: the entry guard before the hoisted
-`mov esi,[__imp__BinkPause]` (the duplicated guard making LICM legal), a real
-top test, and the back edge tail-duplicated through it. Every spelling
-collapses sites (a) and (b): while+if, if+do-while, while+continue, the
-literal goto transcription, and that transcription inside an explicit outer
-`if (n != 0)` all produce identical objects — VC6 threads the top test away
-regardless, having just proved the value nonzero from `dec eax`. NOT
-source-addressable. The `while(1){if(n==0)break;}` form that unrotated
-VideoPlay does not help (88.3%).
-- evidence: `src/smackmgr.cpp:250-275`
-- status: OPEN — cleanest LICM + jump-threading interaction in the corpus
-- probe: none (the phenomenon is retail's extra guard our CL provably cannot
-  be spelled into; five measured spellings collapse identically)
+### D3. Restore the ordinary helper before diagnosing loop rotation — `VideoClose`, exact
+The former hand-expanded resume/close sequence capped at 95.9231% and made
+retail's three pause-count tests look source-inexpressible. Restoring the
+ordinary `videoResume`, sound-service, `closeSmacker` and `closeBinkVideo`
+calls recovers the natural inline decisions and all 225 retail bytes. Loop,
+guard and goto spellings were valid negative controls within the flattened
+body, but they could not model the missing helper boundary.
+- evidence: `src/smackmgr.cpp` at 0x5975f0; the retained helper bodies and
+  ShowVideo's independent expansions.
+- status: explained-lever — establish canonical call boundaries before
+  treating optimizer control flow as a compiler ceiling.
 
 ### D4. Merged-return blocks — SOLVED as a source shape
 `path.cpp` head, TU 75.97 → 92.13%, 1/8 → 6/8 exact in one edit:
@@ -861,6 +885,16 @@ instead of else = 97.06).
 - probe: `d05_dup_exit.cpp` (PASS — flat chain: 4 rets with the final gate
   folded branchless neg/sbb/neg; nested single-`return 0`: 2 rets, one merged
   fail exit)
+
+A further closed case is `SmackManager::nextSmackerFrame` (0x598eb0):
+assigning the real `g_smackDirty` byte from the complete short-circuit
+predicate, then testing that byte for the early return, produces 100%.
+The call to `_SmackWait` still precedes the store; no intermediate state is
+published. A 15-state family reproduced ten elites: all three track-selection
+spellings using the actual global result were exact, while local `bool`,
+`unsigned char`, and `int` carriers did not close the exit layout. Inspect
+whether a recovered state output itself owns the decision before rewriting
+returns or treating the epilogue as an allocator ceiling.
 
 ### D6. The opposite direction: retail duplicates where we merge
 `ai_tactical` 75.5 → 95.9 (three guards goto INTO the third one's body; `||`
@@ -1232,7 +1266,7 @@ so none carry probes (the pinned toolchain is not MSVC 4.2).
    objects at build 8168 vs 145 at 8447 (0.9). OPEN — needs a
    compiler-generation probe (the RTM C2 12.00.8168, Track R, is admitted for
    this). The *source-shape* half is closed as D4 (probed).
-2. **Register-homing family** (`smackmgr` VideoPlay/DrawRects, `widget`
+2. **Register-homing family** (`smackmgr` VideoDrawRects, `widget`
    send_message/enable) — retail memory-homes a value our CL promotes (or
    vice versa); order sweeps plateau. → §B2/B3 (unprobeable standalone).
 3. **EH-bearing functions** — direct-handler versus last-funclet+size
@@ -1281,7 +1315,7 @@ statement that the inliner makes per-function scoring non-compositional
 | `d16_strcmp_intrinsic.cpp` | D16 | inline strcmp intrinsic under /Op, `sbb/sbb,-1` tail |
 
 Behaviors judged NOT reducible to a standalone probe fall into three honest
-classes: (1) **retail-divergence classes** (B1–B5, B7, B10–B12, B16–B20, A8,
+classes: (1) **retail-divergence classes** (B1–B5, B7, B10–B12, B16–B19, A8,
 A15–A17, C3, D3, D6, D7, D12, D19) — the phenomenon is a diff against retail
 bytes, and a lone TU has no retail side; (2) **TU/image-state classes** (C1,
 C2, C8, A5, A10, A18, B13, D15, D17) — the input is the include closure or

@@ -11,6 +11,7 @@
 #include "town.h"
 
 class message;
+class TDialogBox;
 class VictoryConditionStruct;
 class LossConditionStruct;
 
@@ -320,11 +321,13 @@ void doNormalDialog(TNormalDialogInfo dialogInfo);              // 0x4f6990
 // NormalDialog sizes its info block through it before DoNormalDialog.
 // Before normalization (function): CalculateNormalDialogSize.
 // Before normalization (locals): dialog_info.
-void calculateNormalDialogSize(TNormalDialogInfo* dialogInfo);
+void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo);
 // DC kb.cpp:2549 (dc 0xe206c); retail 0x4f0fc0, unclaimed. The dialog
 // handlers hand every message they do not consume to it.
 // Before normalization (function): EventWindowHandler.
-int eventWindowHandler(message* msg);
+// DC kb.cpp:2549/5206 signatures use references; retail passes the same addresses.
+int eventWindowHandler(message& msg);
+TDialogBox* getCurrentNormalDialog();
 // Before normalization (function): extended_dialog.
 void extendedDialog(const char* text,
     std::vector<type_dialog_resource>& resources,
@@ -511,7 +514,7 @@ void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:4781, dc 0xe519c) int GetNextHumanPlayer(int start);
 // CODEVIEW(E:\gamedcs\kb.cpp:4806, dc 0xe5214) void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg);
 // CODEVIEW(E:\gamedcs\kb.cpp:4855, dc 0xe52a8) int CheckMem();
-// CODEVIEW(E:\gamedcs\kb.cpp:5206, dc 0xe5960) void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info);
+// CODEVIEW(E:\gamedcs\kb.cpp:5206, dc 0xe5960) void CalculateNormalDialogSize(TNormalDialogInfo& dialog_info);
 // CODEVIEW(E:\gamedcs\kb.cpp:5441, dc 0xe5ed4) void get_quickview_size(const char* text, int* width, int* height);
 // CODEVIEW(E:\gamedcs\kb.cpp:5478, dc 0xe5f60) TDialogBox* GetCurrentNormalDialog();
 // CODEVIEW(E:\gamedcs\kb.cpp:5488, dc 0xe5f68) void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut, int x, int y, int iResType1, int iResExtra1, int iResType2, int iResExtra2, int iSpecial, int iResType3, int iResExtra3);

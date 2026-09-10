@@ -21,10 +21,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-#define HOMM3_LEVELUP_RELEASE_DIAGNOSTIC()                                \
-    (1 ? static_cast<void>(0)                                            \
-       : static_cast<void>(printf("level up\n")))
-
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
 // against it before synthesizing WIDGET_END_DIALOG.
@@ -55,47 +51,20 @@ static const char* levelUpSkillName(int encodedSkill)
 }
 
 // E:\gamedcs\levelupwindow.cpp:48
-// CURRENT (99.12995%, from 98.8241%, originally 97.7369): nine
-// release-elided, call-shaped diagnostic sites supply the last live /Ob2
-// mass window without emitting calls or string bytes. The titration is sharp:
-// one and eight sites give 98.0000, nine, ten and eleven give 99.12995, and
-// twelve overshoots to 98.07131. Nine is the minimum winning dose retained
-// below. Its exact macro name, placement and text are unattested; retail proves
-// only the dead call-candidate shape already established independently by the
-// artifact, THall and TCastle constructors.
-// A genuine release VERIFY interpretation was tested on 2026-08-21 rather
-// than assumed. Nine byte-elided `TownSpecialGrantedMask.size()` expressions
-// give 98.0000%; one through three byte-elided `GetPrimarySkill(0) >= 0`
-// expressions give 98.8241% and four overshoots to 89.1704%; the natural
-// `first_choice == -1 || LevelUpSkillName(first_choice) != 0` precondition
-// gives 98.0000%. Mixing three GetPrimarySkill checks with one size check is
-// still 98.8241%, and mixing them with six size checks is 98.0000%. Therefore
-// the retained carrier cannot honestly be named VERIFY from present evidence:
-// a real VERIFY remains plausible historically, but no tested invariant has
-// its compiler-phase shape.
-// At the new maximum, all 66 branch mnemonics and symbolic targets agree. Base
-// has 1,257 instructions / 119 calls against retail's 1,262 / 120. The residue
-// is the reserve site's coupled `_Destroy`/`size()` inline split plus the
-// already documented EH-temp slot rotation; why-reg reduces it to 61 unpaired
-// masked slots and a small B10/B14 scratch-register preference.
-// Re-audited 2026-09-01 Dreamcast-first: the retail and candidate CFGs both
-// have 132 blocks, 131 of them exact; only reserve block B4 differs in size.
-// Statement-scoped inline_depth(1), (2), and (3) around the DC-proven reserve
-// call are byte-flat at 99.12995%. This is a measured negative control: a
-// depth pin cannot select the empty `_Destroy` call without also crossing the
-// in-class reserve expansion, so no inert inline-control artifact is retained.
+// Exact after removing the synthetic diagnostic padding and restoring the
+// DC set_visible/set_hotkey/operator[] calls. DC lines 64/73/76/78 and
+// 86..138 support construction followed by vector append; source-family
+// controls vary their genuine result lifetimes. Fusing new into push_back
+// and using one begin/end for-iterator reproduces retail's reserve size()
+// boundary and widget EH homes. The bb local and named back() results stay.
 //
-// The earlier 98.8241 gain came from the two-axis /Ob2 sweep described in
-// mainmenu.cpp, with the mass half supplied HONESTLY rather than padded.
-// The old note's "~12 statements lighter than retail" reading was right, and
-// the missing statements are found: retail NAMES every widget it builds
-// (`textWidget* t = new textWidget(...); Widgets.push_back(t);`) instead of
-// pushing the `new` expression straight into push_back. That is +17
-// byte-inert statements and it lands the mass axis by itself. Retail also
-// names the two `Widgets.back()` results, which is not mass but PLACEMENT:
-// it is what emits retail's `mov eax,[eax-4]; mov ecx,eax` where the fused
-// `Widgets.back()->send_message(...)` emitted one `mov ecx,[eax-4]`
-// (98.6141 -> 98.8241).
+// The 180-state lifetime search reproduced two 100% forms (named or direct
+// text-format results), with all four scored TU functions exact. The last
+// 99.99525% control retained a portrait local and stored its allocation in
+// a dead parameter slot instead of retail's EH stack home. Earlier padding
+// reached only 99.12995%; its nine unreachable printf calls, alternative
+// doses and meaningless VERIFY expressions never established source facts.
+// No diagnostic carrier or inline-depth pin remains.
 // Before normalization (locals): gained_skill, first_choice, second_choice.
 VA(0x004f8880, 0xE7E)  // linkorder+caller+vtable sequence, dc 0xe8344
 TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
@@ -103,113 +72,6 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     : CAdvPopup(205, 65, 385, 470, 0x12),
       m_leftSkill(firstChoice), m_rightSkill(secondChoice), m_selected(0)
 {
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
-    // /Ob2 budget ledger (2026-08-14). Both axes are now at a local maximum
-    // and were re-swept TOGETHER at the landed spelling: pad statements ahead
-    // of this `reserve` x xx_nop sites past the last push_back give 98.8241
-    // only at (0,0) - mass 2/4/8 all drop to 98.0000 at k=0, and every k>=1
-    // column is 88.4002 (k=1) or 79.5254 (k=2) at every mass. Dropping just
-    // the two named `Widgets.back()` results is 98.6141, so this cell is one
-    // step wide in both directions. Measured and REJECTED here:
-    // `set_hotkey(code)` for the two `hotKeyCodes.push_back` calls 96.5610
-    // (the /Ob2 NESTING knob that closed other constructors is negative here,
-    // because both hotkey growths are already byte-exact),
-    // `Widgets.insert(Widgets.end(), accept)` 88.3582, the same behind a
-    // `std::vector<widget*>*` local 89.2655, one reused `widget* w` across
-    // every creation instead of a fresh named local each 89.4263, and the
-    // begin-twice +2 loop hoist 88.3328.
-    // WHAT IS LEFT, both rooted in the LAST `Widgets.push_back(accept)`:
-    //  - retail inlines the first of the grow path's three `size()` calls as
-    //    `_First==0 ? 0 : (_Last-_First)>>2` (132 blocks against our 131) and
-    //    transposes the `_Last`/`_End` load pair with it; the whole grow path
-    //    after that is one divergence propagating through registers. That
-    //    push_back is the LAST candidate site in the body, so by the
-    //    last-site screen its divisor is budget/1 and no site knob can reach
-    //    it - confirmed by the all-negative k>=1 columns above.
-    //  - the `new`-object EH temp lands one slot lower than retail's for the
-    //    first eighteen widgets ([ebp+0x8] then [ebp-0x1c] against retail's
-    //    [ebp-0x1c] then [ebp-0x10]): our C2 finds the dead `thisHero`
-    //    parameter slot reusable one temp earlier. Frame size is identical
-    //    (`sub esp,N` matches), so this is temp numbering, not a missing
-    //    local.
-    // The registration loop, both hotkey growths, both choice layouts and the
-    // whole deadline tail are byte-exact.
-    //
-    // 2026-08-14, THE MASS AXIS IS LIVE AND THE OLD READING WAS A SAMPLING
-    // ARTEFACT. "mass 2/4/8 all drop to 98.0000" is true but the window is
-    // NARROW and sits past it: single-step titration (dead `int padN = x;
-    // padN = padN;` pairs, 1..32) gives 98.0000 for 1..11, 99.1299 for
-    // 12..15, 98.0713 at 16 and 88.5784 from 24. The 2/4/8 sample simply
-    // never landed in the 12..15 cell. POSITION IS IRRELEVANT - the same
-    // twelve at the very END of the body measure identically - which is what
-    // the RE'd rule predicts, since the only thing mass moves is
-    // `budget = 2 * cb(caller)` and `cb` is the whole caller's IL estimate.
-    // At mass 12 the FIRST of the two residuals above is gone: the last
-    // push_back's grow path gets its `size()` expansion and its whole
-    // register phase agrees with retail; what is left there is a small
-    // schedule slip at `reserve` plus the temp-slot rotation.
-    // The old conclusion that the honest fix must be ~24 more real statements
-    // is superseded by the release-elided diagnostic carrier above. NOT that
-    // carrier, all measured this round: `set_hotkey` for one
-    // or both `hotKeyCodes.push_back` calls (97.71 / 97.28 / 96.77 - the DC
-    // xref graph does record `button::set_hotkey` x1 for this constructor,
-    // but it does not pay), the plain unguarded registration loop 88.63 (the
-    // DC xref also records begin x1 / end x1, i.e. no guard - it does not pay
-    // either), and eight orderings of the accept block: hotkeys after the
-    // push_back 92.00, enable first 95.78, enable after the push_back 79.81,
-    // push_back first 92.41, a `std::vector<int>*` local for the hotkeys
-    // 98.8241 (byte-flat), `hotKeyCodes.reserve(2)` 89.75, the three-argument
-    // hotkey insert 78.77, a `widget*` alias for accept 98.7670, and
-    // `Widgets.insert(Widgets.end(), accept)` 88.36.
-    // CLOSED 2026-08-14, and it does NOT need a widget.h edit: the DC xref's
-    // `widget::set_visible` x2 (E:\gamedcs\Widget.h:263, dc 0x56df8, retail
-    // 0x1629b0) where we spell `send_message(WIDGET_CLEAR_STATUS,
-    // WIDGET_DRAWN)` twice is EXACTLY BYTE-FLAT at 98.8241, modelled
-    // file-locally as `set_visible(w, 0)` over the same ternary retail's
-    // header inline must carry. The selector argument is a compile-time
-    // constant, so C1 folds the expansion before the /Ob2 inliner counts it -
-    // no divisor site, no front-end mass. See mainmenu.cpp for the general
-    // rule; the ~24 real statements this constructor wants are still missing.
-    // 2026-08-14, the DC LOCAL census (S_REGREL32 after S_ENDARG, dc 0xe8344)
-    // is the other half of that hunt and it finds exactly ONE local here:
-    // `bb` at sp+0x34, CodeView type 0x1EFE = `bitmapBorder*`. So retail
-    // reuses a single border pointer where this body names `background` and
-    // `portrait` separately. Spelling retail's single reused `bb` is byte-
-    // EXACTLY flat at 98.8241 - consistent with the reused-`widget* w` row
-    // above being a NESTING loss rather than a naming one - so the count of
-    // named locals is not the missing mass either. Note also what the census
-    // does NOT list: every other widget pointer in this body is register-
-    // allocated in the DC build, so the census is a LOWER bound on retail's
-    // locals and cannot be read as "retail declared only one".
-    //
-    // 2026-08-14, THE STATEMENT CENSUS IS CALIBRATED AND IT CANNOT PRICE THIS
-    // BODY EITHER. `*** SRCLINES ***` gives dc 0xe8344 Cb 0x8E8 = 49 statement
-    // lines over E:\gamedcs\levelupwindow.cpp:48-155, in ONE file block - no
-    // header line is attributed inside the range, so for this dump the "which
-    // header lines were inlined" half of the oracle never fires (NB11 attributes
-    // inlined code to the CALL SITE's .cpp line; terrain.h's twenty lines at
-    // 0xe80e4-0xe8343 are a separate out-of-line COMDAT, not an inline here).
-    // This body counts 71 statement lines, ratio 1.449 - which would say we are
-    // ALREADY over, in flat contradiction with the titration above (12..15 pad
-    // units BUY 99.1299). The titration is retail bytes and wins; the census is
-    // the resolution problem. Calibrated over all 807 EXACT functions in the
-    // tree carrying a `dc 0x` map: median ratio 0.933, quartiles 0.733 and
-    // 1.083, and only 29% of exact bodies land within +-10% of 1.0 (36% for
-    // bodies of 30-60 DC lines). A +-25% instrument cannot resolve a
-    // 20-statement effect on a 71-line body. The DC call census for this range
-    // DOES confirm the same widget set (bitmapBorder / textWidget / iconWidget
-    // / coloredBorderFrame / button / CAdvPopup), so this is not the
-    // get_morale_description case of a different function - the Dreamcast
-    // source is simply tighter than retail's by about the mass the titration is
-    // asking for, and the census measures the Dreamcast source.
     m_widgets.reserve(25);
 
     g_levelUpWindow = this;
@@ -217,138 +79,114 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         g_dialogDeadline697784 = GameTime::get() + 15000;
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
+    // Before normalization: bb.
     bitmapBorder* background = new bitmapBorder(
         0, 0, 385, 470, BACKGROUND_ID, "lvlupbkg.pcx", 0x800);
     background->setPlayerPaletteColors(thisHero->m_owner);
     m_widgets.push_back(background);
 
-    bitmapBorder* portrait = new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         171, 66, 58, 64, PORTRAIT_ID,
-        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800);
-    m_widgets.push_back(portrait);
+        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+    // DC lines 71/86/117 call the subscript wrapper, not its getText body.
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT],
             thisHero->m_name);
-    textWidget* titleText = new textWidget(
+    m_widgets.push_back(new textWidget(
         23, 22, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
-        TEXT1_ID, 5, 0, 8);
-    m_widgets.push_back(titleText);
+        TEXT1_ID, 5, 0, 8));
 
-    const char* heroFormat =
-        g_generalText->getText(GENERAL_TEXT_LEVEL_UP_HERO_FORMAT);
-    sprintf(g_text, heroFormat,
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_HERO_FORMAT],
             thisHero->m_name, thisHero->m_level, thisHero->heroFn004D8F70());
-    textWidget* heroText = new textWidget(
+    m_widgets.push_back(new textWidget(
         23, 151, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
-        TEXT2_ID, 5, 0, 8);
-    m_widgets.push_back(heroText);
+        TEXT2_ID, 5, 0, 8));
 
     sprintf(g_text, "%s +1", g_primarySkillNames[gainedSkill]);
-    textWidget* gainedText = new textWidget(
+    m_widgets.push_back(new textWidget(
         23, 242, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
-        TEXT3_ID, 5, 0, 8);
-    m_widgets.push_back(gainedText);
-    iconWidget* gainedIcon = new iconWidget(
+        TEXT3_ID, 5, 0, 8));
+    m_widgets.push_back(new iconWidget(
         174, 190, 42, 42, PRISKILL_ID, "pskil42.def", gainedSkill,
-        0, 0, 0, 0x10);
-    m_widgets.push_back(gainedIcon);
+        0, 0, 0, 0x10));
 
     if (secondChoice != -1) {
-        const char* choiceFormat =
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE);
-        sprintf(g_text, choiceFormat,
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE],
                 g_skillMasteryNames[firstChoice % 3],
                 g_levelUpSkillTraits[firstChoice / 3 - 1].m_name,
                 g_skillMasteryNames[secondChoice % 3],
                 g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
-        textWidget* choiceText = new textWidget(
+        m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
-            TEXT4_ID, 1, 0, 8);
-        m_widgets.push_back(choiceText);
-        textWidget* orText = new textWidget(
+            TEXT4_ID, 1, 0, 8));
+        m_widgets.push_back(new textWidget(
             169, 325, 50, 46,
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR),
-            "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8);
-        m_widgets.push_back(orText);
+            (*g_generalText)[GENERAL_TEXT_LEVEL_UP_OR],
+            "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8));
 
-        coloredBorderFrame* leftBorder = new coloredBorderFrame(
+        m_widgets.push_back(new coloredBorderFrame(
             122, 325, 47, 46, SKILLBORDER_1_ID,
-            g_unnamed6aacb0->m_data[45], 0x400);
-        m_widgets.push_back(leftBorder);
+            g_unnamed6aacb0->m_data[45], 0x400));
+        // DC lines 93/95 retain back() followed by set_visible(false).
         widget* addedLeft = m_widgets.back();
-        addedLeft->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                widget::WIDGET_DRAWN);
+        addedLeft->setVisible(0);
 
-        coloredBorderFrame* rightBorder = new coloredBorderFrame(
+        m_widgets.push_back(new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
-            g_unnamed6aacb0->m_data[45], 0x400);
-        m_widgets.push_back(rightBorder);
+            g_unnamed6aacb0->m_data[45], 0x400));
         widget* addedRight = m_widgets.back();
-        addedRight->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                 widget::WIDGET_DRAWN);
+        addedRight->setVisible(0);
 
-        iconWidget* leftIcon = new iconWidget(
+        m_widgets.push_back(new iconWidget(
             124, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            firstChoice, 0, 0, 0, 0x10);
-        m_widgets.push_back(leftIcon);
-        iconWidget* rightIcon = new iconWidget(
+            firstChoice, 0, 0, 0, 0x10));
+        m_widgets.push_back(new iconWidget(
             222, 326, 44, 44, SKILLICON_2_ID, "secskill.def",
-            secondChoice, 0, 0, 0, 0x10);
-        m_widgets.push_back(rightIcon);
+            secondChoice, 0, 0, 0, 0x10));
 
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
                 g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
-        textWidget* leftLabel = new textWidget(
+        m_widgets.push_back(new textWidget(
             102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
-            TEXT6_ID, 5, 0, 8);
-        m_widgets.push_back(leftLabel);
+            TEXT6_ID, 5, 0, 8));
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[secondChoice % 3],
                 g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
-        textWidget* rightLabel = new textWidget(
+        m_widgets.push_back(new textWidget(
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
-            TEXT7_ID, 5, 0, 8);
-        m_widgets.push_back(rightLabel);
+            TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
-        const char* singleChoiceFormat =
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE);
-        sprintf(g_text, singleChoiceFormat,
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE],
                 g_skillMasteryNames[firstChoice % 3],
                 g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
-        textWidget* soleText = new textWidget(
+        m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
-            TEXT4_ID, 1, 0, 8);
-        m_widgets.push_back(soleText);
-        coloredBorderFrame* soleBorder = new coloredBorderFrame(
+            TEXT4_ID, 1, 0, 8));
+        m_widgets.push_back(new coloredBorderFrame(
             169, 325, 47, 46, SKILLBORDER_1_ID,
-            g_unnamed6aacb0->m_data[45], 0x400);
-        m_widgets.push_back(soleBorder);
-        iconWidget* soleIcon = new iconWidget(
+            g_unnamed6aacb0->m_data[45], 0x400));
+        m_widgets.push_back(new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            firstChoice, 0, 0, 0, 0x10);
-        m_widgets.push_back(soleIcon);
+            firstChoice, 0, 0, 0, 0x10));
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
                 g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
-        textWidget* soleLabel = new textWidget(
+        m_widgets.push_back(new textWidget(
             149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
-            TEXT6_ID, 5, 0, 8);
-        m_widgets.push_back(soleLabel);
+            TEXT6_ID, 5, 0, 8));
         m_selected = SKILLICON_1_ID;
     }
 
     button* accept = new button(
         296, 413, 64, 30, LEVELUP_ACCEPT_ID, "iokay.def",
         0, 1, 0, 0, 2);
-    accept->m_hotKeyCodes.push_back(1);
-    accept->m_hotKeyCodes.push_back(28);
+    // DC lines 135/136 call the canonical button::set_hotkey wrapper.
+    accept->setHotkey(1);
+    accept->setHotkey(28);
     accept->enable(firstChoice == -1 || secondChoice == -1);
     m_widgets.push_back(accept);
 
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        for (widget** it = first; it != m_widgets.end(); ++it) {
-            if (*it)
-                addWidget(*it, -1);
-        }
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
     }
 
     if (g_turnDuration69d630.isOn()

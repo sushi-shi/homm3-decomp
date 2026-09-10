@@ -857,52 +857,30 @@ void townManager::setupExtraStuff()
 // state table, which is also why /OPT:ICF could not fold them.
 // ---------------------------------------------------------------------
 
-// Residual (98.95%): one final /Ob2 boundary and one C2 stack-slot tie.
-// Every widget, literal, id, font, frame, coordinate and branch is retail's.
-// The optimizer-elided diagnostic at the tail is the missing source-history
-// carrier: its Widgets.size() argument adds one inlinable accessor candidate
-// without emitting the call, string or accessor. That moves the widget-vector
-// insertion boundary to retail's position (54 out-of-line insert calls on both
-// sides) and makes all 165 branch mnemonics and symbolic targets agree.
+// EXACT after the preprocessor/lifetime audit. Complete's exit button
+// has a second hotkey, scan code 1, before its insertion into m_widgets.
+// Restoring that real call and using the ordinary while-iterator attachment
+// loop reaches 100%; the old padded 98.9497% source omitted the hotkey.
+// A 180-state corrected-source family reproduced multiple exact candidates.
+// The adopted parent retains the existing construction-result scopes and
+// changes only the final traversal from guarded do to while. The guarded-do
+// control is 95.6527% with the correct hotkey. No padding or inline pin.
+// Removed HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC.
+// Its unreachable printf(m_widgets.size()) supplied an accessor candidate
+// to VC6's inliner, raising the historical score from 95.5868 to 98.9497.
+// That is a compiler-state control, not evidence for a diagnostic statement
+// in TTownScreenWindow::TTownScreenWindow (retail 0x5c34d0, DC 0x16a72c).
+// DC townmgr.cpp:2274 supplies the real reserve call; the widget construction
+// and final addWidget sweep remain. No replacement VERIFY or dummy call is
+// justified by the line gaps or by diagnostics elsewhere in the program.
 //
-// The carrier class is independently evidenced in this TU: three analogous
-// TRACE-shaped sites make TCastleWindow's constructor exact, while the
-// Dreamcast image contains both dreamprintf and OutputDebugStringW. Its macro
-// name, text and exact placement are unattested and explicitly provisional;
-// none survives in the object. Controls separate the useful accessor site
-// from printf-shaped mass: one no-argument TRACE at the tail, one at entry,
-// and three at entry all score 95.54. The accessor-bearing tail site alone
-// raises the body from 95.5868 to 98.9497.
-//
-// Conventional release VERIFY shapes are close but distinguishable:
-// `(void)Widgets.size()`, `(void)!Widgets.empty()` and the natural 79-widget
-// equality invariant all score 98.83. VERIFY therefore remains historically
-// possible, but none of the evidenced forms reproduces the best codegen.
-//
-// Two compiler-state differences remain. First, our first of the final three
-// Widgets.push_back calls still expands where retail calls it; ours therefore
-// emits 318 calls to retail's 319, although the later two push_back calls and
-// the final begin/end sweep agree. Second, retail reserves six scalar dwords
-// (`sub esp,0x18`) while ours reserves five (`sub esp,0x14`). The reserve
-// expansion itself is instruction-identical, but retail homes (new buffer,
-// limit) at (-0x18,-0x1c) where ours swaps them, then gives the old-First temp
-// a fresh -0x24 slot; ours reuses -0x14 and later -0x1c. The diagnostic fixes
-// the insertion phase but cannot reach this temp-allocation tie.
-//
-// Other bounded negatives: named locals for the two loop widgets (95.50), a
-// named off-screen buffer (95.54), a function-scope `int i` (byte-identical),
-// the text-widget induction variable with icon id `id-8` (95.53), 4/8/16
-// self-assign probes (byte-identical), 40 dead statements (95.54), and 70
-// (93.20).
-//
-// The final-site boundary is bounded directly too (2026-08-21). Naming the
-// exit button scores 98.94819; `inline_depth(0)` around its complete
-// push_back statement overshoots to 96.87186. Moving the proven diagnostic
-// immediately before that site scores 98.65389, while placing it between the
-// exit button and the two final widgets is byte-identical at 98.94972. Thus
-// neither a source pseudo, an imposed call, nor candidate ordering recovers
-// retail's 319th call or sixth scalar slot. Local spelling and undifferentiated
-// budget mass are closed; the residual waits on broader TU-state evidence.
+// Historical negative controls: argument-free TRACE sites score 95.54;
+// evaluating size(), !empty(), or a 79-widget equality scores 98.83, without
+// proving any of those expressions belonged here. Naming the final button
+// (98.9482) or forcing its push_back out of line (96.8719) did not reproduce
+// retail's final insert boundary. Hoisting the growth-loop counter was
+// byte-flat; naming the z-buffer extent scored 98.85. These figures describe
+// probes on the removed diagnostic, not the current source's checkpoint.
 
 // The town screen itself - the one window in the compiland that is a
 // plain heroWindow rather than a CAdvPopup, which is what its nine-slot
@@ -914,17 +892,6 @@ void townManager::setupExtraStuff()
 // and by a bare `ret`.
 
 // E:\gamedcs\townmgr.cpp:2261
-#define HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC(text, value) \
-    (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
-
-// Residual (98.9497%): the frame, 0x14 against retail's 0x18, and every other
-// instruction agrees. The missing dword is a temporary of the inlined
-// `Widgets.reserve(96)` - retail spends three slots there ([ebp-0x18],
-// [ebp-0x1c], [ebp-0x24]) where we spend two plus a permutation. MEASURED AND
-// REJECTED 2026-09-06: hoisting the growth-bonus loop counter to function
-// scope (98.95, byte-flat - VC6 reserves no slot for an enregistered local),
-// and naming `height * width` as a `zBufferSize` local for the zBuffer
-// allocation and its memset (98.85).
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
@@ -968,8 +935,11 @@ TTownScreenWindow::TTownScreenWindow()
                                      0, 0, 0, 0, 0x10));
     m_widgets.push_back(new iconWidget(122, 413, 38, 38, 159, "itmcl.def",
                                      0, 0, 0, 0, 0x10));
-    m_widgets.push_back(new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
-                                     font::PRIMARY, 160, 5, 0, 8));
+    {
+        widget* label = new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 160, 5, 0, 8);
+        m_widgets.push_back(label);
+    }
 
     for (int i = 0; i < 8; i++) {
         m_growthBonusIcon[i] = new iconWidget(
@@ -997,20 +967,41 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 387, 58, 64, 107, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 108, 2, 0, 8));
-    m_widgets.push_back(new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 109, 2, 0, 8));
-    m_widgets.push_back(new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 110, 2, 0, 8));
-    m_widgets.push_back(new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 111, 2, 0, 8));
-    m_widgets.push_back(new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 112, 2, 0, 8));
-    m_widgets.push_back(new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 113, 2, 0, 8));
-    m_widgets.push_back(new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 114, 2, 0, 8));
+    {
+        widget* label = new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 108, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 109, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 110, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 111, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 112, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 113, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 114, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
 
     m_widgets.push_back(new iconWidget(305, 387, 58, 64, 115, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
@@ -1042,20 +1033,41 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 483, 58, 64, 132, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 133, 2, 0, 8));
-    m_widgets.push_back(new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 134, 2, 0, 8));
-    m_widgets.push_back(new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 135, 2, 0, 8));
-    m_widgets.push_back(new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 136, 2, 0, 8));
-    m_widgets.push_back(new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 137, 2, 0, 8));
-    m_widgets.push_back(new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 138, 2, 0, 8));
-    m_widgets.push_back(new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
-                                     font::WHITE, 139, 2, 0, 8));
+    {
+        widget* label = new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 133, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 134, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 135, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 136, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 137, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 138, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 139, 2, 0, 8);
+        m_widgets.push_back(label);
+    }
 
     m_widgets.push_back(new iconWidget(305, 483, 58, 64, 140, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
@@ -1072,32 +1084,53 @@ TTownScreenWindow::TTownScreenWindow()
     m_widgets.push_back(new iconWidget(677, 483, 58, 64, 146, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    m_widgets.push_back(new button(744, 414, 48, 16, 152, "iam014.def",
-                                 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(744, 526, 48, 16, 153, "iam015.def",
-                                 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(744, 382, 48, 30, 154, "tsbtns.def",
-                                 0, 1, 0, 32, 2));
-    m_widgets.push_back(new button(744, 544, 48, 30, EXIT_BUTTON_ID,
-                                 "tsbtns.def", 4, 5, 1, 28, 2));
+    {
+        button* control = new button(744, 414, 48, 16, 152, "iam014.def",
+                                 0, 1, 0, 0, 2);
+        m_widgets.push_back(control);
+    }
+    {
+        button* control = new button(744, 526, 48, 16, 153, "iam015.def",
+                                 0, 1, 0, 0, 2);
+        m_widgets.push_back(control);
+    }
+    {
+        button* control = new button(744, 382, 48, 30, 154, "tsbtns.def",
+                                 0, 1, 0, 32, 2);
+        m_widgets.push_back(control);
+    }
+    {
+        button* control = new button(744, 544, 48, 30, EXIT_BUTTON_ID,
+                                 "tsbtns.def", 4, 5, 1, 28, 2);
+        // Complete adds scan code 1 to button::m_hotKeyCodes (+0x48)
+        // before inserting the button in this window's widgets (+0x30).
+        // Retail ctor +0x2163 starts the extra hotkey insertion;
+        // the older DC constructor has no corresponding extra hotkey.
+        control->setHotkey(1);
+        m_widgets.push_back(control);
+    }
 
-    m_widgets.push_back(new bitmapBackedTextWidget(7, 555, 734, 19, 0,
+    {
+        widget* label = new bitmapBackedTextWidget(7, 555, 734, 19, 0,
                                                 "smalfont.fnt", "TStatBar.pcx",
-                                                font::PRIMARY, 151, 1, 0));
-    m_widgets.push_back(new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
-                                     font::PRIMARY, 149, 0, 0, 8));
+                                                font::PRIMARY, 151, 1, 0);
+        m_widgets.push_back(label);
+    }
+    {
+        widget* label = new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
+                                     font::PRIMARY, 149, 0, 0, 8);
+        m_widgets.push_back(label);
+    }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    widget** it = m_widgets.begin();
+    while (it != m_widgets.end()) {
         if (*it)
             addWidget(*it, -1);
         else
             memError();
+        ++it;
     }
-    HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC("TTownScreenWindow widgets: %u\n",
-                                          m_widgets.size());
 }
-
-#undef HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC
 
 VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
 
@@ -2870,380 +2903,78 @@ int TThievesGuildWindow::windowHandler(message* msg)
 //
 // The four local names and the parameter name are the Dreamcast
 // declarator's (dc variables.csv: params this/`which`, locals hallX,
-// hallY, slotX, slotY - and exactly those four, so retail has no local
-// this body does not model). The Dreamcast frame homes hallY 0x240 bytes
+// hallY, slotX, slotY). The recorded locals are a lower bound, not proof
+// that retail had no others. The Dreamcast frame homes hallY 0x240 bytes
 // below hallX, i.e. EIGHT rows of eighteen: that build predates Conflux,
 // where retail's stride-0x48 nine-row tables carry it.
 //
-// Residual (85.99%): a pure /Ob2 caller-cb starvation, and the emitted
-// code is otherwise PROVEN identical. Three inline decisions diverge,
-// all of them budget arithmetic and none of them a modelling gap:
-//   * the reserve's `_Construct` - retail expands the element copy
-//     inline (`cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx`), we
-//     emit a call. That one call homes four loop pointers in memory,
-//     which keeps the edi zero-register alive for the whole body, which
-//     spills the id induction (600+i) to [ebp+8], which moves every
-//     later stack slot by eight and costs the second epilogue.
-//   * the LAST push_back of case 5 - retail expands `insert`, we call it.
-//   * one push_back of case 8 - retail calls it, we expand `insert`.
-// Titrated with dead `probe = N;` statements at the tail (byte-inert
-// front-end mass, docs/vc6/inliner.md's `budget = 2*caller_cb` lever):
-// 0 -> 85.99, 40 -> 93.21 (the two push_back/insert sites close), 60 and
-// 80 -> 99.66 with the code byte-identical to retail (only the trailing
-// jump table and reloc names differ), 100 -> 92.27, 200 -> 89.69. So
-// retail's front end sees roughly fifty to ninety statements more mass
-// in this body than our spelling presents, and there is no window where
-// LESS mass helps. Rejected as the source of that mass, each for a
-// retail-byte reason: a named local per widget (retail gives every
-// push_back its own unnamed temp slot - -0xa4/-0xb8/-0xc0/-0xe8/-0xf0 in
-// case 0 - not one reused slot); x/y locals in the loop (retail reloads
-// slotX[hallX[t][i]] and slotY[hallY[t][i]] separately for all four
-// widgets, so they are re-evaluated, not CSE'd); extra locals of any
-// kind (the frame is 0x604 either way and the Dreamcast roster lists
-// exactly four). Titration scaffolding is NOT committed.
+// Exact after restoring parameter indexing and construction/append groups.
+// DC 4344 (0x16eafe..0x16eb28) indexes BOTH hall tables with the retained
+// parameter R9, also used by switch 4338; group 4419 repeats that source
+// fact. Case-specialized row constants hid its effect on VC6's inline state.
+// Restoring both which subscripts initially fell from 99.6605 to 92.5610;
+// either subscript alone was byte-flat. Keeping the proven parameter and
+// fusing all four widget constructions into their push_back arguments is
+// exact, including reserve, every case's insertions and loop scheduling.
+// The 162-state parameter/result family reproduced this simplest form
+// (61d9353994ff116031c4dc5e); all 79 previously exact townmgr siblings held.
+// The four arrays remain const with Complete's dimensions. The real exit
+// button local is retained for its subsequent hotkey call.
 //
-// 2026-08-14, a NEW and more specific reading of the same residual, from
-// the head rather than the score. The frame TOTAL agrees exactly (0x604
-// both sides) but the LAYOUT inside it does not: retail homes `this` at
-// [ebp-0x7c] and starts slotX at [ebp-0x50]; we home `this` at
-// [ebp-0x60] and start slotX at [ebp-0x58]. Retail therefore keeps 0x2c
-// bytes of frame BELOW its tables that we keep above them, with the same
-// total - which is an ORDERING difference in the local table, not a
-// count difference, and it is present in the first thirty instructions,
-// before any inline decision is reached. The register pair also
-// transposes right there (retail `mov edx,2 / mov esi,4`, ours `mov
-// esi,2 / mov edx,4`), and that transposition is what the rest of the
-// body carries. Next lane: sweep the DECLARATION ORDER of the four
-// locals (slotX, slotY, hallX, hallY, and `int i`) before spending any
-// more on mass - the mass titration may simply have been buying this
-// ordering by accident. Two orders ARE already swept and neither moves
-// it: hoisting `int i` above slotX measured 85.99 unchanged, and putting
-// both int[9][18] tables ahead of slotX/slotY measured 84.61.
+// Earlier controls after the preprocessor/lifetime audit: the initial
+// 81-state family recovered reserve's _Construct expansion. A subsequent
+// 180-state family varied the four actual building-widget result roles;
+// the reproduced winner fuses name/check results, retains name-bar/image
+// scopes, and names the status bar and title. TownScreen stays exact.
+// DC's observed 4302..4461 source span has 89 rows over 160 lines; neither
+// the missing rows nor trailing source recover an exact function line count.
+// Construction/append groups at 4344..4347 motivated a further 72-state
+// family: fused bar/image results, actual vector bindings, and counter/walk
+// lifetimes. Its 25 objects and ten reproduced elites did not improve the
+// score; all 79 exact townmgr siblings held. No alternative was adopted.
+// A later result-scope family reached 99.6605 with four derived pointers
+// per loop and fused status/title results, before fixing the subscripts.
+// Sixteen counter-update/type/ID-order forms emitted the same object.
+// Paired row-walker and tail-only families also failed on those earlier
+// parents. DC's del_Spr_from_Cache after the base constructor has no
+// counterpart in retail's direct vptr-to-array-initializer prologue.
+// Removed HOMM3_THALL_RELEASE_TRACE and its ten
+// identical unreachable printf calls. The old 99.6605% checkpoint depended
+// on this synthetic caller-size padding; it does not prove ten diagnostics
+// existed in THallWindow::THallWindow (retail 0x5c9be0, DC 0x16e6cc).
+// DC recovers the four layout arrays and widget construction. The presence
+// of dreamprintf elsewhere, line gaps, and a better /Ob2 score cannot supply
+// a missing diagnostic's meaning, count, or placement.
 //
-// 2026-08-14, and this SETTLES the "fifty to ninety statements" reading
-// above: it was wrong, and the frame-ordering lead it spawned is a
-// symptom rather than a cause. Two measurements say so.
+// Historical controls without the padding reached 85.9895. Retail expands
+// reserve's _Construct copy and differs at the last push_back in case 5 and
+// one push_back in case 8. Those choices change register homes, array slots,
+// and the second epilogue. The old padded 99.6605% checkpoint remains in
+// HIST; it does not establish a source or self-relocation ceiling.
 //
-//   * The STATEMENT CENSUS. The Dreamcast dump's `*** SRCLINES ***`
-//     section carries file/line -> address pairs per module; sliced by
-//     [dc, dc+Cb) it gives retail's own source-line count for a body.
-//     THallWindow's slice is 89 lines over townmgr.cpp 4302..4461, and
-//     every one of them maps: 4302 prologue+base ctor, 4303 the vptr,
-//     4306/4307 slotX and slotY, 4311-4318 hallX's EIGHT rows, 4323-4330
-//     hallY's eight, 4335 the reserve, 4338 the switch (72 B - the
-//     pre-jump-table compare chain), then eight case blocks of exactly
-//     seven lines each (background push_back, `for`, the four widget
-//     push_backs, the loop close) and an eleven-line tail. Scaling that
-//     to retail - one more case (+7) and one more row in each table (+2)
-//     - predicts 98 lines. This body spells 98. It is LINE-COMPLETE, so
-//     there are no fifty-to-ninety missing statements to go find; what
-//     the dead-store titration bought was cb, and a dead store's cb is
-//     nothing like a real statement's.
+// Failed source probes: flattening the two hall table initializers was
+// byte-flat. setHotkey is retained: on the padded control, spelling its
+// hotkeyCodes.push_back directly scored 99.4651 versus 99.6605. Partial
+// insert(end(), widget) substitutions scored 85.60..89.59 and changed named
+// callee boundaries. Splitting new/push_back statements, hoisting loop
+// counters, introducing an iterator, and loop-update spellings did not
+// recover the reserve boundary. inline_depth(1) was byte-flat. No retained
+// pin or artificial field store is justified: retail proceeds directly from
+// the base constructor/vptr to the four array initializers.
 //
-//   * The FRAME ORDERING IS DOWNSTREAM. The same note records that at
-//     titration 60-80 the emitted code is byte-identical to retail -
-//     which necessarily includes the frame layout and the edx/esi pair.
-//     So mass alone reproduces the ordering, and no declaration order
-//     can be its cause. Sweeping the remaining orders is dead work; the
-//     residual is expression-level caller cb, exactly as for BuyBuild
-//     above but with the sign reversed.
-//
-// The Dreamcast CALL census (dc-xref-graph 0x16e6cc) was screened at the
-// same time and names no missing site: its two apparent extras, a second
-// button::button and a ResourceManager::del_Spr_from_Cache, are absent
-// from retail's own call multiset, so they are Dreamcast-only.
-
-// What the two-table shape is NOT: the aggregate-initializer
-// trailing-zero collapse. Measured 2026-08-14 on SetupThievesGuild's own
-// pair of int[8][8] tables (see the note at its carcass row) - eliding a
-// row's trailing zeros makes VC6 emit `rep stosd` runs where retail
-// stores every element, and spelling every zero out reproduces retail's
-// shape exactly. Both of THallWindow's int[9][18] initializers already
-// spell all 18 columns, and neither side emits a single `rep stosd`, so
-// that lever is already pulled here.
-
-// The note that stood here - "retail holds ~0x2c more bytes of locals",
-// "eleven EH cleanup states", "a missing DECLARATION" - is WITHDRAWN.
-// All three readings were wrong, and each is refuted by one command.
-//
-//   * `push 0xb` is a RELOCATION ADDEND, not a state count. Retail's
-//     prologue is `push 0xb` with an IMAGE_REL_I386_DIR32 to
-//     game_tpthbkcs_pcx_1c9be0_unwind49; ours is `push 0x0` with a
-//     DIR32 to $L77675. Both push the address of this function's scope
-//     table; the 0xb is where the delinker's synthesized symbol starts
-//     inside it. TThievesGuildWindow, which is EXACT, carries the same
-//     `push 0xb` against our `push 0x0`. This is precisely the
-//     prologue split the residual-class list already records as not
-//     scored - it says nothing about object lifetimes.
-//
-//   * The FRAME TOTAL AGREES: `sub esp,0x604` on both sides, and the
-//     0x604 is fully accounted with nothing left over - 324 table ints
-//     (0x510) + slotX 7 + slotY 5 + `this` 1 + exactly 48 temporary
-//     dwords. Retail holds no more locals than we do; it holds the SAME
-//     number in a different order.
-//
-//   * The ordering gap is EIGHT bytes, not 0x2c, and it is downstream
-//     of one inline decision. Retail slotX [ebp-0x50] / slotY
-//     [ebp-0x2c]; ours [ebp-0x58] / [ebp-0x34]; both leave the same
-//     8-byte hole between the two arrays. The eight bytes are the two
-//     iterator temps ([ebp-0x1c], [ebp-0x20]) that our reserve loop
-//     homes in memory because it CALLS _Construct where retail expands
-//     it (`cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx`). `this`
-//     at -0x7c vs -0x60 is the same story one level up.
-//
-// So the row is what the 85.99% note above already said it was - a pure
-// /Ob2 caller-cb row - and the following is now PROVEN rather than
-// inferred. At the plateau `sema diff --branches` reports 179 branches
-// and 2 rets on BOTH sides, i.e. the duplicated epilogue, the hoisted
-// `this` and the whole frame layout (`mov eax,[ebp-0x7c]`) come back on
-// their own. The detailed diff has only eight marked blocks: B0 is the
-// already-explained unwind relocation addend; six case-loop latches swap
-// two independent updates (`inc ebx; add edi,4` versus retail's reverse
-// order); B370 is the decoder walking into jump-table data. A raw-byte
-// check proves all nine dwords of that table agree. Thus the 99.6605
-// residue is six scheduler orderings, not missing behavior or data.
-// Preincrement, `i += 1`, `i = i + 1`, moving the increment to the loop
-// body, and `i + constant` operand order were all byte-flat at the first
-// latch. The visible loop syntax does not control this residue.
-//
-// Two things were newly eliminated this lane, both compile-free or one
-// compile each:
-//
-//   * `set_hotkey(1)` IS retail's spelling, and the score at zero mass
-//     lies about it. `exitButton->hotKeyCodes.push_back(1)` - the
-//     idiom TThievesGuildWindow and TMageGuildWindow both need - scores
-//     86.03 here against set_hotkey's 85.99, but at the titration
-//     plateau the order REVERSES and stays reversed: 99.4651 for
-//     push_back against 99.6605 for set_hotkey, on the same harness in
-//     the same session. The plateau is the honest comparison, because
-//     only there is the inline structure retail's. Do not bank the
-//     four hundredths.
-//   * Table-initializer BRACING is cb-neutral. Rewriting both
-//     int[9][18] initializers as flat 162-element lists (no row braces)
-//     measures 85.9895, unchanged to the digit.
-//
-// And the direction of the wall is now bracketed from the other side.
-// Retail does NOT inline _Construct anywhere else in this compiland:
-// TCastleWindow (17498 B, the biggest body here) and
-// type_garrison_base_window both CALL it with the iterators homed in
-// memory, byte for byte our shape. THallWindow is the only row where
-// retail expands it. So this is not "retail's caller is bigger" - it is
-// the `budget / (n - k)` division at the FIRST candidate site, where the
-// quotient is smallest and reserve always sits. Raising cb is the only
-// lever the model leaves, and the titration staircase measured this
-// lane brackets how much: with set_hotkey, 0 -> 85.99, 40 -> 93.21,
-// 60 and 80 -> 99.66; with push_back, 0-15 -> 86.03, 20-35 -> 93.11,
-// 40-80 -> 99.4651, 90-120 -> 92.09, 150 -> 89.53, 200 -> 87.22. The
-// window is wide, it is NOT a knife edge, and no byte-inert real-source
-// construct that lands in it has been found in five lanes.
-//
-// FIFTH CANDIDATE, MEASURED AND REJECTED 2026-08-20:
-// `Widgets.insert(Widgets.end(), X)` in place of `Widgets.push_back(X)`.
-// It IS the definition of push_back - Dinkumware spells push_back as
-// `{insert(end(), _X); }` - so it is byte-inert in principle, and each
-// site adds a real `end()` expression node, exactly the expression-level
-// cb this note says is missing. All 49 sites of THIS body rewritten
-// measures **63.5287**, far past the far side of the window (worse than
-// the 200-probe reading), so one such rewrite is worth several probes
-// and the construct badly overshoots. A partial rewrite would land
-// inside the window but would be arbitrary source, the same objection
-// that keeps the dead-store titration out of the tree. What it does
-// settle: the cb currency is expression NODES, the direction is MORE,
-// and the dose needed is small - well under a tenth of what 49 end()
-// nodes buy.
-//
-// SIXTH CANDIDATE, MEASURED AND REJECTED 2026-08-20 - and it is NOT
-// another dose of the same shape; it eliminates a different mechanism.
-// The divergence is three levels deep and only the innermost level
-// differs. BOTH sides inline `reserve` - `cmp ecx,4Dh` / `push 134h` /
-// `call operator new` / the copy loop / `call operator delete` /
-// `add eax,134h` land instruction-for-instruction - and BOTH inline
-// `_Ucopy` into its loop; retail then expands `_Construct` INSIDE that
-// loop as `cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx` (the
-// placement-new null test plus the pointer store) where we emit
-// `call std::_Construct`. So the refusal is at inline DEPTH 3, which
-// makes `#pragma inline_depth(255)` on the reserve statement the obvious
-// question - the depth can be lowered but not raised once expansion has
-// begun, so it has to be set at the site beforehand, which a statement
-// pin does. Measured byte-flat: 85.9895 to the digit. Depth is not the
-// limiter; the `budget / (n - k)` quotient is, exactly as this note
-// says.
-//
-// SEVENTH CANDIDATE, ELIMINATED 2026-08-20 WITHOUT A COMPILE - the
-// FIELD-STORE dose. The lever that paid +11.66 and +2.56 on two other
-// bodies (retail sets x/y/width/height after the base constructor even
-// though the base already took them, as TPuzzleWindow's exact ctor does)
-// DOES NOT APPLY HERE. Retail's prologue goes straight from
-// `call CAdvPopup::CAdvPopup` and the vptr store at 0x5c9c1a to the
-// slotX/slotY/hallX/hallY initializers at 0x5c9c3c - there is no member
-// store of any kind in between. Adding them would be inventing
-// instructions retail does not emit, not recovering a missing statement.
-//
-// AND THE CALL MULTISET IS NOW PRICED EXACTLY (predict-inline, same
-// date): base emits 290 out-of-line calls against retail's 289, and the
-// whole difference is TWO SITES IN OPPOSITE DIRECTIONS - one
-// `vector<widget*>::push_back` we expand and retail calls (base x8 vs
-// retail x9; the tool prints retail's side as `vector<int>::push_back`
-// because the retail link ICF-folded the two identical COMDATs, and
-// begin/end pair 1:1 across the same fold), and this `_Construct` we
-// call and retail expands. So the body is one over-inline and one
-// under-inline away from the call multiset being identical, and the
-// fourteen points are the 8-byte frame delta the under-inline forces -
-// the two `_Ucopy` iterator temps homed in memory - shifting every deep
-// local, the ~15%-score-hole shape.
-//
-// EIGHTH ROUND, 2026-08-20 - the wall is now SITE-RESOLVED and the pin
-// family is eliminated. The 49 push_back sites decide in three phases:
-// retail expands push_back one level and CALLS insert at sites 1-29,
-// expands insert fully (size/_Ucopy/_Ufill/_Destroy census) at sites
-// 30-40, and CALLS push_back outright at 41-49 (the Conflux arm + the
-// tail); ours is 1-30 / 31-41 / 42-49 - both boundaries exactly one
-// site late (site 30 = Dungeon's TPTHChk icon, site 41 = Conflux's
-// background). The tail-loop `begin base x0 vs retail x1` / `end x0 vs
-// x2` rows are retail's RUNNING CAP crossing before the tail - the
-// free-tier (<=0x28) exemption stops binding - which is why raising cb
-// fixes them along with everything else. Measured against that
-// structure:
-//   * inline_depth(0) on the Conflux background (site 41) imposes
-//     retail's call there, but the freed charge re-expands site 42 -
-//     multiset unchanged at 30/11/8, +0.157 incidental (86.1468).
-//   * Pinning the WHOLE retail-depth-0 region (Conflux arm + tail +
-//     the AddWidget for) drops the depth-2 census to 10 against
-//     retail's 11 and measures 85.1629. Geometry conservation: until
-//     site 30 expands - which needs MORE inlining, unpinnable - every
-//     imposed tail call is a new deficit elsewhere. Both reverted.
-// So no pin subset can reach retail's structure; the budget dose is
-// the only lever, exactly as the titration said.
-//
-// AND THE CURRENCY IS NOW PINNED DOWN, three measurements:
-//   * Constant-FOLDED expression nodes carry ZERO cb: a single dead
-//     store of a 300-node `0|0|...|0` chain measures 85.9895 to the
-//     digit. C1XX folds before it prices. The whole folded-constant
-//     respelling family (named flag ORs, spelled-out arithmetic) is
-//     dead as a carrier.
-//   * Statements under `if (0)` carry FULL cb and are byte-inert:
-//     sixty plain `i = 0;` stores wrapped in `if (0) {}` measure
-//     99.6605 - identical to the naked 60-probe plateau, re-anchored
-//     at this integration head. C1XX prices the dead tree; C2 deletes
-//     it with no EH or byte residue. A compile-time-disabled feature
-//     block IS a byte-inert cb carrier in this compiler.
-//   * But an if(0) block containing CANDIDATE CALL SITES moves the row
-//     BACKWARD: a dead tail button+push_back measures 84.4622, a whole
-//     dead case arm 79.9089. Dead sites still enter the collector and
-//     enlarge the site denominators. So the Dreamcast-only block (the
-//     second button::button, the 45th push_back, del_Spr_from_Cache)
-//     cannot be retail's missing mass under ANY spelling - as #ifdef
-//     it prices 0, as if(0) it measures backward - and the missing
-//     retail cb is dead statement mass, for which no exact source
-//     statements are recoverable from the DC dump (its line table's tail hole,
-//     4448-4454, is comment-sized, and exact siblings carry 11-, 41-
-//     and 101-line holes that are provably comments). Per the
-//     do_general_melee precedent the scaffolding stays out of the
-//     tree; the row holds at 85.9895 until an honest carrier appears.
-//
-// A RELEASE-ELIDED DIAGNOSTIC IS NOW THE LEADING HONEST-CARRIER
-// HYPOTHESIS (2026-08-20), prompted by the TRACE/assert possibility and
-// measured with the compiler rather than inferred. The byte-inert statement
-// used for the probe was
-//
-//   1 ? (void)0 : (void)printf("THallWindow(%d)\n", which);
-//
-// One such statement is flat at 85.9895; seven and nine both reach
-// 93.212166; ten reaches the established 99.6605 plateau. A SINGLE call
-// expression with ten `which` arguments is flat at 85.9895, so the priced
-// quantity is statement/call-site structure, not argument nodes. The DC
-// image independently contains both `dreamprintf` and OutputDebugStringW,
-// proving that this codebase had diagnostic infrastructure. Retail's base
-// xdata still has exactly 50 states, so any lost diagnostics introduced no
-// additional destructible temporaries; scalar TRACE-style expressions remain
-// compatible with that frame. TCastleWindow now provides independent retail
-// proof for this carrier class: three optimizer-elided call-shaped TRACE sites
-// make its 17.5 KB constructor byte-exact, while preprocessor-erased assert
-// shapes do not. The minimum measured ten-site dose below lifts this body from
-// 85.98953 to the 99.66054 plateau and reproduces the retail call and branch
-// structure. Its exact count, placement, macro name and format text remain
-// unattested; the reconstruction emits neither calls nor strings.
-//
-// VERIFY IS MEASURED AND REJECTED (2026-08-21). Ten release-VERIFY scalar
-// comparisons are erased before C2 prices the caller and leave the body at
-// 85.98953. Retaining evaluation through a tiny TU-visible validation helper
-// does enter the inliner, but 10, 11 and 16 such VERIFY sites all plateau at
-// 93.212166 with 177 branches and one return, against retail's 179 and two.
-// The accessor-bearing form proven exact in TCastleWindow was checked here
-// too: one entry `static_cast<void>(Widgets.size() == 0)` is byte-flat at
-// 85.98953. The release-VERIFY carrier therefore does not transfer to this
-// caller.
-// The TRACE-shaped carrier below alone reaches the retail CFG and 99.66054;
-// this is compiler evidence, not a choice based on the macro's name.
-//
-// AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
-// after the orchestrator reopened the sizing): respelling k of the 49
-// push_back sites measures 85.60 (k=5, arm 1), 89.59 (k=10, arms 1-2),
-// 88.60 (k=10, arms 4-5), 87.81 (k=15, arms 1-3) - a sharp peak near
-// k=10 that sits TEN POINTS BELOW the pure-statement plateau. The
-// construct is not the same currency as call-free mass: each respelled
-// site also adds an end() candidate SITE, and the denominator effect
-// caps the lever. Two constraints bound any future attempt: the
-// respelled sites must be EXPANDED-phase sites (at the nine
-// called-phase sites - Conflux arm + tail - an insert spelling would
-// emit `call insert` against retail's `call push_back`, a hard reloc
-// mismatch), and no uniform site family lands in the window (the
-// backgrounds and the tail singles both straddle the phase boundary).
-// So the partial dose is real but capped ~89.6, and it is non-uniform
-// source; not banked, same verdict as the naked titration.
-#define HOMM3_THALL_RELEASE_TRACE(text, value)                              \
-    (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
-
-// Residual (99.6605%): NOT SOURCE-REACHABLE, and this one is proven rather
-// than asserted. The CODE STREAM IS ALREADY EXACT - 3517 instructions on
-// both sides, identical mnemonics, operands, immediates and displacements,
-// 179 branches against 179, 289 calls against 289. What differs is the
-// SWITCH'S JUMP TABLE, and it differs only in how the two objects SPELL the
-// same nine targets:
-//
-//   ours    2ccc: 00 00 00 00   DIR32 $L69691   (compiler label, addend 0)
-//   retail  787c: 4a 12 00 00   DIR32 ??0THallWindow@@QAE@H@Z  (addend 0x124a)
-//
-// The delinker has no per-label symbols INSIDE a function, so vostok can only
-// express a jump-table target as `<function> + offset`; VC6 emits a `$L`
-// label per arm and relocates against that. objdiff compares the entry bytes,
-// so every one of the nine reads as a mismatch. Nine entries at four bytes
-// plus the `jmp [4*eax + <table>]` operand's own addend is 40 B against this
-// row's 39 B of recoverable mass - the whole of it.
-// Re-audited 2026-09-01: all 369 CFG blocks are exact. The source view also
-// finds six repeated loop latches where retail schedules the induction-pointer
-// add before the index increment and this compile reverses them; both `++i`
-// and a body-scoped increment are byte-flat negative controls. Those harmless
-// rotations cannot explain or repair the score: the 40-byte self-relocation
-// ceiling above still accounts for the complete 39-byte fuzzy loss.
-//
-// THE SAME CEILING BOUNDS EVERY JUMP-TABLE ROW IN THESE UNITS (measured
-// 2026-08-21, self-relocation census): get_spell_work_chance 120 B of table
-// against 152 B recoverable, get_morale_description 40 against 149,
-// get_luck_description 16 against 95, GetArmyMorale 40 against 16, and
-// type_garrison_base_window::WindowHandler 40 against 24. Price a
-// jump-table-bearing row against its table before spending a lane on it, and
-// do not read a 99.x plateau on one as a spelling problem. Fixing it is a
-// PIPELINE change (teach the comparison to resolve a self-relocation addend
-// to the same block the base's `$L` label names), not a source one.
+// Rejected synthetic controls: seven/nine dead TRACE calls gave 93.2122,
+// ten gave 99.6605; a single ten-argument call stayed at 85.9895. Scalar
+// VERIFY comparisons stayed at 85.9895 and validation-helper variants at
+// 93.2122. These are observations about C2 budgeting, not recovered source.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
-
-    int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
-    int slotY[5] = { 37, 141, 245, 349, 453 };
-    int hallX[9][18] = {
+    // DC locals retain const on all four arrays; Complete expands their
+    // dimensions to seven columns, five rows and nine town types.
+    const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
+    const int slotY[5] = { 37, 141, 245, 349, 453 };
+    const int hallX[9][18] = {
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
@@ -3254,7 +2985,7 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
     };
-    int hallY[9][18] = {
+    const int hallY[9][18] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },
@@ -3276,16 +3007,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkCs.pcx", 0x800));
         for (i = 0; i < 16; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[0][i]] - 1, slotY[hallY[0][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[0][i]], slotY[hallY[0][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]], slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[0][i]], slotY[hallY[0][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallcstl.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[0][i]] + 135, slotY[hallY[0][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3294,16 +3025,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[1][i]], slotY[hallY[1][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallramp.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[1][i]] + 135, slotY[hallY[1][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3312,16 +3043,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[2][i]], slotY[hallY[2][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "halltowr.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[2][i]] + 135, slotY[hallY[2][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3330,16 +3061,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[3][i]], slotY[hallY[3][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallinfr.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[3][i]] + 135, slotY[hallY[3][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3348,16 +3079,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[4][i]], slotY[hallY[4][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallnecr.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[4][i]] + 135, slotY[hallY[4][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3366,16 +3097,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[5][i]], slotY[hallY[5][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "halldung.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[5][i]] + 135, slotY[hallY[5][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3384,16 +3115,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[6][i]], slotY[hallY[6][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallstrn.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[6][i]] + 135, slotY[hallY[6][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3402,16 +3133,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[7][i]], slotY[hallY[7][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallfort.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[7][i]] + 135, slotY[hallY[7][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3420,16 +3151,16 @@ THallWindow::THallWindow(int which)
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new textWidget(
-                slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17, 0,
+                slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[8][i]], slotY[hallY[8][i]], 150, 70,
+                slotX[hallX[which][i]], slotY[hallY[which][i]], 150, 70,
                 700 + i, "hallelem.def", 0, 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(
-                slotX[hallX[8][i]] + 135, slotY[hallY[8][i]] + 54, 16, 16,
+                slotX[hallX[which][i]] + 135, slotY[hallY[which][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
@@ -3439,8 +3170,10 @@ THallWindow::THallWindow(int which)
                                        "TStatBar.pcx", 0x800));
     m_widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 502, 1, 0, 8));
+    // DC townmgr.cpp:4444 calls TTextResource::operator[], whose inline
+    // body delegates to getText. Preserve both source boundaries.
     m_widgets.push_back(new textWidget(0, 0, 800, 30,
-                                     g_generalText->getText(593),
+                                     (*g_generalText)[593],
                                      "bigfont.fnt", font::PRIMARY, 503, 1,
                                      0, 8));
 
@@ -3457,7 +3190,6 @@ THallWindow::THallWindow(int which)
     }
 }
 
-#undef HOMM3_THALL_RELEASE_TRACE
 
 // The sixteen bytes the linker parked between THallWindow's constructor
 // and its ??_G are TTextResource::GetText's /Gy COMDAT: `mov eax,

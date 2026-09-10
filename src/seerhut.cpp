@@ -3204,7 +3204,7 @@ std::string TSeerHut::getSeerLogText()
 // quest-guard pair does.
 // E:\gamedcs\seerhut.cpp
 VA(0x005741b0, 0x22C)  // anchor-callee SetRolloverText 0x40b150, retail-only
-std::string TSeerHut::seerHutFn005741B0(int player)
+std::string TSeerHut::seerHutFn005741B0(int player) const
 {
     if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
         return g_seerName;
@@ -3224,7 +3224,7 @@ std::string TSeerHut::seerHutFn005741B0(int player)
 
 // E:\gamedcs\seerhut.cpp
 VA(0x005743e0, 0x22C)  // anchor-callee QuickInfo 0x4137c0, retail-only
-std::string TSeerHut::seerHutFn005743E0(int player)
+std::string TSeerHut::seerHutFn005743E0(int player) const
 {
     if (!(m_visitedPlayers & (1 << static_cast<unsigned char>(player))))
         return g_seerName;

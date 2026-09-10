@@ -35,7 +35,8 @@ void BinkManager::setPixelFormat()
 // The constant OR'd into every _BinkOpen flag word here; it is Bink's
 // counterpart of smackmgr's SMACKOPEN_FROM_ARCHIVE and makes _BinkOpen take
 // the already-open archive HANDLE in place of a file name.
-#define BINKOPEN_FROM_ARCHIVE 0x8000000
+// Before normalization: BINKOPEN_FROM_ARCHIVE.
+static const int g_binkOpenFromArchive = 0x8000000;
 
 // E:\gamedcs\binkmanager.cpp:79 (dc 0x50a7c, a 4-byte stub - the Dreamcast
 // port has no Bink, so the Complete body below is the whole evidence).
@@ -64,7 +65,7 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
                 return _BinkOpen(g_videoFile1,
-                    binkOptions | BINKOPEN_FROM_ARCHIVE);
+                    binkOptions | g_binkOpenFromArchive);
             }
         }
     }
@@ -74,7 +75,7 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
             SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
             g_soundManager->serviceSounds();
             return _BinkOpen(g_videoFile2,
-                binkOptions | BINKOPEN_FROM_ARCHIVE);
+                binkOptions | g_binkOpenFromArchive);
         }
     }
 
@@ -85,7 +86,7 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
                 return _BinkOpen(g_videoFile3,
-                    binkOptions | BINKOPEN_FROM_ARCHIVE);
+                    binkOptions | g_binkOpenFromArchive);
             }
         }
     }
@@ -97,7 +98,7 @@ BINK* BinkManager::getBinkFilePtr(const char* filename, int binkOptions)
                     FILE_BEGIN);
                 g_soundManager->serviceSounds();
                 return _BinkOpen(g_videoFile1,
-                    binkOptions | BINKOPEN_FROM_ARCHIVE);
+                    binkOptions | g_binkOpenFromArchive);
             }
         }
     }

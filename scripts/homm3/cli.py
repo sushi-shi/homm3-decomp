@@ -67,7 +67,7 @@ Subcommands
         retail function, address dossiers, literal evidence. Every
         invocation logs one line to build/homm3_sema.log.
 
-  dreamcast <show|lines|asm|find|gaps|inline-clues|stats|structure> ...
+  dreamcast <show|lines|asm|find|gaps|inline-clues|stats|structure|audit> ...
         Source-shape navigation over the older WinCE/SH4 pressing:
         joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
         assembly and CFG blocks, explicitly qualified retail correlations,
@@ -295,7 +295,7 @@ def _dispatch(argv: list[str]) -> int:
 
     p = sub.add_parser("dreamcast", add_help=False,
                        help="Dreamcast CodeView source-shape tools: "
-                       "show / lines / asm / find / gaps / inline-clues / stats / structure")
+                       "show / lines / asm / find / gaps / inline-clues / stats / structure / audit")
     p.add_argument("dreamcast_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_dreamcast)
 

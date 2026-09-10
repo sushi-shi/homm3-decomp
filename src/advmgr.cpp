@@ -3037,14 +3037,19 @@ void setWindmillHelpText(char* buffer, NewmapCell* cell, const char* separator)
     // @stub
 }
 
-// E:\gamedcs\advmgr.cpp:3054
-DC_ONLY(0xbeac, 0x1A)
-void type_cell_adjuster::type_cell_adjuster()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// DC advmgr.cpp:3054..3058 gives this ordinary constructor and its three
+// zero stores in member order. Retail's SetRolloverText/QuickInfo expand
+// those stores before getTriggerCell; retain the constructor boundary
+// instead of aggregate-initializing its implementation in both callers.
+DC_ONLY(0xbeac, 0x1A)
+type_cell_adjuster::type_cell_adjuster()
+{
+    m_obscuringHero = 0;
+    m_obscuringBoat = 0;
+    m_mobileHero = 0;
+}
 
 // RETAIL-RECONSTRUCTED 2026-08-09. The body consolidates repeated creature
 // slots before choosing either a detailed seven-slot list or one approximate
@@ -3121,28 +3126,15 @@ std::string getArmyHelpText(const armyGroup* source,
 // 74 B, `ret` with this in ecx: walks the three saved slots [0]/[4]/
 // [8], re-obscuring the first two (type_obscuring_object::obscure_cell
 // with 0x22 and 8) and restoring the third, nulling each slot as it
-// goes. restore_cell's whole body is inlined into it, which is why
-// 0xc038 has no retail row of its own; the ctor (26 B) is gone the
-// same way. Order fixes which of the two 1-param methods this is: the
+// goes. The ordinary restoreCell helper expands here; the DC constructor
+// and restore_cell have no retained retail rows in this bracket. Order fixes which of the two 1-param methods this is: the
 // row sits immediately AHEAD of get_trigger_cell, exactly where the DC
 // source has the destructor.
 // E:\gamedcs\advmgr.cpp:3064
 VA(0x0040af60, 0x4A)  // anchor-callee, dc 0xbec8
 type_cell_adjuster::~type_cell_adjuster()
 {
-    if (m_obscuringHero) {
-        m_obscuringHero->obscureCell(HERO, m_obscuringHero->m_id);
-        m_obscuringHero = 0;
-    }
-    if (m_obscuringBoat) {
-        m_obscuringBoat->type_obscuring_object::obscureCell(
-            BOAT, m_obscuringBoat->m_id);
-        m_obscuringBoat = 0;
-    }
-    if (m_mobileHero) {
-        m_mobileHero->restoreCell();
-        m_mobileHero = 0;
-    }
+    restoreCell();
 }
 
 // E:\gamedcs\advmgr.cpp:3072
@@ -3150,19 +3142,7 @@ type_cell_adjuster::~type_cell_adjuster()
 VA(0x0040afb0, 0x12F)  // anchor-callee, dc 0xbf1c
 NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y)
 {
-    if (m_obscuringHero) {
-        m_obscuringHero->obscureCell(HERO, m_obscuringHero->m_id);
-        m_obscuringHero = 0;
-    }
-    if (m_obscuringBoat) {
-        m_obscuringBoat->type_obscuring_object::obscureCell(
-            BOAT, m_obscuringBoat->m_id);
-        m_obscuringBoat = 0;
-    }
-    if (m_mobileHero) {
-        m_mobileHero->restoreCell();
-        m_mobileHero = 0;
-    }
+    restoreCell();
 
     if (x == MOBILE_HERO_CELL_X && y == MOBILE_HERO_CELL_Y
             && g_currentPlayer->m_currHeroId != -1) {
@@ -3193,18 +3173,27 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
     return triggerCell;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:3111
+// DC advmgr.cpp:3111..3127 proves the ordinary helper and its three
+// conditional restores. Retail expands it in the destructor, getTriggerCell,
+// and setRolloverText; keep its body at the original source position.
 DC_ONLY(0xc038, 0x5C)
 void type_cell_adjuster::restoreCell()
 {
-    // @stub
+    if (m_obscuringHero) {
+        m_obscuringHero->obscureCell();
+        m_obscuringHero = 0;
+    }
+    if (m_obscuringBoat) {
+        m_obscuringBoat->obscureCell();
+        m_obscuringBoat = 0;
+    }
+    if (m_mobileHero) {
+        m_mobileHero->restoreCell();
+        m_mobileHero = 0;
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:3130
-#endif  // @carcass
-
 VA(0x0040b0e0, 0x64)  // anchor-global, dc 0xc094
 void advManager::drawRolloverText(char* text)
 {
@@ -3359,8 +3348,8 @@ static void setWindmillHelpText(
 // the obscure_cell/restore_cell census is exactly 2x ours and why the
 // first copy is a STATEMENT, not a scope exit.
 //
-// HISTORICAL 90.9026% plateau: CROSS-JUMPING of SET_VISITED_ROLLOVER /
-// APPEND_VISIT_TEXT macro bodies, in BOTH directions, plus one genuinely
+// HISTORICAL 90.9026% plateau: cross-jumping of the visited-text arms
+// (formerly SET_VISITED_ROLLOVER / APPEND_VISIT_TEXT), plus one genuinely
 // missing sprintf. The call-sequence alignment (base 65 out-of-line calls
 // against retail's 66) localises it exactly, between anchors that resolve
 // identically on both sides:
@@ -3368,7 +3357,7 @@ static void setWindmillHelpText(
 //   * the GetArmySizeName..SEER span: retail 5, we 4;
 //   * the TREE_OF_KNOWLEDGE..WITCH_HUT span: retail 4, we 5.
 // Net +1 for retail, which is the `_sprintf base x36 vs retail x37` row
-// predict-inline reports. The macro arms hold far more sprintf sites than
+// predict-inline reports. These arms hold far more sprintf sites than
 // either side emits - our CL merges ten source sites down to six before
 // the first creature bank where retail merges them to nine - so the
 // per-span counts are a cross-jumping ledger, not a statement census, and
@@ -3436,8 +3425,8 @@ static void setWindmillHelpText(
 // tempText and playerbit) - 93.4910.  The DC's `cTemp` buffers x4 and its
 // `abandoned`/`guarded` pair do not transfer: Complete writes the global
 // gText here, and the mine arm is the separate AdvmgrFn_0040D670 body the DC
-// had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
-// `player` with the names swapped, and `this_generator`/`type` are
+// had inlined. Its `player`/`iThisPlayer` now retain the semantic names
+// `player`/`thisPlayer`; `this_generator`/`type` are
 // `mapGenerator`/`generatorType`.
 // 2026-09-06, polish lane 40 (94.0915 -> 96.9535).  THE ARM MAP.  Both
 // objects carry this switch's two tables inside the function - retail's
@@ -3477,54 +3466,29 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         return;
 
     int visited;
-    playerData* thisPlayer;
-    int player;
-    hero* currentHero;
+    playerData* player;
+    // Before normalization (locals): iThisPlayer.
+    int thisPlayer;
+    hero* currHero;
     char tempText[500];
     int playerBit;
     int infolevel;
 
-    player = g_game->getLocalPlayerGamePos();
-    thisPlayer = g_game->getLocalPlayer();
-    playerBit = 1 << player;
-    if (thisPlayer->m_currHeroId != -1)
-        currentHero = &g_game->m_heroes[thisPlayer->m_currHeroId];
-    else
-        currentHero = 0;
+    thisPlayer = g_game->getLocalPlayerGamePos();
+    player = g_game->getLocalPlayer();
+    playerBit = 1 << thisPlayer;
+    currHero = g_game->getHero(player->m_currHeroId);
 
-    type_cell_adjuster adjuster = { 0, 0, 0 };
+    type_cell_adjuster adjuster;
     NewmapCell* cell = adjuster.getTriggerCell(testCell, rx, ry);
     const char* separator = DATA_COMPGEN(
         0x00660330, rolloverSpaceSeparator, " ");
     const char* visitedFormat = DATA_COMPGEN(
         0x0066034c, rolloverVisitedFormat, " %s");
 
-#define APPEND_VISIT_TEXT(isVisited)                                      \
-    visited = (isVisited);                                                \
-    if (visited)                                                          \
-        sprintf(tempText, visitedFormat,                                  \
-                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));     \
-    else                                                                  \
-        sprintf(tempText, visitedFormat,                                  \
-                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));   \
-    strcat(g_text, tempText)
-
-#define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \
-    case objectType:                                                      \
-        strcpy(g_text, g_adventureObjectNames[objectType]);                 \
-        if (cell->m_isTrigger) {                                           \
-            infolevel = g_game->getInfoFlag(infoType, player);            \
-            if (infolevel) {                                              \
-                sprintf(tempText, visitedFormat,                          \
-                        g_globalInfoFlagNames[infoType]);                   \
-                strcat(g_text, tempText);                                  \
-            }                                                             \
-            if (currentHero) {                                            \
-                APPEND_VISIT_TEXT(heroFlags);                             \
-            }                                                             \
-        }                                                                 \
-        break
-
+    // The former SET_VISITED_ROLLOVER / APPEND_VISIT_TEXT macros expanded
+    // caller-local control flow. Keep each arm and its two sprintf sites
+    // explicit; no recovered shared helper replaces these statements.
     switch (cell->m_type) {
     case NOTHING:
     case ANCHOR_POINT:
@@ -3540,9 +3504,15 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     case ARENA:
         strcpy(g_text, g_adventureObjectNames[ARENA]);
-        if (cell->m_isTrigger && currentHero) {
-            APPEND_VISIT_TEXT(currentHero->m_arenaFlags
-                & (1UL << (cell->m_extraInfo & 0x1f)));
+        if (cell->m_isTrigger && currHero) {
+            visited = (currHero->m_arenaFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
         }
         break;
     case BORDER_GATE:
@@ -3558,14 +3528,58 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             g_borderColorNames[cell->m_objectIndex],
             g_adventureObjectNames[BORDER_TENT]);
         if (cell->m_isTrigger) {
-            APPEND_VISIT_TEXT(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-                              & playerBit);
+            visited = (g_game->m_borderTentVisitFlags[cell->m_objectIndex] & playerBit);
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
         }
         break;
-    SET_VISITED_ROLLOVER(BUOY, BuoyInfo,
-        currentHero->m_flags & 0x4);
-    SET_VISITED_ROLLOVER(CLOVER_FIELD, CloverFieldInfo,
-        currentHero->m_flags & 0x8);
+    case BUOY:
+        strcpy(g_text, g_adventureObjectNames[BUOY]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(BuoyInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[BuoyInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x4);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case CLOVER_FIELD:
+        strcpy(g_text, g_adventureObjectNames[CLOVER_FIELD]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(CloverFieldInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[CloverFieldInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x8);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case CREATURE_BANK:
         union {
             // Before normalization: value.
@@ -3578,9 +3592,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             bankType.m_type, g_unnamed69778c, separator, 0);
         break;
     case CREATURE_GENERATOR_1: {
-        generator* mapGenerator = &g_game->m_generators[cell->m_extraInfo];
-        int owner = mapGenerator->m_playerOwner;
-        int generatorType = mapGenerator->m_genType;
+        // DC3321/3342 records generator&. Before normalization: this_generator.
+        generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
+        int owner = mapGenerator.getOwner();
+        // DC3324/3345 records int. Before normalization: type.
+        int generatorType = mapGenerator.m_genType;
         if (owner != -1) {
             sprintf(g_text, DATA_COMPGEN(
                 0x0066033c, rolloverOwnedObjectFormat, "%s - %s"),
@@ -3592,9 +3608,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     }
     case CREATURE_GENERATOR_4: {
-        generator* mapGenerator = &g_game->m_generators[cell->m_extraInfo];
-        int owner = mapGenerator->m_playerOwner;
-        int generatorType = mapGenerator->m_genType;
+        // DC3321/3342 records generator&. Before normalization: this_generator.
+        generator& mapGenerator = g_game->m_generators[cell->m_extraInfo];
+        int owner = mapGenerator.getOwner();
+        // DC3324/3345 records int. Before normalization: type.
+        int generatorType = mapGenerator.m_genType;
         if (owner != -1) {
             sprintf(g_text, DATA_COMPGEN(
                 0x0066033c, rolloverOwnedObjectFormat, "%s - %s"),
@@ -3607,14 +3625,39 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     case DEAD_GUY:
         strcpy(g_text, g_adventureObjectNames[DEAD_GUY]);
-        if (cell->m_isTrigger && currentHero) {
-            APPEND_VISIT_TEXT(thisPlayer->m_deadGuyFlags
-                & (1UL << (cell->m_extraInfo & 0x1f)));
+        if (cell->m_isTrigger && currHero) {
+            visited = (player->m_deadGuyFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
         }
         break;
-    SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
-        currentHero->m_defenseTowerFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
+    case DEFENSE_TOWER:
+        strcpy(g_text, g_adventureObjectNames[DEFENSE_TOWER]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(DefenseTowerInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[DefenseTowerInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_defenseTowerFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case DERELICT_SHIP:
         getCreatureBankHelpText(g_text, cell, CREATURE_BANK_DERELICT,
             g_unnamed69778c, separator, 0);
@@ -3637,44 +3680,109 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                 .questGuardFn00573040(g_unnamed69778c).c_str());
         break;
     }
-    SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
-        currentHero->m_flags & 0x2000);
-    // The mask here is ONE constant against retail's four.  Retail's arm
-    // (+0x807) ends `mov ecx,eax / mov edx,eax / and ecx,0x20000000 /
-    // and edx,0x10000000 / add ecx,edx / mov edx,eax / and edx,0x8000000 /
-    // and eax,0x20 / add ecx,edx / add ecx,eax` - four separately masked
-    // terms summed left to right, exactly the shape that made TEMPLE and
-    // IDOL_OF_FORTUNE exact one arm each.  Spelling those four here
-    // REPRODUCES that instruction sequence byte for byte and still loses:
-    // the sum leaves the result in ECX one instruction later than the single
-    // mask does, the arm stops tail-merging with BORDER_TENT's copy of the
-    // visited/unvisited selector, and it grows 0xbb -> 0x108 against retail's
-    // 0xd6 - 96.9535 -> 96.8953 (2026-09-06).  Retail merges the whole tail
-    // (`jmp +0x21e`, into BORDER_TENT's `mov [ebp+0x10],ecx`); until that
-    // cross-jump is recovered the one-constant mask is the closer object.
+    case FAERIE_RING:
+        strcpy(g_text, g_adventureObjectNames[FAERIE_RING]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(FaerieRingInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[FaerieRingInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x2000);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    // DC3491 (ce94..cec4) adds four masked flag terms. Retail+0x8b1
+    // likewise has four ANDs and three ADDs. Preserve the sum and DC's
+    // operand order; both tested orders emit identical bytes under VC6.
+    // The six-state query/sum family reproduced four objects. The sum
+    // scores 96.1491% versus 96.2649% for the flattened mask because the
+    // visited-format tail merges differently. The lower score is not
+    // contrary source evidence. DC3477's separate GetInfoFlag assignment
+    // below is byte-flat but remains present in the compiler input.
     case FOUNTAIN_OF_FORTUNE:
         strcpy(g_text, g_adventureObjectNames[FOUNTAIN_OF_FORTUNE]);
         if (cell->m_isTrigger) {
+            // DC3477 assigns infolevel from GetInfoFlag before DC3479's
+            // independent PlayerKnowsCell test. VC6 may elide the unused
+            // result, but the recorded query is real source work.
+            infolevel = g_game->getInfoFlag(FountainOfFortuneInfo, thisPlayer);
             if (cell->playerKnowsCell(g_unnamed69778c)) {
                 sprintf(tempText, visitedFormat,
                         g_globalInfoFlagNames[FountainOfFortuneInfo]);
                 strcat(g_text, tempText);
             }
-            if (currentHero) {
-                APPEND_VISIT_TEXT(currentHero->m_flags
-                    & (0x38000000UL | 0x20UL));
+            if (currHero) {
+                visited = (currHero->m_flags & 0x20)
+                    + (currHero->m_flags & 0x08000000)
+                    + (currHero->m_flags & 0x10000000)
+                    + (currHero->m_flags & 0x20000000);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
             }
         }
         break;
-    SET_VISITED_ROLLOVER(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
-        currentHero->m_flags & 0x4000);
-    SET_VISITED_ROLLOVER(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
-        currentHero->m_gardenOfRevelationFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
+    case FOUNTAIN_OF_YOUTH:
+        strcpy(g_text, g_adventureObjectNames[FOUNTAIN_OF_YOUTH]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(FountainOfYouthInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[FountainOfYouthInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x4000);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case GARDEN_OF_REVELATION:
+        strcpy(g_text, g_adventureObjectNames[GARDEN_OF_REVELATION]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(GardenOfRevelationInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[GardenOfRevelationInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_gardenOfRevelationFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case HILL_FORT:
         strcpy(g_text, g_adventureObjectNames[HILL_FORT]);
         if (cell->m_isTrigger) {
-            infolevel = g_game->getInfoFlag(HillFortInfo, player);
+            infolevel = g_game->getInfoFlag(HillFortInfo, thisPlayer);
             if (infolevel) {
                 sprintf(tempText, visitedFormat,
                         g_globalInfoFlagNames[HillFortInfo]);
@@ -3685,19 +3793,62 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case HERO:
         setHeroHelp(g_text, cell);
         break;
-    SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
-        (currentHero->m_flags & 0x02000000UL)
-        + (currentHero->m_flags & 0x10UL));
-    case LEAN_TO:
-        strcpy(g_text, g_adventureObjectNames[LEAN_TO]);
-        if (cell->m_isTrigger && currentHero) {
-            APPEND_VISIT_TEXT(thisPlayer->m_leanToFlags
-                & (1UL << (cell->m_extraInfo & 0x1f)));
+    case IDOL_OF_FORTUNE:
+        strcpy(g_text, g_adventureObjectNames[IDOL_OF_FORTUNE]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(IdolOfFortuneInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[IdolOfFortuneInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = ((currHero->m_flags
+                    & 0x02000000UL) + (currHero->m_flags & 0x10UL));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
         }
         break;
-    SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
-        currentHero->m_libraryFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
+    case LEAN_TO:
+        strcpy(g_text, g_adventureObjectNames[LEAN_TO]);
+        if (cell->m_isTrigger && currHero) {
+            visited = (player->m_leanToFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
+        }
+        break;
+    case LIBRARY:
+        strcpy(g_text, g_adventureObjectNames[LIBRARY]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(LibraryInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[LibraryInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_libraryFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case LIGHTHOUSE:
         strcpy(g_text, g_adventureObjectNames[LIGHTHOUSE]);
         if (cell->m_isTrigger) {
@@ -3710,30 +3861,121 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
         }
         break;
-    SET_VISITED_ROLLOVER(MAGIC_SCHOOL, MagicSchoolInfo,
-        currentHero->m_magicSchoolFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
-    SET_VISITED_ROLLOVER(MAGIC_SPRING, MagicSpringInfo,
-        (thisPlayer->m_magicSpringFlags
-         & (1UL << (cell->m_extraInfo & 0x1f)))
-        && !((cell->m_extraInfo >> 6) & 1));
-    SET_VISITED_ROLLOVER(MAGIC_WELL, MagicWellInfo,
-        currentHero->m_flags & 0x1);
-    SET_VISITED_ROLLOVER(MERC_CAMP, MercCampInfo,
-        currentHero->m_mercCampFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
-    SET_VISITED_ROLLOVER(MERMAID, MermaidInfo,
-        currentHero->m_flags & 0x8000);
+    case MAGIC_SCHOOL:
+        strcpy(g_text, g_adventureObjectNames[MAGIC_SCHOOL]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(MagicSchoolInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[MagicSchoolInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_magicSchoolFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case MAGIC_SPRING:
+        strcpy(g_text, g_adventureObjectNames[MAGIC_SPRING]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(MagicSpringInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[MagicSpringInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = ((player->m_magicSpringFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 6) & 1));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case MAGIC_WELL:
+        strcpy(g_text, g_adventureObjectNames[MAGIC_WELL]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(MagicWellInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[MagicWellInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x1);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case MERC_CAMP:
+        strcpy(g_text, g_adventureObjectNames[MERC_CAMP]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(MercCampInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[MercCampInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_mercCampFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
+    case MERMAID:
+        strcpy(g_text, g_adventureObjectNames[MERMAID]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(MermaidInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[MermaidInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x8000);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case MINE:
-        advmgrFn0040D670(g_text, cell, player, separator, 0);
+        advmgrFn0040D670(g_text, cell, thisPlayer, separator, 0);
         break;
     case MONSTER:
         if (cell->m_isTrigger) {
-            const char* creatureName = DATA_COMPGEN(
-                0x00691210, rolloverEmptyText, "");
-            if (cell->m_objectIndex >= 0 && cell->m_objectIndex <= 150)
-                creatureName =
-                    g_creatureTypeTraits[cell->m_objectIndex].m_pluralName;
+            // DC 3918 calls GetArmyName(type, 2); retail expands the same
+            // bounds check and plural-name selection. Preserve that helper.
+            const char* creatureName = getArmyName(cell->m_objectIndex, 2);
             sprintf(g_text, DATA_COMPGEN(
                 0x00660344, rolloverMonsterFormat, "%s %s"),
                 armyGroup::getArmySizeName(cell->m_extraInfo & 0xfff, 1),
@@ -3743,51 +3985,119 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case MYSTICAL_GARDEN:
         strcpy(g_text, g_adventureObjectNames[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
-            APPEND_VISIT_TEXT(
-                (thisPlayer->m_mysticalGardenFlags
-                 & (1UL << (cell->m_extraInfo & 0x1f)))
-                && !((cell->m_extraInfo >> 10) & 1));
+            visited = ((player->m_mysticalGardenFlags
+                & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 10) & 1));
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
         }
         break;
-    SET_VISITED_ROLLOVER(OASIS, OasisInfo,
-        currentHero->m_flags & 0x80);
+    case OASIS:
+        strcpy(g_text, g_adventureObjectNames[OASIS]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(OasisInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[OasisInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x80);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case OBELISK:
         strcpy(g_text, g_adventureObjectNames[OBELISK]);
         if (cell->m_isTrigger) {
-            APPEND_VISIT_TEXT(g_game->m_obeliskFlags[cell->m_extraInfo]
-                              & playerBit);
+            visited = (g_game->m_obeliskFlags[cell->m_extraInfo] & playerBit);
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+            else
+                sprintf(tempText, visitedFormat,
+                        (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+            strcat(g_text, tempText);
         }
         break;
-    SET_VISITED_ROLLOVER(POWER_SCHOOL, PowerSchoolInfo,
-        currentHero->m_powerSchoolFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
-    case PYRAMID:
-        setPyramidHelp(g_text, cell, currentHero, separator);
+    case POWER_SCHOOL:
+        strcpy(g_text, g_adventureObjectNames[POWER_SCHOOL]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(PowerSchoolInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[PowerSchoolInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_powerSchoolFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
         break;
-    SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
-        currentHero->m_flags & 0x10000);
+    case PYRAMID:
+        setPyramidHelp(g_text, cell, currHero, separator);
+        break;
+    case RALLY_FLAG:
+        strcpy(g_text, g_adventureObjectNames[RALLY_FLAG]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(RallyFlagInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[RallyFlagInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x10000);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case RESOURCE:
         strcpy(g_text, g_resourceNames[cell->m_objectIndex]);
         break;
     case SEER: {
-        TSeerHut& thisHut = m_fullMap->m_seerHutList[cell->m_extraInfo];
-        strcpy(g_text, thisHut.seerHutFn005741B0(player).c_str());
+        const TSeerHut& thisHut = m_fullMap->m_seerHutList[cell->m_extraInfo];
+        strcpy(g_text, thisHut.seerHutFn005741B0(thisPlayer).c_str());
         break;
     }
     case SHRINE1:
-        setShrineHelpText(g_text, currentHero, cell, Shrine1Info,
+        setShrineHelpText(g_text, currHero, cell, Shrine1Info,
                           separator, separator);
         break;
     case SHRINE2:
-        setShrineHelpText(g_text, currentHero, cell, Shrine2Info,
+        setShrineHelpText(g_text, currHero, cell, Shrine2Info,
                           separator, separator);
         break;
     case SHRINE3:
-        setShrineHelpText(g_text, currentHero, cell, Shrine3Info,
+        setShrineHelpText(g_text, currHero, cell, Shrine3Info,
                           separator, separator);
         break;
-    // These two invoke APPEND_VISIT_TEXT under an UNBRACED `if`, so only
-    // the `visited = ...` assignment is guarded and the sprintf/strcat run
+    // The former APPEND_VISIT_TEXT macro hid this split: only the
+    // `visited = ...` assignment is guarded and the sprintf/strcat run
     // unconditionally. That reads like a bug and is NOT one to fix: retail
     // really does emit those two calls outside the guard here, and bracing
     // both arms was measured at 89.28 against the unbraced 89.82.
@@ -3799,30 +4109,82 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     // its own copy of the visited sprintf.
     case SIREN:
         strcpy(g_text, g_adventureObjectNames[SIREN]);
-        if (cell->m_isTrigger && currentHero)
-            APPEND_VISIT_TEXT(currentHero->m_flags & 0x100000);
+        if (cell->m_isTrigger && currHero)
+            visited = (currHero->m_flags & 0x100000);
+        if (visited)
+            sprintf(tempText, visitedFormat,
+                    (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+        else
+            sprintf(tempText, visitedFormat,
+                    (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+        strcat(g_text, tempText);
         break;
     case STABLES:
         strcpy(g_text, g_adventureObjectNames[STABLES]);
-        if (cell->m_isTrigger && currentHero)
-            APPEND_VISIT_TEXT(currentHero->m_flags & 0x2);
+        if (cell->m_isTrigger && currHero)
+            visited = (currHero->m_flags & 0x2);
+        if (visited)
+            sprintf(tempText, visitedFormat,
+                    (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+        else
+            sprintf(tempText, visitedFormat,
+                    (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+        strcat(g_text, tempText);
         break;
-    SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
-        (currentHero->m_flags & 0x04000000UL)
-        + (currentHero->m_flags & 0x100UL));
+    case TEMPLE:
+        strcpy(g_text, g_adventureObjectNames[TEMPLE]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(TempleInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[TempleInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = ((currHero->m_flags
+                    & 0x04000000UL) + (currHero->m_flags & 0x100UL));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case TOWN:
         setTownHelp(g_text, cell);
         break;
-    SET_VISITED_ROLLOVER(TRAINING_GROUNDS, TrainingGroundsInfo,
-        currentHero->m_trainingGroundsFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
+    case TRAINING_GROUNDS:
+        strcpy(g_text, g_adventureObjectNames[TRAINING_GROUNDS]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(TrainingGroundsInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[TrainingGroundsInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_trainingGroundsFlags
+                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case TREE_OF_KNOWLEDGE:
-        setTreeHelpText(g_text, currentHero, cell, separator, separator);
+        setTreeHelpText(g_text, currHero, cell, separator, separator);
         break;
     case UNIVERSITY:
         strcpy(g_text, g_adventureObjectNames[UNIVERSITY]);
         if (cell->m_isTrigger) {
-            infolevel = g_game->getInfoFlag(UniversityInfo, player);
+            infolevel = g_game->getInfoFlag(UniversityInfo, thisPlayer);
             if (infolevel) {
                 sprintf(tempText, visitedFormat,
                         g_globalInfoFlagNames[UniversityInfo]);
@@ -3833,22 +4195,59 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case WAGON:
         setWagonHelpText(g_text, cell, separator);
         break;
-    SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
-        currentHero->m_warSchoolFlags
-        & (1UL << (cell->m_extraInfo & 0x1f)));
+    case WAR_SCHOOL:
+        strcpy(g_text, g_adventureObjectNames[WAR_SCHOOL]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(WarSchoolInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[WarSchoolInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_warSchoolFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case WARRIOR_TOMB:
         setTombHelpText(g_text, cell, separator);
         break;
     case WATER_WHEEL:
         setWaterWheelHelpText(g_text, cell, separator);
         break;
-    SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
-        currentHero->m_flags & 0x40);
+    case WATERING_HOLE:
+        strcpy(g_text, g_adventureObjectNames[WATERING_HOLE]);
+        if (cell->m_isTrigger) {
+            infolevel = g_game->getInfoFlag(WateringHoleInfo, thisPlayer);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        g_globalInfoFlagNames[WateringHoleInfo]);
+                strcat(g_text, tempText);
+            }
+            if (currHero) {
+                visited = (currHero->m_flags & 0x40);
+                if (visited)
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                else
+                    sprintf(tempText, visitedFormat,
+                            (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                strcat(g_text, tempText);
+            }
+        }
+        break;
     case WINDMILL:
         setWindmillHelpText(g_text, cell, separator);
         break;
     case WITCH_HUT:
-        setWitchHutHelpText(g_text, currentHero, cell,
+        setWitchHutHelpText(g_text, currHero, cell,
                                 separator, separator);
         break;
     default: {
@@ -3861,29 +4260,9 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     }
 
-#undef SET_VISITED_ROLLOVER
-#undef APPEND_VISIT_TEXT
-
-    // type_cell_adjuster::restore_cell() (dc 0xc038), written longhand
-    // because retail inlines it everywhere and leaves no row of its own -
-    // the same reason ~type_cell_adjuster carries the body verbatim.
-    // Retail expands the three-slot sweep TWICE in this function: once
-    // here, ahead of the inlined DrawRolloverText, and once at the closing
-    // brace as the destructor (only that copy carries `mov [ebp-4],-1`).
-    if (adjuster.m_obscuringHero) {
-        adjuster.m_obscuringHero->obscureCell(HERO,
-                                              adjuster.m_obscuringHero->m_id);
-        adjuster.m_obscuringHero = 0;
-    }
-    if (adjuster.m_obscuringBoat) {
-        adjuster.m_obscuringBoat->type_obscuring_object::obscureCell(
-            BOAT, adjuster.m_obscuringBoat->m_id);
-        adjuster.m_obscuringBoat = 0;
-    }
-    if (adjuster.m_mobileHero) {
-        adjuster.m_mobileHero->restoreCell();
-        adjuster.m_mobileHero = 0;
-    }
+    // DC names the explicit restore before DrawRolloverText. Retail expands
+    // it here and again at scope exit through ~type_cell_adjuster.
+    adjuster.restoreCell();
 
     drawRolloverText(g_text);
 }
@@ -3921,6 +4300,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // retail control flow. Sibling full/compact scopes now share retail's -0x14
 // result-string home and 0x14-byte frame; the residual is register allocation
 // and the associated cleanup-tail scheduling.
+
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
 {
@@ -6942,196 +7322,69 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
                 viewHeroes, viewTowns);
 }
 
-// E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (55.8089%). The current QuickInfo slices
-// restore point validation and shroud handling, trigger-cell resolution,
-// the shared creature-bank/shrine/tree/witch-hut text helpers, the default
-// object name, border/generator/resource and visited-state cases, optional
-// map coordinates, sizing, screen-edge clamps and dialog invocation.
-// Retail proves the control flow, constants, field offsets and helper calls;
-// Dreamcast CodeView supplies only the function and local identities.
+// E:\gamedcs\advmgr.cpp:7543. Current reconstruction: 95.5740%.
+// Retail owns the 216-byte case index at 0x415c88 and the 57-entry jump
+// table at 0x415ba4. DC supplies the source interfaces, local types and
+// statement groups. Its observed 7543..8813 span has 525 recorded rows;
+// the 746 unrecorded lines do not identify missing source text or recover
+// a total function line count.
 //
-// The case SET and case ORDER are pinned by the retail tables themselves:
-// the 216-byte case->arm byte index at 0x00415C88 (fn+0x24C8, and
-// 0x24C8+0xD8 == the function size, so the extent is unambiguous) is now
-// byte-identical on both sides, and the 57-entry jump table at 0x00415BA4
-// agrees in length and target order. No arm is missing, extra or misplaced.
+// The continued source audit raised 94.7326 -> 95.5740 with all 93 exact
+// advmgr siblings preserved. Generator owner/type initialization separately
+// evaluates the vector subscript (DC7739/7740 and 7757/7758), unlike the
+// named references in SetRolloverText. DC7890's meaningful fountain query
+// remains even where release removes it; the later cell-knowledge test is
+// independent. Its four masked terms accumulate into visited, as do the
+// two temple terms and the lean-to result. Nested trigger/hero guards keep
+// the separate DC source stages in ARENA, DEAD_GUY, LEAN_TO, SIREN and STABLES.
 //
-// HISTORICAL 90.20% plateau: diagnose reported 373 vs 372 blocks and 197 vs 200
-// conditional branches - i.e. structurally converged, against 242 vs 372
-// and 131 vs 200 before this work - with ONE under-inline left. That one
-// is the std::string surface in the NOTHING/QUEST_GUARD arms: retail
-// open-codes both `append` overloads, `_Eos` and the dtor refcount
-// decrement where we still call them. It is /Ob2 budget, not spelling -
-// dropping the `#pragma inline_depth(0)` that used to wrap
-// cellDescription was worth +0.10 once the body had grown ~2.9 KB, and
-// the rest should follow the same way. Do NOT chase _Tidy/append
-// spellings. The remainder is tail-merge cosmetics: retail shares the
-// no-owner strcpy between CREATURE_GENERATOR_1 and the default arm where
-// we duplicate it, and narrows PlayerKnowsCell's compare to `test al, dl`.
+// Object names use the cell's type, not manually specialized case constants:
+// DC7612 (0x1646c), 7644 (0x165b4), 7886 (0x16e00), 8184 (0x17804) and the
+// other object-name loads all read cell+28 before indexing gQuickViewText.
+// Restoring the 32 subscripts is byte-flat on the selected parent, but
+// changes some alternative formatting results through natural compiler state.
 //
-// AND THE QUEST-GUARD / SEER ARMS CALL DIFFERENT METHODS FROM
-// SetRolloverText'S (found 2026-08-20 by diffing the two bodies' call
-// streams IN ORDER - a census cannot see this, only the order can).
-// Both classes carry three string-returning text builders: TQuestGuard
-// at 0x572d60 (nullary), 0x572e40 and 0x573040; TSeerHut at 0x574070
-// (nullary), 0x5741b0 and 0x5743e0. The two advmgr bodies take
-// DIFFERENT ones:
-//   SetRolloverText -> 0x573040 and 0x5741b0   (what we call - correct)
-//   QuickInfo       -> 0x572e40 and 0x5743e0   (unclaimed; we call the
-//                                               SetRolloverText pair)
-// 0x572e40 is 511 B, thiscall, `ret 8`, returning std::string by value
-// on one argument - the same signature as 0x573040, so arity screening
-// cannot separate them and only the caller does.
+// ARENA's conditional format argument and BUOY/fountain's explicit branches
+// are source alternatives supported by the same visit semantics and DC
+// groups. One conditional argument can lower to two sprintf calls; neither
+// DC's groups nor retail's shared tail proves a unique C++ spelling.
+// The 64-state generator/fountain family produced 24 distinct objects;
+// its combined source-fact form scored 93.3711. Composing
+// the visit tails/guards in 16 states produced eight objects and recovered
+// 95.5740. The name-index/tail family produced twelve objects in 16 states.
+// These measurements supersede earlier isolated claims that the shared
+// tail could not be recovered. No diagnostic padding or inline pin is used.
 //
-// FIXED AND MEASURED 2026-08-20. All four builders are now claimed,
-// reconstructed and EXACT in seerhut.cpp, and both arms here call the
-// pair the retail bytes name. The reading above was RIGHT about the
-// callees and WRONG about the consequence: swapping them is BYTE-FLAT.
-// QuickInfo scored 90.2004 before the swap and 90.2004 after, and
-// SetRolloverText 90.9026 either way. That is the standing doctrine
-// (objdiff scores a relocation whose target is a working label as
-// matching, so a reloc NAME never gates the verdict), so a wrong callee
-// can never have been this residual's cause. Do not re-open it as one.
+// Failed controls: direct ARENA mask accumulation on the final parent
+// changes natural inlining and falls to 91.7578. The garden expression and
+// temple operand order are byte-flat; eight states produce two objects.
+// Earlier copied-point scope, non-const alias and forced out-of-line GetCell
+// probes do not justify erasing the canonical GetCell call. Likewise,
+// flipping GetHero's own branch order loses exact consumers; its ordinary
+// retained definition and this source call remain. Discarded string empty()
+// and size() probes were byte-flat and are not retained as VERIFY statements.
+// Binding the seer return to an extra named value/reference was also worse.
 //
-// What the QUEST_GUARD arm really still differs by, read positionally
-// from the bytes at fn+0x9dd: retail EXPANDS the returned temporary's
-// `~basic_string` (`mov eax,[ebp-0x244] / test / lea ecx,[eax-1] /
-// refcount decrement`, with a shared `operator delete` block at
-// fn+0x1a28) where we emit `lea ecx,[ebp-0x250] / call _Tidy`. That is
-// an UNDER-inline - we call, retail expands - on a 9,632-byte caller,
-// so the lever family is GROW THE CALLER / re-price the site count, not
-// the callee identity. The identical teardown IS reachable: retail
-// expands it and we match it byte for byte inside the seerhut builders
-// themselves, so it is a budget question here and not a spelling one.
-//
-// THE WHOLE `_Tidy` LINE OF INQUIRY IS NOW CLOSED, AND IT WAS NEVER WORTH
-// MORE THAN A POINT (measured 2026-08-20, five builds). Four lanes and
-// three briefs have routed this row off `predict-inline`'s
-// `?_Tidy@... base x3 vs retail x2` UNDER-inline line. That line does not
-// describe the body:
-//   - a reloc census over the WHOLE 0x2600 B of our emitted QuickInfo
-//     finds ZERO `_Tidy` calls; retail's body has TWO, at fn+0x272 and
-//     fn+0x3f3, both on `[ebp-0x30]` = `cellDescription`. In the body the
-//     direction is therefore OVER-inline (we expand, retail calls) - the
-//     OPPOSITE of the label the tool prints and of the "grow the caller"
-//     verdict written above. Whatever the tool's base column counts, it is
-//     not what is emitted here; do not route this row off its sign again.
-//   - GROW was titrated end to end with the `if (0)` instrument: 0..24
-//     inert statements 90.2004, 28..64 -> 90.6343, 128 -> 90.6075,
-//     256/512 -> 88.4786. The numerator's entire reach on this row is
-//     +0.43, and collecting it needs 28 statements of real mass.
-//   - SHRINK works and is the correct direction: lifting the coordinate/
-//     sizing/NormalDialog tail into a single-call-site static flips the
-//     census from 0 `_Tidy` calls to 3, and OUR FIRST TWO LAND EXACTLY ON
-//     RETAIL'S - fn+0x21d and fn+0x39d against retail's fn+0x272 and
-//     fn+0x3f3, same `[ebp-0x30]` receiver. The third, at fn+0x99a on
-//     `[ebp-0x258]`, is the QUEST_GUARD temp that retail EXPANDS at
-//     fn+0x9dd - so the positional reading above was right about that one
-//     site and wrong about the direction of the other two. Net -0.42
-//     (89.7827); re-growing 4..24 inert statements on top holds the census
-//     at 3 and the score at 90.2154, so the three sites are priced
-//     together and no dose separates them.
-// The reachable spread over this whole family is 89.78 .. 90.63 against a
-// 90.20 baseline. The residual is NOT the string surface. Retail emits
-// 3055 instructions here against our 3160; the extra 105 are spread over
-// ~50 hunks, and the two largest real deltas both sit in the entry block:
-// retail takes THREE callee-saved registers (`push ebx` in the prologue,
-// `playerBit` living in ebx) where we take two and spill it, and
-// `GetHero` has the opposite arm polarity - retail `cmp eax,-1 /
-// je <null-arm>` with the null arm placed LAST and its 0 materialised
-// unconditionally in edi BEFORE the branch, against our `cmp ecx,-1 /
-// jne <hero-arm>` with an immediate `mov [ebp-B],0` falling through.
-// Route those, not the inliner.
-//
-// THE GetHero ARM ORDER IS REAL AT THIS SITE AND THE ACCESSOR IS STILL
-// RIGHT - both measured, 2026-08-20, and the pair is the useful part.
-// Writing the test longhand HERE with retail's polarity
-// (`if (player->currHeroId != -1) currHero = &gpGame->heroes[...]; else
-// currHero = 0;`) is worth **+0.20** (90.2004 -> 90.4033), which confirms
-// the byte read. But flipping `game::GetHero` itself to the `!= -1`
-// order - the honest version of the same change - costs the tree
-// **26 exact functions** (1526 -> 1500, 95.80 -> 95.65 fuzzy), so
-// game.h:1955's recorded order is correct and is NOT to be touched:
-// HasCapitol and TBottomViewKingdom prove it, and this measurement is
-// the third proof. That leaves QuickInfo's site as a genuine ANOMALY -
-// either its source reaches the hero through some accessor we have not
-// identified (it is NOT GetCurrHero: retail loads the id as a DWORD here,
-// where GetCurrHero's tell is a CHAR compare), or VC6 flipped the arms
-// on context. The longhand is now shipped. Once the DC-attested helper
-// carriers below and shared visit locals restored the surrounding source
-// shape, it was worth +0.20 again (94.60 -> 94.80) AND changed the prologue
-// from two callee-saved registers to retail's exact EBX/ESI/EDI set,
-// keeping playerBit in EBX. This remains a site-specific retail divergence;
-// the proven Game.h accessor itself stays untouched.
-//
-// CURRENT 2026-08-21 (94.85162%, from 90.200386%). Dreamcast CodeView
-// supplies the full local roster and proves six named text helpers in this
-// caller: set_hero_help, set_pyramid_help, and the wagon/tomb/water-wheel/
-// windmill quartet. Reconstructing those helpers here lets VC6 inline their
-// source-shaped bodies and removes the misleading `_Tidy` discrepancy.
-// Restoring the DC `testFlag`, `visited`, and `infolevel` carriers, plus
-// retail's two complete sprintf arms for BORDER_TENT and OBELISK, supplies
-// the rest of the gain. The emitted out-of-line call multiset now agrees with
-// retail (78 calls on each side).
-//
-// The last retained gain is local to BUOY (94.804726 -> 94.85162): spelling
-// its visited/unvisited argument with ARENA's one-source-call ternary improves
-// byte alignment without changing the call ledger. It does not complete
-// retail's cross-jump, however. Counting only code before RET, this candidate
-// has 199 conditional branches and 372 blocks against retail's 197 and 368.
-// Spelling ARENA with duplicated calls coerces the share but globally re-lays
-// out the switch and falls to 92.45. Explicit labels on ARENA's two sprintf
-// blocks with BUOY gotos score 93.571790 and emit 203 decoded branches against
-// retail's 200. Branch counters that include the bytes after RET are invalid:
-// those bytes are the 57-dword jump table and 216-byte case-index table and
-// happen to decode as bogus jcc opcodes.
-//
-// The frame remains 0x2b8 against retail's 0x2b0. Deleting the copied
-// type_point closes it but falls to 93.27; a non-const reference alias, which
-// preserves the inlined-parameter surface while removing the same eight
-// bytes, scores 93.34301. Calling the exact out-of-line GetCell falls to 90.12
-// because retail's inlined invalid arm retains `fullMap->cell(0,0,0)` where
-// standalone GetCell folds to `fullMap->cellData`. Conventional release
-// VERIFY is bounded separately on the preceding 94.804726 shape: discarded
-// `cellDescription.empty()` and `cellDescription.size()` accessors are both
-// byte-flat. Neither enters the residual cross-jump or frame decision.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (94.8708 -> 95.0826):
-// the same `thisHut` the sibling SetRolloverText wanted - the DC block names
-// it (CodeView 0x2664) for the SEER arm's SeerHutList row, addressed once
-// through a named reference instead of subscripted inside the call.  The
-// declaration block above already stands in the DC's exact local order
-// (testFlag, width, visited, testCell, player, map_point, x, currHero, y,
-// iPlayer, tempText, playerBit, height, infolevel), which is why nothing
-// else in that list moves.  Measured and rejected on top: binding the
-// rollover's by-value string return in the DC's `result` local (0x1329 =
-// std::string, sp+0x9c), either by value or by const& - both 93.0753, so
-// retail consumes the temporary in place here.
+// Complete calls the exact mine/shrine/tree/witch helpers and the distinct
+// quick-info quest/seer builders 0x572e40/0x5743e0. DC's older in-caller mine
+// and seer operations do not replace those retail-proven calls. The current
+// quest temporary's destructor expands naturally as retail does. Remaining
+// differences include GetHero arm layout, the nested cell/zCell decision,
+// and switch-tail scheduling. Compare named sites, not aggregate call counts.
+// ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
+// data/accessor surface; the audit retains that ownership gap, including
+// GetItemId. It is not evidence for a copied helper body in this caller.
+// Before normalization (locals): map_point -> mapPoint; iPlayer -> playerId.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {
-    // 500, NOT 512 (corrected 2026-08-20), which also makes it agree with
-    // SetRolloverText's already-established buffer. The frame layout is the
-    // proof: retail bases this buffer at [ebp-0x238] and READS [ebp-0x44],
-    // [ebp-0x40], [ebp-0x3c] and [ebp-0x38] as separate dwords, every one
-    // of which a 512-byte array based at [ebp-0x238] would cover.
-    // 0x238-0x44 = 0x1f4 = 500 is the largest size that fits, and at 500
-    // our layout ABOVE the buffer becomes exactly retail's 132 bytes
-    // ([ebp-0x2c4 .. ebp-0x241] here against retail's
-    // [ebp-0x2bc .. ebp-0x239]).
-    // Byte-flat on the score - it moved `sub esp` from 0x2e0 to 0x2b8
-    // against retail's 0x2b0.  The last 8 bytes were NOT "two small locals
-    // retail keeps in registers" (2026-09-06): they were the `type_point
-    // point` copy below, which retail packs into the SAME twelve bytes as
-    // the type_cell_adjuster ([ebp-0x3c..-0x30]) because its scope closes
-    // before the adjuster's opens.  Giving that copy its own block closes
-    // the frame exactly - `sub esp,0x2b0`, and every one of the 22 ebp-
-    // relative slots in the body is now retail's slot, `point` at -0x38 and
-    // the get_quickview_size out-params at -0x40/-0x44 included.
+    // DC records tempText[500]. Retail bases it at [ebp-0x238] with
+    // separate dwords beginning at [ebp-0x44], exactly 500 bytes later.
+    // The shared display locals retain the DC declaration order and types.
     unsigned long testFlag;
     int width;
     int visited;
-    NewmapCell* cell;
+    NewmapCell* testCell;
     playerData* player;
     type_point mapPoint;
     long x;
@@ -7147,35 +7400,25 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     player = g_game->getLocalPlayer();
     playerId = g_game->getLocalPlayerGamePos();
     playerBit = 1 << playerId;
-    if (player->m_currHeroId != -1)
-        currHero = &g_game->m_heroes[player->m_currHeroId];
-    else
-        currHero = 0;
+    currHero = g_game->getHero(player->m_currHeroId);
     mapPoint.m_x = m_radarOrigin.m_x + cellX;
     mapPoint.m_y = m_radarOrigin.m_y + cellY;
     mapPoint.m_z = z;
 
     if (!mapPoint.isValid()) {
-        strcpy(g_text, g_generalText->getText(
-            GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
+        strcpy(g_text, (*g_generalText)[
+            GENERAL_TEXT_QUICK_INFO_INVALID_POINT]);
     } else {
-        {
-            type_point point = mapPoint;
-            if (!point.isValid()) {
-                cell = m_fullMap->cell(0, 0, 0);
-            } else {
-                cell = &m_fullMap->m_cellData[
-                    (point.m_z * m_fullMap->m_size + point.m_y) * m_fullMap->m_size
-                    + point.m_x];
-            }
-        }
+        // DC names GetCell here; its ordinary retained body owns the
+        // validity branch and canonical map indexing.
+        testCell = getCell(mapPoint);
 
         if (!(getMapExtra(mapPoint) & playerBit)) {
-            strcpy(g_text, g_generalText->getText(
-                GENERAL_TEXT_QUICK_INFO_SHROUDED));
+            strcpy(g_text, (*g_generalText)[
+                GENERAL_TEXT_QUICK_INFO_SHROUDED]);
         } else {
-            type_cell_adjuster adjuster = { 0, 0, 0 };
-            cell = adjuster.getTriggerCell(cell, cellX, cellY);
+            type_cell_adjuster adjuster;
+            testCell = adjuster.getTriggerCell(testCell, cellX, cellY);
 
             const char* separator = DATA_COMPGEN(
                 0x006603b0, quickInfoSeparator, "\n\n");
@@ -7192,138 +7435,77 @@ void advManager::quickInfo(int cellX, int cellY, int z)
             const char* leanToFormat = DATA_COMPGEN(
                 0x0066034c, quickInfoLeanToFormat, " %s");
 
-// Retail's shape for every object that owns a GlobalInfoFlags row: the
-// "you know what this does" line is gated on the PLAYER's global info
-// flag, not on the cell, and it is emitted before the per-hero visited
-// line. Both live inside one `is_trigger` guard. The flag lands in the
-// third parameter `z`, which retail reuses as a scratch int once
-// mapPoint.z has been read out of it - that is what produces the byte
-// store into the parameter slot followed by the zero-extend in place.
-#define SET_KNOWN_VISITED_QUICKINFO(objectType, infoFlag, condition)     \
-            case objectType:                                             \
-                strcpy(g_text, g_adventureObjectNames[objectType]);         \
-                if (cell->m_isTrigger) {                                   \
-                    infolevel = g_game->getInfoFlag(infoFlag, playerId);   \
-                    if (infolevel) {                                      \
-                        sprintf(tempText, knownFormat,                    \
-                                g_globalInfoFlagNames[infoFlag]);          \
-                        strcat(g_text, tempText);                          \
-                    }                                                     \
-                    if (currHero) {                                       \
-                        visited = (condition);                            \
-                        if (visited)                                      \
-                            sprintf(tempText, visitFormat,                \
-                                    g_generalText->getText(               \
-                                        GENERAL_TEXT_VISITED_OBJECT));    \
-                        else                                              \
-                            sprintf(tempText, visitFormat,                \
-                                    g_generalText->getText(               \
-                                        GENERAL_TEXT_UNVISITED_OBJECT));  \
-                        strcat(g_text, tempText);                          \
-                    }                                                     \
-                }                                                         \
-                break
+            // Known-object text precedes per-hero visited text. Both stay
+            // inside the trigger guard. VC6 reuses the z parameter's stack
+            // slot for several locals; the source retains their real names.
 
-// The same visited/unvisited tail for objects with no info-flag row.
-// Retail does NOT use a ternary here: it emits two complete sprintf calls
-// and shares only the strcat tail, and it stores the tested flag into `z`
-// first rather than testing the field in place.
-// THAT IS SPECIFIC TO THIS MACRO - the ARENA and BUOY cases below keep their
-// ternaries, and the bytes say so (2026-08-21).  RE-MEASURED 2026-09-06 after
-// the frame closed (see QuickInfo's own note) - the verdict does not move:
-// both together 95.9234 -> 93.5268, BUOY alone 95.8398.  Retail's ARENA does
-// emit two complete sprintf calls at +0x3f8/+0x427 and BUOY does jump into
-// them, so the two-sprintf READING is right and only the merge is ours to
-// lose; the ternary keeps the cheaper object until the cross-jump is found. Retail reaches BUOY's tail
-// with `mov ecx,[hero+0x105] / and ecx,4 / mov [ebp+0x10],ecx / jmp <shared>`,
-// i.e. it stores the flag and JUMPS to one shared visited/unvisited selector
-// that it also uses for ARENA; our compile expands the same ternary inline at
-// each. Rewriting those two to this macro's two-sprintf form does NOT recover
-// the sharing and makes it worse - BUOY alone 94.8708 -> 94.8239, BUOY and
-// ARENA together 92.6688. The ternary is retail's source at those two sites;
-// only the cross-jump that merges their tails is a C2 choice we do not get.
-#define SET_VISITED_QUICKINFO(objectType, condition)                     \
-            case objectType:                                             \
-                strcpy(g_text, g_adventureObjectNames[objectType]);         \
-                if (cell->m_isTrigger && currHero) {                       \
-                    visited = (condition);                                \
-                    if (visited)                                          \
-                        sprintf(tempText, visitFormat,                    \
-                                g_generalText->getText(                   \
-                                    GENERAL_TEXT_VISITED_OBJECT));        \
-                    else                                                  \
-                        sprintf(tempText, visitFormat,                    \
-                                g_generalText->getText(                   \
-                                    GENERAL_TEXT_UNVISITED_OBJECT));      \
-                    strcat(g_text, tempText);                              \
-                }                                                         \
-                break
-
-            switch (cell->m_type) {
+            switch (testCell->m_type) {
             case NOTHING:
             case ANCHOR_POINT:
             case EVENT:
             case HOLY_GRAIL: {
-                std::string cellDescription;
-                TAdventureObjectType specialTerrain =
-                    cell->getSpecialTerrain();
-                if (specialTerrain == NOTHING)
-                    cellDescription = g_terrainNames[cell->m_groundSet];
+                std::string result;
+                TAdventureObjectType special =
+                    testCell->getSpecialTerrain();
+                if (special == NOTHING)
+                    result = g_terrainNames[testCell->m_groundSet];
                 else
-                    cellDescription =
-                        g_adventureObjectNames[specialTerrain];
+                    result =
+                        g_adventureObjectNames[special];
 
-                if (cell->isDiggable()) {
-                    cellDescription += '\n';
-                    cellDescription +=
-                        g_generalText->getText(GENERAL_TEXT_QUICK_INFO_DIGGABLE);
+                if (testCell->isDiggable()) {
+                    result += '\n';
+                    result +=
+                        (*g_generalText)[GENERAL_TEXT_QUICK_INFO_DIGGABLE];
                 }
-                strcpy(g_text, cellDescription.c_str());
+                strcpy(g_text, result.c_str());
                 break;
             }
             case ARENA:
-                strcpy(g_text, g_adventureObjectNames[ARENA]);
-                if (cell->m_isTrigger && currHero) {
-                    testFlag = 1UL << (cell->m_extraInfo & 0x1f);
-                    visited = testFlag & currHero->m_arenaFlags;
-                    sprintf(tempText, visitFormat,
-                        visited
-                            ? g_generalText->getText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : g_generalText->getText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(g_text, tempText);
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    if (currHero) {
+                        testFlag = 1UL << (testCell->m_extraInfo & 0x1f);
+                        visited = testFlag & currHero->m_arenaFlags;
+                        sprintf(tempText, visitFormat,
+                            visited
+                                ? (*g_generalText)[
+                                      GENERAL_TEXT_VISITED_OBJECT]
+                                : (*g_generalText)[
+                                      GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
                 }
                 break;
             case BORDER_GUARD:
             case BORDER_GATE:
                 sprintf(g_text, DATA_COMPGEN(
                     0x00660344, rolloverBorderFormat, "%s %s"),
-                    g_borderColorNames[cell->m_objectIndex],
-                    g_adventureObjectNames[cell->m_type]);
+                    g_borderColorNames[testCell->m_objectIndex],
+                    g_adventureObjectNames[testCell->m_type]);
                 break;
             case BORDER_TENT:
                 sprintf(g_text, DATA_COMPGEN(
                     0x00660344, rolloverBorderFormat, "%s %s"),
-                    g_borderColorNames[cell->m_objectIndex],
-                    g_adventureObjectNames[BORDER_TENT]);
-                if (cell->m_isTrigger) {
+                    g_borderColorNames[testCell->m_objectIndex],
+                    g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
                     visited = g_game->m_borderTentVisitFlags[
-                        cell->m_objectIndex] & playerBit;
+                        testCell->m_objectIndex] & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_VISITED_OBJECT]);
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_UNVISITED_OBJECT]);
                     strcat(g_text, tempText);
                 }
                 break;
             case BUOY:
-                strcpy(g_text, g_adventureObjectNames[BUOY]);
-                if (cell->m_isTrigger) {
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
                     infolevel = g_game->getInfoFlag(BuoyInfo, playerId);
                     if (infolevel) {
                         sprintf(tempText, knownFormat,
@@ -7332,18 +7514,41 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = currHero->m_flags & 0x4;
-                        sprintf(tempText, visitFormat,
-                            visited
-                                ? g_generalText->getText(
-                                      GENERAL_TEXT_VISITED_OBJECT)
-                                : g_generalText->getText(
-                                      GENERAL_TEXT_UNVISITED_OBJECT));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
                         strcat(g_text, tempText);
                     }
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(CLOVER_FIELD, CloverFieldInfo,
-                currHero->m_flags & 0x8);
+            case CLOVER_FIELD:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(CloverFieldInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[CloverFieldInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x8);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case CREATURE_BANK: {
                 union {
                     // Before normalization: value.
@@ -7351,111 +7556,210 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     // Before normalization: type.
                     type_creature_bank_type m_type;
                 } bankType;
-                bankType.m_value = cell->m_objectIndex;
+                bankType.m_value = testCell->m_objectIndex;
                 getCreatureBankHelpText(
-                    g_text, cell, bankType.m_type, g_unnamed69778c,
+                    g_text, testCell, bankType.m_type, g_unnamed69778c,
                     newLine, 1);
                 break;
             }
             case CREATURE_GENERATOR_1: {
-                generator* mapGenerator =
-                    &g_game->m_generators[cell->m_extraInfo];
-                int owner = mapGenerator->m_playerOwner;
-                int generatorType = mapGenerator->m_genType;
+                int owner = g_game->m_generators[testCell->m_extraInfo].getOwner();
+                int type = g_game->m_generators[testCell->m_extraInfo].m_genType;
                 if (owner != -1) {
                     sprintf(g_text, DATA_COMPGEN(
                         0x006603b4, quickInfoOwnedObjectFormat,
                         "%s\n\n%s"),
-                        g_creatureGenerator1RolloverNames[generatorType],
+                        g_creatureGenerator1RolloverNames[type],
                         g_objectOwnerColorNames[owner]);
                 } else {
                     strcpy(g_text,
-                        g_creatureGenerator1RolloverNames[generatorType]);
+                        g_creatureGenerator1RolloverNames[type]);
                 }
                 break;
             }
             case CREATURE_GENERATOR_4: {
-                generator* mapGenerator =
-                    &g_game->m_generators[cell->m_extraInfo];
-                int owner = mapGenerator->m_playerOwner;
-                int generatorType = mapGenerator->m_genType;
+                int owner = g_game->m_generators[testCell->m_extraInfo].getOwner();
+                int type = g_game->m_generators[testCell->m_extraInfo].m_genType;
                 if (owner != -1) {
                     sprintf(g_text, DATA_COMPGEN(
                         0x006603b4, quickInfoOwnedObjectFormat,
                         "%s\n\n%s"),
-                        g_creatureGenerator4RolloverNames[generatorType],
+                        g_creatureGenerator4RolloverNames[type],
                         g_objectOwnerColorNames[owner]);
                 } else {
                     strcpy(g_text,
-                        g_creatureGenerator4RolloverNames[generatorType]);
+                        g_creatureGenerator4RolloverNames[type]);
                 }
                 break;
             }
-            SET_VISITED_QUICKINFO(DEAD_GUY,
-                g_currentPlayer->m_deadGuyFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
-            SET_KNOWN_VISITED_QUICKINFO(DEFENSE_TOWER, DefenseTowerInfo,
-                currHero->m_defenseTowerFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+            case DEAD_GUY:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    if (currHero) {
+                        visited = (g_currentPlayer->m_deadGuyFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case DEFENSE_TOWER:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(DefenseTowerInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[DefenseTowerInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_defenseTowerFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case DERELICT_SHIP:
                 getCreatureBankHelpText(
-                    g_text, cell, CREATURE_BANK_DERELICT,
+                    g_text, testCell, CREATURE_BANK_DERELICT,
                     g_unnamed69778c, separator, 1);
                 break;
             case SEPULCHER:
                 getCreatureBankHelpText(
-                    g_text, cell, CREATURE_BANK_SEPULCHER,
+                    g_text, testCell, CREATURE_BANK_SEPULCHER,
                     g_unnamed69778c, separator, 1);
                 break;
             case SHIPWRECK:
                 getCreatureBankHelpText(
-                    g_text, cell, CREATURE_BANK_SHIPWRECK,
+                    g_text, testCell, CREATURE_BANK_SHIPWRECK,
                     g_unnamed69778c, separator, 1);
                 break;
             case DRAGON_CITY:
                 getCreatureBankHelpText(
-                    g_text, cell, CREATURE_BANK_DRAGON,
+                    g_text, testCell, CREATURE_BANK_DRAGON,
                     g_unnamed69778c, separator, 1);
                 break;
             case QUEST_GUARD:
                 strcpy(g_text,
-                    m_fullMap->m_questGuardList[cell->m_extraInfo]
+                    m_fullMap->m_questGuardList[testCell->m_extraInfo]
                         .questGuardFn00572E40(g_unnamed69778c).c_str());
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(FAERIE_RING, FaerieRingInfo,
-                currHero->m_flags & 0x2000);
+            case FAERIE_RING:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(FaerieRingInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[FaerieRingInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x2000);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case FOUNTAIN_OF_FORTUNE:
-                strcpy(g_text, g_adventureObjectNames[FOUNTAIN_OF_FORTUNE]);
-                if (cell->m_isTrigger) {
-                    if (cell->playerKnowsCell(g_unnamed69778c)) {
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    // DC7890 queries this before the independent 7892 test.
+                    infolevel = g_game->getInfoFlag(FountainOfFortuneInfo, playerId);
+                    if (testCell->playerKnowsCell(g_unnamed69778c)) {
                         sprintf(tempText, knownFormat,
                             g_globalInfoFlagNames[FountainOfFortuneInfo]);
                         strcat(g_text, tempText);
                     }
                     if (currHero) {
-                        testFlag =
-                            (currHero->m_flags & 0x20000000UL)
-                            + (currHero->m_flags & 0x10000000UL)
+                        visited =
+                            (currHero->m_flags & 0x20UL)
                             + (currHero->m_flags & 0x08000000UL)
-                            + (currHero->m_flags & 0x20UL);
-                        sprintf(tempText, visitFormat,
-                            testFlag
-                                ? g_generalText->getText(
-                                      GENERAL_TEXT_VISITED_OBJECT)
-                                : g_generalText->getText(
-                                      GENERAL_TEXT_UNVISITED_OBJECT));
+                            + (currHero->m_flags & 0x10000000UL)
+                            + (currHero->m_flags & 0x20000000UL);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
                         strcat(g_text, tempText);
                     }
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
-                currHero->m_flags & 0x4000);
-            SET_KNOWN_VISITED_QUICKINFO(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
-                currHero->m_gardenOfRevelationFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+            case FOUNTAIN_OF_YOUTH:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(FountainOfYouthInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[FountainOfYouthInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x4000);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case GARDEN_OF_REVELATION:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(GardenOfRevelationInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[GardenOfRevelationInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_gardenOfRevelationFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case HILL_FORT:
-                strcpy(g_text, g_adventureObjectNames[HILL_FORT]);
-                if (cell->m_isTrigger) {
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
                     infolevel = g_game->getInfoFlag(HillFortInfo, playerId);
                     if (infolevel) {
                         sprintf(tempText, knownFormat,
@@ -7465,35 +7769,79 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case HERO:
-                setHeroHelp(g_text, cell);
+                setHeroHelp(g_text, testCell);
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
-                (currHero->m_flags & 0x02000000UL)
-                    + (currHero->m_flags & 0x10UL));
-            case LEAN_TO:
-                strcpy(g_text, g_adventureObjectNames[LEAN_TO]);
-                if (cell->m_isTrigger && currHero) {
-                    z = g_currentPlayer->m_leanToFlags
-                        & (1UL << (cell->m_extraInfo & 0x1f));
-                    if (z)
-                        sprintf(tempText, leanToFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
-                    else
-                        sprintf(tempText, leanToFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(g_text, tempText);
+            case IDOL_OF_FORTUNE:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(IdolOfFortuneInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[IdolOfFortuneInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = ((currHero->m_flags
+                            & 0x02000000UL) + (currHero->m_flags & 0x10UL));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(LIBRARY, LibraryInfo,
-                currHero->m_libraryFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+            case LEAN_TO:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    if (currHero) {
+                        visited = g_currentPlayer->m_leanToFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f));
+                        if (visited)
+                            sprintf(tempText, leanToFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, leanToFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case LIBRARY:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(LibraryInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[LibraryInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_libraryFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case LIGHTHOUSE:
-                strcpy(g_text, g_adventureObjectNames[LIGHTHOUSE]);
-                if (cell->m_isTrigger) {
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
                     char owner =
-                        g_game->m_mines[cell->m_extraInfo].m_playerOwner;
+                        g_game->m_mines[testCell->m_extraInfo].m_playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
                                 g_objectOwnerColorNames[owner]);
@@ -7501,104 +7849,343 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SCHOOL, MagicSchoolInfo,
-                currHero->m_magicSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
-            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SPRING, MagicSpringInfo,
-                (g_currentPlayer->m_magicSpringFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)))
-                    && !((cell->m_extraInfo >> 6) & 1));
-            SET_KNOWN_VISITED_QUICKINFO(MAGIC_WELL, MagicWellInfo,
-                currHero->m_flags & 0x1);
-            SET_KNOWN_VISITED_QUICKINFO(MERC_CAMP, MercCampInfo,
-                currHero->m_mercCampFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
-            SET_KNOWN_VISITED_QUICKINFO(MERMAID, MermaidInfo,
-                currHero->m_flags & 0x8000);
+            case MAGIC_SCHOOL:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(MagicSchoolInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[MagicSchoolInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_magicSchoolFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case MAGIC_SPRING:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(MagicSpringInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[MagicSpringInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = ((g_currentPlayer->m_magicSpringFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case MAGIC_WELL:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(MagicWellInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[MagicWellInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x1);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case MERC_CAMP:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(MercCampInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[MercCampInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_mercCampFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case MERMAID:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(MermaidInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[MermaidInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x8000);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case MINE:
-                advmgrFn0040D670(g_text, cell, playerId, newLine, 1);
+                advmgrFn0040D670(g_text, testCell, playerId, newLine, 1);
                 break;
             case MYSTICAL_GARDEN:
-                strcpy(g_text, g_adventureObjectNames[MYSTICAL_GARDEN]);
-                if (cell->m_isTrigger) {
-                    testFlag = 1UL << (cell->m_extraInfo & 0x1f);
-                    visited = (g_currentPlayer->m_mysticalGardenFlags & testFlag)
-                        && !((cell->m_extraInfo >> 10) & 1);
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    visited = (g_currentPlayer->m_mysticalGardenFlags
+                        & (1UL << (testCell->m_extraInfo & 0x1f)))
+                        && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_VISITED_OBJECT]);
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_UNVISITED_OBJECT]);
                     strcat(g_text, tempText);
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(OASIS, OasisInfo,
-                currHero->m_flags & 0x80);
+            case OASIS:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(OasisInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[OasisInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x80);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case OBELISK:
-                strcpy(g_text, g_adventureObjectNames[OBELISK]);
-                if (cell->m_isTrigger) {
-                    visited = g_game->m_obeliskFlags[cell->m_extraInfo]
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    visited = g_game->m_obeliskFlags[testCell->m_extraInfo]
                         & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_VISITED_OBJECT]);
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                (*g_generalText)[
+                                    GENERAL_TEXT_UNVISITED_OBJECT]);
                     strcat(g_text, tempText);
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(POWER_SCHOOL, PowerSchoolInfo,
-                currHero->m_powerSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
-            case PYRAMID:
-                setPyramidHelp(g_text, cell, currHero, separator);
+            case POWER_SCHOOL:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(PowerSchoolInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[PowerSchoolInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_powerSchoolFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(RALLY_FLAG, RallyFlagInfo,
-                currHero->m_flags & 0x10000);
+            case PYRAMID:
+                setPyramidHelp(g_text, testCell, currHero, separator);
+                break;
+            case RALLY_FLAG:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(RallyFlagInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[RallyFlagInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x10000);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case RESOURCE:
-                strcpy(g_text, g_resourceNames[cell->m_objectIndex]);
+                strcpy(g_text, g_resourceNames[testCell->m_objectIndex]);
                 break;
             case SEER: {
-                TSeerHut& thisHut = m_fullMap->m_seerHutList[cell->m_extraInfo];
+                const TSeerHut& thisHut = m_fullMap->m_seerHutList[testCell->m_extraInfo];
                 strcpy(g_text,
                        thisHut.seerHutFn005743E0(playerId).c_str());
                 break;
             }
             case SHRINE1:
-                setShrineHelpText(g_text, currHero, cell, Shrine1Info,
+                setShrineHelpText(g_text, currHero, testCell, Shrine1Info,
                                   newLine, separator);
                 break;
             case SHRINE2:
-                setShrineHelpText(g_text, currHero, cell, Shrine2Info,
+                setShrineHelpText(g_text, currHero, testCell, Shrine2Info,
                                   newLine, separator);
                 break;
             case SHRINE3:
-                setShrineHelpText(g_text, currHero, cell, Shrine3Info,
+                setShrineHelpText(g_text, currHero, testCell, Shrine3Info,
                                   newLine, separator);
                 break;
-            SET_VISITED_QUICKINFO(SIREN,
-                currHero->m_flags & 0x100000);
-            SET_VISITED_QUICKINFO(STABLES,
-                currHero->m_flags & 0x2);
-            SET_KNOWN_VISITED_QUICKINFO(TEMPLE, TempleInfo,
-                (currHero->m_flags & 0x04000000UL)
-                    + (currHero->m_flags & 0x100UL));
-            SET_KNOWN_VISITED_QUICKINFO(TRAINING_GROUNDS, TrainingGroundsInfo,
-                currHero->m_trainingGroundsFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+            case SIREN:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x100000);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case STABLES:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x2);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case TEMPLE:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(TempleInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[TempleInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = ((currHero->m_flags
+                            & 0x100UL) + (currHero->m_flags & 0x04000000UL));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
+            case TRAINING_GROUNDS:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(TrainingGroundsInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[TrainingGroundsInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_trainingGroundsFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case TREE_OF_KNOWLEDGE:
-                setTreeHelpText(g_text, currHero, cell,
+                setTreeHelpText(g_text, currHero, testCell,
                                 newLine, separator);
                 break;
             case UNIVERSITY:
-                strcpy(g_text, g_adventureObjectNames[UNIVERSITY]);
-                if (cell->m_isTrigger) {
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
                     infolevel = g_game->getInfoFlag(UniversityInfo, playerId);
                     if (infolevel) {
                         sprintf(tempText, knownFormat,
@@ -7608,32 +8195,73 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case WAGON:
-                setWagonHelpText(g_text, cell, separator);
+                setWagonHelpText(g_text, testCell, separator);
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(WAR_SCHOOL, WarSchoolInfo,
-                currHero->m_warSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+            case WAR_SCHOOL:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(WarSchoolInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[WarSchoolInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_warSchoolFlags
+                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case WARRIOR_TOMB:
-                setTombHelpText(g_text, cell, separator);
+                setTombHelpText(g_text, testCell, separator);
                 break;
             case WATER_WHEEL:
-                setWaterWheelHelpText(g_text, cell, separator);
+                setWaterWheelHelpText(g_text, testCell, separator);
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(WATERING_HOLE, WateringHoleInfo,
-                currHero->m_flags & 0x40);
+            case WATERING_HOLE:
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
+                if (testCell->m_isTrigger) {
+                    infolevel = g_game->getInfoFlag(WateringHoleInfo, playerId);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                g_globalInfoFlagNames[WateringHoleInfo]);
+                        strcat(g_text, tempText);
+                    }
+                    if (currHero) {
+                        visited = (currHero->m_flags & 0x40);
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_VISITED_OBJECT]);
+                        else
+                            sprintf(tempText, visitFormat,
+                                    (*g_generalText)[
+                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                        strcat(g_text, tempText);
+                    }
+                }
+                break;
             case WINDMILL:
-                setWindmillHelpText(g_text, cell, separator);
+                setWindmillHelpText(g_text, testCell, separator);
                 break;
             case WITCH_HUT:
-                setWitchHutHelpText(g_text, currHero, cell,
+                setWitchHutHelpText(g_text, currHero, testCell,
                                         newLine, separator);
                 break;
             default:
-                strcpy(g_text, g_adventureObjectNames[cell->m_type]);
+                strcpy(g_text, g_adventureObjectNames[testCell->m_type]);
                 break;
             }
 
-#undef SET_VISITED_QUICKINFO
         }
     }
 
@@ -7641,12 +8269,12 @@ void advManager::quickInfo(int cellX, int cellY, int z)
         // 100, NOT 128, by the same frame reading: retail bases it at
         // [ebp-0x2bc] and uses [ebp-0x258] above it, so 0x2bc-0x258 = 0x64
         // = 100 is its size. Byte-flat; the frame carries the evidence.
-        char coordinateText[100];
-        sprintf(coordinateText, DATA_COMPGEN(
+        char debugText[100];
+        sprintf(debugText, DATA_COMPGEN(
             0x00660394, quickInfoCoordinateFormat,
             "\n\nX: %3d - Y: %3d - Z: %3d"),
             mapPoint.m_x, mapPoint.m_y, mapPoint.m_z);
-        strcat(g_text, coordinateText);
+        strcat(g_text, debugText);
     }
 
     getQuickviewSize(g_text, &width, &height);

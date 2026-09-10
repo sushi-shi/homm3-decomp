@@ -503,19 +503,13 @@ void readPrefs()
 // read run. Canonical source ends with strcpy(CDDrive, AppPath). Retail was
 // binary-patched there to a four-byte assignment plus a jump over 17 NOPs,
 // leaving the final five instructions of the old inline strcpy unreachable.
-// Residual (binary patch, 95.9319%): keeping strcpy restores the exact live
-// tail; spelling the patched assignment in C falls to 91.136%, so no
-// binary-patch artifact is encoded in source.  The remaining two flow edits
-// are the patch jump and the synthetic CRT identity attached to _getcwd;
-// the registry-query run and the live strcpy instructions are otherwise
-// instruction-for-instruction retail.
-// 2026-09-05, easy lane 3 - the 2 missing blocks are retail DEAD CODE, not a
-// spelling. At +0xb6a retail `jmp`s over seventeen NOPs and a five-instruction
-// `shr ecx,2 / rep movsd / mov ecx,eax / and ecx,3 / rep movsb` memcpy tail
-// that NOTHING branches to; the live path is the two-instruction global-to-
-// global dword copy above it, which is exactly what this compile emits with no
-// jump and no stranded tail. Everything else (B0..B7, 438-instruction block
-// included) is exact. Do not spend a lane on this row.
+// Residual (95.9319%): the canonical strcpy still emits its full inline
+// length scan and copy; retail instead executes the four-byte assignment
+// and jumps over seventeen NOPs plus the stranded copy tail. This is an
+// observed binary-patch boundary, not a source-level missing branch.
+// A direct four-byte C assignment control scored 91.136% and did not emit
+// the unreachable tail. Preserve the meaningful strcpy and the retail
+// evidence; do not manufacture dead code to imitate the patch bytes.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
 void readPrefsFromRegistry()
 {
@@ -554,82 +548,121 @@ void readPrefsFromRegistry()
             return;
         }
 
-#define READ_REG_PREF(name, address) \
-        RegQueryValueExA(key, name, 0, &type, \
-            static_cast<BYTE*>(static_cast<void*>(address)), &cbData)
-
-        READ_REG_PREF(g_prefMusicVolume,
-            &g_unnamed698758.m_musicVolume);
-        READ_REG_PREF(g_prefSoundVolume,
-            &g_unnamed698758.m_soundVolume);
-        READ_REG_PREF(g_prefLastMusicVolume,
-            &g_unnamed698758.m_lastMusicVolume);
-        READ_REG_PREF(g_prefLastSoundVolume,
-            &g_unnamed698758.m_lastSoundVolume);
-        READ_REG_PREF(g_prefWalkSpeed,
-            &g_unnamed698758.m_walkSpeed);
-        READ_REG_PREF(g_prefComputerWalkSpeed,
-            &g_unnamed698758.m_computerWalkSpeed);
-        READ_REG_PREF(g_prefShowRoute,
-            &g_unnamed698758.m_showRoute);
-        READ_REG_PREF(g_prefMoveReminder,
-            &g_unnamed698758.m_moveReminder);
-        READ_REG_PREF(g_prefQuickCombat,
-            &g_unnamed698758.m_quickCombat);
-        READ_REG_PREF(g_prefVideoSubtitles,
-            &g_unnamed698758.m_videoSubtitles);
-        READ_REG_PREF(g_prefTownOutlines,
-            &g_unnamed698758.m_townOutlines);
-        READ_REG_PREF(g_prefAnimateSpellBook,
-            &g_unnamed698758.m_animateSpellBook);
-        READ_REG_PREF(g_prefWindowScrollSpeed,
-            &g_unnamed698758.m_windowScrollSpeed);
-        READ_REG_PREF(g_prefBlackoutComputer,
-            &g_unnamed698758.m_blackoutComputer);
-        READ_REG_PREF(g_prefFirstTime, &g_firstTimeThrough);
-        READ_REG_PREF(g_prefTestDecomp, &g_testDecomp);
-        READ_REG_PREF(g_prefTestRead, &g_testRead);
-        READ_REG_PREF(g_prefTestBlit, &g_testBlit);
-        READ_REG_PREF(g_prefBinkVideo,
-            &g_unnamed698758.m_binkVideo);
+        // Former READ_REG_PREF expansion. cbData is shared in/out state:
+        // preserve query order and the explicit size resets below.
+        RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_musicVolume)), &cbData);
+        RegQueryValueExA(key, g_prefSoundVolume, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_soundVolume)), &cbData);
+        RegQueryValueExA(key, g_prefLastMusicVolume, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_lastMusicVolume)), &cbData);
+        RegQueryValueExA(key, g_prefLastSoundVolume, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_lastSoundVolume)), &cbData);
+        RegQueryValueExA(key, g_prefWalkSpeed, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_walkSpeed)), &cbData);
+        RegQueryValueExA(key, g_prefComputerWalkSpeed, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_computerWalkSpeed)), &cbData);
+        RegQueryValueExA(key, g_prefShowRoute, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_showRoute)), &cbData);
+        RegQueryValueExA(key, g_prefMoveReminder, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_moveReminder)), &cbData);
+        RegQueryValueExA(key, g_prefQuickCombat, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_quickCombat)), &cbData);
+        RegQueryValueExA(key, g_prefVideoSubtitles, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_videoSubtitles)), &cbData);
+        RegQueryValueExA(key, g_prefTownOutlines, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_townOutlines)), &cbData);
+        RegQueryValueExA(key, g_prefAnimateSpellBook, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_animateSpellBook)), &cbData);
+        RegQueryValueExA(key, g_prefWindowScrollSpeed, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_windowScrollSpeed)), &cbData);
+        RegQueryValueExA(key, g_prefBlackoutComputer, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_blackoutComputer)), &cbData);
+        RegQueryValueExA(key, g_prefFirstTime, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_firstTimeThrough)), &cbData);
+        RegQueryValueExA(key, g_prefTestDecomp, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_testDecomp)), &cbData);
+        RegQueryValueExA(key, g_prefTestRead, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_testRead)), &cbData);
+        RegQueryValueExA(key, g_prefTestBlit, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_testBlit)), &cbData);
+        RegQueryValueExA(key, g_prefBinkVideo, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_binkVideo)), &cbData);
 
         cbData = 4;
-        READ_REG_PREF(g_prefUniqueSystemId, g_unnamed698758.m_name);
+        RegQueryValueExA(key, g_prefUniqueSystemId, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                g_unnamed698758.m_name)), &cbData);
         g_unnamed698758.m_name[3] = 0;
         cbData = 31;
-        READ_REG_PREF(g_prefNetworkDefaultName,
-            g_unnamed698758.m_networkDefaultName);
+        RegQueryValueExA(key, g_prefNetworkDefaultName, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                g_unnamed698758.m_networkDefaultName)), &cbData);
         cbData = 4;
-        READ_REG_PREF(g_prefAutosave,
-            &g_unnamed698758.m_autosave);
-        READ_REG_PREF(g_prefShowCombatGrid,
-            &g_unnamed698758.m_showCombatGrid);
-        READ_REG_PREF(g_prefShowCombatMouseHex,
-            &g_unnamed698758.m_showCombatMouseHex);
-        READ_REG_PREF(g_prefCombatShadeLevel,
-            &g_unnamed698758.m_combatShadeLevel);
-        READ_REG_PREF(g_prefCombatArmyInfoLevel,
-            &g_unnamed698758.m_combatArmyInfoLevel);
-        READ_REG_PREF(g_prefCombatAutoCreatures,
-            &g_unnamed698758.m_combatAutoCreatures);
-        READ_REG_PREF(g_prefCombatAutoSpells,
-            &g_unnamed698758.m_combatAutoSpells);
-        READ_REG_PREF(g_prefCombatCatapult,
-            &g_unnamed698758.m_combatCatapult);
-        READ_REG_PREF(g_prefCombatBallista,
-            &g_unnamed698758.m_combatBallista);
-        READ_REG_PREF(g_prefCombatFirstAidTent,
-            &g_unnamed698758.m_combatFirstAidTent);
-        READ_REG_PREF(g_prefCombatSpeed,
-            &g_unnamed698758.m_combatSpeed);
-        READ_REG_PREF(g_prefMainGameShowMenu,
-            &g_unnamed698758.m_mainGameShowMenu);
-        READ_REG_PREF(g_prefMainGameX,
-            &g_unnamed698758.m_mainGameX);
-        READ_REG_PREF(g_prefMainGameY,
-            &g_unnamed698758.m_mainGameY);
-        READ_REG_PREF(g_prefMainGameFullScreen,
-            &g_unnamed698758.m_mainGameFullScreen);
+        RegQueryValueExA(key, g_prefAutosave, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_autosave)), &cbData);
+        RegQueryValueExA(key, g_prefShowCombatGrid, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_showCombatGrid)), &cbData);
+        RegQueryValueExA(key, g_prefShowCombatMouseHex, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_showCombatMouseHex)), &cbData);
+        RegQueryValueExA(key, g_prefCombatShadeLevel, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatShadeLevel)), &cbData);
+        RegQueryValueExA(key, g_prefCombatArmyInfoLevel, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatArmyInfoLevel)), &cbData);
+        RegQueryValueExA(key, g_prefCombatAutoCreatures, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatAutoCreatures)), &cbData);
+        RegQueryValueExA(key, g_prefCombatAutoSpells, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatAutoSpells)), &cbData);
+        RegQueryValueExA(key, g_prefCombatCatapult, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatCatapult)), &cbData);
+        RegQueryValueExA(key, g_prefCombatBallista, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatBallista)), &cbData);
+        RegQueryValueExA(key, g_prefCombatFirstAidTent, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatFirstAidTent)), &cbData);
+        RegQueryValueExA(key, g_prefCombatSpeed, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_combatSpeed)), &cbData);
+        RegQueryValueExA(key, g_prefMainGameShowMenu, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_mainGameShowMenu)), &cbData);
+        RegQueryValueExA(key, g_prefMainGameX, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_mainGameX)), &cbData);
+        RegQueryValueExA(key, g_prefMainGameY, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_mainGameY)), &cbData);
+        RegQueryValueExA(key, g_prefMainGameFullScreen, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(
+                &g_unnamed698758.m_mainGameFullScreen)), &cbData);
 
         cbData = 350;
         _getcwd(appPath, sizeof(appPath));
@@ -662,7 +695,6 @@ void readPrefsFromRegistry()
         if (g_unnamed698758.m_mainGameY < 0)
             g_unnamed698758.m_mainGameY = 0;
 
-#undef READ_REG_PREF
     }
     checkConfigFile();
 }

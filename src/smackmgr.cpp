@@ -36,35 +36,30 @@
 DATA(0x006839b8) extern char g_archiveDriveLetter;
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
-// surface live in smackmgr.h / binkmanager.h; the underscored import
-// names alias back to the radlib spellings here.
-#define SmackToBuffer _SmackToBuffer
-#define SmackToBufferRect _SmackToBufferRect
-#define SmackDoFrame _SmackDoFrame
-#define SmackGoto _SmackGoto
-#define SmackClose _SmackClose
-#define BinkPause _BinkPause
-#define BinkDDSurfaceType _BinkDDSurfaceType
-#define BinkGetRects _BinkGetRects
-#define SmackWait _SmackWait
-#define SmackNextFrame _SmackNextFrame
-#define SmackOpen _SmackOpen
-#define SmackUseMMX _SmackUseMMX
-#define SmackVolumePan _SmackVolumePan
+// surface live in smackmgr.h / binkmanager.h. Calls use the exact
+// underscored RAD import names, without TU-local spelling aliases.
+// Removed aliases: SmackToBuffer, SmackToBufferRect, SmackDoFrame, SmackGoto,
+// SmackClose, BinkPause, BinkDDSurfaceType, BinkGetRects, SmackWait,
+// SmackNextFrame, SmackOpen, SmackUseMMX, SmackVolumePan.
 
 // SmackToBuffer surface-format flags (radlib smack.h).
-#define SMACKBUFFER555 0x80000000
-#define SMACKBUFFER565 0xC0000000
+// Before normalization: SMACKBUFFER555.
+static const unsigned int g_smackBuffer555 = 0x80000000;
+// Before normalization: SMACKBUFFER565.
+static const unsigned int g_smackBuffer565 = 0xC0000000;
 
 // The constant half of OpenSmackerTrack's SmackOpen mask; the 0x1000 bit is
 // what makes SmackOpen read from an already-open archive HANDLE.
-#define SMACKOPEN_FROM_ARCHIVE 0x1140
+// Before normalization: SMACKOPEN_FROM_ARCHIVE.
+static const int g_smackOpenFromArchive = 0x1140;
 
 // The Smacker track selection mask ShowVideo hands SmackOpen and
 // SmackVolumePan. The extra bit follows the same no-frame-skip policy
 // as Bink's SDK-defined BINKNOSKIP in the parallel opener.
-#define SMACK_TRACK_MASK 0xfe000
-#define SMACKOPEN_NO_FRAME_SKIP 0x200
+// Before normalization: SMACK_TRACK_MASK.
+static const int g_smackTrackMask = 0xfe000;
+// Before normalization: SMACKOPEN_NO_FRAME_SKIP.
+static const int g_smackOpenNoFrameSkip = 0x200;
 
 // The remaining smackmgr.obj bodies, declared ahead of their first
 // in-TU call site. ShowVideo (0x598af0) opens the handle pair and
@@ -124,7 +119,7 @@ DATA(0x0069fe3c) int g_videoCount3;
 // Before normalization: gSmackBufferFlags.
 DATA(0x0069fe18) int g_smackPaused;
 // Before normalization: RedShift.
-DATA(0x0069fe20) unsigned long g_smackBufferFlags;  // SMACKBUFFER555/565
+DATA(0x0069fe20) unsigned long g_smackBufferFlags;  // g_smackBuffer555/565
 // Before normalization: RedBits.
 DATA(0x0069fddc) int g_redShift;
 // Before normalization: GreenShift.
@@ -193,65 +188,31 @@ void videoSoundOnOff(int on)
 }
 
 // E:\gamedcs\smackmgr.cpp:105
-// Residual (88.9%): the gBinkBuffer address sum. Retail adds
-// (Pitch*gBinkY + 2*gBinkX) first and the map pointer last (gBinkX
-// hoisted into esi before the screen deref); our CL reassociates every
-// spelling into (Pitch*gBinkY + map) + scaled-2*gBinkX, folding the
-// scaled term into the final lea. Tried and rejected (all compile to
-// the identical object): term order 2X+P*Y+map, &map[..] indexing,
-// integer-cast arithmetic with map as a plain term, x+x for 2*x, an
-// explicit off temp (forward-substituted), and (2026-08-08) retail's own
-// textual term order P*Y + 2*X + map. Instruction count and semantics
-// match; the delta is the add order and the reg choice it drags along.
-// The cause is narrow and worth naming: `2 * gBinkX` is a SCALED term,
-// and our CL always sinks a scaled term into the LAST lea because a
-// scaled index is free there - so the pointer add lands second and the
-// scaled add third, whichever way the source associates. Retail's CL
-// folded the scaled term into the middle lea instead. No source
-// association reaches it; only un-scaling the term would, and x+x was
-// already rejected. Re-measured 2026-08-08: branch sequences AGREE
-// (2/2) and four more spellings compile to the identical object -
-// explicit parentheses around the int sum in either term order,
-// `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
-// Pitch*gBinkY` (the unsigned-short-index form that supplies the
-// scale as pointer arithmetic). C2-reassociation-capped.
-// RANKED 2026-08-14: 88.9254 is 5 REAL rows of 67 and 0 artefact, and they are
-// exactly the scheduling of the `2 * gBinkX` term - retail loads gBinkX into
-// ESI before `screenBitmap`, folds it with `lea edx,[edx+2*esi]` and adds
-// `map` last (`Pitch*gBinkY + 2*gBinkX + map`); our CL adds `map` first and
-// folds the scaled term after. Nine more spellings measured, all byte-flat at
-// 88.9254: all four term orders of the three-way sum, a named `unsigned char*`
-// base local, a named int offset local, `gBinkX * 2` and `gBinkX + gBinkX`.
-// C2 reassociates every one of them identically.
-//
-// NOT A GENERATION ARTIFACT (2026-09-06, Track R closed on both passes).
-// `genab run --gen rtm-fe` compiles this unit through C1XX 12.00.8168 +
-// C2 12.00.8168 and this function comes back BYTE-IDENTICAL to the SP3
-// build (6+0 both sides, sp3_vs_rtm 0), as does VideoClose (2+20 both
-// sides). The whole smackmgr object is byte-identical under the RTM
-// generation. "CL-generation-capped" is the wrong wording for the cap:
-// the measured fact is C2's reassociation choice, invariant under
-// 8168/8447 in BOTH the front and back end (docs/vc6/rtm-generation.md
-// §6). Do not re-open this as vintage.
+// EXACT: use the canonical Bitmap16Bit::getMap(x,y) interface. Retail
+// combines y*pitch with 2*x before adding map; its receiver/argument capture
+// order is reproduced by the helper expansion. Pasted field arithmetic,
+// term-order/shift/temp variants and a cached bitmap receiver all lose that
+// ordering (88.9254%). The 12-state interface/lifetime family reproduced
+// the direct getMap call at 100%, with all sibling scores unchanged.
+// DC's video function is a platform stub; retail supplies this call-site
+// evidence, while Bitmap16.h proves the existing accessor's declaration.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void videoRealignBuffers()
 {
     g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
-                            ? SMACKBUFFER565 : SMACKBUFFER555;
+                            ? g_smackBuffer565 : g_smackBuffer555;
     if (g_smackVideo)
-        SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+        _SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
             g_windowManager->m_screenBitmap->m_pitch,
             g_windowManager->m_screenBitmap->m_height,
             g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
     if (g_smackVideo2)
-        SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
+        _SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
             g_windowManager->m_screenBitmap->m_pitch,
             g_windowManager->m_screenBitmap->m_height,
             g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
-    g_binkSurfaceType = BinkDDSurfaceType(g_ddsBack);
-    g_binkBuffer = 2 * g_binkX + g_windowManager->m_screenBitmap->m_pitch * g_binkY
-        + static_cast<unsigned char*>(
-              static_cast<void*>(g_windowManager->m_screenBitmap->m_map));
+    g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
+    g_binkBuffer = static_cast<unsigned char*>(static_cast<void*>(g_windowManager->m_screenBitmap->getMap(g_binkX, g_binkY)));
     g_binkPitch = g_windowManager->m_screenBitmap->m_pitch;
     g_binkHeight = g_windowManager->m_screenBitmap->m_height;
 }
@@ -270,25 +231,26 @@ void videoRealignBuffers()
 // Retail's loop is unrotated: all five back edges land on the single
 // top test at the loop header, which is also why the loop-invariant
 // `xor ebx,ebx` sits inside the header.
-// Residual (87.2%): one register-allocation bit at entry, cascading.
-// Retail assigns the callee-saved registers in ebx,esi,edi order to
-// (x, vw, vh); ours assigns edi,esi,ebx to the same three. Because
-// retail's `x` occupies EBX, `pos.x = x + ...` has to land in EAX and
-// must therefore be spilled to [ebp-0xc] across the loop - which frees
-// EBX for the materialized zero the whole loop body compares against
-// (`cmp [g],ebx`). Ours computes pos.x straight into EBX, where it
-// survives the loop for free, so no zero register is available and
-// every test stays in `mov eax,[g]; test eax,eax` form. Tried and
-// rejected: all ten declaration permutations of pos/vw+vh/result/
-// aborted (byte-identical), split `int vw; int vh;` (identical),
-// int[2] and plain int locals for the origin (earlier lane). `vh = h`
-// before `vw = w` is worth +0.03 and is the form kept.
+// EXACT: calculate both persistent screen globals before copying them into
+// the POINT retained for the final updateScreen call. Retail stores gSmackX,
+// computes and stores gSmackY, then spills the two POINT members before
+// SmackToBuffer; passing the globals reproduces that order and the retail
+// EBX/ESI/EDI allocation. The six-state immediate-global family produced
+// three exact objects; this form preserves the observed instruction order.
+//
+// Negative controls: computing POINT first capped the row at 87.1912% and
+// kept pos.x in EBX across the loop. Direct mutable x/y removed the POINT
+// homes, while volatile/address-exposed POINT diagnostics added loads.
+// Declaration, scalar/aggregate, helper, scope, message, gate, SDK spelling,
+// parameter, TU-state and 720-state lifetime crosses did not reproduce the
+// retail allocation. The Dreamcast body is a platform stub, so the Complete
+// retail instruction order is the positive source-shape evidence here.
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
 int videoPlay(int id, int x, int y, int w, int h)
 {
     // The existing aborted flag also carries the loop exit: a test after
-    // the event switch replaces the cleanup jump at unchanged 87.1912%.
-    // A combined event condition changes VC6's dispatch and loses matching.
+    // the event switch replaces the cleanup jump. A combined event condition
+    // changes VC6's dispatch and loses matching.
     POINT pos;
     int vw, vh;
     unsigned char result;
@@ -311,11 +273,11 @@ int videoPlay(int id, int x, int y, int w, int h)
                 vw = g_smackVideo->m_width;
             if (vh < 0)
                 vh = g_smackVideo->m_height;
-            pos.x = x + (vw - g_smackVideo->m_width) / 2;
-            g_smackX = pos.x;
-            pos.y = y + (vh - g_smackVideo->m_height) / 2;
-            g_smackY = pos.y;
-            SmackToBuffer(g_smackVideo, pos.x, pos.y,
+            g_smackX = x + (vw - g_smackVideo->m_width) / 2;
+            g_smackY = y + (vh - g_smackVideo->m_height) / 2;
+            pos.x = g_smackX;
+            pos.y = g_smackY;
+            _SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
                 g_windowManager->m_screenBitmap->m_pitch,
                 g_windowManager->m_screenBitmap->m_height,
                 g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
@@ -425,7 +387,7 @@ void videoDrawCurrentFrame()
 {
     if (g_smackVideo || g_smackVideo2) {
         if (!g_smackPaused && g_smackVideo && g_smackFrameReady)
-            SmackDoFrame(g_smackVideo);
+            _SmackDoFrame(g_smackVideo);
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
@@ -443,11 +405,11 @@ void videoPause()
         g_smackPaused = 1;
     if (g_binkVideo) {
         g_binkPaused = 1;
-        BinkPause(g_binkVideo, 1);
+        _BinkPause(g_binkVideo, 1);
     }
     if (g_binkVideo2) {
         g_binkPaused = 1;
-        BinkPause(g_binkVideo2, 1);
+        _BinkPause(g_binkVideo2, 1);
     }
     videoSoundOnOff(0);
 }
@@ -471,11 +433,11 @@ void videoResume()
         g_smackPaused = 0;
     if (g_binkVideo) {
         g_binkPaused = 0;
-        BinkPause(g_binkVideo, 0);
+        _BinkPause(g_binkVideo, 0);
     }
     if (g_binkVideo2) {
         g_binkPaused = 0;
-        BinkPause(g_binkVideo2, 0);
+        _BinkPause(g_binkVideo2, 0);
     }
     videoSoundOnOff(1);
 }
@@ -485,8 +447,8 @@ VA(0x00597900, 0x23)  // anchor-global, dc 0x14ac54
 void videoRestart()
 {
     if (g_smackVideo) {
-        SmackGoto(g_smackVideo, 1);
-        SmackDoFrame(g_smackVideo);
+        _SmackGoto(g_smackVideo, 1);
+        _SmackDoFrame(g_smackVideo);
     }
     restartBinkVideo();
 }
@@ -517,33 +479,38 @@ unsigned char videoPlaying()
 // Merges the pending dirty rects into one union rect and pushes it to
 // the screen; the id-0x1d bink instead Blts the whole 800x600 back
 // surface to the primary around an Unlock/Lock pair.
-// Residual (89.4%): same reg-homing class as VideoPlay. In the smack
-// merge loop retail memory-homes x/w/h (slots -4/-8/-0xc, ebx only an
-// iteration cache with an unconditional h write-back) and keeps just y
-// in edi; our CL register-homes x in ebx and spills only w/h. The bink
-// arm's induction base also differs (retail's strength reducer bases
-// the rect pointer at .Top, ours at .Left). Indexed FrameRects[i]
-// access instead of a bumped pointer bought 85.1% -> 89.4%. Tried and
-// rejected: retail operand orders in the growth compares (commuted
-// back), first-rect assignment reorder, per-arm vs function-scope
-// merge vars (byte-identical objects). Re-measured 2026-08-08: branch
-// sequences AGREE (23/23), so nothing structural is left; a sweep of
-// the first-rect assignment orders moved it 89.36 -> 89.63 and `x, y,
-// w, h` is the measured optimum (h,w,x,y and x,h,w,y are the worst at
-// 89.35). 2026-08-14: the bink arm's induction base is NOT reachable
-// from the rect expression - a rect pointer local, a walking pointer,
-// a rect reference, and a hoisted `rects` base all compile BYTE
-// IDENTICAL to the subscripted form (89.6347 each); only per-field
-// locals are worse (85.19). Retail's `lea ecx,[esi+0x44]` with loads
-// at -4/0/+4/+8 versus our `[esi+0x40]` with 0/+4/+8/+0xc is the same
-// C2 induction-bias-to-the-second-field choice that palette.cpp's
-// TPalette24 turned out to expose - but there the bias flipped when
-// the loop stopped using a pointer local, and here there is no such
-// handle because the index IS already the induction variable.
+// Residual (90.3379%): the SDK BinkRect bounds object and field references
+// remain; POINT, source RECT and DDSURFACEDESC belong to function scope,
+// while the destination RECT stays in the overlay branch. This natural
+// declaration-scope candidate improves the previous 89.9772% reconstruction.
+// DC0x14ac60 is a four-byte platform stub; it proves no body/local scopes.
+// The 36-state SDK field-result/geometry-scope family emitted 18 objects,
+// and the 16-state individual-object-scope family emitted eight. Capturing
+// rectangle fields in extra locals lost matching; the retained scope
+// reduces the frame from all-function 0xa8 to 0x98 (retail 0x9c).
+// A 25-state scope/bound-type family emitted 12 objects. Its long-scalar
+// parent db3d1eb678b25767ba0c04a1 reaches 89.7123% but reproduces every
+// DirectDraw address (POINT -0x10, dst -0x20, src -0x30, ddsd -0x9c).
+// Keep that reproduced parent as a lead: registers/scheduling still differ.
+// Recombining both parents with independent SDK captures and source-RECT
+// initialization stages exhausted 73 states/17 objects, with no further
+// gain. All 28 exact smackmgr siblings remain exact. The earlier 48-state
+// bound-storage/selection family, rect walkers and cached handles also
+// failed to close the union-loop register homes and Bink induction base.
+// Keep the original update order: changing x/y before the extent compares
+// is retail behavior, even though it is not a general rectangle-union API.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void videoDrawRects()
 {
-    int x, y, w, h;
+    POINT pt;
+    RECT src;
+    DDSURFACEDESC ddsd;
+
+    BinkRect bounds;
+    long& x = bounds.m_left;
+    long& y = bounds.m_top;
+    long& w = bounds.m_width;
+    long& h = bounds.m_height;
 
     if ((g_smackVideo || g_smackVideo2) && !g_smackPaused) {
         Smack* smk;
@@ -553,12 +520,12 @@ void videoDrawRects()
             smk = g_smackVideo;
         else if (g_smackVideo2)
             smk = g_smackVideo2;
-        SmackToBufferRect(smk, g_smackBufferFlags);
-        x = smk->m_lastRectx;
-        y = smk->m_lastRecty;
+        _SmackToBufferRect(smk, g_smackBufferFlags);
         w = smk->m_lastRectw;
         h = smk->m_lastRecth;
-        while (SmackToBufferRect(smk, g_smackBufferFlags)) {
+        x = smk->m_lastRectx;
+        y = smk->m_lastRecty;
+        while (_SmackToBufferRect(smk, g_smackBufferFlags)) {
             if (smk->m_lastRectx < x)
                 x = smk->m_lastRectx;
             if (smk->m_lastRecty < y)
@@ -578,7 +545,7 @@ void videoDrawRects()
         if (g_binkVideoId != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
-            BinkGetRects(bnk, g_binkSurfaceType);
+            _BinkGetRects(bnk, g_binkSurfaceType);
             w = bnk->m_frameRects[0].m_width;
             h = bnk->m_frameRects[0].m_height;
             x = bnk->m_frameRects[0].m_left;
@@ -595,10 +562,7 @@ void videoDrawRects()
             }
             g_windowManager->updateScreen(g_binkX + x, g_binkY + y, w, h);
         } else {
-            POINT pt;
             RECT dst;
-            RECT src;
-            DDSURFACEDESC ddsd;
 
             pt.x = 0;
             pt.y = 0;
@@ -890,8 +854,8 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(g_videoFile1,
-                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+                return _SmackOpen(g_videoFile1,
+                    flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
     }
@@ -900,8 +864,8 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         if (_strcmpi(g_videoHeader2[i].m_name, name) == 0) {
             g_soundManager->serviceSounds();
             SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
-            return SmackOpen(g_videoFile2,
-                flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+            return _SmackOpen(g_videoFile2,
+                flags | extraFlags | g_smackOpenFromArchive, -1);
         }
     }
 
@@ -911,8 +875,8 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(g_videoFile3,
-                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+                return _SmackOpen(g_videoFile3,
+                    flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
     }
@@ -923,8 +887,8 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(g_videoFile1,
-                    flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
+                return _SmackOpen(g_videoFile1,
+                    flags | extraFlags | g_smackOpenFromArchive, -1);
             }
         }
     }
@@ -1018,30 +982,30 @@ void showVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
         g_videoSoundReady = 0;
 
     videoClose();
-    SmackUseMMX(1);
+    _SmackUseMMX(1);
 
-    unsigned long trackMask = g_videoSoundReady ? SMACK_TRACK_MASK : 0;
+    unsigned long trackMask = g_videoSoundReady ? g_smackTrackMask : 0;
     unsigned long videoMode =
         g_videoDescriptors[static_cast<unsigned char>(g_videoDescriptorIndex)].m_noFrameSkip
-            ? SMACKOPEN_NO_FRAME_SKIP : 0;
+            ? g_smackOpenNoFrameSkip : 0;
 
     g_smackVideoId = id;
     g_smackPaused = 0;
     g_smackVideo2 = 0;
     g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
-                            ? SMACKBUFFER565 : SMACKBUFFER555;
+                            ? g_smackBuffer565 : g_smackBuffer555;
     g_smackAdvance = static_cast<unsigned char>(advance);
 
     if (g_videoDescriptors[id].m_smkAudioStem != "") {
         g_smackVideo2 = openSmackerTrack(g_videoDescriptors[id].m_smkAudioStem,
-            trackMask, SMACKOPEN_NO_FRAME_SKIP);
+            trackMask, g_smackOpenNoFrameSkip);
         if (!g_smackVideo2) {
             videoClose();
             return;
         }
-        SmackVolumePan(g_smackVideo2, SMACK_TRACK_MASK,
+        _SmackVolumePan(g_smackVideo2, g_smackTrackMask,
             3640 * g_unnamed698758.m_soundVolume, 0x8000);
-        SmackToBuffer(g_smackVideo2, x, y,
+        _SmackToBuffer(g_smackVideo2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
@@ -1064,14 +1028,14 @@ void showVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     g_smackLoop = loop;
     g_smackX = x;
     g_smackY = y;
-    SmackVolumePan(g_smackVideo, SMACK_TRACK_MASK,
+    _SmackVolumePan(g_smackVideo, g_smackTrackMask,
         3640 * g_unnamed698758.m_soundVolume, 0x8000);
-    SmackToBuffer(g_smackVideo, x, y,
+    _SmackToBuffer(g_smackVideo, x, y,
         g_windowManager->m_screenBitmap->getPitch(),
         g_windowManager->m_screenBitmap->getHeight(),
         g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
     if (g_smackVideo2)
-        SmackToBuffer(g_smackVideo2, x, y,
+        _SmackToBuffer(g_smackVideo2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
@@ -1096,59 +1060,55 @@ VA(0x00598e80, 0x25)  // anchor-callee(SmackDoFrame) + anchor-caller(CGameTransf
 void drawSmackerFrame()
 {
     if (g_smackVideo && g_smackFrameReady && !g_smackPaused)
-        SmackDoFrame(g_smackVideo);
+        _SmackDoFrame(g_smackVideo);
 }
 
 // E:\gamedcs\smackmgr.cpp:1001. The per-frame pump VideoNextFrame drives.
 // Identified by its SmackNextFrame call - the only one in the compiland -
 // which is what separates it from the DrawSmackerFrame wrapper above; the
 // DC row is a 4-byte stub, so only the order-map and the callee prove it.
-// Residual (90.7%): block ORDER of the four-guard bail only. Retail emits
-// it FIRST among the sunk blocks with its own duplicated epilogue
-// (pop edi / mov [gSmackDirty],bl / pop esi / pop ebx / ret) and lets the
-// UpdateScreen arm fall into the shared one; ours emits it LAST and shares.
-// Every other block now pairs one-for-one, and the call streams agree
-// 13 = 13.  Tried and rejected: four split `if (..) { dirty = 0; return; }`
-// guards (76.07), `goto` to a trailing bail label (51.03), the bail as the
-// `if` arm with the whole body in an `else` (90.73, byte-flat both
-// polarities), explicit `== 0` comparisons (90.73, byte-flat).  Writing the
-// last-frame test as `>=` with the SmackNextFrame case in the trailing
-// `else` is what costs 14.8 - the `<` arm must come FIRST.
+// EXACT: assign the complete short-circuit readiness predicate to the
+// real g_smackDirty flag, then test that flag for the early exit. This puts
+// retail's dirty=0 return before the sunk advance block with its own
+// epilogue. Writing two separate dirty stores around an if/return preserves
+// the meaning but shares the epilogue and stays at 90.7265%; local bool,
+// unsigned-char and int predicate carriers also fail to recover the bytes.
+// The finite 15-state family reproduced all three global-result/track-
+// selection forms at 100%. SmackWait remains in the same short-circuit
+// position, and no dirty store occurs before it.
 VA(0x00598eb0, 0x193)  // anchor-caller(VideoNextFrame) + anchor-callee(SmackNextFrame), dc 0x14adfc
 void nextSmackerFrame()
 {
     Smack* smk = g_smackVideo;
     if (!smk)
         smk = g_smackVideo2;
-    if (!smk || !g_smackFrameReady || SmackWait(smk) || !g_smackAdvance) {
-        g_smackDirty = 0;
+    g_smackDirty = smk && g_smackFrameReady && !_SmackWait(smk) && g_smackAdvance;
+    if (!g_smackDirty)
         return;
-    }
-    g_smackDirty = 1;
     if (g_smackPaused)
         return;
-    SmackDoFrame(smk);
+    _SmackDoFrame(smk);
     if (smk->m_frameNum < smk->m_frames - 1) {
-        SmackNextFrame(smk);
+        _SmackNextFrame(smk);
     } else if (g_smackLoop) {
         if (g_smackVideo && g_smackVideo2) {
             if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
                 g_windowManager->fadeScreen(1, 4, 0);
             g_soundManager->serviceSounds();
-            SmackClose(g_smackVideo);
+            _SmackClose(g_smackVideo);
             g_smackVideo = 0;
             if (g_videoDescriptors[g_smackVideoId].m_fadeInSecondTrack) {
-                SmackDoFrame(g_smackVideo2);
+                _SmackDoFrame(g_smackVideo2);
                 g_windowManager->fadeScreen(0, 4, 0);
             }
         } else {
-            SmackNextFrame(smk);
+            _SmackNextFrame(smk);
         }
     } else {
         if (g_smackVideo)
-            SmackClose(g_smackVideo);
+            _SmackClose(g_smackVideo);
         if (g_smackVideo2)
-            SmackClose(g_smackVideo2);
+            _SmackClose(g_smackVideo2);
         g_smackVideo2 = 0;
         g_smackVideo = 0;
         g_smackPaused = 0;
@@ -1180,9 +1140,9 @@ VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoCl
 void closeSmacker()
 {
     if (g_smackVideo)
-        SmackClose(g_smackVideo);
+        _SmackClose(g_smackVideo);
     if (g_smackVideo2)
-        SmackClose(g_smackVideo2);
+        _SmackClose(g_smackVideo2);
     g_smackVideo2 = 0;
     g_smackVideo = 0;
     g_smackPaused = 0;
@@ -1199,7 +1159,7 @@ VA(0x005990a0, 0x1C)  // anchor-callee(SmackGoto) + anchor-caller(CGameTransferS
 void gotoSmackerFrame(unsigned long frame)
 {
     if (g_smackVideo && g_smackFrameReady)
-        SmackGoto(g_smackVideo, frame);
+        _SmackGoto(g_smackVideo, frame);
 }
 
 }  // namespace SmackManager

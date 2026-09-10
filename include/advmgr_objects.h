@@ -29,10 +29,14 @@ public:
     // Before normalization: mobile_hero.
     hero* m_mobileHero;
 
+    // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
+    type_cell_adjuster();
     ~type_cell_adjuster();
     // Before normalization (function): type_cell_adjuster::get_trigger_cell.
     // Before normalization (locals): map_cell.
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
+    // Before normalization (function): type_cell_adjuster::restore_cell.
+    void restoreCell();
 };
 SIZE(type_cell_adjuster, 0xc);
 
