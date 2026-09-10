@@ -119,6 +119,19 @@ sources and yield twenty family-level distinct-object results without improving
 this peak. `/Oa`, `/Ow`, `/Oi-`, `/Ob1`, `/Ot` and `/Op` controls are flat for
 `pcxinfo` or damage sibling rows.
 
+Two final raw-header families exhaust the remaining ordinary expression-tree
+route. Sixty equality-tree alternatives produce thirteen distinct objects; an
+XOR fallback preserves the ten-block retail flow and the live `DL` value, but
+emits `xor dl, 4` rather than retail's `cmp dl, 4`. Sixty equivalent closed/open
+one-value range predicates produce eleven distinct objects and either restore
+C2's extra jump or add comparisons. Neither family exceeds 99.0476%. A bounded
+nine-form inline-assembly diagnostic produces six objects and falls to 18.32%
+or below because VC6 treats the block as a whole-function optimization barrier.
+It is rejected rather than retained as a codegen patch. The natural output-byte
+fallback remains the finished residual: all semantic operations, blocks,
+branches, calls and relocations agree; only the byte compare source and coupled
+EBX/EDI save order differ.
+
 The palette reader has the same 21 CFG blocks, twelve branches, nine calls and
 ten relocations as retail. Its broad declaration-scope family emits one object,
 and putting the status call before the color-count initialization is worse.
