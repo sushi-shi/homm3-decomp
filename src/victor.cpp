@@ -328,6 +328,10 @@ void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
 // Reading the stored output depth for the fallback restores retail's exact
 // ten-block CFG. Only its byte reload and the EBX/EDI save order remain.
 // Snapshot, predicate and entry-declaration follow-ups are flat or worse.
+// Sixty raw-header equality trees and sixty one-value range predicates do not
+// improve this peak: XOR keeps retail's flow/DL home but emits XOR, while CMP
+// forms regain C2's extra jump. Minimal inline assembly blocks global C2 and
+// is much worse, so the natural stored-output form remains the bounded result.
 VA(0x006042a0, 0x127)  // anchor-caller PCX importers + OpenFile/header offsets
 int __stdcall pcxinfo(const char* filename, PcxData* data)
 {
