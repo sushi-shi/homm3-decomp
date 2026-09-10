@@ -542,7 +542,7 @@ void inputManager::forceMouseMove()
     m_bufferBusy = 1;
     e = &m_buffer[m_tail];
     e->m_id = MESSAGE_MOUSE_MOVE;
-    g_mouseManager->mouseCoords(&e->m_codeX, &e->m_codeY);
+    g_mouseManager->mouseCoords(e->m_codeX, e->m_codeY);
     e->m_mouseX = e->m_codeX;
     e->m_mouseY = e->m_codeY;
     quals = 0;

@@ -120,7 +120,6 @@ extern int g_completeDrawEnabled;                         // .bss 0x6989c0
 // Before normalization: gUnnamed6989d4.
 extern int g_unnamed6989d4;                               // .bss 0x6989d4
 
-struct IDirectDrawSurface4;
 struct IDirectDrawSurface;
 struct tagRECT;
 // Before normalization (function): DDCreateSurface.
@@ -129,8 +128,8 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width,
                                    // Before normalization (locals): bPrimary.
                                    int primary);         // 0x6005f0
 // Before normalization (function): DDBlit.
-void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
-            IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
+void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
+            IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags);                        // 0x6001d0
 // The DDERR_WRONGMODE arm of DDBlit's two primary-surface retry loops, and
 // its only caller: it re-establishes the display when Restore reports the

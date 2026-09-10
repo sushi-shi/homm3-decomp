@@ -241,6 +241,11 @@ unsigned char type_AI_puzzle_tile::operator==(
 
 // E:\gamedcs\puzzlewindow.cpp:334
 // Before normalization (locals): dest_x, dest_y, offset_x, offset_y.
+// Boundary repair: DC's 32-pixel sample walks are retained, but no cursor
+// advances after its final sample/row. Partial blocks need not have another
+// 32 bytes/rows allocated. The four-form family favors final guards (60.63%)
+// over next-sample guards (50.28%) and visited offsets (53.69%); retail's
+// unchecked 100% remains HIST, not a safe traversal alternative.
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
@@ -273,12 +278,15 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
         for (int x = 0; x < width; x += 32) {
             if (*sourceBlock)
                 *destinationBlock = 0;
-            sourceBlock += 32;
+            if (x + 32 < width)
+                sourceBlock += 32;
             ++destinationBlock;
         }
 
-        destination += 19;
-        source += m_pitch * 32;
+        if (y + 32 < height) {
+            destination += 19;
+            source += m_pitch * 32;
+        }
     }
 }
 
@@ -337,7 +345,10 @@ type_point aiAttemptPuzzleGuess(long player)
         if (g_game->m_ultimateArtifactX >= 0 &&
             g_game->m_ultimateArtifactPresent &&
             g_game->setupPuzzlePieces(player, 0)) {
-            unsigned char visible[17][19];
+            // DC 0x115f64: visible is a flat unsigned char[156] (13*12
+            // there, 19*17 in Complete), not an array of row subobjects.
+            // Flat ownership is byte-identical; a named row view is 97.1552%.
+            unsigned char visible[17 * 19];
             memset(visible, 1, sizeof(visible));
 
             for (int i = 0; i < 48; ++i) {
@@ -352,7 +363,7 @@ type_point aiAttemptPuzzleGuess(long player)
                 // peak; the flattened-index control is 96.6598%.
                 const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
                 const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
-                bitmap->markPuzzle(visible[0], xCoordinate[piece] - 8,
+                bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
                                     yCoordinate[piece] - 8);
                 bitmap->dispose();
             }
@@ -367,7 +378,7 @@ type_point aiAttemptPuzzleGuess(long player)
                 point.m_y = origin.m_y + row;
                 for (int col = 0; col < 19; ++col) {
                     point.m_x = origin.m_x + col;
-                    if (point.isValid() && visible[row][col]) {
+                    if (point.isValid() && visible[row * 19 + col]) {
 #pragma inline_depth(0)
                         NewmapCell* mapCell = g_game->m_worldMap.cell(
                             point.m_x, point.m_y, point.m_z);

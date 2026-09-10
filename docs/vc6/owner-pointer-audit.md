@@ -1,5 +1,10 @@
 # Member-owner recovery and out-of-object pointer review
 
+The [pointer-boundary implementation](pointer-boundary-repairs.md) supersedes
+this original audit's retained lookup, DirectDraw and image-row exceptions.
+The historical no-score-loss review below is kept as evidence of the original
+dispositions, not the current implementation status.
+
 Reviewed 2026-09-10 in `codex/address-arithmetic-20260910`, following the
 [address-arithmetic review](address-arithmetic-audit.md). The constraint for
 this pass is to preserve or improve **every function's matching percentage**.

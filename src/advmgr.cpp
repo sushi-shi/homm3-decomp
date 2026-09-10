@@ -4216,7 +4216,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
         int rx;
         int ry;
-        g_mouseManager->mouseCoords(&rx, &ry);
+        g_mouseManager->mouseCoords(rx, ry);
         if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
             || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
             || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
@@ -4303,7 +4303,7 @@ static int mouseInScrollZone()
 {
     int rx;
     int ry;
-    g_mouseManager->mouseCoords(&rx, &ry);
+    g_mouseManager->mouseCoords(rx, ry);
     if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
         || ry >= advManager::HOVER_SCREEN_HEIGHT)
         return 0;
@@ -9417,7 +9417,7 @@ void advManager::forceNewHover()
     if (g_currentPlayer->isLocalHuman()) {
         int x;
         int y;
-        g_mouseManager->mouseCoords(&x, &y);
+        g_mouseManager->mouseCoords(x, y);
         m_lastHoverX = -1;
         processHover(x, y);
     }
@@ -9538,7 +9538,7 @@ void advManager::checkScreenScroll()
 {
     int x;
     int y;
-    g_mouseManager->mouseCoords(&x, &y);
+    g_mouseManager->mouseCoords(x, y);
 
     // Before normalization (locals): iDir.
     int dir;
@@ -9767,7 +9767,7 @@ void advManager::startLocalPlayerTurn()
     if (g_currentPlayer->isLocalHuman()) {
         int mouseX;
         int mouseY;
-        g_mouseManager->mouseCoords(&mouseX, &mouseY);
+        g_mouseManager->mouseCoords(mouseX, mouseY);
         adv->m_lastHoverX = -1;
         adv->processHover(mouseX, mouseY);
     }

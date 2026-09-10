@@ -12,33 +12,24 @@
 #include "bitmap16.h"
 #include "wingraph.h"
 
-// Thunk-form timeGetTime (retail reaches it through the 6-byte rel32
-// thunk at 0x4f82e0, not the IAT); the plain declaration and the
-// per-TU import-form doctrine live in winmm_thunks.h. Kept AFTER the
-// windows.h include so the plain declaration downgrades mmsystem.h's
-// dllimport for this TU.
-#include "winmm_thunks.h"
-
-// CheckUpdate's one-time timer latches (BSS; names provisional).
-// Before normalization: gMouseTimerInit.
 // SetPointer's re-entrancy latch - the byte immediately after the
 // timer latches, tested and set around the whole swap (name
 // provisional, no DC row for it).
 // Before normalization: gMouseSetPointerBusy.
-DATA(0x0069ca20) unsigned char g_mouseTimerInit;
-// Before normalization: gMouseUpdateDeadline.
 DATA(0x0069ca21) unsigned char g_mouseSetPointerBusy;
-// Before normalization: gMouseFrameDeadline.
-DATA(0x0069ca18) unsigned long g_mouseUpdateDeadline;
 // Before normalization: gMouseInUpdate.
-DATA(0x0069ca1c) unsigned long g_mouseFrameDeadline;
 DATA(0x0069ca22) unsigned char g_mouseInUpdate;
 
 // LoadFrame's DirectDraw targets. Its channel masks belong to wingraph's
 // complete DDPIXELFORMAT object, shared through the RGBto16 helper.
-DATA(0x006aacc4) IDirectDrawSurface4* g_ddsMouseSurface;
-DATA(0x006aacc8) IDirectDrawSurface4* g_ddsMouseSaveSurface;
-DATA(0x006aaccc) IDirectDrawSurface4* g_ddsMouseScratchSurface;
+// DC's MouseSurface family uses Surface4/DDSURFACEDESC2. Complete instead
+// creates all three through IDirectDraw::CreateSurface in ddInitGraphics
+// (0x6014f0 +0x21d/+0x2bd/+0x310), without QueryInterface. They are v1
+// surfaces, matching loadFrame's retail 108-byte DDSURFACEDESC. A v4 cast
+// was an incorrect cross-platform type bridge, not an SDK size exception.
+DATA(0x006aacc4) IDirectDrawSurface* g_ddsMouseSurface;
+DATA(0x006aacc8) IDirectDrawSurface* g_ddsMouseSaveSurface;
+DATA(0x006aaccc) IDirectDrawSurface* g_ddsMouseScratchSurface;
 
 // The pointer-set sprite table SetPointer indexes with field_4c: five
 // .DEF names in EPointerSet order (.data 0x67ff38).
@@ -226,93 +217,38 @@ void TCSLock::~TCSLock()
 
 #endif  // @carcass
 
-// These two drawing helpers are fully inlined into Update in retail. Their
-// parameter spills and private RECT temporaries are still visible in that
-// body, while no out-of-line retail copies survive.
-__forceinline void mouseManager::saveAndDraw(
-    // Before normalization (locals): dst_surface, save_surface, dst_rect.
-    IDirectDrawSurface4* dstSurface,
-    IDirectDrawSurface4* saveSurface,
-    const RECT* dstRect, int x, int y)
-{
-    if (!IsRectEmpty(dstRect)) {
-        RECT saveRect;
-        RECT sourceRect;
-        saveRect.left = saveRect.top = 0;
-        sourceRect.left = sourceRect.top = 0;
-        saveRect.right = sourceRect.right =
-            dstRect->right - dstRect->left;
-        saveRect.bottom = sourceRect.bottom =
-            dstRect->bottom - dstRect->top;
-        OffsetRect(&sourceRect, dstRect->left - x, dstRect->top - y);
-        ddBlit(saveSurface, &saveRect, dstSurface, dstRect, DDBLT_WAIT);
-        if (m_hideCount == 0)
-            ddBlit(dstSurface, dstRect, g_ddsMouseSurface, &sourceRect,
-                DDBLT_WAIT | DDBLT_KEYSRC);
-    }
-}
-
-__forceinline void mouseManager::restoreUnderlying(
-    // Before normalization (locals): dst_rect.
-    IDirectDrawSurface4* surface, const RECT* dstRect)
-{
-    if (!IsRectEmpty(dstRect)) {
-        RECT sourceRect;
-        sourceRect.left = 0;
-        sourceRect.top = 0;
-        sourceRect.right = dstRect->right - dstRect->left;
-        sourceRect.bottom = dstRect->bottom - dstRect->top;
-        ddBlit(surface, dstRect, g_ddsMouseSaveSurface, &sourceRect,
-            DDBLT_WAIT);
-    }
-}
-
 // E:\gamedcs\mousemgr.cpp:526
 // RETAIL-RECONSTRUCTED 2026-08-09. The 72-block CFG now agrees exactly,
 // including both early-return families, overlap/non-overlap selection, all
-// four clipping ladders and the final cleanup. Reintroducing SaveAndDraw and
-// RestoreUnderlying as forced-inline members was the decisive source-shape
-// correction: their argument homes and private RECTs are visible in retail's
-// Update stack frame even though no standalone retail copies survive.
+// four clipping ladders and the final cleanup. SaveAndDraw and
+// RestoreUnderlying are ordinary members whose expansions retain their
+// argument homes and private RECTs in retail's Update stack frame.
 //
-// Residual (94.1675%): four helper-expansion blocks differ only in VC6
-// parameter homing/zero CSE, and the local frame is eight bytes smaller
-// (0xfc versus 0x104). The two hotspot Y loads also use a relocation to the
-// +4 half of the interleaved POINT table in retail, while the canonical POINT
-// view emits a base relocation plus a +4 displacement. Volatile parameters,
-// ordinary inline, separate coordinate locals and alternate RECT
-// initialization spellings were bounded at <=94.1675%; preserve the
-// canonical semantics instead of encoding allocator state.
+// DC mousemgr.cpp:639/700 and 648/708 prove separate branch-local
+// window_origin POINTs and ddsd descriptors. Keep those scopes, substituting
+// the retail-proven Windows v1 descriptor for DC's Surface4 descriptor.
+// The 32-state helper/scope family reproduced 32 distinct objects and ten
+// elites with every sibling exact. Rectangle-copy initialization and ordinary
+// helpers reach 99.8420 with the old shared origin, 99.7141 with the proven
+// origins retained; old forced/interleaved construction was 94.1675.
 // Before normalization (locals): bForceIt.
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
 void mouseManager::update(unsigned char forceIt)
 {
     TCSLock lock(&m_sectionMouse);
-    POINT cursor;
     RECT pointerRect;
     RECT combinedRect;
     RECT clientRect;
     RECT surfaceRect;
     RECT oldRect;
     RECT scratchRect;
-    DDSURFACEDESC surfaceDesc;
-    int pointerX;
 
     if (g_mouseInUpdate)
         return;
     g_mouseInUpdate = 1;
 
-    if (!forceIt) {
-        EnterCriticalSection(&m_sectionMouse);
-        GetCursorPos(&cursor);
-        pointerX = cursor.x;
-        pointerX &= ~1;
-        cursor.x = pointerX;
-        ScreenToClient(g_hwndApp, &cursor);
-        m_currentX = cursor.x;
-        m_currentY = cursor.y;
-        LeaveCriticalSection(&m_sectionMouse);
-    }
+    if (!forceIt)
+        getPointerPosition();
 
     if (m_hideCount > 0 && !forceIt) {
         g_mouseInUpdate = 0;
@@ -356,11 +292,13 @@ void mouseManager::update(unsigned char forceIt)
             && pointerRect.bottom > m_savedRect.top) {
         UnionRect(&combinedRect, &pointerRect, &m_savedRect);
 
-        cursor.x = 0;
-        cursor.y = 0;
-        ClientToScreen(g_hwndApp, &cursor);
-        OffsetRect(&combinedRect, cursor.x, cursor.y);
+        POINT windowOrigin;
+        windowOrigin.x = 0;
+        windowOrigin.y = 0;
+        ClientToScreen(g_hwndApp, &windowOrigin);
+        OffsetRect(&combinedRect, windowOrigin.x, windowOrigin.y);
 
+        DDSURFACEDESC surfaceDesc;
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
         g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
@@ -374,35 +312,35 @@ void mouseManager::update(unsigned char forceIt)
             combinedRect.bottom = surfaceDesc.dwHeight;
 
         clientRect = combinedRect;
-        OffsetRect(&clientRect, -cursor.x, -cursor.y);
+        OffsetRect(&clientRect, -windowOrigin.x, -windowOrigin.y);
 
         surfaceRect.left = 0;
         surfaceRect.top = 0;
         surfaceRect.right = combinedRect.right - combinedRect.left;
         surfaceRect.bottom = combinedRect.bottom - combinedRect.top;
-        ddBlit(g_ddsMouseScratchSurface, &surfaceRect,
-            static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)),
-            &combinedRect, DDBLT_WAIT);
+        ddBlit(g_ddsMouseScratchSurface, surfaceRect,
+            g_ddsPrimary,
+            combinedRect, DDBLT_WAIT);
 
         oldRect = m_savedRect;
         OffsetRect(&oldRect, -clientRect.left, -clientRect.top);
-        restoreUnderlying(g_ddsMouseScratchSurface, &oldRect);
+        restoreUnderlying(g_ddsMouseScratchSurface, oldRect);
 
-        if (pointerRect.left < -cursor.x)
-            pointerRect.left = -cursor.x;
+        if (pointerRect.left < -windowOrigin.x)
+            pointerRect.left = -windowOrigin.x;
         if (pointerRect.right
-                > static_cast<long>(surfaceDesc.dwWidth) - cursor.x)
-            pointerRect.right = surfaceDesc.dwWidth - cursor.x;
-        if (pointerRect.top < -cursor.y)
-            pointerRect.top = -cursor.y;
+                > static_cast<long>(surfaceDesc.dwWidth) - windowOrigin.x)
+            pointerRect.right = surfaceDesc.dwWidth - windowOrigin.x;
+        if (pointerRect.top < -windowOrigin.y)
+            pointerRect.top = -windowOrigin.y;
         if (pointerRect.bottom
-                > static_cast<long>(surfaceDesc.dwHeight) - cursor.y)
-            pointerRect.bottom = surfaceDesc.dwHeight - cursor.y;
+                > static_cast<long>(surfaceDesc.dwHeight) - windowOrigin.y)
+            pointerRect.bottom = surfaceDesc.dwHeight - windowOrigin.y;
 
         m_savedRect = pointerRect;
         OffsetRect(&pointerRect, -clientRect.left, -clientRect.top);
         saveAndDraw(g_ddsMouseScratchSurface, g_ddsMouseSaveSurface,
-            &pointerRect, m_imageX - clientRect.left,
+            pointerRect, m_imageX - clientRect.left,
             m_imageY - clientRect.top);
 
         scratchRect.left = 0;
@@ -410,15 +348,17 @@ void mouseManager::update(unsigned char forceIt)
         scratchRect.right = combinedRect.right - combinedRect.left;
         scratchRect.bottom = combinedRect.bottom - combinedRect.top;
         ddBlit(
-            static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)),
-            &combinedRect, g_ddsMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+            g_ddsPrimary,
+            combinedRect, g_ddsMouseScratchSurface, scratchRect, DDBLT_WAIT);
     } else {
         combinedRect = pointerRect;
-        cursor.x = 0;
-        cursor.y = 0;
-        ClientToScreen(g_hwndApp, &cursor);
-        OffsetRect(&combinedRect, cursor.x, cursor.y);
+        POINT windowOrigin;
+        windowOrigin.x = 0;
+        windowOrigin.y = 0;
+        ClientToScreen(g_hwndApp, &windowOrigin);
+        OffsetRect(&combinedRect, windowOrigin.x, windowOrigin.y);
 
+        DDSURFACEDESC surfaceDesc;
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
         g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
@@ -432,13 +372,12 @@ void mouseManager::update(unsigned char forceIt)
             combinedRect.bottom = surfaceDesc.dwHeight;
 
         clientRect = combinedRect;
-        OffsetRect(&clientRect, -cursor.x, -cursor.y);
-        saveAndDraw(static_cast<IDirectDrawSurface4*>(
-                static_cast<void*>(g_ddsPrimary)),
-            g_ddsMouseScratchSurface, &combinedRect,
-            m_imageX + cursor.x, m_imageY + cursor.y);
+        OffsetRect(&clientRect, -windowOrigin.x, -windowOrigin.y);
+        saveAndDraw(g_ddsPrimary,
+            g_ddsMouseScratchSurface, combinedRect,
+            m_imageX + windowOrigin.x, m_imageY + windowOrigin.y);
 
-        OffsetRect(&m_savedRect, cursor.x, cursor.y);
+        OffsetRect(&m_savedRect, windowOrigin.x, windowOrigin.y);
         if (m_savedRect.left < 0)
             m_savedRect.left = 0;
         if (m_savedRect.right > static_cast<long>(surfaceDesc.dwWidth))
@@ -447,16 +386,15 @@ void mouseManager::update(unsigned char forceIt)
             m_savedRect.top = 0;
         if (m_savedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
             m_savedRect.bottom = surfaceDesc.dwHeight;
-        restoreUnderlying(static_cast<IDirectDrawSurface4*>(
-                static_cast<void*>(g_ddsPrimary)),
-            &m_savedRect);
+        restoreUnderlying(g_ddsPrimary,
+            m_savedRect);
 
         scratchRect.left = 0;
         scratchRect.top = 0;
         scratchRect.right = clientRect.right - clientRect.left;
         scratchRect.bottom = clientRect.bottom - clientRect.top;
-        ddBlit(g_ddsMouseSaveSurface, &scratchRect,
-            g_ddsMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+        ddBlit(g_ddsMouseSaveSurface, scratchRect,
+            g_ddsMouseScratchSurface, scratchRect, DDBLT_WAIT);
         m_savedRect = clientRect;
     }
 
@@ -466,33 +404,55 @@ void mouseManager::update(unsigned char forceIt)
 
 // E:\gamedcs\mousemgr.cpp:774
 VA(0x0050d500, 0x3F)  // anchor-global, dc 0xff22c
-void mouseManager::mouseCoords(int* x, int* y)
+void mouseManager::mouseCoords(int& x, int& y)
 {
     POINT cursor;
     GetCursorPos(&cursor);
     cursor.x &= ~1;
     ScreenToClient(g_hwndApp, &cursor);
-    *x = cursor.x;
-    *y = cursor.y;
+    x = cursor.x;
+    y = cursor.y;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\mousemgr.cpp:798
-DC_ONLY(0xff268, 0xBE)
-void mouseManager::saveAndDraw(IDirectDrawSurface4* dst_surface, IDirectDrawSurface4* save_surface, const tagRECT* dst_rect, int x, int y)
+// E:\gamedcs\mousemgr.cpp:798 (dc 0xff268). The signature proves const
+// RECT&, and lines 805/809 construct save_rect then copy it into src_rect
+// (the SH4 copy reads save_rect.right). Retail expands this ordinary helper;
+// no forced-inline keyword is needed. Independent rectangle constructions
+// score below the copy in the bounded family (all callers measured).
+void mouseManager::saveAndDraw(
+    // Before normalization (locals): dst_surface, save_surface, dst_rect.
+    IDirectDrawSurface* dstSurface,
+    IDirectDrawSurface* saveSurface,
+    const RECT& dstRect, int x, int y)
 {
-    // @stub
+    if (!IsRectEmpty(&dstRect)) {
+        RECT saveRect = {0, 0, dstRect.right - dstRect.left,
+                         dstRect.bottom - dstRect.top};
+        RECT sourceRect = saveRect;
+        OffsetRect(&sourceRect, dstRect.left - x, dstRect.top - y);
+        ddBlit(saveSurface, saveRect, dstSurface, dstRect, DDBLT_WAIT);
+        if (m_hideCount == 0)
+            ddBlit(dstSurface, dstRect, g_ddsMouseSurface, sourceRect,
+                DDBLT_WAIT | DDBLT_KEYSRC);
+    }
 }
 
-// E:\gamedcs\mousemgr.cpp:844
-DC_ONLY(0xff328, 0x80)
-void mouseManager::restoreUnderlying(IDirectDrawSurface4* surface, const tagRECT* dst_rect)
+// E:\gamedcs\mousemgr.cpp:844 (dc 0xff328): ordinary helper, const RECT&,
+// one block-local src_rect. Retail expands both call sites in Update.
+void mouseManager::restoreUnderlying(
+    // Before normalization (locals): dst_rect.
+    IDirectDrawSurface* surface, const RECT& dstRect)
 {
-    // @stub
+    if (!IsRectEmpty(&dstRect)) {
+        RECT sourceRect;
+        sourceRect.left = 0;
+        sourceRect.top = 0;
+        sourceRect.right = dstRect.right - dstRect.left;
+        sourceRect.bottom = dstRect.bottom - dstRect.top;
+        ddBlit(surface, dstRect, g_ddsMouseSaveSurface, sourceRect,
+            DDBLT_WAIT);
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:865
 VA(0x0050d540, 0x6F)  // anchor-global, dc 0xff3a8
@@ -512,28 +472,28 @@ void mouseManager::showPointer(bool force)
         m_hideCount = 1;
     if (m_hideCount > 0 && --m_hideCount == 0) {
         m_busy++;
-        EnterCriticalSection(&m_sectionMouse);
-        POINT cursor;
-        GetCursorPos(&cursor);
-        cursor.x &= ~1;
-        ScreenToClient(g_hwndApp, &cursor);
-        m_currentX = cursor.x;
-        m_currentY = cursor.y;
-        LeaveCriticalSection(&m_sectionMouse);
+        getPointerPosition();
         if (!IsIconic(g_hwndApp))
             update(1);
         m_busy--;
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\mousemgr.cpp:934
-DC_ONLY(0xff448, 0x3A)
-void mouseManager::GetPointerPosition()
+// DC 0xff448 proves the TCSLock, x/y locals, MouseCoords call and member
+// stores in this order. Retail expands this ordinary helper in Update and
+// ShowPointer, including MouseCoords and both lock boundaries.
+// Before normalization (function): GetPointerPosition.
+void mouseManager::getPointerPosition()
 {
-    // @stub
+    TCSLock lock(&m_sectionMouse);
+    int x, y;
+    mouseCoords(x, y);
+    m_currentX = x;
+    m_currentY = y;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:955
 // DECODED 2026-08-06 (bytes; homm2 twin CheckUpdateMousePos is only a
@@ -603,65 +563,57 @@ void mouseManager::GetPointerPosition()
 //   0xf82e0 rel32).
 #endif  // @carcass
 
-// EXACT 2026-08-09. Retail inlines the outer TCSLock construction but calls
-// the same constructor for the nested out-of-bounds lock, then inlines both
-// destructors. A block-scoped inline_depth(0) around only the inner
-// declaration reproduces that one-call asymmetry without changing any other
-// expansion. It also emits the byte-exact 25-byte constructor COMDAT claimed
-// below, closing both rows together.
+// DC 0xff484 calls the canonical GameTime helpers, isBusy,
+// ShowSystemCursor and GetNumFrames. Retail expands ShowSystemCursor's
+// selected arm at each site, retaining ShowPointer but expanding HidePointer.
+// The former pasted HidePointer body used an inline-depth override; restore
+// the helper boundary instead. Retail's 33ms interval and separate initial
+// Get calls differ from DC's 30ms/shared initial time and remain authoritative.
+// Residual 96.1361% after restoring those calls: the second static guard
+// uses AL rather than retail's CL, and the nested HidePointer expansion
+// inlines TCSLock's ctor where retail retains a call to 0x50d890. The old
+// pasted-body/inline-depth pin reached 100% but hid the canonical call
+// boundary. Restoring the proven function statics is byte-flat. A two-form
+// class-placement probe (header versus immediately before the first mouse
+// function, following DC's ctor/dtor source rows 291/298) also emits one
+// object. Retain the canonical header under the project's single-view rule;
+// neither placement recovers the natural inline decision.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::checkUpdate()
 {
     TCSLock lock(&m_sectionMouse);
-    if (!(g_mouseTimerInit & 1)) {
-        g_mouseTimerInit |= 1;
-        g_mouseUpdateDeadline = timeGetTime() + 33;
-    }
-    if (!(g_mouseTimerInit & 2)) {
-        g_mouseTimerInit |= 2;
-        g_mouseFrameDeadline = timeGetTime() + 100;
-    }
+    // DC procedure 0xff484 owns update_time and animate_time as unsigned
+    // long function statics (NB11 owner record 5144). Retail's one shared
+    // guard byte at 0x69ca20 tests bits 1/2 for these two initializers.
+    DATA_COMPGEN_GUARD(0x0069ca20, mouseTimersGuard, updateTime)
+    // Before normalization: update_time (formerly gMouseUpdateDeadline).
+    DATA(0x0069ca18)
+    static unsigned long updateTime = GameTime::get() + 33;
+    // Before normalization: animate_time (formerly gMouseFrameDeadline).
+    DATA(0x0069ca1c)
+    static unsigned long animateTime = GameTime::get() + 100;
     if (IsIconic(g_hwndApp))
         return;
-    unsigned long deadline = g_mouseUpdateDeadline;
-    if (static_cast<int>(timeGetTime() - deadline) >= 0 && m_busy == 0) {
-        deadline = g_mouseUpdateDeadline;
-        long elapsed = timeGetTime() - deadline;
-        g_mouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
+    if (GameTime::isPast(updateTime) && !isBusy()) {
+        updateTime = GameTime::nextFrameTime(updateTime, 33);
         update(0);
         if (GetWindowThreadProcessId(g_hwndApp, 0) == GetCurrentThreadId()) {
             if (m_currentX >= 0 && m_currentX < 800
                 && m_currentY >= 0 && m_currentY < 600) {
                 if (m_systemPointerIsOn) {
-                    showPointer(0);
-                    ShowCursor(0);
+                    showSystemCursor(0);
                     m_systemPointerIsOn = 0;
                 }
             } else if (!m_systemPointerIsOn) {
-                ShowCursor(1);
-                {
-#pragma inline_depth(0)
-                    TCSLock inner(&m_sectionMouse);
-#pragma inline_depth()
-                    if (++m_hideCount == 1 && !IsIconic(g_hwndApp))
-                        update(1);
-                }
+                showSystemCursor(1);
                 m_systemPointerIsOn = 1;
             }
         }
     }
-    deadline = g_mouseFrameDeadline;
-    if (static_cast<int>(timeGetTime() - deadline) >= 0 && m_busy == 0) {
-        deadline = g_mouseFrameDeadline;
-        long elapsed = timeGetTime() - deadline;
-        g_mouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
+    if (GameTime::isPast(animateTime) && !isBusy()) {
+        animateTime = GameTime::nextFrameTime(animateTime, 100);
         if (m_set == SPELL_SET) {
-            int frames;
-            if (m_sprite->m_numSequences > 0 && *m_sprite->m_validSeqMask != 0)
-                frames = m_sprite->m_s[0]->m_numFrames;
-            else
-                frames = 0;
-            loadFrame((m_frame + 1) % frames);
+            loadFrame((m_frame + 1) % m_sprite->getNumFrames(0));
             update(1);
         }
     }
@@ -685,11 +637,11 @@ void mouseManager::checkUpdate()
 // CheckUpdate (+0x141) calls for its inner lock instead of inlining.
 // Retail emits it here, between CheckUpdate and LoadFrame, not at the
 // DC tail position (0xff7e0).
-// EXACT 2026-08-09: CheckUpdate's block-scoped inline-depth override makes
-// VC6 emit this ordinary constructor COMDAT and use it only for the inner
-// lock. The outer constructor and both destructors remain inlined. The
-// source-authority label pass then joins this already-reviewed claim to the
-// newly present ??0TCSLock public symbol.
+// Historical 100% required CheckUpdate's block-scoped inline-depth pin.
+// With canonical ShowSystemCursor/HidePointer calls restored and the pin
+// removed, VC6 inlines every ctor use and emits no retained copy. Keep the
+// retail claim and its MAX/HIST rather than inventing a dummy reference or
+// another inline override; CheckUpdate documents the unresolved boundary.
 VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
 void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 {
@@ -727,7 +679,8 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 // WinGraph.h's RGBto16 inline (DC WinGraph.h:55) with
 // two of its three channel terms surviving; the two globals are the
 // live 16-bit channel masks.
-// The vtable offsets prove IDirectDrawSurface4; the 0x44e250 callee is
+// The creation path proves IDirectDrawSurface v1; the shared vtable-prefix
+// offsets alone cannot distinguish it from Dreamcast's Surface4. The 0x44e250 callee is
 // the already rostered Bitmap16Bit::reference, and the eight stack
 // arguments make 0x47beb0 the rostered CSprite::DrawPointer overload.
 // Residual (99.3104%): all three CFG blocks agree, and the complete
@@ -753,7 +706,7 @@ void mouseManager::loadFrame(int newFrame)
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
     if (g_ddsMouseSurface->Lock(0,
-            static_cast<DDSURFACEDESC2*>(static_cast<void*>(&surfaceDesc)),
+            &surfaceDesc,
             DDLOCK_WAIT, 0) == DD_OK) {
         Bitmap16Bit bitmap(0, 0);
         bitmap.reference(surfaceDesc.dwWidth, surfaceDesc.dwHeight,
@@ -786,13 +739,6 @@ void mouseManager::showSystemCursor(unsigned char showIt)
 // C:\WCEDreamcast\inc\kfuncs.h:266
 DC_ONLY(0xff76c, 0x8)
 unsigned long GetCurrentThreadId()
-{
-    // @stub
-}
-
-// E:\gamedcs\MouseMgr.h:204
-DC_ONLY(0xff774, 0xC)
-unsigned char mouseManager::isBusy()
 {
     // @stub
 }

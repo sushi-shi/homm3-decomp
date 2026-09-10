@@ -473,7 +473,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         if (spellTargetsASingleArmy(spellToCast, mastery)) {
             int x;
             int y;
-            g_mouseManager->mouseCoords(&x, &y);
+            g_mouseManager->mouseCoords(x, y);
             updateSpellTarget(g_combatManager->getGridIndex(x, y));
             g_windowManager->doDialog(0, handleCastSpell, 0);
             if (!m_nextAction)
@@ -513,7 +513,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             setCombatGrid(g_unnamed698758.m_showCombatGrid, 1, 0, 1);
         int x;
         int y;
-        g_mouseManager->mouseCoords(&x, &y);
+        g_mouseManager->mouseCoords(x, y);
         updateSpellTarget(g_combatManager->getGridIndex(x, y));
         g_windowManager->doDialog(0, handleCastSpell, 0);
         if (shadeLevel && g_unnamed698758.m_showCombatMouseHex)

@@ -9,11 +9,11 @@
 #include "basemgr.h"
 #include "csprite.h"
 
-struct IDirectDrawSurface4;
+struct IDirectDrawSurface;
 
-// mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
-// Dreamcast build keeps ctor/dtor out of line, retail inlines both -
-// the fs:[0] frame in every user is the unwind scaffolding).
+// mousemgr.cpp's critical-section RAII guard (DC ctor/dtor source lines
+// 291/298). Keep its canonical shape in include/ under the single-view rule.
+// The fs:[0] frame in its users is the exception-unwind scaffolding.
 class TCSLock {
 public:
     // Before normalization (locals): lpCriticalSection.
@@ -114,7 +114,9 @@ public:
     virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
     virtual ~mouseManager() { DeleteCriticalSection(&m_sectionMouse); }
     // Before normalization (function): mouseManager::MouseCoords.
-    void mouseCoords(int* x, int* y);
+    void mouseCoords(int& x, int& y);
+    // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
+    void getPointerPosition();
     // Before normalization (function): mouseManager::SetPointer.
     // Before normalization (locals): new_frame, new_set.
     void setPointer(int newFrame, EPointerSet newSet);
@@ -123,13 +125,13 @@ public:
     void update(unsigned char forceIt);
     // Before normalization (function): mouseManager::SaveAndDraw.
     // Before normalization (locals): dst_surface, save_surface, dst_rect.
-    void saveAndDraw(IDirectDrawSurface4* dstSurface,
-                     IDirectDrawSurface4* saveSurface,
-                     const RECT* dstRect, int x, int y);
+    void saveAndDraw(IDirectDrawSurface* dstSurface,
+                     IDirectDrawSurface* saveSurface,
+                     const RECT& dstRect, int x, int y);
     // Before normalization (function): mouseManager::RestoreUnderlying.
-    void restoreUnderlying(IDirectDrawSurface4* surface,
+    void restoreUnderlying(IDirectDrawSurface* surface,
                            // Before normalization (locals): dst_rect.
-                           const RECT* dstRect);
+                           const RECT& dstRect);
     // Before normalization (function): mouseManager::HidePointer.
     void hidePointer();
     // Before normalization (function): mouseManager::ShowPointer.
@@ -156,6 +158,8 @@ public:
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
     // Before normalization (function): mouseManager::IsVis.
     unsigned char isVis() const { return m_hideCount == 0; }
+    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
+    bool isBusy() const { return m_busy != 0; }
     // Before normalization (function): mouseManager::CheckUpdate.
     void checkUpdate();
     // Before normalization (function): mouseManager::LoadFrame.
@@ -175,11 +179,11 @@ extern mouseManager* g_mouseManager;
 // The three DirectDraw surfaces owned and loaded by mousemgr.cpp. The
 // wingraph lifecycle releases the same cells during graphics shutdown.
 // Before normalization: gpDDSMouseSurface.
-extern IDirectDrawSurface4* g_ddsMouseSurface;         // 0x6aacc4
+extern IDirectDrawSurface* g_ddsMouseSurface;         // 0x6aacc4
 // Before normalization: gpDDSMouseSaveSurface.
-extern IDirectDrawSurface4* g_ddsMouseSaveSurface;     // 0x6aacc8
+extern IDirectDrawSurface* g_ddsMouseSaveSurface;     // 0x6aacc8
 // Before normalization: gpDDSMouseScratchSurface.
-extern IDirectDrawSurface4* g_ddsMouseScratchSurface;  // 0x6aaccc
+extern IDirectDrawSurface* g_ddsMouseScratchSurface;  // 0x6aaccc
 
 // --- globals ---
 // CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:266, dc 0xff76c) unsigned long GetCurrentThreadId();

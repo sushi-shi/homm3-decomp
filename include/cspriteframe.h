@@ -160,6 +160,17 @@ public:
                                  int dw, int dh, int dpitch, TPalette16& pal,
                                  unsigned short flagcolor,
                                  unsigned char hflip) const;
+    // DC CSpriteFrame.h:198..200 (0x74484): canonical zero-flag wrapper.
+    // DrawSpellEffect calls it at DC line 3792; retail expands the wrapper
+    // and calls DrawAdvObjWithFlagAlpha with flagcolor=0 at 0x47efca.
+    // Before normalization (function): CSpriteFrame::DrawHeroAlpha.
+    void drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
+                       int dx, int dy, int dw, int dh, int dpitch,
+                       TPalette16& pal, unsigned char hflip) const
+    {
+        drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+                                pal, 0, hflip);
+    }
     // Before normalization (function): CSpriteFrame::DrawAdvObjShadowImpl.
     void drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                               unsigned short* dst, int dx, int dy, int dw,
