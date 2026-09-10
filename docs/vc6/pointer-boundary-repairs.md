@@ -251,6 +251,15 @@ rendering gains, the restored exact lock ctor, the puzzle caller decrease and
 its un-emitted bitset helper. Constructor and bitset label changes are compared
 by retail RVA, not mistaken for added/removed targets.
 
+Final integration also includes the independently committed lobby helper work
+(`22f6bd23`). The combined full build passes at **4078 / 4764 exact, 96.40%
+fuzzy**. In addition to that commit's changes, unchanged-source
+`CEnterNameEdit::onKillFocus` returns from 99.8710% to 100% in the combined
+TU; there are no other fresh CUR changes. Its five
+lobby/chat/ownership native fixtures pass again in the combined tree. The
+combined source has 190 inline-depth pins; only three removals belong to this
+pointer-boundary work.
+
 Outside the listed repairs and mouse/puzzle helper restorations, the initial
 score movement is `CEnterNameEdit::onKeyPress` **99.8868 → 100%**. The mechanical
 `mouseCoords` call update does **not** lower `processWaitingHover`'s CUR:

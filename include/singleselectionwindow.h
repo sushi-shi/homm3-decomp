@@ -775,34 +775,46 @@ public:
     // Before normalization (function): TSingleSelectionWindow::ReceiveChat.
     // Before normalization (locals): cChat.
     void receiveChat(unsigned long dpid, char* chat,
-                     unsigned char inPopup);
+                     bool inPopup);
     // Before normalization (function): TSingleSelectionWindow::OnRequestHeroFaceMsg.
     // Before normalization (locals): pNetMsg.
     void onRequestHeroFaceMsg(CNetMsg* netMsg,
-                              unsigned char inPopup);
+                              bool inPopup);
     // Before normalization (function): TSingleSelectionWindow::OnRequestHeroFaceReplyMsg.
     // Before normalization (locals): pNetMsg.
     void onRequestHeroFaceReplyMsg(CNetMsg* netMsg,
-                                   unsigned char inPopup);
+                                   bool inPopup);
     // Before normalization (function): TSingleSelectionWindow::OnSetAGRMsg.
     // Before normalization (locals): pNetMsg.
-    void onSetAGRMsg(CNetMsg* netMsg, unsigned char inPopup);
+    void onSetAGRMsg(CNetMsg* netMsg, bool inPopup);
     // Before normalization (function): TSingleSelectionWindow::OnTownUpdateMsg.
     // Before normalization (locals): pNetMsg.
-    void onTownUpdateMsg(CNetMsg* netMsg, unsigned char inPopup);
+    void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
+    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoEndMsg.
+    bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::CheckMissingHeaders.
     unsigned char checkMissingHeaders(unsigned long dpidHost);
     // Before normalization (function): TSingleSelectionWindow::SortMaps.
     void sortMaps(int how, unsigned char sendSortMsg,
                   // Before normalization (locals): bUpdate.
                   unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::OnScrollMsg.
+    bool onScrollMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::SetFilter.
     void setFilter(int size);
+    // Before normalization (function): TSingleSelectionWindow::OnHeaderConfirmMsg.
+    bool onHeaderConfirmMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnReqHeaderConfirmMsg.
+    bool onReqHeaderConfirmMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnMapHeaderRequestMsg.
+    bool onMapHeaderRequestMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::DisplayChat.
     void displayChat();
     // Before normalization (function): TSingleSelectionWindow::GetHeroFace.
     // Before normalization (locals): pPlayer.
     void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
+    // Before normalization (function): TSingleSelectionWindow::OnClickMsg.
+    bool onClickMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::MakeHeroFilter.
     void makeHeroFilter();
     // Before normalization (function): TSingleSelectionWindow::CheckFaces.
@@ -908,7 +920,8 @@ public:
     // Before normalization (function): TSingleSelectionWindow::SendPlayerFaces.
     void sendPlayerFaces();
     // Before normalization (function): TSingleSelectionWindow::IsHost.
-    unsigned char isHost();
+    // DC public QAA_NXZ; preserve the bool chain through CDPlay::IsHost.
+    bool isHost();
     // Before normalization (function): TSingleSelectionWindow::IsMultiPlayer.
     unsigned char isMultiPlayer();
     // Before normalization (function): TSingleSelectionWindow::ShowWidget.

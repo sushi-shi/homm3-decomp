@@ -318,6 +318,11 @@ public:
     void init();
     // Before normalization (function): CChatManager::ShutDown.
     void shutDown();
+    // DC variadic members: QAAXPBDZZ. VC6 passes this on the stack for
+    // ellipsis members too; that ABI does not imply a free function.
+    // Before normalization: CChatManager::AddChat, PlayerDropMsg, cChatMsg.
+    void addChat(const char* format, ...);
+    void playerDropMsg(const char* format, ...);
 
     // Before normalization: msgArray.
     CChatStr* m_msgArray;       // +0x00
@@ -387,10 +392,10 @@ public:
     void setMaxLines(int maxChatLines);
     // Before normalization (function): CChatManager::SetPosition.
     void setPosition(int newPos);
-private:
-    // remote.cpp:1060/1065, DC 0x11c71c/0x11c738. Complete's free AddChat
-    // retains the first helper's equivalent expression; KillOldChat expands
-    // the second at both call sites. No standalone retail copy survives.
+protected:
+    // remote.cpp:1060/1065, DC 0x11c71c/0x11c738; the publics prove
+    // protected access. AddChat calls the first canonical helper, while
+    // KillOldChat calls the second. Retail expands these source calls.
     // Before normalization (function): CChatManager::GetNextFreeMsgNbr.
     int getNextFreeMsgNbr();
     // Before normalization (function): CChatManager::GetNextMsgNbr.
@@ -408,30 +413,14 @@ SIZE(CChatManager, 0x44);
 // Before normalization: chatMan.
 DATA(0x0069d7b0) extern CChatManager g_chatMan;
 
-// Retail turns the Dreamcast member CChatManager::TurnDurationMsg
-// (remote.cpp:904, dc 0x11c4ac) into a FREE varargs formatter that takes
-// the manager as an explicit first argument: 0x553960 vsprintf's its own
-// 0x400-byte stack buffer from [ebp+0x10] onward and hands the result to
-// the AddChat body at 0x553840. The order-map over remote.obj's chat band
-// fixes the identity - 0x153770/0x1537a0/0x1537b0/0x153800/0x153840/
-// 0x153960/0x153aa0/0x153b60/0x153c30 carry the ctor, dtor, Init,
-// ShutDown, AddChat, TurnDurationMsg, SystemMsg, PlayerDropMsg and
-// PlayerEnterMsg rows in DC line order down to UpdateWidget at 0x153d00.
-// Varargs forces __cdecl through /Gr, which is exactly the form retail's
-// call sites use (four pushes + `add esp,0x10`); the same shape already
-// has a precedent in advmgr_objects.h's UpdateCompleteDrawFps.
+// The remaining formatter declarations below still use the legacy explicit
+// receiver model. Stack arguments alone do not prove free ownership:
+// see docs/vc6/variadic-members.md and the recovered AddChat/PlayerDropMsg
+// interfaces above. Their source ownership remains to be corrected separately.
 // Before normalization (function): TurnDurationMsg.
 void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...);
-
-// The AddChat body that formatter hands its buffer to, in the same free
-// varargs form: retail's ReceiveChat (0x554a20) calls it with four pushes
-// and `add esp, 0x10`.
-// Before normalization (function): AddChat.
-void __cdecl addChat(CChatManager* manager, const char* format, ...);
 // Before normalization (function): SystemMsg.
 void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
-// Before normalization (function): PlayerDropMsg.
-void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...);
 // Before normalization (function): PlayerEnterMsg.
 void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...);
 
