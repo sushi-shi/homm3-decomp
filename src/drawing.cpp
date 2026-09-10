@@ -523,18 +523,19 @@ VA(0x00493650, 0xBD)  // retail body + DC source shape, dc 0x832d8
 static std::string formatRounded(long amount, long high);
 
 // E:\gamedcs\drawing.cpp:467
+// DC :468/:470..473/:476/:478 resets bCreatureEffect, bHeroEffect,
+// bFlagEffect, bArcherEffect and the drawing limits. Retail 0x493710 proves
+// their Complete offsets; these fields now belong to combatManager itself.
 VA(0x00493710, 0x63)  // anchor-global, dc 0x83db0
 void combatManager::resetLimitCreature()
 {
-    unsigned char* bytes = static_cast<unsigned char*>(static_cast<void*>(this));
-    memset(bytes + COMBAT_CREATURE_EFFECT_OFFSET, 0, 40);
-    bytes[COMBAT_HERO_EFFECT_OFFSET] = 0;
-    bytes[COMBAT_HERO_EFFECT_OFFSET + 1] = 0;
-    bytes[COMBAT_FLAG_EFFECT_OFFSET] = 0;
-    bytes[COMBAT_FLAG_EFFECT_OFFSET + 1] = 0;
-    memset(bytes + COMBAT_ARCHER_EFFECT_OFFSET, 0, 3);
-    *static_cast<TDrawbridgeBounds*>(static_cast<void*>(
-        bytes + COMBAT_DRAWING_EXTENT_OFFSET)) = g_combatAreaLimits;
+    memset(m_creatureEffect, 0, sizeof m_creatureEffect);
+    m_heroEffect[0] = 0;
+    m_heroEffect[1] = 0;
+    m_flagEffect[0] = 0;
+    m_flagEffect[1] = 0;
+    memset(m_archerEffect, 0, sizeof m_archerEffect);
+    m_drawbridgeBounds = g_combatAreaLimits;
 }
 
 // Complete's no-extent refresh. The retail body fixes the field gate and

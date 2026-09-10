@@ -1747,8 +1747,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
 {
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
-        int* costs = g_creatureRecords
-            + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+        const int* costs = g_creatureTypeTraits[creature].m_cost;
         for (int resource = 0; resource < 7; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
@@ -1899,13 +1898,12 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                         + dwelling])
                 continue;
 
-            baseCost = g_creatureRecords
-                + currentHero->m_army.m_armyTypes[slot]
-                    * CREATURE_RECORD_DWORDS
-                + CREATURE_RECORD_COST_DWORD;
-            upgradeCost = g_creatureRecords
-                + upgrade * CREATURE_RECORD_DWORDS
-                + CREATURE_RECORD_COST_DWORD;
+            // DC :232/:236 retains base_cost and upgrade_cost as pointers
+            // into akCreatureTypeTraits.cost. Complete widens cost entries
+            // from short to int; retail proves +0x20 in a 116-byte record.
+            baseCost = g_creatureTypeTraits[
+                currentHero->m_army.m_armyTypes[slot]].m_cost;
+            upgradeCost = g_creatureTypeTraits[upgrade].m_cost;
             amount = currentHero->m_army.m_numTroops[slot];
 
             int resource;
@@ -2233,8 +2231,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     long value = aiGetValueOfArtifact(
         type_artifact(engine, -1), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
-    int* costs = g_creatureRecords
-        + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+    const int* costs = g_creatureTypeTraits[creature].m_cost;
     if (!value)
         return;
 

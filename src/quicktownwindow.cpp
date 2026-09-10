@@ -304,20 +304,23 @@ void TQuickTownWindow::initializeArmyDisplay(
         return;
 
     int widgetId = ARMY_1_SPRITE_ID;
-    int* coordinates = &g_quickTownArmyPositions[0][0];
-    const int* currentArmy = currentArmyGroup.m_armies;
-    for (int remaining = armyGroup::ARMY_GROUP_SLOT_COUNT; remaining;
-         --remaining, currentArmy++) {
-        int creature = *currentArmy;
+    // DC lines 187/192/202/215 index armies and numTroops by the same
+    // slot; army_pos advances only for occupied slots (line 248).
+    // Neither a flat int* across coordinate rows nor a cross-member
+    // currentArmy[7] access represents those declared arrays.
+    int displaySlot = 0;
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        int creature = currentArmyGroup.m_armies[slot];
         if (creature == CREATURE_NONE)
             continue;
 
         m_widgets.push_back(new iconWidget(
-            coordinates[0], coordinates[1], 32, 32, widgetId++,
+            g_quickTownArmyPositions[displaySlot][0],
+            g_quickTownArmyPositions[displaySlot][1], 32, 32, widgetId++,
             "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
         if (viewLevel >= ViewArmySizes) {
-            int count = currentArmy[armyGroup::ARMY_GROUP_SLOT_COUNT];
+            int count = currentArmyGroup.m_numTroops[slot];
             std::ostrstream quantityText;
             if (viewLevel >= ViewAll) {
                 if (count < 10000)
@@ -326,20 +329,22 @@ void TQuickTownWindow::initializeArmyDisplay(
                     quantityText << count / 1000 << "k" << std::ends;
 
                 m_widgets.push_back(new textWidget(
-                    coordinates[0], coordinates[1] + 34, 32, 13,
+                    g_quickTownArmyPositions[displaySlot][0],
+                    g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
                     quantityText.str(), "smalfont.fnt", font::WHITE, -1,
                     1, 0, 8));
             } else {
                 quantityText << armyGroup::getArmySizeName(count, 0)
                               << std::ends;
                 m_widgets.push_back(new textWidget(
-                    coordinates[0], coordinates[1] + 34, 32, 13,
+                    g_quickTownArmyPositions[displaySlot][0],
+                    g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
                     quantityText.str(), "smalfont.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
         }
-        coordinates += 2;
+        ++displaySlot;
     }
 }
 

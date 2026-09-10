@@ -286,12 +286,12 @@ CHSInputDlg::~CHSInputDlg()
 // E:\gamedcs\hiscore.cpp:334
 // Before normalization (locals): bExitFlag.
 VA(0x004e9790, 0x53)  // vtable-slot, dc 0xd9190
-int CHSInputDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
+int CHSInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == OKAY_ID) {
         if (!(m_field1->m_status & widget::WIDGET_ACTIVE)
             || strlen(m_field1->m_text.c_str())) {
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
             return 1;
         }
@@ -904,7 +904,7 @@ void CHSInputDlg::~CHSInputDlg()
 
 // E:\gamedcs\hiscore.cpp:334
 DC_ONLY(0xd9190, 0x3C)
-int CHSInputDlg::onWidgetDeselect(int id, unsigned char* bExitFlag)
+int CHSInputDlg::onWidgetDeselect(int id, bool& bExitFlag)
 {
     // @stub
 }

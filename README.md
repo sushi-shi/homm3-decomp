@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.42%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 96.44%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 4,087 / 4,764 functions exact (85.8%) across the full engine (4764 in linked units).
+**Match score** — 4,090 / 4,764 functions exact (85.9%) across the full engine (4764 in linked units).
 
-**Function exact MAX** — 4,109 / 4,764 current implementations (86.3%) have reached 100%.
+**Function exact MAX** — 4,111 / 4,764 current implementations (86.3%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4018 / 4695 (85.6%) | 4040 / 4695 (86.0%) |  96.38% |    96.60% |
+| `game`       |   138 | 4021 / 4695 (85.6%) | 4042 / 4695 (86.1%) |  96.40% |    96.62% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -49,9 +49,12 @@ Manually maintained cleanup checklist:
   (**2,830 `static_cast`**, **217 `const_cast`**).
 - [ ] Review unions and simplify avoidable alternate views: **63 union definitions**.
 - [ ] Review gotos: **31 statements** in **12 functions across 10 files**.
-- [ ] Review artificial address arithmetic.
-- [ ] Review owner recovery from member pointers.
-- [ ] Review out-of-object pointers.
+- [x] Review artificial address arithmetic; see the
+  [audit and retained arithmetic](docs/vc6/address-arithmetic-audit.md).
+- [x] Review owner recovery from member pointers; see the
+  [owner-pointer audit](docs/vc6/owner-pointer-audit.md).
+- [x] Review out-of-object pointers; see the
+  [fixes and retained retail exceptions](docs/vc6/owner-pointer-audit.md).
 - [ ] Review manual varargs.
 - [ ] Review unrelated variable reuse.
 - [ ] Review stack aggregates and unused members.
@@ -59,8 +62,8 @@ Manually maintained cleanup checklist:
 - [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
-- [ ] Review pragma debt in `src/`: **428 `#pragma` directives**, all for inlining
-  (**209 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Review pragma debt in `src/`: **424 `#pragma` directives**, all for inlining
+  (**207 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 
