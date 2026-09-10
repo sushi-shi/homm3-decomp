@@ -6013,9 +6013,9 @@ int TSingleSelectionWindow::windowHandler(message* msg)
 
         // Before normalization (locals): pMsg.
         CNetMsg* networkMsg = getRemoteData(1, 0);
-        unsigned char cancel = 0;
+        bool cancel = false;
         if (networkMsg) {
-            redraw = handleNetMsg(networkMsg, &cancel);
+            redraw = handleNetMsg(networkMsg, cancel);
             if (redraw && cancel)
                 msg->m_codeY = 0x7801;
         }
@@ -6253,10 +6253,27 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
 // (source order for a table switch). Returns 1 when the pump must tear
 // the dialog down (transmit-init handled, session lost, bad version,
 // failed header init); every path destroys the message.
+// Residual (85.9516%): the ordinary GetThisPlayer calls and OnPlayerDroppedMsg
+// recover DC lines 6488/6511 and remove three pins. The old flattened/pinned
+// control scores 90.0449%; restoring only the first pair gives 87.0841%,
+// only the drop helper 87.6740%. Preserve these positive source boundaries.
+// Retail calls GetPlayer at +0x141/+0x160/+0x22a; VC6 expands all three.
+// Byte-gated C2 trace: GetPlayer cost 75 receives nested budgets 115/114/118
+// (caller cost 1791, initial 3582). DeletePlayer, GetCommonGameVersion and
+// manager PlayerDropped already remain calls naturally (costs 61/138/122,
+// remaining budget 43). No supported missing invariant/RAII operation has
+// been identified at the first mismatch. Do not invent one to tune C1.
+// The map-header arm now also keeps retail's ~NewSMapHeader call (cost 68,
+// budget 57); its full 80-byte construction/read/setup/destruction agrees.
+// The 26-state follow-up tries each of the remaining 11 depth regions and
+// all together, crossed with HeaderRequested's auto-inline removal. None
+// recovers the score: singles reach at most 84.8906%; all reach 60.9862%.
+// Wall for this pass: nested inlining/TU state, plus later flattened handler
+// boundaries and allocator homes. This is not a 100% match or TU closure.
 // E:\gamedcs\singleselectionwindow.cpp:6443 - relocated for RVA order.
 // Before normalization (locals): pNetMsg, pMsg, bExitFlag.
 VA(0x005887a0, 0x9ED)  // anchor-callee WindowHandler's net pump calls it (pMsg, &cancel) right after GetRemoteData(1,0) - the DC signature; size 1.5x dc 0x6a0, dc 0x13fd74
-unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned char* cancel)
+bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
 {
     if (!m_receivedMaps) {
         switch (netMsg->m_subType) {
@@ -6314,33 +6331,14 @@ unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned cha
         break;
     case RS_GAME_TRANSMIT_INIT: {
         m_receivedMaps = 1;
-        // GetThisPlayer open-coded twice: this caller keeps the inner
-        // GetPlayer OUT of line (budget) while ExitDialog's expansions
-        // inline it - a per-site split the shared inline cannot spell.
-        CNetPlayerHandlerPlayer* p;
-        if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
-            p = &m_players.m_humanPlayers[0];
-        else {
-#pragma inline_depth(0)
-            p = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
-#pragma inline_depth()
-        }
-        if (p) {
-            if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
-                p = &m_players.m_humanPlayers[0];
-            else {
-#pragma inline_depth(0)
-                p = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
-#pragma inline_depth()
-            }
-            if (p->m_playerPos == -1) {
-                destroyMsg(netMsg);
-                remoteCleanup();
-                *cancel = 1;
-                normalDialog(g_generalText->getText(525), 1, -1, -1,
-                             -1, 0, -1, 0, -1, 0, -1, 0);
-                return 1;
-            }
+        // DC line 6488 evaluates the ordinary GetThisPlayer helper twice.
+        if (getThisPlayer() && getThisPlayer()->m_playerPos == -1) {
+            destroyMsg(netMsg);
+            remoteCleanup();
+            cancel = true;
+            normalDialog(g_generalText->getText(525), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            return 1;
         }
         if (onGameTransmitInitMsg(netMsg)) {
             destroyMsg(netMsg);
@@ -6353,45 +6351,22 @@ unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned cha
                      -1, 0, -1, 0, -1, 0, -1, 0);
         shutDown(0);
         break;
-    case RS_PLAYER_DROPPED: {
-#pragma inline_depth(0)
-        CNetPlayerHandlerPlayer* p =
-            m_players.getPlayer(netMsg->m_dpidFrom);
-        m_players.deletePlayer(netMsg->m_dpidFrom);
-        m_commonGameVersion = getCommonGameVersion();
-        m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
-#pragma inline_depth()
-        if (p)
-            playerDropMsg(&g_chatMan, g_generalText->getText(527),
-                          p->m_name);
-        updateNameLists();
-        displayChat();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+    case RS_PLAYER_DROPPED:
+        onPlayerDroppedMsg(netMsg);
         break;
-    }
     case RS_SET_AS_HOST:
         if (g_noCdRom) {
             remoteCleanup();
             normalDialog(g_generalText->getText(655), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
-            *cancel = 1;
+            cancel = true;
             return 1;
         }
         onSetAsHostMsg(netMsg);
         break;
-    case RS_NEW_MAP_HEADER_INFO: {
-        // Residual: retail wraps this header in an 0x18-byte stream-reader
-        // base (ctor 0x512c20, vtable 0x641d30) and fills it from the
-        // message via 0x512e00; the reader class is not yet modeled, so
-        // only the header local, its teardown and the SetupOrigData tail
-        // survive here.
-#pragma inline_depth(0)
-        NewSMapHeader header;
-#pragma inline_depth()
-        g_game->setupOrigData();
+    case RS_NEW_MAP_HEADER_INFO:
+        onNewMapHeaderInfo(netMsg);
         break;
-    }
     case RS_GAME_HEADER_INFO:
         onGameHeaderInfoMsg(netMsg);
         break;
@@ -6425,7 +6400,7 @@ unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned cha
     }
     case RS_GAME_HEADER_INFO_INIT:
         if (!onGameHeaderInfoInitMsg(netMsg)) {
-            *cancel = 1;
+            cancel = true;
             destroyMsg(netMsg);
             return 1;
         }
@@ -6566,7 +6541,7 @@ unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned cha
 #pragma inline_depth(0)
         onBadVersionMsg(netMsg);
 #pragma inline_depth()
-        *cancel = 1;
+        cancel = true;
         return 1;
     case RS_SETUP_PING:
 #pragma inline_depth(0)
@@ -6659,6 +6634,11 @@ void CNewPlayerUpdateMan::headerConfirmed(unsigned long dpid)
 // removal still expands it and the adjacent HeaderConfirmed call there,
 // lowering HandleNetMsg 89.7408 -> 85.9113 even with all three helpers
 // restored. This remaining override is debt, not original-source evidence.
+// Rechecked with the complete ordinary OnNewMapHeaderInfo receiver:
+// HandleNetMsg 90.0449 -> 86.1394; none of the 14 single-site removals
+// paired with this deletion restores the current score.
+// With both player helpers recovered: 85.9516 -> 82.2074; the 26-state
+// remaining-depth/auto-inline family finds no safe deletion. Unresolved debt.
 #pragma auto_inline(off)
 // E:\gamedcs\singleselectionwindow.cpp:1492
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
@@ -6846,19 +6826,46 @@ unsigned char TSingleSelectionWindow::OnReqHeaderConfirmMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
+// DC HandleNetMsg calls this ordinary bool helper; its pPlayer local is
+// CNetPlayerInfo*, not the derived handler record. Complete's expansion at
+// HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
+// no-argument Update: the older DC message junk local does not survive.
+// Before normalization: OnPlayerDroppedMsg, pNetMsg, pPlayer.
 // E:\gamedcs\singleselectionwindow.cpp:6937
 DC_ONLY(0x140c88, 0xC6)
-unsigned char TSingleSelectionWindow::OnPlayerDroppedMsg(CNetMsg* pNetMsg)
+bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
-    // @stub
+    CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
+    m_players.deletePlayer(netMsg->m_dpidFrom);
+    m_commonGameVersion = getCommonGameVersion();
+    m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
+    if (player)
+        playerDropMsg(&g_chatMan, g_generalText->getText(527), player->m_name);
+    updateNameLists();
+    displayChat();
+    drawWindow(0, 0xffff0001, 0xffff);
+    this->update();
+    return true;
 }
 
+// DC line 6529 calls this ordinary helper; line 6968 owns its definition.
+// Complete adds the serialized receiver visible in HandleNetMsg +0x310:
+// base ctor 0x512c20, header at +0x18, vtable 0x641d30, read 0x512e00,
+// SetupOrigData, and header teardown. The receive result is not tested.
+// Before normalization (function/parameter): OnNewMapHeaderInfo, pNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6968
 DC_ONLY(0x140d50, 0x22)
-unsigned char TSingleSelectionWindow::OnNewMapHeaderInfo(CNetMsg* pNetMsg)
+bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 {
-    // @stub
+    CNewMapHeaderInfoMsg msg;
+    msg.remoteFn00512E00(netMsg);
+    g_game->setupOrigData();
+    return true;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6980
 DC_ONLY(0x140d74, 0x48)

@@ -937,7 +937,7 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 // 96.7302..97.7112%; combining success and menu results is lower. Grouped
 // Host/Join arms score 96.9836% or 93.6403%. All five sites remain measured.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
-int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
+int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     bool connectionFailed = 0;
     switch (id) {
@@ -961,7 +961,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
         goSessionList();
         if (!onTCP()) {
             remoteCleanup();
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             return 1;
         }
@@ -971,7 +971,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
         goSessionList();
         if (!onModem()) {
             remoteCleanup();
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
         return 1;
@@ -980,7 +980,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
         goSessionList();
         if (!onDirect()) {
             remoteCleanup();
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
         return 1;
@@ -997,14 +997,14 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
-            *exitFlag = 1;
+            exitFlag = 1;
             return 1;
         }
         goto check_host_join_screen;
 
     case JOIN_ID:
         if (onJoin()) {
-            *exitFlag = 1;
+            exitFlag = 1;
             return 1;
         }
 
@@ -1019,12 +1019,12 @@ check_host_join_screen:
         break;
 
     exit_dialog:
-        *exitFlag = 1;
+        exitFlag = 1;
         return 1;
 
     case HOT_SEAT_ID:
         if (onHotSeat()) {
-            *exitFlag = 1;
+            exitFlag = 1;
             return 1;
         }
         break;
@@ -1055,7 +1055,7 @@ check_host_join_screen:
     }
 
     if (connectionFailed) {
-        *exitFlag = 1;
+        exitFlag = 1;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         remoteCleanup();
         return 1;
@@ -1415,19 +1415,19 @@ inline unsigned char CMPInputDlg::onOK()
 // E:\gamedcs\multiplayerwindow.cpp:470
 // Before normalization (locals): bExitFlag.
 VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
-int CMPInputDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
+int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
     case OKAY_ID:
         if (onOK()) {
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
             return 1;
         }
         break;
 
     case BACK_ID:
-        *exitFlag = 1;
+        exitFlag = 1;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }
@@ -1910,18 +1910,18 @@ CHotSeatDlg::~CHotSeatDlg()
 // E:\gamedcs\multiplayerwindow.cpp:707
 // Before normalization (locals): bExitFlag.
 VA(0x00512420, 0x4D)  // retail vtable slot 12, dc 0x102c6c
-int CHotSeatDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
+int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
     case OKAY_ID:
         if (onOK()) {
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
         }
         break;
 
     case BACK_ID:
-        *exitFlag = 1;
+        exitFlag = 1;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }

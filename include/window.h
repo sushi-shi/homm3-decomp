@@ -223,12 +223,12 @@ public:
 //   10  ProcessHover        0x5ff6e0  (ret 8 - findWidgetPtr(x, y))
 //   11  ProcessRightSelect  0x5ff790  (ret 4 - one widget id)
 //   12  OnWidgetDeselect    0x559140  (`xor eax,eax; ret 8` - the
-//       ICF-folded inline below, so window.obj has NO body for it)
+//       ordinary window.cpp body, ICF-folded with another retail owner)
 //   13  GetRolloverWidget   0x5ff8d0  (`xor eax,eax; ret`)
 // This CORRECTS the previous 1:1 DC-order mapping of the seven retail
 // rows onto the seven DC roster entries: the sdd sits second (the
-// widget/heroWindow placement), OnWidgetDeselect has no window.obj
-// row, and the three claims in between were each one slot low.
+// widget/heroWindow placement), OnWidgetDeselect has no distinct retail
+// row here, and the three claims in between were each one slot low.
 class CHeroWindowEx : public heroWindow {
 public:
     // Before normalization: rolloverId.
@@ -249,9 +249,13 @@ public:
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     // Before normalization (function): CHeroWindowEx::ProcessRightSelect.
     virtual unsigned char processRightSelect(int id);                   // slot 11
+protected:
     // Before normalization (function): CHeroWindowEx::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, unsigned char* exitFlag) { return 0; }  // slot 12
+    // DC public ?OnWidgetDeselect@CHeroWindowEx@@MAAHHAA_N@Z proves
+    // protected virtual access and bool&, also shared by its overrides.
+    virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12
+public:
     // Before normalization (function): CHeroWindowEx::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();                            // slot 13
 };
@@ -270,7 +274,7 @@ void setWinText(heroWindow* win, int winId);
 // CODEVIEW(E:\gamedcs\window.cpp:972, dc 0x197d9c) unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY);
 // CODEVIEW(E:\gamedcs\window.cpp:1016, dc 0x197e58) unsigned char CHeroWindowEx::ProcessRightSelect(int id);
 // CODEVIEW(E:\gamedcs\window.cpp:1036, dc 0x197eb4) int CHeroWindowEx::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\window.cpp:1122, dc 0x197f48) int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* bExitFlag);
+// CODEVIEW(E:\gamedcs\window.cpp:1122, dc 0x197f48) int CHeroWindowEx::OnWidgetDeselect(int id, bool& bExitFlag);
 // CODEVIEW(E:\gamedcs\window.cpp:1128, dc 0x197f4c) textWidget* CHeroWindowEx::GetRolloverWidget();
 // CODEVIEW(E:\gamedcs\window.cpp:1133, dc 0x197f50) void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText);
 // CODEVIEW(E:\gamedcs\window.cpp:969, dc 0x1981e0) void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags);

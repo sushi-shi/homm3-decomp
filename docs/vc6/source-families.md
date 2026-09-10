@@ -3752,6 +3752,252 @@ and **63 unions**. Neither Grail pin remains, and ai_player has no inline
 override left. This is not a claim that its source or remaining functions
 are complete.
 
+### Scenario deselection: ordinary body ownership, not an inline fence
+
+`generate-scenario-deselect-family.py` crosses the base handler's current
+header definition / recovered ordinary definition with the scenario caller's
+existing fence / natural call. The source fact is **window.cpp:1122/1123,
+dc 0x197f48**, not the existence of a folded retail body. Dreamcast's public
+`?OnWidgetDeselect@CHeroWindowEx@@MAAHHAA_N@Z` also proves protected virtual
+access and `bool&`; five override publics carry the same reference type.
+Complete's custom-campaign override shares the independently proven slot 12.
+Restore that entire interface, including WindowHandler's local flag and
+reference call, before taking the search checkpoint. This avoids scoring
+newly mangled methods against stale names.
+
+The interface-only full build migrates six claimed symbols with every score
+unchanged. Across all 152 raw objects, **9949 executable sections** retain
+their bytes and function locations; relocation names change only by the
+seven explicit callback signatures and existing anonymous-namespace nonces.
+The herodefs zero-filled BSS's anonymous-static permutation changes its
+padding/extent (1156 to 1152 bytes), not executable instructions.
+
+Context `ea8854cffaf04c674e5d` exhausts **four successful source states** and
+produces **three distinct whole-consumer code identities**. It scores all
+**90 configured window.h consumers / 3964 rows**, determined from the fresh
+Ninja dependency closure. All three retained identities reproduce their
+scores and code independently; the watched authored source stays unchanged
+throughout the run. The scenario callback at 0x5698a0 gives:
+
+| Base handler definition | Existing fence | Natural call |
+|---|---:|---:|
+| Current implicit-inline header body | 100% | 58.25% |
+| Ordinary window.cpp body, in original source order | 100% | 100% |
+
+The ordinary body's two caller forms produce identical objects. The chosen
+natural call preserves all 30 retail instruction bytes and the sole call at
++0x15 (relocation +0x16). Its callee emits `33 c0 c2 08 00`, independently
+identical to the five bytes at retail 0x559140. That address already belongs
+to `ResourceManager::t_stdio_file_adapter::write`; retain the existing single
+claim, with a documented `DC_ONLY` definition for the folded base handler.
+The same body need not remain implicitly inline merely because ICF selected
+another owner. Its source position is after WindowHandler and before
+GetRolloverWidget.
+
+Shared-header collateral is small but real: quest-creature `generate` in
+rmg goes **99.7349% to 100%**, and `CEnterNameEdit::onKillFocus` goes **100%
+to 99.871%**. Both already have MAX/HIST 100%; their own source hashes are
+unchanged. Every other scored row is unchanged. The RMG change swaps two
+independent loads at +0xca/+0xcd; the focus handler exchanges EDI/ESI spill
+homes and their corresponding reload order. kb's score-flat `oldmain` also
+changes four bytes, exchanging EDI/EBX spill homes at +0x129a/+0x129d and
+reload order at +0x1372/+0x1375, without an intervening access to those homes.
+
+The raw-object review accounts for **13,116 retained sections and 94,778
+relocations**. Apart from those twelve instruction bytes, section bytes,
+function offsets and named relocation destinations agree after the observed
+section-index translation. Twenty consuming TUs stop emitting the base's
+header COMDAT and associated `.debug$F`; window.cpp retains the same body at
+its proper source position. Compiler-generated EH/branch labels are compared
+by their actual section/offset destinations, including the four renumbered
+`hero_rollover`, `town_rollover`, `generic_help` and `ignore` labels. No new
+score normalization or second symbol ledger is involved.
+
+`test-scenario-deselect.py` extracts the actual base, scenario callback and
+WindowHandler bodies. At native `-O0` and `-O2`, **262,160 direct callback
+checks** cover both initial flag values, all signed-16-bit IDs and four
+outlying IDs; **864 dispatcher cases** check message priority, callback
+arguments, flag initialization and end-dialog message mutation. Five wrong
+controls must fail: wrong base return, wrong acceptance ID, dropped flag,
+skipped callback, and wrong end-dialog return. The current interface and
+selected frozen body both pass. This reduced fixture tests semantics, not
+VC6 object layout or inlining; `--source` selects a frozen source tree.
+
+The full adopted build passes every gate at **4084/4764 exact**, **96.43%
+linked** and **96.42% whole-image** (rounded). All 4764 RVA rows survive;
+the only two current-score changes are the collateral described above,
+and no MAX/HIST value falls. All **90 production objects** reproduce the
+selected independent recompile's executable bytes, function locations and
+**94,779 relocation destinations** across **13,118 sections**. The only
+raw non-executable layout difference is herodefs's zero-filled anonymous-
+static BSS permutation/padding (1148 versus 1156 bytes). Fresh source and
+structure diagnostics confirm all three scenario blocks and statements
+agree; the named-call difference is precisely the independently byte-proven
+ICF twin, not an absent call or a replacement helper. The census is **213
+overrides across 27 TUs** (208 depth-zero, five auto-inline-off), with the
+**63 unions** unchanged.
+
+Integration with the independently landed ownership cleanup (`4b75e8ce`)
+is separately full-built at **4086/4764 exact**, **96.44% linked** and
+**96.43% whole-image**. Its two newly exact functions remain exact; all
+incoming MAX/HIST peaks and RVA rows survive. Compared with that incoming
+branch, only the same RMG/focus-handler current scores above move. Callback,
+owner-payload, horde-row and DrawBolt native/negative controls pass on the
+combined source. The original four-state experiment remains evidence for
+its frozen pre-integration inputs, not a claim to have searched this new
+header context.
+
+## Lobby map-header receiver and dispatcher overrides
+
+The dispatcher at `0x5887a0` formerly constructed a bare `NewSMapHeader`
+under a depth-zero fence but never read the incoming message. DC source line
+6529 calls the ordinary `OnNewMapHeaderInfo` helper, with its definition at
+line 6968 (`0x140d50`). That older helper already calls `SetupOrigData` and
+returns true; Complete's arm adds the serialized receiver and its lifetime.
+Retail `+0x310..+0x365` calls the base constructor, constructs the header at
+offset `+0x18`, installs vtable `0x641d30`, calls the receive bridge at
+`0x512e00`, calls `SetupOrigData`, and destroys the header. The previously
+modeled `CNewMapHeaderInfoMsg` owns exactly this base and member.
+
+First restore the dispatcher's original public `QAA_N...AA_N` signature as
+`bool handleNetMsg(CNetMsg*, bool&)`, including its caller's local and all
+cancel assignments. The whole interface edit preserves every section byte,
+function location and relocation destination across its four consuming TUs;
+only the independently evidenced symbol rename is admitted. The full
+checkpoint has no score movement before searching.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-map-header-family.py build/lobby-map-header-family.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-map-header-family.json --width 60 --keep 4 --jobs 4 --generations 1
+```
+
+The two axes cross the incomplete/pinned arm with the ordinary complete
+receiver, and the existing `HeaderRequested` auto-inline override with its
+removal. All **four states emit distinct code and reproduce**; all **416
+tracked functions across four header consumers** are scored. The receiver
+with the adjacent override retained raises `HandleNetMsg` **89.7408% to
+90.0449%**. Removing that auto-inline override scores **85.9113%** with the
+old arm and **86.1394%** with the recovered arm. Both complete-receiver
+states restore `CEnterNameEdit::onKillFocus` **99.871% to 100%**. No other
+tracked score moves. The retained ordinary helper has no false `inline`
+keyword, copied caller body or replacement override.
+
+The recovered arm's first **62 raw bytes** (`+0x310..+0x34e`) match retail,
+including its named constructor, receive and setup calls. The vtable and
+game-global relocation spellings differ only by their existing source-owned
+identities. Cleanup still expands two string `_Tidy` calls and
+`~CMapHeaderData`, whereas retail calls `~NewSMapHeader`. Across the four
+units, **811 existing executable sections are byte-identical**; the changed
+ones are the dispatcher and its EH cleanup plus four spill/reload operand
+bytes each in `onKillFocus` and the score-flat `kb::oldmain`. The latter
+changes swap stack homes while preserving the corresponding reloads. The
+ordinary helper adds its own body and EH cleanup, not a duplicate retail
+claim. All four adopted production objects reproduce the selected candidate
+across **1,448 sections and 15,089 relocation destinations**.
+
+After adopting that model and running a fresh full build, the follow-up
+verifies exact parent source/header identity and carries both reproduced
+complete-receiver parents. It tests each of the remaining 14 dispatcher
+depth-zero regions separately and all together, crossed with the adjacent
+auto-inline override:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-dispatch-pins-family.py build/source-families/PARENT_CONTEXT/checkpoint.json build/lobby-dispatch-pins-family.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-dispatch-pins-family.json --width 60 --keep 10 --jobs 4 --generations 1
+```
+
+All **32 states produce distinct objects**, with **ten reproduced elites**.
+All **223 TU score rows** are checked; only the dispatcher moves. No deletion
+preserves 90.0449%: single-region deletions span **79.9839% to 88.9839%**;
+all depth regions removed scores **41.8479%**, or **38.2972%** with the
+auto-inline override also removed. No follow-up deletion is adopted. This
+does not exhaust combinations of arbitrary depth regions or other recovered
+helper models. Contexts `e95ac2ee39002ff3643c` and `5d5ccc52816c48107f9d`
+identify the frozen four-state and follow-up inputs. Their generators are
+historical pre-adoption controls and deliberately reject changed anchors.
+
+`test-lobby-map-header.py` extracts the actual helper, receive bridge and
+virtual-reader bodies. Its reduced fixture checks **1,920 cases** spanning
+sender identities, short-message lengths, read results and exceptional exit
+paths, preserving construction/read/setup/destruction order and the input
+message. Six controls must fail: skipped receive, skipped setup, reversed
+receive/setup order, wrongly rejecting a read failure, wrong header version,
+and wrong helper result. Both the frozen candidate and adopted source pass
+at `-O0` and `-O2`. This is not a retail ABI or complete wire-format test.
+
+The full checkpoint passes at **4087/4764 exact**, **96.44% linked** and
+**96.43% whole-image**, with every RVA and MAX/HIST peak retained. The fresh
+census is **212 overrides** (207 depth-zero, five auto-inline-off), across
+27 TUs, with **63 unions** unchanged. Remaining destructor/inliner and
+flattened-helper differences are open reconstruction work, not TU closure.
+
+## Lobby player helpers and the nested GetPlayer wall
+
+`generate-lobby-player-helpers-family.py` crosses three binary decisions:
+restore both ordinary `getThisPlayer` calls, restore ordinary bool
+`onPlayerDroppedMsg`, and remove the existing `HeaderRequested` auto-inline
+override. The first two recover positive DC facts at caller lines 6488/6511,
+with definitions at 7323/6937. Complete's dropped-player expansion adds version
+recomputation and uses no-argument `update`; its older DC `message junk` local
+is not copied into the newer implementation.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-lobby-player-helpers-family.py build/lobby-player-helpers.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families build/lobby-player-helpers.json --width 60 --keep 8 --jobs 4 --generations 1
+```
+
+All **eight states emit distinct objects and reproduce**, scoring **416 rows
+across four header consumers**. Dispatcher percentages with the adjacent
+auto-inline override retained/removed are: old flattened control
+**90.0449/86.1394**, transfer helper only **87.0841/83.4366**, drop helper only
+**87.6740/83.4136**, and both recovered helpers **85.9516/82.2074**. The two
+drop-only states also move `onKeyPress` from 99.8868% to 100%; that gain does
+not justify retaining the flattened transfer arm. The adopted both-helper
+state changes no other tracked score and removes three depth-zero regions.
+
+The header consumers `advmgr` and `scenarioinfo` are wholly byte/relocation
+identical to control. `kb::oldmain` has only four changed bytes: EDI and EBX
+swap their -0x10/-0x20 spill homes and corresponding reloads. Its score is
+unchanged. All four production objects strictly reproduce the selected
+candidate's 1,449 sections, function locations and 15,092 relocation targets.
+
+The extended `generate-lobby-dispatch-pins-family.py` accepts the completed
+player-helper parent and verifies its exact authored source/header identity.
+It retains both fully recovered parent corners and tests each of the eleven
+remaining depth regions, plus all together, crossed with auto-inline removal.
+All **26 states emit distinct objects**, and **ten elites reproduce**. All 223
+TU rows are scored; only the dispatcher changes. Singles span **80.7489% to
+84.8906%**; all-depth removal gives **60.9862%**, or **58.8618%** with auto-inline
+removal too. No follow-up deletion is adopted. Frozen contexts are
+`3a8df6d3328901340da9` and `1cb1c3134c84c99aa949`; the generators deliberately
+reject incompatible future source anchors.
+
+The passive trace reproduces **390,608 COFF bytes** outside the timestamp and
+all **2,720 dispatcher bytes**. Caller cost is 1791 and initial budget 3582.
+The two `getThisPlayer` expansions and the drop helper each expose `getPlayer`
+at depth two: its cost 75 fits budgets **115, 114 and 118**. Retail keeps
+these three calls at **+0x141, +0x160 and +0x22a**. The remaining drop callees
+already stay out of line naturally: costs 61/138/122 exceed remaining budget
+43. The map-header cleanup now retains `~NewSMapHeader` (cost 68, budget 57),
+and its entire **80-byte** arm matches the retail instruction sequence.
+
+The first unresolved boundary is therefore a nested-inlining/compiler-state
+wall under the recovered source, not evidence against the helpers. DC lookup
+rows 1157/1159/1160/1163 confirm its current loop, `i` local, found-pointer
+return and null return. No supported missing invariant/lifetime was found;
+adding source mass or a new suppression pin would not be recovery. Later
+flattened handler boundaries and allocation choices remain open. This bounded
+pass does not prove no future source model can improve the function.
+
+`test-lobby-player-helpers.py` extracts the actual two helper definitions and
+transfer arm. Its **146 cases** check local/network mode, null lookup, two
+fresh query results, rejection, successful/failed transfer, cancel preservation
+and dropped-player update order. Six controls fail: caching the first query,
+omitting the version store, recomputing before deletion, skipping manager
+notification, skipping cancel, and returning the wrong helper result. Both
+frozen and adopted bodies pass at `-O0` and `-O2`; this is behavior testing,
+not an ABI or inlining oracle.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the
@@ -3759,3 +4005,34 @@ normal checkpoint and README. This preserves `CUR <= MAX <= HIST` and keeps
 historical peaks separate from the current implementation's MAX. Completing a
 family or getting every currently tracked row exact does not prove whole-TU
 source completeness.
+
+## Palette channel lifetimes from DC line layout
+
+The palette constructor families show why a compiler-sized arithmetic residual
+can originate in the lifetime of a result farther down the expression. DC's
+ordinary `Convert24to16` helper has three separately attributed channel
+calculations at lines 224–226, each truncated to a word, then OR/store at 228 and
+destination advance at 229. Named `unsigned short` channel values reproduce the
+byte-wide shift-count hoists in retail callers `0x5226d0` and `0x522770`, taking
+94.8548% / 94.9365% to 100%. Casting each channel inside the combined expression
+leaves those older scores. The all-int helper signature and ordinary helper
+boundary remain intact; no parameter narrowing or inlining directive is needed.
+That 72-state family produced 20 distinct objects.
+
+The mask constructor `0x522810` similarly separates channel lines 101–103 from
+OR/store at 108, with four intervening unrecorded lines whose contents are
+unknown. This supports a channel-lifetime hypothesis without inventing source
+text. A 73-state scale/operand/pointer-order family produced six objects and
+reached 99.2676% from 98.9155%, but retained the wrong channel evaluation order.
+A subsequent 61-state lifetime family produced eight objects, all reproduced:
+indexed RGB reads, named `unsigned int` channel values and an early destination
+pointer close at 100%. Both ordinary and const channel locals work. Advancing
+the source pointer or narrowing the channel locals to words does not close.
+All 25 tracked palette functions are exact together with the selected forms.
+
+The matching source also restores the DC `const TPalette24&` constructor
+interfaces and its native `unsigned char Palette[768]` member. Update every
+caller when correcting such interfaces: the pointer-taking `TPalette24` copy
+constructor otherwise permits an old pointer argument to create an unintended
+temporary before reference binding. Full-build caller scores confirm unchanged
+current results after the calls are corrected.

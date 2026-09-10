@@ -59,7 +59,7 @@ public:
     // inside 400 ms accepts.
     // Before normalization (function): TCustomCampaignWindow::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): TCustomCampaignWindow::LoadCampaignList.
     void loadCampaignList();
     // Before normalization (function): TCustomCampaignWindow::UpdateList.

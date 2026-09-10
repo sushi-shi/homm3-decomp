@@ -8,7 +8,7 @@ image does not.  This command joins those records into one function dossier.
 
 Subcommands
 -----------
-  show SELECTOR [--json]
+  show [SELECTOR ... | --module MODULE ... | --all] [--json]
         Function identity, signature/retail bridges, parameters and locals,
         lexical scopes, and a statement-ordered call/branch listing.
 
@@ -26,6 +26,12 @@ Subcommands
         body snaps to its owner (noted). One identity naming several
         procedures (a bridge to two, an overloaded name) renders every
         match under a banner; a substring naming several is listed.
+
+  lines [SELECTOR ... | --module MODULE ... | --all] [--json]
+        Numbered source-line outlines, observed spans and all internal gaps.
+        Repeated attributions and foreign-source rows remain visible. Empty
+        lines and total function length are unknown without original source.
+        This is DC-only evidence for hypotheses, never an MSVC shape comparison.
 
   asm SELECTOR [--blocks] [--no-breakpoints] [--json]
         SH4 assembly labelled with CodeView breakpoint/source rows. --blocks
@@ -79,7 +85,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, TextIO
 
-from homm3.analysis import dc_asm, dc_lines, dc_srclines, debug_shape
+from homm3.analysis import dc_asm, dc_lines, dc_srclines, dc_source_layout, debug_shape
 from homm3.core import common, inputs, undname
 
 
@@ -624,6 +630,7 @@ def build_dossier(corpus: Corpus, row: dict[str, str], *, dump=None, data=None,
             last_missing_line=item["last_missing_line"],
             leading=item["leading"],
         ) for item in line_shape["gaps"]),
+        source_layout=line_shape["source_layout"],
     )
 
     shape = debug_shape.DebugFunctionShape(
@@ -727,6 +734,8 @@ def render_dossier(dossier: DreamcastDossier,
               f"{line_map.first_body_line}: {missing} absent line(s){detail}",
               file=out)
     print(f"  {GAP_CAUTION}", file=out)
+    if line_map.source_layout is not None:
+        print("\n" + dc_source_layout.render(line_map.source_layout), file=out)
 
     print(f"\nStatements ({len(shape.statements)} line/address rows):", file=out)
     for statement in shape.statements:
@@ -1023,6 +1032,7 @@ def _source_line_shape(
     boundary_line = _integer(row["line"]) if row.get("line") else None
     if module_rows is None:
         module_rows = dc_srclines._load_srclines().get(row["module"], ())
+    module_rows = list(module_rows)
     source = _source_key(row["file"])
     records = [(line, addr) for filename, line, addr in module_rows
                if source == _source_key(filename) and off <= addr < off + cb]
@@ -1111,13 +1121,19 @@ def _source_line_shape(
         "leading_gap_lines": leading_gap,
         "bodyless": bodyless,
         "gaps": gaps,
+        "source_layout": dc_source_layout.recover(
+            [(filename, line, addr) for filename, line, addr in module_rows
+             if off <= addr < off + cb],
+            source=row["file"], boundary_line=boundary_line,
+            boundary_reliable=procedure_line is not None, bodyless=bodyless),
         "caution": GAP_CAUTION,
     }
 
 
-def _gap_payload(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
+def _gap_payload(corpus: Corpus, row: dict[str, str], *, module_rows=None) -> dict[str, Any]:
     shape = _source_line_shape(
-        row, previous_row=corpus.previous_by_key.get(corpus.key(row)))
+        row, module_rows=module_rows,
+        previous_row=corpus.previous_by_key.get(corpus.key(row)))
     return {
         "name": row["name"],
         "module": row["module"],
@@ -1126,6 +1142,21 @@ def _gap_payload(corpus: Corpus, row: dict[str, str]) -> dict[str, Any]:
         "retail_vas": _mapped_vas(corpus, row),
         **shape,
     }
+
+
+def _line_payloads(corpus: Corpus, rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    """Avoid scanning an entire compiland for each corpus function."""
+    module_rows = dc_srclines._load_srclines()
+    indexes = {module: dc_source_layout.LineIndex(module_rows.get(module, ()))
+               for module in {row["module"] for row in rows}}
+    payloads = []
+    for row in rows:
+        off = _integer(row["offset"])
+        previous = corpus.previous_by_key.get(corpus.key(row))
+        start = _integer(previous["offset"]) if previous else off
+        records = indexes[row["module"]].window(start, off + _integer(row["cb"]))
+        payloads.append(_gap_payload(corpus, row, module_rows=records))
+    return payloads
 
 
 def _render_gaps(rows: list[dict[str, Any]], *, selected: bool,
@@ -1237,9 +1268,16 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command", required=True)
 
-    show = sub.add_parser("show", help="joined source-shape dossier")
-    show.add_argument("selector", help="retail VA/RVA, dc:OFF, module:OFF, or name")
-    show.add_argument("--json", action="store_true", help="machine-readable output")
+    for command, help_text in (("show", "joined source-shape dossier"),
+                               ("lines", "DC source-line spans, gaps and numbered outlines")):
+        view = sub.add_parser(command, help=help_text)
+        view.add_argument("selectors", nargs="*", metavar="SELECTOR",
+                          help="retail VA/RVA, dc:OFF, module:OFF, or name; repeatable")
+        scope = view.add_mutually_exclusive_group()
+        scope.add_argument("--module", action="append", dest="modules", metavar="MODULE",
+                           help="module[.obj]; repeatable, filters selectors if supplied")
+        scope.add_argument("--all", action="store_true", help="explicitly select the full corpus")
+        view.add_argument("--json", action="store_true", help="machine-readable output")
 
     asm = sub.add_parser("asm", help="breakpoint-labelled SH4 assembly / CFG")
     asm.add_argument("selector", help="retail VA/RVA, dc:OFF, module:OFF, or name")
@@ -1313,6 +1351,26 @@ def _matches(corpus: Corpus, selector: str) -> list[dict[str, str]]:
     return rows
 
 
+def _batch_matches(corpus: Corpus, args) -> list[dict[str, str]]:
+    """Resolve explicit selections without silently truncating a module/corpus."""
+    if not args.selectors and not args.modules and not args.all:
+        raise DreamcastError("supply a SELECTOR, --module MODULE, or --all")
+    if args.selectors and args.all:
+        raise DreamcastError("--all cannot be combined with selectors")
+    rows = ([row for selector in args.selectors for row in _matches(corpus, selector)]
+            if args.selectors else corpus.functions)
+    if args.modules:
+        modules = {name.lower().removesuffix(".obj") for name in args.modules}
+        known = {row["module"].lower().removesuffix(".obj") for row in corpus.functions}
+        if modules - known:
+            raise NoMatch("unknown module(s): " + ", ".join(sorted(modules - known)))
+        rows = [row for row in rows if row["module"].lower().removesuffix(".obj") in modules]
+    unique = {corpus.key(row): row for row in rows}
+    if not unique:
+        raise NoMatch("no functions in the requested selection")
+    return list(unique.values())
+
+
 def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
     if len(rows) > 1:
         row = rows[index]
@@ -1320,7 +1378,7 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
               f"{row['offset']} {row['name']} ====")
 
 
-COMMANDS = ("show", "asm", "find", "gaps", "inline-clues", "stats", "structure")
+COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure")
 
 # Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
 # each with its real home.
@@ -1364,12 +1422,30 @@ def _dispatch(argv: list[str]) -> int:
                   f"{summary['scopes']} scopes, {summary['locals']} locals, "
                   f"{summary['inline_functions']} functions with inline clues")
             print(f"[homm3 dreamcast] {args.output.resolve() / 'README.md'}")
+        elif args.command == "lines":
+            rows = _batch_matches(corpus, args)
+            payloads = _line_payloads(corpus, rows)
+            if args.json:
+                json.dump({"schema": "homm3.dreamcast-lines.v1",
+                           "authority": AUTHORITY, "functions": payloads},
+                          sys.stdout, indent=2, sort_keys=True)
+                print()
+            else:
+                print(AUTHORITY)
+                for payload in payloads:
+                    print(f"\n{payload['module']}:dc:0x{payload['dc_offset']:08x} {payload['name']}")
+                    print(dc_source_layout.render(payload["source_layout"], rows=True))
         elif args.command == "show":
-            rows = _matches(corpus, args.selector)
-            dossiers = [build_dossier(corpus, row) for row in rows]
+            rows = _batch_matches(corpus, args)
+            dump = dc_lines.load_symbols()
+            data = inputs.read_dreamcast_exe()
+            from homm3.core.nb11_types import Types
+            types = Types.from_symbols(dump)
+            dossiers = [build_dossier(corpus, row, dump=dump, data=data, type_table=types)
+                        for row in rows]
             if args.json:
                 payload = (dossiers[0].to_dict() if len(dossiers) == 1 else
-                           {"authority": AUTHORITY, "selector": args.selector,
+                           {"authority": AUTHORITY, "selector": " ".join(args.selectors),
                             "matches": [d.to_dict() for d in dossiers]})
                 json.dump(payload, sys.stdout, indent=2, sort_keys=True)
                 print()

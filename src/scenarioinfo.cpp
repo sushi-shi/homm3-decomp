@@ -439,14 +439,19 @@ CScenarioInfoDlg::~CScenarioInfoDlg()
 
 // E:\gamedcs\scenarioinfo.cpp:493
 // Before normalization (locals): bExitFlag.
+// DC line 503 calls CHeroWindowEx::OnWidgetDeselect; its return-zero body
+// belongs to window.cpp:1122, not an implicit-inline header definition.
+// Restoring that ordinary owner retains retail's +0x15 call naturally and
+// keeps all 30 caller bytes exact. Deleting only the old fence while
+// retaining the header body scores 58.25%; the ordinary body gives 100%
+// with or without it. The 90-consumer controls and allocator collateral
+// are recorded in docs/vc6/source-families.md (scenario deselection).
 VA(0x005698a0, 0x1E)  // vtable 0x641710 slot 12 + ret 8, dc 0x12ab00
-int CScenarioInfoDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
+int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == SCENARIO_INFO_ACCEPT_ID)
-        *exitFlag = 1;
-#pragma inline_depth(0)
+        exitFlag = 1;
     return CHeroWindowEx::onWidgetDeselect(id, exitFlag);
-#pragma inline_depth()
 }
 
 // E:\gamedcs\scenarioinfo.cpp:508
