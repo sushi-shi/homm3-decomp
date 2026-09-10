@@ -261,8 +261,10 @@ void TCustomCampaignWindow::updateList()
 // the map-count column; either selects its row. A second click on the
 // same row inside 400 ms accepts the campaign and closes the dialog.
 // Before normalization (locals): bExitFlag.
+// Slot 12 overrides CHeroWindowEx::OnWidgetDeselect(int, bool&); retail
+// passes the same one-byte exit flag used by the Dreamcast-proven family.
 VA(0x004835c0, 0xA4)  // anchor-vtable (slot 12 of 0x63d6fc), retail-only
-int TCustomCampaignWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
+int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id < 100 || id > 135)
         return 0;
@@ -276,7 +278,7 @@ int TCustomCampaignWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 
     if (GameTime::elapsedSince(m_lastClickTime) < 400) {
         if (acceptSelection()) {
-            *exitFlag = 1;
+            exitFlag = 1;
             g_windowManager->m_dialogReturn = 1;
             return 1;
         }

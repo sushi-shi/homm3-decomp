@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 96.36%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
+**Executable matched: 96.35%** — fuzzy-weighted bytes over all 1,998,942 unfiltered bytes.
 
-**Match score** — 4,073 / 4,764 functions exact (85.5%) across the full engine (4764 in linked units).
+**Match score** — 4,077 / 4,764 functions exact (85.6%) across the full engine (4764 in linked units).
 
-**Function exact MAX** — 4,094 / 4,764 current implementations (85.9%) have reached 100%.
+**Function exact MAX** — 4,097 / 4,764 current implementations (86.0%) have reached 100%.
 
 | Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4004 / 4695 (85.3%) | 4025 / 4695 (85.7%) |  96.32% |    96.54% |
+| `game`       |   138 | 4008 / 4695 (85.4%) | 4028 / 4695 (85.8%) |  96.31% |    96.53% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -62,8 +62,8 @@ Manually maintained cleanup checklist:
 - [ ] Review [compiler warnings](docs/compiler-warnings.md).
 - [ ] Investigate potentially uninitialized locals and missing-return warnings.
 - [ ] Review preprocessor debt in `src/`: **36 `#define` directives**.
-- [ ] Review pragma debt in `src/`: **426 `#pragma` directives**, all for inlining
-  (**208 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
+- [ ] Review pragma debt in `src/`: **416 `#pragma` directives**, all for inlining
+  (**203 `inline_depth(0)` and 5 `auto_inline(off)` regions**, including their resets).
 - [ ] Search for inline functions.
 - [ ] Search for macros for common code.
 
@@ -137,6 +137,21 @@ Generate a browsable Dreamcast source tree from the embedded debug symbols:
 homm3 dreamcast structure                         # all modules
 homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
 ```
+
+Inspect source-line geometry for one function or across the corpus:
+
+```sh
+homm3 dreamcast lines 0x00524dd0
+homm3 dreamcast lines --module cursor --module town --json
+homm3 dreamcast lines --all --json > /tmp/dc-lines.json
+homm3 dreamcast show --module cursor --json > /tmp/dc-cursor-dossiers.json
+```
+
+`lines` preserves recorded positions, repeated attributions, and internal gaps
+with their line counts. It shows the approximate source shape for educated
+hypotheses; absent rows do not identify empty lines or recover source text.
+Total function length and trailing lines remain unknown. The same layout
+evidence appears in `show` and `structure`, without an MSVC shape comparison.
 
 The default output is `evidence/dreamcast/structure/README.md`, with annotated
 C++ stubs and JSON for each compiland, plus a type catalogue. It includes decoded

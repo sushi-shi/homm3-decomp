@@ -18,6 +18,27 @@ inner loop. Normally supply the active TU so shared-header edits rebuild only
 that TU during iteration. Run `homm3 build` for the final checkpoint: it rebuilds
 affected TUs, refreshes retail targets through delinking, and runs the gates.
 
+## Required DC evidence: source layout as well as statements
+
+**Inspect the function's source-line layout before speculative rewrites.**
+Recorded line positions, observed span lengths, internal gaps and their lengths,
+repeated attributions, and source-file switches all help reveal its approximate
+source shape. Read these alongside signatures, locals/lifetimes, scopes, helper
+calls, and statement order. Even apparently empty space can inform an educated
+guess about the original source.
+
+`homm3 dreamcast lines <selector>` exposes that layout; `lines --module <TU>`
+and `lines --all` extend it across the corpus. `show` accepts repeated selectors
+and modules, and `show`/`structure` include the same line-layout evidence.
+
+**Observations support hypotheses; they do not recover missing text.** A gap
+can contain empty lines, comments, declarations, braces, or optimized/release-
+elided operations. Observed spans are not total function line counts: inline
+attributions can extend them, boundaries can be borrowed, and trailing lines
+are unknown. Do not pad C++ with blank lines or invent assertions to satisfy a
+count. Do not compare this DC shape with MSVC `/Z7` source structure or require
+equal line counts. Test each meaningful hypothesis against retail VC6 output.
+
 ## Matching loop
 
 For every non-exact game function with a Dreamcast counterpart, run this evidence
@@ -25,6 +46,7 @@ pass **before speculative C++ rewrites**:
 
 ```sh
 homm3 dreamcast show 0x00524dd0
+homm3 dreamcast lines 0x00524dd0
 homm3 dreamcast asm 0x00524dd0 --blocks
 homm3 dreamcast inline-clues 0x00524dd0
 homm3 sema diff 0x00524dd0 --summary

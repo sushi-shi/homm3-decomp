@@ -762,20 +762,6 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:1122 - OnWidgetDeselect has NO window.obj row.
-// Vtable 0x243ce8 slot 12 points at 0x559140 (`xor eax,eax; ret 8`),
-// an /OPT:ICF-folded empty inline - so retail defined it in the header
-// and window.h carries it there.
-DC_ONLY(0x197f48, 0x4)
-int CHeroWindowEx::onWidgetDeselect(int id, unsigned char* bExitFlag)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\window.cpp:1016 - vtable 0x243ce8 slot 11. Byte-proven:
 // GetWidget's tailWidget/prevWidget walk inlines, RightClick (+0x24)
 // falls back to RollOver (+0x20), the empty-string guard is VC6's
@@ -808,7 +794,7 @@ VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
 int CHeroWindowEx::windowHandler(message* msg)
 {
     // Before normalization (locals): bExitFlag.
-    unsigned char exitFlag = 0;
+    bool exitFlag = 0;
 
     if ((msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
         && (msg->m_codeX == widget::WIDGET_SELECT
@@ -820,7 +806,7 @@ int CHeroWindowEx::windowHandler(message* msg)
             return 1;
     } else if (msg->m_id == MESSAGE_WIDGET
                && msg->m_codeX == widget::WIDGET_DESELECT) {
-        onWidgetDeselect(msg->m_codeY, &exitFlag);
+        onWidgetDeselect(msg->m_codeY, exitFlag);
     } else {
         return 0;
     }
@@ -830,6 +816,17 @@ int CHeroWindowEx::windowHandler(message* msg)
         msg->m_codeX = widget::WIDGET_END_DIALOG;
         return 2;
     }
+    return 0;
+}
+
+// E:\gamedcs\window.cpp:1122/1123, dc 0x197f48. Ordinary source-owned
+// body, not a header inline. Retail vtable slot 12 and CScenarioInfoDlg's
+// qualified call resolve to 0x559140 (xor eax,eax; ret 8), ICF-folded with
+// t_stdio_file_adapter::write; that existing claim remains the sole owner.
+// Before normalization (function/parameter): OnWidgetDeselect, bExitFlag.
+DC_ONLY(0x197f48, 0x4)
+int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)
+{
     return 0;
 }
 

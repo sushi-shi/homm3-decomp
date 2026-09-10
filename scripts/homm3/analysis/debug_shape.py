@@ -60,6 +60,7 @@ class DebugLineMap:
     previous_body_last_line: int | None = None
     borrowed_boundary_line: bool = False
     gaps: tuple[DebugSourceGap, ...] = field(default_factory=tuple)
+    source_layout: dict[str, Any] | None = None
 
     @property
     def leading_gap_lines(self) -> int | None:
@@ -80,6 +81,7 @@ class DebugLineMap:
             "borrowed_boundary_line": self.borrowed_boundary_line,
             "leading_gap_lines": self.leading_gap_lines,
             "gaps": [gap.to_dict() for gap in self.gaps],
+            "source_layout": self.source_layout,
         }
 
 

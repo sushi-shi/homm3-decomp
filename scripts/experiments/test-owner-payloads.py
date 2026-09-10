@@ -21,9 +21,9 @@ def function(source, signature):
 palette = (root / 'src/palette.cpp').read_text()
 bodies = '\n'.join(function(palette, sig) for sig in (
     'void TPalette16::convert24to16(',
-    'TPalette16::TPalette16(const TPalette24* p24, int rbits,',
-    'TPalette16::TPalette16(const char* name, const TPalette24* p24,',
-    'TPalette16::TPalette16(const TPalette24* p24)\n',
+    'TPalette16::TPalette16(const TPalette24& p24, int rbits,',
+    'TPalette16::TPalette16(const char* name, const TPalette24& p24,',
+    'TPalette16::TPalette16(const TPalette24& p24)\n',
     'TPalette24::TPalette24(const unsigned char*',
 ))
 diff = function((root / 'src/diff.cpp').read_text(),
@@ -34,18 +34,17 @@ fixture = r'''
 #include "diff.h"
 enum { RESOURCE_TYPE_NONE, RESOURCE_TYPE_PALETTE };
 struct resource { resource(const char*, int) {} };
-struct paletteHiColor { unsigned char m_data[256][3]; };
 struct TPalette24 : resource {
-    paletteHiColor m_colors;
+    unsigned char m_palette[768];
     TPalette24() : resource(0, 0) {}
     TPalette24(const unsigned char*);
 };
 struct TPalette16 : resource {
     static unsigned int s_redMask, s_greenMask, s_blueMask;
     unsigned short m_data[256] = {};
-    TPalette16(const TPalette24*, int, int, int, int, int, int);
-    TPalette16(const char*, const TPalette24*, int, int, int, int, int, int);
-    TPalette16(const TPalette24*);
+    TPalette16(const TPalette24&, int, int, int, int, int, int);
+    TPalette16(const char*, const TPalette24&, int, int, int, int, int, int);
+    TPalette16(const TPalette24&);
     void convert24to16(const unsigned char*, int, int, int, int, int, int);
 };
 unsigned int TPalette16::s_redMask, TPalette16::s_greenMask, TPalette16::s_blueMask;
@@ -58,8 +57,9 @@ bool checkPalette() {
         TPalette24 input;
         for (int i = 0; i < 256; ++i)
             for (int c = 0; c < 3; ++c)
-                input.m_colors.m_data[i][c] = (i * (2*c+1) + 37*seed + 61*c) & 255;
-        paletteHiColor unchanged = input.m_colors;
+                input.m_palette[3 * i + c] = (i * (2*c+1) + 37*seed + 61*c) & 255;
+        unsigned char unchanged[768];
+        std::memcpy(unchanged, input.m_palette, sizeof unchanged);
         const int* f = formats[format];
         unsigned int masks[3];
         for (int c = 0; c < 3; ++c)
@@ -67,16 +67,15 @@ bool checkPalette() {
         TPalette16::s_redMask = masks[0];
         TPalette16::s_greenMask = masks[1];
         TPalette16::s_blueMask = masks[2];
-        TPalette16 a(&input), b(&input, f[0],f[1],f[2],f[3],f[4],f[5]);
-        TPalette16 c("palette", &input, f[0],f[1],f[2],f[3],f[4],f[5]);
-        TPalette24 copy(static_cast<const unsigned char*>(
-            static_cast<const void*>(&input.m_colors)));
-        if (std::memcmp(&copy.m_colors, &unchanged, sizeof unchanged)
-            || std::memcmp(&input.m_colors, &unchanged, sizeof unchanged)) return false;
+        TPalette16 a(input), b(input, f[0],f[1],f[2],f[3],f[4],f[5]);
+        TPalette16 c("palette", input, f[0],f[1],f[2],f[3],f[4],f[5]);
+        TPalette24 copy(input.m_palette);
+        if (std::memcmp(copy.m_palette, unchanged, sizeof unchanged)
+            || std::memcmp(input.m_palette, unchanged, sizeof unchanged)) return false;
         for (int i = 0; i < 256; ++i) {
             unsigned int expected = 0;
             for (int channel = 0; channel < 3; ++channel)
-                expected |= (unchanged.m_data[i][channel] >> (8-f[2*channel])) << f[2*channel+1];
+                expected |= (unchanged[3 * i + channel] >> (8-f[2*channel])) << f[2*channel+1];
             if (a.m_data[i] != expected || b.m_data[i] != expected
                 || c.m_data[i] != expected) return false;
         }
@@ -113,7 +112,7 @@ actual = fixture.replace('@BODIES@', bodies).replace('@DIFF@', diff)
 variants = [('actual', actual, True)]
 for name, before, after in (
     ('palette-misses-last', 'index < 256', 'index < 255'),
-    ('palette-wrong-channel', '(*src)[2] * blueScale', '(*src)[0] * blueScale'),
+    ('palette-wrong-channel', 'src[3 * index + 2] * blueScale', 'src[3 * index] * blueScale'),
     ('diff-wrong-source-offset', 'oldOffset += header->m_numBytes;',
      'oldOffset += header->m_numBytes - 1;'),
 ):

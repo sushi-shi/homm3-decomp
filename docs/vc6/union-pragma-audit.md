@@ -13,16 +13,16 @@ lines outside game source; they are experiments, not shipped workarounds.
 | Construct | Baseline | After cleanup | Decision |
 |---|---:|---:|---|
 | Union definitions | 78 (47 source, 31 header) | 63 (37 source, 26 header) | Fifteen removed; classify the remainder below |
-| Inline override regions | 289 | 214 | 75 removed, including six in disabled negative-example code |
-| `inline_depth(0)` regions | 262 | 209 | Remaining overrides are matching debt |
+| Inline override regions | 289 | 209 | 80 removed, including six in disabled negative-example code |
+| `inline_depth(0)` regions | 262 | 204 | Remaining overrides are matching debt |
 | `inline_depth(1)` regions | 7 | 0 | All seven redundant |
 | `auto_inline(off)` regions | 20 | 5 | Three redundant; eleven retired by recovered helpers, locals, types and meaningful release verifications; one retired after complete untracked-body review |
 | Packing regions | 11 | 11 | Preserve layout contracts: eight pack-1, three pack-8 |
-| All pragma directive lines | 600 | 450 | Each region includes its closing/reset directive |
+| All pragma directive lines | 600 | 440 | Each region includes its closing/reset directive |
 
 The six disabled regions were in `army.cpp`'s rejected `drop_aura_links`
-example under `#if 0`. Thus 69 active inline overrides were removed; counting
-all 75 as active compiler interventions would overstate the cleanup.
+example under `#if 0`. Thus 74 active inline overrides were removed; counting
+all 80 as active compiler interventions would overstate the cleanup.
 
 “Retain” does **not** mean that the original source contained a union or an
 inline pragma. Retail establishes behavior, layout and call/expansion choices,
@@ -1131,6 +1131,122 @@ five auto-inline-off**, or **428 source pragma directives** plus the 22
 header packing directives. The **63 unions** and their classifications are
 unchanged. Relative to the user's 253/72 checkpoint, **39 overrides and nine
 unions have been removed**; auto-inline-off regions fall from seven to five.
+
+### Scenario callback ownership
+
+The scenario-dialog fence is removed by restoring the base callback's
+ordinary window.cpp definition, not by flattening the call. DC's source
+position and protected `bool&` virtual signature correct both the erroneous
+header-inline inference and the byte-pointer interface. All six overrides
+and the dispatcher's local/call migrate together. The existing folded retail
+owner at 0x559140 remains the sole address claim.
+
+The [four-state controls](source-families.md#scenario-deselection-ordinary-body-ownership-not-an-inline-fence)
+cover all 90 window-header consumers and preserve the scenario handler's
+100% match. Removing only the fence with the old header body gives 58.25%.
+The recovered ordinary body also restores an RMG generator to 100%, while
+the focus-loss handler's allocator homes move its current score to 99.871%;
+both retain MAX/HIST 100%. A score-flat four-byte change in kb is explicitly
+reviewed too. These are measured collateral, not reasons to retain a
+disproved helper definition.
+
+The full build and all gates pass at **4084/4764 exact**, **96.43% linked**
+and **96.42% whole-image**. No MAX/HIST value falls and all 4764 RVA rows
+survive. All 90 production objects reproduce the selected code and relocation
+destinations; the native callback/dispatcher oracle and five negative
+controls pass at both optimization levels.
+
+The current census is **213 overrides across 27 TUs**: **208 depth-zero and
+five auto-inline-off**, or **426 source directives** plus **22 header packing
+directives**. The **63 unions** and their classifications are unchanged.
+Relative to the user's 253/72 checkpoint, **40 overrides and nine unions
+have been removed**. Scenarioinfo, like ai_player, now has no inline override.
+
+The subsequent integration with the independently landed ownership cleanup
+(`4b75e8ce`) passes a separate full build at **4086/4764 exact**, **96.44%
+linked** and **96.43% whole-image**, preserving its two new exact functions
+and every incoming MAX/HIST peak. Relative to that branch, this change still
+has only the two disclosed current-score movements. Callback, owner-payload,
+horde-row and DrawBolt behavioral/negative tests pass on the combined tree;
+the override and union counts remain 213 and 63.
+
+### Lobby map-header receive ownership
+
+`TSingleSelectionWindow::handleNetMsg` now calls the ordinary
+`onNewMapHeaderInfo` helper attested at DC line 6529 / definition line 6968.
+Complete's later serialized receiver uses the already modeled
+`CNewMapHeaderInfoMsg`: construct, receive, call `setupOrigData`, and clean up.
+The former flattened arm omitted the receive entirely and pinned only a bare
+header constructor. Recovering the real owner removes that depth-zero region.
+The dispatcher and its caller also recover DC's `bool` / `bool&` interface;
+that atomic interface edit is byte-identical in all four header consumers.
+
+The [four-state receive family and 32-state deletion follow-up](source-families.md#lobby-map-header-receiver-and-dispatcher-overrides)
+reproduce every state. The helper recovery raises the dispatcher **89.7408%
+to 90.0449%**, restores `CEnterNameEdit::onKillFocus` **99.871% to 100%**, and
+leaves all other tracked current scores unchanged. The ordinary helper
+expands naturally and its first **62 instruction bytes** agree with retail;
+the remaining destructor expansion is documented beside the dispatcher.
+None of the 14 other individual depth-region deletions, their all-removed
+control, or their combinations with the adjacent auto-inline deletion
+preserves the new score. Those are bounded negative controls, not proof that
+the remaining overrides are necessary in the original source.
+
+The full build and gates pass at **4087/4764 exact**, **96.44% linked** and
+**96.43% whole-image**. No MAX/HIST value falls. All four production objects
+reproduce the selected source family's bytes and relocation destinations.
+The actual helper, receive bridge and virtual reader pass **1,920 native
+receive/lifetime cases** and six negative controls at both optimization
+levels. The census is **212 overrides in 27 TUs** (207 depth-zero, five
+auto-inline-off), **424 source pragma directives** plus 22 header packing
+directives, and **63 unions**. Relative to the user's 253/72 checkpoint,
+**41 overrides and nine unions have been removed**.
+
+### Lobby player helpers and dispatcher wall
+
+DC line 6488 proves two short-circuited ordinary `getThisPlayer` calls;
+line 6511 calls ordinary `onPlayerDroppedMsg`, whose definition at line 6937
+owns a `CNetPlayerInfo*` local and returns bool. Restoring those boundaries
+removes the two transfer-query pins and the drop arm's four-call pin. Complete
+adds the common-version recomputation after deletion and uses no-argument
+`update`; the older DC message local is not manufactured as compiler mass.
+
+The [eight-state helper family and 26-state deletion follow-up](source-families.md#lobby-player-helpers-and-the-nested-getplayer-wall)
+reproduce their retained controls. Only the dispatcher's tracked score moves
+in the adopted state: **90.0449% to 85.9516%**. Its source edit resets MAX to
+the new current value; **HIST 90.2212%** remains banked. No exact function is
+lost. The full pre-integration checkpoint passes at **4087/4764 exact** and
+**96.43% linked/whole-image**. Header-consumer collateral is checked, including
+four score-flat spill/reload bytes in `kb::oldmain`.
+
+The wall is specific: retail keeps three nested `getPlayer` calls, but the
+byte-verified compiler trace permits all three expansions (cost 75 against
+budgets 115/114/118). The canonical lookup already matches retail standalone
+and its DC loop/local/return evidence; no missing invariant or lifetime is
+supported at this first mismatch. Later handler boundaries remain incomplete.
+No replacement override, false inline keyword, dummy operation or fabricated
+assertion was added. The changed compiler context now correctly retains the
+map-header destructor, closing that entire 80-byte arm before its tail jump.
+None of the eleven remaining single-pin removals, their combined removal,
+or their combinations with auto-inline removal recovers the dispatcher score.
+
+The actual player helper/transfer bodies pass **146 behavior cases** and six
+negative controls at `-O0` and `-O2`. All four production objects reproduce
+the adopted candidate's **1,449 sections and 15,092 relocation destinations**.
+The census is **209 overrides in 27 TUs** (204 depth-zero, five auto-inline-off),
+**418 source pragma directives** plus 22 packing directives, and **63 unions**.
+Relative to the user's 253/72 checkpoint, **44 overrides and nine unions have
+been removed**. The requested stopping point is a documented function wall,
+not a claim that the dispatcher or TU is finished.
+
+Integration with main's source-layout tooling and three exact palette
+constructors (`90ec3028`) passes another full build at **4090/4764 exact**,
+**96.44% linked** and **96.43% whole-image**. Relative to incoming main, the
+dispatcher is the sole CUR/MAX change, no exact function or HIST peak is lost,
+and all four consumer objects still strictly reproduce the selected candidate.
+The whole-image rounded score moves from 96.44% to 96.43%. The native lobby,
+map-header, owner-payload and scenario-deselection controls pass on the combined
+tree, as do the 18 source-layout/source-family unit tests.
 
 This audit does not claim TU closure, all remaining unions as original source,
 or all inline debt solved. The remaining reconstruction classes above identify

@@ -171,7 +171,7 @@ public:
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
     // Before normalization (function): CHotSeatDlg::OnWidgetDeselect.
-    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): CHotSeatDlg::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
     // Before normalization (function): CHotSeatDlg::OnOK.
@@ -233,7 +233,7 @@ public:
     virtual ~CMPInputDlg();
     // Before normalization (function): CMPInputDlg::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): CMPInputDlg::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
     // Before normalization (function): CMPInputDlg::OnOK.
@@ -384,7 +384,7 @@ public:
     virtual int windowHandler(message* msg);
     // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
     // Before normalization (function): TMultiPlayerWindow::GoSessionList.

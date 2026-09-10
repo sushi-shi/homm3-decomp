@@ -57,8 +57,10 @@ public:
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
 class TPalette24 : public resource {
 public:
-    // Before normalization: colors.
-    paletteHiColor m_colors;
+    // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
+    // Retail copies the same 0x300-byte payload; preserve the native array.
+    // Before normalization: Palette.
+    unsigned char m_palette[768];
 
     TPalette24();
     TPalette24(const unsigned char* data);
@@ -105,14 +107,16 @@ public:
     // member initializer. Declaration only - the body stays palette's.
     TPalette16();
     TPalette16(const unsigned short* data);
-    TPalette16(const TPalette24* p24);
-    TPalette16(const TPalette24* p24,
+    // DC palette.cpp:67/86/92 signatures preserve const TPalette24&.
+    // Retail consumes the same address at +0x1c; source callers pass objects.
+    TPalette16(const TPalette24& p24);
+    TPalette16(const TPalette24& p24,
                int rbits, int rshift, int gbits, int gshift,
                int bbits, int bshift);
     TPalette16(const TRGBA* rgba,
                int rbits, int rshift, int gbits, int gshift,
                int bbits, int bshift);
-    TPalette16(const char* name, const TPalette24* p24,
+    TPalette16(const char* name, const TPalette24& p24,
                int rbits, int rshift, int gbits, int gshift,
                int bbits, int bshift);
     TPalette16(const TPalette16* copy);
@@ -186,14 +190,14 @@ TPalette16* getPalette(const char* name);
 // --- TPalette16 ---
 // CODEVIEW(E:\gamedcs\palette.cpp:56, dc 0x10a2a8) void TPalette16::TPalette16();
 // CODEVIEW(E:\gamedcs\palette.cpp:61, dc 0x10a2f0) void TPalette16::TPalette16(const unsigned short* data);
-// CODEVIEW(E:\gamedcs\palette.cpp:67, dc 0x10a338) void TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
+// CODEVIEW(E:\gamedcs\palette.cpp:67, dc 0x10a338) void TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
 // CODEVIEW(E:\gamedcs\palette.cpp:73, dc 0x10a3ac) void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
 // CODEVIEW(E:\gamedcs\palette.cpp:79, dc 0x10a41c) void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:86, dc 0x10a498) void TPalette16::TPalette16(const char* name, const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
-// CODEVIEW(E:\gamedcs\palette.cpp:92, dc 0x10a508) void TPalette16::TPalette16(const TPalette24* p24);
+// CODEVIEW(E:\gamedcs\palette.cpp:86, dc 0x10a498) void TPalette16::TPalette16(const char* name, const TPalette24& p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift);
+// CODEVIEW(E:\gamedcs\palette.cpp:92, dc 0x10a508) void TPalette16::TPalette16(const TPalette24& p24);
 // CODEVIEW(E:\gamedcs\palette.cpp:116, dc 0x10a5e0) void TPalette16::TPalette16(const TRGBA* rgba);
 // CODEVIEW(E:\gamedcs\palette.cpp:140, dc 0x10a6a4) void TPalette16::TPalette16(const tagRGBQUAD* quad);
-// CODEVIEW(E:\gamedcs\palette.cpp:165, dc 0x10a77c) void TPalette16::TPalette16(const char* name, const TPalette24* p24);
+// CODEVIEW(E:\gamedcs\palette.cpp:165, dc 0x10a77c) void TPalette16::TPalette16(const char* name, const TPalette24& p24);
 // CODEVIEW(E:\gamedcs\palette.cpp:189, dc 0x10a854) void TPalette16::TPalette16(const TPalette16* copy);
 // CODEVIEW(E:\gamedcs\palette.cpp:194, dc 0x10a8a0) TPalette16* TPalette16::operator=(const TPalette16* from);
 // CODEVIEW(E:\gamedcs\palette.cpp:204, dc 0x10a8e0) void TPalette16::~TPalette16();

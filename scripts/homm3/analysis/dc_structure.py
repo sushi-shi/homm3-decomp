@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 import tempfile
 
-from homm3.analysis import dc_asm, dc_lines, dreamcast
+from homm3.analysis import dc_asm, dc_lines, dc_source_layout, dreamcast
 from homm3.core import common, inputs, nb11
 from homm3.core.nb11_types import Types
 
@@ -170,6 +170,9 @@ def render_function(payload: dict, types: Types) -> str:
 
     line_map = shape["line_map"]
     if line_map:
+        if line_map.get("source_layout") is not None:
+            rows.extend("    // " + _text(line) for line in
+                        dc_source_layout.render(line_map["source_layout"]).splitlines())
         if not line_map["procedure_line_reliable"]:
             rows.append("    // Boundary line may belong to the preceding procedure; no leading-gap inference.")
         if line_map["bodyless"]:
