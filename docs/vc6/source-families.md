@@ -3646,6 +3646,112 @@ no lost banked RVA. The census is **216 overrides** (211 depth-zero / five
 auto-inline-off) and **63 unions**. This removes one override and restores
 one exact caller; it does not close ai_player or exhaust the remaining debt.
 
+### Grail destination and shared map-extra boundaries
+
+DC `check_holy_grail` (`ai_player.obj:0x32e30`) takes the destination vector by
+reference, names its record `point`, and calls `game::get_cell` at line 3181.
+`find_all_destinations` (`0x33038`) also takes that vector by reference and
+calls `game::GetNumMapLevels`. Restoring these interfaces/accessors preserves
+the initial **96.3651%** and removes the Grail map-lookup depth pin. The
+intermediate object calls `NewfullMap::zCell`, whose complete 49-byte body is
+identical to retail's folded `cell` target; this is not proof of a new inline
+decision. The final fully recovered caller below calls `cell` by name.
+
+The provisional `aiGetArtifactPlayerValue` was not a retail-only function.
+DC `AI_get_value_of_artifact` at `0x37514` proves its `const type_artifact&,
+long` player overload, including the empty-artifact guard, floor of ten,
+hero walk and non-exact equip valuation. One canonical declaration now owns
+the interface, including seerhut's formerly inconsistent int/int declaration.
+The full build migrates the existing 0x433aa0 claim under its real overload
+name without changing any score. Keep its ordinary body and distinct caller
+decisions; no false `inline` declaration is introduced.
+
+The initial boundary family (`070f8f532c43a477f273`) emits all 36 states, but
+only its 18 pointer-signature states have comparable caller scores. The other
+18 change the mangled function name while the runner still requests the old
+name, producing false zeroes. They are not codegen losses or valid ranking
+inputs. The reference migration was instead verified by full labels/delink/
+build. The generator now defaults to those 18 name-preserving states;
+`--signature-controls` retains the original diagnostic interface choices.
+Run this generator against the pre-adoption `182b7a26` source.
+
+`generate-ai-grail-lifetime-family.py`, context `23ae2167ec23afbe3de3`, exhausts
+**24 states / 11 objects**, with ten reproduced elites. It tests actual artifact
+construction and player/friendly-distance lifetimes after the interface repair.
+Removing the artifact pin alone gives **90.7841%**; the original typed temporary
+without the later caller-boundary recovery gives **61.8460%**. These are local
+controls, not grounds to reject the positively evidenced typed constructor.
+
+DC `AdvMgr.h:1254`, `advmgr.obj:0x1f084`, proves the inline, int-returning
+`GetMapExtra(type_point)` overload forwarding x/y/z to the unsigned-short
+scalar accessor. It follows the class's `get_map_center` at line 1245. Move
+that body from advmgr.cpp to its original header position after the class,
+remove findpath.cpp's falsely static duplicate, and restore the two point
+calls at destination lines 3300 and 3359. The scalar declaration agrees with
+kb.h and the retained exact 0x4f79b0 body.
+
+`generate-ai-grail-map-extra-family.py`, context `3512473cbfdffe1a9642`, tests
+**24 states / 22 objects** and all **2340 tracked scores across 34 header
+consumers**, with **ten reproduced elites**. Its unchanged-source and
+opposite-corner repeat controls pass.
+The fully canonical corner **`[5,3]` / `ecae36eaf4a6f8ae1a792ae7`** reaches
+**96.9365%** with both point calls, the typed artifact temporary and neither
+Grail pin. Restoring only one point call leaves the unpinned caller at
+91.0238% or 91.3555%; keeping a named point copy at the first site with the
+typed artifact temporary also gives 91.0238%. Both original boundaries and
+the temporary lifetime matter together. No dummy operation, copied helper,
+replacement suppression or scoring change is used.
+
+The chosen caller agrees with retail on **81 CFG blocks**, including every
+block's flow and instruction count, and has **29 calls with no one-sided
+site**. The formerly missing `vector::size()` call at +0x3fd returns naturally.
+The map, patrol and artifact calls are retained without intervention: base
++0x696/+0x6ba/+0x741 correspond to retail +0x694/+0x6b8/+0x73f. Eighteen call
+targets agree by name; the other eleven use five folded-template identities.
+Their complete bodies are independently byte-identical to their retail
+targets: `size` (19 B), `_Ucopy` (73 B), `_Ufill` (64 B), `_Destroy` (3 B),
+and `insert` (778 B). Only insert has relocations, and both allocation/delete
+targets also agree. No new alias normalization is used. The remaining
+instruction differences are register allocation and bitfield scheduling,
+not the former Grail inline mismatch.
+
+The header-only control independently raises `CEnterNameEdit::onKillFocus`
+from 99.8710% to 100%; no other tracked score changes outside the destination
+caller. Raw inspection is stronger and slightly different: **31 complete
+consumer objects** preserve all section bytes, function locations and
+relocation destinations. ai_player changes only the destination function's
+body, but also moves the unchanged `zCell` COMDAT past intervening sections;
+that section-index translation accounts for all other bytes, function
+locations and relocation destinations. singleselectionwindow changes only
+the focus handler. kb additionally
+changes four bytes in `oldmain`, despite its unchanged 78.4499% score: the
+EDI/EBX spill homes at +0x129a/+0x129d exchange `[ebp-0x20]` and `[ebp-0x10]`,
+with corresponding reload order at +0x1372/+0x1375. No intervening instruction
+accesses either home. All **3063 kb relocation destinations** and all function
+locations remain identical. Do not describe all score-flat consumers as raw
+byte-identical.
+
+`test-ai-grail-boundaries.py` exercises actual helper source at native `-O0`
+and `-O2`: **20,480 cases per form** check eligibility, ordered calls, artifact
+fields/owner, coordinate flattening, friendly-cost ties, movement floors,
+victory value and existing-vector-prefix preservation. Five deliberately
+wrong controls must fail. All 24 lifetime forms and the reproduced selected
+corner pass. A separate **2401-case** point-overload oracle covers signed
+10/10/4-bit coordinates and unsigned-short-to-int result widening. The
+fixture mocks services and does not certify VC6 ABI, EH or inlining. Default
+execution checks current source; `--source` selects a snapshot, and
+`--all-forms` requires the pre-adoption lifetime-family anchors.
+
+All **34 production objects** strictly reproduce the selected independent
+repeat, including section bytes, function locations and relocation
+destinations. Full retail delinking/build passes at **4084/4764 exact**,
+**96.43% linked** and **96.42% whole-image** (rounded). One checkpoint rises;
+no source edit lowers MAX and no banked RVA is lost. The census is **214
+inline overrides** (209 depth-zero / five auto-inline-off), across **28 TUs**,
+and **63 unions**. Neither Grail pin remains, and ai_player has no inline
+override left. This is not a claim that its source or remaining functions
+are complete.
+
 The search never writes authored source, CUR, MAX or HIST. Different function
 implementations must not be banked under an old source hash. Review a retained
 candidate, apply the actual C++ change, then run `homm3 build` to regenerate the

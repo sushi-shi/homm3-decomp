@@ -45,13 +45,6 @@ inline const _TYPE& minRef(_TYPE x, _TYPE y)
     return (x < y ? x : y);
 }
 
-// ai_player.obj's artifact valuer (0x433aa0), declared file-locally the
-// way ai_player.cpp itself declares it - no header owns it yet.
-// Before normalization (function): AI_get_artifact_player_value.
-long aiGetArtifactPlayerValue(const type_artifact& artifact,
-                                  // Before normalization (locals): player_id.
-                                  long playerId);
-
 // Dreamcast's source calls SRandom in the cyclops wall selector. Complete's
 // retail relocation names Random, so preserve the boundary through the same
 // fold-away adapter used by the other shared callers.
@@ -359,7 +352,7 @@ unsigned char combatManager::aiCheckRetreat()
                         artifact = m_heroes[m_currentSide]->m_equipped[i];
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifactValue = aiGetArtifactPlayerValue(
+                        long artifactValue = aiGetValueOfArtifact(
                             artifact, m_playerIds[m_currentSide]);
                         combatValue += maxRef(
                             artifactValue,
@@ -371,7 +364,7 @@ unsigned char combatManager::aiCheckRetreat()
                         artifact = m_heroes[m_currentSide]->m_backpack[i];
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifactValue = aiGetArtifactPlayerValue(
+                        long artifactValue = aiGetValueOfArtifact(
                             artifact, m_playerIds[m_currentSide]);
                         combatValue += maxRef(
                             artifactValue,
