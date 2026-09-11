@@ -1965,3 +1965,70 @@ if/return-0 tail lets C2 self-inline a recursive call, so check the
 standalone bytes and the callers' skeletons after every step. Sweep the
 callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
 `town::buildBuilding` moved with these costs, the exact rows did not.
+
+## The vector single-insert wrapper is refused only one level down
+
+Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around
+the 469-unit count insert. Written as `v.insert(v.end(), x)` it sits at depth
+1, where the /Ob2 size test (`budget < cb` against the caller's whole budget)
+always expands it, so the emitted call is the count insert with an extra
+`push 1`. Written as `v.push_back(x)` the wrapper sits at depth 2 with budget
+`d1 budget / sites remaining`, which refuses it whenever that quotient is below
+64 and yields retail's `call insert(iterator, const T&)`.
+`drawIslandBoundary` (0x53cd30) closed from 99.4615% to 100% on that one
+change: its seed push had 1051/23 = 45 and was refused, while the two later
+pushes had 79 and 82 and expanded, all as retail. `positionZone`'s two pushes
+still get 64 and 70 after the change, so they stay expanded; two more
+candidate sites after the first push, or a smaller caller, would refuse them.
+Read the retail call form first: `QAEPA...PAU3@ABU3@@Z` is the wrapper,
+`QAEXPA...IABU3@@Z` the count insert, and ICF folds equal-sized element types
+onto one name, so compare the signature shape, not the element type.
+
+Two practical notes for the trace tool: concurrent `predict-inline --trace`
+runs on the same unit collide (every trace after the first reports no
+budget data), so scan a unit serially; and any `build --fast` of that unit
+while a trace runs invalidates the trace's object gate the same way.
+
+## Free accessor sites are the lever behind retail's refused calls
+
+A nested body budget is `(site budget - callee cb) / remaining sites`, and
+every inline candidate site counts in `remaining`, including free ones
+(cb <= 40, never subtracted). So when retail keeps a call that we expand,
+the missing ingredient is usually candidate sites after the call: the inline
+accessors and small helpers a period class would have. The quad-edge Voronoi
+code in `rmg_support.cpp` (a Graphics Gems IV port; no Dreamcast counterpart)
+closed on exactly that:
+
+- `removeEdge` (0x5fd5b0, 76% -> 100%): `edge->getTwin()` after `detach()`
+  makes ten remaining sites instead of nine, so detach's nested budget drops
+  from 104 to 93 and the second splice (65) is refused after the first.
+- `TRmgVoronoi::TRmgVoronoi` (0x5fd010, 80% -> 100%): `getTwin()` in the four
+  fan splices and a `connectEdges` helper for the diagonal give the first
+  createEdge expansion 13 remaining sites (nested 64, so its second insert
+  wrapper still expands) and the diagonal a nested budget of 197 - 98 = 99,
+  which refuses createEdge (107) and the second splice while expanding the
+  first. The bracket needs splice at cost 63..71: `std::swap` of the
+  predecessors plus a manual successor swap costs 65 with the same bytes
+  (two std::swap calls cost 52, four temporaries 77-82).
+- `addSite` (0x5fd790, 45% -> 91%): with accessors, `connectEdges`, a ccw
+  layer under RightOf and the inline line equation, 22 sites follow the
+  segment predicate, and every retail call decision reproduces.
+- `buildVertices` (0x5fdb40, 32% -> 88%): retail's seven retained operator
+  calls sit one level down, inside a three-point free helper (cost 171) whose
+  nested budget is (958 - 171) / 8 = 98 thanks to seven accessor/setter sites
+  after it; the first subtraction (51) expands, the rest are refused.
+
+Two limits seen on the way. C1XX stops saving a body somewhere above cb ~200:
+member helpers reading `m_next->m_twin->m_sitePosition` chains, or the same
+arithmetic with inline dot products, were never candidates (callee flags
+`0x2a`, no `0x40`), while the by-value form with a dot helper (171-179) was.
+And callees with flag `0x100` (createEdge, which allocates) are gated out of
+non-EH bodies before any budget test: addSite calls createEdge regardless of
+budget, while the EH-bearing constructor budget-tests it.
+
+Byte-identical spellings carry different costs, so bracket a callee from its
+callers' retail decisions and then pick the spelling in the bracket (splice
+above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+returning `TPoint` by value versus `const TPoint&` also changed addSite's
+coincidence test (both coordinates loaded before the compares) and its
+copies inside the circle test.
