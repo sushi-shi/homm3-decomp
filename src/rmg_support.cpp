@@ -349,27 +349,45 @@ int TRmgVector::length() const
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
+// Both constructors start a half-edge as its own ring with no vertex. The
+// ordinary helper is expanded in both; its /Ob2 cost of 60 is spent twice
+// inside createEdge's paired-constructor expansion (126 + 60 + 81 + 60),
+// which is what leaves the second insert's count-insert body a budget of
+// 34 and keeps its first size() call as retail does. The same stores
+// written inline in each constructor (costs 157 and 87..135) never spend
+// enough: createEdge stayed at 90.96% through 14 constructor spellings.
+void TRmgBoundaryVertex::initialize()
+{
+    m_next = this;
+    m_previous = this;
+    m_positionComputed = 0;
+    m_position.m_x = -1;
+    m_position.m_y = -1;
+}
+
 // The retained paired constructor expands this ordinary twin constructor
 // into the successful allocation arm. The same site/zone fields feed the
-// Voronoi vertex calculations; both ring links initially point to self.
+// Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
+// exact; the initializer-list form costs 70 and loses it (90.96%).
 TRmgBoundaryVertex::TRmgBoundaryVertex(
     TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
-    : m_sitePosition(sitePosition), m_zone(zone), m_twin(twin),
-      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
 {
+    m_sitePosition = sitePosition;
+    m_zone = zone;
+    m_twin = twin;
+    initialize();
 }
 
 // The diagram constructor allocates pairs using two by-value point/zone
 // pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
 // Both paths expand the ordinary opposite-edge constructor above.
-// Exact: initialize the zone, then copy the site in the body; write both
-// final position components separately. The 22 partial-initializer forms
-// found two exact choices with no collateral. Chaining the -1 assignments
-// scores 99.9535%; a temporary TPoint keeps a different final-store schedule.
-// Previously 99.6512%: the first point/zone load-store schedule differed.
-// A 40-combination constructor/detach batch tested ten initialization forms:
-// copy and component initializers tie; six component-assignment orders and
-// two point-copy/zone assignment orders are worse (best 94.3256%).
+// Exact: initialize the zone, copy the site in the body, allocate the twin,
+// then share initialize with the twin constructor (cost 126 + 60; the
+// inline stores cost 157 and starve createEdge's second insertion). The 22
+// partial-initializer forms found two exact choices; chaining the -1
+// assignments scores 99.9535%, a temporary TPoint keeps a different
+// final-store schedule, and component site copies (cost 173) lose the
+// first point/zone schedule (97.2093%).
 VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
 TRmgBoundaryVertex::TRmgBoundaryVertex(
     TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
@@ -377,11 +395,7 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
 {
     m_sitePosition = sitePosition;
     m_twin = new TRmgBoundaryVertex(twinSitePosition, twinZone, this);
-    m_next = this;
-    m_previous = this;
-    m_positionComputed = 0;
-    m_position.m_x = -1;
-    m_position.m_y = -1;
+    initialize();
 }
 
 // The two swaps preserve the bidirectional ring after exchanging successors.
@@ -460,23 +474,21 @@ TRmgVoronoi::~TRmgVoronoi()
 
 // Constructor and site insertion share this retained factory. Retail expands
 // the ordinary paired constructor, then inserts each half into the owning
-// vector. The two source insertions have different nested inline decisions.
-// Residual (90.9600%): allocation and paired initialization agree; the second
-// expanded insertion retains three vector::size calls versus retail's four.
-// Naming twin before push_back reproduces retail's pointer snapshot and raises
-// 84.2650%. Eighteen push_back/single/count insertion forms favor the two
-// push_back calls below; the nearest explicit-insert form scores 90.9550%.
-// A 72-state result/twin/vector-binding family leaves this body at 90.9600%.
-// A const-reference-bound returned pointer raises only the diagram constructor
-// to 82.6120%; its combinations with the shared connector add no new peak.
+// vector. The two source insertions have different nested inline decisions:
+// the first push_back's count insert is refused (756 / 2 - 64 < 469), the
+// second's is expanded with a body budget of (609 - 64 - 469) / 2 = 38, so
+// its first size() stays a call like retail's four. Exact (2026-09-12) once
+// the constructors spend 327 units before the second push_back and the
+// twin goes through getTwin(): that temporary is homed in the dead
+// firstZone argument slot (frame 8), while a named twin local or the field
+// itself takes a third local slot (99.82% / 84.27%).
 VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
 TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
 {
     TRmgBoundaryVertex* edge = new TRmgBoundaryVertex(first, firstZone, second, secondZone);
     m_edges.push_back(edge);
-    TRmgBoundaryVertex* twin = edge->m_twin;
-    m_edges.push_back(twin);
+    m_edges.push_back(edge->getTwin());
     return edge;
 }
 

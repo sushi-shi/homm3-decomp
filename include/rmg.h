@@ -1756,6 +1756,8 @@ struct TRmgBoundaryVertex {
         TRmgBoundaryVertex* twin);
     // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
+    // Ordinary; both constructors expand it (see rmg_support.cpp).
+    void initialize();
     void splice(TRmgBoundaryVertex* other);
     void detach();
     // Quad-edge navigation (Graphics Gems IV Sym/Onext/Oprev/Lnext/Lprev,
