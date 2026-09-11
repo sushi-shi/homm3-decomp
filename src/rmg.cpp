@@ -4218,9 +4218,13 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // The ordinary by-value position setter preserves three loads before the
 // stores (91.50 -> 94.35%); direct field assignment interleaves them. The
 // bounds comparison and initialization order reach 94.45%. Retail retains
-// all four connection-vector size calls; our first pass expands two.
-// Preserve the ordinary helper and STL interfaces while resolving that
-// frontier; later bounds differences are scheduling and SIB operand order.
+// all four connection-vector size calls: the first expanded counting pass
+// had a nested budget of exactly the size call's cost (42) until the two
+// later zone sizes were read through getSize, whose two extra candidate
+// sites lower that budget to 40 (94.45 -> 98.85%, 2026-09-11).
+// Residual (98.8497%): inside both counting expansions retail forms the
+// zone vector's this pointer with an add from a spilled this and binds the
+// connection element load differently; all 110 blocks agree.
 VA(0x0053B2F0, 0x678) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize)
@@ -4268,14 +4272,14 @@ void type_random_map_generator::filterZonePositions(
     for (int other = 0; other < m_zones.size(); ++other) {
         if (m_zones[other] != zone) {
             TRmgMapPosition position = m_zones[other]->getLevelPosition();
-            int size = m_zones[other]->m_slot->m_size;
+            int size = m_zones[other]->getSize();
             minimumY = min(minimumY, position.m_y - size);
             minimumX = min(minimumX, position.m_x - size);
             maximumY = max(maximumY, position.m_y + size + 1);
             maximumX = max(maximumX, position.m_x + size + 1);
         }
     }
-    int size = zone->m_slot->m_size;
+    int size = zone->getSize();
     for (candidate = 0; candidate < candidates.size(); ++candidate) {
         int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
         int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
