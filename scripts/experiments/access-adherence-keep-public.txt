@@ -1,0 +1,31 @@
+# Members DC records private/protected but our tree calls from outside the
+# declaring class, so tightening them does not compile (C2248).  Kept public;
+# DC's tighter access is a friend relationship we do not model, or a call-graph
+# platform difference.  Consumed by apply-access-adherence.py --exclude-file.
+# Regenerate: ninja -k 0, then grep C2248 'Class::member' from the log.
+
+advManager::getNormalCursor
+CDPlay::addConnectionEnum
+CDPlay::addGroupEnum
+CDPlay::addPlayerEnum
+CDPlay::addSessionEnum
+CDPlayLobby::addAddressEnum
+combatManager::isComputerAction
+combatManager::keepAttack
+CSpriteFrame::drawAdvObjImpl
+CSpriteFrame::drawAdvObjShadowImpl
+CSpriteFrame::drawCreatureImpl
+hero::canLand
+mouseManager::loadFrame
+TCombatOptionsWindow::highlightCombatSpeed
+TCombatOptionsWindow::highlightGrid
+TCombatOptionsWindow::highlightMouseShadow
+TCombatOptionsWindow::highlightMovementShadow
+THillFortWindow::handleClick
+THillFortWindow::recalculate
+THillFortWindow::upgradeSlot
+townManager::selectArmy
+TSeerHut::save
+TTownGateWindow::updateTownLocators
+type_obscuring_object::obscureCell
+TCombatOptionsWindow::convertID2HelpID

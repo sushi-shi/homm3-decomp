@@ -407,7 +407,9 @@ public:
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
     // Before normalization (function): TTownScreenWindow::UpdateTownLocator.
+    private:
     void updateTownLocator(int i);
+    public:
     // Before normalization (function): TTownScreenWindow::UpdateTownLocators.
     void updateTownLocators();
     // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
@@ -588,9 +590,11 @@ public:
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
     // Before normalization (function): type_garrison_base_window::SetCommandAndText.
+    protected:
     void setCommandAndText(message* msg);
     // Before normalization (function): type_garrison_base_window::WindowHandler.
     virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d0910
+    public:
 };
 
 // The two derived garrison windows have EMPTY destructors: retail inlines
@@ -845,10 +849,12 @@ public:
     // no .rdata cell image-wide, and its one caller (the page's own
     // WindowHandler at 0x5dd2f9) reaches it with a direct call.
     // Before normalization (function): TCastleWindow::SetRolloverText.
+    private:
     void setRolloverText(message* msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     // Before normalization (function): TCastleWindow::Recruit.
     void recruit(int i);
+    public:
     // Before normalization (function): TCastleWindow::WindowHandler.
     virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
 };
@@ -1069,7 +1075,9 @@ public:
     void selectArmy(strip* fromStrip, int slot, unsigned char isOwnerCell);
     // Retail 0x5d27b0 (dc 0x17484c). Runs the town hall page.
     // Before normalization (function): townManager::DoHall.
+    private:
     void doHall();
+    public:
     // castle.obj's, retail 0x461190 (dc 0x5c278) - the carve row
     // directly after castle.cpp's two claimed ones, and DoHall is its
     // only caller in the image. Declared here, defined over there.
@@ -1148,7 +1156,9 @@ public:
     void doPortalOfSummoning();
     // Retail 0x5d2f90 (dc 0x174d1c). Necropolis' creature converter.
     // Before normalization (function): townManager::DoSkeletonTransformer.
+    private:
     void doSkeletonTransformer();
+    public:
     // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs
     // straight from GetBuildingInfo to Main with nothing between them.
     // Conflux's Magic University: the page's hero, then either the
@@ -1163,7 +1173,9 @@ public:
     // Retail 0x5d30d0 (dc 0x174da0). The town hall button, and the
     // Grail offer that stands in front of it.
     // Before normalization (function): townManager::handle_hall_click.
+    private:
     void handleHallClick();
+    public:
     // Retail 0x5ce560 (dc 0x171320). The mage guild button, and the
     // spellbook the page sells the standing hero in front of it.
     // Before normalization (function): townManager::handle_mage_guild_click.

@@ -281,6 +281,7 @@ public:
     // 0x563150. Bodies still deferred.
     virtual ~type_sacrifice_window();
     // Before normalization (function): type_sacrifice_window::set_artifact_mode.
+    private:
     void setArtifactMode();
     // Before normalization (function): type_sacrifice_window::set_creature_mode.
     void setCreatureMode();
@@ -297,6 +298,7 @@ public:
     // Before normalization (function): type_sacrifice_window::set_creature_sacrifice.
     // Before normalization (locals): new_amount.
     void setCreatureSacrifice(long slot, long newAmount);
+    public:
 
     // Before normalization (function): type_sacrifice_window::handle_widget_hover.
     // Before normalization (locals): current_widget.

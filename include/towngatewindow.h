@@ -51,7 +51,9 @@ public:
     // Before normalization (locals): new_town.
     void addTown(int newTown);
     // Before normalization (function): TTownGateWindow::UpdateTownLocator.
+    private:
     void updateTownLocator(int i);
+    public:
     // Before normalization (function): TTownGateWindow::UpdateTownLocators.
     void updateTownLocators();
     // Before normalization (function): TTownGateWindow::DoModal.

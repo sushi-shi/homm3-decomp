@@ -1434,7 +1434,9 @@ public:
     // Before normalization (function): TAdventureMapWindow::animate_bottom_view.
     // Before normalization (locals): in_background.
     void animateBottomView(unsigned char inBackground);
+    private:
     int convertID2HelpID(int id) const;
+    public:
     // Before normalization (function): TAdventureMapWindow::ProcessHover.
     unsigned char processHover(int hx, int hy);
     // Retail 0x402e70, `ret 4` over one message pointer and answering in
@@ -1828,6 +1830,7 @@ public:
     void overrideBottomView(EBottomViewType view, int time);
     // Before normalization (function): advManager::UpdBottomViewEnemyTurn.
     // Before normalization (locals): force_update.
+    private:
     unsigned char updBottomViewEnemyTurn(unsigned char forceUpdate);
     // Before normalization (function): advManager::UpdBottomViewNewTurn.
     // Before normalization (locals): force_update.
@@ -1847,6 +1850,7 @@ public:
     // Before normalization (function): advManager::UpdBottomViewTown.
     // Before normalization (locals): force_update.
     unsigned char updBottomViewTown(unsigned char forceUpdate);
+    public:
     // Before normalization (function): advManager::RedrawAdvScreen.
     // Before normalization (locals): bUpdate, bForceSaveBorder.
     void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
@@ -1869,6 +1873,7 @@ public:
     // idiom hero::VisitedArena already proves.
     // Before normalization (function): advManager::DoEventDefenseTower.
     // Before normalization (locals): current_hero, human_player.
+    private:
     void doEventDefenseTower(class hero* currentHero, NewmapCell* cell,
                              bool humanPlayer);
     // Before normalization (function): advManager::DoEventFountainOfYouth.
@@ -2082,6 +2087,7 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void fightForArtifact(class hero* currentHero, NewmapCell* cell,
                           type_point point, bool humanPlayer);
+public:
 private:
     // Before normalization (function): advManager::DoEventFreeArtifact.
     // Before normalization (locals): current_hero, human_player.
@@ -2097,6 +2103,7 @@ private:
 public:
     // Before normalization (function): advManager::DoArtifactSkillRequirement.
     // Before normalization (locals): current_hero, dialog_text, human_player.
+    private:
     void doArtifactSkillRequirement(class hero* currentHero,
                                     NewmapCell* cell, type_point point,
                                     int skill, const char* dialogText,
@@ -2152,6 +2159,7 @@ public:
     // Before normalization (function): advManager::DoEventAnchor.
     // Before normalization (locals): current_hero, human_player.
     void doEventAnchor(class hero* currentHero, bool humanPlayer);
+    public:
     // cursor.obj's adjacent-monster sweep (0x481900), an advManager member
     // the Dreamcast declares in cursor.cpp and this tree carries in
     // src/cursor.cpp's carcass. DoEventAnchor is its consumer here and
@@ -2164,6 +2172,7 @@ public:
     // for four arguments.
     // Before normalization (function): advManager::DoEventMine.
     // Before normalization (locals): current_hero.
+    private:
     void doEventMine(NewmapCell* cell, class hero* currentHero,
                      type_point point, bool human);
     // The Tree of Knowledge (jump-table arm 0x66). Dreamcast
@@ -2273,6 +2282,7 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void monstersGiveReward(class hero* currentHero, NewmapCell* cell,
                               bool humanPlayer);
+    public:
     // monType IS `int` HERE and the Dreamcast's `W4TCreatureType@@` is not.
     // The reason is a call site, not taste: DoEventMine (0x4a39a0) passes
     // armyGroup::armies[0], which this tree spells `int`, so a TCreatureType
@@ -2293,6 +2303,7 @@ public:
                            int numGroups3);
     // Before normalization (function): advManager::monsters_flee.
     // Before normalization (locals): current_hero, human_player.
+    private:
     void monstersFlee(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
     // Before normalization (function): advManager::monsters_join.
@@ -2343,6 +2354,7 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void doEventWhirlpool(class hero* currentHero, NewmapCell* cell,
                             unsigned char humanPlayer);
+    public:
     // Before normalization (function): advManager::GeneratorEvent.
     void generatorEvent(class hero* who, NewmapCell* eventCell,
                         type_point point);
@@ -2419,8 +2431,10 @@ public:
     // renormalize (`test dl,dl / setne al`) at every one of those sites.
     // Before normalization (function): advManager::DispatchEvent.
     // Before normalization (locals): current_hero, human_player.
+    private:
     void dispatchEvent(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
+    public:
     // Before normalization (function): advManager::EventSound.
     void eventSound(int eventID, int extraInfo);
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
@@ -2442,6 +2456,7 @@ public:
     void setEnvironmentOrigin(type_point point, int reset);
     // Before normalization (function): advManager::do_event_lith_one_way.
     // Before normalization (locals): current_hero, human_player.
+    private:
     void doEventLithOneWay(class hero* currentHero, NewmapCell* cell,
                                bool humanPlayer);
     // Before normalization (function): advManager::do_event_lith_two_way.
@@ -2478,6 +2493,7 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void doEventHero(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
+    public:
     // Before normalization (function): advManager::DrawGround.
     void drawGround(int srcX, int srcY, int z, int destX, int destY);
     // Before normalization (function): advManager::DrawUnderlay.
@@ -2622,7 +2638,9 @@ public:
                        // Before normalization (locals): display_drop_shadow.
                        unsigned char displayDropShadow);
     // Before normalization (function): advManager::garrison_quick_view.
+    private:
     void garrisonQuickView(int id, int x, int y);
+    public:
     // Before normalization (function): advManager::MonsterQuickView.
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
     // Before normalization (function): advManager::UpdBottomView.
@@ -2729,6 +2747,7 @@ public:
     // float argument are the same `ret 4`), and it does not read ecx.
     // Before normalization (function): advManager::get_force_modifier.
     // Before normalization (locals): strength_ratio.
+    private:
     static int getForceModifier(float strengthRatio);
     // The creature id is spelled with VC6's elaborated forward enum
     // (the recruit.h spelling): TCreatureType is not in this header's
@@ -2738,6 +2757,7 @@ public:
     // Before normalization (locals): current_hero.
     static int getLikeModifier(class hero* currentHero,
                                  enum TCreatureType creature);
+    public:
     // cursor.obj's 0x47f7d0 (cursor.cpp:85, dc 0x79a84).
     // Before normalization (function): advManager::StopCursor.
     void stopCursor(unsigned char standEnd);
@@ -2857,6 +2877,7 @@ public:
     // hands it the trigger cell, a second copy of the map point and
     // playerData::IsLocalHuman's bool result unwidened.
     // Before normalization (function): advManager::DoEventShipyard.
+    private:
     void doEventShipyard(NewmapCell* cell, type_point point,
                          // Before normalization (locals): human_player.
                          unsigned char humanPlayer);
@@ -2865,6 +2886,7 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void doEventPrison(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
+                       public:
 };
 
 // AdvMgr.h:1254, dc 0x1f084. The by-value point overload forwards all
