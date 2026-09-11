@@ -363,10 +363,12 @@ public:
     // Before normalization (function): NewfullMap::Read.
     int read(TAbstractFile* infile, int size, unsigned char twoLayers,
              int mapVersion);
+    private:
     int readMapObjects(TAbstractFile* infile, int mapVersion);
     // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
     // carries no map version.
     int loadMapObjects(TAbstractFile* infile);
+    public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
@@ -396,13 +398,16 @@ public:
     // Before normalization (function): NewfullMap::LoadShipyards.
     void loadShipyards();
     // Before normalization (function): NewfullMap::Init.
+    private:
     void init(int size, unsigned char twoLayers);
+    public:
     int loadObject(TAbstractFile* infile, CObject* object);
     // DC mapcell.cpp:3449, f1b1c: the serialized object is a reference.
     int saveObject(TAbstractFile* outfile, CObject& tempObject);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
     int readObjectType(TAbstractFile* infile, CObjectType& objectType);
     int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
+    private:
     int saveMapObjects(TAbstractFile* outfile);
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
@@ -412,6 +417,7 @@ public:
     int loadMapLayer(TAbstractFile* infile, int size, int layer,
                      int saveVersion);
     int saveMapLayer(TAbstractFile* outfile, int size, int layer);
+    public:
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
@@ -461,7 +467,9 @@ public:
     int readSignData(TAbstractFile* infile, CObject* object);
     int loadTreasureList(TAbstractFile* infile);
     // Before normalization (function): NewfullMap::calc_cell_extra.
+    private:
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+    public:
     // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
     // info through it once the object's entry has been spliced out.
     // Before normalization (function): NewfullMap::CalculateCellExtra.
@@ -2821,9 +2829,11 @@ public:
     // Before normalization (function): game::calculate_production.
     void calculateProduction();                 // 0x4b8af0
     // Before normalization (function): game::LoadSignPool.
+    private:
     int loadSignPool(TAbstractFile* infile);      // 0x4b9070
     // Before normalization (function): game::SaveSignPool.
     int saveSignPool(TAbstractFile* outfile);     // 0x4b9270
+    public:
     // DC game.cpp:2492/2531, a7414/a750c: loadString/saveString are
     // static game methods taking a string reference, not invented free
     // helpers. Complete replaces the void* gz stream with TAbstractFile*;
@@ -2837,7 +2847,9 @@ private:
     int loadRumours(TAbstractFile* infile);       // 0x4bbe40
 public:
     // Before normalization (function): game::LoadMinePool.
+    private:
     int loadMinePool(TAbstractFile* infile, int saveVersion);
+    public:
     // Retail 0x4ced40, exact but PROVISIONALLY NAMED. readMonsterData ends by
     // handing it the monster's stream identifier and the cell's packed point;
     // the body appends the pair to the eight-byte-element vector at
@@ -2846,6 +2858,7 @@ public:
     // Before normalization (function): game::record_monster_identifier.
     void recordMonsterIdentifier(int identifier, type_point point);
     // Before normalization (function): game::LoadGarrisonPool.
+    private:
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
     // Before normalization (function): game::LoadTownPool.
     int loadTownPool(TAbstractFile* infile, int saveVersion);
@@ -2869,6 +2882,7 @@ public:
     int saveBlackMarkets(TAbstractFile* outfile);
     // Before normalization (function): game::Load.
     int load(TAbstractFile* infile);              // 0x4bcda0
+    public:
     // Before normalization (function): game::LoadGame.
     // Before normalization (locals): bIsOrigData, bIsQuickLoad.
     int loadGame(const char* filename, int isOrigData, int isQuickLoad);
@@ -2915,9 +2929,11 @@ public:
     // Raw LF_FIELDLIST 0x3edc orders this shared pair as written. Its
     // private access flag is DC-only: retail decorates both as public QAEX.
     // Before normalization (function): game::match_underground_gates.
+    private:
     void matchUndergroundGates();
     // Before normalization (function): game::randomize_university.
     void randomizeUniversity(NewmapCell* cell);
+    public:
     // Before normalization (function): game::RandomizeEvents.
     void randomizeEvents();
     // Before normalization (function): game::ProcessOnMapTowns.
@@ -2944,6 +2960,7 @@ public:
     // Before normalization (function): game::CancelComputerScreen.
     void cancelComputerScreen();
     // Before normalization (function): game::SetCannedRumour.
+    private:
     void setCannedRumour();
     // Before normalization (function): game::SetMapRumour.
     void setMapRumour();
@@ -2951,6 +2968,7 @@ public:
     void setSpecialRumour();
     // Before normalization (function): game::Save.
     int save(TAbstractFile* outfile);             // 0x4be3f0
+    public:
     // Before normalization (function): game::ComputeDailyGold.
     int computeDailyGold(int player, unsigned char includeSilo);
     // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
@@ -3124,6 +3142,7 @@ public:
     // eventRecords count as a dword and then each record through the
     // vtable. Body belongs to event_record.obj.
     // Before normalization (function): game::save_recorded_events.
+    private:
     unsigned char saveRecordedEvents(TAbstractFile* outfile);
     // 0x49dac0, save_recorded_events' mirror - and ASYMMETRIC with it.
     // save ends `ret 4`; this one ends `ret 8` at both exits, because
@@ -3141,6 +3160,7 @@ public:
     // the Dreamcast xref graph records.
     // Before normalization (function): game::setup_shipyards.
     void setupShipyards();
+    public:
     // Before normalization (function): game::ShowScenInfo.
     void showScenInfo();
     // newgame.cpp owns the retail text formatter at 0x513800.

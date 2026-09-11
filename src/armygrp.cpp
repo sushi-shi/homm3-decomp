@@ -1524,229 +1524,119 @@ void armyGroup::mergeArmies(armyGroup* source)
 }
 
 // E:\gamedcs\armygrp.cpp:1347
-// Retail Complete has two trailing controls: a full-width magic-terrain
-// mode and the alignment-grouping byte forwarded to GetMorale. The body
-// returns with `ret 24h`, proving the hidden result plus eight arguments.
-// COMPLETE semantic transcription 2026-08-09 (67.5649%). Explicit neutral
-// town cases and no default preserve retail's two nine-entry terrain selector
-// tables. Variable creature-name lookups use retail's 0..150 guard and shared
-// empty-text fallback. The remaining delta is Dinkumware string-temporary/EH
-// emission and associated register allocation; every modifier is represented.
+// Retail Complete adds a full-width magic-terrain mode and the alignment-
+// grouping byte to the older Dreamcast signature. `ret 24h` proves the hidden
+// result plus eight explicit arguments. The required DC pass records lines
+// 1347..1451, `result`, `alignments[9]`, and `angel_type`; retail's extra
+// terrain modes require the ten-byte alignment array used below.
 //
-// 2026-08-14, THE RESIDUAL IS NOW MEASURED, NOT DESCRIBED, and it is one
-// class: OUR /Ob2 BUDGET IS TOO LARGE AND WE OVER-INLINE DINKUMWARE.
-// `vc6 diagnose` prices it 44 under-inline / 37 over-inline; the normalized
-// disasm ranker prices it 553 real rows of 717 with our body 162 rows LONGER
-// than retail's. Four measurements, all from the unmasked byte view:
-//   FRAME  retail `sub esp,0x50`, ours `sub esp,0x80` - 48 bytes = THREE extra
-//     sixteen-byte string slots. Retail owns exactly two string objects, the
-//     result at [ebp-0x5c] (14 sites) and ONE reused temporary at [ebp-0x40]
-//     (10 sites); ours spreads the same work over [ebp-0x60] (16), [ebp-0x70]
-//     (7), [ebp-0x44] and [ebp-0x8c].
-//   EH STATES  retail runs 1..9, ours 1..0xa. The extra state is real: at
-//     `ArmyGrpFn_0044A460().test(alignment)` retail emits the bounds check and
-//     LEAVES `std::bitset<9>::_Xran()` OUT OF LINE (`cmp esi,9 / jb / mov ecx,
-//     <bitset> / call`), while our CL inlines its whole
-//     `_THROW(out_of_range,"invalid bitset<N> position")` body - fourteen
-//     instructions, a second cold string temporary and a `__CxxThrowException`
-//     - into a far block. GetMorale (0x44ae60) spells the SAME `.test()` and
-//     neither side inlines it there, so this is caller budget, not spelling.
-//     There is no unchecked accessor in VC6's <BITSET> (`operator[] const`
-//     forwards to `test`), so no source change reaches it.
-//   RETURN COUNT  retail has ONE `ret`; ours has THREE. At each of the two
-//     early returns retail calls `basic_string::assign(const char*,size_type)`
-//     OUT OF LINE after the inlined `_Tidy(false)` + `repne scasb` strlen, then
-//     `jmp`s to the single shared epilogue. Ours inlines `assign`'s body
-//     (`_Grow` / `rep movsd` / `_Eos`, fourteen rows) at both sites, which
-//     changes the register state at the return and forces a duplicated
-//     epilogue each time. That is 2 x ~23 rows, the single largest block.
-//   PARAM-SLOT REUSE  retail recycles the dead `magicTerrain` slot [ebp+0x24]
-//     for the creature byte offset and the dead `groupAlignments` slot
-//     [ebp+0x28] for `currentMorale`; ours spends fresh locals. Downstream of
-//     the frame, not a lever of its own.
-// THE DC STATEMENT CENSUS CANNOT PRICE THIS BODY - recorded so nobody spends
-// the hour again. `*** SRCLINES ***` gives dc 0x4f708 Cb 0x3AA = 49 statement
-// lines over E:\gamedcs\armygrp.cpp:1347-1451, but that is an EARLIER SIX-ARG
-// FUNCTION: its call census is `format_string` x1, `IsMember` x1,
-// `operator+=` x2 and no magic-terrain switch at all, against this body's x4 /
-// x4 and two nine-entry selector tables. The census measures the Dreamcast
-// source, and for this compiland the Dreamcast source is a different function.
-// THE TOWN GATES ARE town::HasBuilding CALLS (67.5649 -> 74.4820,
-// 2026-08-15). dc 0x4f708 lines 1415 and 1419 are `mov #5,r5 / mov #0,r6`
-// and `mov #22,r5 / mov #1,r6` on `?HasBuilding@town@@QBA_NH_N@Z` where
-// this body tested `built & bitNumber[TAVERN_ID]` and `active &
-// bitNumber[EXTRA_1_ID]` by hand. The expansion is the same instructions,
-// so what moved is the /Ob2 candidate-site count - the same lever that
-// took TBottomViewKingdom 94.06 -> 98.52 in the same round. GetMorale
-// carries the identical pair (dc 0x4f078 lines 1014/1017) and is
-// byte-flat on it.
+// Retail 0x44b960 proves the accumulator shape that closes the frame and
+// register allocation. GetMorale's result is `currentMorale` in the dead
+// groupAlignments home [ebp+0x28]. The four terrain arms instead mutate the
+// incoming `morale` home [ebp+0x10] with the inverse sign, then the tail does
+// `morale -= currentMorale` in place. This gives retail's 0x50-byte frame and
+// keeps the creature-row offset in the dead magicTerrain home [ebp+0x24].
+// Updating currentMorale was behaviorally close for ordinary values but left a
+// 0x54-byte frame and scored 93.97%; the retail accumulator reaches 96.07%.
 //
-// THE UNDEAD SCAN IS A HasSomeUndead CALL (74.4820 -> 79.1754, 2026-08-20),
-// AND THE DC CALL CENSUS - NOT THE LINE TABLE - IS WHAT PRICES THIS BODY.
-// The note above is right that `*** SRCLINES ***` at dc 0x4f708 describes an
-// older six-argument function; the XREF census at the same offset does NOT.
-// It reads format_string x8, operator+= x7+x2, GetArmyName x3, IsMember x5,
-// GetAlignments x1, GetMorale x1, GetBuildingName x2, IsWieldingArtifact x2,
-// hero::get_morale_description x1, town::HasBuilding x1 - and the x8
-// format_string count is this body's exactly, so the census IS this function.
-// The formerly missing construct, `armyGroup::HasSomeUndead` (dc 0x4eb88),
-// is now spelled as the real const member rather than the temporary file-local
-// copy. Retail has no out-of-line body for it: /Ob2 inlines both surviving
-// morale consumers and /OPT:REF drops the copy, which is why the image's
-// 0x4ab20..0x4ab80 gap holds Dismiss. Restoring the declaration, definition
-// and both call boundaries is byte-flat at GetMorale 98.5654 and this body's
-// 93.0566; the helper's earlier 4.7-point gain remains intact. The fatal gate
-// now rejects the old hand-expanded or file-local forms.
-// THE HERO ARM ASSIGNS (byte-flat, and it is retail's spelling): the census
-// carries `basic_string::operator=` x2 with `result` empty at that point, and
-// get_luck_description's own note proves the same shape from the eh
-// transcript. Recorded because `predict-inline` reads the call multiset.
-// Two further census rows measured and REJECTED here, both regressions:
-// `armygrp_creature_plural_name(angelType)` for the angel arm's name - it
-// would make GetArmyName x3 agree - costs 2.42 (79.1754 -> 76.7514); and
-// rewriting all six `result.append(<const char*>)` as `result +=`, which
-// would make the census's operator+= split agree, costs 2.89 (-> 76.2901).
-// Both are real census facts and both are past this body's budget optimum,
-// so the site count is NOT monotone - measure every added site.
-// Residual (79.1754%): `predict-inline` prices it 2 over-inlined `_Tidy`
-// (base x8 calls against retail's x10) plus the `bitset<9>::test` bounds
-// check, whose `_Xran` body retail leaves out of line and we expand - the
-// `out_of_range` ctor and the `basic_string(const char*)` for "invalid
-// bitset<N> position" are both in our call list and neither is in retail's,
-// and that inlined throw path is the ONE extra eh state (base 20 against
-// retail 19). Pinning `.test()` is the wrong lever by the standing rule -
-// retail keeps only the nested CHILD out of line. The DEPTH lever does not
-// reach it either, MEASURED 2026-08-20: `ArmyGrpFn_0044A460()[alignment]`
-// puts `_Xran` at depth three instead of two (VC6's `operator[] const`
-// forwards to `test`), which is the shape that bought +21.30 and +10.47
-// elsewhere, and here it COSTS 2.96 (79.1754 -> 76.2182). Do not re-run
-// it; the over-inline that is left is a budget fact, not a depth one.
+// Both terrain selectors load `g_creatureTypeTraits[creature].m_townType`
+// inside their own arm. Passing a precomputed town type loads it too early.
+// Values 0..2 and 3..5 select the good/evil actions; 6..8 and out-of-range
+// values join the exit. The goto form reproduces retail B6..B26, including the
+// four-way shared strlen/append tail. Flattening both selectors or splitting
+// one back into the caller changes the inline phase; the best split reached
+// 96.53% numerically but duplicated a terrain strlen, introduced B27, and
+// shifted every later CFG block. The combined ordinary helper is retained.
 //
-// AND BECAUSE IT IS A BUDGET FACT, THE CALLER-SHRINK REACHES IT
-// (79.1754 -> 91.3771, 2026-08-20).  Every earlier attempt on this row moved
-// the /Ob2 DIVISOR - candidate sites added or removed - and the note above
-// correctly recorded that the divisor is not monotone here.  The other half
-// of `budget = clamp(2 * caller_cb, 1000, 35000)` is the NUMERATOR, and it
-// had never been tried: lifting the two magic-terrain blocks into
-// `apply_morale_magic_terrain` below drops the caller's own pre-inline mass,
-// the budget with it, and the Dinkumware expansions this row over-inlines
-// (`basic_string::assign` at both early returns, the `bitset<9>::_Xran`
-// throw path) go back out of line.  +12.20 with the statements unchanged -
-// the helper has ONE call site, so /Ob2 puts it straight back.
-// THE DOSE IS A PEAK AND ITS NEIGHBOURS ARE ALL WORSE, measured on top of
-// this one: the whole `GetAlignments` + grouping block 91.3771 -> 75.7762,
-// the grouping loop alone (the thinner slice of the same block)
-// -> 82.1934, and the angel/archangel member pick -> 89.2445.  This body
-// wants exactly one lift and it is the magic-terrain pair.
+// Other retail/DC facts retained here: both short string arms use operator+=;
+// the penalty is `numAlignments >= 5 ? -3 : 2 - numAlignments`; the angel arm
+// performs `IsMember(ANGEL) || IsMember(ARCHANGEL)` and then tests ARCHANGEL
+// again. DC attributes GetArmyName at that last name lookup, but in the newer
+// retail body its candidate site changes the final append frontier and drops
+// the combined-helper match to 89.41%; the direct constant-bounded traits
+// lookup restores retail's exact CFG through B103.
 //
-// CALLER-SHRINK DOSE for get_morale_description (below): the row's residual
-// is measured as OUR /Ob2 budget being too large, so the lever is the
-// caller's own pre-inline mass.  Lifted verbatim - one call site, so /Ob2
-// puts it straight back and the emitted statements are unchanged.
-//
-// [2026-08-21] +1.68 (91.3771 -> 93.0566) from dropping the caller's
-// `const TCreatureTypeTraits&` row reference - see the note at the use site.
-// The residual after it is the same parameter-home family the luck twin
-// carries: our frame is 0x54 against retail's 0x50 because retail recycles
-// TWO dead parameter homes ([ebp+0x24] for the 116-byte traits offset and
-// [ebp+0x28] for GetMorale's result) where we recycle one and give the
-// offset a stack slot of its own, and the empty-allocator scratch byte again
-// sits at [ebp+0xf] against retail's [ebp+0x13].
-// Structured terrain controls: the Holy Ground evil arm and both Evil Fog
-// arms can own their adjustment/append/return bodies. This removes three
-// joins and raises GetMoraleDescription 93.0566% -> 93.1409%, with every
-// sibling unchanged. Keep default in Evil Fog's good arm: retail's out-of-
-// range town behavior falls into that adjustment. All four direct arms lose
-// score. Keeping the Evil Fog good join instead reaches 93.9282% but retains
-// one additional goto; both supported alternatives reproduce in the 16-state
-// family. The greater structured reduction still improves the starting score.
+// Residual at 96.07%: 102/126 candidate blocks are exact against 131 retail
+// blocks, and every branch through the Spirit-of-Oppression condition agrees.
+// Candidate keeps the Spirit temporary's nested basic_string::_Tidy call and
+// the final operator+= path's nested _Eos call; retail expands both, adding the
+// five remaining blocks and one delete call. With the nested DC scopes and
+// operator spellings below, the traced caller is cb=1040, budget=2080: the
+// Spirit destructor receives 145 for _Tidy's cb=152, while the tail append
+// leaves 10 for _Eos's cb=46. Direct/split terrain and explicit-temporary
+// controls overshoot other library boundaries. Exhaustive crosses of the
+// grouping, Minotaur/Spirit scopes, string operators, terrain gate, and the
+// canonical plural-name predicate produced many byte-distinct objects but no
+// score above 96.07%. This is a compiler-state wall rather than permission to
+// flatten helpers or retain a budget probe.
 // Before normalization (function): apply_morale_magic_terrain.
-// Replacing only holy_ground_good with switch break also scores 91.4420%
-// in GetMoraleDescription, versus 93.1409%; adding an explicit good default
-// produces the same loss. Keeping the adjustment below the switch therefore
-// does not recover a neutral plain-switch exit in this helper context.
-// A do/while(0) around Holy Ground's switch allows the good towns to
-// continue to the common adjustment/append/return. The ordinary helper and
-// its caller boundary remain canonical; all 2108 compiled caller bytes and
-// relocation names/addends stay at 93.1409%. Plain switch break remains lower.
 static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
-                                       int townType, int& currentMorale,
-                                       std::string& result)
+                                    int& morale, std::string& result)
 {
     if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
         && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        do {
-            switch (townType) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                continue;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                --currentMorale;
-                result.append(g_holyGroundEvilMoraleText);
-                return;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                return;
-            }
-        } while (0);
-
-        ++currentMorale;
-        result.append(g_holyGroundGoodMoraleText);
-        return;
-    }
-
-    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (townType) {
+        switch (g_creatureTypeTraits[creature].m_townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
-        default:
-            --currentMorale;
-            result.append(g_evilFogGoodMoraleText);
-            return;
+            goto holyGroundGood;
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            ++currentMorale;
-            result.append(g_evilFogEvilMoraleText);
-            return;
+            goto holyGroundEvil;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            return;
+            goto done;
         }
+        goto done;
+
+    holyGroundGood:
+        --morale;
+        result += g_holyGroundGoodMoraleText;
+        goto done;
+
+    holyGroundEvil:
+        ++morale;
+        result += g_holyGroundEvilMoraleText;
+        goto done;
     }
+    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
+        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+        switch (g_creatureTypeTraits[creature].m_townType) {
+        case TOWN_CASTLE:
+        case TOWN_RAMPART:
+        case TOWN_TOWER:
+            goto evilFogGood;
+        case TOWN_INFERNO:
+        case TOWN_NECROPOLIS:
+        case TOWN_DUNGEON:
+            goto evilFogEvil;
+        case TOWN_STRONGHOLD:
+        case TOWN_FORTRESS:
+        case TOWN_CONFLUX:
+            goto done;
+        }
+        goto done;
+
+    evilFogGood:
+        ++morale;
+        result += g_evilFogGoodMoraleText;
+        goto done;
+
+    evilFogEvil:
+        --morale;
+        result += g_evilFogEvilMoraleText;
+        goto done;
+    }
+
+done:
+    ;
 }
 
-// THE SPIRIT-OF-OPPRESSION ARM ASSIGNS, IT DOES NOT APPEND (byte-flat,
-// 2026-09-06, reloc census). Retail's call at fn+0x6ce is
-// basic_string::assign(const basic_string&, uint, uint) where ours was
-// append(...); every instruction around it - the akArtifactTraits load, the
-// three pushes, the npos load, the EH state byte and the temporary's _Tidy -
-// is identical on both sides, so only the relocation target differed and
-// objdiff (function_reloc_diffs=none) does not score it. Same class and same
-// verdict as get_luck_description's hero arm below; recorded because the call
-// multiset is what `predict-inline` reads.
-// [polish-45] The 149 B is ONE frame decision, and it is shared with
-// get_luck_description below.  Retail's frame is 0x50 where this compile's is
-// 0x54: retail parks the `shl eax,2` creature-row OFFSET in the dead
-// parameter slot [ebp+0x24] and this compile spends a local at [ebp-0x14] on
-// it.  The empty-allocator scratch byte moves with it - retail reads it from
-// [ebp+0x13] (the `morale` slot's high byte), we read it from [ebp+0xf] (the
-// `creature` slot's), the identical 4-byte shift get_luck_description shows
-// at [ebp+0x13] vs [ebp+0xf].  The parameter OFFSETS themselves agree on both
-// sides (+0x8 is the return pointer, +0xc is `creature`, and B0/B1/B2's
-// instructions are byte-identical), so this is which parameter slot C2 judges
-// dead, not a different declarator: retail keeps `creature` in its home and
-// frees `morale`, we do the reverse.  The one base-only call is a
-// `basic_string::_Eos` at +0x780 in the tail.  The narrower-second-parameter
-// hypothesis recorded on get_luck_description is NOT supported by these
-// bytes - the slots line up, only the liveness verdict differs.
+// The Spirit-of-Oppression arm assigns the formatted temporary to `result`.
+// Retail calls basic_string::assign at that site; append is the wrong source
+// operation even though both are equivalent while `result` is empty.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::getMoraleDescription(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1775,42 +1665,41 @@ std::string armyGroup::getMoraleDescription(
     if (ownerHero)
         result = ownerHero->getMoraleDescription();
 
-    applyMoraleMagicTerrain(magicTerrain, creature,
-                               g_creatureTypeTraits[creature].m_townType,
-                               currentMorale, result);
+    applyMoraleMagicTerrain(magicTerrain, creature, morale, result);
 
     unsigned char alignments[10];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
         for (int alignment = -1; alignment < 9; ++alignment) {
-            if (alignments[alignment + 1] > 0 && alignment != -1
-                && armyGrpFn0044A460().test(alignment))
-                ++grouped;
+            if (alignments[alignment + 1] > 0 && alignment != -1) {
+                if (armyGrpFn0044A460().test(alignment))
+                    ++grouped;
+            }
         }
         if (grouped > 1)
             numAlignments += 1 - grouped;
     }
 
     if (numAlignments >= 3) {
-        int penalty = numAlignments < 5 ? 2 - numAlignments : -3;
+        int penalty = numAlignments >= 5 ? -3 : 2 - numAlignments;
         result += formatString(g_alignmentMoraleFormat,
                                 numAlignments, penalty);
     } else if (numAlignments == 1) {
-        result.append(g_sameAlignmentMoraleText);
+        result += g_sameAlignmentMoraleText;
     }
 
     if (hasSomeUndead())
-        result.append(g_undeadMoraleText);
+        result += g_undeadMoraleText;
 
-    TCreatureType angelType = CREATURE_NONE;
-    if (isMember(CREATURE_ANGEL))
+    TCreatureType angelType;
+    if (isMember(CREATURE_ANGEL) || isMember(CREATURE_ARCHANGEL)) {
         angelType = CREATURE_ANGEL;
-    if (isMember(CREATURE_ARCHANGEL))
-        angelType = CREATURE_ARCHANGEL;
-    if (angelType != CREATURE_NONE)
+        if (isMember(CREATURE_ARCHANGEL))
+            angelType = CREATURE_ARCHANGEL;
         result += formatString(g_angelMoraleFormat,
                                 g_creatureTypeTraits[angelType].m_pluralName);
+    }
 
     if (otherGroup) {
         TCreatureType dragonType = CREATURE_NONE;
@@ -1834,28 +1723,30 @@ std::string armyGroup::getMoraleDescription(
                 "\n%s +2", getBuildingName(TOWN_CASTLE, EXTRA_1_ID));
     }
 
-    if ((creature == CREATURE_MINOTAUR
-         || creature == CREATURE_MINOTAUR_KING)
-        && currentMorale < 1) {
-        result += formatString(g_alwaysPositiveMoraleFormat,
-                                armygrpCreaturePluralName(creature));
-        currentMorale = 1;
+    if (creature == CREATURE_MINOTAUR
+        || creature == CREATURE_MINOTAUR_KING) {
+        if (currentMorale < 1) {
+            result += formatString(g_alwaysPositiveMoraleFormat,
+                                    armygrpCreaturePluralName(creature));
+            currentMorale = 1;
+        }
     }
 
-    if (((ownerHero && ownerHero->isWieldingArtifact(
-                           ARTIFACT_SPIRIT_OF_OPPRESSION))
-         || (otherHero && otherHero->isWieldingArtifact(
-                              ARTIFACT_SPIRIT_OF_OPPRESSION)))
-        && currentMorale > 0) {
-        result = formatString(
-            g_spiritOppressionMoraleFormat,
-            g_artifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
-        currentMorale = 0;
+    if ((ownerHero && ownerHero->isWieldingArtifact(
+                         ARTIFACT_SPIRIT_OF_OPPRESSION))
+        || (otherHero && otherHero->isWieldingArtifact(
+                            ARTIFACT_SPIRIT_OF_OPPRESSION))) {
+        if (currentMorale > 0) {
+            result = formatString(
+                g_spiritOppressionMoraleFormat,
+                g_artifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
+            currentMorale = 0;
+        }
     }
 
-    int otherModifier = morale - currentMorale;
-    if (otherModifier)
-        result += formatString(g_otherStatModifiersFormat, otherModifier);
+    morale -= currentMorale;
+    if (morale)
+        result += formatString(g_otherStatModifiersFormat, morale);
 
     return result;
 }

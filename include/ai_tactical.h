@@ -309,12 +309,14 @@ struct type_AI_spellcaster {
     // fight?" - the answer lands in field_1c and it is what the two
     // constructors both end on. Inlined into both in retail.
     // Before normalization (function): type_AI_spellcaster::check_simulation.
+    protected:
     void checkSimulation();
     // dc 0x3d7b0. "Is this the last stack on our side that can still
     // act?" - inlined into consider_teleport, consider_resurrect and
     // consider_single_enchantment, with no retail body of its own.
     // Before normalization (function): type_AI_spellcaster::is_last_action.
     unsigned char isLastAction() const;
+    public:
 
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
@@ -334,6 +336,7 @@ struct type_AI_spellcaster {
     // Before normalization (locals): base_damage, target_hero.
     // DC 0x3d96c and public IBAJ prove a const member; retail 0x436e30
     // reads the estimator and mutates neither it nor the target army.
+    protected:
     long getDamageValue(SpellID spell, long baseDamage,
                           const hero* targetHero, const army* target) const;
     // Before normalization (function): type_AI_spellcaster::get_damage_spell_value.
@@ -523,6 +526,7 @@ struct type_AI_spellcaster {
     void considerResurrect(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_spell.
     void considerSpell(type_spell_choice* choice);
+public:
 protected:
     // Before normalization: type_AI_spellcaster::spells_not_required.
     unsigned char spellsNotRequired() const;
@@ -530,6 +534,7 @@ public:
     // Before normalization (function): type_AI_spellcaster::cast_spell.
     unsigned char castSpell(unsigned char retreating);
     // Before normalization (function): type_AI_spellcaster::consider_teleport.
+    protected:
     void considerTeleport(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_sacrifice.
     void considerSacrifice(type_spell_choice& choice,
@@ -541,6 +546,7 @@ public:
     void setMeleeEnemies();
     // Before normalization (function): type_AI_spellcaster::find_enemy_attacks.
     void findEnemyAttacks();
+    public:
 };
 SIZE(type_AI_spellcaster, 0x410);
 

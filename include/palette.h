@@ -138,8 +138,10 @@ public:
     // /Ob2 expanded it into each of its constructor call sites - but the
     // boundary is the DC roster's own, not an invention.
     // Before normalization (function): TPalette16::Convert24to16.
+    private:
     void convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
+    public:
     // Before normalization (function): TPalette16::Cycle.
     void cycle(int begin, int end, int step);
     // The three army::DrawToBuffer (0x43e140) needs for its tint arms -

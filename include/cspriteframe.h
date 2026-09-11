@@ -124,9 +124,11 @@ public:
     int getCroppedY() const { return m_croppedY; }
 
     // Before normalization (function): CSpriteFrame::Clip.
+    private:
     void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;
+    public:
     // Before normalization (function): CSpriteFrame::Draw.
     void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch,

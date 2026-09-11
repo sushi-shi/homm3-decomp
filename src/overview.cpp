@@ -2847,17 +2847,20 @@ int TOverviewWindow::windowHandler(message* msg)
 // Putting slotOff and i before heroNumber agrees with the Dreamcast source-line
 // order and moves VC6's EBX reload to the retail loop foot. That removes the
 // former surplus exit block and raises this body from 96.5741% to 99.9074%:
-// all eleven retail CFG blocks and every instruction now agree except one
+// all eleven retail CFG blocks and every instruction agreed except one
 // equivalent SIB encoding, `lea ebx,[edi+ebx+0x82]` versus retail's
-// `lea ebx,[ebx+edi+0x82]`. Negative controls: declaring `i` at its former
+// `lea ebx,[ebx+edi+0x82]`. Declaring `i` ahead of `slotOff` swaps those
+// operands and closes the body at 100% (why-reg B6/C3, 2026-09-11); DC emits
+// line 1530 before 1529 (dc 0x107680 precedes 0x10768a), so that order is
+// also the recorded one. Negative controls: declaring `i` at its former
 // position and assigning it in the for initializer drops to 91.930%; reversing
 // the two widget-id addends or grouping `slotOff + 130` first is byte-neutral
 // even after the declaration-order correction.
 VA(0x00522470, 0x15E)  // body/arity identified, dc 0x107668
 void updateBackpack(int slot)
 {
-    int slotOff = slot * 200 + 200;
     int i = 0;
+    int slotOff = slot * 200 + 200;
     int heroNumber = g_overviewTop[g_overviewType] + slot;
     hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;

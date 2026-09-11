@@ -116,7 +116,9 @@ public:
 
     // Before normalization (function): type_university_window::handle_widget_hover.
     // Before normalization (locals): current_widget.
+    protected:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+    public:
     // Before normalization (function): type_university_window::ExitDialog.
     virtual int exitDialog(message* msg);  // slot 14
 

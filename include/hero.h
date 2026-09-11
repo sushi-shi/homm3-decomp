@@ -966,7 +966,9 @@ public:
     void addSpell(int whichSpell);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
     // Before normalization (function): hero::update_spell_list.
+    private:
     void updateSpellList();
+    public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long getEquippedArtifacts(unsigned char countWarMachines);
     long getNumberInBackpack(unsigned char countWarMachines);

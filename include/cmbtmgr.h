@@ -1633,7 +1633,9 @@ public:
     // Before normalization (function): combatManager::InitializeArchers.
     void initializeArchers();
     // Before normalization (function): combatManager::LoadIcons.
+    private:
     void loadIcons();
+    public:
     // Before normalization (function): combatManager::CheckApplyGoodMorale.
     void checkApplyGoodMorale(int group, int index);
     // Before normalization (function): combatManager::CheckApplyBadMorale.
@@ -1646,11 +1648,15 @@ public:
     void spellEffect(int effect, army* targetArmy, int delay,
                      unsigned char doWince);
     // Before normalization (function): combatManager::FreeIcons.
+    private:
     void freeIcons();
+    public:
     // Before normalization (function): combatManager::Close.
     void close();
     // Before normalization (function): combatManager::DoorCanBeLowered.
+    private:
     unsigned char doorCanBeLowered() const;
+    public:
     // Before normalization (function): combatManager::HexIsBlocked.
     unsigned char hexIsBlocked(int index) const;
     // Before normalization (function): combatManager::IsInMoat.
@@ -1689,13 +1695,17 @@ public:
     // Before normalization (function): combatManager::GetBackgroundName.
     const char* getBackgroundName();
     // Before normalization (function): combatManager::UpdateArmyGroup.
+    private:
     void updateArmyGroup(int whichSide);
+    public:
     // Before normalization (function): combatManager::GenerateMap.
     void generateMap();
     // Before normalization (function): combatManager::DetermineCombatTerrain.
     void determineCombatTerrain();
     // Before normalization (function): combatManager::SetupAdjacencyArray.
+    private:
     void setupAdjacencyArray();
+    public:
     // Before normalization (function): combatManager::PlaceLargeObstacle.
     // Before normalization (locals): terrain_mask, special_terrain_mask.
     int placeLargeObstacle(unsigned terrainMask,
@@ -1817,9 +1827,11 @@ public:
     // Before normalization (function): combatManager::GridY.
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
     // Before normalization (function): combatManager::ComputeExtent.
+    private:
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
+    public:
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     // Before normalization (function): combatManager::do_animations.
@@ -2115,6 +2127,7 @@ public:
     void findMoveOrder(std::vector<army*>* result);         // 0x41f140
     // Before normalization (function): combatManager::get_attack_change.
     // Before normalization (locals): current_army.
+    private:
     long getAttackChange(const army* currentArmy, const army* enemy,
                            type_AI_combat_parameters& data);
                                                               // 0x41f3b0
@@ -2132,6 +2145,7 @@ public:
     // Before normalization (locals): current_army, enemy_attacks.
     void markFirewalls(const army* currentArmy, long* enemyAttacks,
                         type_AI_combat_parameters* estimate);   // 0x4214f0
+    public:
     // The moat twin of mark_firewalls, retail-only: 0x421590 walks the
     // eleven gMoatColumns entries and subtracts the moat's
     // get_loss_combat_value from each danger score, omitting the gate hex
@@ -2147,9 +2161,11 @@ public:
                    type_AI_combat_parameters* estimate);        // 0x421590
     // Before normalization (function): combatManager::choose_shooter_target.
     // Before normalization (locals): current_army, best_value.
+    private:
     long chooseShooterTarget(const army* currentArmy,
                                type_AI_combat_parameters* data,
                                long* bestValue);             // 0x41eb80
+    public:
     // Before normalization (function): combatManager::choose_cyclops_action.
     // Before normalization (locals): best_value.
     unsigned char chooseCyclopsAction(long bestValue, long side,
@@ -2157,6 +2173,7 @@ public:
                                                               // 0x41eea0
     // Before normalization (function): combatManager::choose_melee_target.
     // Before normalization (locals): current_army, action_value.
+    private:
     unsigned char chooseMeleeTarget(const army* currentArmy,
                                       unsigned char teleport,
                                       long* actionValue,
@@ -2218,6 +2235,7 @@ public:
         // Before normalization (locals): current_army, best_value.
         const army* currentArmy, long* bestValue,
         type_AI_combat_parameters* estimate);                 // 0x421000
+public:
 private:
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
@@ -2232,6 +2250,7 @@ private:
 public:
     // Before normalization (function): combatManager::choose_defense_hex.
     // Before normalization (locals): current_army, best_hex, open_hexes, search_array.
+    private:
     unsigned char chooseDefenseHex(const army* currentArmy,
                                      const army* client, long* bestHex,
                                      long* openHexes,
@@ -2242,6 +2261,7 @@ public:
         // Before normalization (locals): current_army, search_array.
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);           // 0x420760
+    public:
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
     // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
@@ -2288,6 +2308,7 @@ public:
     // 1.26x of the SH4 bodies.
     // Before normalization (function): combatManager::simulate_melee_attack.
     // Before normalization (locals): current_army, enemy_hex, our_group.
+    private:
     void simulateMeleeAttack(army* currentArmy, long hex, army* target,
                                long enemyHex, long ourGroup);  // 0x4224e0
     // Before normalization (function): combatManager::simulate_melee_attack.
@@ -2297,6 +2318,7 @@ public:
     long simulateActions(std::vector<army*>& list, long i,
                           // Before normalization (locals): our_group.
                           long ourGroup);                       // 0x422880
+    public:
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
@@ -2338,14 +2360,18 @@ public:
     // Before normalization (function): combatManager::ClearEffects.
     void clearEffects();                                      // 0x5a66b0
     // Before normalization (function): combatManager::has_ranged_advantage.
+    private:
     unsigned char hasRangedAdvantage(
         type_AI_combat_parameters* data);                     // 0x420a80
+    public:
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
     // Before normalization (function): combatManager::DoSpellAI.
     unsigned char doSpellAI();                                // 0x422da0
     // Before normalization (function): combatManager::should_stay_in_castle.
+    private:
     unsigned char shouldStayInCastle(
         type_AI_combat_parameters* estimate);                 // 0x4213f0
+public:
 private:
     // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy and
     // immediately follows should_stay_in_castle there; the retail call from
@@ -2363,11 +2389,13 @@ private:
 public:
     // Before normalization (function): combatManager::place_shooter.
     // Before normalization (locals): current_army.
+    private:
     void placeShooter(const army* currentArmy);             // 0x422060
     // Before normalization (function): combatManager::choose_shooter_action.
     // Before normalization (locals): current_army.
     void chooseShooterAction(const army* currentArmy,
                                unsigned char simulated, long side);
+                                                              public:
                                                               // 0x41f060
     // Before normalization (function): combatManager::choose_melee_action.
     // Before normalization (locals): current_army.
@@ -2394,7 +2422,9 @@ public:
     // Before normalization (function): combatManager::valid_wall_target.
     unsigned char validWallTarget(TWallTargetId wall);       // 0x476440
     // Before normalization (function): combatManager::automate_catapult.
+    private:
     unsigned char automateCatapult();                         // 0x473c00
+    public:
     // 0x474bf0. `ret 4` proves the retail body takes the acting stack
     // that the DC roster's nullary prototype omits; the body reaches
     // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
@@ -2452,7 +2482,9 @@ public:
     // Before normalization (function): combatManager::ComputeMaxExtent.
     void computeMaxExtent();
     // Before normalization (function): combatManager::get_surrender_cost.
+    private:
     long getSurrenderCost();                                 // 0x477a00
+    public:
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
     // come from ai_tactical's get_damage_value (0x436e30), which calls
@@ -2685,8 +2717,10 @@ public:
     // returns it by value, and retail's callers pass the hidden return
     // slot straight through to format_string.
     // Before normalization (function): combatManager::get_failure_reason.
+    private:
     std::string getFailureReason(SpellID spell, const char* msg,
                                    long hex);                  // 0x5a2880
+    public:
     // Before normalization (function): combatManager::display_failure_reason.
     void displayFailureReason(SpellID spell, const char* msg,
                                 long hex);                     // 0x5a2c60
@@ -2860,10 +2894,12 @@ public:
     // Declared beside the leaves it calls rather than at the end of the
     // class because this run of spells.obj leaves is already unconditional.
     // Before normalization (function): combatManager::find_spell_target.
+    private:
     army* findSpellTarget(SpellID spell, long side, long hex,
                             // Before normalization (locals): first_target, creature_spell.
                             unsigned char firstTarget,
                             long creatureSpell);   // 0x5a3950
+    public:
     // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
     // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
     // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
@@ -3062,7 +3098,9 @@ public:
     // acted on: this header keeps one public block.
     // Before normalization (function): combatManager::LoadArmies.
     // Before normalization (locals): is_surrounded.
+    private:
     void loadArmies(unsigned char isSurrounded);
+    public:
     // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
     // spelled `unsigned char` as everywhere else in this header.
     // Before normalization (function): combatManager::NextArmy.
@@ -3129,7 +3167,9 @@ public:
     // Before normalization (function): combatManager::CombatMessage.
     void combatMessage(int command);
     // Before normalization (function): combatManager::automate_first_aid_tent.
+    private:
     unsigned char automateFirstAidTent();
+    public:
     // Before normalization (function): combatManager::Main.
     virtual int main(message& msg);
     // Before normalization (function): combatManager::ProcessCombatMsg.
@@ -3150,13 +3190,17 @@ public:
     // Before normalization (function): combatManager::ResetRound.
     void resetRound();
     // Before normalization (function): combatManager::auto_resolve_combat.
+    private:
     void autoResolveCombat();
+    public:
     // Before normalization (function): combatManager::CheckWin.
     int checkWin(message* msg);
     // Before normalization (function): combatManager::process_move_then_attack.
+    private:
     unsigned char processMoveThenAttack(message* msg);
     // Before normalization (function): combatManager::process_first_aid.
     void processFirstAid(army* currentArmy);
+    public:
     // Before normalization (function): combatManager::ResetCyclingCreatures.
     void resetCyclingCreatures();
 private:

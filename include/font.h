@@ -156,7 +156,9 @@ public:
 
     // Before normalization (function): font::DrawStringExecute.
     // Before normalization (locals): color_scheme.
+    private:
     void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    public:
     // Before normalization (function): font::DrawBoundedString.
     // Before normalization (locals): color_scheme.
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
