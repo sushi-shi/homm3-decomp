@@ -1192,6 +1192,20 @@ struct TRmgMapItem {
     {
         return m_tileData.m_placementOutline;
     }
+    // Connection flood: the visited bit is read and written through the
+    // same byte boundary the other flag queries use.
+    unsigned char isConnectionVisited() const
+    {
+        return m_tileData.m_connectionVisited;
+    }
+    void setConnectionVisited()
+    {
+        m_tileData.m_connectionVisited = 1;
+    }
+    unsigned char getLandType() const
+    {
+        return m_tile.m_landType;
+    }
 
     // Retail road/river relaxation copies the predecessor to a separate
     // parameter home before storing cost and coordinates. The by-value
@@ -1688,6 +1702,14 @@ struct TRmgZone {
     TRmgZone(TRmgTownSlot* slot);
     void chooseTerrain();
     ~TRmgZone();
+    int getTerrain() const
+    {
+        return m_terrain;
+    }
+    const TRmgZoneBounds& getBounds() const
+    {
+        return m_bounds;
+    }
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
     unsigned char canConnect(const TRmgZone* other) const;
@@ -1730,6 +1752,59 @@ struct TRmgBoundaryVertex {
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
     void splice(TRmgBoundaryVertex* other);
     void detach();
+    // Quad-edge navigation (Graphics Gems IV Sym/Onext/Oprev/Lnext/Lprev,
+    // Org2d/Dest2d): these inline accessors are candidate sites for the
+    // /Ob2 inliner, and their count is what makes retail refuse the fan
+    // splices, distance and orientation calls in addSite, the twin splice
+    // in removeEdge and the fifth createEdge in the diagram constructor.
+    // Site positions return by value: addSite's coincidence test loads both
+    // coordinates before comparing, as a copied temporary does.
+    TRmgBoundaryVertex* getTwin() const
+    {
+        return m_twin;
+    }
+    TRmgBoundaryVertex* getNext() const
+    {
+        return m_next;
+    }
+    TRmgBoundaryVertex* getPrevious() const
+    {
+        return m_previous;
+    }
+    TRmgBoundaryVertex* getLeftNext() const
+    {
+        return m_twin->m_previous;
+    }
+    TRmgBoundaryVertex* getLeftPrevious() const
+    {
+        return m_next->m_twin;
+    }
+    TPoint getSitePosition() const
+    {
+        return m_sitePosition;
+    }
+    TPoint getOppositeSitePosition() const
+    {
+        return m_twin->m_sitePosition;
+    }
+    TRmgZone* getZone() const
+    {
+        return m_zone;
+    }
+    TRmgZone* getOppositeZone() const
+    {
+        return m_twin->m_zone;
+    }
+    // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
+    unsigned char isPositionComputed() const
+    {
+        return m_positionComputed;
+    }
+    void setPosition(const TPoint& position)
+    {
+        m_position = position;
+        m_positionComputed = 1;
+    }
 };
 SIZE(TRmgBoundaryVertex, 0x24);
 
@@ -1748,6 +1823,8 @@ public:
     // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
     TRmgBoundaryVertex* createEdge(TPoint first, TRmgZone* firstZone,
         TPoint second, TRmgZone* secondZone);
+    TRmgBoundaryVertex* connectEdges(TRmgBoundaryVertex* first,
+        TRmgBoundaryVertex* second);
     void removeEdge(TRmgBoundaryVertex* edge);
     void addSite(TPoint point, TRmgZone* zone);
     TRmgBoundaryVertex* locate(TPoint point);

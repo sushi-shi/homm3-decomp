@@ -3409,7 +3409,7 @@ VA(0x005373A0, 0x53D)
 void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSteps)
 {
     std::vector<TRmgMapPosition> pending;
-    pending.insert(pending.end(), position);
+    pending.push_back(position);
     while (pending.size()) {
         position = pending.back();
         pending.erase(pending.end() - 1);
@@ -3457,7 +3457,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                         int score = scoreObjectPlacement(properties, candidatePosition);
                         if (score > 0) {
                             totalWeight += score;
-                            candidates.insert(candidates.end(), properties);
+                            candidates.push_back(properties);
                             positions.insert(positions.end(), candidatePosition);
                             weights.insert(weights.end(), score);
                         }
@@ -4307,7 +4307,13 @@ void type_random_map_generator::filterZonePositions(
 // restore the entire final random-selection sequence. The remaining real
 // delta is the two single-element vector insert calls: VC6 expands their
 // wrapper and calls count-insert, whereas retail retains the 540-byte
-// single-insert body at 0x54c3f0. Keep the original vector interface.
+// single-insert body at 0x54c3f0. A depth-1 `insert(end(), x)` wrapper is
+// always expanded by the /Ob2 size test, so retail's call needs the wrapper
+// nested inside push_back; spelled that way (2026-09-11) the two sites get
+// nested budgets of 64 and 70 (907/14 and 843/12), still one and seven units
+// past the wrapper's cost of 64, so both remain expanded. Two more candidate
+// sites after the first push, or 11 more units spent before it, would refuse
+// them; neither has a source correlate yet.
 VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
 void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
 {
@@ -4316,13 +4322,13 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
         zone->m_levelPosition.m_y = 0;
         zone->m_levelPosition.m_z = 0;
         zone->m_levelPosition.m_x = 0;
-        candidates.insert(candidates.end(), zone->getLevelPosition());
+        candidates.push_back(zone->getLevelPosition());
         if (m_map.m_numberLevels > 1) {
             zone->m_levelPosition.m_x = 0;
             zone->m_levelPosition.m_y = 0;
             zone->m_levelPosition.m_z = 1;
             if (canPlaceZone(zone))
-                candidates.insert(candidates.end(), zone->getLevelPosition());
+                candidates.push_back(zone->getLevelPosition());
         }
     } else {
         TRmgTownSlot* slot = zone->m_slot;
@@ -4761,17 +4767,22 @@ static void insertRmgWorkItem(
 // Residual (99.4615%): X-before-Y midpoint assignments restore endpoint
 // registers; constructing the point scores 99.1436%, and reversing its
 // addition operands scores 99.0923%. All subdivision/marking instructions
-// then agree. The initial single-element insert wrapper expands here into
-// count-insert (one extra push), while retail retains it. Preserve that call.
-// Naming the end iterator, binding the queued endpoint by reference, and
-// three real endpoint snapshots do not restore that wrapper. The joint
-// spatial family stays at 99.4615% here; copying can lower it to 96.2872%.
+// then agree. Retail retains the single-element insert wrapper at the first
+// queue push (0x53d34e calls `insert(iterator, const TPoint&)`); an
+// `insert(end(), to)` spelling puts that wrapper at depth 1, where the /Ob2
+// size test always expands it into count-insert (one extra push). Written as
+// `push_back(to)` the wrapper sits at depth 2 with a nested budget of 45
+// (1051 / 23 remaining sites) and is refused exactly as retail's call shows,
+// while the two later push_back sites keep budgets of 79 and 82 and expand
+// like retail (`homm3 vc6 predict-inline 0x0053cd30 --trace`). Exact at
+// 100% (2026-09-11); the earlier iterator/reference/snapshot controls never
+// moved the wrapper's depth.
 VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
 void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
     int zoneIndex, int level, int roughness)
 {
     std::vector<TPoint> pending;
-    pending.insert(pending.end(), to);
+    pending.push_back(to);
     while (pending.size() > 0) {
         to = pending.back();
         pending.pop_back();
@@ -5353,12 +5364,12 @@ void type_random_map_generator::paintZoneTerrain()
     int progressSteps = 15800 / m_zones.size();
     for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
         TRmgZone* zone = m_zones[zoneIndex];
-        TRmgZoneBounds bounds = zone->m_bounds;
+        TRmgZoneBounds bounds = zone->getBounds();
         TRmgMapPosition position = zone->getLevelPosition();
-        if (zone->m_terrain != eTerrainWater) {
+        if (zone->getTerrain() != eTerrainWater) {
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
-            TRmgTerrainBrush brush(&levelMap, zone->m_terrain, 4);
+            TRmgTerrainBrush brush(&levelMap, zone->getTerrain(), 4);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
@@ -6560,7 +6571,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 {
     std::vector<TRmgMapPosition> openPositions;
     openPositions.push_back(position);
-    m_map.getMapItem(position)->m_tileData.m_connectionVisited = 1;
+    m_map.getMapItem(position.m_x, position.m_y, position.m_z)->setConnectionVisited();
     while (openPositions.size()) {
         position = openPositions.back();
         openPositions.pop_back();
@@ -6571,16 +6582,16 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 continue;
             TRmgMapItem* item = m_map.getMapItem(nearby);
-            unsigned char visited = item->m_tileData.m_connectionVisited;
+            unsigned char visited = item->isConnectionVisited();
             if (visited)
                 continue;
             if (!item->hasSubterraneanGate()) {
-                unsigned char terrain = item->m_tile.m_landType;
+                unsigned char terrain = item->getLandType();
                 if (terrain == eTerrainWater)
                     continue;
             }
-            item->m_tileData.m_connectionVisited = 1;
-            unsigned char terrain = item->m_tile.m_landType;
+            item->setConnectionVisited();
+            unsigned char terrain = item->getLandType();
             if (terrain == eTerrainWater)
                 openPositions.insert(openPositions.end(), nearby);
         }
@@ -7211,8 +7222,7 @@ void type_random_map_generator::connectZones()
                     && otherMapItem->m_zoneState.m_zone
                            != mapItem->m_zoneState.m_zone) {
                     borderItems.insert(borderItems.end(), mapItem);
-                    borderPositions.insert(
-                        borderPositions.end(), position);
+                    borderPositions.push_back(position);
                 }
             }
         }
@@ -11117,43 +11127,54 @@ VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 // Each uncomputed interior half-edge identifies an incident triangle. Retail
 // computes its integer circumcenter through the canonical point/vector
 // operations, then shares the result with the other two incident half-edges.
-// The first point subtraction expands; the two later subtractions are calls.
-// Residual (31.6268%): the triangle walk and all eight CFG blocks agree,
-// but VC6 expands seven arithmetic calls retained by retail. Direct dot
-// products and ordinary by-value/by-reference dot helpers are byte-neutral.
-// An isolated inline_depth(0) diagnostic covering secondSide through position
-// raises 72.2254%; flattening that region restores 31.6268%, with scratch
-// space 0x44 rather than retail's 0x78. The diagnostic is not retained:
-// canonical operators remain ordinary and visible to their RMG callers.
-// A 58-state return-lifetime family retains ten reproduced parents (56 code
-// identities); a further 180 states vary canonical operator return construction.
-// Named radius and reference-bound side results reach 37.8873%; a named
-// subtraction result reaches 46.9155%, but the seven retained calls remain
-// over-expanded. Those source shapes are not adopted merely for their scores.
+// The first point subtraction expands; the two later subtractions and the
+// scale, divide and translate operators are calls. Those seven calls can
+// only be refused one level down: the arithmetic is an ordinary three-point
+// helper whose nested budget is (958 - 171) / 8 = 98 with the three
+// setPosition and four navigation sites after it, so the first subtraction
+// (51) expands and everything after it is refused (predict-inline --trace
+// 0x5fdb40). A member helper reading m_next->m_twin->m_sitePosition costs
+// too much for C1XX to save its body (never a candidate), as does inline
+// dot arithmetic beyond ~200; the by-value dot helper keeps it at 171.
+// Retail's 0x78 frame holds the seven hidden-result temporaries.
+// Residual (87.7394%): register roles differ in the argument loads and the
+// dot products; a 56-state family (argument order, origin/third locals,
+// dot operand order, setPosition binding) peaks here from 84.1197%.
+// Dot product of two displacement vectors; y first reproduces retail's
+// product order in buildVertices.
+static int getRmgDotProduct(TRmgVector first, TRmgVector second)
+{
+    return first.m_y * second.m_y + first.m_x * second.m_x;
+}
+
+// Circumcenter of the triangle with these three sites: the perpendicular
+// bisector of the origin-to-second side, scaled by the projected sides.
+// Parameter order follows the argument evaluation retail shows (the
+// opposite site is loaded before the site across the next edge).
+static TPoint computeRmgCircumcenter(TPoint origin, TPoint third, TPoint second)
+{
+    TRmgVector axis = second - origin;
+    TRmgVector perpendicular(-axis.m_y, axis.m_x);
+    TRmgVector secondSide = third - second;
+    TRmgVector thirdSide = origin - third;
+    return origin + (axis + perpendicular * getRmgDotProduct(secondSide, thirdSide)
+        / getRmgDotProduct(perpendicular, thirdSide)) / 2;
+}
+
 VA(0x005FDB40, 0x16E) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {
     for (unsigned int index = 0; index < m_edges.size(); ++index) {
         TRmgBoundaryVertex* edge = m_edges[index];
-        if (edge->m_zone && !edge->m_positionComputed) {
-            TPoint origin = edge->m_sitePosition;
-            TPoint third = edge->m_next->m_twin->m_sitePosition;
-            TRmgVector axis = edge->m_twin->m_sitePosition - origin;
-            TRmgVector perpendicular(-axis.m_y, axis.m_x);
-            TRmgVector secondSide = edge->m_next->m_twin->m_sitePosition
-                - edge->m_twin->m_sitePosition;
-            TRmgVector thirdSide = origin - third;
-            int numerator = secondSide.m_x * thirdSide.m_x + secondSide.m_y * thirdSide.m_y;
-            int denominator = perpendicular.m_x * thirdSide.m_x + perpendicular.m_y * thirdSide.m_y;
-            TPoint position = origin + (axis + perpendicular * numerator / denominator) / 2;
-            edge->m_position = position;
-            edge->m_positionComputed = 1;
-            edge = edge->m_next->m_twin;
-            edge->m_position = position;
-            edge->m_positionComputed = 1;
-            edge = edge->m_next->m_twin;
-            edge->m_position = position;
-            edge->m_positionComputed = 1;
+        if (edge->getZone() && !edge->isPositionComputed()) {
+            TPoint origin = edge->getSitePosition();
+            TPoint position = computeRmgCircumcenter(origin,
+                edge->getNext()->getOppositeSitePosition(), edge->getOppositeSitePosition());
+            edge->setPosition(position);
+            edge = edge->getNext()->getTwin();
+            edge->setPosition(position);
+            edge = edge->getNext()->getTwin();
+            edge->setPosition(position);
         }
     }
 }
