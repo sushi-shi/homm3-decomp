@@ -673,11 +673,15 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
 // calls all four, and flipRmgEdge gets 33 and calls detach and both splices
 // (predict-inline --trace 0x5fd790). Field reads instead of accessors gave
 // 45.4167% with the same helpers.
-// Residual (91.1250%): retail homes base in [ebp-8] across the fan loop and
-// re-enters the loop past that reload (20 blocks versus 19), and the circle
-// argument copies use other slots. Fifty line-equation/fan/suspect-loop
-// spellings and three base/edge declaration orders leave 91.1250%; why-reg
-// finds no homing knob.
+// Naming the connected edge before advancing (next/edge/base) homes base in
+// [ebp-8] across the fan loop with retail's re-entry past the reload, and
+// re-reading the predecessor for the two suspect-edge queries puts the
+// circle argument copies in retail's slots (91.1250% -> 94.0268%; a named
+// predecessor or site local scores 91.59% / 82.83%).
+// Residual (94.0268%): all 20 blocks and 17 calls agree; point.m_y and edge
+// are bound to EBX/EDI in the opposite roles (176 register-only slots).
+// why-reg's model path classes this as front-end handle state: the
+// definition order already matches and an aliased point loses 118 slots.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
@@ -692,15 +696,15 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     base->splice(edge);
     m_root = base;
     do {
-        base = connectEdges(edge, base->getTwin());
-        edge = base->getPrevious();
+        TRmgBoundaryVertex* next = connectEdges(edge, base->getTwin());
+        edge = next->getPrevious();
+        base = next;
     } while (edge->getLeftNext() != m_root);
 
     for (;;) {
-        TRmgBoundaryVertex* previous = edge->getPrevious();
-        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)) {
+        if (isRmgPointRightOfEdge(edge->getPrevious()->getOppositeSitePosition(), edge)) {
             if (isRmgPointInsideCircle(edge->getSitePosition(),
-                    previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
+                    edge->getPrevious()->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
                 edge = edge->getPrevious();
                 continue;
