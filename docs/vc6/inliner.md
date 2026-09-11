@@ -2032,3 +2032,36 @@ above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
 returning `TPoint` by value versus `const TPoint&` also changed addSite's
 coincidence test (both coordinates loaded before the compares) and its
 copies inside the circle test.
+
+### Leads from the 2026-09-11 RMG trace scan
+
+A serial `predict-inline --trace` pass over the 82 rmg/rmg_terrain/rmg_support
+rows below 96% found that most residuals are register/slot allocation with
+every call decision already matching; the accessor-site lever applies where
+the trace lists UNDER/OVER callees:
+
+- `filterZonePositions` (0x53b2f0, 94.45% -> 98.85%): the first expanded
+  `countPlacedZoneConnections` had a nested budget of exactly 42 with the
+  connection-vector `size` at cost 42 (slack 0); reading the two later zone
+  sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
+  retail's four size calls all reappear.
+- `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
+  directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in
+  `rmg_support.cpp` today so no rmg.cpp caller can expand it. Moving it makes
+  it a candidate at every three-argument construction: canPlaceObject
+  86.68 -> 91.18, createMonolithConnection 86.74 -> 88.81 and createRoads
+  72.69 -> 80.44 gain, but connectZones 93.62 -> 83.24, commitTreasureGroup
+  99.91 -> 93.30, canPlaceTreasureGroup 99.99 -> 96.90, createRiver,
+  markRiverCoastTarget and createRiverToObject lose 6-12 points, so the move
+  needs those callers' site counts settled first. Not adopted.
+- `openConnectionPath` (0x5408e0): retail calls the by-value-position
+  `getMapItem` overload at the entry lookup (budget 1120, cb 41) and expands
+  the same call at the loop end; no budget rule explains the first refusal,
+  so it is a non-budget gate to identify.
+- `TRmgLineWalker::paintPoint` (0x4fa3c0): retail refuses the first
+  `TRmgGridPoint::operator+=` (cost 43) inside the first neighbour pass at a
+  site whose budget is 187 here; only a helper around that pass (nested
+  budget below 43) would reproduce it.
+- `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
+  (nested 148 here) while expanding the third; four more candidate sites
+  after the second terrain query would do it.
