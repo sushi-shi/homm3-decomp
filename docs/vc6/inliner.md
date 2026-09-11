@@ -1933,3 +1933,35 @@ relocation destinations after explicit source-backed symbol migrations.
 Two-register `/Gr` is not proof of a free function or a pointer parameter.
 The finite families and negative controls are documented in the
 [audit](union-pragma-audit.md#serialization-locals-and-interface-recovery).
+
+## A callee's IL cost is a lever its own bytes cannot show
+
+`homm3 vc6 predict-inline <callee> --trace` prints the callee's C1 IL size
+(`caller cb`), the quantity C2 charges against every caller's budget. Two
+spellings of one body can be byte-identical and still differ by tens of
+units, so a byte-exact callee can carry a wrong cost and misprice every
+caller's `budget < cb` test. Bracket the cost from the callers' retail
+decisions instead of the callee's bytes.
+
+`hero::isWieldingArtifact` (0x4d91f0) was exact at cost 133. `hero::getLuck`
+(0x4e36c0) retail-calls its seventh site after six expansions (`1000 - 6*cb <
+cb`, so cb >= 143) and then calls `town::hasBuilding` (`1000 - 6*cb - 45 <
+68`, so cb >= 149); `hero::heroFn004E6120` (0x4e6120) still expands the copy
+nested inside `getHitPointBonus` (`449 - 2*cb >= cb`, so cb <= 149). An
+if/else block (+8), a named combination index (+5) and a repeated traits
+lookup (+3) land exactly on 149 with the standalone body unchanged; getLuck
+closes from 88.0650% to 100% and heroFn004E6120 stays exact, while 150
+drops it to 86.88%. `town::hasBuilding`'s if/else block form raises its cost
+60 -> 68 (retail 62..84 from the same two callers; `town::buildBuilding`'s
+site budgets, retail calling at 72 and expanding at 82, narrow that to
+73..82 and stay open at 99.55%).
+
+Measured cost increments on those bodies: a block scope +2, an `else` block
++8, `? 1 : 0` on a comparison +4, `!= 0` on a call result +3, `!= false` on a
+bool +3, `static_cast<bool>` +2, a named local -3 relative to a repeated
+lookup, a function-scope loop counter -3 relative to a for-init one. Braces
+around a `return` inside a loop also change the inlined loop's CFG, and an
+if/return-0 tail lets C2 self-inline a recursive call, so check the
+standalone bytes and the callers' skeletons after every step. Sweep the
+callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
+`town::buildBuilding` moved with these costs, the exact rows did not.
