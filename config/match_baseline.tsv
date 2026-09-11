@@ -631,7 +631,7 @@ armygrp	?getCreatureTotal@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4ada0	1
 armygrp	?getLuck@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000	100.0000	100.0000	0x4b2d0	574076489e1d
 armygrp	?getLuckDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	92.3623	92.3623	92.3623	0x4c1c0	c50245acbf7c
 armygrp	?getMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	100.0000	100.0000	100.0000	0x4ae60	2d210badc898
-armygrp	?getMoraleDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.1409	93.1409	93.9282	0x4b960	1d81d847c960
+armygrp	?getMoraleDescription@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	96.0704	96.0704	96.0704	0x4b960	d184f98eacd0
 armygrp	?getNativeTerrain@armyGroup@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x4c590	25c22bcfa235
 armygrp	?getNumArmies@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4acc0	70f65260b483
 armygrp	?getSpellWorkChance@@YIMHW4TCreatureType@@PBVhero@@1@Z	96.6018	96.6018	96.6018	0x4a4d0	e85eb7368183
@@ -670,14 +670,14 @@ bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x4e050	67a4c833
 bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100	8a18481cb803
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020	-
 bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e780	ba5e06283d64
-bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	97.2647	97.2647	98.8301	0x4e940	5d633e60761c
+bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	97.2647	97.2647	100.0000	0x4e940	5d633e60761c
 bitmap16	?darken@Bitmap16Bit@@QAEXHHHH@Z	82.6377	82.6377	100.0000	0x4e5f0	acfa73a2e271
 bitmap16	?darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	86.8791	86.8791	100.0000	0x4e6a0	dc1b671d2274
 bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	75.0079	75.0079	83.5794	0x4e2b0	7dd5e2c04ec6
 bitmap16	?fillRect@Bitmap16Bit@@QAEXHHHHG@Z	82.1964	82.1964	100.0000	0x4e4c0	5cc1ca1b8cb2
 bitmap16	?frameRect@Bitmap16Bit@@QAEXHHHHG@Z	95.2113	95.2113	100.0000	0x4e540	40f3a2e5f28d
 bitmap16	?getSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	a246c8b9a5dd
-bitmap16	?grab@Bitmap16Bit@@QAEXPBGHHHHH@Z	82.5581	82.5581	97.7093	0x4e3f0	a149ec03fda1
+bitmap16	?grab@Bitmap16Bit@@QAEXPBGHHHHH@Z	82.5581	82.5581	100.0000	0x4e3f0	a149ec03fda1
 bitmap16	?reference@Bitmap16Bit@@QAEXHHHPAG@Z	100.0000	100.0000	100.0000	0x4e250	49e485ce684f
 bitmap16	?remap@Bitmap16Bit@@QAEXH@Z	100.0000	100.0000	100.0000	0x4e130	fbeb4217e8f9
 bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4ee00	3124dc821125
@@ -740,7 +740,7 @@ bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.5213	98.5213
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820	98297ae59526
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0	bb8564ce83b1
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220	7b5d6817fc56
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.8000	94.8000	98.7476	0x521f0	314738e67d46
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.0054	94.8000	98.7476	0x521f0	314738e67d46
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
@@ -2221,8 +2221,8 @@ hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	98.3750	98.3750	100.000
 hero	?getHitPointBonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80	2f8fe351b93e
 hero	?getIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0	23c18e324750
 hero	?getLastBackpackIndex@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	3fae2b62f98c
-hero	?getLuck@hero@@QBEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	ecbac4361fe7
-hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	95.4461	0xdcac0	bb7841f177d2
+hero	?getLuck@hero@@QBEHPBV1@EE@Z	100.0000	100.0000	100.0000	0xe36c0	7dd580827146
+hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	83.8119	93.7128	95.4461	0xdcac0	bb7841f177d2
 hero	?getMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	d58556297163
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	45ee127530e9
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	f40179578af7
@@ -2230,7 +2230,7 @@ hero	?getMobility@hero@@QBEHE@Z	100.0000	100.0000	100.0000	0xe4990	b00caedf57d9
 hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	21fff6db2cac
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	95244cdd2002
 hero	?getMorale@hero@@QBEHPBV1@EE@Z	100.0000	100.0000	100.0000	0xe39b0	90316aac4083
-hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	91.6489	93.9111	0xdc320	6dd1274392f3
+hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.9467	97.9467	97.9467	0xdc320	6dd1274392f3
 hero	?getMysticismBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe3f40	1a896d3456cd
 hero	?getNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60	e1c196cb3178
 hero	?getNecromancyFactor@hero@@QBEME@Z	100.0000	100.0000	100.0000	0xe3cd0	e9b43cc9e4ee
@@ -2280,7 +2280,7 @@ hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd
 hero	?isInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	98f58fd6bc6f
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	9a0678be800d
 hero	?isMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c75ba64d4522
-hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	ab02a77d1885
+hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	05abc92671c1
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	87.9412	87.9412	87.9412	0xd7a20	ed9b82353cae
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	8deba303263e
 hero	?markSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	94.5148	94.5148	94.5148	0xd9350	3c3c9ac9f685
@@ -2848,7 +2848,7 @@ overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.00
 overview	?processIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	5866d9f853a9
 overview	?setupDynamicStuff@game@@QAEXHH@Z	91.8605	91.8605	91.8605	0x11bd50	138225b82095
 overview	?setupNewOverviewType@game@@QAEXHE@Z	96.4609	96.4609	100.0000	0x11e330	30c1e6e13441
-overview	?updateBackpack@@YIXH@Z	99.9074	99.9074	99.9074	0x122470	3e8c66ecbe47
+overview	?updateBackpack@@YIXH@Z	100.0000	100.0000	100.0000	0x122470	d9a55ebc6450
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	7e48a373ed2f
 overview	?updateFlaggableIcons@TOverviewWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	f7f0d60ef692
 overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	80.0996	80.0996	80.0996	0x121960	29d11d2cdf7d
@@ -3503,7 +3503,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	f5f728d41fe6
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.8952	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	00d1a737ae30
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -4348,7 +4348,7 @@ textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	270b78507ca4
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	4d04fc51e8d6
 town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	6d830b23a7c9
-town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	92.5627	92.5627	99.3036	0x1bede0	0681b85718af
+town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	97.5320	97.5320	99.3036	0x1bede0	0681b85718af
 town	?buyBuilding@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	c269ce35af9f
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	99b8ea163b9e
 town	?canBuild@town@@QBEEF@Z	81.1852	81.1852	89.6018	0x1c0d20	ca3afa6bf843
@@ -4418,7 +4418,7 @@ townmgr	??0TShipWindow@@QAE@H@Z	96.7680	96.7680	100.0000	0x1d1ef0	4c82cb8d93d5
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0	926fc48e7183
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190	b3d37e6d4074
 townmgr	??0TTownScreenWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1c34d0	00116f8dead4
-townmgr	??0townManager@@QAE@XZ	99.0800	99.0800	100.0000	0x1c3310	e630123b36d4
+townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310	8d29d1821870
 townmgr	??0townObject@@QAE@HHPBD@Z	100.0000	100.0000	100.0000	0x1c2ea0	e7d906a6393b
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1ce830	a7d1a11d0bec
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	0b473a175a3c

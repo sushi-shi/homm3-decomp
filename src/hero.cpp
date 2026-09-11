@@ -1637,18 +1637,38 @@ unsigned char hero::hasArtifact(int whichArtifact) const
 // nineteen equipped slots answer directly, and anything left recurses
 // on the COMBINATION artifact this piece belongs to - so wearing an
 // assembled combo counts as wearing each of its components.
+//
+// IL COST IS BYTE-INVISIBLE HERE AND BYTE-LOADED IN THE CALLERS (2026-09-11).
+// C2 charges a callee's C1 IL size (cb) against the /Ob2 budget, and this
+// body's own bytes are identical across spellings whose cb spans 133..156.
+// Three retail decisions bracket the cost: getLuck (0x4e36c0) calls this at
+// its seventh site after six expansions (1000 - 6*cb < cb, so cb >= 143) and
+// then calls town::hasBuilding (1000 - 6*cb - 45 < 68, so cb >= 149), while
+// heroFn004E6120 (0x4e6120) still expands the copy nested in
+// getHitPointBonus (449 - 2*cb >= cb, so cb <= 149). The if/else block, the
+// named combination index and the repeated traits lookup put cb at exactly
+// 149 (`homm3 vc6 predict-inline 0x004d91f0 --trace`). The original 133
+// left getLuck at 88.0650%; 150 and above drop heroFn004E6120 to 86.88%.
+// Measured increments: else block +8, repeated lookup +3, named index +5,
+// braces around `return 1` +2 (that one also changes the inlined loop shape),
+// `? 1 : 0` +4, `!= 0` on the recursion +3, comparing slot 17 against the
+// parameter +1, a function-scope `slot` -3. An if/return-0 tail self-inlines
+// the recursion and breaks the body (37%); keep the `&&` return.
 VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
 unsigned char hero::isWieldingArtifact(int whichArtifact) const
 {
-    if (whichArtifact == ARTIFACT_SPELLBOOK)
+    if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return m_equipped[17].m_artifactId == ARTIFACT_SPELLBOOK;
-    for (int slot = 0; slot < 19; slot++) {
-        if (m_equipped[slot].m_artifactId == whichArtifact)
-            return 1;
+    } else {
+        for (int slot = 0; slot < 19; slot++) {
+            if (m_equipped[slot].m_artifactId == whichArtifact)
+                return 1;
+        }
     }
     int combination = g_artifactTraits[whichArtifact].m_targetCombo;
-    return combination != -1 &&
-           isWieldingArtifact(g_combinationArtifacts[combination].m_artifactId);
+    return combination != -1
+        && isWieldingArtifact(g_combinationArtifacts[
+               g_artifactTraits[whichArtifact].m_targetCombo].m_artifactId);
 }
 
 // E:\gamedcs\hero.cpp:1466
@@ -6496,7 +6516,7 @@ void hero::giveResource(int whichRes, int howMuch)
 // TOWN_RAMPART where the morale twin expands the same test inline
 // against TOWN_CASTLE. The fifth artifact bonus is likewise a direct
 // `push 0x30 / call IsWieldingArtifact` - /Ob2 runs out of budget after
-// four expansions.
+// six expansions (both Hourglass tests and four rungs).
 //
 // Dreamcast game-source line 5241 calls limit(-3, luck, 3). Its
 // includes.h:134 by-value wrapper calls the reference-returning t_limit
@@ -6508,10 +6528,12 @@ void hero::giveResource(int whichRes, int howMuch)
 //
 // DC 5241 likewise records one conditional-expression return. Restoring
 // it preserves 88.0650%; a function-scope luck declaration drops to 86.3496.
-// Residual (88.0650%): retail keeps luck in the dead onCursedGround
-// parameter home and saves EBX only when the town loop needs it. VC6
-// promotes luck to EBX and saves it in the prologue. Separate Hourglass
-// early-outs gave 71.67%; keep the combined condition and shared return.
+// Exact (2026-09-11) once isWieldingArtifact's IL cost is 149 and
+// town::hasBuilding's is 68: the seventh IsWieldingArtifact rung and the
+// Grail HasBuilding are then refused by the 1000-unit /Ob2 floor exactly as
+// retail's two calls show, and the luck/EBX homing followed on its own.
+// Separate Hourglass early-outs gave 71.67%; keep the combined condition and
+// shared return.
 // Before normalization (locals): on_cursed_ground, apply_limits.
 // DC hero.cpp:5165 proves the const receiver; the body only reads this hero.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
@@ -6548,22 +6570,12 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
     if (isWieldingArtifact(0x2f))
         luck++;
     if (isWieldingArtifact(0x30))
-        // Residual (88.07%) after the `long luck` fix: the WHOLE remaining
-        // delta is THIS rung's /Ob2 decision.  Retail expands
-        // IsWieldingArtifact at five rungs (the two 0x55 hourglass tests,
-        // 0x6c, 0x2d, 0x2e, 0x2f - readable as the 19-slot
-        // `cmp dword ptr [reg], <id>` scan loops at 0x4dc2f4/0x4dc339/
-        // 0x4dc41e/0x4dc45b/0x4dc499) and CALLS it here at 0x4dc4d2, a
-        // 0x10-byte arm against our 0x3d-byte sixth expansion; that
-        // expansion is our whole 44-byte size surplus (788 vs retail's 744)
-        // and the 42-vs-39 conditional-branch delta `vc6 diagnose` reports.
-        // The callee is byte-exact (IsWieldingArtifact is 100.0000), the
-        // candidate-site set is identical, and `predict-inline` is BLIND to
-        // it: an expanded rung still emits one IsWieldingArtifact call for
-        // its combination-artifact recursion, so both multisets read 9 = 9
-        // and the tool reports "inline structure matches".  Count the scan
-        // loops, not the calls.  No pin-free lever known; a statement pin
-        // here would be the sixth new pin and the ratchet holds at 355.
+        // Retail CALLS this seventh IsWieldingArtifact site (0x4dc4d2)
+        // after expanding the two Hourglass tests and four rungs: with the
+        // callee's IL cost at 149 the 1000-unit budget holds 106 here, so
+        // C2 refuses the expansion. `predict-inline` counts calls only, and
+        // an expanded rung still emits the recursion call, so read the
+        // budget trace, not the multiset. See isWieldingArtifact's note.
         luck++;
 
     if (m_owner >= 0) {
