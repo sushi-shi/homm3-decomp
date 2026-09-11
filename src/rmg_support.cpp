@@ -674,14 +674,21 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
 // (predict-inline --trace 0x5fd790). Field reads instead of accessors gave
 // 45.4167% with the same helpers.
 // Naming the connected edge before advancing (next/edge/base) homes base in
-// [ebp-8] across the fan loop with retail's re-entry past the reload, and
-// re-reading the predecessor for the two suspect-edge queries puts the
-// circle argument copies in retail's slots (91.1250% -> 94.0268%; a named
-// predecessor or site local scores 91.59% / 82.83%).
-// Residual (94.0268%): all 20 blocks and 17 calls agree; point.m_y and edge
-// are bound to EBX/EDI in the opposite roles (176 register-only slots).
-// why-reg's model path classes this as front-end handle state: the
-// definition order already matches and an aliased point loses 118 slots.
+// [ebp-8] across the fan loop with retail's re-entry past the reload; the
+// named predecessor (homed in [ebp-0xc] before and after the orientation
+// call, as retail) keeps point.m_y in EDI and edge in EBX, and spelling the
+// loop condition as getTwin()->getPrevious() keeps both together
+// (91.1250% -> 97.6518%). Re-reading the predecessor twice instead ranks
+// edge above point.m_y and swaps EBX/EDI across 176 slots (94.03%); a
+// separate suspect-loop variable or a site local scores 88.39% / 82.83%.
+// A 40-state include-set sweep of this TU moves no function, so the rest is
+// not TU state.
+// Residual (97.6518%): retail spills the segment predicate's dx and dy to
+// [ebp-8]/[ebp-0xc] and re-reads them for the four products, and homes the
+// connected edge in the dead zone argument slot while base takes [ebp-8];
+// here dx stays in a register and next shares base's slot. Six line
+// spellings and five fan-loop forms (166 states over four families) do not
+// separate them.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
@@ -699,12 +706,13 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
         TRmgBoundaryVertex* next = connectEdges(edge, base->getTwin());
         edge = next->getPrevious();
         base = next;
-    } while (edge->getLeftNext() != m_root);
+    } while (edge->getTwin()->getPrevious() != m_root);
 
     for (;;) {
-        if (isRmgPointRightOfEdge(edge->getPrevious()->getOppositeSitePosition(), edge)) {
+        TRmgBoundaryVertex* previous = edge->getPrevious();
+        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)) {
             if (isRmgPointInsideCircle(edge->getSitePosition(),
-                    edge->getPrevious()->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
+                    previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
                 edge = edge->getPrevious();
                 continue;
