@@ -11,11 +11,13 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Initializer-list copy of the point: the body assignment costs the
+// walker's first neighbour pass its retained compound add (78.03 against
+// 87.12%); the factory and rectangle clear are byte-identical either way.
 TRmgLinePainterTile::TRmgLinePainterTile(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
-    : m_painter(painter)
+    : m_painter(painter), m_point(point)
 {
-    m_point = point;
 }
 
 // The 168-case query family tested receiver/coordinate reference bindings,
@@ -70,12 +72,16 @@ TRmgGridRectangle::TRmgGridRectangle(
 // Shared grid/proxy controls can restore the += call (70.2846%) but introduce
 // unwanted arithmetic calls in terrain painting. Five ordinary operator+
 // placements add no gain; parameter-by-value proxy construction also loses.
-// Residual (71.9231%): the retained calls at 0x4f9f60/0x4f9f77/0x4f9f86
-// (TPoint add, grid conversion, proxy factory) sit where this body's own
-// budget is still above 700, so retail expands the loop body from a nested
-// context whose budget is under 42; the signed-point arithmetic reproduces
-// retail's operand shapes but not those three refusals (74.42% with the
-// grid-side sum, which had the wrong shapes).
+// The retained calls at 0x4f9f60/0x4f9f77/0x4f9f86 (TPoint add, grid
+// conversion, proxy factory) sit where this body's own budget is above
+// 700, so retail expands the neighbour query from a nested context: an
+// ordinary neighbour-land helper on the painter interface holds the sum,
+// the conversion and the factory, and its budget divides by the sites
+// after it, which the current tile's frame and flip accessors in the
+// pattern test supply (71.92 -> 91.48%; a tile-returning neighbour
+// factory 83.55%, no accessors 79.75%, getters and setters together
+// 86.74%). The signed-point arithmetic reproduces retail's operand
+// shapes; the remaining rows are register and schedule differences.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -87,7 +93,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     unsigned char matches[TILE_DIR_COUNT];
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
-            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == oldType;
+            matches[direction] = painter->getNeighbourLand(point, direction) == oldType;
         else
             matches[direction] = 0;
     }
@@ -97,8 +103,8 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     selectRmgLinePattern(matches, table, pattern, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
-    if (table->m_patterns[current.m_frame] != pattern
-        || current.m_flipX != flipX || current.m_flipY != flipY) {
+    if (table->m_patterns[current.getFrame()] != pattern
+        || current.getFlipX() != flipX || current.getFlipY() != flipY) {
         unsigned int frame = table->m_ranges[pattern].m_firstIndex
             + rand() % table->m_ranges[pattern].m_valueCount;
         current.m_flipY = flipY;
@@ -125,6 +131,17 @@ VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
 TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 {
     return TRmgLinePainterTile(this, point);
+}
+
+// Neighbour query used by refresh 0x4f9f00 and the walker's first pass
+// 0x4fa3c0: an ordinary helper whose expansion carries the signed sum,
+// the grid conversion and the proxy factory as nested sites. Retail
+// retains all three in refresh and only the compound add in the walker,
+// which is what this helper's divided budget gives them; queried inline
+// they are expanded at both callers' own budgets.
+int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
+{
+    return at(point + g_tileDirections[direction]).getLand();
 }
 
 // Retail clears the rectangle row-major, then refreshes left, right, top and
@@ -258,12 +275,12 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 // the first retains compound addition at 0x4fa489, the second expands it.
 // Direct entry construction removes a retained implicit proxy copy and raises
 // 70.1938% -> 79.9380%, without changing the factory's proven neighbour calls.
-// The first neighbour pass still expands += where retail retains it; the
-// rectangle and translated-point lifetimes also leave different stack slots.
-// The 300-case neighbour family varied sum value/reference bindings and
-// copy/assignment/coordinate construction with real compound-add calls, both
-// separate and in the query operand. None exceeded 79.9380%; the low was
-// 72.8295%. Keep the existing source chain while recovering the helper boundary.
+// The first neighbour pass retains += where retail does once the query
+// goes through the painter's neighbour-land helper and the tile proxy is
+// built from its initializer list (80.64 -> 87.12%; the body-assigned
+// proxy 78.03%). The 300-case neighbour family over sum bindings and
+// point construction with the query inline never exceeded 79.94%: the
+// three sites cannot be refused at this body's own budget.
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -285,7 +302,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     unsigned int direction;
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
-            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == riverType;
+            matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
         else
             matches[direction] = 0;
     }

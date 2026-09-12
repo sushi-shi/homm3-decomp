@@ -1527,6 +1527,7 @@ public:
     virtual int getLand(const TRmgGridPoint& point) = 0;
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
+    int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
