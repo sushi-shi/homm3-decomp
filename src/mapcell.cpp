@@ -1037,77 +1037,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     return -1;
 }
 
-// E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
-// three are members of NewfullMap. Retail inlines each at its only call
-// site - Save - and /OPT:REF drops the out-of-line copies, so there are no
-// carve rows to claim; they are file-local statics for loadMonsterData's
-// reason.
-//
-// They are NOT a tidying of Save's body, they are why Save compiles the way
-// it does. Written longhand inside Save, the caller's front-end mass lifts
-// the /Ob2 budget far enough that VC6 goes on to inline saveTreasureData,
-// saveMonsterData and saveTimedEventList as well, where retail calls all
-// three (measured: 28.0548%).
-static int saveBlackBoxList(NewfullMap* map, TAbstractFile* outfile)
-{
-    int count = map->m_blackBoxes.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
-        return -1;
-    for (unsigned int i = 0; i < map->m_blackBoxes.size(); ++i) {
-        if (map->saveBlackBox(outfile, &map->m_blackBoxes[i]) < 0)
-            return -1;
-    }
-    return 0;
-}
-
-static int saveTreasureList(NewfullMap* map, TAbstractFile* outfile)
-{
-    int count = map->m_customTreasure.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
-        return -1;
-    for (unsigned int i = 0; i < map->m_customTreasure.size(); ++i) {
-        if (map->saveTreasureData(outfile, &map->m_customTreasure[i]) < 0)
-            return -1;
-    }
-    return 0;
-}
-
-static int saveMonsterList(NewfullMap* map, TAbstractFile* outfile)
-{
-    int count = map->m_customMonsterList.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
-        return -1;
-    for (unsigned int i = 0; i < map->m_customMonsterList.size(); ++i) {
-        if (map->saveMonsterData(outfile, &map->m_customMonsterList[i]) < 0)
-            return -1;
-    }
-    return 0;
-}
-
-// These last two have NO Dreamcast counterpart - the roster has no
-// saveSeerHutList or saveQuestGuardList - so the SPLIT is inferred, not
-// attested. What forces it is the byte evidence: with both blocks written
-// longhand inside Save, VC6 still had budget to inline saveTimedEventList
-// where retail calls it (50.7945%); splitting them out drops the budget
-// past that point and takes Save to 88.6918%. The names follow the three
-// attested list helpers above.
-static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
-{
-    int count = map->m_seerHutList.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
-        return -1;
-    // Retail CALLS vector<TSeerHut>::size in this loop's CONDITION, at
-    // Save+0x224 (entry) and +0x246 (back edge), and inlines the count
-    // read above it. The pin is lexical, so it covers the `for` header
-    // only; the index has to leave the init for that to be legal.
-    unsigned int i;
-#pragma inline_depth(0)
-    for (i = 0; i < map->m_seerHutList.size(); ++i)
-#pragma inline_depth()
-        map->m_seerHutList[i].save(outfile);
-    return 0;
-}
-
+// Complete adds a separate quest-guard pool; its save loop is unchanged.
 static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
 {
     // The mirror of the seer-hut helper, one call further: retail calls
@@ -1129,23 +1059,18 @@ static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
 // treasure, monsters, seer huts, quest guards - and finally the two event
 // lists. Every list header is a two-byte count taken from size().
 //
-// The first three sets go through their own list helpers, which is what
-// keeps this body small enough for retail's inline decisions; the last two
-// are longhand here, and their size() is an out-of-line call by the time
-// the budget reaches them.
+// The first three sets retain their DC-proven ordinary member helpers.
+// Complete's seer pool belongs to this map, whereas DC SaveSeerList is a
+// static TSeerHut helper over the global pool. NewfullMap's existing friend
+// relationship permits the later loop to call private TSeerHut::save.
 //
-// Two asymmetries are retail's and are left alone: the quest-guard count's
-// Write carries no short-write gate where the other four do, and neither
-// seer huts nor quest guards check the per-record save's result.
-//
-// Residual (88.6918%): one inline decision, in the seer-hut helper. Retail
-// CALLS vector<TSeerHut>::size() there - twice, once before the loop and
-// once per iteration - where this compile still has budget to expand it.
-// predict-inline reports exactly that and nothing else. Every call, every
-// list and every gate is retail's; the remaining gap is how much /Ob2
-// budget is left by the time the fourth helper is expanded, and the two
-// levers that reached it are already pulled (28.0548 longhand -> 50.7945
-// with the three attested helpers -> 88.6918 with all five).
+// The former free saveSeerHutList helper and its inline_depth pin recovered
+// 93.7123% but had no source ownership evidence. Removing them leaves 55.50%:
+// VC6 still expands saveTimedEventList and disagrees on vector::size calls.
+// This is an unresolved inliner boundary, not permission to widen save's
+// access or reinstate a budget-only split. HIST retains the previous peak.
+// Quest-guard count writes and per-record saves retain retail's unchecked
+// results, unlike the short-write gates for the preceding lists.
 VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
 int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 {
@@ -1158,15 +1083,22 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
     if (saveMapObjects(outfile) < 0)
         return -1;
 
-    if (saveBlackBoxList(this, outfile) < 0)
+    if (saveBlackBoxList(outfile) < 0)
         return -1;
-    if (saveTreasureList(this, outfile) < 0)
+    if (saveTreasureList(outfile) < 0)
         return -1;
-    if (saveMonsterList(this, outfile) < 0)
+    if (saveMonsterList(outfile) < 0)
         return -1;
 
-    if (saveSeerHutList(this, outfile) < 0)
+    // DC calls TSeerHut::SaveSeerList, a static helper over the global map.
+    // Complete reads this map's vector instead. Keep the loop in the proven
+    // friend NewfullMap rather than inventing a free helper to steer /Ob2.
+    // The former helper's inline_depth pin has also been removed.
+    int seerCount = m_seerHutList.size();
+    if (static_cast<unsigned>(outfile->write(&seerCount, 2)) < 2)
         return -1;
+    for (unsigned int seer = 0; seer < m_seerHutList.size(); ++seer)
+        m_seerHutList[seer].save(outfile);
     saveQuestGuardList(this, outfile);
 
     if (saveTimedEventList(outfile) < 0)
@@ -1721,16 +1653,21 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
              < sizeof(ignored) ? -1 : 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:1293
-DC_ONLY(0xedf80, 0xA0)
-int NewfullMap::saveTreasureList(void* outfile)
+// DC mapcell.cpp:1293 records this ordinary public member.
+// Complete expands it in Save; retained-body absence does not make it static.
+// The later file interface replaces DC gzwrite through void*.
+int NewfullMap::saveTreasureList(TAbstractFile* outfile)
 {
-    // @stub
+    int count = m_customTreasure.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < m_customTreasure.size(); ++i) {
+        if (saveTreasureData(outfile, &m_customTreasure[i]) < 0)
+            return -1;
+    }
+    return 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:1316
 VA(0x004fef10, 0x4D)  // order-map: calls armyGroup::save + saveString 0x4bbb60; called by Save (saveTreasureList inlined), dc 0xee020
@@ -2238,16 +2175,21 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:1729
-DC_ONLY(0xeeb3c, 0xA0)
-int NewfullMap::saveBlackBoxList(void* outfile)
+// DC mapcell.cpp:1729 records this ordinary public member.
+// Complete expands it in Save; retained-body absence does not make it static.
+// The later file interface replaces DC gzwrite through void*.
+int NewfullMap::saveBlackBoxList(TAbstractFile* outfile)
 {
-    // @stub
+    int count = m_blackBoxes.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < m_blackBoxes.size(); ++i) {
+        if (saveBlackBox(outfile, &m_blackBoxes[i]) < 0)
+            return -1;
+    }
+    return 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:1725 - moved here from DC tail position (dc 0xf4bfc):
 // retail places this COMDAT between readBlackBoxData and saveBlackBox; it is
@@ -3105,16 +3047,21 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:2695
-DC_ONLY(0xf06e8, 0xA0)
-int NewfullMap::saveMonsterList(void* outfile)
+// DC mapcell.cpp:2695 records this ordinary public member.
+// Complete expands it in Save; retained-body absence does not make it static.
+// The later file interface replaces DC gzwrite through void*.
+int NewfullMap::saveMonsterList(TAbstractFile* outfile)
 {
-    // @stub
+    int count = m_customMonsterList.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < m_customMonsterList.size(); ++i) {
+        if (saveMonsterData(outfile, &m_customMonsterList[i]) < 0)
+            return -1;
+    }
+    return 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:2768 - the DC roster carries this as a member of
 // NewfullMap, but retail's only call site inlines it and /OPT:REF then drops
@@ -5535,11 +5482,9 @@ void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtra
     calcCellExtra(thisCell, setExtraInfo);
 
     if (restoreHero)
-        obscuringHero->type_obscuring_object::obscureCell(
-            HERO, obscuringHero->m_id);
+        obscuringHero->obscureCell();
     if (restoreBoat)
-        obscuringBoat->type_obscuring_object::obscureCell(
-            BOAT, obscuringBoat->m_id);
+        obscuringBoat->obscureCell();
 }
 
 // E:\gamedcs\mapcell.cpp:4346

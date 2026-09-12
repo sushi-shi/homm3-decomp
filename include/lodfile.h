@@ -92,7 +92,9 @@ public:
     void clear();
     int open(const char* filename, int flags);
     // Before normalization (locals): item_name.
+    private:
     void* getDataPtr(const char* itemName);
+    public:
     LODEntry* getItemIndex(const char* itemName);
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);

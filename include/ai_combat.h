@@ -220,16 +220,19 @@ public:
     type_AI_combat_data(const type_AI_combat_data& other);
     // Before normalization (function): type_AI_combat_data::initialize_creatures.
     // Before normalization (locals): base_modifier, enemy_hero.
+    protected:
     void initializeCreatures(double baseModifier, const hero* enemyHero);
     // Before normalization (function): type_AI_combat_data::check_wall_archery_penalty.
     // Before normalization (locals): enemy_town.
     void checkWallArcheryPenalty(const town* enemyTown);
     // Before normalization (function): type_AI_combat_data::get_catagory.
     type_speed_catagory getCatagory(TCreatureType creature, long speed) const;
+    public:
     // Before normalization (function): type_AI_combat_data::adjust_army.
     // Before normalization (locals): dismiss_hero.
     void adjustArmy(unsigned char dismissHero);
     // Before normalization (function): type_AI_combat_data::get_fastest_speed.
+    protected:
     long getFastestSpeed() const;
     // Before normalization (function): type_AI_combat_data::get_next_chain_lightning_target.
     long getNextChainLightningTarget(long excluded,
@@ -273,12 +276,14 @@ public:
                     unsigned char shootersBlocked) const;
     // Before normalization (function): type_AI_combat_data::get_final_melee_value.
     long getFinalMeleeValue() const;
+    public:
     // Before normalization (function): type_AI_combat_data::get_total.
     // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
     // expands the corresponding this+0x1c load in chooseMelee. Vector
     // cardinality is creatures.size(), not this game accessor.
     long getTotal() const { return m_totalCombatValue; }
     // Before normalization (function): type_AI_combat_data::get_army.
+    protected:
     armyGroup* getArmy() { return m_currentArmy; }
     // Before normalization (function): type_AI_combat_data::get_hero.
     hero* getHero() { return m_currentHero; }
@@ -323,6 +328,7 @@ public:
     void doMeleeCombat(type_AI_combat_data& defender);
     // Before normalization (function): type_AI_combat_data::do_general_melee.
     void doGeneralMelee(type_AI_combat_data& defender);
+    public:
     // Before normalization (function): type_AI_combat_data::simulate_combat.
     void simulateCombat(type_AI_combat_data& defender);
     // Before normalization (function): type_AI_combat_data::do_aftermath.

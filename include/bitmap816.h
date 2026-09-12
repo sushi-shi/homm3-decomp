@@ -73,8 +73,10 @@ public:
         int dy, bool tblit) const;
     void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
         int dx, int dy, int dw, int dh, int dpitch, int id) const;
+    private:
     int importPCXFile(const char* filename, int rbits, int rshift,
         int gbits, int gshift, int bbits, int bshift);
+    public:
     // Before normalization (function): Bitmap816::mark_puzzle.
     // Before normalization (locals): dest_x, dest_y.
     void markPuzzle(unsigned char* visible, long destX, long destY);

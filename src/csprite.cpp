@@ -192,9 +192,9 @@ void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
                            int dx, int dy, int dw, int dh, int dpitch,
                            unsigned char hflip, unsigned short outcolor)
 {
-    m_s[seqnum]->m_f[framenum]->drawCreatureImpl(
+    m_s[seqnum]->m_f[framenum]->drawCreature(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-        *m_p, hflip, outcolor, 0);
+        *m_p, hflip, outcolor);
 }
 
 // E:\gamedcs\csprite.cpp:282
@@ -203,8 +203,8 @@ void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, unsigned char hflip)
 {
-    m_s[0]->m_f[framenum]->drawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
+    m_s[0]->m_f[framenum]->drawAdvObj(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:290
@@ -215,8 +215,8 @@ void CSprite::drawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  unsigned short outcolor,
                                  unsigned char hflip)
 {
-    m_s[0]->m_f[framenum]->drawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, outcolor);
+    m_s[0]->m_f[framenum]->drawAdvObjWithFlag(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:306
@@ -225,7 +225,7 @@ void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
                                int dh, int dpitch, unsigned char hflip)
 {
-    m_s[0]->m_f[framenum]->drawAdvObjShadowImpl(
+    m_s[0]->m_f[framenum]->drawAdvObjShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -291,8 +291,8 @@ void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, unsigned char hflip)
 {
-    m_s[seqnum]->m_f[framenum]->drawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
+    m_s[seqnum]->m_f[framenum]->drawHero(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:380
@@ -302,7 +302,7 @@ void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int dx, int dy, int dw, int dh, int dpitch,
                              unsigned char hflip)
 {
-    m_s[seqnum]->m_f[framenum]->drawAdvObjShadowImpl(
+    m_s[seqnum]->m_f[framenum]->drawHeroShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -313,8 +313,8 @@ void CSprite::drawHeroAlpha(int seqnum, int framenum, int sx, int sy,
                             int dx, int dy, int dw, int dh, int dpitch,
                             unsigned char hflip)
 {
-    m_s[seqnum]->m_f[framenum]->drawAdvObjWithFlagAlpha(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, 0, hflip);
+    m_s[seqnum]->m_f[framenum]->drawHeroAlpha(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:404
