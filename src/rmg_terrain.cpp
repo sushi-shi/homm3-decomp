@@ -147,10 +147,17 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // the grid conversion and the proxy factory as nested sites. Retail
 // retains all three in refresh and only the compound add in the walker,
 // which is what this helper's divided budget gives them; queried inline
-// they are expanded at both callers' own budgets.
+// they are expanded at both callers' own budgets. The converted sum is
+// named: the walker's expansion then stores the proxy's painter before
+// the converted coordinates as retail does (95.85 -> 100%; a named proxy
+// costs refresh its factory call, 89.41%; a named signed sum is the same
+// object; the proxy constructor copying the point through its fields,
+// accessors, setters or a by-value parameter never helps and the first
+// three cost the rectangle clear, 94.51%).
 int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
 {
-    return at(point + g_tileDirections[direction]).getLand();
+    TRmgGridPoint nearby = point + g_tileDirections[direction];
+    return at(nearby).getLand();
 }
 
 // Retail clears the rectangle row-major, then refreshes left, right, top and
@@ -295,9 +302,9 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 // from one register copied into another (87.12 -> 95.61%). A width/height
 // pair, one extent, reference extents and a named extent are flat; a named
 // rectangle 83.56%. The painter alias and the availability mask scoped to
-// the first pass give retail's 0x3c frame (95.84%). Remaining: the neighbour
-// proxy's expansion stores its painter before the converted coordinates,
-// ours between them.
+// the first pass give retail's 0x3c frame (95.84%). The neighbour proxy's
+// store order then follows the named sum in getNeighbourLand (exact,
+// 2026-09-12).
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -1625,6 +1632,10 @@ void rmgTerrainPainter::paintTransitions()
 // while its modified vertical predicate falls to 78.9709%. Crossing the ten
 // best parents with six orders of these predicates and paintTransitions
 // also gives no gain. Keep both exact canonical bodies and the original order.
+// Retail's repair caller binds the unchanged coordinate of each neighbour
+// to the two-reference constructor through a fresh copy; spelling that
+// coordinate, both coordinates, or the caller's neighbours through the
+// grid accessors is flat or worse (32 states, 86.93-93.63%).
 VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
