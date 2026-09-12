@@ -3503,7 +3503,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	f5f728d41fe6
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.8952	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	00d1a737ae30
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -3567,7 +3567,7 @@ rmg_terrain	?_Lbound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$l
 rmg_terrain	?_Ubound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8b60	-
 rmg_terrain	?_Ufill@?$vector@EV?$allocator@E@std@@@std@@IAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x1b8060	-
 rmg_terrain	?at@TRmgLinePainterInterface@@QAE?AUTRmgLinePainterTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0xfa050	51ad534437c1
-rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	605f0e10d3ea
+rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	99.2138	99.2138	99.2138	0x1b6540	3ee267c97fe3
 rmg_terrain	?buildNeighbourKinds@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAH@Z	100.0000	100.0000	100.0000	0x1b68a0	83ee9fa1adb1
 rmg_terrain	?changeTerrain@TRmgTerrainBrush@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1b7520	e1bee61f4043
 rmg_terrain	?checkFirstDiagonal@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6ba0	4e67ca418389
@@ -3584,7 +3584,7 @@ rmg_terrain	?getEntry@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000
 rmg_terrain	?getEntry@TRmgTableTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	a2af54cf7bfe
 rmg_terrain	?getPackedCell@rmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	fe243c14bfe0
 rmg_terrain	?getRmgTerrainNeighbourKind@@YIHHH@Z	100.0000	100.0000	100.0000	0x1b3e40	00d2732a3f9a
-rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	70.1029	70.1029	70.1029	0x1b6fd0	e3ffc676899a
+rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	92.6255	92.6255	92.6255	0x1b6fd0	617674eb985c
 rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	689aa34d7a84
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
 rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	5428ff7efd87
@@ -3598,7 +3598,7 @@ rmg_terrain	?paintPoint@TRmgLineWalker@@QAEXABUTRmgGridPoint@@@Z	80.6357	80.6357
 rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	98.6781	98.6781	100.0000	0x1b4b20	14a71bf4be67
 rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b7690	2e230eeb2b4b
 rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b4960	7b042e1361fa
-rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
+rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	100.0000	100.0000	100.0000	0x1b5a70	87e5cee3e8ef
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b50f0	8a31a2f31fcb
 rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	71.9231	74.4231	74.4231	0xf9f00	ab30f992e664
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	93.6307	93.6307	93.6307	0x1b5440	baa98ce0e57a

@@ -855,6 +855,11 @@ int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
     return getPackedCell(point)->getTerrain();
 }
 
+int rmgTerrainPainter::getFrame(const TRmgGridPoint& point)
+{
+    return getPackedCell(point)->getFrame();
+}
+
 unsigned int rmgTerrainPainter::getWidth() const
 {
     return m_width;
@@ -1446,104 +1451,89 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 // coordinates is 78.6334%. Translating the three left-edge neighbours is
 // byte-identical to the retained direct-coordinate form.
 // Dimension accessor calls then reach 84.0645% (2240 bytes, 68/66 blocks).
-// Unused accessor definitions leave the 81.5196% body unchanged. Only the
-// right-edge southwest cache read still over-inlines: getPackedCell costs
-// 90 and receives 104; the following bottom-edge reads receive 127/145.
-// A shared index helper and both comparison/guard-return terrain predicates
-// are byte-identical at this checkpoint; none is retained as extra interface.
+// Exact (2026-09-12). Retail refuses all twelve pre-loop cache reads and
+// expands the two bottom-edge reads with their fills refused; the
+// right-edge south-west read needs five more candidate sites after it
+// (104 units at 29 remaining sites against 90). Reading the point through
+// its accessors in the edge-count indices, the loop increments and the
+// neighbour constructions supplies them (93.74%, decisions all as retail),
+// and constructing each neighbour directly from the offset coordinates
+// instead of a compound add of a TPoint settles the registers (the
+// scoped-block and named-local forms are one object). Loop conditions
+// through the accessors are byte-identical; edge constructions through
+// them 93.21%; the increments as ++field 88.29%.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void rmgTerrainPainter::paintTransitions()
 {
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
-    for (point.m_y = 0; point.m_y < getHeight() - 1; ++point.m_y) {
+    for (point.setY(0); point.m_y < getHeight() - 1; point.setY(point.getY() + 1)) {
         int terrain = getTerrain(TRmgGridPoint(0, point.m_y));
 
         if (getTerrain(TRmgGridPoint(1, point.m_y)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[point.m_y * getWidth() + 1];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[point.getY() * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(1, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[(point.m_y + 1) * getWidth() + 1];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(0, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[(point.m_y + 1) * getWidth()];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[(point.getY() + 1) * getWidth()];
         }
 
-        for (point.m_x = 1; point.m_x < getWidth() - 1; ++point.m_x) {
+        for (point.setX(1); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
             terrain = getTerrain(point);
 
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(1, 0);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
-                }
+            TRmgGridPoint east(point.getX() + 1, point.getY());
+            if (getTerrain(east) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(1, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x + 1];
-                }
+            TRmgGridPoint southEast(point.getX() + 1, point.getY() + 1);
+            if (getTerrain(southEast) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() + 1];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(0, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
-                }
+            TRmgGridPoint south(point.getX(), point.getY() + 1);
+            if (getTerrain(south) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(-1, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
-                }
+            TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+            if (getTerrain(southWest) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
             }
         }
 
         terrain = getTerrain(point);
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(0, 1);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
-            }
+        TRmgGridPoint south(point.getX(), point.getY() + 1);
+        if (getTerrain(south) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
         }
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(-1, 1);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
-            }
+        TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+        if (getTerrain(southWest) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
         }
     }
 
-    for (point.m_x = 0; point.m_x < getWidth() - 1; ++point.m_x) {
+    for (point.setX(0); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
         int terrain = getTerrain(point);
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(1, 0);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
-            }
+        TRmgGridPoint east(point.getX() + 1, point.getY());
+        if (getTerrain(east) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
         }
     }
 
-    for (point.m_y = 0; point.m_y < getHeight(); ++point.m_y) {
-        for (point.m_x = 0; point.m_x < getWidth(); ++point.m_x) {
-            unsigned int index = point.m_y * getWidth() + point.m_x;
+    for (point.setY(0); point.m_y < getHeight(); point.setY(point.getY() + 1)) {
+        for (point.setX(0); point.m_x < getWidth(); point.setX(point.getX() + 1)) {
+            unsigned int index = point.getY() * getWidth() + point.getX();
 
             if (edgeCounts[index] > 0) {
                 int neighbours[8];
@@ -1630,18 +1620,21 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
 // contributes only when at least one adjoining cardinal cell also matches.
-// Residual (MAX 77.2609%, rechecked 2026-09-07): retail retains the center
-// and four cardinal getPackedCell calls, then expands the diagonals. The
-// candidate already expands east; southeast retains initializePackedCell
-// where retail expands its adapter read. Passive VC6 trace (identical
-// 656-byte candidate) gives east budget 92 against getPackedCell's cost 90.
-// That expansion consumes 90; southeast later gives initializePackedCell
-// budget 107 against its cost 128. The two differences are sequentially
-// coupled, not independent pins to add. Caller cb=432, initial budget=1000.
-// Controls: existing getWidth/getHeight calls are byte-neutral; replacing
-// the four diagonal conjunctions with explicit if/else guards gives 60.3877%
-// versus 77.2609%. The source already retains the canonical terrain/cache
-// helpers. RMG has no Dreamcast counterpart to supply the missing boundary.
+// Retail retains the center and four cardinal cache reads, expands the
+// diagonals' reads with their fills refused, and expands the south-east
+// fill. Residual 99.2138% (77.26% with eight constructed temporaries and
+// no corner points). The east read must be refused at the budget its
+// remaining sites leave, and the north-west read expanded right after,
+// which needs the diagonal region to hold three candidate sites per arm
+// and the caller to sit near 1150 units: the clamped coordinates kept as
+// two corner points whose accessors feed the diagonal temporaries, and
+// one reused point moved through its setters for the cardinal reads, do
+// both (constructed cardinal temporaries 92.92%; diagonals through the
+// signed-point conversion are one object with this; the reused point for
+// the diagonals is unconditional, so it changes the flow, 74.36%; the
+// corners constructed straight from the clamps reverse the clamp order,
+// 78.32%). Remaining: the south-east fill's index and cell-base registers
+// swap roles and the frame is 0x38 against 0x30.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)
@@ -1651,23 +1644,34 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
     unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
     unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
+    TRmgGridPoint low(west, north);
+    TRmgGridPoint high(east, south);
 
-    matches[TILE_DIR_NORTH] = getTerrain(TRmgGridPoint(point.m_x, north)) == terrain;
-    matches[TILE_DIR_SOUTH] = getTerrain(TRmgGridPoint(point.m_x, south)) == terrain;
-    matches[TILE_DIR_WEST] = getTerrain(TRmgGridPoint(west, point.m_y)) == terrain;
-    matches[TILE_DIR_EAST] = getTerrain(TRmgGridPoint(east, point.m_y)) == terrain;
+    TRmgGridPoint nearby;
+    nearby.setX(point.m_x);
+    nearby.setY(low.getY());
+    matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
+    nearby.setX(point.m_x);
+    nearby.setY(high.getY());
+    matches[TILE_DIR_SOUTH] = getTerrain(nearby) == terrain;
+    nearby.setX(low.getX());
+    nearby.setY(point.m_y);
+    matches[TILE_DIR_WEST] = getTerrain(nearby) == terrain;
+    nearby.setX(high.getX());
+    nearby.setY(point.m_y);
+    matches[TILE_DIR_EAST] = getTerrain(nearby) == terrain;
     matches[TILE_DIR_NORTHWEST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(west, north)) == terrain;
+        && getTerrain(TRmgGridPoint(low.getX(), low.getY())) == terrain;
     matches[TILE_DIR_NORTHEAST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(east, north)) == terrain;
+        && getTerrain(TRmgGridPoint(high.getX(), low.getY())) == terrain;
     matches[TILE_DIR_SOUTHWEST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(west, south)) == terrain;
+        && getTerrain(TRmgGridPoint(low.getX(), high.getY())) == terrain;
     matches[TILE_DIR_SOUTHEAST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(east, south)) == terrain;
+        && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
 }
 
 // The final top-tested loop reuses the preceding scan's known zero entry.
@@ -1911,9 +1915,19 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // separate cache queries and the scoped point value are visible in retail;
 // the later queries expand further than the first four retained calls.
 // SHR at +0x6a/+0xb6/+0x121/+0x25c proves logical, not signed division.
-// Generated source families: preserve dimension accessor calls (63.4074 ->
-// 70.1029). A separate frame accessor, reference-bound rule or point, and
-// copy-initialized point values do not recover the missing cache boundaries.
+// Residual 92.63% (70.10% with direct cell reads): retail calls both
+// west and north reads, calls the east read but expands its frame read
+// with the fill called, and expands both south reads with their fills.
+// The frame read therefore sits in a getFrame sibling of getTerrain
+// (its cost divides like the terrain read's), the guards and the point
+// go through the coordinate accessors, and each point is constructed at
+// the cell and stepped by one setter, which gives the south arm the six
+// candidate sites its 371-unit read needs while the east read stays
+// under 90 (accessor constructions alone 76.27%, the signed conversion
+// 83.91%, a signed sum 44%). Remaining: retail keeps the rule pointer in
+// EBX and reloads the terrain parameter; ours keeps the parameter and
+// reloads the rule (declaring the rule first 92.63, a reference, a
+// terrain copy, an int strength 91.58, no rule local 78.79).
 // Residual: the first frame query expands getPackedCell where retail calls
 // it; later source call/expansion decisions are also displaced. No pins.
 // A 60-case point/query matrix and a 60-case follow-up crossing ten parents
@@ -1930,30 +1944,34 @@ VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
 {
-    unsigned int strength = m_transitionStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    if (point.m_x > 0) {
-        TRmgGridPoint nearby(point.m_x - 1, point.m_y);
+    unsigned int strength = m_transitionStrength;
+    if (point.getX() > 0) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setX(nearby.getX() - 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_y > 0) {
-        TRmgGridPoint nearby(point.m_x, point.m_y - 1);
+    if (point.getY() > 0) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setY(nearby.getY() - 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_x < getWidth() - 1) {
-        TRmgGridPoint nearby(point.m_x + 1, point.m_y);
+    if (point.getX() < getWidth() - 1) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setX(nearby.getX() + 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_y < getHeight() - 1) {
-        TRmgGridPoint nearby(point.m_x, point.m_y + 1);
+    if (point.getY() < getHeight() - 1) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setY(nearby.getY() + 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     return strength;
