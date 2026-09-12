@@ -90,8 +90,10 @@ template<class T> static bool check(bool caller) {
         TRmgZone zone; zone.m_slot = &slot;
         zone.m_levelPosition = TRmgMapPosition(scenario / 11 % (w + 2) - 1, scenario / 13 % (h + 2) - 1, scenario % 2);
         zone.m_boundaryRoughness = scenario % 15 - 5;
+        int spread = scenario % 3 == 0 ? 31 : 1;
         for (int i = 0; i < 1 + scenario % 6; ++i)
-            zone.m_boundary.push_back(TPoint((i * 3 + scenario) % (w + 4) - 2, (i * 5 + scenario) % (h + 4) - 2));
+            zone.m_boundary.push_back(TPoint(((i * 3 + scenario) % (w + 4) - 2) * spread,
+                ((i * 5 + scenario) % (h + 4) - 2) * spread));
         TRmgZone saved = zone;
         std::vector<TRmgMapItem> cells(w * h * 2 + 2);
         for (unsigned i = 0; i < cells.size(); ++i) {

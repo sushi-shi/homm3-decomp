@@ -165,6 +165,7 @@ namespace {
 // The current TPoint constructor reproduces all 127 initializer bytes after
 // resolving the 16 table references, including repeated constant loads.
 // Before normalization: gRmgDirections.
+VA_COMPGEN(0x00530DA0, 0x7F, STATIC_CTOR, g_rmgDirections)
 DATA(0x0069CDC0)
 TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, 0),
@@ -175,18 +176,6 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(-1, -1),
     TPoint(0, -1),
     TPoint(1, -1)
-};
-
-// Shipyards are three tiles wide.  The connection repair pass probes the
-// four water-facing squares beside their upper and lower edges before it
-// floods the reachable water region.
-// Before normalization: gRmgShipyardWaterOffsets.
-DATA(0x0069CE00)
-TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
-    TPoint(-3, 0),
-    TPoint(1, 0),
-    TPoint(-3, 1),
-    TPoint(1, 1)
 };
 
 // Before normalization: gLandRiverDeltaIndex.
@@ -1120,6 +1109,10 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 // same 84.6471..85.1765% range (36 whole-TU objects, ten repeated finalists).
 // Named values, const references, assignment and direct returns do not recover
 // retail's post-call pointer move followed by interleaved loads/stores.
+// A signed map-size specialization plus an ordinary coordinate-template
+// conversion also fails: nineteen domain/return/conversion states produce
+// seven code identities and the same 84.6471..85.1765% adapter range.
+// No signed-return declaration or custom grid copy is adopted from that probe.
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
@@ -2472,8 +2465,14 @@ int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
 // Naming both payloads or just the type gives 99.9518%; direct stores give
 // 97.2048%. Keep both ordinary constructors shared with the sibling factories.
 // Current 99.7349% after the coordinate-template/comparator recovery in
-// rmg.h: VC6 omits retail's `mov ecx,[ebp+8]` at +0xca. This body, its CFG
-// and named calls are unchanged; the earlier 100% MAX/HIST remain recorded.
+// rmg.h: the allocation-failure arm exchanges `mov ecx,[ebp+8]` and
+// `mov edx,[ebp-4]` at +0xca. The CFG and named calls agree; the earlier
+// 100% MAX/HIST remain recorded.
+// Thirty-two pointer value/reference constructor states leave this peak;
+// twelve result-base/count-ownership states produce two code identities,
+// also without improvement. A position-base experiment restores this row
+// incidentally, but neither that gain nor its unchanged copy sites proves
+// the inheritance; the three-direct-field position model remains.
 VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
 type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -4921,6 +4920,20 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 // subtraction (73.46%); retaining the long clamp result reaches 75.35%.
 // Length and edge calls remain intact. Clamp temporary homes, vector
 // multiply/divide scheduling and the reverse-loop register roles differ.
+// Sixty clamp-expression/vector/counter-lifetime states give sixteen code
+// identities. Independent loop vectors reach 78.8713%, but retain the same
+// counter/length allocation problem. Nested clamps and separate scale/divide
+// expressions do not resolve it; the original body remains the control.
+// Value/reference coordinate parameters (sixteen seven-TU states) also fail
+// here and disturb exact signed-vector/terrain consumers; their small gains
+// in other callers do not establish those constructor declarations.
+// Sixty ordinary shared point-inset helper forms (plus the source control)
+// produce 42 code identities in the first population and no improvement.
+// In-place and returned-point ownership, sequential/nested clamps and caller
+// lifetimes still fail the retail register roles; no inferred helper is kept.
+// The independent integer-distance/edge-order/fill oracle accepts all 120
+// lifetime/helper alternatives and rejects wrong clamp, division and edge
+// order controls, including coordinates beyond the small-map dimensions.
 VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
 void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 {
@@ -6608,6 +6621,29 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
     }
 }
 
+namespace {
+
+// Shipyards are three tiles wide.  The connection repair pass probes the
+// four water-facing squares beside their upper and lower edges before it
+// floods the reachable water region.
+// Before normalization: gRmgShipyardWaterOffsets.
+// Retail 0x541910 stores all eight coordinates at 0x69ce00..0x69ce1c;
+// this identifies the initializer independently of its generated name.
+// Its position between floodConnectionRegion and canPlaceShipyard supports
+// this declaration beside its first user. Both source-order controls retain
+// every tracked score, including the exact initializer; the table's former
+// file-start placement is preserved by generate-rmg-shipyard-table-order.py.
+VA_COMPGEN(0x00541910, 0x45, STATIC_CTOR, g_rmgShipyardWaterOffsets)
+DATA(0x0069CE00)
+TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
+    TPoint(-3, 0),
+    TPoint(1, 0),
+    TPoint(-3, 1),
+    TPoint(1, 1)
+};
+
+} // namespace
+
 // Retail first checks the six land cells at x-2..x, y..y+1, then searches
 // the four signed water offsets for a gate-marked water tile. The opposite
 // side must be in bounds and non-water. Footprint x validity is a caller
@@ -6619,6 +6655,10 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 // enum snapshots instead fold to and/cmp byte. A conditional opposite-x is
 // byte-neutral. Returned-point translation and keeping only the old z do
 // not recover the remaining coordinate homes/registers or side-branch shape.
+// Sixty-one scalar/value query-level and coordinate/side controls give only
+// 90.8045%; the main register roles remain wrong. All forms pass 4,800
+// ordered-query scenarios across both levels and five wrong controls fail.
+// No accessor or query-level change is adopted from that family.
 VA(0x00541960, 0x16C) // anchor-callee 0x541c94; thiscall, ret 0x0c
 unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
 {
@@ -7116,14 +7156,36 @@ unsigned char type_random_map_generator::placeMonolithBorder(
 // Two-way prototypes need one object in each zone. One-way prototypes use
 // the matched exit prototype as well, producing entrance/exit pairs in both
 // zones. Placement failures delete only the failed object and continue.
-// Residual (86.7357%): the retained border calls, four base-object allocations,
+// Residual (91.9027%): the retained border calls, four base-object allocations,
 // property choices and placement sequence agree. VC6 retains two translated-
 // position constructors and calls the scalar map accessor inside placeGuard;
-// retail retains its map-position overload. A size call and second registry
-// insertion boundary also differ, with a 0x30 frame versus retail's 0x1c.
+// retail retains its map-position overload. A size call and both early
+// registry insertion boundaries differ, with a 0x34 frame versus retail's 0x1c.
 // Copying the guard coordinate then incrementing y, or using compound +=,
 // gives 86.6448%. Preserve the ordinary position, guard and value helpers;
 // their bodies are shared with the ground, shipyard and gate connections.
+// Retail copies each entrance's X before Y into a two-coordinate temporary.
+// Named points assigned in that order recover those copies (86.7357 ->
+// 90.6913%); two-scalar construction instead evaluates Y first. All eleven
+// projection/model controls were scored across seven consumers. A canonical
+// position conversion reaches 87.57%, a point base with explicit slicing
+// 88.53%, and named two-scalar construction 88.72%. The inherited position's
+// incidental quest-factory gain does not establish that class relationship.
+// Keep direct coordinate ownership; only this caller's score changes.
+// Retail selects the two-way registry first, then substitutes the one-way
+// registry. Its second two-way registration retains the single-element
+// insert wrapper, while the one-way branch expands to counted insertion.
+// Reversing the first conditional and using insert(end(), object) at the
+// second two-way site reaches 91.9027%; all sibling scores stay unchanged.
+// Sixteen registry-selection/ownership controls include named references
+// and pointers, which emit the same code. Repeating the conditional in an
+// explicit first insert is worse (91.2178%); push_back itself calls the
+// single-element wrapper, so its retained retail call does not prove a
+// different source API. The first wrapper's expansion remains unresolved.
+// Eight value/reference argument states for the ordinary addition and guard
+// helpers yield eight seven-TU objects. No state improves this function;
+// borrowing the guard coordinate drops it to 87.2579%. Borrowing the offset
+// also disturbs river/coast callers. The original value interfaces remain.
 VA(0x00542CE0, 0x554) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
 void type_random_map_generator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, int prototypeIndex)
@@ -7150,8 +7212,11 @@ void type_random_map_generator::createMonolithConnection(
     if (!placeObjectInZone(object, source)) {
         delete object;
     } else {
-        (exitProperties ? m_monolithsOneWay : m_monolithsTwoWay).push_back(object);
-        source->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        (!exitProperties ? m_monolithsTwoWay : m_monolithsOneWay).push_back(object);
+        TPoint entrance;
+        entrance.m_x = object->m_position.m_x;
+        entrance.m_y = object->m_position.m_y;
+        source->m_entrances.push_back(entrance);
         if (connection->m_placeBorderObjects
             && placeMonolithBorder(object->getPosition(), destination)) {
             guardValue = 0;
@@ -7164,10 +7229,13 @@ void type_random_map_generator::createMonolithConnection(
         delete object;
     } else {
         if (!exitProperties)
-            m_monolithsTwoWay.push_back(object);
+            m_monolithsTwoWay.insert(m_monolithsTwoWay.end(), object);
         else
             m_monolithsOneWay.push_back(object);
-        destination->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+        TPoint entrance;
+        entrance.m_x = object->m_position.m_x;
+        entrance.m_y = object->m_position.m_y;
+        destination->m_entrances.push_back(entrance);
         if (!connection->m_placeBorderObjects
             || !placeMonolithBorder(object->getPosition(), source)) {
             if (guardValue > 0)
@@ -7180,14 +7248,20 @@ void type_random_map_generator::createMonolithConnection(
             delete object;
         } else {
             m_monolithsOneWay.push_back(object);
-            source->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+            TPoint entrance;
+            entrance.m_x = object->m_position.m_x;
+            entrance.m_y = object->m_position.m_y;
+            source->m_entrances.push_back(entrance);
         }
         object = new type_object(exitProperties);
         if (!placeObjectInZone(object, destination)) {
             delete object;
         } else {
             m_monolithsOneWay.push_back(object);
-            destination->m_entrances.push_back(TPoint(object->m_position.m_x, object->m_position.m_y));
+            TPoint entrance;
+            entrance.m_x = object->m_position.m_x;
+            entrance.m_y = object->m_position.m_y;
+            destination->m_entrances.push_back(entrance);
         }
     }
 }

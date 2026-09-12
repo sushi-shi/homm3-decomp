@@ -18,6 +18,36 @@ tracked score in all seven consumers unchanged. The full build verifies the
 adopted constructor; restoring the value ID parameter is the negative control.
 Generator: `scripts/experiments/generate-rmg-prison-argument-family.py`.
 
+The direction and shipyard-offset initializers are separately admitted from
+their retail stores at `0x530da0` and `0x541910`, reproducing 127 and 69 bytes.
+Their VC6 `$E` functions reference anonymous-namespace data with a
+`?name@?%<source path><nonce>@@...` spelling. Compiler-function ownership
+recognizes the exact leading identifier while retaining unique-candidate and
+constructor/destructor-role checks; the ordinal and nonce never select a body.
+The shipyard declaration is placed beside its first user, consistent with
+retail's initializer placement. Both source-order controls preserve all scores.
+Tracked initializers keep their own ledger verification, while full-engine
+README fractions exclude generated categories from numerator and denominator.
+
+The island-inset lifetime and helper families retain ordinary vector operations
+and the final interior fill. Sixty lifetime forms yield sixteen objects and
+only 78.8713%; sixty shared-helper alternatives plus the current source do
+not improve the original 78.7719% boundary. The integer-distance/edge/fill oracle
+checks all 120 alternatives, extended coordinates, and wrong clamp, division,
+edge-order and fill controls. Neither family changes the authored function.
+The shipyard-query oracle independently checks ordered footprint, water and
+opposite-side probes for 61 forms across 4,800 scenarios each; five wrong
+controls fail. Query-level changes peak at 90.8045% and are not adopted.
+
+The monolith entrance projection family recovers retail's X-before-Y copies
+with named points assigned component by component (86.7357% to 90.6913%).
+The position-base and conversion hypotheses do not establish either type
+relationship. A sixteen-state registry family raises the caller to 91.9027%
+through retail's selection order and the second two-way single-element insert.
+Every sibling score stays unchanged. Eight ordinary helper argument-ownership
+states do not improve it; the coordinate constructor, accessor and insertion
+expansion differences remain documented beside the function.
+
 Inside the pinned build shell, with `HOMM3_DIR` set to the owning worktree:
 
 ```sh

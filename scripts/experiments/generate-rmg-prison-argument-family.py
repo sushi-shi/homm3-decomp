@@ -28,13 +28,24 @@ def main():
     definition = """rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, int objectId, int heroIndex,
     int experience)"""
-    options = []
+    header_text = (HOMM3_DIR / "include/rmg.h").read_text()
+    source_text = (HOMM3_DIR / "src/rmg.cpp").read_text()
+    variants = []
     for references in itertools.product((False, True), repeat=3):
         header, source = declaration, definition
         for name, reference in zip(("objectId", "heroIndex", "experience"), references):
             if reference:
                 header = header.replace("int " + name, "const int& " + name)
                 source = source.replace("int " + name, "const int& " + name)
+        variants.append((references, header, source))
+    current = [(refs, header, source) for refs, header, source in variants
+               if header_text.count(header) == 1 and source_text.count(source) == 1]
+    if len(current) != 1:
+        raise ValueError("review the current prison constructor declaration and definition")
+    _, declaration, definition = current[0]
+    variants.sort(key=lambda row: row != current[0])
+    options = []
+    for references, header, source in variants:
         options.append({"name": "ownership_" + "".join("r" if r else "v" for r in references),
                         "replace": header,
                         "extra_edits": [{"source": "src/rmg.cpp", "find": definition,
