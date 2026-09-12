@@ -1814,13 +1814,15 @@ static const int& clampRmgTerrainCoordinate(
 // the early-return reference clamp reach 89.7363 (direct member extents and
 // a constructed/reused point start at 78.2388). The signed offset initializer
 // already agrees byte-for-byte. Cache-call expansion and stack homes remain.
-// Grid-point and TPoint accessors (2026-09-12) give the first neighbour
-// query twelve remaining sites, so its cache read stays a call as in retail
-// while the last query expands the read and its fill (calls now agree,
-// 89.74 -> 90.71%). A separate second point also refuses that read but
-// costs a frame slot (0x30 against 0x28). Residual: register binding across
-// the clamp results (eax/edx/ecx roles) with the schedule aligned; why-reg's
-// catalog has no knob for it.
+// Exact (2026-09-12). Grid-point and TPoint accessors give the first
+// neighbour query eleven remaining sites, so its cache read stays a call as
+// in retail while the last query expands the read and its fill. The first
+// point is constructed from both clamps: VC6 evaluates constructor
+// arguments right to left, and retail clamps y before x (height, pair.y,
+// then width, pair.x), which the setter form (x then y) cannot reproduce
+// (90.71%). The second query reuses that point through the setters; a
+// separate second point costs a frame slot (0x30 against 0x28, 93.06%)
+// and assigning a second constructed point 93.18%.
 VA(0x005B6BA0, 0x24C)  // transition 2/8 tests; retail-only
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1834,11 +1836,11 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     };
     int terrain = getTerrain(point);
     const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby;
-    nearby.setX(clampRmgTerrainCoordinate(
-        static_cast<int>(point.getX()) + pair[0].getX(), 0, static_cast<int>(getWidth()) - 1));
-    nearby.setY(clampRmgTerrainCoordinate(
-        static_cast<int>(point.getY()) + pair[0].getY(), 0, static_cast<int>(getHeight()) - 1));
+    TRmgGridPoint nearby(
+        clampRmgTerrainCoordinate(
+            static_cast<int>(point.getX()) + pair[0].getX(), 0, static_cast<int>(getWidth()) - 1),
+        clampRmgTerrainCoordinate(
+            static_cast<int>(point.getY()) + pair[0].getY(), 0, static_cast<int>(getHeight()) - 1));
     if (getTerrain(nearby) == terrain)
         return 1;
     nearby.setX(clampRmgTerrainCoordinate(
@@ -1860,8 +1862,16 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
 // sites and 894 units (89 < 90), so its cache read stays a call as in
 // retail and the second query expands the read and its fill: 71.96 ->
 // 94.83% with copy-initialized points, 99.19% constructing the first point
-// directly. Residual: the frame is 0x30 against retail's 0x28; three
-// homed slots where retail keeps registers.
+// directly. Residual: the frame is 0x30 against retail's 0x28 because the
+// second point gets its own slots where retail's second query reuses the
+// first point's (-0x10/-0xc). Reusing the point drops the default
+// constructor site, the first read gets 99 units and expands again
+// (77.98%); sibling-scoped points coalesce but also fold y into the clamp
+// temporary (0x24, 97.64%); a block-scoped second point, either point
+// declared first, a constructed second point, re-indexed offsets through
+// flip accessors, and ternary/nested/reference clamps (54/66/74 units)
+// all land between 77.98 and 99.19%. The reuse form needs one more free
+// site after the first read or 85 fewer units before it.
 VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
