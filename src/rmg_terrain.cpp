@@ -829,44 +829,33 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// A 45-cost grid copy site once restored both retained set _Init calls and
-// the expanded packed-vector insert (23.33% -> 91.22%); with the trivial grid
-// copy the assigned virtual result keeps them. Assign the virtual result
-// into an existing local: this also expands the final size query, while erase
-// remains a call, and recovers all 29 CFG blocks (97.92%). Direct construction
-// and reference binding retain that size call. A grid member instead of the
-// separate dimensions changes the constructor's earlier call boundaries.
-// Residual: dimension stores and the area multiply in the first block.
-// A named fill value changes those stores (96.33%); reversing the product
-// operands and zero-initializing the local size are byte-neutral. Value/reference
-// dimension queries and a shorter size scope are also flat. The retained brush
-// constructor calls this ordinary body at 0x5b7297.
-// Signed dimension fields, reversed dimension stores, a named area product,
-// and moving the packed-cell flag initialization into its ctor body are flat.
-// Copy-initializing the empty size temporary retains the wrong size call (92.04%).
-// A focused 60-case matrix of dimension snapshots, member/local area operands,
-// assignment-result references and named products is also flat at 97.9205%.
-// A further 60-state family uses the ordinary getWidth/getHeight boundaries
-// from paintTransitions, with five dimension bindings and three area-result
-// lifetimes. Its 24 distinct objects and ten reproduced finalists add no
-// tracked peak; the direct dimension stores remain the closest reconstruction.
+// The dimensions are one grid-point member assigned straight from the
+// adapter's virtual size result; the packed-cell count is the product of the
+// ordinary getWidth/getHeight queries. That assignment keeps both retained
+// set _Init calls and the expanded packed-vector insert, and the two free
+// query sites leave the area product reading the width back from the member
+// (mov ecx, edx; imul ecx, [edi+0xc]), which is retail's first block.
+// Two scalar members with direct dimension stores held 97.92% through five
+// families (dimension snapshots, area operands, assignment-result references,
+// named products, size lifetimes): the stores and the multiply never matched.
+// With the grid member, reading the product from the fields (23.13%) or from
+// a named size copy (99.36%) or setting the fields one by one (98.94%) all
+// change the earlier call boundaries. The retained brush constructor calls
+// this ordinary body at 0x5b7297.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    TRmgGridPoint size;
-    size = m_adapter->getSize();
-    m_width = size.m_x;
-    m_height = size.m_y;
-    m_packedCells.resize(m_width * m_height, TRmgPackedTerrainCell());
+    m_size = m_adapter->getSize();
+    m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
 TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     const TRmgGridPoint& point)
 {
-    unsigned int index = point.m_y * m_width + point.m_x;
+    unsigned int index = point.m_y * m_size.m_x + point.m_x;
     if (!m_packedCells[index].m_initialized)
         initializePackedCell(point, index);
     return &m_packedCells[index];
@@ -887,12 +876,12 @@ int rmgTerrainPainter::getFrame(const TRmgGridPoint& point)
 
 unsigned int rmgTerrainPainter::getWidth() const
 {
-    return m_width;
+    return m_size.m_x;
 }
 
 unsigned int rmgTerrainPainter::getHeight() const
 {
-    return m_height;
+    return m_size.m_y;
 }
 
 // The base-frame paths in PaintPoint and PaintTransitions first compute
@@ -914,7 +903,7 @@ void rmgTerrainPainter::setTile(
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     m_adapter->setTile(point, tile);
-    TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_width + point.m_x];
+    TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_size.m_x + point.m_x];
     packed.setInitialized();
     packed.setTerrain(tile.m_terrain);
     packed.setFrame(tile.m_frame);
@@ -1171,7 +1160,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_y < m_height - 1) {
+        if (point.m_y < m_size.m_y - 1) {
             TRmgGridPoint nearby(point.m_x, point.m_y + 1);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isHorizontalGap(nearby)) {
@@ -1187,7 +1176,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_x < m_width - 1) {
+        if (point.m_x < m_size.m_x - 1) {
             TRmgGridPoint nearby(point.m_x + 1, point.m_y);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isVerticalGap(nearby)) {
@@ -1198,7 +1187,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
     } else {
         unsigned char neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
-            m_width, m_height, point.m_x, point.m_y, neighbourExists);
+            m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 const TPoint& offset = g_tileDirections[direction];
@@ -1666,9 +1655,9 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
-    unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
+    unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
-    unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
+    unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
     TRmgGridPoint low(west, north);
     TRmgGridPoint high(east, south);
 
@@ -1765,9 +1754,9 @@ void rmgTerrainPainter::buildNeighbourKinds(
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
-    unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
+    unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
-    unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
+    unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
 
     {
         TRmgGridPoint nearby(point.m_x, north);
