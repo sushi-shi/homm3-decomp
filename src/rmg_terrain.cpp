@@ -588,14 +588,24 @@ void rmgTerrainPainter::initializePackedCell(
 // ECX/EDX hold the two terrain indices; both rule flags are read at +4.
 // Retail returns no edge for equal terrain or a sand center, hard edge if
 // either rule forbids blending, otherwise the center's non-dirt predicate.
+// Exact. Named rule pointers with nested tests give this helper the inline
+// cost buildNeighbourKinds needs (87..104 with plain point locals): with
+// the plain `&&` form (cost 70) or named rules alone (82) the caller's
+// seven expansions leave 114 units and the eighth kind test expands where
+// retail calls it (77.66% / 87.59%); a byte local, two byte locals or a
+// nested conditional return are byte-identical alternatives, and splitting
+// the first test breaks the body (67.27%). 108-state family, 2026-09-12.
 VA(0x005B3E40, 0x38)  // anchor-callee 0x5b6b8e; fastcall; retail-only
 int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
 {
     if (terrain == neighbourTerrain || terrain == eTerrainSand)
         return RMG_NEIGHBOUR_NO_EDGE;
-    if (g_rmgTerrainRules[terrain]->m_blendsWithOtherTerrain
-        && g_rmgTerrainRules[neighbourTerrain]->m_blendsWithOtherTerrain)
-        return terrain != eTerrainDirt;
+    const TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+    const TRmgTerrainRule* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
+    if (rule->m_blendsWithOtherTerrain) {
+        if (neighbourRule->m_blendsWithOtherTerrain)
+            return terrain != eTerrainDirt;
+    }
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
@@ -1668,6 +1678,10 @@ noSeparation:
 // (87.5851 -> 94.9255). Direct temporaries expand the last classifier too.
 // Residual: register scheduling begins to differ at +0xb4; bounds-accessor
 // spelling and independent MapItem::clear snapshot order do not improve it.
+// Exact (2026-09-12): plain point locals per block (a const reference bound
+// to a constructed temporary adds a copy site each) and the neighbour-kind
+// helper's cost window keep all nine cache calls and retail's single kind
+// call for the south-east block; see the helper above.
 VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f45; retail-only
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, int* neighbours)
@@ -1679,49 +1693,49 @@ void rmgTerrainPainter::buildNeighbourKinds(
     unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
 
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(point.m_x, north);
+        TRmgGridPoint nearby(point.m_x, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTH] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(point.m_x, south);
+        TRmgGridPoint nearby(point.m_x, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTH] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(west, point.m_y);
+        TRmgGridPoint nearby(west, point.m_y);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_WEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(east, point.m_y);
+        TRmgGridPoint nearby(east, point.m_y);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_EAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(west, north);
+        TRmgGridPoint nearby(west, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTHWEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(east, north);
+        TRmgGridPoint nearby(east, north);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_NORTHEAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(west, south);
+        TRmgGridPoint nearby(west, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTHWEST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
     }
     {
-        const TRmgGridPoint& nearby = TRmgGridPoint(east, south);
+        TRmgGridPoint nearby(east, south);
         int nearbyTerrain = getTerrain(nearby);
         neighbours[TILE_DIR_SOUTHEAST] = getRmgTerrainNeighbourKind(
             terrain, nearbyTerrain);
