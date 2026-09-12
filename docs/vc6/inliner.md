@@ -2260,4 +2260,7 @@ the structures the replay admits. What it found:
   every `paintPoint` edit that defers it (dropping the secondary find
   guard, an arm, the loop or the tail) also changes `paintPoint`'s
   retained calls, and the trigger is not monotone in the number of set
-  calls. Open.
+  calls. Explicit instantiation of the set or the tree (top or end of the
+  file, either comparator) changes nothing about the comparator or the
+  frame and emits every member out of the first-use order retail shows.
+  Open.

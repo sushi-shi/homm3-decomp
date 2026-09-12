@@ -2224,7 +2224,10 @@ VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 // header, as a friend, or early in this file leaves every row unchanged
 // (insert 79.83%). Every paintPoint change that defers the batch (dropping
 // the secondary find guard, an arm, the loop, or the tail) also changes
-// paintPoint's retained calls, so the frame stays open.
+// paintPoint's retained calls, so the frame stays open. Explicitly
+// instantiating the set or the tree, at the top or the end of this file,
+// moves neither the comparator nor the frame and emits every member out
+// of retail's first-use order (insert from slot 164 to 206).
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
 {
