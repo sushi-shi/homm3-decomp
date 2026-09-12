@@ -3597,7 +3597,7 @@ rmg_terrain	?lower_bound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@
 rmg_terrain	?paintPoint@TRmgLineWalker@@QAEXABUTRmgGridPoint@@@Z	80.6357	80.6357	80.6357	0xfa3c0	ea89bb807938
 rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	98.6781	98.6781	100.0000	0x1b4b20	14a71bf4be67
 rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b7690	2e230eeb2b4b
-rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	72.8497	72.8497	72.8497	0x1b4960	52a8c3316260
+rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b4960	7b042e1361fa
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	71.9231	74.4231	74.4231	0xf9f00	ab30f992e664

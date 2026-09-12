@@ -630,9 +630,10 @@ struct TRmgGridPoint {
 
     // Coordinate accessors: each use is a free inline site, and the terrain
     // painter's diagonal checks need those sites to divide their budgets so
-    // that retail's retained cache reads stay calls (2026-09-12). Only the
-    // diagonal checks use them so far; every other body still reads the
-    // public fields, and each migration is measured on its own.
+    // that retail's retained cache reads stay calls (2026-09-12), and
+    // paintRectangle walks its rectangle through them so its body stays
+    // above the saved-body cliff. Every other body still reads the public
+    // fields, and each migration is measured on its own.
     unsigned int getX() const { return m_x; }
     unsigned int getY() const { return m_y; }
     void setX(unsigned int newX) { m_x = newX; }

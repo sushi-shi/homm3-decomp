@@ -302,6 +302,7 @@ public:
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     // Prior provisional role: SetTile
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    void paintBaseTile(const TRmgGridPoint& point);
     int getPaintTerrain() const;
     unsigned char isPaintTerrain(const TRmgGridPoint& point);
 

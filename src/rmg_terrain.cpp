@@ -889,6 +889,16 @@ void rmgTerrainPainter::setTile(
     packed.setFlipY(tile.m_flipY);
 }
 
+// The base-tile block of paintPoint as paintRectangle's own helper: its one
+// site is what paintRectangle's terrain test needs (see there), while
+// paintPoint expands the same three operations from its own block.
+void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
+{
+    int frame = selectBaseFrame(point, m_paintTerrain, -1);
+    rmgTerrainTile tile(m_paintTerrain, frame);
+    setTile(point, tile);
+}
+
 // Provisional terrain-comparison interface, inferred from the first
 // eight-neighbour read at retail 0x5b4e55. Both accessors participate:
 // flattening the configured-terrain read into the predicate expands that
@@ -927,6 +937,18 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // multiplication residual. Sharing the base-frame/constructed-tile sequence
 // through another helper leaves selectBaseFrame, the tile constructor and
 // setTile called in paintPoint, contradicting its retail expansion (81.6203%).
+// Exact (2026-09-12). Three things had to hold at once. Retail expands the
+// cache read inside the terrain test AND its fill, which needs the test's
+// nested budget above 346: with a direct `m_paintTerrain != getTerrain`
+// test and the base-tile work in one ordinary helper there are two
+// candidate sites from the test on (500 units; the predicate helper or an
+// inline else branch leave 250). That helper alone drops this body to
+// cost 157, a saved candidate the brush wrapper at 0x5b7690 then expands;
+// walking the rectangle through the grid point's accessors keeps the body
+// unsaved so the wrapper's retained call survives. The paint terrain reads
+// first in the test for the retained compare order. paintPoint keeps its
+// own inline copy of the base-tile block: sharing the helper costs it
+// 98.68 -> 76.68/78.68%.
 VA(0x005B4960, 0x1B2) // anchor-callee 0x5b7690; thiscall, ret 16; retail-only
 void rmgTerrainPainter::paintRectangle(
     unsigned int x, unsigned int y,
@@ -935,14 +957,12 @@ void rmgTerrainPainter::paintRectangle(
     unsigned int endX = x + rectangleWidth;
     unsigned int endY = y + rectangleHeight;
     TRmgGridPoint point;
-    for (point.m_y = y; point.m_y < endY; ++point.m_y) {
-        for (point.m_x = x; point.m_x < endX; ++point.m_x) {
-            if (!isPaintTerrain(point)) {
+    for (point.setY(y); point.getY() < endY; point.setY(point.getY() + 1)) {
+        for (point.setX(x); point.getX() < endX; point.setX(point.getX() + 1)) {
+            if (m_paintTerrain != getTerrain(point)) {
                 paintPoint(point);
             } else {
-                int frame = selectBaseFrame(point, m_paintTerrain, -1);
-                rmgTerrainTile tile(m_paintTerrain, frame);
-                setTile(point, tile);
+                paintBaseTile(point);
             }
         }
     }
@@ -1866,6 +1886,11 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // with no collateral gain. Shared/copied points and named frame queries lower
 // the score; moving the existing helper definitions leaves the leading caller
 // unchanged. Reopening this family requires new evidence, not resampling it.
+// Retail keeps five of the eight cache reads as calls, expands the east
+// frame read with its fill called and both south reads with their fills
+// expanded; here the four frame reads all expand (2026-09-12 trace). A
+// painter-level getFrame(point) sibling of getTerrain drops this body to
+// 32.53%; it is not the boundary.
 VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
