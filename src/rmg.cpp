@@ -2460,9 +2460,12 @@ int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
 // Retail allocates the pending hut, selects the artifact prototype, and
 // constructs its wrapper before loading both creature payload fields.
 // Complete-only: the definition's 0x640c00 table proves this override.
-// Exact: naming only the count recovers the final load/store scheduling.
+// Banked exact: naming only the count recovers the final load/store scheduling.
 // Naming both payloads or just the type gives 99.9518%; direct stores give
 // 97.2048%. Keep both ordinary constructors shared with the sibling factories.
+// Current 99.7349% after the coordinate-template/comparator recovery in
+// rmg.h: VC6 omits retail's `mov ecx,[ebp+8]` at +0xca. This body, its CFG
+// and named calls are unchanged; the earlier 100% MAX/HIST remain recorded.
 VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
 type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)

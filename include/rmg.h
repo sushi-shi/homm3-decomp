@@ -591,13 +591,22 @@ int getRmgSquaredDistance(TPoint first, TPoint second);
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
 // at 0x5b76b0 reads both arguments through pointers. This role name is
 // provisional; the signed geometry TPoint is a separate recovered surface.
-struct TRmgGridPoint {
+// The coordinate-template model is supported by two independent boundaries:
+// const-coordinate-reference construction at 0x5b76b0 and the comparison
+// emitted among the terrain tree templates at 0x5b8ca0. Its template body
+// stays unknown to the optimizer until after insert is emitted, preserving
+// retail's _Lockit exception scope (0x5b7cd0). An ordinary inline comparison
+// on this same specialization is compiled at paintPoint and loses that frame.
+// TRmgGridPointT is a provisional template name; TRmgGridPoint preserves the
+// existing unsigned-coordinate role spelling at its uses.
+template<class Coordinate>
+struct TRmgGridPointT {
     // Before normalization: x.
-    unsigned int m_x;
+    Coordinate m_x;
     // Before normalization: y.
-    unsigned int m_y;
+    Coordinate m_y;
 
-    TRmgGridPoint() {}
+    TRmgGridPointT() {}
     // Trivially copyable: no user-written copy constructor. Retail's proxy
     // factory at() (0x4fa050) and rmg's getSize (0x532240) copy a grid
     // point as the compiler's memberwise copy, x before y; a written copy
@@ -624,9 +633,9 @@ struct TRmgGridPoint {
     // The river-painter constructor at 0x55ee50 stays exact; its earlier
     // 99.71% implicit-copy reading predates the retained compound add.
 
-    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
+    TRmgGridPointT(const Coordinate& newX, const Coordinate& newY)
         : m_x(newX), m_y(newY) {}
-    TRmgGridPoint(const TPoint& point);
+    TRmgGridPointT(const TPoint& point);
 
     // Coordinate accessors: each use is a free inline site, and the terrain
     // painter's diagonal checks need those sites to divide their budgets so
@@ -634,14 +643,14 @@ struct TRmgGridPoint {
     // paintRectangle walks its rectangle through them so its body stays
     // above the saved-body cliff. Every other body still reads the public
     // fields, and each migration is measured on its own.
-    unsigned int getX() const { return m_x; }
-    unsigned int getY() const { return m_y; }
-    void setX(unsigned int newX) { m_x = newX; }
-    void setY(unsigned int newY) { m_y = newY; }
+    Coordinate getX() const { return m_x; }
+    Coordinate getY() const { return m_y; }
+    void setX(Coordinate newX) { m_x = newX; }
+    void setY(Coordinate newY) { m_y = newY; }
 
     // paintTransitions steps one column with a grid-side compound add; the
     // retained add at 0x4fa540 is TPoint's, so this one stays inline.
-    TRmgGridPoint& operator+=(const TPoint& offset)
+    TRmgGridPointT& operator+=(const TPoint& offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;
@@ -653,9 +662,13 @@ struct TRmgGridPoint {
     }
 };
 
-// The retained comparison at 0x5b8ca0 receives both point addresses in
-// ECX/EDX and returns without popping arguments: a free fastcall boundary.
-bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
+typedef TRmgGridPointT<unsigned int> TRmgGridPoint;
+
+template<class Coordinate>
+bool operator<(const TRmgGridPointT<Coordinate>& left, const TRmgGridPointT<Coordinate>& right)
+{
+    return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
+}
 
 struct TRmgZoneBounds {
     // Before normalization: minimumX.

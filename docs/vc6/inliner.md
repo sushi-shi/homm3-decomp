@@ -2238,29 +2238,56 @@ the structures the replay admits. What it found:
   retail's first block does.
 - A helper wrapping a read cannot starve it: the helper's cost is
   subtracted before the division by its remaining siblings, a few units.
-- The STL `_Tree::insert` row (79.8) is an exception-frame difference:
-  retail compiled the instantiation before the grid-point comparator's
-  body, so the `_Lockit` scope needs a frame; our comparator, a regular
-  function or an inline one emitted at its first use, is compiled first
-  and known not to throw. Only declaring it restores the frame (100%) but
-  removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
-  places the comparator between the two `_Distance` instantiations, but
-  spelling it inline in either header, as an in-class friend, or inline
-  early in the file leaves every row byte-identical (2026-09-12). The
-  mechanism, measured on small units through `cc_wrap`: C1XX writes an
-  inline function's body right after the function whose processing first
-  needs it; template member bodies always go to the deferred region, and
-  an inline comparator referenced only from `less<T>::operator()` lands
-  there too (after `insert`, which then gets its frame) unless the
-  instantiation batch runs at the end of a regular function, which
-  happens once enough distinct instantiations are pending (a unit with
-  vector/list/set traffic in its constructor pulled the comparator out
-  right after the first set user). In `rmg_terrain` that batch runs at
-  `paintPoint`'s end, so the comparator is compiled before `insert`;
-  every `paintPoint` edit that defers it (dropping the secondary find
-  guard, an arm, the loop or the tail) also changes `paintPoint`'s
-  retained calls, and the trigger is not monotone in the number of set
-  calls. Explicit instantiation of the set or the tree (top or end of the
-  file, either comparator) changes nothing about the comparator or the
-  frame and emits every member out of the first-use order retail shows.
-  Open.
+- The STL `_Tree::insert` row at `0x5b7cd0` closes at 100% with a
+  **coordinate class template and a function-template comparison**. The
+  const-coordinate-reference constructor at `0x5b76b0` supports generic
+  coordinates; retail's comparison at `0x5b8ca0`, between `_Distance`
+  (`0x5b8c70`) and `_Construct` (`0x5b8cc0`), supports deferred template
+  emission. `TRmgGridPointT<Coordinate>` and its free `operator<` reproduce
+  that order without changing any painter statement. The unsigned alias
+  retains the existing `TRmgGridPoint` role; original template names and
+  any additional specializations remain unknown (there is no DC RMG TU).
+  All 342 insert bytes and all 15 CFG blocks match after the full build.
+  Its retained comparator and the bound-search expansions remain present.
+
+  The negative control keeps the coordinate class template but replaces
+  its function-template comparison with an ordinary fixed-type inline
+  overload using the identical expression. C1XX then emits the comparator
+  immediately after `paintPoint`; C2 knows it cannot throw when compiling
+  insert, drops `_Lockit`'s unwind scope, and returns to 79.8254%.
+  Thus a header-inline function and a function template are materially
+  different source hypotheses even when their retained bodies agree.
+  The previous "instantiation-batch wall" diagnosis overlooked this kind
+  of source definition.
+
+  Four earlier controls crossed ordinary `.cpp`/header-inline comparison
+  with broad `rmg.h`/painting-only dependencies. All four left insert at
+  79.8254%; the narrow inline case still emitted the comparator after
+  `paintPoint`. `<stdexcept>` is required by the real `TAllocationFailure`
+  throw at `0x5b7250`; removing it would discard supported source.
+  Explicit tree/set instantiation likewise failed and disrupted retail's
+  first-use member order. None of those alternatives was adopted.
+
+  Full-build collateral: quest-creature `generate` (`0x534b90`) changes
+  from 100% to 99.7349%, omitting the parameter reload at `+0xca`; its
+  source, CFG, calls and recorded MAX/HIST remain unchanged. All other
+  tracked current scores hold. Reproduce the comparator control across
+  all seven header consumers with:
+
+  ```sh
+  PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-comparator-family.py build/rmg-grid-comparator.json
+  PYTHONPATH=scripts python -m homm3.vc6.source_families build/rmg-grid-comparator.json --width 60 --keep 8 --jobs 2
+  ```
+
+  Both states compile and reproduce, yielding two distinct code results.
+  The fixed-type control also restores quest-creature generation to 100%
+  and changes `loadTemplates` from 80.8461% to 80.8308%; all other tracked
+  scores agree. The template definition is retained for its constructor,
+  comparator-emission and exception-scope evidence.
+
+  The label join now recognizes tree keys that are global class templates
+  with one primitive type argument, preserving both parts in the claim
+  owner (`TRmgGridPointT_unsigned_int`). Equal-size signed/unsigned trees
+  are tested independently; multi-argument and namespaced templates do
+  not borrow this key. This changes symbol identification only, not the
+  byte comparison or Dinkumware implementation.
