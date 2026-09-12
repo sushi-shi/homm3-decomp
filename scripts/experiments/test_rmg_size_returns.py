@@ -26,6 +26,14 @@ class SizeReturnTests(unittest.TestCase):
             module.base_forms(), module.adapter_forms("TRmgMapAdapter"))]
         self.assertEqual(len(pairs), 60)
         base, adapter = pairs[0]
+        helper = generator("generate-rmg-position-family.py")
+        authored = (root / "src/rmg.cpp").read_text()
+        actual_base = helper.definition(authored, "type_random_map::getSize")
+        actual_adapter = helper.definition(authored, "TRmgMapAdapter::getSize")
+        components = generator("generate-rmg-adapter-size-components.py")
+        pairs += [(actual_base, body) for _, body in components.variants(actual_adapter)]
+        self.assertEqual(len(pairs), 96)
+        valid_count = len(pairs)
         pairs += [(base.replace("m_size.m_x, m_size.m_y", "m_size.m_y, m_size.m_x"), adapter),
                   (base, adapter.replace("return size;", "size.m_y ^= 1u; return size;")),
                   (base, adapter.replace("return size;", "m_map->getSize(); return size;"))]
@@ -60,9 +68,9 @@ bool check() {
 '''
         text += "int main() {\n"
         for index in range(len(pairs)):
-            condition = "!" if index < 60 else ""
+            condition = "!" if index < valid_count else ""
             text += 'if(%sN%d::check()) { std::printf("failed form %d\\n"); return 1; }\n' % (condition, index, index)
-        text += 'std::puts("60 size-return pairs: 49 dimension pairs, both adapters; three broken controls rejected"); return 0; }\n'
+        text += 'std::puts("96 size-return pairs: 49 dimension pairs, both adapters; three broken controls rejected"); return 0; }\n'
         with tempfile.TemporaryDirectory(prefix="rmg-size-return-oracle-") as folder:
             source, binary = Path(folder) / "oracle.cpp", Path(folder) / "oracle"
             source.write_text(text)

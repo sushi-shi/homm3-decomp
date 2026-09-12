@@ -1109,6 +1109,11 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 // conversion also fails: nineteen domain/return/conversion states produce
 // seven code identities and the same 84.6471..85.1765% adapter range.
 // No signed-return declaration or custom grid copy is adopted from that probe.
+// With the implicit grid copy restored, 37 component-construction controls
+// (25 objects, ten reproduced elites) use fields, accessors or borrowed
+// components with four captured-size and three result lifetimes. Every
+// adapter remains 85.1765%; every tracked sibling score is unchanged. The
+// canonical two-reference constructor does not explain the interleaved copy.
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
@@ -6177,6 +6182,18 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 // separate masking and signed/const locals: masking reaches only 81.5933%
 // and perturbs writeMapHeader 77.9030 -> 77.8952%. No mask is adopted merely
 // to fix one instruction; retain the canonical signed field and 99.3582% body.
+// Current-context projection lifetimes (37 states, seven reproduced objects)
+// cross guard/scan/zone/function scope, word/byte locals, the existing getter,
+// and a copied tile. All masked forms remain 80.38-81.59%. A verified masked
+// parent crossed with reset-coordinate construction and pass/call lifetimes
+// (25 states, seven objects) also cannot exceed 81.59%. The mask reserves EDI
+// for this before the reset pass, spilling a predecessor component; its effect
+// is not confined to the later extraction. Every sibling score stays fixed.
+// The current signed-to-unsigned and masked projections make identical seed
+// decisions for all 64 encodings: terrain is compared with water/rock only,
+// and the zone-terrain comparison is reached only for water. An exhaustive
+// 196608-case control includes all signed-byte zone kinds and gate/road/object
+// states. The unmatched extraction is not evidence of different seed behavior.
 VA(0x005405D0, 0x304)
 void type_random_map_generator::buildZoneConnectionPaths()
 {

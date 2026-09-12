@@ -4396,3 +4396,45 @@ all four reproduced. Value forms retain refresh's 97.3461%; references to
 the selector's escaped output fall to 91.5154%. No sibling score moves.
 Neither the ESI/EDI parameter exchange nor the extra table-entry register
 load is resolved, so no source alternative is adopted from this family.
+
+### Connection terrain projection and reset ownership
+
+`generate-rmg-connection-terrain-lifetimes.py` exhausts 37 controls in
+`799adc71ad51cd9d59b5`: terrain-local scope, word/byte types, the canonical
+getter and direct/copied tile ownership. Seven distinct objects reproduce.
+All masked forms score 80.3843–81.5933%; the current sign-extended form is
+99.3582%. Unlike the earlier context, every sibling score remains unchanged.
+Inspection of the masked object shows the generator receiver already in
+EDI at entry and a spilled predecessor component during the reset pass.
+This is a whole-function allocation change preceding the terrain read.
+
+`generate-rmg-connection-reset-projection.py` verifies the parent's source
+snapshot, rendered definition and repeated object identity, then tests four
+coordinate constructions, three lifetimes and a separate reset-pass scope.
+Its 25 controls in `99948c09bce0fdd4cbb8` produce seven reproduced objects;
+the masked parent remains the best masked result at 81.5933%. Neither family
+changes the authored function or any helper interface.
+
+The extraction mismatch alone does not establish changed seed selection.
+All 64 raw terrain encodings were checked against every signed-byte zone
+kind, three object counts and both gate/road flags: 196,608 comparisons agree.
+Both projections distinguish water (8) and rock (9) identically; zone terrain
+is compared only when the candidate terrain is already water. This verifies
+the affected scalar decisions, not the complete path-building algorithm.
+
+`generate-rmg-adapter-size-components.py` tests the canonical two-reference
+grid constructor at the adapter return boundary, preserving the implicit
+same-type copy and both ICF owners. Four captured-size lifetimes, three
+component bindings and three result constructions plus the original form
+yield 37 states and 25 objects in `69963d98b90649e33c35`. Ten elites reproduce;
+all tracked scores remain unchanged, including the adapter's 85.1765%.
+Field/accessor/reference components do not produce retail's interleaved
+load/store sequence. No return-interface or game-body edit is adopted.
+
+`test_rmg_size_returns.py` now checks these 36 forms alongside its original
+60 pairs using actual coordinate declarations and the current base getter.
+Each passes 49 dimension pairs for both adapters, including negative/extreme
+signed dimensions and mutation of the source dimensions during the virtual
+query. Three swapped-coordinate, corrupted-result and repeated-query controls
+fail. This checks returned values and the single virtual call; VC6 determines
+the hidden-result ABI and instruction verdict.
