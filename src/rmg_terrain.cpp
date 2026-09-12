@@ -2216,10 +2216,15 @@ VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
 // y-then-x ordering also appears in the tree's expanded comparisons.
 // Retail emits it between the two _Distance instantiations, after the
-// tree insert whose lock scope carries an exception frame; spelling it
-// inline here or in either header, as a friend, or early in this file
-// leaves every row unchanged (insert 79.83%), so that frame is not the
-// comparator's emission order.
+// tree insert, whose lock scope then carries an exception frame because
+// the comparator is not yet known not to throw. An inline comparator does
+// land there in a small unit (and insert gets its frame), but in this unit
+// the instantiation batch at paintPoint's end pulls it out right after
+// paintPoint, before every template; spelling it inline here or in either
+// header, as a friend, or early in this file leaves every row unchanged
+// (insert 79.83%). Every paintPoint change that defers the batch (dropping
+// the secondary find guard, an arm, the loop, or the tail) also changes
+// paintPoint's retained calls, so the frame stays open.
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
 {
