@@ -2,8 +2,10 @@
 """Test input ownership at ordinary position-addition and guard boundaries.
 
 Monolith retail 0x542ce0 expands its translated-coordinate constructor and
-retains the value-position map accessor. The candidate retains the constructor
-and expands that accessor to its scalar overload. Shipyard preserves a separate
+retains the value-position map accessor. With coordinate construction owned by
+rmg.cpp, the candidate expands the constructor correctly but still expands
+that accessor to its scalar overload. Revisit the earlier hidden-constructor
+parameter controls in this corrected context. Shipyard preserves a separate
 coordinate snapshot. These Complete-only helpers have no retained declarations
 or Dreamcast records. Compare value and const-reference inputs consistently at
 their declaration and definition; leave all call expressions, the constructor

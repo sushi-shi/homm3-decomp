@@ -32,7 +32,8 @@ std::vector<int> events;
 int randomValue, randomCalls;
 int scriptedRand() { ++randomCalls; return randomValue; }
 struct TRmgTownSlot { int m_kind, m_playerIndex; };
-struct TRmgTemplate { std::string m_name; std::vector<TRmgTownSlot*> m_zones; };
+struct TRmgTemplate { std::string m_name; std::vector<TRmgTownSlot*> m_zones; @TEMPLATE_METHODS@ };
+@TEMPLATE_METHOD_DEFINITIONS@
 struct TRmgZone {
     TRmgTownSlot* m_slot;
     int m_terrain, m_alignment, id;
@@ -212,7 +213,12 @@ def main():
     parser.add_argument("--manifest", type=Path, action="append", default=[])
     args = parser.parse_args()
     family = generator("generate-rmg-coordinator-family.py")
-    authored = family.definition((HOMM3_DIR / "src/rmg.cpp").read_text())
+    game_source = (HOMM3_DIR / "src/rmg.cpp").read_text()
+    authored = family.definition(game_source)
+    helper = generator("generate-rmg-position-family.py")
+    template_methods = set()
+    if "TRmgTemplate::getName" in game_source:
+        template_methods.add(helper.definition(game_source, "TRmgTemplate::getName"))
     original = family.variant(authored, 0, 0, 0)
     bodies = [family.variant(original, *v) for v in itertools.product(range(5), range(4), range(3))]
     for path in args.manifest:
@@ -220,6 +226,9 @@ def main():
         for axis in payload["axes"]:
             for option in axis["options"]:
                 body = option["replace"]
+                for edit in option.get("extra_edits", []):
+                    if edit.get("source") == "src/rmg.cpp" and "TRmgTemplate::getName" in edit.get("replace", ""):
+                        template_methods.add(helper.definition(edit["replace"], "TRmgTemplate::getName"))
                 if body not in bodies:
                     bodies.append(body)
     positive_count = len(bodies)
@@ -247,6 +256,11 @@ def main():
         header = (HOMM3_DIR / "include" / file).read_text()
         start = header.index("enum " + name + " {")
         enums.append(header[start:header.index("};", start) + 2])
+    if len(template_methods) > 1:
+        raise ValueError("template-name helpers disagree across manifests")
+    source = source.replace("@TEMPLATE_METHODS@", "\n".join(
+        method.split("{", 1)[0].replace("TRmgTemplate::", "").strip() + ";" for method in sorted(template_methods)))
+    source = source.replace("@TEMPLATE_METHOD_DEFINITIONS@", "\n".join(sorted(template_methods)))
     source = source.replace("@ENUMS@", "\n".join(enums))
     header = (HOMM3_DIR / "include/rmg.h").read_text()
     at = header.index("struct TRmgMapPosition {")

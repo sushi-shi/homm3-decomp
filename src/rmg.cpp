@@ -3545,6 +3545,17 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
 // The nested call changes other inlining decisions: CreateGroundConnection's
 // first clear retains range erase, while CreateRiver's final map destruction
 // calls its vector deleting destructor. Original delegation remains provisional.
+// Nine coordinate-accessor ownership/use controls preserve this body but do
+// not recover monolith's retained overload. Twenty-four projection/local/
+// result forms plus twelve projection-order/return controls distinguish a
+// possible const-reference-to-value projection: both monolith guard calls
+// then retain this wrapper, but the wrapper uses ESI for its level (76%).
+// Reordering those projections gives 74.2667% or 76%, never the exact body.
+// All 46 scalar/value projection forms pass cell-offset, source-immutability
+// and aliased-dimension checks; no ownership change is yet justified.
+// Crossing the retained-call projection with sixty canonical scalar index,
+// row and result forms also fails to restore this body (at most 76% among
+// those projected forms). All 61 controls pass the same native contract.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
@@ -5450,6 +5461,10 @@ void type_random_map_generator::paintZoneTerrain()
 // produce 16 distinct objects, with ten reproduced elites and no improvement.
 // Every form passes a 3x3 sample-lattice oracle plus four negative controls;
 // retain the scalar midpoint source until its permuted homes are recovered.
+// Forty-eight input/midpoint constness, initialization and work/half/quadrant
+// scope states produce only three objects, all at 99.9545%. A four-value
+// midpoint constructor, crossed with persistent-record/scalar sample locals
+// in the caller, also leaves this helper unchanged across nine controls.
 VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
@@ -5523,6 +5538,14 @@ TRmgZoneConnection* TRmgTownSlot::findConnection(int destinationZone)
 // Retail 0x53f048 passes the byte mask in ECX, width in EDX and height
 // on the stack. This free fastcall boundary has no Dreamcast counterpart.
 void __fastcall generateRmgIslandMask(unsigned char* mask, int width, int height);
+// The first call reserves 16 outgoing bytes and fills them from four sample
+// registers before copying the 36-byte region. Preserve the midpoint-record
+// ABI; four scalar formal parameters are not established by its ret 0x34.
+// Nine ordinary midpoint-constructor and record/scalar caller-storage controls
+// preserve this 82.2075% body or fall to 82.1286%, with subdivision unchanged.
+// Constructor members versus body stores are neutral. All nine models pass
+// 3,136 sample-lattice cases and 784 complete mask/RNG comparisons each;
+// wrong constructor mapping, samples, variation and extra random draws fail.
 // First reconstruction: 82.2075%. All 28 CFG blocks agree. Four blocks
 // differ in size, including root initialization and the common subdivision
 // call; preserve the nine-dword work item and four-edge by-value boundary.
@@ -7216,6 +7239,16 @@ unsigned char type_random_map_generator::placeMonolithBorder(
 // helpers yield eight seven-TU objects. No state improves this function;
 // borrowing the guard coordinate drops it to 87.2579%. Borrowing the offset
 // also disturbs river/coast callers. The original value interfaces remain.
+// Repeating those eight states with the coordinate constructor correctly
+// visible leaves monolith fixed at 90.5751%. Value-by-reference is neutral;
+// borrowing the position worsens shipyard/gates, and borrowing the offset
+// worsens ground/river/coast. The value interfaces remain supported.
+// Coordinate getter projection alone still calls the scalar map lookup and
+// adds a size call. Binding three value-getter results as const references
+// restores both retained map-position calls and both expanded sizes
+// (92.6892%), but its own lookup loses the exact body (76%, extra ESI).
+// All six projection orders and direct/named returns leave that callee at
+// 74.2667/76%; do not adopt the caller gain without recovering the callee.
 VA(0x00542CE0, 0x554) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
 void type_random_map_generator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, int prototypeIndex)
@@ -7522,6 +7555,11 @@ void type_random_map_generator::connectZones()
 // 96.1514% with that same constructor; all four causal controls reproduce.
 // Sixty caller and sixty origin forms plus 61 shared-constructor combinations
 // preserve the real brush/map scopes and predicates. No inline pin is used.
+// After recovering the map's coordinate dimension member, thirteen direct/
+// borrowed/value dimension and query-order controls do not improve 99.7982%.
+// Borrowing the member for the view only gives identical code; extending its
+// use into the first scan or copying it lowers the score. The 72-form native
+// pass/RAII oracle preserves all map policies and rejects eleven bad controls.
 VA(0x005439E0, 0x283)
 void type_random_map_generator::decorateUnderground()
 {
@@ -10062,6 +10100,15 @@ void type_random_map_generator::createRivers()
 // selection and reversed addition are byte-neutral on the leading body.
 // Both eight-byte memsets and the nine-int loop recover retail's store/fill
 // scheduling. Native mapping/ordered-callback checks cover the source family.
+// Twenty-four index ownership/preparation-scope forms, fourteen denominator
+// lifetime forms, and eight borrowed-name accessor controls do not restore
+// EBX. A const reference to the computed index fixes count-load order
+// (99.9357%) but still leaves all four index register operands different;
+// that local-reference ownership remains unproven and is not adopted.
+// The name accessor and its declaration-only control are byte-neutral.
+// The allocator model agrees on first definitions; its B1 model does not
+// cover this later reuse decision. The verified temporary-binding trace is
+// likewise incomplete and does not map these spill/color choices to source.
 VA(0x00549930, 0x37B)
 unsigned char type_random_map_generator::generate()
 {

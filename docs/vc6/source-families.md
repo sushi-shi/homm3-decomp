@@ -4227,3 +4227,59 @@ other forms remain 93.4062%, with every sibling score unchanged. All six pass
 the transfer oracle alongside its existing 420 semantic forms and negative
 controls. No caller edit is adopted: the canonical translation helper alone
 does not establish retail's retained-constructor decision.
+
+### RMG projection and lifetime controls after constructor recovery
+
+The eight ordinary guard-argument states were repeated with the coordinate
+constructor visible in `rmg.cpp` (`b35eeb6482f7b15a679d`): none changes
+monolith's 90.5751%. Value-by-reference is neutral; borrowing coordinates or
+offsets worsens the other connection/river callers. No interface is changed.
+
+The coordinate projection generators preserve the two map lookup overloads:
+
+- `generate-rmg-coordinate-accessors.py`: nine declaration-only, point and
+  dimension projection controls, value or borrowed returns; eight objects,
+  eight reproduced elites (`4da50a017b531d62694f`).
+- `generate-rmg-map-position-projection.py`: 24 projected-scalar and result
+  lifetimes; 21 objects, ten reproduced elites (`604097ade7c808916faf`). The
+  `values+references+direct` parent restores monolith's map and size calls,
+  but its retained lookup is 76% because of an extra ESI save/load/restore.
+- `generate-rmg-map-projection-order.py`: original plus twelve order/return
+  controls from that hash-verified parent (`c3a5483bb0c6758b8ce3`). None
+  restores the callee's 39-byte body.
+- `generate-rmg-map-projection-index.py`: original plus sixty canonical
+  scalar index forms (`ac7b49e6875e4fa6c207`), exhausted across two populations.
+  The projected lookup never exceeds 76%; no caller/header edit is adopted.
+
+`verify-rmg-coordinate-projections.py` imports each rendered declaration and
+body. All 107 controls pass 882 scalar/value coordinate queries and 49
+aliased-dimension queries per form; four wrong controls fail. See the retained
+callee and monolith source comments for the unresolved boundary.
+
+`generate-rmg-underground-dimensions.py` uses the recovered dimension member
+in thirteen ownership/query-order/scan-binding forms. Seven objects and seven
+reproduced elites (`469dd8c48facd7fef4c0`) do not improve 99.7982%. The extended
+72-form underground oracle passes, including all eleven negative controls.
+
+Generation's 24 index/preparation-scope controls produce four objects
+(`3ad3eb57a962a5cceb86`); fourteen template-count controls produce ten; eight
+borrowed-name accessor controls produce eight (`6cf4f44a973cd514758b`). A
+reference-bound computed index reaches 99.9357% by correcting count-load
+order, but the same four index register operands still differ. No reference
+ownership is adopted on this partial allocation result. The name accessor and
+its declaration-only control are neutral. The coordinator oracle passes 83,
+73 and 65 source forms respectively, including mutation of the template table
+between callbacks; caching its earlier template pointer remains rejected.
+The first-definition allocator model and the byte-identical passive binding
+trace do not explain this later register reuse.
+
+Noise subdivision's 48 immutable-input/midpoint and child-scope controls
+produce three objects without changing 99.9545%. The mask caller's 16-byte
+outgoing argument allocation supports retaining the four-value record ABI.
+Nine ordinary record-constructor/persistent-record/scalar-local alternatives
+produce four objects, leave subdivision fixed and do not improve the mask
+caller (82.2075%, scalar forms 82.1286%).
+`verify-rmg-noise-construction.py` checks each actual record declaration and
+constructor with 3,136 independent sample lattices and 784 complete mask/RNG
+trace comparisons; four constructor/sample/variation/draw controls fail.
+No game-source alternative from these noise families is adopted.

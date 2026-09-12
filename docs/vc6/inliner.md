@@ -2311,3 +2311,27 @@ the structures the replay admits. What it found:
   are tested independently; multi-argument and namespaced templates do
   not borrow this key. This changes symbol identification only, not the
   byte comparison or Dinkumware implementation.
+
+### Retained lookup boundaries and scalar temporary references
+
+The ordinary position lookup at `0x5378e0` currently delegates to its scalar
+overload at cost 41. In monolith's two `placeGuard` expansions, nested budgets
+70 and 88 allow it and refuse the scalar callee, while retail retains the
+position overload. Value/borrowed coordinate getters alone do not change
+that wrong overload and add an unwanted occupancy-size call.
+
+Binding three value-getter results to const scalar references makes the
+position wrapper large enough to retain both retail calls and expand both
+occupancy sizes (monolith 90.5751% to 92.6892%). Its retained body, however,
+loads the level through ESI, adding a save/restore and dropping from 100% to
+76%. All six projection orders and both return forms leave that body at
+74.2667% or 76%. Sixty row/index/result spellings of the canonical scalar
+formula also fail to restore the retained body. These probes use real
+coordinate projections and preserve the scalar formula in its owner; they
+introduce no dummy operations or inline-depth controls.
+
+The native cell-offset and aliased-dimension checks pass all 107 forms, but
+behavior equivalence and corrected caller calls do not establish the complete
+source model. Keep the current source while recovering a projection that
+also reproduces the retained callee. All source/header consumers were scored;
+these alternative implementations were never banked into the current MAX.
