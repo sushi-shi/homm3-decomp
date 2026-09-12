@@ -267,8 +267,7 @@ public:
     TRmgMapInterface* m_adapter;                // +0x00; prior role: adapter
     int m_paintTerrain;                               // +0x04; prior role: paintTerrain
     int m_transitionStrength;                         // +0x08; prior role: transitionStrength
-    unsigned int m_width;                             // +0x0c; prior role: width
-    unsigned int m_height;                            // +0x10; prior role: height
+    TRmgGridPoint m_size;                             // +0x0c; prior roles: width, height
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14; prior role: primaryPoints
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24; prior role: secondaryPoints
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34; prior role: packedCells
