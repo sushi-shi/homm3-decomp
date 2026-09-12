@@ -3,32 +3,34 @@
 #include <va.h>
 #include "terrain.h"
 #include "diff.h"
+#include "includes.h"
 
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
+
+// E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
+// owns this record's single in-class constructor; only this TU uses it.
+class CDiffHeader
 {
-    return (x < y ? y : x);
+public:
+    int m_numBytes;
+    int m_oldNumBytes;
+    unsigned char m_copy;
+    unsigned char m_tailPadding[3];
+
+    CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
+        : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
+    {
+    }
+};
+
+// E:\gamedcs\diff.cpp:52, dc 0x822e0
+CDiffFile::CDiffFile()
+{
 }
 
-inline int max(int a, int b)
-{
-    return cppMax(a, b);
-}
-
-#if 0 // @carcass: trivial retail-dropped/inlined bodies
-DC_ONLY(0x822e0, 0x4)
-void CDiffFile::CDiffFile()
-{
-}
-
-#endif
-
-// DC diff.cpp:57/58: GetData is defined in this TU before Apply.
-// The payload follows the four-byte size word in the serialized allocation.
-DC_ONLY(0x822e4, 0x6)
+// E:\gamedcs\diff.cpp:57, dc 0x822e4
 unsigned char* CDiffFile::getData()
 {
+    // Payload follows the serialized size word in the same allocation.
     return static_cast<unsigned char*>(static_cast<void*>(this + 1));
 }
 
@@ -85,8 +87,8 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 {
 }
 
-// DC diff.cpp:115, defined here before FindNextSame.
-DC_ONLY(0x8238c, 0x4c)
+// E:\gamedcs\diff.cpp:115, dc 0x8238c. Ordinary helper defined
+// before MakeDiff; Complete's /Ob2 chooses its caller expansion.
 int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
 {
     int count = 0;
@@ -165,6 +167,12 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // register hints, and inert type-count probes.  This is a measured C1
 // front-end-handle wall, not license to invent an alias local absent from DC.
 // E:\gamedcs\diff.cpp:174
+// DC diff.cpp:204/211, 222/226 and 237 use the whole output buffer
+// plus diffOffset as their memcpy destinations (first pair 0x82500/0x82510).
+// GetBase was an unattested header wrapper subtracting the size member
+// from GetData's array address. The modeled payload array starts after the
+// size prefix, so subtract that prefix from the whole-buffer offsets here.
+// Apply keeps its separate payload-relative GetData accesses.
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 {
@@ -184,20 +192,20 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             int newCount = 0;
             if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
                 CDiffHeader header(newCount, 1, oldCount);
-                memcpy(diff->getBase() + diffOffset, &header,
-                       sizeof(CDiffHeader));
+                memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
+                       &header, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->getBase() + diffOffset,
+                memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        m_newData + newOffset, newCount);
                 diffOffset += newCount;
                 oldOffset += oldCount;
                 newOffset += newCount;
             } else {
                 CDiffHeader header(m_newSize - newOffset, 1, 0);
-                memcpy(diff->getBase() + diffOffset, &header,
-                       sizeof(CDiffHeader));
+                memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
+                       &header, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->getBase() + diffOffset,
+                memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        m_newData + newOffset, m_newSize - newOffset);
                 diffOffset += m_newSize - newOffset;
                 diffSize = diffOffset;
@@ -206,8 +214,8 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             }
         } else {
             CDiffHeader header(sameCount, 0, 0);
-            memcpy(diff->getBase() + diffOffset, &header,
-                   sizeof(CDiffHeader));
+            memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
+                   &header, sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);
             oldOffset += sameCount;
             newOffset += sameCount;
@@ -216,10 +224,4 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 
 }
 
-#if 0 // @carcass: retail inlined into MakeDiff
-DC_ONLY(0x825b8, 0xe)
-void CDiffHeader::CDiffHeader(int numBytes, unsigned char copy,
-                             int oldNumBytes)
-{
-}
-#endif
+// CDiffHeader's canonical source-local body is above at DC line 43.

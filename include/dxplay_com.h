@@ -5,51 +5,6 @@
 #include "dxplay.h"
 #include "dplaycaps.h"
 
-// The group enum trampoline's backing record: a 0x100-byte name buffer
-// followed by the DPID at +0x100 (0x104 total). AddGroupEnum news one,
-// strcpys the enumerated short name in, and stores the id. CDPlayGroup is
-// only forward-declared in the shared header; completed here for this TU
-// (CDPlayPlayer, its twin, is complete in dxplay.h).
-class CDPlayGroup {
-public:
-    // Before normalization (locals): sName.
-    CDPlayGroup(char* name, unsigned long dpid)
-    {
-        strcpy(m_name, name);
-        m_dpid = dpid;
-    }
-
-    char m_name[0x100];      // +0x00
-    unsigned long m_dpid;     // +0x100
-};
-
-// The address-element records one DirectPlay SP address chunk EnumAddress splits
-// out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and
-// its size at +0x14. AddAddressEnum news one per enumerated chunk; the array's
-// inlined teardown frees the buffer, then the element. Completed here for this
-// TU (only forward-declared in the shared header).
-class CDPlayAddressElement {
-public:
-    // Before normalization (locals): lpGuid, pData.
-    CDPlayAddressElement(const GUID* guid, const void* data,
-        unsigned long dataSize)
-    {
-        m_guid = *guid;
-        m_dataSize = dataSize;
-        m_data = new char[dataSize];
-        memcpy(m_data, data, m_dataSize);
-    }
-
-    ~CDPlayAddressElement()
-    {
-        delete [] m_data;
-    }
-
-    GUID m_guid;              // +0x00
-    // Before normalization: m_pData.
-    char* m_data;            // +0x10
-    unsigned long m_dataSize; // +0x14
-};
 
 // DirectPlay HRESULT macros used by the wrappers and CDPlay::GetErrorDesc.
 // Keep these as preprocessor constants, as they are in the VC6 DPLAY.H:
@@ -148,9 +103,7 @@ struct DPCHAT {
     // Before normalization: dwFlags.
     unsigned long m_flags;            // +0x04
     union {
-        // Before normalization: lpszMessage.
         unsigned short* m_message;  // +0x08
-        // Before normalization: lpszMessageA.
         char* m_messageA;
     };
 };

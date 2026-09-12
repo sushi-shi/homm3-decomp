@@ -106,7 +106,8 @@ public:
         return 1;
     }
 
-    // Before normalization (function): CAutoArray::Delete.
+    // Original: CAutoArray<CDPlaySession>::Delete; array.h:113, dc 0x103150.
+    // deleteElement avoids the C++ keyword produced by lowercasing Delete.
     virtual unsigned char deleteElement(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)

@@ -41,7 +41,7 @@ TFileVersionInfo::~TFileVersionInfo()
 
 // E:\gamedcs\u2dvers.cpp:63
 VA(0x005eee00, 0x265)  // anchor-import (version.dll), dc 0x18e3b8
-unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer)
+unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
 {
     unsigned char found = 0;
     if (m_data) {

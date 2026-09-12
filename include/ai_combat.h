@@ -273,15 +273,15 @@ public:
                     unsigned char shootersBlocked) const;
     // Before normalization (function): type_AI_combat_data::get_final_melee_value.
     long getFinalMeleeValue() const;
+    // Before normalization (function): type_AI_combat_data::get_army.
+    armyGroup* getArmy() const { return m_currentArmy; }
     // Before normalization (function): type_AI_combat_data::get_total.
     // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
     // expands the corresponding this+0x1c load in chooseMelee. Vector
     // cardinality is creatures.size(), not this game accessor.
     long getTotal() const { return m_totalCombatValue; }
-    // Before normalization (function): type_AI_combat_data::get_army.
-    armyGroup* getArmy() { return m_currentArmy; }
     // Before normalization (function): type_AI_combat_data::get_hero.
-    hero* getHero() { return m_currentHero; }
+    hero* getHero() const { return m_currentHero; }
     // Before normalization (function): type_AI_combat_data::cast_chain_lightning.
     void castChainLightning(type_spell_choice& choice,
                               type_AI_combat_data& defender, long damage) const;

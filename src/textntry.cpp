@@ -4,6 +4,7 @@
 #include <va.h>
 #include <string.h>
 #include "textntry.h"
+#include "bitmap16.h"
 #include "bitmap816.h"
 #include "inputmgr.h"
 #include "kb.h"
@@ -13,17 +14,35 @@
 #include "window.h"
 #include "winmgr.h"
 
-// E:\gamedcs\textntry.cpp:44 (dc 0x163750). Inlined into
-// textEntryWidget::SaveBackground 0x5bba70, its only caller; `inline`
-// so no out-of-line body is emitted, which is what retail shows.
-inline void CTextEntrySave::save(int saveX, int saveY)
-{
-    m_saved = 1;
-    grab(g_windowManager->m_screenBitmap->m_map, saveX, saveY,
-        g_windowManager->m_screenBitmap->m_width,
-        g_windowManager->m_screenBitmap->m_height,
-        g_windowManager->m_screenBitmap->m_pitch);
-}
+// The background snapshot textEntryWidget hangs off saveBack@0x54.
+// Retail keeps NO out-of-line body for any of it - every method is
+// inlined into its single textntry.cpp call site (SetAutoDraw 0x5bbac0
+// opens with `push 0x3c` and closes with the vtable store + the
+// `[+0x38]=0` flag; SaveBackground 0x5bba70 carries Save's `[+0x38]=1`
+// and Grab verbatim; Draw 0x5bb400 reads the flag inline). Extent
+// PROVEN 0x3c by that allocation size against Bitmap16Bit's 0x38;
+// vtable 0x642d8c = {0x557310, 0x55d0f0, 0x44e240}, its own scalar
+// deleting destructor over Bitmap16Bit's two inherited slots.
+//
+class CTextEntrySave : public Bitmap16Bit {
+public:
+    unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
+
+    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
+    CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
+    // Original: CTextEntrySave::Save; textntry.cpp:44, dc 0x163750.
+    void save(int saveX, int saveY)
+    {
+        m_saved = 1;
+        grab(g_windowManager->m_screenBitmap->m_map, saveX, saveY,
+            g_windowManager->m_screenBitmap->m_width,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_pitch);
+    }
+    // Original: CTextEntrySave::IsSaved; textntry.cpp:50, dc 0x16377c.
+    unsigned char isSaved() { return m_saved; }
+};
+
 
 #if 0  // @carcass
 
@@ -471,7 +490,7 @@ int textEntryWidget::main(message& msg)
 // threes are one CSE'd constant and font::PRIMARY_DIM is the spelling
 // that lands it.
 VA(0x005bb400, 0x254)  // anchor-vtable slot 4, dc 0x163150
-void textEntryWidget::draw()
+void textEntryWidget::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;

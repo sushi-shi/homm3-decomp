@@ -13,22 +13,22 @@ void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
 }
 
-// The two archive directory records. LoadSoundHeaders (0x5984a0) sizes its
-// allocation `new SoundHeaderStruct[count + 2]` as (3*count + 6) * 16 and
-// then ReadFiles 48*count bytes into it; LoadAnimHeaders (0x598210) does
-// (11*count + 22) * 4 against 44*count. So the stride is 48 and 44. The
-// split inside the record is byte-proven by the 0x598790 lookup, which
-// walks the video directory in 0x2c steps, strcmpi's from offset 0 and
-// seeks to the dword at +0x28: a 40-byte name followed by the file offset,
-// with the sound record carrying a size behind it.
+// Dreamcast SoundHeaderStruct proves filename[40], signed int offset/size
+// at +40/+44 and size 48. LoadSoundHeaders (0x5984a0) allocates
+// (3*count + 6) * 16 bytes and reads 48*count bytes. GetSoundFile
+// (0x55c130) independently uses the filename, offset and size fields.
+// Shared with ResourceManager; the archive loader owns these records.
 struct SoundHeaderStruct {
-    // Before normalization: name.
-    char m_name[40];
-    // Before normalization: offset.
-    unsigned long m_offset;
-    // Before normalization: size.
-    unsigned long m_size;
+    // Before normalization: filename.
+    char m_filename[40];
+    int m_offset;
+    int m_size;
 };
+SIZE(SoundHeaderStruct, 0x30);
+
+// LoadAnimHeaders (0x598210) allocates (11*count + 22) * 4 bytes
+// and reads 44*count. OpenSmackerTrack (0x598790) walks 0x2c-byte
+// records, compares the name at +0 and seeks to the offset at +0x28.
 struct VideoHeaderStruct {
     // Before normalization: name.
     char m_name[40];

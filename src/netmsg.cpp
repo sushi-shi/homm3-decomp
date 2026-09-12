@@ -7,8 +7,9 @@
 // laid out in strict alphabetical compiland order - all 116 identified
 // units are in order, mousemgr < multiplayerwindow < ... < newgame <
 // objecttype < overview - so this object's name sorts strictly between
-// `multiplayerwindow` and `newgame`. It implements the class DC homes in
-// E:\gamedcs\netmsg.h, which is where the spelling comes from.
+// `multiplayerwindow` and `newgame`. It serializes CNetMsg, which DC homes
+// in E:\gamedcs\netmsg.h; the new complex-message base itself is not named
+// by CodeView. That header supplies the inferred module spelling.
 //
 // The compiland's whole .text contribution is the nine bodies below,
 // bracketed by two cinit runs of the same shape (32/89/96/97 bytes then
@@ -21,9 +22,54 @@
 
 #include "abstractfile.h"
 #include "netmsg.h"
-#include "netmsg_priv.h"
 #include "remote.h"
 #include "remotedlg.h"
+
+// Complete adds this module-local memory stream to the wire-message bridge.
+// The class name is provisional. Retail vtable 0x640264 proves the three
+// TAbstractFile slots; constructor expansions at 0x512cad and 0x512e28 prove
+// the owned and borrowed forms. No original header location is established.
+class t_memory_file : public TAbstractFile {
+public:
+    // Both constructors are defined inline in this module-local class.
+    // Retail expands
+    // the owning form into 0x512c80 / 0x512d40 (vptr, ownsBuffer, the
+    // hundred-byte allocation, capacity, position) and the borrowing form
+    // into 0x512e00, over a buffer it must not free.
+    //
+    // The four members are assigned in the BODY, not in a member-initialiser
+    // list, and the difference is visible: an initialiser list emits the
+    // derived vptr store AFTER the members, which leaves the base class's
+    // own store live across the allocation call and gives TWO vptr stores.
+    // Assigning in the body puts the two stores adjacent, VC6 drops the
+    // base one, and what is left is retail's single `mov [this], 0x640264`
+    // ahead of the flag.
+    t_memory_file()
+    {
+        m_ownsBuffer = 1;
+        m_buffer = new char[100];
+        m_capacity = 100;
+        m_position = 0;
+    }
+    t_memory_file(char* buffer, unsigned int capacity)
+    {
+        m_ownsBuffer = 0;
+        m_buffer = buffer;
+        m_capacity = capacity;
+        m_position = 0;
+    }
+    virtual ~t_memory_file();
+    virtual int read(void* data, int size);
+    virtual int write(const void* data, int size);
+
+    unsigned char m_ownsBuffer;  // +0x04
+    char* m_buffer;              // +0x08
+    // UNSIGNED, from the growth test's `jbe` in both members: a signed
+    // `position + size > capacity` could only emit `jg`.
+    unsigned int m_capacity;     // +0x0c
+    unsigned int m_position;     // +0x10
+};
+SIZE(t_memory_file, 0x14);
 
 // Retail 0x512b00. The vptr store, the owned-buffer release and the base
 // class's own vptr restore - the whole body of an empty destructor on a

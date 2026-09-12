@@ -21,22 +21,36 @@
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning max, declared file-locally for
-// the same reason textwdgt.cpp declares _cpp_min: the slider's state count
-// stores BOTH operands to stack temps and selects between their ADDRESSES
-// with two LEAs, which no value-returning spelling produces, and the TU
-// needs no other <algorithm> surface.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
+
+// The scroller's private slider. Retail proves the whole shape from the
+// constructor 0x5b9fb0 and the vtable 0x642cc8: a 0x6c-byte object whose
+// slider base ctor runs with the ten ordinary slider arguments, whose
+// vptr is then re-stored to 0x642cc8, and whose one extra dword at +0x68
+// is the owning scroller. That vtable copies slider's sixteen inherited
+// slots and overrides only slot 16, the state-change hook, at 0x5b9fa0.
+class type_text_slider : public slider {
+public:
+    // Before normalization: owner.
+    type_text_scroller* m_owner;  // +0x68
+
+    type_text_slider(int x, int y, int w, int h, int id, int num,
+                     TSliderFunction func, EGraphics graphics, int page,
+                     unsigned char hotKey, type_text_scroller* scroller)
+        : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
+    {
+        m_owner = scroller;
+    }
+
+    // Before normalization (function): type_text_slider::Close.
+    virtual void close();  // slot 16, retail 0x5b9fa0
+};
+SIZE(type_text_slider, 0x6c);
 
 // Slot 16 of the scroller's private slider vtable 0x642cc8 - the only
 // slot it overrides. Thirteen bytes, no frame: it reads the slider's own
-// currentState and the owner at +0x68 and tail-calls the scroller's
+// currentState and the owner at +0x68 and calls the scroller's
 // repaint.
 VA(0x005B9FA0, 0xD)  // anchor-vtable 0x642cc8 slot 16, retail-only
 void type_text_slider::close()
@@ -45,7 +59,7 @@ void type_text_slider::close()
 }
 
 // The scroller constructor. Retail fixes the whole argument list: the
-// first five go to the widget base as (x, y, w, h) with a literal -1 id
+// x/y/w/h arguments go to the widget base with a literal -1 id
 // and style 1, the sixth is kept in the +0x30 font name, the seventh is
 // forwarded to every per-line textWidget as its colour, and the eighth
 // reaches the slider constructor's EGraphics slot.

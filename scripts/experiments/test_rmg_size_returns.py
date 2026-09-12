@@ -15,7 +15,7 @@ class SizeReturnTests(unittest.TestCase):
         module = generator("generate-rmg-size-return-family.py")
         root = Path(__file__).resolve().parents[2]
         header = (root / "include/rmg.h").read_text()
-        text = "#include <climits>\n#include <cstdio>\n"
+        text = "#include <climits>\n#include <cstdio>\n#define VA(address, size)\n"
         for name in ("TRmgVector", "TPoint", "TRmgGridPoint"):
             start = header.index("struct " + name + " {")
             text += header[start:header.index("\n};", start) + 3] + "\n"

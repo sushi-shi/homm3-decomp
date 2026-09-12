@@ -106,14 +106,12 @@ public:
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): iconWidget::Draw.
-    virtual void draw();
+    virtual void draw() const;
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
     // own extent, not the widget rect.
-    // Before normalization (function): iconWidget::GetRealHeight.
-    virtual int getRealHeight();  // slot 5, retail 0x4eab30
-    // Before normalization (function): iconWidget::GetRealWidth.
-    virtual int getRealWidth();   // slot 6, retail 0x4eab20
+    virtual int getRealHeight() const;  // slot 5, retail 0x4eab30
+    virtual int getRealWidth() const;   // slot 6, retail 0x4eab20
     // Slot 13 of 0x63ec48, i.e. a virtual iconWidget ADDS on top of
     // widget's twelve-plus-_vslot12 - not an override. That is what the
     // vtable widths say: button and type_func_button stop at 13 slots

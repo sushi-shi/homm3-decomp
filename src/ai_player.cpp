@@ -43,35 +43,7 @@
 #include "town.h"
 #include "tradpost.h"
 #include "recruit.h"
-
-// VC6's retail min/max sites in this TU copy both operands into homes
-// and select one by address. These by-value wrappers reproduce that
-// shape; the installed Dinkumware overloads take const references.
-// armyGroup and gTownDwellingCreatures both model the creature ordinal as
-// int while type_creature_value's key is the TCreatureType domain; same
-// bit-preserving bridge ai_combat.cpp and philai.cpp use for the same
-// crossing, rather than lying with an enum cast. It writes the slot IN
-// PLACE: a value-returning form costs calculate_demand 86.38 -> 86.13,
-// its temporary's home shifting three registers.
-// Before normalization (function): set_creature_type.
-inline void setCreatureType(TCreatureType& slot, int value)
-{
-    memcpy(&slot, &value, sizeof slot);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(const _TYPE& x, const _TYPE& y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(const _TYPE& x, const _TYPE& y)
-{
-    return (x < y ? y : x);
-}
+#include "includes.h"
 
 #ifdef min
 #undef min
@@ -80,25 +52,6 @@ inline const _TYPE& cppMax(const _TYPE& x, const _TYPE& y)
 #undef max
 #endif
 
-// E:\\gamedcs\\includes.h:97,114. Observatory keeps these source-visible
-// by-value wrappers; Complete expands them and the reference selectors.
-inline int min(int a, int b)
-{
-    return cppMin(a, b);
-}
-
-inline int max(int a, int b)
-{
-    return cppMax(a, b);
-}
-
-template <class _TYPE>
-// Before normalization (function): _cpp_limit.
-// Before normalization (locals): _Lo, _V, _Hi.
-inline const _TYPE& cppLimit(_TYPE lo, _TYPE v, _TYPE hi)
-{
-    return (v < lo ? lo : (hi < v ? hi : v));
-}
 
 // events.h publishes the same seventh-day member for its adventure-event
 // readers. Keep this TU's narrow include set while naming the calendar value
@@ -120,28 +73,6 @@ const std::bitset<9>& armyGrpFn0044A460();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
-inline SpellID spellIdFromInt(int value)
-{
-    SpellID spell;
-    memcpy(&spell, &value, sizeof spell);
-    return spell;
-}
-
-// Before normalization (function): spell_school_from_int.
-inline TSpellSchool spellSchoolFromInt(int value)
-{
-    TSpellSchool school;
-    memcpy(&school, &value, sizeof school);
-    return school;
-}
-
-inline type_building_id buildingIdFromInt(int value)
-{
-    type_building_id building;
-    memcpy(&building, &value, sizeof building);
-    return building;
-}
-
 // Before normalization: CTA_SHOOTER.
 const unsigned int g_ctaShooter = 0x4;
 
@@ -149,6 +80,26 @@ const unsigned int g_ctaShooter = 0x4;
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
 std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+// Retail and Dreamcast both make this an 8-byte strategy object: a
+// three-slot vptr followed by the current player id. start_turn inlines
+// both constructors and calls check_towns on one base and one derived
+// instance. The virtual roster/order comes from the three retail vtable
+// entries and the corresponding DC public names.
+class type_town_threat_checker {
+protected:
+    void markTowns(hero* enemyHero, searchArray* currentSearchArray);
+
+public:
+    int m_currentPlayerId;
+
+    // Original: type_town_threat_checker; ai_player.cpp:89, dc 0x2dd40.
+    type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
+    void checkTowns();
+    virtual void clearMarks() const;
+    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual void markTown(town* ourTown) const;
+};
+
 
 // E:\gamedcs\ai_player.cpp:97
 // The DC body calls this exact family (GetHero, GetMobility, SeedPosition and
@@ -188,7 +139,7 @@ void type_town_threat_checker::checkTowns()
 // Slot 0 of vtable 0x63b670. The target walks gpGame's vector<town> by
 // its 0x168-byte stride and clears the DC-named byte at +3 in every row.
 VA(0x00428260, 0x4E)  // vtable slot + DC method/field proof; dc 0x2de68
-void type_town_threat_checker::clearMarks()
+void type_town_threat_checker::clearMarks() const
 {
     for (unsigned int i = 0; i < g_game->m_towns.size(); ++i)
         g_game->m_towns[i].m_threateningHeroes = 0;
@@ -261,58 +212,16 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
 // This is the census's second conversion after ??0TQuickCreatureWindow and it
 // fits the same screen: the callee's body does work the caller's spelling does
 // not (a whole struct return), so it cannot constant-fold away.
-// E:\gamedcs\Town.h:311, dc 0x1fdac - a header inline whose out-of-line copy
-// lands in advmgr.obj, where it is still carcassed. Kept file-local (a free
-// static over the same body rather than the `town::` member it is in retail);
-// promoting it into town.h's declaration is the obvious follow-up, and quicktownwindow's
-// and armygrp's `town::HasBuilding` rows are the neighbours that would pay for
-// the same edit.
-// 2026-08-14, town.h OPENED and the follow-up was surveyed before spending the
-// edit: IT HAS NO CONSUMER THAT CAN PAY TODAY, so the helper stays file-local.
-// `town::get_location` has exactly TEN DC call sites and every one is either
-// unreconstructed, already converted, or a Dreamcast-only factoring:
-//   advManager::DoAdvCommand / TownQuickView / SetTownContext, and
-//     advspells' advManager::TownGate - all four score 0.0, not reconstructed
-//   type_town_threat_checker::mark_towns - exact with a direct inline
-//     constructor expansion; it does not consume this by-value helper
-//   searchArray::check_town_portal - no reconstructed row
-//   townManager::MoveHero - another lane's unit
-//   town::PlaceInMap - ALREADY 100.0000 without it
-//   town::get_legion_bonus - 81.7262, and RETAIL'S x86 BODY CONTAINS NO
-//     type_point AT ALL (84 instructions, no struct return, no map lookup), so
-//     that census row is Dreamcast source too. Seven spellings measured against
-//     it while town.cpp was open, all negative or flat: explicit per-arm
-//     assignment 81.0714, `2 * growth` 81.0714, per-arm divide 75.0000, keeping
-//     `bonus = growth` ahead of an else-arm 81.7262 (flat), direct returns per
-//     arm 73.8691 twice, and two independent `if`s 63.3333. Its residual is the
-//     bonus/growth register split and retail's THREE duplicated `/2` tails
-//     against our two - a block-duplication class, not a struct return.
-//   can_take_town - this body, already converted below
-// The promotion becomes worth making when advmgr's three rows and
-// event_record are reconstructed; until then it is a wide-header edit with a
-// documented downside (an ungated town.h slice once cost initialize_game_data
-// 100.0 -> 96.09) and no upside.
-// Before normalization (function): get_location.
-static type_point getLocation(const town* t)
-{
-    // Before normalization (locals): town_x, town_z, town_y.
-    short townX = t->m_mapX;
-    short townZ = t->m_mapZ;
-    short townY = t->m_mapY;
-    type_point point;
-    point.m_x = townX;
-    point.m_y = townY;
-    point.m_z = townZ;
-    return point;
-}
-
+// The original member now lives in town.h, including the type_point
+// constructor call shown by DC Town.h:312. canTakeTown uses that canonical
+// by-value helper; the former file-local getLocation clone is removed.
 // Before normalization (locals): attacking_hero, defending_town, attacking_army, defending_army.
 VA(0x00428410, 0x160)  // anchor-global, dc 0x2dc00
 unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 {
     armyGroup attackingArmy = attackingHero->m_army;
     armyGroup defendingArmy = defendingTown->getArmy();
-    NewmapCell* cell = g_game->getCell(getLocation(defendingTown));
+    NewmapCell* cell = g_game->getCell(defendingTown->getLocation());
     type_AI_combat_data attacker(attackingHero, &attackingArmy, 1.25, 0,
                                  defendingTown, cell);
     type_AI_combat_data defender(0, &defendingArmy, 0.75, attackingHero, 0,
@@ -429,10 +338,20 @@ long type_AI_player::getResourceValue(int* resources)
 // E:\gamedcs\ai_player.cpp:186
 // Before normalization (locals): our_town.
 VA(0x00428570, 0x0D)  // exact: vtable slot + DC field/type proof; dc 0x2dfa4
-void type_town_threat_checker::markTown(town* ourTown)
+void type_town_threat_checker::markTown(town* ourTown) const
 {
     ++ourTown->m_threateningHeroes;
 }
+class type_garrison_purchaser : public type_town_threat_checker {
+public:
+    // Original: type_garrison_purchaser; ai_player.cpp:195, dc 0x2dfb8.
+    type_garrison_purchaser(int newPlayer)
+        : type_town_threat_checker(newPlayer) {}
+    virtual void clearMarks() const;
+    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual void markTown(town* ourTown) const;
+};
+
 
 // The retail vtable at 0x63b67c puts 0x428580 in derived slot 2, the same
 // slot/name the DC vtable assigns type_garrison_purchaser::mark_town. Its
@@ -441,7 +360,7 @@ void type_town_threat_checker::markTown(town* ourTown)
 // extension (allow_trade plus the separately stored Angelic-Alliance flag).
 // Before normalization (locals): our_town, has_angelic_alliance.
 VA(0x00428580, 0x121)  // retail vtable slot + body/callgraph proof; dc 0x2dff4
-void type_garrison_purchaser::markTown(town* ourTown)
+void type_garrison_purchaser::markTown(town* ourTown) const
 {
     type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
     playerData* player = &g_game->m_players[m_currentPlayerId];
@@ -454,13 +373,7 @@ void type_garrison_purchaser::markTown(town* ourTown)
 // The original header owns the constructor; retain its selected retail
 // COMDAT claim here without a second source definition.
 #if 0  // @carcass
-VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
-type_creature_source::type_creature_source(TCreatureType new_type,
-                                           short* new_amount,
-                                           bool _is_free)
-{
-    // @stub
-}
+// Canonical body and VA: include/ai_player.h.
 #endif
 
 // The purchaser destructor remains implicit in C++. Its live vector member
@@ -544,10 +457,23 @@ void type_AI_player::calculateDemand()
         }
     }
 
+    // Historical set_creature_type probe: changing its in-place write
+    // to a value-returning wrapper moved calculate_demand from 86.38 to
+    // 86.13 by shifting a temporary home and three registers. The scoped
+    // representation copy below keeps the operation without inventing a
+    // source helper to steer that compiler decision.
     std::vector<type_creature_value> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
-        setCreatureType(creatures[creatureIndex].m_type, creatureIndex);
+        // Keep this ordinal copy in the owning loop. The former
+        // set_creature_type wrapper was a reconstruction bridge, not a
+        // CodeView helper. memcpy preserves the integer representation
+        // without narrowing the admitted values through an enum cast.
+        {
+            int value = creatureIndex;
+            memcpy(&creatures[creatureIndex].m_type, &value,
+                   sizeof creatures[creatureIndex].m_type);
+        }
         creatures[creatureIndex].m_amount = 0;
     }
 
@@ -599,7 +525,7 @@ void type_AI_player::calculateDemand()
         if (currentTown->isLegalBuilding(MARKETPLACE_ID))
             markets++;
     }
-    markets = cppLimit(1, markets, 10);
+    markets = limit(1, markets, 10);
     double efficiency = g_tradingPostEfficency[markets];
 
     union {
@@ -1032,9 +958,12 @@ void type_AI_player::calculateReserve()
         for (; dwelling < 14; dwelling++, population++) {
             if (*population > 0) {
                 type_creature_value creatureInfo;
-                setCreatureType(creatureInfo.m_type,
-                    g_townDwellingCreatures[
-                        currentTown->m_type * 14 + dwelling]);
+                {
+                    int value = g_townDwellingCreatures[
+                        currentTown->m_type * 14 + dwelling];
+                    memcpy(&creatureInfo.m_type, &value,
+                           sizeof creatureInfo.m_type);
+                }
                 creatureInfo.m_amount = *population;
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
                     * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
@@ -1409,12 +1338,21 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
+            // Preserve the ordinal's representation at the consuming call;
+            // the former gameResourceFromInt wrapper had no source identity.
+            EGameResource resource;
+            {
+                int ordinal = i;
+                memcpy(&resource, &ordinal, sizeof resource);
+            }
             marketValue = static_cast<long>(
-                getMarketValue(gameResourceFromInt(i)) * supply[i]
+                getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
         } else if (supply[i] != 0) {
             long onHand = player->m_resources[i];
-            long value = getMarketValue(gameResourceFromInt(i));
+            union { int m_integer; EGameResource m_resource; } resourceValue;
+            resourceValue.m_integer = i;
+            long value = getMarketValue(resourceValue.m_resource);
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
                     baseCost[j] += (tradeQty[j] * cost[i] - onHand)
@@ -1501,9 +1439,21 @@ void type_AI_player::doResourceTrade(int* supply)
         for (int dest = 0; dest < 7; ++dest) {
             if (supply[dest] >= 0)
                 continue;
-            double ratio = getTradeRatio(gameResourceFromInt(source),
-                                           gameResourceFromInt(dest),
-                                           marketEfficiency);
+            double ratio;
+            {
+                EGameResource sourceResource;
+                EGameResource destResource;
+                {
+                    int ordinal = source;
+                    memcpy(&sourceResource, &ordinal, sizeof sourceResource);
+                }
+                {
+                    int ordinal = dest;
+                    memcpy(&destResource, &ordinal, sizeof destResource);
+                }
+                ratio = getTradeRatio(sourceResource, destResource,
+                                      marketEfficiency);
+            }
             long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
             long limit = static_cast<long>(
                 static_cast<long>(supply[source] / ratio) * ratio);
@@ -1698,8 +1648,13 @@ static __int64 getRequirements(const town* currentTown,
     int k = building;
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & g_bitNumber[k]) {
-            if (!currentTown->isLegalBuilding(buildingIdFromInt(k)))
-                return 0;
+            {
+                type_building_id buildingId;
+                int ordinal = k;
+                memcpy(&buildingId, &ordinal, sizeof buildingId);
+                if (!currentTown->isLegalBuilding(buildingId))
+                    return 0;
+            }
             seen |= g_bitNumber[k];
             requirements |= g_hierarchyMask[currentTown->m_type][k];
             requirements &= ~currentTown->m_active;
@@ -1722,8 +1677,13 @@ static void getFullCost(const town* currentTown, int* result,
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
         if (requirements & g_bitNumber[k]) {
-            int* costs = currentTown->getBuildCostArray(
-                buildingIdFromInt(k));
+            int* costs;
+            {
+                type_building_id buildingId;
+                int ordinal = k;
+                memcpy(&buildingId, &ordinal, sizeof buildingId);
+                costs = currentTown->getBuildCostArray(buildingId);
+            }
             for (int i = 0; i < 7; ++i)
                 result[i] += costs[i];
         }
@@ -1786,24 +1746,37 @@ unsigned char type_AI_player::purchaseBuilding(
         memset(extraCosts, 0, sizeof(extraCosts));
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
-            if (!currentTown->isLegalBuilding(
-                    buildingIdFromInt(building))
-                || (currentTown->m_active & g_bitNumber[building])
-                || building == HOLY_GRAIL_ID) {
-                basicValue[building] = -1;
-                continue;
+            {
+                type_building_id buildingId;
+                int ordinal = building;
+                memcpy(&buildingId, &ordinal, sizeof buildingId);
+                if (!currentTown->isLegalBuilding(buildingId)
+                    || (currentTown->m_active & g_bitNumber[building])
+                    || building == HOLY_GRAIL_ID) {
+                    basicValue[building] = -1;
+                    continue;
+                }
             }
-            basicValue[building] = valueOfBuilding(
-                currentTown, buildingIdFromInt(building),
-                prohibitedCreatures, extraCosts[building]);
+            {
+                type_building_id buildingId;
+                int ordinal = building;
+                memcpy(&buildingId, &ordinal, sizeof buildingId);
+                basicValue[building] = valueOfBuilding(
+                    currentTown, buildingId,
+                    prohibitedCreatures, extraCosts[building]);
+            }
         }
 
         memset(fullValue, 0, sizeof(fullValue));
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
             if (basicValue[building] <= 0)
                 continue;
-            requirements = getRequirements(
-                currentTown, buildingIdFromInt(building));
+            {
+                type_building_id buildingId;
+                int ordinal = building;
+                memcpy(&buildingId, &ordinal, sizeof buildingId);
+                requirements = getRequirements(currentTown, buildingId);
+            }
             if (requirements == 0)
                 continue;
             getFullCost(currentTown, extraCosts[building],
@@ -1829,7 +1802,12 @@ unsigned char type_AI_player::purchaseBuilding(
         return 0;
 
     int cost[7];
-    bestTown->getBuildCost(buildingIdFromInt(bestBuilding), cost);
+    {
+        type_building_id buildingId;
+        int ordinal = bestBuilding;
+        memcpy(&buildingId, &ordinal, sizeof buildingId);
+        bestTown->getBuildCost(buildingId, cost);
+    }
     tradeResources(cost, 1);
     if (g_game->m_towns[bestTown->m_id].m_builtThisTurn)
         return 0;
@@ -1845,8 +1823,13 @@ unsigned char type_AI_player::purchaseBuilding(
                 return 0;
         }
     }
-    if (!bestTown->buyBuilding(buildingIdFromInt(bestBuilding)))
-        return 0;
+    {
+        type_building_id buildingId;
+        int ordinal = bestBuilding;
+        memcpy(&buildingId, &ordinal, sizeof buildingId);
+        if (!bestTown->buyBuilding(buildingId))
+            return 0;
+    }
     calculateDemand();
     return 1;
 }
@@ -1998,57 +1981,35 @@ long valueOfHall(town* currentTown, type_building_id building)
     }
 }
 
-// E:\gamedcs\game.h:1370
-// The retail COMDAT of the game.h inline member, selected into
-// ai_player.obj. The DC parameter name player_number is STALE - every
-// retail caller hands it a TEAM (buy_creatures expands GetTeam at the
-// call site first, ClaimTown negates the bool result) and the body is
-// the guarded IsHumanTeam scan with no teamInfo pre-read of its own.
-// Before normalization (locals): player_number.
-VA(0x0042b9e0, 0x45)  // anchor-bracket + body (guarded teamInfo/IsHuman scan), dc 0x37fd8
-bool game::isHumanAlly(int playerNumber) const
-{
-    if (playerNumber >= 0) {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == playerNumber
-                && g_game->isHuman(player))
-                return true;
-        }
-    }
-    return false;
-}
-
 #if 0  // @carcass: claim-only home for the game.h COMDAT below
 
 // E:\gamedcs\Game.h:1016. The active header body and its -1/null arm are
 // independently fixed by the DC inline, the exact HD cross-build identity,
 // and retail's five callers. This declarator assigns ai_player.obj's selected
 // copy to its retail slot without creating a second definition.
-VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
-town* game::getTown(int townId)
-{
-    // @stub
-}
+// Canonical body and VA: include/game.h.
 
 #endif  // @carcass
 
-// The source member remains the Game.h inline used by every real caller.
-// Retail selected one out-of-line COMDAT copy into ai_player.obj; taking its
-// address is the same emission anchor used by town::HasBuilding below and
-// does not de-inline any source call site.
-// Before normalization: g_emit_GetTown.
-town* (game::* g_emitGetTown)(int) = &game::getTown;
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_player.cpp:1808
-DC_ONLY(0x31030, 0x62)
-int maxBuyableCreatures(const long* funds, TCreatureType type, int limit)
+// E:\gamedcs\ai_player.cpp:1808, dc 0x31030.
+static int __cdecl maxBuyableCreatures(
+    const long* funds, TCreatureType type, int limit)
 {
-    // @stub
+    int resources[7];
+    getMonsterCost(type, resources);
+    for (int resource = 0; resource < 7; ++resource) {
+        if (resources[resource] > 0) {
+            int affordable;
+            if (funds[resource] > 0)
+                affordable = funds[resource] / resources[resource];
+            else
+                affordable = 0;
+            if (affordable < limit)
+                limit = affordable;
+        }
+    }
+    return limit;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
 // Ordinary protected purchase_buildings boundary (DC public ...@@IAAXXZ),
@@ -2375,12 +2336,7 @@ void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, cons
 
 // mark_danger_zones (dc 0x32894) is claimed in retail-RVA order below.
 
-// E:\gamedcs\ai_player.cpp:3013
-DC_ONLY(0x329f8, 0x8A)
-void AI_mark_danger_zones(hero* current_hero, long* danger_zones)
-{
-    // @stub
-}
+// AI_mark_danger_zones (dc 0x329f8) is reconstructed below.
 
 // E:\gamedcs\ai_player.cpp:3044
 DC_ONLY(0x32a84, 0x3AC)
@@ -2666,13 +2622,6 @@ long aiGetEquipValue(type_artifact artifact, const hero* our_hero, unsigned char
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5684
-DC_ONLY(0x37514, 0x72)
-long aiGetValueOfArtifact(const type_artifact* artifact, long player_id)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5708
 DC_ONLY(0x37588, 0x266)
 long getFullValue(const hero* our_hero)
@@ -2864,6 +2813,7 @@ void searchArray::setRectangle(tagRECT* rect)
     // @stub
 }
 
+
 // E:\gamedcs\findpath.h:265
 DC_ONLY(0x37e98, 0x54)
 long* getDangerCell(long* danger_zones, type_point point)
@@ -3017,6 +2967,8 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     return bestValue;
 }
 
+// Before normalization (locals): current_army.
+
 // E:\gamedcs\ai_player.cpp:2171. Dreamcast retains this source helper;
 // Complete's /Ob2 folds it into both swap entry points. Retail independently
 // proves the two short totals, optional subtraction, and zero floor.
@@ -3068,6 +3020,10 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
     } while (doBestSwap(m_adjacentArmy->getNumArmies() > 1) > 0);
     aiArrangeArmy(*m_army);
 }
+
+// doSwap's retained copy is enrolled on its canonical definition above.
+// Its real callers govern emission; the former address-taking global was
+// reconstruction scaffolding.
 
 // E:\gamedcs\ai_player.cpp:2209. The two 56-byte locals, six helper
 // boundaries, and positive-value loop come from the Dreamcast dossier.
@@ -3452,30 +3408,11 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
         type_creature_source(newType, newAmount, false));
 }
 
+
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
 // the three-quarter cap on the cost penalty used to choose the best source.
-// Before normalization (function): MaxBuyableCreatures.
-static int __cdecl maxBuyableCreatures(
-    const long* funds, TCreatureType type, int limit)
-{
-    int resources[7];
-    getMonsterCost(type, resources);
-    for (int resource = 0; resource < 7; ++resource) {
-        if (resources[resource] > 0) {
-            int affordable;
-            if (funds[resource] > 0)
-                affordable = funds[resource] / resources[resource];
-            else
-                affordable = 0;
-            if (affordable < limit)
-                limit = affordable;
-        }
-    }
-    return limit;
-}
-
 // DC's parameter is an unsigned char, not C++ bool. Residual (97.27%): 217
 // of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
 // around the best-source state (`why-reg` distance 70), after equivalent
@@ -3891,49 +3828,122 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
     return pieces - 1;
 }
 
-// E:\gamedcs\ai_player.cpp:2975
-// Retail folds the Dreamcast wrapper's enemy-hero census into this body:
-// the sole x86 caller passes only our_hero in ECX and danger_zones in EDX,
-// and the plain return confirms there is no third stack argument. Computer
-// enemies outside our team are searched from their current position with
-// 300 bonus movement. Every reachable cell accumulates a survivable combat
-// result; a catastrophic loss writes the shared unreachable sentinel.
-// Before normalization (locals): our_hero, danger_zones, player_id, hero_index, enemy_hero,
-// visited_index.
-VA(0x0042de50, 0x25c)  // unique AI_value_of_combat callee + sole x86 caller, dc 0x32894
-void markDangerZones(const hero* ourHero, long* dangerZones)
+// E:\gamedcs\ai_player.cpp:2975, dc 0x32894.
+// CodeView makes mark_danger_zones a static three-argument helper and names
+// GetMobility, GetLocation, SeedPosition and the visited-cell accessors.
+// Retail expands this helper inside AI_mark_danger_zones at 0x42de50;
+// the outer player/hero census belongs to that two-argument wrapper.
+// Before normalization (function): mark_danger_zones.
+static void markDangerZones(const hero* ourHero, hero* enemyHero,
+                            long* dangerZones)
+{
+    long value = aiValueOfCombat(
+        ourHero, enemyHero, enemyHero->m_army, 0, 0);
+    if (value < 0) {
+        int mobility = enemyHero->getMobility() + 300;
+        checkDoMain(0, 0);
+        type_point start = enemyHero->getLocation();
+        type_point target(-1, -1, -1);
+        g_searchArray->seedPosition(
+            enemyHero, start, target, mobility,
+            (enemyHero->m_flags >> 18) & 1,
+            const_AI_enemy_search, mobility, 0);
+
+        for (long visitedIndex =
+                 g_searchArray->getVisitedCount();
+             visitedIndex--;) {
+            const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
+            if (value >= -500000000) {
+                *getDangerCell(dangerZones, point) += value;
+            } else {
+                *getDangerCell(dangerZones, point) =
+                    -1000000000;
+            }
+        }
+    }
+}
+
+// E:\gamedcs\ai_player.cpp:3013, dc 0x329f8.
+// CodeView line 3030 calls GetHero then mark_danger_zones inside the player
+// and hero loops. Retail 0x5263ac/0x5263af passes dangerZones in EDX and
+// currentHero in ECX to 0x42de50 at 0x5263b1. The old claim incorrectly
+// attached that complete census to the inner three-argument helper.
+// Before normalization (function): AI_mark_danger_zones.
+VA(0x0042de50, 0x25c)  // outer census + MoveHero caller, dc 0x329f8
+void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 {
     for (int playerId = 0; playerId < 8; ++playerId) {
         const playerData& player = g_game->m_players[playerId];
-        if (!g_game->onSameTeam(playerId, ourHero->m_owner)
+        if (!g_game->onSameTeam(playerId, currentHero->m_owner)
             && !g_game->m_playerDisabled[playerId]) {
             for (int heroIndex = 0; heroIndex < player.m_numHeroes;
                  ++heroIndex) {
                 hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
-                long value = aiValueOfCombat(
-                    ourHero, enemyHero, enemyHero->m_army, 0, 0);
-                if (value < 0) {
-                    int mobility = enemyHero->getMobility() + 300;
-                    checkDoMain(0, 0);
-                    type_point start(enemyHero->m_x, enemyHero->m_y,
-                                     enemyHero->m_z);
-                    type_point target(-1, -1, -1);
-                    g_searchArray->seedPosition(
-                        enemyHero, start, target, mobility,
-                        (enemyHero->m_flags >> 18) & 1,
-                        const_AI_enemy_search, mobility, 0);
+                markDangerZones(currentHero, enemyHero, dangerZones);
+            }
+        }
+    }
+}
 
-                    for (long visitedIndex =
-                             g_searchArray->m_visitedPoints.size();
-                         visitedIndex--;) {
-                        const type_point& point = g_searchArray
-                            ->m_visitedPoints[visitedIndex]->m_point;
-                        if (value >= -500000000) {
-                            *getDangerCell(dangerZones, point) += value;
+// The three helpers below are source-visible in the Dreamcast line table but
+// folded into AI_choose_destination by retail VC6.  Their boundaries are
+// reconstruction facts: keeping them here preserves the same helper calls
+// without manufacturing retail-only out-of-line slots.
+
+
+// E:\gamedcs\ai_player.cpp:3164, dc 0x32e30. Dreamcast preserves this
+// static helper boundary, vector-reference parameter and local `point`;
+// Complete adds the build-grail value change but expands the helper into
+// its sole caller. DC lines 3181/3205 call game::get_cell and construct the
+// typed artifact temporary for AI_get_value_of_artifact. Restoring those
+// boundaries plus the caller's two GetMapExtra(point) uses naturally retains
+// both retail calls (findAllDestinations +0x694/+0x73f), without either old
+// depth pin. Before the point-overload recovery, direct-map/no-pin measured
+// 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
+// Before normalization (function): check_holy_grail.
+static void checkHolyGrail(
+    // Before normalization (locals): current_hero, search_array, friendly_distances, guess_cell,
+    // map_cell, friendly_cost.
+    const hero* currentHero, const searchArray* currentSearchArray,
+    std::vector<HeroDestination>& destinations,
+    const unsigned short* friendlyDistances)
+{
+    playerData* player = &g_game->m_players[currentHero->m_owner];
+    if (player->m_puzzleGuess.m_x >= 0) {
+        HeroDestination point;
+        point.m_point.m_x = player->m_puzzleGuess.m_x;
+        point.m_point.m_y = player->m_puzzleGuess.m_y;
+        point.m_point.m_z = player->m_puzzleGuess.m_z;
+        point.m_isCritical = 0;
+        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
+        if (guessCell->m_visited) {
+            NewmapCell* mapCell = g_game->getCell(point.m_point);
+            if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
+                || mapCell->m_extraInfo
+                    == static_cast<unsigned long>(currentHero->m_id)) {
+                if (currentHero->isInPatrolRadius(
+                        point.m_point)) {
+                    point.m_moveCost = guessCell->m_cost;
+                    unsigned short friendlyCost = friendlyDistances[
+                        (point.m_point.m_z * g_mapHeight
+                         + point.m_point.m_y)
+                            * g_mapWidth
+                        + point.m_point.m_x];
+                    if (point.m_moveCost <= friendlyCost) {
+                        if (g_game->m_mapHeader.m_victoryCondition.m_type
+                            == VICTORY_CONDITION_BUILD_GRAIL) {
+                            point.m_value = 1968;
                         } else {
-                            *getDangerCell(dangerZones, point) =
-                                -1000000000;
+                            point.m_value = aiGetValueOfArtifact(
+                                type_artifact(ARTIFACT_HOLY_GRAIL),
+                                currentHero->m_owner);
                         }
+                        point.m_moveCost = max(
+                            point.m_moveCost,
+                            currentHero->getMobility()
+                                + currentHero->m_movePoints);
+                        if (point.m_value > 0)
+                            destinations.push_back(point);
                     }
                 }
             }
@@ -3941,9 +3951,6 @@ void markDangerZones(const hero* ourHero, long* dangerZones)
     }
 }
 
-// Dreamcast places these two ordinary static helpers in ai_player.cpp.
-// Their source calls remain visible to VC6; setRectangle's aggregate
-// assignment lives at its original header boundary in findpath.h.
 // E:\gamedcs\ai_player.cpp:3390
 // Before normalization (function): mark_strategic_map.
 static void markStrategicMap(
@@ -4251,86 +4258,18 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // bool, const-reference, const-member ABI; its single expression and retail's
 // five-block body compare the same three packed coordinates. The sole retail
 // caller is the large route evaluator immediately above this COMDAT band.
-VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
-bool type_point::operator==(const type_point& arg) const
-{
-    // @stub
-}
+// Canonical body and VA: include/struct.h.
 
 // E:\gamedcs\Hero.h:157. The DC header statement constructs a type_point
 // from x/y/z; retail's two callers retain that same constructor expansion.
-VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
-type_point type_obscuring_object::getLocation() const
-{
-    // @stub
-}
+// Canonical body and VA: include/hero.h.
 
 // E:\gamedcs\Findpath.h:202. The DC public symbol proves bool/const and its
 // five source rows prove the null guard plus one index expression. Retail and
 // the HD cross-build retain that same header body in ai_player.obj.
-VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
-pathCell* searchArray::getCell(type_point point, bool flying) const
-{
-    // @stub
-}
+// Canonical body and VA: include/findpath.h.
 
 #endif  // @carcass
-
-// These remain the canonical header inlines used by their real callers.
-// Retail selected one out-of-line COMDAT copy of each into ai_player.obj in
-// this order.  Typed address-takes materialize those copies without replacing
-// an attested inline call with a source-false out-of-line call.
-// Before normalization: g_emit_type_point_equal.
-bool (type_point::* g_emitTypePointEqual)(
-    const type_point&) const = &type_point::operator==;
-// Before normalization: g_emit_get_location.
-type_point (type_obscuring_object::* g_emitGetLocation)() const =
-    &type_obscuring_object::getLocation;
-// Before normalization: g_emit_get_cell.
-pathCell* (searchArray::* g_emitGetCell)(type_point, bool) const =
-    &searchArray::getCell;
-
-// E:\gamedcs\findpath.h:270
-VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
-long searchArray::getDangerValue(type_point point) const
-{
-    if (!m_dangerZones)
-        return 0;
-    return *getDangerCell(m_dangerZones, point);
-}
-
-// The Dreamcast roster marks both coordinate lookups static, and its
-// AI_build_ship xrefs mark both calls inlined. Retail retains those two
-// source-level passes: owned town docks first, then claimed map shipyards.
-// Before normalization (function): get_shipyard_town.
-static town* getShipyardTown(const playerData* player, long x, long y,
-                               long z)
-{
-    for (long i = 0; i < player->m_numTowns; ++i) {
-        // Before normalization (locals): current_town.
-        town* currentTown = g_game->getTown(player->m_townIds[i]);
-        if (currentTown->m_dockSite == x && currentTown->m_dockSiteY == y
-            && currentTown->m_mapZ == z)
-            return currentTown;
-    }
-    return 0;
-}
-
-// Before normalization (function): get_map_shipyard.
-static unsigned char getMapShipyard(const playerData* player, long x,
-                                      long y, long z)
-{
-    for (unsigned long i = 0; i < player->m_shipyards.size(); ++i) {
-        if (player->m_shipyards[i].m_z == z) {
-            NewmapCell* cell = g_game->getCell(player->m_shipyards[i]);
-            const ShipyardInfo* shipyard = static_cast<const ShipyardInfo*>(
-                static_cast<const void*>(&cell->m_extraInfo));
-            if (shipyard->m_boatX == x && shipyard->m_boatY == y)
-                return 1;
-        }
-    }
-    return 0;
-}
 
 #if 0  // @carcass
 
@@ -4361,15 +4300,6 @@ int game::getTeam(int playerNum)
 
 #endif  // @carcass
 
-#if 0  // @carcass: claim-only home for the game.h inline COMDAT
-// E:\gamedcs\game.h:1380. The header owns the single canonical body;
-// DC 0x38000 calls NewfullMap::cell(int,int,int), not cell(type_point).
-VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
-NewmapCell* game::getCell(type_point point)
-{
-    // @stub
-}
-#endif  // @carcass
 
 // The nine functions below are located by the callee-fingerprint join against
 // evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved
@@ -4420,65 +4350,6 @@ long markDestinations(hero* currentHero, long maxDistance,
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost);
 
-// E:\gamedcs\ai_player.cpp:3164, dc 0x32e30. Dreamcast preserves this
-// static helper boundary, vector-reference parameter and local `point`;
-// Complete adds the build-grail value change but expands the helper into
-// its sole caller. DC lines 3181/3205 call game::get_cell and construct the
-// typed artifact temporary for AI_get_value_of_artifact. Restoring those
-// boundaries plus the caller's two GetMapExtra(point) uses naturally retains
-// both retail calls (findAllDestinations +0x694/+0x73f), without either old
-// depth pin. Before the point-overload recovery, direct-map/no-pin measured
-// 93.7016%, and the typed temporary/no-artifact-pin measured 61.8460%.
-// Before normalization (function): check_holy_grail.
-static void checkHolyGrail(
-    // Before normalization (locals): current_hero, search_array, friendly_distances, guess_cell,
-    // map_cell, friendly_cost.
-    const hero* currentHero, const searchArray* currentSearchArray,
-    std::vector<HeroDestination>& destinations,
-    const unsigned short* friendlyDistances)
-{
-    playerData* player = &g_game->m_players[currentHero->m_owner];
-    if (player->m_puzzleGuess.m_x >= 0) {
-        HeroDestination point;
-        point.m_point.m_x = player->m_puzzleGuess.m_x;
-        point.m_point.m_y = player->m_puzzleGuess.m_y;
-        point.m_point.m_z = player->m_puzzleGuess.m_z;
-        point.m_isCritical = 0;
-        pathCell* guessCell = currentSearchArray->getCell(point.m_point, 0);
-        if (guessCell->m_visited) {
-            NewmapCell* mapCell = g_game->getCell(point.m_point);
-            if (!(mapCell->m_type == HERO && mapCell->m_isTrigger)
-                || mapCell->m_extraInfo
-                    == static_cast<unsigned long>(currentHero->m_id)) {
-                if (currentHero->isInPatrolRadius(
-                        point.m_point)) {
-                    point.m_moveCost = guessCell->m_cost;
-                    unsigned short friendlyCost = friendlyDistances[
-                        (point.m_point.m_z * g_mapHeight
-                         + point.m_point.m_y)
-                            * g_mapWidth
-                        + point.m_point.m_x];
-                    if (point.m_moveCost <= friendlyCost) {
-                        if (g_game->m_mapHeader.m_victoryCondition.m_type
-                            == VICTORY_CONDITION_BUILD_GRAIL) {
-                            point.m_value = 1968;
-                        } else {
-                            point.m_value = aiGetValueOfArtifact(
-                                type_artifact(ARTIFACT_HOLY_GRAIL),
-                                currentHero->m_owner);
-                        }
-                        point.m_moveCost = max(
-                            point.m_moveCost,
-                            currentHero->getMobility()
-                                + currentHero->m_movePoints);
-                        if (point.m_value > 0)
-                            destinations.push_back(point);
-                    }
-                }
-            }
-        }
-    }
-}
 
 // Residual (96.9365%): all 81 CFG blocks agree in flow/instruction count;
 // 29 call sites align, including vector::size at +0x3fd and both Grail
@@ -4822,20 +4693,6 @@ static unsigned char attemptTeleport(hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
 
-// Before normalization (function): check_gate_purchase.
-static __forceinline void checkGatePurchase(type_point point)
-{
-    // Before normalization (locals): town_id, current_town.
-    int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
-    if (townId >= 0) {
-        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
-        // Complete expansions retain this call. The 2026-09-09 whole-TU
-        // control retains the same code without the former depth pin.
-        town* currentTown = g_game->getTown(townId);
-        if (!currentTown->hasBuilding(EXTRA_1_ID, true))
-            currentTown->buyBuilding(EXTRA_1_ID);
-    }
-}
 
 // Exact. Dreamcast's final line and retail's six-exit tail prove the single
 // `event_cell == 0 && !bNoMove && !bFoughtBattle` result. The retarget flag is
@@ -5159,6 +5016,21 @@ static unsigned char attemptTeleport(hero* currentHero,
     ++currentHero->m_dWalkSpellsCast;
     return 1;
 }
+// E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
+static __forceinline void checkGatePurchase(type_point point)
+{
+    // Before normalization (locals): town_id, current_town.
+    int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
+    if (townId >= 0) {
+        // check_gate_purchase -> game::GetTown: Dreamcast line 4161 and both
+        // Complete expansions retain this call. The 2026-09-09 whole-TU
+        // control retains the same code without the former depth pin.
+        town* currentTown = g_game->getTown(townId);
+        if (!currentTown->hasBuilding(EXTRA_1_ID, true))
+            currentTown->buyBuilding(EXTRA_1_ID);
+    }
+}
+
 
 // E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
 // decorated signature and the retail /Gr call at move_hero+0x219.  The body
@@ -5319,20 +5191,9 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
 // E:\gamedcs\Town.h:324. The DC public symbol proves bool/bool/const; its
 // statement groups and the retail blocks agree on active versus built and
 // the 64-bit bitNumber test. HD supplies an exact cross-build identity.
-VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
-bool town::hasBuilding(int buildingId, bool check_included) const
-{
-    // @stub
-}
+// Canonical body and VA: include/town.h.
 
 #endif  // @carcass
-
-// The source member remains the Town.h inline used by every real caller.
-// Retail selected one out-of-line COMDAT copy into ai_player.obj; this
-// address-take is the established VC6 emission anchor (the do_swap pattern)
-// and does not force any call site out of line.
-// Before normalization: g_emit_HasBuilding.
-bool (town::* g_emitHasBuilding)(int, bool) const = &town::hasBuilding;
 
 // The canonical definition stays before AI_AttemptMove. VC6 retained it
 // after the caller and the Town.h COMDAT, so this redeclaration records the
@@ -5361,6 +5222,65 @@ VA(0x00430ab0, 0x4c1)  // caller/callee/body bridge, dc 0x34630
 static unsigned char attemptTeleport(hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
+
+// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
+// loops, with construction and valuation grouped in each statement, and the
+// source helper remains real even though Complete inlines both calls below.
+// The direct TArtifact construction preserves Dreamcast's proved field type.
+// Replacing it with the compatibility artifact_from_int helper is the negative
+// control: CFG stays 77/77 exact but the caller frame is four bytes short
+// (99.97449%). The caller gates both recruit ids, so this helper has no
+// source-false null guard.
+static long totalArtifactValue(hero* candidate, long playerId)
+{
+    long total = 0;
+    long slot;
+    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+        type_artifact backpackArtifact(
+            candidate->getBackpack(slot).m_artifactId);
+        total += aiGetValueOfArtifact(backpackArtifact, playerId);
+    }
+    for (slot = 0; slot < 19; ++slot) {
+        type_artifact equippedArtifact(
+            candidate->getArtifact(TArtifactSlot(slot)).m_artifactId);
+        total += aiGetValueOfArtifact(equippedArtifact, playerId);
+    }
+    return total;
+}
+
+// E:\gamedcs\ai_player.cpp:4565, dc 0x357ec.
+
+
+// The Dreamcast roster marks both coordinate lookups static, and its
+// AI_build_ship xrefs mark both calls inlined. Retail retains those two
+// source-level passes: owned town docks first, then claimed map shipyards.
+static town* getShipyardTown(const playerData* player, long x, long y,
+                               long z)
+{
+    for (long i = 0; i < player->m_numTowns; ++i) {
+        town* currentTown = g_game->getTown(player->m_townIds[i]);
+        if (currentTown->m_dockSite == x && currentTown->m_dockSiteY == y
+            && currentTown->m_mapZ == z)
+            return currentTown;
+    }
+    return 0;
+}
+
+// E:\gamedcs\ai_player.cpp:4583, dc 0x35888.
+static unsigned char getMapShipyard(const playerData* player, long x,
+                                      long y, long z)
+{
+    for (unsigned long i = 0; i < player->m_shipyards.size(); ++i) {
+        if (player->m_shipyards[i].m_z == z) {
+            NewmapCell* cell = g_game->getCell(player->m_shipyards[i]);
+            const ShipyardInfo* shipyard = static_cast<const ShipyardInfo*>(
+                static_cast<const void*>(&cell->m_extraInfo));
+            if (shipyard->m_boatX == x && shipyard->m_boatY == y)
+                return 1;
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\ai_player.cpp:4607
 // A computer hero may buy and launch from either an owned town dock or a
@@ -5418,32 +5338,8 @@ long aiGetShipCost(const hero* ourHero, type_point point)
     return -aiResourceCost(player, cost);
 }
 
-// E:\\gamedcs\\ai_player.cpp:4457. Dreamcast proves two lexical artifact
-// loops, with construction and valuation grouped in each statement, and the
-// source helper remains real even though Complete inlines both calls below.
-// The direct TArtifact construction preserves Dreamcast's proved field type.
-// Replacing it with the compatibility artifact_from_int helper is the negative
-// control: CFG stays 77/77 exact but the caller frame is four bytes short
-// (99.97449%). The caller gates both recruit ids, so this helper has no
-// source-false null guard.
-// Before normalization (function): total_artifact_value.
-// Before normalization (locals): player_id, backpack_artifact, equipped_artifact.
-static long totalArtifactValue(hero* candidate, long playerId)
-{
-    long total = 0;
-    long slot;
-    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact backpackArtifact(
-            candidate->getBackpack(slot).m_artifactId);
-        total += aiGetValueOfArtifact(backpackArtifact, playerId);
-    }
-    for (slot = 0; slot < 19; ++slot) {
-        type_artifact equippedArtifact(
-            candidate->getArtifact(slot).m_artifactId);
-        total += aiGetValueOfArtifact(equippedArtifact, playerId);
-    }
-    return total;
-}
+
+
 
 // E:\\gamedcs\\ai_player.cpp:4670. Dreamcast supplies the cap checks,
 // computer-player census, two recruit valuations and four source-level
@@ -5517,11 +5413,7 @@ bool type_AI_player::hireHeroes()
 // E:\gamedcs\Game.h:972. The DC header body, exact HD cross-build identity,
 // and retail's fifteen callers all preserve the -1/null arm and 1170-byte
 // hero stride. The compiled definition remains in game.h.
-VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
-hero* game::getHero(int which)
-{
-    // @stub
-}
+// Canonical body and VA: include/game.h.
 
 #endif  // @carcass
 
@@ -6155,13 +6047,16 @@ long type_creature_growth_artifact::getValue(const hero* owner,
     return value;
 }
 
-// Retail-only artifact-effect get_value virtuals (Complete/SoD added 6 concrete
-// types beyond the DC 18). Each is proven a virtual get_value by its type-vftable
-// slot in .rdata at 0x63b6b0.. (slot 0 = the shared ICF-folded scalar deleting
-// dtor 0x33080, slot 1 = get_value); all are thiscall ret 0xc = get_value(const
-// hero*, bool equipped, bool exact) per NH3API adventure_AI.hpp. Type names are
-// provisional (carve/NH3API elimination) except where noted; the RVA/size and the
-// get_value CATEGORY are vtable-proven. No DC offset (post-DC types).
+// Complete extends initialize_artifact_effects from DC's effect kinds
+// 0..17 (dc 0x35f3c/0x35f3e) to 0..23 (retail 0x43415b). Its new
+// jump-table entries 18..23 at 0x434578..0x43458c construct these six
+// concrete effects at 0x43443e/0x434463/0x434485/0x4344a2/0x4344cd/
+// 0x4344e3. Their vptr stores link each constructor to the getValue below:
+// 0x63b74c/0x63b754/0x63b75c/0x63b764/0x63b778/0x63b770 respectively.
+// Each table has the shared deleting destructor 0x433080 at slot 0 and
+// the matching three-argument, ret 0xc getValue at slot 1. The exact
+// Complete-only constructor and virtual definitions are reviewed in
+// config/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
 long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
                                     unsigned char exact) const
@@ -6400,12 +6295,20 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
 
     long value = 0;
     switch (artifact.m_artifactId) {
-    case ARTIFACT_SPELL_SCROLL:
+    case ARTIFACT_SPELL_SCROLL: {
         if (owner->m_inSpellbook[artifact.m_extra])
             return 0;
         if (!equipped && owner->m_availableSpells[artifact.m_extra])
             return 0;
-        return aiGetSpellValue(owner, spellIdFromInt(artifact.m_extra));
+        // The ordinal copy belongs to this scroll appraisal. Keep memcpy
+        // so the bridge preserves bits without an out-of-range enum cast.
+        SpellID spell;
+        {
+            int ordinal = artifact.m_extra;
+            memcpy(&spell, &ordinal, sizeof spell);
+        }
+        return aiGetSpellValue(owner, spell);
+    }
 
     case ARTIFACT_HOLY_GRAIL:
     case ARTIFACT_CATAPULT:
@@ -6653,7 +6556,7 @@ long getFullValue(const hero* ourHero)
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);
 
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = ourHero->getArtifact(slot);
+        type_artifact artifact = ourHero->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);
     }
@@ -6841,11 +6744,38 @@ inline type_luck_artifact::type_luck_artifact(long newBonus)
 {
 }
 
+inline type_duration_artifact::type_duration_artifact(long newBonus)
+    : type_power_artifact(newBonus)
+{
+}
+
+inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
+                                                   long newBonus)
+    : type_power_artifact(newBonus), m_school(newSchool)
+{
+}
+
+inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
+    : m_bonus(maxLevel)
+{
+}
+
 inline type_antimorale_artifact::type_antimorale_artifact()
 {
 }
 
 inline type_antiluck_artifact::type_antiluck_artifact()
+{
+}
+
+inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
+    : type_combat_artifact(0), m_school(newSchool)
+{
+}
+
+inline type_income_artifact::type_income_artifact(
+    long newAmount, EGameResource newResource)
+    : m_amount(newAmount), m_resource(newResource)
 {
 }
 
@@ -6861,24 +6791,8 @@ inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
 {
 }
 
-// Before normalization (locals): new_bonus.
-inline type_duration_artifact::type_duration_artifact(long newBonus)
-    : type_power_artifact(newBonus)
-{
-}
 
-// Before normalization (locals): new_school, new_bonus.
-inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
-                                                   long newBonus)
-    : type_power_artifact(newBonus), m_school(newSchool)
-{
-}
 
-// Before normalization (locals): max_level.
-inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
-    : m_bonus(maxLevel)
-{
-}
 
 // Before normalization (locals): new_spell.
 inline type_spell_artifact::type_spell_artifact(SpellID newSpell)
@@ -6905,18 +6819,7 @@ inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
 {
 }
 
-// Before normalization (locals): new_school.
-inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
-    : type_combat_artifact(0), m_school(newSchool)
-{
-}
 
-inline type_income_artifact::type_income_artifact(
-    // Before normalization (locals): new_amount, new_resource.
-    long newAmount, EGameResource newResource)
-    : m_amount(newAmount), m_resource(newResource)
-{
-}
 
 // Before normalization (function): initialize_artifact_effects.
 static void initializeArtifactEffects();

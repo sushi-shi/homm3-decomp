@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
-from homm3.match import banked_rows, single_view, status, verify_va_claims
+from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
 
 
 class BuildModeTest(unittest.TestCase):
@@ -39,6 +39,7 @@ class BuildModeTest(unittest.TestCase):
             ("banked", banked_rows, "run_gate", []),
             ("claims", verify_va_claims, "run_gate", []),
             ("single_view", single_view, "run_gate", []),
+            ("ownership", source_ownership, "run_gate", []),
             ("cleanliness", board, "check_and_roll", []),
             ("readme", status, "write_readme", None),
         ]:
@@ -51,7 +52,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
                                       "check", "checkpoint", "banked", "claims",
-                                      "single_view", "cleanliness", "readme"])
+                                      "single_view", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
 

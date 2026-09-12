@@ -120,23 +120,44 @@ public:
     // Before normalization (function): TSpellbookWindow::WindowHandler.
     virtual int windowHandler(message* msg);
 
-    // Before normalization (function): TSpellbookWindow::SetSchool.
-    void setSchool(TSpellSchool school);
-    // Before normalization (function): TSpellbookWindow::GetSchool.
-    unsigned getSchool();
-    // Before normalization (function): TSpellbookWindow::SetContext.
-    void setContext(TSpellContext context);
-    // Before normalization (function): TSpellbookWindow::GetContextMask.
-    unsigned getContextMask();
-    // Before normalization (function): TSpellbookWindow::GotoPage.
+    // E:\gamedcs\SpellbookWindow.h:222
+    void setSchool(TSpellSchool school)
+    {
+        m_school = school;
+        s_lastSchool = school;
+    }
+    // E:\gamedcs\SpellbookWindow.h:230
+    unsigned getSchool() const
+    {
+        return m_school;
+    }
+    // E:\gamedcs\SpellbookWindow.h:236
+    void setContext(TSpellContext context)
+    {
+        if (context == eContextAdventure)
+            m_contextMask = eAdventureContextMask;
+        else
+            m_contextMask = eCombatContextMask;
+        s_lastContext = context;
+    }
+    // E:\gamedcs\SpellbookWindow.h:248
+    unsigned getContextMask() const
+    {
+        return m_contextMask;
+    }
     void gotoPage(int page);
     // Before normalization (function): TSpellbookWindow::GetPage.
     int getPage();
-    // Before normalization (function): TSpellbookWindow::PreviousPage.
-    void previousPage();
-    // Before normalization (function): TSpellbookWindow::NextPage.
-    void nextPage();
-    // Before normalization (function): TSpellbookWindow::Reset.
+    // E:\gamedcs\SpellbookWindow.h:258
+    void previousPage()
+    {
+        gotoPage(m_page - 1);
+    }
+    // E:\gamedcs\SpellbookWindow.h:264
+    void nextPage()
+    {
+        gotoPage(m_page + 1);
+    }
     static void reset();
 
 private:
@@ -186,8 +207,7 @@ private:
     // Before normalization: RolloverWidget.
     bitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
 
-    int convertID2HelpID(int id);
-    // Before normalization (function): TSpellbookWindow::GetPositionFromSchool.
+    int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);
     // Before normalization (function): TSpellbookWindow::GetSchoolFromPosition.
     static TSpellSchool getSchoolFromPosition(int position);

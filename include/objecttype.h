@@ -1,129 +1,15 @@
-// objecttype.h - the Complete-only image-name registry shared by
-// TObjectType::GetImageName and TObjectType::setImageName.
-//
-// Kept out of advmgr_objects.h deliberately: objecttype.cpp is the only
-// consumer, and advmgr_objects.h reaches nine compilands through game.h and
-// mapcell.h.
+// objecttype.h - Complete object-template records shared with map loading
+// and the random-map generator. Private registries and filters stay in
+// objecttype.cpp, where their retail tables and function bodies are owned.
 #ifndef HOMM3_OBJECTTYPE_H
 #define HOMM3_OBJECTTYPE_H
 
-#include <istream>
-#include <map>
+#include <bitset>
 #include <string>
 #include <vector>
+#include "mapcell.h"
 
-#include "advmgr_objects.h"
-
-// Retail publishes this class's whole layout at the .bss object 0x69cb80
-// that both accessors address:
-//   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,
-//          _Head at +4, _Multi at +8, _Size at +0x0c - whose constructor
-//          allocates 0x24-byte nodes, i.e. a tree header plus
-//          pair<const string, int>;
-//   +0x10  a 16-byte vector whose elements are FOUR bytes wide.
-// The 4-byte element carries a map node address, modeled here with the
-// map's iterator. GetImageName reads `rows[i]` and adds 0x0c to reach the
-// key string; setImageName reads +0x1c to reach the mapped index. These
-// are exactly the iterator's `->first` and `->second` accesses. A probe
-// using the pinned STL's raw node-pointer type instead reproduces both
-// setImageName record-order checkpoints byte for byte, so these bytes
-// do not distinguish the two source representations. The
-// registry's growth path in setImageName confirms it from the other side:
-// it inserts into the tree and then push_backs the RETURNED ITERATOR.
-//
-// NAMES ARE PROVISIONAL - nothing attests this class; only the offsets, the
-// node size and the two accessors' arithmetic are retail-proven.
-class TObjectImageNameTable {
-public:
-    typedef std::map<std::string, int> TNameIndex;
-
-    // Before normalization: nameIndex.
-    TNameIndex m_nameIndex;
-    // Before normalization: rows.
-    std::vector<TNameIndex::iterator> m_rows;
-
-    // Provisional name and boundary inferred from retail setImageName:
-    // its first rows.size() expands, but this insertion path calls size,
-    // the pair constructor and row insert. Flattening this lookup into
-    // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    // Keep the returned entry distinct from the iterator passed by reference
-    // to vector::insert. In setImageName this preserves retail's existing-
-    // entry EAX path and reloads only after insertion (fn+0xe8). With the
-    // ordinary registry accessor, returning the mapped value by value also
-    // restores the caller's scratch allocation; see setImageName's controls.
-    int getIndex(const std::string& name)
-    {
-        TNameIndex::iterator found = m_nameIndex.find(name);
-        TNameIndex::iterator result = found;
-        if (found == m_nameIndex.end()) {
-            // Retail copies both returned fields, including the unused
-            // bool into a stack home. Extracting .first directly drops it.
-            std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
-                TNameIndex::value_type(name, m_rows.size()));
-            found = inserted.first;
-            m_rows.insert(m_rows.end(), found);
-            result = found;
-        }
-        return result->second;
-    }
-};
-
-// --- the object-type filter family -----------------------------------------
-//
-// Fifteen file-scope filter objects and the fifteen-entry table of pointers
-// to them at 0x640288, all retail-proven and all Complete-only (no Dreamcast
-// row covers any of it), so every NAME below is a role description. What the
-// bytes fix: three concrete classes over one abstract base with a virtual
-// destructor and one pure virtual predicate; the base vtable 0x6402cc holds
-// {scalar deleting dtor, _purecall}, and the three concrete vtables
-// (0x6402c4, 0x6402d4, 0x6402dc) hold {scalar deleting dtor, the predicate}.
-// The fifteen dynamic initializers at 0x514280..0x5145e0 give the source
-// order and every constructor argument: nine of the first class with the
-// terrain ids 0..8 (rock, 9, is absent), one of the second, and five of the
-// third with 1..5 - and the pointer table lists them in exactly that order.
-class TObjectTypeFilter {
-public:
-    virtual ~TObjectTypeFilter();
-    // Retail 0x5141bd returns its literal zero through AL. The native-terrain
-    // override is exact with this byte result and a direct logical tail.
-    // Before normalization (function): TObjectTypeFilter::Accepts.
-    virtual unsigned char accepts(const TObjectType* objectType) const = 0;
-};
-
-// Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
-// TObjectType's slotCategory (+0x24) and recommendedTerrainMask (+0x18):
-// an unplaced object (category 0) whose recommended terrain set contains
-// this terrain and is SMALL - the `count() <= 3` arm, against the
-// any-terrain filter's `count() > 3` next door.
-class TNativeTerrainObjectFilter : public TObjectTypeFilter {
-public:
-    explicit TNativeTerrainObjectFilter(int terrain);
-    // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
-    virtual unsigned char accepts(const TObjectType* objectType) const;
-
-    int m_terrain;
-};
-
-// Retail 0x514220. No state - its constructor 0x5144b0 writes nothing but
-// the vptr - and the mirror of the filter above: an unplaced object whose
-// recommended terrain set is WIDE.
-class TAnyTerrainObjectFilter : public TObjectTypeFilter {
-public:
-    TAnyTerrainObjectFilter();
-    // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
-    virtual unsigned char accepts(const TObjectType* objectType) const;
-};
-
-// Retail 0x514260, the whole body a `sete` on one compare: the object's
-// slotCategory against the one this filter carries at +4.
-class TSlotCategoryObjectFilter : public TObjectTypeFilter {
-public:
-    explicit TSlotCategoryObjectFilter(int slotCategory);
-    // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
-    virtual unsigned char accepts(const TObjectType* objectType) const;
-
-    int m_slotCategory;
-};
+class TObjectTypeFilter;
 
 enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
@@ -132,10 +18,151 @@ enum EObjectTypeFilterConstants {
 // Before normalization: gObjectTypeFilters.
 extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
-// The per-row parser TObjectTypeTable::load runs over each objects.txt
-// line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
-// stream arrives in ECX and the record in EDX, and it answers the stream
-// so the caller can chain.
-std::istream& operator>>(std::istream& is, TObjectType& objectType);
+// Map-editor/RMG object template consumed by the retail-identical
+// CObjectType conversion constructor at 0x506080. The public names are from
+// the HD structural bridge; retail independently fixes the 0x4c stride and
+// every offset read by that constructor.
+struct TObjectType {
+    // Numeric slot identities shared with the Complete-only editor filter
+    // table (0x640288). The RMG selector at 0x546040 admits categories 4/5
+    // on non-water terrain without consulting the recommended mask. Their
+    // original semantic labels have not been recovered.
+    enum {
+        // RMG footprint checker 0x5318b0 treats zero specially when the
+        // recommended-terrain mask admits water; original role unresolved.
+        SLOT_CATEGORY_0 = 0,
+        SLOT_CATEGORY_4 = 4,
+        SLOT_CATEGORY_5 = 5
+    };
+
+    struct TPoint {
+        // Before normalization: x.
+        int m_x;
+        // Before normalization: y.
+        int m_y;
+    };
+    struct TImageInfo {
+        // Provisional overload: setImageName initializes the point before
+        // either bitset constructor. TObjectType's default construction
+        // leaves that point uninitialized, requiring a distinct size path.
+        TImageInfo() {}
+        explicit TImageInfo(const TPoint& size) : m_objectSize(size) {}
+
+        // Before normalization: objectSize.
+        TPoint m_objectSize;
+        // Before normalization: drawMask.
+        std::bitset<48> m_drawMask;
+        // Before normalization: shadowMask.
+        std::bitset<48> m_shadowMask;
+    };
+
+    // The default constructor load()'s `objectTypes.resize(count)` builds
+    // its `_Ty()` temporary from, published one store at a time at
+    // 0x514e2a-0x514ea1: every member in declaration order, an ALL-SET
+    // passable mask spelled as a flipped `bitset<48>(0)`, and the {8,6}
+    // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
+    // which is why it has no initializer here either.
+    TObjectType();
+
+    // Before normalization: imageNumber.
+    int m_imageNumber;
+    // Before normalization: passableMask.
+    std::bitset<48> m_passableMask;
+    // Before normalization: triggerMask.
+    std::bitset<48> m_triggerMask;
+    // Before normalization: terrainMask.
+    std::bitset<10> m_terrainMask;
+    // Before normalization: recommendedTerrainMask.
+    std::bitset<10> m_recommendedTerrainMask;
+    // Before normalization: objectType.
+    TAdventureObjectType m_objectType;
+    // Before normalization: subtype.
+    int m_subtype;
+    // Before normalization: slotCategory.
+    int m_slotCategory;
+    // Before normalization: isUnderlay.
+    unsigned char m_isUnderlay;
+    // Before normalization: hasTrigger.
+    unsigned char m_hasTrigger;
+    // Before normalization: triggerCell.
+    TPoint m_triggerCell;
+    // Before normalization: imageInfo.
+    TImageInfo m_imageInfo;
+
+    // Retail 0x514960, thiscall with no arguments. DECLARED ONLY: the body
+    // is defined in the Complete .msk/objects compiland in the
+    // newgame..overview gap, where two function-local statics cache a table
+    // of image records and this member returns the +0x0c string of the row
+    // `imageNumber` selects (or a static empty string when the index is out
+    // of range). The ROLE is proven by its conversion-constructor caller - the result is what
+    // CObjectType's conversion constructor assigns into ImageName - and the
+    // NAME follows the role; nothing attests it.
+    const std::basic_string<char, std::char_traits<char>,
+                            // Before normalization (function): TObjectType::GetImageName.
+                            std::allocator<char> >& getImageName();
+
+    // CObjectType's conversion loads each dimension as a dword before
+    // narrowing it to char. Direct field access folds those into byte
+    // loads in VC6; ordinary integer accessors retain the observed boundary.
+    // Their role names are provisional: this editor type is Complete-only.
+    // Before normalization (function): TObjectType::GetWidth.
+    int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    // Before normalization (function): TObjectType::GetHeight.
+    int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
+
+    // Retail 0x514610 and 0x514a60, both in the same Complete-only
+    // compiland and both returning *this - the per-row `>>` at 0x514b80
+    // chains them off each other's result. setImageName resolves the
+    // record's name through the image-name registry into `imageNumber`
+    // (and, on a miss, loads the row's .msk to append one); setTriggerMask
+    // stores `mask & ~passableMask`, sets `hasTrigger` from its any(), and
+    // scans the 8x6 grid for the first set cell. NAMES ARE PROVISIONAL.
+    TObjectType& setImageName(
+        const std::basic_string<char, std::char_traits<char>,
+                                std::allocator<char> >& name);
+    TObjectType& setTriggerMask(const std::bitset<48>& mask);
+    // Provisional fluent setter names: retail objects.txt extraction retains
+    // the two setters above and expands this ordered field/invariant chain.
+    // The corresponding ordinary definitions live in objecttype.cpp.
+    TObjectType& setPassableMask(const std::bitset<48>& mask);
+    TObjectType& setTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setObjectType(TAdventureObjectType type);
+    TObjectType& setSubtype(int subtype);
+    TObjectType& setSlotCategory(int category);
+    TObjectType& setUnderlay(bool underlay);
+
+};
+SIZE(TObjectType, 0x4c);
+
+// The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
+// dimensions - in .rdata at 0x640278. Both of its consumers, the default
+// constructor above and TObjectType::setTriggerMask's else arm, issue both
+// loads before either store. objecttype.cpp owns the definition.
+// Before normalization: gNoTriggerCell.
+extern const TObjectType::TPoint g_noTriggerCell;
+
+// Shared header definition for the resize default value. Retail expands
+// this constructor, which does not establish an explicit inline keyword:
+// an ordinary definition in objecttype.cpp was byte-flat (2026-09-06).
+inline TObjectType::TObjectType()
+    : m_imageNumber(0),
+      m_passableMask(~std::bitset<48>(0)),
+      m_objectType(NOTHING),
+      m_subtype(0),
+      m_slotCategory(0),
+      m_isUnderlay(0),
+      m_hasTrigger(0),
+      m_triggerCell(g_noTriggerCell)
+{
+}
+
+class TObjectTypeTable {
+public:
+    // Before normalization: objectTypes.
+    std::vector<TObjectType> m_objectTypes;
+    void load(char* filename);
+};
+SIZE(TObjectTypeTable, 0x10);
 
 #endif  /* HOMM3_OBJECTTYPE_H */

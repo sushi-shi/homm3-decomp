@@ -42,6 +42,12 @@ public:
     void getTurnAIVars(int whichPlayer);
 };
 
+// Complete's computer-owner purchase wrapper, defined at 0x526d20 in
+// philai.cpp. town::buyBuilding calls it before charging the resource row.
+// No original name is known; retain the ordinal until source evidence exists.
+// Before normalization (function): Unnamed526d20.
+void unnamed526d20(int playerId, int* costs, int flag);
+
 // Before normalization (function): AI_get_spell_value.
 // Before normalization (locals): our_hero.
 long aiGetSpellValue(const hero* ourHero, SpellID spell);

@@ -777,10 +777,10 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             } else {
                 offsetToMon = 292;
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
-                    artifact = currHero->getArtifact(
+                    artifact = currHero->getArtifact(TArtifactSlot(
                         (item + (kNumArtifactSlots / 2)
                             * g_overviewHeroArtifactPage[heroNumber])
-                            % kNumArtifactSlots);
+                            % kNumArtifactSlots));
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon, row * 116 + 90,
                         44, 44, rowWidgetId + item + 119,
@@ -978,8 +978,10 @@ void TOverviewWindow::updateFlaggableIcon(int i)
     }
 }
 
-// Dreamcast proves the seven-item loop and the helper boundary. Complete's
-// 42-byte body calls UpdateFlaggableIcon seven times and redraws the strip.
+// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
+// DC refreshes two items and draws overWin through its global pointer.
+// Complete extends the loop to seven and retains ECX as the window receiver
+// at 0x51e7c2/0x51e7c7/0x51e7e2, matching the adjacent converted helpers.
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
 {
@@ -1198,6 +1200,34 @@ void game::overview()
     g_textButtonDynamic = 0;
 }
 
+// Dreamcast proves these as two ordinary static source helpers, each with the
+// selected hero index, one backpack-bound query and one conditional refresh.
+// Complete emits no standalone copies: VC6 expands every call below, while
+// independently choosing whether to expand get_last_backpack_index within
+// each expansion.
+static void incrementBackpackStart(long slot)
+{
+    long heroNumber = g_overviewTop[g_overviewType] + slot;
+    long lastBackpackIndex = getLastBackpackIndex(heroNumber) + 1;
+    if (lastBackpackIndex > 8) {
+        g_overviewBackpackStart[heroNumber] =
+            (g_overviewBackpackStart[heroNumber] + 1) % lastBackpackIndex;
+        updateBackpack(slot);
+    }
+}
+
+static void decrementBackpackStart(long slot)
+{
+    long heroNumber = g_overviewTop[g_overviewType] + slot;
+    long lastBackpackIndex = getLastBackpackIndex(heroNumber);
+    if (lastBackpackIndex > 8) {
+        g_overviewBackpackStart[heroNumber] =
+            (g_overviewBackpackStart[heroNumber] + lastBackpackIndex - 1)
+            % lastBackpackIndex;
+        updateBackpack(slot);
+    }
+}
+
 // E:\gamedcs\overview.cpp:1647. Dreamcast proves this helper boundary, its
 // const-reference artifact parameter and the block-scoped spellbook window.
 // Complete emits no standalone body: VC6 expands both calls below, preserving
@@ -1329,10 +1359,10 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
                 showArtifact(
                     currHero,
-                    currHero->getArtifact(
+                    currHero->getArtifact(TArtifactSlot(
                         (codeY - 119
                          + 9 * g_overviewHeroArtifactPage[selectedIndex])
-                        % 18),
+                        % 18)),
                     rightMouse);
                 break;
 
@@ -2152,10 +2182,10 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 6:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 7:
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
-                currHero->getArtifact(
+                currHero->getArtifact(TArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
-                         g_overviewTop[g_overviewType] + slot]) % 18)
+                         g_overviewTop[g_overviewType] + slot]) % 18))
                     .getRolloverText(g_text);
                 break;
 
@@ -2528,35 +2558,7 @@ void game::overview()
 
 #endif  // @carcass
 
-// Dreamcast proves these as two ordinary static source helpers, each with the
-// selected hero index, one backpack-bound query and one conditional refresh.
-// Complete emits no standalone copies: VC6 expands every call below, while
-// independently choosing whether to expand get_last_backpack_index within
-// each expansion.
-// Before normalization (function): increment_backpack_start.
-static void incrementBackpackStart(long slot)
-{
-    long heroNumber = g_overviewTop[g_overviewType] + slot;
-    long lastBackpackIndex = getLastBackpackIndex(heroNumber) + 1;
-    if (lastBackpackIndex > 8) {
-        g_overviewBackpackStart[heroNumber] =
-            (g_overviewBackpackStart[heroNumber] + 1) % lastBackpackIndex;
-        updateBackpack(slot);
-    }
-}
 
-// Before normalization (function): decrement_backpack_start.
-static void decrementBackpackStart(long slot)
-{
-    long heroNumber = g_overviewTop[g_overviewType] + slot;
-    long lastBackpackIndex = getLastBackpackIndex(heroNumber);
-    if (lastBackpackIndex > 8) {
-        g_overviewBackpackStart[heroNumber] =
-            (g_overviewBackpackStart[heroNumber] + lastBackpackIndex - 1)
-            % lastBackpackIndex;
-        updateBackpack(slot);
-    }
-}
 
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
@@ -2865,7 +2867,9 @@ void updateBackpack(int slot)
     hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
     type_artifact artifact;
-    message msg(0, 0, 0, 0, 0, 0, 0, 0);
+    // DC 0x1076c4 calls the default message constructor at 0x2d58.
+    // Retail 0x522470 initializes the same zero fields before id/codeX.
+    message msg;
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;

@@ -8,6 +8,7 @@
 #include <va.h>
 #include <windows.h>
 #include <vector>
+#include <windows.h>
 
 #include "struct.h"
 
@@ -110,14 +111,9 @@ struct pathCell {
     // Before normalization: move_left.
     unsigned short m_moveLeft;
 
-    // DC findpath.cpp:79 attests a pathCell::pathCell, and retail's
-    // searchArray::Init (0x4b1460) proves the retail one is EMPTY but
-    // USER-DECLARED: `new pathCell[n]` there allocates through plain
-    // operator new (no vector-new helper, so nothing is constructed)
-    // and yet still emits VC6's array-construction preamble - the
-    // `dec esi; mov [ebp-4], esi` count-1 temp that a POD would never
-    // produce, and that forces the stack frame Init carries.
-    pathCell() {}
+    // CodeView dc 0xa115c explicitly marks the default constructor generated
+    // (compgenx). Its type_point members already make construction nontrivial;
+    // searchArray::Init's array preamble does not prove a user-written body.
 };
 #pragma pack(pop)
 SIZE(pathCell, 30);
@@ -219,13 +215,14 @@ public:
     // Before normalization (function): searchArray::Clear.
     // Before normalization (locals): fly_level, start_z, stop_z.
     void clear(long flyLevel, long startZ, long stopZ);
-    // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
-    // two expansions in check_adjacent_hexes and no retained retail call.
-    // Retail 0x4b3b90 retains this 32-byte bounds-free accessor. Four calls
-    // inside FindCombatPath's mark expansions reach it; PushCombatPoint's
-    // source call expands. The old getCellData name/body was an NH3API
-    // fallback; DC's canonical const helper is byte-identical and owns it.
-    // Before normalization (function): searchArray::get_hex.
+    // Original: searchArray::get_hex; FindPath.h:194, dc 0x27fe8.
+    // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
+    // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
+    // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
+    // expansions of DC mark_enemy's get_hex call.
+    // The old getCellData name came from HD/NH3API; CodeView supplies the
+    // canonical name and const header ownership of this same body.
+    VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
     pathCell* getHex(long x) const
     {
         if (m_cellData == 0)
@@ -319,19 +316,23 @@ public:
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
     void setMoat(const army* currentArmy);
-    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
-    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
-    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
-    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
-    // 16-bit value, and FindCombatPath even does the neighbour's
-    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
-    // add; movsx ecx, cx`) - which only a short parameter forces. The
-    // one call whose argument is already a sign-extended 16-bit value
-    // loses the movsx, exactly as it should.
-    // Before normalization (function): searchArray::is_moat.
-    unsigned char isMoat(short hex) { return m_isMoatSlowed[hex]; }
-    // DC findpath.cpp:1187. The ValidHex guard belongs to this helper;
-    // retail eliminates it at the already-checked first caller site.
+
+    // Header-inline in the DC roster and expanded by ProcessHover in retail.
+    // The public decoration is
+    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
+    // a const member and _N proves the source parameter was native bool.
+    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
+    // only the low byte and never writes through this.
+    VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
+    pathCell* getCell(type_point point, bool flying) const
+    {
+        if (!m_cellData)
+            return m_cellData;
+        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
+                         * g_mapWidth + point.m_x];
+    }
+    // DC findpath.cpp:1187. ValidHex belongs to the ordinary helper;
+    // retail eliminates it at the first, already-checked caller site.
     // Before normalization (function): searchArray::check_enemy_armies.
     // Before normalization (locals): current_group.
 private:
@@ -347,27 +348,11 @@ public:
     // body's.
     // Before normalization (function): searchArray::get_travel_time.
     // Before normalization (locals): current_army.
-    long getTravelTime(const army* currentArmy, long hex);
+    long getTravelTime(const army* currentArmy, long hex) const;
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
     // Before normalization (function): searchArray::get_danger_value.
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
 
-    // Header-inline in the DC roster and expanded by ProcessHover in retail.
-    // The public decoration is
-    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
-    // a const member and _N proves the source parameter was native bool.
-    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
-    // only the low byte and never writes through this.
-    // Before normalization (function): searchArray::get_cell.
-    pathCell* getCell(type_point point, bool flying) const
-    {
-        if (!m_cellData)
-            return m_cellData;
-        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
-                         * g_mapWidth + point.m_x];
-    }
-
-    // Before normalization (function): searchArray::clear_path.
     void clearPath()
     {
         m_result.erase(m_result.begin(), m_result.end());
@@ -392,6 +377,11 @@ public:
     {
         return m_result[i];
     }
+    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
+    // folded into ai_player.obj's destination chooser on retail x86.  Keep
+    // the boundaries visible in C++ even where the selected lowering is a
+    // vector::size call or direct field/index arithmetic.
+    long getVisitedCount() const { return m_visitedPoints.size(); }
 
     // Before normalization (function): searchArray::BuildPath.
     // Before normalization (locals): current_hero.
@@ -405,6 +395,17 @@ public:
                       type_search_type searchType,
                       int curTempMobility,
                       unsigned char seedContinuation);
+    pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
+    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
+    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
+    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
+    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
+    // 16-bit value, and FindCombatPath even does the neighbour's
+    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
+    // add; movsx ecx, cx`) - which only a short parameter forces. The
+    // one call whose argument is already a sign-extended 16-bit value
+    // loses the movsx, exactly as it should.
+    unsigned char isMoat(short hex) const { return m_isMoatSlowed[hex]; }
     // E:\\gamedcs\\findpath.h:247 (dc 0x37e7c). Retail folds this
     // const tiny helper into move_hero and AI_choose_destination as the
     // byte read at +0x20.
@@ -418,25 +419,29 @@ public:
     {
         m_dangerZones = dangerZoneMap;
     }
-    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
-    // folded into ai_player.obj's destination chooser on retail x86.  Keep
-    // the boundaries visible in C++ even where the selected lowering is a
-    // vector::size call or direct field/index arithmetic.
-    // Before normalization (function): searchArray::get_visited_count.
-    long getVisitedCount() const { return m_visitedPoints.size(); }
-    // Before normalization (function): searchArray::get_visited_cell.
-    pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
-    // Before normalization (function): searchArray::set_rectangle.
-    void setRectangle(tagRECT& rect) { m_validRectangle = rect; }
+    // Original: searchArray::set_rectangle; FindPath.h:257, dc 0x37e84.
+    void setRectangle(tagRECT& rect)
+    {
+        m_validRectangle = rect;
+    }
 };
 
-// findpath.h:265 in the DC roster; no retail row of its own - /Ob2
+// Original: get_danger_cell; FindPath.h:265, dc 0x37e98. No retail row - /Ob2
 // folds it into every caller, ai_player.obj's get_danger_value included.
 // Before normalization (function): get_danger_cell.
 // Before normalization (locals): danger_zones.
 inline long* getDangerCell(long* dangerZones, type_point point)
 {
     return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
+}
+
+// Original: searchArray::get_danger_value; FindPath.h:270, dc 0x37eec.
+VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
+inline long searchArray::getDangerValue(type_point point) const
+{
+    if (!m_dangerZones)
+        return 0;
+    return *getDangerCell(m_dangerZones, point);
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:

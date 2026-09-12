@@ -234,14 +234,14 @@ unsigned char iconWidget::handleClick(unsigned char downClick, unsigned char rig
 // (widget::GetRealHeight) is 0x4eab30, which is also what fixes which
 // CSprite field each one reads (Width@0x30 / Height@0x34).
 VA(0x004eab20, 0x7)  // anchor-vtable (slot 6 of 0x63ec48), dc 0xd96bc
-int iconWidget::getRealWidth()
+int iconWidget::getRealWidth() const
 {
     return m_sprite->m_width;
 }
 
 // E:\gamedcs\iconwdgt.cpp:269
 VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
-int iconWidget::getRealHeight()
+int iconWidget::getRealHeight() const
 {
     return m_sprite->m_height;
 }
@@ -301,7 +301,7 @@ int iconWidget::getRealHeight()
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
 VA(0x004eab40, 0x4B0)  // anchor-vtable (slot 4 of 0x63ec48), dc 0xd96e8
-void iconWidget::draw()
+void iconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;

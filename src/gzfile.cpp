@@ -1,8 +1,9 @@
 // gzfile.cpp - the zlib-backed TAbstractFile every savegame, map and
 // campaign write goes through.
 //
-// THIS COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER (the Dreamcast port
-// has no gz stream at all). Retail's object is the one opened by the
+// The TGzFile class and compiland are absent from the Dreamcast roster.
+// DC SaveGame calls gzopen/gzclose directly with a void* handle; Complete
+// supplies this TAbstractFile wrapper. Retail's object is the one opened by the
 // cinit at 0x4d6c30 and closed before the next unit's cinit at 0x4d6dc0,
 // which brackets exactly the eight bodies below: the constructor, the two
 // gz virtual slots, the destructor and the four compiler-generated
@@ -10,13 +11,13 @@
 // TGzInflateBuf's in the gametypewindow..hero link-order bracket.
 //
 // The class, its layout and its TOpenFailure tag are modelled in
-// savegame.h off the retail bytes; this unit only supplies the bodies.
+// gzfile.h off the retail bytes; this unit only supplies the bodies.
 // Retail's zlib is FASTCALL (`@gzopen@8`, `@gzread@12`), which is what the
 // vendored zlib-1.1.3 header emits under this profile's /Gr - so <zlib.h>
 // resolves here from vendor/zlib-1.1.3, the exact library retail links.
 #include <va.h>
 #include <zlib.h>
-#include "savegame.h"
+#include "gzfile.h"
 
 // 0x4d6c50 stores TAbstractFile's vftable, calls @gzopen@8 with the path
 // in ecx and the mode in edx, parks the handle at +4, swaps in TGzFile's

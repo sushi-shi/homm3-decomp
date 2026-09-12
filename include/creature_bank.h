@@ -77,7 +77,7 @@ struct type_creature_bank_level {
     // The retail table walks 0x60-byte records; this byte aligns their extent.
     char m_tailPadding;
 
-    type_creature_bank_level() {}
+    type_creature_bank_level();
 };
 SIZE(type_creature_bank_level, 0x60);
 

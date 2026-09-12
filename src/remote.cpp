@@ -38,43 +38,6 @@
 void startMouseThread();
 void stopMouseThread();
 
-// E:\gamedcs\netmsg.h:264. DC supplies the member names and the header
-// source boundary; retail independently proves the PC offsets and this exact
-// body in both advManager::DoNetCombat and the wait-dialog constructor.
-inline CCombatInitMsg::CCombatInitMsg()
-    : t_complex_net_message(RS_COMBAT_INIT)
-{
-    m_point = type_point(0, 0, 0);
-    m_leftHero = 0;
-    m_rightTown = 0;
-    m_rightHero = 0;
-    m_seed = 0;
-    m_winner = 0;
-    m_retreatWin = 0;
-    m_combatSurrender = 0;
-    m_leftOwner = 0;
-    m_leftGold = 0;
-    m_rightOwner = 0;
-    m_rightGold = 0;
-}
-
-// Before normalization (locals): sLogFileName.
-inline CLogFile::CLogFile(char* logFileName)
-{
-    strcpy(m_logFileName, logFileName);
-}
-
-// E:\gamedcs\struct.h:340. The definition belongs in this TU as well as in
-// the selection window's: retail's RemoteCleanup (0x5544b0) and the copy of
-// it inlined into HandleLowLevelMsg (0x552e77) both EXPAND the three stores
-// where a declaration-only view emits `call ??0CNetPlayerInfo@@QAE@XZ`.
-inline CNetPlayerInfo::CNetPlayerInfo()
-{
-    m_dpid = 0;
-    m_name[0] = 0;
-    m_version = *g_videoGameState;
-}
-
 DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 // The global constructor consists solely of the inlined strcpy above;
@@ -85,6 +48,39 @@ DATA(0x0063dc18) const GUID guidHeroes3 = {
     0x8b743aa0, 0x53b2, 0x11d2,
     { 0x80, 0x8a, 0x00, 0x60, 0x08, 0x95, 0xfb, 0x43 }
 };
+
+// DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
+// `__inside__`; retail's two inlined error paths fix it at 0x69d814.
+DATA(0x0069d814) static unsigned char g_inside;
+
+// E:\gamedcs\remote.cpp:102 - Dreamcast retains this as an out-of-line
+// helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
+// three beeps, 200-byte local error buffer and recursion guard are visible in
+// both byte-identical expansions.
+inline void dpsd(int dpErr, char* file, int line)
+{
+    if (g_inside)
+        return;
+
+    g_inside = 1;
+    char errorText[200];
+    if (!g_dPlay)
+        strcpy(errorText,
+               DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
+                            "Initialization failed!"));
+    else
+        g_dPlay->getErrorDesc(g_dPlay->getLastError(), errorText);
+
+    MessageBeep(0);
+    MessageBeep(0);
+    MessageBeep(0);
+    sprintf(g_text,
+            DATA_COMPGEN(0x00682a48, remoteDirectPlayError,
+                         "DirectPlay Error:\n\n'%s'\n\n  File:'%s'\n Line# %d"),
+            errorText, file, line);
+    shutDown(g_text);
+    g_inside = 0;
+}
 
 // E:\gamedcs\remote.cpp:129 - the whole-buffer checksum game.obj's
 // TransmitSaveGame reaches across the compiland boundary. Retail seeds it
@@ -299,42 +295,10 @@ DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 DATA(0x00682a38) unsigned char g_followPlayerMode;
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
-// Before normalization: lastActiveUpdate.
 DATA(0x006993e0) char g_mapName[260];
-// DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
-// `__inside__`; retail's two inlined error paths fix it at 0x69d814.
-// Before normalization: __inside__.
 DATA(0x0069d818) static unsigned long g_lastActiveUpdate;
-DATA(0x0069d814) static unsigned char g_inside;
 
-// E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
-// retail bodies - /Ob2 expands each into the one caller it has, the
-// constructor and the destructor claimed further down - but their SHAPE is
-// readable there: each arm ends in a mouse-thread call when the guard was
-// built with a worker thread, and in a direct pointer store when it was
-// not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
-// later destructor both stop the thread, exactly as retail does.
-//
-// A previous reading had these two as single-armed (`if (m_thread)` with no
-// else) and recorded the constructor and destructor as having no retail
-// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
-// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
-// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
-inline void CHourGlass::stop()
-{
-    if (m_thread)
-        stopMouseThread();
-    else
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-}
 
-inline void CHourGlass::start()
-{
-    if (m_thread)
-        startMouseThread();
-    else
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
-}
 
 // Before normalization: PLAYER_ACTIVE_UPDATE_INTERVAL.
 static const long g_playerActiveUpdateInterval = 600000;
@@ -1067,14 +1031,12 @@ void CChatManager::addChat(const char* format, ...)
 }
 
 // E:\gamedcs\remote.cpp:904
-// Legacy explicit-receiver declaration, not proven free ownership (see
-// docs/vc6/variadic-members.md). The display guard is IsClose(59000) with the
-// adventure-suspended and popup checks; the sound tail prefers timeover.wav
-// and falls back to chat.wav. A positive display scope removes the
-// skip-chat goto with identical VC6 scores throughout this TU, retaining
-// the common sound tail and the order of the short-circuit time checks.
+// Original: CChatManager::TurnDurationMsg. The member remains variadic;
+// retail 0x553960 uses the same stack receiver/format/varargs layout as AddChat.
+// The display guard expands IsClose(59000) with adventure/popup checks;
+// the sound tail prefers timeover.wav and falls back to chat.wav.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
-void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1107,22 +1069,22 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
             g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
             chatText);
-        manager->m_isSysMsg = 1;
-        manager->addChat(finalText);
-        manager->m_isSysMsg = 0;
+        m_isSysMsg = 1;
+        addChat(finalText);
+        m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = manager->m_turnDurSample;
-    if (manager->m_chatMemSample
+    sample* sampleToPlay = m_turnDurSample;
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1131,7 +1093,7 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
 // The system-message twin of TurnDurationMsg has no timer/popup guard and
 // selects sysmsg.wav before the common chat.wav fallback.
 VA(0x00553aa0, 0xC0)  // anchor-callees + arity/order-map, dc 0x11c558
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::systemMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1144,21 +1106,21 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    manager->addChat(finalText);
-    sample* sampleToPlay = manager->m_sysMsgSample;
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_sysMsgSample;
+    m_isSysMsg = 0;
 
-    if (manager->m_chatMemSample
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1203,7 +1165,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 // E:\gamedcs\remote.cpp:990
 // The byte-identical structural twin selects playcome.wav instead.
 VA(0x00553c30, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c658
-void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
+void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1216,24 +1178,24 @@ void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    manager->addChat(finalText);
-    sample* sampleToPlay = manager->m_playerEnterSample;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_playerEnterSample;
 
-    if (!(manager->m_chatMemSample
+    if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
-              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
+              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->m_chatSample;
+            sampleToPlay = m_chatSample;
         if (sampleToPlay) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(sampleToPlay);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1033
@@ -1284,6 +1246,8 @@ inline int CChatManager::getNextFreeMsgNbr()
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
+// E:\gamedcs\remote.cpp:1065. Original: CChatManager::GetNextMsgNbr.
+// Retail KillOldChat expands this helper at both surviving call sites.
 inline int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
@@ -1752,12 +1716,9 @@ void sendChat(const char* chatString, int toWho)
     if (_strcmpi(chatString,
                  g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-            systemMsg(&g_chatMan,
-                      g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
         } else {
-            systemMsg(
-                &g_chatMan,
-                g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
                 g_game->getPlayerName(toWho));
         }
 
@@ -2105,34 +2066,9 @@ void waitForReadyToPlayMsg()
 // in remote.h. Dreamcast calls IsInPopup before the virtual abort-message
 // getter; retail expands the first accessor and retains vtable slot 2.
 #if 0  // @carcass: claim-only, header-origin Copy body
-VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
-void CNetMsgHandler::copy(CNetMsgHandler* pOther)
-{
-}
+// Canonical body and VA: include/remote.h.
 #endif
 
-// E:\gamedcs\remote.h:658 and :659 - CNetMsgHandlerPause's two overrides,
-// slots 1 and 3 of vtable 0x640f04. Five bytes each: while a modal dialog
-// holds the pause handler installed, the network is answered with nothing
-// at all. They sit HERE, beside Copy, rather than in the 0x557exx run with
-// the rest of the class, because retail's are header-origin COMDATs and
-// that is where the linker grouped them - which is itself the corroboration
-// that DC homes all three in remote.h.
-// E:\gamedcs\remote.h:658
-VA(0x00555170, 0x5)  // anchor-vtable (slot 1 of 0x640f04), dc 0x11f80c
-CNetMsg* CNetMsgHandlerPause::checkHandleNet(unsigned char inPopup,
-                                             unsigned char* msgReceived)
-{
-    return 0;
-}
-
-// E:\gamedcs\remote.h:659
-// Before normalization (locals): pNetMsg.
-VA(0x00555180, 0x5)  // anchor-vtable (slot 3 of 0x640f04), dc 0x11f810
-CNetMsg* CNetMsgHandlerPause::handleNetMsg(CNetMsg* netMsg)
-{
-    return 0;
-}
 
 // E:\gamedcs\remote.cpp:1738 - advance the animation, periodically tell
 // the host this player is ready, then dispatch at most one queued handshake
@@ -2161,7 +2097,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    systemMsg(&g_chatMan, g_generalText->getText(471));
+                    g_chatMan.systemMsg(g_generalText->getText(471));
                     break;
 
                 case RS_SESSION_LOST:
@@ -2228,36 +2164,7 @@ unsigned char createDPlayObject()
     return 1;
 }
 
-// E:\gamedcs\remote.cpp:102 - Dreamcast retains this as an out-of-line
-// helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
-// three beeps, 200-byte local error buffer and recursion guard are visible in
-// both byte-identical expansions.
-// Before normalization (function): DPSD.
-// Before normalization (locals): iDPErr, cFile, iLine, sError.
-inline void dpsd(int dpErr, char* file, int line)
-{
-    if (g_inside)
-        return;
 
-    g_inside = 1;
-    char errorText[200];
-    if (!g_dPlay)
-        strcpy(errorText,
-               DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
-                            "Initialization failed!"));
-    else
-        g_dPlay->getErrorDesc(g_dPlay->getLastError(), errorText);
-
-    MessageBeep(0);
-    MessageBeep(0);
-    MessageBeep(0);
-    sprintf(g_text,
-            DATA_COMPGEN(0x00682a48, remoteDirectPlayError,
-                         "DirectPlay Error:\n\n'%s'\n\n  File:'%s'\n Line# %d"),
-            errorText, file, line);
-    shutDown(g_text);
-    g_inside = 0;
-}
 
 // E:\gamedcs\remote.cpp:1858 - DC supplies the complete switch and the four
 // CDPlayLobby factory identities; retail fixes their x86 argument order and
@@ -2701,7 +2608,7 @@ void handleNewHost()
             }
         }
     }
-    systemMsg(&g_chatMan, g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(471));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -3056,7 +2963,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                systemMsg(&g_chatMan, g_generalText->getText(471));
+                g_chatMan.systemMsg(g_generalText->getText(471));
                 break;
 
             case RS_SESSION_LOST:
@@ -3243,8 +3150,8 @@ void CGameTransferSmack::start()
 // E:\gamedcs\remote.cpp:2747. The two 256-byte locals and the source names
 // `cText` / `sPct` come from CodeView; retail fixes the PC-only 20-frame
 // Smacker scale, general-text rows 99/100, percentage format and screen draw.
-// DrawCurrentFrame is the DC-attested header inline and reduces here to the
-// current-handle video wrapper at 0x598e80.
+// DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
+// helper below calls the current-handle video wrapper at 0x598e80.
 VA(0x005574b0, 0x12D)  // order/call graph + DC identity, dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
@@ -3270,6 +3177,14 @@ void CGameTransferSmack::setPercentage(float pct)
             font::PRIMARY, 5, -1);
     }
     g_windowManager->updateScreen(m_x, m_y, 160, 160);
+}
+
+// Original: CGameTransferSmack::DrawCurrentFrame; remote.cpp:2784, dc 0x11ede8.
+// DC retains an empty body on the console; retail SetPercentage calls the
+// Windows video draw wrapper through this source helper.
+inline void CGameTransferSmack::drawCurrentFrame()
+{
+    drawCurrentSmackFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789 - the guard-and-clear half of the destructor,
@@ -3949,15 +3864,6 @@ CNetMsgHandler::~CNetMsgHandler()
         g_dPlay->setNetMsgHandler(0);
 }
 
-// E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
-// INTRODUCING VIRTUAL in remote.h at vfptr offset 4; retail's virtual
-// destructor in slot 0 pushes it to slot 2.
-// E:\gamedcs\remote.h:629
-VA(0x00557900, 0x4)  // anchor-vtable (slot 2 of 0x640f14), dc 0x201f8
-CNetMsg* CNetMsgHandler::getAbortPopupMsg()
-{
-    return m_abortPopupMsg;
-}
 
 // E:\gamedcs\remote.cpp:2875
 // Before normalization (locals): pNetMsg.
@@ -4086,9 +3992,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(629));
+            g_chatMan.turnDurationMsg(g_generalText->getText(629));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(630), minutes);
+            g_chatMan.turnDurationMsg(g_generalText->getText(630), minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -4100,9 +4006,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(627));
+            g_chatMan.turnDurationMsg(g_generalText->getText(627));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(628), seconds);
+            g_chatMan.turnDurationMsg(g_generalText->getText(628), seconds);
     }
 
     m_lastWarned = currTime;
@@ -4119,12 +4025,13 @@ void CTurnDuration::checkForWarning()
 }
 
 // E:\gamedcs\remote.cpp:3020
-
-// E:\gamedcs\remote.cpp:3020
+// Original IsClose calls IsOn (remote.cpp:2920, dc 0x11f070). Keep the
+// ordinary helper above visible to this caller; the former IsOnInline
+// copy invented a second source boundary to steer its expansion.
 VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
-    if (!isOnInline())
+    if (!isOn())
         return 0;
     if (m_turnStartTime == 0)
         return 0;
@@ -4283,6 +4190,35 @@ VA(0x00557fc0, 0x1A)  // anchor-callee(StopMouseThread/SetPointer), dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
     stop();
+}
+
+// E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
+// retail bodies - /Ob2 expands each into the one caller it has, the
+// constructor and the destructor claimed further down - but their SHAPE is
+// readable there: each arm ends in a mouse-thread call when the guard was
+// built with a worker thread, and in a direct pointer store when it was
+// not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
+// later destructor both stop the thread, exactly as retail does.
+//
+// A previous reading had these two as single-armed (`if (m_thread)` with no
+// else) and recorded the constructor and destructor as having no retail
+// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
+// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
+// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
+inline void CHourGlass::stop()
+{
+    if (m_thread)
+        stopMouseThread();
+    else
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+}
+
+inline void CHourGlass::start()
+{
+    if (m_thread)
+        startMouseThread();
+    else
+        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against

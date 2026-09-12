@@ -11,18 +11,7 @@
 
 struct IDirectDrawSurface;
 
-// mousemgr.cpp's critical-section RAII guard (DC ctor/dtor source lines
-// 291/298). Keep its canonical shape in include/ under the single-view rule.
-// The fs:[0] frame in its users is the exception-unwind scaffolding.
-class TCSLock {
-public:
-    // Before normalization (locals): lpCriticalSection.
-    TCSLock(CRITICAL_SECTION* criticalSection);
-    ~TCSLock();
 
-    // Before normalization: section.
-    CRITICAL_SECTION* m_section;
-};
 
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
@@ -99,20 +88,17 @@ public:
     //   2 Main  0x4ec560 - the program-wide `xor eax,eax; ret 4` that
     //     /OPT:ICF folded, shared with inputManager::Main (which owns
     //     the claim) and heroWindow::handle_message; declared only.
-    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager INLINED into it
-    //     (the widget `inline dtor` idiom) - which is why the dtor is
-    //     defined in this header and has no out-of-line retail row of
-    //     its own, DC's separate 0xfea50 body notwithstanding.
-    // Before normalization (function): mouseManager::Open.
+    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
+    // The written destructor belongs in mousemgr.cpp (CodeView line 344);
+    // its expansion inside a generated wrapper does not imply header ownership.
     virtual int open(int newPriority);   // slot 0, retail 0x50cbf0
     // Before normalization (function): mouseManager::Close.
     virtual void close();                // slot 1, retail 0x50cc40
     // Before normalization (function): mouseManager::Main.
     virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
-    virtual ~mouseManager() { DeleteCriticalSection(&m_sectionMouse); }
-    // Before normalization (function): mouseManager::MouseCoords.
+    virtual ~mouseManager();
     void mouseCoords(int& x, int& y);
-    // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
+    // DC mousemgr.cpp:934; ordinary helper used by Update and ShowPointer.
     void getPointerPosition();
     // Before normalization (function): mouseManager::SetPointer.
     // Before normalization (locals): new_frame, new_set.
@@ -133,30 +119,26 @@ public:
     void hidePointer();
     // Before normalization (function): mouseManager::ShowPointer.
     void showPointer(bool restore);
+    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
     // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
-    // mutating it in this build. SetPointer discards both results, so retail
-    // has no call or count update. Keep the canonical source boundaries.
+    // mutating it in this build. SetPointer discards both results.
     int enable() { return m_disableCount; }
     int disable() { return m_disableCount; }
-    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
-    // +0x4c/+0x50 loads at their call sites.
-    // Before normalization (function): mouseManager::GetSet.
-    EPointerSet getSet() const
-    {
-        return m_set;
-    }
-    // Before normalization (function): mouseManager::GetFrame.
+    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
+    bool isBusy() const { return m_busy != 0; }
     int getFrame() const
     {
         return m_frame;
+    }
+    EPointerSet getSet() const
+    {
+        return m_set;
     }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
     // Before normalization (function): mouseManager::IsVis.
     unsigned char isVis() const { return m_hideCount == 0; }
-    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
-    bool isBusy() const { return m_busy != 0; }
     // Before normalization (function): mouseManager::CheckUpdate.
     void checkUpdate();
     // Before normalization (function): mouseManager::LoadFrame.

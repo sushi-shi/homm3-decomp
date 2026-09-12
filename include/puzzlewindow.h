@@ -15,69 +15,7 @@ class Bitmap816;
 class NewmapCell;
 class TResourceDisplay;
 
-// Retail preserves the Dreamcast record's four packed allocation units:
-// a 10-bit object type, two signed four-bit object offsets, three terrain
-// descriptors, and the diggable/grail/visible flag trio.
-// Dreamcast's full 16-byte record and retail constructor masks agree:
-// object_type occupies bits 0..9 of the first dword; the two four-bit
-// coordinates share byte 4; terrain/river/road occupy bits 0..12 at +8;
-// diggable/has_grail/visible occupy bits 0..2 at +12. The remaining bits
-// and alignment bytes below have no semantic fields in the reference.
-struct type_AI_puzzle_tile {
-    // Before normalization: object_type.
-    int m_objectType : 10;
-    // Before normalization: pad_00.
-    int m_paddingAfterObjectType : 22;
-    // Before normalization: object_x.
-    signed char m_objectX : 4;
-    // Before normalization: object_y.
-    signed char m_objectY : 4;
-    // Before normalization: pad_05.
-    char m_paddingBeforeTerrain[3];
-    // Before normalization: terrain.
-    int m_terrain : 5;
-    // Before normalization: river.
-    int m_river : 4;
-    // Before normalization: road.
-    int m_road : 4;
-    // Before normalization: pad_08.
-    int m_paddingAfterRoad : 19;
-    // Before normalization: diggable.
-    unsigned char m_diggable : 1;
-    // Before normalization: has_grail.
-    unsigned char m_hasGrail : 1;
-    // Before normalization: visible.
-    unsigned char m_visible : 1;
-    // Before normalization: pad_0c.
-    unsigned char m_paddingAfterVisible : 5;
-    // Before normalization: pad_0d.
-    char m_tailPadding[3];
 
-    // Retail keeps NO out-of-line body for the default constructor - the
-    // carve leaves three bytes of padding between UpdatePuzzle's end
-    // (0x52c76d) and the two-argument constructor at 0x52c770, so there is
-    // no slot it could occupy, and AI_attempt_puzzle_guess expands it
-    // verbatim into its 323-iteration array-construction loop at
-    // 0x52cb13. The Dreamcast port moved it into puzzlewindow.cpp:279;
-    // retail's is a class-body inline. Every store is byte-proven by that
-    // loop: `and eax,0xfffffc00` (object_type), `mov byte ptr,0xff`
-    // (both four-bit offsets), `and eax,0xffffe01f` + `or al,0x1f`
-    // (terrain -1, river and road 0), `and al,0xfb` + `or al,1`.
-    type_AI_puzzle_tile()
-    {
-        m_objectType = 0;
-        m_objectX = -1;
-        m_objectY = -1;
-        m_terrain = -1;
-        m_river = 0;
-        m_road = 0;
-        m_diggable = 1;
-        m_visible = 0;
-    }
-    type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
-};
-SIZE(type_AI_puzzle_tile, 0x10);
 
 // DC's 0x58-byte CAdvPopup grows to retail's proven 0x60-byte base. The
 // remaining fields translate directly: one piece-count byte, the resource
@@ -144,13 +82,6 @@ extern const char* g_puzzleFilePrefixes[];
 // pool and only AI_attempt_puzzle_guess reads it.
 // Before normalization: puzzleGuessThreshold.
 extern double g_puzzleGuessThreshold[];
-// 0x52cf10, 1460 B - bracketed puzzlewindow..questlogwindow and reached
-// only from AI_attempt_puzzle_guess, which hands it the hidden result
-// pointer in ECX and the player in EDX under /Gr. Declared, not defined:
-// VC6 cannot inline a body it cannot see, which is what retail's call
-// needs. dc 0x115be8.
-// Before normalization (function): match_puzzle.
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);

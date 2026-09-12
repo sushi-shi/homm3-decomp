@@ -198,14 +198,43 @@ public:
     int sendMessage(widget::ECommands command, int extra);
     // Before normalization (function): widget::set_help_text.
     void setHelpText(const char* text, const char* rclick, unsigned char copyText);
+    // Keep the retail virtual slot order as one block. CodeView's header
+    // bodies at 144/147 and 186/187 precede the text/status helpers below.
+    virtual ~widget();                                      // slot 0
+    virtual int open(int newPriority, heroWindow* parent);  // slot 1
+    // DC Main(message&) is shared by the widget overrides; retail passes
+    // the same address through slot 2.
+    virtual int main(message& msg) = 0;                     // slot 2
+    // Complete widened the Dreamcast nil-argument draw hook. The shared
+    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
+    // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
+    // These hooks write to the destination bitmap through its pointer.
+    virtual void draw() const = 0;                                // slot 4
+    VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+    virtual int getRealHeight() const { return m_height; }          // slot 5
+    VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+    virtual int getRealWidth() const { return m_width; }            // slot 6
+    virtual void processHover();                           // slot 7
+    virtual void dim() const;                                     // slot 8
+    virtual void enable(unsigned char on);                  // slot 9
+    virtual void onSetFocus() {}                            // slot 10
+    virtual void onKillFocus() {}                           // slot 11
+    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
+    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
+    // no claimable home, and leaving it undefined here is also what
+    // keeps button's override (0x456a10) emitting a real call instead
+    // of an /Ob2-inlined nothing.
+    virtual void vslot12(int on);                          // slot 12
+
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     // Before normalization (function): widget::get_help_text.
     const char* getHelpText() const { return m_rollOver; }
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
-    // Before normalization (function): widget::get_rclick_text.
-    const char* getRclickText()
+    const char* getRclickText() const
     {
         return m_rightClick ? m_rightClick : m_rollOver;
     }
@@ -237,7 +266,7 @@ public:
     // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
     // callers fold this body into their owning function; the one COMDAT
     // copy the linker retained (0x5629b0) is claimed in sacrifice_window.cpp.
-    // Before normalization (function): widget::set_visible.
+    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
     void setVisible(unsigned char arg)
     {
         if (arg)
@@ -252,42 +281,7 @@ public:
     // Before normalization (function): widget::Close.
     void close();
 
-    virtual ~widget();                                      // slot 0
-    // Before normalization (function): widget::Open.
-    virtual int open(int newPriority, heroWindow* parent);  // slot 1
-    // Before normalization (function): widget::Main.
-    // Dreamcast Main(message&) is shared by widget and every recorded
-    // override (button, border, icon, slider and text families). Retail slot2
-    // passes the same message address. Keep the reference interface coherent
-    // across overrides and dispatches; the former pointer declarations were
-    // source-inaccurate even where their machine bytes agreed.
-    virtual int main(message& msg) = 0;                     // slot 2
-    // Dreamcast records this const two-argument interface, including the
-    // textWidget and bitmapBorder overrides. Retail corroborates it with
-    // TCampaignBrief's dispatch and the shared `ret 8` at 0x5bc7e0.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
-    // Before normalization (function): widget::Draw.
-    virtual void draw() = 0;                                // slot 4
-    // Before normalization (function): widget::GetRealHeight.
-    virtual int getRealHeight() { return m_height; }          // slot 5
-    // Before normalization (function): widget::GetRealWidth.
-    virtual int getRealWidth() { return m_width; }            // slot 6
-    // Before normalization (function): widget::process_hover.
-    virtual void processHover();                           // slot 7
-    // Before normalization (function): widget::Dim.
-    virtual void dim() const;                               // slot 8
-    virtual void enable(unsigned char on);                  // slot 9
-    // Before normalization (function): widget::OnSetFocus.
-    virtual void onSetFocus() {}                            // slot 10
-    // Before normalization (function): widget::OnKillFocus.
-    virtual void onKillFocus() {}                           // slot 11
-    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
-    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
-    // no claimable home, and leaving it undefined here is also what
-    // keeps button's override (0x456a10) emitting a real call instead
-    // of an /Ob2-inlined nothing.
-    // Before normalization (function): widget::_vslot12.
-    virtual void vslot12(int on);                          // slot 12
+
 };
 SIZE(widget, 48);
 

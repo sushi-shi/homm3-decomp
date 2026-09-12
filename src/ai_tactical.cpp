@@ -19,12 +19,7 @@
 // here. No other TU in the tree copies an `army`.
 #include "csprite.h"
 #include "sample.h"
-
-// Before normalization (function): creature_base_hit_points.
-static int creatureBaseHitPoints(TCreatureType type)
-{
-    return g_creatureTypeTraits[type].m_hitPoints;
-}
+#include "includes.h"
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -65,41 +60,6 @@ static int creatureBaseHitPoints(TCreatureType type)
 // Before normalization: ARTIFACT_RECANTERS_CLOAK.
 const int g_artifactRecantersCloak = 0x53;
 
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
-
-// The luck/morale family's [-3, 3] rating clamp. Retail's
-// get_mirth_value 0x438170 homes THREE values - the rating, -3 and 3 -
-// and picks between their addresses with `cmp v,-3 / jge / &(-3) /
-// jmp out / cmp v,3 / &3 / jg out / &v`, i.e. ONE test of v against
-// each bound and no fourth slot for an intermediate. A nested
-// _cpp_min(_cpp_max(v,-3),3) cannot produce that with either
-// signature: by value it needs a fourth slot for *inner, by const
-// reference it binds v's own address and drops to two slots (both
-// measured 2026-08-08). A single three-operand selector reproduces the
-// branch shape exactly and takes get_mirth_value to 100.00; the
-// spelling is PROVISIONAL (behaviour-derived from the branch graph, no
-// roster name for it). The argument ORDER is byte-proven: retail
-// materialises the high bound before the low one, which is the
-// (_V, _Hi, _Lo) parameter list, not (_V, _Lo, _Hi).
-template <class _TYPE>
-// Before normalization (function): _cpp_clamp.
-// Before normalization (locals): _V, _Hi, _Lo.
-inline const _TYPE& cppClamp(_TYPE v, _TYPE hi, _TYPE lo)
-{
-    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
-}
 
 // The AI's luck/morale weights. Retail LOADS all four from .rdata
 // instead of folding them into immediates, which is what pins them as
@@ -585,7 +545,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 // where the same statements written out in the caller store to the
 // slot at every assignment.
 DC_ONLY(0x3d154, 0x8E)
-inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell)
+inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 {
     if (m_speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
@@ -849,7 +809,7 @@ type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
 
 // E:\gamedcs\ai_tactical.cpp:753
 VA(0x00436930, 0x1A)  // anchor-global, dc 0x3d56c
-long type_enchant_data::getMasteryValue()
+long type_enchant_data::getMasteryValue() const
 {
     return g_spellTraits[m_spell].m_masteryBonus[m_mastery];
 }
@@ -893,38 +853,7 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 
 #endif  // @carcass
 
-// E:\gamedcs\ai_tactical.cpp:3377 - OUT OF FILE ORDER ON PURPOSE.
-// check_simulation and the deputy constructor below are both INLINED
-// into the public constructor and carry no retail body of their own,
-// so they are `inline` here and defined ahead of their one caller
-// rather than at their Dreamcast line numbers.
-//
-// The scan itself: walk the OTHER side's stacks and answer "the fight
-// is already decided" in field_1c unless some enemy is still magic-
-// vulnerable (creature bit 21 clear), still alive, and still able to
-// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
-// pointer form, the same one consider_teleport carries.
-DC_ONLY(0x425a8, 0x68)
-inline void type_AI_spellcaster::checkSimulation()
-{
-    const army* enemy = g_combatManager->m_armies[m_enemySide];
-    long count = g_combatManager->m_numArmies[m_enemySide];
-    for (; count-- > 0; ++enemy) {
-        unsigned char immune = static_cast<unsigned char>(
-            static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 21);
-        if (immune & 1)
-            continue;
-        if (enemy->getTotalHitPoints(1) <= 0)
-            continue;
-        unsigned char idle = static_cast<unsigned char>(
-            static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 6);
-        if (idle & 1)
-            continue;
-        m_winLikely = 0;
-        return;
-    }
-    m_winLikely = 1;
-}
+
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
@@ -1016,7 +945,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // the helper naturally at its three callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
 DC_ONLY(0x3d7b0, 0x86)
-unsigned char type_AI_spellcaster::isLastAction() const
+inline unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
     long total = g_combatManager->m_numArmies[m_side];
@@ -1127,7 +1056,7 @@ long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const h
 
 // E:\gamedcs\ai_tactical.cpp:953
 VA(0x00436f60, 0x45)  // anchor-global, dc 0x3da7c
-long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_data caster) const
 {
     // Before normalization (locals): base_damage.
     long baseDamage = g_spellTraits[caster.m_spell].m_powerFactor * caster.m_power
@@ -1209,7 +1138,7 @@ long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDam
 // swaps both and costs the match.
 // Before normalization (locals): base_damage, friendly_damage, enemy_damage.
 VA(0x00437040, 0x141)  // anchor-global, dc 0x3db84
-long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSkillMastery mastery, long hex)
+long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSkillMastery mastery, long hex) const
 {
     long friendlyDamage = 0;
     long enemyDamage = 0;
@@ -1233,7 +1162,7 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
 // column test, which is why retail emits a range guard the loop bound
 // already guarantees.
 DC_ONLY(0x3dc50, 0x72)
-inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice)
+inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice) const
 {
     // Before normalization (locals): base_damage.
     long baseDamage = g_spellTraits[choice->m_spell].m_powerFactor * choice->m_power
@@ -1267,7 +1196,7 @@ inline void type_AI_spellcaster::considerAreaEffect(type_spell_choice* choice)
 // next hex, and stop the moment it answers off-field. ClearEffects
 // wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
-long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery mastery, army* target)
+long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery mastery, army* target) const
 {
     long count = g_chainLightningTargets[mastery];
     // Before normalization (locals): enemy_damage, friendly_damage.
@@ -1302,7 +1231,7 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
 // before ValidSpellTargetArmy, preserving the side/global registers across
 // that arm, while a successful value replaces all three choice fields.
 VA(0x00437310, 0xD1)  // anchor-callee, dc 0x3dde8
-void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice)
+void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) const
 {
     // Before normalization (locals): target_side, creature_cast.
     long targetSide = 1 - m_side;
@@ -1355,7 +1284,7 @@ void type_AI_spellcaster::considerMassDamage(
 // body nor the DC one, and the by-value parameter still costs its 20
 // stack bytes (`ret 0x18`).
 VA(0x004373f0, 0x34)  // anchor-vtable, dc 0x3df28
-long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely)
         return 0;
@@ -1406,7 +1335,7 @@ long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
 // helper boundary is being recovered independently of its existing byte peak.
 // Before normalization (locals): our_army, enemy_hits, slow_flag.
 VA(0x00437430, 0x198)  // anchor-vtable, dc 0x3e17c
-long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
@@ -1453,7 +1382,7 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // Before normalization (locals): our_army, our_hits, enemy_hits, old_damage, new_damage,
 // double_attack, target_hits, slow_flag.
 VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
-long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
@@ -1484,7 +1413,7 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
 // Before normalization (locals): our_army, test_army, old_damage, new_damage, enemy_hits,
 // slow_flag.
 VA(0x00437800, 0x1F5)  // anchor-global, dc 0x3e3bc
-long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* enemy, long duration, long bonus)
+long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* enemy, long duration, long bonus) const
 {
     if (m_winLikely)
         return 0;
@@ -1505,7 +1434,7 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
 // Traits row +0x170c = 43*136 + 0x34 pins SPELL_BLOODLUST.
 // Before normalization (locals): our_army.
 VA(0x00438100, 0x64)  // anchor-vtable, dc 0x3e4a0
-long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (!ourArmy->canShoot(0)) {
         const army* target = ourArmy->getAITarget();
@@ -1532,8 +1461,9 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
 //
 // CLOSED 2026-08-08 (82.10 -> 100.00). The clamp is NOT a nested
 // _cpp_min/_cpp_max chain in either signature: it is the single
-// three-operand _cpp_clamp declared at the head of this file. See that
-// declaration for the byte argument. The two remaining edits were
+// three-operand selector used in the earlier flattened implementation.
+// The canonical AI_value_of_morale boundary now owns that work; its caller
+// retains the negative controls below, and the unused local selector is gone. The two remaining edits were
 // ordinary statement shape:
 //   - `change` is a named local evaluated BEFORE the clamp; retail
 //     interleaves the akSpellTraits row load with the clamp's slot
@@ -1552,7 +1482,7 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
 // with `const _TYPE&` parameters 81.99-84.30.
 // Before normalization (locals): our_army, slow_flag.
 VA(0x00438170, 0x142)  // anchor-vtable, dc 0x3e50c
-long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data caster) const
 {
     unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 17);
     if (undead & 1)
@@ -1590,7 +1520,7 @@ long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data c
 // EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
 // EAX/EDX pair, closed by naming the flag (see get_disease_value).
 VA(0x004382c0, 0x1C6)  // anchor-vtable, dc 0x3e658
-long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data caster) const
 {
     unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 17);
     if (undead & 1)
@@ -1664,7 +1594,7 @@ long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data ca
 // reproduce 100%. Bless keeps its own exact bytes through this recovery.
 // Before normalization (locals): our_army, enemy_hits, slow_flag.
 VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
-long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
@@ -1713,7 +1643,7 @@ long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data
 // type_AI_enemy_data* to the first record, and a ternary for `scale`.
 // Before normalization (locals): our_army.
 VA(0x004387c0, 0x14A)  // anchor-global, dc 0x3e9d8
-long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* enemy, long duration, double increase)
+long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* enemy, long duration, double increase) const
 {
     long damage = enemy->getAverageDamage(ourArmy, enemy->canShoot(0),
                                             enemy->m_numTroops, 0, 0);
@@ -1754,7 +1684,7 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
 // `unsigned char`, so only the low byte is ever read.
 // Before normalization (locals): our_army, test_army, old_damage, new_damage.
 VA(0x00438910, 0xFB)  // anchor-global, dc 0x3ec10
-long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duration, long bonus)
+long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duration, long bonus) const
 {
     const army* enemy = m_worstEnemies[ourArmy->m_bitIndex].m_enemy;
     if (!enemy)
@@ -1812,7 +1742,7 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
 // follows from the surrounding pressure once the flag holds EAX - it
 // is not a separate source-level choice.
 VA(0x00438a10, 0xAD)  // anchor-vtable, dc 0x3ed34
-long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -1840,7 +1770,7 @@ long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data c
 // Traits row +0x19b4 = 48*136 + 0x34 pins SPELL_PRAYER.
 // Before normalization (locals): our_army.
 VA(0x00438ac0, 0x85)  // anchor-vtable, dc 0x3eea8
-long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data caster) const
 {
     long bonus = g_spellTraits[SPELL_PRAYER].m_masteryBonus[caster.m_mastery];
     const army* target = ourArmy->getAITarget();
@@ -1858,7 +1788,7 @@ long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data 
 // get_blood_lust_value carries with the can_shoot test inverted.
 // Before normalization (locals): our_army.
 VA(0x00438b50, 0x64)  // anchor-vtable, dc 0x3ef24
-long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (ourArmy->canShoot(0)) {
         const army* target = ourArmy->getAITarget();
@@ -1883,7 +1813,7 @@ long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_da
 // Traits row +0xf14 = 28*136 + 0x34 pins SPELL_AIR_SHIELD.
 // Before normalization (locals): our_army.
 VA(0x00438bc0, 0x99)  // anchor-vtable, dc 0x3ef90
-long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* enemy = m_attacks[ourArmy->m_bitIndex].m_enemy;
     if (enemy == 0)
@@ -1901,7 +1831,7 @@ long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_da
 // 0x34 pins SPELL_SHIELD.
 // Before normalization (locals): our_army.
 VA(0x00438c60, 0x99)  // anchor-vtable, dc 0x3f080
-long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* enemy = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
     if (enemy == 0)
@@ -1923,7 +1853,7 @@ long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data 
 // shared call - not the de Morgan'd bail.
 // Before normalization (locals): our_army.
 VA(0x00438d00, 0x81)  // anchor-vtable, dc 0x3f158
-long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
     if (target != 0 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
@@ -1949,7 +1879,7 @@ long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data 
 // this same body get_stone_skin_value.
 // Before normalization (locals): our_army.
 VA(0x00438d90, 0x25)  // anchor-vtable, dc 0x3f208
-long type_AI_spellcaster::getToughSkinValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getToughSkinValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getDefenseSkillValue(ourArmy, caster.m_duration,
                                    g_spellTraits[SPELL_STONE_SKIN].m_masteryBonus[caster.m_mastery]);
@@ -1982,7 +1912,7 @@ long type_AI_spellcaster::getToughSkinValue(const army* ourArmy, type_enchant_da
 // reachable when both the row pointer and the count are read before
 // the kills_only guard (90.3 -> 97.7).
 VA(0x00438dc0, 0x109)  // anchor-vtable, dc 0x3f22c
-long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const
 {
     const combatManager* combat = g_combatManager;
     const army* stacks = combat->m_armies[m_side];
@@ -2017,7 +1947,7 @@ long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_
 // stack cannot be weakened below zero attack.
 // Traits row +0x181c = 45*136 + 0x34 pins SPELL_WEAKNESS.
 VA(0x00438ed0, 0x8D)  // anchor-vtable, dc 0x3f408
-long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly) {
         const army* target = enemy->getAITarget();
@@ -2050,7 +1980,7 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
 // naming the flag (see get_disease_value). Tried and rejected:
 // `effect *=` instead of `effect = effect * ...` (no change).
 VA(0x00438f60, 0x199)  // anchor-vtable, dc 0x3f5f0
-long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -2102,7 +2032,7 @@ long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_dat
 // slot, the dead `enemy` parameter at [ebp+8], which is what one
 // reused variable produces.
 VA(0x00439100, 0x169)  // anchor-vtable, dc 0x3f7f0
-long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
         return 0;
@@ -2201,7 +2131,7 @@ long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
 // `&armies[side][0]` with no j at all; set_melee_enemies below already
 // carries the hoisted form).
 VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
-long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_data caster) const
 {
     if (enemy->getAITarget() == 0)
         return 0;
@@ -2285,7 +2215,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
 // AI prices it as exactly that much damage through the ordinary loss
 // pricer; `caster` never reaches the body.
 VA(0x00439500, 0x4C)  // anchor-vtable, dc 0x3fc20
-long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely)
         return 0;
@@ -2318,7 +2248,7 @@ long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data ca
 // Splitting the += into two statements also reaches 100.0.
 // Before normalization (locals): our_army, slow_flag, old_speed, new_speed, old_time, new_time.
 VA(0x00439550, 0x153)  // anchor-global, dc 0x3fc80
-long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long duration)
+long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long duration) const
 {
     if (ourArmy->getAITarget() == 0)
         return 0;
@@ -2365,7 +2295,7 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
 // E:\gamedcs\ai_tactical.cpp:1965
 // Before normalization (locals): our_army.
 VA(0x004396b0, 0x2E)  // linkorder, dc 0x3fdb8
-long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getSpeedValue(ourArmy, caster.getMasteryValue(),
                            caster.m_duration);
@@ -2482,7 +2412,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
 // E:\gamedcs\ai_tactical.cpp:2077
 // Before normalization (locals): our_army.
 VA(0x004399a0, 0x29)  // anchor-vtable, dc 0x40060
-long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getProtectionValue(
         ourArmy, eSchoolAir, 5, caster.m_duration,
@@ -2492,7 +2422,7 @@ long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchan
 // E:\gamedcs\ai_tactical.cpp:2087
 // Before normalization (locals): our_army.
 VA(0x004399d0, 0x29)  // anchor-vtable, dc 0x4008c
-long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getProtectionValue(
         ourArmy, eSchoolFire, 5, caster.m_duration,
@@ -2502,7 +2432,7 @@ long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_encha
 // E:\gamedcs\ai_tactical.cpp:2097
 // Before normalization (locals): our_army.
 VA(0x00439a00, 0x32)  // anchor-vtable, dc 0x400b8
-long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
     return getProtectionValue(ourArmy, eSchoolEarth, 5, caster.m_duration, amount);
@@ -2511,7 +2441,7 @@ long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_ench
 // E:\gamedcs\ai_tactical.cpp:2107
 // Before normalization (locals): our_army.
 VA(0x00439a40, 0x32)  // anchor-vtable, dc 0x400f4
-long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
     return getProtectionValue(ourArmy, eSchoolWater, 5, caster.m_duration, amount);
@@ -2561,7 +2491,7 @@ double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn)
 // already-standing spell. VC6 drops the dead 1 store.
 // Before normalization (locals): current_army, bad_spells_only, value_of.
 VA(0x00439a80, 0x135)  // anchor-global, dc 0x40248
-long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly)
+long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
     for (long spell = 10; spell < 81; spell++) {
@@ -2604,7 +2534,7 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
 // difference; `caster` is dead.
 // Before normalization (locals): our_army, test_army.
 VA(0x00439bc0, 0x6E)  // linkorder, dc 0x40348
-long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
     return getCancelValue(&testArmy, 0);
@@ -2634,7 +2564,7 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
 // Retail's by-value, reference-returning min copies both operands first.
 // Original DC local: current_army. our_army is normalized to ourArmy.
 VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
-long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
 {
     army currentArmy = *ourArmy;
     long value = getCancelValue(&currentArmy, 1);
@@ -2658,7 +2588,7 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
 // E:\gamedcs\ai_tactical.cpp:2220
 // Before normalization (locals): our_army, test_army.
 VA(0x00439d40, 0x94)  // linkorder, dc 0x40570
-long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
     long value = getCancelValue(&testArmy, 0);
@@ -2675,7 +2605,7 @@ long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_da
 // at the top of each body rather than inside the branch that uses it.
 // Before normalization (locals): our_army, test_army.
 VA(0x00439de0, 0x94)  // linkorder, dc 0x405d4
-long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
     return getProtectionValue(ourArmy, eSchoolAll, 5, caster.m_duration,
@@ -2735,7 +2665,7 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // Before normalization (locals): our_army, our_hits, enemy_hits, total_damage, new_damage,
 // double_attack, target_hits, slow_flag.
 VA(0x00439e80, 0x290)  // linkorder, dc 0x40628
-long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
 {
     long mult = 1;
     if (ourArmy->m_creatureType == CREATURE_GRIFFIN)
@@ -2830,7 +2760,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
 // Before normalization (locals): our_army, fire_immune, our_hits, old_damage, enemy_hits,
 // slow_flag.
 VA(0x0043a110, 0x222)  // linkorder, dc 0x407e8
-long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (m_winLikely)
         return 0;
@@ -2893,7 +2823,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
 // single summed return (89.6). Same overwrite-the-variable shape as
 // ai_combat's take_damage, found the same day.
 VA(0x0043a340, 0xBE)  // anchor-global, dc 0x40928
-long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target)
+long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target) const
 {
     unsigned char ranged = enemy->canShoot(0);
     if (target->m_combatSide == m_side)
@@ -2934,7 +2864,7 @@ long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target)
 // `caster` is dead - retail keeps the 20-byte by-value record on the
 // stack and never reads it.
 VA(0x0043a400, 0xF8)  // linkorder, dc 0x40a08
-long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data caster) const
 {
     std::vector<army*> targets;
     if (m_winLikely)
@@ -2995,7 +2925,7 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
 // neighbouring `>> 21` site already used - then lands the last three
 // bytes.  Both spellings of the same shift agree after all.
 VA(0x0043a500, 0x16E)  // linkorder, dc 0x40ac0
-long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely)
         return 0;
@@ -3090,7 +3020,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
 // pointer copy (`mov eax,ecx / cmp dword ptr [eax],0x35`) at the Haste
 // override where we load the value once. Six bytes, register-homing.
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
-void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group)
+void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group) const
 {
     // Before normalization (locals): value_func, creature_cast.
     TEnchantValue valueFunc = getEnchantmentFunction(choice->m_spell);
@@ -3146,7 +3076,7 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
 // The +0x198 row is read HERE by spell id, which is what the split of
 // army.h's spell-row view out of the round view exists for.
 VA(0x0043a910, 0x150)  // anchor-global, dc 0x40dc8
-void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group)
+void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group) const
 {
     if (spellTargetsASingleArmy(choice->m_spell, choice->m_mastery)) {
         considerSingleEnchantment(choice, group);
@@ -3225,7 +3155,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // it costs 10.7 points, 95.5486 -> 84.8629, so retail's teleport arm
 // really does spell the walk out. Two call sites, two shapes.
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
-void type_AI_spellcaster::considerTeleport(type_spell_choice* choice)
+void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 {
     unsigned char moved = 0;
     // Before normalization (locals): our_army, no_target, creature_cast.
@@ -3323,7 +3253,7 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice)
 // gpCombatManager relocation-name differences. This is C1 register-handle
 // state, with no source-addressable lever found.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
-void type_AI_spellcaster::considerResurrect(type_spell_choice* choice)
+void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 {
     // Before normalization (locals): our_army, creature_cast.
     const army* ourArmy = g_combatManager->m_armies[m_side];
@@ -3421,6 +3351,11 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice)
 // (byte-identical at 89.0901).
 // Before normalization (locals): healed_army, target_hex, creature_cast, our_army, no_target,
 // healedArmy, targetHex.
+// DC ai_tactical.cpp:2705 (0x41308..0x4131e) directly indexes
+// akCreatureTypeTraits for the victim's base hit points. Retail expands
+// the same lookup at 0x43b000/0x43b006 (116-byte row, hitPoints at +0x4c).
+// Keep it here; the former creature_base_hit_points wrapper had no
+// evidenced source boundary.
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
 {
@@ -3437,7 +3372,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
                                              creatureCast))
             continue;
         long resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
-                            + creatureBaseHitPoints(victim->m_creatureType)
+                            + g_creatureTypeTraits[victim->m_creatureType].m_hitPoints
                             + choice.m_power)
                            * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
         long missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
@@ -3532,7 +3467,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 // `caster` never reaches the body.
 // Before normalization (locals): our_army, no_target.
 VA(0x0043b2e0, 0x85)  // anchor-vtable, dc 0x41558
-long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data caster)
+long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (!m_winLikely) {
         unsigned char noTarget = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
@@ -3567,7 +3502,7 @@ long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data c
 // two-local `average`/`damage` spelling was semantically equivalent but left
 // this body at 99.87%.
 VA(0x0043b370, 0x18E)  // anchor-vtable, dc 0x41624
-long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly && !m_winLikely) {
         long value = enemy->getTotalCombatValue(m_estimate.m_lowestAttack,
@@ -3617,7 +3552,7 @@ long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data cas
 // EAX/EDX tie-break, closed by naming the flag (see get_disease_value);
 // this is the body the naming was first proven on.
 VA(0x0043b500, 0x17D)  // anchor-vtable, dc 0x41890
-long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_data caster)
+long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_data caster) const
 {
     if (enemy->canShoot(0)) {
         unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 23);
@@ -3660,7 +3595,7 @@ long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_
 // followed by alignment padding. Unsupported spells are deliberately worth 0.
 VA(0x0043b680, 0x10)  // address-take + retail leaf bytes, dc 0x41a74
 long type_AI_spellcaster::unimplemented(const army* enemy,
-                                        type_enchant_data caster)
+                                        type_enchant_data caster) const
 {
     return 0;
 }
@@ -3686,7 +3621,7 @@ long type_AI_spellcaster::unimplemented(const army* enemy,
 // Promoting the retail-only 0x43b680 default leaf resolved the last such
 // relocation; the complete two-level dispatch is now exact.
 VA(0x0043b690, 0x251)  // exact enchantment dispatch, dc 0x41a7c
-type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(SpellID spell)
+type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(SpellID spell) const
 {
     switch (spell) {
     case SPELL_AGE:
@@ -3795,7 +3730,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // into a pointer biased by +8 so the enum-typed `wall` member sits at
 // displacement zero.
 VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
-void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice)
+void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
 {
     if (m_side == 1)
         return;
@@ -3919,7 +3854,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 // the damage result leaves 98.1927. Four real mass-result lifetimes do not
 // change these outcomes. No inline override or synthetic caller mass remains.
 VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
-void type_AI_spellcaster::considerSpell(type_spell_choice* choice)
+void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 {
     switch (choice->m_spell) {
     case SPELL_RESURRECTION:
@@ -4133,7 +4068,7 @@ void type_AI_spellcaster::findEnemyAttacks()
 // mov edx,3` block and why the Air arm loads a BYTE where the other
 // three shift a dword first.
 VA(0x0043c330, 0x16C)  // anchor-callee, dc 0x423f4
-long type_AI_spellcaster::getOgreMageValue(const army* target)
+long type_AI_spellcaster::getOgreMageValue(const army* target) const
 {
     if (target->m_spellInfluence[43])
         return 0;
@@ -4182,7 +4117,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target)
 // onto the stack (`sub esp,0x14 / rep movsd`) rather than passed as a
 // reference: the family's parameter is a type_enchant_data BY VALUE.
 VA(0x0043c4a0, 0x180)  // anchor-callee, dc 0x424c4
-long type_AI_spellcaster::getCaliphValue(const army* target)
+long type_AI_spellcaster::getCaliphValue(const army* target) const
 {
     long total = 0;
     long count = 0;
@@ -4305,6 +4240,34 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
         return getAreaEffectValue(spell, baseDamage, mastery, hex);
     }
     return 0;
+}
+
+// E:\gamedcs\ai_tactical.cpp:3377, dc 0x425a8.
+// The scan itself: walk the OTHER side's stacks and answer "the fight
+// is already decided" in field_1c unless some enemy is still magic-
+// vulnerable (creature bit 21 clear), still alive, and still able to
+// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
+// pointer form, the same one consider_teleport carries.
+DC_ONLY(0x425a8, 0x68)
+inline void type_AI_spellcaster::checkSimulation()
+{
+    const army* enemy = g_combatManager->m_armies[m_enemySide];
+    long count = g_combatManager->m_numArmies[m_enemySide];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->getTotalHitPoints(1) <= 0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->m_monInfo.m_attributes) >> 6);
+        if (idle & 1)
+            continue;
+        m_winLikely = 0;
+        return;
+    }
+    m_winLikely = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:3398

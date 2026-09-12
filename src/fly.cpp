@@ -14,22 +14,6 @@
 #include "soundmgr.h"
 #include "winmgr.h"
 
-// Complete retains the Dreamcast source boundaries in Fly but folds both
-// drawing helpers away. ScrollTo is a no-op for the fixed PC combat viewport;
-// UpdateCombatArea expands to the one retail UpdateScreen call. Keeping the
-// inline names here restores the cross-TU source calls without inventing x86
-// bodies which retail does not contain.
-inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
-{
-    return false;
-}
-
-inline void combatManager::updateCombatArea(const SLimitData& area)
-{
-    g_windowManager->updateScreen(
-        area.m_minX, area.m_minY, area.width(), area.height());
-}
-
 // GameTime, glTimers and gCombatAreaLimits all reach this TU through
 // their owners' headers: retail's fly.cpp saw GameTime for free (the DC
 // roster files GameTime::NextFrameTime at struct.h:438, and CmbtMgr.h

@@ -11,9 +11,6 @@ class resource;
 class sample;
 class TPalette24;
 class LODFile;
-struct TResourceLODSlot;
-// Before normalization: gResourceLODSlots.
-extern TResourceLODSlot g_resourceLodSlots[];
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -25,42 +22,8 @@ class TPalette16;
 class TSpreadsheetResource;
 class TTextResource;
 
-// The four state-selected rows at retail 0x69e538 contain three
-// (count, LOD-index-list) pairs. The first serves sprites, the second
-// bitmaps, and the final pair remains byte-proven but semantically unnamed.
-struct TResourceArchiveList {
-    // Before normalization: count.
-    int m_count;
-    // Before normalization: indices.
-    int* m_indices;
-};
-
-struct TResourceArchiveContext {
-    // Before normalization: sprites.
-    TResourceArchiveList m_sprites;
-    // Before normalization: bitmaps.
-    TResourceArchiveList m_bitmaps;
-    // Before normalization: sounds.
-    TResourceArchiveList m_sounds;
-};
-SIZE(TResourceArchiveContext, 0x18);
-
-// Dreamcast CodeView's function-local GetBitmap16 record (type 0x289c),
-// independently byte-proven by retail's three archive-header reads.
-struct TBitmapResourceHeader {
-    // Before normalization: DataSize.
-    int m_dataSize;
-    // Before normalization: Width.
-    int m_width;
-    // Before normalization: Height.
-    int m_height;
-};
-SIZE(TBitmapResourceHeader, 0x0c);
-
 // Before normalization: gpVideoGameState.
 extern int* g_videoGameState;
-// Before normalization: gResourceArchiveContexts.
-extern TResourceArchiveContext g_resourceArchiveContexts[4];
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
 // toggles it before selecting the palette transform.
 // Before normalization: gGraphicsSaturated.
@@ -117,14 +80,9 @@ void addToCache(resource* value);
 // Before normalization (function): ResourceManager::GetFromCache.
 resource* getFromCache(const char* name);
 
-// Dreamcast retains this cache sweep out of line and calls it from window
-// construction/destruction sites. Complete has neither that body nor emitted
-// call instructions at those sites, so model the source boundary as a
-// retail-neutral inline no-op for the PC build.
-// Before normalization (function): ResourceManager::del_Spr_from_Cache.
-inline void delSprFromCache()
-{
-}
+void dispose(resource* value);
+void dispose(CSprite* value);
+void delSprFromCache();
 
 // Retail body 0x55cf50, 131 B, fastcall under /Gr like its GetSprite
 // neighbours. It walks the archive list the 24-byte rows at 0x69e538
@@ -160,6 +118,9 @@ int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // getItemIndex finds the named entry, then returns that entry's +0x14 size.
 // Before normalization (function): ResourceManager::GetBitmapResourceSize.
 int getBitmapResourceSize(const char* name);
+
+// Original: ResourceManager::GetFromCache, resourcemanager.cpp:2377.
+resource* getFromCache(const char* name);
 
 
 }

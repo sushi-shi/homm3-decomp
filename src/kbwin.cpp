@@ -326,13 +326,13 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
 }
 #pragma auto_inline(on)
 
-// E:\gamedcs\kbwin.cpp:680
-// Identity corrected from the linkorder-forced "UpdateDfltMenu": the
-// body is a 4-arg stdcall dialog proc (WM_INITDIALOG/WM_COMMAND,
-// EndDialog on IDOK, PollSound in the default path) - the homm2
-// AppAbout lineage (buka kbwin.cpp 0x471883). Retail returns 1 from
-// the WM_COMMAND arm where homm2 fell through to PollSound.
-VA(0x004f8140, 0x37)  // linkorder, dc 0xe8018
+// Win32 About-dialog callback; AppCommand passes 0x4f8140 to
+// DialogBoxParamA at 0x4f80a7. The body handles WM_INITDIALOG and
+// WM_COMMAND, calls EndDialog on IDOK, and returns with ret 16.
+// Dreamcast UpdateDfltMenu is a separate menu helper: its old link-order
+// pairing here was incorrect. AppAbout naming follows homm2 kbwin.cpp
+// (buka 0x471883); retail returns 1 from the WM_COMMAND arm.
+VA(0x004f8140, 0x37)  // address-taken DialogBoxParamA callback, retail-only
 BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     unsigned short command;

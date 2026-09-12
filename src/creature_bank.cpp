@@ -26,6 +26,9 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
+// Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
+type_creature_bank_level::type_creature_bank_level() {}
+
 // E:\gamedcs\creature_bank.cpp:25. Retail initializes the Dinkumware string
 // at +0 and then calls armyGroup::armyGroup four times at +0x10 with a 0x60
 // stride, exactly the implicit member construction this empty body requests.
@@ -160,17 +163,6 @@ unsigned char initializeCreatureBankTraits()
     return 1;
 }
 
-// The four-way base-elemental compare gpGame->f_1f698 gates. Byte-identical
-// to the longhand chain when expanded, and armygrp.cpp / viewarmywindow.cpp
-// already carry the same inline for the same reason; retail expands it twice
-// in initialize_creature_bank below.
-// Before normalization (function): is_base_elemental.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
-
 // E:\gamedcs\creature_bank.cpp:146, dc 0x71218. Retail expands this file
 // static at all five of initialize_creature_bank's call sites, so no
 // out-of-line row survives. The free-slot cursor starts AT the slot being
@@ -222,7 +214,8 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // `bank->guards.armyTypes[slot]` at each use instead lets VC6 re-materialise
 // the load inside each compare block and duplicate the store.
 //
-// Exact (2026-09-07, 98.1132% -> 100%): preserving the `groups` parameter
+// Historical match before canonical-helper cleanup (2026-09-07,
+// 98.1132% -> 100%): preserving the `groups` parameter
 // through a `groupsLeft` countdown declared after splitSlot's free cursor
 // makes VC6 initialize slot/ESI before groups/EDI in all five expansions,
 // as retail does. Consuming IsBaseCreature's canonical int result as an
@@ -279,14 +272,13 @@ void initializeCreatureBank(type_creature_bank* bank,
 
     if (random(1, 100) <= level->m_upgradeChance) {
         TCreatureType current = bank->m_guards.m_armyTypes[slot];
-        if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
+        if (!(g_game->m_f1f698 == 0 && (current == CREATURE_AIR_ELEMENTAL
+                || current == CREATURE_EARTH_ELEMENTAL
+                || current == CREATURE_FIRE_ELEMENTAL
+                || current == CREATURE_WATER_ELEMENTAL))
             && static_cast<unsigned char>(isBaseCreature(current))) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
-            int upgraded;
-            if (g_game->m_f1f698 == 0 && isBaseElemental(promoted))
-                upgraded = -1;
-            else
-                upgraded = upgradedCreatureType(promoted);
+            int upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;
         }
     }

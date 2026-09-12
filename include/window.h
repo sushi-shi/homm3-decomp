@@ -241,9 +241,11 @@ public:
 
     // Window.h:210, dc 0x2dcc. Dreamcast's public signature and retail's
     // shared slot-3 forwarder both prove this header-inline override.
-    // Before normalization (function): CHeroWindowEx::handle_message.
-    virtual int handleMessage(message& msg);                         // slot 3, 0x405680
-    // Before normalization (function): CHeroWindowEx::WindowHandler.
+    VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
+    virtual int handleMessage(message& msg)
+    {
+        return windowHandler(&msg);
+    }
     virtual int windowHandler(message* msg);                            // slot 9
     // Before normalization (function): CHeroWindowEx::ProcessHover.
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10

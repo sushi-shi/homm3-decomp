@@ -17,6 +17,7 @@
 #include "recruit.h"
 #include "remote.h"
 #include "soundmgr.h"
+#include "sskilltraits.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
@@ -34,21 +35,9 @@ DATA(0x00697784) extern unsigned long g_dialogDeadline697784;
 DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
 DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
-// Retail's packed table is four pointers per secondary skill: the generic
-// name followed by its basic/advanced/expert display strings. The encoded
-// choice is 3*skill+level, with skill zero represented by values 3..5.
-DATA(0x0067dcf0) extern const TLevelUpSkillTraits (&g_levelUpSkillTraits)[28];
-
 // Text tables read directly by the retail constructor. The shared four-entry
 // primary-skill table is declared with the other game-wide data in game.h.
 DATA(0x006a7570) extern const char* g_skillMasteryNames[3];
-
-// Before normalization (function): LevelUpSkillName.
-static const char* levelUpSkillName(int encodedSkill)
-{
-    return g_levelUpSkillTraits[encodedSkill / 3 - 1]
-        .m_levelNames[encodedSkill % 3];
-}
 
 // E:\gamedcs\levelupwindow.cpp:48
 // Exact after removing the synthetic diagnostic padding and restoring the
@@ -113,9 +102,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     if (secondChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE],
                 g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name,
+                g_sSkillTraits[firstChoice / 3 - 1].m_name,
                 g_skillMasteryNames[secondChoice % 3],
-                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
+                g_sSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8));
@@ -145,19 +134,19 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             secondChoice, 0, 0, 0, 0x10));
 
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8));
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[secondChoice % 3],
-                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
+                g_sSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE],
                 g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8));
@@ -168,7 +157,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
             firstChoice, 0, 0, 0, 0x10));
         sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
-                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
+                g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8));
@@ -254,6 +243,12 @@ TLevelUpWindow::~TLevelUpWindow()
 // after the codeY switch. Seven separate `return 0;` statements had cost
 // seven duplicated epilogues AND made VC6 cross-jump the four
 // enable/DrawWindow/`return 1` tails that retail keeps separate.
+// DC levelupwindow.cpp:267/274 (0xe8e90/0xe8ed8) directly index
+// akSSkillTraits, the canonical TSSkillTraits table in sskilltraits.h.
+// Retail 0x4f99e4/0x4f9a2a reads that same reference at 0x67dcf0,
+// then selects the mastery string before NormalDialog at 0x4f9a39.
+// The former LevelUpSkillName helper and TLevelUpSkillTraits table copy
+// had no separate CodeView source boundary.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::windowHandler(message* msg)
 {
@@ -328,12 +323,16 @@ int TLevelUpWindow::windowHandler(message* msg)
             switch (msg->m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
-                normalDialog(levelUpSkillName(g_levelUpWindow->m_leftSkill),
+                normalDialog(
+                    g_sSkillTraits[g_levelUpWindow->m_leftSkill / 3 - 1]
+                        .m_levelNames[g_levelUpWindow->m_leftSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case SKILLICON_2_ID:
             case SKILLBORDER_2_ID:
-                normalDialog(levelUpSkillName(g_levelUpWindow->m_rightSkill),
+                normalDialog(
+                    g_sSkillTraits[g_levelUpWindow->m_rightSkill / 3 - 1]
+                        .m_levelNames[g_levelUpWindow->m_rightSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }

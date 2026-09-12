@@ -16,15 +16,78 @@
 #include "message.h"
 #include "resourcemanager.h"
 #include "scenarioinfo.h"
-#include "scenarioinfo_priv.h"
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "slider.h"
 #include "textresource.h"
+#include "textscroller.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+
+// Complete adds this compact row renderer to the scenario-info dialog. It
+// has no Dreamcast counterpart, so the class name is role-derived; its base,
+// complete 0x60-byte layout, vtable shape, and owned portrait are retail
+// facts from 0x5680fd..0x56822c and 0x5693a0..0x5697c4. The class is
+// private to this dialog module; no original header location is established.
+class CScenarioPlayerInfoWidget : public widget {
+public:
+    // Before normalization: panel.
+    Bitmap816* m_panel;                 // +0x30
+    // Before normalization: flag.
+    Bitmap816* m_flag;                  // +0x34
+    // Before normalization: townSprite.
+    CSprite* m_townSprite;              // +0x38
+    // Before normalization: townType.
+    int m_townType;                     // +0x3c
+    // Before normalization: playerName.
+    const char* m_playerName;           // +0x40
+    // Before normalization: handicapText.
+    const char* m_handicapText;         // +0x44
+    // Before normalization: playerTypeText.
+    const char* m_playerTypeText;       // +0x48
+    // Before normalization: playerPosition.
+    int m_playerPosition;               // +0x4c
+    // Before normalization: startingBonus.
+    int m_startingBonus;                // +0x50
+    // Before normalization: bonusSprite.
+    CSprite* m_bonusSprite;             // +0x54
+    // Before normalization: heroPortrait.
+    Bitmap816* m_heroPortrait;          // +0x58, owned
+    // Before normalization: startingHero.
+    hero* m_startingHero;               // +0x5c
+
+    // Retail's inlined constructor ends with `mov word ptr [edi+0x10], dx`
+    // (0x568160) - the widget id, `390 + playerPosition`, which is exactly
+    // the row ProcessRightSelect fetches back with GetWidget to reach
+    // heroPortrait.  The store sits INSIDE the new-expression's
+    // allocation-succeeded arm, so it is the constructor's, not the caller's.
+    CScenarioPlayerInfoWidget(CSprite* town, int widgetId)
+    {
+        m_townSprite = town;
+        m_townType = 0;
+        m_panel = 0;
+        m_flag = 0;
+        m_playerName = 0;
+        m_handicapText = 0;
+        m_playerTypeText = 0;
+        m_playerPosition = 0;
+        m_bonusSprite = 0;
+        m_heroPortrait = 0;
+        m_startingBonus = 4;
+        m_startingHero = 0;
+        m_id = widgetId;
+    }
+
+    virtual ~CScenarioPlayerInfoWidget();
+    // Before normalization (function): CScenarioPlayerInfoWidget::Main.
+    virtual int main(message& msg) { return widget::main(msg); }
+    virtual void zBufferDraw(unsigned short*, int) const {}
+    // Before normalization (function): CScenarioPlayerInfoWidget::Draw.
+    virtual void draw() const;
+};
+SIZE(CScenarioPlayerInfoWidget, 0x60);
 
 // E:\gamedcs\scenarioinfo.cpp:258
 // 2026-09-05: 95.7756 -> 95.9787 by moving the `vc` and `lc` pointers down
@@ -309,7 +372,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
 // Complete-only row renderer. Its vtable at 0x6416dc and every field access
 // in retail 0x5693a0 fix the otherwise unpublished class layout.
 VA(0x005693a0, 0x394)
-void CScenarioPlayerInfoWidget::draw()
+void CScenarioPlayerInfoWidget::draw() const
 {
     int windowX = m_parentWindow->m_x;
     int windowY = m_parentWindow->m_y;

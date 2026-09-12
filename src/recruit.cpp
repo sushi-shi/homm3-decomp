@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <xutility>
 #include <va.h>
+#include "includes.h"
 #include "armygrp.h"
 #include "artifact.h"
 #include "recruit.h"
@@ -57,17 +58,6 @@
 #include "misc.h"
 #include "viewarmywindow.h"
 
-// VC6's source max helper takes its operands by value and returns one of
-// their stack homes by reference. The animation clock below exposes that
-// exact lowering (two homes followed by a selected-pointer load).
-template <class _TYPE>
-// Before normalization (function): recruit_max.
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& recruitMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
-
 // recruit.cpp-owned rollover text pointers. Each has exactly one retail
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent
 // TRecruitWindow constructor initializes the dialog family that owns them.
@@ -117,30 +107,7 @@ void getMonsterCost(int monId, int* resCost)
             g_creatureTypeTraits[monId].m_cost[resource];
 }
 
-// E:\gamedcs\recruit.cpp:1082
-// Dreamcast keeps this source-visible helper out of line; Complete's VC6
-// build expands it at every recruitUnit call site and emits no standalone
-// body.  Raw NB11 names the sole surviving local `resCost`, while the body
-// calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::updateCost()
-{
-    int resCost[7];
-    getMonsterCost(m_monsterType, resCost);
-    m_goldPerTroop = resCost[6];
 
-    int i;
-    for (i = 0; i < 6; i++) {
-        if (resCost[i] != 0)
-            break;
-    }
-    if (i < 6) {
-        m_altResource = i;
-        m_resourcesPerTroop = resCost[i];
-    } else {
-        m_altResource = -1;
-        m_resourcesPerTroop = 0;
-    }
-}
 
 // ---------------------------------------------------------------------
 // recruit.obj order map, recomputed 2026-08-08 from the carve rows in
@@ -694,7 +661,7 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // TTextResource::operator[], GetArmyName and sprintf; UpdateCost in turn
 // owns a sole `resCost` array and calls GetMonsterCost. Retail independently
 // corroborates all three helper boundaries by expanding their bodies. Keeping
-// those source facts raises the current candidate from 88.2360% to 96.5558%
+// those source facts raised the candidate from 88.2360% to 96.5558%
 // and makes every instruction through the GetArmyName join exact.
 // The tree-wide 30-forest TU-state sweep reproduced this unchanged
 // 75fd1ca020f9 body's 96.5558% historical peak twice at trial 24, so that
@@ -969,7 +936,7 @@ int recruitUnit::main(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            recruitMax(100L, elapsed);
+            max(100, elapsed);
 
         // Before normalization (locals): mon_type, view_army_window.
         const TCreatureType monType[4] = {
@@ -1023,13 +990,13 @@ int recruitUnit::main(message& msg)
 
                     for (int i = 0; i < m_numberToBuy; i++) {
                         if (m_monsterType == CREATURE_BALLISTA) {
-                            type_artifact artifact(ARTIFACT_BALLISTA, -1);
+                            type_artifact artifact(ARTIFACT_BALLISTA);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_FIRST_AID_TENT) {
-                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT, -1);
+                            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         } else if (m_monsterType == CREATURE_AMMO_CART) {
-                            type_artifact artifact(ARTIFACT_AMMO_CART, -1);
+                            type_artifact artifact(ARTIFACT_AMMO_CART);
                             m_thisHero->giveArtifact(&artifact, 1, 1);
                         }
                     }
@@ -1196,18 +1163,30 @@ int recruitUnit::main(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\recruit.cpp:1082 - no retail body of its own; the inline
-// definition lives above, after GetMonsterCost, and every call site expands
-// the nested helper chain. See the note there.
-DC_ONLY(0x11ac7c, 0x88)
-void recruitUnit::updateCost()
+// E:\gamedcs\recruit.cpp:1082
+// Dreamcast keeps this source-visible helper out of line; Complete's VC6
+// build expands it at every recruitUnit call site and emits no standalone
+// body.  Raw NB11 names the sole surviving local `resCost`, while the body
+// calls the exact GetMonsterCost helper above before deriving the two costs.
+inline void recruitUnit::updateCost()
 {
-    // @stub
-}
+    int resCost[7];
+    getMonsterCost(m_monsterType, resCost);
+    m_goldPerTroop = resCost[6];
 
-#endif  // @carcass
+    int i;
+    for (i = 0; i < 6; i++) {
+        if (resCost[i] != 0)
+            break;
+    }
+    if (i < 6) {
+        m_altResource = i;
+        m_resourcesPerTroop = resCost[i];
+    } else {
+        m_altResource = -1;
+        m_resourcesPerTroop = 0;
+    }
+}
 
 // E:\gamedcs\recruit.cpp:1120
 // `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and

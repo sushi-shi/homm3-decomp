@@ -26,12 +26,13 @@ public:
 
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
-    // Before normalization (function): TFileVersionInfo::GetVersionInfo.
-    unsigned char getVersionInfo(const char* name, std::string* buffer);
+    // Original: TFileVersionInfo::GetVersionInfo, const in CodeView
+    // u2dvers.cpp:63; GetProductVersion is const at u2dvers.h:149.
+    unsigned char getVersionInfo(const char* name, std::string* buffer) const;
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
     // Before normalization (function): TFileVersionInfo::GetProductVersion.
-    unsigned char getProductVersion(std::string* productVersion)
+    unsigned char getProductVersion(std::string* productVersion) const
     {
         return getVersionInfo("ProductVersion", productVersion);
     }

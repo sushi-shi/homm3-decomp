@@ -213,7 +213,7 @@ int TDimensionDoorWindow::windowHandler(message* msg)
                 g_advManager->m_lastHoverX = cellX;
                 g_advManager->m_lastHoverY = cellY;
                 NewmapCell* cell = g_advManager->getCell(
-                    g_advManager->getMapCenter());
+                    g_advManager->get_mouse_map_point());
                 if (!(cell->m_flags0011 & 0x100) && !cell->m_isTrigger) {
                     g_windowManager->m_dialogReturn = 1;
                     g_mouseManager->setPointer(ADV_DIMENSION_DOOR_POINTER,
@@ -347,7 +347,7 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
                 g_advManager->m_lastHoverX = cellX;
                 g_advManager->m_lastHoverY = cellY;
                 NewmapCell* cell = g_advManager->getCell(
-                    g_advManager->getMapCenter());
+                    g_advManager->get_mouse_map_point());
                 if (cell->m_type == BOAT && cell->m_isTrigger) {
                     g_windowManager->m_dialogReturn = 1;
                     g_mouseManager->setPointer(ADV_SKUTTLE_BOAT_POINTER,

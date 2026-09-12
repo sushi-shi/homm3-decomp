@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include "includes.h"
 
 // Live prototypes (claimed misc.cpp bodies).
 // Before normalization (function): SafeRandom.
@@ -15,7 +16,8 @@ int random(int min, int max);       // 0x50b230
 // Before normalization (function): SRand.
 // Before normalization (locals): iSeed.
 void sRand(int seed);              // 0x50c5f0
-// Before normalization (function): CheckConfigFile.
+// Original SRandom, defined once in misc.cpp (DC source line 796).
+int sRandom(int lower, int upper);
 void checkConfigFile();             // 0x50b260
 // Before normalization (function): SetGameDefaults.
 void setGameDefaults();             // 0x50b4d0
@@ -58,43 +60,6 @@ extern char g_regAppPath[351];       // .bss 0x6985c4
 extern char g_regCdRomPath[350];     // .bss 0x698838
 // Before normalization: giShowIntro.
 extern int g_showIntro;              // .bss 0x6993c0
-
-// The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
-// VC6 generic vector<unsigned char> representation at +8: allocator
-// byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
-// vector<bool>, a platform-library divergence rather than x86 evidence.
-class TPickANumber {
-public:
-    // Before normalization: low.
-    int m_low;
-    // Before normalization: count.
-    int m_count;
-    // Before normalization: marks.
-    std::vector<unsigned char> m_marks;
-
-    TPickANumber(int lowBound, int high);
-    // The destructor remains implicit. Dreamcast records the owner boundary
-    // at includes.h:134, while Complete emits the named VC6 public selected
-    // by cmbtmgr.obj and folds the vector<unsigned char> teardown into it.
-    // Before normalization (function): TPickANumber::Pick.
-    int pick();
-};
-
-// Dreamcast's named game.cpp wrapper over TPickANumber. Complete keeps no
-// extra state: its compiler-generated default constructor passes [0, 15] to
-// the base and its Reset body is fully inlined into ProcessOnMapTowns.
-class TPickRandomTownName : public TPickANumber {
-public:
-    TPickRandomTownName() : TPickANumber(0, 15) {}
-
-    // Before normalization (function): TPickRandomTownName::Reset.
-    void reset()
-    {
-        for (int i = 0; i < m_marks.size(); ++i)
-            m_marks[i] = 1;
-        m_count = m_marks.size();
-    }
-};
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:41, dc 0xfd81c) int SafeRandom(int min, int max);

@@ -39,9 +39,8 @@ public:
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     // Before normalization (function): textWidget::Draw.
-    virtual void draw();
-    // Dreamcast textwdgt.cpp:257, original spelling Dim. Retail slot 8
-    // is empty, overriding widget::Dim's screen darkening operation.
+    virtual void draw() const;
+    // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
     virtual void dim() const;
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
@@ -52,8 +51,7 @@ public:
     // operator= call; textEntryWidget::SetText(const char*) (dc 0x1635dc)
     // overrides exactly this slot at 0x5bb950. The claim-only retail VA home
     // lives in singleselectionwindow.cpp, whose object owns the DC COMDAT.
-    // Before normalization (function): textWidget::SetText.
-    // Before normalization (locals): new_text.
+    VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
     virtual void setText(const char* newText) { m_text = newText; }
 
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
@@ -71,46 +69,7 @@ public:
 
 class Bitmap816;
 class Bitmap16Bit;
-class type_text_slider;
 
-// The scenario-description scroller shared by the selection window and the
-// stand-alone scenario-info popup. Retail fixes its original type identity,
-// constructor ABI, member offsets, and complete 0x5c extent.
-class type_text_scroller : public widget {
-public:
-    type_text_scroller(const char* text, int x, int y, int w, int h,
-                       const char* fontName, font::TColor color,
-                       slider::EGraphics graphics);
-    virtual ~type_text_scroller();
-    // Before normalization (function): type_text_scroller::Open.
-    virtual int open(int priority, heroWindow* parent);
-    // Before normalization (function): type_text_scroller::Main.
-    virtual int main(message& msg);
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    // Before normalization (function): type_text_scroller::Draw.
-    virtual void draw();
-    // Before normalization (function): type_text_scroller::SetText.
-    void setText(const char* text);
-    // Before normalization (function): type_text_scroller::Refresh.
-    void refresh(int knobRange);
-
-    // Before normalization: font_filename.
-    const char* m_fontFilename;
-    // Before normalization: text_lines.
-    std::vector<std::string> m_textLines;
-    // Before normalization: line_images.
-    std::vector<textWidget*> m_lineImages;
-    // Before normalization: text_slider.
-    type_text_slider* m_textSlider;
-    // Before normalization: background.
-    Bitmap16Bit* m_background;
-};
-SIZE(type_text_scroller, 0x5c);
-
-// Compatibility spelling for already reconstructed callers. Being a typedef,
-// it emits the retail `type_text_scroller` decorated names rather than a
-// second source-false class identity.
-typedef type_text_scroller CScrollTextWidget;
 
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
@@ -134,10 +93,9 @@ public:
                            const char* fontName, const char* backName,
                            font::TColor color, int id, unsigned justify,
                            int style);
-    virtual ~bitmapBackedTextWidget();
+    // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    // Before normalization (function): bitmapBackedTextWidget::Draw.
-    virtual void draw();  // slot 4, retail 0x5bc7f0
+    virtual void draw() const;  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

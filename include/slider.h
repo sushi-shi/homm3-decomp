@@ -68,11 +68,9 @@ public:
     virtual int main(message& msg);                 // slot 2
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): slider::Draw.
-    virtual void draw();                            // slot 4
-    // Before normalization (function): slider::GetRealHeight.
-    virtual int getRealHeight();                    // slot 5
-    // Before normalization (function): slider::GetRealWidth.
-    virtual int getRealWidth();                     // slot 6
+    virtual void draw() const;                            // slot 4
+    virtual int getRealHeight() const;                    // slot 5
+    virtual int getRealWidth() const;                     // slot 6
     virtual void enable(unsigned char on);          // slot 9
     // Before normalization (function): slider::OnSetFocus.
     virtual void onSetFocus();                      // slot 10
@@ -91,8 +89,10 @@ public:
 
     // Before normalization (function): slider::get_maximum.
     int getMaximum() const { return m_numStates; }
-    // Before normalization (function): slider::get_state.
-    int getState() const { return m_currentState; }
+    // Original: slider::get_state, ordinary declaration in CodeView type
+    // 0x2368. No procedure/source location or active caller is known;
+    // retain the API without borrowing get_maximum's body position.
+    int getState() const;
     // Before normalization (function): slider::Select.
     int select(message* msg, unsigned char dragging);
     // Before normalization (function): slider::Deselect.

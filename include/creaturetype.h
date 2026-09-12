@@ -14,7 +14,10 @@
 // Before normalization: CREATURE_TYPE_LAST.
 const int g_creatureTypeLast = 0x96;
 
-// E:\gamedcs\CreatureType.h:296
+// E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
+// events.cpp also expands this at monsters_flee/join/sell_out, passing a
+// literal count so each singular/plural selection folds at its call site.
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {

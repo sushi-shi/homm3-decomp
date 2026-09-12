@@ -21,33 +21,18 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
 
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
 // Before normalization: gpCombatResultsWindow.
 DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 
-// Dreamcast line 307 calls the source-private `int min(int, int)` from
-// includes.h:114; its own body calls this const-reference `_cpp_min` from
-// DC_precompiledheaders.h:41. Retail corroborates the two-layer source shape:
-// the loss-row cap at 0x470d51 stores both by-value wrapper arguments to stack
-// temps, then selects between their addresses with two LEAs. Keep the wrapper
-// instead of collapsing the proven call into the template.
-template <class _TYPE>
-// Before normalization (function): _cpp_min.
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(const _TYPE& x, const _TYPE& y)
-{
-    return (y < x ? y : x);
-}
 
 #ifdef min
 #undef min
 #endif
-inline int min(int a, int b)
-{
-    return cppMin(a, b);
-}
+
 
 // genrltxt.txt rows this dialog narrates itself with. They are consumed
 // nowhere else in the image, so no EGeneralTextIndex name is coined for them

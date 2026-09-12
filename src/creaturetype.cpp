@@ -4,7 +4,6 @@
 #include <va.h>
 #include <stdlib.h>
 #include <string.h>
-#include "autostrptr.h"
 #include "creaturetype.h"
 #include "resourcemanager.h"
 #include "textresource.h"
@@ -53,9 +52,9 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 // The return type is INT, not the Dreamcast roster's unsigned char: retail
 // materializes the two results as `mov eax,1` / `xor eax,eax` (an unsigned
 // char return is `mov al,1` / `xor al,al` - IsSiegeWeapon right below is the
-// exact control). Its hill-fort caller still tests only AL because the
-// wrapper it is inlined into returns unsigned char, which is what truncates
-// the value at the call site.
+// exact control). Its hill-fort callers still test only AL, preserved by
+// their explicit unsigned-char conversion. That test does not establish the
+// CanUpgradeCreature wrapper previously introduced in hillfortwindow.cpp.
 VA(0x0047b120, 0x5D)  // linkorder + anchor-callee (hill fort), dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
@@ -211,6 +210,27 @@ unsigned char initializeCreatureTypeTraitsTable()
     traitsSheet->dispose();
     return 1;
 }
+
+namespace {
+
+// CodeView field pStr; each loader owns its own private string class.
+class TAutoStrPtr {
+public:
+    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; creaturetype.cpp:399, dc 0x71eec.
+    TAutoStrPtr() : m_string(0) {}
+    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; creaturetype.cpp:402, dc 0x71ef4.
+    ~TAutoStrPtr() { delete[] m_string; }
+    // Original: `anonymous namespace'::TAutoStrPtr::set; creaturetype.cpp:404, dc 0x71f0c.
+    void set(char* value) { m_string = value; }
+    // Original: `anonymous namespace'::TAutoStrPtr::get; creaturetype.cpp:406, dc 0x71f10.
+    char* get() const { return m_string; }
+
+private:
+    char* m_string;
+};
+
+}
+
 
 // E:\gamedcs\creaturetype.cpp:416
 // The per-row parser, EXTERN rather than file-static: retail emits it out
