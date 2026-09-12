@@ -2077,3 +2077,36 @@ the trace lists UNDER/OVER callees:
 - `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
   (nested 148 here) while expanding the third; four more candidate sites
   after the second terrain query would do it.
+
+### Leads from the 2026-09-12 terrain painter families
+
+Seven source families (about 350 states) over `rmg_terrain` after the grid
+point became trivially copyable. What they settle and what they leave:
+
+- `buildNeighbourKinds` closed (plain point locals plus a helper cost of
+  87..104); `paintPoint` reached 98.68% and now has one wrapper expansion
+  and its downstream direction-pointer register left.
+- `getPackedCell` (cost 90) and `initializePackedCell` (128) have no
+  byte-identical spelling with a different cost: the reference, pointer and
+  unindexed forms break the retained 0x5b48d0 body, and the three fill
+  spellings are one object. The six callers where retail calls
+  `getPackedCell` but expands `initializePackedCell` elsewhere
+  (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
+  `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
+  site structure, not a cheaper cache pair.
+- `queueOtherTerrainNeighbours` (63.63%): retail refuses the four cardinal
+  inserts' pair constructor (cost 41) and the north-west/north-east cache
+  reads (90), then expands the south-east fill (128). With the budget model
+  that needs more than 41 remaining candidate sites at the first insert and
+  about 695 units at the last read; the traced body has 25 sites and 351
+  units. Paint-terrain, dimension and rule accessors add ten sites (68.24%);
+  the rest points at a per-arm helper for the cardinal probes.
+- `refreshRmgLinePoint` (71.92%): retail calls `TPoint::operator+=`, the
+  grid conversion and `at()` from a loop body whose own budget is above
+  700, so those three sit in a nested context under 42 units in retail; the
+  signed-point arithmetic reproduces the operand shapes but not the nesting.
+- `changeTerrain` (81.33%) needs the erase body under 231 units: ten more
+  units in `finish` or the painter's `changeTerrain`, or one more site after
+  the erase. `size()`/`empty()`/`!= 0` spellings are one object; direct
+  initialization or an iterator local in `finish` drops its body-saved flag
+  (0x40) and stops it inlining anywhere.
