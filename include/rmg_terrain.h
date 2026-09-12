@@ -310,6 +310,7 @@ public:
     void paintPoint(const TRmgGridPoint& point);
     // Prior provisional role: QueueOtherTerrainNeighbours
     void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
+    void queueSecondaryPoint(const TRmgGridPoint& point);
     // Prior provisional role: RepairTerrainPoint
     void repairTerrainPoint(const TRmgGridPoint& point);
     // Prior provisional role: IsHorizontalGap
