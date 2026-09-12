@@ -2110,3 +2110,44 @@ point became trivially copyable. What they settle and what they leave:
   the erase. `size()`/`empty()`/`!= 0` spellings are one object; direct
   initialization or an iterator local in `finish` drops its body-saved flag
   (0x40) and stops it inlining anywhere.
+
+### Second terrain round, 2026-09-12: what the accessor lever settled
+
+- `changeTerrain` closed by cost alone: the painter's changeTerrain at 43
+  units gives finish 957 and the erase(key) body 234; any byte-neutral
+  cost from 53 (a returned previous terrain is 54, parameter copies 53,
+  const-reference parameters only 47) puts the erase body at 230 and keeps
+  the tagged `_Distance` a call. finish is rigid at 169 in every
+  byte-identical spelling; direct-initialized or iterator-local copies drop
+  its body-saved flag, and splitting paintTransitions out costs the brush
+  destructor.
+- Both diagonal checks and `paintRectangle` closed or nearly closed through
+  sites, not costs: grid-point and TPoint coordinate accessors, the width
+  and height accessors and an else-chain clamp give the first neighbour
+  query ten to twelve remaining sites so its cache read stays a call
+  (checkSecondDiagonal 70.3 -> 99.2, checkFirstDiagonal 89.7 -> 90.7).
+  `paintRectangle` needs two candidate sites from its terrain test on (a
+  direct field compare and the base-tile block as a helper), and that
+  helper alone drops the body under the saved-body cliff so the brush
+  wrapper expands it; walking the rectangle through the accessors keeps
+  it unsaved (72.8 -> 100).
+- The saved-body cliff bites in both directions: a body of 157 units is
+  saved and expanded by its wrapper; 193 is not. A tiny painter `getFrame`
+  sibling of getTerrain and a secondary-queue helper both compiled as
+  non-candidates when defined next to their callers, so a new helper's
+  candidate status has to be read from the trace before its budgets mean
+  anything.
+- `queueOtherTerrainNeighbours` (63.6 -> 78.2): a secondary-queue helper
+  nests the insert so its pair copy divides each arm's budget; the four
+  cardinal arms then need 64..104 units at the helper and the north-west
+  arm 105 or more, which the current site counts (54/62/69/81/91) do not
+  give. Per-arm accessor placements do not move it.
+- `paintTransitions` (84.1): retail refuses all twelve pre-loop reads and
+  expands only the last two; ours expands three earlier ones (nested
+  budgets 104/127/145 against 90). The point constructions and edge-count
+  indices are the natural accessor sites; a family over their placement
+  is the next step.
+- `TRmgLineWalker::paintPoint` (80.6): retail calls `TPoint::operator+=`
+  once inside the first neighbour loop where our nested budget is 110
+  against 43; that needs about twelve more remaining sites, the same
+  shape of gap as `refreshRmgLinePoint`.
