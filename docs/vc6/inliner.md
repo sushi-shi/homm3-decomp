@@ -2120,11 +2120,22 @@ point became trivially copyable. What they settle and what they leave:
   byte-identical spelling; direct-initialized or iterator-local copies drop
   its body-saved flag, and splitting paintTransitions out costs the brush
   destructor.
-- Both diagonal checks and `paintRectangle` closed or nearly closed through
-  sites, not costs: grid-point and TPoint coordinate accessors, the width
-  and height accessors and an else-chain clamp give the first neighbour
-  query ten to twelve remaining sites so its cache read stays a call
-  (checkSecondDiagonal 70.3 -> 99.2, checkFirstDiagonal 89.7 -> 90.7).
+- Both diagonal checks and `paintRectangle` closed through sites, not
+  costs: grid-point and TPoint coordinate accessors, the width and height
+  accessors and an else-chain clamp give the first neighbour query ten to
+  twelve remaining sites so its cache read stays a call (checkFirstDiagonal
+  89.7 -> 100 once the first point is constructed from both clamps, since
+  constructor arguments evaluate right to left; checkSecondDiagonal 70.3 ->
+  100 with one point reused through the setters and the last read spelled
+  `getPackedCell(p)->getTerrain()`, whose two depth-one sites replace the
+  candidate site the dropped second point took with it). A helper's cost
+  is subtracted before the division by the remaining sites, so a small
+  terrain-test wrapper around a read cannot starve that read.
+- Store order of reference-bound arguments follows the order the argument
+  temporaries are created: `clamp(value, 0, maximum)` stores the literal
+  before the value, while evaluating `maximum` and then `value` into locals
+  ahead of the call stores the literal last. checkSecondDiagonal's second
+  query needs the latter and its first query the former.
   `paintRectangle` needs two candidate sites from its terrain test on (a
   direct field compare and the base-tile block as a helper), and that
   helper alone drops the body under the saved-body cliff so the brush
