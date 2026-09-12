@@ -1862,16 +1862,24 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
 // sites and 894 units (89 < 90), so its cache read stays a call as in
 // retail and the second query expands the read and its fill: 71.96 ->
 // 94.83% with copy-initialized points, 99.19% constructing the first point
-// directly. Residual: the frame is 0x30 against retail's 0x28 because the
-// second point gets its own slots where retail's second query reuses the
-// first point's (-0x10/-0xc). Reusing the point drops the default
-// constructor site, the first read gets 99 units and expands again
-// (77.98%); sibling-scoped points coalesce but also fold y into the clamp
-// temporary (0x24, 97.64%); a block-scoped second point, either point
-// declared first, a constructed second point, re-indexed offsets through
-// flip accessors, and ternary/nested/reference clamps (54/66/74 units)
-// all land between 77.98 and 99.19%. The reuse form needs one more free
-// site after the first read or 85 fewer units before it.
+// directly. Exact (2026-09-12) with one point reused through the setters
+// (a separate second point costs a frame slot, 0x30 against 0x28) and
+// the last read through the cell pointer: reusing the point drops the
+// default constructor site and the first read expands at 99 units
+// (77.98%), so the last query needs one more candidate site, which the
+// cell pointer supplies as two depth-one sites (99.23%). The remaining
+// row was the order of the clamp's minimum store against the value
+// store: with the height limit and the offset sum evaluated into locals
+// before the call (limit first), the literal minimum is materialized
+// last as in retail (locals in the other order or only one of them
+// 97.4/99.2; the sum before the x assignment 96.5; y before x 95.9).
+// Also refuted: sibling-scoped points (coalesce but fold y into the
+// clamp temporary, 0x24, 97.64%), a block-scoped second point, either
+// point declared first, a constructed second point, re-indexed offsets
+// through flip accessors, ternary/nested/reference clamps (54/66/74
+// units), a terrain-test helper (its cost divides by the remaining
+// sites, 77.98/73.08%), and signed-point sums through operator+ (right
+// frame and decisions, wrong registers, 91.5-98.7%).
 VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1887,11 +1895,11 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
             0, static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
         return 1;
-    TRmgGridPoint nextPoint;
-    nextPoint.setX(point.getX());
-    nextPoint.setY(clampRmgTerrainCoordinate(
-        static_cast<int>(point.getY()) + offset.getY(), 0, static_cast<int>(getHeight()) - 1));
-    return getTerrain(nextPoint) != terrain;
+    nearby.setX(point.getX());
+    int maximum = static_cast<int>(getHeight()) - 1;
+    int y = static_cast<int>(point.getY()) + offset.getY();
+    nearby.setY(clampRmgTerrainCoordinate(y, 0, maximum));
+    return getPackedCell(nearby)->getTerrain() != terrain;
 }
 
 // Complete-only retail 0x5b6fd0: inspect west, north, east, then south.
