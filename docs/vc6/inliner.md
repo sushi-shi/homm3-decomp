@@ -2246,5 +2246,18 @@ the structures the replay admits. What it found:
   removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
   places the comparator between the two `_Distance` instantiations, but
   spelling it inline in either header, as an in-class friend, or inline
-  early in the file leaves every row byte-identical (2026-09-12): the
-  frame is not decided by where the comparator's body is emitted.
+  early in the file leaves every row byte-identical (2026-09-12). The
+  mechanism, measured on small units through `cc_wrap`: C1XX writes an
+  inline function's body right after the function whose processing first
+  needs it; template member bodies always go to the deferred region, and
+  an inline comparator referenced only from `less<T>::operator()` lands
+  there too (after `insert`, which then gets its frame) unless the
+  instantiation batch runs at the end of a regular function, which
+  happens once enough distinct instantiations are pending (a unit with
+  vector/list/set traffic in its constructor pulled the comparator out
+  right after the first set user). In `rmg_terrain` that batch runs at
+  `paintPoint`'s end, so the comparator is compiled before `insert`;
+  every `paintPoint` edit that defers it (dropping the secondary find
+  guard, an arm, the loop or the tail) also changes `paintPoint`'s
+  retained calls, and the trigger is not monotone in the number of set
+  calls. Open.
