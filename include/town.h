@@ -865,11 +865,25 @@ extern __int64 g_bitNumber[];
 
 // The Town.h inline declared above. Placed here because it indexes
 // bitNumber, which the class definition precedes.
+// The if/else block form is load-bearing for /Ob2 (2026-09-11): it puts this
+// body's C1 IL cost at 68 (`homm3 vc6 predict-inline
+// '?hasBuilding@town@@QBE_NH_N@Z' --trace`). Retail's cost is bracketed to
+// 62..84 by hero::getLuck, which calls the Grail test after six
+// IsWieldingArtifact expansions (budget 61 left), and hero::getMorale, which
+// expands it at 210; town::buildBuilding's site budgets (retail calls at a
+// 72-unit site and expands an 82-unit one) narrow that to 73..82 and remain
+// open. The plain early-return form costs 60 and leaves getLuck at 94.2277%
+// with the Grail test expanded; the retained ai_player.obj copy (0x4305a0)
+// is byte-identical in both forms. Measured: `else` without braces 64,
+// `!= false` 71, static_cast<bool> 70, a named mask or result local changes
+// the copy's bytes.
 inline bool town::hasBuilding(int buildingId, bool checkIncluded) const
 {
-    if (checkIncluded)
+    if (checkIncluded) {
         return (m_active & g_bitNumber[buildingId]) != 0;
-    return (m_built & g_bitNumber[buildingId]) != 0;
+    } else {
+        return (m_built & g_bitNumber[buildingId]) != 0;
+    }
 }
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall

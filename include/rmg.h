@@ -559,6 +559,18 @@ struct TPoint {
     {
         return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
     }
+    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
+    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
+    // TPoint copy of a grid point with a tile direction. Declared last so
+    // the earlier member handles are unchanged.
+    // Coordinate accessors, used by the terrain painter's diagonal checks
+    // for the same site-count reason as the grid point's; declared after
+    // the data so the earlier member handles are unchanged. Adding them
+    // also returned rmg's quest-creature generate to 100% (include-set
+    // state, 99.73% before).
+    int getX() const { return m_x; }
+    int getY() const { return m_y; }
+    TPoint& operator+=(const TPoint& offset);
 };
 
 // The retained 0x5fdd20/0x5fdd40 bodies pass both eight-byte operands on
@@ -586,40 +598,58 @@ struct TRmgGridPoint {
     unsigned int m_y;
 
     TRmgGridPoint() {}
-    // The retained river-painter ctor at 0x55ee50 copies both GetSize result
-    // components before storing its adapter. This copy boundary restores all
-    // 118 bytes; an implicit copy interleaves adapter and y stores (99.71%).
-    // Moving the adapter into the caller ctor body instead stores its vptr
-    // too early (99.10%); a copy assignment does not affect construction.
-    // Mixed-constructor/return controls can lift brush destruction to 92.1398%
-    // and terrain paintPoint to 98.3653% by copying through assignment, but
-    // then no RMG TU emits the retained 22-byte constructor at 0x4fa520.
-    // Explicit assignment forms do not recover it; preserve this boundary.
-    TRmgGridPoint(const TRmgGridPoint& other)
-        : m_x(other.m_x), m_y(other.m_y) {}
+    // Trivially copyable: no user-written copy constructor. Retail's proxy
+    // factory at() (0x4fa050) and rmg's getSize (0x532240) copy a grid
+    // point as the compiler's memberwise copy, x before y; a written copy
+    // of any spelling (initializer list or body, either field order, or
+    // `*this = other`) reschedules those copies (at() 67.53%, getSize
+    // 97.56%) and is a 45-cost inline site at every copy, which drains the
+    // brush destructor's finish budget (needsTerrainRepair refused at
+    // 70 < 106, 78.60%) and clearRmgLineRectangle (94.51%). The implicit
+    // copy closes all four (2026-09-12). A written operator= instead costs
+    // clearRmgLineRectangle, the painter constructor and terrain paintPoint
+    // (94.51/91.22/90.97%).
+    // The retained 22-byte one-argument constructor at 0x4fa520 is the
+    // conversion from the signed TPoint, and the retained 33-byte add at
+    // 0x4fa540 is TPoint's: refresh 0x4f9f51..0x4f9f86 copies the grid
+    // point memberwise into a TPoint, calls TPoint::operator+= with the
+    // tile direction, copies the sum out as the returned value, then calls
+    // this constructor to build the grid argument of the retained at()
+    // call. Grid arithmetic therefore goes through TPoint both ways (the
+    // free sum lives in rmg_terrain.h with its only users): repairTerrainPoint
+    // 91.34 -> 93.63%, terrain paintPoint 96.56 -> 97.29%, line paintPoint
+    // 79.94 -> 80.64%, refresh 74.42 -> 71.92%; rmg's quest-creature
+    // generate lost one parameter reload (99.73%) as include-set state
+    // until TPoint's accessors below restored it.
+    // The river-painter constructor at 0x55ee50 stays exact; its earlier
+    // 99.71% implicit-copy reading predates the retained compound add.
 
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
+    TRmgGridPoint(const TPoint& point);
 
-    TRmgGridPoint& operator+=(const TPoint& offset);
-    TRmgGridPoint operator+(const TPoint& offset) const
+    // Coordinate accessors: each use is a free inline site, and the terrain
+    // painter's diagonal checks need those sites to divide their budgets so
+    // that retail's retained cache reads stay calls (2026-09-12), and
+    // paintRectangle walks its rectangle through them so its body stays
+    // above the saved-body cliff. Every other body still reads the public
+    // fields, and each migration is measured on its own.
+    unsigned int getX() const { return m_x; }
+    unsigned int getY() const { return m_y; }
+    void setX(unsigned int newX) { m_x = newX; }
+    void setY(unsigned int newY) { m_y = newY; }
+
+    // paintTransitions steps one column with a grid-side compound add; the
+    // retained add at 0x4fa540 is TPoint's, so this one stays inline.
+    TRmgGridPoint& operator+=(const TPoint& offset)
     {
-        // Retail paintPoint 0x5b4e38..0x5b4e55 retains original x at EBP-0x14
-        // before the additions. Earlier TU controls favored copy-initialized
-        // construction plus compound return (99.9204%) over a named return
-        // (99.0163%); those controls predate the current retained-add call.
-        // Direct-construction control under the preceding TU: construction
-        // and a named return restore expansion of this helper in paintPoint
-        // (89.0488 -> 89.7848) and repairTerrainPoint (89.7150 -> 89.9680).
-        // The retained ctor/copy/compound-add interfaces remain unchanged.
-        // With the shared line proxy admitted, an assignment-built result
-        // raises terrain paintPoint to 90.9656% and line refresh to 63.9923%.
-        // Named and compound returns both reproduce those gains; neither
-        // closes the remaining copy/add call decisions in either caller.
-        TRmgGridPoint result;
-        result = *this;
-        result += offset;
-        return result;
+        m_x += offset.m_x;
+        m_y += offset.m_y;
+        return *this;
+    }
+    operator TPoint() const
+    {
+        return TPoint(m_x, m_y);
     }
 };
 
@@ -1192,6 +1222,20 @@ struct TRmgMapItem {
     {
         return m_tileData.m_placementOutline;
     }
+    // Connection flood: the visited bit is read and written through the
+    // same byte boundary the other flag queries use.
+    unsigned char isConnectionVisited() const
+    {
+        return m_tileData.m_connectionVisited;
+    }
+    void setConnectionVisited()
+    {
+        m_tileData.m_connectionVisited = 1;
+    }
+    unsigned char getLandType() const
+    {
+        return m_tile.m_landType;
+    }
 
     // Retail road/river relaxation copies the predecessor to a separate
     // parameter home before storing cost and coordinates. The by-value
@@ -1688,8 +1732,22 @@ struct TRmgZone {
     TRmgZone(TRmgTownSlot* slot);
     void chooseTerrain();
     ~TRmgZone();
+    int getTerrain() const
+    {
+        return m_terrain;
+    }
+    const TRmgZoneBounds& getBounds() const
+    {
+        return m_bounds;
+    }
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
+    // Template slot radius; the position filter reads it through this
+    // accessor, which is what makes its first counting pass call size().
+    int getSize() const
+    {
+        return m_slot->m_size;
+    }
     unsigned char canConnect(const TRmgZone* other) const;
 };
 
@@ -1728,8 +1786,63 @@ struct TRmgBoundaryVertex {
         TRmgBoundaryVertex* twin);
     // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
+    // Ordinary; both constructors expand it (see rmg_support.cpp).
+    void initialize();
     void splice(TRmgBoundaryVertex* other);
     void detach();
+    // Quad-edge navigation (Graphics Gems IV Sym/Onext/Oprev/Lnext/Lprev,
+    // Org2d/Dest2d): these inline accessors are candidate sites for the
+    // /Ob2 inliner, and their count is what makes retail refuse the fan
+    // splices, distance and orientation calls in addSite, the twin splice
+    // in removeEdge and the fifth createEdge in the diagram constructor.
+    // Site positions return by value: addSite's coincidence test loads both
+    // coordinates before comparing, as a copied temporary does.
+    TRmgBoundaryVertex* getTwin() const
+    {
+        return m_twin;
+    }
+    TRmgBoundaryVertex* getNext() const
+    {
+        return m_next;
+    }
+    TRmgBoundaryVertex* getPrevious() const
+    {
+        return m_previous;
+    }
+    TRmgBoundaryVertex* getLeftNext() const
+    {
+        return m_twin->m_previous;
+    }
+    TRmgBoundaryVertex* getLeftPrevious() const
+    {
+        return m_next->m_twin;
+    }
+    TPoint getSitePosition() const
+    {
+        return m_sitePosition;
+    }
+    TPoint getOppositeSitePosition() const
+    {
+        return m_twin->m_sitePosition;
+    }
+    TRmgZone* getZone() const
+    {
+        return m_zone;
+    }
+    TRmgZone* getOppositeZone() const
+    {
+        return m_twin->m_zone;
+    }
+    // Voronoi vertex bookkeeping: the computed flag and the shared vertex.
+    unsigned char isPositionComputed() const
+    {
+        return m_positionComputed;
+    }
+    void setPosition(const TPoint& position)
+    {
+        m_position = position;
+        m_positionComputed = 1;
+    }
 };
 SIZE(TRmgBoundaryVertex, 0x24);
 
@@ -1748,6 +1861,8 @@ public:
     // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
     TRmgBoundaryVertex* createEdge(TPoint first, TRmgZone* firstZone,
         TPoint second, TRmgZone* secondZone);
+    TRmgBoundaryVertex* connectEdges(TRmgBoundaryVertex* first,
+        TRmgBoundaryVertex* second);
     void removeEdge(TRmgBoundaryVertex* edge);
     void addSite(TPoint point, TRmgZone* zone);
     TRmgBoundaryVertex* locate(TPoint point);
