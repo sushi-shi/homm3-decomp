@@ -174,6 +174,9 @@ def main() -> int:
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:
         want = {m.removesuffix(".cpp") for m in args.module}
+        missing = want - {Path(r["file"]).stem for r in commands}
+        if missing:
+            ap.error(f"no TU matched {sorted(missing)}")
         commands = [r for r in commands if Path(r["file"]).stem in want]
 
     if not commands:

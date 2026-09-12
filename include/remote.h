@@ -227,7 +227,7 @@ public:
     // Before normalization (function): CDPlayHeroes::HandlePlayerDrop.
     void handlePlayerDrop(unsigned long dpid);
 
-protected:
+public:
     // The three other system-message overrides, all of them CDPlay slots
     // this class replaces rather than introduces (retail 0x552530 /
     // 0x552740 / 0x552920, in the DC roster's own order between
@@ -244,6 +244,7 @@ protected:
     // Before normalization (function): CDPlayHeroes::SysMsgCreatePlayerOrGroup.
     virtual unsigned char sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
+protected:
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.

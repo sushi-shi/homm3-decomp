@@ -3075,7 +3075,7 @@ remote	?compressMsg@CDPlayHeroes@@IAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0
 remote	?copy@CNetMsgHandler@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x155150	f7600beaadaf
 remote	?createDPlayObject@@YIEXZ	100.0000	100.0000	100.0000	0x1555b0	8994101f3e2d
 remote	?destroyMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x155910	bea3dc11a0ed
-remote	?drawSprite@CAnimatedDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x154cf0	7e0db5d8fee1
+remote	?drawSprite@CAnimatedDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x154cf0	7e0db5d8fee1
 remote	?drawWindow@CAnimatedDlg@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x154e90	8d03f092badb
 remote	?getAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900	42d2e9579b48
 remote	?getNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	09dced481353
@@ -3141,13 +3141,13 @@ remote	?shutDown@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x153800	7a4ff9
 remote	?start@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157480	6d7b3f2ea68b
 remote	?start@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d90	526c12236099
 remote	?stop@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1575e0	a5d24f4988b6
-remote	?sysMsgCreatePlayerOrGroup@CDPlayHeroes@@MAEEPAUDPMSG_CREATEPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x152b40	6988ef190215
-remote	?sysMsgDestroyPlayerOrGroup@CDPlayHeroes@@MAEEPAUDPMSG_DESTROYPLAYERORGROUP@@K@Z	97.6166	97.6166	97.6166	0x152920	981908991c7b
-remote	?sysMsgHost@CDPlayHeroes@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152530	94ab762b0e36
-remote	?sysMsgSessionLost@CDPlayHeroes@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152740	e59df5a06d7e
+remote	?sysMsgCreatePlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_CREATEPLAYERORGROUP@@K@Z	100.0000	100.0000	100.0000	0x152b40	6988ef190215
+remote	?sysMsgDestroyPlayerOrGroup@CDPlayHeroes@@UAEEPAUDPMSG_DESTROYPLAYERORGROUP@@K@Z	97.6166	97.6166	97.6166	0x152920	981908991c7b
+remote	?sysMsgHost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152530	94ab762b0e36
+remote	?sysMsgSessionLost@CDPlayHeroes@@UAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	0x152740	e59df5a06d7e
 remote	?systemMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153aa0	9bbd4a69963c
 remote	?testIfLobbyLaunched@@YIEXZ	100.0000	100.0000	100.0000	0x155920	eb154a2c7b4a
-remote	?tickAnimation@CAnimatedDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x154e10	ca484a1ef9b1
+remote	?tickAnimation@CAnimatedDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x154e10	ca484a1ef9b1
 remote	?transmitRemoteData@@YIHPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x1545f0	f8ad511cd3c1
 remote	?transmitRemoteData@CDPlayHeroes@@QAE_NPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x153220	33f251472dfb
 remote	?transmitRemoteDataDPID@@YIHPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x154560	f8a9e389f0bf
@@ -3633,7 +3633,7 @@ sacrifice_window	?doModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0
 sacrifice_window	?emptyBackpack@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164060	047843f2f5e3
 sacrifice_window	?exitClick@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164a80	5177fd10682c
 sacrifice_window	?exitClick@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x166b30	cb91e6ce562f
-sacrifice_window	?exitDialog@type_sacrifice_window@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x165430	f785bb892c75
+sacrifice_window	?exitDialog@type_sacrifice_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x165430	f785bb892c75
 sacrifice_window	?handleClick@type_army_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fda0	55b136e08c00
 sacrifice_window	?handleClick@type_artifact_offering_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd40	0128b851e245
 sacrifice_window	?handleClick@type_backpack_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd10	69c3fb5e264b

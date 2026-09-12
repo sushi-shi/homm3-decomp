@@ -937,6 +937,7 @@ public:
 private:
     // Before normalization (function): TSingleSelectionWindow::GetThisPlayer.
     CNetPlayerHandlerPlayer* getThisPlayer();
+public:
     // Before normalization (function): TSingleSelectionWindow::CalcPosition.
     int calcPosition(int playerPos);
 };
