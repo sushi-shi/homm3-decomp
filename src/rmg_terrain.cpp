@@ -944,13 +944,12 @@ void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 // flattening the configured-terrain read into the predicate expands that
 // cache call. Keep these ordinary helpers and the base-tile constructor;
 // their combined expansions recover the first and final cache boundaries.
-// The comparison return costs 38 (free) against the guard form's 47. With
-// the trivial grid copy and a direct-initialized neighbour it lets the
-// final insert expand its pair constructor as retail does (paintPoint
-// 97.29 -> 98.68%, 2026-09-12); the guard form kept that constructor out of
-// line but retained the middle erase's distance wrapper, which now expands.
-// Reading the configured terrain as the field, or swapping the operands,
-// drops the caller below 90%.
+// The guard return costs 47 against the comparison return's 38 (free).
+// Under the trivial grid copy and a direct-initialized neighbour the free
+// form expanded the loop erase's distance wrapper (98.68%); the 47-unit
+// form refuses it while the final insert's pair constructor still expands,
+// closing paintPoint (2026-09-12). Reading the configured terrain as the
+// field, or swapping the operands, drops the caller below 90%.
 int rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -958,7 +957,9 @@ int rmgTerrainPainter::getPaintTerrain() const
 
 unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 {
-    return getTerrain(point) == getPaintTerrain();
+    if (getTerrain(point) != getPaintTerrain())
+        return 0;
+    return 1;
 }
 
 // The brush forwards its four unsigned bounds to this body at 0x5b76a6.
@@ -1149,15 +1150,16 @@ void rmgTerrainPainter::paintRectangle(
 // the four-argument distance call and translation registers); a named grid
 // return or direct frame argument does not close that coupled residual. The
 // retained guard predicate plus named direction reference closes it entirely.
-// Residual (98.6781%): the middle erase's three-argument _Distance wrapper
-// expands where retail calls it (nested budget 43 against cost 41) while the
-// final insert's pair constructor now expands as retail does; the two sit
-// on opposite sides of the same budget, and the direction pointer holds EBX
-// where retail keeps EDX downstream of it. A 32-state family over the
-// coordinate constructor's spelling, the predicate form and the neighbour
-// binding separates only this pair (copy-initialized neighbour 96.87%,
-// unnamed offset 91.60%); the sum/conversion forms of family 3 and the
-// cache pair's spellings (family 7) move nothing here.
+// Exact (2026-09-12). The loop erase's three-argument _Distance wrapper
+// must be refused (retail calls it) while the final insert's pair
+// constructor expands; at 98.68% the wrapper's nested budget was 47
+// against cost 41 with the comparison-return predicate free at 38. A
+// replay of the budget arithmetic showed that only a predicate costing
+// 41-52 units, or a caller 17-26 units cheaper, flips that one decision;
+// the guard-return predicate costs 47 and does exactly that (a named
+// terrain result or a conditional return stay free, 99.10%; a named
+// configured terrain 86.51%). A free site added after the erase instead
+// refuses the loop find and expands the last cache read.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
@@ -2213,6 +2215,11 @@ VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
 // y-then-x ordering also appears in the tree's expanded comparisons.
+// Retail emits it between the two _Distance instantiations, after the
+// tree insert whose lock scope carries an exception frame; spelling it
+// inline here or in either header, as a friend, or early in this file
+// leaves every row unchanged (insert 79.83%), so that frame is not the
+// comparator's emission order.
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
 {

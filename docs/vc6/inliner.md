@@ -2215,8 +2215,27 @@ the structures the replay admits. What it found:
   accessors give the refresh's tail the sites the helper's budget divides
   by, the proxy's initializer-list copy keeps the walker's compound add
   retained, and a plain copy of the selected pattern lets retail's EDI
-  survive `rand()`. 74 -> 97.35 and 80.6 -> 87.1; both residuals are
-  callee-saved role swaps at entry (see regalloc.md, B1).
+  survive `rand()`. 74 -> 97.35 and 80.6 -> 87.1; both residuals were
+  callee-saved role swaps at entry (see regalloc.md, B1). The walker then
+  closed (100): a rectangle constructor taking its size as a grid point
+  materializes the one-cell rectangle's two unit extents from one register
+  copied into another, the painter alias and availability mask scoped to
+  the first pass give retail's frame, and naming the converted sum inside
+  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  the coordinates). Refresh keeps its entry swap.
+- Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
+  loop erase's `_Distance` wrapper had to be refused while the final
+  insert's pair copy stayed expanded, and no site insertion did that; the
+  replay showed that only a predicate costing 41-52 units in place of the
+  free 38-unit `isPaintTerrain`, or a caller 17-26 units cheaper, flips
+  exactly that decision. The guard-return spelling costs 47 and closed the
+  row, byte-identical in its own expansion. Simulate the callee's cost
+  (`cost=needle:cb`) before spelling it.
+- The painter constructor (97.92 -> 100): the dimensions as one grid-point
+  member assigned from the virtual size result, with the packed-cell count
+  as the product of the ordinary width/height queries; those two free
+  sites leave the product reading the width back from the member, which
+  retail's first block does.
 - A helper wrapping a read cannot starve it: the helper's cost is
   subtracted before the division by its remaining siblings, a few units.
 - The STL `_Tree::insert` row (79.8) is an exception-frame difference:
@@ -2224,4 +2243,8 @@ the structures the replay admits. What it found:
   body, so the `_Lockit` scope needs a frame; our comparator, a regular
   function or an inline one emitted at its first use, is compiled first
   and known not to throw. Only declaring it restores the frame (100%) but
-  removes the body the `_Lbound`/`_Ubound` instantiations expand.
+  removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
+  places the comparator between the two `_Distance` instantiations, but
+  spelling it inline in either header, as an in-class friend, or inline
+  early in the file leaves every row byte-identical (2026-09-12): the
+  frame is not decided by where the comparator's body is emitted.
