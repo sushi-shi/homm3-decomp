@@ -90,6 +90,11 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // retail; a direct proxy construction, reading the land through the
 // painter first, building the mask first, and accessor coordinates do
 // not swap them (84-97%).
+// Sixty table pointer/reference, selected-pattern value/reference and
+// compared-entry ownership controls produce four objects. Value forms
+// retain 97.3461%; borrowing the escaped selector output gives 91.5154%.
+// None recovers the parameter homes or the direct memory comparison, and
+// no sibling score changes. Keep the independent post-tile-read value.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {

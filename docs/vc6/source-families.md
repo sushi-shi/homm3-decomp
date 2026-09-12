@@ -4388,3 +4388,11 @@ Five bad controls change a clamp dimension, omit the center read, change
 diagonal admission, use the wrong corner or invert a cardinal comparison;
 all are rejected. The generator rebases the adopted ownership without losing
 the former direct-corner/function-scope negative control.
+
+`generate-rmg-line-refresh-pattern-values.py` separately crosses four table
+pointer/reference views, five selected-pattern local forms and three table
+entry bindings. Its 60 states in `b3b6a1ad532ba0b638f7` produce four objects,
+all four reproduced. Value forms retain refresh's 97.3461%; references to
+the selector's escaped output fall to 91.5154%. No sibling score moves.
+Neither the ESI/EDI parameter exchange nor the extra table-entry register
+load is resolved, so no source alternative is adopted from this family.
