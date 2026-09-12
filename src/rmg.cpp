@@ -10291,6 +10291,18 @@ unsigned char type_random_map_generator::generate()
 // The nearby team-array homes and later canonical bitset call boundaries
 // still differ. The focused oracle verifies normalization and the zero-team
 // output branch; it does not validate the rest of this serialization routine.
+// Mask lifetime recovery (79.2606%): keep packedHeroes alive for its write,
+// but end the expansion hero bitset's scope after packing. Give the spell
+// and skill serialization regions separate scopes. These real last-use
+// boundaries remove two excess CFG blocks. String assign now remains a call
+// in place of its expanded _Tidy/_Grow calls, reducing the total by one;
+// the 0x304 frame still differs from retail's 0x318.
+// Forty-eight player-array lifetime controls give six reproduced objects
+// and a 79.2465% peak. Crossing those six parents with eight mask scopes
+// yields 48 states, twelve objects and ten reproduced elites. The best
+// form keeps the original player declarations; no sibling score changes.
+// The focused mask oracle checks actual packing and output-region order
+// through all 156 hero positions, both map-era widths and nonbinary flags.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
@@ -10613,15 +10625,17 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= 1) {
-        std::bitset<156> availableHeroes;
-        setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
-
         unsigned char packedHeroes[20];
-        memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int heroBit = 0; heroBit < 156; ++heroBit) {
-            if (availableHeroes.test(heroBit))
-                packedHeroes[heroBit >> 3] |= 1 << (heroBit & 7);
+        {
+            std::bitset<156> availableHeroes;
+            setAvailableRmgHeroes(
+                &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
+
+            memset(packedHeroes, 0, sizeof(packedHeroes));
+            for (unsigned int heroBit = 0; heroBit < 156; ++heroBit) {
+                if (availableHeroes.test(heroBit))
+                    packedHeroes[heroBit >> 3] |= 1 << (heroBit & 7);
+            }
         }
         outfile->write(packedHeroes, sizeof(packedHeroes));
     } else {
@@ -10688,23 +10702,27 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= 2) {
-        std::bitset<70> disabledSpells;
-        unsigned char packedSpells[9];
-        memset(packedSpells, 0, sizeof(packedSpells));
-        for (unsigned int spell = 0; spell < 70; ++spell) {
-            if (disabledSpells.test(spell))
-                packedSpells[spell >> 3] |= 1 << (spell & 7);
+        {
+            std::bitset<70> disabledSpells;
+            unsigned char packedSpells[9];
+            memset(packedSpells, 0, sizeof(packedSpells));
+            for (unsigned int spell = 0; spell < 70; ++spell) {
+                if (disabledSpells.test(spell))
+                    packedSpells[spell >> 3] |= 1 << (spell & 7);
+            }
+            outfile->write(packedSpells, sizeof(packedSpells));
         }
-        outfile->write(packedSpells, sizeof(packedSpells));
 
-        std::bitset<28> disabledSkills;
-        unsigned char packedSkills[4];
-        memset(packedSkills, 0, sizeof(packedSkills));
-        for (unsigned int skill = 0; skill < 28; ++skill) {
-            if (disabledSkills.test(skill))
-                packedSkills[skill >> 3] |= 1 << (skill & 7);
+        {
+            std::bitset<28> disabledSkills;
+            unsigned char packedSkills[4];
+            memset(packedSkills, 0, sizeof(packedSkills));
+            for (unsigned int skill = 0; skill < 28; ++skill) {
+                if (disabledSkills.test(skill))
+                    packedSkills[skill >> 3] |= 1 << (skill & 7);
+            }
+            outfile->write(packedSkills, sizeof(packedSkills));
         }
-        outfile->write(packedSkills, sizeof(packedSkills));
 
         char byteBuffer = 0;
         for (int hero = 0; hero < 156; ++hero)

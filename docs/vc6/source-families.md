@@ -4527,3 +4527,43 @@ lower-limit, branch-strictness and upper-limit controls fail. The rebased
 focused normalization oracle, not a whole-header serialization check.
 The writer remains non-exact: team-array stack homes and canonical bitset
 inlining are still open, with 176 candidate versus 164 retail CFG blocks.
+
+### Map-header player arrays and availability-mask scopes
+
+`generate-rmg-header-player-lifetimes.py` varies the four player-array
+declarations, the geometry records' last-use scope and the team array's
+declaration point. Its 48 distinct source forms in `9e28f3aec77f9b081647`
+produce six objects, all reproduced. Ending alignment and town-coordinate
+lifetimes after player serialization gives 79.2465%, up from 78.4014%.
+Reordering declarations or moving the team array adds no improvement.
+All zeroing, queries, field updates and writes retain their original order.
+
+`generate-rmg-header-mask-lifetimes.py` checks the full source snapshot and
+repeated object identity for each of those six parents, then crosses three
+independent lifetime changes: each hero bitset can expire after packing,
+and spell/skill serialization can have separate scopes. Its 48 states in
+`97fc69f43bfb5a3663f5` produce twelve objects and ten reproduced elites.
+State `fcd5ed39c7d1eb6e40be7663` reaches 79.2606% using the original player
+declarations, a shorter expansion-hero bitset lifetime and separate spell
+and skill scopes. This form is adopted; every sibling score remains fixed.
+Both mask and coordinate types lack a user-defined destructor, and the
+coordinate default constructor is empty, so these scope changes preserve
+observable operations. No new helper, layout, qualifier or pragma is added.
+
+The adopted header has 174 versus 164 retail blocks and 92 versus 87
+branches, two fewer excess blocks than before. The named call comparison
+shows one additional retained string `assign` replacing one `_Tidy` and one
+`_Grow` call from its expansion; canonical bitset inlining remains unresolved. The frame
+is still 0x304 versus retail 0x318. This is a partial match, not CFG closure.
+
+`verify-rmg-header-mask-scopes.py` imports the actual hero initializer and
+each rendered hero/spell/skill region. Only the initializer's template index
+type is adapted to native `std::bitset`'s `size_t` parameter. It checks 1,044
+version/pattern combinations per form, every single disabled/enabled hero,
+nonbinary flag values, packed-byte order and sizes, zero spell/skill masks,
+and all 156 trailing hero writes. Four controls omit a final hero bit,
+shift its packed position, shorten the legacy input or omit a trailing
+write; all fail. All 48 historical forms and the actual adopted body pass.
+The oracle accepts an explicit recorded snapshot after source adoption;
+it does not silently apply stale anchors to current source. It covers these
+mask regions, not player, artifact or complete-header serialization.
