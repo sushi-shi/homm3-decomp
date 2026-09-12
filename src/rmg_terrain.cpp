@@ -51,9 +51,10 @@ void TRmgLinePainterTile::setOverlay(int value)
     m_painter->setOverlay(m_point, value);
 }
 
-TRmgGridRectangle::TRmgGridRectangle(
-    const TRmgGridPoint& origin, unsigned int width, unsigned int height)
-    : m_origin(origin), m_size(width, height)
+// The size is a grid point: the walker's one-cell rectangle then constructs
+// a unit size the way retail 0x4fa3c0 materializes it (see paintPoint).
+TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size)
+    : m_origin(origin), m_size(size)
 {
 }
 
@@ -289,6 +290,14 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 // proxy 78.03%). The 300-case neighbour family over sum bindings and
 // point construction with the query inline never exceeded 79.94%: the
 // three sites cannot be refused at this body's own budget.
+// The rectangle constructor takes its size as a grid point, so the one-cell
+// rectangle constructs a unit size: retail materializes both unit extents
+// from one register copied into another (87.12 -> 95.61%). A width/height
+// pair, one extent, reference extents and a named extent are flat; a named
+// rectangle 83.56%. The painter alias and the availability mask scoped to
+// the first pass give retail's 0x3c frame (95.84%). Remaining: the neighbour
+// proxy's expansion stores its painter before the converted coordinates,
+// ours between them.
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -297,22 +306,24 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     if (oldType == m_riverType || tile.isBlocked())
         return;
     if (oldType)
-        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, 1, 1));
+        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
     tile.setOverlay(m_riverType);
     refreshRmgLinePoint(m_painter, point);
 
     int riverType = m_riverType;
-    TRmgLinePainterInterface* painter = m_painter;
-    unsigned char available[TILE_DIR_COUNT];
-    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                           point.m_x, point.m_y, available);
     unsigned char matches[TILE_DIR_COUNT];
     unsigned int direction;
-    for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-        if (available[direction])
-            matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
-        else
-            matches[direction] = 0;
+    {
+        TRmgLinePainterInterface* painter = m_painter;
+        unsigned char available[TILE_DIR_COUNT];
+        buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
+                               point.m_x, point.m_y, available);
+        for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+            if (available[direction])
+                matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
+            else
+                matches[direction] = 0;
+        }
     }
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
