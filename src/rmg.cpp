@@ -335,34 +335,31 @@ VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
 // m_objects, and type_random_map::clear calls it for every allocated cell.
 // Dreamcast has no RMG compiland, so the original method spelling is unknown;
 // `clear` describes the retail operation while preserving its real boundary.
-// Four compiled forms peaked at 76.95%. Direct member writes store the packed
-// connection word too early (73.68%); local packed-field snapshots recover the
-// retail masks and final store order, leaving only EDI lifetime/load scheduling.
-// A Cartesian source family also varied all three snapshot/update group
-// orders and named begin/end iterator lifetimes. None changed this body's
-// score or recovered EDI's lifetime across the vector-copy guard.
-// Carrying the connection snapshot across the pointer-vector erase reaches
-// 91.03%. The vector owns pointers only, so that snapshot is independent of
-// its clear operation. Taking every snapshot afterward restores 76.95%;
-// taking tile or tileData early instead does not recover the connection
-// lifetime. Public clear() is equivalent here; resize(0) adds a size guard.
-// Separating declarations from post-erase assignments does not preserve that
-// allocation: generated declaration/read permutations return to 76.95%, even
-// with all three real locals declared before the erase and a vector reference.
+// Exact: update terrain directly, but stage connection and tileData in local
+// copies. Retail loads connection after erase and reuses the copy loop's EDI;
+// these two snapshots recover that lifetime and all masks/stores. Copying all
+// three words instead peaks at 76.95%; moving connection before erase gives
+// 91.03% but needs an extra EBX save in the loop. Making every update direct
+// stores connection too early (73.68%). Declaration/read/group permutations
+// and named iterators did not settle those ownership errors. Public clear()
+// was neutral in the earlier copy model; resize(0) adds a size guard.
+// The 55 copied/borrowed/direct ownership and grouped/final-store controls
+// yield 40 objects with no sibling score changes. Each passes 16,384 native
+// cases against the retail masks, preserved bits/coordinates and pointer
+// vector behavior; six independently corrupted controls fail.
 VA(0x00530F10, 0x6F)
 void TRmgMapItem::clear()
 {
-    TRmgConnectionDecoration connection = m_connection;
     m_objects.erase(m_objects.begin(), m_objects.end());
-    TRmgGroundTile tile = m_tile;
+    TRmgConnectionDecoration connection = m_connection;
     TRmgGroundTileData tileData = m_tileData;
 
     connection.m_present = 0;
-    tile.m_landType = eTerrainWater;
-    tile.m_terrainFrame = 21;
-    tile.m_riverType = 0;
-    tile.m_riverFrame = 0;
-    tile.m_roadType = 0;
+    m_tile.m_landType = eTerrainWater;
+    m_tile.m_terrainFrame = 21;
+    m_tile.m_riverType = 0;
+    m_tile.m_riverFrame = 0;
+    m_tile.m_roadType = 0;
     tileData.m_roadFrame = 0;
     tileData.m_blockedDirections = 0;
     tileData.m_connectionDirection = 0;
@@ -383,7 +380,6 @@ void TRmgMapItem::clear()
     tileData.m_riverTarget = 0;
     tileData.m_impassable = 0;
     m_connection = connection;
-    m_tile = tile;
     m_movement.m_cost = 32700;
     m_movement.m_zonePathCost = 32700;
     m_zoneState.m_score = 32700;

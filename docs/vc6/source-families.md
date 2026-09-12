@@ -4283,3 +4283,28 @@ caller (82.2075%, scalar forms 82.1286%).
 constructor with 3,136 independent sample lattices and 784 complete mask/RNG
 trace comparisons; four constructor/sample/variation/draw controls fail.
 No game-source alternative from these noise families is adopted.
+
+### Map-cell packed-field ownership
+
+`generate-rmg-clear-ownership.py` crosses copied, borrowed and direct updates
+for the connection, terrain and terrain-data words with grouped versus
+final-store update lifetimes. Its 55 controls include the old pre-erase
+connection snapshot. In context `8692df78d0029b5121ed`, all 55 compile, produce
+40 objects, and reproduce ten elites. Direct terrain updates with copied
+connection and terrain-data words match `TRmgMapItem::clear` (`0x530f10`)
+exactly, raising 91.0263% to 100% with every sibling score unchanged.
+
+This removes a copied terrain word and reads connection after vector erase.
+Retail can then reuse the copy loop's EDI without the previous extra EBX
+save/restore. The three-copy post-erase control remains 76.95%; declaration
+permutations could not fix that ownership error. All three retail blocks,
+both branches and the return agree after adoption and a full build passes.
+
+`verify-rmg-clear-ownership.py` compiles every rendered body with the actual
+packed declarations. Each passes 16,384 cases against independently encoded
+retail masks, untouched previous-coordinate components, vector capacity,
+and pointer-pointee preservation. Six controls corrupt vector clearing,
+terrain frame, a preserved flag, connection presence, zone eligibility or
+an untouched coordinate; all fail. Earlier lifetime and declaration families
+retain the three-copy model as an explicit negative control, while the
+neighbour/reset family follows the adopted terrain ownership.

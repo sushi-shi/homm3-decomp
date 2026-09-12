@@ -444,7 +444,8 @@ int main() {
                 self.assertEqual(body.count(kind + " " + local), 1)
                 self.assertEqual(body.count(f"{local} = {member};"), 1)
                 self.assertLess(call, body.index(f"{local} = {member};"))
-            self.assertTrue(body.endswith(item["find"][item["find"].index("    connection.m_present = 0;"):]))
+            control = module.previous().copied_control(item["find"])
+            self.assertTrue(body.endswith(control[control.index("    connection.m_present = 0;"):]))
             self.assertNotIn("#pragma", body)
         for option in (item["options"][17], item["options"][-1]):
             rebased, = module.make_axes(source.replace(item["find"], option["replace"]))
@@ -457,8 +458,9 @@ int main() {
         item, = module.make_axes(source)
         self.assertIn(len(item["options"]), (216, 217))
         self.assertEqual(item["find"], item["options"][0]["replace"])
-        tail = item["find"][item["find"].index("    connection.m_present = 0;"):]
-        for option in item["options"]:
+        control = module.copied_control(item["find"])
+        tail = control[control.index("    connection.m_present = 0;"):]
+        for option in item["options"][1:]:
             body = option["replace"]
             self.assertTrue(body.endswith(tail))
             self.assertEqual(sum(body.count(call.strip()) for _, call in module.CALLS), 1)
@@ -852,7 +854,7 @@ int main() {
             new_source = source.replace(axes[2]["find"], option["replace"])
             if option["name"].endswith("expression") or option["name"] == "baseline":
                 rebased = module.make_axes(terrain, new_source)
-                self.assertIn(len(rebased[2]["options"]), (18, 19))
+                self.assertIn(len(rebased[2]["options"]), (6, 7, 18, 19))
             self.assertEqual(option["replace"].count("m_objects.erase("), 1)
         directions = ["NORTH", "SOUTH", "WEST", "EAST", "NORTHWEST", "NORTHEAST", "SOUTHWEST", "SOUTHEAST"]
         for construction, query in itertools.product(
