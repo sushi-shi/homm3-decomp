@@ -894,9 +894,13 @@ void rmgTerrainPainter::setTile(
 // flattening the configured-terrain read into the predicate expands that
 // cache call. Keep these ordinary helpers and the base-tile constructor;
 // their combined expansions recover the first and final cache boundaries.
-// The explicit guard returns below also preserve retail's inner distance
-// wrapper. Flattening them to return the comparison drops the predicate's
-// measured cost from 47 to 38 and over-expands that later library call.
+// The comparison return costs 38 (free) against the guard form's 47. With
+// the trivial grid copy and a direct-initialized neighbour it lets the
+// final insert expand its pair constructor as retail does (paintPoint
+// 97.29 -> 98.68%, 2026-09-12); the guard form kept that constructor out of
+// line but retained the middle erase's distance wrapper, which now expands.
+// Reading the configured terrain as the field, or swapping the operands,
+// drops the caller below 90%.
 int rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -904,9 +908,7 @@ int rmgTerrainPainter::getPaintTerrain() const
 
 unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 {
-    if (getTerrain(point) == getPaintTerrain())
-        return 1;
-    return 0;
+    return getTerrain(point) == getPaintTerrain();
 }
 
 // The brush forwards its four unsigned bounds to this body at 0x5b76a6.
@@ -1087,6 +1089,15 @@ void rmgTerrainPainter::paintRectangle(
 // the four-argument distance call and translation registers); a named grid
 // return or direct frame argument does not close that coupled residual. The
 // retained guard predicate plus named direction reference closes it entirely.
+// Residual (98.6781%): the middle erase's three-argument _Distance wrapper
+// expands where retail calls it (nested budget 43 against cost 41) while the
+// final insert's pair constructor now expands as retail does; the two sit
+// on opposite sides of the same budget, and the direction pointer holds EBX
+// where retail keeps EDX downstream of it. A 32-state family over the
+// coordinate constructor's spelling, the predicate form and the neighbour
+// binding separates only this pair (copy-initialized neighbour 96.87%,
+// unnamed offset 91.60%); the sum/conversion forms of family 3 and the
+// cache pair's spellings (family 7) move nothing here.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
@@ -1138,7 +1149,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 const TPoint& offset = g_tileDirections[direction];
-                TRmgGridPoint nearby = point + offset;
+                TRmgGridPoint nearby(point + offset);
                 if (isPaintTerrain(nearby)) {
                     if (m_primaryPoints.find(nearby) != m_primaryPoints.end()) {
                         if (!needsTerrainRepair(nearby)) {
