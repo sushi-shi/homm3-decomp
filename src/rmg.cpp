@@ -1460,10 +1460,17 @@ TRmgTownSlot* TRmgTemplate::findZone(int zoneIndex)
     return 0;
 }
 
-// Shipyard water probing copies all three fields from the object before
-// adding offsets. This ordinary value accessor models that copy boundary;
-// the source name is inferred from the Complete-only retail use.
-TRmgMapPosition type_object::getPosition() const
+// Shipyard and treasure placement copy all three fields into their own
+// position values before changing coordinates. A borrowed accessor result
+// preserves those snapshots without introducing an intermediate value copy.
+// Nine value/const-value/reference and construction controls across seven TUs
+// make commitTreasureGroup exact only with this const-reference result
+// (99.9141 -> 100%). addGuard and tryAddObject also improve; shipyard and
+// every other tracked caller remain unchanged. Monolith CUR falls to 88.7463%
+// with the same outstanding helper boundaries; its 91.9027% MAX stays banked.
+// This is an ordinary Complete-only accessor with an inferred source name;
+// no retained declaration or Dreamcast ABI independently fixes its return.
+const TRmgMapPosition& type_object::getPosition() const
 {
     return m_position;
 }
@@ -2636,7 +2643,8 @@ void TRmgTreasureGroup::reset()
 // stack dword to 0x535110 (AL result); its first and last calls trace the
 // group's closed outline. 0x535ee0 appends points at +0x38 until closure.
 // Provisional names describe these retail roles.
-// Partial 89.93%: all 73 blocks align, with 64 matching sizes; branches
+// Partial 91.2998% after the borrowed object-position accessor (89.9329%
+// with a value result): all 73 blocks align; branches
 // and both returns agree. Retail retains vector<TPoint>::_Destroy during
 // outline erasure and the single-element object insertion wrapper; VC6
 // expands those to no destructor call and the count insertion call.
@@ -2831,7 +2839,8 @@ placementFailure:
 // directions 3..1. Candidate bounds leave a margin around the group map.
 // A successful random choice transfers the object to the group and stamps
 // its footprint on surface level zero. Names describe Complete-only roles.
-// Residual (79.3429%): all 21 CFG blocks and branch destinations align;
+// Residual (79.7429% after borrowing the object-position accessor): all
+// 21 CFG blocks and branch destinations align;
 // remaining differences are local/register homes, coordinate copies and
 // vector cleanup scheduling. Reusing the candidate variable for the final
 // choice loses to separate scopes (75.5095% versus 79.3143%). The RMG trigger
@@ -2985,6 +2994,11 @@ void TRmgTreasureGroup::traceOutline()
 // call at 0x53609f). The unchanged constructor keeps its 100% MAX/HIST.
 // Preserve the canonical body and retail source order while recovering the
 // remaining caller/TU context; hiding it would discard proven source work.
+// All 128 combinations of owned-map field initialization and this caller's
+// progress/version initialization yield 108 objects. Eight retain the exact
+// map constructor, but none improves this caller. Forms restoring its call
+// alter the retained callee substantially (for example 58.0175%); reject that
+// trade. Width-only member initialization is byte-neutral, not a new lead.
 VA(0x00536070, 0xFB) // caller 0x537b52 + base vtable 0x640c3c; retail-only
 TRmgGeneratorBase::TRmgGeneratorBase(int width, int height, int levels,
     TProgressSink* progress, int additionalSteps, int version)
@@ -7156,7 +7170,7 @@ unsigned char type_random_map_generator::placeMonolithBorder(
 // Two-way prototypes need one object in each zone. One-way prototypes use
 // the matched exit prototype as well, producing entrance/exit pairs in both
 // zones. Placement failures delete only the failed object and continue.
-// Residual (91.9027%): the retained border calls, four base-object allocations,
+// Residual (88.7463% CUR, 91.9027% MAX): the retained border calls, four base-object allocations,
 // property choices and placement sequence agree. VC6 retains two translated-
 // position constructors and calls the scalar map accessor inside placeGuard;
 // retail retains its map-position overload. A size call and both early
@@ -8871,7 +8885,10 @@ VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 // offset. The retained routine updates object positions and map-cell state.
 // Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked
 // against retail's 692 bytes before the local source-family population.
-// Residual (99.9141%): all 45 blocks, branches and three calls agree. Of 120
+// Exact: all 692 bytes, 45 blocks and three calls with getPosition returning
+// a const reference. This caller still owns and translates a separate value;
+// the accessor family distinguishes that snapshot from an extra return copy.
+// Previous 99.9141%: all 45 blocks, branches and three calls agreed. Of 120
 // scored states, border-before-gate snapshots restore the outer-loop reload;
 // only width/y operands at +0x16a/+0x16d differ (four raw operand bytes).
 // Tried: point/scalar/per-row scans, five destination-position construction
@@ -8885,8 +8902,9 @@ VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 // result-binding forms produce 11 distinct objects, with ten reproduced
 // retained candidates. Every form keeps this same four-byte mismatch.
 // All seven header-consuming TUs were scored; only other rmg.cpp callers
-// moved. No accessor change was adopted: this family supplies no positive
-// evidence for a different helper body at the mismatching expansion.
+// moved. That caller-lifetime family did not distinguish accessor ownership.
+// The subsequent nine-state canonical-accessor family resolves the operands
+// with a borrowed result; all value and const-value copy forms remain 99.9141%.
 VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)

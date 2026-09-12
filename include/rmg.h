@@ -947,7 +947,9 @@ public:
     // Retail retains this body at 0x5330e0 beneath derived construction.
     // No Dreamcast inline declaration exists for this Complete-only type.
     type_object(TRmgObjectPropertiesRef* newProperties);
-    TRmgMapPosition getPosition() const;
+    // Placement callers own their coordinate snapshots. The borrowed result
+    // makes commitTreasureGroup exact; see the accessor's source evidence.
+    const TRmgMapPosition& getPosition() const;
 
     // The constructor and placement scorer share this five-byte reset.
     // The method name is provisional; retail preserves the store order.

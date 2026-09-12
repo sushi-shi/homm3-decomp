@@ -20,7 +20,7 @@ struct type_object {
     std::vector<int>* m_events;
     std::vector<type_object*>* m_objects;
     type_object* m_append;
-    TRmgMapPosition getPosition() const;
+    // @POSITION_ACCESSOR_DECL@
     virtual unsigned char isWritable() {
         event(*m_events, -2, m_id, m_position.m_x, m_position.m_y, m_position.m_z);
         ++m_writes;

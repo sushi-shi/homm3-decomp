@@ -16,7 +16,7 @@ struct TRmgObjectPropertiesRef { // @PROPERTY_FIELDS@
 };
 struct type_object {
     // @OBJECT_FIELDS@
-    TRmgMapPosition getPosition() const;
+    // @POSITION_ACCESSOR_DECL@
 };
 struct TRmgMapItem {
     TRmgGroundTile m_tile;

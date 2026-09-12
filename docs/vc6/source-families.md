@@ -48,6 +48,17 @@ Every sibling score stays unchanged. Eight ordinary helper argument-ownership
 states do not improve it; the coordinate constructor, accessor and insertion
 expansion differences remain documented beside the function.
 
+Nine object-position accessor forms distinguish a borrowed const-reference
+result from value and const-value copies. The borrowed result makes the
+unchanged `commitTreasureGroup` exact at all 692 bytes, improves group
+`addGuard` and `tryAddObject`, and preserves the other consumers across seven
+TUs. Monolith CUR drops to 88.7463%; its unchanged-source 91.9027% MAX remains.
+The transfer and placement oracles import the authored accessor declaration
+as well as its body; their mutable-object, aliased-map and negative controls
+pass. The retained map-constructor visibility probe is separate: 128 real
+member-initialization states produce 108 objects, but none improves the base
+caller while retaining its already exact owned-map constructor.
+
 Inside the pinned build shell, with `HOMM3_DIR` set to the owning worktree:
 
 ```sh

@@ -107,6 +107,7 @@ class RmgGroupCommitTests(unittest.TestCase):
         checks.append("if (check<WrongCachedSize>()) return 2;")
         program = template
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)), ("PREDICATES", "\n".join(predicates)),
+                ("POSITION_ACCESSOR_DECL", value_helpers[1].split("{", 1)[0].replace("type_object::", "").strip() + ";"),
                 ("OBJECT_POSITION", field(block("class type_object {"), "m_position")),
                 ("GROUP_POSITION", field(block("struct TRmgTreasureGroup {"), "m_position")),
                 ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", "\n".join(value_helpers)),

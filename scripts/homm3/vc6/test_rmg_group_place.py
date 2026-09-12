@@ -153,7 +153,8 @@ class RmgGroupPlaceTests(unittest.TestCase):
             declarations = []
             for name in names:
                 matches = [line.split("//")[0].strip() for line in text.splitlines()
-                           if re.search(r"\b" + name + r";", line.split("//")[0])]
+                           if re.search(r"\b" + name + r";", line.split("//")[0])
+                           and not line.lstrip().startswith("return ")]
                 self.assertEqual(len(matches), 1, name)
                 declarations.append(matches[0])
             return "\n".join(declarations)
@@ -226,6 +227,7 @@ class RmgGroupPlaceTests(unittest.TestCase):
             checks.append("if (check<" + label + ">()) { std::fprintf(stderr, \"missed " + label + "\\n\"); return 2; }")
         program = template
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)),
+                ("POSITION_ACCESSOR_DECL", value_helpers[1].split("{", 1)[0].replace("type_object::", "").strip() + ";"),
                 ("OBJECT_ENUM", block((self.root / "include/mapcell.h").read_text(), "enum TAdventureObjectType {")),
                 ("PROTOTYPE_POINT", prototype_point),
                 ("PROTOTYPE_FIELDS", fields(prototype, ("m_objectType", "m_triggerCell"))),
