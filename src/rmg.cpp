@@ -1326,6 +1326,10 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // `mov ecx,[ecx]` where retail has one `mov ecx,[ecx+8]`, and reverses the
 // LEA operands. Const values and references to copied scalar temporaries
 // do not remove that residual. No binding is adopted on score alone.
+// Crossing independent slot-object pointer/reference bindings with all four
+// scalar ownership policies gives 36 states and twelve objects. It retains
+// that same 97.7922% ceiling and split field load, with no sibling movement.
+// All 146 prior/new source forms pass the signed integer-distance oracle.
 VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -4203,19 +4207,26 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
 // Both connection-count passes in FilterZonePositions retain the same
 // vector-size and CanConnect calls. Keep the shared operation as one
 // ordinary helper; its source name/boundary remain retail hypotheses.
-// Including the by-value position/setter in this helper is byte-neutral,
-// as is naming a reference to the current connection. Neither restores
-// the two vector::size calls over-inlined in the first counting pass.
+// Including the by-value position/setter in this helper was byte-neutral,
+// as was naming a reference to the current connection. Neither restored
+// the two vector::size calls over-inlined before the getSize recovery below.
 // A temporary depth-0 pin on that loop condition restores those two calls
 // but expands the first zone-pointer vector::size instead (94.56%); the
 // ordinary unpinned source is the negative control. Early-continue for an
 // unplaced destination is also byte-neutral. No diagnostic pin is retained.
+// Borrow the destination slot's index: both expansions then retain the
+// retail receiver loads, index register and post-size reloads (98.8497 ->
+// 99.6892%). Copied/const-value indexes preserve the older sequence. The
+// 54 receiver/element/index/flow controls yield eighteen objects with no
+// sibling changes. Twenty begin-plus-index/element-binding follow-ups keep
+// the same two reversed SIB operands. All 74 helper forms pass ordered
+// predicate-call, invalid-index, duplicate-zone and count checks.
 int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
 {
     int result = 0;
     TRmgTownSlot* slot = zone->m_slot;
     for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
-        int destination = slot->m_connections[connection].m_destination->m_zoneIndex;
+        const int& destination = slot->m_connections[connection].m_destination->m_zoneIndex;
         if (destination < m_zones.size() && m_zones[destination]->canConnect(zone))
             ++result;
     }
@@ -4263,48 +4274,64 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // had a nested budget of exactly the size call's cost (42) until the two
 // later zone sizes were read through getSize, whose two extra candidate
 // sites lower that budget to 40 (94.45 -> 98.85%, 2026-09-11).
-// Residual (98.8497%): inside both counting expansions retail forms the
-// zone vector's this pointer with an add from a spilled this and binds the
-// connection element load differently; all 110 blocks agree.
+// The borrowed destination index in countPlacedZoneConnections recovers
+// those receiver/load sequences (99.6892%). Assigning the copied position
+// in the bound scan recovers maximum-X's SIB (99.7061%). Ending level/count
+// locals before bounds accumulation fixes its initialization/reload order
+// (99.7635%); both ranking phases keep their own candidate counter.
+// Forty-nine bound-value/selector/aggregate forms, 49 pass/counter scopes
+// and six shared-counter controls preserve complete filtering in 37,632
+// native scenarios each, with five independent negative controls rejected.
+// Direct int/long selectors and an aggregate bounds owner are lower; the
+// canonical value min/max wrappers remain. Sharing the candidate counter
+// does not improve the separate-pass form. Residual: two connection-element
+// SIB orders and the final ranking counter/pointer stack-versus-argument
+// homes; all 110 blocks and branch destinations agree. Four call labels
+// differ by ICF ownership: the zone-pointer size is byte-identical to the
+// army-pointer size at 0x423110, and the coordinate-vector _Destroy is the
+// same ret 8 as artifact-vector _Destroy at 0x404140. The call boundaries
+// agree; retain the actual RMG container types rather than those link labels.
 VA(0x0053B2F0, 0x678) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize)
 {
-    int bestConnections = 0;
-    if (m_map.m_size.m_z > 1) {
-        unsigned char occupiedLevels[2] = {0, 0};
-        for (int other = 0; other < m_zones.size(); ++other) {
-            if (m_zones[other] != zone)
-                occupiedLevels[m_zones[other]->getLevelPosition().m_z] = 1;
-        }
-        if (!occupiedLevels[0] || !occupiedLevels[1]) {
-            int candidate = candidates.size();
-            while (candidate--) {
-                if (!occupiedLevels[candidates[candidate].m_z])
-                    break;
+    {
+        int bestConnections = 0;
+        if (m_map.m_size.m_z > 1) {
+            unsigned char occupiedLevels[2] = {0, 0};
+            for (int other = 0; other < m_zones.size(); ++other) {
+                if (m_zones[other] != zone)
+                    occupiedLevels[m_zones[other]->getLevelPosition().m_z] = 1;
             }
-            if (candidate > 0) {
-                candidate = candidates.size();
+            if (!occupiedLevels[0] || !occupiedLevels[1]) {
+                int candidate = candidates.size();
                 while (candidate--) {
-                    if (occupiedLevels[candidates[candidate].m_z])
-                        candidates.erase(candidates.begin() + candidate);
+                    if (!occupiedLevels[candidates[candidate].m_z])
+                        break;
+                }
+                if (candidate > 0) {
+                    candidate = candidates.size();
+                    while (candidate--) {
+                        if (occupiedLevels[candidates[candidate].m_z])
+                            candidates.erase(candidates.begin() + candidate);
+                    }
                 }
             }
         }
-    }
 
-    for (int candidate = 0; candidate < candidates.size(); ++candidate) {
-        zone->setLevelPosition(candidates[candidate]);
-        int connections = countPlacedZoneConnections(zone);
-        if (connections > bestConnections)
-            bestConnections = connections;
-    }
-    for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
-        zone->setLevelPosition(candidates[candidate]);
-        if (countPlacedZoneConnections(zone) < bestConnections)
-            candidates.erase(candidates.begin() + candidate);
-    }
+        for (int candidate = 0; candidate < candidates.size(); ++candidate) {
+            zone->setLevelPosition(candidates[candidate]);
+            int connections = countPlacedZoneConnections(zone);
+            if (connections > bestConnections)
+                bestConnections = connections;
+        }
+        for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
+            zone->setLevelPosition(candidates[candidate]);
+            if (countPlacedZoneConnections(zone) < bestConnections)
+                candidates.erase(candidates.begin() + candidate);
+        }
 
+    }
     int bestSize = 32000;
     int minimumY = 0;
     int minimumX = 0;
@@ -4312,7 +4339,8 @@ void type_random_map_generator::filterZonePositions(
     int maximumX = 0;
     for (int other = 0; other < m_zones.size(); ++other) {
         if (m_zones[other] != zone) {
-            TRmgMapPosition position = m_zones[other]->getLevelPosition();
+            TRmgMapPosition position;
+            position = m_zones[other]->getLevelPosition();
             int size = m_zones[other]->getSize();
             minimumY = min(minimumY, position.m_y - size);
             minimumX = min(minimumX, position.m_x - size);
@@ -4321,7 +4349,7 @@ void type_random_map_generator::filterZonePositions(
         }
     }
     int size = zone->getSize();
-    for (candidate = 0; candidate < candidates.size(); ++candidate) {
+    for (int candidate = 0; candidate < candidates.size(); ++candidate) {
         int candidateMinimumY = min(minimumY, candidates[candidate].m_y - size);
         int candidateMinimumX = min(minimumX, candidates[candidate].m_x - size);
         int candidateMaximumY = max(maximumY, candidates[candidate].m_y + size + 1);

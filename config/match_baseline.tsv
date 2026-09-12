@@ -3364,7 +3364,7 @@ rmg	?fill@std@@YIXPAUTRmgObjectPlacementRule@@0ABU2@@Z	100.0000	100.0000	100.000
 rmg	?fillIslandInterior@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x13cf50	573d3ce9ed12
 rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	97.8371	97.8371	97.8371	0x146520	b5fe14b0f0d8
 rmg	?fillZoneArea@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgBoundaryVertex@@@Z	90.0984	90.0984	90.0984	0x13d380	ef73588a3f08
-rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	98.8497	98.8497	98.8497	0x13b2f0	0b728a91f35c
+rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@H@Z	99.7635	99.7635	99.7635	0x13b2f0	00d84d629b2c
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
 rmg	?floodConnectionCosts@type_random_map@@QAEXUTRmgMapPosition@@E@Z	83.6813	83.6813	83.6813	0x131460	2ddf5783ccdd
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	92.0500	92.0500	92.0500	0x141780	78f3ebc48e57

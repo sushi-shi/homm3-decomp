@@ -21,6 +21,10 @@ class ConnectionOwnerTests(unittest.TestCase):
         forms += list(module.variants(original, snapshots=True))
         positive_count = len(forms)
         self.assertEqual(positive_count, 110)
+        slot_forms = list(generator('generate-rmg-connect-slot-bindings.py').variants(original))
+        self.assertEqual(len(slot_forms), 36)
+        forms += slot_forms
+        positive_count = len(forms)
         forms += [("wrong_level", original.replace("m_z != m_levelPosition.m_z", "m_z == m_levelPosition.m_z")),
                   ("wrong_strictness", original.replace("combinedSize > minimumSize", "combinedSize >= minimumSize")),
                   ("wrong_minimum", original.replace("otherSize < minimumSize", "otherSize > minimumSize")),

@@ -4308,3 +4308,61 @@ terrain frame, a preserved flag, connection presence, zone eligibility or
 an untouched coordinate; all fail. Earlier lifetime and declaration families
 retain the three-copy model as an explicit negative control, while the
 neighbour/reset family follows the adopted terrain ownership.
+
+### Zone-connection bindings and filter pass lifetimes
+
+`generate-rmg-connect-slot-bindings.py` crosses both slot-object bindings
+with copied/borrowed scalar sizes in `canConnect`. All 36 states compile in
+context `d031f9418687b9f314ef`, producing twelve objects and ten reproduced
+elites. They retain the previous 97.7922% ceiling and split field load; no
+`canConnect` change is adopted. The existing integer-distance oracle now
+checks these forms alongside its 110 earlier controls.
+
+The filter's canonical `countPlacedZoneConnections` helper has a separate
+ownership result. `generate-rmg-connection-count-bindings.py` produces 54
+states and eighteen objects in `b8ee29d0ab96969d6e2b`. Borrowing the destination
+slot's index fixes both expansions' zone-vector receiver loads, index homes
+and post-call reloads, raising the filter from 98.8497% to 99.6892%. Named
+slot/element bindings are unnecessary; the adopted change uses only
+`const int& destination`. Twenty element-access follow-ups produce nine
+objects in `7dc68ce947c7c46940fb`; all nineteen parent-derived forms preserve
+the same two reversed SIB operands. Every retained call and all 110 blocks
+agree. `verify-rmg-connection-count.py` checks 27,648 scenarios per form,
+including invalid indexes, duplicate zone pointers and ordered predicate
+calls; four incorrect skip/receiver/count controls fail.
+
+`generate-rmg-filter-bound-values.py` combines that reproduced helper parent
+with position ownership, canonical versus direct reference selectors,
+scalar/aggregate bounds, and addition order. Its 49 states produce nineteen
+objects in `03066f85e1787d197aa4`. Ordinary assignment of the by-value position
+fixes the maximum-X addition and reaches 99.7061%. The canonical value
+`min`/`max` wrappers and scalar bounds remain supported; direct int/long
+selectors and the aggregate owner are lower.
+
+`generate-rmg-filter-phase-scopes.py` adds 49 actual phase/counter lifetime
+controls, producing five objects in `b77ea5f006ffec5e86f3`. Scoping level
+preference and connection ranking before bounds accumulation fixes the
+latter's initialization and reload order (99.7635%). Signed int remains the
+counter type; unsigned/long counter variants add nothing. The six
+`generate-rmg-filter-shared-counter.py` controls reproduce four objects and
+do not improve that result. The adopted form keeps separate candidate
+counters for the two ranking phases. Its residual is the two connection
+SIB orders and the final counter/pointer stack-versus-argument homes.
+
+The final semantic call report has eight identical names and four different
+ICF-owner labels. Both zone-pointer `size` calls have the same nineteen bytes
+as retail's army-pointer `size` at `0x423110`; both coordinate-vector
+`_Destroy` calls have the same `ret 8` body as the artifact-vector label at
+`0x404140`. Those retained boundaries were checked against the actual callee
+bodies. The RMG container types remain unchanged; label agreement alone is
+not used to claim the caller exact.
+
+`verify-rmg-filter-bounds.py` checks each rendered filter and count helper
+using the actual coordinate, setter, size accessor and connection predicate.
+A separate integer-lattice/extent-ranking model checks 37,632 scenarios per
+form, surviving candidate order, every setter call and the final position.
+Five bad controls fail, including changing the retail `candidate > 0` guard
+to `>= 0`. The latter would incorrectly remove occupied-level candidates
+when only the candidate at index zero uses a free level. Parent snapshots,
+rendered source and repeated object hashes are verified before follow-ups;
+these historical manifests intentionally reject a changed source checkpoint.
