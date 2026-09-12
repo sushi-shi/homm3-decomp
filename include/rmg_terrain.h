@@ -36,6 +36,12 @@ struct rmgTerrainTile {
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+    // Frame and flip accessors: the line refresh compares the current tile
+    // through them so its neighbour helper keeps retail's three retained
+    // calls (2026-09-12); the painters' own copies still use the fields.
+    int getFrame() const { return m_frame; }
+    unsigned char getFlipX() const { return m_flipX; }
+    unsigned char getFlipY() const { return m_flipY; }
     // 0x55edc0 constructs its snapshot separately from adapter return values.
     // Those returns keep an implicit copy boundary: a custom copy constructor
     // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
@@ -261,8 +267,7 @@ public:
     TRmgMapInterface* m_adapter;                // +0x00; prior role: adapter
     int m_paintTerrain;                               // +0x04; prior role: paintTerrain
     int m_transitionStrength;                         // +0x08; prior role: transitionStrength
-    unsigned int m_width;                             // +0x0c; prior role: width
-    unsigned int m_height;                            // +0x10; prior role: height
+    TRmgGridPoint m_size;                             // +0x0c; prior roles: width, height
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14; prior role: primaryPoints
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24; prior role: secondaryPoints
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34; prior role: packedCells
@@ -291,6 +296,7 @@ public:
     // required even though it has no separately located retail body.
     // Prior provisional role: GetTerrain
     int getTerrain(const TRmgGridPoint& point);
+    int getFrame(const TRmgGridPoint& point);
     // Provisional dimension accessors inferred from paintTransitions' scalar
     // loads and inline boundaries. Unused declarations are byte-neutral;
     // the source calls restore all but one of its retained cache reads.

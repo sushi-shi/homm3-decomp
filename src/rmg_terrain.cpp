@@ -11,11 +11,13 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Initializer-list copy of the point: the body assignment costs the
+// walker's first neighbour pass its retained compound add (78.03 against
+// 87.12%); the factory and rectangle clear are byte-identical either way.
 TRmgLinePainterTile::TRmgLinePainterTile(
     TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
-    : m_painter(painter)
+    : m_painter(painter), m_point(point)
 {
-    m_point = point;
 }
 
 // The 168-case query family tested receiver/coordinate reference bindings,
@@ -49,9 +51,10 @@ void TRmgLinePainterTile::setOverlay(int value)
     m_painter->setOverlay(m_point, value);
 }
 
-TRmgGridRectangle::TRmgGridRectangle(
-    const TRmgGridPoint& origin, unsigned int width, unsigned int height)
-    : m_origin(origin), m_size(width, height)
+// The size is a grid point: the walker's one-cell rectangle then constructs
+// a unit size the way retail 0x4fa3c0 materializes it (see paintPoint).
+TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size)
+    : m_origin(origin), m_size(size)
 {
 }
 
@@ -70,12 +73,23 @@ TRmgGridRectangle::TRmgGridRectangle(
 // Shared grid/proxy controls can restore the += call (70.2846%) but introduce
 // unwanted arithmetic calls in terrain painting. Five ordinary operator+
 // placements add no gain; parameter-by-value proxy construction also loses.
-// Residual (71.9231%): the retained calls at 0x4f9f60/0x4f9f77/0x4f9f86
-// (TPoint add, grid conversion, proxy factory) sit where this body's own
-// budget is still above 700, so retail expands the loop body from a nested
-// context whose budget is under 42; the signed-point arithmetic reproduces
-// retail's operand shapes but not those three refusals (74.42% with the
-// grid-side sum, which had the wrong shapes).
+// The retained calls at 0x4f9f60/0x4f9f77/0x4f9f86 (TPoint add, grid
+// conversion, proxy factory) sit where this body's own budget is above
+// 700, so retail expands the neighbour query from a nested context: an
+// ordinary neighbour-land helper on the painter interface holds the sum,
+// the conversion and the factory, and its budget divides by the sites
+// after it, which the current tile's frame and flip accessors in the
+// pattern test supply (71.92 -> 91.48%; a tile-returning neighbour
+// factory 83.55%, no accessors 79.75%, getters and setters together
+// 86.74%). Retail then keeps the selected pattern in EDI across the
+// rand() call, which the output variable itself cannot do once its
+// address has been passed: a plain copy taken after the tile read holds
+// it (97.35%; the copy before the read 96.75%, a range reference 94.74%,
+// the flip locals declared first 91.5%, register 91.5%). Residual: the
+// point and painter parameters take ESI/EDI in the opposite roles from
+// retail; a direct proxy construction, reading the land through the
+// painter first, building the mask first, and accessor coordinates do
+// not swap them (84-97%).
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -87,23 +101,24 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     unsigned char matches[TILE_DIR_COUNT];
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
-            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == oldType;
+            matches[direction] = painter->getNeighbourLand(point, direction) == oldType;
         else
             matches[direction] = 0;
     }
     TRmgLinePatternTable* table = painter->getPattern(oldType);
-    int pattern;
     unsigned char flipX, flipY;
-    selectRmgLinePattern(matches, table, pattern, flipX, flipY);
+    int selected;
+    selectRmgLinePattern(matches, table, selected, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
-    if (table->m_patterns[current.m_frame] != pattern
-        || current.m_flipX != flipX || current.m_flipY != flipY) {
+    int pattern = selected;
+    if (table->m_patterns[current.getFrame()] != pattern
+        || current.getFlipX() != flipX || current.getFlipY() != flipY) {
         unsigned int frame = table->m_ranges[pattern].m_firstIndex
             + rand() % table->m_ranges[pattern].m_valueCount;
-        current.m_flipY = flipY;
         current.m_frame = frame;
         current.m_flipX = flipX;
+        current.m_flipY = flipY;
         tile.setTile(current);
     }
 }
@@ -125,6 +140,24 @@ VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
 TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 {
     return TRmgLinePainterTile(this, point);
+}
+
+// Neighbour query used by refresh 0x4f9f00 and the walker's first pass
+// 0x4fa3c0: an ordinary helper whose expansion carries the signed sum,
+// the grid conversion and the proxy factory as nested sites. Retail
+// retains all three in refresh and only the compound add in the walker,
+// which is what this helper's divided budget gives them; queried inline
+// they are expanded at both callers' own budgets. The converted sum is
+// named: the walker's expansion then stores the proxy's painter before
+// the converted coordinates as retail does (95.85 -> 100%; a named proxy
+// costs refresh its factory call, 89.41%; a named signed sum is the same
+// object; the proxy constructor copying the point through its fields,
+// accessors, setters or a by-value parameter never helps and the first
+// three cost the rectangle clear, 94.51%).
+int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
+{
+    TRmgGridPoint nearby = point + g_tileDirections[direction];
+    return at(nearby).getLand();
 }
 
 // Retail clears the rectangle row-major, then refreshes left, right, top and
@@ -258,12 +291,20 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 // the first retains compound addition at 0x4fa489, the second expands it.
 // Direct entry construction removes a retained implicit proxy copy and raises
 // 70.1938% -> 79.9380%, without changing the factory's proven neighbour calls.
-// The first neighbour pass still expands += where retail retains it; the
-// rectangle and translated-point lifetimes also leave different stack slots.
-// The 300-case neighbour family varied sum value/reference bindings and
-// copy/assignment/coordinate construction with real compound-add calls, both
-// separate and in the query operand. None exceeded 79.9380%; the low was
-// 72.8295%. Keep the existing source chain while recovering the helper boundary.
+// The first neighbour pass retains += where retail does once the query
+// goes through the painter's neighbour-land helper and the tile proxy is
+// built from its initializer list (80.64 -> 87.12%; the body-assigned
+// proxy 78.03%). The 300-case neighbour family over sum bindings and
+// point construction with the query inline never exceeded 79.94%: the
+// three sites cannot be refused at this body's own budget.
+// The rectangle constructor takes its size as a grid point, so the one-cell
+// rectangle constructs a unit size: retail materializes both unit extents
+// from one register copied into another (87.12 -> 95.61%). A width/height
+// pair, one extent, reference extents and a named extent are flat; a named
+// rectangle 83.56%. The painter alias and the availability mask scoped to
+// the first pass give retail's 0x3c frame (95.84%). The neighbour proxy's
+// store order then follows the named sum in getNeighbourLand (exact,
+// 2026-09-12).
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -272,22 +313,24 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     if (oldType == m_riverType || tile.isBlocked())
         return;
     if (oldType)
-        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, 1, 1));
+        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
     tile.setOverlay(m_riverType);
     refreshRmgLinePoint(m_painter, point);
 
     int riverType = m_riverType;
-    TRmgLinePainterInterface* painter = m_painter;
-    unsigned char available[TILE_DIR_COUNT];
-    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                           point.m_x, point.m_y, available);
     unsigned char matches[TILE_DIR_COUNT];
     unsigned int direction;
-    for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-        if (available[direction])
-            matches[direction] = painter->at(point + g_tileDirections[direction]).getLand() == riverType;
-        else
-            matches[direction] = 0;
+    {
+        TRmgLinePainterInterface* painter = m_painter;
+        unsigned char available[TILE_DIR_COUNT];
+        buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
+                               point.m_x, point.m_y, available);
+        for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+            if (available[direction])
+                matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
+            else
+                matches[direction] = 0;
+        }
     }
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
@@ -440,11 +483,15 @@ TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 // Static initializer 0x5b3a10 passes the global at 0x6a4158. Retail clears
 // its 116 ranges, then groups the 48 fixed records by transition and flips.
 // No Dreamcast counterpart exists for this Complete-only table owner.
-// Partial 96.61%: unsigned indexing restores the retail branch signedness
-// (signed indexing: 95.76%). An explicit record-pointer loop gives 92.38%.
-// Residual: VC6 anchors the scan at the Y-flip byte instead of X-flip and
-// compares the record count rather than the fixed table's end address.
-// Flat flip fields and the nested flip pair emit the same constructor bytes.
+// Exact (2026-09-12): unsigned indexing restores the retail branch
+// signedness (signed indexing 95.76%), and indexing the fixed table at
+// every use anchors the strength-reduced scan pointer at the X-flip byte
+// as retail does; a named entry pointer anchors it at the Y-flip byte
+// (96.61%, 98.28% with the flip tests reversed) and an explicit
+// record-pointer loop compares the table's end address (92.38%). The
+// frame, X-flip, Y-flip order of both the test and the reloads is the only
+// one that closes; the other 35 orders land between 81.9 and 98.2%. Flat
+// flip fields and the nested flip pair emit the same constructor bytes.
 VA(0x005B3940, 0xC5)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
@@ -455,12 +502,11 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
         &m_ranges[(frame * 2 + flipX) * 2 + flipY];
     ++range->m_count;
     for (unsigned int index = 1; index < 48; ++index) {
-        const TRmgTerrainTransitionEntry* entry = &g_rmgTerrainPatterns[index];
-        if (entry->m_frame != frame || entry->m_flipX != flipX
-            || entry->m_flipY != flipY) {
-            frame = entry->m_frame;
-            flipX = entry->m_flipX;
-            flipY = entry->m_flipY;
+        if (g_rmgTerrainPatterns[index].m_frame != frame || g_rmgTerrainPatterns[index].m_flipX != flipX
+            || g_rmgTerrainPatterns[index].m_flipY != flipY) {
+            frame = g_rmgTerrainPatterns[index].m_frame;
+            flipX = g_rmgTerrainPatterns[index].m_flipX;
+            flipY = g_rmgTerrainPatterns[index].m_flipY;
             range = &m_ranges[(frame * 2 + flipX) * 2 + flipY];
             range->m_firstIndex = index;
         }
@@ -801,44 +847,33 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// A 45-cost grid copy site once restored both retained set _Init calls and
-// the expanded packed-vector insert (23.33% -> 91.22%); with the trivial grid
-// copy the assigned virtual result keeps them. Assign the virtual result
-// into an existing local: this also expands the final size query, while erase
-// remains a call, and recovers all 29 CFG blocks (97.92%). Direct construction
-// and reference binding retain that size call. A grid member instead of the
-// separate dimensions changes the constructor's earlier call boundaries.
-// Residual: dimension stores and the area multiply in the first block.
-// A named fill value changes those stores (96.33%); reversing the product
-// operands and zero-initializing the local size are byte-neutral. Value/reference
-// dimension queries and a shorter size scope are also flat. The retained brush
-// constructor calls this ordinary body at 0x5b7297.
-// Signed dimension fields, reversed dimension stores, a named area product,
-// and moving the packed-cell flag initialization into its ctor body are flat.
-// Copy-initializing the empty size temporary retains the wrong size call (92.04%).
-// A focused 60-case matrix of dimension snapshots, member/local area operands,
-// assignment-result references and named products is also flat at 97.9205%.
-// A further 60-state family uses the ordinary getWidth/getHeight boundaries
-// from paintTransitions, with five dimension bindings and three area-result
-// lifetimes. Its 24 distinct objects and ten reproduced finalists add no
-// tracked peak; the direct dimension stores remain the closest reconstruction.
+// The dimensions are one grid-point member assigned straight from the
+// adapter's virtual size result; the packed-cell count is the product of the
+// ordinary getWidth/getHeight queries. That assignment keeps both retained
+// set _Init calls and the expanded packed-vector insert, and the two free
+// query sites leave the area product reading the width back from the member
+// (mov ecx, edx; imul ecx, [edi+0xc]), which is retail's first block.
+// Two scalar members with direct dimension stores held 97.92% through five
+// families (dimension snapshots, area operands, assignment-result references,
+// named products, size lifetimes): the stores and the multiply never matched.
+// With the grid member, reading the product from the fields (23.13%) or from
+// a named size copy (99.36%) or setting the fields one by one (98.94%) all
+// change the earlier call boundaries. The retained brush constructor calls
+// this ordinary body at 0x5b7297.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    TRmgGridPoint size;
-    size = m_adapter->getSize();
-    m_width = size.m_x;
-    m_height = size.m_y;
-    m_packedCells.resize(m_width * m_height, TRmgPackedTerrainCell());
+    m_size = m_adapter->getSize();
+    m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
 TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     const TRmgGridPoint& point)
 {
-    unsigned int index = point.m_y * m_width + point.m_x;
+    unsigned int index = point.m_y * m_size.m_x + point.m_x;
     if (!m_packedCells[index].m_initialized)
         initializePackedCell(point, index);
     return &m_packedCells[index];
@@ -852,14 +887,19 @@ int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
     return getPackedCell(point)->getTerrain();
 }
 
+int rmgTerrainPainter::getFrame(const TRmgGridPoint& point)
+{
+    return getPackedCell(point)->getFrame();
+}
+
 unsigned int rmgTerrainPainter::getWidth() const
 {
-    return m_width;
+    return m_size.m_x;
 }
 
 unsigned int rmgTerrainPainter::getHeight() const
 {
-    return m_height;
+    return m_size.m_y;
 }
 
 // The base-frame paths in PaintPoint and PaintTransitions first compute
@@ -881,7 +921,7 @@ void rmgTerrainPainter::setTile(
     const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     m_adapter->setTile(point, tile);
-    TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_width + point.m_x];
+    TRmgPackedTerrainCell& packed = m_packedCells[point.m_y * m_size.m_x + point.m_x];
     packed.setInitialized();
     packed.setTerrain(tile.m_terrain);
     packed.setFrame(tile.m_frame);
@@ -904,13 +944,12 @@ void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 // flattening the configured-terrain read into the predicate expands that
 // cache call. Keep these ordinary helpers and the base-tile constructor;
 // their combined expansions recover the first and final cache boundaries.
-// The comparison return costs 38 (free) against the guard form's 47. With
-// the trivial grid copy and a direct-initialized neighbour it lets the
-// final insert expand its pair constructor as retail does (paintPoint
-// 97.29 -> 98.68%, 2026-09-12); the guard form kept that constructor out of
-// line but retained the middle erase's distance wrapper, which now expands.
-// Reading the configured terrain as the field, or swapping the operands,
-// drops the caller below 90%.
+// The guard return costs 47 against the comparison return's 38 (free).
+// Under the trivial grid copy and a direct-initialized neighbour the free
+// form expanded the loop erase's distance wrapper (98.68%); the 47-unit
+// form refuses it while the final insert's pair constructor still expands,
+// closing paintPoint (2026-09-12). Reading the configured terrain as the
+// field, or swapping the operands, drops the caller below 90%.
 int rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -918,7 +957,9 @@ int rmgTerrainPainter::getPaintTerrain() const
 
 unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 {
-    return getTerrain(point) == getPaintTerrain();
+    if (getTerrain(point) != getPaintTerrain())
+        return 0;
+    return 1;
 }
 
 // The brush forwards its four unsigned bounds to this body at 0x5b76a6.
@@ -1109,15 +1150,16 @@ void rmgTerrainPainter::paintRectangle(
 // the four-argument distance call and translation registers); a named grid
 // return or direct frame argument does not close that coupled residual. The
 // retained guard predicate plus named direction reference closes it entirely.
-// Residual (98.6781%): the middle erase's three-argument _Distance wrapper
-// expands where retail calls it (nested budget 43 against cost 41) while the
-// final insert's pair constructor now expands as retail does; the two sit
-// on opposite sides of the same budget, and the direction pointer holds EBX
-// where retail keeps EDX downstream of it. A 32-state family over the
-// coordinate constructor's spelling, the predicate form and the neighbour
-// binding separates only this pair (copy-initialized neighbour 96.87%,
-// unnamed offset 91.60%); the sum/conversion forms of family 3 and the
-// cache pair's spellings (family 7) move nothing here.
+// Exact (2026-09-12). The loop erase's three-argument _Distance wrapper
+// must be refused (retail calls it) while the final insert's pair
+// constructor expands; at 98.68% the wrapper's nested budget was 47
+// against cost 41 with the comparison-return predicate free at 38. A
+// replay of the budget arithmetic showed that only a predicate costing
+// 41-52 units, or a caller 17-26 units cheaper, flips that one decision;
+// the guard-return predicate costs 47 and does exactly that (a named
+// terrain result or a conditional return stay free, 99.10%; a named
+// configured terrain 86.51%). A free site added after the erase instead
+// refuses the loop find and expands the last cache read.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
@@ -1138,7 +1180,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_y < m_height - 1) {
+        if (point.m_y < m_size.m_y - 1) {
             TRmgGridPoint nearby(point.m_x, point.m_y + 1);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isHorizontalGap(nearby)) {
@@ -1154,7 +1196,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_x < m_width - 1) {
+        if (point.m_x < m_size.m_x - 1) {
             TRmgGridPoint nearby(point.m_x + 1, point.m_y);
             if (m_primaryPoints.find(nearby) != m_primaryPoints.end()
                 && !isVerticalGap(nearby)) {
@@ -1165,7 +1207,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
     } else {
         unsigned char neighbourExists[TILE_DIR_COUNT];
         buildTileNeighbourMask(
-            m_width, m_height, point.m_x, point.m_y, neighbourExists);
+            m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 const TPoint& offset = g_tileDirections[direction];
@@ -1443,104 +1485,89 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 // coordinates is 78.6334%. Translating the three left-edge neighbours is
 // byte-identical to the retained direct-coordinate form.
 // Dimension accessor calls then reach 84.0645% (2240 bytes, 68/66 blocks).
-// Unused accessor definitions leave the 81.5196% body unchanged. Only the
-// right-edge southwest cache read still over-inlines: getPackedCell costs
-// 90 and receives 104; the following bottom-edge reads receive 127/145.
-// A shared index helper and both comparison/guard-return terrain predicates
-// are byte-identical at this checkpoint; none is retained as extra interface.
+// Exact (2026-09-12). Retail refuses all twelve pre-loop cache reads and
+// expands the two bottom-edge reads with their fills refused; the
+// right-edge south-west read needs five more candidate sites after it
+// (104 units at 29 remaining sites against 90). Reading the point through
+// its accessors in the edge-count indices, the loop increments and the
+// neighbour constructions supplies them (93.74%, decisions all as retail),
+// and constructing each neighbour directly from the offset coordinates
+// instead of a compound add of a TPoint settles the registers (the
+// scoped-block and named-local forms are one object). Loop conditions
+// through the accessors are byte-identical; edge constructions through
+// them 93.21%; the increments as ++field 88.29%.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void rmgTerrainPainter::paintTransitions()
 {
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
-    for (point.m_y = 0; point.m_y < getHeight() - 1; ++point.m_y) {
+    for (point.setY(0); point.m_y < getHeight() - 1; point.setY(point.getY() + 1)) {
         int terrain = getTerrain(TRmgGridPoint(0, point.m_y));
 
         if (getTerrain(TRmgGridPoint(1, point.m_y)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[point.m_y * getWidth() + 1];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[point.getY() * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(1, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[(point.m_y + 1) * getWidth() + 1];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(0, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * getWidth()];
-            ++edgeCounts[(point.m_y + 1) * getWidth()];
+            ++edgeCounts[point.getY() * getWidth()];
+            ++edgeCounts[(point.getY() + 1) * getWidth()];
         }
 
-        for (point.m_x = 1; point.m_x < getWidth() - 1; ++point.m_x) {
+        for (point.setX(1); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
             terrain = getTerrain(point);
 
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(1, 0);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
-                }
+            TRmgGridPoint east(point.getX() + 1, point.getY());
+            if (getTerrain(east) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(1, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x + 1];
-                }
+            TRmgGridPoint southEast(point.getX() + 1, point.getY() + 1);
+            if (getTerrain(southEast) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() + 1];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(0, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
-                }
+            TRmgGridPoint south(point.getX(), point.getY() + 1);
+            if (getTerrain(south) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
             }
-            {
-                TRmgGridPoint nearby(point.m_x, point.m_y);
-                nearby += TPoint(-1, 1);
-                if (getTerrain(nearby) != terrain) {
-                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
-                }
+            TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+            if (getTerrain(southWest) != terrain) {
+                ++edgeCounts[point.getY() * getWidth() + point.getX()];
+                ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
             }
         }
 
         terrain = getTerrain(point);
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(0, 1);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
-            }
+        TRmgGridPoint south(point.getX(), point.getY() + 1);
+        if (getTerrain(south) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX()];
         }
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(-1, 1);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
-            }
+        TRmgGridPoint southWest(point.getX() - 1, point.getY() + 1);
+        if (getTerrain(southWest) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[(point.getY() + 1) * getWidth() + point.getX() - 1];
         }
     }
 
-    for (point.m_x = 0; point.m_x < getWidth() - 1; ++point.m_x) {
+    for (point.setX(0); point.m_x < getWidth() - 1; point.setX(point.getX() + 1)) {
         int terrain = getTerrain(point);
-        {
-            TRmgGridPoint nearby(point.m_x, point.m_y);
-            nearby += TPoint(1, 0);
-            if (getTerrain(nearby) != terrain) {
-                ++edgeCounts[point.m_y * getWidth() + point.m_x];
-                ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
-            }
+        TRmgGridPoint east(point.getX() + 1, point.getY());
+        if (getTerrain(east) != terrain) {
+            ++edgeCounts[point.getY() * getWidth() + point.getX()];
+            ++edgeCounts[point.getY() * getWidth() + point.getX() + 1];
         }
     }
 
-    for (point.m_y = 0; point.m_y < getHeight(); ++point.m_y) {
-        for (point.m_x = 0; point.m_x < getWidth(); ++point.m_x) {
-            unsigned int index = point.m_y * getWidth() + point.m_x;
+    for (point.setY(0); point.m_y < getHeight(); point.setY(point.getY() + 1)) {
+        for (point.setX(0); point.m_x < getWidth(); point.setX(point.getX() + 1)) {
+            unsigned int index = point.getY() * getWidth() + point.getX();
 
             if (edgeCounts[index] > 0) {
                 int neighbours[8];
@@ -1607,6 +1634,10 @@ void rmgTerrainPainter::paintTransitions()
 // while its modified vertical predicate falls to 78.9709%. Crossing the ten
 // best parents with six orders of these predicates and paintTransitions
 // also gives no gain. Keep both exact canonical bodies and the original order.
+// Retail's repair caller binds the unchanged coordinate of each neighbour
+// to the two-reference constructor through a fresh copy; spelling that
+// coordinate, both coordinates, or the caller's neighbours through the
+// grid accessors is flat or worse (32 states, 86.93-93.63%).
 VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
@@ -1627,44 +1658,58 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
 // contributes only when at least one adjoining cardinal cell also matches.
-// Residual (MAX 77.2609%, rechecked 2026-09-07): retail retains the center
-// and four cardinal getPackedCell calls, then expands the diagonals. The
-// candidate already expands east; southeast retains initializePackedCell
-// where retail expands its adapter read. Passive VC6 trace (identical
-// 656-byte candidate) gives east budget 92 against getPackedCell's cost 90.
-// That expansion consumes 90; southeast later gives initializePackedCell
-// budget 107 against its cost 128. The two differences are sequentially
-// coupled, not independent pins to add. Caller cb=432, initial budget=1000.
-// Controls: existing getWidth/getHeight calls are byte-neutral; replacing
-// the four diagonal conjunctions with explicit if/else guards gives 60.3877%
-// versus 77.2609%. The source already retains the canonical terrain/cache
-// helpers. RMG has no Dreamcast counterpart to supply the missing boundary.
+// Retail retains the center and four cardinal cache reads, expands the
+// diagonals' reads with their fills refused, and expands the south-east
+// fill. Residual 99.2138% (77.26% with eight constructed temporaries and
+// no corner points). The east read must be refused at the budget its
+// remaining sites leave, and the north-west read expanded right after,
+// which needs the diagonal region to hold three candidate sites per arm
+// and the caller to sit near 1150 units: the clamped coordinates kept as
+// two corner points whose accessors feed the diagonal temporaries, and
+// one reused point moved through its setters for the cardinal reads, do
+// both (constructed cardinal temporaries 92.92%; diagonals through the
+// signed-point conversion are one object with this; the reused point for
+// the diagonals is unconditional, so it changes the flow, 74.36%; the
+// corners constructed straight from the clamps reverse the clamp order,
+// 78.32%). Remaining: the south-east fill's index and cell-base registers
+// swap roles and the frame is 0x38 against 0x30.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
-    unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
+    unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
-    unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
+    unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
+    TRmgGridPoint low(west, north);
+    TRmgGridPoint high(east, south);
 
-    matches[TILE_DIR_NORTH] = getTerrain(TRmgGridPoint(point.m_x, north)) == terrain;
-    matches[TILE_DIR_SOUTH] = getTerrain(TRmgGridPoint(point.m_x, south)) == terrain;
-    matches[TILE_DIR_WEST] = getTerrain(TRmgGridPoint(west, point.m_y)) == terrain;
-    matches[TILE_DIR_EAST] = getTerrain(TRmgGridPoint(east, point.m_y)) == terrain;
+    TRmgGridPoint nearby;
+    nearby.setX(point.m_x);
+    nearby.setY(low.getY());
+    matches[TILE_DIR_NORTH] = getTerrain(nearby) == terrain;
+    nearby.setX(point.m_x);
+    nearby.setY(high.getY());
+    matches[TILE_DIR_SOUTH] = getTerrain(nearby) == terrain;
+    nearby.setX(low.getX());
+    nearby.setY(point.m_y);
+    matches[TILE_DIR_WEST] = getTerrain(nearby) == terrain;
+    nearby.setX(high.getX());
+    nearby.setY(point.m_y);
+    matches[TILE_DIR_EAST] = getTerrain(nearby) == terrain;
     matches[TILE_DIR_NORTHWEST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(west, north)) == terrain;
+        && getTerrain(TRmgGridPoint(low.getX(), low.getY())) == terrain;
     matches[TILE_DIR_NORTHEAST] =
         (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(east, north)) == terrain;
+        && getTerrain(TRmgGridPoint(high.getX(), low.getY())) == terrain;
     matches[TILE_DIR_SOUTHWEST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
-        && getTerrain(TRmgGridPoint(west, south)) == terrain;
+        && getTerrain(TRmgGridPoint(low.getX(), high.getY())) == terrain;
     matches[TILE_DIR_SOUTHEAST] =
         (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
-        && getTerrain(TRmgGridPoint(east, south)) == terrain;
+        && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
 }
 
 // The final top-tested loop reuses the preceding scan's known zero entry.
@@ -1733,9 +1778,9 @@ void rmgTerrainPainter::buildNeighbourKinds(
 {
     int terrain = getTerrain(point);
     unsigned int north = point.m_y > 0 ? point.m_y - 1 : point.m_y;
-    unsigned int south = point.m_y < m_height - 1 ? point.m_y + 1 : point.m_y;
+    unsigned int south = point.m_y < m_size.m_y - 1 ? point.m_y + 1 : point.m_y;
     unsigned int west = point.m_x > 0 ? point.m_x - 1 : point.m_x;
-    unsigned int east = point.m_x < m_width - 1 ? point.m_x + 1 : point.m_x;
+    unsigned int east = point.m_x < m_size.m_x - 1 ? point.m_x + 1 : point.m_x;
 
     {
         TRmgGridPoint nearby(point.m_x, north);
@@ -1908,9 +1953,21 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // separate cache queries and the scoped point value are visible in retail;
 // the later queries expand further than the first four retained calls.
 // SHR at +0x6a/+0xb6/+0x121/+0x25c proves logical, not signed division.
-// Generated source families: preserve dimension accessor calls (63.4074 ->
-// 70.1029). A separate frame accessor, reference-bound rule or point, and
-// copy-initialized point values do not recover the missing cache boundaries.
+// Exact (2026-09-12; 70.10% with direct cell reads). Retail calls both
+// west and north reads, calls the east read but expands its frame read
+// with the fill called, and expands both south reads with their fills.
+// The frame read therefore sits in a getFrame sibling of getTerrain
+// (its cost divides like the terrain read's), the guards and the point
+// go through the coordinate accessors, and each point is constructed at
+// the cell and stepped by one setter, which gives the south arm the six
+// candidate sites its 371-unit read needs while the east read stays
+// under 90 (accessor constructions alone 76.27%, the signed conversion
+// 83.91%, a signed sum 44%). The step reads the parameter's coordinate
+// again (retail computes y + 1 into a fresh register; stepping the
+// point's own coordinate shifts in place and keeps the terrain parameter
+// in EBX where retail keeps the rule pointer, 92.63%), with the strength
+// local declared before the rule (rule first 97.09; a rule reference or
+// a terrain copy 97.09; a default-constructed point set twice 89.44).
 // Residual: the first frame query expands getPackedCell where retail calls
 // it; later source call/expansion decisions are also displaced. No pins.
 // A 60-case point/query matrix and a 60-case follow-up crossing ten parents
@@ -1929,28 +1986,32 @@ int rmgTerrainPainter::getTransitionStrength(
 {
     unsigned int strength = m_transitionStrength;
     TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
-    if (point.m_x > 0) {
-        TRmgGridPoint nearby(point.m_x - 1, point.m_y);
+    if (point.getX() > 0) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setX(point.getX() - 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_y > 0) {
-        TRmgGridPoint nearby(point.m_x, point.m_y - 1);
+    if (point.getY() > 0) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setY(point.getY() - 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_x < getWidth() - 1) {
-        TRmgGridPoint nearby(point.m_x + 1, point.m_y);
+    if (point.getX() < getWidth() - 1) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setX(point.getX() + 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
-    if (point.m_y < getHeight() - 1) {
-        TRmgGridPoint nearby(point.m_x, point.m_y + 1);
+    if (point.getY() < getHeight() - 1) {
+        TRmgGridPoint nearby(point.getX(), point.getY());
+        nearby.setY(point.getY() + 1);
         if (getTerrain(nearby) == terrain
-            && rule->isSpecialFrame(getPackedCell(nearby)->getFrame()))
+            && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     return strength;
@@ -2154,6 +2215,16 @@ VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
 // y-then-x ordering also appears in the tree's expanded comparisons.
+// Retail emits it between the two _Distance instantiations, after the
+// tree insert, whose lock scope then carries an exception frame because
+// the comparator is not yet known not to throw. An inline comparator does
+// land there in a small unit (and insert gets its frame), but in this unit
+// the instantiation batch at paintPoint's end pulls it out right after
+// paintPoint, before every template; spelling it inline here or in either
+// header, as a friend, or early in this file leaves every row unchanged
+// (insert 79.83%). Every paintPoint change that defers the batch (dropping
+// the secondary find guard, an arm, the loop, or the tail) also changes
+// paintPoint's retained calls, so the frame stays open.
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
 {
