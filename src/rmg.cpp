@@ -6983,6 +6983,21 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // over-expansion of the two final placeGuard -> getMapItem calls. Keep
 // those ordinary helper boundaries; source fact recovery, not forced
 // calls or extracted arbitrary blocks, must recover their inline split.
+// Bounds/value recovery (85.8212%): the repeated operand homes in retail
+// +0x90..+0x10e are the canonical value-taking min/max wrappers. A separate
+// destination-bounds scope and assigned position preserve those copies;
+// both bounds are snapshots across rand/canPlaceObject callbacks. The scan
+// builds destination x/y from the current candidate and takes only the
+// queried level; placement copies the candidate before setting that level.
+// The 48-state bounds family reaches 84.8486%, then 37 projection controls
+// reach 85.8212% with all exact siblings intact. Explicit range erase/resize,
+// insertion overloads and score lifetimes (37 states) do not improve the
+// retained erase decision. A final projection after trigger subtraction
+// (31 states over ten reproduced parents) gives no further gain.
+// Still open: 0x68 frame versus retail 0x6c, scan-loop/register differences,
+// expanded candidate clear and both final guard map lookups. The native
+// oracle covers the edited prefix and placement-coordinate projections;
+// the untouched object/guard placement suffix is not covered by that oracle.
 VA(0x00542080, 0x8AA)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
@@ -6996,15 +7011,17 @@ unsigned char type_random_map_generator::createSubterraneanGate(
         return 0;
 
     TRmgZoneBounds sourceBounds = source->m_bounds;
-    TRmgZoneBounds destinationBounds = destination->m_bounds;
-    sourceBounds.m_minimumX = std::_cpp_max(
-        sourceBounds.m_minimumX, destinationBounds.m_minimumX);
-    sourceBounds.m_minimumY = std::_cpp_max(
-        sourceBounds.m_minimumY, destinationBounds.m_minimumY);
-    sourceBounds.m_maximumX = std::_cpp_min(
-        sourceBounds.m_maximumX, destinationBounds.m_maximumX);
-    sourceBounds.m_maximumY = std::_cpp_min(
-        sourceBounds.m_maximumY, destinationBounds.m_maximumY);
+    {
+        TRmgZoneBounds destinationBounds = destination->m_bounds;
+        sourceBounds.m_minimumX = max(
+            sourceBounds.m_minimumX, destinationBounds.m_minimumX);
+        sourceBounds.m_minimumY = max(
+            sourceBounds.m_minimumY, destinationBounds.m_minimumY);
+        sourceBounds.m_maximumX = min(
+            sourceBounds.m_maximumX, destinationBounds.m_maximumX);
+        sourceBounds.m_maximumY = min(
+            sourceBounds.m_maximumY, destinationBounds.m_maximumY);
+    }
     if (sourceBounds.m_minimumX >= sourceBounds.m_maximumX || sourceBounds.m_minimumY >= sourceBounds.m_maximumY)
         return 0;
 
@@ -7014,7 +7031,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 
     std::vector<TRmgMapPosition> candidates;
     int bestScore = 0;
-    TRmgMapPosition position = source->getLevelPosition();
+    TRmgMapPosition position;
+    position = source->getLevelPosition();
 
     for (position.m_y = sourceBounds.m_minimumY; position.m_y < sourceBounds.m_maximumY; ++position.m_y) {
         for (position.m_x = sourceBounds.m_minimumX; position.m_x < sourceBounds.m_maximumX; ++position.m_x) {
@@ -7023,9 +7041,10 @@ unsigned char type_random_map_generator::createSubterraneanGate(
                 continue;
             int score = sourceItem->m_zoneState.m_score;
 
-            TRmgMapPosition otherPosition = destination->getLevelPosition();
+            TRmgMapPosition otherPosition;
             otherPosition.m_x = position.m_x;
             otherPosition.m_y = position.m_y;
+            otherPosition.m_z = destination->getLevelPosition().m_z;
             TRmgMapItem* destinationItem = m_map.getMapItem(otherPosition);
             if (destinationItem->m_zoneState.m_zone != destinationZone)
                 continue;
@@ -7053,9 +7072,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     position = candidates[rand() % candidates.size()];
     addObject(new type_object(gateProperties), position);
 
-    TRmgMapPosition otherPosition = destination->getLevelPosition();
-    otherPosition.m_x = position.m_x;
-    otherPosition.m_y = position.m_y;
+    TRmgMapPosition otherPosition = position;
+    otherPosition.m_z = destination->getLevelPosition().m_z;
     addObject(new type_object(gateProperties), otherPosition);
 
     position -= TPoint(gatePrototype->m_triggerCell.m_x,

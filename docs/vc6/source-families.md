@@ -4438,3 +4438,54 @@ signed dimensions and mutation of the source dimensions during the virtual
 query. Three swapped-coordinate, corrupted-result and repeated-query controls
 fail. This checks returned values and the single virtual call; VC6 determines
 the hidden-result ABI and instruction verdict.
+
+### Subterranean-gate bounds and coordinate projections
+
+`generate-rmg-subterranean-bounds.py` tests the repeated value-argument
+copies visible at retail `0x542080`, using the canonical `min`/`max`
+wrappers from `homm3_minmax.h`. Its 48 states in `94ef54051b886c819a61`
+produce sixteen objects and ten reproduced elites. Copied bound records,
+an intersection-only destination snapshot and an assigned source position
+reach 84.8486% from 82.1005%. The value wrappers recover the repeated
+argument homes; direct STL reference selectors lack those copies.
+
+`generate-rmg-subterranean-candidates.py` follows the checked parent through
+public clear/range-erase/resize and append overloads, score initialization
+and position construction. Its 37 states in `02bb3a4f207533b23b36` produce
+37 objects and ten reproduced elites without improving the parent. Explicit
+range erase with the original append/lifetime choices gives 82.1462%; it
+does not recover the retained boundary merely by naming the right overload.
+
+`generate-rmg-subterranean-level-projection.py` tests whether each query
+supplies a whole coordinate or only a level, preserving its position relative
+to callbacks. All 37 states in `0ed3ed541db4a3b4b0dd` produce distinct objects
+and ten elites reproduce. Constructing the scan's destination x/y component
+by component and querying its Z, then copying the selected source position
+before the placement-level query, reaches 85.8212%. The initial source query
+still supplies a whole assigned value. The adopted state is
+`34852cea0b074867855dde9c`; no shared constructor or accessor changes.
+
+`generate-rmg-subterranean-entrance-projection.py` verifies all ten retained
+parents and adds the analogous projection after trigger subtraction. Its
+31 controls in `0ffea3938317a06e4e7e` produce 31 objects and ten reproduced
+elites without exceeding 85.8212%. That last projection remains unchanged.
+Other than a small `writeMapHeader` allocation gain in some controls, all
+sibling scores remain fixed throughout these families. No exact sibling is
+lost. The adopted frame is 0x68 versus retail 0x6c. Candidate clear still
+expands to copy/destruction, and the final guard expansions still omit two
+retained map lookups; the scan control flow and register allocation remain
+non-exact. Equal block counts are not claimed as CFG agreement.
+
+`verify-rmg-subterranean-scan.py` imports the actual coordinate, packed zone
+state, position accessor and every rendered entry/bounds/scan statement.
+An independent lattice-intersection and ranking model checks 3,072 scenarios
+per form, candidate order, map/placement query traces and unchanged cell
+state. Placement callbacks mutate the original bounds, and a random-draw
+callback can change the source level before its later query. Five controls
+break level admission, intersection, ties, clearing or snapshot ownership;
+all are rejected. Separate checks exercise both edited destination-coordinate
+projections over 144 input/level combinations per form. This oracle covers
+the edited prefix and coordinate projections, not the remaining object,
+entrance-vector, border or guard operations. The actual adopted body also
+passes; the primary generator retains the historical source as a control
+when rebased after adoption.
