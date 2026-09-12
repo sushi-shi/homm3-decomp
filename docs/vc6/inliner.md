@@ -1041,6 +1041,18 @@ These are consequences of a shared value-copy boundary; no STL body or inline
 control changed. The map size accessor and terrain-brush destructor currently
 dip, with their 100% peaks retained. `createRiver` remains at 85.9575%.
 
+**Corrected 2026-09-12.** The grid copy constructor was the wrong boundary.
+Retail's `at()` (0x4fa050) and `getSize` (0x532240) copy `TRmgGridPoint`
+memberwise, which no written copy constructor reproduces in either field
+order, and the retained 22-byte body at 0x4fa520 is the conversion from the
+signed `TPoint` that refresh calls after the retained `TPoint::operator+=`
+(0x4fa540). With the trivial copy the brush destructor, `at()`,
+`clearRmgLineRectangle` and `getSize` are exact and the river-painter
+constructor stays exact; `changeTerrain` and `buildNeighbourKinds` lose the
+45-unit drains their decisions leaned on (81.33% and 77.66%) and need their
+own budget evidence. The measured alternatives are recorded beside
+`TRmgGridPoint` in rmg.h.
+
 ### Scalar read boundaries affect an earlier alternative branch
 
 `TSeerHut::load` (`0x574a90`) reaches 100% from 35.38% when its single-byte

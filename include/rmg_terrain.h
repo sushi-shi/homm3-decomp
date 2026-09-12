@@ -7,6 +7,17 @@
 #include <vector>
 #include "rmg.h"
 
+// Grid points add tile directions through the signed TPoint: refresh and
+// both paintPoints build `point + g_tileDirections[d]` as a TPoint copy, the
+// retained TPoint::operator+= and a copied result, then convert back through
+// the retained TRmgGridPoint(const TPoint&) constructor at 0x4fa520. The sum
+// lives here with its only users; in rmg.h it perturbs rmg the same way.
+inline TPoint operator+(const TPoint& point, const TPoint& offset)
+{
+    TPoint result = point;
+    return result += offset;
+}
+
 // Retail adapter slots 1 and 4 exchange this three-dword value. The first
 // two dwords are the terrain and frame fields; the low two bytes of the last
 // dword are the independent sprite flips. The names in this file describe
