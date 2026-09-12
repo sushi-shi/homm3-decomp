@@ -349,34 +349,15 @@ int TRmgVector::length() const
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
-// The retained paired constructor expands this ordinary twin constructor
-// into the successful allocation arm. The same site/zone fields feed the
-// Voronoi vertex calculations; both ring links initially point to self.
-TRmgBoundaryVertex::TRmgBoundaryVertex(
-    TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
-    : m_sitePosition(sitePosition), m_zone(zone), m_twin(twin),
-      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+// Both constructors start a half-edge as its own ring with no vertex. The
+// ordinary helper is expanded in both; its /Ob2 cost of 60 is spent twice
+// inside createEdge's paired-constructor expansion (126 + 60 + 81 + 60),
+// which is what leaves the second insert's count-insert body a budget of
+// 34 and keeps its first size() call as retail does. The same stores
+// written inline in each constructor (costs 157 and 87..135) never spend
+// enough: createEdge stayed at 90.96% through 14 constructor spellings.
+void TRmgBoundaryVertex::initialize()
 {
-}
-
-// The diagram constructor allocates pairs using two by-value point/zone
-// pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
-// Both paths expand the ordinary opposite-edge constructor above.
-// Exact: initialize the zone, then copy the site in the body; write both
-// final position components separately. The 22 partial-initializer forms
-// found two exact choices with no collateral. Chaining the -1 assignments
-// scores 99.9535%; a temporary TPoint keeps a different final-store schedule.
-// Previously 99.6512%: the first point/zone load-store schedule differed.
-// A 40-combination constructor/detach batch tested ten initialization forms:
-// copy and component initializers tie; six component-assignment orders and
-// two point-copy/zone assignment orders are worse (best 94.3256%).
-VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
-TRmgBoundaryVertex::TRmgBoundaryVertex(
-    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
-    : m_zone(zone)
-{
-    m_sitePosition = sitePosition;
-    m_twin = new TRmgBoundaryVertex(twinSitePosition, twinZone, this);
     m_next = this;
     m_previous = this;
     m_positionComputed = 0;
@@ -384,15 +365,56 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
     m_position.m_y = -1;
 }
 
+// The retained paired constructor expands this ordinary twin constructor
+// into the successful allocation arm. The same site/zone fields feed the
+// Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
+// exact; the initializer-list form costs 70 and loses it (90.96%).
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
+{
+    m_sitePosition = sitePosition;
+    m_zone = zone;
+    m_twin = twin;
+    initialize();
+}
+
+// The diagram constructor allocates pairs using two by-value point/zone
+// pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
+// Both paths expand the ordinary opposite-edge constructor above.
+// Exact: initialize the zone, copy the site in the body, allocate the twin,
+// then share initialize with the twin constructor (cost 126 + 60; the
+// inline stores cost 157 and starve createEdge's second insertion). The 22
+// partial-initializer forms found two exact choices; chaining the -1
+// assignments scores 99.9535%, a temporary TPoint keeps a different
+// final-store schedule, and component site copies (cost 173) lose the
+// first point/zone schedule (97.2093%).
+VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
+    : m_zone(zone)
+{
+    m_sitePosition = sitePosition;
+    m_twin = new TRmgBoundaryVertex(twinSitePosition, twinZone, this);
+    initialize();
+}
+
 // The two swaps preserve the bidirectional ring after exchanging successors.
 // This ordinary helper is retained by the diagram constructor and expanded
 // twice in detach. The existing +0x10/+0x14 fields prove its semantic owner.
-// The two canonical std::swap calls reproduce all 49 retail bytes.
+// Exact with a std::swap of the predecessors and a manual successor swap.
+// Two std::swap calls give the same 49 bytes at /Ob2 cost 52; this form
+// costs 65, and the diagram constructor's diagonal needs 63..71 so that
+// connectEdges' nested budget (197 - 98) refuses createEdge and the second
+// splice while expanding the first (predict-inline --trace 0x5fd010). Four
+// manual temporaries (cost 77/82) or named successors with std::swap (62)
+// break splice, detach or the constructor.
 VA(0x005FCF60, 0x31) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
 void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
 {
     std::swap(m_next->m_previous, other->m_next->m_previous);
-    std::swap(m_next, other->m_next);
+    TRmgBoundaryVertex* next = m_next;
+    m_next = other->m_next;
+    other->m_next = next;
 }
 
 // addSite calls this before reusing an edge. Save the twin's predecessor
@@ -411,16 +433,17 @@ void TRmgBoundaryVertex::detach()
 
 // Complete starts with a rectangular outer subdivision spanning -200..400.
 // Four paired edges form its perimeter; a fifth connects opposite corners.
-// Each pair is owned through createEdge and joined through the shared splice.
-// Residual (80.5217%): retail retains the fifth createEdge call while VC6
-// expands all five. The first four paired constructors remain calls in both.
-// The factory's named twin restores pointer-copy ownership and improves this
-// caller from 73.1706%; explicit vector insert overloads reach at most 77.4950%.
-// Construction/connector/factory families: 60 corner/lifetime forms reach
-// 80.7057%; a shared ordinary connection member reaches 90.6722%, but calls
-// both diagonal splices where retail expands the first. Its fan expansion
-// has the opposite mismatch. 121 result-lifetime forms and 121 combined
-// factory/connector forms do not improve that frontier; none is adopted.
+// Each pair is owned through createEdge and joined through the shared splice,
+// as Graphics Gems IV's Subdivision constructor splices ea->Sym() to eb.
+// Exact (2026-09-11): the four fan splices go through getTwin, and the
+// diagonal is connectEdges(fourthEdge, thirdEdge). With 13 candidate sites
+// after the first createEdge its nested budget is (949 - 107) / 13 = 64:
+// the first expansion's second insert wrapper still expands while the
+// later ones (55, 45, 39) call it, as retail does. The diagonal's nested
+// budget of 197 - 98 then refuses createEdge and the second splice but
+// expands the first. Direct m_twin reads (r1 = 9) expand every wrapper and
+// createEdge; getTwin in the diagonal too (r1 = 17) starves the first
+// expansion (66.1639%).
 VA(0x005FD010, 0x316) // anchor-caller 0x53e050 and five createEdge expansions/calls
 TRmgVoronoi::TRmgVoronoi()
 {
@@ -432,14 +455,11 @@ TRmgVoronoi::TRmgVoronoi()
     TRmgBoundaryVertex* secondEdge = createEdge(second, 0, third, 0);
     TRmgBoundaryVertex* thirdEdge = createEdge(third, 0, fourth, 0);
     TRmgBoundaryVertex* fourthEdge = createEdge(fourth, 0, first, 0);
-    firstEdge->m_twin->splice(secondEdge);
-    secondEdge->m_twin->splice(thirdEdge);
-    thirdEdge->m_twin->splice(fourthEdge);
-    fourthEdge->m_twin->splice(firstEdge);
-    TRmgBoundaryVertex* diagonal = createEdge(fourthEdge->m_twin->m_sitePosition,
-        fourthEdge->m_twin->m_zone, thirdEdge->m_sitePosition, thirdEdge->m_zone);
-    diagonal->splice(fourthEdge->m_twin->m_previous);
-    diagonal->m_twin->splice(thirdEdge);
+    firstEdge->getTwin()->splice(secondEdge);
+    secondEdge->getTwin()->splice(thirdEdge);
+    thirdEdge->getTwin()->splice(fourthEdge);
+    fourthEdge->getTwin()->splice(firstEdge);
+    connectEdges(fourthEdge, thirdEdge);
     m_root = firstEdge;
 }
 
@@ -454,23 +474,39 @@ TRmgVoronoi::~TRmgVoronoi()
 
 // Constructor and site insertion share this retained factory. Retail expands
 // the ordinary paired constructor, then inserts each half into the owning
-// vector. The two source insertions have different nested inline decisions.
-// Residual (90.9600%): allocation and paired initialization agree; the second
-// expanded insertion retains three vector::size calls versus retail's four.
-// Naming twin before push_back reproduces retail's pointer snapshot and raises
-// 84.2650%. Eighteen push_back/single/count insertion forms favor the two
-// push_back calls below; the nearest explicit-insert form scores 90.9550%.
-// A 72-state result/twin/vector-binding family leaves this body at 90.9600%.
-// A const-reference-bound returned pointer raises only the diagram constructor
-// to 82.6120%; its combinations with the shared connector add no new peak.
+// vector. The two source insertions have different nested inline decisions:
+// the first push_back's count insert is refused (756 / 2 - 64 < 469), the
+// second's is expanded with a body budget of (609 - 64 - 469) / 2 = 38, so
+// its first size() stays a call like retail's four. Exact (2026-09-12) once
+// the constructors spend 327 units before the second push_back and the
+// twin goes through getTwin(): that temporary is homed in the dead
+// firstZone argument slot (frame 8), while a named twin local or the field
+// itself takes a third local slot (99.82% / 84.27%).
 VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
 TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
 {
     TRmgBoundaryVertex* edge = new TRmgBoundaryVertex(first, firstZone, second, secondZone);
     m_edges.push_back(edge);
-    TRmgBoundaryVertex* twin = edge->m_twin;
-    m_edges.push_back(twin);
+    m_edges.push_back(edge->getTwin());
+    return edge;
+}
+
+// Quad-edge Connect(a, b): a new edge from first's destination to second's
+// origin, spliced into first's left face and second's origin ring. Ordinary
+// and shared; retail expands it in the constructor (0x5fd2c3) and addSite
+// (0x5fd72a) while calling createEdge and the fan splices inside it. Its
+// /Ob2 cost of 98 sits inside the constructor's 63..145 bracket; field
+// reads (93), a named twin (103), chained accessors (113) or endpoint
+// locals (122) keep the same bytes here, and 137 or more loses the
+// constructor's first diagonal splice.
+TRmgBoundaryVertex* TRmgVoronoi::connectEdges(TRmgBoundaryVertex* first,
+    TRmgBoundaryVertex* second)
+{
+    TRmgBoundaryVertex* edge = createEdge(first->getOppositeSitePosition(),
+        first->getOppositeZone(), second->getSitePosition(), second->getZone());
+    edge->splice(first->getLeftNext());
+    edge->getTwin()->splice(second);
     return edge;
 }
 
@@ -478,13 +514,11 @@ TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
 // ring links, erase each owned pointer, then free both trivial half-edges.
 // Retail expands detach's first splice but retains the twin's splice call.
 // Both searches use unsigned indices and erase through the vector interface.
-// Residual (76.1539%): all 18 CFG blocks and ten branches agree. Only the
-// detach expansion differs structurally: VC6 expands both splice calls;
-// retail retains the second one. Reversing predecessor capture order in the
-// canonical detach helper lowers this caller to 73.1250%; keep its exact body.
-// All 64 unsigned-loop/shared-index/erase-iterator combinations produce the
-// same tracked scores (eighteen distinct whole-TU objects). The second splice
-// remains expanded in every form; changing search lifetime is not the cause.
+// Exact (2026-09-11): reading the twin through getTwin adds one candidate
+// site after detach, so detach's nested budget is (1000 - 61) / 10 = 93
+// and its second splice (65) is refused after the first, exactly as retail.
+// With the field read (nine sites) the budget is 104 and both expand;
+// the earlier 64 loop/index/erase forms never changed that site count.
 VA(0x005FD5B0, 0xFF) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
 void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 {
@@ -493,7 +527,7 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
     while (index < m_edges.size() && m_edges[index] != edge)
         ++index;
     m_edges.erase(m_edges.begin() + index);
-    TRmgBoundaryVertex* twin = edge->m_twin;
+    TRmgBoundaryVertex* twin = edge->getTwin();
     index = 0;
     while (index < m_edges.size() && m_edges[index] != twin)
         ++index;
@@ -503,17 +537,23 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 }
 
 // Provisional shared edge-side predicate, used by locate and legalization.
-// Graphics Gems IV delaunay/quadedge.C's RightOf supplies a source-boundary
-// hypothesis, not HoMM3 identity: Complete uses integer by-value TPoint and
-// the canonical orientation below. No original helper name/inline is proven.
-// Retail locate's first expanded orientation has no spilled endpoint; an
-// ordinary helper with a named twin restores all 215 bytes. Flattening the
-// call boundary returns 91.0460%. Six of 61 tested states reach exactness;
-// all use this cyclic order and by-value point. No inline pin is required.
+// Graphics Gems IV delaunay/quadedge.C's RightOf(x, e) is ccw(x, Dest, Org)
+// over TriArea; Complete uses integer by-value TPoint and the canonical
+// orientation below in the same cyclic order. The ccw layer is ordinary:
+// addSite expands RightOf with a nested budget of 54, expands ccw (cost 31)
+// and refuses the orientation call as retail does at 0x5fdfa7; locate's
+// budgets expand all three. Retail locate's first expanded orientation has
+// no spilled endpoint; the named twin restores all 215 bytes. Flattening
+// the call boundary returns 91.0460%.
+static int isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
+{
+    return getRmgPointOrientation(first, second, third) > 0;
+}
+
 static int isRmgPointRightOfEdge(TPoint point, TRmgBoundaryVertex* edge)
 {
     TRmgBoundaryVertex* twin = edge->m_twin;
-    return getRmgPointOrientation(edge->m_sitePosition, point, twin->m_sitePosition) > 0;
+    return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
 }
 
 // The zone-building callers pass an eight-byte TPoint and receive an edge.
@@ -576,22 +616,33 @@ static void flipRmgEdge(TRmgBoundaryVertex* edge)
     edge->m_twin->splice(twinPrevious->m_twin->m_previous);
 }
 
-// Provisional segment predicate: retail snapshots the opposite endpoint,
-// compares three squared distances, then materializes collinearity as a byte.
-// The retail collinearity region uses four products for a line equation,
-// rather than the canonical orientation's two translated-vector products.
-// Tested 61 three-point line-predicate forms (47.6339% caller peak) and
-// 61 ordinary line-construction/contains forms (47.8601%). Every changed
-// form retains the new helper call(s), absent from retail. These are not
-// matched expansions; no line helper, class or inline directive is adopted.
+// Provisional segment predicate, Graphics Gems IV's OnEdge: retail snapshots
+// the opposite endpoint, calls the three squared distances, rejects a site
+// beyond either endpoint, then evaluates the implicit line a*x + b*y + c
+// (a = dy, b = -dx, c = -(a*org.x + b*org.y)) and materializes the zero
+// test as a byte. Inside addSite this expansion gets a nested budget of 33
+// (908 - 174 over 22 remaining sites), which refuses all three distance
+// calls like retail; a TRmgLine constructor/evaluate pair is refused at
+// that budget too (72.5%-77.6%), so the equation stays inline. An
+// orientation call here scores 89.4762% against the accessor form's
+// 91.1250%. The line origin is bound by reference to the site field, the
+// way the flip helper reads it: retail loads org.x once into ecx and spills
+// dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
+// reproduces; a by-value TPoint copy through the accessor re-reads the
+// field and keeps dx in a register (addSite 90.3482% with the rest exact).
 static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
 {
-    TPoint opposite = edge->m_twin->m_sitePosition;
-    int firstDistance = getRmgSquaredDistance(point, edge->m_sitePosition);
+    TPoint opposite = edge->getOppositeSitePosition();
+    int firstDistance = getRmgSquaredDistance(point, edge->getSitePosition());
     int secondDistance = getRmgSquaredDistance(point, opposite);
-    int edgeDistance = getRmgSquaredDistance(edge->m_sitePosition, opposite);
-    return firstDistance <= edgeDistance && secondDistance <= edgeDistance
-        && getRmgPointOrientation(edge->m_sitePosition, opposite, point) == 0;
+    int edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
+    if (firstDistance > edgeDistance || secondDistance > edgeDistance)
+        return 0;
+    const TPoint& origin = edge->m_sitePosition;
+    int dx = opposite.m_x - origin.m_x;
+    int dy = opposite.m_y - origin.m_y;
+    int c = -(dy * origin.m_x - dx * origin.m_y);
+    return dy * point.m_x - dx * point.m_y + c == 0;
 }
 
 // Provisional geometric predicate: retail snapshots three points before
@@ -615,62 +666,78 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
     return determinant > 0;
 }
 
-// Complete's incremental subdivision insertion. Retail rejects coincident
-// endpoints, splits an edge for a collinear site, builds the incident fan,
-// then flips diagonals using an integer circumcircle determinant. Products
-// of a squared norm and orientation widen to signed 64 bits (imul/sbb/adc).
-// Residual (45.4167%): all 20 CFG blocks have the same flow destinations.
-// VC6 expands the first two distance calls, both fan splice calls and the
-// flip's detach, while retaining the collinearity orientation call where
-// retail expands a line equation and tests a byte. Circle orientation-call
-// decisions also differ; scratch space is 0x44 versus retail's 0x30.
-// Flattening all three provisional geometric helpers scores 15.6369%; circle
-// alone 25.9821%, segment+circle 36.2798%. A separate connector is 36.4464%
-// with all three helpers. Line-equation predicate/direct forms are 44.6071%
-// and 34.4464%. Other TU scores hold for the retained helper boundaries.
-// An isolated inline_depth(0) diagnostic on the flat version's distance,
-// fan-splice, orientation and flip regions scores 70.7827%; flattening those
-// regions restores 15.6369%. No pin is retained; the canonical distance,
-// orientation, splice and detach definitions remain ordinary and shared.
-// The shared edge-side predicate makes locate exact and moves this caller
-// from 45.3869% to 45.4167%. Its separate 47.0387% frontier does not preserve
-// exact lookup. Factory/connector experiments reach 47.6667% independently;
-// those scores are not observations of this adopted implementation.
+// Complete's incremental subdivision insertion, Graphics Gems IV's
+// InsertSite: reject coincident endpoints, split an edge for a collinear
+// site, connect the incident fan, then flip suspect diagonals with the
+// integer circumcircle determinant (squared norm times orientation widened
+// to signed 64 bits, imul/sbb/adc). Every call decision now matches retail:
+// the accessor sites (getSitePosition/getTwin/getPrevious/getLeftNext...)
+// count as inline candidates, so with 22 sites after the segment predicate
+// its distances are refused, connectEdges gets 38 and calls both fan
+// splices, RightOf gets 54 and calls the orientation, InCircle gets 42 and
+// calls all four, and flipRmgEdge gets 33 and calls detach and both splices
+// (predict-inline --trace 0x5fd790). Field reads instead of accessors gave
+// 45.4167% with the same helpers.
+// Exact. Four spellings fix the frame and the callee-saved roles, and a
+// complete 64-state family (2 x 4 x 4 x 2, all scored) separates each one:
+// - the coincidence test copies each endpoint into its own scoped by-value
+//   TPoint, as locate does, so each copy dies before the next loads and the
+//   compares read eax/ecx then ecx/edx as retail; both copies live in one
+//   scope swap those registers over 14 rows with the same 0x30 frame
+//   (98.5536%), and a single || condition or two bare ifs score 93.7411%;
+// - the fan loop assigns connectEdges back to base before taking its
+//   predecessor, which homes base in [ebp-8] and the connected edge in the
+//   dead zone argument slot; a named next local in any order 90.6-90.9%;
+// - the named predecessor (homed in [ebp-0xc] before and after the
+//   orientation call, as retail) reads its site as getTwin()->
+//   getSitePosition() in both suspect tests, which keeps point.m_y in EDI
+//   and edge in EBX; getOppositeSitePosition there scores 93.7411%, and
+//   re-reading the predecessor twice ranks edge above point.m_y and swaps
+//   EBX/EDI across 176 slots (94.03%);
+// - the segment predicate binds its line origin by reference (see above);
+//   the accessor copy costs 90.3482% here.
+// The loop condition stays getTwin()->getPrevious(); a separate suspect-
+// loop variable or a site local scores 88.39% / 82.83%, and a 40-state
+// include-set sweep of this TU moves no function.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
     TRmgBoundaryVertex* edge = locate(point);
-    if (point == edge->m_sitePosition || point == edge->m_twin->m_sitePosition)
-        return;
-    if (isRmgPointOnSegment(point, edge)) {
-        edge = edge->m_previous;
-        removeEdge(edge->m_next);
+    {
+        TPoint origin = edge->getSitePosition();
+        if (point == origin)
+            return;
     }
-    TRmgBoundaryVertex* base = createEdge(edge->m_sitePosition, edge->m_zone, point, zone);
+    {
+        TPoint destination = edge->getOppositeSitePosition();
+        if (point == destination)
+            return;
+    }
+    if (isRmgPointOnSegment(point, edge)) {
+        edge = edge->getPrevious();
+        removeEdge(edge->getNext());
+    }
+    TRmgBoundaryVertex* base = createEdge(edge->getSitePosition(), edge->getZone(), point, zone);
     base->splice(edge);
     m_root = base;
     do {
-        TRmgBoundaryVertex* oppositeBase = base->m_twin;
-        base = createEdge(edge->m_twin->m_sitePosition, edge->m_twin->m_zone,
-            oppositeBase->m_sitePosition, oppositeBase->m_zone);
-        base->splice(edge->m_twin->m_previous);
-        base->m_twin->splice(oppositeBase);
-        edge = base->m_previous;
-    } while (edge->m_twin->m_previous != m_root);
+        base = connectEdges(edge, base->getTwin());
+        edge = base->getPrevious();
+    } while (edge->getTwin()->getPrevious() != m_root);
 
     for (;;) {
-        TRmgBoundaryVertex* previous = edge->m_previous;
-        if (isRmgPointRightOfEdge(previous->m_twin->m_sitePosition, edge)) {
-            if (isRmgPointInsideCircle(edge->m_sitePosition,
-                    previous->m_twin->m_sitePosition, edge->m_twin->m_sitePosition, point)) {
+        TRmgBoundaryVertex* previous = edge->getPrevious();
+        if (isRmgPointRightOfEdge(previous->getTwin()->getSitePosition(), edge)) {
+            if (isRmgPointInsideCircle(edge->getSitePosition(),
+                    previous->getTwin()->getSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
-                edge = edge->m_previous;
+                edge = edge->getPrevious();
                 continue;
             }
         }
-        if (edge->m_next == m_root)
+        if (edge->getNext() == m_root)
             return;
-        edge = edge->m_next->m_next->m_twin;
+        edge = edge->getNext()->getNext()->getTwin();
     }
 }
 

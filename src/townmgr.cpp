@@ -766,6 +766,13 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
 // Dreamcast statement order and is rejected. Dreamcast public `castleOpen`
 // supports the future data rename g_castleOpen; that rename is byte-flat here.
 // No probe or score-only assignment order is retained.
+//
+// DC townmgr.cpp:2042/2043 place both 64-bit mask assignments LAST, after
+// m_command at 2040: two dword stores each at +48/+56 from the 0x16a6e4
+// base, directly after the -1 triple at +32/+36/+40. The 24-order family
+// above only permuted the four adjacent statements and never tried that
+// position. Assigning the masks below m_command reproduces retail's delayed
+// upper-dword stores and closes the constructor at 100% (2026-09-11).
 
 // E:\gamedcs\townmgr.cpp:1999
 VA(0x005c3310, 0xDF)  // anchor-vtable 0x643720 + baseManager base ctor, dc 0x16a59c
@@ -785,8 +792,6 @@ townManager::townManager()
     m_panorama = 0;
     memset(m_monPix, 0, sizeof(m_monPix));
     memset(m_townObjects, 0, sizeof(m_townObjects));
-    m_canBuyMask = 0;
-    m_canBuildMask = 0;
     m_townObjectCount = 0;
     m_loadedTownType = -1;
     m_townWindow = 0;
@@ -801,6 +806,8 @@ townManager::townManager()
     m_lastHover = -1;
     m_lastQualifier = -1;
     m_command = -1;
+    m_canBuyMask = 0;
+    m_canBuildMask = 0;
 }
 
 // The town's free buildings, and the compiland's only reader of the
