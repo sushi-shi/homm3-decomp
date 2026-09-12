@@ -559,6 +559,11 @@ struct TPoint {
     {
         return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
     }
+    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
+    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
+    // TPoint copy of a grid point with a tile direction. Declared last so
+    // the earlier member handles are unchanged.
+    TPoint& operator+=(const TPoint& offset);
 };
 
 // The retained 0x5fdd20/0x5fdd40 bodies pass both eight-byte operands on
@@ -586,40 +591,46 @@ struct TRmgGridPoint {
     unsigned int m_y;
 
     TRmgGridPoint() {}
-    // The retained river-painter ctor at 0x55ee50 copies both GetSize result
-    // components before storing its adapter. This copy boundary restores all
-    // 118 bytes; an implicit copy interleaves adapter and y stores (99.71%).
-    // Moving the adapter into the caller ctor body instead stores its vptr
-    // too early (99.10%); a copy assignment does not affect construction.
-    // Mixed-constructor/return controls can lift brush destruction to 92.1398%
-    // and terrain paintPoint to 98.3653% by copying through assignment, but
-    // then no RMG TU emits the retained 22-byte constructor at 0x4fa520.
-    // Explicit assignment forms do not recover it; preserve this boundary.
-    TRmgGridPoint(const TRmgGridPoint& other)
-        : m_x(other.m_x), m_y(other.m_y) {}
+    // Trivially copyable: no user-written copy constructor. Retail's proxy
+    // factory at() (0x4fa050) and rmg's getSize (0x532240) copy a grid
+    // point as the compiler's memberwise copy, x before y; a written copy
+    // of any spelling (initializer list or body, either field order, or
+    // `*this = other`) reschedules those copies (at() 67.53%, getSize
+    // 97.56%) and is a 45-cost inline site at every copy, which drains the
+    // brush destructor's finish budget (needsTerrainRepair refused at
+    // 70 < 106, 78.60%) and clearRmgLineRectangle (94.51%). The implicit
+    // copy closes all four (2026-09-12). A written operator= instead costs
+    // clearRmgLineRectangle, the painter constructor and terrain paintPoint
+    // (94.51/91.22/90.97%).
+    // The retained 22-byte one-argument constructor at 0x4fa520 is the
+    // conversion from the signed TPoint, and the retained 33-byte add at
+    // 0x4fa540 is TPoint's: refresh 0x4f9f51..0x4f9f86 copies the grid
+    // point memberwise into a TPoint, calls TPoint::operator+= with the
+    // tile direction, copies the sum out as the returned value, then calls
+    // this constructor to build the grid argument of the retained at()
+    // call. Grid arithmetic therefore goes through TPoint both ways (the
+    // free sum lives in rmg_terrain.h with its only users): repairTerrainPoint
+    // 91.34 -> 93.63%, terrain paintPoint 96.56 -> 97.29%, line paintPoint
+    // 79.94 -> 80.64%, refresh 74.42 -> 71.92%; rmg's quest-creature
+    // generate loses one parameter reload (99.73%) as include-set state.
+    // The river-painter constructor at 0x55ee50 stays exact; its earlier
+    // 99.71% implicit-copy reading predates the retained compound add.
 
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
+    TRmgGridPoint(const TPoint& point);
 
-    TRmgGridPoint& operator+=(const TPoint& offset);
-    TRmgGridPoint operator+(const TPoint& offset) const
+    // paintTransitions steps one column with a grid-side compound add; the
+    // retained add at 0x4fa540 is TPoint's, so this one stays inline.
+    TRmgGridPoint& operator+=(const TPoint& offset)
     {
-        // Retail paintPoint 0x5b4e38..0x5b4e55 retains original x at EBP-0x14
-        // before the additions. Earlier TU controls favored copy-initialized
-        // construction plus compound return (99.9204%) over a named return
-        // (99.0163%); those controls predate the current retained-add call.
-        // Direct-construction control under the preceding TU: construction
-        // and a named return restore expansion of this helper in paintPoint
-        // (89.0488 -> 89.7848) and repairTerrainPoint (89.7150 -> 89.9680).
-        // The retained ctor/copy/compound-add interfaces remain unchanged.
-        // With the shared line proxy admitted, an assignment-built result
-        // raises terrain paintPoint to 90.9656% and line refresh to 63.9923%.
-        // Named and compound returns both reproduce those gains; neither
-        // closes the remaining copy/add call decisions in either caller.
-        TRmgGridPoint result;
-        result = *this;
-        result += offset;
-        return result;
+        m_x += offset.m_x;
+        m_y += offset.m_y;
+        return *this;
+    }
+    operator TPoint() const
+    {
+        return TPoint(m_x, m_y);
     }
 };
 

@@ -70,6 +70,12 @@ TRmgGridRectangle::TRmgGridRectangle(
 // Shared grid/proxy controls can restore the += call (70.2846%) but introduce
 // unwanted arithmetic calls in terrain painting. Five ordinary operator+
 // placements add no gain; parameter-by-value proxy construction also loses.
+// Residual (71.9231%): the retained calls at 0x4f9f60/0x4f9f77/0x4f9f86
+// (TPoint add, grid conversion, proxy factory) sit where this body's own
+// budget is still above 700, so retail expands the loop body from a nested
+// context whose budget is under 42; the signed-point arithmetic reproduces
+// retail's operand shapes but not those three refusals (74.42% with the
+// grid-side sum, which had the wrong shapes).
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -289,13 +295,20 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
-// Refresh 0x4f9f77 copies the translated grid value before passing it to
-// the retained painter proxy at 0x4f9f86. The shared unsigned grid identity
-// follows that proxy's copied coordinate and the painter dimensions, not
-// merely a same-sized point body. Its existing explicit copy constructor
-// reproduces all 22 raw bytes without relocations.
-VA_COMPGEN(0x004FA520, 0x16, CLASS_CTOR, TRmgGridPoint)
+// Refresh 0x4f9f77 builds the grid argument of the retained proxy call at
+// 0x4f9f86 from the copied TPoint sum through this one-argument
+// constructor. It is not the grid copy: retail's at() and getSize copy grid
+// points memberwise, and a written copy constructor of any spelling
+// reschedules them (see TRmgGridPoint in rmg.h). The conversion from the
+// signed TPoint reproduces all 22 raw bytes without relocations.
+VA(0x004FA520, 0x16) // anchor-callee 0x4f9f77; thiscall, ret 4
+TRmgGridPoint::TRmgGridPoint(const TPoint& point)
+    : m_x(point.m_x), m_y(point.m_y)
+{
+}
 
+// TPoint's compound add: the receiver at refresh 0x4f9f51..0x4f9f5d is the
+// TPoint copy of a grid point, so this is not the grid type's operator.
 // Refresh 0x4f9f60 and line paintPoint's first neighbour pass retain this
 // same two-dword add, returning the receiver for the subsequent value copy.
 // There is no Dreamcast RMG inline declaration. One ordinary definition in
@@ -303,7 +316,7 @@ VA_COMPGEN(0x004FA520, 0x16, CLASS_CTOR, TRmgGridPoint)
 // auto-inlining. The 168-state placement/lifetime family (48 code results)
 // leaves every other tracked RMG score unchanged with this placement alone.
 VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
-TRmgGridPoint& TRmgGridPoint::operator+=(const TPoint& offset)
+TPoint& TPoint::operator+=(const TPoint& offset)
 {
     m_x += offset.m_x;
     m_y += offset.m_y;
@@ -778,8 +791,9 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The grid copy constructor restores both retained set _Init calls and the
-// expanded packed-vector insert (23.33% -> 91.22%). Assign the virtual result
+// A 45-cost grid copy site once restored both retained set _Init calls and
+// the expanded packed-vector insert (23.33% -> 91.22%); with the trivial grid
+// copy the assigned virtual result keeps them. Assign the virtual result
 // into an existing local: this also expands the final size query, while erase
 // remains a call, and recovers all 29 CFG blocks (97.92%). Direct construction
 // and reference binding retain that size call. A grid member instead of the
@@ -1896,11 +1910,16 @@ TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-// Exact: all 362 raw bytes after 14 relocations; all 13 blocks agree. The
-// grid copy constructor restores erase(key)'s retained distance helper at
-// 0x5b8cd0 and its count local. Implicit grid copies instead expand distance
-// into iterator increments (81.33%). The final GetPackedCell expansion keeps
-// its nested InitializePackedCell call, as retail does.
+// Residual (81.3309%): retail expands erase(key) and the three-argument
+// _Distance wrapper but calls its tagged four-argument body at 0x5b8cd0;
+// here the tagged body expands too. Two 45-cost grid copy sites in finish
+// used to leave the wrapper 16 units for that cost-45 callee (100%); with
+// the trivial grid copy finish gets 788, the two begin expansions leave 702,
+// the erase body gets 234 of it over three sites and the wrapper 48. The
+// exact form needs the erase body under 231: ten more units in finish or
+// the painter's changeTerrain, or one more candidate site after the erase.
+// The final getPackedCell expansion keeps its nested initializePackedCell
+// call, as retail does.
 VA(0x005B7520, 0x16A) // anchor-callee 0x5401c3; retail-only
 void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 {

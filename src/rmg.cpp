@@ -892,15 +892,10 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
 
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
-// The proven grid copy constructor moves the width load before the result
-// pointer load (97.56%, with 100% banked). Named constructed and assigned
-// results keep that scheduling difference and leave createRiver unchanged.
-// A 16-state batch of member assignment, signed/unsigned input locals, both
-// input orders, and named/temporary returns also remains at 97.5556%.
-// The coupled 60-state size-return family also tests const-reference-bound
-// unsigned dimension temporaries with six result lifetimes and both adapter
-// ICF owners: this body remains 97.5556% throughout. The retained grid copy
-// constructor is unchanged; return/dimension lifetimes do not fix the load.
+// Exact with the trivial grid copy (2026-09-12): a written grid copy
+// constructor moved the width load before the result pointer load (97.56%)
+// and none of the 16-state and 60-state return/dimension-lifetime families
+// could undo it; the copy boundary, not this body, was the cause.
 VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
 TRmgGridPoint type_random_map::getSize()
 {
