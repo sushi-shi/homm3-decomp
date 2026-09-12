@@ -4489,3 +4489,41 @@ the edited prefix and coordinate projections, not the remaining object,
 entrance-vector, border or guard operations. The actual adopted body also
 passes; the primary generator retains the historical source as a control
 when rebased after adoption.
+
+`generate-rmg-subterranean-score-values.py` tests a separate source-score
+value and signed sum, with source-score types, sum-declaration lifetimes,
+zone query order and whole/Z-only level capture. Its 49 states in
+`45441aa8fc73fb46c777` yield thirteen objects and ten reproduced elites.
+None improves 85.8212%; the source-score extraction remains scheduled after
+the destination query. No source alternative is adopted. The scan oracle
+now mixes small scores and values near 65,535, detecting an additional wrong
+control that truncates the accumulated sum. All 49 forms pass 3,072 scenarios
+and six negative controls. An initial all-high-score fixture failed to detect
+that control because truncation preserved the relative ranking; mixed low/high
+cells correct that coverage gap.
+
+### Map-header team selectors
+
+`generate-rmg-header-team-selectors.py` independently reverses the two
+upper-bound selector operands and compares reference/value selectors with
+copied, immutable and direct-field inputs. The 24 forms in
+`889f9ab4fad2048472fc` produce twenty objects and ten reproduced elites.
+Direct fields passed to the canonical value-taking wrappers, with team
+count first in both upper-bound calls, reach 78.4014% from 76.5336%.
+All five selector sequences then match retail operands and argument homes;
+the nearby output write also recovers its register order. The copied-reference
+control with both min operands reversed is 76.5681%; value wrappers with
+unchanged min order and direct fields give 78.3670%. Every sibling score
+remains unchanged. State `ca273ca65f631fe1e81ad73e` is adopted after its
+rendered source and independently reproduced object are verified.
+
+`verify-rmg-header-team-selectors.py` extracts the actual normalization region
+through the branch preceding team assignment and uses the actual value-wrapper
+header. A separate conditional-clamp model checks 14,641 player/team-count
+combinations per form, including out-of-range inputs, updated counts,
+unchanged player counts and the zero-team output write. Four bad default,
+lower-limit, branch-strictness and upper-limit controls fail. The rebased
+24-form family includes the actual adopted source and passes. This is a
+focused normalization oracle, not a whole-header serialization check.
+The writer remains non-exact: team-array stack homes and canonical bitset
+inlining are still open, with 176 candidate versus 164 retail CFG blocks.

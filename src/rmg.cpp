@@ -6998,6 +6998,12 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // expanded candidate clear and both final guard map lookups. The native
 // oracle covers the edited prefix and placement-coordinate projections;
 // the untouched object/guard placement suffix is not covered by that oracle.
+// A later 49-state source-score family (13 objects, ten reproduced elites)
+// separates the first packed score from the signed sum, varying score type,
+// sum scope and initial zone/level capture. It cannot exceed 85.8212%; a
+// 16-bit source local reaches only 84.37%. Keep the current accumulated score.
+// The oracle now mixes low and near-65535 cell scores and rejects truncating
+// their sum, in addition to the five earlier admission/ranking controls.
 VA(0x00542080, 0x8AA)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
@@ -10276,6 +10282,15 @@ unsigned char type_random_map_generator::generate()
 // naming all three iterators and default-constructing then assigning the first
 // each regress to 95.66%; making the iterator non-trivial regresses to 93.97%
 // and destroys the matching tail CFG.  Those source-false forms remain out.
+// Current selector recovery (78.4014%): use the canonical value-taking
+// min/max wrappers directly on team/player fields. Their argument copies
+// replace the former caller-local copies; both upper-bound calls take the
+// team count first. All five selector instruction sequences then match the
+// retail operands and homes. Twenty-four ownership/order controls produce
+// twenty objects and ten reproduced elites, with every sibling unchanged.
+// The nearby team-array homes and later canonical bitset call boundaries
+// still differ. The focused oracle verifies normalization and the zero-team
+// output branch; it does not validate the rest of this serialization routine.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
@@ -10552,8 +10567,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         if (!m_humanTeamCount)
             m_humanTeamCount = m_humanPlayerCount;
         if (!m_computerPlayerCount) {
-            int teamCount = m_humanTeamCount;
-            m_humanTeamCount = std::_cpp_max(teamCount, 2);
+            m_humanTeamCount = max(m_humanTeamCount, 2);
         }
 
         if (m_humanTeamCount >= m_humanPlayerCount
@@ -10565,22 +10579,16 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             memset(teams, 0, sizeof(teams));
 
             {
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_max(teamCount, 1);
+                m_humanTeamCount = max(m_humanTeamCount, 1);
             }
             {
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_max(teamCount, 1);
+                m_computerTeamCount = max(m_computerTeamCount, 1);
             }
             {
-                int playerCount = m_humanPlayerCount;
-                int teamCount = m_humanTeamCount;
-                m_humanTeamCount = std::_cpp_min(playerCount, teamCount);
+                m_humanTeamCount = min(m_humanTeamCount, m_humanPlayerCount);
             }
             {
-                int playerCount = m_computerPlayerCount;
-                int teamCount = m_computerTeamCount;
-                m_computerTeamCount = std::_cpp_min(playerCount, teamCount);
+                m_computerTeamCount = min(m_computerTeamCount, m_computerPlayerCount);
             }
 
             assignRmgTeams(

@@ -51,6 +51,8 @@ def main():
              'sourceBounds.m_minimumX, destinationBounds.m_maximumX'),
             ('score < bestScore', 'score <= bestScore'),
             ('candidates.clear();', '/* bad control: keep earlier lower scores */'),
+            ('score += destinationItem->m_zoneState.m_score;',
+             'score = static_cast<unsigned short>(score + destinationItem->m_zoneState.m_score);'),
             ('TRmgZoneBounds sourceBounds = source->m_bounds;',
              'TRmgZoneBounds& sourceBounds = source->m_bounds;')):
         if bodies[0].count(old) != 1:
@@ -166,7 +168,8 @@ struct Environment {
         m_map.owner = this;
         for (int i = 0; i < 128; ++i) {
             m_map.cells[i].m_zoneState.m_zone = (i * 7 + bits) % 11 ? i / 64 : -1;
-            m_map.cells[i].m_zoneState.m_score = (i * 13 + bits * 3) % 7;
+            int score = (i * 13 + bits * 3) % 7;
+            m_map.cells[i].m_zoneState.m_score = (bits & 16) && i % 3 ? 65535 - score : score;
             m_map.cells[i].m_zoneState.m_connectionEligibility = (i + bits) % 100;
         }
     }
@@ -254,7 +257,7 @@ int main() {
                     '        p = projection.projectEntrance(TRmgMapPosition(x,y,z), &destination);\n'
                     '        if (p.m_x != x || p.m_y != y || p.m_z != other) return 1;\n'
                     '      } }\n')
-    text.append('    std::puts("' + str(good) + ' subterranean prefixes: 3072 scenarios each; five bad controls rejected");\n}\n')
+    text.append('    std::puts("' + str(good) + ' subterranean prefixes: 3072 scenarios each; six bad controls rejected");\n}\n')
     with tempfile.TemporaryDirectory(prefix='rmg-subterranean-scan-') as folder:
         cpp, exe = Path(folder) / 'oracle.cpp', Path(folder) / 'oracle'
         cpp.write_text(''.join(text))
