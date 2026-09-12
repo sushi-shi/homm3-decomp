@@ -3569,7 +3569,7 @@ rmg_terrain	?_Lbound@?$_Tree@U?$TRmgGridPointT@I@@U1@U_Kfn@?$set@U?$TRmgGridPoin
 rmg_terrain	?_Ubound@?$_Tree@U?$TRmgGridPointT@I@@U1@U_Kfn@?$set@U?$TRmgGridPointT@I@@U?$less@U?$TRmgGridPointT@I@@@std@@V?$allocator@U?$TRmgGridPointT@I@@@3@@std@@U?$less@U?$TRmgGridPointT@I@@@4@V?$allocator@U?$TRmgGridPointT@I@@@4@@std@@IBEPAU_Node@12@ABU?$TRmgGridPointT@I@@@Z	100.0000	100.0000	100.0000	0x1b8b60	-
 rmg_terrain	?_Ufill@?$vector@EV?$allocator@E@std@@@std@@IAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x1b8060	-
 rmg_terrain	?at@TRmgLinePainterInterface@@QAE?AUTRmgLinePainterTile@@ABU?$TRmgGridPointT@I@@@Z	100.0000	100.0000	100.0000	0xfa050	51ad534437c1
-rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABU?$TRmgGridPointT@I@@PAE@Z	99.2138	99.2138	99.2138	0x1b6540	5d846d5b0748
+rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABU?$TRmgGridPointT@I@@PAE@Z	100.0000	100.0000	100.0000	0x1b6540	f62a5364a776
 rmg_terrain	?buildNeighbourKinds@rmgTerrainPainter@@QAEXABU?$TRmgGridPointT@I@@PAH@Z	100.0000	100.0000	100.0000	0x1b68a0	50c7a19ade44
 rmg_terrain	?changeTerrain@TRmgTerrainBrush@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1b7520	e1bee61f4043
 rmg_terrain	?checkFirstDiagonal@rmgTerrainPainter@@QAEEABU?$TRmgGridPointT@I@@ABUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b6ba0	4e67ca418389

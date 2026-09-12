@@ -4366,3 +4366,25 @@ to `>= 0`. The latter would incorrectly remove occupied-level candidates
 when only the candidate at index zero uses a free level. Parent snapshots,
 rendered source and repeated object hashes are verified before follow-ups;
 these historical manifests intentionally reject a changed source checkpoint.
+
+### Exact matching-neighbour mask
+
+`generate-rmg-matching-mask-lifetimes.py` tests clamp-value ownership, corner
+construction, the cardinal point's scope and conditional diagonal points.
+In context `daab1389c87a0cb92ca7`, all 36 states compile, produce 24 objects
+and reproduce ten elites. Copy-initializing both corner points fixes the
+south-east cache-fill registers (99.2138% to 99.9420%); scoping the reused
+cardinal point separately restores the 0x30-byte frame and reaches 100%.
+The scope-only control is 99.2717%. Ordinary corner assignment also reaches
+100%, but copy initialization is the simpler recovered form. No other
+tracked terrain function changes score, and all nine call boundaries remain.
+
+`verify-rmg-matching-mask.py` imports the actual coordinate template and
+direction enum. For every rendered body it checks 185,856 mask scenarios,
+the center/cardinal/conditional-diagonal query sequence, input preservation
+and output guards. Maps of widths/heights 1, 2, 3 and 5 exercise clamping and
+aliased edge cells; 512 local patterns cover every interior neighbour mask.
+Five bad controls change a clamp dimension, omit the center read, change
+diagonal admission, use the wrong corner or invert a cardinal comparison;
+all are rejected. The generator rebases the adopted ownership without losing
+the former direct-corner/function-scope negative control.
