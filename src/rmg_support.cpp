@@ -624,7 +624,12 @@ static void flipRmgEdge(TRmgBoundaryVertex* edge)
 // (908 - 174 over 22 remaining sites), which refuses all three distance
 // calls like retail; a TRmgLine constructor/evaluate pair is refused at
 // that budget too (72.5%-77.6%), so the equation stays inline. An
-// orientation call here scores 89.4762% against this form's 91.1250%.
+// orientation call here scores 89.4762% against the accessor form's
+// 91.1250%. The line origin is bound by reference to the site field, the
+// way the flip helper reads it: retail loads org.x once into ecx and spills
+// dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
+// reproduces; a by-value TPoint copy through the accessor re-reads the
+// field and keeps dx in a register (addSite 90.3482% with the rest exact).
 static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
 {
     TPoint opposite = edge->getOppositeSitePosition();
@@ -633,7 +638,7 @@ static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
     int edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
-    TPoint origin = edge->getSitePosition();
+    const TPoint& origin = edge->m_sitePosition;
     int dx = opposite.m_x - origin.m_x;
     int dy = opposite.m_y - origin.m_y;
     int c = -(dy * origin.m_x - dx * origin.m_y);
@@ -673,28 +678,41 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
 // calls all four, and flipRmgEdge gets 33 and calls detach and both splices
 // (predict-inline --trace 0x5fd790). Field reads instead of accessors gave
 // 45.4167% with the same helpers.
-// Naming the connected edge before advancing (next/edge/base) homes base in
-// [ebp-8] across the fan loop with retail's re-entry past the reload; the
-// named predecessor (homed in [ebp-0xc] before and after the orientation
-// call, as retail) keeps point.m_y in EDI and edge in EBX, and spelling the
-// loop condition as getTwin()->getPrevious() keeps both together
-// (91.1250% -> 97.6518%). Re-reading the predecessor twice instead ranks
-// edge above point.m_y and swaps EBX/EDI across 176 slots (94.03%); a
-// separate suspect-loop variable or a site local scores 88.39% / 82.83%.
-// A 40-state include-set sweep of this TU moves no function, so the rest is
-// not TU state.
-// Residual (97.6518%): retail spills the segment predicate's dx and dy to
-// [ebp-8]/[ebp-0xc] and re-reads them for the four products, and homes the
-// connected edge in the dead zone argument slot while base takes [ebp-8];
-// here dx stays in a register and next shares base's slot. Six line
-// spellings and five fan-loop forms (166 states over four families) do not
-// separate them.
+// Exact. Four spellings fix the frame and the callee-saved roles, and a
+// complete 64-state family (2 x 4 x 4 x 2, all scored) separates each one:
+// - the coincidence test copies each endpoint into its own scoped by-value
+//   TPoint, as locate does, so each copy dies before the next loads and the
+//   compares read eax/ecx then ecx/edx as retail; both copies live in one
+//   scope swap those registers over 14 rows with the same 0x30 frame
+//   (98.5536%), and a single || condition or two bare ifs score 93.7411%;
+// - the fan loop assigns connectEdges back to base before taking its
+//   predecessor, which homes base in [ebp-8] and the connected edge in the
+//   dead zone argument slot; a named next local in any order 90.6-90.9%;
+// - the named predecessor (homed in [ebp-0xc] before and after the
+//   orientation call, as retail) reads its site as getTwin()->
+//   getSitePosition() in both suspect tests, which keeps point.m_y in EDI
+//   and edge in EBX; getOppositeSitePosition there scores 93.7411%, and
+//   re-reading the predecessor twice ranks edge above point.m_y and swaps
+//   EBX/EDI across 176 slots (94.03%);
+// - the segment predicate binds its line origin by reference (see above);
+//   the accessor copy costs 90.3482% here.
+// The loop condition stays getTwin()->getPrevious(); a separate suspect-
+// loop variable or a site local scores 88.39% / 82.83%, and a 40-state
+// include-set sweep of this TU moves no function.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
     TRmgBoundaryVertex* edge = locate(point);
-    if (point == edge->getSitePosition() || point == edge->getOppositeSitePosition())
-        return;
+    {
+        TPoint origin = edge->getSitePosition();
+        if (point == origin)
+            return;
+    }
+    {
+        TPoint destination = edge->getOppositeSitePosition();
+        if (point == destination)
+            return;
+    }
     if (isRmgPointOnSegment(point, edge)) {
         edge = edge->getPrevious();
         removeEdge(edge->getNext());
@@ -703,16 +721,15 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     base->splice(edge);
     m_root = base;
     do {
-        TRmgBoundaryVertex* next = connectEdges(edge, base->getTwin());
-        edge = next->getPrevious();
-        base = next;
+        base = connectEdges(edge, base->getTwin());
+        edge = base->getPrevious();
     } while (edge->getTwin()->getPrevious() != m_root);
 
     for (;;) {
         TRmgBoundaryVertex* previous = edge->getPrevious();
-        if (isRmgPointRightOfEdge(previous->getOppositeSitePosition(), edge)) {
+        if (isRmgPointRightOfEdge(previous->getTwin()->getSitePosition(), edge)) {
             if (isRmgPointInsideCircle(edge->getSitePosition(),
-                    previous->getOppositeSitePosition(), edge->getOppositeSitePosition(), point)) {
+                    previous->getTwin()->getSitePosition(), edge->getOppositeSitePosition(), point)) {
                 flipRmgEdge(edge);
                 edge = edge->getPrevious();
                 continue;
