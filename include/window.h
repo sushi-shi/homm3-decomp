@@ -151,9 +151,11 @@ public:
     // Before normalization (function): heroWindow::GetWidget.
     widget* getWidget(int id);
     // Before normalization (function): heroWindow::SaveBackground.
+    private:
     int saveBackground();
     // Before normalization (function): heroWindow::RestoreBackground.
     void restoreBackground(unsigned char update);
+    public:
     // Before normalization (function): heroWindow::CenterWindow.
     void centerWindow(int centerX, int centerY);
     int findWidget(int mx, int my) const;
@@ -163,11 +165,15 @@ public:
     // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
     // is exactly the TDialogHandler shape DoModal hands to DoDialog.
     // Before normalization (function): heroWindow::HeroWindowHandler.
+    protected:
     static int heroWindowHandler(message& msg);
+    public:
     // Before normalization (function): heroWindow::SleepAllWidgets.
     void sleepAllWidgets(unsigned char sleep);
     // Before normalization (function): heroWindow::delete_widgets.
+    protected:
     void deleteWidgets();
+    public:
 
     virtual ~heroWindow();                            // slot 0, retail 0x5fea80
     // Before normalization (function): heroWindow::Open.
@@ -200,7 +206,9 @@ public:
     // Before normalization (function): heroWindow::DoModal.
     virtual int doModal(unsigned char fadeIn);        // slot 6, retail 0x5ff460
     // Before normalization (function): heroWindow::AddWidgetsToMessageStream.
+    protected:
     virtual void addWidgetsToMessageStream();         // slot 7, retail 0x5ff570
+    public:
     // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in
     // window.obj's own band (reconstructed 2026-08-08, once widget's
     // 13th slot was modelled). It runs widget::sleep over the whole
@@ -257,7 +265,9 @@ protected:
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12
 public:
     // Before normalization (function): CHeroWindowEx::GetRolloverWidget.
+    protected:
     virtual textWidget* getRolloverWidget();                            // slot 13
+    public:
 };
 
 // Before normalization (function): InitializeWinSetupText.

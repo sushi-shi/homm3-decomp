@@ -102,7 +102,9 @@ public:
 
     TSystemOptionsWindow();
     virtual ~TSystemOptionsWindow();
+    private:
     int convertID2HelpID(int id) const;
+    public:
     // Before normalization (function): TSystemOptionsWindow::DoModal.
     void doModal();
     // Before normalization (function): TSystemOptionsWindow::WindowHandler.

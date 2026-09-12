@@ -1129,6 +1129,11 @@ def _demangle_key(mangled: str):
     # cache (`_Tree@UTCacheMapKey@ResourceManager@@...`).
     tree_named_owner = re.search(
         r"\?\$_Tree@(?:V|U)([A-Za-z_]\w*)@", mangled)
+    # A global class template with one primitive type argument, such as
+    # TRmgGridPointT<unsigned int>. Preserve both the class and argument:
+    # discarding the argument would merge distinct signed/unsigned trees.
+    tree_template_owner = re.search(
+        r"\?\$_Tree@(?:V|U)\?\$([A-Za-z_]\w*)@([CDEFGHIJK])@@", mangled)
     tree_pointer_owner = re.search(
         r"\?\$_Tree@P(?:A|B)?(?:V|U)([A-Za-z_]\w*)@", mangled)
     tree_string_owner = re.search(
@@ -1145,6 +1150,9 @@ def _demangle_key(mangled: str):
                    + "_set") if tree_set_primitive else
                   tree_value.group(1) if tree_value else
                   tree_named_owner.group(1) if tree_named_owner else
+                  (tree_template_owner.group(1) + "_" +
+                   DEQUE_PRIMITIVE_ELEMENT[tree_template_owner.group(2)])
+                  if tree_template_owner else
                   tree_pointer_owner.group(1) if tree_pointer_owner else
                   "string" if tree_string_owner else None)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
