@@ -1195,68 +1195,68 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 // are alternative arms: retail 0x5b5159 and 0x5b521f skip the opposite arm.
 // The cardinal probes construct a fresh point for insertion; the diagonal
 // probes retain their point and terrain value for the rule test and insertion.
-// Residual (78.1881%, 63.63% before the secondary-queue helper below and
-// the dimension accessors). Retail expands set::insert in all eight arms,
-// calls the node insert everywhere, calls the result-pair copy in the four
-// cardinal arms (merged into two tails) and expands it in the diagonals;
-// it calls the cache read in the cardinal and north-west/north-east arms
-// and expands it with its fill in the south-east arm. With the helper the
-// pair copy is refused where its nested budget is under 105 and the read
-// where its budget is under 90: north/south get 54/62 (their whole insert
-// stays a call), west/east 69/81 (right), north-west 91 (pair refused,
-// read at 106 expanded), north-east 108/120, south-east read 351 with the
-// fill at 130 refused. Per-arm paint-terrain and rule accessors and a
-// direct south-east insert (33 states) move nothing; a helper that also
-// tests the terrain starves its own insert.
-void rmgTerrainPainter::queueSecondaryPoint(const TRmgGridPoint& point)
-{
-    m_secondaryPoints.insert(point);
-}
-
+// Exact (2026-09-12; 63.63% with field reads). Retail expands set::insert
+// in all eight arms and calls the node insert everywhere; the result-pair
+// copy (41 units) is called in the north, south and west arms (the first
+// two share one tail) and expanded from the east arm on; the cache read
+// (90) is called through the north-east arm, expanded in the south-west
+// arm with its fill (128) called, and expanded with the fill in the
+// south-east arm. A nested budget is the running budget over the remaining
+// candidate sites, so the arms need the site count to fall steeply:
+// reading every coordinate through the grid point's accessors in the
+// guards and constructions gives the pair copies 32/35/39 units then 46,
+// the reads 31/34/38/44/53/68 then 105 (fill 7) and 463 (fill 186), with
+// the caller at 1066 units and a 2132 budget. With field reads the first
+// insert already expands its pair copy (25 sites). A secondary-queue
+// helper nesting the insert refuses the whole insert in the north and
+// south arms (54/62 against 64) and cannot give the north-west arm 105
+// while the north-east read stays under 90 (78.19%); paint-terrain and
+// rule accessors or a direct south-east insert on top of it move nothing,
+// and a helper that also tests the terrain starves its own insert.
 VA(0x005B50F0, 0x34E) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
-    if (point.m_y > 0
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y - 1)) != m_paintTerrain) {
-        queueSecondaryPoint(TRmgGridPoint(point.m_x, point.m_y - 1));
-    } else if (point.m_y < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != m_paintTerrain) {
-        queueSecondaryPoint(TRmgGridPoint(point.m_x, point.m_y + 1));
+    if (point.getY() > 0
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != m_paintTerrain) {
+        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() - 1));
+    } else if (point.getY() < getHeight() - 1
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != m_paintTerrain) {
+        m_secondaryPoints.insert(TRmgGridPoint(point.getX(), point.getY() + 1));
     }
-    if (point.m_x > 0
-        && getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y)) != m_paintTerrain) {
-        queueSecondaryPoint(TRmgGridPoint(point.m_x - 1, point.m_y));
-    } else if (point.m_x < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != m_paintTerrain) {
-        queueSecondaryPoint(TRmgGridPoint(point.m_x + 1, point.m_y));
+    if (point.getX() > 0
+        && getTerrain(TRmgGridPoint(point.getX() - 1, point.getY())) != m_paintTerrain) {
+        m_secondaryPoints.insert(TRmgGridPoint(point.getX() - 1, point.getY()));
+    } else if (point.getX() < getWidth() - 1
+        && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != m_paintTerrain) {
+        m_secondaryPoints.insert(TRmgGridPoint(point.getX() + 1, point.getY()));
     }
-    if (point.m_x > 0 && point.m_y > 0) {
-        TRmgGridPoint nearby(point.m_x - 1, point.m_y - 1);
+    if (point.getX() > 0 && point.getY() > 0) {
+        TRmgGridPoint nearby(point.getX() - 1, point.getY() - 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            queueSecondaryPoint(nearby);
+            m_secondaryPoints.insert(nearby);
     }
-    if (point.m_x < getWidth() - 1 && point.m_y > 0) {
-        TRmgGridPoint nearby(point.m_x + 1, point.m_y - 1);
+    if (point.getX() < getWidth() - 1 && point.getY() > 0) {
+        TRmgGridPoint nearby(point.getX() + 1, point.getY() - 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            queueSecondaryPoint(nearby);
+            m_secondaryPoints.insert(nearby);
     }
-    if (point.m_x > 0 && point.m_y < getHeight() - 1) {
-        TRmgGridPoint nearby(point.m_x - 1, point.m_y + 1);
+    if (point.getX() > 0 && point.getY() < getHeight() - 1) {
+        TRmgGridPoint nearby(point.getX() - 1, point.getY() + 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            queueSecondaryPoint(nearby);
+            m_secondaryPoints.insert(nearby);
     }
-    if (point.m_x < getWidth() - 1 && point.m_y < getHeight() - 1) {
-        TRmgGridPoint nearby(point.m_x + 1, point.m_y + 1);
+    if (point.getX() < getWidth() - 1 && point.getY() < getHeight() - 1) {
+        TRmgGridPoint nearby(point.getX() + 1, point.getY() + 1);
         int terrain = getTerrain(nearby);
         if (terrain != m_paintTerrain
             && !g_rmgTerrainRules[terrain]->m_allowsSeparatedNeighbours)
-            queueSecondaryPoint(nearby);
+            m_secondaryPoints.insert(nearby);
     }
 }
 

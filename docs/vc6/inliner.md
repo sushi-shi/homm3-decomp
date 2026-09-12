@@ -2094,13 +2094,12 @@ point became trivially copyable. What they settle and what they leave:
   (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
   `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
   site structure, not a cheaper cache pair.
-- `queueOtherTerrainNeighbours` (63.63%): retail refuses the four cardinal
-  inserts' pair constructor (cost 41) and the north-west/north-east cache
-  reads (90), then expands the south-east fill (128). With the budget model
-  that needs more than 41 remaining candidate sites at the first insert and
-  about 695 units at the last read; the traced body has 25 sites and 351
-  units. Paint-terrain, dimension and rule accessors add ten sites (68.24%);
-  the rest points at a per-arm helper for the cardinal probes.
+- `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
+  inserts' pair constructor (cost 41) and the cache reads (90) through the
+  north-east arm, then expands the south-east fill (128). With the budget
+  model that needs more than 41 remaining candidate sites at the first
+  insert and about 695 units at the last read; the traced body has 25
+  sites and 351 units. Closed in the second round below.
 - `refreshRmgLinePoint` (71.92%): retail calls `TPoint::operator+=`, the
   grid conversion and `at()` from a loop body whose own budget is above
   700, so those three sit in a nested context under 42 units in retail; the
@@ -2137,11 +2136,20 @@ point became trivially copyable. What they settle and what they leave:
   non-candidates when defined next to their callers, so a new helper's
   candidate status has to be read from the trace before its budgets mean
   anything.
-- `queueOtherTerrainNeighbours` (63.6 -> 78.2): a secondary-queue helper
-  nests the insert so its pair copy divides each arm's budget; the four
-  cardinal arms then need 64..104 units at the helper and the north-west
-  arm 105 or more, which the current site counts (54/62/69/81/91) do not
-  give. Per-arm accessor placements do not move it.
+- `queueOtherTerrainNeighbours` (63.6 -> 100): the eight arms need the
+  remaining-site count to fall steeply, from over 40 at the first insert
+  to two at the last read. Reading every coordinate through the grid
+  point's accessors in the guards and the constructions (five or six free
+  sites per cardinal arm, four to six per diagonal) does exactly that with
+  the insert called directly: pair copies 32/35/39 refused then 46
+  expanded, reads 31..68 refused then 105 and 463 expanded, the last fill
+  at 186. A secondary-queue helper nesting the insert (78.2) was a dead
+  end: it divides the helper's own budget, so the north/south arms lose
+  the whole insert (54/62 against 64) and no site count gives the
+  north-west arm 105 while the north-east read stays under 90. Model
+  first, then probe: a simulator of the running-budget arithmetic over
+  candidate site structures (scratch qo-sim) found the accessor structure
+  before any compile.
 - `paintTransitions` (84.1): retail refuses all twelve pre-loop reads and
   expands only the last two; ours expands three earlier ones (nested
   budgets 104/127/145 against 90). The point constructions and edge-count
