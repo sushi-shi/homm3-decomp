@@ -1554,7 +1554,7 @@ struct TRmgGridRectangle {
     TRmgGridPoint m_origin;
     TRmgGridPoint m_size;
 
-    TRmgGridRectangle(const TRmgGridPoint& origin, unsigned int width, unsigned int height);
+    TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size);
 };
 SIZE(TRmgGridRectangle, 0x10);
 
