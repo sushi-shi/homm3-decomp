@@ -2169,4 +2169,95 @@ point became trivially copyable. What they settle and what they leave:
 - `TRmgLineWalker::paintPoint` (80.6): retail calls `TPoint::operator+=`
   once inside the first neighbour loop where our nested budget is 110
   against 43; that needs about twelve more remaining sites, the same
-  shape of gap as `refreshRmgLinePoint`.
+  shape of gap as `refreshRmgLinePoint`. Closed further below.
+
+### Third terrain round, 2026-09-12: the budget model as a simulator
+
+The running-budget rule reads, in full: every site list (the caller's
+depth-one sites, and each expanded body's own sites) has a running budget;
+a site whose cost is over 40 is refused when that running budget is below
+its cost and otherwise subtracts its cost from every enclosing running
+budget; an expanded site's body gets `(budget - cost if over 40) /
+remaining siblings including itself` as its own running budget. A short
+replay of a `predict-inline --trace` tree under that rule (scratch
+`sim-tree.py`, validated against every traced row) predicts the decisions
+of any site insertion before compiling, so a family only needs to spell
+the structures the replay admits. What it found:
+
+- `queueOtherTerrainNeighbours` and `buildMatchingNeighbourMask` need the
+  remaining-site count to fall steeply through their arms. Point accessors
+  in every guard and construction do it for the first; for the second the
+  clamped coordinates held as two corner points whose accessors feed the
+  diagonal temporaries (three sites per diagonal) and one reused point
+  moved through its setters for the cardinal reads (kept in a block so the
+  diagonal temporaries take its slot, retail's 0x30 frame) match every
+  read and fill decision. A reused point for the diagonals is unconditional
+  and changes the flow; conversion-built temporaries give the same sites
+  with a larger frame. 99.27%: the south-east fill's SIB order and cell
+  base register are C2 state that no declaration order moves.
+- `getTransitionStrength` keeps two reads per arm: the frame read sits in
+  a `getFrame` sibling of `getTerrain` so its cost divides like the terrain
+  read's, and each neighbour is constructed at the cell and stepped by one
+  setter from the parameter's coordinate (the point's own coordinate shifts
+  in place and keeps the terrain parameter in EBX where retail keeps the
+  rule pointer). 100%.
+- `paintTransitions` needed five more candidate sites after its twelfth
+  read: point accessors in the edge-count indices, loop increments and
+  neighbour constructions; constructing each neighbour directly from the
+  offset coordinates instead of a compound add settled the registers. 100%.
+- The pattern-table constructor: indexing the fixed table at every use
+  anchors the strength-reduced scan at the X-flip byte as retail; a named
+  entry pointer anchors it at the Y-flip byte. 100%.
+- The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
+  the sum, conversion and factory sites of a neighbour query can only be
+  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  on the painter interface holds them; the current tile's frame and flip
+  accessors give the refresh's tail the sites the helper's budget divides
+  by, the proxy's initializer-list copy keeps the walker's compound add
+  retained, and a plain copy of the selected pattern lets retail's EDI
+  survive `rand()`. 74 -> 97.35 and 80.6 -> 87.1; both residuals were
+  callee-saved role swaps at entry (see regalloc.md, B1). The walker then
+  closed (100): a rectangle constructor taking its size as a grid point
+  materializes the one-cell rectangle's two unit extents from one register
+  copied into another, the painter alias and availability mask scoped to
+  the first pass give retail's frame, and naming the converted sum inside
+  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  the coordinates). Refresh keeps its entry swap.
+- Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
+  loop erase's `_Distance` wrapper had to be refused while the final
+  insert's pair copy stayed expanded, and no site insertion did that; the
+  replay showed that only a predicate costing 41-52 units in place of the
+  free 38-unit `isPaintTerrain`, or a caller 17-26 units cheaper, flips
+  exactly that decision. The guard-return spelling costs 47 and closed the
+  row, byte-identical in its own expansion. Simulate the callee's cost
+  (`cost=needle:cb`) before spelling it.
+- The painter constructor (97.92 -> 100): the dimensions as one grid-point
+  member assigned from the virtual size result, with the packed-cell count
+  as the product of the ordinary width/height queries; those two free
+  sites leave the product reading the width back from the member, which
+  retail's first block does.
+- A helper wrapping a read cannot starve it: the helper's cost is
+  subtracted before the division by its remaining siblings, a few units.
+- The STL `_Tree::insert` row (79.8) is an exception-frame difference:
+  retail compiled the instantiation before the grid-point comparator's
+  body, so the `_Lockit` scope needs a frame; our comparator, a regular
+  function or an inline one emitted at its first use, is compiled first
+  and known not to throw. Only declaring it restores the frame (100%) but
+  removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
+  places the comparator between the two `_Distance` instantiations, but
+  spelling it inline in either header, as an in-class friend, or inline
+  early in the file leaves every row byte-identical (2026-09-12). The
+  mechanism, measured on small units through `cc_wrap`: C1XX writes an
+  inline function's body right after the function whose processing first
+  needs it; template member bodies always go to the deferred region, and
+  an inline comparator referenced only from `less<T>::operator()` lands
+  there too (after `insert`, which then gets its frame) unless the
+  instantiation batch runs at the end of a regular function, which
+  happens once enough distinct instantiations are pending (a unit with
+  vector/list/set traffic in its constructor pulled the comparator out
+  right after the first set user). In `rmg_terrain` that batch runs at
+  `paintPoint`'s end, so the comparator is compiled before `insert`;
+  every `paintPoint` edit that defers it (dropping the secondary find
+  guard, an arm, the loop or the tail) also changes `paintPoint`'s
+  retained calls, and the trigger is not monotone in the number of set
+  calls. Open.
