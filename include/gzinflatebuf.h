@@ -1,24 +1,13 @@
-// gzinflatebuf.h - the gzip-inflating streambuf and its TAbstractFile
-// adapter that Complete's campaign loader reads .h3c payloads through.
-//
-// NEITHER CLASS HAS A DREAMCAST ROW. TGzInflateBuf's bodies sit in the
-// gametypewindow..hero link-order bracket (the compiland opened by cinit
-// 0x4d5f70..0x4d5fb0: 0x4d5fd0 get-byte helper, 0x4d6050 constructor,
-// 0x4d65e0 error ctor, 0x4d6690, 0x4d67f0 scalar deleting dtor,
-// 0x4d6820 destructor, 0x4d6920 underflow, 0x4d6b80 / 0x4d6ba0), one
-// object ahead of TGzFile's (savegame.h). TStreamBufFile's two virtual
-// bodies are emitted at the head of customcampaign.obj (0x483f10 /
-// 0x483f30), which is where they are claimed. Names PROVISIONAL, taken
-// from the decorated vftable symbols retail keeps (??_7TGzInflateBuf@@6B@
-// at 0x63e710, ??_7TStreamBufFile@@6B@ at 0x63dacc).
+// gzinflatebuf.h - the gzip-inflating stream buffer shared by Complete's
+// campaign loaders. Its retail band lies between gametypewindow and hero;
+// the class has no Dreamcast CodeView counterpart. The campaign-only
+// TAbstractFile adapter is defined with its callers in customcampaign.cpp.
 #ifndef HOMM3_GZINFLATEBUF_H
 #define HOMM3_GZINFLATEBUF_H
 
-#include <stdexcept>
 #include <streambuf>
 #include <zlib.h>
 
-#include "abstractfile.h"
 
 // A std::streambuf that inflates a gzip member out of another streambuf.
 // LAYOUT BYTE-PROVEN by the constructor 0x4d6050 and destructor 0x4d6820:
@@ -80,28 +69,5 @@ private:
     int readByte();             // 0x4d6ba0
 };
 SIZE(TGzInflateBuf, 0x84);
-
-// std::runtime_error's string constructor is an in-class inline, so the
-// message form expands at its three throw sites while the message-less
-// form stays out of line at 0x4d65e0.
-class TGzInflateBuf::TDataError : public std::runtime_error {
-public:
-    TDataError();  // 0x4d65e0
-    TDataError(const std::string& text) : std::runtime_error(text) {}
-};
-
-// The TAbstractFile view of a streambuf: Read is sgetn, Write is sputn.
-// Size 8 is byte-proven by every stack instance (vftable, streambuf*).
-class TStreamBufFile : public TAbstractFile {
-public:
-    TStreamBufFile(std::streambuf* newBuffer) : m_buffer(newBuffer) {}
-    // Before normalization (function): TStreamBufFile::Read.
-    virtual int read(void* data, int size);         // 0x483f10
-    // Before normalization (function): TStreamBufFile::Write.
-    virtual int write(const void* data, int size);  // 0x483f30
-
-    // Before normalization: buffer.
-    std::streambuf* m_buffer;  // +4
-};
 
 #endif  /* HOMM3_GZINFLATEBUF_H */

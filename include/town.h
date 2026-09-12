@@ -152,23 +152,6 @@ enum EGameResource {
     RES_SMALL_GOLD = 36
 };
 
-// Integer resource ordinals cross into the DC-proven EGameResource ABI
-// at helpers such as add_reward (dc 0x91308). Retail GiveBlackBoxReward
-// (0x49fa90) uses both the 0..6 resource loop and primary-skill base +
-// index directly. This shared bridge preserves that four-byte value.
-// Before normalization (function): game_resource_from_int.
-inline EGameResource gameResourceFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: resource.
-        EGameResource m_resource;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_resource;
-}
-
 // DC names this shared table townBuildingSpriteNames. Retail extends its
 // RoE eight-town run with Conflux and places the definition in townmgr.obj;
 // kb.obj's dialog-icon switch is the first proven cross-TU consumer.
@@ -283,6 +266,16 @@ SIZE(TownExtra, 0x88);
 // include-set canary measured exactly this forward declaration at
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
 class TTownEvent;
+
+// The 1i64 << n building-bit table every mask builder indexes (DC
+// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
+// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
+// every i < 48, so the four "mask" globals this header used to carry
+// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
+// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
+// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
+// - extern only, no DATA claim (the gpWindowManager pattern).
+extern __int64 g_bitNumber[];
 
 class town {
 public:
@@ -457,8 +450,8 @@ public:
     __int64 m_available;
 
     // Before normalization (function): town::CanBuildDock.
-    unsigned char canBuildDock();
-    // DC Town.h:299 / :305 header inlines; getBuildingMask defined here
+    unsigned char canBuildDock() const;
+    // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
     // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
     // townmgr.obj). Declared 2026-08-27 with IsCastle/IsCapitol below:
@@ -473,39 +466,17 @@ public:
     __int64 getBuildingMask() const { return m_active; }
     // Before normalization (function): town::get_generator_bonus.
     long getGeneratorBonus(long dwelling) const;
-    // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
-    // linker kept an out-of-line copy in advmgr.obj). Packs the town's
-    // three map bytes into a type_point and returns it BY VALUE - the
-    // `__$ReturnUdt` in the Dreamcast declarator is that hidden return
-    // buffer. Retail has no out-of-line body: /Ob2 expands it at every
-    // call site.
-    //
-    // GATED, and it has to be: added ungated this declarator took
-    // initialize_game_data 100.0 -> 96.09 and recruitUnit::Update
-    // 90.84 -> 88.24 with no semantic change anywhere - the tree's two
-    // standing include-set canaries, both at once. Every consumer opens
-    // HOMM3_TOWN_LOCATION_DECLS for itself and re-measures.
-    //
-    // MEASURED 2026-08-14 against the one caller this tree can already
-    // score, and the result is NEGATIVE: rewriting ai_player.cpp's
-    // can_take_town (0x428410) to `type_point point =
-    // defending_town->get_location();` scores 86.87 with the body below
-    // and 79.06 with a `return type_point(mapX, mapY, mapZ);` body,
-    // against 98.75 for the three-short spelling that body already
-    // carries. So the standing report that a by-value UDT return closes
-    // can_take_town does NOT reproduce here; whatever closed it was a
-    // different call site or a different spelling. The declarator is
-    // landed anyway because the Dreamcast evidence for the accessor is
-    // solid and the gating requirement is now measured, but the next
-    // lane should treat the caller list as UNPROVEN and score each one.
+    // DC Town.h:311 (dc 0x1fdac), selected in advmgr.obj. Line 312
+    // calls the canonical three-short type_point constructor with mapX/Y/Z
+    // and returns the value through the hidden UDT-result buffer.
+    // Earlier canTakeTown probes scored 86.87 with a separately named
+    // point-return local and 79.06 with this constructor expression, versus
+    // the local clone's 98.75/100 peaks. Those measurements do not refute
+    // the CodeView constructor call or justify a second helper definition.
     // Before normalization (function): town::get_location.
     type_point getLocation() const
     {
-        type_point point;
-        point.m_x = m_mapX;
-        point.m_y = m_mapY;
-        point.m_z = m_mapZ;
-        return point;
+        return type_point(m_mapX, m_mapY, m_mapZ);
     }
     // DC `town::HasBuilding` (dc 0x1fe14, E:\gamedcs\Town.h:324) - an
     // INLINE MEMBER of this header, not a town.obj method. Retail's
@@ -514,8 +485,8 @@ public:
     //   check_included != 0 -> `[ecx+0x158]` = active
     //   check_included == 0 -> `[ecx+0x150]` = built
     // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
-    // tree's readers had been spelling by hand. Body below, after
-    // bitNumber's declaration - UNGATED as of the view audit, see the
+    // tree's readers had been spelling by hand. The body is canonical
+    // and ungated, in CodeView source order; see the
     // correction at the end of this note.
     //
     // THE VISIBILITY IS SCOPED, and both halves of the scoping are
@@ -551,18 +522,31 @@ public:
     // complete source ABI: const member (QB), native-bool return and native-
     // bool second parameter (_N ... _N). Retail's thiscall lowering is the
     // same and its selected ai_player.obj COMDAT returns canonical 0/1.
-    // Before normalization (function): town::HasBuilding.
-    // Before normalization (locals): check_included.
-    bool hasBuilding(int buildingId, bool checkIncluded) const;
+    VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    bool hasBuilding(int buildingId, bool checkIncluded) const
+    {
+        if (checkIncluded) {
+            return (m_active & g_bitNumber[buildingId]) != 0;
+        } else {
+            return (m_built & g_bitNumber[buildingId]) != 0;
+        }
+    }
     // DC Town.h:337 / :342 header inlines, declaration-only here
     // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
     // out of line by the DC linker in game.obj). See the
     // get_building_mask note above for why they landed together.
-    // Before normalization (function): town::IsCastle.
-    unsigned char isCastle() const;
-    // Before normalization (function): town::IsCapitol.
-    unsigned char isCapitol() const;
-    // Before normalization (function): town::CalcNumLevelArchers.
+    // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
+    unsigned char isCastle() const
+    {
+        return hasBuilding(CASTLE_FORT_ID, 0)
+            || hasBuilding(CASTLE_CITADEL_ID, 0)
+            || hasBuilding(CASTLE_CASTLE_ID, 0);
+    }
+    // E:\gamedcs\Town.h:342.
+    unsigned char isCapitol() const
+    {
+        return hasBuilding(HALL_CAPITOL_ID, 0);
+    }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
     // Before normalization (function): town::get_castle_growth_bonus.
     long getCastleGrowthBonus(TCreatureType creature) const;
@@ -607,15 +591,15 @@ public:
     // it follows get_castle_growth_bonus' neighbour rather than
     // asserting one.
     // Provisional retail-only name; DC get_legion_bonus is the next method.
-    long getLegionBonus(long dwelling);
+    long getAssembledLegionBonus(long dwelling);
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
-    // Before normalization (function): town::TownFn_005BF900.
-    long townFn005BF900(long dwelling);
+    // Original: town::get_legion_bonus; CodeView town.cpp:1581, const.
+    long getLegionBonus(long dwelling) const;
     // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
     // growth for one dwelling slot.
     // Before normalization (function): town::get_growth_rate.
-    short getGrowthRate(short dwelling);
+    short getGrowthRate(short dwelling) const;
     // 0x5bfdd0.
     // Before normalization (function): town::increase_population.
     // Before normalization (locals): bonus_creature, alternate_bonus, bonus_amount.
@@ -707,7 +691,7 @@ public:
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
     // Before normalization (function): town::GiveSpells.
-    void giveSpells(hero* forceHero);
+    void giveSpells(hero* forceHero) const;
 // advmgr.obj joins the gate for View alone: DoAdvCommand's two town arms
 // call it, one on gpGame->GetTown(currTownId) and one on the town the
 // current hero obscures. The guard is SPLIT around the single declarator
@@ -840,51 +824,6 @@ public:
     static type_horde_effect s_constHordeEffects[9][4];
 };
 SIZE(town, 360);
-
-// Retail 0x526d20, a 30-byte /Gr fastcall shim on the computer-player
-// side: it routes the cost row through the owning AI player's
-// trade_resources. town::buy_building (0x5bf3c0) is the only reader -
-// it runs the shim for a non-human owner before charging the row - and
-// no roster attests a name, so this keeps a house ordinal placeholder
-// (the general-text precedent). CLAIMED AND DEFINED in src/philai.cpp
-// (exact, 2026-08-27): the body sits in philai's span between the
-// AI_resource_cost pair and the spellvalue constructor.
-// Before normalization (function): Unnamed526d20.
-void unnamed526d20(int playerId, int* costs, int flag);
-
-// The 1i64 << n building-bit table every mask builder indexes (DC
-// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
-// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
-// every i < 48, so the four "mask" globals this header used to carry
-// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
-// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
-// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
-// - extern only, no DATA claim (the gpWindowManager pattern).
-// Before normalization: bitNumber.
-extern __int64 g_bitNumber[];
-
-// The Town.h inline declared above. Placed here because it indexes
-// bitNumber, which the class definition precedes.
-// The if/else block form is load-bearing for /Ob2 (2026-09-11): it puts this
-// body's C1 IL cost at 68 (`homm3 vc6 predict-inline
-// '?hasBuilding@town@@QBE_NH_N@Z' --trace`). Retail's cost is bracketed to
-// 62..84 by hero::getLuck, which calls the Grail test after six
-// IsWieldingArtifact expansions (budget 61 left), and hero::getMorale, which
-// expands it at 210; town::buildBuilding's site budgets (retail calls at a
-// 72-unit site and expands an 82-unit one) narrow that to 73..82 and remain
-// open. The plain early-return form costs 60 and leaves getLuck at 94.2277%
-// with the Grail test expanded; the retained ai_player.obj copy (0x4305a0)
-// is byte-identical in both forms. Measured: `else` without braces 64,
-// `!= false` 71, static_cast<bool> 70, a named mask or result local changes
-// the copy's bytes.
-inline bool town::hasBuilding(int buildingId, bool checkIncluded) const
-{
-    if (checkIncluded) {
-        return (m_active & g_bitNumber[buildingId]) != 0;
-    } else {
-        return (m_built & g_bitNumber[buildingId]) != 0;
-    }
-}
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.

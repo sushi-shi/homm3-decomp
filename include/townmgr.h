@@ -202,34 +202,7 @@ extern const char* g_townBuildingSprites[9][44];
 // Before normalization: gTownMusic.
 extern const char* g_townMusic[9];
 
-// The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
-// to the adventure handler's TRADE path with the same `this` - a direct,
-// non-virtual base call, so the derivation is at offset 0 - and then
-// refreshes the resource bar it was constructed with. That refresh reads
-// the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
-// base, and the Dreamcast constructor's one parameter is that same bar.
-class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
-public:
-    // Before normalization: pResourceDisplay.
-    TResourceDisplay* m_resourceDisplay;  // +0x0c
 
-    // The only retail construction site (townManager::Open) expands this
-    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
-    // call, followed by the derived vptr and resource-display stores.
-    CTownNetMsgHandler(TResourceDisplay* display)
-    { m_resourceDisplay = display; }
-    // Four bytes on the Dreamcast and no retail row of its own, so it
-    // is a header one-liner every caller expands: DoHall 0x5d27b0
-    // emits the bare `mov [handler+0xc], bar` at both of its two
-    // hand-over sites.
-    // Before normalization (function): CTownNetMsgHandler::SetResourceDisplay.
-    void setResourceDisplay(TResourceDisplay* display)
-    { m_resourceDisplay = display; }
-    // Before normalization (function): CTownNetMsgHandler::HandleGiftMsg.
-    // Before normalization (locals): pNetMsg.
-    void handleGiftMsg(CNetMsg* netMsg);
-};
-SIZE(CTownNetMsgHandler, 0x10);
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -410,6 +383,8 @@ public:
     void updateTownLocator(int i);
     // Before normalization (function): TTownScreenWindow::UpdateTownLocators.
     void updateTownLocators();
+    void doTownKnob(unsigned char up);
+    void bonusRightClick(long id);
     // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
     // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
     // only caller in the image and hands it the town being shown.
@@ -607,14 +582,14 @@ public:
     // points push a third literal 0 behind the army pointer.
     type_monster_join_window(hero* inHero, armyGroup* monsters,
                              unsigned char flags);
-    virtual ~type_monster_join_window();
+    // Implicit destructor; CodeView dc 0x181638 compgenx.
 };
 
 class TGarrisonWindow : public type_garrison_base_window {
 public:
     // Before normalization (locals): garrison_owner, garrison_army.
     TGarrisonWindow(hero* inHero, int garrisonOwner, armyGroup* garrisonArmy);
-    virtual ~TGarrisonWindow();
+    // Implicit destructor; CodeView dc 0x181684 compgenx.
 };
 
 // The blacksmith, which sells one war machine per town type. Its
@@ -1136,7 +1111,9 @@ public:
     // player's eight-hero count before doing so. DoCommand is its only
     // caller in the whole image, and retail still emits it out of line.
     // Before normalization (function): townManager::MoveHeroFromGarrison.
+    void moveHeroToGarrison();
     void moveHeroFromGarrison();
+    void drawTown(int update, int incFrame, unsigned char drawHotspots);
     // Retail 0x5d4c10 (dc 0x176634). The town page's command dispatch.
     // Before normalization (function): townManager::DoCommand.
     void doCommand(int inCommand, unsigned char isGarrison,

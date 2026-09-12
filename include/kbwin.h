@@ -6,65 +6,7 @@
 #define HOMM3_KBWIN_H
 
 #include <windows.h>
-
-// Static timer utility (DC attests the class and all three members;
-// kbwin.cpp lines 823-839).
-class GameTime {
-public:
-    // Before normalization (function): GameTime::Get.
-    static unsigned long get();             // 0x4f82e0
-    // Before normalization (function): GameTime::DelayTil.
-    static void delayTil(unsigned long time);  // 0x4f82f0
-    // Before normalization (function): GameTime::Delay.
-    static void delay(int interval);        // 0x4f83c0
-    // DC struct.h:438 (dc 0x4c994, 44 B on SH4) - the frame-pacing
-    // step, and a HEADER INLINE: no retail out-of-line body exists,
-    // /Ob2 expands it at every site. army::Fly (0x4b4a40) is the
-    // expansion that proves the shape - `this_frame` is homed to a
-    // stack slot BEFORE the Get() call and read back twice afterwards,
-    // which a hand-spelled `timer += lag` (two independent global
-    // loads) cannot produce, and the clamp compares `cmp interval, lag;
-    // jle`, i.e. the INTERVAL is the left operand.
-    // Declared HERE rather than in struct.h, its Dreamcast home,
-    // because this tree already carries the rest of GameTime here and
-    // moving the class would put struct.h's type_point into every one
-    // of kbwin.h's nineteen consumers.
-    // Before normalization (function): GameTime::NextFrameTime.
-    // Before normalization (locals): this_frame.
-    static unsigned long nextFrameTime(unsigned long thisFrame,
-                                       long interval)
-    {
-        long lag = static_cast<long>(get() - thisFrame);
-        if (interval > lag)
-            lag = interval;
-        return thisFrame + lag;
-    }
-    // Dreamcast struct.h:403-405, dc 0x1eec4. HighScoreWindowHandler
-    // compares this signed elapsed interval against 200 in retail.
-    // Before normalization (function): GameTime::Elapsed.
-    static long elapsed(unsigned long stop, unsigned long start)
-    {
-        return static_cast<long>(stop - start);
-    }
-    // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
-    // header inlines of the same family; no retail out-of-line body
-    // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
-    // is the expansion that proves the shape: the deadline argument is
-    // loaded into a callee-saved register BEFORE the Get() call (an
-    // argument evaluated ahead of its guard), and the result is tested
-    // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
-    // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    // Before normalization (function): GameTime::ElapsedSince.
-    static long elapsedSince(unsigned long time)
-    {
-        return static_cast<long>(get() - time);
-    }
-    // Before normalization (function): GameTime::IsPast.
-    static unsigned char isPast(unsigned long time)
-    {
-        return elapsedSince(time) >= 0;
-    }
-};
+#include "struct.h"
 
 // Live prototypes (homm2 kbwin lineage; retail bodies noted).
 // Before normalization (function): AppExit.

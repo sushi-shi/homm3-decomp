@@ -214,8 +214,6 @@ public:
     // it as a carcass.
     // Before normalization (function): TCombatCreatureSubWindow::UnShow.
     void unShow();
-    // Before normalization (function): TCombatCreatureSubWindow::IsShown.
-    bool isShown() const { return m_shown; }
 };
 SIZE(TCombatCreatureSubWindow, 0x70);
 

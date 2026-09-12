@@ -11,10 +11,12 @@
 #include "kb.h"
 #include "quest.h"  // type_quest, the quest-guard arm of enter_trigger
 #include <stdlib.h>  // abs, check_town_portal's distance surcharge
+#include "includes.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local
-// duplicate free helpers. The direct != body preserves retail's three tests.
+// duplicate free helpers. The direct != body preserves retail's three tests;
+// negating operator== instead scored 64.78% in the earlier buildPath probe.
 
 // Using the canonical comparisons changes buildPath from 82.5524% to
 // 81.4143%; its 86.3333% historical peak remains recorded below and in HIST.
@@ -94,25 +96,11 @@ long aiValueOfEvent(const hero* currentHero, type_point point);
 // Before normalization (function): AI_resource_cost.
 int aiResourceCost(const playerData* player, const int* resources);
 
-// Dreamcast line 309 calls the source-private `int min(int, int)` from
-// includes.h:114 over the const-reference `_cpp_min` - the same two-layer
-// shape combatresultswindow.cpp keeps: retail stores both by-value
-// wrapper arguments to stack temps and selects between their addresses.
-// (<xutility>'s std::_cpp_min measured 76.46 against this pair's 94.50.)
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(const _TYPE& x, const _TYPE& y)
-{
-    return (y < x ? y : x);
-}
 
 #ifdef min
 #undef min
 #endif
-inline int min(int a, int b)
-{
-    return cppMin(a, b);
-}
+
 
 // E:\gamedcs\search.cpp:113
 // A monster guarding the cell being entered: the pathCell's `monster`

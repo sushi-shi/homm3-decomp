@@ -23,6 +23,7 @@ class SegmentTests(unittest.TestCase):
         types = "struct TRmgZone {};\n" + "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgBoundaryVertex"))
         methods = "\n".join(helper.definition(source, name, **args) for name, args in (
+            ("TRmgBoundaryVertex::initialize", {}),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin")),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone")),
             ("getRmgPointOrientation", {}), ("getRmgSquaredDistance", {})))

@@ -11,6 +11,10 @@
 #include "game.h"
 #include "window.h"
 
+// Shared saved game snapshot; original Dreamcast name: saveHeader.
+// campaignbrief.cpp owns retail 0x69fdc4.
+extern game* g_saveHeader;
+
 class bitmapBorder;
 class button;
 class coloredBorderFrame;
@@ -64,41 +68,7 @@ SIZE(CampaignScenarioPreview, 0x4d4);
 // decoded; their first parameter is the same opaque per-scenario record in
 // all three (it carries a byte vector at +0x18, an int row at +0x4c, a
 // vector at +0x70 and a five-dword bit block at +0x90).
-class TCampaignStartOption {
-public:
-    // UpdateBonusIcons centres the frames when there are two choices.
-    enum EChoiceCount {
-        CHOICE_COUNT_PAIR = 2
-    };
-    // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
-    // one vptr store with no `mov eax,ecx`, which no VC6 constructor emits.
-    // Defined out of line in the .cpp so the plain body is emitted at all;
-    // 0x484f50, the root's `??_G`, then inlines it, as does every derived
-    // destructor.
-    virtual ~TCampaignStartOption();
-    virtual bool isBuildingBonus(int which) const = 0;
-    virtual int getCount() const = 0;
-    virtual const char* getIconDefName(void* scenario, int which) const = 0;
-    virtual int getIconIndex(int which) const = 0;
-    // 0x484f80, inherited by the bonus and the third option: sums the
-    // 5-dword bit block through the nibble table at 0x67729c and answers
-    // the campaign's crossover index.
-    virtual int slot5(void* scenario, int which) const;
-    virtual std::string getText(void* scenario, int which) const = 0;
-    // 0x485090, `or eax,-1 / ret 4` - inherited unchanged by ALL THREE
-    // concrete classes, so the root is where the -1 lives.
-    virtual int slot7(int which) const;
-    virtual int getPlayer(int which) const = 0;
-    virtual void read(TAbstractFile* file) = 0;
-    // `ret 4`: the slot takes one argument this option never reads, and
-    // both sibling options answer it with the shared do-nothing at
-    // 0x485d80.
-    virtual void apply(void* scenario) = 0;
-    virtual void setTown(CMapHeaderData* header) = 0;
-    // 0x485000: every prerequisite scenario the record marks must already
-    // be completed in gpGame->campaign.mapScores.
-    virtual bool slot12(void* scenario, int value) const;
-};
+class TCampaignStartOption;
 
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
 // fixes every field used by the campaign constructor and destructor.
@@ -244,12 +214,6 @@ public:
         // SCampaign::PruneCrossoverHeroes' per-hero-id table (provisional).
         // Before normalization (function): TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes.
         void markCrossoverHeroes(unsigned char* wanted);
-        // Prune's repeated inflated_size guard suggests an inlined scenario
-        // query in retail; the role name is provisional.
-        // Before normalization (function): TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes.
-        int getMaxCrossoverHeroes() const;
-        // Complete pool-eligibility predicate; retail expansion in Prune.
-        bool usesCrossoverPool(int pool);
     };
 
     struct CampaignHeaderStruct {
@@ -322,10 +286,6 @@ public:
         void freeData();
         // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetNumMaps.
         int getNumMaps() const;
-        // Prune's header-owned marking pass; name provisional without a DC row.
-        void markRequiredHeroes(unsigned char* wanted);
-        // Total scenario slots, unlike the populated-map count getNumMaps.
-        int getScenarioCount() const;
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

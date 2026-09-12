@@ -23,7 +23,7 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-#include "homm3_minmax.h"
+#include "includes.h"
 
 // Dreamcast publishes this source-private renderer state by name. Retail
 // independently fixes each address through the repeated view-world draw
@@ -83,6 +83,7 @@ DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 // Before normalization: view_heroes.
 DATA(0x006aac30)
 static unsigned char g_viewHeroes;
+
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:

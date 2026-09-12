@@ -7,6 +7,7 @@
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
+#include "mapcell.h"
 #include <va.h>
 #include <algorithm>
 #include <bitset>
@@ -1293,12 +1294,12 @@ void TRmgZone::chooseTerrain()
         m_terrain = eTerrainSubterranean;
 }
 
-// Three trivial member vectors account for all 118 retained destructor
-// bytes, including the three independently resolved operator-delete calls.
-VA(0x00532B50, 0x76)
-TRmgZone::~TRmgZone()
-{
-}
+// The implicit destructor releases the three member vectors in reverse
+// declaration order: entrances (+0x404), boundary (+0x3f4), then distances
+// (+0x3e4). Retail 0x532b62/0x532b85/0x532ba6 frees each backing allocation
+// and clears its three pointers. No vptr, owned pointee or user cleanup is
+// present; the written empty destructor added no source operation.
+VA_COMPGEN(0x00532B50, 0x76, IMPLICIT_DTOR, TRmgZone)
 
 // Both the level-occupancy pass and the bounds pass in FilterZonePositions
 // copy the whole coordinate before selecting a component. That retained
@@ -1492,6 +1493,10 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
 
 // The base-sized default-payload classes retain separate serialization
 // vtables. Their ordinary constructors expand the same canonical base call.
+// These Complete generator classes have no Dreamcast RMG compiland or
+// class/procedure counterparts. The factories 0x534870/0x534970/0x534a00/
+// 0x534a90 allocate only the base's 0x1c bytes and install 0x640ac4/0x640b24/
+// 0x640b34/0x640b54 respectively; writer slot 3 proves each payload role.
 rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -1519,6 +1524,11 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 
 // The three simple reward factories expand this same constructor. The
 // vector's automatic construction precedes these scalar/default writes.
+// Complete's generation classes have no Dreamcast RMG compiland, class or
+// procedure counterparts. DC's BlackBoxData and NewfullMap::readBlackBox
+// are the gameplay payload and reader, not these generator definitions.
+// Retail 0x534380/0x534410/0x534490 allocate 0x54 bytes, install 0x640ad4,
+// clear vector words +0x48/+0x4c/+0x50, and set the reward defaults below.
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
@@ -8782,6 +8792,15 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
+// Canonical int-copy overloads shared with mapcell's BlackBoxData paths.
+// They expand there but remain naturally emitted by this TU's int vectors.
+// Retail addObject (0x5402a0) calls the mutable form from its costs worklist;
+// BlackBoxData assignment and the RMG helper cluster call the const form.
+// Each native overload matches all 37 admitted bytes without relocations.
+// Keep their distinct retained RVAs even though their machine code agrees.
+VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
+VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
+
 // Group placement transfers its contents at a chosen three-coordinate
 // offset. The retained routine updates object positions and map-cell state.
 // Starting body reconstructed on decomp-complete-4.0 in 938b3d5d; checked
@@ -10036,6 +10055,21 @@ unsigned char type_random_map_generator::generate()
 // naming all three iterators and default-constructing then assigning the first
 // each regress to 95.66%; making the iterator non-trivial regresses to 93.97%
 // and destroys the matching tail CFG.  Those source-false forms remain out.
+// Canonical library ownership: use the pinned VC6 XSTRING constructors and
+// BITSET test/_Xran/reference definitions. Eleven application-local explicit
+// specializations previously copied those bodies and pinned their nested
+// calls; they were not recovered RMG source and have been removed.
+// The earlier constructor-only negative control measured 95.70% -> 94.10%,
+// grew the frame from 0x32c to 0x334, and added three target-only calls. That
+// explains the old workaround, but does not establish those specializations
+// or the rewritten _Xran temporaries as original application definitions.
+// With all eleven replacements removed, the caller measures 76.5336% versus
+// the preceding 95.6987% (MAX retained). The verified source comparison shows
+// the remaining frontier in library call/expansion decisions and exception
+// paths: 176 candidate blocks versus 164 retail, with 93 versus 87 branches.
+// RMG's retained bitset<129>::set comparison also loses its emitted body
+// (MAX 100). Preserve the canonical library definitions through these dips;
+// no application specialization or inline pin is evidence for fixing them.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {

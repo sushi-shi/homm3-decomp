@@ -18,7 +18,7 @@
 // value-type headers game.h used to forward here. A TU that wants
 // `game`/gpGame/playerData now says `#include "game.h"` itself
 // (armygrp.cpp, hero.cpp, town.cpp, ai_tactical.cpp all do).
-#include "mapcell.h"   // TTerrainType, for akNativeTerrains below
+#include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
 #include "struct.h"    // type_point, used through this header's consumers
 #include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
 
@@ -647,14 +647,6 @@ SIZE(SSpellTraits, 136);
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
 // Before normalization: akSpellTraits.
 DATA(0x00687f58) extern const SSpellTraits (&g_spellTraits)[81];
-
-// Dreamcast SpellDefs.h:345..346, dc 0x4fd34: original IsMindSpell.
-// Its header definition and get_spell_work_chance line 505 establish the
-// canonical accessor boundary; Complete expands this bit test in the caller.
-inline unsigned char isMindSpell(int spell)
-{
-    return (g_spellTraits[spell].m_flags & 0x400) != 0;
-}
 
 // spelldefs.cpp owner; retail /Gr passes spell/mastery in ECX/EDX.
 // Before normalization (function): SpellTargetsASingleArmy.

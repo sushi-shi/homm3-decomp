@@ -299,6 +299,36 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5 = 763
 };
 
+// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
+// the text pointer vector begins at +0x1c and its Dinkumware _First
+// member is loaded from +0x20. This is the same retail vector layout as
+// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
+// +0x2c position follows the adjacent vector/data members used by both
+// text-resource variants.
+class TTextResource : public resource {
+public:
+    typedef std::vector<char*> TTextArray;
+
+    TTextResource();
+    TTextResource(const char* name, int size, const char* data);
+    virtual ~TTextResource();
+
+    virtual unsigned int getSize() const;
+    // E:\gamedcs\TextResource.h:66
+    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
+    const char* getText(int r) const { return m_text[r]; }
+    // E:\gamedcs\TextResource.h:73
+    const char* operator[](int i) const { return getText(i); }
+
+public:
+    // Canonical backing vector. Public while the decompilation still has
+    // direct retail consumers; this replaces the former fake +0x20 view.
+    TTextArray m_text;  // +0x1c (_First +0x20)
+private:
+    char* m_data;       // +0x2c
+};
+SIZE(TTextResource, 48);
+
 // PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
 // Spreadsheet row vector sits at +0x1c on the resource base - VC6
 // Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
@@ -322,8 +352,6 @@ public:
     virtual unsigned int getSize() const;
     // Before normalization (function): TSpreadsheetResource::GetNumberOfRows.
     int getNumberOfRows() const { return m_spreadsheet.size(); }
-    // Before normalization (function): TSpreadsheetResource::GetRow.
-    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
     // Before normalization: TSpreadsheetResource::GetSpreadsheet.
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
     // indexes the row and cell vectors directly. High-score defaults call
@@ -331,6 +359,8 @@ public:
     const char* getSpreadsheet(int r, int c) const {
         return (*m_spreadsheet[r])[c];
     }
+    // Before normalization (function): TSpreadsheetResource::GetRow.
+    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
 
 private:
     // Before normalization: Spreadsheet.
@@ -342,40 +372,6 @@ private:
 };
 SIZE(TSpreadsheetResource, 52);
 
-// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
-// the text pointer vector begins at +0x1c and its Dinkumware _First
-// member is loaded from +0x20. This is the same retail vector layout as
-// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
-// +0x2c position follows the adjacent vector/data members used by both
-// text-resource variants.
-class TTextResource : public resource {
-public:
-    typedef std::vector<char*> TTextArray;
-
-    TTextResource();
-    TTextResource(const char* name, int size, const char* data);
-    virtual ~TTextResource();
-
-    // Before normalization (function): TTextResource::GetSize.
-    virtual unsigned int getSize() const;
-    // E:\gamedcs\TextResource.h:66
-    // Before normalization (function): TTextResource::GetText.
-    const char* getText(int r) const { return m_text[r]; }
-    // E:\gamedcs\TextResource.h:73
-    const char* operator[](int i) const { return getText(i); }
-
-public:
-    // Canonical backing vector. Public while the decompilation still has
-    // direct retail consumers; this replaces the former fake +0x20 view.
-    // Before normalization: Text.
-    TTextArray m_text;  // +0x1c (_First +0x20)
-private:
-    // Before normalization: Data.
-    char* m_data;       // +0x2c
-};
-SIZE(TTextResource, 48);
-
-// Before normalization: gpGeneralText.
 extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
 
 // --- TSpreadsheetResource ---

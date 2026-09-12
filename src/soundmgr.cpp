@@ -33,25 +33,14 @@ DATA(0x00684ae0) int g_soundMaxSamples = 14;
 DATA(0x0069fe80) AILWaveFormat g_soundWaveFormat;
 DATA(0x00698a28) int g_unk698a28;
 
-// Provisional file-static, /Ob2-inlined at both of its call sites (no
-// out-of-line body sits anywhere in the soundmgr span). The manager
-// travels as a parameter because the two callers disagree about which
-// one they mean: PauseSamples passes `this`, WaitSample passes the
-// global. Name unattested.
-// Before normalization (function): SamplePlaying.
-static int samplePlaying(soundManager* mgr, ds_memsample* inSample)
-{
-    if (g_noSound)
-        return 0;
-    if (!mgr->m_ds)
-        return 0;
-    if (!inSample)
-        return 0;
-    EnterCriticalSection(&mgr->m_sectionSoundCall);
-    int playing = AIL_sample_status(inSample) == AIL_SAMPLE_PLAYING;
-    LeaveCriticalSection(&mgr->m_sectionSoundCall);
-    return playing;
-}
+// The ordinary GetSampleInfo member below owns both sample queries. Its
+// operation-4 arm tests gbNoSound, this->ds and the sample, enters the sound
+// critical section, compares AIL_sample_status with 4, then leaves it.
+// Retail expands that same sequence in PauseSamples (0x599cd5), WaitSample
+// (0x599f07), AdjustSoundVolumes (0x59a14a), WaitEndSample (0x59a507) and
+// the worker (0x59a712): these are the status-call addresses. Keep the
+// canonical member calls and each caller's this/global receiver. The former
+// SamplePlaying wrapper duplicated this arm under an unattested boundary.
 
 // E:\gamedcs\soundmgr.cpp:69
 // LOCATED 2026-08-07, RECONSTRUCTED 2026-08-08. Location evidence:
@@ -349,8 +338,8 @@ void soundManager::close()
     }
 }
 
-// Retail-only pair (no DC lines; the WinCE build has no app-switch
-// handling): AppWndProc's WM_ACTIVATEAPP calls PauseSamples on
+// Complete's desktop activation pair: AppWndProc's WM_ACTIVATEAPP
+// calls PauseSamples on
 // deactivate and ResumeSamples on activate around ResumeStream. Both
 // early-out on gbNoSound and walk sampleHandles under
 // section_sound_call. Names provisional pending the real source
@@ -384,7 +373,7 @@ void soundManager::pauseSamples()
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++) {
-        g_sampleWasPlaying[i] = samplePlaying(this, m_sampleHandles[i]);
+        g_sampleWasPlaying[i] = getSampleInfo(m_sampleHandles[i], SAMPLE_INFO_PLAYING);
         AIL_stop_sample(m_sampleHandles[i]);
     }
     LeaveCriticalSection(&m_sectionSoundCall);
@@ -437,7 +426,7 @@ void soundManager::waitSample(ds_memsample* sample, int time)
     if (time < 0)
         time = 4000;
     unsigned long deadline = GameTime::get() + time;
-    while (samplePlaying(g_soundManager, sample)) {
+    while (g_soundManager->getSampleInfo(sample, SAMPLE_INFO_PLAYING)) {
         if (static_cast<long>(GameTime::get() - deadline) >= 0)
             return;
         process1WindowsMessage();
@@ -522,10 +511,10 @@ void soundManager::adjustSoundVolumes()
         // above the gUnk698764 test into a callee-saved register.
         ds_memsample* handle = m_sampleHandles[i];
         // Positive arm first: retail falls through into the
-        // SamplePlaying test and sinks the `push 0; push 1` arm below
+        // GetSampleInfo playing query and sinks the `push 0; push 1` arm below
         // it, which is the layout the if/else-if spelling inverts.
         if (g_unk698764) {
-            if (samplePlaying(this, handle))
+            if (getSampleInfo(handle, SAMPLE_INFO_PLAYING))
                 modifySample(handle, SAMPLE_MODIFY_100, g_ailDriverState[i]);
         } else {
             modifySample(handle, SAMPLE_MODIFY_1, 0);
@@ -683,7 +672,8 @@ void waitEndSample(SAMPLE2 sample2, int milliWait)
     unsigned long deadline = GameTime::get() + milliWait;
     // The handle test is loop-invariant and retail hoists it: one test
     // ahead of the loop, none inside.
-    while (sample2.m_playSample && samplePlaying(g_soundManager, sample2.m_playSample)) {
+    while (sample2.m_playSample && g_soundManager->getSampleInfo(
+               sample2.m_playSample, soundManager::SAMPLE_INFO_PLAYING)) {
         if (static_cast<long>(GameTime::get() - deadline) >= 0)
             break;
         process1WindowsMessage();
@@ -728,14 +718,16 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 // The address taken by launch_sample is a cdecl thread entry.  Its packet
 // fields, 100-ms elapsed-time loop, live-waiter accounting, and final
 // ClearMemSample expansion are all independently visible in retail.
-// Residual (92.00%): candidate and retail each emit 95 instructions, the
+// Historical probe (92.00%) with the former SamplePlaying wrapper:
+// candidate and retail each emitted 95 instructions, the
 // same 13 symbolic branches and the same ten calls. The 17/18-block view is
 // one path-dependent reload schedule inside the provisional SamplePlaying
 // expansion: retail keeps the manager in EAX on early exits and inserts a
 // one-instruction reload block after the loop; this C1 allocation uses ESI
 // and reloads later in ClearMemSample. Swapping the helper's two parameters
 // and naming its critical-section pointer are both byte-flat across this row
-// and its four exact sibling callers, so retain the common helper boundary.
+// and its four exact sibling callers. Those optimizer results did not
+// establish a separate helper; the canonical GetSampleInfo now owns the query.
 // E:\gamedcs\soundmgr.cpp:911/976 vicinity; PC worker has no DC row.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
@@ -744,7 +736,8 @@ void __cdecl waitEndSampleThread(void* arglist)
     LaunchedSample* launched = static_cast<LaunchedSample*>(arglist);
     int elapsed = 0;
     if (launched->m_sample2.m_playSample && !g_shutDownDone) {
-        while (samplePlaying(g_soundManager, launched->m_sample2.m_playSample)
+        while (g_soundManager->getSampleInfo(
+                   launched->m_sample2.m_playSample, soundManager::SAMPLE_INFO_PLAYING)
                && elapsed < launched->m_maxTime) {
             Sleep(100);
             elapsed += 100;
@@ -758,20 +751,7 @@ void __cdecl waitEndSampleThread(void* arglist)
     _endthread();
 }
 
-// Dreamcast records this named SoundMgr.h member as an empty WinCE service in
-// kb.obj. Complete gives it the non-empty PC Miles body below: retail keeps an
-// exact out-of-line copy and exact /Ob2 expansions in MemorySample and
-// launch_sample. Those three copies jointly prove the shared member boundary.
-VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
-void soundManager::serviceSounds()
-{
-    EnterCriticalSection(&m_sectionSoundCall);
-    AIL_serve();
-    if (g_mp3Stream && g_soundManager->m_mp3Playing && !g_shutDownDone)
-        AIL_service_stream(g_mp3Stream, 1);
-    Sleep(1);
-    LeaveCriticalSection(&m_sectionSoundCall);
-}
+
 
 // E:\gamedcs\soundmgr.cpp:1068
 // Retail has five address-taken references to this 16-byte-aligned entry.

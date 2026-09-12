@@ -22,36 +22,6 @@
 // Before normalization: gpQuestLogWindow.
 DATA(0x0069cd20) static TQuestLogWindow* g_questLogWindow;
 
-// Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
-// helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
-// Complete's virtual quest model replaces the latter byte with a live quest
-// and a non-empty quest-log line, but retail keeps the same final visited-bit
-// and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
-// forms a named quest_text_row pointer for SeerHutList, while the exact
-// UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-inline unsigned char TSeerHut::questActiveforPlayer(
-    const unsigned char playerNum) const
-{
-    type_quest* thisQuest = m_quest;
-    if (!thisQuest)
-        return 0;
-
-    const std::string* questTexts = thisQuest->questTextRow()
-        + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
-    return questTexts[type_quest::QUEST_TEXT_LOG].length()
-        && (m_visitedPlayers & (1 << playerNum))
-        && m_quest;
-}
-
-inline unsigned char TQuestGuard::questActiveforPlayer(
-    const unsigned char playerNum) const
-{
-    return m_quest
-        && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-        && (m_visitedPlayers & (1 << playerNum))
-        && m_quest;
-}
-
 // E:\gamedcs\questlogwindow.cpp:34
 // Dreamcast proves the helper call; Complete expands the 16-row version of
 // UpdateQuestLocators and otherwise retains the same scroll/store/redraw

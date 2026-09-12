@@ -20,7 +20,8 @@ matcher's inner loop):
                bodies are compiler-generated and reconstructed
                implicitly. No uses exist yet; the allowance is wired for
                their arrival.)
-  IN ORDER     within each file the VA() claims are strictly increasing:
+  IN ORDER     within each source module the VA() claims strictly increase;
+               headers and inline bodies follow CodeView source order:
                the carcass preserves retail link order, and a function
                pasted into the wrong place breaks the order before it
                breaks anything else. VA() only - DC_ONLY() carries
@@ -84,7 +85,8 @@ def load_functions() -> dict[int, int]:
     return functions
 
 
-def check(claims_by_file: dict, functions: dict, classes: dict) -> list[tuple]:
+def check(claims_by_file: dict, functions: dict, classes: dict,
+          inline_claims: set[tuple[str, int]] = frozenset()) -> list[tuple]:
     """All (kind, va, message) violations across the four checks; [] =
     the contract holds. `claims_by_file` maps a display path to that
     file's parsed claims; `functions` is rva->size; `classes` is
@@ -125,7 +127,8 @@ def check(claims_by_file: dict, functions: dict, classes: dict) -> list[tuple]:
                         f"CLASS overlap: {where} claims 0x{va:08x} which "
                         f"is {category} code, not a game-target function"))
 
-            if macro == "VA":
+            if (macro == "VA" and (path, va) not in inline_claims
+                    and Path(path).suffix.lower() not in {".h", ".hpp", ".inl"}):
                 if previous_va is not None and va <= previous_va:
                     violations.append((
                         "ORDER", va,
@@ -219,9 +222,13 @@ def _scan():
                 claims_by_file[str(path.relative_to(common.HOMM3_DIR))] = claims
                 total += len(claims)
     from homm3.match import universe
+    from homm3.match.source_ownership import collect, claim_definitions
     classes, _sizes = universe.classify()
-    return claims_by_file, total, check(
-        claims_by_file, load_functions(), classes)
+    definitions, errors, _reached = collect()
+    inline_claims = {(d.file, d.va) for d in claim_definitions(definitions) if d.inline and d.va is not None}
+    violations = check(claims_by_file, load_functions(), classes, inline_claims)
+    violations.extend(('PARSE', 0, error) for error in errors)
+    return claims_by_file, total, violations
 
 
 def run_gate() -> list[str]:

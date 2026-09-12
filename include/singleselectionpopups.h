@@ -8,6 +8,9 @@
 #include "widget.h"
 #include "dialogbox.h"
 #include "message.h"
+#include "remote.h"
+#include "kbwin.h"
+#include "winmgr.h"
 #include "rmg.h"
 
 class CSprite;
@@ -40,7 +43,7 @@ public:
     virtual int main(message& msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CHotspotWidget::Draw.
-    virtual void draw();             // slot 4, folded onto 0x404df0
+    virtual void draw() const;             // slot 4, folded onto 0x404df0
 };
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
@@ -60,7 +63,7 @@ public:
     virtual int main(message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CSpriteWidget::Draw.
-    virtual void draw();             // slot 4, retail 0x575750
+    virtual void draw() const;             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
 
@@ -79,7 +82,7 @@ public:
     virtual int main(message& msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): CBitmapWidget::Draw.
-    virtual void draw();             // slot 4, retail 0x575a20
+    virtual void draw() const;             // slot 4, retail 0x575a20
 };
 
 class CNetMsgHandler;
@@ -107,8 +110,44 @@ public:
         m_widgets.push_back(w);
         addWidget(w, -1);
     }
-    // Before normalization (function): CSingleSelPopup::handle_message.
-    virtual int handleMessage(message& msg);  // slot 3, retail 0x575430
+    // E:\gamedcs\singleselectionpopups.h:45 - slot 3 of every dialog vtable. A
+    // right-click (RIGHT_BUTTON_UP) or a network abort-popup ends the dialog with
+    // WIDGET_END_DIALOG in both codeX/codeY; everything else falls through to the
+    // base heroWindow::handle_message (folded onto inputManager::Main 0x4ec560).
+    // The two end-dialog paths keep their own dialogReturn/id stores and share
+    // only the codeX/codeY/return tail, exactly as retail cross-jumps them; the
+    // `id = MESSAGE_WIDGET` store must precede `dialogReturn = codeY` (id store
+    // stays per-block, +12.8) and the netmsg chain nests inside the id!=0x40 arm
+    // so the default `return` sinks between the two arms (+45 over the flat form).
+    //
+    // EXACT 2026-08-28. Both end-dialog arms assign codeY before codeX. Applying
+    // that equal-value store order to only one arm prevents VC6 from merging the
+    // shared tail; preserving it in both arms reproduces retail's cross-jump.
+    VA(0x00575430, 0x8f)  // anchor-vtable CSingleSelPopup::handle_message = shared slot3 of all four dialog vtables, ret 4, dc 0x12ef28
+    virtual int handleMessage(message& msg)
+    {
+        if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
+            if (g_videoPaused && g_dPlay) {
+                CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
+                if (handler) {
+                    handler->checkHandleNet(1, 0);
+                    if (handler->getAbortPopupMsg()) {
+                        msg.m_id = MESSAGE_WIDGET;
+                        g_windowManager->m_dialogReturn = msg.m_codeY;
+                        msg.m_codeY = widget::WIDGET_END_DIALOG;
+                        msg.m_codeX = widget::WIDGET_END_DIALOG;
+                        return 2;
+                    }
+                }
+            }
+            return heroWindow::handleMessage(msg);
+        }
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return 2;
+    }
 };
 
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own

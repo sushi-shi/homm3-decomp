@@ -67,7 +67,7 @@ struct type_enchant_data {
     type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
     // Before normalization (function): type_enchant_data::get_mastery_value.
-    long getMasteryValue();
+    long getMasteryValue() const;
 };
 SIZE(type_enchant_data, 0x14);
 
@@ -210,7 +210,7 @@ public:
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     // Before normalization (function): type_AI_attack_hex_chooser::get_attack_time.
-    long getAttackTime(const pathCell* cell);
+    long getAttackTime(const pathCell* cell) const;
 protected:
     // Before normalization (function): type_AI_attack_hex_chooser::check_adjacent_hexes.
     // Before normalization (locals): enemy_hex, start_direction, stop_direction.
@@ -321,9 +321,9 @@ struct type_AI_spellcaster {
     // to the second - which is the pairing that settled the 0x420d20 /
     // 0x420f00 twin question in the first place.
     // Before normalization (function): type_AI_spellcaster::get_ogre_mage_value.
-    long getOgreMageValue(const army* target);
+    long getOgreMageValue(const army* target) const;
     // Before normalization (function): type_AI_spellcaster::get_caliph_value.
-    long getCaliphValue(const army* target);
+    long getCaliphValue(const army* target) const;
     // Retail-only SoD helper at 0x43c620. Its only caller is ai.cpp's
     // Faerie Dragon chooser, whose three pushes prove (hex, five times
     // stack size, army::field_4e0) in this order. No Dreamcast row names it;
@@ -337,7 +337,7 @@ struct type_AI_spellcaster {
     long getDamageValue(SpellID spell, long baseDamage,
                           const hero* targetHero, const army* target) const;
     // Before normalization (function): type_AI_spellcaster::get_damage_spell_value.
-    long getDamageSpellValue(const army* enemy, type_enchant_data caster);
+    long getDamageSpellValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_mass_damage_effect.
     // Before normalization (locals): enemy_damage, friendly_damage.
     // DC 0x3db2c: get_mass_damage_effect is const (public IBAJ).
@@ -345,15 +345,15 @@ struct type_AI_spellcaster {
     // Before normalization (function): type_AI_spellcaster::get_area_effect_value.
     // Before normalization (locals): base_damage.
     long getAreaEffectValue(SpellID spell, long baseDamage,
-                               TSkillMastery mastery, long hex);
+                               TSkillMastery mastery, long hex) const;
     // Before normalization (function): type_AI_spellcaster::get_chain_lightning_value.
     long getChainLightningValue(long power, TSkillMastery mastery,
-                                   army* target);
+                                   army* target) const;
     // Before normalization (function): type_AI_spellcaster::consider_chain_lightning.
-    void considerChainLightning(type_spell_choice* choice);
+    void considerChainLightning(type_spell_choice* choice) const;
     // Before normalization (function): type_AI_spellcaster::get_speed_value.
     // Before normalization (locals): our_army.
-    long getSpeedValue(const army* ourArmy, long increase, long duration);
+    long getSpeedValue(const army* ourArmy, long increase, long duration) const;
     // Before normalization (function): type_AI_spellcaster::should_attack_now.
     unsigned char shouldAttackNow(const army& enemy) const;
     // Before normalization (function): type_AI_spellcaster::get_defense_boost_value.
@@ -364,71 +364,71 @@ struct type_AI_spellcaster {
     long getAttackBoostValue(const army* ourArmy, const army* enemy,
                             long duration, double increase) const;
     long getDefenseBoostValue(const army* ourArmy, const army* enemy,
-                                 long duration, double increase);
+                                 long duration, double increase) const;
     // Before normalization (function): type_AI_spellcaster::get_defense_skill_value.
     // Before normalization (locals): our_army.
     long getDefenseSkillValue(const army* ourArmy, long duration,
-                                 long bonus);
+                                 long bonus) const;
     // Before normalization (function): type_AI_spellcaster::get_attack_skill_value.
     // Before normalization (locals): our_army.
     long getAttackSkillValue(const army* ourArmy, const army* enemy,
-                                long duration, long bonus);
+                                long duration, long bonus) const;
     // Before normalization (function): type_AI_spellcaster::get_age_value.
-    long getAgeValue(const army* enemy, type_enchant_data caster);
+    long getAgeValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_clone_value.
     // Before normalization (locals): our_army.
-    long getCloneValue(const army* ourArmy, type_enchant_data caster);
+    long getCloneValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_mirth_value.
     // Before normalization (locals): our_army.
-    long getMirthValue(const army* ourArmy, type_enchant_data caster);
+    long getMirthValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_sorrow_value.
-    long getSorrowValue(const army* enemy, type_enchant_data caster);
+    long getSorrowValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_misfortune_value.
-    long getMisfortuneValue(const army* enemy, type_enchant_data caster);
+    long getMisfortuneValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_blood_lust_value.
     // Before normalization (locals): our_army.
-    long getBloodLustValue(const army* ourArmy, type_enchant_data caster);
+    long getBloodLustValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_disease_value.
-    long getDiseaseValue(const army* enemy, type_enchant_data caster);
+    long getDiseaseValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_prayer_value.
     // Before normalization (locals): our_army.
-    long getPrayerValue(const army* ourArmy, type_enchant_data caster);
+    long getPrayerValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_air_shield_value.
     // Before normalization (locals): our_army.
-    long getAirShieldValue(const army* ourArmy, type_enchant_data caster);
+    long getAirShieldValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_shield_value.
     // Before normalization (locals): our_army.
-    long getShieldValue(const army* ourArmy, type_enchant_data caster);
+    long getShieldValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_tough_skin_value.
     // Before normalization (locals): our_army.
-    long getToughSkinValue(const army* ourArmy, type_enchant_data caster);
+    long getToughSkinValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_disruptive_ray_value.
-    long getDisruptiveRayValue(const army* enemy, type_enchant_data caster);
+    long getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_weakness_value.
-    long getWeaknessValue(const army* enemy, type_enchant_data caster);
+    long getWeaknessValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_bless_value.
     // Before normalization (locals): our_army.
-    long getBlessValue(const army* ourArmy, type_enchant_data caster);
+    long getBlessValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_frenzy_value.
     // Before normalization (locals): our_army.
-    long getFrenzyValue(const army* ourArmy, type_enchant_data caster);
+    long getFrenzyValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_blind_value.
-    long getBlindValue(const army* enemy, type_enchant_data caster);
+    long getBlindValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_curse_value.
-    long getCurseValue(const army* enemy, type_enchant_data caster);
+    long getCurseValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_forgetfulness_value.
-    long getForgetfulnessValue(const army* enemy, type_enchant_data caster);
+    long getForgetfulnessValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_precision_value.
     // Before normalization (locals): our_army.
-    long getPrecisionValue(const army* ourArmy, type_enchant_data caster);
+    long getPrecisionValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_slayer_value.
     // Before normalization (locals): our_army.
-    long getSlayerValue(const army* ourArmy, type_enchant_data caster);
+    long getSlayerValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_poison_value.
-    long getPoisonValue(const army* enemy, type_enchant_data caster);
+    long getPoisonValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_haste_value.
     // Before normalization (locals): our_army.
-    long getHasteValue(const army* ourArmy, type_enchant_data caster);
+    long getHasteValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_protection_value.
     // Before normalization (locals): our_army.
     long getProtectionValue(const army* ourArmy, TSpellSchool school,
@@ -436,73 +436,75 @@ struct type_AI_spellcaster {
     // Before normalization (function): type_AI_spellcaster::get_air_protection_value.
     // Before normalization (locals): our_army.
     long getAirProtectionValue(const army* ourArmy,
-                                  type_enchant_data caster);
+                                  type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_fire_protection_value.
     // Before normalization (locals): our_army.
     long getFireProtectionValue(const army* ourArmy,
-                                   type_enchant_data caster);
+                                   type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_earth_protection_value.
     // Before normalization (locals): our_army.
     long getEarthProtectionValue(const army* ourArmy,
-                                    type_enchant_data caster);
+                                    type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_water_protection_value.
     // Before normalization (locals): our_army.
     long getWaterProtectionValue(const army* ourArmy,
-                                    type_enchant_data caster);
+                                    type_enchant_data caster) const;
     // DC ai_tactical.cpp:2116, get_duration. Retail protection expands it.
     double getDuration(long turns, unsigned char movedThisTurn) const;
     // Before normalization (function): type_AI_spellcaster::get_cancel_value.
     // Before normalization (locals): current_army, bad_spells_only.
-    long getCancelValue(army* currentArmy, unsigned char badSpellsOnly);
+    long getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const;
     // Before normalization (function): type_AI_spellcaster::get_dispel_value.
     // Before normalization (locals): our_army.
-    long getDispelValue(const army* ourArmy, type_enchant_data caster);
+    long getDispelValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_cure_value.
     // Before normalization (locals): our_army.
-    long getCureValue(const army* ourArmy, type_enchant_data caster);
+    long getCureValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_antimagic_value.
     // Before normalization (locals): our_army.
-    long getAntimagicValue(const army* ourArmy, type_enchant_data caster);
+    long getAntimagicValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_backlash_value.
     // Before normalization (locals): our_army.
-    long getBacklashValue(const army* ourArmy, type_enchant_data caster);
+    long getBacklashValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_muck_and_mire_value.
-    long getMuckAndMireValue(const army* enemy, type_enchant_data caster);
+    long getMuckAndMireValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_counterstroke_value.
     // Before normalization (locals): our_army.
-    long getCounterstrokeValue(const army* ourArmy, type_enchant_data caster);
+    long getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_fire_shield_value.
     // Before normalization (locals): our_army.
-    long getFireShieldValue(const army* ourArmy, type_enchant_data caster);
+    long getFireShieldValue(const army* ourArmy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_hypnotize_value.
-    long getHypnotizeValue(const army* enemy, type_enchant_data caster);
+    long getHypnotizeValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_berserk_value.
-    long getBerserkValue(const army* enemy, type_enchant_data caster);
+    long getBerserkValue(const army* enemy, type_enchant_data caster) const;
     // Before normalization (function): type_AI_spellcaster::get_traitor_value.
-    long getTraitorValue(const army* enemy, const army* target);
+    long getTraitorValue(const army* enemy, const army* target) const;
     // The luck twin of get_mirth_value / get_sorrow_value below;
     // get_enchantment_function (0x43b690) address-takes it for the
     // SPELL_FORTUNE row of its dispatch.
     // Before normalization (function): type_AI_spellcaster::get_fortune_value.
     // Before normalization (locals): our_army.
-    long getFortuneValue(const army* ourArmy, type_enchant_data caster);
+    long getFortuneValue(const army* ourArmy, type_enchant_data caster) const;
     // 0x43b680 (16 B), the row get_enchantment_function hands back for
     // every spell it does not price. Its only evidence is that
     // address-take plus the carve slot; the DC roster spells the name.
-    long unimplemented(const army* enemy, type_enchant_data caster);
+    long unimplemented(const army* enemy, type_enchant_data caster) const;
     // The shape of every row in get_enchantment_function's table, and
     // the shape get_cancel_value (0x439a80) and get_caliph_value
     // (0x43c4a0) call back through: retail's `call dword ptr [ebp-x]`
     // with the object in ECX and no this-adjust is a single-inheritance
-    // pointer-to-member-function, which is one code address wide.
+    // pointer-to-member-function, which is one code address wide. CodeView
+    // declares these pricers const; their callback type keeps that receiver
+    // qualifier too (get_enchantment_function, ai_tactical.cpp:2884).
     typedef long (type_AI_spellcaster::*TEnchantValue)(const army*,
-                                                       type_enchant_data);
+                                                       type_enchant_data) const;
     // Before normalization (function): type_AI_spellcaster::get_enchantment_function.
-    TEnchantValue getEnchantmentFunction(SpellID spell);
+    TEnchantValue getEnchantmentFunction(SpellID spell) const;
     // Before normalization (function): type_AI_spellcaster::consider_single_enchantment.
-    void considerSingleEnchantment(type_spell_choice* choice, long group);
+    void considerSingleEnchantment(type_spell_choice* choice, long group) const;
     // Before normalization (function): type_AI_spellcaster::consider_enchantment.
-    void considerEnchantment(type_spell_choice* choice, long group);
+    void considerEnchantment(type_spell_choice* choice, long group) const;
     // These pricers expand into consider_spell (0x43bb20), and the carve
     // has no retained row for them. That does not itself prove source inline;
     // the group, mass and summon definitions are ordinary source helpers.
@@ -511,18 +513,18 @@ struct type_AI_spellcaster {
     long getGroupDamageValue(SpellID spell, long baseDamage, long group,
                                 hero* targetHero) const;
     // Before normalization (function): type_AI_spellcaster::consider_area_effect.
-    void considerAreaEffect(type_spell_choice* choice);
+    void considerAreaEffect(type_spell_choice* choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_mass_damage.
     // DC 0x3de90: const member with a writable type_spell_choice reference.
     void considerMassDamage(type_spell_choice& choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_summon.
     void considerSummon(type_spell_choice& choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_earthquake.
-    void considerEarthquake(type_spell_choice* choice);
+    void considerEarthquake(type_spell_choice* choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_resurrect.
-    void considerResurrect(type_spell_choice* choice);
+    void considerResurrect(type_spell_choice* choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_spell.
-    void considerSpell(type_spell_choice* choice);
+    void considerSpell(type_spell_choice* choice) const;
 protected:
     // Before normalization: type_AI_spellcaster::spells_not_required.
     unsigned char spellsNotRequired() const;
@@ -530,7 +532,7 @@ public:
     // Before normalization (function): type_AI_spellcaster::cast_spell.
     unsigned char castSpell(unsigned char retreating);
     // Before normalization (function): type_AI_spellcaster::consider_teleport.
-    void considerTeleport(type_spell_choice* choice);
+    void considerTeleport(type_spell_choice* choice) const;
     // Before normalization (function): type_AI_spellcaster::consider_sacrifice.
     void considerSacrifice(type_spell_choice& choice,
                             // Before normalization (locals): healedArmy, targetHex.

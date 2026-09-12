@@ -310,8 +310,8 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
     zBufferDraw(sx, sy, sw, sh, zBuffer, dx, dy, 800, 600, 1600, id);
 }
 
-// Retail vtable 0x63ba14 slot 2. DC's header-inline resource-size helper is
-// not listed separately in the source roster.
+// Retail vtable 0x63ba14 slot 2. Complete adds this resource virtual;
+// DC Bitmap816 type 0x105e / fields 0x244e has no GetSize member.
 VA(0x0044fe30, 0x09)
 unsigned int Bitmap816::getSize() const
 {

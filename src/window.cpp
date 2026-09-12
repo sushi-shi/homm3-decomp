@@ -596,10 +596,13 @@ void heroWindow::addWidgetsToMessageStream()
     }
 }
 
-// Retail-only (no DC roster entry): the sleep-nest counter around
-// virtual slot 8, called by executive::CallManager on the adventure
-// window. First sleep and last wake dispatch the vslot. Placed after
-// delete_widgets to keep the file's VA order = retail link order.
+// Complete's base-window sleep counter; DC heroWindow type 0x101c has
+// no corresponding member or counter. DC's TAdventureMapWindow instead
+// owns an ordinary direct widget walk (dc 0x370, adventuremapwindow.cpp:52).
+// Retail CallManager calls this base member at 0x4b0cbe/0x4b0d3a/0x4b0df5.
+// First sleep and last wake dispatch slot 8, including the adventure-window
+// override that controls Complete's mouse effect. Preserve this base owner
+// and its retained RVA position after AddWidgetsToMessageStream.
 VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
 void heroWindow::sleepAllWidgets(unsigned char sleep)
 {
@@ -612,9 +615,11 @@ void heroWindow::sleepAllWidgets(unsigned char sleep)
     }
 }
 
-// Retail-only (no DC roster entry): heroWindow vtable 0x243cc4 slot 8,
-// the virtual SleepAllWidgets dispatches on its counter edges. It is
-// the window-wide fan-out of widget::sleep - the DC-attested inline
+// Complete heroWindow vtable 0x643cc4 slot 8 (entry 0x643ce4) owns this
+// sleep-edge hook. DC heroWindow type 0x101c instead assigns virtual offset
+// 32 to AddWidgetsToMessageStream, which Complete retains as an ordinary
+// member at 0x5ff570. The new slot therefore has a different identity.
+// This is the window-wide fan-out of widget::sleep - the DC-attested inline
 // (Widget.h:244) whose retail body is the per-widget nest counter at
 // widget+0x2c plus the widget slot-12 edge hook, and which /Ob2
 // expands in full here (its only call site in the image).

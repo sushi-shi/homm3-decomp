@@ -10,18 +10,8 @@
 #include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
+#include "includes.h"
 
-// VC6's own <xutility> reference-returning min, declared file-locally for
-// the same reason ai_combat.cpp and combatresultswindow.cpp declare it: the
-// clamp in bitmapBackedTextWidget::Draw stores BOTH operands to stack temps
-// and selects between their ADDRESSES with two LEAs, which no
-// value-returning spelling produces, and the TU needs no other STL surface.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
 
 #if 0  // @carcass
 
@@ -226,7 +216,7 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
 // 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
 VA(0x005bc5f0, 0x92)  // anchor-vtable (0x642dc0) + font/FillRect calls, dc 0x164f80
-void textWidget::draw()
+void textWidget::draw() const
 {
     if (m_status & WIDGET_DRAWN) {
         int drawX = m_x + m_parentWindow->m_x;
@@ -357,10 +347,9 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
-VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
-bitmapBackedTextWidget::~bitmapBackedTextWidget()
-{
-}
+// CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:325
 // The eleven-parameter constructor. Its own argument slots identify it: ten
@@ -412,7 +401,7 @@ void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // image. Blits the backing bitmap clamped to its own extent, then runs the
 // base text draw.
 VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
-void bitmapBackedTextWidget::draw()
+void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;

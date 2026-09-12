@@ -216,6 +216,24 @@ def source_hashes() -> dict[tuple[str, str], str]:
                 hashes[key] = hashlib.sha1(
                     definition.encode("utf-8", "replace")
                 ).hexdigest()[:12]
+    # Canonical header bodies carry their own VA annotations. Their retail
+    # comparison carrier may be any emitted TU; identity is the RVA, while
+    # the fingerprint must follow the physical header definition.
+    from homm3.retail_labels.headers import claim_files
+    keys_by_rva = {}
+    for (_unit, rva), keys in by_identity.items():
+        keys_by_rva.setdefault(rva, []).extend(keys)
+    for path in claim_files():
+        raw = path.read_text(errors="replace")
+        masked = source.mask_lexical_noise(raw)
+        for _start, end, args, _raw_args in source.macro_invocations(masked, va_head, raw):
+            if end is None or len(args) != 2 or not source.ADDR_ARG_RE.match(args[0]):
+                continue
+            rva = source.rva_of(args[0], str(path))
+            for key in keys_by_rva.get(rva, ()):
+                definition = _canonical_definition_text(raw, masked, end + 1, key[1])
+                if definition is not None:
+                    hashes[key] = hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
     return hashes
 
 

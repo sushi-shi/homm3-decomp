@@ -28,8 +28,7 @@ class CSprite;
 // Before normalization (function): GetArmyName.
 inline const char* getArmyName(int type, int count);
 
-// Shared includes.h limit helpers used by the class-body accessors.
-#include "homm3_limit.h"
+#include "includes.h"
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -2161,6 +2160,7 @@ inline int army::getLuck(unsigned char applyLimits) const
     }
 
     // E:\gamedcs\Army.h:736
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
 inline int army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
@@ -2228,6 +2228,7 @@ inline int army::getOwningSide() const
     }
 
     // E:\gamedcs\Army.h:800
+VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 inline int army::getControllingSide() const
     {
         if (m_spellInfluence[60])
@@ -2273,6 +2274,7 @@ inline bool army::isInAura() const
     }
 
     // E:\gamedcs\Army.h:840
+VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
 inline bool army::isIncapacitated() const
     {
         return m_spellInfluence[62] || m_spellInfluence[70]

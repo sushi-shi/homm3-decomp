@@ -9,6 +9,7 @@
 #include "netmsg.h"
 #include "turn_update_msg.h"
 #include "armygrp.h"
+#include "ai_creature_value.h"
 
 class hero;
 class playerData;
@@ -16,6 +17,9 @@ class searchArray;
 class town;
 class generator;
 struct type_artifact;
+
+// Original: AI_mark_danger_zones; ai_player.cpp:3013, dc 0x329f8.
+void aiMarkDangerZones(hero* currentHero, long* dangerZones);
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
@@ -38,6 +42,10 @@ void aiSwapArtifacts(hero* source, hero* destination);
 // Before normalization (locals): our_hero.
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
+// Original: AI_get_value_of_artifact; ai_player.cpp:5684, dc 0x37514.
+// This overload values the artifact across a player's heroes. CodeView
+// proves the const reference and long player id; retail retains 0x433aa0.
+long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 // Before normalization (function): get_full_value.
 // Before normalization (locals): our_hero.
 long getFullValue(const hero* ourHero);
@@ -47,78 +55,85 @@ long removeNegativeArtifacts(hero* ourHero);
 // Before normalization (locals): our_hero.
 long aiGetShipCost(const hero* ourHero, type_point point);
 
-// The two gift messages extend the shared 20-byte network-message head.
-// Their subtype and total-size constants are the immediates retail stores at
-// +8/+0xc; the derived payload offsets agree with the DC member roster.
-class CGiftMsg : public CNetMsg {
+
+
+
+
+
+// Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
+// offset is corroborated by a retail reader: reset_magus_hut_value
+// (0x429ab0) reads the short at +0 and writes the long at +4, and
+// get_total_value (0x42a150) walks the seven doubles from +0x60 with
+// `add esi, 8` after biasing `this` by 0x60.
+//
+// The two statics carry their DC public names verbatim
+// (?attack_computer_bonus@type_AI_player@@1MA at DC seg3 0x26c0,
+// ?attack_human_bonus@ at 0x26c4); retail holds the same adjacent pair
+// at 0x6604f8 / 0x6604fc, both initialised to 0.5f, and philai.obj's
+// set_attack_bonuses(float computer_bonus, float human_bonus) names the
+// order. They are DEFINED by philai.cpp, not here.
+class type_AI_player {
 public:
-    int m_niceGuy;
-    int m_resource;
-    int m_qty;
+    short m_team;
+    long m_magusHutValue;
+    long m_reservedFunds[7];
+    long m_resourceSupply[7];
+    long m_resourceDemand[7];
+    double m_resourceValue[7];
 
-    CGiftMsg(int niceGuy, int resource, int qty)
-        : CNetMsg(RS_GIFT, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
-          m_resource(resource), m_qty(qty) {}
-};
-
-class CGiftRequestMsg : public CNetMsg {
-public:
-    int m_greedyGuy;
-    int m_resource;
-
-    CGiftRequestMsg(int greedyGuy, int resource)
-        : CNetMsg(RS_GIFT_REQUEST, sizeof(CGiftRequestMsg)),
-          m_greedyGuy(greedyGuy),
-          m_resource(resource) {}
-};
-
-SIZE(CNetMsg, 20);
-SIZE(CGiftMsg, 32);
-SIZE(CGiftRequestMsg, 28);
-
-// Retail and Dreamcast both make this an 8-byte strategy object: a
-// three-slot vptr followed by the current player id. start_turn inlines
-// both constructors and calls check_towns on one base and one derived
-// instance. The virtual roster/order comes from the three retail vtable
-// entries and the corresponding DC public names.
-class type_town_threat_checker {
+    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
+    // AI_initialize; retail leaves exactly the team-word store.
+    void init(short newTeam) { m_team = newTeam; }
+    long getMagusHutValue() const { return m_magusHutValue; }
+    static float getAttackBonus(short player);  // 0x428710
+    // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
+    // inlined into type_income_artifact::get_value, whose by-value double
+    // return temp at [ebp-8] is what the retail bytes home under /Op.
+    double getResourceValue(enum EGameResource resource) const
+    {
+        return m_resourceValue[resource];
+    }
+    static void setAttackBonuses(float computerBonus,
+                                   float humanBonus)
+    {
+        s_attackComputerBonus = computerBonus;
+        s_attackHumanBonus = humanBonus;
+    }
+    void calculateDemand();                      // 0x428740
+    void endTurn();                              // 0x428dd0
+    void makeGift(long playerId);               // 0x429110
+    void startTurn();                            // 0x4297c0
+    void resetMagusHutValue();                 // 0x429ab0
+    void calculateReserve();                     // 0x429ad0
+    long getTotalValue(long basicValue, int* cost);  // 0x42a150
+    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
+    void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
 protected:
-    // Before normalization (function): type_town_threat_checker::mark_towns.
-    // Before normalization (locals): enemy_hero, search_array.
-    void markTowns(hero* enemyHero, searchArray* currentSearchArray);
-
+    // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
+    // helper; the prohibited-creature array belongs to its body.
+    void purchaseBuildings();
 public:
-    // Before normalization: current_player_id.
-    int m_currentPlayerId;
+    // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
+    // pass purchase_buildings drives).
+    unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
+    bool hireHeroes();
+    bool checkTradeSupply(const int* cost, long number, int* supply,
+                            std::vector<long>& tradeQty);
+    bool canTradeResources(const int* cost, int* supply,
+                             std::vector<long>& tradeQty);
+    void tradeResources(const int* cost, long number);
+    bool buildMarkets(int* supply);
+    void doResourceTrade(int* supply);
 
-    // Before normalization (locals): new_player.
-    type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
-    // Before normalization (function): type_town_threat_checker::check_towns.
-    void checkTowns();
-    // Before normalization (function): type_town_threat_checker::clear_marks.
-    virtual void clearMarks();
-    // Before normalization (function): type_town_threat_checker::is_marked.
-    // Before normalization (locals): our_town.
-    virtual unsigned char isMarked(const town* ourTown);
-    // Before normalization (function): type_town_threat_checker::mark_town.
-    // Before normalization (locals): our_town.
-    virtual void markTown(town* ourTown);
+private:
+    static float s_attackComputerBonus;
+    static float s_attackHumanBonus;
 };
 
-class type_garrison_purchaser : public type_town_threat_checker {
-public:
-    // Before normalization (locals): new_player.
-    type_garrison_purchaser(int newPlayer)
-        : type_town_threat_checker(newPlayer) {}
-    // Before normalization (function): type_garrison_purchaser::clear_marks.
-    virtual void clearMarks();
-    // Before normalization (function): type_garrison_purchaser::is_marked.
-    // Before normalization (locals): our_town.
-    virtual unsigned char isMarked(const town* ourTown);
-    // Before normalization (function): type_garrison_purchaser::mark_town.
-    // Before normalization (locals): our_town.
-    virtual void markTown(town* ourTown);
-};
+// Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
+// recalculates the recipient's demand through this array before giving
+// resources to another computer player. Owner TU remains unlocated.
+extern type_AI_player g_aiPlayers[8];
 
 // Dreamcast records this exact 12-byte value object, and retail's
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
@@ -134,7 +149,7 @@ struct type_creature_source {
 
     // ai_player.h:299 initializes these three fields; line 300 copies
     // the pointed-to amount. The decorated DC public retains bool (_N).
-    // Before normalization (locals): new_type, new_amount, _is_free.
+    VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
     type_creature_source(TCreatureType newType, short* newAmount,
                          bool isFree)
         : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
@@ -201,8 +216,10 @@ public:
                         const armyGroup* sourceArmy,
                         const hero* secondHero,
                         unsigned char newHasAngelicAlliance);
-    // Before normalization (function): type_AI_creature_swapper::get_army_value_increase.
-    long getArmyValueIncrease() const { return m_armyValueIncrease; }
+    // Original: type_AI_creature_swapper::get_army_increase.
+    // E:\gamedcs\ai_player.h:307, dc 0x114bd8: returns army_value_increase
+    // at +0x18. The former getArmyValueIncrease spelling obscured this identity.
+    long getArmyIncrease() const { return m_armyValueIncrease; }
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
@@ -264,27 +281,6 @@ void aiConsolidateArmy(armyGroup& currentArmy);
 // Before normalization (locals): current_army.
 void aiArrangeArmy(armyGroup& currentArmy);
 
-// Dreamcast records this exact 12-byte sort key; retail calculate_reserve
-// copies it three dwords at a time and compares the value at +4.
-// The DC decorated comparison publics encode bool (_N), despite their
-// unsigned-byte debug storage records (ai_creature_value.h:29/35).
-struct type_creature_value {
-    // Before normalization: type.
-    TCreatureType m_type;
-    // Before normalization: value.
-    long m_value;
-    // Before normalization: amount.
-    short m_amount;
-
-    bool operator<(const type_creature_value& arg) const
-    {
-        return m_value < arg.m_value;
-    }
-    bool operator>(const type_creature_value& arg) const
-    {
-        return m_value > arg.m_value;
-    }
-};
 
 // DC classes.csv: 16 B - point, value(+4), move_cost(+8), is_nearby(+12),
 // is_critical(+13). net_value_of_location (0x42f980) adjusts move_cost and
@@ -300,9 +296,8 @@ struct HeroDestination {
     unsigned char m_isNearby;
     // Before normalization: is_critical.
     unsigned char m_isCritical;
-    // E:\\gamedcs\\ai_player.h:233 (dc 0x380f0). The source constructor is
-    // empty; Complete's /Ob2 therefore erases every call entirely.
-    HeroDestination() {}
+    // CodeView dc 0x380f0 marks this default constructor compiler-generated
+    // (compgenx). The type_point member supplies its implicit construction.
 };
 
 // Before normalization (function): find_all_destinations.
@@ -327,119 +322,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
                           unsigned char allowSpells,
                           unsigned char exploreMode);
 
-// Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
-// offset is corroborated by a retail reader: reset_magus_hut_value
-// (0x429ab0) reads the short at +0 and writes the long at +4, and
-// get_total_value (0x42a150) walks the seven doubles from +0x60 with
-// `add esi, 8` after biasing `this` by 0x60.
-//
-// The two statics carry their DC public names verbatim
-// (?attack_computer_bonus@type_AI_player@@1MA at DC seg3 0x26c0,
-// ?attack_human_bonus@ at 0x26c4); retail holds the same adjacent pair
-// at 0x6604f8 / 0x6604fc, both initialised to 0.5f, and philai.obj's
-// set_attack_bonuses(float computer_bonus, float human_bonus) names the
-// order. They are DEFINED by philai.cpp, not here.
-class type_AI_player {
-public:
-    // Before normalization: team.
-    short m_team;
-    // Before normalization: magus_hut_value.
-    long m_magusHutValue;
-    // Before normalization: reserved_funds.
-    long m_reservedFunds[7];
-    // Before normalization: resource_supply.
-    long m_resourceSupply[7];
-    // Before normalization: resource_demand.
-    long m_resourceDemand[7];
-    // Before normalization: resource_value.
-    double m_resourceValue[7];
 
-    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
-    // AI_initialize; retail leaves exactly the team-word store.
-    // Before normalization (locals): new_team.
-    void init(short newTeam) { m_team = newTeam; }
-    // Before normalization (function): type_AI_player::get_attack_bonus.
-    static float getAttackBonus(short player);  // 0x428710
-    // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
-    // inlined into type_income_artifact::get_value, whose by-value double
-    // return temp at [ebp-8] is what the retail bytes home under /Op.
-    // Before normalization (function): type_AI_player::get_resource_value.
-    double getResourceValue(enum EGameResource resource) const
-    {
-        return m_resourceValue[resource];
-    }
-    // Before normalization (function): type_AI_player::set_attack_bonuses.
-    // Before normalization (locals): computer_bonus, human_bonus.
-    static void setAttackBonuses(float computerBonus,
-                                   float humanBonus)
-    {
-        s_attackComputerBonus = computerBonus;
-        s_attackHumanBonus = humanBonus;
-    }
-    // Before normalization (function): type_AI_player::get_magus_hut_value.
-    long getMagusHutValue() const { return m_magusHutValue; }
-    // Before normalization (function): type_AI_player::calculate_demand.
-    void calculateDemand();                      // 0x428740
-    // Before normalization (function): type_AI_player::end_turn.
-    void endTurn();                              // 0x428dd0
-    // Before normalization (function): type_AI_player::make_gift.
-    // Before normalization (locals): player_id.
-    void makeGift(long playerId);               // 0x429110
-    // Before normalization (function): type_AI_player::start_turn.
-    void startTurn();                            // 0x4297c0
-    // Before normalization (function): type_AI_player::reset_magus_hut_value.
-    void resetMagusHutValue();                 // 0x429ab0
-    // Before normalization (function): type_AI_player::calculate_reserve.
-    void calculateReserve();                     // 0x429ad0
-    // Before normalization (function): type_AI_player::get_total_value.
-    // Before normalization (locals): basic_value.
-    long getTotalValue(long basicValue, int* cost);  // 0x42a150
-    // Before normalization (function): type_AI_player::buy_creatures.
-    // Before normalization (locals): current_hero, current_town.
-    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
-    // Before normalization (function): type_AI_player::buy_mage_guild.
-    // Before normalization (locals): current_hero, current_town.
-    void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
-protected:
-    // DC public ?purchase_buildings@type_AI_player@@IAAXXZ proves protected
-    // access and a void/no-argument ordinary member.
-    // Before normalization (function): type_AI_player::purchase_buildings.
-    void purchaseBuildings();
-public:
-    // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
-    // pass purchase_buildings drives).
-    // Before normalization (function): type_AI_player::purchase_building.
-    // Before normalization (locals): prohibited_creatures.
-    unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
-    // Before normalization (function): type_AI_player::hire_heroes.
-    bool hireHeroes();
-    // Before normalization (function): type_AI_player::check_trade_supply.
-    bool checkTradeSupply(const int* cost, long number, int* supply,
-                            // Before normalization (locals): trade_qty.
-                            std::vector<long>& tradeQty);
-    // Before normalization (function): type_AI_player::can_trade_resources.
-    bool canTradeResources(const int* cost, int* supply,
-                             // Before normalization (locals): trade_qty.
-                             std::vector<long>& tradeQty);
-    // Before normalization (function): type_AI_player::trade_resources.
-    void tradeResources(const int* cost, long number);
-    // Before normalization (function): type_AI_player::build_markets.
-    bool buildMarkets(int* supply);
-    // Before normalization (function): type_AI_player::do_resource_trade.
-    void doResourceTrade(int* supply);
-
-private:
-    // Before normalization: attack_computer_bonus.
-    static float s_attackComputerBonus;
-    // Before normalization: attack_human_bonus.
-    static float s_attackHumanBonus;
-};
-
-// Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
-// recalculates the recipient's demand through this array before giving
-// resources to another computer player. Owner TU remains unlocated.
-// Before normalization: gAIPlayers.
-extern type_AI_player g_aiPlayers[8];
 
 // Both are `static` in the DC roster (functions.csv kind column) and
 // have no DC public. They are spelled with external linkage here
@@ -536,7 +419,7 @@ long aiValueOfObservatory(struct type_point origin, long playerId, long range);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:4930, dc 0x35f08) void initialize_artifact_effects();
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5557, dc 0x37194) long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5643, dc 0x37464) long AI_get_equip_value(type_artifact artifact, const hero* our_hero, unsigned char exact);
-// CODEVIEW(E:\gamedcs\ai_player.cpp:5684, dc 0x37514) long AI_get_value_of_artifact(const type_artifact* artifact, long player_id);
+// CODEVIEW(E:\gamedcs\ai_player.cpp:5684, dc 0x37514) long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5708, dc 0x37588) long get_full_value(const hero* our_hero);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5792, dc 0x377f0) long remove_negative_artifacts(hero* our_hero);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5835, dc 0x37898) unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change);

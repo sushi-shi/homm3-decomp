@@ -28,7 +28,7 @@ struct hero {
     hero() : resistanceFactor(0.75f), resistanceCalls(0) {
         std::memset(artifacts, 0, sizeof(artifacts));
     }
-    unsigned char isWieldingArtifact(int id) { return artifacts[id]; }
+    unsigned char isWieldingArtifact(int id) const { return artifacts[id]; }
     float getMagicResistanceFactor() {
         ++resistanceCalls;
         return resistanceFactor;

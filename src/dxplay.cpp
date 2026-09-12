@@ -6,9 +6,8 @@
 // bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
 // the CDPlay/CDPlayLobby/CAutoArray vtables and the cinit tail all place the
-// whole gap in dxplay.  Retail's function EMISSION order is NOT the DC source
-// order (the dxplay.h header-inline virtuals emit first), so claims below are
-// ordered by retail RVA, not by dc offset.
+// whole gap in dxplay. Header-inline virtuals retain their canonical bodies
+// and VA annotations in dxplay.h; ordinary definitions here follow retail RVA.
 //
 // The CDPlay (0x63dc28, 62 slots), CDPlayLobby (0x63dd20, 73 slots) and
 // CAutoArray<CDPlayAddressElement> (0x63de44, 7 slots) vtables read out of the
@@ -54,45 +53,6 @@ int __stdcall enumPlayersCallback(unsigned long, unsigned long, const DPNAME*, u
 // Before normalization: s_coInitialized.
 static unsigned char g_coInitialized = 0;
 
-// --- reconstructed bodies (compiled) - the three retail-lowest RVAs ---
-
-// E:\gamedcs\dxplay.h:371
-VA(0x00496c70, 0x21)  // anchor-vtable CDPlay slot30 +0x78, dc 0x8bee8
-void CDPlay::setGuid(GUID guid)
-{
-    m_guid = guid;
-}
-
-// E:\gamedcs\dxplay.h:372
-VA(0x00496ca0, 0x4)  // anchor-vtable CDPlay slot31 +0x7c, dc 0x8bf04
-GUID* CDPlay::getGuid()
-{
-    return &m_guid;
-}
-
-// E:\gamedcs\dxplay.h:403
-VA(0x00496cb0, 0x4)  // anchor-vtable CDPlay slot36 +0x90, dc 0x8bf0c
-bool CDPlay::isHost()
-{
-    return m_isHost;
-}
-
-
-// E:\gamedcs\dxplay.h:434
-// Before normalization (locals): pMsg.
-VA(0x00496cc0, 0x5)  // anchor-vtable CDPlay slot42 +0xa8 (ReceiveMsg), dc 0x8bf14
-unsigned char CDPlay::receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
-{
-    return 1;
-}
-
-// E:\gamedcs\dxplay.h:440
-// Before normalization (locals): pSysMsg.
-VA(0x00496cd0, 0x5)  // anchor-vtable CDPlay slots44-54 ICF-folded (SysMsg* stub rep), dc 0x8bf18
-unsigned char CDPlay::sysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
-{
-    return 1;
-}
 
 // E:\gamedcs\dxplay.cpp:89
 VA_COMPGEN(0x00496ce0, 0x2F, SCALAR_DELETING_DTOR, CDPlay)
@@ -471,33 +431,9 @@ unsigned char CDPlay::flushReceiveQueue()
 }
 
 #if 0  // @carcass: the active header-inline body emits this COMDAT
-VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
-void CDPlayMsg::~CDPlayMsg()
-{
-    destroy();
-}
+// Canonical body and VA: include/dxplay.h.
 #endif
 
-// Before normalization (locals): lpSession.
-inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* session)
-{
-    if (session) {
-        m_flags = session->m_flags;
-        m_guidInstance = session->m_guidInstance;
-        m_guidApp = session->m_guidApplication;
-        m_maxPlayers = session->m_maxPlayers;
-        m_playerCount = session->m_currentPlayers;
-        m_user1 = session->m_user1;
-        m_user2 = session->m_user2;
-        m_user3 = session->m_user3;
-        m_user4 = session->m_user4;
-        strcpy(m_sessionName, session->m_sessionNameA);
-        if (session->m_passwordA)
-            strcpy(m_password, session->m_passwordA);
-        else
-            m_password[0] = 0;
-    }
-}
 
 // E:\gamedcs\dxplay.cpp:605
 // Before normalization (locals): lpDPSessionDesc, dwFlags, pSession.
@@ -1629,14 +1565,14 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // return value, leaving the guard, scalar delete and two field clears. The
 // VC6 header-inline destructor emits that body as the ??1CDPlayMsg COMDAT.
 
-// TRuntimeError's message-carrying constructor - the one body of the game's
-// own exception family that lives in THIS compiland's span, and the callee
-// every `throw TAllocationFailure()` site reaches (objnames' 0x41b500
-// expands the derived body around a call to it; gzinflatebuf keeps its own
-// 0x4d6b80 COMDAT and calls it three times).
+// TRuntimeError's retained message constructor sits after the DxPlay family.
+// The physical dxplay.cpp allocation follows that retail band; RTTI proves
+// the class name, while the original Windows source filename is unknown.
+// Objnames' 0x41b500 expands the derived allocation-error initialization
+// around a call here; gzinflatebuf retains and calls 0x4d6b80.
 //
-// The body is the base list and nothing else. TDebugBreak is an empty base
-// with an empty inline constructor, so it emits nothing at all; the
+// The body is the base list. RTTI proves the empty TDebugBreak base;
+// its canonical empty default constructor is visible in exceptions.h. The
 // `std::string(text)` temporary is built in place (strlen, `_Grow`, the
 // `rep movsd` copy) and handed to std::runtime_error, whose constructor VC6
 // expands here - the member string's allocator byte plus three zero stores
@@ -1647,7 +1583,7 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // dead hidden-return slot a full-width pointer parameter leaves free.
 VA(0x0049a0c0, 0xF9)  // linkorder (dxplay span, after 0x49a020) + anchor-callee objnames 0x41b500 / gzinflatebuf 0x4d6b80, retail-only
 TRuntimeError::TRuntimeError(const char* text)
-    : TDebugBreak(text), std::runtime_error(std::string(text))
+    : std::runtime_error(std::string(text))
 {
 }
 

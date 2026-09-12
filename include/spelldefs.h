@@ -8,6 +8,14 @@
 #include <vector>
 #include "armygrp.h"
 
+// Dreamcast SpellDefs.h:345..346, dc 0x4fd34: original IsMindSpell.
+// Its header definition and get_spell_work_chance line 505 establish the
+// canonical accessor boundary; Complete expands this bit test in the caller.
+inline unsigned char isMindSpell(int spell)
+{
+    return (g_spellTraits[spell].m_flags & 0x400) != 0;
+}
+
 // Retail spell-class flag roles in SSpellTraits::field_c. Names are
 // behavior-derived; values and mastery thresholds are byte-proven by
 // SpellTargetsASingleArmy.
@@ -31,24 +39,6 @@ unsigned char initializeSpellTraitsTable();
 // only the public DC array name survives.
 // Before normalization: aSpellTraitsImp.
 extern SSpellTraits g_spellTraitsImp[81];
-
-namespace {
-
-// Source-private Dreamcast TAutoStrPtr. Its retail ctor/dtor are ICF-shared
-// inline representatives; spelldefs' lazy static arrays are its only storage.
-class TAutoStrPtr {
-public:
-    TAutoStrPtr() : m_str(0) {}
-    ~TAutoStrPtr() { delete[] m_str; }
-    void set(char* value) { m_str = value; }
-    char* get() const { return m_str; }
-
-private:
-    // Before normalization: pStr.
-    char* m_str;
-};
-
-}
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spelldefs.cpp:335, dc 0x14e39c) void InitializeSpellTraits(int id, const std::vector<char* resource);

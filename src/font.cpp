@@ -117,7 +117,7 @@ void font::setPalette(const TPalette16* newPalette)
 // homes width/height in the dead c/x parameter slots, eliminating the
 // former extra frame slot and the ESI/EDI mirror cascade (78.2623 -> 100).
 VA(0x004b51a0, 0xA9)  // anchor-global, dc 0xa1d58
-void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
+void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
         return;
@@ -590,7 +590,7 @@ int font::getCharacterWidth(unsigned char currChar) const
 // GetCharacterWidth inlines here (defined just above, all three
 // glyph fields summed); no newline or color-marker handling.
 VA(0x004b57d0, 0x44)  // linkorder, dc 0xa2438
-long font::getStringWidth(const char* arg)
+long font::getStringWidth(const char* arg) const
 {
     long width = 0;
     for (const char* p = arg; *p;)
@@ -654,7 +654,7 @@ int font::lineLength(const char* str, int boxWidth) const
 // The homm2 nested-loop shape survives verbatim; retail adds the
 // {}-color-marker skip and inlines GetCharacterWidth.
 VA(0x004b5920, 0x64)  // anchor-global, dc 0xa2554
-int font::lineWidth(const char* text)
+int font::lineWidth(const char* text) const
 {
     int len = strlen(text);
     int idx = 0;
@@ -671,7 +671,7 @@ int font::lineWidth(const char* text)
 
 // E:\gamedcs\font.cpp:535
 VA(0x004b5990, 0x76)  // anchor-global, dc 0xa25c8
-int font::longestLineWidth(const char* str)
+int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
     int best = 0;
@@ -692,7 +692,7 @@ int font::longestLineWidth(const char* str)
 
 // E:\gamedcs\font.cpp:572
 VA(0x004b5a10, 0x6F)  // anchor-global, dc 0xa2650
-int font::longestWordLength(const char* str)
+int font::longestWordLength(const char* str) const
 {
     int best = 0;
     const char* p = str;
@@ -723,7 +723,7 @@ int font::longestWordLength(const char* str)
 // placed after the loop, where spelling a `pos = candidate` inside
 // each exit duplicates the block (94.6%).
 VA(0x004b5a80, 0x110)  // anchor-global, dc 0xa26d4
-int font::longestWrappedLineWidth(const char* str, int boxWidth)
+int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int len = strlen(str);
     int maxWidth = 0;

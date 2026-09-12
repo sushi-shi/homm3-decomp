@@ -67,10 +67,10 @@
 #include "message.h"
 #include "misc.h"
 #include "winmgr.h"
-// TLevelUpWindow, akLevelUpSkillTraits and the two skill-icon ids: the
-// level-up dialog hero::CheckLevel raises. levelupwindow.h only adds
-// advmgr_popup.h on top of what hero.h already pulls.
+// The level-up dialog and its widget ids; skill names use the shared
+// akSSkillTraits table, formerly duplicated as akLevelUpSkillTraits.
 #include "levelupwindow.h"
+#include "sskilltraits.h"
 // The two windows THeroScreenWindow::WindowHandler constructs on the
 // stack: the spellbook on the artifact slot 17 arm and the quick-hero
 // popup on the locator right-click arm.
@@ -92,26 +92,6 @@
 // includes.h integer wrappers recovered from Dreamcast.
 #include "homm3_minmax.h"
 
-// The base stores emit in CNetMsg(subType,size) order. PlaceInMap's 0x424,
-// 0x20-byte payload is the recruit record, with gNetLocalGamePos supplied as
-// Dreamcast's third constructor argument.
-inline CMCRecruitHero::CMCRecruitHero(int id, type_point location, int player)
-    : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
-      m_heroId(id),
-      m_point(location),
-      m_playerPos(player)
-{
-}
-
-// The dead-hero record expands inside hero::Deallocate. Retail's five base
-// stores use CNetMsg(subType,size) order, so preserve the real CMapChange
-// initializer instead of duplicating those assignments in the derived body.
-inline CMCDeadHero::CMCDeadHero(int id, type_point location)
-    : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero)),
-      m_heroId(id),
-      m_point(location)
-{
-}
 
 #include "mousemgr.h"
 #include "widget.h"
@@ -122,6 +102,7 @@ inline CMCDeadHero::CMCDeadHero(int id, type_point location)
 #include "button.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
+#include "includes.h"
 
 DATA(0x0069774c) extern unsigned char g_campaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&g_heroClasses)[18];
@@ -546,7 +527,7 @@ mine* type_obscuring_object::get_obscured_mine()
 // 0x62 is TAdventureObjectType TOWN, and the -1 test on the index is
 // the same "no town" sentinel game::GetTown carries.
 VA(0x004d7490, 0x35)  // anchor-global, dc 0xcab04
-town* type_obscuring_object::getObscuredTown()
+town* type_obscuring_object::getObscuredTown() const
 {
     if (m_valid && m_obscuredType == TOWN && m_wasTrigger)
         return g_game->getTown(m_extraInfo);
@@ -725,37 +706,6 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     sendMapChange(&change);
 }
 
-// The three scalar readers hero::load funnels every field through - the
-// exact mirror of save's writers, and for the same reason. Each returns
-// BY VALUE, so the deserialised scalar is a compiler TEMPORARY rather
-// than a named local, and retail packs all three into the dead incoming
-// `infile` word: the byte at [ebp+0xb], the short at [ebp+0xa] and the
-// dword at [ebp+8], allocated from the top of that arena downwards.
-// Named locals do not get that arena.
-// Before normalization (function): ReadByteField.
-static unsigned char readByteField(TAbstractFile* infile)
-{
-    unsigned char value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
-// Before normalization (function): ReadWordField.
-static short readWordField(TAbstractFile* infile)
-{
-    short value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
-// Before normalization (function): ReadDwordField.
-static int readDwordField(TAbstractFile* infile)
-{
-    int value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
 // E:\gamedcs\hero.cpp:577
 // save's twin, field for field and in the same order. Three SAVE-VERSION
 // gates are the only asymmetry, and each is a real format migration:
@@ -805,82 +755,128 @@ static int readDwordField(TAbstractFile* infile)
 // Conventional release VERIFY around an already-unguarded Read retains the
 // same call and reduces to its existing ignored-result expression, so it
 // cannot supply the missing nested-call boundary either.
-// FRAME CENSUS 2026-09-06, and it does NOT reopen the missing-statement
-// reading.  Retail's frame is 0x50 against our 0x44 and the Dreamcast roster
-// names six scratch buffers here (uint_buffer, ushort_buffer, int_buffer,
-// short_buffer, uchar_buffer, char_buffer), which together look like the
-// read-into-a-temp-then-assign shape that would double this body's statement
-// count (DC prices it at 159 source lines against our 75).  The retail bytes
-// refuse it: every scalar read in retail goes through the SAME recycled
-// parameter home this compile already uses - `lea ecx,[ebp+0xb] / push 1 /
-// push ecx / call [eax+4]` at every byte site - and the two heads are
-// instruction-identical from the prologue to the custom-name assign.  The
-// twelve surplus bytes are all in the TAIL: retail's extra slots are -0x10,
-// -0x28, -0x2c, -0x30 and -0x5c, and every one of them is first written
-// inside the granted-mask `_Xran` throw path (the `std::out_of_range` object
-// at -0x5c takes `vtbl_2455cc`, its message string pointer sits at -0x10),
-// against our -0x14/-0x34/-0x38/-0x3c for the same temporaries.  So the frame
-// delta is a CONSEQUENCE of the recorded `_Grow` inline split, not
-// independent evidence for missing named locals.
+// The preceding score notes describe the former scalar-wrapper candidate.
+// DC 0xcaf98 explicitly owns uint_buffer, ushort_buffer, int_buffer,
+// short_buffer, uchar_buffer and char_buffer in this function; its SH4
+// reads fill those buffers before member assignment. Retail 0x4d7a6b onward
+// preserves the read/copy sequence through TAbstractFile::read, including
+// signed-byte extension (0x4d7a78/0x4d7b49) and boolean normalization
+// (0x4d7a95). Recycled parameter homes do not disprove these source locals.
+// The reconstruction-only readByteField/readWordField/readDwordField
+// wrappers are removed. Complete's unchecked reads and version gates stay.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
+    unsigned int uintBuffer;
+    unsigned short ushortBuffer;
+    int intBuffer;
+    short shortBuffer;
+    unsigned char ucharBuffer;
+    char charBuffer;
+
     if (!type_obscuring_object::load(infile))
         return -1;
 
     if (saveVersion >= 25) {
-        m_sex = static_cast<signed char>(readByteField(infile));
-        m_hasCustomName = readByteField(infile) != 0;
+        infile->read(&charBuffer, sizeof(charBuffer));
+        m_sex = static_cast<signed char>(charBuffer);
+        infile->read(&ucharBuffer, sizeof(ucharBuffer));
+        m_hasCustomName = ucharBuffer != 0;
         m_customName = readLengthPrefixedString(infile);
     }
 
-    m_owner = readByteField(infile);
-    m_patrolRadius = readByteField(infile);
-    m_moraleBonus = readByteField(infile);
-    m_luckBonus = readByteField(infile);
-    m_backpackCount = readByteField(infile);
-    m_disguiseLevel = static_cast<signed char>(readByteField(infile));
-    m_flightLevel = static_cast<signed char>(readByteField(infile));
-    m_waterWalkLevel = static_cast<signed char>(readByteField(infile));
-    m_dWalkSpellsCast = readByteField(infile);
-    m_visionsPower = static_cast<signed char>(readByteField(infile));
-    m_id = static_cast<signed char>(readByteField(infile));
-    m_heroClass = static_cast<signed char>(readByteField(infile));
-    m_portrait = readByteField(infile);
-    m_patrolX = readByteField(infile);
-    m_patrolY = readByteField(infile);
-    m_facing = readByteField(infile);
-    m_formation = readByteField(infile);
-    m_levelSeed = readByteField(infile);
-    m_lastWisdom = readByteField(infile);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_owner = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_patrolRadius = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_moraleBonus = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_luckBonus = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_backpackCount = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_disguiseLevel = static_cast<signed char>(charBuffer);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_flightLevel = static_cast<signed char>(charBuffer);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_waterWalkLevel = static_cast<signed char>(charBuffer);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_dWalkSpellsCast = charBuffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_visionsPower = static_cast<signed char>(charBuffer);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_id = static_cast<signed char>(charBuffer);
+    infile->read(&charBuffer, sizeof(charBuffer));
+    m_heroClass = static_cast<signed char>(charBuffer);
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_portrait = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_patrolX = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_patrolY = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_facing = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_formation = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_levelSeed = ucharBuffer;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_lastWisdom = ucharBuffer;
 
-    m_pathTargetX = readDwordField(infile);
-    m_pathTargetY = readDwordField(infile);
-    m_pathTargetZ = readWordField(infile);
-    m_lastMagicSchoolLevel = readWordField(infile);
-    m_maxMovePoints = readDwordField(infile);
-    m_movePoints = readDwordField(infile);
-    m_experience = readDwordField(infile);
-    m_skillCount = readDwordField(infile);
-    m_mana = readWordField(infile);
-    m_level = readWordField(infile);
-    m_targetDistance = readWordField(infile);
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_pathTargetX = intBuffer;
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_pathTargetY = intBuffer;
+    infile->read(&shortBuffer, sizeof(shortBuffer));
+    m_pathTargetZ = shortBuffer;
+    infile->read(&shortBuffer, sizeof(shortBuffer));
+    m_lastMagicSchoolLevel = shortBuffer;
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_maxMovePoints = intBuffer;
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_movePoints = intBuffer;
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_experience = intBuffer;
+    infile->read(&intBuffer, sizeof(intBuffer));
+    m_skillCount = intBuffer;
+    infile->read(&shortBuffer, sizeof(shortBuffer));
+    m_mana = shortBuffer;
+    infile->read(&shortBuffer, sizeof(shortBuffer));
+    m_level = shortBuffer;
+    infile->read(&ushortBuffer, sizeof(ushortBuffer));
+    m_targetDistance = ushortBuffer;
 
-    m_trainingGroundsFlags = readDwordField(infile);
-    m_defenseTowerFlags = readDwordField(infile);
-    m_gardenOfRevelationFlags = readDwordField(infile);
-    m_mercCampFlags = readDwordField(infile);
-    m_powerSchoolFlags = readDwordField(infile);
-    m_treeOfKnowledgeFlags = readDwordField(infile);
-    m_libraryFlags = readDwordField(infile);
-    m_arenaFlags = readDwordField(infile);
-    m_magicSchoolFlags = readDwordField(infile);
-    m_warSchoolFlags = readDwordField(infile);
-    m_universityFlags = readDwordField(infile);
-    m_shrine1Flags = readDwordField(infile);
-    m_shrine2Flags = readDwordField(infile);
-    m_shrine3Flags = readDwordField(infile);
-    m_flags = readDwordField(infile);
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_trainingGroundsFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_defenseTowerFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_gardenOfRevelationFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_mercCampFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_powerSchoolFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_treeOfKnowledgeFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_libraryFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_arenaFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_magicSchoolFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_warSchoolFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_universityFlags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_shrine1Flags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_shrine2Flags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_shrine3Flags = uintBuffer;
+    infile->read(&uintBuffer, sizeof(uintBuffer));
+    m_flags = uintBuffer;
 
     m_army.load(infile);
 
@@ -902,20 +898,21 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion >= 32)
         infile->read(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    m_isSleeping = readByteField(infile) != 0;
+    infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    m_isSleeping = ucharBuffer != 0;
 
     std::bitset<48> granted;
-    // Before normalization (locals): granted_mask.
-    unsigned char grantedMask[6];
-    infile->read(grantedMask, sizeof(grantedMask));
+    // DC scratch-array name: inBuf. Former reconstruction: granted_mask.
+    unsigned char inBuf[6];
+    infile->read(inBuf, sizeof(inBuf));
     for (unsigned int i = 0; i < 48; i++)
-        granted.set(i, (grantedMask[i >> 3] & (1 << (i & 7))) != 0);
+        granted.set(i, (inBuf[i >> 3] & (1 << (i & 7))) != 0);
     m_townSpecialGrantedMask = granted;
     return 0;
 }
 
 // E:\gamedcs\hero.cpp:914
-// The record serialiser. Three scratch locals carry every scalar into
+// The record serialiser. Typed scratch locals carry every scalar into
 // the stream - retail copies each field into a stack temp and hands
 // Write() that temp's address, never the member's, which is what makes
 // the write widths independent of the member widths (the byte writes of
@@ -935,92 +932,128 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // tests: VC6 rotated the loop and merged the peeled first-iteration
 // check with the back-edge condition, so ONE compare serves both and
 // _Xran sits above the loop body rather than inside it.
-// The three scalar writers hero::save funnels every field through.
-// They carry NO retail row of their own - each is expanded at all its
-// call sites - but they are not mere convenience: a BY-VALUE parameter
-// is what puts the serialised copy in a compiler TEMPORARY instead of a
-// named local, and retail's frame is only big enough for the six-byte
-// mask buffer (`sub esp,8`) with all three temps packed into the dead
-// incoming-parameter word - the byte at [ebp+0xb], the wider two at
-// [ebp+8], overlapping. Named locals do not get that arena.
-// Before normalization (function): WriteByteField.
-static void writeByteField(TAbstractFile* outfile, unsigned char value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-// Before normalization (function): WriteWordField.
-static void writeWordField(TAbstractFile* outfile, short value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
-// Before normalization (function): WriteDwordField.
-static void writeDwordField(TAbstractFile* outfile, int value)
-{
-    outfile->write(&value, sizeof(value));
-}
-
+// DC 0xcb698 owns the same six scalar buffers (original spellings:
+// uint_buffer, ushort_buffer, int_buffer, short_buffer, uchar_buffer,
+// char_buffer). SH4 writes them after copying/narrowing each member; retail
+// 0x4d80e2..0x4d8121 independently proves the byte/dword scratch writes,
+// followed by virtual Write calls. Its overlapping parameter-home slots
+// do not establish the former writeByteField/writeWordField/writeDwordField
+// source boundaries. Keep the buffers local and the wire widths explicit.
 VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
+    unsigned int uintBuffer;
+    unsigned short ushortBuffer;
+    int intBuffer;
+    short shortBuffer;
+    unsigned char ucharBuffer;
+    char charBuffer;
+
     if (!type_obscuring_object::save(outfile))
         return -1;
 
 
-    writeByteField(outfile, m_sex);
-    writeByteField(outfile, m_hasCustomName);
+    charBuffer = static_cast<char>(m_sex);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_hasCustomName);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
 
-    writeDwordField(outfile, m_customName.length());
+    uintBuffer = static_cast<unsigned int>(m_customName.length());
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    writeByteField(outfile, m_owner);
-    writeByteField(outfile, m_patrolRadius);
-    writeByteField(outfile, m_moraleBonus);
-    writeByteField(outfile, m_luckBonus);
-    writeByteField(outfile, m_backpackCount);
-    writeByteField(outfile, m_disguiseLevel);
-    writeByteField(outfile, m_flightLevel);
-    writeByteField(outfile, m_waterWalkLevel);
-    writeByteField(outfile, m_dWalkSpellsCast);
-    writeByteField(outfile, m_visionsPower);
-    writeByteField(outfile, m_id);
-    writeByteField(outfile, m_heroClass);
-    writeByteField(outfile, m_portrait);
-    writeByteField(outfile, m_patrolX);
-    writeByteField(outfile, m_patrolY);
-    writeByteField(outfile, m_facing);
-    writeByteField(outfile, m_formation);
-    writeByteField(outfile, m_levelSeed);
-    writeByteField(outfile, m_lastWisdom);
+    charBuffer = static_cast<char>(m_owner);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_patrolRadius);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_moraleBonus);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_luckBonus);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_backpackCount);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_disguiseLevel);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_flightLevel);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_waterWalkLevel);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_dWalkSpellsCast);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_visionsPower);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_id);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    charBuffer = static_cast<char>(m_heroClass);
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_portrait);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_patrolX);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_patrolY);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_facing);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_formation);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_levelSeed);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    ucharBuffer = static_cast<unsigned char>(m_lastWisdom);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
 
-    writeDwordField(outfile, m_pathTargetX);
-    writeDwordField(outfile, m_pathTargetY);
-    writeWordField(outfile, m_pathTargetZ);
-    writeWordField(outfile, m_lastMagicSchoolLevel);
-    writeDwordField(outfile, m_maxMovePoints);
-    writeDwordField(outfile, m_movePoints);
-    writeDwordField(outfile, m_experience);
-    writeDwordField(outfile, m_skillCount);
-    writeWordField(outfile, m_mana);
-    writeWordField(outfile, m_level);
-    writeWordField(outfile, m_targetDistance);
+    intBuffer = static_cast<int>(m_pathTargetX);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    intBuffer = static_cast<int>(m_pathTargetY);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    shortBuffer = static_cast<short>(m_pathTargetZ);
+    outfile->write(&shortBuffer, sizeof(shortBuffer));
+    shortBuffer = static_cast<short>(m_lastMagicSchoolLevel);
+    outfile->write(&shortBuffer, sizeof(shortBuffer));
+    intBuffer = static_cast<int>(m_maxMovePoints);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    intBuffer = static_cast<int>(m_movePoints);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    intBuffer = static_cast<int>(m_experience);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    intBuffer = static_cast<int>(m_skillCount);
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    shortBuffer = static_cast<short>(m_mana);
+    outfile->write(&shortBuffer, sizeof(shortBuffer));
+    shortBuffer = static_cast<short>(m_level);
+    outfile->write(&shortBuffer, sizeof(shortBuffer));
+    ushortBuffer = static_cast<unsigned short>(m_targetDistance);
+    outfile->write(&ushortBuffer, sizeof(ushortBuffer));
 
-    writeDwordField(outfile, m_trainingGroundsFlags);
-    writeDwordField(outfile, m_defenseTowerFlags);
-    writeDwordField(outfile, m_gardenOfRevelationFlags);
-    writeDwordField(outfile, m_mercCampFlags);
-    writeDwordField(outfile, m_powerSchoolFlags);
-    writeDwordField(outfile, m_treeOfKnowledgeFlags);
-    writeDwordField(outfile, m_libraryFlags);
-    writeDwordField(outfile, m_arenaFlags);
-    writeDwordField(outfile, m_magicSchoolFlags);
-    writeDwordField(outfile, m_warSchoolFlags);
-    writeDwordField(outfile, m_universityFlags);
-    writeDwordField(outfile, m_shrine1Flags);
-    writeDwordField(outfile, m_shrine2Flags);
-    writeDwordField(outfile, m_shrine3Flags);
-    writeDwordField(outfile, m_flags);
+    uintBuffer = static_cast<unsigned int>(m_trainingGroundsFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_defenseTowerFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_gardenOfRevelationFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_mercCampFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_powerSchoolFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_treeOfKnowledgeFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_libraryFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_arenaFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_magicSchoolFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_warSchoolFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_universityFlags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_shrine1Flags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_shrine2Flags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_shrine3Flags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    uintBuffer = static_cast<unsigned int>(m_flags);
+    outfile->write(&uintBuffer, sizeof(uintBuffer));
 
     m_army.save(outfile);
 
@@ -1034,17 +1067,18 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(m_backpack, sizeof(m_backpack));
     outfile->write(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    writeByteField(outfile, m_isSleeping);
+    ucharBuffer = static_cast<unsigned char>(m_isSleeping);
+    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
-    // Before normalization (locals): granted_mask.
-    unsigned char grantedMask[6];
-    memset(grantedMask, 0, sizeof(grantedMask));
+    // DC scratch-array name: outBuf. Former reconstruction: granted_mask.
+    unsigned char outBuf[6];
+    memset(outBuf, 0, sizeof(outBuf));
     for (unsigned int i = 0; i < 48; ++i) {
         if (granted.test(i))
-            grantedMask[i >> 3] |= 1 << (i & 7);
+            outBuf[i >> 3] |= 1 << (i & 7);
     }
-    outfile->write(grantedMask, sizeof(grantedMask));
+    outfile->write(outBuf, sizeof(outBuf));
     return 0;
 }
 
@@ -1212,8 +1246,14 @@ void hero::initialize(short index)
         giveSS(g_heroTraits[index].m_secondSkill,
                g_heroTraits[index].m_secondSkillLevel);
     }
-    if (g_heroTraits[index].m_startsWithSpellbook)
-        m_equipped[17].m_artifactId = artifactFromInt(ARTIFACT_SPELLBOOK);
+    if (g_heroTraits[index].m_startsWithSpellbook) {
+        union {
+            int m_integer;
+            TArtifact m_artifact;
+        } converted;
+        converted.m_integer = ARTIFACT_SPELLBOOK;
+        m_equipped[17].m_artifactId = converted.m_artifact;
+    }
     if (g_heroTraits[index].m_startingSpell != -1)
         addSpell(g_heroTraits[index].m_startingSpell);
 
@@ -1269,30 +1309,6 @@ void hero::initialize(short index)
 // unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 //
-// The four artifact loops HeroFn_004D8B30 runs when the setup record
-// carries a custom loadout. One call site, so /Ob2 expands it and emits
-// no out-of-line body; splitting it out is the /Ob2 budget lever that
-// mark_spells and HeroFn_004E6120 both needed.
-// Before normalization (function): apply_setup_artifacts.
-static void applySetupArtifacts(hero* who, const HeroExtra* setup)
-{
-    int i;
-    for (i = 0; i < 19; i++) {
-        if (who->m_equipped[i].m_artifactId != ARTIFACT_NONE)
-            who->removeArtifact(i);
-    }
-    for (i = 0; i < 19; i++) {
-        if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
-            who->equipArtifact(&setup->m_artifacts[i], i);
-    }
-    for (i = 0; i < 64; i++)
-        who->m_backpack[i] = type_artifact();
-    for (i = 0; i < 64; i++) {
-        if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
-            who->addToBackpack(&setup->m_backpack[i], -1);
-    }
-}
-
 // 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
@@ -1415,8 +1431,26 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
         }
     }
 
-    if (setup->m_customArtifacts)
-        applySetupArtifacts(this, setup);
+    if (setup->m_customArtifacts) {
+        // Retail 0x4d8d28..0x4d8dbb owns these four loadout loops. The
+        // former applySetupArtifacts wrapper was introduced only for /Ob2;
+        // the older DC initialize_hero also owns its artifact traversal.
+        int i;
+        for (i = 0; i < 19; i++) {
+            if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
+                removeArtifact(i);
+        }
+        for (i = 0; i < 19; i++) {
+            if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
+                equipArtifact(&setup->m_artifacts[i], i);
+        }
+        for (i = 0; i < 64; i++)
+            m_backpack[i] = type_artifact();
+        for (i = 0; i < 64; i++) {
+            if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
+                addToBackpack(&setup->m_backpack[i], -1);
+        }
+    }
 
     if (setup->m_sex != -1)
         m_sex = setup->m_sex;
@@ -1472,7 +1506,6 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
     m_mana = static_cast<short>(getMaxMana());
     m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
 }
-
 
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
@@ -1534,7 +1567,7 @@ unsigned char hero::belongsToHuman() const
 // past the `inc`, not on it), so the four war-machine ids are only
 // ever reached with the flag clear. Transcribed as retail emits it.
 VA(0x004d9070, 0x45)  // anchor-global, dc 0xcc0e4
-long hero::getEquippedArtifacts(unsigned char countWarMachines)
+long hero::getEquippedArtifacts(unsigned char countWarMachines) const
 {
     long count = 0;
     for (int slot = 0; slot < 19; slot++) {
@@ -1549,7 +1582,7 @@ long hero::getEquippedArtifacts(unsigned char countWarMachines)
 
 // E:\gamedcs\hero.cpp:1338
 VA(0x004d90c0, 0x4A)  // anchor-bracket, dc 0xcc138
-long hero::getNumberInBackpack(unsigned char countWarMachines)
+long hero::getNumberInBackpack(unsigned char countWarMachines) const
 {
     long count = 0;
     if (countWarMachines)
@@ -1765,11 +1798,14 @@ void hero::addSpell(int whichSpell)
     m_availableSpells[whichSpell] = 1;
 }
 
-// Every spell of one magic school, the body the four Tome arms of
-// mark_spells share. A file-static with four call sites: /Ob2 expands it
-// into each arm, which is why no retail row exists for it.
-// Before normalization (function): spells_of_school.
-static std::bitset<70> spellsOfSchool(TSpellSchool school)
+// E:\gamedcs\hero.cpp:1527, dc 0xcc360.
+// DC mark_spells is the ordinary global school helper called by the Tome
+// arms of UpdateSpellList at dc 0xcc446. Complete collects each school's
+// grants in a returned bitset: retail 0x4d9386..0x4d93d2 constructs a
+// separate three-dword result, tests akSpellTraits.schoolBits, and copies
+// it into the artifact result. The other three Tome arms repeat this.
+// Before normalization (function): mark_spells; formerly spells_of_school.
+std::bitset<70> markSpells(TSpellSchool school)
 {
     std::bitset<70> granted(0);
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
@@ -1779,18 +1815,9 @@ static std::bitset<70> spellsOfSchool(TSpellSchool school)
     return granted;
 }
 
-// The Spellbinder's Hat sweep. One call site, so /Ob2 expands it
-// unconditionally and no retail row exists for it.
-// Before normalization (function): mark_spells_of_level.
-static void markSpellsOfLevel(std::bitset<70>& target, int level)
-{
-    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if (g_spellTraits[spell].m_level == level)
-            target.set(spell, true);
-    }
-}
-
-// E:\gamedcs\hero.cpp:1527
+// Complete artifact dispatcher; markArtifactSpells is a provisional name.
+// It was formerly labelled mark_spells, but dc 0xcc360 owns only the
+// school helper above, not this artifact-id switch.
 // The artifact -> granted-spells map, and NOT the DC row's
 // `(unsigned char*, TSpellSchool)`: it is a /Gr FREE function returning
 // bitset<70> BY VALUE - the hidden return pointer arrives in ECX and the
@@ -1815,8 +1842,14 @@ static void markSpellsOfLevel(std::bitset<70>& target, int level)
 // line: that is purely the /Ob2 budget running out mid-switch, so all
 // four arms are written identically here.
 //
-// The TWO HELPERS above are byte-forced, not tidiness. Retail's callee
-// census is _Tidy x5 / reference::operator= x5 / operator[] x2 / set x3,
+// Historical two-helper experiment: the level helper was introduced only
+// to adjust /Ob2 and is now removed. DC preserves the school helper, while
+// its Spellbinder's Hat level scan is directly in UpdateSpellList at
+// hero.cpp:1576..1580. Complete moves that arm into this dispatcher at
+// 0x4d94d8..0x4d9507, retaining bitset::set at 0x4d94f3. The old score
+// improvements below do not prove a separate level-helper boundary.
+// The two-helper experiment observed the retail callee
+// census: _Tidy x5 / reference::operator= x5 / operator[] x2 / set x3,
 // i.e. retail inlines almost no STL here at all - and with the four Tome
 // loops and the level loop written out longhand in this function our CL
 // has enough /Ob2 budget to inline ALL of it (84.29%). Moving them into
@@ -1847,26 +1880,30 @@ static void markSpellsOfLevel(std::bitset<70>& target, int level)
 // 84.86% before the level helper); its call shape is identical to the
 // `(0)` ctor's at all five sites, so no byte is given up by spelling it
 // this way.
-VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
-std::bitset<70> markSpells(int artifactId)
+VA(0x004d9350, 0x272)  // retail artifact-id dispatch + bitset return, retail-only
+std::bitset<70> markArtifactSpells(int artifactId)
 {
     std::bitset<70> result(0);
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
-        result = spellsOfSchool(eSchoolAir);
+        result = markSpells(eSchoolAir);
         break;
     case ARTIFACT_TOME_OF_FIRE_MAGIC:
-        result = spellsOfSchool(eSchoolFire);
+        result = markSpells(eSchoolFire);
         break;
     case ARTIFACT_TOME_OF_WATER_MAGIC:
-        result = spellsOfSchool(eSchoolWater);
+        result = markSpells(eSchoolWater);
         break;
     case ARTIFACT_TOME_OF_EARTH_MAGIC:
-        result = spellsOfSchool(eSchoolEarth);
+        result = markSpells(eSchoolEarth);
         break;
-    case ARTIFACT_SPELLBINDERS_HAT:
-        markSpellsOfLevel(result, g_fifthLevelSpell);
+    case ARTIFACT_SPELLBINDERS_HAT: {
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+            if (g_spellTraits[spell].m_level == g_fifthLevelSpell)
+                result.set(spell, true);
+        }
         break;
+    }
     case ARTIFACT_ARMAGEDDONS_BLADE:
         result[SPELL_ARMAGEDDON] = true;
         break;
@@ -1911,7 +1948,7 @@ void hero::updateSpellList()
                 m_availableSpells[extra] = 1;
             } else {
                 if (g_artifactTraits[artifactId].m_givesSpells) {
-                    std::bitset<70> granted = markSpells(artifactId);
+                    std::bitset<70> granted = markArtifactSpells(artifactId);
                     std::transform(m_availableSpells,
                                    m_availableSpells + NUM_SPELLS,
                                    bitset_iterator<70>(granted, 0),
@@ -1924,7 +1961,7 @@ void hero::updateSpellList()
                     for (int component = 0; component < 144; component++) {
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
-                            std::bitset<70> granted = markSpells(component);
+                            std::bitset<70> granted = markArtifactSpells(component);
                             std::transform(m_availableSpells,
                                            m_availableSpells + NUM_SPELLS,
                                            bitset_iterator<70>(granted, 0),
@@ -2029,8 +2066,12 @@ void hero::updateArmies()
 // E:\gamedcs\hero.cpp:1606
 #endif  // @carcass
 
-VA(0x004d9990, 0x65)  // dc-bracket forced, dc 0xcc4e0
-void hero::heroScreenUpdate(int whichStat, int isQuickView)
+// Original: hero::ViewStat; hero.cpp:1709, dc 0xcc708.
+// Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
+// plus the quick/normal dialog type to NormalDialog. DC confirms the same
+// calls and arguments; the old HeroScreenUpdate association was positional.
+VA(0x004d9990, 0x65)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
+void hero::viewStat(int whichStat, int isQuickView)
 {
     unsigned short statValue = getPrimarySkill(whichStat);
     normalDialog(g_statDesc[whichStat],
@@ -2055,7 +2096,7 @@ void hero::heroScreenUpdate(int whichStat, int isQuickView)
 // independently identified retail callers now establish the public name and
 // the const artifact pointer as well as this body's ABI.
 // The `neg / sbb / and 3 / inc` chain is the quick-view flag turned into
-// the same dialog-type pair HeroScreenUpdate uses (4 quick, 1 normal),
+// the same dialog-type pair viewStat uses (4 quick, 1 normal),
 // and the two arms carry SEPARATE string locals - retail homes them at
 // [ebp-0x1c] and [ebp-0x2c], which is what fixes the duplicated
 // description call rather than one shared temporary.
@@ -2081,19 +2122,20 @@ void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:1709
-// ARITY SETTLED FROM THE BYTES (2026-08-20), against the DC prototype
-// the block note above flags: retail is `ret 4` with ONE stack argument
-// and never touches ECX, and that argument is an ARTIFACT id - it goes
-// straight into a stack type_artifact whose get_description() opens the
-// text. So the DC name ViewStat does not describe this body and the
-// name below is an ORDINAL PLACEHOLDER. General text 734 is the
-// question; 733 is HeroFn_004DC100's assemble prompt, and 0x4dc070 is
-// the disassemble action this reply gates.
-VA(0x004d9b30, 0x18D)  // dc-bracket forced + settled arity, dc 0xcc708
+// Complete-only combination-artifact prompt.
+// Retail is `ret 4` with one artifact-id argument and never reads ECX.
+// A stack type_artifact supplies the description before general text 734
+// asks for confirmation; the caller gates disassembly at 0x4dc070 on this
+// reply. DC ViewStat is independently identified at retail 0x4d9990 above;
+// its former association with this body was a positional-map error.
+// DC's 20-byte TArtifactTraits (type 0x3d9c) lacks the combination fields
+// used by this caller, and TArtifact's enum ends at 127 (type 0x1b5a).
+// The provisional address-based name remains until a PC source name is found.
+VA(0x004d9b30, 0x18D)  // combination-artifact caller + settled retail ABI
 int hero::heroFn004D9B30(int artifact)
 {
-    type_artifact record(artifact, -1);
+    // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
+    type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
     text += g_generalText->getText(734);
@@ -2125,7 +2167,8 @@ int hero::heroFn004D9CC0(int artifact)
     int assembled =
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
             .m_artifactId;
-    type_artifact record(artifact, -1);
+    // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
+    type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
     text += formatString(g_generalText->getText(733),
@@ -2622,9 +2665,9 @@ void hero::checkLevel()
                             g_generalText->getText(
                                 GENERAL_TEXT_LEVEL_UP_CHOICE),
                             g_skillMasteryNames[m_skillLevel[skills[0]]],
-                            g_levelUpSkillTraits[skills[0]].m_name,
+                            g_sSkillTraits[skills[0]].m_name,
                             g_skillMasteryNames[m_skillLevel[skills[1]]],
-                            g_levelUpSkillTraits[skills[1]].m_name);
+                            g_sSkillTraits[skills[1]].m_name);
                     strcat(g_text, text);
                     {
                         TLevelUpWindow window(
@@ -2909,7 +2952,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
                     artifact = TArtifact(0x91);
                     break;
                 }
-                if (g_currentHero->getArtifact(i).m_artifactId == ARTIFACT_NONE
+                if (g_currentHero->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
@@ -3369,7 +3412,7 @@ void handleArtifactClick(long code, unsigned char right_mouse)
 #endif  // @carcass
 
 VA(0x004dbd90, 0x1E)  // body-identified (backpack stride/base), dc 0xce140
-long hero::getLastBackpackIndex()
+long hero::getLastBackpackIndex() const
 {
     for (long slot = 64; slot--; ) {
         if (m_backpack[slot].m_artifactId != -1)
@@ -3494,7 +3537,8 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
     }
 
     return equipArtifact(
-        &type_artifact(g_combinationArtifacts[combination].m_artifactId, -1),
+        // The Complete combination table stores the added artifact ordinal; equipArtifact receives the canonical DC-typed record.
+        &type_artifact(static_cast<TArtifact>(g_combinationArtifacts[combination].m_artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
         -1);
 }
 
@@ -3509,7 +3553,8 @@ void hero::heroFn004DC070(long slot)
         g_combinationArtifacts[combination].m_components;
     for (int artifactId = 0; artifactId < 144; artifactId++) {
         if (components.test(artifactId)) {
-            type_artifact artifact(artifactId, -1);
+            // Complete enumerates all 144 component bits, beyond DC's 128 artifact ids; each set bit becomes a typed artifact record.
+            type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             equipArtifact(&artifact, -1);
         }
     }
@@ -4016,23 +4061,10 @@ void THeroScreenWindow::show_skills()
 
 #endif  // @carcass
 
-// The three bodies the Dreamcast build keeps as their own functions and
-// retail expands into WindowHandler: handle_artifact_click (dc 0xcdf30),
-// handle_backpack_click (dc 0xcea3c) and show_skills (dc 0xcf3ac). None
-// has a retail row, so each is a file-static with ONE call site, which
-// /Ob2 expands unconditionally and emits no out-of-line copy for.
-//
-// They are BYTE-FORCED, not tidiness. Written longhand inside
-// WindowHandler the caller carries so much /Ob2 budget that it also
-// expands update_all_slots, ViewArtifact, HeroFn_004E2840 and
-// bitset<144>::any(), every one of which retail CALLS. Moving these three
-// arms back out is what restores retail's own inline census.
-//
-// The two click handlers keep the Dreamcast names and their `(long code,
-// unsigned char right_mouse)` arity. show_skills does NOT: the DC row is
-// zero-argument and this body needs the widget id, the same arity
-// divergence the block note above already records for five other
-// hero-screen rows, so it takes a descriptive local name instead.
+// The two click handlers retain the DC helper identities
+// handle_artifact_click (dc 0xcdf30) and handle_backpack_click (dc 0xcea3c).
+// THeroScreenWindow::show_skills (dc 0xcf3ac) is a separate widget-update
+// member, not the skill-description popup formerly lifted from WindowHandler.
 // Before normalization (function): handle_artifact_click.
 // Before normalization (locals): right_mouse.
 static void handleArtifactClick(long code, unsigned char rightMouse)
@@ -4203,8 +4235,8 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
                 &g_heroScreenDraggedArtifact, index)) {
             normalDialog(
                 g_currentHero
-                    ->getBackpackError(artifactFromInt(
-                        g_heroScreenDraggedArtifact.m_artifactId))
+                    ->getBackpackError(
+                        g_heroScreenDraggedArtifact.m_artifactId)
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
@@ -4254,41 +4286,10 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
         mouseManager::ARTIFACT_SET);
 }
 
-// Before normalization (function): show_hero_skills.
-// Before normalization (locals): right_mouse.
-static void showHeroSkills(int code, unsigned char rightMouse)
-{
-    if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
-        return;
-    int nth;
-    if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
-        && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
-        nth = code - THeroScreenWindow::SKILL_ICON_FIRST_ID;
-    else if (code >= THeroScreenWindow::SKILL_NAME_FIRST_ID
-             && code <= THeroScreenWindow::SKILL_NAME_LAST_ID)
-        nth = code - THeroScreenWindow::SKILL_NAME_FIRST_ID;
-    else if (code < THeroScreenWindow::SKILL_LEVEL_FIRST_ID
-             || code > THeroScreenWindow::SKILL_LEVEL_LAST_ID)
-        return;
-    else
-        nth = code - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
-    if (nth >= g_currentHero->m_skillCount)
-        return;
-    int skill = g_currentHero->getNthSS(nth);
-    strcpy(g_text,
-           g_sSkillTraits[skill]
-               .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
-    normalDialog(g_text,
-                 rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                             : hero::PRIMARY_STAT_DIALOG_TYPE,
-                 -1, -1, 0x14,
-                 3 * skill + g_currentHero->m_skillLevel[skill] + 2,
-                 -1, 0, -1, 0, -1, 0);
-}
-
 // E:\gamedcs\hero.cpp:3486. Retail has 5182 bytes; the DC caller has
-// 3128 and calls handle_artifact_click, handle_backpack_click and show_skills.
-// Preserve those canonical helpers even where Complete expands them.
+// 3128 and retains calls to the two click handlers and its widget-update
+// show_skills member. Preserve helper identities without conflating that
+// widget update with the Complete skill-description popup.
 // Both byte-indexed widget switches already have the retail case-to-arm
 // assignments and source arm order. The id triplets group by statistic:
 // {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77} experience, and
@@ -4331,15 +4332,156 @@ static void showHeroSkills(int code, unsigned char rightMouse)
 // Full sema CFG views still truncate this row at embedded jump-table data;
 // use complete sema disassembly or an arm range, not the reported block total.
 //
-// Earlier controls, now bounded by the restored source: RTM C1XX and C2 were
-// byte-identical to SP3; case-arm reordering contradicted the decoded tables;
-// a trailing else around the post-hover dispatcher left the epilogue late.
-// Helper splits of the shift arms, hero-locator selection and army refresh
-// tails did not fix that placement. Int-width rightMouse, missing.any pins,
-// dead-statement growth and repeated release-accessor probes did not improve
-// it. Existing click-helper pins are historical diagnostics; do not add more.
-// Their earlier site/whole-callee and nested-depth trials cannot establish
-// that this caller requires a different compiler generation or dummy code.
+// THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
+// swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
+// units: this function's bytes are IDENTICAL on both sides (it is absent
+// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// that differs at all), and hero.obj's five functions that DO differ
+// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
+// jb/jl loop-guard twins that move AWAY from retail. The captured IL is
+// byte-identical between the two front ends apart from its own two-byte
+// version word (rtm-generation.md §6), so there is no front-end lever
+// here. The merge-set flip is a model gap, not a vintage.
+//
+// THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
+// corrects the earlier "nothing missing" diagnosis. In the selected-army
+// path, retail tests gUnnamed6aa9d8 before split/merge/swap. When that latch
+// is set, clicking an occupied different slot merely selects that slot,
+// refreshes the seven army widgets, broadcasts the mixed-army status and
+// redraws; an empty slot does nothing. The target block is fn+0x7bc..0x8e1:
+// `test gUnnamed6aa9d8 / je <split path> / cmp army[slot],-1 / je <tail> /
+// mov [gHeroScreenArmySlot],edi / call UpdateArmies`. It is semantic,
+// not padding. A direct same-level else-if initially cost 74.4733 ->
+// 70.1594 by crossing a VC6 whole-function threshold. Restoring the
+// independently attested Hero.h:634 GetMaxMana inline at its five hero.obj
+// sites is byte-flat at every site alone but changes that threshold honestly:
+// with both source corrections present this function reaches 75.4051 and
+// emits all four UpdateArmies calls plus both BroadcastMessage calls.
+// That is the landed form. The qualifier test in the split path is also
+// corrected from MESSAGE_MODIFIER_SHIFT (0x1) to
+// MESSAGE_MODIFIER_SHIFT_KEYS (0x3), exactly retail's `test byte ptr [...],3`;
+// the matcher masks that immediate class, so the semantic correction is
+// score-neutral.
+//
+// Retail's three army refresh arms also do NOT pass the status code as the
+// constant the arm already knows: each emits
+// `mov [gHeroScreenArmySlot],edi / call UpdateArmies / mov
+// eax,[gHeroScreenArmySlot] / cmp eax,-1 / jne push 6 / push 5` in front
+// of heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
+// fn+0x6c5, fn+0x7e0 and fn+0x8bb - i.e. it RE-READS the global after
+// the call and
+// selects WIDGET_CLEAR_STATUS(6) / WIDGET_SET_STATUS(5) at run time. The
+// values our three compiled arms pass as constants agree with what that select
+// produces, so this is a spelling and not a polarity error. Writing it as
+// the ternary in both arms costs 74.4733 -> 74.2419, so the select alone
+// does not pay: the rest of those two blocks has to converge with it.
+// why-branch's current `right_mouse`-as-int suggestion is also rejected:
+// it costs 75.4051 -> 71.9404, and retail homes the normalized flag as a
+// byte, agreeing with the unsigned-char source and the DC helper arities.
+// Consolidating the three duplicated army-refresh tails into a tiny inline
+// helper is a second six-statement shrink control (2026-08-21). Passing the
+// status as an argument is byte-flat at 75.4051 with 129 branches and 87
+// calls; selecting it inside the helper from gHeroScreenArmySlot regresses
+// to 74.13 with 128 branches. The shared-tail helper therefore cannot move
+// the whole-function cross-jump phase either, and is not retained.
+// Conventional release VERIFY is bounded as well (2026-08-21): evaluating
+// the header-inline `gpGame->GetCurrHero() == gpCurrentHero` invariant at
+// doses 1, 3 and 5 is byte-flat at 75.4051%. The release evaluation is a real
+// accessor candidate rather than an elided TRACE/ASSERT arm, but it does not
+// move this whole-function cross-jump phase.
+// The DC local census is exhausted too (2026-08-21): its only named locals
+// are `exitFlag` and `infowin`. `exitFlag` is the base-handler result tested
+// at entry, and type 0x4D89 proves `infowin` is the block-scoped
+// TQuickHeroWindow already constructed in the hero-locator right-click arm.
+// Retail likewise constructs and destroys that object in this arm, so neither
+// local exposes missing source structure; their identifier spelling cannot
+// affect code generation.
+// Lead for the next lane (2026-09-04, polish lane 2): the DC dossier's
+// `exitFlag` is NOT the base-handler result - it is initialised to 0 in
+// the CAdvPopup::WindowHandler call's delay slot, written once (`= 1`)
+// in the HERO_NAME_ID arm when dialogReturn == DIALOG_RETURN_ACCEPT (dc
+// line 3594), and tested once after the switch (line 3949: `if
+// (exitFlag) { dialogReturn = codeY; codeY = codeX = 10; return 2; }
+// return 1;`). Retail's shape agrees: one return-1 epilogue at fn+0x79
+// with 64 arms jumping back to it and the return-2 block inline after
+// the HERO_NAME_ID arm. Spelled that way here (townManager::Main closed
+// 23 points on the identical device) VC6 does produce the single shared
+// epilogue, but places it after the source-last SELECT arm
+// (show_hero_skills) instead of retail's MOUSE_MOVE `return 1`, and the
+// score falls 75.41 -> 69.34; the current inline `return 2` keeps the
+// epilogue at the end and scores higher only because more arms then
+// align. What decides where VC6 lands the threaded return-1 block is
+// the open question (Main lands it after the TOWN_x arm where retail
+// has the selector arm); solve that and this device is worth ~15 pts.
+// CENSUS 2026-09-05 (the sema CFG/call/reloc views are UNUSABLE on this row -
+// the block builder gives up at the first inline jump table and reports
+// "target 24 blocks / 8 calls"; the RAW `sema disasm` of both sides is
+// complete, 1431 rows, and is the only usable oracle here).
+// Retail emits 15 `NormalDialog` CALLS; this compile emits SIX out of the
+// eleven source sites, because our C2 cross-jumps every right-click help arm
+// (`test bl,bl / je <exit> / 12 pushes / mov ecx,<help text> / mov edx,4 /
+// JMP <shared call>`) while retail ends each arm with its own `call
+// NormalDialog / jmp <exit>` - behaviour-catalog D7, cross-jumping we perform
+// and retail does not, and the same class as the shared `je` in
+// game::ValidateVictoryLossConditions.  Retail also expands
+// hero::viewStat's two dialog sites inline (0x4de1da..0x4de320:
+// `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
+// `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
+// Two independent frame facts, both unexplained: retail reserves 0x14c and
+// this compile 0x144 - EIGHT bytes short, i.e. two named locals missing -
+// and retail homes `right_mouse` in the DEAD `msg` PARAMETER SLOT [ebp+8]
+// with `this` at [ebp-0x18] and localPlayer at [ebp-0x10], where we use
+// [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
+// sits at fn+0x7e, immediately after the MOUSE_MOVE arm's `mov eax,1`
+// fall-through; ours is threaded to fn+0x128a at the very end.
+// ARM ORDER IS NOT THE PROBLEM - MEASURED AND REFUTED 2026-09-05.  A
+// standing brief said "the jump-table arm ORDER differs"; it does not.
+// Both jump tables were decoded on both sides and they agree exactly.
+// The two BYTE index tables are byte-identical (00 01 08 08 ... 08 04 05
+// 06 07 and 00 00 00 11 ... 10 10 11 05), so the case-to-arm assignment
+// is already right; and sorting each table's targets by address gives the
+// SAME arm sequence on both sides - DESELECT 8,7,0,1,5,2,3,4,6 and SELECT
+// 3,2,8,9,5,7,6,4,0,1,16,14,15,10,11,12,13,17.  Reordering the `case`
+// labels can only make this worse.  Do not spend a round on it.
+//
+// AND THE 15-vs-6 NormalDialog CENSUS IS NOT AN INDEPENDENT DEFECT: it is
+// the epilogue placement wearing a second face.  Retail's merged `return
+// 1` block sits at fn+0x79, as the FALL-THROUGH successor of the
+// MOUSE_MOVE arm, and all 64 other exits `jmp` back to it; ours sits at
+// fn+0x128a, as the fall-through successor of the SOURCE-LAST arm
+// (show_hero_skills).  Because our epilogue is the last block, the last
+// arm's `call NormalDialog` + fall-through is a two-instruction tail that
+// the six right-click help arms share, so C2's cross-jumper merges all six
+// into it (`mov edx,4 / jmp 0x1285`).  Retail's arms end `call
+// NormalDialog / jmp 0x5fd9` - the SAME two-instruction tail, six times,
+// UNMERGED - purely because their shared successor is far away.  So there
+// is exactly ONE decision left in this function, not two: which member of
+// the epilogue merge-set C2 emits in place.  Retail keeps the FIRST
+// (source-order) `return 1`; we keep the LAST.  Every documented attempt
+// (the exitFlag device, caller shrink at four doses, the shared-tail
+// helper, the status-code select, `right_mouse` as int, RTM-vs-SP3) moved
+// something else and left that decision untouched - the exitFlag device in
+// particular DOES produce the single shared epilogue and still places it
+// after show_hero_skills (75.41 -> 69.34), which is what proves the
+// placement is a separate knob from the merge.
+// Two facts that any candidate explanation has to carry: retail's frame is
+// 0x14c against our 0x144 (two named locals we do not have), and retail
+// homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
+// spend a numbered local on it - both consistent with the frame being
+// allocated after a different set of blocks survived.
+// A third fact that BOUNDS the search: both sides emit exactly TWO `ret 4`
+// sites, and the SECOND one (the HERO_NAME arm's `return 2`) is at the same
+// place on both - base fn+0x198 against retail fn+0x19b.  So the merge-set
+// question is only about which copy of `return 1` survives in place, and
+// everything downstream of fn+0x19b is already aligned.
+// MEASURED AND REJECTED 2026-09-05: wrapping everything after the MOUSE_MOVE
+// arm in an `else` (dropping that arm's own `return 1` so the arm falls into
+// a single trailing one - the shape retail's layout literally has, if/body,
+// join, else-body) scores 70.97 against 74.22, and the epilogue does NOT
+// move: it is still the last block, at fn+0x1291.  So the `else` is not the
+// construct that puts retail's join early, and no source bracketing tried so
+// far reaches C2's choice of surviving copy.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::windowHandler(message* msg)
 {
@@ -4439,7 +4581,7 @@ int THeroScreenWindow::windowHandler(message* msg)
         case PRIMARY_SKILL_3_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            g_currentHero->heroScreenUpdate(msg->m_codeY - PRIMARY_SKILL_0_ID,
+            g_currentHero->viewStat(msg->m_codeY - PRIMARY_SKILL_0_ID,
                                             rightMouse);
             break;
 
@@ -4693,9 +4835,39 @@ int THeroScreenWindow::windowHandler(message* msg)
                              -1, 0, -1, 0, -1, 0);
             break;
 
-        default:
-            showHeroSkills(msg->m_codeY, rightMouse);
+        default: {
+            // Retail 0x4de4fc..0x4de5d4 handles the skill-popup range here.
+            // DC show_skills instead calls GetWidget/show; it cannot own
+            // this widget-id/rightMouse popup or justify a new wrapper.
+            if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
+                break;
+            int code = msg->m_codeY;
+            int nth;
+            if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
+                && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
+                nth = code - THeroScreenWindow::SKILL_ICON_FIRST_ID;
+            else if (code >= THeroScreenWindow::SKILL_NAME_FIRST_ID
+                     && code <= THeroScreenWindow::SKILL_NAME_LAST_ID)
+                nth = code - THeroScreenWindow::SKILL_NAME_FIRST_ID;
+            else if (code < THeroScreenWindow::SKILL_LEVEL_FIRST_ID
+                     || code > THeroScreenWindow::SKILL_LEVEL_LAST_ID)
+                break;
+            else
+                nth = code - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
+            if (nth >= g_currentHero->m_skillCount)
+                break;
+            int skill = g_currentHero->getNthSS(nth);
+            strcpy(g_text,
+                   g_sSkillTraits[skill]
+                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+            normalDialog(g_text,
+                         rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                     : hero::PRIMARY_STAT_DIALOG_TYPE,
+                         -1, -1, 0x14,
+                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         -1, 0, -1, 0, -1, 0);
             break;
+        }
         }
         break;
     }
@@ -5157,8 +5329,7 @@ THeroScreenWindow::THeroScreenWindow()
 // (0x57c2d2/0x5cc832/0x5dcae6/0x5e7b71). The public base-object symbol and
 // its vector<int> body prove the identity; the declarator only enrolls the
 // already-emitted COMDAT and does not manufacture a second definition.
-VA(0x004e1370, 0x1AF)
-void button::setHotkey(int code);
+// Canonical body and VA: include/button.h.
 
 // E:\gamedcs\hero.cpp:4186
 // RETAIL_LOCATED(0x004e1520, 0x21): compiler-generated ??_G immediately
@@ -5695,19 +5866,14 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     return m_skillLevel[whichSS] - oldLevel;
 }
 
-#if 0  // @carcass
-
-
-
-
-// E:\gamedcs\hero.cpp:4689
-DC_ONLY(0xd38d8, 0x12)
-unsigned char hero::hasSecondarySkill(int iWhich)
+// Original: hero::HasSecondarySkill; hero.cpp:4689, dc 0xd38d8.
+// The DC formal type is non-const, and its source body tests skillOrder.
+// SetupHeroView calls this ordinary TU helper; no header force-inline view.
+unsigned char hero::hasSecondarySkill(int whichSkill)
 {
-    // @stub
+    return m_skillOrder[whichSkill] > 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:4653
 VA(0x004e2340, 0x2A)  // anchor-global, dc 0xd3830
@@ -6103,7 +6269,7 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 
     if (artifact->m_artifactId == ARTIFACT_TITANS_THUNDER
         && m_equipped[17].m_artifactId == ARTIFACT_NONE) {
-        type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+        type_artifact spellbook(ARTIFACT_SPELLBOOK);
         equipArtifact(&spellbook, 17);
     }
 
@@ -6752,7 +6918,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
 // the specialty scale runs through fild/__ftol instead of staying in
 // the FPU, and the artifact bonuses are plain adds.
 VA(0x004e3f40, 0x12F)  // anchor-global, dc 0xd44a4
-int hero::getMysticismBonus()
+int hero::getMysticismBonus() const
 {
     int bonus = g_mysticismBonuses[m_skillLevel[eSecSkillMysticism]];
     if (m_skillLevel[eSecSkillMysticism] > 0) {
@@ -6778,7 +6944,7 @@ int hero::getMysticismBonus()
 
 // E:\gamedcs\hero.cpp:5424
 VA(0x004e4070, 0xEF)  // anchor-global, dc 0xd4560
-int hero::getVisibility()
+int hero::getVisibility() const
 {
     int visibility = g_scoutingVisibility[m_skillLevel[eSecSkillScouting]];
     if (m_skillLevel[eSecSkillScouting] > 0) {
@@ -6804,7 +6970,7 @@ int hero::getVisibility()
 // recursion inside each survives as a call), which is /Ob2 doing its
 // own budgeting - the source is three plain calls.
 VA(0x004e4160, 0x143)  // anchor-global, dc 0xd45d8
-float hero::getArcheryFactor()
+float hero::getArcheryFactor() const
 {
     float factor = g_archeryFactors[m_skillLevel[eSecSkillArchery]];
     if (m_skillLevel[eSecSkillArchery] > 0) {
@@ -6834,7 +7000,7 @@ float hero::getArcheryFactor()
 // makes the specialty test unreachable at mastery None, which is why
 // retail computes the table load BEFORE branching on it.
 VA(0x004e42b0, 0x60)  // anchor-global, dc 0xd4664
-float hero::getOffenseFactor()
+float hero::getOffenseFactor() const
 {
     float factor = g_offenseFactors[m_skillLevel[eSecSkillOffense]];
     if (m_skillLevel[eSecSkillOffense] > 0) {
@@ -6847,7 +7013,7 @@ float hero::getOffenseFactor()
 
 // E:\gamedcs\hero.cpp:5514
 VA(0x004e4310, 0x7D)  // anchor-global, dc 0xd46a8
-float hero::getDefenseFactor()
+float hero::getDefenseFactor() const
 {
     float factor = g_defenseFactors[m_skillLevel[eSecSkillDefense]];
     if (m_skillLevel[eSecSkillDefense] > 0) {
@@ -6867,7 +7033,7 @@ float hero::getDefenseFactor()
 // block is outside the `> 0` guard and re-reads the record, which is
 // why retail computes the akHeroSpecificAbilities row TWICE.
 VA(0x004e4390, 0x89)  // anchor-global, dc 0xd46f8
-int hero::getEstatesBonus()
+int hero::getEstatesBonus() const
 {
     int bonus = g_estatesGold[m_skillLevel[eSecSkillEstates]];
     if (m_skillLevel[eSecSkillEstates] > 0) {
@@ -6888,7 +7054,7 @@ int hero::getEstatesBonus()
 // too) with GetDefenseFactor's clamp, but no `1 - x` inversion: an
 // eagle-eye chance is used as-is.
 VA(0x004e4420, 0x15A)  // anchor-global, dc 0xd4768
-float hero::getEagleEyeChance()
+float hero::getEagleEyeChance() const
 {
     float factor = g_eagleEyeFactors[m_skillLevel[eSecSkillEagleEye]];
     if (m_skillLevel[eSecSkillEagleEye] > 0) {
@@ -6917,7 +7083,7 @@ float hero::getEagleEyeChance()
 // artifact scan, not on the return) - so a hero with no Diplomacy
 // still gets the artifact discount.
 VA(0x004e4580, 0x15C)  // anchor-global, dc 0xd482c
-float hero::getSurrenderCostFactor()
+float hero::getSurrenderCostFactor() const
 {
     float factor = g_diplomacyFactors[m_skillLevel[eSecSkillDiplomacy]];
     if (m_skillLevel[eSecSkillDiplomacy] > 0) {
@@ -6938,7 +7104,7 @@ float hero::getSurrenderCostFactor()
 
 // E:\gamedcs\hero.cpp:5647
 VA(0x004e46e0, 0x15C)  // anchor-global, dc 0xd48c8
-float hero::getMagicResistanceFactor()
+float hero::getMagicResistanceFactor() const
 {
     float factor = g_magicResistanceFactors[m_skillLevel[eSecSkillMagicResistance]];
     if (m_skillLevel[eSecSkillMagicResistance] > 0) {
@@ -7019,7 +7185,7 @@ float hero::GetSorceryFactor()
 
 // E:\gamedcs\hero.cpp:5783
 VA(0x004e48b0, 0x66)  // anchor-global, dc 0xd4a88
-float hero::getIntelligenceFactor()
+float hero::getIntelligenceFactor() const
 {
     float factor = g_intelligenceFactors[m_skillLevel[eSecSkillIntelligence]];
     if (m_skillLevel[eSecSkillIntelligence] > 0) {
@@ -7055,18 +7221,9 @@ float hero::getFirstAidFactor() const
 // SAME cell the owned-Lighthouse count and the Castle Lighthouse
 // building multiply, which is what makes it the lighthouse bonus rather
 // than a fourth artifact's.
-// The elemental gate the creature specialty applies before every upgrade
-// query - the twin of hillfortwindow.obj's own copy. No out-of-line row
-// exists; /Ob2 expands it at the single call site below.
-// Before normalization (function): GetUpgradedCreature.
-static TCreatureType getUpgradedCreature(TCreatureType type)
-{
-    if (g_game->m_f1f698 == 0 &&
-        (type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL ||
-         type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL))
-        return CREATURE_NONE;
-    return upgradedCreatureType(type);
-}
+// Creature-specialty upgrades use the canonical game::UpgradedCreatureType
+// member (retained at 0x529710), including its base-map elemental guard.
+// The former local GetUpgradedCreature duplicated that same body.
 
 // E:\gamedcs\hero.cpp:5833
 // The movement allowance. Two disjoint halves joined by one AI tail: the
@@ -7135,7 +7292,7 @@ int hero::getMobility(unsigned char seaMovement) const
                         speed++;
                     else if (g_heroSpecificAbilities[m_id].m_creature !=
                                  CREATURE_BALLISTA &&
-                             creature == getUpgradedCreature(
+                             creature == g_game->upgradedCreatureType(
                                  g_heroSpecificAbilities[m_id].m_creature))
                         speed++;
                 }
@@ -7359,9 +7516,18 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     return bestSchool;
 }
 
+// Canonical const-API checkpoint: IsWieldingArtifact, GetIntelligenceFactor,
+// get_special_terrain, get_spell_level, GetManaCost and artifact rollover
+// retain 100% after their six symbol migrations. Shared-header collateral:
+// CEnterNameEdit::OnKillFocus 100 -> 99.870964%, oldmain 77.025734 -> 77.023056%,
+// CampaignHeaderStruct::Load 53.971493 -> 53.986843%. All historical peaks
+// remain banked; Fly is unchanged at 32.623375% with the canonical overload.
+// The DC LF_MFUNCTION records prove const on this overload and the Hero.h
+// facade. The former second, const-adapter implementation represented this
+// same source function; retain one ordinary body and its canonical calls.
 // E:\gamedcs\hero.cpp:6071
-// The traits row carries a mana cost PER MASTERY, so the whole of
-// get_spell_level is inlined here just to index it. Titan's Lightning
+// DC6071 names GetSpellSchoolLevel and HasArmy as source calls. Complete
+// adds the Armageddon's Blade mastery override before indexing the mana row. Titan's Lightning
 // Bolt is free; Pegasi in the defending army tax the caster two points
 // and the caster's own Mages refund two, both gated on there being an
 // enemy group at all; the floor is 1.
@@ -7589,7 +7755,7 @@ unsigned char hero::isInPatrolRadius(type_point point) const
 VA(0x004e5760, 0x1F2)  // anchor-global, dc 0xd53a0
 long hero::modifySpellDamage(SpellID spell, int damage,
                                // Before normalization (locals): target_army.
-                               const class army* targetArmy)
+                               const class army* targetArmy) const
 {
     float value = static_cast<float>(damage);
     int school = g_spellTraits[spell].m_school;
@@ -7651,7 +7817,7 @@ void hero::fly(int level)
 
 // E:\gamedcs\hero.cpp:6319
 VA(0x004e5aa0, 0xE0)  // anchor-global, dc 0xd54ac
-long hero::getCombatSpeedBonus()
+long hero::getCombatSpeedBonus() const
 {
     long bonus = 0;
     if (isWieldingArtifact(ARTIFACT_NECKLACE_OF_SWIFTNESS))
@@ -7685,7 +7851,7 @@ long hero::getCombatSpeedBonus()
 // the four gates inlines IsWieldingArtifact's 19-slot scan, which
 // clobbers the registers it would otherwise sit in.
 VA(0x004e5b80, 0x15C)  // anchor-global, dc 0xd5508
-long hero::getHitPointBonus(int creatureType)
+long hero::getHitPointBonus(int creatureType) const
 {
     long bonus = 0;
     if (isWieldingArtifact(ARTIFACT_RING_OF_VITALITY))
@@ -7711,7 +7877,7 @@ long hero::getHitPointBonus(int creatureType)
 // fly/water-walk push), and requires cell terrain 8 (water) to agree with
 // it, then checks the cell passability bit 0x40.
 VA(0x004e5ce0, 0xE7)  // anchor-bracket + order-map, dc 0xd5548
-unsigned char hero::canLand()
+unsigned char hero::canLand() const
 {
     type_point point;
     point.m_x = m_x;
@@ -7757,7 +7923,7 @@ void hero::walkOnWater(int level)
 // map offers `hero::GetRoguePower` on a masked-identity match, but that
 // is NH3API lineage and still needs independent retail corroboration.
 VA(0x004e5de0, 0x2D)  // linkorder + order-map, retail-only
-int hero::heroFn004E5DE0()
+int hero::heroFn004E5DE0() const
 {
     if (m_visionsPower < 3 && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
         return 3;
@@ -7775,7 +7941,7 @@ int hero::heroFn004E5DE0()
 // reversed `-heroLocation.x + location->x` spelling are byte-identical;
 // why-reg finds no binding divergence in its model slice.
 VA(0x004e5e10, 0x11C)  // anchor-global, dc 0xd55c0
-unsigned char hero::isInIdentifyRange(const type_point* location)
+unsigned char hero::isInIdentifyRange(const type_point* location) const
 {
     int identifyLevel = heroFn004E5DE0();
     int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
@@ -7801,7 +7967,7 @@ unsigned char hero::isInIdentifyRange(const type_point* location)
 // Boat movement disables flight and water-walking overrides; both arms carry
 // Pathfinding and the Nomad terrain exemption into MinimumTerrainCost.
 VA(0x004e5f30, 0xBF)  // anchor-global, dc 0xd5644
-unsigned char hero::isMobile()
+unsigned char hero::isMobile() const
 {
     type_point point;
     point.m_x = m_x;
@@ -7868,18 +8034,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
     return bonus;
 }
 
-// The flat creature bonus kinds 4 and 7 both add. Two call sites, so
-// /Ob2 expands it into each and emits no out-of-line body.
-// Before normalization (function): add_flat_creature_bonus.
-static void addFlatCreatureBonus(TCreatureTypeTraits* traits,
-                                    const THeroSpecificAbility& ability)
-{
-    traits->m_attackSkill += ability.m_creatureAttackBonus;
-    traits->m_defenseSkill += ability.m_creatureDefenseBonus;
-    traits->m_damageLowBound += ability.m_creatureDamageBonus;
-    traits->m_damageHighBound += ability.m_creatureDamageBonus;
-}
-
 // E:\gamedcs\hero.cpp:6493
 // IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right
 // - this is hero.obj's last main-.text body, immediately before the
@@ -7913,14 +8067,10 @@ static void addFlatCreatureBonus(TCreatureTypeTraits* traits,
 // are real retail rows that /Ob2 expands INTO this body, which is why
 // this definition has to sit after them in link order.
 //
-// add_flat_creature_bonus above is BYTE-FORCED, not tidiness, and the
-// same lever mark_spells needed. Written longhand in both arms this body
-// carries enough /Ob2 budget to expand IsWieldingArtifact at BOTH of its
-// sites; retail expands only the first (the Vial of Dragon Blood scan)
-// and keeps a real call at the second, inside the inlined
-// get_combat_speed_bonus. Folding the duplicated four-statement bonus
-// into a two-call-site static shrinks the pre-inline caller, drops the
-// budget, and restores retail's call exactly: 93.41% -> 99.97%.
+// The flat additions at 0x4e621a..0x4e6246 and 0x4e633d..0x4e6377
+// belong to the two specialty arms below. The former addFlatCreatureBonus
+// helper had no DC or retained retail identity and existed only to shrink
+// the caller's /Ob2 budget. Earlier 99.97% measurements used that wrapper.
 // The last instruction was operand ORDER on the upgraded-creature test -
 // retail emits `cmp ecx,eax` with creature_type first, so that compare
 // is spelled `creature_type == GetUpgradedCreature(...)`. Flipping the
@@ -7931,14 +8081,12 @@ VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const
 {
-    hero* self = const_cast<hero*>(this);
-
     traits->m_attackSkill += getPrimarySkill(0);
     traits->m_defenseSkill += getPrimarySkill(1);
 
     const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
 
-    if (self->isWieldingArtifact(g_artifactVialOfDragonBlood)
+    if (isWieldingArtifact(g_artifactVialOfDragonBlood)
         && (traits->m_attributes & g_creatureAttrDragon)) {
         int bonus = g_vialOfDragonBloodBonus;
         traits->m_attackSkill += bonus;
@@ -7950,7 +8098,7 @@ void hero::heroFn004E6120(int creatureType,
     case eHeroAbilityCreatureUniversal:
         if (creatureType == ability.m_creature
             || (ability.m_creature != CREATURE_BALLISTA
-                && creatureType == getUpgradedCreature(ability.m_creature))) {
+                && creatureType == g_game->upgradedCreatureType(ability.m_creature))) {
             if (ability.m_type == eHeroAbilityCreature) {
                 double scale = m_level / (traits->m_level + 1) * 0.05;
                 traits->m_attackSkill = static_cast<int>(
@@ -7962,7 +8110,10 @@ void hero::heroFn004E6120(int creatureType,
                 if (!(traits->m_attributes & g_ctaSiegeWeapon))
                     traits->m_speed++;
             } else {
-                addFlatCreatureBonus(traits, ability);
+                traits->m_attackSkill += ability.m_creatureAttackBonus;
+                traits->m_defenseSkill += ability.m_creatureDefenseBonus;
+                traits->m_damageLowBound += ability.m_creatureDamageBonus;
+                traits->m_damageHighBound += ability.m_creatureDamageBonus;
                 if (m_id == g_heroXeron)
                     traits->m_speed++;
             }
@@ -7970,14 +8121,18 @@ void hero::heroFn004E6120(int creatureType,
         break;
     case eHeroAbilityDragons:
         if (g_creatureTypeTraits[creatureType].m_attributes
-            & g_creatureAttrDragon)
-            addFlatCreatureBonus(traits, ability);
+            & g_creatureAttrDragon) {
+            traits->m_attackSkill += ability.m_creatureAttackBonus;
+            traits->m_defenseSkill += ability.m_creatureDefenseBonus;
+            traits->m_damageLowBound += ability.m_creatureDamageBonus;
+            traits->m_damageHighBound += ability.m_creatureDamageBonus;
+        }
         break;
     }
 
     if (!(traits->m_attributes & g_ctaSiegeWeapon))
-        traits->m_speed += self->getCombatSpeedBonus();
-    traits->m_hitPoints += self->getHitPointBonus(creatureType);
+        traits->m_speed += getCombatSpeedBonus();
+    traits->m_hitPoints += getHitPointBonus(creatureType);
 }
 
 #if 0  // @carcass
@@ -8194,27 +8349,6 @@ std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(uns
 
 #endif  // @carcass
 
-// ---------------------------------------------------------------------
-// STL COMDAT emission anchor - SCAFFOLDING, flagged for ratification.
-//
-// The five claims in the COMDAT-tail block above name template members
-// whose definitions live in VC6's <vector>/<bitset>.  A claim alone does
-// not make the compiler emit anything: an inline member only gets its
-// out-of-line COMDAT when some call site declines to inline it, and with
-// /Ob2 every ordinary call site inlines.  `#pragma inline_depth(0)` is
-// the smallest construct that reproduces retail's emission decision, and
-// it costs exactly one extra symbol in hero.obj.
-//
-// Extra base-side symbols are inert: objdiff enumerates the TARGET
-// object's functions, so this anchor and the vector helper COMDATs it
-// drags in add no rows to the report and no rows to the ratchet
-// (measured 2026-08-07).
-//
-// This whole block DELETES ITSELF the day hero.cpp's real bodies land -
-// retail's own hero.cpp is what referenced these templates.  Until then
-// it is the honest minimum: no vendored headers, no `#define private
-// public`, no explicit instantiation.
-// ---------------------------------------------------------------------
 // Retail 0x48d940 is the shared vector<int>::_Ufill COMDAT: its guarded
 // dword-fill loop is called by vector<int> users across the image, including
 // button::setHotkey and hero's vector<int>::push_back.  The retail link does
@@ -8222,20 +8356,14 @@ std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(uns
 // specialization from its recovered source uses.
 VA_COMPGEN(0x0048d940, 0x26, VECTOR_UFILL, int)
 
-#pragma inline_depth(0)
-// Before normalization (function): h3_stl_comdat_anchor.
-void h3StlComdatAnchor(std::vector<int>& v, const int& value,
-                          std::bitset<70>& spells,
-                          const std::bitset<144>& artifacts)
-{
-    v.begin();
-    v.end();
-    v.push_back(value);
-    spells.set(0, true);
-    artifacts.any();
-}
-#pragma inline_depth()
+
 
 // COMDAT pairing: bitset<144>::test, agreement 1.000 at an exactly equal
 // 55-byte extent.
 VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
+
+// Retail loadMap, markArtifactSpells (0x4d9350) and readTownData share this
+// bitset<70> cleanup. It expands in game but remains naturally emitted here
+// and in mapcell. All 37 bytes agree, including the three-word fill and
+// six-bit high-word mask; there are no relocations or added source calls.
+VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)

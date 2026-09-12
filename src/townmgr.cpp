@@ -62,6 +62,7 @@
 #include "university_window.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
 
 // singleselectionwindow.obj's pair, retail 0x577790 / 0x577810 (dc
 // 0x12fdb8 / 0x12fdd4). 0x577790 is the STARTER - it tests the thread
@@ -88,42 +89,6 @@ void getCategoryStats(int whichCat, long* value, signed char* index);
 void sortStats(long* value, signed char* index);
 
 
-
-// The tree's representation-bridge idiom (game.cpp 0x60, ai_combat.cpp
-// 0x108), copied here for this compiland's two int-to-enum edges: it
-// keeps the conversion explicit without an enum cast, and VC6 reduces
-// the four-byte copy to a move.
-//
-// RedrawTownScreen crosses the creature edge because armyGroup::armies
-// is int by armygrp.h's own design while strip::DrawIcons takes the
-// Dreamcast's TCreatureType. SetupMage crosses the building edge
-// because retail passes is_legal_building a plain loop counter
-// (`mov edx,[ebp-4]; push edx` - no table, no conversion), so the
-// retail source contained the identical conversion.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
-// Before normalization (function): building_id_from_int.
-inline type_building_id buildingIdFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: building.
-        type_building_id m_building;
-    } storage;
-    storage.m_value = value;
-    return storage.m_building;
-}
 
 // resourcemanager.h's two entry points this compiland needs, declared
 // file-locally rather than by including that header: BuyBuild and
@@ -255,38 +220,10 @@ DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
 // the only claimed consumer so far.
 void setWinText(heroWindow* win, int which);
 
-// The shipyard price gate, a single-call-site static: /Ob2 expands it
-// unconditionally and emits no out-of-line body, so it costs nothing in
-// the image - the two GetLocalPlayerGamePos calls and the 1000-gold /
-// 10-wood compares are exactly retail's, in retail's order.
-//
-// It is not cosmetic. The same test written open-coded in the caller
-// compiles to the same bytes EXCEPT at the last Widgets.push_back: /Ob2
-// hands a nested call site the budget `remaining / sites-still-to-come`,
-// so at the LAST candidate site the divisor collapses to one and
-// vector::insert expands inline - which retail does not do. One more
-// candidate site behind that push_back restores retail's divisor and the
-// whole body goes exact (75.73% -> 100%). The helper is that site, and
-// the inline accounting is the evidence for the shape.
-// The blacksmith's half of the same price gate, and the same
-// single-call-site static for the same reason: open-coded in the caller
-// it compiles to identical bytes everywhere except inside
-// Widgets.reserve, where one fewer candidate site raises that nested
-// site's `remaining / sites-still-to-come` share enough for
-// vector::size to expand inline - which retail does not do here (it
-// does in TBuyBuildWindow, whose site count differs). 98.12% -> 100%.
-// Before normalization (function): SmithAffordable.
-static bool smithAffordable(int cost)
-{
-    return g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= cost;
-}
-
-// Before normalization (function): ShipyardAffordable.
-static bool shipyardAffordable()
-{
-    return g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= 1000
-        && g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[0] >= 10;
-}
+// Historical constructor probes: smithAffordable/shipyardAffordable were
+// artificial single-call wrappers to alter vector inlining (98.12 -> 100%
+// and 75.73 -> 100%). Their price checks now live in the owning constructors;
+// preserve both shipyard GetLocalPlayerGamePos calls and their order.
 
 // The compiland's building-description formatter, retail 0x5d2a40 (DC
 // makes it static in this source file). Declared here because the
@@ -296,6 +233,7 @@ static bool shipyardAffordable()
 // Before normalization (locals): this_town, bIncludeTitle.
 char* getBuildingInfo(const town* thisTown, int buildingId,
                       unsigned char includeTitle, unsigned char extended);
+
 
 // The two unclaimed rows behind it, screened 2026-08-14 by CALLSITE.
 //
@@ -329,43 +267,6 @@ char* getBuildingInfo(const town* thisTown, int buildingId,
 // roster is contiguous across the gap anyway (GetBuildingInfo 0x174f78
 // is followed directly by townManager::Main 0x175160). Guessing a name
 // here would be inventing one.
-
-// VC6's <xutility> reference-returning min/max, spelled file-locally for
-// the reason findpath.cpp and army.cpp record: retail materialises BOTH
-// operands into stack temps and selects between their ADDRESSES with two
-// LEAs (0x5d6c4a..0x5d6c55 is this TU's instance), which is the
-// signature of a reference-returning template and not of a ternary.
-// Operands by value, the orientation the engine is byte-proven on.
-//
-// HOISTED to the top of the file 2026-08-14 (it used to sit just above
-// BuildObj): the three WindowHandler bodies need it too and two of them
-// are earlier in the compiland. The move is byte-inert - every score in
-// the unit, BuildObj's included, is unchanged across it.
-//
-// The OPERAND ORDER is load-bearing and it is `_cpp_max(floor, value)`,
-// not `(value, floor)`. By-value parameters home in declaration order,
-// so the argument that goes first takes the first stack temp and the
-// second becomes the ternary's default address; retail's animation tick
-// homes the ELAPSED time into the later slot and defaults to it
-// (`lea eax,[elapsed] / jg`). Written `_cpp_max(elapsed, 100L)` both
-// halves invert - 98.96 on the blacksmith's handler and 99.80 on the
-// fort page's, against 100 for the order below. The BY-VALUE parameters
-// are the other load-bearing half: an address-taken caller local is
-// homed at its definition, ahead of the sign test, where an inlined
-// by-value parameter is homed at the call site inside the branch.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
 
 // The selected entry of the town-locator row. Ten image-wide references,
 // every one inside townmgr's bracket, so this compiland owns it; only
@@ -597,6 +498,33 @@ void townObject::DrawHotspot()
 // Before normalization: gTownObjectPositions.
 DATA(0x0068a38c) extern const char* const g_townObjectNames[];
 DATA(0x0068a9bc) extern const short g_townObjectPositions[][3];
+
+// The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
+// to the adventure handler's TRADE path with the same `this` - a direct,
+// non-virtual base call, so the derivation is at offset 0 - and then
+// refreshes the resource bar it was constructed with. That refresh reads
+// the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
+// base, and the Dreamcast constructor's one parameter is that same bar.
+class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
+public:
+    TResourceDisplay* m_resourceDisplay;  // DC: pResourceDisplay, +0x0c
+
+    // The only retail construction site (townManager::Open) expands this
+    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
+    // call, followed by the derived vptr and resource-display stores.
+    // Original: CTownNetMsgHandler::CTownNetMsgHandler; townmgr.cpp:1830, dc 0x181418.
+    CTownNetMsgHandler(TResourceDisplay* display)
+    { m_resourceDisplay = display; }
+    // Four bytes on the Dreamcast and no retail row of its own, so it
+    // is a source-local one-liner every caller expands: DoHall 0x5d27b0
+    // emits the bare `mov [handler+0xc], bar` at both of its two
+    // hand-over sites.
+    // Original: CTownNetMsgHandler::SetResourceDisplay; townmgr.cpp:1836, dc 0x181468.
+    void setResourceDisplay(TResourceDisplay* display)
+    { m_resourceDisplay = display; }
+    void handleGiftMsg(CNetMsg* netMsg);
+};
+SIZE(CTownNetMsgHandler, 0x10);
 
 // E:\gamedcs\townmgr.cpp:1855, retail 0x5c2ea0 - townmgr.obj's FIRST
 // carve row, sitting ahead of townManager's own constructor. Two
@@ -1340,14 +1268,14 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             }
 
             if (currTown->m_owner >= 0) {
-                long legionBonus = currTown->getLegionBonus(slot);
+                long legionBonus = currTown->getAssembledLegionBonus(slot);
                 if (legionBonus > 0) {
                     rightText += formatString(
                         DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
                         g_artifactTraits[0x85].m_name, legionBonus);
                     offsetToMon -= legionBonus;
                 }
-                long generatorBonus = currTown->townFn005BF900(slot);
+                long generatorBonus = currTown->getLegionBonus(slot);
                 if (generatorBonus > 0) {
                     // Tier n's growth artifact, eArtifactLegsOfLegion
                     // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
@@ -2204,7 +2132,7 @@ void townManager::setCommandAndText(message* msg)
                        ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
         g_unnamed6aa9e8 = code;
-        PlayImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
+        playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
     } else {
         g_unnamed6aa9e8 = -1;
     }
@@ -3210,11 +3138,7 @@ THallWindow::THallWindow(int which)
 // reproduced for the reader inside the carcass gate.
 #if 0  // @carcass: claim-only - the definition lives in textresource.h
 // E:\gamedcs\TextResource.h:66
-VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
-const char* TTextResource::getText(int r) const
-{
-    return Text[r];
-}
+// Canonical body and VA: include/textresource.h.
 #endif  // @carcass
 
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
@@ -3590,7 +3514,7 @@ void townManager::handleMageGuildClick()
                      -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
-        type_artifact spellbook(0, -1);
+        type_artifact spellbook(ARTIFACT_SPELLBOOK);
         currentHero->giveArtifact(&spellbook, 1, 1);
         g_currentPlayer->m_resources[GOLD] -= 500;
     }
@@ -4143,8 +4067,15 @@ int type_garrison_base_window::windowHandler(message* msg)
         case widget::WIDGET_DESELECT:
             if (msg->m_codeY == DIVIDE_BUTTON_ID) {
                 townManager* mgr = g_townManager;
-                enum TCreatureType creature = creatureTypeFromInt(
-                    mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
+                enum TCreatureType creature;
+                {
+                    union {
+                        int m_value;
+                        TCreatureType m_creature;
+                    } storage;
+                    storage.m_value = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
+                    creature = storage.m_creature;
+                }
                 mgr->m_divideStatus = 1;
                 g_townManager->m_garrisonStrip->draw(creature);
                 g_townManager->m_heroStrip->draw(creature);
@@ -4237,10 +4168,9 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
 VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
 
 // E:\gamedcs\townmgr.cpp:5156
-VA(0x005d0d90, 0x6B)  // anchor-vtable 0x643854 slot 0 + ??_G call edge, dc 0x181638
-type_monster_join_window::~type_monster_join_window()
-{
-}
+// CodeView dc 0x181638: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
 
 // The constructor the previous lane predicted would free this class's
 // ??_G, and it does: it is the ONLY body that stores vftable 0x643890
@@ -4280,10 +4210,9 @@ TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
 VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
 
 // E:\gamedcs\townmgr.cpp:5177
-VA(0x005d10c0, 0x6B)  // anchor-vtable 0x643890 slot 0 + ??_G call edge, dc 0x181684
-TGarrisonWindow::~TGarrisonWindow()
-{
-}
+// CodeView dc 0x181684: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, TGarrisonWindow)
 
 // Three modal entry points that build one of the two garrison windows on
 // the stack, run it, and let the local's destructor - the empty derived
@@ -4400,7 +4329,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     broadcastMessage(&msg);
 
     hero* visitor = g_game->getHero(g_townManager->m_townToView->m_visitingHeroId);
-    if (!smithAffordable(cost)
+    if (g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] < cost
         || visitor->hasArtifact(g_blacksmithArtifacts[m_townType].m_artifactId)) {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = BUY_BUTTON_ID;
@@ -4638,7 +4567,8 @@ TShipWindow::TShipWindow(int type)
         getWidget(BUY_BUTTON_ID)->enable(0);
     setWinText(this, 12);
 
-    if (!shipyardAffordable()) {
+    if (!(g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= 1000
+        && g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[0] >= 10)) {
         // Not the heroWindow::Widget*Status pair: those live in
         // window.obj and VC6 cannot inline across a TU, while retail
         // emits both message builds inline here and shares one record
@@ -4846,21 +4776,6 @@ void townManager::doHall()
 // fort page's summoning row: the generic recruit dialog over the town's
 // own garrison, with the portal's creature and its stock as slot one.
 
-// The no-hero info dialog, lifted for the /Ob2 BUDGET (2026-08-20) -
-// findpath find_queue_slot's class, a codegen device, not a source
-// claim. One _Tidy over-inline was the whole inliner residual (we
-// expanded the info string's destructor helper where retail calls it);
-// shrinking caller_cb and nesting the expansion puts it back out of
-// line. Single call site, inlined straight back, no new symbol.
-// Before normalization (function): university_info_dialog.
-// Before normalization (locals): current_town.
-static void universityInfoDialog(town* currentTown)
-{
-    std::string info(getBuildingInfo(currentTown, EXTRA_0_ID, 1, 1));
-    normalDialog(info.c_str(), 1, -1, -1, currentTown->m_type + 0x16,
-                 EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
-}
-
 // E:\gamedcs\townmgr.cpp:5685
 VA(0x005d2950, 0xEF)  // anchor-callee(SetSummoningGenerator 0x5bd750 + recruitUnit ctor) + arity, dc 0x174bfc
 void townManager::doPortalOfSummoning()
@@ -5040,7 +4955,12 @@ void townManager::doUniversity()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (!townHero) {
-        universityInfoDialog(m_townToView);
+        // Complete 0x5d2e47..0x5d2ecc constructs and destroys this local
+        // string in the no-hero branch. The former wrapper existed only
+        // to steer /Ob2 and had no independent source identity.
+        std::string info(getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
+        normalDialog(info.c_str(), 1, -1, -1, m_townToView->m_type + 0x16,
+                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
     } else {
         type_university townUniversity;
         townUniversity.initializeMagicSkills();
@@ -5196,14 +5116,9 @@ void townManager::handleHallClick()
 // including the arms that refuse on IsLocalHuman; the three arms that
 // find no strip at all `return` outright and skip even that.
 //
-// The move-to-garrison arm has NO out-of-line body in the image and its
-// second, redundant IsLocalHuman test is the evidence: the arm's own
-// guard is the first, the helper's own guard is the second, and VC6
-// emitted both because a call sits between them. It is spelled below as
-// a file static for the reason the MoveHero note gives - an
-// extern-linkage member would be emitted unconditionally and there is no
-// row for it - while its partner, MoveHeroFromGarrison, IS emitted at
-// 0x5d5220 and stays a call.
+// MoveHeroToGarrison remains an ordinary townManager member. Retail
+// DoCommand expands it with its own IsLocalHuman guard as well as the
+// arm's guard; MoveHeroFromGarrison retains its call at 0x5d5220.
 //
 // The merge arm's `destGroup` local is load-bearing and is the last two
 // bytes of this row: written through `field_134->group` at both the
@@ -5214,48 +5129,23 @@ void townManager::handleHallClick()
 // retail re-reads `field_12c->group` at every use, which is what the
 // four separate `mov edx,[eax+0x6c]` reloads in the merge tail are.
 
-// E:\gamedcs\townmgr.cpp:6792
-// Before normalization (function): MoveHeroToGarrison.
-static void moveHeroToGarrison(townManager* mgr)
-{
-    if (!g_currentPlayer->isLocalHuman())
-        return;
-
-    mgr->m_townToView->swapHeroes();
-    delete mgr->m_heroStrip;
-    mgr->m_heroStrip = 0;
-    delete mgr->m_garrisonStrip;
-    mgr->m_garrisonStrip = 0;
-    mgr->newStrips();
-}
-
-// Three more DC-proven helpers Main calls and /Ob2 folds away. None has
-// a retail row (no carve gap at their order-map positions), so they are
-// file statics like MoveHeroToGarrison below; what they buy is not
-// their bytes - those were already written longhand at every site -
-// but the CANDIDATE CALL SITES themselves: the /Ob2 nested budget is
-// `budget / sites-remaining`, and with these sites absent Main's
-// std::string arms over-expanded `_Tidy`/`_Grow`/`_Eos` where retail
-// calls all three.
-//
-// TTownScreenWindow::DoTownKnob (dc 0x16b030, 82 B, `(bool up)`): the
-// locator knob step. The DC body is GetLocalPlayer, then `up ? (field_4c
-// > 0 && --) : (field_4c < numTowns - N && ++)`; the local player is
-// dead on the up arm, which is the retained GetLocalPlayer call every
-// up site shows. UpdateTownLocators is the CALLER's statement (the DC
-// body has none). N is 3 in retail against the DC's 2.
+// Ordinary members proven by the DC declarations and calls; Main
+// expands them in retail. DoTownKnob dc 0x16b074 calls UpdateTownLocators
+// inside the helper. Retail Main 0x5d47b5..0x5d4804 and 0x5d4931..0x5d49fd
+// preserve that sequence, using three visible towns instead of DC's two.
 // E:\gamedcs\townmgr.cpp:2526
 // Before normalization (function): DoTownKnob.
-static void doTownKnob(TTownScreenWindow* win, unsigned char up)
+void TTownScreenWindow::doTownKnob(unsigned char up)
 {
     playerData* player = g_game->getLocalPlayer();
     if (up) {
-        if (win->m_topTown > 0)
-            win->m_topTown--;
+        if (m_topTown > 0)
+            m_topTown--;
     } else {
-        if (win->m_topTown < player->m_numTowns - 3)
-            win->m_topTown++;
+        if (m_topTown < player->m_numTowns - 3)
+            m_topTown++;
     }
+    updateTownLocators();
 }
 
 // TTownScreenWindow::bonus_right_click (dc 0x16b084, 98 B, `(long id)`):
@@ -5263,17 +5153,47 @@ static void doTownKnob(TTownScreenWindow* win, unsigned char up)
 // both the icon and the text row subtract their own first id.
 // E:\gamedcs\townmgr.cpp:2547
 // Before normalization (function): bonus_right_click.
-static void bonusRightClick(TTownScreenWindow* win, long id)
+void TTownScreenWindow::bonusRightClick(long id)
 {
-    int creature = win->m_bonusCreatures[id];
+    int creature = m_bonusCreatures[id];
     if (creature != -1) {
-        widget* w = win->m_growthBonusIcon[id];
-        const char* popupText = w->m_rightClick;
-        if (!popupText)
-            popupText = w->m_rollOver;
+        widget* w = m_growthBonusIcon[id];
+        // DC 0x16b0b2 calls widget::get_rclick_text; retail Main expands
+        // the same right-click/rollover fallback at both bonus arms.
+        const char* popupText = w->getRclickText();
         normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
                      -1, 0, -1, 0, -1, 0);
     }
+}
+
+// ExitTownManager (original spelling), dc 0x174f60, is an ordinary
+// free function called by both Main head checks. Retail merges its two
+// expansions into the return-2 block at 0x5d32c7; absence of a retained
+// body does not change the proven external declaration into a static.
+// E:\gamedcs\townmgr.cpp:5778
+// Before normalization (function): ExitTownManager.
+int exitTownManager(message& msg)
+{
+    g_windowManager->m_dialogReturn = TTownScreenWindow::EXIT_BUTTON_ID;
+    msg.m_id = MESSAGE_EXECUTIVE;
+    msg.m_codeX = 1;
+    msg.m_codeY = 0xa;
+    return 2;
+}
+
+// E:\gamedcs\townmgr.cpp:6792
+// Before normalization (function): MoveHeroToGarrison.
+void townManager::moveHeroToGarrison()
+{
+    if (!g_currentPlayer->isLocalHuman())
+        return;
+
+    m_townToView->swapHeroes();
+    delete m_heroStrip;
+    m_heroStrip = 0;
+    delete m_garrisonStrip;
+    m_garrisonStrip = 0;
+    newStrips();
 }
 
 // townManager::DrawTown (dc 0x177044, 118 B, `(int update, int incFrame,
@@ -5281,42 +5201,24 @@ static void bonusRightClick(TTownScreenWindow* win, long id)
 // zBuffer only when hotspots are drawn, paints the border, then walks
 // the objects; `update` is unused there and flushes the panorama band
 // here - the PC build also polls the mixer between objects.
-// RedrawTownScreen (0x5d5410, exact) is the (0, 1, 1) expansion written
-// longhand; Main's pacing tick is (1, 1, 0).
+// RedrawTownScreen dc 0x176eb0 calls DrawTown(0, 1, 1); retail
+// 0x5d5410..0x5d546a expands it. Main's pacing tick is (1, 1, 0).
 // E:\gamedcs\townmgr.cpp:6931
 // Before normalization (function): DrawTown.
-static void drawTown(townManager* mgr, int update, int incFrame,
+void townManager::drawTown(int update, int incFrame,
                      unsigned char drawHotspots)
 {
     if (drawHotspots)
-        memset(static_cast<TTownScreenWindow*>(mgr->m_townWindow)->m_zBuffer, 0,
+        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
                WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
-    mgr->m_panorama->draw2();
+    m_panorama->draw2();
     pollSound();
-    for (int i = 0; i < mgr->m_townObjectCount; i++) {
-        mgr->m_townObjects[i]->draw(incFrame, drawHotspots);
+    for (int i = 0; i < m_townObjectCount; i++) {
+        m_townObjects[i]->draw(incFrame, drawHotspots);
         pollSound();
     }
     if (update)
         g_windowManager->updateScreen(0, 0, 800, 374);
-}
-
-// The turn-expiry / network-abort exit shared by both head checks of
-// Main. DC-proven (dc 0x174f60, 24 B SH4, `?ExitTownManager@@YAHAAUmessage@@@Z`)
-// and called at both sites there; retail has no row between
-// DoPortalOfSummoning (0x5d2950+0xef) and GetBuildingInfo (0x5d2a40), so
-// the x86 build kept it static and /Ob2 folded both sites into Main's
-// head, where the cross-jumper merged the two expansions into the one
-// return-2 block at 0x5d32c3.
-// E:\gamedcs\townmgr.cpp:5778
-// Before normalization (function): ExitTownManager.
-static int exitTownManager(message& msg)
-{
-    g_windowManager->m_dialogReturn = TTownScreenWindow::EXIT_BUTTON_ID;
-    msg.m_id = MESSAGE_EXECUTIVE;
-    msg.m_codeX = 1;
-    msg.m_codeY = 0xa;
-    return 2;
 }
 
 // Residual (90.27%, from 66.81): what closed the first 23 points was
@@ -5420,7 +5322,7 @@ int townManager::main(message& msg)
         int delta = GameTime::get() - g_combatStamp698998;
         if (delta >= 0) {
             g_combatStamp698998 += cppMin(delta, 150);
-            drawTown(this, 1, 1, 0);
+            drawTown(1, 1, 0);
         }
     }
 
@@ -5788,8 +5690,7 @@ building_popup:
             case TTownScreenWindow::BONUS_5_ID:
             case TTownScreenWindow::BONUS_6_ID:
                 if (rclick)
-                    bonusRightClick(
-                        static_cast<TTownScreenWindow*>(m_townWindow),
+                    static_cast<TTownScreenWindow*>(m_townWindow)->bonusRightClick(
                         code - TTownScreenWindow::BONUS_0_ID);
                 break;
             case TTownScreenWindow::TOWN_UP_ARROW_ID:
@@ -5897,8 +5798,7 @@ building_popup:
             case TTownScreenWindow::BONUS_5_TEXT_ID:
             case TTownScreenWindow::BONUS_6_TEXT_ID:
                 if (rclick)
-                    bonusRightClick(
-                        static_cast<TTownScreenWindow*>(m_townWindow),
+                    static_cast<TTownScreenWindow*>(m_townWindow)->bonusRightClick(
                         code - TTownScreenWindow::BONUS_0_TEXT_ID);
                 break;
             case TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID:
@@ -5987,22 +5887,27 @@ building_popup:
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID: {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
-                doTownKnob(win, 0);
-                win->updateTownLocators();
+                win->doTownKnob(0);
                 redrawTownScreen();
                 break;
             }
             case TTownScreenWindow::TOWN_UP_ARROW_ID: {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
-                doTownKnob(win, 1);
-                win->updateTownLocators();
+                win->doTownKnob(1);
                 redrawTownScreen();
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
-                enum TCreatureType id = creatureTypeFromInt(
-                    m_srcStrip->m_group->m_armies[m_srcIndex]);
+                enum TCreatureType id;
+                {
+                    union {
+                        int m_value;
+                        TCreatureType m_creature;
+                    } storage;
+                    storage.m_value = m_srcStrip->m_group->m_armies[m_srcIndex];
+                    id = storage.m_creature;
+                }
                 m_garrisonStrip->draw(id);
                 m_heroStrip->draw(id);
                 break;
@@ -6043,8 +5948,7 @@ building_popup:
                 < g_game->getLocalPlayer()->m_numTowns - 1) {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
-                doTownKnob(win, 0);
-                win->updateTownLocators();
+                win->doTownKnob(0);
                 g_unnamed6aaa50++;
                 int id = player->m_townIds[g_unnamed6aaa50];
                 m_townToView = g_game->getTown(id);
@@ -6062,8 +5966,7 @@ building_popup:
             if (g_unnamed6aaa50 > 0) {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
-                doTownKnob(win, 1);
-                win->updateTownLocators();
+                win->doTownKnob(1);
                 g_unnamed6aaa50--;
                 int id = player->m_townIds[g_unnamed6aaa50];
                 m_townToView = g_game->getTown(id);
@@ -6218,7 +6121,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
 
     case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
         if (g_currentPlayer->isLocalHuman()) {
-            moveHeroToGarrison(this);
+            moveHeroToGarrison();
             resetStrips();
         }
         break;
@@ -6327,14 +6230,7 @@ void townManager::moveHeroFromGarrison()
 VA(0x005d5410, 0x11C)  // anchor-caller(DoHall/BuildObj tails) + order-map ahead of ResetStrips, dc 0x176eb0
 void townManager::redrawTownScreen()
 {
-    memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-           WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
-    static_cast<bitmapBorder16*>(m_panorama)->draw2();
-    pollSound();
-    for (int i = 0; i < m_townObjectCount; i++) {
-        m_townObjects[i]->draw(1, 1);
-        pollSound();
-    }
+    drawTown(0, 1, 1);
 
     message msg;
     msg.m_qualifier = 0;
@@ -6348,14 +6244,18 @@ void townManager::redrawTownScreen()
     msg.m_extraText = m_statusText;
     m_townWindow->broadcastMessage(&msg);
 
-    // armyGroup::armies is int by armygrp.h's own design (it keeps the
-    // int-typed slot writes cast-free) while strip::DrawIcons takes the
-    // Dreamcast's TCreatureType, so the domain edge is crossed through
-    // the file's representation bridge rather than through a cast.
+    // The armyGroup integer roster crosses to DrawIcons' CodeView
+    // TCreatureType domain through the same four-byte representation.
     TCreatureType creature = CREATURE_NONE;
     if (m_divideStatus)
-        creature = creatureTypeFromInt(
-            m_srcStrip->m_group->m_armies[m_srcIndex]);
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = m_srcStrip->m_group->m_armies[m_srcIndex];
+        creature = storage.m_creature;
+    }
     m_resourceDisplay->update(1, 0);
     m_garrisonStrip->drawIcons(0, creature);
     m_heroStrip->drawIcons(0, creature);
@@ -6549,47 +6449,9 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // the same decisions. A third dose is NOT titrated; findpath measured
 // both its extra doses losing, so stop unless the boundary moves.
 
-// BuyBuild's palette message, lifted out of the body for the /Ob2 BUDGET
-// (2026-08-20) - findpath find_queue_slot's class: a codegen device that
-// shrinks caller_cb, NOT a claim about retail's source. The residual note
-// below had already measured the direction (a +20 dead-statement probe
-// LOWERED the score, so this body carries more front-end mass than
-// retail's and wants a leaner spelling); this is the numerator lever
-// applied in that direction. Single call site, so /Ob2 inlines it back
-// and townmgr.obj defines no extra symbol.
-// Before normalization (function): set_buybuild_palette.
-static void setBuybuildPalette(TBuyBuildWindow* window, message& msg)
-{
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = 1;
-    msg.m_extra = g_game->getLocalPlayerGamePos();
-    window->broadcastMessage(&msg);
-}
-
-// Second dose of the same device: the quick-view button-clearing
-// broadcasts, single call site.
-// Before normalization (function): clear_buybuild_buttons.
-static void clearBuybuildButtons(TBuyBuildWindow* window, message& msg)
-{
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-    msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
-    window->broadcastMessage(&msg);
-    msg.m_codeY = 8;
-    window->broadcastMessage(&msg);
-    msg.m_codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
-    window->broadcastMessage(&msg);
-    msg.m_codeY = 9;
-    window->broadcastMessage(&msg);
-    msg.m_codeY = 0;
-    window->broadcastMessage(&msg);
-}
+// The former setBuybuildPalette and clearBuybuildButtons helpers were
+// explicitly /Ob2 budget devices. Their message statements now live in
+// BuyBuild; the historical caller-mass probes above remain as evidence.
 
 // The buy-build window's prerequisite-text formatter. It starts from the
 // town's hierarchy mask for this building, drops the special free-Grail
@@ -6723,7 +6585,16 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     if (window == 0)
         memError();
 
-    setBuybuildPalette(window, msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 1;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    window->broadcastMessage(&msg);
 
     CSprite* icons = ResourceManager::getSprite("Resource.def");
     int iconWidth = icons->m_width;
@@ -6751,7 +6622,18 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 
     m_objToBuild = -1;
     if (quickView) {
-        clearBuybuildButtons(window, msg);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+        window->broadcastMessage(&msg);
+        msg.m_codeY = 8;
+        window->broadcastMessage(&msg);
+        msg.m_codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
+        window->broadcastMessage(&msg);
+        msg.m_codeY = 9;
+        window->broadcastMessage(&msg);
+        msg.m_codeY = 0;
+        window->broadcastMessage(&msg);
         g_windowManager->doQuickView(window);
     } else {
         if (infoOnly) {
@@ -7118,14 +7000,17 @@ void townManager::setupMage(heroWindow* mageWin)
             if (m_townToView->m_type == TOWN_TOWER
                 && (m_townToView->m_active & g_bitNumber[EXTRA_1_ID]))
                 state++;
-            // The int-to-enum edge retail's own source crossed here:
-            // the argument is a plain loop counter (`mov edx,[ebp-4];
-            // push edx` - no table, no conversion). It goes through
-            // the file's representation bridge, which is what took the
-            // board's `casts to enum types` floor back to 0 - this site
-            // is the one that raised it to 1 in the first place.
-            if (!m_townToView->isLegalBuilding(buildingIdFromInt(level)))
-                state = 0;
+            // Retail passes the loop counter to IsLegalBuilding
+            // (`mov edx,[ebp-4]; push edx`) in the same representation.
+            {
+                union {
+                    int m_value;
+                    type_building_id m_building;
+                } storage;
+                storage.m_value = level;
+                if (!m_townToView->isLegalBuilding(storage.m_building))
+                    state = 0;
+            }
             if (slot < m_townToView->m_mageGuildSpellCounts[level])
                 state = 0;
             else
@@ -7451,20 +7336,6 @@ void TTownScreenWindow::updateTownLocator(int i)
 // E:\gamedcs\townmgr.cpp:2506
 DC_ONLY(0x16af58, 0xD8)
 void TTownScreenWindow::updateTownLocators()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:2526
-DC_ONLY(0x16b030, 0x52)
-void TTownScreenWindow::doTownKnob(unsigned char up)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:2547
-DC_ONLY(0x16b084, 0x62)
-void TTownScreenWindow::bonusRightClick(long id)
 {
     // @stub
 }
@@ -7875,13 +7746,6 @@ void townManager::swapHeroes()
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:6792
-DC_ONLY(0x176bf0, 0x108)
-void townManager::moveHeroToGarrison()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:6813
 DC_ONLY(0x176cf8, 0x1B8)
 void townManager::moveHeroFromGarrison()
@@ -7892,13 +7756,6 @@ void townManager::moveHeroFromGarrison()
 // E:\gamedcs\townmgr.cpp:6866
 DC_ONLY(0x176f24, 0x120)
 void townManager::resetStrips()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:6931
-DC_ONLY(0x177044, 0x76)
-void townManager::drawTown(int update, int incFrame, unsigned char drawHotspots)
 {
     // @stub
 }

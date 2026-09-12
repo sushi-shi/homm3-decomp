@@ -22,19 +22,22 @@ class VoronoiConstructionTests(unittest.TestCase):
         types = "struct TRmgZone {};\n" + "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgBoundaryVertex")) + "\n" + block("TRmgVoronoi", "class")
         methods = "\n".join(helper.definition(source, name, **args) for name, args in (
+            ("TRmgBoundaryVertex::initialize", {}),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin")),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone")),
             ("TRmgBoundaryVertex::splice", {}), ("TRmgVoronoi::createEdge", {}),
-            ("TRmgVoronoi::~TRmgVoronoi", {})))
+            ("TRmgVoronoi::~TRmgVoronoi", {}), ("TRmgVoronoi::connectEdges", {})))
         forms = list(module.variants())
         self.assertEqual(len(forms), 60)
         self.assertEqual(len({body for _, body in forms}), 60)
         original = helper.definition(source, module.FUNCTION)
-        self.assertEqual(original, forms[0][1])
+        forms.append(("authored", original))
+        positive_count = len(forms)
         forms += [("wrong_corner", original.replace("TPoint fourth(-200, 400)", "TPoint fourth(-200, -200)")),
                   ("wrong_root", original.replace("m_root = firstEdge", "m_root = secondEdge")),
-                  ("wrong_splice", original.replace("diagonal->m_twin->splice(thirdEdge)", "diagonal->m_twin->splice(secondEdge)")),
-                  ("missing_splice", original.replace("firstEdge->m_twin->splice(secondEdge);", ""))]
+                  ("wrong_splice", original.replace("connectEdges(fourthEdge, thirdEdge)", "connectEdges(fourthEdge, secondEdge)")),
+                  ("missing_splice", original.replace("firstEdge->getTwin()->splice(secondEdge);", ""))]
+        self.assertTrue(all(body != original for _, body in forms[positive_count:]))
         text = "#include <vector>\n#include <algorithm>\n#include <cstdio>\n"
         for index, (_, body) in enumerate(forms):
             text += f"namespace Case{index} {{\n" + types + "\n" + methods + "\n" + body + r"""
@@ -58,7 +61,7 @@ bool check() {
 """
         text += "int main(){\n"
         for index in range(len(forms)):
-            condition = f"!Case{index}::check()" if index < 60 else f"Case{index}::check()"
+            condition = f"!Case{index}::check()" if index < positive_count else f"Case{index}::check()"
             text += f'if({condition}) {{ std::printf("failed form {index}\\n"); return 1; }}\n'
         text += "return 0;}\n"
         with tempfile.TemporaryDirectory(prefix="rmg-voronoi-construction-oracle-") as folder:

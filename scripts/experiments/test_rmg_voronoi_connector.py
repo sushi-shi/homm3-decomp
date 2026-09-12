@@ -24,8 +24,8 @@ class VoronoiConnectorTests(unittest.TestCase):
             return header[start:header.index("\n};", start)+3]
         types = "struct TRmgZone {};\n" + "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgBoundaryVertex")) + "\n" + block("TRmgVoronoi", "class")
-        types = types.replace("    void removeEdge", module.DECLARATION + "    void removeEdge")
         methods = "\n".join(helper.definition(source, name, **args) for name, args in (
+            ("TRmgBoundaryVertex::initialize", {}),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin")),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone")),
             ("TRmgBoundaryVertex::splice", {}), ("TRmgBoundaryVertex::detach", {}),
@@ -39,16 +39,15 @@ class VoronoiConnectorTests(unittest.TestCase):
         locate = helper.definition(source, "TRmgVoronoi::locate")
         edge_side = ""
         if "isRmgPointRightOfEdge(" in source:
-            edge_side = helper.definition(source, "isRmgPointRightOfEdge") + "\n"
+            edge_side = (helper.definition(source, "isRmgCounterClockwise") + "\n"
+                         + helper.definition(source, "isRmgPointRightOfEdge") + "\n")
             methods = methods.replace(locate, edge_side + locate)
         old_segment = helper.definition(source, "isRmgPointOnSegment")
-        forms = [helper.definition(source, "TRmgVoronoi::TRmgVoronoi") + "\n" +
-                 helper.definition(source, "TRmgVoronoi::addSite")]
-        for option in module.helper_options(source):
-            if "+placement_0+" in option["name"]:
-                site = next(edit["replace"] for edit in option["extra_edits"]
-                            if edit.get("find", "").startswith("void TRmgVoronoi::addSite"))
-                forms.append(option["replace"] + "\n" + site)
+        caller_bodies = (helper.definition(source, "TRmgVoronoi::TRmgVoronoi") + "\n"
+                         + helper.definition(source, "TRmgVoronoi::addSite"))
+        forms = [helper.definition(source, "TRmgVoronoi::connectEdges") + "\n" + caller_bodies]
+        for binding, result, previous in itertools.product(range(4), range(2), range(2)):
+            forms.append(module.connector(binding, result, previous) + "\n" + caller_bodies)
         self.assertEqual(len(forms), 17)
         form_methods = [methods] * len(forms)
         if os.environ.get("HOMM3_VORONOI_MANIFEST"):
@@ -153,13 +152,14 @@ bool check() {
             return header[start:header.index("\n};", start)+3]
         types = "struct TRmgZone {};\n" + "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgBoundaryVertex")) + "\n" + block("TRmgVoronoi", "class")
-        types = types.replace("    void removeEdge", module.DECLARATION + "    void removeEdge")
         methods = "\n".join(helper.definition(source, name, **args) for name, args in (
+            ("TRmgBoundaryVertex::initialize", {}),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin")),
             ("TRmgBoundaryVertex::TRmgBoundaryVertex", dict(parameters="TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone")),
             ("TRmgBoundaryVertex::splice", {}), ("TRmgVoronoi::createEdge", {}),
             ("TRmgVoronoi::~TRmgVoronoi", {}), ("TRmgVoronoi::TRmgVoronoi", {})))
         forms = [module.connector(*choice) for choice in itertools.product(range(4), range(3), range(2), range(2))]
+        forms.append(helper.definition(source, "TRmgVoronoi::connectEdges"))
         positive_count = len(forms)
         forms += [forms[0].replace("first->m_twin->m_sitePosition", "first->m_sitePosition"),
                   forms[0].replace("result->m_twin->splice(second);", ""),

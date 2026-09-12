@@ -35,62 +35,18 @@ DATA(0x00699194) static THillFortWindow* g_hillFortWindow;
 // Before normalization: gHillFortHoverID.
 DATA(0x0067f184) static int g_hillFortHoverId = -1;
 
-// armyGroup deliberately models its mutable roster as int while the
-// consumers' domain is TCreatureType; this is ai_combat.cpp/game.cpp's
-// bit-preserving bridge, repeated here rather than lying with an enum cast.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    TCreatureType creature;
-    memcpy(&creature, &value, sizeof creature);
-    return creature;
-}
+// Use game::GetCurrHero's canonical Game.h:991 body (dc 0x2ed4).
+// The former TU-local copy only existed while another lane owned game.h.
+// Recalculate/UpgradeSlot use the canonical Complete upgrade selector at
+// 0x529710 as well, including the base-map elemental exclusion.
 
-// game::GetCurrHero (DC Game.h:991, dc 0x2ed4) is a SEPARATE accessor from
-// game::GetHero (dc 0x2eb0), not a wrapper around it, and retail proves the
-// difference is the arm order: every site in this TU emits `cmp id,-1` /
-// `je` PAST the index math, i.e. the `!= -1` spelling with the null arm at
-// the tail, while game.h's GetHero puts the null arm first. That is not a
-// cosmetic choice - re-spelling game.h's GetHero the other way costs twelve
-// exact rows elsewhere in the tree (measured 2026-08-14), so the two really
-// are written differently. Modelled file-locally because game.h belongs to
-// another lane; it should move there when that lane admits the member.
-// Before normalization (function): GetCurrHero.
-static hero* getCurrHero()
-{
-    if (g_currentPlayer->m_currHeroId != -1)
-        return &g_game->m_heroes[g_currentPlayer->m_currHeroId];
-    return 0;
-}
-
-// The elemental gate this TU applies before every upgrade query. armygrp
-// spells the same predicate out longhand at each of its sites; here it has
-// to be a helper, because retail materializes the creature type ONCE, above
-// the f_1f698 test, and hands the same register to both the comparison chain
-// and the callee - which is exactly an inlined by-value parameter and is not
-// what an if/else over `slot[which].type` produces (VC6 sinks the load into
-// each arm instead). No out-of-line row exists for either: /Ob2 inlines both
-// at every call site in UpgradeSlot and Recalculate.
-// Before normalization (function): CanUpgradeCreature.
-static unsigned char canUpgradeCreature(TCreatureType type)
-{
-    if (g_game->m_f1f698 == 0
-        && (type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-            || type == CREATURE_FIRE_ELEMENTAL
-            || type == CREATURE_WATER_ELEMENTAL))
-        return 0;
-    return isBaseCreature(type);
-}
-
-// Before normalization (function): GetUpgradedCreature.
-static TCreatureType getUpgradedCreature(TCreatureType type)
-{
-    if (g_game->m_f1f698 == 0
-        && (type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-            || type == CREATURE_FIRE_ELEMENTAL
-            || type == CREATURE_WATER_ELEMENTAL))
-        return CREATURE_NONE;
-    return upgradedCreatureType(type);
-}
+// Recalculate's DC lines 228/332 and UpgradeSlot's dc 0xd71d4 call
+// IsBaseCreature directly. Complete adds the base-map elemental guards at
+// 0x4e7f8d..0x4e7fbb, 0x4e8222..0x4e8240 and 0x4e858c..0x4e85ba.
+// Keep those guards at the call sites. The former CanUpgradeCreature wrapper
+// was introduced to influence VC6's load scheduling; that scheduling does not
+// establish a source helper boundary. Each query snapshots its type before
+// reading the map version, and keeps retail's low-byte test of the result.
 
 // The three .rdata objects hillfortwindow.obj contributes, in retail's own
 // order: the per-slot upgrade-button icons indexed by TUpgradeSlot::state,
@@ -129,7 +85,7 @@ THillFortWindow::THillFortWindow()
     g_hillFortWindow = this;
     // Before normalization (locals): pHero, num_id, gold_icon_id, gold_cost_id, res_icon_id,
     // res_cost_id, num_y.
-    hero* currentHero = getCurrHero();
+    hero* currentHero = g_game->getCurrHero();
 
     m_widgets.reserve(NWIDGETS);
 
@@ -409,7 +365,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     msg.m_extra = 0;
     msg.m_window = 0;
 
-    hero* currentHero = getCurrHero();
+    hero* currentHero = g_game->getCurrHero();
 
     unsigned char anyUpgradable = 0;
     unsigned char noneUpgradable = 1;
@@ -432,17 +388,39 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
-        if (canUpgradeCreature(creatureTypeFromInt(s.m_type))) {
+        TCreatureType type;
+        {
+            int ordinal = s.m_type;
+            memcpy(&type, &ordinal, sizeof type);
+        }
+        if ((g_game->m_f1f698 != 0
+             || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
+                 && type != CREATURE_FIRE_ELEMENTAL
+                 && type != CREATURE_WATER_ELEMENTAL))
+            && static_cast<unsigned char>(isBaseCreature(type))) {
             anyUpgradable = 1;
             noneUpgradable = 0;
             if (s.m_level == 0) {
                 strcpy(s.m_goldCost, g_generalText->getText(345));
                 strcpy(s.m_resourceCost, g_emptyRolloverText);
             } else {
-                TCreatureType upgraded =
-                    getUpgradedCreature(creatureTypeFromInt(s.m_type));
-                getUpgradeCost(creatureTypeFromInt(s.m_type), upgraded,
-                                 s.m_count, s.m_cost);
+                TCreatureType upgraded;
+                {
+                    TCreatureType baseType;
+                    {
+                        int ordinal = s.m_type;
+                        memcpy(&baseType, &ordinal, sizeof baseType);
+                    }
+                    upgraded = g_game->upgradedCreatureType(baseType);
+                }
+                {
+                    TCreatureType baseType;
+                    {
+                        int ordinal = s.m_type;
+                        memcpy(&baseType, &ordinal, sizeof baseType);
+                    }
+                    getUpgradeCost(baseType, upgraded, s.m_count, s.m_cost);
+                }
                 s.m_cost[6] = static_cast<int>(
                     s.m_cost[6] * g_afUpgradeCostFactor[s.m_level]);
                 m_totalCost[6] += s.m_cost[6];
@@ -509,7 +487,17 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 broadcastMessage(&msg);
             }
 
-            if (!canUpgradeCreature(creatureTypeFromInt(s.m_type))) {
+            TCreatureType stateType;
+            {
+                int ordinal = s.m_type;
+                memcpy(&stateType, &ordinal, sizeof stateType);
+            }
+            if ((g_game->m_f1f698 == 0
+                 && (stateType == CREATURE_AIR_ELEMENTAL
+                     || stateType == CREATURE_EARTH_ELEMENTAL
+                     || stateType == CREATURE_FIRE_ELEMENTAL
+                     || stateType == CREATURE_WATER_ELEMENTAL))
+                || !static_cast<unsigned char>(isBaseCreature(stateType))) {
                 s.m_state = UPGRADE_STATE_NONE;
             } else if (canAfford(s.m_cost, g_currentPlayer->m_resources)) {
                 s.m_state = UPGRADE_STATE_AFFORDABLE;
@@ -609,14 +597,32 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
         break;
 
     case UPGRADE_STATE_AFFORDABLE:
-        if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0
-            && canUpgradeCreature(creatureTypeFromInt(m_slot[which].m_type))) {
-            TCreatureType upgraded =
-                getUpgradedCreature(creatureTypeFromInt(m_slot[which].m_type));
+        if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
+            TCreatureType type;
+            {
+                int ordinal = m_slot[which].m_type;
+                memcpy(&type, &ordinal, sizeof type);
+            }
+            if ((g_game->m_f1f698 != 0
+                 || (type != CREATURE_AIR_ELEMENTAL
+                     && type != CREATURE_EARTH_ELEMENTAL
+                     && type != CREATURE_FIRE_ELEMENTAL
+                     && type != CREATURE_WATER_ELEMENTAL))
+                && static_cast<unsigned char>(isBaseCreature(type))) {
+                TCreatureType upgraded;
+                {
+                    TCreatureType baseType;
+                    {
+                        int ordinal = m_slot[which].m_type;
+                        memcpy(&baseType, &ordinal, sizeof baseType);
+                    }
+                    upgraded = g_game->upgradedCreatureType(baseType);
+                }
 
-            getCurrHero()->m_army.m_armies[which] = upgraded;
-            for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
-                g_currentPlayer->m_resources[i] -= m_slot[which].m_cost[i];
+                g_game->getCurrHero()->m_army.m_armies[which] = upgraded;
+                for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+                    g_currentPlayer->m_resources[i] -= m_slot[which].m_cost[i];
+            }
         }
         break;
 
@@ -656,7 +662,7 @@ void THillFortWindow::handleClick(message& msg)
     case HERO_PORTRAIT_ID:
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                getCurrHero()->m_name, getCurrHero()->heroFn004D8F70());
+                g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
         if (rightClick)
             normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         else
@@ -797,7 +803,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
                     g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                    getCurrHero()->m_name, getCurrHero()->heroFn004D8F70());
+                    g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
             msg.m_extraText = g_text;
             break;
 

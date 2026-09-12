@@ -177,11 +177,44 @@ int TPuzzleWindow::updatePuzzle(int full)
     return piecesNotFound;
 }
 
-// E:\gamedcs\puzzlewindow.cpp:279 - the default constructor the Dreamcast
-// carries out of line (dc 0x1154c4, 0x74 B). Retail has no slot for it:
-// UpdatePuzzle ends at 0x52c76d and the two-argument constructor starts at
-// 0x52c770. It is a class-body inline in puzzlewindow.h, expanded verbatim
-// into AI_attempt_puzzle_guess's array-construction loop.
+// Retail preserves the Dreamcast record's four packed allocation units:
+// a 10-bit object type, two signed four-bit object offsets, three terrain
+// descriptors, and the diggable/grail/visible flag trio.
+struct type_AI_puzzle_tile {
+    int m_objectType : 10;
+    int m_paddingAfterObjectType : 22;
+    signed char m_objectX : 4;
+    signed char m_objectY : 4;
+    char m_paddingBeforeTerrain[3];
+    int m_terrain : 5;
+    int m_river : 4;
+    int m_road : 4;
+    int m_paddingAfterRoad : 19;
+    unsigned char m_diggable : 1;
+    unsigned char m_hasGrail : 1;
+    unsigned char m_visible : 1;
+    unsigned char m_paddingAfterVisible : 5;
+    char m_tailPadding[3];
+
+    // Original: type_AI_puzzle_tile::type_AI_puzzle_tile; puzzlewindow.cpp:279, dc 0x1154c4.
+    // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
+    type_AI_puzzle_tile()
+    {
+        m_objectType = 0;
+        m_objectX = -1;
+        m_objectY = -1;
+        m_terrain = -1;
+        m_river = 0;
+        m_road = 0;
+        m_diggable = 1;
+        m_visible = 0;
+    }
+    type_AI_puzzle_tile(NewmapCell* cell, type_point point);
+    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
+};
+SIZE(type_AI_puzzle_tile, 0x10);
+
+type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 
 // E:\gamedcs\puzzlewindow.cpp:294
 // Residual (99.444%): naming the source field by const reference makes VC6

@@ -50,6 +50,8 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
+#include "includes.h"
+#include "creaturetype.h"
 #include "homm3_limit.h"
 #include <va.h>
 #include <stdio.h>
@@ -98,72 +100,8 @@ DATA(0x00697788) int g_thisNetGotAdventureControl;
 #include "netgame.h"
 #include "systemoptionswindow.h"
 
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x > y ? x : y);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& maxRef(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
 
 // includes.h:134 supplies the shared limit calls below.
-
-// The objectIndex short is the shared creature-id lane; the union bridge
-// (events.cpp precedent) keeps the TCreatureType conversion cast-free and
-// VC6 reduces it to the move it already was.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: creature.
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
-// townmgr.cpp's building-id twin of the creature bridge.
-inline type_building_id buildingIdFromInt(int value)
-{
-    union {
-        // Before normalization: value.
-        int m_value;
-        // Before normalization: building.
-        type_building_id m_building;
-    } storage;
-    storage.m_value = value;
-    return storage.m_building;
-}
-
-// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
-// selector - army::GetName (0x440100) is its out-of-line twin. 150 is one
-// past the akCreatureTypeTraits extent, exactly the bound the retail guard
-// tests (army.h names it ARMY_CREATURE_LAST inside class army, whose
-// header this TU does not pull).
-// Before normalization (function): GetArmyName.
-static inline const char* getArmyName(int type, int count)
-{
-    if (type >= 0 && type <= 150) {
-        if (count == 1)
-            return g_creatureTypeTraits[type].m_name;
-        return g_creatureTypeTraits[type].m_pluralName;
-    }
-    return "";
-}
 
 // The three text resources this compiland keeps alive for the rollover
 // tables below. Every reference to all three in the whole image is one of
@@ -312,7 +250,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            systemMsg(&g_chatMan, g_generalText->getText(352),
+            g_chatMan.systemMsg(g_generalText->getText(352),
                       g_currentPlayer->m_name);
             g_unnamed69d810 = g_netLocalGamePos;
         }
@@ -427,7 +365,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             m_abortPopupMsg = netMsg;
             return 0;
         }
-        CTradeHeroesMsg* msg = static_cast<CTradeHeroesMsg*>(netMsg);
+        CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
         // Retail CALLS the compiler-generated ??4hero COMDAT at both
         // trade copies; unpinned, our /Ob2 expands the 0x492-byte
         // memberwise assign twice (100.00 -> 32.00). The pin replaces
@@ -436,16 +374,15 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         // recruitUnit::Update through the include-set wall (16 rows
         // returned to exact when it left).
 #pragma inline_depth(0)
-        g_game->m_heroes[msg->m_hero1.m_id] = msg->m_hero1;
-        g_game->m_heroes[msg->m_hero2.m_id] = msg->m_hero2;
+        g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
+        g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
 #pragma inline_depth()
-        g_advManager->heroSwap(&g_game->m_heroes[msg->m_hero1.m_id],
-                               &g_game->m_heroes[msg->m_hero2.m_id]);
+        g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
+                               &g_game->m_heroes[msg->m_right.m_id]);
         break;
     }
     case RS_PLAYER_ACTIVE:
-        systemMsg(
-            &g_chatMan, g_generalText->getText(40),
+        g_chatMan.systemMsg(g_generalText->getText(40),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -572,33 +509,37 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 }
 
 // E:\gamedcs\advmgr.cpp:713
+// The retained handler name receives RS_GIFT. Retail 0x406c2d reads
+// the donor at +0x14; 0x406cee/0x406cf1 and 0x406d5e/0x406d61 read
+// quantity/resource at +0x1c/+0x18, matching DC CGiftMsg, not the
+// two-hero CTradeRequestMsg. Former view fields: m_playerPos/m_amount.
 // Before normalization (locals): pNetMsg, pMsg.
 VA(0x00406bf0, 0x1FA)  // dc-bracket forced, dc 0x6428
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 {
-    CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
+    CGiftMsg* msg = static_cast<CGiftMsg*>(netMsg);
     std::string text;
-    if (g_game->m_players[msg->m_playerPos].isHuman()) {
+    if (g_game->m_players[msg->m_niceGuy].isHuman()) {
         text = formatString(
             g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_game->m_players[msg->m_playerPos].m_name);
+            g_game->m_players[msg->m_niceGuy].m_name);
     } else {
         text = formatString(
             g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_playerColorNames[msg->m_playerPos]);
+            g_playerColorNames[msg->m_niceGuy]);
     }
 
     std::vector<type_dialog_resource> resources;
     type_dialog_resource resource;
     resource.m_resource = msg->m_resource;
-    resource.m_qualifier = msg->m_amount;
+    resource.m_qualifier = msg->m_qty;
     resources.push_back(resource);
     extendedDialog(text.c_str(), resources, -1, -1, 15000);
     resources.clear();
 
     playerData* localPlayer = g_game->getLocalPlayer();
     if (localPlayer) {
-        localPlayer->m_resources[msg->m_resource] += msg->m_amount;
+        localPlayer->m_resources[msg->m_resource] += msg->m_qty;
         g_advManager->m_advWindow->updateResourceDisplay(!isInPopup(), 1);
     }
 }
@@ -1108,22 +1049,6 @@ int advManager::inMapArea(int x, int y)
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
 
-// A header-inline COMDAT that the retail link filed inside advmgr's
-// span (its four call sites all live in OTHER modules - 0x1cdf0,
-// 0x1d090, 0x91900, 0x91d00 - so nothing in advmgr.obj anchors it).
-// 111 B, `ret 4` with the single stack argument being the hidden UDT
-// return pointer, no calls: it folds origin+half-extent
-// ([ecx+0xe4]/[ecx+0xec] and [ecx+0xe6]/[ecx+0xf0]) into one packed
-// 10/10-bit type_point and stores it through [ebp+8]. Moved here from
-// the DC header block to keep the file in retail link order.
-// E:\gamedcs\AdvMgr.h:1245
-VA(0x00407b10, 0x6F)  // anchor-callee, dc 0x1f000
-type_point advManager::getMapCenter() const
-{
-    return type_point(m_radarOrigin.m_x + m_lastHoverX,
-                      m_radarOrigin.m_y + m_lastHoverY,
-                      m_radarOrigin.m_z);
-}
 
 #if 0  // @carcass
 
@@ -1134,14 +1059,22 @@ void advManager::GetCursorSampleSet(int walkSpeed)
     // @stub
 }
 
-// E:\gamedcs\advmgr.cpp:1245
-DC_ONLY(0x7a04, 0x88)
-type_point advManager::get_mouse_map_point(__$ReturnUdt)
-{
-    // @stub
-}
+// The ordinary get_mouse_map_point body follows this reference block.
 
 #endif  // @carcass
+
+// E:\gamedcs\advmgr.cpp:1245. This is the mouse-relative point, not
+// get_map_center: DC 0x7a04 adds the mouse offsets, while header dc 0x1f000
+// adds fixed viewport offsets. Retail reads +0xec/+0xf0 and keeps this
+// ordinary body for the cross-TU spell/window callers; DoAdvCommand expands
+// its four source calls. A header-inline spelling emitted no retained body.
+VA(0x00407b10, 0x6F)  // field loads + four cross-TU call sites, dc 0x7a04
+type_point advManager::get_mouse_map_point() const
+{
+    return type_point(m_radarOrigin.m_x + m_lastHoverX,
+                      m_radarOrigin.m_y + m_lastHoverY,
+                      m_radarOrigin.m_z);
+}
 
 // E:\gamedcs\advmgr.cpp:1253
 // RECONSTRUCTED from the decode the previous lane banked here. The body is
@@ -1172,11 +1105,10 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     The canonical ordinary body is defined later in this TU and expands
 //     naturally at both sites. The former claim that later definitions
 //     cannot inline was false; pasted teardown bodies were unnecessary.
-//   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
-//     and const-qualified/defined at :1498, so calling it from a non-const
-//     member binds the undefined overload and would emit a call where
-//     retail inlines. The four `radarOrigin + lastHover` sites are
-//     therefore written out field by field.
+//   - DC separates the header get_map_center (fixed viewport offsets)
+//     from the ordinary get_mouse_map_point (mouse offsets). Both source
+//     call boundaries are restored below; the former overload workaround
+//     conflated two distinct methods.
 //   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
 //     zero-argument arm tail-merged onto the real one. No such function
 //     exists in the DC roster and NewfullMap::cell(type_point) already
@@ -1498,8 +1430,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         trimLoopingSounds(0);
         heroView(viewingPlayer->m_currHeroId, 0, 0, 0);
         if (g_unnamed699560) {
-            type_point centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                              m_radarOrigin.m_z);
+            type_point centre = getMapCenter();
             setEnvironmentOrigin(centre, 1);
         }
         if (g_networkActive69954c && g_dPlay) {
@@ -1512,8 +1443,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_HERO: {
-        type_point mapPoint(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
-                            m_radarOrigin.m_z);
+        type_point mapPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -1528,8 +1458,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_SELECT_TOWN: {
-        type_point mapPoint(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
-                            m_radarOrigin.m_z);
+        type_point mapPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -1546,10 +1475,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     case ADV_COMMAND_SHIPYARD: {
         g_mouseManager->showPointer(0);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        type_point mapPoint(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
-                            m_radarOrigin.m_z);
-        type_point dockPoint(m_radarOrigin.m_x + m_lastHoverX, m_radarOrigin.m_y + m_lastHoverY,
-                             m_radarOrigin.m_z);
+        type_point mapPoint = get_mouse_map_point();
+        type_point dockPoint = get_mouse_map_point();
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.isValid();
         NewfullMap* map = m_fullMap;
@@ -1575,32 +1502,6 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 
 #if 0  // @carcass
 
-// The second MapCell.h COMDAT the retail link filed inside advmgr's
-// span; 21 call sites all over the image. 49 B, `ret 0xc` (3 stack
-// args + this), no calls and no bounds test. The old claim that an
-// 82-byte zCell was a different x86 body confused SH4 and x86 sizes:
-// DC's private zCell arithmetic itself emits the exact 49 retail bytes.
-// The index arithmetic ends `lea edx,[eax+eax*8]; lea eax,[eax+edx*2];
-// lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
-// Moved here from the DC header block to keep retail link order.
-// E:\gamedcs\MapCell.h:895
-// The canonical header now owns this body and its private zCell helper.
-// Its mutable storage verification preserves this exact cell copy; without
-// it VC6 emits the same arithmetic only as zCell. No claim rename is needed.
-// The removed fork/pin had imposed different caller expansion choices:
-// doAdvCommand 83.3621 -> 77.1728, processHover 91.6263 -> 88.1523,
-// drawBoatPart/Shadow 100 -> 98.2619, drawHeroPart 100 -> 99.75 and its
-// shadow 100 -> 99.7524. Other caller changes are in the audit; their
-// MAX/HIST retain the peaks. The canonical boundary recovers
-// processOnMapTowns 94.3642 -> 98.6258 and monster quest text 93.002 -> 98.3426.
-// These score dips do not refute the DC-proven helper calls or method order.
-VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
-NewmapCell* NewfullMap::cell(int x, int y, int z)
-{
-    // Claim-only mirror; the compiled definition is in game.h.
-    HOMM3_RELEASE_VERIFY(m_cellData != 0);
-    return zCell(x, y, z);
-}
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
@@ -3039,6 +2940,117 @@ void setWindmillHelpText(char* buffer, NewmapCell* cell, const char* separator)
 
 #endif  // @carcass
 
+// Before normalization (function): set_town_help.
+static void setTownHelp(char* buffer, const NewmapCell* cell)
+{
+    const town* mapTown = g_game->getTown(cell->m_extraInfo);
+    const char* townTypeName = g_unnamed6a74f4[cell->m_objectIndex];
+    const char* townName = mapTown->m_name.begin();
+    if (!townName)
+        townName = DATA_COMPGEN(0x0063a608, townRolloverEmptyText, "");
+    sprintf(buffer, DATA_COMPGEN(
+        0x0065f3d4, rolloverTownFormat, "%s, %s"),
+        townName, townTypeName);
+}
+
+// Before normalization (function): set_hero_help.
+static void setHeroHelp(char* buffer, const NewmapCell* cell)
+{
+    hero* mapHero = g_game->getHero(cell->m_extraInfo);
+    sprintf(buffer,
+            g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+            mapHero->m_name, mapHero->heroFn004D8F70());
+}
+
+// Before normalization (function): set_pyramid_help.
+static void setPyramidHelp(
+    char* buffer, const NewmapCell* cell, const hero* currentHero,
+    const char* separator)
+{
+    strcpy(buffer, g_adventureObjectNames[PYRAMID]);
+    if (cell->m_isTrigger && currentHero) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->playerKnowsCell(currentHero->m_owner)
+                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
+                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+// Before normalization (function): set_wagon_help_text.
+static void setWagonHelpText(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, g_adventureObjectNames[WAGON]);
+    if (cell->m_isTrigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->playerKnowsCell(g_netLocalGamePos)
+                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
+                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+// Before normalization (function): set_tomb_help_text.
+static void setTombHelpText(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, g_adventureObjectNames[WARRIOR_TOMB]);
+    if (cell->m_isTrigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->playerKnowsCell(g_netLocalGamePos)
+                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
+                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+// The ternary is retail's own shape at BOTH callers: SetRolloverText's arm
+// (+0x1ca4, 0xb6 B) and QuickInfo's (+0x1f73, the same 0xb6) each hoist
+// `gpGeneralText->m_texts` OUT of the branch - `mov eax,[gpGeneralText] /
+// shl edx,2 / mov eax,[eax+0x20] / test dx,dx` - which only a common
+// subexpression across the two GetText arms produces.  The if/else spelling
+// duplicates the load into each arm: measured 2026-09-06 at WATER_WHEEL +0x44
+// against retail (SetRolloverText 96.0784, QuickInfo 95.0826) where the
+// ternary lands at +7 (96.8953 / 95.8819).
+// Before normalization (function): set_water_wheel_help_text.
+static void setWaterWheelHelpText(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, g_adventureObjectNames[WATER_WHEEL]);
+    if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
+        strcat(buffer, separator);
+        short gold = (cell->m_extraInfo & 0x1f) * 500;
+        strcat(buffer,
+               gold == 0
+                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
+                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+// Retail's WINDMILL keeps TWO complete strcat expansions (+0x1e8a, 0xf4 B),
+// each loading gpGeneralText itself and into a DIFFERENT register (ecx then
+// eax), which reads as if/else rather than a ternary.  It is not: spelling
+// this arm if/else while WATER_WHEEL above stays a ternary costs three points
+// on each caller - SetRolloverText 96.8953 -> 93.8242, QuickInfo 95.8819 ->
+// 92.7502 (2026-09-06) - because the WAGON/WARRIOR_TOMB/WATER_WHEEL arms all
+// cross-jump INTO this arm's two blocks and the if/else form moves their entry
+// points.  The residual -30 B here is that merge depth, not the branch shape.
+// Before normalization (function): set_windmill_help_text.
+static void setWindmillHelpText(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, g_adventureObjectNames[WINDMILL]);
+    if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
+        strcat(buffer, separator);
+        unsigned long amount = cell->m_extraInfo >> 13;
+        strcat(buffer,
+               (amount & 0xf) == 0
+                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
+                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
 // DC advmgr.cpp:3054..3058 gives this ordinary constructor and its three
 // zero stores in member order. Retail's SetRolloverText/QuickInfo expand
 // those stores before getTriggerCell; retain the constructor boundary
@@ -3230,117 +3242,6 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell,
 // Before normalization (locals): current_hero, separator_1, separator_2.
 void setWitchHutHelpText(char* buffer, hero* currentHero,
     NewmapCell* cell, const char* separator1, const char* separator2);
-
-// Before normalization (function): set_town_help.
-static void setTownHelp(char* buffer, const NewmapCell* cell)
-{
-    const town* mapTown = g_game->getTown(cell->m_extraInfo);
-    const char* townTypeName = g_unnamed6a74f4[cell->m_objectIndex];
-    const char* townName = mapTown->m_name.begin();
-    if (!townName)
-        townName = DATA_COMPGEN(0x0063a608, townRolloverEmptyText, "");
-    sprintf(buffer, DATA_COMPGEN(
-        0x0065f3d4, rolloverTownFormat, "%s, %s"),
-        townName, townTypeName);
-}
-
-// Before normalization (function): set_hero_help.
-static void setHeroHelp(char* buffer, const NewmapCell* cell)
-{
-    hero* mapHero = g_game->getHero(cell->m_extraInfo);
-    sprintf(buffer,
-            g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-            mapHero->m_name, mapHero->heroFn004D8F70());
-}
-
-// Before normalization (function): set_pyramid_help.
-static void setPyramidHelp(
-    char* buffer, const NewmapCell* cell, const hero* currentHero,
-    const char* separator)
-{
-    strcpy(buffer, g_adventureObjectNames[PYRAMID]);
-    if (cell->m_isTrigger && currentHero) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(currentHero->m_owner)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-// Before normalization (function): set_wagon_help_text.
-static void setWagonHelpText(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, g_adventureObjectNames[WAGON]);
-    if (cell->m_isTrigger) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-// Before normalization (function): set_tomb_help_text.
-static void setTombHelpText(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, g_adventureObjectNames[WARRIOR_TOMB]);
-    if (cell->m_isTrigger) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-// The ternary is retail's own shape at BOTH callers: SetRolloverText's arm
-// (+0x1ca4, 0xb6 B) and QuickInfo's (+0x1f73, the same 0xb6) each hoist
-// `gpGeneralText->m_texts` OUT of the branch - `mov eax,[gpGeneralText] /
-// shl edx,2 / mov eax,[eax+0x20] / test dx,dx` - which only a common
-// subexpression across the two GetText arms produces.  The if/else spelling
-// duplicates the load into each arm: measured 2026-09-06 at WATER_WHEEL +0x44
-// against retail (SetRolloverText 96.0784, QuickInfo 95.0826) where the
-// ternary lands at +7 (96.8953 / 95.8819).
-// Before normalization (function): set_water_wheel_help_text.
-static void setWaterWheelHelpText(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, g_adventureObjectNames[WATER_WHEEL]);
-    if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
-        strcat(buffer, separator);
-        short gold = (cell->m_extraInfo & 0x1f) * 500;
-        strcat(buffer,
-               gold == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-// Retail's WINDMILL keeps TWO complete strcat expansions (+0x1e8a, 0xf4 B),
-// each loading gpGeneralText itself and into a DIFFERENT register (ecx then
-// eax), which reads as if/else rather than a ternary.  It is not: spelling
-// this arm if/else while WATER_WHEEL above stays a ternary costs three points
-// on each caller - SetRolloverText 96.8953 -> 93.8242, QuickInfo 95.8819 ->
-// 92.7502 (2026-09-06) - because the WAGON/WARRIOR_TOMB/WATER_WHEEL arms all
-// cross-jump INTO this arm's two blocks and the if/else form moves their entry
-// points.  The residual -30 B here is that merge depth, not the branch shape.
-// Before normalization (function): set_windmill_help_text.
-static void setWindmillHelpText(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, g_adventureObjectNames[WINDMILL]);
-    if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
-        strcat(buffer, separator);
-        unsigned long amount = cell->m_extraInfo >> 13;
-        strcat(buffer,
-               (amount & 0xf) == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
 
 // E:\gamedcs\advmgr.cpp:3146
 // 90.0426 -> 90.9026 (2026-08-20) on the explicit type_cell_adjuster
@@ -4500,17 +4401,6 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
     }
 }
 
-// The DC header names this expression type_point::operator==. Keeping the
-// retail-proven inline body local avoids changing unrelated compilands while
-// reproducing the packed bitfield comparison in ProcessHover.
-// Before normalization (function): PointsEqual.
-inline unsigned char pointsEqual(const type_point* point,
-                                 const type_point* arg)
-{
-    return point->m_x == arg->m_x
-           && point->m_y == arg->m_y
-           && point->m_z == arg->m_z;
-}
 
 // E:\gamedcs\advmgr.cpp:4385
 // RETAIL-RECONSTRUCTED 2026-08-11 (80.9400%). Retail proves the complete
@@ -4594,31 +4484,30 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
 
     if (g_mouseManager->m_frame >= HOVER_SCROLL_POINTER_FIRST
         && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
-        int rx;
-        int ry;
-        g_mouseManager->mouseCoords(rx, ry);
-        if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
-            || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
-            || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
-                && ry >= HOVER_SCROLL_MARGIN
-                && ry <= HOVER_SCROLL_BOTTOM)) {
+        if (!mouseInScrollZone())
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        }
     }
 
     m_advWindow->processHover(mouseX, mouseY);
     return 1;
 }
 
-// E:\gamedcs\advmgr.cpp:4514
-#if 0  // @carcass
-DC_ONLY(0xf23c, 0x84)
+// E:\gamedcs\advmgr.cpp:4514, dc 0xf23c.
+// CodeView proves the private member and type_adventure_cursor return type.
+// ProcessHover calls it at dc 0xfc00; Complete expands the same garrison/team/
+// army checks there. Restore the member boundary and canonical GetGarrison
+// call instead of the former file-static function taking an explicit mgr.
+// Before normalization (function): get_garrison_cursor.
 type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 {
-    // @stub
+    if (currCell->m_isTrigger) {
+        garrison& mapGarrison = *g_game->getGarrison(currCell->m_extraInfo);
+        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
+            && mapGarrison.m_garrisonArmy.hasCreatures())
+            return ADV_SWORD_POINTER;
+    }
+    return getNormalCursor(currCell);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4530
 // Chooses the base cursor before ProcessHover adds its multi-turn offset.
@@ -4654,45 +4543,6 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     }
     return ADV_WALK_POINTER;
 }
-
-// DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
-// (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
-// cursor when a manned garrison belongs to another team, otherwise the
-// cell's normal cursor. ProcessHover's GARRISON arm calls it and /Ob2
-// folds it (no retail row); a static like MouseInScrollZone above.
-// Before normalization (function): get_garrison_cursor.
-static int getGarrisonCursor(advManager* mgr, NewmapCell* currCell)
-{
-    if (currCell->m_isTrigger) {
-        garrison& mapGarrison = g_game->m_garrisons[currCell->m_extraInfo];
-        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
-            && mapGarrison.m_garrisonArmy.hasCreatures())
-            return 5;
-    }
-    return mgr->getNormalCursor(currCell);
-}
-
-// DC advmgr.cpp:10756 `?MouseInScrollZone@advManager@@QAAHXZ` (110 B): true
-// when the pointer sits in the 16-pixel scroll border of the 800x600
-// screen. Both hover handlers expand it in place (retail homes its two
-// coordinates in the dead mouseX/mouseY parameter slots); a static here
-// because no retail row is claimed for it and it reads nothing from
-// `this`.
-// Before normalization (function): MouseInScrollZone.
-static int mouseInScrollZone()
-{
-    int rx;
-    int ry;
-    g_mouseManager->mouseCoords(rx, ry);
-    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
-        || ry >= advManager::HOVER_SCREEN_HEIGHT)
-        return 0;
-    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
-        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
-        return 0;
-    return 1;
-}
-
 
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
@@ -4876,7 +4726,7 @@ int advManager::processHover(int mouseX, int mouseY)
         heroPoint.m_x = currHero->m_x;
         heroPoint.m_y = currHero->m_y;
         heroPoint.m_z = currHero->m_z;
-        if (pointsEqual(&heroPoint, &m_lastMapHover)) {
+        if (heroPoint == m_lastMapHover) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
             return 1;
@@ -4973,7 +4823,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             }
             case GARRISON:
-                newCursor = getGarrisonCursor(this, currCell);
+                newCursor = getGarrisonCursor(currCell);
                 break;
             case TOWN: {
                 town* currentTown = g_game->getTown(currCell->m_extraInfo);
@@ -5138,7 +4988,7 @@ int advManager::processSearch(int x, int y, int z)
                         GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
+            type_artifact grail(ARTIFACT_HOLY_GRAIL);
 
             if (g_currentPlayer->isHuman()) {
                 g_unnamed69950c = g_netLocalGamePos;
@@ -5154,7 +5004,7 @@ int advManager::processSearch(int x, int y, int z)
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL, -1);
+                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
                 std::string description = describedGrail.getDescription();
                 normalDialog(description.c_str(), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
@@ -5532,16 +5382,6 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
-// Before normalization (function): DrawHeroCell.
-static inline NewmapCell* drawHeroCell(advManager* manager, type_point point)
-{
-    unsigned char valid = point.isValid();
-    NewfullMap* map = manager->m_fullMap;
-    if (!valid)
-        return map->cell(0, 0, 0);
-    return map->cell(point.m_x, point.m_y, point.m_z);
-}
-
 // E:\gamedcs\advmgr.cpp:5688
 // Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
 // call and a single conditional return expression. Its former two-return
@@ -5552,19 +5392,12 @@ static inline NewmapCell* drawHeroCell(advManager* manager, type_point point)
 // currHero/frame-count release invariants, a discarded GetNumFrames value,
 // and naming the divisor; naming the remainder scored 98.1571%.
 //
-// Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
-// DrawHeroCell keeps Complete's invalid-point call to
-// NewfullMap::cell(0, 0, 0). DC GetCell at 0x14b90 also calls that scalar
-// wrapper at line 7028, then the packed-point wrapper at 7029; the prior
-// claim that DC returned cellData directly mistook flattened code for source.
-// DrawHeroCell remains canonical-helper recovery debt. The boat and ground
-// copies have been retired in favor of the ordinary GetCell below. Restoring
-// all three hero/underlay calls too scores 96.6095/96.6415/86.9011 and stops
-// emitting scalar cell; neither const-byte nor const-bool isValid changes
-// those choices. This does not refute the canonical helper or its callers.
-// The earlier flattened GetCell substitution scored 93.18%. The register
-// model's lack of binding divergence did not establish correct helper
-// expression shape; see docs/vc6/regalloc.md 6f.
+// Keep game::GetHero, get_location, GetHflip and advManager::GetCell.
+// DC 0x11424 calls the latter, as do the five other drawing routines.
+// Its DC lines 7028/7029 call NewfullMap::cell(0,0,0) / cell(point).
+// The earlier 93.18% substitution probe used a flattened GetCell body;
+// it does not prove a semantic difference or justify local helper copies.
+// See docs/vc6/regalloc.md 6f for that historical probe.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -5578,7 +5411,7 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
 
     if (currHero->m_flags & 0x40000) {
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
-        NewmapCell* heroCell = drawHeroCell(this, currHero->getLocation());
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
             m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -5649,7 +5482,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             return;
 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
-        NewmapCell* heroCell = drawHeroCell(this, currHero->getLocation());
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!(heroCell->m_flags0011 & 0x200)) {
             m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -6644,7 +6477,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 
     type_point point;
     point = type_point(srcX, srcY, z);
-    thisCell = drawHeroCell(this, point);
+    thisCell = getCell(point);
 
     baseX = m_scrollX + destX * 32;
     baseY = m_scrollY + destY * 32;
@@ -6859,6 +6692,9 @@ DATA(0x006aac3c) extern int g_unnamed6aac3c;
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::getCell(type_point point)
 {
+    // DC advmgr.cpp:7028/7029 preserve both NewfullMap overloads.
+    // Retail 0x412be6 folds the zero-coordinate call to cellData, and
+    // 0x412bf0..0x412c35 expands the point overload's row arithmetic.
     if (!point.isValid())
         return m_fullMap->cell(0, 0, 0);
     return m_fullMap->cell(point);
@@ -8596,23 +8432,10 @@ void advManager::heroQuickView(int heroId, int x, int y,
 // AI_approximate_strength precedent).
 const char* getBuildingName(int townType, int buildingId);
 
-// One-call /Ob2 depth devices for TownQuickView. The DC roster has no helper
-// rows here, so these are not source-boundary claims; VC6 expands both and
-// emits no standalone functions. Their measured effect is recorded below.
-// Before normalization (function): append_town_quick_view_resource.
-static inline void appendTownQuickViewResource(
-    std::string& text, int amount, const char* resourceName)
-{
-    text += formatString("%i %s", amount, resourceName);
-}
-
-// Before normalization (function): append_town_quick_view_income_header.
-static inline void appendTownQuickViewIncomeHeader(std::string& text)
-{
-    text += "\n\nIncome:\n";
-}
-
 // E:\gamedcs\advmgr.cpp:9115
+// The resource/income wrapper probes below are historical. Those local
+// wrappers existed only to alter /Ob2 depth; use the same direct string
+// appends as the income-resource loop and retain one formatString helper.
 // 90.98338 -> 92.75378 -> 92.941086 (2026-08-21), after the two pinned
 // building-name appends had already raised the older 85.32 plateau. The
 // resource helper adds one source nesting level around the formatted-string
@@ -8702,35 +8525,40 @@ void advManager::townQuickView(int townId, int x, int y,
             text += "\n\n";
         first = 1;
         for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-            if ((thisTown->m_built & g_bitNumber[building])
-                && thisTown->isLegalBuilding(
-                       buildingIdFromInt(building))) {
-                // Retail CALLS basic_string::append(const char*,
-                // size_type) at BOTH of this arm's appends - fn+0x349 for
-                // the separator and fn+0x371 for the name - with the
-                // strlen expanded in front of each as `repne scasb`, and
-                // our CL expanded the append too. `operator+=` reaches
-                // append(const char*) which reaches this two-argument one,
-                // so the site has to be spelled at the depth retail stops
-                // at before a statement pin can impose the call.
-                // MEASURED NEGATIVE, do not extend: the same treatment on
-                // the other seven `text += <literal>` sites in this block
-                // costs 90.9834 -> 73.8082. Retail calls append at THESE
-                // two and expands it at the rest.
-                if (!first) {
-                    const char* sep = ", ";
-                    size_t sepLen = strlen(sep);
+            if (thisTown->m_built & g_bitNumber[building]) {
+                union {
+                    int m_value;
+                    type_building_id m_building;
+                } storage;
+                storage.m_value = building;
+                if (thisTown->isLegalBuilding(storage.m_building)) {
+                    // Retail CALLS basic_string::append(const char*,
+                    // size_type) at BOTH of this arm's appends - fn+0x349 for
+                    // the separator and fn+0x371 for the name - with the
+                    // strlen expanded in front of each as `repne scasb`, and
+                    // our CL expanded the append too. `operator+=` reaches
+                    // append(const char*) which reaches this two-argument one,
+                    // so the site has to be spelled at the depth retail stops
+                    // at before a statement pin can impose the call.
+                    // MEASURED NEGATIVE, do not extend: the same treatment on
+                    // the other seven `text += <literal>` sites in this block
+                    // costs 90.9834 -> 73.8082. Retail calls append at THESE
+                    // two and expands it at the rest.
+                    if (!first) {
+                        const char* sep = ", ";
+                        size_t sepLen = strlen(sep);
 #pragma inline_depth(0)
-                    text.append(sep, sepLen);
+                        text.append(sep, sepLen);
+#pragma inline_depth()
+                    }
+                    first = 0;
+                    const char* buildingName =
+                        getBuildingName(thisTown->m_type, building);
+                    size_t buildingNameLen = strlen(buildingName);
+#pragma inline_depth(0)
+                    text.append(buildingName, buildingNameLen);
 #pragma inline_depth()
                 }
-                first = 0;
-                const char* buildingName =
-                    getBuildingName(thisTown->m_type, building);
-                size_t buildingNameLen = strlen(buildingName);
-#pragma inline_depth(0)
-                text.append(buildingName, buildingNameLen);
-#pragma inline_depth()
             }
         }
 
@@ -8738,11 +8566,11 @@ void advManager::townQuickView(int townId, int x, int y,
         for (int res = 0; res < 7; res++) {
             if (res > 0)
                 text += ", ";
-            appendTownQuickViewResource(
-                text, ownerPlayer->m_resources[res], g_resourceNames[res]);
+            text += formatString(
+                "%i %s", ownerPlayer->m_resources[res], g_resourceNames[res]);
         }
 
-        appendTownQuickViewIncomeHeader(text);
+        text += "\n\nIncome:\n";
         g_game->calculateProduction();
         first = 1;
         for (int inc = 0; inc < 7; inc++) {
@@ -8850,7 +8678,15 @@ VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
     int count = cell->m_extraInfo & 0xfff;
-    TCreatureType type = creatureTypeFromInt(cell->m_objectIndex);
+    TCreatureType type;
+    {
+        union {
+            int m_value;
+            TCreatureType m_creature;
+        } storage;
+        storage.m_value = cell->m_objectIndex;
+        type = storage.m_creature;
+    }
 
     playerData* localPlayer = g_game->getLocalPlayer();
     g_game->getLocalPlayerGamePos();
@@ -9930,11 +9766,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 // call naturally inside get_target while expanding the get_location copy;
 // the former per-callee pin diagnosis was disproved by its recovered source.
 #if 0  // @carcass -- canonical inline body is in struct.h
-VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-type_point::type_point(short new_x, short new_y, short new_z)
-{
-    // @stub
-}
+// Canonical body and VA: include/struct.h.
 #endif
 
 // E:\gamedcs\advmgr.cpp:10526
@@ -10159,8 +9991,8 @@ void advManager::screenScroll(int dir, int changeMouse)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10696
-// The DC carries MouseInScrollZone (dc 0x1ccf8) out of line; retail has no
-// body for it anywhere in the bracket, so the zone decision lives here.
+// The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
+// definition follows this routine. Retail expands the hover callers' tests.
 VA(0x00419820, 0x169)  // anchor-callee, dc 0x1cb08
 void advManager::checkScreenScroll()
 {
@@ -10214,17 +10046,25 @@ void advManager::checkScreenScroll()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:10756
-DC_ONLY(0x1ccf8, 0x6E)
+// E:\gamedcs\advmgr.cpp:10756, dc 0x1ccf8.
+// CodeView proves this public member and its rx/ry locals. Both hover
+// handlers call it (dc 0xf1c4/0xfd28); Complete expands its border test.
+// A body that does not read this still belongs to the proven class, at this
+// source position rather than beside the first retained caller.
+// Before normalization (function): MouseInScrollZone.
 int advManager::mouseInScrollZone()
 {
-    // @stub
+    int rx;
+    int ry;
+    g_mouseManager->mouseCoords(rx, ry);
+    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
+        || ry >= advManager::HOVER_SCREEN_HEIGHT)
+        return 0;
+    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
+        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
+        return 0;
+    return 1;
 }
-
-// E:\gamedcs\advmgr.cpp:10842
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10778
 // Centres the adventure view at the start of a turn. Retail picks the
@@ -10572,26 +10412,15 @@ void advManager::enableButtons()
 }
 
 // E:\gamedcs\advmgr.cpp:11125
-// EXACT 2026-08-21 (82.00565 -> 82.14124 -> 96.38418 -> 100). The DC
-// local roster is literal source evidence here: RECT rect, int x/y, and one
-// NewmapCell* map_cell. Restoring that shape supplies retail's 0x24-byte frame
-// and four contiguous bound slots. The decisive step is the inline accessor
-// boundary below. A flat cellData subscript lets C2 strength-reduce the inner
-// walk (191 instructions); retail recomputes the header-inline cell lookup on
-// every iteration (177). advmgr's shared NewfullMap personality deliberately
-// exposes cell(x,y,z) out of line for its other call sites, so this two-site
-// surrogate recreates the original inline depth without emitting a standalone
-// helper. Finally, `_cpp_min` is symmetric semantically but VC6 evaluates its
-// operands in source-sensitive scratch-register order; width/height first is
-// the exact retail schedule. Calls, 16 branches, two returns, 24 blocks and all
-// 177 instructions now agree.
-// Before normalization (function): find_adjacent_map_cell.
-static inline NewmapCell* findAdjacentMapCell(
-    NewfullMap* map, int x, int y, int z)
-{
-    return &map->m_cellData[(z * map->m_size + y) * map->m_size + x];
-}
-
+// DC 0x1dc24 names NewfullMap::cell at line 11138. Both cell lookups
+// use its canonical MapCell.h body; the former findAdjacentMapCell
+// surrogate copied that body to work around a since-removed TU-specific
+// declaration. Retail recomputes the same 38-byte-stride cell address.
+// Historical probes: flat cellData indexing emitted 191 instructions
+// versus retail's 177; restoring RECT, x/y, one mapCell pointer and the
+// accessor advanced 82.00565 -> 82.14124 -> 96.38418 -> 100%.
+// Keep width/height first in cppMin: the reverse operand order changed
+// VC6 scratch-register scheduling. Those scores predate this cleanup.
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::findAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
@@ -10606,8 +10435,7 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
     rect.right = cppMin<int>(g_mapWidth, point.m_x + 2);
     rect.bottom = cppMin<int>(g_mapHeight, point.m_y + 2);
 
-    mapCell = findAdjacentMapCell(
-        m_fullMap, point.m_x, point.m_y, point.m_z);
+    mapCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     unsigned char centerIsWater = mapCell->m_groundSet == eTerrainWater;
     if (mapCell->cellIsTrigger()
         && !g_adventureObjectTraits[mapCell->getMapObject()][1])
@@ -10615,8 +10443,7 @@ unsigned char advManager::findAdjacentMonster(type_point point, type_point* resu
 
     for (x = rect.left; x < rect.right; ++x) {
         for (y = rect.top; y < rect.bottom; ++y) {
-            mapCell = findAdjacentMapCell(
-                m_fullMap, x, y, point.m_z);
+            mapCell = m_fullMap->cell(x, y, point.m_z);
             if (mapCell->m_type == MONSTER && mapCell->m_isTrigger
                 && (mapCell->m_groundSet == eTerrainWater) == centerIsWater
                 && (x != excluded.m_x || y != excluded.m_y
@@ -10906,9 +10733,9 @@ int advManager::moreTreesNear(type_point point)
     int dead = 0;
     type_point pt;
 
-    rect.top = maxRef(point.m_y - radius, 0);
+    rect.top = max(point.m_y - radius, 0);
     rect.bottom = cppMin(point.m_y + radius + 1, g_mapHeight);
-    rect.left = maxRef(point.m_x - radius, 0);
+    rect.left = max(point.m_x - radius, 0);
     rect.right = cppMin(point.m_x + radius + 1, g_mapWidth);
 
     pt.m_z = point.m_z;
@@ -10998,6 +10825,9 @@ VA_COMPGEN(0x0041b0e0, 0x21, SCALAR_DELETING_DTOR, CAdvPopup)
 // active implicit destructor remains source-truthful in window.h.
 VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
+// CodeView marks dc 0x34c8 compiler-generated (compgenx): only the
+// CHeroWindowEx base teardown runs there. The exact Windows-only source
+// exception is reviewed in config/win_only.tsv.
 // Dreamcast's shared destructor is otherwise empty before the CHeroWindowEx
 // base teardown. Complete adds the inverse of the constructor's popup-state
 // latch: retail tests the same 0x69954c flag, fetches the handler, and restores
@@ -12393,6 +12223,12 @@ VA_COMPGEN(0x0041b250, 0xE6, BASIC_STRING_APPEND_STR, char)
 
 // COMDAT pairing: append on the char instantiation, mnemonic agreement 0.955.
 VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
+
+// <string>'s pointer/count assignment is shared with SendChat (0x4022e0).
+// Retail's hero assignment (0x406480) and getArmyHelpText (0x40abe0) call
+// it too. It expands in adventuremapwindow but remains naturally emitted
+// here: all 161 bytes agree outside four matching named call relocations.
+VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
 
 // COMDAT pairing: `logic_error::what`, byte-identical to this object's own
 // COMDAT over all five instructions - `mov eax,[ecx+0x10] / test / jne` and

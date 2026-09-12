@@ -24,8 +24,9 @@ struct type_artifact_offering : public type_artifact {
     // Before normalization: value.
     long m_value;
 
-    type_artifact_offering();
-    explicit type_artifact_offering(TArtifact artifact);
+    // CodeView marks default construction generated (dc 0x128714).
+    // Its base call passes -1 to type_artifact(TArtifact), so the inherited
+    // default-argument path supplies construction without written wrappers.
 
     // Dreamcast types the slot as TArtifactSlot. Retail passes the same
     // four-byte domain used by the live sacrifice-window click handlers.

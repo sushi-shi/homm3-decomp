@@ -22,6 +22,7 @@ static int campaignBriefHandler(message& msg);
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "textscroller.h"
 #include "widget.h"
 #include "winmgr.h"
 
@@ -86,24 +87,6 @@ void showTerritorySmacker(unsigned char bEvil2Post)
 
 #endif
 
-// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
-// ResetMapAndDescription as header-style inlines: neither has a retail
-// body, and Select carries both expanded. Retail nevertheless keeps
-// vector::size out of line at both loop tests (0x423110, the pointer-vector
-// size COMDAT), while the current compiler state expands it and scores 92.11%.
-// MEASURED AND REJECTED: inline_depth(1) at the ClearSelected call is
-// byte-flat; inline_depth(0) around the loop also calls operator[] and Hide,
-// falling to 91.45%. There is no scoped-depth midpoint for the two nested
-// size calls, so retain the Dreamcast-proven helper and natural library use.
-DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::clearSelected()
-{
-    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
-        if (m_scenarios[i].m_available)
-            getWidget(MAP_SELECTED_1_ID + i)->hide();
-    }
-}
-
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
@@ -117,6 +100,20 @@ inline void TCampaignBrief::resetMapAndDescription(int which)
     msg.m_extraText = m_scenarios[which].m_mapName.c_str();
     broadcastMessage(&msg);
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
+}
+
+// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
+// ResetMapAndDescription as header-style inlines: neither has a retail
+// body, and Select carries both expanded - which is what makes
+// vector::size a NESTED candidate there, called out of line at both
+// loop tests (0x423110, the pointer-vector size COMDAT).
+DC_ONLY(0x589a4, 0x84)
+inline void TCampaignBrief::clearSelected()
+{
+    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
+        if (m_scenarios[i].m_available)
+            getWidget(MAP_SELECTED_1_ID + i)->hide();
+    }
 }
 
 // E:\gamedcs\campaignbrief.cpp:392
@@ -844,7 +841,7 @@ std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
 // The ctor's two local aggregate paths select these retained compiler-
 // generated members.  Their ownership is fixed by the called sub-object
 // offsets and by the matching constructor/destructor call streams.
-VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
+// Canonical body and VA: include/game.h.
 // The nested slot record's own default constructor, between
 // NewSMapHeader's and CMapHeaderData's in retail's COMDAT order where the
 // DC roster puts it first (dc 0x5ac3c, 68 B against 63). Its destructor is
@@ -852,7 +849,7 @@ VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
 // the vector must construct before the scalar stores, while hasMainTown and
 // mainTownType remain untouched. Initializing those fields and moving the
 // stores into the member-init list was the full 65.92% residual.
-VA_COMPGEN(0x0045a950, 0x3F, CLASS_CTOR, TPlayerSlotAttributes)
+// Canonical body and VA: include/game.h.
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // The owner token has to be the class the DEMANGLER produces from the
@@ -861,7 +858,7 @@ VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // prefix. Default construction, destruction, copy construction and copy
 // assignment each have their own admitted claim.
 VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
-VA_COMPGEN(0x0045ac20, 0xD2, CLASS_CTOR, SGameSetupOptions)
+// Canonical body and VA: include/game.h.
 
 // Dreamcast attributes this retained destructor to campaignbrief.cpp:192,
 // its use site rather than a Game.h definition. Retail independently proves
@@ -900,7 +897,7 @@ VA_COMPGEN(0x0045b140, 0x6E, IMPLICIT_DTOR, map)
 // +0x00, +0x22 and +0x23 - and campaignbrief.obj is where the COMDAT
 // lands because TCampaignBrief's preview vector constructs one per
 // scenario. The delinker already labelled the row from the class.
-VA_COMPGEN(0x0045bac0, 0xE, CLASS_CTOR, LossConditionStruct)
+// Canonical body and VA: include/victorylossconditions.h.
 
 // COMDAT pairing: vector<type_map_hero_identity>'s copy assignment, 661 B
 // against campaignbrief.obj's single 661-byte COMDAT.
@@ -1522,3 +1519,59 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
+
+// Original constructor family: campaignbrief.cpp:192, dc 0x5ae10.
+// Complete adds the filename argument and changes the record's members;
+// keep its retained body in the same owning module as the destructor.
+// Retail reads filename at 0x488636, copies it into the string at +4,
+// clears data/stream/status at 0x488681..0x488687, and returns with ret 4.
+// The four members default-construct (the empty
+// allocator byte is copied out of the parameter padding at [ebp+0xb]);
+// the body assigns the name and clears the three pointers/status.
+VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
+    const char* filename)
+{
+    m_fileName = filename;
+    m_data = 0;
+    m_stream = 0;
+    m_fileError = CAMPAIGN_FILE_OK;
+}
+
+// Original: TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct;
+// campaignbrief.cpp:192, dc 0x5ade8. Complete expands the record and its
+// cleanup; preserve that retail body in the original owning module.
+// Retail deletes every scenario record (null-checked by
+// `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
+// (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
+// i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
+// campaign_desc, campaign_name and file_name in reverse order.
+//
+// MAX 78.5339; current canonical clear() body 75.72034. Retail calls
+// both vector::erase and FreeData; candidate expands them and leaves
+// vector::_Destroy called from erase. Keep clear() as the source boundary.
+// The 2026-09-07 passive trace corrects the old small-free-class diagnosis:
+// FreeData's C2 cost is 101, not <=40, and its site has budget 752 after
+// clear/erase. The state gate allows it (body flags 0x8000, callee 0x68).
+// Clear's nested erase costs 69 against budget 144; its _Destroy costs 49
+// against 29 and stays called. These are ordinary measured budget decisions,
+// not proof that caller-side source structure can never affect the frontier.
+// Earlier artificial free/charged-site controls were byte-inert; do not
+// repeat them or use them to infer the helper's cost. Natural loop controls:
+// signed index is byte-identical at 75.72034; naming the scenarios vector
+// by reference gives 67.27966. Neither changes the retained source choice.
+VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    for (unsigned int i = 0; i < m_scenarios.size(); ++i)
+        delete m_scenarios[i];
+    m_scenarios.clear();
+    freeData();
+}
+
+// This delete loop naturally retains ScenarioStruct's compiler-generated
+// deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign
+// call the shared 0x488eb0 copy. All 33 bytes and both calls agree: the
+// ordinary destructor stays at 0x485fe0 in customcampaign, then flags&1
+// gates operator delete. Move only the enrollment from the inlining consumer.
+VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)

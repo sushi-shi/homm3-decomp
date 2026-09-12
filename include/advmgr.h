@@ -11,11 +11,13 @@
 #include "secondaryskill.h"
 #include "herospec.h"
 #include "struct.h"
+#include "mapcell.h"
 // EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
 // `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
 // must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
+#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
 
 class BlackBoxData;
 class CNetMsgHandler;
@@ -23,7 +25,7 @@ class resource;
 class sample;
 class ds_memsample;
 class TreasureData;
-union ExtraInfoUnion;
+struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
 class armyGroup;
@@ -34,572 +36,7 @@ class armyGroup;
 // Before normalization: gAdventureWindowHelp.
 extern THelpText g_adventureWindowHelp[];
 
-// MapCell.h's artifact-price domain, published in full by Dreamcast.  It
-// lives beside MapArtifactInfo rather than in events.h: the enum is part of
-// the packed map-cell representation and is also the return type of
-// ExtraInfoUnion::GetArtifactPrice.
-enum ArtifactPrices {
-    const_free_artifact = 0,
-    const_artifact_costs_2000 = 1,
-    const_artifact_requires_wisdom = 2,
-    const_artifact_requires_leadership = 3,
-    const_artifact_costs_2500 = 4,
-    const_artifact_costs_3000 = 5,
-    const_artifact_defended = 6
-};
 
-// events.obj needs the plain packed dword arm plus the object views its
-// reconstructed handlers actually read. Keeping this narrow avoids
-// importing the remaining eighteen bitfield views into its TU.
-
-// do_event_water_wheel (0x4a7de0) loads bits 0..4 with `mov al,[cell] /
-// and eax,0x1f`, multiplies the result by 500 and clears the same bits
-// again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
-// 500-gold units.
-struct type_water_wheel_info {
-    // Before normalization: gold.
-    unsigned long m_gold : 5;
-    // Before normalization: tail.
-    unsigned long m_tail : 27;
-};
-SIZE(type_water_wheel_info, 4);
-
-// do_event_windmill (0x4a7fc0) reads a SIGNED four-bit resource id at
-// bits 0..3 (`shl eax,0x1c / sar eax,0x1c`) and an UNSIGNED four-bit
-// amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
-// clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
-struct type_windmill_info {
-    // Before normalization: resource.
-    EGameResource m_resource : 4;
-    // Before normalization: unused.
-    unsigned long m_unused : 9;
-    // Before normalization: amount.
-    unsigned long m_amount : 4;
-    // Before normalization: tail.
-    unsigned long m_tail : 15;
-};
-SIZE(type_windmill_info, 4);
-
-// DoEventLeanTo (0x4a31a0) reads a five-bit id at bits 0..4 (`mov al,
-// [cell] / and eax,0x1f`), an UNSIGNED four-bit amount at bits 6..9 and
-// an UNSIGNED four-bit resource id at bits 10..13 (`shr eax,N / and
-// eax,0xf` both times). Emptying the lean-to rewrites all three fields at
-// once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
-// nobody's and puts the tail at 14.
-struct type_lean_to_info {
-    // Before normalization: id.
-    unsigned long m_id : 5;
-    // Before normalization: unused.
-    unsigned long m_unused : 1;
-    // Before normalization: amount.
-    unsigned long m_amount : 4;
-    // Before normalization: resource.
-    unsigned long m_resource : 4;
-    // Before normalization: tail.
-    unsigned long m_tail : 18;
-};
-SIZE(type_lean_to_info, 4);
-
-// DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
-// "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
-// alone (`and dword ptr [cell], 0xffffffbf`).
-struct type_magic_spring_info {
-    // Before normalization: id.
-    unsigned long m_id : 5;
-    // Before normalization: unused.
-    unsigned long m_unused : 1;
-    // Before normalization: full.
-    unsigned long m_full : 1;
-    // Before normalization: tail.
-    unsigned long m_tail : 25;
-};
-SIZE(type_magic_spring_info, 4);
-
-// DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
-// four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
-// one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
-// emptying it clears that bit alone (`and ah,0xfb`).
-struct type_garden_info {
-    // Before normalization: id.
-    unsigned long m_id : 5;
-    // Before normalization: unused.
-    unsigned long m_unused : 1;
-    // Before normalization: resource.
-    EGameResource m_resource : 4;
-    // Before normalization: full.
-    unsigned long m_full : 1;
-    // Before normalization: tail.
-    unsigned long m_tail : 21;
-};
-SIZE(type_garden_info, 4);
-
-// do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
-// (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
-// 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
-// alone (`and al,0xfe` over the whole dword), so the two lanes are
-// separate fields rather than one packed value.
-struct type_tomb_info {
-    // Before normalization: has_artifact.
-    unsigned long m_hasArtifact : 1;
-    // Before normalization: unused.
-    unsigned long m_unused : 12;
-    // Before normalization: artifact.
-    signed long m_artifact : 10;
-    // Before normalization: tail.
-    unsigned long m_tail : 9;
-};
-SIZE(type_tomb_info, 4);
-
-// do_event_witch_hut (0x4a8080) reads a SIGNED seven-bit secondary-skill
-// id at bits 13..19 (`shl esi,0xc / sar esi,0x19`) and compares it with
-// -1 - the all-ones encoding this header already names
-// WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
-struct type_witch_hut_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 13;
-    // Before normalization: skill.
-    signed long m_skill : 7;
-    // Before normalization: tail.
-    unsigned long m_tail : 12;
-};
-SIZE(type_witch_hut_info, 4);
-
-// The Fountain of Fortune's luck tier, a SIGNED four-bit field at bits
-// 13..16. DoEventFountain (0x4a2480) proves both ends of it: the value
-// reads are `shl eax,0xf / sar eax,0x1c`, the signature of a signed
-// bitfield at bit 13, and the range check that guards the jump table is
-// `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
-struct type_fountain_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 13;
-    // Before normalization: luck.
-    signed long m_luck : 4;
-    // Before normalization: tail.
-    unsigned long m_tail : 15;
-};
-SIZE(type_fountain_info, 4);
-
-// The eight-bit team-visibility lane SetCellVisited writes. Proven from
-// the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
-// narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
-// which is only legal because the field is exactly eight bits wide.
-struct type_cell_visited_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 5;
-    // Before normalization: visited.
-    unsigned long m_visited : 8;
-    // Before normalization: tail.
-    unsigned long m_tail : 19;
-};
-SIZE(type_cell_visited_info, 4);
-
-// The Pyramid's guarded flag at bit 0 and signed eight-bit spell lane at
-// bits 13..20. Retail's out-of-line set_pyramid merges the two bitfield
-// assignments into one dword read-modify-write.
-struct type_pyramid_info {
-    // Before normalization: guarded.
-    unsigned long m_guarded : 1;
-    // Before normalization: unused.
-    unsigned long m_unused : 12;
-    // Before normalization: spell.
-    signed long m_spell : 8;
-    // Before normalization: tail.
-    unsigned long m_tail : 11;
-};
-SIZE(type_pyramid_info, 4);
-
-// DoEventWagon (0x4a69b0) packs five lanes into the one dword and the
-// arm proves every width: an UNSIGNED five-bit resource amount at bits
-// 0..4, read with a BYTE load because the field ends inside the first
-// byte (`mov al,[cell] / and eax,0x1f`); a "still loaded" flag at bit 13
-// and a "carries an artifact" flag at bit 14, both `shr / test cl,1`
-// against the SAME cached dword; a SIGNED ten-bit artifact id at bits
-// 15..24 (`shl eax,7 / sar eax,0x16`); and a SIGNED four-bit resource id
-// at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
-// bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
-// read-modify-write SetGardenEmpty produces at bit 10.
-struct type_wagon_info {
-    // Before normalization: amount.
-    unsigned long m_amount : 5;
-    // Before normalization: unused.
-    unsigned long m_unused : 8;
-    // Before normalization: full.
-    unsigned long m_full : 1;
-    // Before normalization: has_artifact.
-    unsigned long m_hasArtifact : 1;
-    // Before normalization: artifact.
-    signed long m_artifact : 10;
-    // Before normalization: resource.
-    EGameResource m_resource : 4;
-    // Before normalization: tail.
-    unsigned long m_tail : 3;
-};
-SIZE(type_wagon_info, 4);
-
-// DoEventSkeleton (0x4a5480) - the Corpse, adventure object 22, whose
-// per-player flag game.h already names DeadGuyFlags. Three lanes: a
-// five-bit UNSIGNED item id at bits 0..4, read with a BYTE load
-// (`mov cl,[cell] / and ecx,0x1f`); a SIGNED ten-bit artifact at bits
-// 6..15 (`shl eax,0x10 / sar eax,0x16`); and the "still holds something"
-// flag at bit 16 (`shr eax,0x10 / test al,1`). Bit 5 belongs to nobody,
-// and the emptying write is what proves it: SetSkeleton folds its three
-// stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
-// that spares bit 5 while clearing the id lane and bit 16, and an OR
-// rather than a masked insert because the artifact is set to -1.
-struct type_skeleton_info {
-    // Before normalization: id.
-    unsigned long m_id : 5;
-    // Before normalization: unused.
-    unsigned long m_unused : 1;
-    // Before normalization: artifact.
-    signed long m_artifact : 10;
-    // Before normalization: has_treasure.
-    unsigned long m_hasTreasure : 1;
-    // Before normalization: tail.
-    unsigned long m_tail : 15;
-};
-SIZE(type_skeleton_info, 4);
-
-// Dreamcast CodeView publishes all five MapArtifactInfo fields and their
-// order. Complete retains that record but expands the guard lane from eight
-// to nine bits for its larger creature domain; AI_value_of_event proves the
-// resulting retail positions directly: signed price 0..3, signed guard
-// 4..12, signed resource 13..16, a 14-bit guard count, and custom at bit 31.
-struct MapArtifactInfo {
-    // Before normalization: price.
-    ArtifactPrices m_price : 4;
-    // Before normalization: guard.
-    TCreatureType m_guard : 9;
-    // Before normalization: resource_price.
-    EGameResource m_resourcePrice : 4;
-    // Before normalization: guard_qty.
-    unsigned long m_guardQty : 14;
-    // Before normalization: custom.
-    unsigned long m_custom : 1;
-};
-SIZE(MapArtifactInfo, 4);
-
-// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
-// it reads it through the same GetItemId, as the Dreamcast line table
-// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
-// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
-struct type_tree_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 13;
-    // Before normalization: price.
-    signed long m_price : 3;
-    // Before normalization: tail.
-    unsigned long m_tail : 16;
-};
-SIZE(type_tree_info, 4);
-
-// Two more retail-used arms of the four-byte union. Both getters extract
-// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
-// The other DC arms remain unmodelled until a retail consumer needs them.
-struct type_creature_bank_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 13;
-    // Before normalization: index.
-    unsigned long m_index : 12;
-    // Before normalization: tail.
-    unsigned long m_tail : 7;
-};
-SIZE(type_creature_bank_info, 4);
-
-struct type_university_info {
-    // Before normalization: unused.
-    unsigned long m_unused : 13;
-    // Before normalization: index.
-    unsigned long m_index : 12;
-    // Before normalization: tail.
-    unsigned long m_tail : 7;
-};
-SIZE(type_university_info, 4);
-
-union ExtraInfoUnion {
-    // Before normalization: value.
-    unsigned long m_value;
-    // Before normalization: artifact_info.
-    MapArtifactInfo m_artifactInfo;
-    // Before normalization: water_wheel_info.
-    type_water_wheel_info m_waterWheelInfo;
-    // Before normalization: windmill_info.
-    type_windmill_info m_windmillInfo;
-    // Before normalization: lean_to_info.
-    type_lean_to_info m_leanToInfo;
-    // Before normalization: magic_spring_info.
-    type_magic_spring_info m_magicSpringInfo;
-    // Before normalization: garden_info.
-    type_garden_info m_gardenInfo;
-    // Before normalization: tomb_info.
-    type_tomb_info m_tombInfo;
-    // Before normalization: witch_hut_info.
-    type_witch_hut_info m_witchHutInfo;
-    // Before normalization: fountain_info.
-    type_fountain_info m_fountainInfo;
-    // Before normalization: cell_visited_info.
-    type_cell_visited_info m_cellVisitedInfo;
-    // Before normalization: pyramid_info.
-    type_pyramid_info m_pyramidInfo;
-    // Before normalization: wagon_info.
-    type_wagon_info m_wagonInfo;
-    // Before normalization: skeleton_info.
-    type_skeleton_info m_skeletonInfo;
-    // Before normalization: tree_info.
-    type_tree_info m_treeInfo;
-    // Before normalization: shrine_info.
-    ShrineInfo m_shrineInfo;
-    // Before normalization: creature_bank_info.
-    type_creature_bank_info m_creatureBankInfo;
-    // Before normalization: university_info.
-    type_university_info m_universityInfo;
-    // Before normalization: scholar_info.
-    ScholarInfo m_scholarInfo;
-
-    // MapCell.h:1063..1089, dc 0x9c898..0x9c8bc and 0xbca4c.
-    // These accessors belong to ExtraInfoUnion. Retail DoEventScholar
-    // sign-extends the same 3/3/7/10-bit lanes; scalar bridges preserve
-    // the recovered enum return types over their packed representation.
-    // Before normalization (function): ExtraInfoUnion::GetScholarAward.
-    ScholarAwards getScholarAward() const
-    {
-        union {
-            int m_integer;
-            ScholarAwards m_award;
-        } converted;
-        converted.m_integer = m_scholarInfo.m_award;
-        return converted.m_award;
-    }
-    // Before normalization (function): ExtraInfoUnion::GetScholarPrimarySkill.
-    TPrimarySkill getScholarPrimarySkill() const
-    { return primarySkillFromInt(m_scholarInfo.m_primary); }
-    // Before normalization (function): ExtraInfoUnion::GetScholarSecondarySkill.
-    TSecondarySkill getScholarSecondarySkill() const
-    {
-        union {
-            int m_integer;
-            TSecondarySkill m_skill;
-        } converted;
-        converted.m_integer = m_scholarInfo.m_secondary;
-        return converted.m_skill;
-    }
-    // Before normalization (function): ExtraInfoUnion::GetScholarSpell.
-    SpellID getScholarSpell() const { return m_scholarInfo.m_spell; }
-    // Before normalization (function): ExtraInfoUnion::SetScholar.
-    void setScholar(ScholarAwards award, TPrimarySkill primary,
-                    TSecondarySkill secondary, SpellID spell)
-    {
-        m_scholarInfo.m_award = award;
-        m_scholarInfo.m_primary = primary;
-        m_scholarInfo.m_secondary = secondary;
-        m_scholarInfo.m_spell = spell;
-    }
-
-    // Before normalization (function): ExtraInfoUnion::SetCellVisited.
-    void setCellVisited(short player);
-    // Before normalization (function): ExtraInfoUnion::clear_visited_bits.
-    void clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
-    // Before normalization (function): ExtraInfoUnion::set_pyramid.
-    // Before normalization (locals): new_spell.
-    void setPyramid(bool guards, int newSpell);
-    // Before normalization (function): ExtraInfoUnion::SetWagon.
-    void setWagon(enum EGameResource resource, short amount);
-    // Before normalization (function): ExtraInfoUnion::SetWagon.
-    void setWagon(int artifact);
-    // Before normalization (function): ExtraInfoUnion::set_witch_skill.
-    void setWitchSkill(int skill);
-    // MapCell.h:923-945. These are source-real accessors, not convenience
-    // wrappers: Dreamcast publishes their decorated signatures and bodies,
-    // while Complete inlines them into the artifact event/appraisal paths.
-    // Before normalization (function): ExtraInfoUnion::IsCustomized.
-    bool isCustomized() const { return m_artifactInfo.m_custom != 0; }
-    // Before normalization (function): ExtraInfoUnion::GetArtifactDefender.
-    TCreatureType getArtifactDefender() const { return m_artifactInfo.m_guard; }
-    // Before normalization (function): ExtraInfoUnion::GetArtifactPrice.
-    ArtifactPrices getArtifactPrice() const { return m_artifactInfo.m_price; }
-    // Before normalization (function): ExtraInfoUnion::GetArtifactResourceCost.
-    enum EGameResource getArtifactResourceCost() const
-    {
-        return m_artifactInfo.m_resourcePrice;
-    }
-    // Before normalization (function): ExtraInfoUnion::IsDefendedArtifact.
-    bool isDefendedArtifact() const
-    {
-        return m_artifactInfo.m_price == const_artifact_defended;
-    }
-
-    // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
-    // GetLeanToAmount is decorated `short` and that WIDTH is what makes
-    // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
-    // dialog argument a `movsx`. GetLeanToResource is decorated
-    // EGameResource; it is spelled `int` here because the field is read
-    // UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
-    // what the bytes constrain and an enum return is int-wide anyway, so
-    // no truncation barrier is lost. The id has no DC accessor and is
-    // read off the arm directly.
-    // Before normalization (function): ExtraInfoUnion::GetLeanToAmount.
-    short getLeanToAmount() const { return m_leanToInfo.m_amount; }
-    // Before normalization (function): ExtraInfoUnion::GetLeanToResource.
-    int getLeanToResource() const { return m_leanToInfo.m_resource; }
-    // Before normalization (function): ExtraInfoUnion::SetLeanTo.
-    void setLeanTo(short id, short amount, int resource)
-    {
-        m_leanToInfo.m_id = id;
-        m_leanToInfo.m_amount = amount;
-        m_leanToInfo.m_resource = resource;
-    }
-
-    // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
-    // new state rather than clearing unconditionally, which is what the
-    // DC decoration `void (unsigned char)` says and what makes the
-    // drink-it write a plain bit clear at the one site that passes 0.
-    // Before normalization (function): ExtraInfoUnion::MagicSpringIsFull.
-    unsigned char magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
-    // Before normalization (function): ExtraInfoUnion::FillMagicSpring.
-    void fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
-
-    // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
-    // is `unsigned char () const` and its `(value >> 10) & 1` shape is
-    // what retail inlines; a direct bitfield test would fold to a byte
-    // `test` on cell+1 instead.
-    // Before normalization (function): ExtraInfoUnion::GardenIsFull.
-    unsigned char gardenIsFull() const { return m_gardenInfo.m_full; }
-    // Before normalization (function): ExtraInfoUnion::GetGardenResource.
-    enum EGameResource getGardenResource() const { return m_gardenInfo.m_resource; }
-    // Before normalization (function): ExtraInfoUnion::SetGardenEmpty.
-    void setGardenEmpty() { m_gardenInfo.m_full = 0; }
-
-    // The five MapCell.h accessors the two mill handlers inline. The
-    // Dreamcast publishes all five with their signatures - get_wheel_gold
-    // and get_windmill_amount return `short` (?...@@QBAFXZ),
-    // get_windmill_resource returns EGameResource, and both setters take
-    // the same pair - and the retail bytes fix the bodies:
-    //   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
-    //     do_event_water_wheel truncates the product with `movsx esi,ax`
-    //     even though 31*500 provably fits in a short;
-    //   * set_windmill writes BOTH fields, which is why the payout tail
-    //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
-    //     instead of two read-modify-writes.
-    // Before normalization (function): ExtraInfoUnion::get_wheel_gold.
-    short getWheelGold() const { return m_waterWheelInfo.m_gold * 500; }
-    // Before normalization (function): ExtraInfoUnion::set_wheel_gold.
-    void setWheelGold(short amount) { m_waterWheelInfo.m_gold = amount / 500; }
-    // Before normalization (function): ExtraInfoUnion::get_windmill_resource.
-    enum EGameResource getWindmillResource() const { return m_windmillInfo.m_resource; }
-    // Before normalization (function): ExtraInfoUnion::get_windmill_amount.
-    short getWindmillAmount() const { return m_windmillInfo.m_amount; }
-    // Before normalization (function): ExtraInfoUnion::set_windmill.
-    void setWindmill(enum EGameResource resource, short amount)
-    {
-        m_windmillInfo.m_resource = resource;
-        m_windmillInfo.m_amount = amount;
-    }
-
-    // The five further MapCell.h accessors the tomb and witch-hut
-    // handlers inline. Dreamcast decorations fix every signature:
-    // PlayerKnowsCell is `bool (short) const` (MapCell.h:914; the Dreamcast
-    // public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
-    // tomb_is_full `unsigned char () const` (1203), get_tomb_artifact
-    // `TArtifact () const` (1198), empty_tomb `void ()` (1193) and
-    // get_witch_skill `TSecondarySkill () const` (1246).
-    //
-    // The two enum-returning getters are spelled `int` because neither
-    // TArtifact nor TSecondarySkill has a modelled definition in this
-    // tree; the WIDTH is what the bytes constrain, and an enum return is
-    // int-wide under VC6, so no truncation barrier exists on either -
-    // which is what lets do_event_witch_hut compare the raw skill with
-    // `cmp esi,-1` and index the trait table without a `movsx`.
-    // Before normalization (function): ExtraInfoUnion::PlayerKnowsCell.
-    bool playerKnowsCell(short player) const
-    {
-        if (player < 0 || player >= 8)
-            return 0;
-        return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
-    }
-    // Before normalization (function): ExtraInfoUnion::tomb_is_full.
-    unsigned char tombIsFull() const { return m_tombInfo.m_hasArtifact; }
-    // Before normalization (function): ExtraInfoUnion::get_tomb_artifact.
-    int getTombArtifact() const { return m_tombInfo.m_artifact; }
-    // Before normalization (function): ExtraInfoUnion::empty_tomb.
-    void emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
-    // Before normalization (function): ExtraInfoUnion::get_witch_skill.
-    int getWitchSkill() const { return m_witchHutInfo.m_skill; }
-
-    // The wagon's six MapCell.h accessors, all six named and decorated by
-    // the Dreamcast line table over DoEventWagon (dc 0x96784):
-    // WagonIsFull and WagonHasArtifact are `_N` - bool, not the unsigned
-    // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
-    // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
-    // which is what makes the payout argument a `movsx ecx,di`) and
-    // EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
-    // same reason get_tomb_artifact is: TArtifact has no modelled
-    // definition here and an enum return is int-wide under VC6 anyway.
-    // Before normalization (function): ExtraInfoUnion::WagonIsFull.
-    bool wagonIsFull() const { return m_wagonInfo.m_full; }
-    // Before normalization (function): ExtraInfoUnion::WagonHasArtifact.
-    bool wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
-    // Before normalization (function): ExtraInfoUnion::GetWagonArtifact.
-    int getWagonArtifact() const { return m_wagonInfo.m_artifact; }
-    // Before normalization (function): ExtraInfoUnion::GetWagonResource.
-    enum EGameResource getWagonResource() const { return m_wagonInfo.m_resource; }
-    // Before normalization (function): ExtraInfoUnion::GetWagonAmount.
-    short getWagonAmount() const { return m_wagonInfo.m_amount; }
-    // Before normalization (function): ExtraInfoUnion::EmptyWagon.
-    void emptyWagon() { m_wagonInfo.m_full = 0; }
-
-    // The corpse's four MapCell.h accessors, named and decorated by the
-    // Dreamcast line table over DoEventSkeleton (dc 0x95650):
-    // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
-    // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
-    // MapCell.h:1104, which this file's carcass already carried.
-    // GetSkeletonArtifact is spelled `int` for the reason get_tomb_artifact
-    // is: retail stores the sign-extended ten-bit field straight into the
-    // artifact record with NO `movsx`, which a short return would have
-    // forced.
-    //
-    // SetSkeleton's ID PARAMETER IS INT-WIDE and the Dreamcast's `F` is
-    // not: the three folded stores end in `and eax,0xfffeffe0 / xor edx,eax
-    // / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
-    // and the artifact constant last. A `short` parameter makes VC6
-    // reassociate the same value as `(id | 0xffc0) | masked` and emit the
-    // two ops the other way round. All four width combinations were
-    // measured against the retail bytes and exactly one is exact - short
-    // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
-    // so the width is byte-determined, not a guess.
-    // Before normalization (function): ExtraInfoUnion::SkeletonHasTreasure.
-    bool skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
-    // Before normalization (function): ExtraInfoUnion::GetSkeletonArtifact.
-    int getSkeletonArtifact() const { return m_skeletonInfo.m_artifact; }
-    // Before normalization (function): ExtraInfoUnion::GetItemId.
-    short getItemId() const { return m_skeletonInfo.m_id; }
-
-    // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
-    // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-    // and spelled `int` for get_tomb_artifact's reason.
-    // Before normalization (function): ExtraInfoUnion::GetTreePrice.
-    int getTreePrice() const { return m_treeInfo.m_price; }
-    // Before normalization (function): ExtraInfoUnion::GetShrineSpell.
-    SpellID getShrineSpell() const
-    {
-        return m_shrineInfo.m_spell;
-    }
-    // Before normalization (function): ExtraInfoUnion::SetSkeleton.
-    // Before normalization (locals): has_treasure.
-    void setSkeleton(int id, bool hasTreasure, short artifact)
-    {
-        m_skeletonInfo.m_id = id;
-        m_skeletonInfo.m_artifact = artifact;
-        m_skeletonInfo.m_hasTreasure = hasTreasure;
-    }
-
-    // Before normalization (function): ExtraInfoUnion::get_black_box.
-    BlackBoxData* getBlackBox() const;
-    // Before normalization (function): ExtraInfoUnion::get_creature_bank.
-    type_creature_bank& getCreatureBank() const;
-    // Before normalization (function): ExtraInfoUnion::get_university.
-    type_university* getUniversity() const;
-};
-SIZE(ExtraInfoUnion, 4);
 
 struct type_creature_bank;
 struct type_university;
@@ -1406,6 +843,7 @@ public:
     // Before normalization (function): TAdventureMapWindow::UpdateResourceDisplay.
     void updateResourceDisplay(unsigned char draw, unsigned char update);
     // Before normalization (function): TAdventureMapWindow::UpdateButtons.
+    void setAdvWinButtonPalette(int id, int player);
     void updateButtons(unsigned char draw, unsigned char update);
     // Before normalization (function): TAdventureMapWindow::UpdateQuestLogButton.
     void updateQuestLogButton(unsigned char update);
@@ -2540,6 +1978,8 @@ public:
     int processWaitingHover(int mouseX, int mouseY);
     // Before normalization (function): advManager::ProcessHover.
     int processHover(int mouseX, int mouseY);
+    // Original: advManager::MouseInScrollZone (advmgr.cpp:10756, dc 0x1ccf8).
+    int mouseInScrollZone();
     // Before normalization (function): advManager::ProcessSearch.
     int processSearch(int x, int y, int z);
     // Before normalization (function): advManager::get_normal_cursor.
@@ -2595,9 +2035,7 @@ public:
                                       type_point excluded);
     // Before normalization (function): advManager::InMapArea.
     int inMapArea(int x, int y);
-    // Before normalization (function): advManager::get_map_center.
-    type_point getMapCenter();
-    // Before normalization (function): advManager::GetCell.
+    type_point get_mouse_map_point() const;
     NewmapCell* getCell(type_point point);
     // Before normalization (function): advManager::MoreTreesNear.
     int moreTreesNear(type_point point);
@@ -2717,8 +2155,6 @@ public:
     unsigned short* getRouteArrayPtr(int x, int y, int z);
     // Before normalization (function): advManager::GetSoundId.
     e_looping_sound_id getSoundId(int x, int y, int z);
-    // Before normalization (function): advManager::get_map_center.
-    type_point getMapCenter() const;
     // Wandering-monster mood modifiers, both STATIC. Its twin
     // get_like_modifier (0x4a75c0) settles the question for the pair:
     // that row is `ret` with the creature type in EDX, i.e. /Gr
@@ -2754,6 +2190,8 @@ public:
     // Before normalization (locals): current_hero.
     int considerHidingMouse(class hero* currentHero, int direction);
 private:
+    // Original: advManager::get_garrison_cursor (advmgr.cpp:4514, dc 0xf23c).
+    type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     // cursor.cpp:420/458. Dreamcast marks both helpers private and Complete
     // retains their out-of-line bodies. MoveHero calls these source
     // boundaries; their bodies must not be pasted into the caller merely
@@ -2865,6 +2303,16 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void doEventPrison(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
+
+    // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
+    // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    type_point getMapCenter() const
+    {
+        return type_point(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
+                          m_radarOrigin.m_y + HERO_VIEW_TILE_Y,
+                          m_radarOrigin.m_z);
+    }
+
 };
 
 // AdvMgr.h:1254, dc 0x1f084. The by-value point overload forwards all

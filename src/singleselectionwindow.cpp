@@ -3,6 +3,7 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <algorithm>
 #include <io.h>
+#include <direct.h>
 #include <string.h>
 #include <va.h>
 // The TurnChatOn/TurnChatOff widget runs are widget::show()/hide()
@@ -22,6 +23,7 @@
 #include "hotseat.h"
 #include "netgame.h"
 #include "ownership.h"
+#include <memory>
 #include "savegame.h"
 #include "text.h"
 // Update draws the scenario rows: the three icon strips are CSprite
@@ -37,7 +39,411 @@
 #include "scenarioinfo.h"
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
-#include "singleselectionwindow_priv.h"
+// Module-local dialogs, network messages and header-transfer jobs.
+#include <bitset>
+#include <vector>
+
+#include "gamecontext.h"
+#include "inputmgr.h"
+#include "slider.h"
+#include "textresource.h"
+#include "remotedlg.h"
+#include "textntry.h"
+#include "netmsg.h"
+#include "winmgr.h"
+// TurnChatOn/TurnChatOff relabel chatToggle through textButton's
+// inherited header-inline SetText (retail expands the std::string
+// assign in place, calling only _Grow/_Eos - the button.h shape).
+#include "button.h"
+#include "textscroller.h"
+#include "textwdgt.h"
+#include "resourcemanager.h"
+#include "multiplayerwindow.h"
+#include "campaignbrief.h"
+#include "misc.h"
+
+// The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message
+// proves the two tail fields (the polled message pointer at +0x78, the awaited
+// dpid at +0x7c). Its vtable 0x241cf8 replaces CAnimatedDlg slot 0 (the ??_G)
+// and slot 3 (handle_message).
+// misc.cpp's PRNG pair and kb's fatal exit, declared here so the
+// CHostWaitDlg::Wait inline below can reach them (the cpp-local rule
+// would hide them from a header inline).
+int random(int min, int max);
+// Before normalization (locals): iSeed.
+void sRand(int seed);
+
+
+
+
+
+
+
+
+
+
+// The setup/lobby record ids live on Dreamcast's one eRS_Messages ladder.
+// singleselectionwindow.cpp opens their scoped netmsg.h view before its shared
+// includes. Complete's three post-1081 transfer-control rungs are byte-proven
+// at their build sites in this TU.
+
+// The lobby message shapes HandleNetMsg reads and builds. All are
+// DC-attested class names (SingleSelectionWindow.cpp 473..773); only the
+// fields the retail arms touch are modeled, at the offsets the arms fix
+// (first derived field at +0x14 over the 0x14-byte CNetMsg base).
+class CScrollMsg : public CNetMsg {
+public:
+    int m_map;    // +0x14
+    int m_index;  // +0x18
+
+    // SetCurrentMap's host-broadcast site expands it (the
+    // CMapHeaderRequestMsg pattern); the higher-offset store lands
+    // first there, as in that ctor.
+    CScrollMsg(int map, int index);
+};
+
+
+
+
+
+
+// The six std::sort predicates SortMaps instantiates - retail's band at
+// 0x590070..0x591cf0 is six Dinkumware _Sort instantiations (the
+// one-line sort() wrapper inlines to the observed 4-arg
+// _Sort(_F,_L,_P,(_Ty*)0) calls) and the out-of-line comparator bodies
+// beside them are these functors' operator()s (0x5903b0 tests the
+// "autosave" prefix and picks the +0x33d filename over the +0x58c title
+// on its +1 byte; 0x590e00 ranks numPlayers*10+maxNumHumanPlayers).
+// Dreamcast SortMaps (dc 0x13b780) instead uses qsort with alphaCompare,
+// numberCompare, sizeCompare, victoryCompare and lossCompare. Complete's
+// predicates carry direction and, for name/version, a network-name flag.
+// Their semantic class names remain provisional. The five retained written
+// operator() definitions below own their VA annotations directly; they are
+// not compiler-generated functions. The size predicate expands in retail's
+// sort machinery. Constructor stores put isNet before direction, matching
+// SortMaps at 0x5850b4/0x5850b7 and 0x58510a/0x58510d.
+struct TSortMapsByName {
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    // Before normalization: isNet.
+    unsigned char m_isNet;      // +1
+    TSortMapsByName(unsigned char dir, unsigned char net)
+    {
+        m_isNet = net;
+        m_direction = dir;
+    }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByPlayers {
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByPlayers(unsigned char dir) { m_direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+// Retail's version comparator DELEGATES its equal-version arm to the name
+// comparator on the SAME object address: every predicate site inside
+// _Median / _Unguarded_partition / _Unguarded_insert BY_VERSION expands the
+// version test and then `lea ecx,<the predicate parameter slot>; call
+// TSortMapsByName::operator()` - the receiver is the by-value TSortMapsByVersion
+// itself, which is what identifies the base as this class rather than a
+// constructed temporary.
+struct TSortMapsByVersion : public TSortMapsByName {
+    TSortMapsByVersion(unsigned char dir, unsigned char net)
+        : TSortMapsByName(dir, net)
+    {
+    }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsBySize {
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsBySize(unsigned char dir) { m_direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByVictory {
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByVictory(unsigned char dir) { m_direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByLoss {
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByLoss(unsigned char dir) { m_direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+class CSetFilterMsg : public CNetMsg {
+public:
+    int m_size;  // +0x14
+
+    // SetFilter expands this ctor at its host-broadcast site.
+    CSetFilterMsg(int size);
+};
+
+
+
+
+
+
+
+
+
+
+
+class CGameHeaderInfoEndMsg : public CNetMsg {
+public:
+    CGameHeaderInfoEndMsg();
+};
+
+class CClickMsg : public CNetMsg {
+public:
+    int m_widgetId;  // +0x14
+    CClickMsg(int widgetId);
+};
+
+
+
+class CNewSetupInfoMsg : public CNetMsg {
+public:
+    SGameSetupOptions m_setup;  // +0x14
+    unsigned char m_flag;       // +0x1e0, the window's +0x37f byte
+    // Before normalization: pad_1e1.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeExtras[3];
+    int m_extras[8];            // +0x1e4, the window's +0x18a0 run
+
+    CNewSetupInfoMsg(SGameSetupOptions* setup);
+};
+
+
+
+
+
+
+
+// The join announcement: the joining player's full CNetPlayerInfo
+// record plus a version string tail. OnNewPlayerMsg reads the record
+// at +0x14, the name at +0x18 and gates on the version at +0x34; the
+// sender's dpid rides the CNetMsg field_04 slot.
+class CNewPlayerMsg : public CNetMsg {
+public:
+    CNetPlayerInfo m_playerInfo;  // +0x14 (dpid/sName/version int)
+    char m_version[20];           // +0x34
+
+    // Before normalization (locals): pPlayerInfo.
+    CNewPlayerMsg(CNetPlayerInfo* playerInfo, char* version);
+};
+
+// Dreamcast's new-map announcement carries one NewSMapHeader. Complete wraps
+// the same payload in t_complex_net_message so the header is serialized via
+// its unique 0x641d30 read/write vtable. The +0x18 member placement is fixed
+// independently by both retail virtual bodies and their construction sites.
+class CNewMapHeaderInfoMsg : public t_complex_net_message {
+public:
+    NewSMapHeader m_header;  // +0x18
+
+    // Complete's receive arm constructs the complex-message base and header
+    // before deserialization (HandleNetMsg +0x310, vtable 0x641d30).
+    CNewMapHeaderInfoMsg() {}
+    CNewMapHeaderInfoMsg(NewSMapHeader* mapHeader);
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+};
+
+// The re-requested-row reply (subtype RS_GAME_HEADER_INFO through the
+// t_complex_net_message subtype ctor 0x512c50): one full list row plus the
+// transfer flag and row number. Retail widens DC's (headerNbr, pHeader) ctor
+// with the list-select flag and adds the unique 0x641b20 read/write vtable.
+// HandleRequests expands the construction - base ctor and the header's member
+// assign (the 0x578440 COMDAT) stay calls, while default construction and the
+// flag/number stores inline.
+class CGameHeaderInfoMsg : public t_complex_net_message {
+public:
+    unsigned char m_flag;                 // +0x18
+    // Before normalization: pad_19.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
+    int m_number;                         // +0x1c
+    GameSelectionHeadersStruct m_header;  // +0x20
+
+    CGameHeaderInfoMsg() {}
+    CGameHeaderInfoMsg(unsigned char flag, int number,
+                       // Before normalization (locals): pHeader.
+                       GameSelectionHeadersStruct* header);
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+};
+
+
+
+// Dreamcast names the selected row's difficulty mirror `lastDiff`;
+// Complete retains it at .data 0x683454 (initial 1).
+// Before normalization: lastDiff.
+
+// Shared game snapshot owned by campaignbrief.cpp; Dreamcast publishes this
+// exact `saveHeader` identity at UpdateGameVars' BackupGameHeaders call.
+// Before normalization: saveHeader.
+
+
+
+
+
+
+
+
+
+
+// Complete's retail-only 1083 opener for TransferHeaders. It is the compact
+// count-only sibling of DC's original 1024 message above.
+class CTransferHeaderInfoInitMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;  // +0x14
+
+    CTransferHeaderInfoInitMsg(unsigned long numMaps)
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT_EX,
+                  sizeof(CTransferHeaderInfoInitMsg))
+    {
+        m_numMaps = numMaps;
+    }
+};
+
+// CNewPlayerUpdateProc owns the header-transfer state and three virtual
+// operations. CodeView names its constructor at dc 0x14808c and teardown
+// at dc 0x148a28; the latter destroys the request container directly.
+// Complete's 0x641d44 vtable contains Go/Tick/Finish. The derived map-list
+// implementation overrides those slots through 0x641d38 without adding
+// data. No evidence supports the former abstract CNewPlayerUpdateTask base;
+// its novtable annotation existed solely to influence destructor codegen.
+class CNewPlayerUpdateProc {
+public:
+    CNewPlayerUpdateProc(unsigned long dpid);
+    ~CNewPlayerUpdateProc();
+    unsigned char isFinished();
+    void headerRequested(unsigned char flag, int number);
+    void headerConfirmed();
+    virtual void go();       // slot 0, 0x5789f0
+    // Before normalization (function): CNewPlayerUpdateProc::Tick.
+    virtual void tick();     // slot 1, 0x578a90
+    // Before normalization (function): CNewPlayerUpdateProc::Finish.
+    virtual void finish();   // slot 2, 0x5795a0
+    // Before normalization (function): CNewPlayerUpdateProc::RequestConfirmation.
+    void requestConfirmation();  // DC source helper, inlined in retail Tick
+    // Before normalization (function): CNewPlayerUpdateProc::HandleRequests.
+    void handleRequests();       // retail 0x578010
+
+    unsigned long m_dpid;           // +0x04
+    int m_nextHeader;               // +0x08, next row to send
+    // Complete widens DC's CAutoArray<int> requests to an eight-byte pair.
+    // The vector occupies +0x0c..+0x1b; 0x583ef0 releases and clears its
+    // pointer triple at +0x10/+0x14/+0x18. Preserve the native container.
+    std::vector<SHeaderRequest> m_requests;
+    unsigned long m_lastSendTime;   // +0x1c, Tick's 75-tick throttle
+    unsigned char m_finished;       // +0x20, Tick-loop delete gate
+};
+
+// Complete's derived map-list implementation for the added 1083
+// TransferHeaders protocol. Its separate vtable and constructor are retail-
+// only; Go is exact, while Tick/Finish retain their documented residuals.
+class t_map_list_update : public CNewPlayerUpdateProc {
+public:
+    t_map_list_update(unsigned long dpid);
+    // Before normalization (function): t_map_list_update::Go.
+    virtual void go();       // slot 0, 0x577d70
+    // Before normalization (function): t_map_list_update::Tick.
+    virtual void tick();     // slot 1, 0x577de0
+    // Before normalization (function): t_map_list_update::Finish.
+    virtual void finish();   // slot 2, 0x578930
+};
+
+// The per-lobby set of header-transfer jobs: eight slots, ticked from
+// WindowHandler every pump. Tick is defined out of class in the TU
+// (retail keeps an out-of-line copy and expands it into WindowHandler).
+class CNewPlayerUpdateMan {
+public:
+    // Dreamcast's destructor calls CNewPlayerUpdateProc's scalar deleting
+    // destructor, fixing the source element type. Complete's retail-only
+    // t_map_list_update still converts to this immediate base.
+    CNewPlayerUpdateProc* m_procs[8];
+
+    ~CNewPlayerUpdateMan();
+
+    CNewPlayerUpdateMan();
+
+    unsigned char isSendingHeaders();
+
+    int getFirstAvailable();
+
+    CNewPlayerUpdateProc* getProc(unsigned long dpid);
+
+    // Before normalization (function): CNewPlayerUpdateMan::Tick.
+    void tick();
+    // Before normalization (function): CNewPlayerUpdateMan::PlayerDropped.
+    void playerDropped(unsigned long dpid);  // retail 0x589480
+    // Before normalization (function): CNewPlayerUpdateMan::HeaderConfirmed.
+    void headerConfirmed(unsigned long dpid);  // retail 0x589270
+    // Retail widened the DC (dpid, number) pair with a middle byte; the
+    // 1029 arm forwards the request-msg fields verbatim.
+    // Before normalization (function): CNewPlayerUpdateMan::HeaderRequested.
+    void headerRequested(unsigned long dpid, unsigned char flag,
+                         int number);  // retail 0x5892b0
+    // DC NewPlayer (dc 0x14870c, LOCATED round 2 at retail 0x58a280):
+    // take the first free slot and start a transfer job for the
+    // joining dpid.
+    // Before normalization (function): CNewPlayerUpdateMan::NewPlayer.
+    void newPlayer(unsigned long dpid);  // retail 0x58a280
+    // Complete-only map-list transfer; source name remains provisional.
+    void requestMapHeaders(unsigned long dpid);
+};
+
+// RESOLVED (round 2): the round-1 "LoadHeadersList" at 0x58eab0 is the
+// out-of-line vector<GameSelectionHeadersStruct>::size() COMDAT
+// (thiscall on the vector at this+0x1050; seventeen callers). The
+// vector view (HOMM3_SSWINDOW_HEADER_VECTORS) spells those sites
+// .size() and /Ob2 reproduces the call-vs-expand split per caller.
+
+// The persisted multiplayer nickname (prefs "Network Name").
+// multiplayerwindow.cpp owns the DATA claim at 0x698817; the name editors
+// commit into it before calling WritePrefs.
+// Before normalization: gLocalPlayerName.
+
+
+// Before normalization: gUnnamed6989f0.
+
+
+// Three constructor headings (new/load/save) at .bss 0x6a8098. The table's
+// values and indexing are retail-proven; no public spelling survives.
+// Before normalization: gUnnamed6a8098.
+
+
+
+// 0x69954c, the paused-video gate DoModal/ExitDialog test. DECLARATION ONLY
+// (kbwin.cpp owns the DATA claim); declared here rather than by pulling
+// kbwin.h into this closure, the same reason hero.h states for its own copy.
+
+
+// The local network identity. remote.cpp owns the address claim; the
+// selection window reads its dpid when choosing the current lobby player.
+
+
+// The free game-selection message pump (retail dialogDrawFunction, dc
+// 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
+// message& (not message*) so it binds the int(*)(message&) TDialogHandler.
+// Before normalization (function): Update.
+int update(message& msg);
 #include "soundmgr.h"
 #include "u2dvers.h"
 
@@ -94,23 +500,6 @@ unsigned char SavedGameExists(char* filename)
 }
 
 #endif  // @carcass
-
-// DC preserves this source helper. Complete expands it into the selection
-// window constructor: the retail body has the same executable-path buffer,
-// TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
-// E:\gamedcs\singleselectionwindow.cpp:368
-// Before normalization (function): GetGameVersion.
-static inline void getGameVersion(char* version)
-{
-    char filename[351];
-    GetModuleFileNameA(0, filename, sizeof(filename));
-    TFileVersionInfo fileInfo(filename);
-    std::string value;
-    if (fileInfo.getProductVersion(&value))
-        strcpy(version, value.c_str());
-    else
-        version[0] = 0;
-}
 
 // COMDAT pairing: singleselectionwindow.obj is the only compiland in the
 // tree that emits ?copy@std@@YIPAV?$vector@Vhero@@... (710 B), and 710 is
@@ -290,6 +679,22 @@ void stopMouseThread()
 }
 #pragma auto_inline(on)
 
+// DC preserves this source helper. Complete expands it into the selection
+// window constructor: the retail body has the same executable-path buffer,
+// TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
+// E:\gamedcs\singleselectionwindow.cpp:368
+static inline void getGameVersion(char* version)
+{
+    char filename[351];
+    GetModuleFileNameA(0, filename, sizeof(filename));
+    TFileVersionInfo fileInfo(filename);
+    std::string value;
+    if (fileInfo.getProductVersion(&value))
+        strcpy(version, value.c_str());
+    else
+        version[0] = 0;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:382
 // Before normalization (function): HasNonRandomHero.
 inline unsigned char hasNonRandomHero(int gamePos)
@@ -384,38 +789,96 @@ void getGameVersion(char* version)
 
 #endif  // @carcass
 
-// Dreamcast keeps the CNetPlayerInfo base-constructor boundary and initializes
-// dpid/name there. Complete extends that base with version; placing its retail-
-// only initialization in the same boundary reproduces the order of all three
-// stores when VC6 expands the derived seat-record constructor.
-// E:\gamedcs\struct.h:340
-inline CNetPlayerInfo::CNetPlayerInfo()
-{
-    m_dpid = 0;
-    m_name[0] = 0;
-    m_version = *g_videoGameState;
-}
 
-// E:\gamedcs\struct.h:346. Dreamcast proves the parameter order and the
-// dpid-before-name statement order. Complete appends the same version field
-// its default constructor initializes; both SetupNewGameMode loops expand
-// this constructor in place.
-// Before normalization (locals): _sName, _dpid.
-inline CNetPlayerInfo::CNetPlayerInfo(char* name, unsigned long dpid)
-{
-    m_dpid = dpid;
-    strcpy(m_name, name);
-    m_version = *g_videoGameState;
-}
 
-// E:\gamedcs\remote.h:207. The DC build retains this tiny accessor call;
-// VC6 expands its bounds guard and 21-byte name stride in the hot-seat loop.
-inline char* CHotSeatMan::getName(int player)
-{
-    if (player >= m_playerCount)
-        return 0;
-    return m_names[player];
-}
+
+// E:\gamedcs\singleselectionwindow.cpp:429
+class CHostWaitDlg : public CAnimatedDlg {
+public:
+    CHostWaitDlg()
+    {
+        m_msg = 0;
+        m_forWho = 0;
+    }
+    virtual int handleMessage(message& msg);  // slot 3
+
+    // DC Wait (0x1476dc, source line 437) takes only the dpid and reads
+    // general text 534 after randomizing the creature. Complete's two
+    // expansions fetch their text BEFORE storing forWho and calling
+    // GameTime/SRand: 731 at 0x588ea1, 534 at 0x588f67. The launch message
+    // therefore widens this shared member with a caller-evaluated text
+    // argument; a fixed DC 534 body would show the wrong launch text.
+    // Setup and DoModal remain virtual through this canonical body.
+    void wait(unsigned long forWho, const char* text)
+    {
+        m_forWho = forWho;
+        sRand(GameTime::get());
+        int creature;
+        do {
+            creature = random(0, 111);
+        } while (creature == WAIT_CREATURE_ARCH_DEVIL
+                 || creature == WAIT_CREATURE_DEVIL);
+        setup(text, g_mediumFont,
+              g_creatureTypeTraits[creature].m_spriteName, 0);
+        doModal(0);
+    }
+
+    CNetMsg* m_msg;         // +0x78
+    unsigned long m_forWho;  // +0x7c
+};
+
+
+
+// E:\gamedcs\singleselectionwindow.cpp:473
+// DC names this source-level launch message and its constructor. Complete
+// expands the base-only constructor at BeginSavedGame: subtype 0x415, size
+// 0x14, and no payload beyond CNetMsg.
+class CLaunchingGameMsg : public CNetMsg {
+public:
+    CLaunchingGameMsg()
+        : CNetMsg(RS_LAUNCHING_GAME, sizeof(CLaunchingGameMsg))
+    {
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:487
+// DC's original 1024 header-transfer opener. CodeView proves the base
+// CGameHeaderInfoInitMsg(numMaps, loadGameMode, msgSize) boundary and the
+// derived CGameHeaderInfoInitMsgEx(version, numMaps, loadGameMode) boundary;
+// Complete retail expands both into CNewPlayerUpdateProc::Go. The receiver
+// independently proves the resulting count/mode/version layout and 0x30
+// extent. Keep these source boundaries even though VC6 /Ob2 erases them.
+class CGameHeaderInfoInitMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;   // +0x14
+    unsigned char m_netGame;   // +0x18
+    char m_tailPadding[3];
+
+    CGameHeaderInfoInitMsg(unsigned long numMaps,
+                           unsigned char loadGameMode,
+                           unsigned long msgSize)
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT, msgSize)
+    {
+        m_numMaps = numMaps;
+        m_netGame = loadGameMode;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:505
+class CGameHeaderInfoInitMsgEx : public CGameHeaderInfoInitMsg {
+public:
+    char m_version[20];        // +0x1c
+
+    CGameHeaderInfoInitMsgEx(const char* version, unsigned long numMaps,
+                             unsigned char loadGameMode)
+        : CGameHeaderInfoInitMsg(numMaps, loadGameMode,
+                                 sizeof(CGameHeaderInfoInitMsgEx))
+    {
+        memset(m_version, 0, sizeof(m_version));
+        strncpy(m_version, version, sizeof(m_version) - 1);
+    }
+};
+
 
 // E:\gamedcs\singleselectionwindow.cpp:532
 CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
@@ -449,6 +912,103 @@ inline CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(
     m_header = *mapHeader;
 }
 
+
+
+
+
+
+
+
+
+
+
+// E:\gamedcs\singleselectionwindow.cpp:587
+// The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
+// retail's inline expansion fixes every field offset. DC's ctor takes
+// (nbr, fileName, townType, fileTime); retail reads them all from the
+// header row plus the list-select flag. The filename parameter is char*
+// in DC procedure 0x147c78; preserving that mutability is byte-flat in both Ticks.
+class CMapFileNameMsg : public CNetMsg {
+public:
+    unsigned char m_flag;         // +0x14
+    char m_paddingBeforeNumber[3];
+    int m_number;                 // +0x18
+    char m_fileName[0x40];        // +0x1c
+    int m_townTypes[8];           // +0x5c
+    FILETIME m_fileTime;          // +0x7c
+
+    // Original: CMapFileNameMsg::CMapFileNameMsg; singleselectionwindow.cpp:587, dc 0x147c78.
+    // Complete adds the transfer-list flag at +0x14 before the DC payload.
+    CMapFileNameMsg(unsigned char flag, int number, char* fileName,
+                    int* townTypes, FILETIME fileTime)
+        : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
+    {
+        m_flag = flag;
+        m_number = number;
+        strncpy(m_fileName, fileName, 0x3c);
+        m_fileTime = fileTime;
+        memcpy(m_townTypes, townTypes, sizeof(m_townTypes));
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:605
+class CMapHeaderRequestMsg : public CNetMsg {
+public:
+    unsigned char m_flag;  // +0x14
+    char m_paddingBeforeNumber[3];
+    int m_number;          // +0x18
+
+    // Retail widened the DC (nbr) ctor with the list-select flag; both
+    // CheckMissingHeaders expansions fix the field order - and the
+    // STORE order: number lands before flag on every expansion (the
+    // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
+    // Original: CMapHeaderRequestMsg::CMapHeaderRequestMsg; singleselectionwindow.cpp:605, dc 0x147cec.
+    CMapHeaderRequestMsg(unsigned char flag, int number)
+        : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
+    {
+        m_number = number;
+        m_flag = flag;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:616
+class CReqHeaderConfirmMsg : public CNetMsg {
+public:
+    CReqHeaderConfirmMsg()
+        : CNetMsg(RS_REQ_HEADER_CONFIRM, 0x14)
+    {
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:626
+class CHeaderConfirmMsg : public CNetMsg {
+public:
+    CHeaderConfirmMsg()
+        : CNetMsg(RS_HEADER_CONFIRM, 0x14)
+    {
+    }
+};
+
+
+// E:\gamedcs\singleselectionwindow.cpp:638
+class CSortMapsMsg : public CNetMsg {
+public:
+    int m_how;        // +0x14
+    int m_direction;  // +0x18
+
+    // SortMaps expands this ctor at its host-broadcast site (the
+    // CRequestHeroFaceReplyMsg pattern).
+    CSortMapsMsg(int how, int direction)
+        : CNetMsg(RS_SORT_MAPS, sizeof(CSortMapsMsg))
+    {
+        m_how = how;
+        m_direction = direction;
+    }
+};
+
+
+
+
 // E:\gamedcs\singleselectionwindow.cpp:651
 CSetFilterMsg::CSetFilterMsg(int size)
     : CNetMsg(RS_SET_FILTER, sizeof(CSetFilterMsg))
@@ -456,12 +1016,106 @@ CSetFilterMsg::CSetFilterMsg(int size)
     m_size = size;
 }
 
+
+
+
+
+// E:\gamedcs\singleselectionwindow.cpp:663
+class CRequestHeroFaceMsg : public CNetMsg {
+public:
+    int m_which;  // +0x14
+
+    CRequestHeroFaceMsg(int which)
+        : CNetMsg(RS_REQUEST_HERO_FACE, sizeof(CRequestHeroFaceMsg))
+    {
+        m_which = which;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:676
+class CRequestHeroFaceReplyMsg : public CNetMsg {
+public:
+    int m_pos;   // +0x14
+    int m_face;  // +0x18
+
+    VA(0x0058e6c0, 0x31)  // retained retail body; formerly enrolled by CLASS_CTOR
+    CRequestHeroFaceReplyMsg(int pos, int face)
+        : CNetMsg(RS_REQUEST_HERO_FACE_REPLY,
+                  sizeof(CRequestHeroFaceReplyMsg))
+    {
+        m_pos = pos;
+        m_face = face;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:690
+class CSetAGRMsg : public CNetMsg {
+public:
+    int m_gamePos;  // +0x14
+    int m_agr;      // +0x18
+
+    CSetAGRMsg(int gamePos, int agr)
+        : CNetMsg(RS_SETAGR, sizeof(CSetAGRMsg))
+    {
+        m_gamePos = gamePos;
+        m_agr = agr;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:703
+class CNewHostMsg : public CNetMsg {
+public:
+    unsigned long m_dpidNewHost;  // +0x14
+
+    CNewHostMsg(unsigned long dpidNewHost)
+        : CNetMsg(RS_NEW_HOST, sizeof(CNewHostMsg))
+    {
+        m_dpidNewHost = dpidNewHost;
+    }
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:717
+// The full-roster broadcast (DC ctor takes both player arrays); the
+// receiver reads the human records at +0x14 and the computer block at
+// +0x3f4.
+class CUpdatePlayerPosMsg : public CNetMsg {
+public:
+    CNetPlayerHandlerPlayer m_netPlayer[8];   // +0x014
+    CNetPlayerHandlerPlayer m_compPlayer[8];  // +0x3f4
+
+    // E:\gamedcs\singleselectionwindow.cpp:717
+    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* netPlayers,
+                        CNetPlayerHandlerPlayer* compPlayers);
+};
+
+
+
 // E:\gamedcs\singleselectionwindow.cpp:730
 CClickMsg::CClickMsg(int widgetId)
     : CNetMsg(RS_CLICK, sizeof(CClickMsg))
 {
     m_widgetId = widgetId;
 }
+
+
+
+
+
+// E:\gamedcs\singleselectionwindow.cpp:744
+class CTownUpdateMsg : public CNetMsg {
+public:
+    int m_gamePos;  // +0x14
+    TTownType m_town;  // +0x18
+
+    CTownUpdateMsg(int gamePos, TTownType town)
+        : CNetMsg(RS_TOWN_UPDATE, sizeof(CTownUpdateMsg))
+    {
+        m_gamePos = gamePos;
+        m_town = town;
+    }
+};
+
+
 
 // E:\gamedcs\singleselectionwindow.cpp:758. The ctor boundary is expanded
 // into SetupNewGameMode, but its CNetPlayerInfo member's default constructor
@@ -473,16 +1127,6 @@ inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* playerInfo,
 {
     m_playerInfo = *playerInfo;
     strncpy(m_version, version, sizeof(m_version));
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:773, dc 0x148038. The ordinary
-// two-argument constructor copies the version and error text after CNetMsg.
-// Retail's header-init handler loads the text argument before expanding it.
-CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
-    : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
-{
-    strncpy(m_version, version, sizeof(m_version));
-    strncpy(m_errText, errText, sizeof(m_errText));
 }
 
 // The three game-selection description tables: each caches a fixed-count
@@ -582,6 +1226,31 @@ DATA(0x00683458) static const char* const g_fileSpec[5] = {
     DATA_COMPGEN(0x0068347c, tutorialMapFileSpec, "*.tut"),
     DATA_COMPGEN(0x00683474, tutorialGameFileSpec, "*.tgm")
 };
+
+
+
+
+
+// E:\gamedcs\singleselectionwindow.cpp:773
+class CBadVersionMsg : public CNetMsg {
+public:
+    char m_version[20];   // +0x14
+    // Extent 80 byte-proven by OnGameHeaderInfoInitMsg's reply: the
+    // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
+    char m_errText[80];   // +0x28, format string
+
+    // Original: CBadVersionMsg::CBadVersionMsg; singleselectionwindow.cpp:773, dc 0x148038.
+    // Both source builds construct the header, then copy the two bounded
+    // strings. The retail reply sites use the same 20/80-byte bounds.
+    CBadVersionMsg(const char* version, const char* errText)
+        : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
+    {
+        strncpy(m_version, version, sizeof(m_version));
+        strncpy(m_errText, errText, sizeof(m_errText));
+    }
+};
+
+
 
 // E:\gamedcs\singleselectionwindow.cpp:821
 // Before normalization (function): InitializeVCDescriptions.
@@ -892,6 +1561,36 @@ unsigned char CNetPlayerHandler::SetComputer(int pos)
 
 #endif  // @carcass
 
+// DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
+// fallback through it (lea into the computer bank).
+// Original: CNetPlayerHandler::GetCompPlayerInPos; singleselectionwindow.cpp:1089, dc 0x130654.
+inline CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
+{
+    return &m_computerPlayers[pos];
+}
+
+// DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
+// on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
+// load as the fall-through - the arm order UpdatePlayerPositions'
+// retail expansion keeps (found path in line, -1 jumps to the join).
+// Original: CNetPlayerHandler::GetGamePos; singleselectionwindow.cpp:1138, dc 0x130778.
+inline int CNetPlayerHandler::getGamePos(unsigned long dpid)
+{
+    int netPos = getNetPos(dpid);
+    if (netPos == -1)
+        return -1;
+    return m_humanPlayers[netPos].m_playerPos;
+}
+
+// Original: CNetPlayerHandler::GetNetPos; singleselectionwindow.cpp:1193, dc 0x130898.
+inline int CNetPlayerHandler::getNetPos(unsigned long dpid)
+{
+    for (int i = 0; i < MAX_PLAYERS; ++i)
+        if (m_humanPlayers[i].m_dpid == dpid)
+            return i;
+    return -1;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1214
 int CNetPlayerHandler::getUnassignedPlayerPos()
 {
@@ -916,7 +1615,7 @@ int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 
 // Opens the header transfer to the joining player: announce how many
 // headers will follow.
-// E:\gamedcs\singleselectionwindow.cpp:1272
+// Complete-only derived body; DC line 1272 belongs to the base Go.
 VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
 void t_map_list_update::go()
 {
@@ -925,6 +1624,18 @@ void t_map_list_update::go()
         win->m_transferHeaders.size());
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
+
+// Original: CNewPlayerUpdateProc::CNewPlayerUpdateProc; singleselectionwindow.cpp:1262, dc 0x14808c.
+inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
+{
+    m_dpid = dpid;
+    m_nextHeader = 0;
+    m_finished = 0;
+    m_lastSendTime = 0;
+}
+
+// Original: CNewPlayerUpdateProc::IsFinished; singleselectionwindow.cpp:1341, dc 0x148338.
+inline unsigned char CNewPlayerUpdateProc::isFinished() { return m_finished; }
 
 // DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
 // Complete's expanded copy at 0x5892b0 queues flag/number by value instead
@@ -1151,23 +1862,26 @@ void CNewPlayerUpdateProc::tick()
     m_lastSendTime = GameTime::get();
 }
 
+
+
+
+
+
+
+
+
 // The source-declared header-row constructor remains inline in
 // SingleSelectionWindow.h, as Dreamcast CodeView proves.  Retail retains one
 // complete COMDAT copy: NewSMapHeader/SGameSetupOptions/SavedGameHeader are
 // constructed in order, the two PC-only text bands are cleared, and
 // setup.difficulty is preset to one.
-VA_COMPGEN(0x00578E00, 0x25F, CLASS_CTOR, GameSelectionHeadersStruct)
+// Canonical body and VA: include/singleselectionwindow.h.
 
 // DC 0x147940 proves the constructor boundary, the default row construction,
 // and the final source-row copy.  Complete adds the transfer-list flag and
 // t_complex_net_message vtable but preserves that order; the implicit
 // GameSelectionHeadersStruct assignment is retail's retained 0x578440 body.
-// Retail comparison is structurally exact (9/9 blocks) and differs only in
-// scheduling the third embedded string constructor's `lea ecx` before its
-// null push. An explicit m_header() initializer is byte-flat at 98.80%;
-// moving flag/number into the initializer list drops this body to 90.74% and
-// also loses an exact TU function, so the source-order assignments remain.
-VA(0x00579060, 0x251)
+VA(0x00579060, 0x251)  // DC header-row constructor + Complete list flag, dc 0x147940
 CGameHeaderInfoMsg::CGameHeaderInfoMsg(
     // Before normalization (locals): pHeader.
     unsigned char flag, int number, GameSelectionHeadersStruct* header)
@@ -1190,26 +1904,195 @@ CGameHeaderInfoMsg::CGameHeaderInfoMsg(
 // it unnamed removes that source-false loop and matches all 32 retail blocks.
 VA_COMPGEN(0x005792C0, 0x2D1, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
 
-// DC keeps this source helper out of line. Complete's larger setup message
-// adds the window's mode byte and eight filter dwords; VC6 expands this call
-// into Finish while retaining the CNewSetupInfoMsg constructor boundary.
-// E:\gamedcs\singleselectionwindow.cpp:7009
-inline unsigned char TSingleSelectionWindow::sendSetupInfo(
-    unsigned long dpid)
+
+// Ticks every live transfer job and reaps the finished ones. Retail
+// keeps this out-of-line copy (not yet located among the 0x5892xx rows)
+// and expands it into WindowHandler's pump.
+// E:\gamedcs\singleselectionwindow.cpp:1443. The manager owns eight
+// CNewPlayerUpdateProc pointers; its body expands into
+// ~TSingleSelectionWindow in Complete retail.
+CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 {
-    CNewSetupInfoMsg msg(&g_game->m_setup);
-    msg.m_flag = m_randomMapSelected;
-    msg.m_extras[0] = m_randomMapOptions[0];
-    msg.m_extras[1] = m_randomMapOptions[1];
-    msg.m_extras[2] = m_randomMapOptions[2];
-    msg.m_extras[3] = m_randomMapOptions[3];
-    msg.m_extras[4] = m_randomMapOptions[4];
-    msg.m_extras[5] = m_randomMapOptions[5];
-    msg.m_extras[6] = m_randomMapOptions[6];
-    msg.m_extras[7] = m_randomMapOptions[7];
-    transmitRemoteDataDPID(&msg, dpid, false, true);
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i])
+            delete m_procs[i];
+    }
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1466
+void CNewPlayerUpdateMan::tick()
+{
+    for (int i = 0; i < 8; ++i) {
+        if (m_procs[i]) {
+            m_procs[i]->tick();
+            if (m_procs[i]->isFinished()) {
+                delete m_procs[i];
+                m_procs[i] = 0;
+            }
+        }
+    }
+}
+
+// DC IsSendingHeaders; Complete expands it into each sort-button arm.
+// Original: CNewPlayerUpdateMan::IsSendingHeaders; singleselectionwindow.cpp:1517, dc 0x148928.
+inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
+{
+    for (int i = 0; i < 8; ++i)
+        if (m_procs[i])
+            return 1;
+    return 0;
+}
+
+// DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
+// Original: CNewPlayerUpdateMan::GetFirstAvailable; singleselectionwindow.cpp:1533, dc 0x148960.
+inline int CNewPlayerUpdateMan::getFirstAvailable()
+{
+    for (int i = 0; i < 8; ++i)
+        if (m_procs[i] == 0)
+            return i;
+    return -1;
+}
+
+// DC GetProc (protected there); the HeaderConfirmed body expands it.
+// Original: CNewPlayerUpdateMan::GetProc; singleselectionwindow.cpp:1544, dc 0x148998.
+inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
+{
+    for (int i = 0; i < 8; ++i)
+        if (m_procs[i] && m_procs[i]->m_dpid == dpid)
+            return m_procs[i];
+    return 0;
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1569
+// The chat/duration/file-menu slider. DC gives it a `slider` base and a
+// SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
+// Both bodies read the slider base fields retail's slider.obj proves
+// (numStates +0x48, currentState +0x3c, oldState +0x38, knobPos +0x40,
+// knobRange +0x44). CChatSlider introduces no field either body reaches.
+class CChatSlider : public slider {
+public:
+    CChatSlider(int x, int y, int w, int h, int id, int num,
+                TSliderFunction func, EGraphics graphics, int page)
+        : slider(x, y, w, h, id, num, func, graphics, page, 0)
+    {
+    }
+
+    virtual void setResolution(int num);  // slot 13
+    virtual void setState(int state);     // slot 14
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:1618
+// The chat text widget. It snapshots the screen region under itself into a
+// CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
+// so Draw restores the background before repainting. m_save at +0x50; vtable
+// 0x241bdc overrides slot 4 (Draw vs the textWidget base).
+class CChatWidget : public textWidget {
+public:
+    class CChatSave : public Bitmap16Bit {
+    public:
+        unsigned char m_saved;  // +0x38
+        CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
+        // Original: CChatSave::IsSaved, non-const; CodeView line 1631.
+        unsigned char isSaved() { return m_saved; }
+    };
+
+    CChatWidget(int x, int y, int w, int h, const char* text,
+                const char* fontName, font::TColor color, int id,
+                unsigned justify, int backColor, int style)
+        : textWidget(x, y, w, h, text, fontName, color, id,
+                     justify, backColor, style)
+    {
+        m_save = new CChatSave(w, h);
+    }
+
+    virtual ~CChatWidget();
+    virtual void draw() const;  // slot 4
+
+    CChatSave* m_save;  // +0x50
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:1741
+// The lobby chat-entry subtype. Dreamcast proves the class and its IgnoreKey
+// override; retail's constructor call proves it has no additional fields.
+class CSingleSelectionChatEdit : public CChatEdit {
+public:
+    CSingleSelectionChatEdit(
+        int x, int y, int w, int h, int textSize, const char* text,
+        const char* fontName, font::TColor color,
+        font::EJustify justification,
+        const char* backgroundIcon, int backgroundFrame, int id, int style,
+        int readType, int insetX, int insetY)
+        : CChatEdit(x, y, w, h, textSize, const_cast<char*>(text),
+                    const_cast<char*>(fontName), color, justification,
+                    const_cast<char*>(backgroundIcon), backgroundFrame, id,
+                    style, readType, insetX, insetY)
+    {
+    }
+
+    virtual void sendChat(const char* text, int toWho);
+    virtual unsigned char ignoreKey(message* msg);
+};
+
+// E:\gamedcs\singleselectionwindow.cpp:1805
+// The lobby player-name editor (one per name row, widget ids 353..360).
+// vtable 0x241c14 overrides slot 11 (OnKillFocus) and slot 15 (OnKeyPress);
+// both bodies expand the shared commit helper OnEnter, which DC keeps out
+// of line (dc 0x149238) and retail fully inlines - no retail row exists
+// for it, so its definition must be `inline` (cpp-local, this TU only).
+class CEnterNameEdit : public textEntryWidget {
+public:
+    CEnterNameEdit(int x, int y, int w, int h, int textSize,
+                   const char* text, const char* fontName,
+                   font::TColor color, unsigned justification,
+                   const char* backgroundIcon, int backgroundFrame, int id,
+                   int style, int readType, int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+
+    virtual void onKillFocus();            // slot 11
+    virtual int onKeyPress(message* msg);  // slot 15
+    int onEnter();
+};
+
+// The shared name-commit helper both CEnterNameEdit overrides expand. DC
+// keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
+// two overrides carry its whole body - so the definition is `inline`.
+// The committed name lands in three places: the lobby slot record, the
+// persisted prefs nickname, and the row's read-only name text widget
+// (id pos+345). player->sName on the not-found path is address arithmetic
+// only, exactly as retail compiles it.
+// Original: CEnterNameEdit::OnEnter; singleselectionwindow.cpp:1820, dc 0x149238.
+inline int CEnterNameEdit::onEnter()
+{
+    int pos = m_id - 353;
+    hide();
+    g_unnamed69fbe8->onNameChange(pos, getText());
     return 1;
 }
+
+// E:\gamedcs\singleselectionwindow.cpp:1887
+// The save-filename editor. vtable 0x241c60 overrides slot 15 (OnKeyPress)
+// and slot 16 (IgnoreKey).
+class CSaveGameEdit : public textEntryWidget {
+public:
+    CSaveGameEdit(int x, int y, int w, int h, int textSize,
+                  const char* text, const char* fontName,
+                  font::TColor color, unsigned justification,
+                  const char* backgroundIcon, int backgroundFrame, int id,
+                  int style, int readType, int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+
+    virtual int onKeyPress(message* msg);           // slot 15
+    virtual unsigned char ignoreKey(message* msg);  // slot 16
+};
+
 
 // Complete retail preserves Dreamcast's end/filter/scroll/setup message
 // sequence, mutually exclusive pane click, current-difficulty click, roster
@@ -1258,6 +2141,16 @@ void CNewPlayerUpdateProc::finish()
     g_unnamed69fbe8->checkFaces();
     g_unnamed69fbe8->sendPlayerFaces();
 }
+
+
+
+
+
+
+
+
+
+
 
 // Dreamcast proves the two array-construction passes followed by the two
 // ordered memcpy statements. Complete widens each seat record to 0x7c; the
@@ -1884,50 +2777,17 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 // E:\gamedcs\TextWdgt.h:64. The active definition stays in the header;
 // Dreamcast emits it in singleselectionwindow.obj and retail's vtable plus
 // this+0x30 string assignment independently identify the Complete body.
-VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
-void textWidget::setText(const char* new_text)
-{
-    // @stub
-}
+// Canonical body and VA: include/textwdgt.h.
 
 // Complete-only: no Dreamcast procedure exists. Retail's sole huge-constructor
 // caller retains the header accessor, whose signed currentMap index, +0x60
 // vector pointer and 0x14 stride match the independently identical HD body and
 // its CampaignScenarioInfo* signature.
-VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
-CampaignScenarioInfo* SCampaign::getCurrentScenario()
-{
-    // @stub
-}
+// Canonical body and VA: include/game.h.
 
 #endif  // @carcass
 
-// The seat-record reset: the base constructor clears dpid/name and seeds
-// version from the game-context cell, then every derived selection field goes
-// back to its idle value.
-// Defined out of class (see the header note) so /Ob2 reproduces
-// retail's per-site inline/call split.
-// E:\gamedcs\struct.h:352
-VA(0x0057C790, 0x40)  // anchor-global reads *gpVideoGameState (0x69923c) into +0x1c and presets the 0x7c record exactly as both CUpdatePlayerPosMsg expansions do; called per element by OnNewPlayerMsg's init loop + address-taken by its ??_L call
-CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
-{
-    m_heroIndex = -1;
-    m_townIndex = -1;
-    m_availableHeroesCount = 0;
-    m_startBonusIndex = 3;
-    m_playerPos = -1;
-    m_color = -1;
-    m_handicap = 0;
-    memset(m_availableHeroes, 0, sizeof(m_availableHeroes));
-}
 
-// Dreamcast retains this member boundary; Complete expands it into the chat
-// slider wrapper below.
-inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
-{
-    g_chatMan.setPosition(newIndex);
-    displayChat();
-}
 
 // E:\gamedcs\singleselectionwindow.cpp:985
 VA(0x0057C7D0, 0x1B)  // anchor-reloc constructor chat-slider callback + exact DC call edge, dc 0x13035c
@@ -1936,19 +2796,6 @@ static void sliderChatWindow(int state, heroWindow*)
     g_unnamed69fbe8->onChatWindowSlider(state);
 }
 
-// Complete expands this Dreamcast member boundary into SliderDuration.  Its
-// older `message` local disappeared in retail; the x86 body instead proves a
-// host setup broadcast followed by the full-window redraw and duration-clock
-// refresh.
-inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
-{
-    m_durationIndex = newIndex;
-    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-    if (g_videoPaused && isHost())
-        sendSetupInfo(0);
-    drawWindow(0, 0xffff0001, 0xffff);
-    update();
-}
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 VA(0x0057C7F0, 0x194)  // anchor-reloc constructor duration-slider callback + retail setup-message copy, dc 0x13037c
@@ -1957,13 +2804,6 @@ static void sliderDuration(int state, heroWindow*)
     g_unnamed69fbe8->onDurationSlider(state);
 }
 
-// Dreamcast retains this member boundary. Complete expands it into the tiny
-// file-slider callback below, whose bytes prove the same store/call pair.
-inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
-{
-    m_currentIndex = newIndex;
-    setCurrentMap(m_currentMap, 1);
-}
 
 // The file-list slider callback is a genuine Complete function boundary.
 // E:\gamedcs\singleselectionwindow.cpp:994
@@ -2034,7 +2874,7 @@ VA_COMPGEN(0x0057ca80, 0x05, IMPLICIT_DTOR, CChatSlider)
 
 // E:\gamedcs\singleselectionwindow.cpp:1675
 VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget vtbl 0x241bdc slot4 (Draw override vs textWidget base), dc 0x148df4
-void CChatWidget::draw()
+void CChatWidget::draw() const
 {
     CChatSave* save = m_save;
     if (!save->isSaved()) {
@@ -2083,28 +2923,6 @@ CChatWidget::~CChatWidget()
     delete m_save;
 }
 
-// Dreamcast retains this source helper (dc 0x1415a8); Complete expands it
-// into CSingleSelectionChatEdit::SendChat below. Retail independently proves
-// the setup-ping special case, the local player's formatted chat line, the
-// repaint, and the final guaranteed chat broadcast in exactly this order.
-inline void TSingleSelectionWindow::sendChat(
-    // Before normalization (locals): cChat.
-    unsigned long dpid, const char* chat)
-{
-    if (_strcmpi(chat,
-                 g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
-        CPingMsg msg(GameTime::get(), RS_SETUP_PING);
-        transmitRemoteDataDPID(&msg, dpid, false, false);
-        return;
-    }
-
-    g_chatMan.addChat(
-            DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-            g_thisNetPlayerInfo.m_name, chat);
-    displayChat();
-    CChatMsg msg(chat);
-    transmitRemoteDataDPID(&msg, dpid, false, true);
-}
 
 // CChatEdit's vtable slot 24. Dreamcast proves the helper call and that the
 // recipient argument is ignored; retail expands the helper with dpid zero.
@@ -2141,33 +2959,8 @@ unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
-// E:\gamedcs\singleselectionwindow.cpp:1820
-// DC lines 1823/1824 call hide, GetText and ordinary OnNameChange. Keep
-// all three boundaries; OnNameChange owns the player/prefs/widget work.
-// The merged header/helper state keeps OnKeyPress exact with GetText as the
-// direct argument. Capturing a separate text pointer scored 100% before the
-// integration but now swaps two stack-slot operands (99.8868%). A 12-state
-// family covering text/receiver evaluation and return scopes reproduces the
-// direct-argument winner with every other function unchanged. Retain the
-// canonical helper chain; no declaration or inlining override is needed.
-// OnEnter's existing inline declaration remains unchanged.
-inline int CEnterNameEdit::onEnter()
-{
-    int pos = m_id - 353;
-    hide();
-    g_unnamed69fbe8->onNameChange(pos, getText());
-    return 1;
-}
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
-// The canonical OnEnter/OnNameChange chain now keeps this body exact with
-// either two direct returns or an explicit else. Earlier wrapper-only key
-// and else controls were sensitive to the missing helper/header state.
-// The subsequent generic-university correction in game.h exchanges the two
-// spill slots in the OnEnter expansion (99.8868%); branches and calls agree.
-// A reproduced header-only old-constructor control recovers 100%, proving
-// shared-header collateral, not a defect in this canonical helper chain.
-// Preserve the correct university model and this body's 100% MAX/HIST.
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
 int CEnterNameEdit::onKeyPress(message* msg)
 {
@@ -2175,6 +2968,23 @@ int CEnterNameEdit::onKeyPress(message* msg)
         return onEnter();
     return textEntryWidget::onKeyPress(msg);
 }
+
+
+// NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
+// restored OnKeyPress once; since then BOTH rows of the pair OSCILLATE
+// between 100.0000 and 99.89/99.87 per delink generation on a pure
+// data-name pairing deadlock (max accepted downward as needed, hist
+// keeps the peaks): the bytes are exact and the deltas are reloc names
+// only -
+// (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
+// the delinker names the merged retail cell 0x63a608 after
+// adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
+// two legitimate names - whichever the synth PDB picks, the other TU's
+// row shows the mismatch); (b) gLocalPlayerName's 0x698817 cell is not
+// carried by the delink data manifest, so the target side keeps the
+// flat data_298817. Closes only via a data-manifest change (a pipeline
+// contract, not a lane edit).
+
 
 // Field-recovery collateral: 99.8710% after the mine/sign declarations
 // changed in game.h. The inlined onEnter has its two saved-local stack
@@ -2263,10 +3073,14 @@ int CSaveGameEdit::onKeyPress(message* msg)
 VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 
 // Complete's desktop lobby adds this constructor-sized control builder; the
-// retained callers and the contiguous filter-widget id families establish
-// its no-argument member boundary. It has no older Dreamcast counterpart.
+// constructor call at 0x57bad7 and the contiguous filter-widget id families
+// establish its no-argument member boundary. Dreamcast class record 0x246e
+// has neither the eight random-map options nor these button arrays; its
+// mapFilter/filterSize members describe the existing scenario-file filter.
+// These desktop random-map helpers retain provisional semantic names.
 //
-// EXACT (2026-09-04) from 60.93 with no statement added: retail calls
+// Historical probes before removing the artificial setHighlightFrame
+// wrapper (2026-09-04, 60.93 -> 100%): retail calls
 // vector<widget*>::insert at the first twelve push_back sites and expands
 // it from the thirteenth on (nested /Ob2 budget = budget / sites-remaining,
 // docs/vc6/inliner.md s2). Written with direct member stores in the six
@@ -2275,11 +3089,23 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // candidate sites from site thirteen onward - two free (cb <= 40) sites
 // per loop iteration - which the loop body's two stores supply once they
 // are spelled as button's inline setters (set_disabled_frame is
-// Dreamcast button.h:99; set_highlight_frame is the Complete-only twin).
+// Dreamcast button.h:99; set_highlight_frame was an unproven twin).
 // One setter per loop measured 84.90; two gave every one of the 366 blocks.
+// Keep the proven disabled-frame helper and direct highlight-field stores;
+// matching the inline budget does not establish a second source helper.
+// Recovery, 2026-09-09: named allocation results, a real vector reference,
+// and loop-local button/widget pointers recover 84.8995 -> 92.9883 without
+// the unproven highlight helper. The six loops use public single insert;
+// standalone widgets keep push_back. Retail keeps the append call and its
+// pointer argument on the frame. The 54-state initial family plus 61-state
+// refinement preserve all 56 constructors, defaults, field stores and order.
+// Direct loop push_back and unnamed conversion controls remain below this
+// result. CEnterNameEdit::onKeyPress changes 100 -> 99.8868 with its source
+// unchanged; its MAX/HIST stay 100. See docs/vc6/source-families.md.
 VA(0x0057D170, 0x1DF7)
 void TSingleSelectionWindow::createFilterWidgets()
 {
+    std::vector<widget*>& widgets = m_widgets;
     m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
     m_randomMapOptions[1] = 2;
     m_randomMapOptions[2] = -1;
@@ -2289,24 +3115,45 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_randomMapOptions[6] = SCENARIO_FILTER_CATEGORY_ANY;
     m_randomMapOptions[7] = -1;
 
-    m_widgets.push_back(new textWidget(
-        58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
-        font::PRIMARY, 0x118,
-        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    m_widgets.push_back(new button(
-        161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2));
-    m_widgets.push_back(new button(
-        349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2));
+    {
+        widget* created = new textWidget(
+            58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
+            font::PRIMARY, 0x118,
+            font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
+    {
+        widget* created = new button(
+            349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
 
-    m_widgets.push_back(new textWidget(
-        71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
-        font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
+            font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountAButtons[0] = new button(
         70, 153, 30, 32, 0x11f, "RanNum1.def", 0, 1, 0, 0, 2);
     m_filterCountAButtons[1] = new button(
@@ -2327,14 +3174,19 @@ void TSingleSelectionWindow::createFilterWidgets()
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        m_filterCountAButtons[i]->setHighlightFrame(2);
-        m_filterCountAButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountAButtons[i]);
+        button* current = m_filterCountAButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
-        font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
+            font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountBButtons[0] = new button(
         70, 219, 30, 32, 0x129, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountBButtons[1] = new button(
@@ -2354,14 +3206,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        m_filterCountBButtons[i]->setHighlightFrame(2);
-        m_filterCountBButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountBButtons[i]);
+        button* current = m_filterCountBButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
-        font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
+            font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountCButtons[0] = new button(
         70, 285, 30, 32, 0x133, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountCButtons[1] = new button(
@@ -2381,14 +3238,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        m_filterCountCButtons[i]->setHighlightFrame(2);
-        m_filterCountCButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountCButtons[i]);
+        button* current = m_filterCountCButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
-        font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
+            font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterCountDButtons[0] = new button(
         70, 351, 30, 32, 0x13d, "RanNum0.def", 0, 1, 0, 0, 2);
     m_filterCountDButtons[1] = new button(
@@ -2406,14 +3268,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        m_filterCountDButtons[i]->setHighlightFrame(2);
-        m_filterCountDButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterCountDButtons[i]);
+        button* current = m_filterCountDButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
-        font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
+            font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterWaterButtons[0] = new button(
         70, 419, 83, 32, 0x146, "RanNone.def", 0, 1, 0, 0, 2);
     m_filterWaterButtons[1] = new button(
@@ -2423,14 +3290,19 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        m_filterWaterButtons[i]->setHighlightFrame(2);
-        m_filterWaterButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterWaterButtons[i]);
+        button* current = m_filterWaterButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new textWidget(
-        71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
-        font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8));
+    {
+        widget* created = new textWidget(
+            71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
+            font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8);
+        widgets.push_back(created);
+    }
     m_filterStrengthButtons[0] = new button(
         70, 485, 83, 32, 0x14b, "RanWeak.def", 0, 1, 0, 0, 2);
     m_filterStrengthButtons[1] = new button(
@@ -2440,13 +3312,18 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        m_filterStrengthButtons[i]->setHighlightFrame(2);
-        m_filterStrengthButtons[i]->setDisabledFrame(1);
-        m_widgets.push_back(m_filterStrengthButtons[i]);
+        button* current = m_filterStrengthButtons[i];
+        current->m_highlightedFrame = 2;
+        current->setDisabledFrame(1);
+        widget* added = current;
+        widgets.insert(widgets.end(), added);
     }
 
-    m_widgets.push_back(new button(
-        57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
+    {
+        widget* created = new button(
+            57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2);
+        widgets.push_back(created);
+    }
 }
 
 // Retail-only (no DC roster row - the DC lobby has no filter panel).
@@ -2561,6 +3438,10 @@ void TSingleSelectionWindow::updateFilterWidgets()
         widgetSetStatus(m_randomMapOptions[7] + 0x14b, 0x10);
 }
 
+// The version-data guards in SetupLoadGameMode/SetupNewGameMode use VC6
+// std::auto_ptr<int>: an ownership byte followed by a pointer, with scalar
+// delete on scope exit (retail 0x57f330/0x57f740). The former TAutoPtr copy
+// added no operation; the canonical library owns these inline boundaries.
 // E:\gamedcs\singleselectionwindow.cpp:2635
 // Dreamcast proves the same player-enumeration, scoped temporary-player,
 // seat-assignment and final host-selection shape as SetupNewGameMode below.
@@ -2588,7 +3469,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
             g_dPlay->enumPlayers(&playerArray, 0, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
-                TAutoPtr<int> version(static_cast<int*>(
+                std::auto_ptr<int> version(static_cast<int*>(
                     g_dPlay->getPlayerData(curr->getId(), 0, 0)));
                 if (!version.get())
                     continue;
@@ -2627,7 +3508,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
 
 // The inline constructor is defined ahead of all consumers above. VC6 emits
 // its retained public COMDAT at the first out-of-line site in this run.
-VA_COMPGEN(0x0057F720, 0x18, CLASS_CTOR, CNetPlayerInfo)  // DC's ordered dpid/name stores plus Complete's game-version field, dc 0x11f5e4
+// CNetPlayerInfo owns its retained constructor VA in struct.h.
 
 // E:\gamedcs\singleselectionwindow.cpp:2727
 VA(0x0057F740, 0x3D5)  // 100.0000%: 981/981 bytes; anchor-callee ctor call site +0x2bd4, adjacent pair with SetupLoadGameMode above; default CNetPlayerInfo ctor 0x57f720; dc 0x135aa4, 0x304 B SH4
@@ -2653,7 +3534,7 @@ void TSingleSelectionWindow::setupNewGameMode()
             g_dPlay->enumPlayers(&playerArray, 0, 0);
             for (int i = 0; i < playerArray.getCount(); ++i) {
                 CDPlayPlayer* curr = playerArray.get(i);
-                TAutoPtr<int> version(static_cast<int*>(
+                std::auto_ptr<int> version(static_cast<int*>(
                     g_dPlay->getPlayerData(curr->getId(), 0, 0)));
                 if (!version.get())
                     continue;
@@ -3297,13 +4178,15 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
     m_inAdvancedOptions = 0;
 }
 
-// Complete split the filter-pane teardown out of SetupAdvancedOptions:
-// the caller at 0x581100 invokes this member immediately after
-// TurnOffScenarioOptions, while the constructor is its other retail caller.
-// Every widget call and the final +0x37e clear are direct byte evidence.
-// The source name is provisional because the older Dreamcast revision keeps
-// this statement group inside SetupAdvancedOptions.
-VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; retail-only extracted helper
+// Complete-only random-map pane teardown; the source name is provisional.
+// Retail SetupAdvancedOptions calls this member at 0x58136f, following
+// TurnOffScenarioOptions, and the constructor calls it at 0x57c5bd.
+// Dreamcast SetupAdvancedOptions instead proceeds from TurnOffScenarioOptions
+// (dc 0x13640e, line 2943) directly to the advanced control's show call
+// (dc 0x13641c, line 2946). Its class record 0x246e has only the advanced
+// and scenario pane flags, without Complete's random-map panel state.
+// The desktop widget-103/280..335 teardown and final +0x37e clear belong here.
+VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
 void TSingleSelectionWindow::turnOffFilterOptions()
 {
     if (m_flag65 || (m_flag64 && !g_videoPaused
@@ -3969,45 +4852,24 @@ void TSingleSelectionWindow::makeHeroFilter()
 VA(0x00583b40, 0x37D)  // anchor-callee the claimed ??_G (0x57d130) calls exactly this row (its only callee besides operator delete), exact shared ownership lowering, dc 0x1396d8
 TSingleSelectionWindow::~TSingleSelectionWindow();
 
-// The shared header-transfer task teardown: frees the staging buffer and
-// zeroes the buffer triple. Non-virtual - WindowHandler's inlined Tick
-// deletes either concrete implementation through a direct call to this body.
-// The whole body is the m_requests vector teardown (deallocate + the
-// zeroed triple) - the +0x10 members are a std::vector, so the task's
-// dtor is empty. novtable (see the class) is what keeps the vptr
-// unstored, exactly as retail's bytes have it.
-// E:\gamedcs\singleselectionwindow.cpp:1553
-// UNREACHABLE, PROVEN 2026-09-06 - this row banks 0 and no source shape
-// that keeps the rest of the class exact can emit it. A whole-image scan of
-// the absolute operand finds ZERO references to 0x583ec0: neither concrete
-// vtable holds it (0x641d38 t_map_list_update and 0x641d44
-// CNewPlayerUpdateProc are three slots each - Go, Tick, Finish - and
-// 0x641d50 is already the next class's table), and no call site reaches it,
-// so retail kept a dead COMDAT (which is also why /OPT:REF cannot have been
-// on). Three VC6 probes at the unit's own flags settle what would emit it:
-//   * novtable + non-virtual ~Task + `delete basePtr`: emits `??1Task` only.
-//     This is our current state and it is what makes 0x583ef0 exact.
-//   * novtable + VIRTUAL ~Task: emits `??_GProc`/`??_7Proc` - the DERIVED
-//     class's wrapper, never `??_GTask` - and widens both concrete vtables
-//     to four slots, which retail's three refute.
-//   * non-virtual ~Task with novtable REMOVED: still no `??_G` at all, and
-//     `??1Task` gains a leading `mov dword ptr [esi], offset ??_7Task` that
-//     retail's 0x583ef0 does not have, so it would trade an exact row for
-//     nothing.
-// A `??_G<C>` needs C's own vtable to be emitted, and an abstract novtable
-// interface never emits one. Leave the claim; do not spend a lane on it.
-VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateTask)  // wrapper calls the task dtor below; DC concrete-proc wrapper at 0x1489f0
-// No auto-inline override: the two-state control preserves every tracked
-// score and 395 of 396 emitted bodies. Only the untracked implicit Proc
-// destructor changes, from a jump to this body into the same 38-byte teardown
-// (identical instructions and delete relocation; 32 additional padded bytes).
-// Do not call this an ICF fix: genuine VC6 links with /OPT:ICF still keep the
-// ordinary non-COMDAT Task body separate from the generated Proc COMDAT.
-// Both remain emitted; callers keep their original symbols and source calls.
-// The separate dead scalar-wrapper claim and ownership/link-layout questions
-// above are not solved by removing an unnecessary code-generation override.
-VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
-CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
+// E:\gamedcs\singleselectionwindow.cpp:1553.
+// CodeView owns both the scalar deleting wrapper (dc 0x1489f0) and the
+// ordinary destructor (dc 0x148a28) in CNewPlayerUpdateProc. Complete's
+// wrapper calls 0x583ef0 at 0x583ec6; PlayerDropped calls that same teardown
+// directly at 0x5894a3 before deleting the allocation. It destroys only
+// m_requests, whose pointer triple is at +0x10/+0x14/+0x18 in Complete.
+//
+// Historical probes on the removed CNewPlayerUpdateTask surrogate: an
+// abstract novtable base with non-virtual destructor reproduced 0x583ef0
+// but did not emit its claimed scalar deleting wrapper. Making the base
+// destructor virtual added a fourth vtable slot; removing novtable from
+// that surrogate added a vptr reset. Those failures describe the artificial
+// hierarchy, not an unreachable retail function or an original base class.
+// The empty teardown now belongs to the CodeView-named concrete class;
+// both claims follow that owner, with the diagnostic inline pin removed.
+VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateProc)  // dc 0x1489f0
+VA(0x00583ef0, 0x26)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
+CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 {
 }
 
@@ -4020,8 +4882,8 @@ const char* TSingleSelectionWindow::getFileName(int which)
     if (m_flag64 == 0 && m_flag65 == 0)
         return m_selectionHeaders[which].m_setup.m_filename;
     const char* name;
-    if (getMapCount() != 0
-            && getMapCount() > static_cast<unsigned int>(which))
+    if (m_selectionHeaders.size() != 0
+            && m_selectionHeaders.size() > static_cast<unsigned int>(which))
         name = m_selectionHeaders[which].m_title;
     else
         name = g_generalText->getText(508);
@@ -4041,7 +4903,7 @@ const char* TSingleSelectionWindow::getMapName(int which)
     if (m_flag64 == 0 && m_flag65 == 0) {
         const char* name;
         if (which >= 0
-                && getMapCount() > static_cast<unsigned int>(which))
+                && m_selectionHeaders.size() > static_cast<unsigned int>(which))
             name = m_selectionHeaders[which].m_title;
         else
             name = g_generalText->getText(508);
@@ -4081,7 +4943,7 @@ void GetLCText(LossConditionStruct* lc, char* sText)
 VA(0x005840f0, 0x45C)  // anchor-callee Update's first body call (no-arg, this); selects GetMapName/GetFileName by mode for the title at (0x1a6,0x2d) and owns the save-date format literal (flat name game_d_d_d_d_02d), size 0.71x dc 0x62A, dc 0x139ccc
 void TSingleSelectionWindow::drawBasicMapInfo()
 {
-    if (getMapCount() == 0 && m_flag65 == 0)
+    if (m_selectionHeaders.size() == 0 && m_flag65 == 0)
         return;
     NewSMapHeader* hdr = &g_game->m_mapHeader;
     VictoryConditionStruct* vc = &g_game->m_mapHeader.m_victoryCondition;
@@ -4170,44 +5032,13 @@ int TSingleSelectionWindow::MaxPlayers()
 
 #endif  // @carcass
 
-// Ticks every live transfer job and reaps the finished ones. Retail
-// keeps this out-of-line copy (not yet located among the 0x5892xx rows)
-// and expands it into WindowHandler's pump.
-// E:\gamedcs\singleselectionwindow.cpp:1443. The manager owns eight
-// CNewPlayerUpdateProc pointers; its body expands into
-// ~TSingleSelectionWindow in Complete retail.
-CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
-{
-    for (int i = 0; i < 8; ++i) {
-        if (m_procs[i])
-            delete m_procs[i];
-    }
-}
 
-// E:\gamedcs\singleselectionwindow.cpp:1466
-void CNewPlayerUpdateMan::tick()
-{
-    for (int i = 0; i < 8; ++i) {
-        if (m_procs[i]) {
-            m_procs[i]->tick();
-            if (m_procs[i]->isFinished()) {
-                delete m_procs[i];
-                m_procs[i] = 0;
-            }
-        }
-    }
-}
 
-// The Dinkumware vector<GameSelectionHeadersStruct>::size() shape -
-// the null-_First ternary, then the pointer difference whose /0xCA3
-// magic-multiply fixes the element stride. Small consumers expand it;
-// the big bodies call retail's out-of-line size() COMDAT (0x58eab0),
-// exactly as /Ob2's budget decides per caller.
-inline unsigned int TSingleSelectionWindow::getMapCount() const
-{
-    return m_selectionHeaders.size();
-}
-
+// Selection counts use the native vector query at each site. The former
+// getMapCount wrapper had no independent source identity or retained body.
+// For example, GetFileName 0x583f20 repeats the null/bounds/0xca4-stride
+// calculation at 0x583f76 and 0x583fa2; preserve both reads rather than
+// caching the count. Large callers may retain vector::size at 0x58eab0.
 // E:\gamedcs\singleselectionwindow.cpp:4239. Retail dropped the message
 // parameter: the no-arg redraw member OnGameTransmitInitMsg (99.6%)
 // provably calls at its failure path and the m_flag64 handlers tail-call.
@@ -4246,8 +5077,8 @@ int TSingleSelectionWindow::update()
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
             int rows = g_unnamed69fdc8;
-            if (getMapCount() < static_cast<unsigned int>(rows))
-                rows = getMapCount();
+            if (m_selectionHeaders.size() < static_cast<unsigned int>(rows))
+                rows = m_selectionHeaders.size();
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(511), g_windowManager->m_screenBitmap,
                 25, 52, 132, 32, 2, 5, -1);
@@ -4256,7 +5087,7 @@ int TSingleSelectionWindow::update()
                 int y = 123;
                 do {
                     int color = m_currentMap == m_currentIndex + i ? 5 : 4;
-                    if (getMapCount()
+                    if (m_selectionHeaders.size()
                             > static_cast<unsigned int>(m_currentIndex + i)) {
                         GameSelectionHeadersStruct* hdr =
                             &m_selectionHeaders[m_currentIndex + i];
@@ -4439,22 +5270,6 @@ void TSingleSelectionWindow::onSortMaps(int how)
 
 #endif  // @carcass
 
-// Dreamcast preserves this helper. Complete expands it into the six sort
-// button arms: active header transfers suppress sorting, a repeated column
-// flips direction, and a new column resets it before sorting and reselection.
-inline void TSingleSelectionWindow::onSortMaps(int how)
-{
-    if (m_newPlayerUpdateMan && m_newPlayerUpdateMan->isSendingHeaders())
-        return;
-    if (m_sortWhich == how)
-        m_sortDirection ^= 1;
-    else {
-        m_sortDirection = 0;
-        m_sortWhich = how;
-    }
-    sortMaps(how, 1, 1);
-    setCurrentMap(0, 1);
-}
 
 // DC SetHumanSlot: refresh the game vars, clear every seat and the
 // disabled slots' CanBeHuman, then re-seat. Multiplayer fills seats
@@ -4585,10 +5400,28 @@ void TSingleSelectionWindow::setHumanSlot()
         player->m_playerPos = -1;
 }
 
+
+// Dreamcast preserves this helper. Complete expands it into the six sort
+// button arms: active header transfers suppress sorting, a repeated column
+// flips direction, and a new column resets it before sorting and reselection.
+inline void TSingleSelectionWindow::onSortMaps(int how)
+{
+    if (m_newPlayerUpdateMan && m_newPlayerUpdateMan->isSendingHeaders())
+        return;
+    if (m_sortWhich == how)
+        m_sortDirection ^= 1;
+    else {
+        m_sortDirection = 0;
+        m_sortWhich = how;
+    }
+    sortMaps(how, 1, 1);
+    setCurrentMap(0, 1);
+}
+
 // Sort the source list (TransferHeaders in transfer mode, HeadersA
 // otherwise) by the picked column, refill SelectionHeaders through the
 // size filter, broadcast the pick when hosting, and redraw. The sorts
-// are std::sort over per-column functors (see the priv header); the
+// are std::sort over the module-local per-column functors; the
 // refill is the vector erase/insert pair whose element operator= and
 // _Destroy retail keeps out of line.
 // E:\gamedcs\singleselectionwindow.cpp:4646
@@ -4653,7 +5486,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
         CSortMapsMsg msg(how, m_sortDirection);
         transmitRemoteDataDPID(&msg, 0, false, true);
     }
-    if (getMapCount() != 0)
+    if (m_selectionHeaders.size() != 0)
         updateGameVars();
     m_fileSlider->setState(m_currentIndex);
     if (update) {
@@ -4662,49 +5495,8 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
     }
 }
 
-// DC line 7324..7333 proves the pPlayer local (sp+0x10) and a separate
-// `return pPlayer` row (7333). The DC asm also proves the then-arm is an
-// EARLY RETURN: at 7326 it forms &humanPlayers[0] straight into r0 and
-// branches to the epilogue (0x141a4c), never storing pPlayer and never
-// executing the 7333 row; only the GetPlayer path (7329) stores pPlayer
-// and falls into 7333. An if/else-assign spelling with a shared return
-// let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
-// (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
-// early-return form keeps retail's `xor eax,eax / test eax,eax` join.
-CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
-{
-    // Before normalization (locals): pPlayer.
-    CNetPlayerHandlerPlayer* player;
-    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
-        return &m_players.m_humanPlayers[0];
-    player = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
-    return player;
-}
 
-// DC keeps this source helper separate (i/nextColor locals and the two
-// ordered eligibility tests).  Complete expands it into OnNameClick.  The
-// first byte is setup.playerPos; the second PC-only veto is the game's
-// per-seat disabled byte when the network header mode is active.
-// E:\gamedcs\singleselectionwindow.cpp:8643
-inline int TSingleSelectionWindow::calcPosition(int playerPos)
-{
-    int nextColor = 0;
-    for (int i = 0; i < playerPos; ++i) {
-        if (g_game->m_setup.m_playerPos[i] < 0)
-            continue;
-        if (m_flag64 && g_game->m_playerDisabled[i])
-            continue;
-        ++nextColor;
-    }
-    return nextColor;
-}
 
-// Like GetThisPlayer above: retail keeps no out-of-line copy (the
-// DC_ONLY row below stays), every caller expands the GetGamePos chain.
-inline int TSingleSelectionWindow::getThisPlayerGamePos()
-{
-    return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
-}
 
 VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
 void TSingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
@@ -4783,7 +5575,7 @@ VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 
 void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
 {
     int i;
-    if (map >= static_cast<int>(getMapCount()))
+    if (map >= static_cast<int>(m_selectionHeaders.size()))
         return;
     message msg;
     msg.m_id = 0;
@@ -5007,7 +5799,7 @@ void TSingleSelectionWindow::setFilter(int size)
 #pragma inline_depth()
         }
     }
-    if (getMapCount() != 0) {
+    if (m_selectionHeaders.size() != 0) {
         m_currentHeader = m_selectionHeaders.begin();
         updateGameVars();
     }
@@ -5037,8 +5829,8 @@ void TSingleSelectionWindow::setFilter(int size)
         break;
     }
     broadcastMessage(&msg);
-    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
-    setCurrentMap(getMapCount() > 0 ? 0 : -1, 0);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
     if (g_videoPaused != 0 && g_dPlay->isHost()) {
@@ -5222,7 +6014,7 @@ DC_ONLY(0x13c724, 0x78)
 bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 {
     CClickMsg* clickMsg = static_cast<CClickMsg*>(netMsg);
-    lobby_message msg;
+    message msg;
     unsigned char exitFlag;
     msg.m_codeY = clickMsg->m_widgetId;
     onWidgetDeselect(&msg, &exitFlag, 1);
@@ -6058,15 +6850,15 @@ int TSingleSelectionWindow::windowHandler(message* msg)
                 break;
             case KEYCODE_KP_2:
                 if (m_inScenarioOptions
-                        && m_currentMap < getMapCount() - 1
+                        && m_currentMap < m_selectionHeaders.size() - 1
                         && !m_flag65) {
                     int newMap = m_currentMap + 1;
                     if (newMap > m_currentIndex + g_unnamed69fdc8 - 1) {
                         ++m_currentIndex;
                         if (m_currentIndex
-                                > getMapCount() - g_unnamed69fdc8)
+                                > m_selectionHeaders.size() - g_unnamed69fdc8)
                             m_currentIndex =
-                                getMapCount() - g_unnamed69fdc8;
+                                m_selectionHeaders.size() - g_unnamed69fdc8;
                         m_fileSlider->setState(m_currentIndex);
                     }
                     drawWindow(0, 0xffff0001, 0xffff);
@@ -6089,9 +6881,9 @@ int TSingleSelectionWindow::windowHandler(message* msg)
                 if (m_inScenarioOptions) {
                     int offset = m_currentMap - m_currentIndex;
                     int newTop = m_currentIndex + g_unnamed69fdc8 - 1;
-                    if (getMapCount() > static_cast<unsigned int>(g_unnamed69fdc8)) {
-                        if (newTop > getMapCount() - g_unnamed69fdc8)
-                            newTop = getMapCount() - g_unnamed69fdc8;
+                    if (m_selectionHeaders.size() > static_cast<unsigned int>(g_unnamed69fdc8)) {
+                        if (newTop > m_selectionHeaders.size() - g_unnamed69fdc8)
+                            newTop = m_selectionHeaders.size() - g_unnamed69fdc8;
                         m_currentIndex = newTop;
                         m_fileSlider->setState(newTop);
                         drawWindow(0, 0xffff0001, 0xffff);
@@ -6154,7 +6946,15 @@ int TSingleSelectionWindow::getThisPlayerGamePos()
 // E:\gamedcs\singleselectionwindow.cpp:6301
 #endif  // @carcass
 
-// EXACT (2026-09-07): 70.46 -> 100 on the DC line-table shape
+
+// Like GetThisPlayer above: retail keeps no out-of-line copy (the
+// DC_ONLY row below stays), every caller expands the GetGamePos chain.
+inline int TSingleSelectionWindow::getThisPlayerGamePos()
+{
+    return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
+}
+
+// MATCHING (2026-09-04): 70.46 -> 98.49 on the DC line-table shape
 // (6301..6440): a plain `if (IsMultiPlayer()) {seat loop} else {solo}`
 // with no gotos, `pPlayer->IsHuman()` for the dpid tests, the solo arm
 // through GetThisPlayer() (its early-return form gives retail's
@@ -6462,21 +7262,9 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
     return 0;
 }
 
-// The zeroing message ctor the RS_CLICK arm calls; the shared message
-// class stays ctor-less (mage_message precedent), so the body lives on
-// the TU-local layout-identical subtype.
-VA(0x00589190, 0x1C)  // anchor-callee the RS_CLICK arm's out-of-line ctor call on its stack message, dc 0x145128
-lobby_message::lobby_message()
-{
-    m_id = 0;
-    m_codeX = 0;
-    m_codeY = 0;
-    m_qualifier = 0;
-    m_mouseX = 0;
-    m_mouseY = 0;
-    m_extra = 0;
-    m_window = 0;
-}
+// The RS_CLICK message constructor is canonical in struct.h. Its selected
+// retail body at 0x589190 zeroes the eight message words; the former local
+// lobby_message subtype duplicated it and incorrectly cited DC Update.
 
 #if 0  // @carcass
 
@@ -6552,17 +7340,6 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
             m_procs[i] = 0;
         }
     }
-}
-
-// DC GetProc is an ordinary cpp helper at 0x148998, source line 1544.
-CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
-{
-    for (int i = 0; i < 8; ++i) {
-        if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
-            return m_procs[i];
-        }
-    }
-    return 0;
 }
 
 // Bounce the setup ping straight back at its sender, echoing the
@@ -6742,6 +7519,16 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 
 #endif  // @carcass
 
+// E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
+// helper out of line; Complete expands its sole operation at all three known
+// call sites and has no corresponding x86 function row.
+// Before normalization (function): UpdateTurnDuration.
+static inline void updateTurnDuration()
+{
+    g_turnDuration69d630.setDuration(
+        g_turnDurationMinutes[g_game->m_setup.m_turnDuration] * 60000);
+}
+
 // DC HandleNetMsg calls this ordinary bool helper; its pPlayer local is
 // CNetPlayerInfo*, not the derived handler record. Complete's expansion at
 // HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
@@ -6803,6 +7590,40 @@ unsigned char TSingleSelectionWindow::sendSetupInfo(unsigned long dpid)
 }
 
 #endif  // @carcass
+
+// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
+// options call sites. Keep the original cpp boundaries visible while allowing
+// the retail TU to reproduce that lowering.
+// E:\gamedcs\singleselectionwindow.cpp:6980
+inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
+    unsigned long dpidTo)
+{
+    CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
+                            m_players.m_computerPlayers);
+    transmitRemoteDataDPID(&msg, dpidTo, true, true);
+    return 1;
+}
+
+// DC keeps this source helper out of line. Complete's larger setup message
+// adds the window's mode byte and eight filter dwords; VC6 expands this call
+// into Finish while retaining the CNewSetupInfoMsg constructor boundary.
+// E:\gamedcs\singleselectionwindow.cpp:7009
+inline unsigned char TSingleSelectionWindow::sendSetupInfo(
+    unsigned long dpid)
+{
+    CNewSetupInfoMsg msg(&g_game->m_setup);
+    msg.m_flag = m_randomMapSelected;
+    msg.m_extras[0] = m_randomMapOptions[0];
+    msg.m_extras[1] = m_randomMapOptions[1];
+    msg.m_extras[2] = m_randomMapOptions[2];
+    msg.m_extras[3] = m_randomMapOptions[3];
+    msg.m_extras[4] = m_randomMapOptions[4];
+    msg.m_extras[5] = m_randomMapOptions[5];
+    msg.m_extras[6] = m_randomMapOptions[6];
+    msg.m_extras[7] = m_randomMapOptions[7];
+    transmitRemoteDataDPID(&msg, dpid, false, true);
+    return 1;
+}
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // Before normalization: OnGameHeaderInfoEndMsg, pNetMsg, pMsg.
@@ -6982,29 +7803,6 @@ TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 
 #endif  // @carcass
 
-// E:\gamedcs\singleselectionwindow.cpp:8230
-// Before normalization (function/locals): OnNameChange, gamePos, newName, player, w.
-// Both CEnterNameEdit overrides expand this ordinary member; there is no
-// retained retail body to claim. DC line 8231 overrides gamePos from a
-// platform-specific field and line 8252 reads a stored icon position. Retail
-// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
-// so those two Complete semantics remain explicit below. The original w
-// local and all eight named/virtual source calls retain their order.
-DC_ONLY(0x143810, 0xA8)
-void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
-{
-    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
-    setFocus(-1);
-    if (player) {
-        strcpy(player->m_name, newName);
-        strcpy(g_localPlayerName, newName);
-        writePrefs();
-    }
-    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
-    w->setText(player->m_name);
-    drawHeroAdvancedOption(gamePos, 1, -1);
-}
-
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8256
@@ -7036,16 +7834,6 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 }
 
 #endif  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
-// helper out of line; Complete expands its sole operation at all three known
-// call sites and has no corresponding x86 function row.
-// Before normalization (function): UpdateTurnDuration.
-static inline void updateTurnDuration()
-{
-    g_turnDuration69d630.setDuration(
-        g_turnDurationMinutes[g_game->m_setup.m_turnDuration] * 60000);
-}
 
 // E:\gamedcs\singleselectionwindow.cpp:6778
 // The DC local roster proves the calendar snapshots and the typed transmit
@@ -7200,9 +7988,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
                              "New Player has incompatible version #%s"),
                 msg->m_version);
             const char* errText = g_generalText->getText(666);
-            CBadVersionMsg reply;
-            strncpy(reply.m_version, m_gameVersion, 20);
-            strncpy(reply.m_errText, errText, 80);
+            CBadVersionMsg reply(m_gameVersion, errText);
             transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
         }
@@ -7236,7 +8022,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
-    playerEnterMsg(&g_chatMan, g_generalText->getText(526),
+    g_chatMan.playerEnterMsg(g_generalText->getText(526),
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -7277,18 +8063,24 @@ void CNewPlayerUpdateMan::requestMapHeaders(unsigned long dpid)
 // empty destructor adds that store here and to both BeginNewGame cleanups.
 VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 
-// Dreamcast singleselectionwindow.cpp:7017. The mismatch arm constructs
-// CBadVersionMsg(hostVersion, GameText[666]), calls OnBadVersionMsg and
-// returns false. Restore those boundaries rather than duplicating their
-// CNetMsg/strncpy/dialog bodies: ctor alone scores 94.8089%, handler alone
-// 87.5488%, and both 99.8008% from 81.3049%. Both ordinary bodies expand
-// here, and their source calls restore the retail vector clear/resize
-// decisions later in this function without any inline-depth controls.
-// Complete loads the map count before storing the net-game flag at
-// 0x58a546/0x58a549. That statement order closes the remaining gap to 100%;
-// a separate flag local instead scores 97.1951%. The header-list containers
-// replace Dreamcast's older arrays, so their operations follow retail.
-// Before normalization (locals): pNetMsg, pMsg.
+
+// The transfer opener: version-gate the sender (the short EX form
+// carries none - "1.0" stands in), build the never-sent CBadVersionMsg
+// reply and show the mismatch dialog on failure; otherwise arm the
+// transfer state and resize both header lists to the announced count
+// (the temps expand this ctor with the member ctors called - the
+// composition proof), then clear every row's received flag.
+// Residual (81.3): three inline-boundary/cosmetic classes - (1) the
+// clears: retail expands HeadersA's erase but keeps its degenerate
+// copy(Last,Last,First) as a CALL to the 787 B copy COMDAT 0x58f160,
+// and spells SelectionHeaders' teardown through the erase COMDAT
+// 0x58ef20 (a hoist+pin spelling of the second one measured 77.69 -
+// worse - the iterators' formation drifted); (2) size(): retail calls
+// the 0x58eab0 COMDAT five times where we fold two of the compares
+// inline; (3) the reply arm zero-registers: our CNetMsg ctor homes 0
+// in edi (callee-saved, reused for NormalDialog's zero pushes) where
+// retail uses eax and pushes immediates.
+// E:\gamedcs\singleselectionwindow.cpp:7017
 VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
 unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
 {
@@ -7384,6 +8176,58 @@ bool TSingleSelectionWindow::isHost()
     if (!g_videoPaused)
         return 1;
     return g_dPlay->isHost();
+}
+
+
+// Dreamcast retains this member boundary; Complete expands it into the chat
+// slider wrapper below.
+inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
+{
+    g_chatMan.setPosition(newIndex);
+    displayChat();
+}
+
+// Dreamcast retains this member boundary. Complete expands it into the tiny
+// file-slider callback below, whose bytes prove the same store/call pair.
+inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
+{
+    m_currentIndex = newIndex;
+    setCurrentMap(m_currentMap, 1);
+}
+
+// Complete expands this Dreamcast member boundary into SliderDuration.  Its
+// older `message` local disappeared in retail; the x86 body instead proves a
+// host setup broadcast followed by the full-window redraw and duration-clock
+// refresh.
+inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
+{
+    m_durationIndex = newIndex;
+    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+    if (g_videoPaused && isHost())
+        sendSetupInfo(0);
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
+}
+
+// Dreamcast retains this source helper (dc 0x1415a8); Complete expands it
+// into CSingleSelectionChatEdit::SendChat below. Retail independently proves
+// the setup-ping special case, the local player's formatted chat line, the
+// repaint, and the final guaranteed chat broadcast in exactly this order.
+inline void TSingleSelectionWindow::sendChat(
+    unsigned long dpid, const char* chat)
+{
+    if (_strcmpi(chat,
+                 g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
+        CPingMsg msg(GameTime::get(), RS_SETUP_PING);
+        transmitRemoteDataDPID(&msg, dpid, false, false);
+        return;
+    }
+
+    g_chatMan.addChat(DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+            g_thisNetPlayerInfo.m_name, chat);
+    displayChat();
+    CChatMsg msg(chat);
+    transmitRemoteDataDPID(&msg, dpid, false, true);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7212
@@ -7494,6 +8338,25 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
 
 #endif  // @carcass
 
+
+// DC line 7324..7333 proves the pPlayer local (sp+0x10) and a separate
+// `return pPlayer` row (7333). The DC asm also proves the then-arm is an
+// EARLY RETURN: at 7326 it forms &humanPlayers[0] straight into r0 and
+// branches to the epilogue (0x141a4c), never storing pPlayer and never
+// executing the 7333 row; only the GetPlayer path (7329) stores pPlayer
+// and falls into 7333. An if/else-assign spelling with a shared return
+// let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
+// (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
+// early-return form keeps retail's `xor eax,eax / test eax,eax` join.
+CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
+{
+    CNetPlayerHandlerPlayer* player;
+    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return &m_players.m_humanPlayers[0];
+    player = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
+    return player;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:7337
 // Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058B0B0, 0x67)  // anchor-callee RS_REQUEST_HERO_FACE arm applies its own reply through it (msg, 0), size 0.83x dc 0x7c, dc 0x141a74
@@ -7540,7 +8403,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
 VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbNoCDRom gate, size 2.2x dc 0x1c4, dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
-    systemMsg(&g_chatMan, g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(471));
     displayChat();
     CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
     transmitRemoteDataDPID(&msg, 0, false, true);
@@ -7551,7 +8414,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     m_currentIndex = 0;
     m_durationIndex = g_game->m_setup.m_turnDuration;
     setCurrentMap(0, 0);
-    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         if (m_players.m_humanPlayers[i].m_dpid != 0
                 && m_players.m_humanPlayers[i].m_dpid
@@ -7655,7 +8518,7 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     else
         sprintf(text, g_generalText->getText(529),
                 DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
-    systemMsg(&g_chatMan, text);
+    g_chatMan.systemMsg(text);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
 }
@@ -8107,6 +8970,17 @@ bool TSingleSelectionWindow::beginNewGame()
     return 1;
 }
 
+
+// E:\gamedcs\singleselectionwindow.cpp:7889
+unsigned char TSingleSelectionWindow::isMultiPlayer()
+{
+    if (g_videoPaused)
+        return 1;
+    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return 1;
+    return 0;
+}
+
 // Rebuild the two 4-seat name columns: each human seat's name on its
 // own line ("%s\n" - the pooled literal advmgr owns as
 // turnPopupLineFormat), columns split 0..3 / 4..7, pushed through the
@@ -8190,28 +9064,7 @@ void TSingleSelectionWindow::turnChatOff(unsigned char update)
     }
 }
 
-// DC keeps these helpers out of line; retail VC6 expands them at the advanced-
-// options call sites. Keep the original cpp boundaries visible while allowing
-// the retail TU to reproduce that lowering.
-// E:\gamedcs\singleselectionwindow.cpp:6980
-inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
-    unsigned long dpidTo)
-{
-    CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
-                            m_players.m_computerPlayers);
-    transmitRemoteDataDPID(&msg, dpidTo, true, true);
-    return 1;
-}
 
-// E:\gamedcs\singleselectionwindow.cpp:7889
-unsigned char TSingleSelectionWindow::isMultiPlayer()
-{
-    if (g_videoPaused)
-        return 1;
-    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
-        return 1;
-    return 0;
-}
 
 // E:\gamedcs\singleselectionwindow.cpp:7990
 void TSingleSelectionWindow::onTownUpdateMsg(
@@ -8462,6 +9315,29 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
     return g_game->m_heroes[heroId].m_name;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:8230
+// Before normalization (function/locals): OnNameChange, gamePos, newName, player, w.
+// Both CEnterNameEdit overrides expand this ordinary member; there is no
+// retained retail body to claim. DC line 8231 overrides gamePos from a
+// platform-specific field and line 8252 reads a stored icon position. Retail
+// instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
+// so those two Complete semantics remain explicit below. The original w
+// local and all eight named/virtual source calls retain their order.
+DC_ONLY(0x143810, 0xA8)
+void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
+{
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    setFocus(-1);
+    if (player) {
+        strcpy(player->m_name, newName);
+        strcpy(g_localPlayerName, newName);
+        writePrefs();
+    }
+    textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
+    w->setText(player->m_name);
+    drawHeroAdvancedOption(gamePos, 1, -1);
+}
+
 // Case-blind prefix search over the filtered list; on a hit the row
 // becomes both the selection and the top row, clamped so a full page
 // stays visible, and the slider follows.
@@ -8471,13 +9347,13 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
     int i = 0;
-    while (static_cast<unsigned int>(i) < getMapCount()) {
+    while (static_cast<unsigned int>(i) < m_selectionHeaders.size()) {
         if (_strnicmp(filename, m_selectionHeaders[i].m_setup.m_filename, len)
                 == 0) {
             m_currentIndex = i;
             m_currentMap = i;
-            if (i + g_unnamed69fdc8 > getMapCount())
-                m_currentIndex = getMapCount() - g_unnamed69fdc8;
+            if (i + g_unnamed69fdc8 > m_selectionHeaders.size())
+                m_currentIndex = m_selectionHeaders.size() - g_unnamed69fdc8;
             if (m_currentIndex < 0)
                 m_currentIndex = 0;
             m_fileSlider->setState(m_currentIndex);
@@ -8768,6 +9644,25 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         g_windowManager->updateScreen(13, rowY + 127, 382, 54);
 }
 
+
+// DC keeps this source helper separate (i/nextColor locals and the two
+// ordered eligibility tests).  Complete expands it into OnNameClick.  The
+// first byte is setup.playerPos; the second PC-only veto is the game's
+// per-seat disabled byte when the network header mode is active.
+// E:\gamedcs\singleselectionwindow.cpp:8643
+inline int TSingleSelectionWindow::calcPosition(int playerPos)
+{
+    int nextColor = 0;
+    for (int i = 0; i < playerPos; ++i) {
+        if (g_game->m_setup.m_playerPos[i] < 0)
+            continue;
+        if (m_flag64 && g_game->m_playerDisabled[i])
+            continue;
+        ++nextColor;
+    }
+    return nextColor;
+}
+
 // Version mismatch: tear the session down and show the offender's
 // message formatted with both version strings.
 // E:\gamedcs\singleselectionwindow.cpp:8662
@@ -8793,7 +9688,7 @@ unsigned char TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
 VA(0x0058dfb0, 0x320)  // anchor-callee WindowHandler key arm 5 calls it no-arg; anchor-import DeleteFileA + 'games' literal, dc 0x145120
 void TSingleSelectionWindow::onDeleteFile()
 {
-    if (getMapCount() == 0)
+    if (m_selectionHeaders.size() == 0)
         return;
     if (g_videoPaused && !m_flag65)
         return;
@@ -8815,14 +9710,20 @@ void TSingleSelectionWindow::onDeleteFile()
     }
     m_selectionHeaders.erase(m_selectionHeaders.begin() + m_currentMap);
     m_headersA.erase(m_headersA.begin() + i);
-    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
-    if (getMapCount() != 0) {
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    if (m_selectionHeaders.size() != 0) {
         sortMaps(SORT_MAPS_BY_VERSION, 1, 1);
         setCurrentMap(0, 1);
     } else {
         drawWindow(0, 0xffff0001, 0xffff);
         setCurrentMap(-1, 1);
     }
+}
+
+// Original: CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler; singleselectionwindow.cpp:8758, dc 0x14514c.
+inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
+{
+    m_wasCompressed = 0;
 }
 
 // The Complete-only implicit destructor wrapper occupies slot zero of the
@@ -8841,7 +9742,7 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 // the message-id immediate (0x403 against this row's 0x40c,
 // RS_REQUEST_HERO_FACE_REPLY). The 0x1c size immediate is sizeof the class,
 // and the two arguments land at +0x14 and +0x18 as the class declares.
-VA_COMPGEN(0x0058e6c0, 0x31, CLASS_CTOR, CRequestHeroFaceReplyMsg)
+// Canonical inline body and VA are above in this module.
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
@@ -9887,7 +10788,7 @@ std::vector<hero>::vector(const std::vector<hero>& other)
 
 #endif  // @carcass
 
-VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
+VA(0x005903b0, 0x13D)  // anchor-callee _Sort_0 BY_NAME (0x590070) calls it; anchor-global the 'AUTOSAVE.' literal at 0x683968 and rolloverSpaceSeparator's " " seed; ret 8 on two const& args + thiscall functor, retail-only
 inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
@@ -9918,7 +10819,7 @@ inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
 
 // numPlayers*10 + maxNumHumanPlayers is the rank: retail forms it with
 // `lea eax,[eax+eax*4]` then `lea esi,[ebx+eax*2]` off the +6/+8 bytes.
-VA_COMPGEN(0x00590e00, 0x4F, FUNCTOR_CALL, TSortMapsByPlayers)  // anchor-callee _Sort_0 BY_PLAYERS (0x590ad0) calls it; the only row in the band reading CMapHeaderData's +6/+8 player counts, retail-only
+VA(0x00590e00, 0x4F)  // anchor-callee _Sort_0 BY_PLAYERS (0x590ad0) calls it; the only row in the band reading CMapHeaderData's +6/+8 player counts, retail-only
 bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
@@ -9932,7 +10833,7 @@ bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
 
 // The format compare is the outer test and the equal arm DELEGATES to
 // TSortMapsByName::operator() on this same object - which is why the class
-// derives from it (see singleselectionwindow_priv.h). Retail proves the
+// derives from it (see the module-local declarations above). Retail proves the
 // delegation from the other side, in the three BY_VERSION helper
 // instantiations: `_Median` (0x594c20) contains FIVE `call
 // TSortMapsByName::operator()` and not one inline _strnicmp/__strcmpi,
@@ -9944,7 +10845,7 @@ bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
 // left those three at 38.21 / 60.09 / 64.42 and could never call anything.
 // The delegation alone takes all three to EXACT (+2013 B), and this row
 // followed once BY_NAME's own two facts landed.
-VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
+VA(0x00591190, 0x180)  // anchor-callee _Sort_0 BY_VERSION (0x590e50) calls it; same 'AUTOSAVE.'/" " text shape as BY_NAME behind a leading header.version compare, retail-only
 bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
@@ -9968,7 +10869,7 @@ bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
 
 // The condition bytes: victory at CMapHeaderData +0x30, loss at +0x7c (the
 // struct sizes 0x4c and 0x24 place them there and retail sign-extends both).
-VA_COMPGEN(0x00591cb0, 0x33, FUNCTOR_CALL, TSortMapsByVictory)  // anchor-callee _Sort_0 BY_VICTORY (0x591970) calls it; movsx of the signed byte at header +0x30 = victoryCondition.Type, retail-only
+VA(0x00591cb0, 0x33)  // anchor-callee _Sort_0 BY_VICTORY (0x591970) calls it; movsx of the signed byte at header +0x30 = victoryCondition.Type, retail-only
 bool TSortMapsByVictory::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
@@ -9980,7 +10881,7 @@ bool TSortMapsByVictory::operator()(const GameSelectionHeadersStruct& a,
     return typeA < typeB;
 }
 
-VA_COMPGEN(0x00592030, 0x33, FUNCTOR_CALL, TSortMapsByLoss)  // anchor-callee _Sort_0 BY_LOSS (0x591cf0) calls it; movsx of the signed byte at header +0x7c = lossCondition.Type, retail-only
+VA(0x00592030, 0x33)  // anchor-callee _Sort_0 BY_LOSS (0x591cf0) calls it; movsx of the signed byte at header +0x7c = lossCondition.Type, retail-only
 bool TSortMapsByLoss::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
@@ -10285,3 +11186,15 @@ VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)
 // _Nw+1 = 5 confirms it. Byte-identical to the emitted
 // `?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z` over all 40 bytes.
 VA_COMPGEN(0x0045c1a0, 0x28, BITSET_TIDY, Bitset156)
+
+// Retail readMapPlayerSlot and setNewPlayerSlot (0x58e700) share the
+// four-bit feature test at 0x4cf960. The game TU expands it; this consumer
+// retains the native 52-byte body and its call to _Xran at 0x4d1850.
+// The same throw helper is called by setupAdvancedOptions, onBeginGame
+// and getCommonGameVersion. Its 203 instruction bytes agree outside named
+// relocations: five calls, the invalid-bitset-position string, out_of_range
+// RTTI/vtable, npos, and the standard exception-chain/cleanup metadata.
+// Keep the unreachable post-throw epilogue within the admitted extent.
+// These are the canonical <bitset> bodies, with no forced instantiation.
+VA_COMPGEN(0x004cf960, 0x34, BITSET_TEST, Bitset4)
+VA_COMPGEN(0x004d1850, 0xCB, BITSET_XRAN, Bitset4)

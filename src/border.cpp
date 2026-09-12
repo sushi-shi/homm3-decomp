@@ -13,30 +13,12 @@
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 
-#if 0  // @carcass
-
-// Claim-only home for the canonical inline in widget.h. Dreamcast
-// Widget.h:186 (dc 0x54d1c) proves the empty OnSetFocus body. Retail
-// widget vtable 0x643c90 and border vtable 0x63ba24 both put 0x404df0 in
-// slots 10 and 11. This is a shared ICF representative for OnSetFocus,
-// OnKillFocus and other empty methods, not exclusive border ownership.
-// border.obj already emits this header body through its real vtable.
-VA(0x00404df0, 0x1)  // anchor-vtable (0x63ba4c, 0x643cb8), dc 0x54d1c
-void widget::onSetFocus()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:34
-DC_ONLY(0x5433c, 0x3C)
-void border::border()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:62
-
-#endif  // @carcass
+// Original: border::border; border.cpp:34, dc 0x5433c.
+// Ordinary source-local body. Retail expands it in the three derived
+// constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
+// constructor call and a single derived vtable store. No explicit inline
+// declaration is needed to expose this body to those same-TU callers.
+border::border() {}
 
 // E:\gamedcs\border.cpp:35 - border::`scalar deleting destructor'
 // (dc 0x54d24). Slot 0 of border's vtable 0x63ba24; the 33-byte row
@@ -192,10 +174,9 @@ VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 // - the derived vtable store is dead-store-eliminated against the
 // inlined ~border, so only ??_7border@@6B@ survives before the
 // tail-jump to ~widget (the ~type_func_button shape in button.cpp).
-VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
-coloredBorderFrame::~coloredBorderFrame()
-{
-}
+// CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 
 // E:\gamedcs\border.cpp:213 - slot 4 of vtable 0x63ba5c, nil-ary. Both
 // arms share the first three pushes (colour, height, width), which is
@@ -203,7 +184,7 @@ coloredBorderFrame::~coloredBorderFrame()
 // callee differ. The colour member is an int; `mov dx, [ecx+0x30]` is
 // the truncation to Colorize/FrameRect's unsigned short parameter.
 VA(0x004501e0, 0x5B)  // anchor-vtable (slot 4 of 0x63ba5c), dc 0x546d4
-void coloredBorderFrame::draw()
+void coloredBorderFrame::draw() const
 {
     if (m_colorize)
         g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
@@ -369,7 +350,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 // gpWindowManager rather than a local, and with the 8-argument
 // Bitmap816 overload.
 VA(0x00450450, 0x44)  // anchor-vtable (slot 4 of 0x63ba94), dc 0x548fc
-void bitmapBorder::draw()
+void bitmapBorder::draw() const
 {
     if (m_image)
         m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
@@ -388,7 +369,7 @@ void bitmapBorder::draw()
 // resource base is 0x1c on both builds). Retail's bitmapBorder does NOT
 // emit SetPalette between them, which is why the two rows are adjacent.
 VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
-int bitmapBorder::getRealWidth()
+int bitmapBorder::getRealWidth() const
 {
     if (m_image)
         return m_image->m_width;
@@ -397,7 +378,7 @@ int bitmapBorder::getRealWidth()
 
 // E:\gamedcs\border.cpp:318
 VA(0x004504b0, 0xE)  // anchor-vtable (slot 5 of 0x63ba94), dc 0x54968
-int bitmapBorder::getRealHeight()
+int bitmapBorder::getRealHeight() const
 {
     if (m_image)
         return m_image->m_height;
@@ -532,7 +513,7 @@ void bitmapBorder16::zBufferDraw()
 // verbatim EXCEPT for the parent-window origin added to the destination
 // point - which is exactly what a Draw/Draw2 pair means.
 VA(0x004507b0, 0x55)  // dc-bracket + body (Draw2 plus the window origin), dc 0x54ba8
-void bitmapBorder16::draw()
+void bitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
@@ -544,7 +525,7 @@ void bitmapBorder16::draw()
 
 // E:\gamedcs\border.cpp:425
 VA(0x00450810, 0x44)  // anchor-global, dc 0x54bf0
-void bitmapBorder16::draw2()
+void bitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;

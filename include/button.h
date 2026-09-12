@@ -81,8 +81,8 @@ public:
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Before normalization (function): button::Select.
     int select(message* msg);
-    // Before normalization (function): button::DeselectSelected.
-    int deselectSelected(message* msg);
+    // Original: button::Deselect; button.cpp:401, dc 0x57854.
+    int deselect(message& msg);
 
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
@@ -91,6 +91,12 @@ public:
     // Before normalization (function): button::SetText.
     // Before normalization (locals): new_text.
     void setText(const char* newText) { m_text = newText; }
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    // Before normalization (function): button::set_disabled_frame.
+    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The pointer local is load-bearing, and every caller's whole
     // register allocation hangs off it. Retail materialises the inlined
     // `this` for the insert BEFORE the const-ref argument temp - `lea
@@ -106,7 +112,7 @@ public:
     // ??0TPuzzleWindow 98.64% -> 100%, create_ok_widget 98.66% -> 100%,
     // ??0TAdventureOptionsWindow 89.57% -> 95.12%, create_dismiss_widget
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
-    // Before normalization (function): button::set_hotkey.
+    VA(0x004e1370, 0x1AF)
     void setHotkey(int code)
     {
         // Dreamcast button.h:105 is a single vector<int>::push_back call.
@@ -114,32 +120,17 @@ public:
         // in SetSleepImage and the marketplace-caller expansions.
         m_hotKeyCodes.push_back(code);
     }
-    // Dreamcast button.h:120-122 proves this separate wrapper and its single
-    // vector<int>::clear call.  Its call from TAdvMenu::SetSleepImage is also
-    // explicit in the Dreamcast line table; preserve the helper boundary so
-    // VC6 sees the same inlining candidate before setHotkey.
+    // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
+    // TAdvMenu::SetSleepImage retains this call in its source line table.
     // Before normalization (function): button::clear_hotkeys.
     void clearHotkeys() { m_hotKeyCodes.clear(); }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
-    // Before normalization (function): button::set_disabled_frame.
-    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
-    // Complete-only, like field_40 itself (the hover/highlight frame,
-    // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
-    // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
-    // vector<widget*>::insert sequence needs exactly two free candidate
-    // sites per loop iteration, and the loop body has exactly two stores.
-    // Before normalization (function): button::set_highlight_frame.
-    void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
 
     // Before normalization (function): button::Main.
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): button::Draw.
-    virtual void draw();  // slot 4, retail 0x456940
+    virtual void draw() const;  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0
 
@@ -166,7 +157,7 @@ public:
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
 
     // Before normalization (function): textButton::Draw.
-    virtual void draw();    // slot 4, retail 0x456ca0
+    virtual void draw() const;    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 };

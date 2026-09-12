@@ -462,16 +462,16 @@ int slider::deselect(message* msg)
 // units (vtable targets 0x4eab20/30 and 0x5bc7e0).
 #if 0  // @carcass -- ICF/header COMDAT, no slider.obj home
 DC_ONLY(0x14a67c, 0x16)
-int slider::getRealWidth() { return width; }
+int slider::getRealWidth() const { /* @stub: DC calls the sprite GetWidth. */ }
 DC_ONLY(0x14a694, 0x16)
-int slider::getRealHeight() { return height; }
+int slider::getRealHeight() const { /* @stub: DC calls the sprite GetHeight. */ }
 DC_ONLY(0x14a6ac, 0x4)
 void slider::zBufferDraw() {}
 #endif
 
 // E:\gamedcs\slider.cpp:613
 VA(0x00596C40, 0x3D5)  // contiguous slider block, dc 0x14a6b0
-void slider::draw()
+void slider::draw() const
 {
     if (m_width > m_height) {
         if ((m_status & WIDGET_SELECTED) && m_clickX - m_x < m_knobStart) {

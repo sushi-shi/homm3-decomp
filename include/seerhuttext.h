@@ -1,7 +1,6 @@
-// seerhuttext.h - prototypes of src/seerhuttext.cpp, the Complete-only
-// compiland that links between search.obj (ends 0x16bd2c) and seerhut.obj
-// (starts 0x16d3e0). It has NO Dreamcast counterpart, so every name below is
-// PROVISIONAL and describes the retail body that fixes it.
+// seerhuttext.h - Complete text-table layouts and helper declarations.
+// The helper source filename and layout member names are provisional;
+// neighboring retail RVAs alone do not prove a separate compiland.
 #ifndef HOMM3_SEERHUTTEXT_H
 #define HOMM3_SEERHUTTEXT_H
 
@@ -69,10 +68,6 @@ DATA(0x0069faa8) extern std::vector<std::string> g_seerHutNames;
 // Before normalization (function): LoadSeerHutTextColumn.
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col);
-
-// Retail 0x56c3e0. The compiland's entry point.
-// Before normalization (function): InitializeSeerHutText.
-unsigned char initializeSeerHutText();
 
 // Retail 0x56c960. Join a string vector into one localized list. Free
 // fastcall under /Gr with a by-value return, so the hidden result pointer

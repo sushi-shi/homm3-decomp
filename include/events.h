@@ -16,7 +16,7 @@ class hero;
 // remains beside its original events.cpp source location so VC6 sees the
 // ordinary inline member before the two std::sort instantiations.
 struct spell_level_order {
-    unsigned char operator()(SpellID first, SpellID second);
+    unsigned char operator()(SpellID first, SpellID second) const;
 };
 
 // townmgr.cpp's 0x5d1130. advManager::DispatchEvent's garrison arm is the

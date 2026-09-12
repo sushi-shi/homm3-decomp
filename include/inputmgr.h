@@ -103,16 +103,12 @@ enum EKeyCodes {
 // keyboardFilter@0x94c, keyCodeType@0x950, extendFlag@0x954,
 // currWidgetID@0x958, prevDialog@0x95c (tail past that unmodeled).
 // GetEvent returns the message BY VALUE (retail body 0x4ec590).
-class inputBufferMessage : public message {
-public:
-    inputBufferMessage() {}
-};
-SIZE(inputBufferMessage, 32);
-
 class inputManager : public baseManager {
 public:
     // Before normalization: iBuffer.
-    inputBufferMessage m_buffer[64];
+    // DC inputManager type 0x240a declares iBuffer as message[64].
+    // The canonical message constructor supplies Complete's zeroed records.
+    message m_buffer[64];
     // Before normalization: iHead.
     int m_head;
     // Before normalization: iTail.

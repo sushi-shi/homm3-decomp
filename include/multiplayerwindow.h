@@ -39,111 +39,12 @@ SIZE(TIPv4SocketAddress, 0x10);
 
 #include "hotseat.h"
 
-// The text-entry widgets the two multiplayer dialogs use. All three add the
-// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
-// dialog can chase focus around its field ring; the hierarchy is proven by
-// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
-// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
-//
-// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
-// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
-// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
-// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
-// constructor: this is the only model that preserves the retail constructor's
-// later vector-inlining state. Its DC OnKeyPress nevertheless reuses
-// CMPEdit::OnKeyPress, and retail table 0x640210 folds the identical
-// SetFocus/OnNextEdit/OnPrevEdit bodies onto CMPEdit's addresses.
-// CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
-// OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
-// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
-// OnKeyPress(15) and carries its own ring-walk pair.
-class CMPEdit : public textEntryWidget {
-public:
-    // Before normalization: nextEdit.
-    CMPEdit* m_nextEdit;   // +0x70
-    // Before normalization: prevEdit.
-    CMPEdit* m_prevEdit;   // +0x74
 
-    CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
-            const char* fontName, font::TColor color, unsigned justification,
-            const char* backgroundIcon, int backgroundFrame, int id,
-            int style, int readType, int insetX, int insetY);
-    // Before normalization (function): CMPEdit::SetNextEdit.
-    // Before normalization (locals): pNextEdit.
-    void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
-    // Before normalization (function): CMPEdit::SetPrevEdit.
-    // Before normalization (locals): pPrevEdit.
-    void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
-    // Before normalization (function): CMPEdit::SetFocus.
-    virtual void setFocus(unsigned char state);  // slot 14, retail 0x510890
-    // Before normalization (function): CMPEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);        // slot 15, retail 0x5107d0
-    // DECLARATION ORDER CORRECTED 2026-09-06 (claim lane 31): retail's own
-    // table 0x640184 holds 0x510850 at slot 19 and 0x510870 at slot 20, and
-    // the two bodies are told apart by the member they read - 0x510850 reads
-    // nextEdit at +0x70, 0x510870 reads prevEdit at +0x74. DC lists
-    // OnNextEdit (dc 0x10215c) ahead of OnPrevEdit (dc 0x102184) for the same
-    // reason. The pair had been declared the other way round, which put the
-    // WRONG body in each vtable slot; the call sites below move with it, so
-    // no emitted instruction changes.
-    // Before normalization (function): CMPEdit::OnNextEdit.
-    virtual void onNextEdit();                   // slot 19, retail 0x510850
-    // Before normalization (function): CMPEdit::OnPrevEdit.
-    virtual void onPrevEdit();                   // slot 20, retail 0x510870
-};
 
-class CMPInputEdit : public CMPEdit {
-public:
-    CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
-                 unsigned justification, const char* backgroundIcon,
-                 int backgroundFrame, int id, int style, int readType,
-                 int insetX, int insetY)
-        : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
-                  backgroundIcon, backgroundFrame, id, style, readType, insetX,
-                  insetY)
-    {
-    }
-    // Before normalization (function): CMPInputEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50de50
-};
 
-class CHotSeatEdit : public textEntryWidget {
-public:
-    // Before normalization: nextEdit.
-    CHotSeatEdit* m_nextEdit;   // +0x70
-    // Before normalization: prevEdit.
-    CHotSeatEdit* m_prevEdit;   // +0x74
 
-    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
-                 unsigned justification, const char* backgroundIcon,
-                 int backgroundFrame, int id, int style, int readType,
-                 int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-        m_nextEdit = 0;
-        m_prevEdit = 0;
-    }
-    // Before normalization (function): CHotSeatEdit::SetNextEdit.
-    // Before normalization (locals): pNextEdit.
-    void setNextEdit(CHotSeatEdit* nextEdit) { m_nextEdit = nextEdit; }
-    // Before normalization (function): CHotSeatEdit::SetPrevEdit.
-    // Before normalization (locals): pPrevEdit.
-    void setPrevEdit(CHotSeatEdit* prevEdit) { m_prevEdit = prevEdit; }
-    // Before normalization (function): CHotSeatEdit::OnKillFocus.
-    virtual void onKillFocus();                   // slot 11, retail 0x50dee0
-    // Before normalization (function): CHotSeatEdit::SetFocus.
-    virtual void setFocus(unsigned char state);   // slot 14, retail 0x510890
-    // Before normalization (function): CHotSeatEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50df60
-    // Before normalization (function): CHotSeatEdit::OnNextEdit.
-    virtual void onNextEdit();                    // slot 19, folded 0x510850
-    // Before normalization (function): CHotSeatEdit::OnPrevEdit.
-    virtual void onPrevEdit();                    // slot 20, folded 0x510870
-};
+// The private edit hierarchy is defined in multiplayerwindow.cpp.
+class CHotSeatEdit;
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
@@ -190,63 +91,7 @@ public:
 };
 SIZE(CHotSeatDlg, 0x114);
 
-// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
-// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
-// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
-// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
-// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
-// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
-// The vtable 0x6400f4 is FIFTEEN slots, not fourteen: it runs 0x2400f4 to
-// 0x24012f and CMPInputEdit's own table starts at 0x240130, so slot 14 is
-// real and holds 0x510980 - UpdateOK. That is the one place this dialog
-// diverges from CHotSeatDlg's roster (whose table stops at slot 13), and
-// CMPInputEdit::OnKeyPress 0x50de50 calls it through `[edx+0x38]` rather
-// than inlining it, which is the other half of the same proof.
-// DisableOK/OnOK stay non-virtual. field1/field2 are DC CMPInputEdit* but
-// reached only as textWidget here.
-class CMPInputDlg : public CHeroWindowEx {
-public:
-    enum {
-        BACKGROUND_ID = 500,
-        FIELD1_ID = 501,
-        FIELD2_ID = 502,
-        HEADER1_ID = 503,
-        HEADER2_ID = 504,
-        OKAY_ID = 505,
-        BACK_ID = 506,
-        ROLLOVER_ID = 507
-    };
 
-    // Original members: CMPInputDlg::field1/field2 (DC class 0x4484,
-    // +0x4c/+0x50). These name the two text-entry fields, not unknown
-    // offsets. The PC base shifts both by four bytes; retain OG names.
-    CMPInputEdit* m_field1;  // +0x50
-    CMPInputEdit* m_field2;  // +0x54
-    // Before normalization: header1.
-    textWidget* m_header1;   // +0x58
-    // Before normalization: header2.
-    textWidget* m_header2;   // +0x5c
-    // Before normalization: rollover.
-    textWidget* m_rollover;  // +0x60
-
-    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
-    virtual ~CMPInputDlg();
-    // Before normalization (function): CMPInputDlg::OnWidgetDeselect.
-    // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CMPInputDlg::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
-    // Before normalization (function): CMPInputDlg::OnOK.
-    unsigned char onOK();
-    // Before normalization (function): CMPInputDlg::UpdateOK.
-    virtual void updateOK();  // slot 14, retail 0x510980
-    // Before normalization (function): CMPInputDlg::DisableOK.
-    __forceinline void disableOK()
-    {
-        getWidget(OKAY_ID)->enable(0);
-    }
-};
-SIZE(CMPInputDlg, 0x64);
 
 class CSprite;
 
@@ -261,33 +106,10 @@ public:
     // Before normalization (function): CHeroSessions::GetSessionInfo.
     bool getSessionInfo(unsigned long index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
-    // Before normalization (function): CHeroSessions::GetSessionInfo.
-    bool getSessionInfo(int index, char* sessName, char* userName,
-                        int& numPlayers, eSessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
 
-// CMultiPlayerWindowEdit - the text-entry widget the session-host name field
-// uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
-// its only addition is the slot-15 key-handler override that gives it a
-// distinct vtable (retail 0x640054, stored by the TMultiPlayerWindow
-// constructor).
-class CMultiPlayerWindowEdit : public textEntryWidget {
-public:
-    CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
-                           const char* text, const char* fontName,
-                           font::TColor color, unsigned justification,
-                           const char* backgroundIcon, int backgroundFrame,
-                           int id, int style, int readType, int insetX,
-                           int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-    }
-    // Before normalization (function): CMultiPlayerWindowEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);  // slot 15, retail 0x50ed60
-};
+
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
 // DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
@@ -385,9 +207,12 @@ public:
     // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
-    // Before normalization (function): TMultiPlayerWindow::GoSessionList.
+    // Original: TMultiPlayerWindow::GetRolloverWidget; MultiPlayerWindow.h:91, dc 0x101da0.
+    VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
+    virtual textWidget* getRolloverWidget()
+    {
+        return m_rolloverWidget;
+    }
     void goSessionList();
     // Before normalization (function): TMultiPlayerWindow::GoMainMenu.
     void goMainMenu();
