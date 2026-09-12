@@ -80,8 +80,15 @@ TRmgGridRectangle::TRmgGridRectangle(
 // after it, which the current tile's frame and flip accessors in the
 // pattern test supply (71.92 -> 91.48%; a tile-returning neighbour
 // factory 83.55%, no accessors 79.75%, getters and setters together
-// 86.74%). The signed-point arithmetic reproduces retail's operand
-// shapes; the remaining rows are register and schedule differences.
+// 86.74%). Retail then keeps the selected pattern in EDI across the
+// rand() call, which the output variable itself cannot do once its
+// address has been passed: a plain copy taken after the tile read holds
+// it (97.35%; the copy before the read 96.75%, a range reference 94.74%,
+// the flip locals declared first 91.5%, register 91.5%). Residual: the
+// point and painter parameters take ESI/EDI in the opposite roles from
+// retail; a direct proxy construction, reading the land through the
+// painter first, building the mask first, and accessor coordinates do
+// not swap them (84-97%).
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -98,18 +105,19 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
             matches[direction] = 0;
     }
     TRmgLinePatternTable* table = painter->getPattern(oldType);
-    int pattern;
     unsigned char flipX, flipY;
-    selectRmgLinePattern(matches, table, pattern, flipX, flipY);
+    int selected;
+    selectRmgLinePattern(matches, table, selected, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
+    int pattern = selected;
     if (table->m_patterns[current.getFrame()] != pattern
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
         unsigned int frame = table->m_ranges[pattern].m_firstIndex
             + rand() % table->m_ranges[pattern].m_valueCount;
-        current.m_flipY = flipY;
         current.m_frame = frame;
         current.m_flipX = flipX;
+        current.m_flipY = flipY;
         tile.setTile(current);
     }
 }

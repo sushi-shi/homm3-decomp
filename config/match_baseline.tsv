@@ -3600,7 +3600,7 @@ rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0
 rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b4960	7b042e1361fa
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	100.0000	100.0000	100.0000	0x1b5a70	87e5cee3e8ef
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b50f0	8a31a2f31fcb
-rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	91.4846	91.4846	91.4846	0xf9f00	47ecc8a3262e
+rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	97.3461	97.3461	97.3461	0xf9f00	135c1c2d7c9d
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	93.6307	93.6307	93.6307	0x1b5440	baa98ce0e57a
 rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	d2fa6bcbbe7b
 rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	956180a40602
