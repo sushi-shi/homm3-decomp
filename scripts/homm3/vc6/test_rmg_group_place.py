@@ -170,7 +170,7 @@ class RmgGroupPlaceTests(unittest.TestCase):
         lookup = header[at:header.index("\n    }", at) + 6]
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
         helper = self.module.helpers()
-        value_helpers = [helper.definition(support, "TRmgMapPosition::TRmgMapPosition"),
+        value_helpers = [helper.definition(self.source, "TRmgMapPosition::TRmgMapPosition"),
                          helper.definition(self.source, "type_object::getPosition"),
                          helper.definition(self.source, "type_random_map::getMapItem",
                                            parameters="TRmgMapPosition point")]

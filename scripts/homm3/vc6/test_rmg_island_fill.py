@@ -35,7 +35,7 @@ class IslandFillTests(unittest.TestCase):
             start = header.index("struct " + name + " {")
             return header[start:header.index("\n};", start) + 3]
         types = "\n".join(block(n) for n in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneCellState", "TRmgGroundTileData"))
-        helper = "\n".join(self.module.helpers().definition(support, n) for n in ("TRmgMapPosition::TRmgMapPosition", "TRmgVector::length"))
+        helper = "\n".join(self.module.helpers().definition(support + "\n" + self.source, n) for n in ("TRmgMapPosition::TRmgMapPosition", "TRmgVector::length"))
         helper += "\n" + "\n".join(self.module.helpers().definition(self.source, n) for n in (
             "TRmgMapPosition::operator+=", "TRmgZone::getLevelPosition", "TRmgVector::operator*", "TRmgVector::operator/"))
         caller = self.module.helpers().definition(self.source, "type_random_map_generator::insetIslandZone")
@@ -81,7 +81,7 @@ class IslandFillTests(unittest.TestCase):
             ("Zone", "!= zoneIndex", "== zoneIndex"),
             ("Blocked", "item->isZoneBoundary()", "item->isZoneBoundary() || item->m_tileData.m_roadEntrance"),
             ("Level", "next.m_y, next.m_z", "next.m_y, 0"),
-            ("Extent", "next.m_x >= m_map.m_mapWidth", "next.m_x >= m_map.m_mapWidth - 1"),
+            ("Extent", "next.m_x >= m_map.m_size.m_x", "next.m_x >= m_map.m_size.m_x - 1"),
             ("Seed", "pending.push_back(position);", "")):
             self.assertIn(before, self.module.BASELINE)
             candidate("Wrong" + name, self.module.BASELINE.replace(before, after), False)

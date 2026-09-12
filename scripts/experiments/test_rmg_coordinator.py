@@ -26,6 +26,8 @@ HARNESS = r'''
 #include <cstdlib>
 using std::memset;
 @ENUMS@
+struct TPoint;
+@MAP_POSITION@
 std::vector<int> events;
 int randomValue, randomCalls;
 int scriptedRand() { ++randomCalls; return randomValue; }
@@ -38,7 +40,7 @@ struct TRmgZone {
 };
 struct Progress { void advance(int n) { events.push_back(10000+n); } };
 struct Map {
-    int m_numberLevels;
+    TRmgMapPosition m_size;
     void markCoastalTiles() { events.push_back(900); }
 };
 struct type_random_map_generator {
@@ -64,7 +66,7 @@ struct type_random_map_generator {
     }
     void buildZoneBoundaries(TRmgTemplate* t, int level) {
         events.push_back(200 + (t==replacement ? 10 : 0) + level);
-        if (mutate && level==0 && m_map.m_numberLevels==1) m_map.m_numberLevels=2;
+        if (mutate && level==0 && m_map.m_size.m_z==1) m_map.m_size.m_z=2;
     }
     void paintZoneTerrain() { events.push_back(300); }
     void placePrimaryTown(TRmgZone* z) {
@@ -148,7 +150,7 @@ bool check(Fn fn, int mask, int hMode, int cMode, bool mutate, bool progress, in
     std::fill(g.m_activeZoneCountsByAlignment,g.m_activeZoneCountsByAlignment+9,42);
     g.m_activeZoneCount=42;
     g.m_templateName="before";
-    g.m_map.m_numberLevels=levels;
+    g.m_map.m_size.m_z=levels;
     g.m_progress=progress ? &sink:0;
     std::vector<int> expected;
     expected.push_back(100+g.selected);
@@ -246,6 +248,9 @@ def main():
         start = header.index("enum " + name + " {")
         enums.append(header[start:header.index("};", start) + 2])
     source = source.replace("@ENUMS@", "\n".join(enums))
+    header = (HOMM3_DIR / "include/rmg.h").read_text()
+    at = header.index("struct TRmgMapPosition {")
+    source = source.replace("@MAP_POSITION@", header[at:header.index("\n};", at) + 3])
     source = source.replace("@BODIES@", "\n".join(projected))
     source = source.replace("@FUNCTIONS@", ",".join("&type_random_map_generator::generate%d" % i for i in range(len(bodies))))
     source = source.replace("@POSITIVE_COUNT@", str(positive_count))

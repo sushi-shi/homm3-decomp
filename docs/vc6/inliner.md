@@ -2058,14 +2058,34 @@ the trace lists UNDER/OVER callees:
   sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
   retail's four size calls all reappear.
 - `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
-  directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in
-  `rmg_support.cpp` today so no rmg.cpp caller can expand it. Moving it makes
-  it a candidate at every three-argument construction: canPlaceObject
-  86.68 -> 91.18, createMonolithConnection 86.74 -> 88.81 and createRoads
-  72.69 -> 80.44 gain, but connectZones 93.62 -> 83.24, commitTreasureGroup
-  99.91 -> 93.30, canPlaceTreasureGroup 99.99 -> 96.90, createRiver,
-  markRiverCoastTarget and createRiverToObject lose 6-12 points, so the move
-  needs those callers' site counts settled first. Not adopted.
+  directly before `canFitObject`, so it belongs in `rmg.cpp`. Its former
+  `rmg_support.cpp` placement prevented every rmg.cpp expansion. The older
+  probe deferred this source correction because caller scores fell; that
+  score-based rejection was unsupported. The body is now restored beside
+  `canFitObject`. All 26 retained bytes remain exact, with member initializers
+  and X/Y/Z body stores producing identical code. canPlaceObject improves
+  86.68 -> 91.18 and createRoads 72.69 -> 80.44. With the borrowed position
+  accessor, monolith moves 88.75 -> 90.58, while commitTreasureGroup falls
+  from 100 to 93.41 and other path/river callers over-expand the constructor.
+  The subsequent dimension-member correction changes several caller source
+  hashes and resets their MAX; HIST retains their earlier peaks. Recover
+  those call decisions through real caller/helper context; do not hide the
+  constructor again.
+- The owned map's three signed dimensions at +0xc/+0x10/+0x14 form a
+  `TRmgMapPosition m_size` subobject. This retail-only ownership hypothesis
+  preserves both the retained 160-byte map constructor and the 251-byte
+  generator-base constructor, including its call to that map constructor.
+  Independent scalar fields instead expand it (base 48.05%), and all 128
+  scalar-map/progress/version initializer combinations fail to restore both.
+  Nine coordinate-member construction pairs distinguish body stores from
+  member initialization and assigned values: only body stores at owned/view
+  construction preserve all those constructor bodies. Default subobject
+  construction contributes real compiler state without emitted extra work.
+  With this member, `carveBranchingPaths` must borrow the dimensions to keep
+  its previous 73.02% code and retained exact `list<TPoint>::_Buynode`.
+  Entry and per-level references are byte-identical; direct reads lose the
+  retained helper, and value/scalar snapshots worsen carving. The eight-state
+  follow-up preserves the retail-proven container lifetimes throughout.
 - `openConnectionPath` (0x5408e0): retail calls the by-value-position
   `getMapItem` overload at the entry lookup (budget 1120, cb 41) and expands
   the same call at the loop end; no budget rule explains the first refusal,

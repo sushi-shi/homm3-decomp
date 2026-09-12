@@ -57,7 +57,7 @@ def main():
         {"source": "include/rmg.h", "find": position, "replace": ""},
         {"source": "include/rmg.h", "insert_before": "// The retained 0x5fdd20/0x5fdd40 bodies pass both eight-byte operands on",
          "text": derived + "\n\n"},
-        {"source": "src/rmg_support.cpp", "find": ctor,
+        {"source": "src/rmg.cpp", "find": ctor,
          "replace": ctor.replace(": m_x(newX), m_y(newY), m_z(newZ)", ": TPoint(newX, newY), m_z(newZ)")}]
     conversion_edits = [{"source": "include/rmg.h", "insert_after": "    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}",
                          "text": "\n    TPoint(const TRmgMapPosition& position)\n        : m_x(position.m_x), m_y(position.m_y) {}"}]

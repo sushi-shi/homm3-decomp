@@ -11,7 +11,7 @@ struct TRmgMapItem {
     // @GATE@
 };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     std::vector<int> m_reads;
     bool m_badRead;
@@ -89,8 +89,8 @@ template<class Candidate> static bool check() {
         bool expected = reference(cells, w, h, p, reads);
         accepted += expected;
         Candidate candidate;
-        candidate.m_map.m_mapWidth = w;
-        candidate.m_map.m_mapHeight = h;
+        candidate.m_map.m_size.m_x = w;
+        candidate.m_map.m_size.m_y = h;
         candidate.m_map.m_mapItems = &cells[0];
         candidate.m_map.m_badRead = false;
         std::memset(&candidate.m_map.m_invalid, 0, sizeof(candidate.m_map.m_invalid));

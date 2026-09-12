@@ -15,7 +15,7 @@ template<class T> const T& _cpp_max(const T& a, const T& b) { return a < b ? b :
 struct TRmgMapItem { unsigned m_guard; TRmgZoneCellState m_zoneState; TRmgGroundTileData m_tileData;
     // @BOUNDARY_QUERY@
 };
-struct type_random_map { int m_mapWidth, m_mapHeight; TRmgMapItem* m_mapItems;
+struct type_random_map { TRmgMapPosition m_size; TRmgMapItem* m_mapItems;
     // @ACCESSOR@
 };
 struct TRmgTownSlot { int m_zoneIndex; };
@@ -37,7 +37,7 @@ struct Root {
         // Opaque drawing changes the same visitation bit that the later fill
         // consumes. Scripted cells make an early fill observably incorrect;
         // this fixture does not claim to reproduce drawIslandBoundary itself.
-        int size = m_map.m_mapWidth * m_map.m_mapHeight;
+        int size = m_map.m_size.m_x * m_map.m_size.m_y;
         int index = int(m_edges.size() * 3) % size;
         m_map.m_mapItems[level * size + index].m_tileData.m_zoneBoundary = 1;
     }
@@ -113,7 +113,7 @@ template<class T> static bool check(bool caller) {
             }
         }
         reference(expected, w, h, zone);
-        T candidate; candidate.m_map.m_mapWidth = w; candidate.m_map.m_mapHeight = h; candidate.m_map.m_mapItems = &cells[1];
+        T candidate; candidate.m_map.m_size.m_x = w; candidate.m_map.m_size.m_y = h; candidate.m_map.m_mapItems = &cells[1];
         if (caller) candidate.insetIslandZone(&zone); else candidate.fillIslandInterior(&zone);
         if (std::memcmp(&cells[0], &expected[0], cells.size() * sizeof(cells[0]))) return false;
         if (std::memcmp(&zone.m_levelPosition, &saved.m_levelPosition, sizeof(zone.m_levelPosition)) || zone.m_slot != saved.m_slot

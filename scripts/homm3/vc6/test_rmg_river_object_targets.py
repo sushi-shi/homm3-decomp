@@ -68,8 +68,8 @@ class RmgRiverObjectTargetTests(unittest.TestCase):
             ("HalfRound", "m_objectSize.m_x) / 2", "m_objectSize.m_x) / 3"),
             ("Dimensions", "offsetY = static_cast<unsigned int>(prototype->m_imageInfo.m_objectSize.m_y)", "offsetY = static_cast<unsigned int>(prototype->m_imageInfo.m_objectSize.m_x)"),
             ("TriggerY", "offsetY = prototype->m_triggerCell.m_y;", "offsetY = prototype->m_triggerCell.m_x;"),
-            ("XBoundary", "position.m_x < m_map.m_mapWidth", "position.m_x <= m_map.m_mapWidth"),
-            ("YBoundary", "position.m_y < m_map.m_mapHeight", "position.m_y <= m_map.m_mapHeight"),
+            ("XBoundary", "position.m_x < m_map.m_size.m_x", "position.m_x <= m_map.m_size.m_x"),
+            ("YBoundary", "position.m_y < m_map.m_size.m_y", "position.m_y <= m_map.m_size.m_y"),
             ("Level", "position.m_x, position.m_y, position.m_z", "position.m_x, position.m_y, 0"),
             ("Bit", "m_tileData.m_hasRiver = 1", "m_tileData.m_riverTarget = 1"),
             ("Progress", "m_progress->advance(1000);", "m_progress->advance(1);"),
@@ -82,7 +82,7 @@ class RmgRiverObjectTargetTests(unittest.TestCase):
                 ("TILE_DATA", block("TRmgGroundTileData")), ("PROTOTYPE_POINT", prototype_point),
                 ("SCALAR_ACCESSOR", scalar.group()),
                 ("POSITION_ACCESSOR", self.module.helpers().definition(self.source, "type_random_map::getMapItem", parameters="TRmgMapPosition point")),
-                ("VALUE_HELPERS", self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")),
+                ("VALUE_HELPERS", self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")),
                 ("CANDIDATES", "\n".join(methods)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)
         self.assertNotIn("// @", program)

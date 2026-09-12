@@ -3,8 +3,8 @@
 
 Retail retains the exact owned-map constructor at 0x530fb0 and calls it from
 TRmgGeneratorBase 0x536070. With both definitions visible in their retail
-source order, current VC6 expands the callee. Compare body assignment with
-member initialization for the five real owned-map fields, and independently
+source order, the recovered coordinate member now preserves that call. Compare body assignment with
+member initialization for the three real owned-map members, and independently
 for the base generator's progress/version fields. Preserve allocation size,
 the canonical array constructor/destructor, progress calls, time and RNG order,
 all declarations, member layout and source visibility. No dummy statements,
@@ -35,13 +35,14 @@ def main():
     # Keep declaration order in the initializer list and the recovered store
     # order in the body. The allocation expression is identical in each form.
     fields = [("m_ownsMapItems", "1"), ("m_mapItems", "new TRmgMapItem[width * height * levels]"),
-              ("m_mapWidth", "width"), ("m_mapHeight", "height"), ("m_numberLevels", "levels")]
+              ("m_size", "width, height, levels")]
     options = []
-    for mask in range(32):
+    for mask in range(8):
         initialized = [(name, value) for index, (name, value) in enumerate(fields) if mask & (1 << index)]
         body = original[original.index("\n{"):]
         for name, value in initialized:
-            statement = "    " + name + " = " + value + ";\n"
+            statement = ("    m_size.m_x = width;\n    m_size.m_y = height;\n    m_size.m_z = levels;\n"
+                         if name == "m_size" else "    " + name + " = " + value + ";\n")
             assert statement in body
             body = body.replace(statement, "")
         prefix = signature
@@ -72,7 +73,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     load_manifest(args.output, HOMM3_DIR)
-    print("32 owned-map x 4 generator-base initializer states")
+    print("8 owned-map x 4 generator-base initializer states")
 
 
 if __name__ == "__main__":

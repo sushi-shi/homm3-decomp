@@ -948,7 +948,7 @@ public:
     // No Dreamcast inline declaration exists for this Complete-only type.
     type_object(TRmgObjectPropertiesRef* newProperties);
     // Placement callers own their coordinate snapshots. The borrowed result
-    // makes commitTreasureGroup exact; see the accessor's source evidence.
+    // distinguishes its former exact transfer model; see the source evidence.
     const TRmgMapPosition& getPosition() const;
 
     // The constructor and placement scorer share this five-byte reset.
@@ -1331,12 +1331,11 @@ public:
     char m_paddingBeforeMapItems[3];
     // Before normalization: mapItems.
     TRmgMapItem* m_mapItems;                // +0x08
-    // Before normalization: mapWidth.
-    int m_mapWidth;                         // +0x0c
-    // Before normalization: mapHeight.
-    int m_mapHeight;                        // +0x10
-    // Before normalization: numberLevels.
-    int m_numberLevels;                     // +0x14
+    // Before normalization: mapWidth, mapHeight, numberLevels.
+    // Retail-only ownership hypothesis: this coordinate subobject preserves
+    // the exact owned-map body and its retained call from TRmgGeneratorBase;
+    // three independent integers preserve only the former. No DC declaration.
+    TRmgMapPosition m_size; // +0x0c: signed width, height and level count
 
     // Owning constructor retained at 0x530fb0, called by the generator base
     // and temporary treasure-group maps. Three dimensions, thiscall ret 0xc.
@@ -1359,9 +1358,9 @@ public:
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
         m_mapItems = items;
-        m_mapWidth = width;
-        m_mapHeight = height;
-        m_numberLevels = 1;
+        m_size.m_x = width;
+        m_size.m_y = height;
+        m_size.m_z = 1;
         m_ownsMapItems = 0;
     }
 
@@ -1384,7 +1383,7 @@ public:
     // Before normalization (function): type_random_map::GetMapItem.
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
-        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
+        return m_mapItems + (z * m_size.m_y + y) * m_size.m_x + x;
     }
     // Before normalization (function): type_random_map::GetMapItem.
     TRmgMapItem* getMapItem(TRmgMapPosition point);

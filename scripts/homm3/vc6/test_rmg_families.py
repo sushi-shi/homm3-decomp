@@ -817,9 +817,9 @@ int main() {
         module = generator("generate-rmg-border-flood-family.py")
         source = ("void type_random_map_generator::markBorderObjectArea()\n{\n"
                   "    int minimumX = max(position.m_x - 1, 0);\n"
-                  "    int maximumX = min(position.m_x + 2, m_map.m_mapWidth);\n"
+                  "    int maximumX = min(position.m_x + 2, m_map.m_size.m_x);\n"
                   "    int minimumY = max(position.m_y - 1, 0);\n"
-                  "    int maximumY = min(position.m_y + 2, m_map.m_mapHeight);\n"
+                  "    int maximumY = min(position.m_y + 2, m_map.m_size.m_y);\n"
                   "    for (int y = minimumY; y < maximumY; ++y) {\n"
                   "        for (int x = minimumX; x < maximumX; ++x) {}\n    }\n}")
         seen = set()

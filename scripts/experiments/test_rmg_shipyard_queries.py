@@ -20,18 +20,18 @@ def main():
         start = header.index("struct " + name + " {")
         return header[start:header.index("\n};", start) + 3]
     types = "\n".join(block(n) for n in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgGroundTile", "TRmgGroundTileData"))
-    imported = helpers.definition(support, "TRmgMapPosition::TRmgMapPosition")
+    imported = helpers.definition(source, "TRmgMapPosition::TRmgMapPosition")
     imported += "\n" + helpers.definition(source, "TRmgMapPosition::operator+=")
     # Select the value-position overload, not the separate two-scalar body.
     lookup = source.index("TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)")
     imported += "\n" + source[lookup:source.index("\n}", lookup) + 2]
     accessor = re.search(r"inline TRmgMapItem\* getMapItem\(int x, int y, int z\)\s*\{[^}]+}", header)[0]
     accessor = accessor.replace("{", """{
-        if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight || z < 0 || z > 1) {
+        if (x < 0 || x >= m_size.m_x || y < 0 || y >= m_size.m_y || z < 0 || z > 1) {
             m_badRead = true;
             return &m_invalid;
         }
-        m_reads.push_back((z * m_mapHeight + y) * m_mapWidth + x);""", 1)
+        m_reads.push_back((z * m_size.m_y + y) * m_size.m_x + x);""", 1)
     original = helpers.definition(source, "type_random_map_generator::canPlaceShipyard")
     alternatives = [("Source", original, True)]
     alternatives += [("Candidate" + str(i), body, True) for i, (_, body) in enumerate(module.forms(original))]

@@ -47,7 +47,7 @@ class RmgRiverCoordinatorTests(unittest.TestCase):
         types = [block("struct " + name + " {") for name in ("TRmgVector", "TPoint", "TRmgMapPosition")]
         start = object_header.index("    struct TPoint {")
         prototype_point = object_header[start:object_header.index("\n    };", start) + 7]
-        helper_bodies = [self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition"),
+        helper_bodies = [self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition"),
             self.module.helpers().definition(self.source, "TRmgMapPosition::operator-=")]
         wheel = re.search(r"\bWATER_WHEEL\s*=\s*(\d+)", mapcell)
         self.assertIsNotNone(wheel)

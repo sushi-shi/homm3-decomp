@@ -56,8 +56,8 @@ HEAD = """void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup*
     TRmgZoneBounds bounds;
     bounds.m_minimumX = std::_cpp_max<long>(0, -position.m_x);
     bounds.m_minimumY = std::_cpp_max<long>(0, -position.m_y);
-    bounds.m_maximumX = std::_cpp_min<long>(group->m_map.m_mapWidth, m_map.m_mapWidth - position.m_x);
-    bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_mapHeight, m_map.m_mapHeight - position.m_y);
+    bounds.m_maximumX = std::_cpp_min<long>(group->m_map.m_size.m_x, m_map.m_size.m_x - position.m_x);
+    bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_size.m_y, m_map.m_size.m_y - position.m_y);
 """
 POLICY = """            if (destination->m_tile.m_landType != eTerrainWater
                 && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable

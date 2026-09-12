@@ -62,7 +62,7 @@ class AddObjectTests(unittest.TestCase):
         for name in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgMovementCost",
                      "TRmgZoneCellState", "TRmgGroundTile", "TRmgGroundTileData", "TRmgConnectionDecoration"):
             text += block(header, "struct " + name) + "\n"
-        text += definition(support, "TRmgMapPosition::TRmgMapPosition") + "\n"
+        text += definition(source, "TRmgMapPosition::TRmgMapPosition") + "\n"
         text += definition(source, "TRmgMapPosition::operator+=") + "\n"
         text += block(mapcell, "enum TAdventureObjectType") + "\n"
         start = objects.index("    struct TPoint {")
@@ -77,7 +77,7 @@ struct TRmgMapItem {
     TRmgGroundTile m_tile; TRmgGroundTileData m_tileData; TRmgConnectionDecoration m_connection;
 };
 struct type_random_map {
-    int m_mapWidth,m_mapHeight; TRmgMapItem* m_mapItems;
+    TRmgMapPosition m_size; TRmgMapItem* m_mapItems;
     TRmgObjectPropertiesRef* m_replacement;
     std::vector<int> m_trace;
     void addObject(type_object* object,TRmgMapPosition position) {
@@ -109,7 +109,7 @@ void reference(GeneratorFixture& owner,type_object* object,TRmgMapPosition posit
     const TObjectType& prototype=*object->m_properties->m_prototype;
     ++owner.m_objectCountByType[prototype.m_objectType];
     if(!prototype.m_hasTrigger) return;
-    int width=owner.m_map.m_mapWidth,height=owner.m_map.m_mapHeight;
+    int width=owner.m_map.m_size.m_x,height=owner.m_map.m_size.m_y;
     int sx=position.m_x-prototype.m_triggerCell.m_x,sy=position.m_y-prototype.m_triggerCell.m_y;
     int seed=(position.m_z*height+sy)*width+sx;
     TRmgMapItem* cells=owner.m_map.m_mapItems;
@@ -170,7 +170,7 @@ template<class Candidate> bool check() {
         }
         for(int z=0;z<2;++z) {actual.m_zones.push_back(&za[z]);expected.m_zones.push_back(&zb[z]);}
         actual.m_positions.push_back(0);expected.m_positions.push_back(0);
-        actual.m_map.m_mapWidth=expected.m_map.m_mapWidth=w;actual.m_map.m_mapHeight=expected.m_map.m_mapHeight=h;
+        actual.m_map.m_size.m_x=expected.m_map.m_size.m_x=w;actual.m_map.m_size.m_y=expected.m_map.m_size.m_y=h;
         actual.m_map.m_mapItems=&a[64];expected.m_map.m_mapItems=&b[64];
         actual.m_map.m_replacement=expected.m_map.m_replacement=mutate ? &newProperties : 0;
         TRmgMapPosition input((end?w-1:0)+first.m_triggerCell.m_x,(end?h-1:0)+first.m_triggerCell.m_y,level);

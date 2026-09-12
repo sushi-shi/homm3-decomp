@@ -49,8 +49,8 @@ states do not improve it; the coordinate constructor, accessor and insertion
 expansion differences remain documented beside the function.
 
 Nine object-position accessor forms distinguish a borrowed const-reference
-result from value and const-value copies. The borrowed result makes the
-unchanged `commitTreasureGroup` exact at all 692 bytes, improves group
+result from value and const-value copies. In the earlier constructor-hidden
+context, the borrowed result made `commitTreasureGroup` exact at all 692 bytes, improves group
 `addGuard` and `tryAddObject`, and preserves the other consumers across seven
 TUs. Monolith CUR drops to 88.7463%; its unchanged-source 91.9027% MAX remains.
 The transfer and placement oracles import the authored accessor declaration
@@ -4178,3 +4178,52 @@ caller when correcting such interfaces: the pointer-taking `TPalette24` copy
 constructor otherwise permits an old pointer argument to create an unintended
 temporary before reference binding. Full-build caller scores confirm unchanged
 current results after the calls are corrected.
+
+### Coordinate constructor ownership and map dimensions (2026-09-12)
+
+`generate-rmg-position-constructor-owner.py` tests the ordinary retained
+coordinate constructor in its owning `rmg.cpp`, immediately before
+`canFitObject`, against its former hidden `rmg_support.cpp` placement.
+The retained body stays exact; caller score losses do not justify discarding
+retail source-order evidence. The actual constructor now lives in `rmg.cpp`.
+
+`generate-rmg-map-dimensions-family.py` then compares three independent
+signed fields with one `TRmgMapPosition` member and crosses three genuine
+construction forms at each owned/view constructor. The original ten states
+(context `dc0256be8e6e3cfeb19f1`) produce ten objects. Body stores into the
+coordinate member uniquely preserve both the 160-byte owned-map constructor
+and its 251-byte generator-base caller at 100%. Constructor member
+initialization instead produces 97.3509%/48.0526%; assigning an owned coordinate
+value produces 81.7193%/100%. These are semantic member-ownership controls;
+contiguous offsets alone do not prove the aggregate.
+
+`generate-rmg-map-dimension-uses.py` follows the verified aggregate parent,
+checking snapshot and independently reproduced output hashes. Its eight
+states (context `40ee300d5ae09fe5b405`) compare direct extents with references,
+coordinate values and scalar snapshots at entry or per level in
+`carveBranchingPaths`. Both reference placements preserve its 73.0200% body
+and restore exact retained `list<TPoint>::_Buynode`; direct aggregate reads
+lose that helper. Entry-reference state `41f96c4c41e5b74bef8c6ba7` is adopted.
+Every state keeps vector/list construction and cleanup inside the level loop.
+The ownership generator now rebases from this model with an eleventh adopted
+reference control; old checkpoints retain their original ten-state inputs.
+The initializer generator now varies the three actual members (8 x 4 states),
+with historical independent-scalar experiments preserved in their checkpoints.
+
+The full build passes with both constructors and `_Buynode` exact. Rewriting
+member paths changes ten affected function hashes and resets their MAX to
+current code; HIST retains earlier peaks, including `commitTreasureGroup`'s
+100%. Its current 93.4062% is the coordinate constructor over-expanding in
+its corrected TU. The trace has cost 47 at depth 1 with budget 1562, so a
+minor arithmetic spelling cannot fix that size decision. Runtime fixtures
+import the actual coordinate declaration and constructor and use the member
+model directly; no compatibility union or replacement type conceals layout.
+
+`generate-rmg-group-commit-translation.py` checks the missing constructor call
+through the existing ordinary position-plus-point helper and value/reference
+result lifetimes. Six states produce five reproduced objects (context
+`6b11f25a86f7b434deee`); direct helper-expression use scores 93.3867%, the
+other forms remain 93.4062%, with every sibling score unchanged. All six pass
+the transfer oracle alongside its existing 420 semantic forms and negative
+controls. No caller edit is adopted: the canonical translation helper alone
+does not establish retail's retained-constructor decision.

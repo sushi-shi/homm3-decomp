@@ -32,7 +32,7 @@ def main():
     source = (HOMM3_DIR / "src/rmg.cpp").read_text()
     old_base = """TRmgGridPoint type_random_map::getSize()
 {
-    return TRmgGridPoint(m_mapWidth, m_mapHeight);
+    return TRmgGridPoint(m_size.m_x, m_size.m_y);
 }"""
     header_edits = []
     for owner in ("TRmgMapInterface", "type_random_map"):
@@ -50,11 +50,11 @@ def main():
                       sig + "\n    {\n        m_x = point.m_x;\n        m_y = point.m_y;\n    }\n")
         edits = header_edits + [{"source": "include/rmg.h", "insert_before": "    TRmgGridPointT(const TPoint& point);", "text": conversion}]
         if returned == "constructed":
-            base_body = "    return TRmgGridPointT<int>(m_mapWidth, m_mapHeight);"
+            base_body = "    return TRmgGridPointT<int>(m_size.m_x, m_size.m_y);"
         elif returned == "named":
-            base_body = "    TRmgGridPointT<int> size(m_mapWidth, m_mapHeight);\n    return size;"
+            base_body = "    TRmgGridPointT<int> size(m_size.m_x, m_size.m_y);\n    return size;"
         else:
-            base_body = "    TRmgGridPointT<int> size;\n    size.m_x = m_mapWidth;\n    size.m_y = m_mapHeight;\n    return size;"
+            base_body = "    TRmgGridPointT<int> size;\n    size.m_x = m_size.m_x;\n    size.m_y = m_size.m_y;\n    return size;"
         for owner in ("TRmgRoadMapAdapter", "TRmgMapAdapter"):
             old = "TRmgGridPoint " + owner + "::getSize()\n{\n    TRmgGridPoint size = m_map->getSize();\n    return size;\n}"
             if adapter == "signed_named":

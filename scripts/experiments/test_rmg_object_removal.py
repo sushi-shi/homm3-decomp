@@ -60,9 +60,12 @@ class ObjectRemovalTests(unittest.TestCase):
             return next(line.split("//")[0].strip() for line in text.splitlines() if name+";" in line)
 
         text="#include <vector>\n#include <bitset>\n#include <algorithm>\n#include <cstring>\n#include <cstdio>\n"
-        for name in ("TRmgVector","TPoint","TRmgMapPosition","TRmgGridPoint","TRmgZoneCellState","TRmgGroundTileData"):
+        for name in ("TRmgVector","TPoint","TRmgMapPosition","TRmgZoneCellState","TRmgGroundTileData"):
             text+=block(header,"struct "+name)+"\n"
-        text+=definition(support,"TRmgMapPosition::TRmgMapPosition")+"\n"
+        start = header.index("template<class Coordinate>\nstruct TRmgGridPointT {")
+        end = header.index("typedef TRmgGridPointT<unsigned int> TRmgGridPoint;", start)
+        text += header[start:end] + "typedef TRmgGridPointT<unsigned int> TRmgGridPoint;\n"
+        text+=definition(source,"TRmgMapPosition::TRmgMapPosition")+"\n"
         text+=block(mapcell,"enum TAdventureObjectType")+"\n"
         start=objects.index("    struct TPoint {")
         nested_end=objects.index("\n    };",objects.index("    struct TImageInfo {",start))+7
@@ -75,7 +78,7 @@ class ObjectRemovalTests(unittest.TestCase):
         text+="struct TRmgObjectPropertiesRef { "+field(header,"m_prototype")+" };\n"
         text+="struct type_object { "+field(header,"m_properties")+" "+field(header,"m_position")+" };\n"
         text+="struct TRmgMapItem { "+field(header,"m_objects")+" TRmgZoneCellState m_zoneState; TRmgGroundTileData m_tileData; };\n"
-        text+="struct type_random_map { int m_mapWidth,m_mapHeight; TRmgMapItem* m_mapItems; TRmgMapItem* getMapItem(TRmgMapPosition point);\n"
+        text+="struct type_random_map { TRmgMapPosition m_size; TRmgMapItem* m_mapItems; TRmgMapItem* getMapItem(TRmgMapPosition point);\n"
         text+=definition(header,"getMapItem",parameters="int x, int y, int z")+"\n};\n"
         text+=definition(source,"type_random_map::getMapItem",parameters="TRmgMapPosition point")+"\n"
         counts=next(line.split("//")[0].strip() for line in header.splitlines() if "m_objectCountByType[" in line)
@@ -97,8 +100,8 @@ static void reference(GeneratorFixture& owner,type_object* object) {
     for(unsigned i=0;i<owner.m_positions.size();++i) registered|=owner.m_positions[i]==object;
     if(registered) {
         removeFirst(owner.m_positions,object);--owner.m_objectCountByType[p.m_objectType];
-        int linear=position.m_z*owner.m_map.m_mapHeight*owner.m_map.m_mapWidth
-            +(position.m_y-p.m_triggerCell.m_y)*owner.m_map.m_mapWidth+position.m_x-p.m_triggerCell.m_x;
+        int linear=position.m_z*owner.m_map.m_size.m_y*owner.m_map.m_size.m_x
+            +(position.m_y-p.m_triggerCell.m_y)*owner.m_map.m_size.m_x+position.m_x-p.m_triggerCell.m_x;
         int zone=owner.m_map.m_mapItems[linear].m_zoneState.m_zone;
         if(zone>=0) --owner.m_zones[zone]->m_objectCountByType[p.m_objectType];
     }
@@ -109,10 +112,10 @@ static void reference(GeneratorFixture& owner,type_object* object) {
         owner.m_nextKeyTentColor=available.empty()?int(owner.m_disabledKeyTents.size()):available.front();
     }
     // Enumerate destination cells, not the candidate's reverse footprint scan.
-    for(int linear=0;linear<owner.m_map.m_mapWidth*owner.m_map.m_mapHeight*2;++linear) {
-        int x=linear%owner.m_map.m_mapWidth;
-        int y=(linear/owner.m_map.m_mapWidth)%owner.m_map.m_mapHeight;
-        int z=linear/(owner.m_map.m_mapWidth*owner.m_map.m_mapHeight);
+    for(int linear=0;linear<owner.m_map.m_size.m_x*owner.m_map.m_size.m_y*2;++linear) {
+        int x=linear%owner.m_map.m_size.m_x;
+        int y=(linear/owner.m_map.m_size.m_x)%owner.m_map.m_size.m_y;
+        int z=linear/(owner.m_map.m_size.m_x*owner.m_map.m_size.m_y);
         int dx=position.m_x-x,dy=position.m_y-y;
         if(z!=position.m_z || dx<0 || dy<0 || dx>=p.m_imageInfo.m_objectSize.m_x || dy>=p.m_imageInfo.m_objectSize.m_y) continue;
         int bit=8*(5-dy)+(7-dx);
@@ -165,8 +168,8 @@ template<class Candidate> bool check() {
             }
             b[i]=a[i];
         }
-        actual.m_map.m_mapWidth=expected.m_map.m_mapWidth=w;
-        actual.m_map.m_mapHeight=expected.m_map.m_mapHeight=h;
+        actual.m_map.m_size.m_x=expected.m_map.m_size.m_x=w;
+        actual.m_map.m_size.m_y=expected.m_map.m_size.m_y=h;
         actual.m_map.m_mapItems=&a[64];expected.m_map.m_mapItems=&b[64];
         if(registered) {
             if(population) actual.m_positions.push_back(&other);

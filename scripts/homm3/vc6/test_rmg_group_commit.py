@@ -63,10 +63,11 @@ class RmgGroupCommitTests(unittest.TestCase):
         lookup = header[at:header.index("\n    }", at) + 6]
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
         helper = self.module.helpers()
-        value_helpers = [helper.definition(support, "TRmgMapPosition::TRmgMapPosition"),
+        value_helpers = [helper.definition(self.source, "TRmgMapPosition::TRmgMapPosition"),
                          helper.definition(self.source, "type_object::getPosition"),
                          helper.definition(self.source, "type_random_map::getMapItem",
-                                           parameters="TRmgMapPosition point")]
+                                           parameters="TRmgMapPosition point"),
+                         helper.definition(self.source, "TRmgMapPosition::operator+")]
         original = helper.definition(self.source, self.module.FUNCTION)
         programs, checks = [], []
 
@@ -79,7 +80,7 @@ class RmgGroupCommitTests(unittest.TestCase):
         methods["current"] = original
         if os.environ.get("HOMM3_GROUP_COMMIT_MANIFEST"):
             _, originals, axes = source_families.load_manifest(Path(os.environ["HOMM3_GROUP_COMMIT_MANIFEST"]), self.root)
-            for index in range(60):
+            for index in range(len(axes[0].options)):
                 rendered = source_families.render(originals, axes, (index,))[self.module.SOURCE]
                 methods["manifest_" + str(index)] = helper.definition(rendered, self.module.FUNCTION)
         for index, method in enumerate(dict.fromkeys(methods.values())):

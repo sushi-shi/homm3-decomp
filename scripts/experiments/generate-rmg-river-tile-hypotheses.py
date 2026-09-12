@@ -40,15 +40,15 @@ def neighbourhood(radius, storage, receiver):
     else:
         x, y = "static_cast<int>(point.m_x)", "static_cast<int>(point.m_y)"
     expressions = [f"max({x} - {radius}, 0)", f"max({y} - {radius}, 0)",
-                   f"min({x} + {radius + 1}, m_map->m_mapWidth)",
-                   f"min({y} + {radius + 1}, m_map->m_mapHeight)"]
+                   f"min({x} + {radius + 1}, m_map->m_size.m_x)",
+                   f"min({y} + {radius + 1}, m_map->m_size.m_y)"]
     for name, expression in zip(fields, expressions):
         declare = not record and (not shared or radius == 1)
         lines.append(("int " if declare else "") + name + " = " + expression + ";")
     # Separate real loop scopes also compile with VC6's pre-standard for scope.
     loop = [f"for (int y = {fields[1]}; y < {fields[3]}; ++y) {{",
             f"    for (int x = {fields[0]}; x < {fields[2]}; ++x) {{"]
-    cell = "m_map->m_mapItems[y * m_map->m_mapWidth + x]"
+    cell = "m_map->m_mapItems[y * m_map->m_size.m_x + x]"
     statements = []
     if radius == 2:
         statements.append("TRmgMapItem& neighbour = " + cell + ";")
@@ -63,7 +63,7 @@ def neighbourhood(radius, storage, receiver):
         statements.append("flags.m_impassable = 1;")
         prefix = None
     elif receiver == "index":
-        statements.append("int index = y * m_map->m_mapWidth + x;")
+        statements.append("int index = y * m_map->m_size.m_x + x;")
         statements.append("TRmgMapItem& neighbour = m_map->m_mapItems[index];")
         prefix = "neighbour."
     else:
@@ -91,7 +91,7 @@ def bodies(refine=False):
     for storage, snapshot, receiver in combinations:
         for predicate in ("unsigned char", "bool", "int"):
             lines = [
-                "TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];"]
+                "TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_size.m_x + point.m_x];"]
             if snapshot.startswith("scalar"):
                 fields = ("flipX", "terrain", "flipY", "frame") if snapshot == "scalar_retail" else (
                     "terrain", "frame", "flipX", "flipY")

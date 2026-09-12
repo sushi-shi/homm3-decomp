@@ -53,7 +53,7 @@ def main():
 }""")):
         options.append({"name": name, "replace": "", "extra_edits": [
             {"insert_before": anchor, "text": declaration + "\n\n"},
-            {"source": "src/rmg_support.cpp", "find": ctor, "replace": replacement}]})
+            {"source": "src/rmg.cpp", "find": ctor, "replace": replacement}]})
     payload = {"schema": 1, "source": "include/rmg.h", "evidence": __doc__,
                "units": ["rmg", "rmg_support", "rmg_terrain", "tiles",
                          "singleselectionpopups", "singleselectionwindow", "scenarioinfo"],

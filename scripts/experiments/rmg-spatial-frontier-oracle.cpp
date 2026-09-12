@@ -33,13 +33,13 @@ struct TRmgMapItem {
     }
 };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight, m_numberLevels;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     std::vector<TRmgMapItem> m_cells;
     std::vector<int> m_queries;
     void record(int x, int y, int z) {
-        assert(x >= 0 && x < m_mapWidth && y >= 0 && y < m_mapHeight);
-        assert(z >= 0 && z < m_numberLevels && m_queries.size() < 30000);
+        assert(x >= 0 && x < m_size.m_x && y >= 0 && y < m_size.m_y);
+        assert(z >= 0 && z < m_size.m_z && m_queries.size() < 30000);
         m_queries.push_back(x); m_queries.push_back(y); m_queries.push_back(z);
     }
     // @SCALAR_LOOKUP@
@@ -111,7 +111,7 @@ template<class Candidate> static bool checkBounds() {
     return true;
 }
 static void initializeMap(type_random_map& map, int width, int height, int seed) {
-    map.m_mapWidth = width; map.m_mapHeight = height; map.m_numberLevels = 2;
+    map.m_size.m_x = width; map.m_size.m_y = height; map.m_size.m_z = 2;
     map.m_cells.resize(width * height * 2);
     map.m_mapItems = &map.m_cells[0];
     map.m_queries.clear();
