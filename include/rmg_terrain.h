@@ -276,7 +276,7 @@ public:
     // Prior provisional role: Finish
     void finish();
     // Prior provisional role: ChangeTerrain
-    void changeTerrain(int terrain, int strength);
+    int changeTerrain(int terrain, int strength);
     // Prior provisional role: PaintRectangle
     void paintRectangle(
         unsigned int x, unsigned int y,

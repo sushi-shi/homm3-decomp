@@ -563,6 +563,13 @@ struct TPoint {
     // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
     // TPoint copy of a grid point with a tile direction. Declared last so
     // the earlier member handles are unchanged.
+    // Coordinate accessors, used by the terrain painter's diagonal checks
+    // for the same site-count reason as the grid point's; declared after
+    // the data so the earlier member handles are unchanged. Adding them
+    // also returned rmg's quest-creature generate to 100% (include-set
+    // state, 99.73% before).
+    int getX() const { return m_x; }
+    int getY() const { return m_y; }
     TPoint& operator+=(const TPoint& offset);
 };
 
@@ -612,13 +619,24 @@ struct TRmgGridPoint {
     // free sum lives in rmg_terrain.h with its only users): repairTerrainPoint
     // 91.34 -> 93.63%, terrain paintPoint 96.56 -> 97.29%, line paintPoint
     // 79.94 -> 80.64%, refresh 74.42 -> 71.92%; rmg's quest-creature
-    // generate loses one parameter reload (99.73%) as include-set state.
+    // generate lost one parameter reload (99.73%) as include-set state
+    // until TPoint's accessors below restored it.
     // The river-painter constructor at 0x55ee50 stays exact; its earlier
     // 99.71% implicit-copy reading predates the retained compound add.
 
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
     TRmgGridPoint(const TPoint& point);
+
+    // Coordinate accessors: each use is a free inline site, and the terrain
+    // painter's diagonal checks need those sites to divide their budgets so
+    // that retail's retained cache reads stay calls (2026-09-12). Only the
+    // diagonal checks use them so far; every other body still reads the
+    // public fields, and each migration is measured on its own.
+    unsigned int getX() const { return m_x; }
+    unsigned int getY() const { return m_y; }
+    void setX(unsigned int newX) { m_x = newX; }
+    void setY(unsigned int newY) { m_y = newY; }
 
     // paintTransitions steps one column with a grid-side compound add; the
     // retained add at 0x4fa540 is TPoint's, so this one stays inline.

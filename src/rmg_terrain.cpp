@@ -1757,14 +1757,19 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // checkFirstDiagonal +0xfe/+0x126/+0x17b/+0x1a8 and checkSecondDiagonal
 // +0xb1/+0x105 select one of three operand addresses before loading it.
 // Keep this source boundary: a value-return clamp discards those lifetimes.
+// The else chain costs 64 against the plain form's 56; the eight units are
+// what checkSecondDiagonal's first neighbour query needs below 90 (the
+// cache read stays a call as in retail) once the point and offset
+// accessors give it ten remaining sites.
 static const int& clampRmgTerrainCoordinate(
     const int& value, const int& minimum, const int& maximum)
 {
     if (value < minimum)
         return minimum;
-    if (value > maximum)
+    else if (value > maximum)
         return maximum;
-    return value;
+    else
+        return value;
 }
 
 // Retail's guarded table at 0x6a5260 has two signed offsets per reflection.
@@ -1775,6 +1780,13 @@ static const int& clampRmgTerrainCoordinate(
 // the early-return reference clamp reach 89.7363 (direct member extents and
 // a constructed/reused point start at 78.2388). The signed offset initializer
 // already agrees byte-for-byte. Cache-call expansion and stack homes remain.
+// Grid-point and TPoint accessors (2026-09-12) give the first neighbour
+// query twelve remaining sites, so its cache read stays a call as in retail
+// while the last query expands the read and its fill (calls now agree,
+// 89.74 -> 90.71%). A separate second point also refuses that read but
+// costs a frame slot (0x30 against 0x28). Residual: register binding across
+// the clamp results (eax/edx/ecx roles) with the schedule aligned; why-reg's
+// catalog has no knob for it.
 VA(0x005B6BA0, 0x24C)  // transition 2/8 tests; retail-only
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1789,16 +1801,16 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     int terrain = getTerrain(point);
     const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby;
-    nearby.m_x = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_x) + pair[0].m_x, 0, static_cast<int>(getWidth()) - 1);
-    nearby.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + pair[0].m_y, 0, static_cast<int>(getHeight()) - 1);
+    nearby.setX(clampRmgTerrainCoordinate(
+        static_cast<int>(point.getX()) + pair[0].getX(), 0, static_cast<int>(getWidth()) - 1));
+    nearby.setY(clampRmgTerrainCoordinate(
+        static_cast<int>(point.getY()) + pair[0].getY(), 0, static_cast<int>(getHeight()) - 1));
     if (getTerrain(nearby) == terrain)
         return 1;
-    nearby.m_x = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_x) + pair[1].m_x, 0, static_cast<int>(getWidth()) - 1);
-    nearby.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + pair[1].m_y, 0, static_cast<int>(getHeight()) - 1);
+    nearby.setX(clampRmgTerrainCoordinate(
+        static_cast<int>(point.getX()) + pair[1].getX(), 0, static_cast<int>(getWidth()) - 1));
+    nearby.setY(clampRmgTerrainCoordinate(
+        static_cast<int>(point.getY()) + pair[1].getY(), 0, static_cast<int>(getHeight()) - 1));
     return getTerrain(nearby) == terrain;
 }
 
@@ -1809,6 +1821,13 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
 // raises its checkpoint from 70.7500 to 71.9615. The shared clamp's early-return
 // form gives CUR 70.3141 without changing this body: MAX stays 71.9615.
 // Residual: the center cache query expands where retail retains its call.
+// Grid-point/TPoint accessors, the width and height accessors and the else
+// chain in the shared clamp put the first neighbour query at ten remaining
+// sites and 894 units (89 < 90), so its cache read stays a call as in
+// retail and the second query expands the read and its fill: 71.96 ->
+// 94.83% with copy-initialized points, 99.19% constructing the first point
+// directly. Residual: the frame is 0x30 against retail's 0x28; three
+// homed slots where retail keeps registers.
 VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1819,15 +1838,15 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     };
     int terrain = getTerrain(point);
     const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
-    TRmgGridPoint nearby = TRmgGridPoint(
-        clampRmgTerrainCoordinate(static_cast<int>(point.m_x) + offset.m_x,
-            0, static_cast<int>(m_width) - 1), point.m_y);
+    TRmgGridPoint nearby(
+        clampRmgTerrainCoordinate(static_cast<int>(point.getX()) + offset.getX(),
+            0, static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
         return 1;
     TRmgGridPoint nextPoint;
-    nextPoint.m_x = point.m_x;
-    nextPoint.m_y = clampRmgTerrainCoordinate(
-        static_cast<int>(point.m_y) + offset.m_y, 0, static_cast<int>(m_height) - 1);
+    nextPoint.setX(point.getX());
+    nextPoint.setY(clampRmgTerrainCoordinate(
+        static_cast<int>(point.getY()) + offset.getY(), 0, static_cast<int>(getHeight()) - 1));
     return getTerrain(nextPoint) != terrain;
 }
 
@@ -1900,11 +1919,27 @@ void rmgTerrainPainter::finish()
     paintTransitions();
 }
 
-void rmgTerrainPainter::changeTerrain(int terrain, int strength)
+// Returns the terrain that was being painted. The brush wrapper discards
+// it, and retail's brush body has no trace of the load, so the return is
+// provisional; what it does prove is this body's inline cost. At cost 43
+// (finish plus two stores) the wrapper gives finish 957 units and the
+// erase(key) body 234, so the tagged four-argument _Distance expands where
+// retail calls it (81.33%). Any byte-neutral cost from 53 up (this form is
+// 54; copying both parameters into locals is 53; const-reference
+// parameters reach only 47) puts the erase body at 230 and the wrapper's
+// tagged callee at 44 < 45, which restores retail's call. finish itself
+// is rigid: size()/empty()/!= 0/> 0/this-> spellings all cost 169 and one
+// object, set aliases cost 171 and change bytes, direct-initialized or
+// iterator-local copies drop its body-saved flag, and moving
+// paintTransitions() into both callers leaves the brush destructor at
+// 92.14%.
+int rmgTerrainPainter::changeTerrain(int terrain, int strength)
 {
+    int previous = m_paintTerrain;
     finish();
     m_paintTerrain = terrain;
     m_transitionStrength = strength;
+    return previous;
 }
 
 VA(0x005B7250, 0x9A) // anchor-callee 0x54017e; allocation and throw RTTI
@@ -1935,16 +1970,12 @@ TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-// Residual (81.3309%): retail expands erase(key) and the three-argument
-// _Distance wrapper but calls its tagged four-argument body at 0x5b8cd0;
-// here the tagged body expands too. Two 45-cost grid copy sites in finish
-// used to leave the wrapper 16 units for that cost-45 callee (100%); with
-// the trivial grid copy finish gets 788, the two begin expansions leave 702,
-// the erase body gets 234 of it over three sites and the wrapper 48. The
-// exact form needs the erase body under 231: ten more units in finish or
-// the painter's changeTerrain, or one more candidate site after the erase.
-// The final getPackedCell expansion keeps its nested initializePackedCell
-// call, as retail does.
+// Exact: all 362 raw bytes after 14 relocations; all 13 blocks agree.
+// Retail expands erase(key) and the three-argument _Distance wrapper but
+// calls its tagged four-argument body at 0x5b8cd0; that call needs the
+// erase body under 231 units, which the painter's changeTerrain cost sets
+// (see its note). The final getPackedCell expansion keeps its nested
+// initializePackedCell call, as retail does.
 VA(0x005B7520, 0x16A) // anchor-callee 0x5401c3; retail-only
 void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 {
