@@ -36,6 +36,12 @@ struct rmgTerrainTile {
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+    // Frame and flip accessors: the line refresh compares the current tile
+    // through them so its neighbour helper keeps retail's three retained
+    // calls (2026-09-12); the painters' own copies still use the fields.
+    int getFrame() const { return m_frame; }
+    unsigned char getFlipX() const { return m_flipX; }
+    unsigned char getFlipY() const { return m_flipY; }
     // 0x55edc0 constructs its snapshot separately from adapter return values.
     // Those returns keep an implicit copy boundary: a custom copy constructor
     // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
