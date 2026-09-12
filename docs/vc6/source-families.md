@@ -6,6 +6,18 @@ It is not `state-sweep`, which adds transient random includes to an unchanged
 function body. Source alternatives require semantic review and retail evidence;
 a higher similarity score alone does not validate a reconstruction.
 
+The prison argument-ownership family tests all eight value/const-reference
+combinations for the three scalar parameters of the expanded `rmgHeroObject`
+constructor. Binding the postincremented object ID by const reference while
+passing experience by value recovers all 147 bytes of factory `0x5348d0`,
+up from 95.1754%. Hero-index ownership is neutral at that boundary; its value
+parameter remains. The temporary ID lives through construction, and allocation,
+hero reservation, conditional increment and member values are unchanged.
+Eight distinct objects and seven reproduced finalists leave every other
+tracked score in all seven consumers unchanged. The full build verifies the
+adopted constructor; restoring the value ID parameter is the negative control.
+Generator: `scripts/experiments/generate-rmg-prison-argument-family.py`.
+
 Inside the pinned build shell, with `HOMM3_DIR` set to the owning worktree:
 
 ```sh

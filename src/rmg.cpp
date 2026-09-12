@@ -1998,8 +1998,12 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
 // The hero-object factory marks the selected index in disabledHeroes before
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
+// The constructor's expanded retail copy at 0x5348d0 supports binding the
+// postincremented object ID by const reference. The temporary lives through
+// construction; the other scalar parameters remain values. No retained
+// constructor symbol or Dreamcast RMG signature supplies its declaration.
 rmgHeroObject::rmgHeroObject(TRmgObjectPropertiesRef* properties,
-    type_random_map_generator* generator, int objectId, int heroIndex,
+    type_random_map_generator* generator, const int& objectId, int heroIndex,
     int experience)
     : type_object(properties)
 {
@@ -2385,15 +2389,19 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 // a hero, returns null on exhaustion, and expands the 0x2c-byte object's
 // constructor with the definition's experience and the next generator id.
 // Complete-only: no Dreamcast counterpart; constructor spelling provisional.
-// Residual (95.1754%): the selector's nested decrement/test retains retail's
+// Exact: the selector's nested decrement/test retains retail's
 // call at 0x5348dc naturally, while its standalone body remains exact.
 // The combined && form expands it and gives 9.0702%; nested/continue forms
 // give 63.7193% before constructor refinement. Assigning heroIndex before
 // objectId recovers the base-position stores and derived-vptr ordering.
 // The 16 initializer/body combinations peak at 94.6316%; 30 constructor
-// assignment-order forms peak here, and all six integer-parameter orders
-// are flat. Retail still loads experience later and stores the first
-// placement byte before the position fields. No other RMG scores changed.
+// assignment-order forms peak at 95.1754%, and all six integer-parameter
+// orders are flat. The eight value/reference argument-ownership states
+// recover all 147 bytes with objectId bound by const reference and experience
+// passed by value. A heroIndex reference is neutral; retain the simpler value
+// parameter. This restores the later experience load and placement-byte store
+// before the position fields. The other six consuming TUs and every sibling
+// score are unchanged; the value-objectId negative control stays at 95.1754%.
 VA(0x005348D0, 0x93) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
