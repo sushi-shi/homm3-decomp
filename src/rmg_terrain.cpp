@@ -1915,7 +1915,7 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // separate cache queries and the scoped point value are visible in retail;
 // the later queries expand further than the first four retained calls.
 // SHR at +0x6a/+0xb6/+0x121/+0x25c proves logical, not signed division.
-// Residual 92.63% (70.10% with direct cell reads): retail calls both
+// Exact (2026-09-12; 70.10% with direct cell reads). Retail calls both
 // west and north reads, calls the east read but expands its frame read
 // with the fill called, and expands both south reads with their fills.
 // The frame read therefore sits in a getFrame sibling of getTerrain
@@ -1924,10 +1924,12 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 // the cell and stepped by one setter, which gives the south arm the six
 // candidate sites its 371-unit read needs while the east read stays
 // under 90 (accessor constructions alone 76.27%, the signed conversion
-// 83.91%, a signed sum 44%). Remaining: retail keeps the rule pointer in
-// EBX and reloads the terrain parameter; ours keeps the parameter and
-// reloads the rule (declaring the rule first 92.63, a reference, a
-// terrain copy, an int strength 91.58, no rule local 78.79).
+// 83.91%, a signed sum 44%). The step reads the parameter's coordinate
+// again (retail computes y + 1 into a fresh register; stepping the
+// point's own coordinate shifts in place and keeps the terrain parameter
+// in EBX where retail keeps the rule pointer, 92.63%), with the strength
+// local declared before the rule (rule first 97.09; a rule reference or
+// a terrain copy 97.09; a default-constructed point set twice 89.44).
 // Residual: the first frame query expands getPackedCell where retail calls
 // it; later source call/expansion decisions are also displaced. No pins.
 // A 60-case point/query matrix and a 60-case follow-up crossing ten parents
@@ -1944,32 +1946,32 @@ VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
 {
-    TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     unsigned int strength = m_transitionStrength;
+    TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
     if (point.getX() > 0) {
         TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setX(nearby.getX() - 1);
+        nearby.setX(point.getX() - 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getY() > 0) {
         TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setY(nearby.getY() - 1);
+        nearby.setY(point.getY() - 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getX() < getWidth() - 1) {
         TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setX(nearby.getX() + 1);
+        nearby.setX(point.getX() + 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
     }
     if (point.getY() < getHeight() - 1) {
         TRmgGridPoint nearby(point.getX(), point.getY());
-        nearby.setY(nearby.getY() + 1);
+        nearby.setY(point.getY() + 1);
         if (getTerrain(nearby) == terrain
             && rule->isSpecialFrame(getFrame(nearby)))
             strength >>= 1;
