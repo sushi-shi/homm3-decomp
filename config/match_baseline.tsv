@@ -3584,7 +3584,7 @@ rmg_terrain	?getEntry@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000
 rmg_terrain	?getEntry@TRmgTableTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	a2af54cf7bfe
 rmg_terrain	?getPackedCell@rmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	fe243c14bfe0
 rmg_terrain	?getRmgTerrainNeighbourKind@@YIHHH@Z	100.0000	100.0000	100.0000	0x1b3e40	00d2732a3f9a
-rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	92.6255	92.6255	92.6255	0x1b6fd0	617674eb985c
+rmg_terrain	?getTransitionStrength@rmgTerrainPainter@@QAEHABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6fd0	7409f5db6fcb
 rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	689aa34d7a84
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
 rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	5428ff7efd87
