@@ -128,12 +128,13 @@ DATA(0x0069e5a8) int g_soundCount;
 DATA(0x0069e5a4) int g_soundCountCd;
 DATA(0x0069e5ac) int g_soundCountCampaign;
 
+// Retail shares one serviceSounds tail across all four handle guards.
+// Combining the equivalent conditions avoids two source copies of the
+// now-visible header inline; its standalone retained-call residual remains.
 VA(0x005971b0, 0x3B)  // dc 0x14ac30
 void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2)
-        g_soundManager->serviceSounds();
-    else if (g_binkVideo || g_binkVideo2)
+    if (g_smackVideo || g_smackVideo2 || g_binkVideo || g_binkVideo2)
         g_soundManager->serviceSounds();
 }
 
@@ -231,7 +232,7 @@ int videoPlay(int id, int x, int y, int w, int h)
         g_smackFrameReady = 0;
         return result;
     }
-    return playBinkVideo(id, x, y, w, h);
+    return BinkManager::playBink(id, x, y, w, h);
 }
 
 VA(0x00597570, 0x75)  // dc 0x14ac3c
@@ -244,9 +245,14 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
         showVideo(id, x, y, w, h, a6, a7, a8);
     else
-        openBinkVideo(id, x, y, w, h, a6, a7);
+        BinkManager::openBink(id, x, y, w, h, a6, a7);
 }
 
+// Retail's 225-byte body follows this canonical helper chain:
+
+// keyword or per-site pragma was needed at that earlier exact checkpoint.
+// With the canonical sound header visible, the shared guard recovery below
+// reaches 38.1538%; serviceSounds still expands where retail retains calls.
 VA(0x005975f0, 0xE1)  // dc 0x14ac40
 void videoClose()
 {
@@ -254,7 +260,7 @@ void videoClose()
         videoResume();
     g_soundManager->serviceSounds();
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
 }
 
 VA(0x005976e0, 0x5E)  // dc 0x14ac44
@@ -269,7 +275,7 @@ void videoNextFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            nextBinkFrame();
+            BinkManager::nextBinkFrame();
     }
     g_inVideoNextFrame = 0;
 }
@@ -283,7 +289,7 @@ void videoDrawCurrentFrame()
     }
     if (g_binkVideo || g_binkVideo2) {
         if (!g_binkPaused)
-            drawCurrentBinkFrame();
+            BinkManager::drawCurrentBinkFrame();
     }
 }
 
@@ -308,9 +314,7 @@ void videoPause()
 VA(0x00597850, 0xAB)  // dc 0x14ac50
 void videoResume()
 {
-    if (g_videoPauseCount == 0)
-        return;
-    if (--g_videoPauseCount != 0)
+    if (g_videoPauseCount == 0 || --g_videoPauseCount != 0)
         return;
     if (g_smackVideo || g_smackVideo2)
         g_smackPaused = 0;
@@ -332,7 +336,7 @@ void videoRestart()
         _SmackGoto(g_smackVideo, 1);
         _SmackDoFrame(g_smackVideo);
     }
-    restartBinkVideo();
+    BinkManager::restartBink();
 }
 
 VA(0x00597930, 0x5A)  // dc 0x14ac58
@@ -472,7 +476,7 @@ VA(0x00597c70, 0x84)  // dc 0x14ac64
 void videoShutDown()
 {
     SmackManager::closeSmacker();
-    closeBinkVideo();
+    BinkManager::closeBink();
     if (g_videoFile3)
         CloseHandle(g_videoFile3);
     if (g_videoFile2)

@@ -1,12 +1,15 @@
 // seerhut.cpp - E:\gamedcs\seerhut.cpp (compiland seerhut.obj)
 #include <va.h>
+#include "creaturetype.h"
 #include <algorithm>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "seerhut.h"
-#include "ai_player.h"  // shared artifact valuation overloads
+#include "ai_player.h"
+#include "seerhuttext.h"
+#include "resourcemanager.h"
 #include "hero.h"
 #include "quest.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
@@ -15,6 +18,7 @@
 #include "advmgr.h"
 #include "winmgr.h"
 #include "textresource.h"
+#include "includes.h"
 
 void aiEquipArtifacts(hero* currentHero);
 void aiJoinDecision(hero* currentHero, TCreatureType creature, int amount);
@@ -26,22 +30,7 @@ void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
 // declaration used by the other frameless-construction compilands.
 __declspec(nothrow) void __cdecl operator delete(void* value);
 
-static inline const char* getArmyName(int type, int count)
-{
-    return type >= 0 && type <= 0x96
-               ? (count == 1 ? g_creatureTypeTraits[type].m_name
-                             : g_creatureTypeTraits[type].m_pluralName)
-               : g_emptyRolloverText;
-}
-
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
-
-// E:\gamedcs\seerhut.cpp:50
-DC_ONLY(0x12cd28, 0x35C)
-unsigned char initializeSeerHutText()
-{
-    // @stub
-}
 
 // E:\gamedcs\seerhut.cpp:139
 DC_ONLY(0x12d084, 0x4C)
@@ -237,22 +226,6 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 // from a header - seerhut.cpp is its only consumer in this tree.
 int aiResourceCost(int player, const int* costs);
 
-// The tree's representation-bridge idiom (townmgr.cpp's
-// building_id_from_int, ai_combat.cpp's pair): the two container quests
-// deserialize their elements as plain 16-bit serial values and the
-// vectors below them are typed on the real domains, so the edge is
-// crossed through a union rather than through a cast into an enum.
-// The artifact twin is shared through artifact.h.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        int m_value;
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
-
 type_quest* createQuest(int questType, unsigned char flags);
 
 std::string formatString(const char* format, ...);
@@ -267,17 +240,6 @@ DATA(0x006a5e64) extern const char* g_resourceNames[7];
 // west, north-west, then centre.
 DATA(0x006a5c48) extern const char* g_questMonsterDirections[9];
 
-// VC6's by-value, reference-returning max helper. The unvisited arm of
-// TSeerHut::getValue homes both operands and selects between their addresses,
-// which distinguishes this template shape from a plain ternary.
-template <class T>
-inline const T& cppMax(T left, T right)
-{
-    return left < right ? right : left;
-}
-
-std::string joinTextList(const std::vector<std::string>& items);
-
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
 // header and the include-set residual class makes a one-line declaration
@@ -288,6 +250,42 @@ void normalDialog(const char* text, int mbType, int x, int y,
 void extendedDialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);
+
+// Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
+// three-column tables from it, then walk every row
+
+// Earlier residual (79.88%, before insert(end(), name) restored 100%):
+// a three-way register permutation and one inline decision, both downstream
+// of where `sheet` lands. Retail keeps it in EBX -
+// Original: InitializeSeerHutText; seerhut.cpp:50, dc 0x12cd28.
+// DC initializes the older fixed text table; Complete uses the spreadsheet
+// and separate column loader, but retains this initializer and its source owner.
+VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
+unsigned char initializeSeerHutText()
+{
+    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+        DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
+    if (!sheet)
+        return 0;
+
+    if (sheet->getNumberOfRows() < 60)
+        return 0;
+
+    for (int c = 0; c < 3; ++c) {
+        loadSeerHutTextColumn(sheet, &g_seerHutTextB[c], c + 1);
+        loadSeerHutTextColumn(sheet, &g_seerHutTextA[c], c + 4);
+    }
+
+    for (int row = 50; row < sheet->getNumberOfRows(); ++row) {
+        const char* name = sheet->getRow(row)[0];
+        if (!name[0] || name[0] == ' ')
+            continue;
+        g_seerHutNames.insert(g_seerHutNames.end(), name);
+    }
+
+    sheet->dispose();
+    return 1;
+}
 
 VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
 
@@ -1199,7 +1197,12 @@ int type_artifact_quest::getAIValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-        type_artifact wanted(m_artifacts[i], -1);
+        // Retail stores the artifact id and -1 directly. DC's TArtifact
+        // constructor has exactly that order (hero.h:209..213); the former
+        // two-int convenience overload is unnecessary. Historical 100/70
+        // measurements compared a hidden/visible default constructor before
+        // the typed value construction was restored.
+        type_artifact wanted(m_artifacts[i]);
 
         total += aiGetValueOfArtifact(wanted, player);
     }
@@ -1354,7 +1357,11 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
         short id;
 
         file->read(&id, sizeof(id));
-        m_artifacts.push_back(artifactFromInt(id));
+        TArtifact artifact;
+        {
+            artifact = TArtifact(id);
+        }
+        m_artifacts.push_back(artifact);
     }
     type_quest::load(file, version);
 }
@@ -1372,7 +1379,10 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
         short id;
 
         file->read(&id, sizeof(id));
-        TArtifact artifact = artifactFromInt(id);
+        TArtifact artifact;
+        {
+            artifact = TArtifact(id);
+        }
         m_artifacts.push_back(artifact);
         g_game->m_artifactDisabled[artifact] = 1;
     }
@@ -1603,7 +1613,10 @@ void type_creature_quest::load(TAbstractFile* file, int version)
         int number;
 
         file->read(&type, sizeof(short));
-        TCreatureType creature = creatureTypeFromInt(type & 0xffff);
+        TCreatureType creature;
+        {
+            creature = TCreatureType(type & 0xffff);
+        }
         file->read(&number, sizeof(number));
         int amount = number;
         m_counts.push_back(amount);
@@ -1626,7 +1639,10 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
         int number;
 
         file->read(&type, sizeof(short));
-        TCreatureType creature = creatureTypeFromInt(type & 0xffff);
+        TCreatureType creature;
+        {
+            creature = TCreatureType(type & 0xffff);
+        }
         file->read(&number, sizeof(short));
         int amount = number & 0xffff;
         m_counts.push_back(amount);
@@ -1635,16 +1651,14 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-// Creature types and counts use separate short and int fields in the save format.
-static inline void writeCreatureType(TAbstractFile* file, short value)
-{
-    file->write(&value, sizeof(value));
-}
-
-static inline void writeCreatureCount(TAbstractFile* file, int value)
-{
-    file->write(&value, sizeof(value));
-}
+// Historical probe (99.9632 -> 100%): invented WriteCreatureType and
+// WriteCreatureCount wrappers made VC6 reuse a four-byte argument home for
+// the short and int payloads. That codegen observation does not establish
+// either source helper. Keep each scalar copy in this serializer instead:
+// retail 0x5712cb loads the short before the two-byte write at 0x5712d8,
+// then 0x5712e2 loads the count before the four-byte write at 0x5712ee.
+// Separate scopes preserve the temporary lifetimes and the original short
+// conversion without introducing an int/short pointer alias.
 
 VA(0x00571280, 0x137)
 void type_creature_quest::save(TAbstractFile* file)
@@ -1652,8 +1666,14 @@ void type_creature_quest::save(TAbstractFile* file)
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
     for (unsigned int i = 0; i < m_types.size(); i++) {
-        writeCreatureType(file, m_types[i]);
-        writeCreatureCount(file, m_counts[i]);
+        {
+            short value = m_types[i];
+            file->write(&value, sizeof(value));
+        }
+        {
+            int value = m_counts[i];
+            file->write(&value, sizeof(value));
+        }
     }
 
     {
@@ -2298,16 +2318,6 @@ int TQuestGuard::save(TAbstractFile* outfile)
     }
 }
 
-VA(0x00573580, 0x13)
-TSeerHut::TSeerHut()
-    : TQuestGuard(0), m_reward()
-{
-    m_quest = 0;
-    m_visitedPlayers = 0;
-    m_nameIndex = 0;
-    m_completedByPlayer = 0;
-}
-
 VA(0x005735a0, 0xC3)
 int TSeerHut::getValue(hero* currentHero)
 {
@@ -2417,6 +2427,27 @@ void TSeerHut::doEmptyDialog()
                  -1, 0, -1, 0, -1, 0);
 }
 
+// Dreamcast places this private boundary immediately after DoEmptyDialog and
+// gives it the same (hero*, bool) inputs. Complete's virtual quest owns the
+// completion text and its reward object owns application, but retail folds
+// this revised helper into DoSeerEvent and cross-jumps its accepted arm with
+// the AI reward tail.
+inline void TSeerHut::doCompletionDialog(
+    hero* currentHero, bool humanPlayer)
+{
+    normalDialog(m_quest->getCompletionText().c_str(),
+                 2, -1, -1, getRewardType(),
+                 m_reward.getRewardExtra(currentHero),
+                 -1, 0, -1, 0, -1, 0);
+
+    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT
+        || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
+        m_quest->takePayment(currentHero);
+        m_reward.giveReward(currentHero, humanPlayer);
+        m_quest = 0;
+    }
+}
+
 // Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
 // no-local switch helper called first by DoCompletionDialog. Retail's inlined
 // copy preserves the ten reward arms and Complete's shifted skill pictures.
@@ -2459,27 +2490,7 @@ inline int TSeerHut::getRewardType()
     }
 }
 
-// Dreamcast places this private boundary immediately after DoEmptyDialog and
-// gives it the same (hero*, bool) inputs. Complete's virtual quest owns the
-// completion text and its reward object owns application, but retail folds
-// this revised helper into DoSeerEvent and cross-jumps its accepted arm with
-// the AI reward tail.
-inline void TSeerHut::doCompletionDialog(
-    hero* currentHero, bool humanPlayer)
-{
-    normalDialog(m_quest->getCompletionText().c_str(),
-                 2, -1, -1, getRewardType(),
-                 m_reward.getRewardExtra(currentHero),
-                 -1, 0, -1, 0, -1, 0);
-
-    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT
-        || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
-        m_quest->takePayment(currentHero);
-        m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
-    }
-}
-
+// retail's real `AI_get_value_of_artifact(const type_artifact&, long)`
 VA(0x00573a70, 0x210)
 int TSeerReward::getValue(const hero* currentHero)
 {
@@ -2531,8 +2542,12 @@ int TSeerReward::getValue(const hero* currentHero)
     case eRewardArtifact: {
         if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
             return 0;
+        // Complete stores the reward ordinal in the serialized union word.
+        // Decode that word before constructing the canonical typed artifact.
+        TArtifact artifact;
+        memcpy(&artifact, &m_value.m_dwords[0], sizeof artifact);
         return aiGetValueOfArtifact(
-            type_artifact(m_value.m_dwords[0], -1), currentHero->m_owner);
+            type_artifact(artifact), currentHero->m_owner);
     }
 
     case eRewardSpell:
@@ -2608,7 +2623,9 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardArtifact:
         if (currentHero->getNumberInBackpack(1) < 64) {
             type_artifact artifact(ARTIFACT_NONE);
-            artifact.m_artifactId = artifactFromInt(m_value.m_dwords[0]);
+            {
+                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
+            }
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -2626,14 +2643,21 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardCreature:
         if (!currentHero->m_army.add(m_value.m_creature.m_creatureType,
                                    m_value.m_creature.m_count, -1)) {
-            if (humanPlayer)
-                doMonsterJoinDialog(currentHero,
-                    creatureTypeFromInt(m_value.m_creature.m_creatureType),
+            if (humanPlayer) {
+                TCreatureType creature;
+                {
+                    creature = TCreatureType(m_value.m_creature.m_creatureType);
+                }
+                doMonsterJoinDialog(currentHero, creature,
                     m_value.m_creature.m_count);
-            else
-                aiJoinDecision(currentHero,
-                    creatureTypeFromInt(m_value.m_creature.m_creatureType),
+            } else {
+                TCreatureType creature;
+                {
+                    creature = TCreatureType(m_value.m_creature.m_creatureType);
+                }
+                aiJoinDecision(currentHero, creature,
                     m_value.m_creature.m_count);
+            }
         }
         break;
     }
@@ -2967,17 +2991,16 @@ void TSeerHut::read(TAbstractFile* infile)
     m_nameIndex = chosen;
 }
 
-// Complete's byte-valued stream read. The name is provisional; load's
-// retail expansion proves the width and return-value lifetime. Keeping the
-// ordinary helper also supplies the real scalar call sites after the legacy
-// quest constructor, recovering its nested constructor/insert boundaries.
-static unsigned char readSeerByte(TAbstractFile* infile)
-{
-    unsigned char value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
+// Historical probe: the invented ReadSeerByte wrapper reproduced all 586
+// bytes outside relocations, all ten CFG blocks, and EH states 0/1/2.
+// Those optimizer effects do not prove an additional source helper. Each
+// byte read now belongs directly to this serializer, with a separate local
+// and the same unsigned conversion, ignored status and consumption order.
+// Retail's six legacy reads are at 0x574ae3/0x574af8/0x574b0b/0x574b1e/
+// 0x574b2b/0x574b43; the fourth remains a discarded reserved byte. Modern
+// quest-kind and trailer reads are at 0x574c5f/0x574c98/0x574cab/0x574cbe.
+// Retail retains four
+// The earlier flattened-byte probe left 35.3825%, a 0x1c rather than 0x14 frame, and
 VA(0x00574A90, 0x24A)  // dc 0x12d8e4
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {
@@ -2985,26 +3008,68 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         int intBuffer;
         infile->read(&intBuffer, sizeof(intBuffer));
         infile->read(&m_reward, sizeof(m_reward));
-        unsigned char noQuest = readSeerByte(infile) != 0;
-        m_completedByPlayer = readSeerByte(infile);
-        m_visitedPlayers = readSeerByte(infile);
-        readSeerByte(infile);  // reserved legacy byte
-        int textRow = readSeerByte(infile);
-        m_nameIndex = readSeerByte(infile);
+        unsigned char noQuest;
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            noQuest = value != 0;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_completedByPlayer = value;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_visitedPlayers = value;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));  // reserved legacy byte
+        }
+        int textRow;
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            textRow = value;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_nameIndex = value;
+        }
         if (noQuest || intBuffer == -1)
             m_quest = 0;
         else
             m_quest = new type_artifact_quest(
                 1, static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
-        type_quest* newQuest = createQuest(readSeerByte(infile), 1);
+        type_quest* newQuest;
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            newQuest = createQuest(value, 1);
+        }
         m_quest = newQuest;
         if (newQuest)
             newQuest->load(infile, saveVersion);
         infile->read(&m_reward, sizeof(m_reward));
-        m_completedByPlayer = readSeerByte(infile);
-        m_visitedPlayers = readSeerByte(infile);
-        m_nameIndex = readSeerByte(infile);
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_completedByPlayer = value;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_visitedPlayers = value;
+        }
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            m_nameIndex = value;
+        }
     }
 }
 
@@ -3021,3 +3086,20 @@ VA_COMPGEN(0x004b7080, 0x56, SCALAR_DELETING_DTOR, basic_string)
 // COMDAT pairing: vector<basic_string<char>>::_Ufill, agreement 1.000 at an
 // exactly equal 41-byte extent.
 VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)
+
+// The shared single-string insertion and its retained library helpers no
+// longer emit in events, but this TU naturally emits the same specializations.
+// Retail calls 0x4af350 from creatureBankEvent and five quest dialogs:
+// artifact/creature/resource proposals, creature progress and resource text.
+// The latter callers prove this consumer independently of matching scores.
+// All 1,217 instruction bytes below agree outside relocation operands.
+// Allocation/deallocation, _Construct/_Ufill and the four calls within this
+// chain agree; size at 0x4af4e0 is byte-identical to the retained string-vector
+// size (also folded with vector<vector<hero> >). _Xran and memmove are the
+// retail invalid-position throw and overlap-safe copy; npos/empty-string
+// data point to 0x63a60c/0x63a608. No template body or caller is manufactured.
+VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT_SINGLE, string)
+VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
+VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
+VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
+VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)

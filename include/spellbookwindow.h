@@ -109,14 +109,43 @@ public:
     virtual int open(int newPriority, unsigned char update);
     virtual void close(unsigned char update);
 
-    void setSchool(TSpellSchool school);
-    unsigned getSchool();
-    void setContext(TSpellContext context);
-    unsigned getContextMask();
+    // E:\gamedcs\SpellbookWindow.h:222
+    void setSchool(TSpellSchool school)
+    {
+        m_school = school;
+        s_lastSchool = school;
+    }
+    // E:\gamedcs\SpellbookWindow.h:230
+    unsigned getSchool() const
+    {
+        return m_school;
+    }
+    // E:\gamedcs\SpellbookWindow.h:236
+    void setContext(TSpellContext context)
+    {
+        if (context == eContextAdventure)
+            m_contextMask = eAdventureContextMask;
+        else
+            m_contextMask = eCombatContextMask;
+        s_lastContext = context;
+    }
+    // E:\gamedcs\SpellbookWindow.h:248
+    unsigned getContextMask() const
+    {
+        return m_contextMask;
+    }
     void gotoPage(int page);
     int getPage();
-    void previousPage();
-    void nextPage();
+    // E:\gamedcs\SpellbookWindow.h:258
+    void previousPage()
+    {
+        gotoPage(m_page - 1);
+    }
+    // E:\gamedcs\SpellbookWindow.h:264
+    void nextPage()
+    {
+        gotoPage(m_page + 1);
+    }
     static void reset();
     virtual int windowHandler(message* msg);
 
@@ -146,7 +175,7 @@ private:
                                       const hero* currentHero,
                                       unsigned char rollover);
 
-    int convertID2HelpID(int id);
+    int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);
     static TSpellSchool getSchoolFromPosition(int position);
     void displayNewSchool(int position);

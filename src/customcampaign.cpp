@@ -5,6 +5,7 @@
 // customcampaign/dialogbox gaps remain ambiguous, so the older-revision
 // carcass is not force-claimed merely from roster order.
 #include <va.h>
+#include "creaturetype.h"
 #include <algorithm>
 #include <direct.h>
 #include <fstream>
@@ -19,6 +20,7 @@
 #include "customcampaign.h"
 #include "customcampaign_legacy.h"
 #include "gzinflatebuf.h"
+#include "abstractfile.h"
 #include "hero.h"
 #include "bitmap16.h"
 #include "font.h"
@@ -124,8 +126,19 @@ static const int g_campaignSkipKey = 0x3e;
 DATA(0x0063d734) extern const int g_campaignVideoIds[];
 DATA(0x00675be8) extern const char* g_campaignVideoSounds[];
 
-// The two TStreamBufFile virtuals, emitted at the head of this object
-// (see gzinflatebuf.h): sgetn / sputn on the wrapped streambuf.
+// The TAbstractFile view of a streambuf: Read is sgetn, Write is sputn.
+// Size 8 is byte-proven by every stack instance (vftable, streambuf*).
+class TStreamBufFile : public TAbstractFile {
+public:
+    TStreamBufFile(std::streambuf* newBuffer) : m_buffer(newBuffer) {}
+    virtual int read(void* data, int size);         // 0x483f10
+    virtual int write(const void* data, int size);  // 0x483f30
+
+    std::streambuf* m_buffer;  // +4
+};
+
+// The campaign stream adapter owns these two virtuals and its local
+// constructor above. Retail 0x63dacc supplies the read/write slots.
 VA(0x00483f10, 0x17)
 int TStreamBufFile::read(void* data, int size)
 {
@@ -148,6 +161,15 @@ int getCrossoverHeroValue(hero* candidate)
     return skills + primary;
 }
 
+// Module-local campaign sort predicate; the class name is provisional.
+// The written operator owns its retained VA directly. The former
+// FUNCTOR_CALL enrollment worked around an obsolete scanner limitation:
+// the source annotation now supplies the operator's mangled identity.
+struct CrossoverHeroStronger {
+    bool operator()(hero& lhs, hero& rhs) const;
+};
+
+VA(0x00483f80, 0x9B)  // retained written predicate; score/experience/hero-id ordering
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
     int leftValue = getCrossoverHeroValue(&lhs);
@@ -257,7 +279,8 @@ void TCampaignSpellScrollBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        type_artifact scroll(ARTIFACT_SPELL_SCROLL, m_spell);
+        // Complete reads this spell from an unsigned byte at 0x484050; the canonical scroll constructor takes DC SpellID.
+        type_artifact scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(&scroll, 0, 0);
     }
 }
@@ -273,10 +296,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         int creature = m_creature;
         int faction;
         if (g_game->m_f1f698 == 0 &&
-            (creature == CREATURE_AIR_ELEMENTAL ||
-             creature == CREATURE_EARTH_ELEMENTAL ||
-             creature == CREATURE_FIRE_ELEMENTAL ||
-             creature == CREATURE_WATER_ELEMENTAL))
+            isBaseElemental(creature))
             faction = -1;
         else
             faction = g_creatureTypeTraits[creature].m_townType;
@@ -439,7 +459,8 @@ void TCampaignArtifactBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        type_artifact granted(m_artifact, -1);
+        // Complete reads this bonus as a signed word at 0x4848a0; the canonical artifact constructor takes DC TArtifact.
+        type_artifact granted(static_cast<TArtifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         target->giveArtifact(&granted, 0, 0);
     }
 }
@@ -1256,7 +1277,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             savedArtifacts[slot] = type_artifact();
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(slot);
+            type_artifact artifact = currentHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 savedArtifacts[slot] = artifact;
                 currentHero->removeArtifact(slot);
@@ -1264,7 +1285,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(slot);
+            type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1275,7 +1296,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(slot);
+            type_artifact artifact = currentHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
@@ -1349,23 +1370,23 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
                 currentHero->addSpell(spell);
         }
         if (!m_retainArtifacts
-            && sourceHero->getArtifact(hero::EQUIPPED_SLOT_SPELLBOOK).m_artifactId
+            && sourceHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
                 == ARTIFACT_SPELLBOOK
-            && currentHero->getArtifact(hero::EQUIPPED_SLOT_SPELLBOOK).m_artifactId
+            && currentHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
                 == ARTIFACT_NONE) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            type_artifact spellbook(ARTIFACT_SPELLBOOK);
             currentHero->equipArtifact(&spellbook, -1);
         }
     }
 
     if (m_retainArtifacts) {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->getArtifact(slot);
+            type_artifact artifact = currentHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(slot);
+            type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1379,10 +1400,10 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
     } else {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->getArtifact(slot);
+            type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts.test(artifact.m_artifactId)) {
-                type_artifact displaced = currentHero->getArtifact(slot);
+                type_artifact displaced = currentHero->getArtifact(TArtifactSlot(slot));
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
                 currentHero->equipArtifact(&artifact, slot);
@@ -1485,6 +1506,12 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
 // first, so retail sorts them by their power rating before the pass below.
 // Retail-only, name provisional (the whole std::sort instantiation this
 // predicate pulls into customcampaign.obj is at 0x48eec0 and its helpers).
+// Keep the comparator declaration in this module with its sole consumer.
+struct HeroPlaceholderStronger {
+    bool operator()(const HeroPlaceholderData& left,
+                    const HeroPlaceholderData& right) const;
+};
+
 bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
                                          const HeroPlaceholderData& right)
     const
@@ -1663,7 +1690,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             int slotIndex;
             for (slotIndex = 0; slotIndex < g_crossoverEquippedArtifactSlots;
                  ++slotIndex) {
-                type_artifact heroArtifact = carried.getArtifact(slotIndex);
+                type_artifact heroArtifact = carried.getArtifact(TArtifactSlot(slotIndex));
                 if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
@@ -1742,12 +1769,8 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // TCampaignStartOption hierarchy. Its retained bodies prove the const query
 // signatures and all thirteen vtable slots; no second interface is needed.
 
-template<>
-std::bitset<144>::reference bitset_iterator<144>::operator*() const
-{
-    return (*m_bits)[m_position];
-}
-VA_COMPGEN(0x0048eb40, 0x14, BITSET_ITERATOR_DEREF, Bitset144)
+// The retained destination dereference at 0x48eb40 is annotated on the
+// canonical generic body in bitset_iterator.h, with its 144-bit instance.
 
 // The serialization and prerequisite-insert inline boundaries remain unfinished.
 // Retail puts each absent-text arm first and retains the allocated MapTextStruct
@@ -1908,7 +1931,12 @@ void SCampaign::doPreLoadCustomization()
 }
 #endif
 
-VA(0x004883d0, 0x21)
+// ScenarioStruct::Read's type-3 arm calls this 33-byte constructor in
+// retail. An implicit-constructor probe removed the standalone VC6 body
+// altogether and left the retained claim unpaired; the prior exact written
+// form preserves the call boundary. This Complete-only class has no DC
+// constructor to prove a different source form (config/win_only.tsv).
+VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm)
 TCampaignStartHeroOption::TCampaignStartHeroOption()
 {
 }
@@ -1939,43 +1967,8 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
-VA(0x004885d0, 0xCB)
-TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
-    const char* filename)
-{
-    m_fileName = filename;
-    m_data = 0;
-    m_stream = 0;
-    m_fileError = CAMPAIGN_FILE_OK;
-}
-
-// Complete-only. Retail deletes every scenario record (null-checked by
-// `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
-// (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
-// i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
-// campaign_desc, campaign_name and file_name in reverse order.
-
-// MAX 78.5339; current canonical clear() body 75.72034. Retail calls
-// both vector::erase and FreeData; candidate expands them and leaves
-// vector::_Destroy called from erase. Keep clear() as the source boundary.
-// The 2026-09-07 passive trace corrects the old small-free-class diagnosis:
-// FreeData's C2 cost is 101, not <=40, and its site has budget 752 after
-// clear/erase. The state gate allows it (body flags 0x8000, callee 0x68).
-// Clear's nested erase costs 69 against budget 144; its _Destroy costs 49
-// against 29 and stays called. These are ordinary measured budget decisions,
-// not proof that caller-side source structure can never affect the frontier.
-// Earlier artificial free/charged-site controls were byte-inert; do not
-// repeat them or use them to infer the helper's cost. Natural loop controls:
-// signed index is byte-identical at 75.72034; naming the scenarios vector
-// by reference gives 67.27966. Neither changes the retained source choice.
-VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    for (unsigned int i = 0; i < m_scenarios.size(); ++i)
-        delete m_scenarios[i];
-    m_scenarios.clear();
-    freeData();
-}
+// CampaignHeaderStruct's constructor (0x4885d0) and destructor
+// (0x4886a0) are defined in campaignbrief.cpp, their CodeView owner.
 
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
@@ -2421,19 +2414,6 @@ void TCampaignBrief::CampaignHeaderStruct::startScenario(
     m_scenarios[which]->startScenario(m_stream, option);
 }
 
-VA(0x00489500, 0x88)  // dc 0xbcd90
-SCampaign::SCampaign()
-{
-    m_isCheater = 0;
-    m_secretActive = 0;
-    m_currentMap = -1;
-    m_numMapRegions = -1;
-    m_briefingChoice = -1;
-    m_crossoverArrayIndex = -1;
-    m_currentCampaign = CAMPAIGN_NONE;
-    memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
-}
-
 VA(0x00489590, 0x233)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
@@ -2450,16 +2430,6 @@ void SCampaign::selectCampaign(int campaignIndex, const char* filename)
     CampaignScenarioInfo blank;
     for (int scenarioIndex = 0; scenarioIndex < count; ++scenarioIndex)
         m_mapScores.push_back(blank);
-}
-
-VA(0x004897d0, 0x43)  // dc 0xe6ef8
-unsigned char SCampaign::campaignComplete()
-{
-    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
-        if (!m_mapScores[i].m_completed)
-            return 0;
-    }
-    return 1;
 }
 
 // The campaign and map ordinals retail's end-of-map bookkeeping compares
@@ -2634,92 +2604,6 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     pruneCrossoverHeroes(campaignHeader);
 }
 
-// PruneCrossoverHeroes gathers both artifact arrays from one retained hero.
-// This ordinary helper restores the two single-element insert calls, the
-// second retained sort, and the second erase's retained copy (94.2643%).
-// Its expansion through the final pool assignment reproduces retail
-// +0x32f..+0x3e6: 183 bytes after four relocations. The 453-byte folded
-// artifact/dialog-resource insert bodies agree outside their relocations.
-// Flattening these loops is the 71.0389% negative control; an unused helper
-// is byte-neutral. Receiver and name remain provisional (Complete-only).
-void hero::collectArtifacts(std::vector<type_artifact>& artifacts) const
-{
-    type_artifact artifact;
-    int slot;
-    for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-        artifact = getArtifact(slot);
-        if (artifact.m_artifactId != ARTIFACT_NONE)
-            artifacts.push_back(artifact);
-    }
-    for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
-        artifact = getBackpack(slot);
-        if (artifact.m_artifactId != ARTIFACT_NONE)
-            artifacts.push_back(artifact);
-    }
-}
-
-// Prune's signed scenario-count query is separate from GetNumMaps, which
-// counts only populated scenarios. The ordinary wrapper retains both retail
-// size calls at +0x172/+0x25d; flattening it expands those calls into Prune.
-// The name remains provisional; Complete has no Dreamcast counterpart.
-int TCampaignBrief::CampaignHeaderStruct::getScenarioCount() const
-{
-    return m_scenarios.size();
-}
-
-// Prune's first loop retains both scenario-vector size queries and each
-// ScenarioStruct::MarkCrossoverHeroes call. Keeping this header-owned phase
-// as an ordinary helper recovers that boundary; leaving the helper unused
-// is byte-neutral, while flattening the loop again loses it (33.82%).
-// Prune +0x35..+0x84 reproduces all 79 retail bytes after four relocations;
-// the shared pointer-vector size body also agrees in all 19 bytes.
-// The role and spelling remain provisional: Complete has no Dreamcast twin.
-void TCampaignBrief::CampaignHeaderStruct::markRequiredHeroes(unsigned char* wanted)
-{
-    for (unsigned int mapIndex = 0; mapIndex < m_scenarios.size(); ++mapIndex) {
-        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
-            m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
-    }
-}
-
-// Prune asks whether this populated scenario uses a given crossover pool.
-// The virtual query's scenario argument is this receiver. Restoring the
-// ordinary predicate preserves its two retail guards and recovers the later
-// erase/dtor boundaries. An unused helper leaves 93.3860%; calling it reaches
-// 99.7643%, and letting collectArtifacts own its hero receiver's lifetime
-// reaches 99.9223%. Role and name remain provisional (Complete-only).
-bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool)
-{
-    return m_inflatedSize > 0 && m_options->slot12(this, pool);
-}
-
-// Retail PruneCrossoverHeroes repeats the scenario's inflated_size check
-// at +0x1c1 after the outer guard at +0x1a1. Treat the inner count query as
-// a scenario helper (provisional name): it still expands fully into Prune,
-// while its own max locals retain the retail temporary homes. Flattening
-// this query into Prune leaves 19.3083% current (26.1010% prior MAX);
-// restoring the boundary raises it to 34.6269 without a new retail claim.
-// With the other recovered queries at 99.9223%, the remaining differences
-// are vptr register choices at Prune +0x1d0/+0x1df/+0x1ec. An early empty
-// return adds two CFG blocks (97.5337%); scoped while, negated-zero, and
-// named count/default-player results are byte-neutral. So are moving this
-// ordinary definition beside MarkCrossoverHeroes or after Prune, and
-// replacing the duplicate options interface with TCampaignStartOption.
-// Hoisting the loop index or splitting best's declaration/initialization is
-// likewise byte-neutral, so neither explains the three scratch-register swaps.
-int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
-{
-    int best = 0;
-    if (m_inflatedSize > 0) {
-        if (m_options->getCount() == 0)
-            best = m_heroesStatus[m_options->getPlayer(-1)];
-        else
-            for (int option = m_options->getCount(); option--;)
-                best = max(best, m_heroesStatus[m_options->getPlayer(option)]);
-    }
-    return best;
-}
-
 // CompleteCurrentMap's tail call flags heroes requested by unfinished
 // scenarios, keeps those heroes plus each pool's strongest permitted ones,
 // gathers the leftovers' artifacts, then replaces the pool with its keep list.
@@ -2732,24 +2616,34 @@ int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 // exits; `i-- > 0` instead leaves JBE entries. The forward scenario loop
 // ends in signed JL at +0x264, requiring a signed index and comparison.
 
-// Header marking and per-hero artifact collection are ordinary helpers;
-// their own notes record the retained boundaries and flattening controls.
-// Keep one source hero across both artifact loops and one eight-byte
-// artifact temporary at [ebp-0x48], matching the 0xd8-byte frame and the
-// wanted[] home at [ebp-0xe4]. Separate temporaries or repeated hero lookup
-// lose those lifetimes. Dreamcast Hero.h:965/970 proves both accessors.
+// Retail keeps the marking, scenario-limit and artifact-gathering phases in
+// this body. The former collectArtifacts, getScenarioCount,
+// markRequiredHeroes, usesCrossoverPool and getMaxCrossoverHeroes wrappers
+// had no independent source or retained-body evidence. Their historical
+// 99.9223% combined result is an inlining-budget observation, not proof of
+// those five function boundaries. The phases belong to this caller.
 
-// The max(int,int) wrapper owns temporary operand homes at +0x210/+0x232;
+// Preserve the repeated inflated_size guard: retail reloads it at 0x489fe1
+// after the virtual pool query at 0x489fd6. Preserve the signed total-slot
+// comparison at 0x48a084; GetNumMaps counts only populated scenarios.
+// Keep one const source hero across both artifact loops and one eight-byte
+// artifact temporary. Dreamcast Hero.h:965/970 proves both accessor calls.
+// The max(int,int) helper owns the operand temporaries at +0x210/+0x232;
 // direct std::_cpp_max instead takes addresses of the caller's variables.
-// Keep push_back: direct insert(end(), value) expands the wrong overload.
-// A helper for the entire limit phase loses four retail virtual calls and
-// changes the frame to 0xd0. Keep the scalar header count and scenario pool
-// predicate queries separate. Together with front() for the strongest hero
-// and a direct collector receiver, these give all 62 retail CFG blocks,
-// every retained call boundary, and the 0x450-byte body (99.9223%).
-// Six non-relocation bytes remain: EAX/EDX choices for three virtual calls
-// in getMaxCrossoverHeroes. Keeping an extra sourceHero alias changes the
-// final deleting-destructor boundary again; the collector owns that lifetime.
+// Keep push_back: direct insert(end(), value) expands a different overload.
+// Historical failed probes: flattening the collector alone gave 71.0389%,
+// header marking 33.82%, and the maximum query 19.3083% (prior MAX 26.1010%).
+// A helper for the entire limit phase lost four virtual calls and produced
+// a 0xd0-byte frame. An early empty return added two CFG blocks (97.5337%).
+// Scoped while, negated-zero, named count/player results, definition moves,
+// the canonical options interface and moving the loop-index declaration
+// were byte-neutral. Those measurements predate this ownership correction;
+// no new compilation or match result is claimed here.
+// Current-source lifetime control (2026-09-09): 36 variants naming a
+// source hero, scenario vector and sort endpoints, plus front()/begin()
+// access, produce 24 objects and no gain above 20.6088. Retained helper
+// calls are the remaining frontier; do not restore the five budget-only
+// wrappers to recover their historical percentage.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 {
@@ -2759,7 +2653,10 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
     unsigned char wanted[game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
-    header->markRequiredHeroes(wanted);
+    for (unsigned int mapIndex = 0; mapIndex < header->m_scenarios.size(); ++mapIndex) {
+        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
+            header->m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
+    }
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
         std::vector<hero>& pooled = m_carryOverHeroes[pool];
@@ -2774,12 +2671,22 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         int keepCount = 0;
         for (int scenarioIndex = 0;
-             scenarioIndex < header->getScenarioCount();
+             scenarioIndex < static_cast<int>(header->m_scenarios.size());
              ++scenarioIndex) {
             TCampaignBrief::ScenarioStruct* scenario =
                 header->m_scenarios[scenarioIndex];
-            if (!m_mapScores[scenarioIndex].m_completed && scenario->usesCrossoverPool(pool)) {
-                keepCount = max(keepCount, scenario->getMaxCrossoverHeroes());
+            if (!m_mapScores[scenarioIndex].m_completed
+                && scenario->m_inflatedSize > 0
+                && scenario->m_options->slot12(scenario, pool)) {
+                int best = 0;
+                if (scenario->m_inflatedSize > 0) {
+                    if (scenario->m_options->getCount() == 0)
+                        best = scenario->m_heroesStatus[scenario->m_options->getPlayer(-1)];
+                    else
+                        for (int option = scenario->m_options->getCount(); option--;)
+                            best = max(best, scenario->m_heroesStatus[scenario->m_options->getPlayer(option)]);
+                }
+                keepCount = max(keepCount, best);
             }
         }
 
@@ -2794,7 +2701,19 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
-            pooled[rest].collectArtifacts(pooledArtifacts);
+            const hero& sourceHero = pooled[rest];
+            type_artifact artifact;
+            int slot;
+            for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+                artifact = sourceHero.getArtifact(TArtifactSlot(slot));
+                if (artifact.m_artifactId != ARTIFACT_NONE)
+                    pooledArtifacts.push_back(artifact);
+            }
+            for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
+                artifact = sourceHero.getBackpack(slot);
+                if (artifact.m_artifactId != ARTIFACT_NONE)
+                    pooledArtifacts.push_back(artifact);
+            }
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
@@ -2830,20 +2749,6 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
     }
 }
 
-static unsigned char readCampaignByte(TAbstractFile* infile)
-{
-    unsigned char value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
-static short readCampaignWord(TAbstractFile* infile)
-{
-    short value;
-    infile->read(&value, sizeof(value));
-    return value;
-}
-
 // Complete campaign deserialization; no Dreamcast SCampaign counterpart.
 // Retail proves the 0x66a9-byte legacy record, sixteen 0x462-byte heroes,
 // and field-by-field promotion (not a whole-record copy). The modern arm
@@ -2860,20 +2765,39 @@ static short readCampaignWord(TAbstractFile* infile)
 // Widened counts plus the cast score 67.8382%; correcting the flag order
 // gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
 // Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
-// Sharing artifactFromInt through artifact.h replaces that cast without
-// changing the signed word boundary; the typed-header checkpoint is
-// 70.3423%, with 79.2531% retained in HIST (2026-09-08).
+// The signed word is widened locally into the recovered TArtifact field;
+// the reconstruction-only artifactFromInt wrapper has been removed.
+// The earlier typed-header checkpoint was 70.3423%, with 79.2531%
+// retained in HIST (2026-09-08); no new byte-score claim follows this move.
 
 // Residual: the array-constructor iterator and nested vector size/resize
 // helpers still expand where retail retains calls. The 69.5768% trace
 // has caller cb 1816, budget 3632: the legacy iterator costs 49 with budget
 // 63, and modern leading size() costs 42 with budgets 78..125.
-// String assignment already stops at the correct by-length worker; the
-// old diagnosis of an expanded _Grow there was stale.
+// That older trace retained the string by-length worker. In the current
+// source model the legacy assignment expands _Grow and calls _Eos again;
+// the earlier trace does not describe this residual boundary.
 // Earlier probes that extracted arbitrary portions of legacy promotion
 // into new helpers changed the budget but did not prove source boundaries.
 // Keep field promotion, real STL helpers, std::fill for the seven missing
 // completion flags, and the separate read-then-assign scalar operations.
+// The former readCampaignByte/readCampaignWord wrappers had no DC or retained
+// retail body. Their sole caller owns the virtual reads: 0x48a310's modern
+// arm reads into narrow locals and then promotes each value into its field.
+// Restore the read/assign operations here instead of claiming invented helpers.
+
+// Controlled recovery (2026-09-09): the 64 combinations of six widened,
+// masked read buffers produce two emitted identities but no score change.
+// Thus retail's dword-and-mask instructions do not prove an int source
+// buffer. Keep narrow buffers. A 32-state lexical-lifetime family gives
+// nine objects; named leading/scenario/artifact buffers in their enclosing
+// scopes raise 50.8734% to 52.7064%, with every sibling score unchanged.
+// Separately scoping days/score and flattening the count-buffer scopes do
+// not improve that retained state. Native wire-format checks exercise all
+// 32 states, versions 28/35/36, byte conversions, signed artifact/assigned
+// words, remapping, vector contents and the exact read-size sequence.
+// Residual: both leading erase workers and the legacy array iterator still
+// expand; most nested vector size calls and legacy string boundaries remain.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
@@ -2884,12 +2808,12 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     m_carryOverHeroes.clear();
 
     if (saveVersion < 28) {
-        // The out-of-line LegacyCampaignHero constructor below is what puts
-        // the 16-element array through the retail 0x4013d0 vector-constructor
-        // iterator at all; leaving the constructor implicit in the header is
-        // the negative control.  Retail CALLS `??_H` here (0x48a34d) and we
-        // still expand the thunk's own four-instruction loop - that last step
-        // is the /Ob2 budget, not this declaration.
+        // Retail takes the generated LegacyCampaignHero constructor's address
+        // for its 16-element array iterator (0x4013d0 at 0x48a379). The prior
+        // explicit empty constructor affected emission, but 0x48ae30 contains
+        // only base/member construction and proves no source-written body.
+        // Preserve the implicit constructor and its separate retained claim;
+        // no new compiler result is asserted by this ownership correction.
         LegacyCampaignSave saved;
         infile->read(&saved, sizeof(saved));
 
@@ -2975,20 +2899,34 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         return;
     }
 
-    m_isCheater = readCampaignByte(infile) != 0;
+    unsigned char cheaterByte;
+    infile->read(&cheaterByte, sizeof(cheaterByte));
+    m_isCheater = cheaterByte != 0;
     if (saveVersion >= 26) {
-        m_secretActive = readCampaignByte(infile) != 0;
+        unsigned char value;
+        infile->read(&value, sizeof(value));
+        m_secretActive = value != 0;
     } else {
         m_secretActive = false;
     }
-    m_currentMap = readCampaignByte(infile);
-    m_currentCampaign = readCampaignByte(infile);
+    unsigned char currentMapByte;
+    infile->read(&currentMapByte, sizeof(currentMapByte));
+    m_currentMap = currentMapByte;
+    unsigned char campaignByte;
+    infile->read(&campaignByte, sizeof(campaignByte));
+    m_currentCampaign = campaignByte;
     if (saveVersion < 36
             && m_currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
         m_currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    m_numMapRegions = static_cast<signed char>(readCampaignByte(infile));
-    m_crossoverArrayIndex = readCampaignByte(infile);
-    m_briefingChoice = static_cast<signed char>(readCampaignByte(infile));
+    unsigned char regionByte;
+    infile->read(&regionByte, sizeof(regionByte));
+    m_numMapRegions = static_cast<signed char>(regionByte);
+    unsigned char crossoverByte;
+    infile->read(&crossoverByte, sizeof(crossoverByte));
+    m_crossoverArrayIndex = crossoverByte;
+    unsigned char briefingByte;
+    infile->read(&briefingByte, sizeof(briefingByte));
+    m_briefingChoice = static_cast<signed char>(briefingByte);
 
     m_campaignFilename = readLengthPrefixedString(infile);
     if (saveVersion >= 36) {
@@ -2999,11 +2937,18 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                   m_campaignCompleted + sizeof(m_campaignCompleted), 0);
     }
 
-    int count = readCampaignByte(infile);
+    int count;
+    {
+        unsigned char value;
+        infile->read(&value, sizeof(value));
+        count = value;
+    }
     rMapScores.resize(count);
     for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
-        scenario.m_completed = readCampaignByte(infile) != 0;
+        unsigned char completedByte;
+        infile->read(&completedByte, sizeof(completedByte));
+        scenario.m_completed = completedByte != 0;
         int days;
         infile->read(&days, sizeof(days));
         scenario.m_days = days;
@@ -3011,47 +2956,74 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         infile->read(&score, sizeof(score));
         scenario.m_score = score;
 
-        scenario.m_completeOrder =
-            static_cast<signed char>(readCampaignByte(infile));
-        scenario.m_index =
-            static_cast<signed char>(readCampaignByte(infile));
+        unsigned char completeOrderByte;
+        infile->read(&completeOrderByte, sizeof(completeOrderByte));
+        scenario.m_completeOrder = static_cast<signed char>(completeOrderByte);
+        unsigned char scenarioIndexByte;
+        infile->read(&scenarioIndexByte, sizeof(scenarioIndexByte));
+        scenario.m_index = static_cast<signed char>(scenarioIndexByte);
     }
 
-    count = readCampaignByte(infile);
+    {
+        unsigned char value;
+        infile->read(&value, sizeof(value));
+        count = value;
+    }
     m_carryOverHeroes.resize(count);
     m_carryoverArtifact.resize(count);
 
     for (pool = 0; pool < count; ++pool) {
         std::vector<hero>& heroPool = m_carryOverHeroes[pool];
-        int heroCount = readCampaignByte(infile);
+        int heroCount;
+        {
+            unsigned char value;
+            infile->read(&value, sizeof(value));
+            heroCount = value;
+        }
         heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             heroPool[whichHero].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
-        int artifactCount =
-            static_cast<unsigned short>(readCampaignWord(infile));
+        int artifactCount;
+        {
+            short value;
+            infile->read(&value, sizeof(value));
+            artifactCount = static_cast<unsigned short>(value);
+        }
         artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            artifactPool[whichArtifact].m_artifactId =
-                artifactFromInt(readCampaignWord(infile));
-            artifactPool[whichArtifact].m_extra = readCampaignWord(infile);
+            int artifactValue;
+            short artifactIdWord;
+            infile->read(&artifactIdWord, sizeof(artifactIdWord));
+            artifactValue = artifactIdWord;
+            artifactPool[whichArtifact].m_artifactId = TArtifact(artifactValue);
+            short artifactExtraWord;
+            infile->read(&artifactExtraWord, sizeof(artifactExtraWord));
+            artifactPool[whichArtifact].m_extra = artifactExtraWord;
         }
     }
 
-    count = readCampaignByte(infile);
+    {
+        unsigned char value;
+        infile->read(&value, sizeof(value));
+        count = value;
+    }
     m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        short value = readCampaignWord(infile);
+        short value;
+        infile->read(&value, sizeof(value));
         m_assignedCarryover[assignedIndex] = value;
     }
 }
 
-VA(0x0048ae30, 0x5D)  // anchor-caller SCampaign::Load +0x56
-LegacyCampaignHero::LegacyCampaignHero()
-{
-}
+// The fixed pre-v28 record uses the old 0x462 hero layout. Retained 0x48ae30
+// calls the obscuring-object base ctor and armyGroup ctor, zeros bitset<48>,
+// then constructs 18 equipped and 64 backpack artifacts. That is exactly
+// declaration-order base/member construction; there is no custom body.
+// SCampaign::Load passes its address to the 16-element constructor iterator.
+VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero)
 
 // Complete campaign serialization; no SCampaign::Save counterpart appears
 // in the Dreamcast roster. Retail writes seven leading bytes, the campaign
@@ -3301,8 +3273,6 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
 }
 #endif
 
-VA_COMPGEN(0x00483f80, 0x9B, FUNCTOR_CALL, CrossoverHeroStronger)
-
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
 // The map hero placeholders' own sort, instantiated by
 // ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
@@ -3410,11 +3380,9 @@ VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 // way in both directions.
 VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
 
-// COMDAT pairing: TCampaignBrief::ScenarioStruct's scalar deleting
-// destructor. It calls 0x485fe0 - this file's own claimed ~ScenarioStruct -
-// in the flags&1 / operator delete wrapper, and this unit emits the only
-// ??_GScenarioStruct in the image.
-VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
+// ScenarioStruct's deleting wrapper at 0x488eb0 now expands in this TU.
+// The same native wrapper remains in campaignbrief, where its enrollment
+// lives; its ordinary destructor at 0x485fe0 remains owned by this file.
 
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
@@ -3461,6 +3429,9 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // 84.92324%, and inlines these unchanged library bodies; their MAX stays 100%.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
 VA_COMPGEN(0x0048db40, 0x24, VECTOR_UCOPY, unsigned_char)
+// rmg_terrain emits a byte-identical _Ufill, but that body already represents
+// its distinct retained 0x5b8060. Do not steal that enrollment or manufacture
+// another copy to hide this consumer's remaining emission debt.
 VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
 VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 

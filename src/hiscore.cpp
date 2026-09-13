@@ -93,27 +93,6 @@ void highScoreManager::viewHiScore()
     g_windowManager->doDialog(&window, highScoreWindowHandler, 0);
 }
 
-// Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
-// 351-byte cBuf local even in the VMU port. Retail's two caller expansions
-// prove the PC file path, flags, error handler and full score-table write.
-void writeHighScores()
-{
-    char path[351];
-    sprintf(path,
-        DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
-        DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
-        g_highScoreFileName);
-    int file = _open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
-                     _S_IWRITE);
-    if (file == -1) {
-        fileError(g_highScoreFileName);
-    } else {
-        _write(file, g_highScoreManager->m_highScores,
-               sizeof(g_highScoreManager->m_highScores));
-        _close(file);
-    }
-}
-
 // The retail build inlines this sole constructor use into
 // AddScoreToHighScore.  Every widget argument below is byte-visible in that
 // expansion; the three-entry reserve followed by four pushes also explains
@@ -155,6 +134,28 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
     m_field1->setAutoDraw(1);
 }
 
+// Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
+// 351-byte cBuf local even in the VMU port. Retail's two caller expansions
+// prove the PC file path, flags, error handler and full score-table write.
+void writeHighScores()
+{
+    char path[351];
+    sprintf(path,
+        DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
+        DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
+        g_highScoreFileName);
+    int file = _open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
+                     _S_IWRITE);
+    if (file == -1) {
+        fileError(g_highScoreFileName);
+    } else {
+        _write(file, g_highScoreManager->m_highScores,
+               sizeof(g_highScoreManager->m_highScores));
+        _close(file);
+    }
+}
+
+// E:\gamedcs\hiscore.cpp:772
 VA(0x004e91d0, 0x4CC)  // dc 0xd7c3c
 int highScoreManager::addScoreToHighScore(int score, int days,
     int difficulty, int scoreType, const char* land)

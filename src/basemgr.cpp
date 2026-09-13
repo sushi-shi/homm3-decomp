@@ -15,4 +15,3 @@ baseManager::baseManager()
     m_status = 0;
     strcpy(m_mgrName, "Unknown");
 }
-

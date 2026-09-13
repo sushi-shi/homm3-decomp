@@ -3,7 +3,6 @@
 #define HOMM3_SWAPMGR_H
 
 #include "basemgr.h"
-#include "chatedit.h"
 #include "hero.h"
 #include "netmsg.h"
 #include "remote.h"
@@ -231,25 +230,6 @@ public:
 SIZE(CTradeRequestDoneMsg, 0x14);
 SIZE(CGiveMeStuffMsg, 0x14);
 SIZE(CHeroUpdateMsg, 0x938);
-
-// Dreamcast proves this private handler boundary and its CNetMsgHandler
-// base. Retail's Open inlines the constructor: the base constructor call,
-// derived vtable store and final byte clear are all visible at 0x5aeab4.
-// DC's separate line 514 assignment and retail's vtable-then-clear order
-// prove that the byte is assigned in the body, not a member initializer.
-class CSwapMgrNetMsgHandler : public CNetMsgHandler {
-public:
-    CSwapMgrNetMsgHandler() { m_exitRequested = 0; }
-    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) OVERRIDE;
-
-    // handleNetMsg 0x5aeb00 sets this on the other player's departure or
-    // RS_TRADE_REQUEST_DONE; the manager's event loop then exits the trade.
-    unsigned char m_exitRequested;
-    // The retail-derived handler has only its exit latch after the
-    // 0x0c-byte base and a 0x10-byte allocation; these are trailing alignment.
-    char m_paddingAfterExitRequested[3];
-};
-SIZE(CSwapMgrNetMsgHandler, 0x10);
 
 class swapManager : public baseManager {
 public:

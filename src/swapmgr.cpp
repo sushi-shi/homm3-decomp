@@ -1,5 +1,6 @@
 // swapmgr.cpp - E:\gamedcs\swapmgr.cpp (compiland swapmgr.obj)
-#include "homm3_limit.h"
+#include "includes.h"
+#include "creaturetype.h"
 #include <va.h>
 #include "swapmgr.h"
 #include "game.h"
@@ -30,27 +31,10 @@ DATA(0x006a3d08) static int g_unnamed6a3d08;
 DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
-// Reset has four DC calls to includes.h limit (0x1ef5c), one around
-// each morale/luck value. Its canonical definition is in homm3_limit.h.
-
-inline int textPointerPayload(char* text)
-{
-    union {
-        char* m_pointer;
-        int m_payload;
-    } converted;
-    converted.m_pointer = text;
-    return converted.m_payload;
-}
-
-static inline const char* getArmyName(int type, int count)
-{
-    if (type < 0 || type > kSwapRolloverCreatureLast)
-        return g_emptyRolloverText;
-    if (count == 1)
-        return g_creatureTypeTraits[type].m_name;
-    return g_creatureTypeTraits[type].m_pluralName;
-}
+// The shared includes.h helper is named by Reset's four Dreamcast xrefs
+// (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
+// selects one of the argument addresses, matching the reference-returning
+// template independently proved by the other TUs.
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
 // constructor signature; retail independently proves the CNetMsg base plus
@@ -85,9 +69,6 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 {
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
 // E:\gamedcs\swapmgr.cpp:210. Dreamcast proves the source-level sequence:
 // reserve the widget roster, construct one widget per line, append the two
 // late-owned controls, then register every non-null widget in vector order.
@@ -742,6 +723,22 @@ void TSwapWindow::updateArrows()
     }
 }
 
+// Dreamcast proves this private handler boundary and its CNetMsgHandler
+// base. Retail's Open inlines the constructor: the base constructor call,
+// derived vtable store and final byte clear are all visible at 0x5aeab4.
+// DC's separate line 514 assignment and retail's vtable-then-clear order
+// prove that the byte is assigned in the body, not a member initializer.
+class CSwapMgrNetMsgHandler : public CNetMsgHandler {
+public:
+    // Original: CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler; swapmgr.cpp:512, dc 0x15f1e4.
+    CSwapMgrNetMsgHandler() { m_field0c = 0; }
+    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) OVERRIDE;
+
+    unsigned char m_field0c;  // Prior provisional spelling: field_0c.
+    char m_paddingAfterExitRequested[3];
+};
+SIZE(CSwapMgrNetMsgHandler, 0x10);
+
 VA(0x005ae500, 0xA9)  // dc 0x15c470
 swapManager::swapManager(hero* leftHero, hero* rightHero)
 {
@@ -939,7 +936,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         int otherPlayer = g_swapManager->getOtherHero()->m_owner;
         if (g_game->getGamePosFromDPID(netMsg->m_dpidFrom)
             == otherPlayer)
-            m_exitRequested = 1;
+            m_field0c = 1;
         handlePlayerDrop(netMsg->m_dpidFrom);
         break;
     }
@@ -954,7 +951,7 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             m_abortPopupMsg = netMsg;
             return 0;
         }
-        m_exitRequested = 1;
+        m_field0c = 1;
         break;
 
     case RS_CHAT_MSG:
@@ -1081,7 +1078,7 @@ inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
 VA(0x005aef00, 0x24C)  // dc 0x15cd2c
 void swapManager::updateSlot(int hero, TArtifactSlot slot)
 {
-    int artifact = m_heroes[hero]->getArtifact(slot).m_artifactId;
+    int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
         int type = g_artifactSlotTraits[slot].m_type;
@@ -1099,7 +1096,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (m_heroes[hero]->getArtifact(i).m_artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
@@ -1110,21 +1107,26 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         && m_heroes[hero]->heroFn004E2840(
                g_heroScreenDraggedArtifact.m_artifactId, slot))
     {
+        int converted;
+        converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
-            artifactFromInt(artifact));
+            TArtifact(converted));
+        converted = 0x90;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifactFromInt(0x90));
+            TArtifact(converted));
     }
     else
     {
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
+        int converted;
+        converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifactFromInt(artifact));
+            TArtifact(converted));
     }
 }
 
@@ -1273,7 +1275,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     TArtifactSlot slot =
         static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     hero* ourHero = m_heroes[side];
-    type_artifact oldArtifact = ourHero->getArtifact(slot);
+    type_artifact oldArtifact = ourHero->getArtifact(TArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -1411,8 +1413,8 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
         if (!ourHero->addToBackpack(&g_heroScreenDraggedArtifact, id)) {
             normalDialog(
                 ourHero
-                    ->getBackpackError(artifactFromInt(
-                        g_heroScreenDraggedArtifact.m_artifactId))
+                    ->getBackpackError(
+                        g_heroScreenDraggedArtifact.m_artifactId)
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
@@ -1448,42 +1450,12 @@ inline int swapManager::exitSwapManager(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-// E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
-// boundary; Complete expands its Update body at Main's chat-refresh site.
-DC_ONLY(0x15eb90, 0x1A)
-inline void swapManager::onChatUpdate()
-{
-    drawSwapWin();
-    update();
-}
-
 // Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
 DC_ONLY(0x15de40, 0x4C8)
 inline void swapManager::swapSide()
 {
-}
-
-inline bool swapManager::isLeftHero()
-{
-    if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())
-        return true;
-    return false;
-}
-
-inline unsigned char swapManager::isRightHero()
-{
-    if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
-        return true;
-    return false;
-}
-
-inline hero* swapManager::getOtherHero()
-{
-    if (isLeftHero())
-        return m_heroes[1];
-    return m_heroes[0];
 }
 
 #if 0  // @carcass: the active implicit special member emits this COMDAT
@@ -1534,7 +1506,7 @@ int swapManager::main(message& msg)
     if (g_networkActive69954c)
     {
         m_netMsgHandler->checkHandleNet(0, 0);
-        if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_exitRequested)
+        if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_field0c)
         {
             if (isLeftHero())
             {
@@ -2201,8 +2173,15 @@ void swapManager::setRolloverText(int codeY)
         break;
     }
 
-    m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                             0x7b, textPointerPayload(g_text));
+    {
+        union {
+            char* m_pointer;
+            int m_payload;
+        } converted;
+        converted.m_pointer = g_text;
+        m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                 0x7b, converted.m_payload);
+    }
     m_parent->drawWindow(0, 0x7a, 0x7b);
     g_windowManager->updateScreen(4, 0x242, 0x2d4, 0x12);
 }
@@ -2426,6 +2405,15 @@ void swapManager::update()
     updateAllSlots();
 }
 
+// E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
+// boundary; Complete expands its Update body at Main's chat-refresh site.
+DC_ONLY(0x15eb90, 0x1A)
+inline void swapManager::onChatUpdate()
+{
+    drawSwapWin();
+    update();
+}
+
 // E:\gamedcs\swapmgr.cpp:2147
 // Dreamcast proves two snapshot assignments followed by the popup guard and
 // UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
@@ -2525,17 +2513,31 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
     }
 }
 
-#if 0  // @carcass: the active inline definition above emits this COMDAT
-// E:\gamedcs\swapmgr.cpp:2231. The retail-order claim remains here while the
-// canonical inline definition above Main controls caller lowering.
+// E:\gamedcs\swapmgr.cpp:2231, dc 0x15edf8.
+// The retained COMDAT belongs to this canonical inline definition.
 VA(0x005b1380, 0x1C)
-bool swapManager::isLeftHero()
+inline bool swapManager::isLeftHero()
 {
-    if (heroes[0]->owner == g_game->getLocalPlayerGamePos())
+    if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
-#endif
+
+// E:\gamedcs\swapmgr.cpp:2241, dc 0x15ee24.
+inline unsigned char swapManager::isRightHero()
+{
+    if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
+        return true;
+    return false;
+}
+
+// E:\gamedcs\swapmgr.cpp:2251, dc 0x15ee50.
+inline hero* swapManager::getOtherHero()
+{
+    if (isLeftHero())
+        return m_heroes[1];
+    return m_heroes[0];
+}
 
 bool swapManager::canModHero(int whichHero)
 {

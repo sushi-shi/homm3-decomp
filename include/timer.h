@@ -11,26 +11,6 @@
 class CTimer
 {
 public:
-    void start()
-    {
-        if (m_enabled) {
-            m_startTime = timeGetTime();
-            m_isRunning = 1;
-        }
-    }
-
-    void stop()
-    {
-        if (m_isRunning && m_enabled) {
-            m_stopTime = timeGetTime();
-            m_isRunning = 0;
-            if (m_stopTime > m_startTime)
-                m_elapsedTime = m_stopTime - m_startTime;
-            else
-                m_elapsedTime = 0;
-        }
-    }
-
     // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
     // consumer that proves this trivial header boundary at GlobalTimer+13.
     void enable()
@@ -41,6 +21,24 @@ public:
         : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
           m_isRunning(0), m_enabled(enabled)
     {
+    }
+    void start()
+    {
+        if (m_enabled) {
+            m_startTime = timeGetTime();
+            m_isRunning = 1;
+        }
+    }
+    void stop()
+    {
+        if (m_isRunning && m_enabled) {
+            m_stopTime = timeGetTime();
+            m_isRunning = 0;
+            if (m_stopTime > m_startTime)
+                m_elapsedTime = m_stopTime - m_startTime;
+            else
+                m_elapsedTime = 0;
+        }
     }
 
 private:

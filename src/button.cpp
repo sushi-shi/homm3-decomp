@@ -55,10 +55,6 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004560f0, 0x9A)  // dc 0x571ec
 inline button::~button()
 {
@@ -91,31 +87,10 @@ void button::initialize(int x, int y, int w, int h, int id, const char* image, i
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-// homm2's inline DeselectSelected survives with the endDialog variant;
-// /Ob2 expands it at all four Main sites and emits no standalone copy
-// (the `inline` keyword keeps it out of the object, matching retail).
-inline int button::deselectSelected(message* msg)
-{
-    if (!(m_status & WIDGET_SELECTED))
-        return 0;
-    m_status &= ~WIDGET_SELECTED;
-    draw();
-    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeY = m_id;
-    if (m_endDialog == 1)
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
-    else
-        msg->m_codeX = widget::WIDGET_DESELECT;
-    msg->m_qualifier = g_leftRightSave;
-    g_leftRightSave = 0;
-    return 2;
-}
-
 // E:\gamedcs\button.cpp:131
 // Residual (88.1%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
 // GONE. (1) The capture loop's two exits now BREAK to one shared
-// `return DeselectSelected(msg)`; spelling either as its own `return`
+// `return Deselect(*msg)`; spelling either as its own `return`
 // expands the inlined deselect body twice (+8.4 points). (2) The
 // WIDGET sub-switch case ORDER is retail's emission order -
 // SET_PALETTE, SET_ICON_NAME, SET_TEXT, SET_PLAYER_PALETTE_COLORS -
@@ -160,7 +135,7 @@ int button::main(message& msg)
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
         if (static_cast<int>(GameTime::get() - repeatTime) > 0)
-            return deselectSelected(&msg);
+            return deselect(msg);
     }
     if (m_sleepCount > 0)
         return 0;
@@ -195,7 +170,7 @@ int button::main(message& msg)
             break;
         for (unsigned int key = 0; key < m_hotKeyCodes.size(); key++) {
             if (m_hotKeyCodes[key] == msg.m_codeX)
-                return deselectSelected(&msg);
+                return deselect(msg);
         }
         return 0;
     }
@@ -229,7 +204,7 @@ int button::main(message& msg)
                     if (!(m_status & WIDGET_SELECTED))
                         select(&msg);
                 } else {
-                    deselectSelected(&msg);
+                    deselect(msg);
                 }
             }
             process1WindowsMessage();
@@ -238,7 +213,7 @@ int button::main(message& msg)
             if (msg.m_id == MESSAGE_LEFT_BUTTON_UP)
                 break;
         }
-        return deselectSelected(&msg);
+        return deselect(msg);
     }
     case MESSAGE_LEFT_BUTTON_UP: {
         if (isDisabled)
@@ -247,7 +222,7 @@ int button::main(message& msg)
             break;
         if (!(m_status & WIDGET_SELECTED))
             break;
-        return deselectSelected(&msg);
+        return deselect(msg);
     }
     case MESSAGE_RIGHT_BUTTON_DOWN:
         break;
@@ -298,10 +273,6 @@ int button::main(message& msg)
     return 2;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00456860, 0xDA)  // dc 0x57730
 int button::select(message* msg)
 {
@@ -325,14 +296,36 @@ int button::select(message* msg)
     return 2;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:401
-DC_ONLY(0x57854, 0xBC)
-int button::deselect(message* msg)
+// Original: button::Deselect; button.cpp:401, dc 0x57854.
+// CodeView's Main calls this member at dc 0x57304/0x574ce/0x57676/
+// 0x576e0/0x57708. Its body owns the selected-bit early return/clear,
+// Draw, UpdateScreen, widget message, endDialog choice and qualifier reset.
+// Complete expands the same member in Main: the first copy clears +0x16
+// at 0x4561d6, draws at 0x4561dc, calls UpdateScreen at 0x456206, then
+// stamps the message and clears gLeftRightSave at 0x45620e..0x45623e.
+// The DC-only combat-screen offset arm at dc 0x5787a..0x578ba is absent
+// in that retail expansion. Keep the reference formal proved by CodeView.
+// Formerly DeselectSelected with an unsupported inline keyword copied from
+// the homm2 reconstruction; use the actual HoMM3 name and source position.
+int button::deselect(message& msg)
 {
-    // @stub
+    if (!(m_status & WIDGET_SELECTED))
+        return 0;
+    m_status &= ~WIDGET_SELECTED;
+    draw();
+    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = m_id;
+    if (m_endDialog == 1)
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+    else
+        msg.m_codeX = widget::WIDGET_DESELECT;
+    msg.m_qualifier = g_leftRightSave;
+    g_leftRightSave = 0;
+    return 2;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:429
 DC_ONLY(0x57910, 0x12)
@@ -358,7 +351,7 @@ void button::zBufferDraw()
 #endif  // @carcass
 
 VA(0x00456940, 0x99)  // dc 0x5793c
-void button::draw()
+void button::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -467,12 +460,8 @@ textButton::~textButton()
     m_font->dispose();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00456ca0, 0x82)  // dc 0x57b98
-void textButton::draw()
+void textButton::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -495,10 +484,6 @@ void textButton::draw()
     m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                             drawX, drawY, m_width, m_height, color, 5, -1);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00456d30, 0x46)  // dc 0x57c4c
 type_func_button::type_func_button(long x, long y, long w, long h, long id,

@@ -181,13 +181,13 @@ unsigned char iconWidget::handleClick(unsigned char downClick, unsigned char rig
 }
 
 VA(0x004eab20, 0x7)  // dc 0xd96bc
-int iconWidget::getRealWidth()
+int iconWidget::getRealWidth() const
 {
     return m_sprite->getWidth();
 }
 
 VA(0x004eab30, 0x7)  // dc 0xd96d0
-int iconWidget::getRealHeight()
+int iconWidget::getRealHeight() const
 {
     return m_sprite->getHeight();
 }
@@ -199,7 +199,7 @@ int iconWidget::getRealHeight()
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
 VA(0x004eab40, 0x4B0)  // dc 0xd96e8
-void iconWidget::draw()
+void iconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
@@ -478,10 +478,6 @@ void iconWidget::nextRandomFrame()
     }
     setIconSequence(chosen);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004eb250, 0xED)  // dc 0xd9ee8
 void iconWidget::nextRandomSiegeEngineFrame()

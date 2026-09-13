@@ -19,19 +19,22 @@
 class TFileVersionInfo {
 public:
     char* m_data;
-
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
-    unsigned char getProductVersion(std::string* productVersion)
+    unsigned char getProductVersion(std::string* productVersion) const
     {
         return getVersionInfo("ProductVersion", productVersion);
     }
 
 private:
-    unsigned char getVersionInfo(const char* name, std::string* buffer);
+    // Original: TFileVersionInfo::GetVersionInfo, const in CodeView
+    // u2dvers.cpp:63; GetProductVersion is const at u2dvers.h:149.
+    unsigned char getVersionInfo(const char* name, std::string* buffer) const;
 };
 SIZE(TFileVersionInfo, 4);
+
+// --- TFileVersionInfo ---
 
 #endif  /* HOMM3_U2DVERS_H */

@@ -1,5 +1,6 @@
 // town.cpp - E:\gamedcs\town.cpp (compiland town.obj)
 #include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+#include "creaturetype.h"
 #include "terrain.h"
 #include <va.h>
 #include <algorithm>
@@ -12,10 +13,11 @@
 #include "events.h"
 #include "kb.h"
 #include "misc.h"
-#include "timedevent.h"
+#include "mapcell.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "town.h"
+#include "philai.h"
 #include "townmgr.h"
 
 // Narrow town.obj-only globals reached by town::View. Their owning
@@ -438,16 +440,6 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 }
 
-#if 0  // @carcass: claim-only home for the header COMDAT below
-
-VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
-int hero::getPrimarySkill(int skill) const
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005bde80, 0xD4)  // dc 0x166408
 town::town()
 {
@@ -513,27 +505,8 @@ int town::hasGarrison()
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\town.cpp:976
-// Walks a forced hero once, or the visiting and garrison heroes in that
-// order. A spellbook and the active Mage Guild bit gate both paths. Normal
-// towns grant the five six-spell guild rows through Wisdom + 2; a Conflux
-// with its Grail grants every eligible spell outside the town's 70-bit veto
-// set, excluding Titan's Lightning Bolt.
-// Residual (99.92157%): the checked outer loop retains retail's preheader;
-// all 37 blocks and all 23 branch sequences now agree. The sole instruction
-// difference is at the ordinary Mage Guild loop latch: retail reloads `level`
-// before `this`, while VC6 schedules those two independent loads in reverse.
-// Dreamcast lines 992/994/999 separately guard the hero, spellbook and
-// HasBuilding call. Restoring those nested statement groups is byte-flat and
-// retires the old helper-flattening debt; do not recombine them into one `&&`.
-// A 656-shape tree search plus clean loop, lifetime, condition, and CodeView-
-// backed const-member variants either emit this same order or score worse.
-#endif  // @carcass
-
 VA(0x005be030, 0x1D3)  // dc 0x1665a0
-void town::giveSpells(hero* forceHero)
+void town::giveSpells(hero* forceHero) const
 {
     if (!forceHero && m_visitingHeroId == -1 && m_garrisonHeroId == -1)
         return;
@@ -583,10 +556,6 @@ void town::giveSpells(hero* forceHero)
         ++heroIndex;
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005be210, 0xC0)  // dc 0x166688
 void town::view(int alreadyFaded)
@@ -704,24 +673,14 @@ void town::swapHeroes()
     placedHero->placeInMap(player, point, 0);
 }
 
-// Keep the two-argument Dinkumware bitset mutation out of line while the
-// tiny adapter itself disappears. Retail town.obj calls the shared COMDAT
-// here but still inlines the predicate's bitset::test.
-#pragma inline_depth(0)
-static inline void setTownSpellBit(std::bitset<70>& bits,
-                                      unsigned position, bool value)
-{
-    bits.set(position, value);
-}
-#pragma inline_depth()
-
 VA(0x005be600, 0x32A)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {
     std::bitset<70> prohibited;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        setTownSpellBit(
-            prohibited, spell,
+        // Complete builds this mask one bit at a time; retail 0x5be668
+        // retains Dinkumware's set(position,bool), without a game adapter.
+        prohibited.set(spell,
             m_spells[spell] || g_game->m_spellDisabledInfo[spell]);
     }
 
@@ -878,22 +837,6 @@ type_building_id town::createBuilding(type_building_id building)
         }
     }
     return building;
-}
-
-// E:\gamedcs\Town.h:337 / :342. These header-inline accessors must precede
-// destroy_extra_capitol as well as BuildBuilding: both Dreamcast bodies prove
-// source-visible calls, while each retail caller independently decides how
-// deeply VC6 expands the nested HasBuilding body.
-inline unsigned char town::isCastle() const
-{
-    return hasBuilding(CASTLE_FORT_ID, 0)
-        || hasBuilding(CASTLE_CITADEL_ID, 0)
-        || hasBuilding(CASTLE_CASTLE_ID, 0);
-}
-
-inline unsigned char town::isCapitol() const
-{
-    return hasBuilding(HALL_CAPITOL_ID, 0);
 }
 
 VA(0x005bec60, 0x173)  // dc 0x166ed8
@@ -1062,14 +1005,10 @@ unsigned char town::buyBuilding(type_building_id building)
 }
 
 VA(0x005bf4e0, 0xC)  // dc 0x167378
-unsigned char town::canBuildDock()
+unsigned char town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005bf4f0, 0x7A)  // dc 0x167388
 void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
@@ -1140,7 +1079,7 @@ long town::getHordeBonus(long dwelling) const
 }
 
 VA(0x005bf810, 0xE2)
-long town::getLegionBonus(long dwelling)
+long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
@@ -1159,7 +1098,7 @@ long town::getLegionBonus(long dwelling)
 }
 
 VA(0x005bf900, 0x258)  // dc 0x1675d4
-long town::townFn005BF900(long dwelling)
+long town::getLegionBonus(long dwelling) const
 {
     game* currentGame = g_game;
     int tier = dwelling % TOWN_DWELLING_COUNT + 1;
@@ -1218,7 +1157,7 @@ long town::townFn005BF900(long dwelling)
 }
 
 VA(0x005bfb60, 0x266)  // dc 0x167748
-short town::getGrowthRate(short dwelling)
+short town::getGrowthRate(short dwelling) const
 {
     long dwellingIndex = dwelling;
     if (!(m_active & g_bitNumber[DWELLING_0_ID + dwellingIndex]))
@@ -1252,7 +1191,7 @@ short town::getGrowthRate(short dwelling)
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
         growth += legionBonus;
-        growth += townFn005BF900(dwellingIndex);
+        growth += getLegionBonus(dwellingIndex);
     }
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
@@ -1303,33 +1242,13 @@ void town::changeGeneratorBonus(TCreatureType creature, long change)
         m_generatorBonus[slot + TOWN_DWELLING_COUNT] += change;
 }
 
-#if 0  // @carcass
-
-// STATIC-HELPERS-AFTER-CALLER, twice over. This whole block is ordered
-// by the CALL GRAPH, not by DC rank, and every edge is a rel32 in the
-// image:
-//     0x005bfeb0 -> 0x005c0220, 0x005c0400      (give_event_reward)
-//     0x005c0670 -> 0x005c08c0 -> 0x005c0c90    (town::initialize)
-// Retail emits each free static helper AFTER the member that calls it,
-// where the Dreamcast source has it before. Arity separates the two
-// kinds cleanly: the members are `ret 4` (ecx + one stack argument),
-// the /Gr free helpers are `ret 0` with their arguments in ecx/edx
-// (check_shipyard_square's third goes on the stack).
-#endif  // @carcass
-
 // The kb.h and castle.h prototypes, repeated file-locally for the
 // reason CheckEndGame above is.
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
                      long x, long y, long timeout);
 const char* getBuildingName(int townType, int buildingId);
-static inline const char* getArmyName(int type, int count)
-{
-    return type >= 0 && type <= 150
-               ? (count == 1 ? g_creatureTypeTraits[type].m_name
-                             : g_creatureTypeTraits[type].m_pluralName)
-               : "";
-}
+
 void showBuildingRewards(const town* thisTown,
                            std::vector<type_dialog_resource>* rewards);
 void showCreatureRewards(const town* thisTown,
@@ -1669,6 +1588,11 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     }
 }
 
+// Retail 0x5c0ce7 reads the whole +0xc flags word before testing bits 8
+// and 12 at 0x5c0ceb/0x5c0cf3. The canonical NewmapCell union now exposes
+// that word as m_cellFlags; the old cell_flags_word cast wrapper predates
+// its restoration and has no independent CodeView helper boundary.
+
 VA(0x005c0c90, 0x89)  // dc 0x167f68
 unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 {
@@ -1803,10 +1727,6 @@ __int64 town::getBuildableMask() const
         mask &= ~g_bitNumber[HALL_CAPITOL_ID];
     return mask;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005c1080, 0x64)  // dc 0x1688a0
 int* town::getBuildCostArray(type_building_id building) const

@@ -4,11 +4,14 @@
 
 #include <string>
 #include <vector>
+#include "includes.h"
 
 // Live prototypes (claimed misc.cpp bodies).
 int safeRandom(int min, int max);   // 0x50b1d0
 int random(int min, int max);       // 0x50b230
 void sRand(int seed);              // 0x50c5f0
+// Original SRandom, defined once in misc.cpp (DC source line 796).
+int sRandom(int lower, int upper);
 void checkConfigFile();             // 0x50b260
 void setGameDefaults();             // 0x50b4d0
 void setDefaultSystemOptions();
@@ -39,37 +42,7 @@ extern char g_regAppPath[351];       // .bss 0x6985c4
 extern char g_regCdRomPath[350];     // .bss 0x698838
 extern int g_showIntro;              // .bss 0x6993c0
 
-// The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
-// VC6 generic vector<unsigned char> representation at +8: allocator
-// byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
-// vector<bool>, a platform-library divergence rather than x86 evidence.
-class TPickANumber {
-protected:
-    int m_low;
-
-public:
-    int m_count;
-    std::vector<unsigned char> m_marks;
-
-    TPickANumber(int lowBound, int high);
-    int pick();
-};
-
-// Dreamcast's named game.cpp wrapper over TPickANumber. Complete keeps no
-// extra state: its compiler-generated default constructor passes [0, 15] to
-// the base and its Reset body is fully inlined into ProcessOnMapTowns.
-class TPickRandomTownName : public TPickANumber {
-public:
-    TPickRandomTownName() : TPickANumber(0, 15) {}
-
-    void reset()
-    {
-        for (int i = 0; i < m_marks.size(); ++i)
-            m_marks[i] = 1;
-        m_count = m_marks.size();
-    }
-};
-
+// --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:151, dc 0xfd8a4) void GenerateUniqueSystemID();
 // CODEVIEW(E:\gamedcs\misc.cpp:170, dc 0xfd958) void CheckConfigFile();
 // CODEVIEW(E:\gamedcs\misc.cpp:352, dc 0xfdb78) void SetDefaultSystemOptions();

@@ -1103,13 +1103,6 @@ int getDesktopHeight()
     return g_unnamed68c878;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\wingraph.cpp:1876
-// Located as WinMain's post-CreateWindow callee; the retail body is a
-// 5-byte tail jmp into the DirectDraw-creating 0x6014f0.
-#endif  // @carcass
-
 VA(0x006014e0, 0x5)  // dc 0x19a42c
 void initGraphics()
 {

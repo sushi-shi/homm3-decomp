@@ -15,6 +15,7 @@
 
 #include "exceptions.h"
 #include "objnames.h"
+#include "resourceptr.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 
@@ -81,6 +82,10 @@ static const int g_adventureObjectTrait1Ids[] = {
 // them through a function-local std::auto_ptr<char> at 0x691688, and
 // re-points each row's name into it.
 
+// vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT. The shared header
+// supplies body visibility to both callers; expansion does not establish
+// the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
+
 VA(0x0041b500, 0x28B)
 void initializeAdventureObjectNames()
 {
@@ -122,7 +127,7 @@ void initializeAdventureObjectNames()
 
     TTextResource* names = ResourceManager::getText(
         DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
-    TTextResourceGuard guard(names);
+    TResourcePtr<TTextResource> guard(names);
     if (names == 0)
         throw TRuntimeError();
 
@@ -143,11 +148,4 @@ void initializeAdventureObjectNames()
         g_adventureObjectTraitRows[line].m_name = next;
         next += size;
     }
-}
-
-VA(0x0041bd90, 0x12)
-TTextResourceGuard::~TTextResourceGuard()
-{
-    if (m_have && m_text != 0)
-        m_text->dispose();
 }

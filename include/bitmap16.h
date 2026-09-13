@@ -8,11 +8,13 @@
 // independently proven as a byte stride. This union names those two views
 // without introducing reinterpret-cast debt or changing the stored pointer.
 union Bitmap16MapPointer {
+public:
     unsigned short* m_pixels;
     unsigned char* m_bytes;
 };
 
 union Bitmap16ConstMapPointer {
+public:
     const unsigned short* m_pixels;
     const unsigned char* m_bytes;
 };
@@ -56,28 +58,11 @@ private:
 
 public:
     virtual unsigned int getSize() const;
-
     Bitmap16Bit(int w, int h);
     Bitmap16Bit(const char* name, int w, int h);
     void reference(int w, int h, int pitch, unsigned short* data);
     void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
-              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
-    {
-        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
-             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
-             flipped);
-    }
     void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
-    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
-    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
-    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
-    // the retained raw call at 0x0044e3f0.
-    void grab(const Bitmap16Bit* src, int srcX, int srcY)
-    {
-        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
-             src->getPitch());
-    }
     // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
     // callers pin it: textWidget::Draw's back-colour fill, and
     // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
@@ -103,6 +88,7 @@ public:
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
     int getPitch() const { return m_pitch; }
+    VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     unsigned short* getMap(int x, int y)
     {
         return static_cast<unsigned short*>(static_cast<void*>(
@@ -114,6 +100,23 @@ public:
         return static_cast<const unsigned short*>(static_cast<const void*>(
             static_cast<const unsigned char*>(static_cast<const void*>(m_map))
             + y * m_pitch)) + x;
+    }
+    VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
+    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
+    {
+        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
+             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
+             flipped);
+    }
+    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
+    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
+    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
+    // the retained raw call at 0x0044e3f0.
+    void grab(const Bitmap16Bit* src, int srcX, int srcY)
+    {
+        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
+             src->getPitch());
     }
     void remap(int oldGreenBits);
 };

@@ -5,6 +5,9 @@
 #include "widget.h"
 #include "dialogbox.h"
 #include "message.h"
+#include "remote.h"
+#include "kbwin.h"
+#include "winmgr.h"
 #include "rmg.h"
 
 class CSprite;
@@ -28,7 +31,7 @@ public:
     virtual ~CHotspotWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw();             // slot 4, folded onto 0x404df0
+    virtual void draw() const;             // slot 4, folded onto 0x404df0
 };
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
@@ -43,7 +46,7 @@ public:
     virtual ~CSpriteWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw();             // slot 4, retail 0x575750
+    virtual void draw() const;             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
 
@@ -58,7 +61,7 @@ public:
     CBitmapWidget(int xPos, int yPos, Bitmap816* image);
     virtual int main(message& msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw();             // slot 4, retail 0x575a20
+    virtual void draw() const;             // slot 4, retail 0x575a20
 };
 
 class CNetMsgHandler;
@@ -84,7 +87,32 @@ public:
         m_widgets.push_back(w);
         addWidget(w, -1);
     }
-    virtual int handleMessage(message& msg);  // slot 3, retail 0x575430
+
+    VA(0x00575430, 0x8f)  // dc 0x12ef28
+    virtual int handleMessage(message& msg)
+    {
+        if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
+            if (g_videoPaused && g_dPlay) {
+                CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
+                if (handler) {
+                    handler->checkHandleNet(1, 0);
+                    if (handler->getAbortPopupMsg()) {
+                        msg.m_id = MESSAGE_WIDGET;
+                        g_windowManager->m_dialogReturn = msg.m_codeY;
+                        msg.m_codeY = widget::WIDGET_END_DIALOG;
+                        msg.m_codeX = widget::WIDGET_END_DIALOG;
+                        return 2;
+                    }
+                }
+            }
+            return heroWindow::handleMessage(msg);
+        }
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return 2;
+    }
 };
 
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own

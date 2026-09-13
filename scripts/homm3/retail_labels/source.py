@@ -48,8 +48,11 @@ gruntz). Two mechanisms, in strict precedence:
                inline header definition cannot steal a nearby address -
                and no lossy demangle key, so two functions that normalize
                to one spelling cannot swap names. The proposed name is
-               then CONFIRMED against cl's own base obj: the exact string
-               must be a defined symbol there. cl's object is therefore a
+               then CONFIRMED against cl's own base obj, accepting only
+               the compiler-specific anonymous-namespace encoding as an
+               alternate spelling. An active inline with an existing banked
+               carrier keeps its source identity when no body is emitted.
+               cl's object is therefore a
                CONFIRMER, never an answerer - a stale artifact can no
                longer supply a name the current source has stopped
                producing; it can only fail to confirm, which is reported.
@@ -81,6 +84,7 @@ import os
 import re
 import struct
 import sys
+from pathlib import Path
 
 from homm3.core import clang, common
 from homm3.core.tsv import write as write_tsv
@@ -138,6 +142,11 @@ OPERATOR_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*==\s*\(")
 OPERATOR_NOT_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*!=\s*\(")
+# Written call operators own ordinary VA annotations. Keep the owner in the
+# lexical fallback too; they are not compiler-generated functor machinery.
+CALL_OPERATOR_RE = re.compile(
+    r"(?<![\w:])(?P<owner>[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)::"
+    r"operator\s*\(\s*\)\s*\(")
 # Keep value-operator identities distinct from the return type and from each
 # other. Only simple member/namespace owners are admitted here; template
 # owners still require the IR channel or a dedicated template key.
@@ -439,7 +448,6 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "LIST_ERASE_RANGE", "LIST_BUYNODE",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
-                 "BITSET_ITERATOR_DEREF",
                  "BITSET_AND_ASSIGN", "BITSET_OR",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
@@ -461,7 +469,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE", "TREE_ERASE_KEY",
                  "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
-                 "EXCEPTION_DORAISE", "FUNCTOR_CALL",
+                 "EXCEPTION_DORAISE",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
                  "DEQUE_CONST_ITERATOR_ADD",
                  "DEQUE_ITERATOR_INC", "DEQUE_ITERATOR_DEC",
@@ -768,7 +776,7 @@ def scan_file(path, functions: set[int],
                            "function entry")
             declared = int(_arg(args[1], SIZE_ARG_RE, "size", where), 0)
             follower = None
-            for lineno in range(line_of(end) + 1, line_of(end) + 4):
+            for lineno in range(line_of(end) + 1, len(lines) + 1):
                 if lineno > len(lines):
                     break
                 candidate = lines[lineno - 1]
@@ -783,6 +791,7 @@ def scan_file(path, functions: set[int],
             sm = SPECIAL_RE.search(follower)
             om = OPERATOR_EQUAL_RE.search(follower)
             nom = OPERATOR_NOT_EQUAL_RE.search(follower)
+            call_operator = CALL_OPERATOR_RE.search(follower)
             value_operator = VALUE_OPERATOR_RE.search(follower)
             if sm:
                 raw = f"{sm.group(1)}__{sm.group(2)}"
@@ -790,6 +799,8 @@ def scan_file(path, functions: set[int],
                 raw = f"{om.group(1)}::operator_equal"
             elif nom:
                 raw = f"{nom.group(1)}::operator_not_equal"
+            elif call_operator:
+                raw = f"{call_operator.group('owner')}::operator_call"
             elif value_operator:
                 owner = value_operator.group("owner")
                 operation = VALUE_OPERATOR_NAMES[value_operator.group("token")]
@@ -847,6 +858,12 @@ def scan_file(path, functions: set[int],
         elif macro == "VA_COMPGEN":
             kind = _arg(args[2], IDENT_ARG_RE, "kind", where)
             owner = _arg(args[3], IDENT_ARG_RE, "owner", where)
+            if kind == "BITSET_ITERATOR_DEREF":
+                common.die(f"{where}: BITSET_ITERATOR_DEREF is a written function; "
+                           "put VA and a VA instance selector on its generic header definition")
+            if kind == "FUNCTOR_CALL":
+                common.die(f"{where}: FUNCTOR_CALL is a written function; "
+                           "put VA on its operator() definition")
             if kind not in COMPGEN_KINDS:
                 common.die(f"{where}: unknown VA_COMPGEN kind {kind}")
             rows.append({"rva": rva, "unit": unit,
@@ -1184,15 +1201,14 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_upper_bound"
     if mangled.startswith("?equal_range@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_equal_range"
-    if mangled.startswith("?insert@?$map@V?$basic_string@D"):
-        return "string@map_insert"
     # The resource cache retains both map::find and _Tree::find. Key the
     # public layer on its named key as well; its const overload and the
     # hinted/range insert overloads have different machine interfaces.
-    named_map = re.match(r"^\?(find|insert)@\?\$map@(?:V|U)([A-Za-z_]\w*)@",
+    named_map = re.match(r"^\?(find|insert)@\?\$map@(?:(?:V|U)([A-Za-z_]\w*)@|V\?\$basic_string@D)",
                          mangled)
     if named_map:
         member, owner = named_map.groups()
+        owner = owner or "string"
         if (member == "find"
                 and "@@QAE?AViterator@?$_Tree@" in mangled):
             return f"{owner.lower()}@map_find"
@@ -1501,17 +1517,6 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("?_Insertion_sort_1@std@@")
             and "TSpellbookEntry" in mangled):
         return "tspellbookentry@insertion_sort_1"
-    # combatManager::TObstacleVector is a HAND-MODELLED container whose
-    # members VC6 emits like any other; key it onto the vector family so
-    # the claim reads with its siblings instead of needing a new kind.
-    if mangled.startswith(("?_Ucopy@TObstacleVector@combatManager@@",
-                           "?ucopy@TObstacleVector@combatManager@@")):
-        return "tobstaclevector@vector_ucopy"
-    if mangled.startswith("?size@TObstacleVector@combatManager@@"):
-        return "tobstaclevector@vector_size"
-    if mangled.startswith(("?_Ufill@TObstacleVector@combatManager@@",
-                           "?ufill@TObstacleVector@combatManager@@")):
-        return "tobstaclevector@vector_ufill"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
         return algorithm_key
@@ -1531,9 +1536,11 @@ def _demangle_key(mangled: str):
     doraise = re.match(r"^\?_Doraise@([A-Za-z_]\w*)@std@@", mangled)
     if doraise:
         return f"{doraise.group(1).lower()}@exception_doraise"
-    functor_call = re.match(r"^\?\?R([A-Za-z_]\w*)@@", mangled)
-    if functor_call:
-        return f"{functor_call.group(1).lower()}@functor_call"
+    call_operator = re.match(
+        r"^\?\?R((?:[A-Za-z_]\w*@)+)@[A-Z]", mangled)
+    if call_operator:
+        owner = "_".join(reversed(call_operator.group(1).strip("@").split("@")))
+        return f"{owner}_operator_call".lower()
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
@@ -1752,14 +1759,43 @@ def _base_authority_scan(unit: str) -> tuple:
     return groups, digests
 
 
+def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
+    """Resolve only the compiler-specific spelling of an anonymous namespace.
+
+    Clang hashes the namespace; VC6 embeds its first declaration's filename
+    and a number. That declaration can be in the owning module's header.
+    Keep the entire class/member/signature suffix and require one symbol in
+    the owning object's source module. Ordinary names remain exact matches.
+    """
+    if mangled in candidates:
+        return mangled
+    clang_anon = re.compile(r"@\?A0x[0-9A-Fa-f]+@")
+    if not clang_anon.search(mangled):
+        return None
+    expected = clang_anon.sub("@?anonymous@", mangled)
+    matches = []
+    for candidate in candidates:
+        anon = re.search(r"@\?%([^@]+)@", candidate)
+        if not anon:
+            continue
+        origin = re.fullmatch(r"(.+\.(?:cpp|cxx|cc|c|h|hpp|inl))\d+", anon.group(1), re.I)
+        if not origin or Path(origin.group(1).replace('\\', '/')).stem.lower() != unit.lower():
+            continue
+        if candidate[:anon.start()] + "@?anonymous@" + candidate[anon.end():] == expected:
+            matches.append(candidate)
+    return matches[0] if len(matches) == 1 else None
+
+
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
-            problems: list[str]) -> set:
+            problems: list[str], banked_inlines: dict | None = None) -> set:
     """Bind VA() claims to the mangled names clang paired them with, in
     place; returns the mangled names taken (which the lexical join must
     then leave alone).
 
-    cl's own obj CONFIRMS: the exact string clang proposed must be a
-    defined symbol there. Confirmation is what makes the mirror and the
+    cl's own obj CONFIRMS the proposed name, with only the validated
+    anonymous-namespace spelling conversion below. An already banked inline
+    may keep its active source identity without an emitted body. Otherwise,
+    confirmation is what makes the mirror and the
     two compilers' manglers self-checking - and it is one-directional, so
     a stale obj can only fail to confirm, never answer with a name the
     source has stopped producing."""
@@ -1773,7 +1809,17 @@ def ir_bind(unit: str, rows: list[dict], ir_names: dict,
         mangled = ir_names.get(row["rva"])
         if mangled is None:
             continue          # not compiled here (a `#if 0` carcass stub)
-        if content and mangled not in content:
+        confirmed = vc6_function_name(mangled, content, unit)
+        if content and confirmed is None:
+            if (banked_inlines or {}).get(row['rva']) == mangled:
+                row['joined'] = mangled
+                row['channel'] = 'src-VA+ir'
+                taken.add(mangled)
+                problems.append(
+                    f"{unit}: VA(0x{row['rva'] + common.IMAGE_BASE:08x}) - "
+                    f"no retained {mangled!r}; keeping its active canonical "
+                    "inline identity and banked carrier to report the missing body")
+                continue
             # The obj contradicts the compiler's own pairing, so it is the
             # LAST thing that may name this claim: handing the row to the
             # lexical key join would let that same disputed object answer
@@ -1786,6 +1832,7 @@ def ir_bind(unit: str, rows: list[dict], ir_names: dict,
                 f"the object may be stale, or the two manglers disagree. "
                 f"Claim left UNJOINED on its raw declarator label.")
             continue
+        mangled = confirmed or mangled
         row["joined"] = mangled
         row["channel"] = "src-VA+ir"
         taken.add(mangled)
@@ -2336,11 +2383,6 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(
                 f"{owner}@istream_extract_bitset", []).append(row)
             continue
-        if "$bitset_iterator_deref$" in row["name"]:
-            owner = row["name"].rsplit("$", 1)[1].lower()
-            claim_keys.setdefault(
-                f"{owner}@bitset_iterator_deref", []).append(row)
-            continue
         if "$tree_min$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
@@ -2643,16 +2685,44 @@ def src_files() -> list:
 
 
 def _extract_one(path, functions: set, ir_names: dict | None,
-                 problems: list[str]) -> list[dict]:
+                 problems: list[str], banked_inlines: dict | None = None) -> list[dict]:
     """One unit's rows, IR-bound where clang reached the TU and lexically
     joined for the rest."""
     unit = path.stem
     rows = scan_file(path, functions, problems)
     taken = set()
     if ir_names is not None:
-        taken = ir_bind(unit, rows, ir_names, problems)
+        taken = ir_bind(unit, rows, ir_names, problems, banked_inlines)
     join_unit(unit, rows, taken)
     return rows
+
+
+def ast_names(path: Path, definitions, ir_names: dict | None,
+              problems: list[str]) -> dict:
+    """Recover annotations omitted by LLVM for source-local inline bodies."""
+    from homm3.match.source_ownership import claim_definitions
+    names = dict(ir_names or {})
+    relative = path.relative_to(common.HOMM3_DIR).as_posix()
+    for definition in claim_definitions(definitions):
+        if definition.file != relative or definition.va is None or not definition.mangled:
+            continue
+        rva = definition.va - common.IMAGE_BASE
+        if rva in names and names[rva] != definition.mangled:
+            problems.append(f'{relative}: AST/IR identity conflict at {hex(definition.va)} '
+                            f'({definition.mangled!r} vs {names[rva]!r}) (FATAL)')
+        else:
+            names[rva] = definition.mangled
+    return names
+
+
+def banked_inline_names(path: Path, definitions, banked: set) -> dict:
+    """Only an active inline body can keep an existing missing comparison."""
+    from homm3.match.source_ownership import claim_definitions
+    relative = path.relative_to(common.HOMM3_DIR).as_posix()
+    return {d.va - common.IMAGE_BASE: d.mangled
+            for d in claim_definitions(definitions)
+            if d.file == relative and d.inline and d.va is not None and d.mangled
+            and (path.stem, d.va - common.IMAGE_BASE) in banked}
 
 
 def run(only_units: list[str] | None = None,
@@ -2673,8 +2743,12 @@ def run(only_units: list[str] | None = None,
                 raise SystemExit(f"[labels] unknown unit {name!r} - units "
                                  f"are src/ file stems, e.g. 'advmgr'")
     functions = {r["rva"] for r in _census_functions()}
+    from homm3.retail_labels import headers
+    header_paths = headers.claim_files()
+    # A header body may be emitted by several TUs. Resolve its annotation
+    # tree-wide, even when the caller requested a single source fragment.
     todo = [p for p in paths
-            if only_units is None or p.stem in only_units]
+            if only_units is None or p.stem in only_units or header_paths]
     changed, pruned, problems = [], [], []
 
     if clang.clang_bin() is None:
@@ -2689,10 +2763,25 @@ def run(only_units: list[str] | None = None,
             ir_maps = list(pool.map(unit_ir_names, todo))
 
     no_ir = []
+    rows_by_unit = {}
+    from homm3.match.source_ownership import collect
+    definitions, errors, _reached = collect()
+    problems.extend(f'{error} (FATAL)' for error in errors)
+    from homm3.match.status import load_baseline
+    banked = {(unit, row.rva) for (unit, _name), row in load_baseline().items()
+              if row.rva is not None}
     for path, ir_names in zip(todo, ir_maps):
         if ir_names is None:
             no_ir.append(path.stem)
-        rows = _extract_one(path, functions, ir_names, problems)
+        ir_names = ast_names(path, definitions, ir_names, problems)
+        rows_by_unit[path.stem] = _extract_one(
+            path, functions, ir_names, problems,
+            banked_inline_names(path, definitions, banked))
+    headers.project(header_paths, functions,
+                    {p.stem: names for p, names in zip(todo, ir_maps)},
+                    rows_by_unit, problems)
+    for path in todo:
+        rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "
                   f"macros in src/{path.name} are the storage; do not edit."]
         if write_tsv(fragment_path(path.stem), banner, HEADER,
@@ -2844,14 +2933,12 @@ def completeness_problems(sites: dict, have: dict,
       2026-08-20: 101 header DATA() addresses, 101 already carried
       (99 reloc-target, 1 reloc-alias, 1 src-DATA_COMPGEN).
 
-      VA() in a header is NOT excused. A function address always gets a
-      row (the working-label pass covers the whole universe), so the
-      model cannot tell that the SOURCE NAME was dropped - only this
-      sweep can. The claim belongs in the owning TU's `#if 0 //
-      @carcass` block, where 160 claim-only stubs already put the retail
-      functions this build does not define; there it reaches a fragment
-      and keeps its declarator name. `floor` enumerates the sites this
-      sweep still reports as standing debt rather than a fatal loss.
+      VA() on a canonical header body must reach a comparison fragment.
+      Header projection obtains its annotated identity from Clang and selects
+      a VC6 emitter, or retains the banked comparison carrier when no object
+      emits the body. Missing output is measured; missing claims remain fatal.
+      The comparison carrier does not own the source definition. The legacy
+      empty `floor` argument is retained for completeness negative controls.
     """
     floor = HEADER_VA_FLOOR if floor is None else floor
     problems = []
@@ -2873,8 +2960,8 @@ def completeness_problems(sites: dict, have: dict,
             elif header_only:
                 problems.append(
                     f"{macro}(0x{va:08x}) at {wheres[0]} is in a HEADER, "
-                    f"which extraction does not read - move the claim to the "
-                    f"owning TU's @carcass block or it names nothing (FATAL)")
+                    f"but no annotated active definition reached a comparison "
+                    f"fragment (FATAL)")
             else:
                 problems.append(
                     f"{macro}(0x{va:08x}) at {wheres[0]} is in NO fragment - "
@@ -3238,13 +3325,101 @@ def selftest() -> list[str]:
                       "char@basic_string_nullstr")):
         if _demangle_key(bad) == arm:
             failures.append(f"the {arm} arm stopped rejecting {bad!r}")
-    # Project-owned vector facades retain their compiler-function identities
-    # after source normalization; actual std::vector spellings remain ABI names.
-    for member, key in (("ucopy", "vector_ucopy"), ("ufill", "vector_ufill")):
-        for spelling in (member, "_" + member[0].upper() + member[1:]):
-            if _demangle_key("?" + spelling + "@TObstacleVector@combatManager@@") != \
-                    "tobstaclevector@" + key:
-                failures.append("normalized obstacle vector key regressed: " + spelling)
+    # Public map lookup/insertion and the underlying tree are distinct
+    # retained functions even when their machine bodies are identical.
+    # Complete symbols emitted by VC6 SP3 /Ob0 from std::map calls.
+    # Include const lookup, hinted insertion and range insertion as controls.
+    map_cases = (
+        (
+            '?insert@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMa'
+            'pKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE?AU?$pair'
+            '@Viterator@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey'
+            '@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceMana'
+            'ger@@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator'
+            '@PAVresource@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@'
+            'PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBUTCacheMapKey@ResourceManager@@PAV'
+            'resource@@@2@@Z',
+            'tcachemapkey@map_insert'),
+        (
+            '?insert@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMa'
+            'pKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE?AViterat'
+            'or@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@Resourc'
+            'eManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@@PAV'
+            'resource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVreso'
+            'urce@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresou'
+            'rce@@@4@@2@V342@ABU?$pair@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@'
+            '2@@Z',
+            None),
+        (
+            '?insert@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMa'
+            'pKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAEXPBU?$pai'
+            'r@$$CBUTCacheMapKey@ResourceManager@@PAVresource@@@2@0@Z',
+            None),
+        (
+            '?find@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapK'
+            'ey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE?AViterator'
+            '@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@ResourceM'
+            'anager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@@PAVre'
+            'source@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresour'
+            'ce@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresourc'
+            'e@@@4@@2@ABUTCacheMapKey@ResourceManager@@@Z',
+            'tcachemapkey@map_find'),
+        (
+            '?find@?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTCacheMapK'
+            'ey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QBE?AVconst_it'
+            'erator@?$_Tree@UTCacheMapKey@ResourceManager@@U?$pair@$$CBUTCacheMapKey@Res'
+            'ourceManager@@PAVresource@@@std@@U_Kfn@?$map@UTCacheMapKey@ResourceManager@'
+            '@PAVresource@@U?$less@UTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAV'
+            'resource@@@5@@4@U?$less@UTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVr'
+            'esource@@@4@@2@ABUTCacheMapKey@ResourceManager@@@Z',
+            None),
+        (
+            '?insert@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@'
+            '@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@'
+            'V?$allocator@H@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$basic_string@DU?$c'
+            'har_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$ch'
+            'ar_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?'
+            '$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$cha'
+            'r_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$ba'
+            'sic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@'
+            '2@@std@@_N@2@ABU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$alloca'
+            'tor@D@2@@std@@H@2@@Z',
+            'string@map_insert'),
+        (
+            '?find@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H'
+            'U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?'
+            '$allocator@H@2@@std@@QAE?AViterator@?$_Tree@V?$basic_string@DU?$char_traits'
+            '@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@'
+            'D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_trai'
+            'ts@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D'
+            '@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string'
+            '@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@ABV?$'
+            'basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@@Z',
+            'string@map_find'),
+    )
+    for symbol, expected in map_cases:
+        key = _demangle_key(symbol)
+        if expected is not None and key != expected:
+            failures.append("native map identity regressed: " + symbol)
+        if expected is None and key in {"tcachemapkey@map_find", "tcachemapkey@map_insert"}:
+            failures.append("distinct map overload collapsed: " + symbol)
+    for member, kind in (("find", "map_find"), ("insert", "map_insert")):
+        facade = "?" + member + "@TCacheMap@ResourceManager@@"
+        if _demangle_key(facade) == "tcachemapkey@" + kind:
+            failures.append("cache facade accepted as a map: " + member)
+    if _demangle_key("?find@?$_Tree@UTCacheMapKey@ResourceManager@@") != \
+            "tcachemapkey@tree_find":
+        failures.append("map find absorbed underlying tree find")
+    # Obstacle helpers belong to the real library, not the removed facade.
+    for member, key in (("_Ucopy", "vector_ucopy"), ("_Ufill", "vector_ufill"),
+                        ("size", "vector_size")):
+        native = "?" + member + "@?$vector@UTObstacle@combatManager@@"
+        if _demangle_key(native) != "tobstacle@" + key:
+            failures.append("canonical obstacle vector key regressed: " + member)
+        for spelling in (member, member.lstrip("_").lower()):
+            facade = "?" + spelling + "@TObstacleVector@combatManager@@"
+            if _demangle_key(facade) == "tobstaclevector@" + key:
+                failures.append("removed obstacle facade accepted as STL: " + spelling)
     # `logic_error::what` rides CHAR_STREAM_MEMBERS; its sibling
     # `runtime_error` and the ctor of the same class must not follow it.
     if _demangle_key("?what@logic_error@std@@UBEPBDXZ")             != "char@logic_error_what":
@@ -3419,20 +3594,19 @@ def main(argv=None) -> int:
     if not a.unit and not a.all:
         ap.error("pick --unit U or --all")
     changed, pruned, problems = run(a.unit if not a.all else None, a.jobs)
-    fatal = []
     if a.unit is None:
         # The gate proves it can fail before it judges the tree.
         broken = selftest()
         if broken:
-            fatal += [f"completeness SELFTEST BROKEN: {b}" for b in broken]
+            problems = problems + [f"(FATAL) completeness SELFTEST BROKEN: {b}"
+                                   for b in broken]
         else:
             problems = problems + check_completeness()
-            fatal += [p for p in problems if "FATAL" in p]
+    fatal = [p for p in problems if "FATAL" in p]
     for problem in problems:
         print(f"[labels] {problem}", file=sys.stderr)
     if fatal:
-        print(f"[labels] {len(fatal)} lost label(s) - a macro site that "
-              f"reaches no claim names nothing", file=sys.stderr)
+        print(f"[labels] {len(fatal)} fatal label gate problem(s)", file=sys.stderr)
         return 1
     print(f"[labels] {len(changed)} fragment(s) changed"
           + (f", {len(pruned)} pruned" if pruned else "")

@@ -8,17 +8,6 @@
 
 struct IDirectDrawSurface;
 
-// mousemgr.cpp's critical-section RAII guard (DC ctor/dtor source lines
-// 291/298). Keep its canonical shape in include/ under the single-view rule.
-// The fs:[0] frame in its users is the exception-unwind scaffolding.
-class TCSLock {
-public:
-    TCSLock(CRITICAL_SECTION* criticalSection);
-    ~TCSLock();
-
-    CRITICAL_SECTION* m_section;
-};
-
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
 // Byte-proven by the retail ctor 0x50cb50: the baseManager base ends
@@ -51,7 +40,6 @@ public:
         ARTIFACT_SET = 0x4,
         MAX_POINTER_SETS = 0x5
     };
-
     int m_noChangePointer;
     RECT m_savedRect;
     EPointerSet m_set;
@@ -71,47 +59,51 @@ public:
     int m_currentY;
     int m_busy;
     CRITICAL_SECTION m_sectionMouse;
-
     mouseManager();
+    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
+    // The written destructor belongs in mousemgr.cpp (CodeView line 344);
+    // its expansion inside a generated wrapper does not imply header ownership.
     virtual int open(int newPriority);
-    virtual void close();                // slot 1, retail 0x50cc40
-    virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
-    virtual ~mouseManager() { DeleteCriticalSection(&m_sectionMouse); }
+    virtual void close();  // slot 1, retail 0x50cc40
+    virtual int main(message& msg);  // slot 2, folded onto 0x4ec560
+    virtual ~mouseManager();
     void hidePointer();
     void showPointer(bool restore);
     void setPointer(int newFrame, EPointerSet newSet);
     void mouseCoords(int& x, int& y);
     void update(unsigned char forceIt);
     void checkUpdate();
+    // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
     // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
-    // mutating it in this build. SetPointer discards both results, so retail
-    // has no call or count update. Keep the canonical source boundaries.
+    // mutating it in this build. SetPointer discards both results.
     int enable() { return m_disableCount; }
     int disable() { return m_disableCount; }
-    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
-    // source helper while Complete's /Ob2 lowers it to the field_68 test.
-    unsigned char isVis() const { return m_hideCount == 0; }
-    int getFrame() const
-    {
-        return m_frame;
-    }
-    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
-    // +0x4c/+0x50 loads at their call sites.
-    EPointerSet getSet() const
-    {
-        return m_set;
-    }
 
 private:
     // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
     bool isBusy() const { return m_busy != 0; }
+
+public:
+    int getFrame() const
+    {
+        return m_frame;
+    }
+    EPointerSet getSet() const
+    {
+        return m_set;
+    }
+    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
+    // source helper while Complete's /Ob2 lowers it to the field_68 test.
+    unsigned char isVis() const { return m_hideCount == 0; }
+
+private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,
                      IDirectDrawSurface* saveSurface,
                      const RECT& dstRect, int x, int y);
     void restoreUnderlying(IDirectDrawSurface* surface,
                            const RECT& dstRect);
-    // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
+    // DC mousemgr.cpp:934; ordinary helper used by Update and ShowPointer.
     void getPointerPosition();
 
 public:
@@ -119,7 +111,7 @@ public:
     // retail 0x601a00 retains that call. Preserve this specific friend.
     friend unsigned char ddSetFullScreenStatus(int newStatus);
     void showSystemCursor(unsigned char showIt);
-    void reset();                 // 0x50cc80
+    void reset();  // 0x50cc80
 
 private:
     void loadFrame(int newFrame);

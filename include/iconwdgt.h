@@ -85,9 +85,9 @@ public:
     virtual ~iconWidget();  // retail 0x4ea7b0
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();
-    virtual int getRealHeight();
-    virtual int getRealWidth();
+    virtual void draw() const;
+    virtual int getRealHeight() const;
+    virtual int getRealWidth() const;
     virtual unsigned char handleClick(unsigned char downClick,
                                        unsigned char rightClick);
 

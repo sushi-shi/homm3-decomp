@@ -19,10 +19,6 @@ hexcell::hexcell()
     m_backgroundOffset = none;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e7170, 0x3C)  // dc 0xd6138
 army* hexcell::getArmy() const
 {
@@ -38,7 +34,3 @@ army* hexcell::getDeadArmy(int i) const
         return 0;
     return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass

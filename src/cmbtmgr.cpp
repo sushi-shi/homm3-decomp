@@ -43,6 +43,7 @@
 #include <stdlib.h>
 
 #include <va.h>
+#include "DC_precompiledheaders.h"  // canonical reference selectors
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
@@ -80,12 +81,6 @@
 #include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
 #include "winmgr.h"
 
-inline combatManager::TArcherSprite::~TArcherSprite()
-{
-    if (m_value)
-        m_value->dispose();
-}
-
 VA(0x00462760, 0x127)  // dc 0x5d3e0
 combatManager::combatManager()
     : m_combatWindow(0)
@@ -108,12 +103,12 @@ combatManager::combatManager()
 VA_COMPGEN(0x00462890, 0x15, DEFAULT_CTOR_CLOSURE, set)
 VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 
-VA(0x00462920, 0x0B)
-combatManager::TArcher::TArcher()
-    : m_sprite(0), m_shadowSprite(0)
-{
-}
-
+// The manager constructor takes these callbacks for three 0x24-byte
+// TArcher rows. The two canonical resource handles generate both bodies:
+// 0x462920 clears +4/+8; 0x462930 releases +8 then +4, including cleanup
+// of the second member if the first release throws. CodeView's older
+// TArcher uses raw Sprite/Missile pointers and has no written constructor.
+VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher)
 VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher)
 
 VA(0x00462990, 0x8F)  // dc 0x5d538
@@ -280,10 +275,6 @@ int combatManager::open(int newPriority)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00463260, 0x105)  // dc 0x5dc70
 void combatManager::close()
 {
@@ -369,12 +360,12 @@ void combatManager::freeIcons()
         }
     }
 
-    for (TObstacle* obstacle = m_obstacles.m_begin;
-            obstacle != m_obstacles.m_end; ++obstacle) {
+    for (TObstacle* obstacle = m_obstacles.begin();
+            obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
             obstacle->m_sprite->dispose();
     }
-    m_obstacles.erase(m_obstacles.m_begin, m_obstacles.m_end);
+    m_obstacles.erase(m_obstacles.begin(), m_obstacles.end());
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
@@ -1053,75 +1044,7 @@ void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
 
 #endif  // @carcass
 
-// Moved AHEAD of the two CheckApply*Morale bodies (it used to sit next
-// to LowerDoor): retail expands the quick-combat gate INLINE in both of
-// them - the `setne al / test al, al` tail on the global-mode arm is the
-// signature of an inlined unsigned char return - while Close, which
-// precedes this point, still CALLS the out-of-line const twin at
-// 0x46a4a0. Position is therefore load-bearing, not cosmetic.
-
-// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
-// LowerDoor's inlined branch graph proves all four inputs and the exact
-// distinction between network-side quick combat and the global mode.
-
-// THE TWO PLAYER RECORDS ARE NAMED REFERENCES, AND THAT IS WORTH SIX
-// FUNCTIONS (2026-08-20). Retail computes BOTH `lea` chains -
-// `lea edx,[ecx+8*edx+K]` and `lea eax,[ecx+8*eax+K]` - ahead of the
-// short-circuit and then tests `mov ecx,[edx+0e4h] / cmp ecx,edi` and
-// `cmp [eax+0e4h],edi`. Spelled as two `gpGame->players[...].quickCombat`
-// subscripts joined by `&&`, VC6 folds +0xe4 into each load and defers
-// the second address chain past the first branch, which is one extra
-// branch-shape divergence in EVERY expansion of this body. Naming the
-// records first hoists the addresses and leaves the loads at the tests,
-// which is exactly retail's shape. Measured on the same build:
-// Open 82.9093 -> 97.0819, damage_message 89.6402 -> 98.8371,
-// ShootBallisticMissile 86.4031 -> 89.3406, ShootMissile 91.7404 ->
-// 93.9760, ShootAnimatedMissile 91.1779 -> 93.5088, SetNextArmy
-// 87.5102 -> 89.9086, and LowerDoor - the body a standing note in Open
-// cited as proof that the folded form was retail's - held at 100.0000
-// throughout.
-inline unsigned char combatManager::isQuickCombat()
-{
-    if (g_game->m_isTutorial)
-        return 0;
-    if (g_networkActive69954c && m_sideIsAi[0] && m_sideIsAi[1]) {
-        const playerData& left = g_game->m_players[m_playerIds[0]];
-        const playerData& right = g_game->m_players[m_playerIds[1]];
-        return left.m_quickCombat && right.m_quickCombat;
-    }
-    return g_combatQuickMode69877c != 0;
-}
-
-// ai_tactical.cpp's byte-proven three-operand selector, spelled locally
-// for the same reason MaxOf below is: retail homes the rating and BOTH
-// bounds and picks between their addresses, which only a const-
-// reference-in / const-reference-out select produces. The (_V, _Hi, _Lo)
-// argument order is byte-proven there and again here - both morale
-// bodies materialise the high bound before the low one.
-template <class _TYPE>
-inline const _TYPE& cppClamp(_TYPE v, _TYPE hi, _TYPE lo)
-{
-    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
-}
-
-// army::GetName (0x440100) as retail's cmbtmgr.cpp saw it - the DC
-// roster puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline
-// this TU could expand, and both morale bodies do expand it rather than
-// call 0x440100. Spelled file-locally so our CL has a body to expand
-// too; static with no surviving reference, so no slot is expected.
-static const char* creatureName(int type, long count)
-{
-    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
-        if (count == 1)
-            return g_creatureTypeTraits[type].m_name;
-        return g_creatureTypeTraits[type].m_pluralName;
-    }
-    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
-    // literal; the linker folds our COMDAT onto it, so the only delta is
-    // a reloc NAME (masked).
-    return "";
-}
-
+// and the creature-name lookup uses CreatureType.h's canonical helper.
 VA(0x00464920, 0x211)  // dc 0x5f2b0
 void combatManager::checkApplyGoodMorale(int group, int index)
 {
@@ -1146,7 +1069,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE),
-            creatureName(stack->m_creatureType, stack->m_numTroops));
+            getArmyName(stack->m_creatureType, stack->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -1154,6 +1077,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
+// of a frame slot in the former local clamp experiment. Tried and
 VA(0x00464b40, 0x1FB)  // dc 0x5f3c4
 int combatManager::checkApplyBadMorale(int group, int index)
 {
@@ -1167,7 +1091,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
                         g_generalText->getText(GENERAL_TEXT_BAD_MORALE),
-                        creatureName(stack->m_creatureType, stack->m_numTroops));
+                        getArmyName(stack->m_creatureType, stack->m_numTroops));
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
                     waitEndSample(sample, -1);
@@ -1211,8 +1135,8 @@ unsigned char combatManager::unnamed464d40(army* selected)
             0x0066ff88, fearSampleName, "Fear.wav"));
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR),
-                creatureName(CREATURE_AZURE_DRAGON, azureDragons),
-                creatureName(selected->m_creatureType, selected->m_numTroops));
+                getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
+                getArmyName(selected->m_creatureType, selected->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
         spellEffect(15, selected, 100, 1);
         waitEndSample(sample, -1);
@@ -1504,34 +1428,31 @@ void combatManager::setNextArmy(int group, int index)
     getControl();
 }
 
-// Single-call-site file static: /Ob2 inlines it into CombatIsOver and
-// emits no out-of-line copy, so no retail slot is expected for it.
-static unsigned char sideIsWipedOut(const army* row)
-{
-    for (int slot = 0; slot < 20; slot++) {
-        if (row[slot].m_creatureType == -1)
-            continue;
-        unsigned char removed = static_cast<unsigned char>(
-            static_cast<unsigned>(row[slot].m_monInfo.m_attributes) >> 21);
-        if (removed & 1)
-            continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(row[slot].m_monInfo.m_attributes) >> 6);
-        if ((flags & 1) == 0)
-            return 0;
-    }
-    return 1;
-}
-
+// DC CombatIsOver owns the twenty-slot scan at cmbtmgr.cpp:2439..2449,
+// including the two army::Is calls at dc 0x5fb82/0x5fb8c. Retail
+// 0x46585c..0x465881 expands those tests in the same scan. The former
+// SideIsWipedOut wrapper split this loop from its proven source owner.
 VA(0x00465830, 0x76)  // dc 0x5fb14
-unsigned char combatManager::combatIsOver()
+unsigned char combatManager::combatIsOver() const
 {
     for (int side = 0; side < 2; side++) {
         if (m_sideSurrendered[side])
             return 1;
         if (m_sideRetreated[side])
             return 1;
-        if (sideIsWipedOut(m_armies[side]))
+        unsigned char hasArmy = 0;
+        for (int slot = 0; slot < 20; slot++) {
+            const army& currentArmy = m_armies[side][slot];
+            if (currentArmy.m_creatureType == -1)
+                continue;
+            if (currentArmy.is(1u << 21))
+                continue;
+            if (currentArmy.is(1u << 6))
+                continue;
+            hasArmy = 1;
+            break;
+        }
+        if (!hasArmy)
             return 1;
     }
     return 0;
@@ -1887,7 +1808,8 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_spellDamage = 0;
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = -1;
-            m_obstacles.pushBack(obstacle);
+            m_obstacles.push_back(obstacle);
+            // Removing this pin with the former copied vector wrappers and int
             int obstacleSlot = m_obstacles.size() - 1;
 #pragma inline_depth(0)
             placeObstacle(&obstacle, obstacleSlot, hex, 2);
@@ -1895,127 +1817,6 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             return 1;
         }
     }
-}
-
-// Dinkumware's three-arm `vector<T>::insert(iterator, size_type, const T&)`
-// over the hand-modelled obstacle vector, plus the two uninitialised-range
-// helpers it reduces to. All three are retail rows of this compiland and
-// all three are spelled here rather than in cmbtmgr.h so that only this TU
-// sees a body: retail's own cmbtmgr.obj carries BOTH forms of insert -
-// SetupAndLoadObstacles expands it, place_obstacle calls the out-of-line
-// copy - which is the ordinary /Ob2 budget split between a 1543-byte
-// caller and a 579-byte one.
-
-// The shapes are read straight off 0x46aeb0: `(capacity - end) / 24`
-// against an UNSIGNED count (`jae`), the grow arm's
-// `size() + (count < size() ? size() : count)`, Dinkumware `_Allocate`'s
-// `if (n < 0) n = 0` before `operator new(n * 24)`, the null-guarded
-// size() at both ends, and the three-arm tail
-// (_Ucopy / copy_backward / fill) with the element moves as `rep movsd 6`.
-// Destroy stays DECLARED-NOT-DEFINED: retail's inline expansion in
-// SetupAndLoadObstacles calls it (the ICF-folded `ret 8` at 0x404140)
-// while the out-of-line body has it inlined away to nothing, which is the
-// same budget split one level down.
-
-// `inline` IS LOAD-BEARING, and this is the finding to carry away: with a
-// plain out-of-class definition VC6's /Ob2 auto-inliner does NOT take a
-// 740-byte body - the score of every caller stayed identical to the digit
-// - while it does take the two 59/49-byte helpers. Marking insert `inline`
-// is what makes SetupAndLoadObstacles expand it.
-
-// LEFT UNCLAIMED ON PURPOSE. Retail's own rows are 0x46aeb0 (740 B),
-// 0x46b1a0 (59 B) and 0x46b1e0 (49 B), all three inside cmbtmgr's span and
-// all three reachable by call edge from claimed bodies - so a claim would
-// be defensible - but they are the compiler-emitted STL container surface
-// this file's header already lists as the excluded COMDAT class, and
-// objdiff does not score a base symbol with no delinked counterpart
-// anyway (measured: defining all three added no report row at all). The
-// three `#pragma inline_depth(0)` pins below therefore cost nothing here -
-// they shape only the INLINE copy SetupAndLoadObstacles carries, and the
-// unclaimed out-of-line bodies are free to diverge from retail's, which
-// expands _Ucopy/_Ufill into all three arms.
-// Dinkumware's `fill` and `copy_backward` take their bounds BY VALUE, and
-// that is byte-load-bearing: the fill loop compares against the register
-// copy of `_Last` (`cmp eax, edx`) where a member-read spelling re-reads
-// `[ebx+end]` every iteration, and `_Last - _M` stays a spilled CSE
-// (`lea eax, [ecx-24]` + [ebp-X]) because copy_backward receives it as a
-// separate argument. File-local so no header widens.
-static inline void obstacleFill(combatManager::TObstacle* first,
-                                 combatManager::TObstacle* last,
-                                 const combatManager::TObstacle& value)
-{
-    for (; first != last; ++first)
-        *first = value;
-}
-
-static inline combatManager::TObstacle* obstacleCopyBackward(
-    combatManager::TObstacle* first, combatManager::TObstacle* last,
-    combatManager::TObstacle* dest)
-{
-    while (first != last)
-        *--dest = *--last;
-    return dest;
-}
-
-inline void combatManager::TObstacleVector::insert(TObstacle* where,
-                                                   unsigned count,
-                                                   const TObstacle& value)
-{
-    if (m_capacity - m_end < count) {
-        unsigned tail = (count < static_cast<unsigned>(size())
-                             ? static_cast<unsigned>(size())
-                             : count);
-#pragma inline_depth(0)
-        unsigned grown = size() + tail;
-#pragma inline_depth()
-        int raw = static_cast<int>(grown);
-        if (raw < 0)
-            raw = 0;
-        TObstacle* moved = static_cast<TObstacle*>(
-            ::operator new(raw * sizeof(TObstacle)));
-#pragma inline_depth(0)
-        TObstacle* head = ucopy(m_begin, where, moved);
-        ufill(head, count, value);
-        ucopy(where, m_end, head + count);
-#pragma inline_depth()
-        destroy(m_begin, m_end);
-        ::operator delete(m_begin);
-        m_capacity = moved + grown;
-#pragma inline_depth(0)
-        m_end = moved + size() + count;
-#pragma inline_depth()
-        m_begin = moved;
-    } else if (static_cast<unsigned>(m_end - where) < count) {
-#pragma inline_depth(0)
-        ucopy(where, m_end, where + count);
-        ufill(m_end, count - (m_end - where), value);
-#pragma inline_depth()
-        obstacleFill(where, m_end, value);
-        m_end += count;
-    } else if (0 < count) {
-        TObstacle* shifted = m_end - count;
-#pragma inline_depth(0)
-        ucopy(shifted, m_end, m_end);
-#pragma inline_depth()
-        obstacleCopyBackward(where, shifted, m_end);
-        obstacleFill(where, where + count, value);
-        m_end += count;
-    }
-}
-
-combatManager::TObstacle* combatManager::TObstacleVector::ucopy(
-    const TObstacle* first, const TObstacle* last, TObstacle* dest)
-{
-    for (; first != last; ++dest, ++first)
-        new (static_cast<void*>(dest)) TObstacle(*first);
-    return dest;
-}
-
-void combatManager::TObstacleVector::ufill(TObstacle* first, unsigned count,
-                                            const TObstacle& value)
-{
-    for (; 0 < count; --count, ++first)
-        new (static_cast<void*>(first)) TObstacle(value);
 }
 
 VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
@@ -2045,67 +1846,16 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     (89.8722 -> 91.5113 on that rewrite alone). The redundant
 //     `id < 0` re-test in front of place_obstacle survives it.
 
-// 64.8103 -> 91.5113% 2026-08-20, and the whole 26.7 points is the
-// INLINE STRUCTURE the note below had already diagnosed correctly. What
-// had been missing was the mechanism, and there are two:
-
-//   * RETAIL EXPANDS TObstacleVector::insert INLINE HERE, roughly 460 of
-//     this body's 1543 bytes, and it CALLS the out-of-line copy at
-//     0x46aeb0 from place_obstacle - the ordinary /Ob2 budget split
-//     between a 1543-byte caller and a 579-byte one. insert, _Ucopy and
-//     _Ufill are now defined in this TU (below place_obstacle) with the
-//     helpers' call sites pinned, and place_obstacle's own insert site
-//     pinned, which reproduces retail's call census exactly: _Ucopy x4,
-//     _Ufill x2, one Destroy, one operator new, one operator delete,
-//     with the fill/copy_backward pairs expanded as `rep movsd 6`.
-//     `inline` ON THE DEFINITION IS LOAD-BEARING: without it VC6's /Ob2
-//     leaves the 740-byte body a call at BOTH sites and the score does
-//     not move by one digit - auto-inlining reaches the small helpers
-//     (59 B, 49 B) but not a body that size.
-
-//   * THE PlaceObstacle PIN IS RIGHT AFTER ALL, and the note that
-//     rejected it was measuring a different function. With insert still
-//     a call the identical `#pragma inline_depth(0)` LOST 5.89
-//     (64.8103 -> 58.9216); with insert expanded it GAINS 10.9
-//     (78.9588 -> 89.8722). A pin's verdict is only valid against the
-//     inline structure it was measured in, so re-try a rejected pin
-//     after any earlier inline decision changes. `obstacles.size() - 1`
-//     is hoisted into a named local ahead of the pragma because retail
-//     expands it at this site.
-
-// 91.5113 -> 98.1361 2026-08-20, four levers, all read off the bytes:
-
-//   * THE size() SURPLUS SPLITS INSIDE ONE STATEMENT, and the earlier
-//     verdict that the statement-granular pragma made x4 the floor was
-//     wrong: retail's grow arm expands the TERNARY's two size() uses as
-//     ONE inline CSE'd magic-division (the `test/je` null guard and
-//     `imul/sar/shr/add` tail are in the bytes) and calls size() only
-//     for the leftmost ADDEND. Two statements reach it: an unpinned
-//     `unsigned tail = (count < size() ? size() : count);` then a
-//     pinned `grown = size() + tail;`. x4 -> x2, census exact (+3.79).
-//   * Dinkumware's fill/copy_backward take their bounds BY VALUE
-//     (obstacle_fill/obstacle_copy_backward below); the hand loops
-//     re-read [this+end] per iteration where retail compares the
-//     register copy (+0.87), and a named `shifted = end - count` gives
-//     retail's spilled CSE across the pinned _Ucopy call (+0.47).
-//   * The reject-loop exit is `break`, NOT `return`: an in-loop return
-//     is a second scope-exit dtor path, and the cross-jumper leaves two
-//     argument heads on operator delete where retail's single exit
-//     block has one (+1.00).
-//   * `landmine_slot` is initialised from size() and DECREMENTED
-//     (`dec edx` on the division result) - `size() - 1` in one
-//     initialiser makes a second pseudo and a `lea` (+0.49).
-
-// Residual (98.1402%, rechecked 2026-09-01): all 82 CFG blocks are
-// structurally exact. Dreamcast's `new_landmine` scope and its individual
-// field-assignment line rows also confirm the retained record construction
-// and order. The remaining differences are scheduling only - the field stores of the
-// landmine record interleave into insert's inlined division a slot
-// later than retail's, retail reuses the `end` load for insert's
-// `where` argument where this compile re-reads the member, and the
-// grow arm places `mov ecx,ebx` for the pinned size() call one store
-// earlier. Register-homing family; the remaining named-vs-anonymous
-// reloc rows (gLandMineShape/const_23cf10, GetSprite) are cosmetic.
+// Retail expands std::vector<TObstacle>::insert here and calls its retained
+// 0x46aeb0 copy from PlaceObstacle. The grow branch uses the library's
+// _Ucopy/_Ufill and fill/copy_backward helpers over 0x18-byte records.
+// The former copied vector implementation used inline-depth pins inside
+// those library operations; their canonical bodies now come from <vector>.
+// Prior source probes: a return in the obstacle rejection loop introduced
+// a second cleanup path; retain break. Initialize landmineSlot from size()
+// before decrementing it; combining the subtraction changed scheduling.
+// The historical 98.1402% result used the copied container and does not
+// establish code generation for the restored standard-library interface.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
 {
@@ -2178,7 +1928,7 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_spellDamage = damage;
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
-                m_obstacles.insert(m_obstacles.m_end, 1, newLandmine);
+                m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
                 int landmineSlot = m_obstacles.size();
                 landmineSlot--;
 #pragma inline_depth(0)
@@ -2544,16 +2294,13 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:3426
-DC_ONLY(0x610e0, 0x7E)
+// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
+// Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
+// TeleportTo and ProcessNextAction retain this forwarding source boundary.
 void combatManager::testRaiseDoor()
 {
-    // @stub
+    raiseDoor();
 }
-
-#endif  // @carcass
 
 VA(0x00467460, 0x22)  // dc 0x61160
 unsigned char inCastle(int index)
@@ -2581,7 +2328,7 @@ unsigned char combatManager::isAdjacent(int first, int second) const
 
 VA(0x00467510, 0xEA)  // dc 0x61224
 unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIndex,
-                                               int destIndex)
+                                               int destIndex) const
 {
     int side = shooter->m_spellInfluence[60] ? 1 - shooter->m_combatSide
                                       : shooter->m_combatSide;
@@ -2601,7 +2348,7 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
 }
 
 VA(0x00467600, 0x23A)  // dc 0x61284
-unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender)
+unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->m_spellInfluence[60] ? 1 - attacker->m_combatSide
                                        : attacker->m_combatSide;
@@ -3235,22 +2982,9 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
-// homes both operands to the frame, selects an ADDRESS with lea/lea and
-// dereferences it - which is what a const-reference-in, const-reference-
-// out select inlines to and what neither a by-value helper nor an
-// inline ternary produces (both enregister; 93.3%). VC6's own
-// <algorithm> does not export `max` into namespace std, so the template
-// is written out here rather than included.
-
-// MOVED AHEAD OF PowEffect 2026-08-20: that body performs seven of these
-// selects and a static has to be defined before its first use. get_distance,
-// the other consumer, is measured after every move.
-static const long& maxOf(const long& x, const long& y)
-{
-    return x < y ? y : x;
-}
-
+// PowEffect's prior local selector probe homed both operands and selected
+// their addresses; a by-value helper or inline ternary measured 93.3%.
+// The canonical cppMax reference selector now owns that shared body.
 // E:\gamedcs\cmbtmgr.cpp:4158
 // The whole combat animation frame pump: one spell effect's worth of
 // attack, wince, death and defend sequences played across every stack
@@ -3264,7 +2998,7 @@ static const long& maxOf(const long& x, const long& y)
 // samples, the third gates the wind-down loop.
 
 // Shapes worth keeping:
-//   * the frame budget is four chained MaxOf selects ending on
+//   * the frame budget is four chained maximum selects ending on
 //     `wince + attack - 1`, which retail forms with one
 //     `lea eax,[esi+edi-1]`;
 //   * `iNextFrameType = cs_wince + (Is(1u << 27))` is ARITHMETIC, not a
@@ -3367,20 +3101,20 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
                 if (stack.m_showAttackFrames)
-                    attackFrames = maxOf(attackFrames,
+                    attackFrames = cppMax<long>(attackFrames,
                         stack.m_stdIcon->getNumFrames(
                             stack.m_showAttackFrameType));
                 else if (stack.m_allUnitsKilled)
-                    winceFrames = maxOf(winceFrames,
+                    winceFrames = cppMax<long>(winceFrames,
                         stack.m_stdIcon->getNumFrames(cs_death));
                 else if (stack.m_someUnitsDamaged)
-                    winceFrames = maxOf(winceFrames,
+                    winceFrames = cppMax<long>(winceFrames,
                         stack.m_stdIcon->getNumFrames(cs_wince));
             }
         }
-        numFrames = maxOf(numFrames, winceFrames);
-        numFrames = maxOf(numFrames, attackFrames);
-        numFrames = maxOf(numFrames, winceFrames + attackFrames - 1);
+        numFrames = cppMax<long>(numFrames, winceFrames);
+        numFrames = cppMax<long>(numFrames, attackFrames);
+        numFrames = cppMax<long>(numFrames, winceFrames + attackFrames - 1);
 
         if (resetLimitCreature)
             this->resetLimitCreature();
@@ -3399,7 +3133,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 
         computeMaxExtent();
         if (spellEffect != -1)
-            PlayImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
+            playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
 
         for (int frameCount = 0; frameCount < numFrames; frameCount++) {
             int winceStartOffset = numFrames - 1 - frameCount;
@@ -3614,10 +3348,6 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00469670, 0xD2)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
@@ -3628,7 +3358,7 @@ long combatManager::getDistance(long start, long stop)
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
-        return maxOf(abs(a), abs(b));
+        return cppMax<long>(abs(a), abs(b));
     return abs(a) + abs(b);
 }
 
@@ -3854,10 +3584,7 @@ void combatManager::raiseSkeletons(int side)
         if (!added) {
             TCreatureType upgradedType = m_raisedCreatureType;
             if (!g_game->m_f1f698
-                && (upgradedType == CREATURE_AIR_ELEMENTAL
-                    || upgradedType == CREATURE_EARTH_ELEMENTAL
-                    || upgradedType == CREATURE_FIRE_ELEMENTAL
-                    || upgradedType == CREATURE_WATER_ELEMENTAL)) {
+                && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;
             } else {
                 upgradedType = upgradedCreatureType(upgradedType);
@@ -3888,146 +3615,23 @@ void combatManager::learnSpellFromEagleEye(int side)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4886
-// SURVEYED 2026-08-20 (not reconstructed), and the survey starts with a
-// correction: an out-of-tree note had this body at 0x469f40, which is
-// wrong - that address is inside LearnSpellFromEagleEye (0x00469fe0,
-// 0x88). The claim below is the carve's and is the one that matches.
+// DC 0x63704 owns both artifact loops and their local artifact copies.
+// Lines 4900/4922 call hero::get_artifact/get_backpack; lines 4914/4936
+// call vector::push_back. VC6's push_back delegates through insert(end(),
+// value) to insert(end(), 1, value): retail retains the equipped append
+// at 0x46a11a -> 0x54d330 and expands the backpack append. GiveArtifact
+// calls at 0x46a0f8/0x46a190 return the success byte before removal.
+// The looted_artifacts parameter is a reference: DC's public mangling has
+// AAV (not PAV), despite an older roster rendering it as a pointer.
 
-// The body is hero::TransferArtifacts (src/hero.cpp:2630, already
-// reconstructed) with GiveArtifact in place of add_to_backpack and a
-// vector append on the end. Byte-verified here: the two flag guards, the
-// looted hero as `heroes[1 - side]` (retail forms it as
-// `[this + 4*(0x14f4 - side)]`, and 0x14f4*4 == 0x53d0 == &heroes[1]),
-// the winner as heroes[side], equipped at dead+0x12d walked 19 slots of
-// 8 bytes, backpack at dead+0x3cc walked DOWNWARDS from 63, and the same
-// seven-way refusal chain in the same compare order (-1, 2, 0, 3, 4, 5,
-// 6) that artifact.h already names in full.
-
-// TWO THINGS TO SETTLE BEFORE WRITING IT, neither of them about bytes:
-//   * hero::GiveArtifact is declared `void` in hero.h but retail returns
-//     in al and this body branches on it (`test al,al / je`). Fixing that
-//     is a hero.h edit, and a sibling lane owns src/hero.cpp - coordinate
-//     rather than race it. The change is a retype at constant declarator
-//     count, which this lane measured to be include-set inert.
-//   * the append is a real out-of-line call to the three-argument
-//     vector insert at 0x54d330, reached as `insert(_Last, 1, &artifact)`
-//     with the vector in ecx. Whether to spell that `push_back` (the DC
-//     roster carries the push_back row) or the insert directly depends on
-//     how the STL surface is modelled here; place_obstacle's own
-//     TObstacleVector uses the explicit insert spelling.
-#endif  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:4886
-// RECONSTRUCTED 2026-08-20, CLOSED AT 100.0000 2026-08-21. The previous
-// lane's survey named two blockers; both are gone. hero::GiveArtifact
-// already returns `unsigned char` in hero.h and hero.cpp (a sibling
-// lane landed that retype), so no coordination was needed, and the STL
-// question answers itself - <vector> is already in cmbtmgr.h's closure
-// through army.h, so the real Dinkumware std::vector<type_artifact>
-// costs no include edge.
-
-// The parameter is a REFERENCE. The DC roster text renders it
-// `std::vector<...>* looted_artifacts`, but the S_PUB32 mangling is
-// ?LootDeadHero@combatManager@@QAAXHAAV?$vector@...@Z - `AAV`, not
-// `PAV` - so this is the roster's documented reference-as-pointer
-// rendering and not a pointer parameter. Codegen is identical either
-// way; the mangling is the only witness, and it is unambiguous.
-
-// THE 0.0000 THIS ROW SAT AT WAS AN objdiff CLAMP, NOT A DIFF REFUSAL.
-// A prior revision of this block claimed objdiff "declines to diff"
-// the function and blamed the std::vector<type_artifact> template
-// COMDATs. Both claims were wrong (measured with objdiff-cli one-shot
-// diff + objdiff v3.7.3 source, objdiff-core/src/diff/code.rs): the
-// symbols pair fine and the diff runs - 387 aligned rows, prologue and
-// epilogue matching - but the middle fully desynced (144 DELETE + 131
-// INSERT rows) because our compile expanded the FIRST loop's insert
-// where retail keeps a call, so the expansions never aligned. objdiff's
-// max_score counts only the target side (256 instructions x
-// PENALTY_INSERT_DELETE) while diff_score adds the penalty for BOTH
-// sides' unmatched rows (275 x 100), then clamps - hence exactly 0.0,
-// and protobuf-JSON drops the 0.0-default field from report.json. The
-// surviving valid measurement from that revision is the negative
-// control: delete the two inserts and the score is 33.3711% - fewer
-// unmatched rows, no clamp - which proved the body itself was sound.
-
-// WHAT ACTUALLY CLOSED IT: retail CALLS the equipped loop's insert
-// (0x54d330) and EXPANDS the backpack loop's, keeping the expansion
-// SHALLOW (_Ucopy x3, _Ufill x2, operator new, _Destroy, delete out of
-// line). That is the /Ob2 budget at its 1000 floor: retail's caller is
-// small enough pre-inline that site 1 gets budget/2 < cost (call) and
-// site 2 gets the remainder (shallow expand). Our monolithic body sat
-// above the floor, so the decisions came out inverted and deeper. Three
-// moves reproduce retail exactly, closing 0.0 -> 67.89 -> 84.56 ->
-// 91.55 -> 100.0000: a statement-scoped inline_depth(0) pin on the
-// equipped loop's insert (with end() hoisted to an iterator local so
-// the pin cannot de-inline it), then the three statics below - the
-// guard chain, then each loop body as a single-call-site static
-// (inlined back regardless of size) - which drop the caller's
-// pre-inline cb, the budget numerator, to the floor. The ESI/EDI
-// transposition and the 4-byte frame surplus the intermediate scores
-// showed were downstream of the inline structure and dissolved with
-// the last dose; no register spelling was needed.
-
-// The body is hero::TransferArtifacts with GiveArtifact swapped in for
-// add_to_backpack and the append added. The seven-way refusal chain is
-// literally TransferArtifacts' source order - NONE, HOLY_GRAIL,
-// SPELLBOOK, CATAPULT, BALLISTA, AMMO_CART, FIRST_AID_TENT - and
-// artifact.h's values reproduce retail's compare order (-1, 2, 0, 3, 4,
-// 5, 6) with no reordering, which is the corroboration that the two
-// bodies really are one source shape written twice.
-// /Ob2 budget shaping: the guard chain lifted into a static keeps
-// LootDeadHero's own pre-inline mass down; VC6 inlines it straight back
-// at both sites, so the emitted bytes are the chain longhand.
-static int isUnlootableArtifact(int artifactId)
-{
-    return artifactId == ARTIFACT_NONE ||
-           artifactId == ARTIFACT_HOLY_GRAIL ||
-           artifactId == ARTIFACT_SPELLBOOK ||
-           artifactId == ARTIFACT_CATAPULT ||
-           artifactId == ARTIFACT_BALLISTA ||
-           artifactId == ARTIFACT_AMMO_CART ||
-           artifactId == ARTIFACT_FIRST_AID_TENT;
-}
-
-// Second /Ob2 dose, same direction: the whole equipped-loop body in a
-// single-call-site static (inlined back regardless of size), so the
-// caller's pre-inline cb - the budget numerator - falls further and the
-// backpack loop's insert expansion goes shallow like retail's.
-static int lootEquippedSlot(hero* winner, hero* dead, int slot,
-                              std::vector<type_artifact>* loot)
-{
-    type_artifact artifact = dead->getArtifact(slot);
-    if (isUnlootableArtifact(artifact.m_artifactId))
-        return 1;
-    if (!winner->giveArtifact(&artifact, 1, 0))
-        return 0;
-    dead->removeArtifact(slot);
-    std::vector<type_artifact>::iterator where = loot->end();
-    loot->insert(where, 1, artifact);
-    return 1;
-}
-
-// Third dose, symmetric: the backpack-loop body in its own
-// single-call-site static. No pin inside - retail EXPANDS this loop's
-// insert - but the lift keeps the caller at the budget floor so the
-// expansion's helpers (_Ucopy/_Ufill/_Destroy/delete) stay out of line
-// the way retail's do.
-static int lootBackpackSlot(hero* winner, hero* dead, int index,
-                              std::vector<type_artifact>* loot)
-{
-    type_artifact artifact = dead->getBackpack(index);
-    if (isUnlootableArtifact(artifact.m_artifactId))
-        return 1;
-    if (!winner->giveArtifact(&artifact, 1, 0))
-        return 0;
-    dead->removeBackpackArtifact(index);
-    loot->insert(loot->end(), 1, artifact);
-    return 1;
-}
-
+// Historical probes: the former monolithic candidate's 0% was objdiff's
+// clamp (144 DELETE + 131 INSERT), not a rejected comparison. Removing
+// both appends scored 33.3711%. An equipped-insert pin and artificial
+// isUnlootableArtifact/lootEquippedSlot/lootBackpackSlot splits advanced
+// 0 -> 67.89 -> 84.56 -> 91.55 -> 100%. The splits changed VC6's inline
+// budget but had no independent source evidence; they are now removed.
+// These measurements predate restoring the canonical getters/push_back.
 VA(0x0046a070, 0x2D3)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
@@ -4039,15 +3643,37 @@ void combatManager::lootDeadHero(int side,
     hero* dead = m_heroes[1 - side];
     if (!dead)
         return;
-    std::vector<type_artifact>* loot = &lootedArtifacts;
     hero* winner = m_heroes[side];
     for (int slot = 0; slot < 19; slot++) {
-        if (!lootEquippedSlot(winner, dead, slot, loot))
+        // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
+        type_artifact artifact = dead->getArtifact(static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+        if (artifact.m_artifactId == ARTIFACT_NONE
+            || artifact.m_artifactId == ARTIFACT_HOLY_GRAIL
+            || artifact.m_artifactId == ARTIFACT_SPELLBOOK
+            || artifact.m_artifactId == ARTIFACT_CATAPULT
+            || artifact.m_artifactId == ARTIFACT_BALLISTA
+            || artifact.m_artifactId == ARTIFACT_AMMO_CART
+            || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!winner->giveArtifact(&artifact, 1, 0))
             return;
+        dead->removeArtifact(slot);
+        lootedArtifacts.push_back(artifact);
     }
     for (int index = 63; index >= 0; index--) {
-        if (!lootBackpackSlot(winner, dead, index, loot))
+        type_artifact artifact = dead->getBackpack(index);
+        if (artifact.m_artifactId == ARTIFACT_NONE
+            || artifact.m_artifactId == ARTIFACT_HOLY_GRAIL
+            || artifact.m_artifactId == ARTIFACT_SPELLBOOK
+            || artifact.m_artifactId == ARTIFACT_CATAPULT
+            || artifact.m_artifactId == ARTIFACT_BALLISTA
+            || artifact.m_artifactId == ARTIFACT_AMMO_CART
+            || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!winner->giveArtifact(&artifact, 1, 0))
             return;
+        dead->removeBackpackArtifact(index);
+        lootedArtifacts.push_back(artifact);
     }
 }
 
@@ -4095,22 +3721,6 @@ bool combatManager::isQuickCombat() const
     }
     return g_unnamed698758.m_quickCombat != 0;
 }
-
-// Two combatManager grid workers that live in the retail cmbtmgr.obj tail
-// (the 0x6a511..0x6b610 gap before combatcontrolsubwindow), both proven to
-// belong to the combat manager by the huge [this+0x14031] this-relative
-// scratch-map offset - only combatManager is 0x14000+ B, so no window or
-// STL COMDAT can carry that offset. Located, not reconstructed: @stub
-// bodies, admitted for the denominator. Neither has a DC cmbtmgr.obj row
-// (the SH4 build folds the worker back into its army-side wrapper).
-#if 0  // @carcass claim
-
-// 0x46a520 (68 B, `ret 4`): thiscall worker over an army*. Clears the
-// 187-cell scratch map at [this+0x14031] (rep stosd 0x2e + stosw + stosb =
-// COMBAT_GRID_CELLS) then marks the stack's primary grid index ([army+0x38])
-// and, when the stack's second-hex flag ([army+0x84] & 1) is set, its
-// army::get_second_grid_index cell. Called from army.obj (carve 0x45950).
-#endif  // @carcass claim
 
 VA(0x0046a520, 0x44)
 void combatManager::unnamed46a520(army* stack)
@@ -4854,21 +4464,21 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
-// COMDAT pairing: combatManager::TObstacleVector::_Ucopy - the hand-modelled
-// obstacle container's uninitialised copy, `ret 0xc` for its three pointers.
-VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, tobstaclevector)
-
-// COMDAT pairing: combatManager::TObstacleVector::size, the hand-modelled
-// container's in-class inline. Not a std::vector member and not confusable
-// with one - it reads `begin` at +4 and `end` at +8 (there is a member ahead
-// of them) and guards the subtraction with `begin == 0`, which is the
-// header's own `begin == 0 ? 0 : end - begin` and nothing else in the image.
-// The 24-byte element stride of the reciprocal divide is TObstacle's.
-VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TObstacleVector)
-
-// COMDAT pairing: combatManager::TObstacleVector::_Ufill, the sibling of the
-// already-claimed _Ucopy, agreement 1.000 at an exactly equal 49-byte extent.
-VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)
+// Canonical Dinkumware std::vector<combatManager::TObstacle> helpers.
+// Retail _Ucopy/_Ufill use placement construction with a 0x18-byte stride;
+// The folded size() at 0x517750 is now enrolled against objecttype's retained
+// TImageInfo specialization, which shares the same 24-byte element stride.
+// Retail 0x46aeb0 is the count-insert called by placeObstacle (0x466010)
+// and castSpell (0x59fe30), whose receiver is the manager's TObstacle vector.
+// It sits directly before this TU's _Ucopy/_Ufill cluster. Both cmbtmgr and
+// spells emit the native specialization: all 740 retail bytes agree after
+// excluding its two independently verified operator new/delete relocations.
+// Twelve following alignment bytes are outside the admitted retail extent.
+// The former objecttype/TImageInfo claim was a same-stride ICF proxy without
+// a matching caller; retain the actual TObstacle owner and public STL API.
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TObstacle)
+VA_COMPGEN(0x0046b1a0, 0x3B, VECTOR_UCOPY, TObstacle)
+VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacle)
 
 VA_COMPGEN(0x0046A680, 0xBE, CLASS_CTOR, set)
 

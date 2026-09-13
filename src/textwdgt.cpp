@@ -9,17 +9,7 @@
 #include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
-
-// VC6's own <xutility> reference-returning min, declared file-locally for
-// the same reason ai_combat.cpp and combatresultswindow.cpp declare it: the
-// clamp in bitmapBackedTextWidget::Draw stores BOTH operands to stack temps
-// and selects between their ADDRESSES with two LEAs, which no
-// value-returning spelling produces, and the TU needs no other STL surface.
-template <class _TYPE>
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
+#include "includes.h"
 
 #if 0  // @carcass
 
@@ -210,7 +200,7 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 VA(0x005bc5f0, 0x92)  // dc 0x164f80
-void textWidget::draw()
+void textWidget::draw() const
 {
     if (m_status & WIDGET_DRAWN) {
         int drawX = m_x + m_parentWindow->m_x;
@@ -326,10 +316,10 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
-VA(0x005bc6d0, 0x8A)  // dc 0x1653b0
-bitmapBackedTextWidget::~bitmapBackedTextWidget()
-{
-}
+// E:\gamedcs\textwdgt.cpp:320
+// CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
 VA(0x005bc760, 0x7B)  // dc 0x1651d8
 bitmapBackedTextWidget::bitmapBackedTextWidget(
@@ -364,7 +354,7 @@ void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 VA(0x005bc7f0, 0x7c)  // dc 0x165258
-void bitmapBackedTextWidget::draw()
+void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
