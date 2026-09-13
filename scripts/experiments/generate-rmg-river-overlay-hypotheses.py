@@ -19,17 +19,17 @@ SIGNATURE = "void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int val
 
 
 def cell_forms():
-    expression = "m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]"
+    expression = "m_map->m_mapItems[point.m_y * m_map->m_size.m_x + point.m_x]"
     yield "cell_reference", f"TRmgMapItem& item = {expression};", "item."
     yield "cell_pointer", f"TRmgMapItem* item = &{expression};", "item->"
     yield "map_reference", ("type_random_map& map = *m_map;\n"
-                            "TRmgMapItem& item = map.m_mapItems[point.m_y * map.m_mapWidth + point.m_x];"), "item."
+                            "TRmgMapItem& item = map.m_mapItems[point.m_y * map.m_size.m_x + point.m_x];"), "item."
     yield "map_pointer", ("type_random_map* map = m_map;\n"
-                          "TRmgMapItem& item = map->m_mapItems[point.m_y * map->m_mapWidth + point.m_x];"), "item."
+                          "TRmgMapItem& item = map->m_mapItems[point.m_y * map->m_size.m_x + point.m_x];"), "item."
     for name, fields in (("coordinate_xy", ("x", "y")), ("coordinate_yx", ("y", "x"))):
         yield name, "\n".join([
             *(f"unsigned int {field} = point.m_{field};" for field in fields),
-            "TRmgMapItem& item = m_map->m_mapItems[y * m_map->m_mapWidth + x];"]), "item."
+            "TRmgMapItem& item = m_map->m_mapItems[y * m_map->m_size.m_x + x];"]), "item."
 
 
 def flag_forms(prefix):

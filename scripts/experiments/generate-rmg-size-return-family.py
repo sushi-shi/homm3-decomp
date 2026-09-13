@@ -26,10 +26,10 @@ def body(owner, lines):
 def base_forms():
     for capture, returned in itertools.product(range(2), range(6)):
         lines = []
-        x, y = "m_mapWidth", "m_mapHeight"
+        x, y = "m_size.m_x", "m_size.m_y"
         if capture:
-            lines = ["const unsigned int& width = m_mapWidth;",
-                     "const unsigned int& height = m_mapHeight;"]
+            lines = ["const unsigned int& width = m_size.m_x;",
+                     "const unsigned int& height = m_size.m_y;"]
             x, y = "width", "height"
         point = "TRmgGridPoint(" + x + ", " + y + ")"
         forms = [

@@ -64,7 +64,7 @@ class KeyTentTests(unittest.TestCase):
         text = "#include <vector>\n#include <cstring>\n#include <cstdio>\n#include <new>\n#include <algorithm>\n"
         for name in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds", "TRmgZoneCellState", "TRmgGroundTileData"):
             text += block(header, "struct " + name) + "\n"
-        text += definition(support, "TRmgMapPosition::TRmgMapPosition") + "\n"
+        text += definition(source, "TRmgMapPosition::TRmgMapPosition") + "\n"
         text += block(mapcell, "enum TAdventureObjectType") + "\n"
         text += "struct TObjectType { " + field(objects, "m_subtype") + " };\n"
         text += "struct TRmgObjectPropertiesRef { " + field(header, "m_prototype") + " " + field(header, "m_refCount") + " };\n"
@@ -114,11 +114,11 @@ struct type_object {
         text += r'''
 struct TRmgMapItem { TRmgZoneCellState m_zoneState; TRmgGroundTileData m_tileData; };
 struct type_random_map {
-    int m_mapWidth,m_mapHeight,m_numberLevels;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     bool m_owned;
     type_random_map():m_mapItems(0),m_owned(false) {}
-    type_random_map(int w,int h,int levels):m_mapWidth(w),m_mapHeight(h),m_numberLevels(levels),m_owned(true) {
+    type_random_map(int w,int h,int levels):m_size(w,h,levels),m_owned(true) {
         m_mapItems=new TRmgMapItem[w*h*levels];
         std::memset(m_mapItems,0,sizeof(TRmgMapItem)*w*h*levels);
         for(int i=0;i<w*h*levels;++i) m_mapItems[i].m_tileData.m_roadEntrance=i&1;
@@ -127,7 +127,7 @@ struct type_random_map {
     ~type_random_map() {
         if(m_owned) {
             g_finalBits.clear();
-            for(int i=0;i<m_mapWidth*m_mapHeight;++i) {
+            for(int i=0;i<m_size.m_x*m_size.m_y;++i) {
                 g_finalBits.push_back(m_mapItems[i].m_tileData.m_placementOutline);
                 if(m_mapItems[i].m_tileData.m_roadEntrance!=(i&1)) g_valid=false;
             }
@@ -146,7 +146,7 @@ struct type_random_map {
 void TRmgTreasureGroup::reset() {
     g_group=this;event(2,int(m_objects.size()));m_objects.clear();m_outline.clear();
     m_ready=0;m_hasGuard=0;
-    for(int i=0;i<m_map.m_mapWidth*m_map.m_mapHeight;++i) m_map.m_mapItems[i].m_tileData.m_placementOutline=0;
+    for(int i=0;i<m_map.m_size.m_x*m_map.m_size.m_y;++i) m_map.m_mapItems[i].m_tileData.m_placementOutline=0;
 }
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) {
     event(4,identity(guard));if(g_add) m_objects.push_back(guard);return g_add;
@@ -201,7 +201,7 @@ template<class Candidate> bool check() {
         owner.m_zones.push_back(&zones[0]);owner.m_zones.push_back(&zones[1]);
         std::vector<TRmgMapItem> cells(12);std::memset(&cells[0],0,sizeof(cells[0])*cells.size());
         for(int i=0;i<12;++i) cells[i].m_zoneState.m_zone=(i/6)^1;
-        owner.m_map.m_mapWidth=3;owner.m_map.m_mapHeight=2;owner.m_map.m_numberLevels=2;owner.m_map.m_mapItems=&cells[0];
+        owner.m_map.m_size.m_x=3;owner.m_map.m_size.m_y=2;owner.m_map.m_size.m_z=2;owner.m_map.m_mapItems=&cells[0];
         std::vector<TRmgMapItem> saved=cells;
         TObjectType prototypes[5];TRmgObjectPropertiesRef properties[5];
         for(int i=0;i<5;++i) { prototypes[i].m_subtype=i;properties[i].m_prototype=&prototypes[i];properties[i].m_refCount=100; }

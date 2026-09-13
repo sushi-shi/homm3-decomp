@@ -95,19 +95,19 @@ def variants(original):
 
 def level_variants(original):
     view = """        type_random_map map(m_map.getMapItem(0, 0, level),
-            m_map.m_mapWidth, m_map.m_mapHeight);"""
+            m_map.m_size.m_x, m_map.m_size.m_y);"""
     if original.count("    TPoint point;\n") != 1 or original.count(view) != 1:
         raise ValueError("level family requires the shared-point island body")
     views = [view,
-        """        int mapHeight = m_map.m_mapHeight;
+        """        int mapHeight = m_map.m_size.m_y;
         type_random_map map(m_map.getMapItem(0, 0, level),
-            m_map.m_mapWidth, mapHeight);""",
-        """        int mapWidth = m_map.m_mapWidth;
+            m_map.m_size.m_x, mapHeight);""",
+        """        int mapWidth = m_map.m_size.m_x;
         type_random_map map(m_map.getMapItem(0, 0, level),
-            mapWidth, m_map.m_mapHeight);""",
+            mapWidth, m_map.m_size.m_y);""",
         """        TPoint mapSize;
-        mapSize.m_y = m_map.m_mapHeight;
-        mapSize.m_x = m_map.m_mapWidth;
+        mapSize.m_y = m_map.m_size.m_y;
+        mapSize.m_x = m_map.m_size.m_x;
         type_random_map map(m_map.getMapItem(0, 0, level),
             mapSize.m_x, mapSize.m_y);"""]
     for coordinate, binding, lifetime in itertools.product(range(5), range(4), range(3)):
@@ -132,7 +132,7 @@ def level_variants(original):
 
 def origin_variants(original):
     view = """        type_random_map map(m_map.getMapItem(0, 0, level),
-            m_map.m_mapWidth, m_map.m_mapHeight);"""
+            m_map.m_size.m_x, m_map.m_size.m_y);"""
     if original.count(view) != 1 or original.count("    TRmgMapPosition point;") != 1:
         raise ValueError("origin family requires the level-carrying coordinate")
     bindings = [None, ("const int&", "const int&"), ("const int&", "int"),
@@ -156,10 +156,10 @@ def origin_variants(original):
                 stores = [f"        {name}.m_x = {name}.m_y = 0;", stores[2]]
             setup += "\n".join(stores) + "\n"
             lookup = f"m_map.getMapItem({name}.m_x, {name}.m_y, {name}.m_z)" if origin == 1 else f"m_map.getMapItem({name})"
-        width, height = "m_map.m_mapWidth", "m_map.m_mapHeight"
+        width, height = "m_map.m_size.m_x", "m_map.m_size.m_y"
         if binding:
             wtype, htype = bindings[binding]
-            setup += f"        {htype} mapHeight = m_map.m_mapHeight;\n        {wtype} mapWidth = m_map.m_mapWidth;\n"
+            setup += f"        {htype} mapHeight = m_map.m_size.m_y;\n        {wtype} mapWidth = m_map.m_size.m_x;\n"
             width, height = "mapWidth", "mapHeight"
         replacement = setup + f"        type_random_map map({lookup},\n            {width}, {height});"
         body = body.replace(view, replacement)

@@ -34,8 +34,8 @@ class RmgTreasureOutlineTests(unittest.TestCase):
             self.assertEqual(len(rebased["options"]), 60)
             self.assertEqual(rebased["find"], rebased["options"][0]["replace"])
         with self.assertRaisesRegex(ValueError, "review the current"):
-            self.module.make_axes(self.source.replace("int height = m_map.m_mapHeight;",
-                                                     "int height = m_map.m_mapHeight + 1;"))
+            self.module.make_axes(self.source.replace("int height = m_map.m_size.m_y;",
+                                                     "int height = m_map.m_size.m_y + 1;"))
 
     def test_parent_and_start_axes_are_disjoint_and_preserve_their_baseline(self):
         options = self.module.make_axes(self.source)[0]["options"]
@@ -59,7 +59,7 @@ class RmgTreasureOutlineTests(unittest.TestCase):
         header = (self.root / "include/rmg.h").read_text()
         template = (self.root / "scripts/experiments/rmg-treasure-outline-oracle.cpp").read_text()
         types = []
-        for name in ("TRmgVector", "TPoint", "TRmgGroundTile", "TRmgGroundTileData"):
+        for name in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgGroundTile", "TRmgGroundTileData"):
             start = header.index("struct " + name + " {")
             types.append(header[start:header.index("\n};", start) + 3])
         start = header.index("enum ERmgDirectionLimits {")
@@ -93,7 +93,7 @@ class RmgTreasureOutlineTests(unittest.TestCase):
             programs.append(candidate(label, option["replace"].replace(self.module.WALK_START, start)))
             checks.append('if (!check<' + label + '>()) { std::fprintf(stderr, "failed state ' + str(index) + '\\n"); return 1; }')
         for label, before, after in (
-                ("WrongEmpty", "position.m_x == m_map.m_mapWidth", "position.m_y == m_map.m_mapHeight"),
+                ("WrongEmpty", "position.m_x == m_map.m_size.m_x", "position.m_y == m_map.m_size.m_y"),
                 ("WrongStart", "--position.m_y;", "++position.m_y;"),
                 ("WrongPredicate", "item->isRoadEntrance() ||", "false ||"),
                 ("WrongLevel", "position.m_x, position.m_y, 0", "position.m_x, position.m_y, 1")):

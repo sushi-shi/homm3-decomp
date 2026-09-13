@@ -98,7 +98,12 @@ def shipyard_axes(original):
 
 
 def flood_axis(original):
-    end = original.index("    m_map.getMapItem(position)->")
+    starts = [call for call in (
+        "    m_map.getMapItem(position)->",
+        "    m_map.getMapItem(position.m_x, position.m_y, position.m_z)->") if call in original]
+    if len(starts) != 1:
+        raise ValueError("review the flood seed's canonical point/scalar lookup")
+    end = original.index(starts[0])
     initial = original[:end]
     head = initial[:initial.index("    std::vector<TRmgMapPosition> openPositions;")]
     vector = "    std::vector<TRmgMapPosition> openPositions;\n"

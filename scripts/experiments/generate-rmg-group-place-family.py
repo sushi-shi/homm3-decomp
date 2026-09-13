@@ -85,8 +85,8 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         TRmgMapPosition guardPosition;
         guardPosition = TRmgMapPosition(group->m_guardPosition.m_x + position.m_x,
             group->m_guardPosition.m_y + position.m_y, position.m_z);
-        if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_mapWidth
-            || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_mapHeight)
+        if (guardPosition.m_x < 1 || guardPosition.m_x + 1 >= m_map.m_size.m_x
+            || guardPosition.m_y < 1 || guardPosition.m_y + 1 >= m_map.m_size.m_y)
             return 0;
         for (int x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
             for (int y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
@@ -121,8 +121,8 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
             continue;
         point.m_x += position.m_x;
         point.m_y += position.m_y;
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+        if (point.m_x < 0 || point.m_x >= m_map.m_size.m_x
+            || point.m_y < 0 || point.m_y >= m_map.m_size.m_y)
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
@@ -155,7 +155,7 @@ checkOutline:
             if (!source->hasSubterraneanGate()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;
-                if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
+                if (x < m_map.m_size.m_x && y < m_map.m_size.m_y
                     && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
                     return 0;
             }

@@ -13,12 +13,12 @@ struct TRmgMapItem {
     // @PREDICATES@
 };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     std::vector<TRmgMapItem> m_cells;
     std::vector<int> m_queries;
     void record(int x, int y, int z) {
-        if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight || z != 0
+        if (x < 0 || x >= m_size.m_x || y < 0 || y >= m_size.m_y || z != 0
             || m_queries.size() >= 10000) throw std::runtime_error("invalid lookup or unbounded walk");
         m_queries.push_back(x); m_queries.push_back(y); m_queries.push_back(z);
     }
@@ -35,7 +35,7 @@ struct OutlineRoot {
 static void initialize(OutlineRoot& root, int width, int height, int flags,
     int left, int top, int right, int bottom) {
     type_random_map& map = root.m_map;
-    map.m_mapWidth = width; map.m_mapHeight = height;
+    map.m_size.m_x = width; map.m_size.m_y = height;
     map.m_cells.resize(width * height);
     map.m_mapItems = map.m_cells.empty() ? 0 : &map.m_cells[0];
     for (int y = 0; y < height; ++y) for (int x = 0; x < width; ++x) {

@@ -42,7 +42,7 @@ class ConnectionQueueTests(unittest.TestCase):
             "TRmgZoneCellState", "TRmgGroundTile", "TRmgGroundTileData", "TRmgConnectionDecoration"))
         types += "\n" + block((root / "include/terrain_type.h").read_text(), "enum TTerrainType")
         support = (root / "src/rmg_support.cpp").read_text()
-        types += "\n" + module.definition(support, "TRmgMapPosition::TRmgMapPosition")
+        types += "\n" + module.definition(source, "TRmgMapPosition::TRmgMapPosition")
         types += "\n" + module.definition(source, "TRmgMapPosition::operator+=")
         item = block(header, "struct TRmgMapItem")
         fields = "\n".join(line.split("//")[0] for line in item.splitlines()
@@ -58,7 +58,7 @@ struct TRmgMapItem {
         for name in ("isRoadEntrance", "hasSubterraneanGate", "setMovementCost"):
             types += "\n" + module.definition(header, name)
         types += "\n};\nstruct type_random_map {\n"
-        types += "int m_mapWidth, m_mapHeight; TRmgMapItem* m_mapItems;\n"
+        types += "TRmgMapPosition m_size; TRmgMapItem* m_mapItems;\n"
         types += module.definition(header, "getMapItem", parameters="int x, int y, int z")
         types += "\nTRmgMapItem* getMapItem(TRmgMapPosition point);\nvoid floodConnectionCosts(TRmgMapPosition, unsigned char);\n};\n"
         types += module.definition(source, "type_random_map::getMapItem", parameters="TRmgMapPosition point")
@@ -256,11 +256,11 @@ bool check() {
         std::vector<TRmgMapItem> expected=cells;
         unsigned char waterZone=flag==0 ? 0 : flag==1 ? 1 : 255;
         reference(expected,width,height,seed,waterZone);
-        type_random_map map;map.m_mapWidth=width;map.m_mapHeight=height;map.m_mapItems=&cells[0];
+        type_random_map map;map.m_size.m_x=width;map.m_size.m_y=height;map.m_mapItems=&cells[0];
         TRmgMapPosition position(pattern%width,pattern%height,level);
         map.floodConnectionCosts(position,waterZone);
         for(int i=0;i<count;++i) if(!same(cells[i],expected[i])) return false;
-        if(map.m_mapWidth!=width || map.m_mapHeight!=height || map.m_mapItems!=&cells[0]) return false;
+        if(map.m_size.m_x!=width || map.m_size.m_y!=height || map.m_mapItems!=&cells[0]) return false;
     }
     return true;
 }
