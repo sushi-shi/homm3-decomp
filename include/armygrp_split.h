@@ -26,38 +26,27 @@ enum TSplitDialogReturn {
 // Retail allocates 0x80 bytes for this source-private dialog.
 class TSplitWindow : public CAdvPopup {
 public:
-    // Before normalization: splitSlider.
     slider* m_splitSlider;                // +0x60, widget id 6
-    // Before normalization: sourceEntry.
     textEntryWidget* m_sourceEntry;       // +0x64, widget id 4
-    // Before normalization: destinationEntry.
     textEntryWidget* m_destinationEntry;  // +0x68, widget id 5
-    // Before normalization: totalTroops.
     int m_totalTroops;             // +0x6c
-    // Before normalization: sourceTroops.
     int m_sourceTroops;            // +0x70
-    // Before normalization: destinationTroops.
     int m_destinationTroops;       // +0x74
-    // Before normalization: minimumTransfer.
     signed char m_minimumTransfer; // +0x78
-    // Before normalization: sourceMustKeep.
     signed char m_sourceMustKeep;  // +0x79
+
 private:
-    // Before normalization: pad_7a.
     // The retail constructor places the two keep-army bytes at
     // +0x78/+0x79 and the creature dword at +0x7c; these bytes align that word.
     char m_paddingBeforeCreature[2];
+
 public:
-    // Before normalization: creature.
     TCreatureType m_creature;      // +0x7c
 
     TSplitWindow(int x2, int y2, TCreatureType thisArmy);
     virtual ~TSplitWindow();
-    // Before normalization (function): TSplitWindow::UpdateSplitArmy.
     inline void updateSplitArmy(unsigned char update);
-    // Before normalization (function): TSplitWindow::SetRolloverText.
     inline void setRolloverText(int codeY);
-    // Before normalization (function): TSplitWindow::WindowHandler.
     virtual int windowHandler(message* msg);
 };
 SIZE(TSplitWindow, 0x80);

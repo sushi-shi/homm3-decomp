@@ -8,14 +8,6 @@
 #include <va.h>
 #include "victor.h"
 
-// Provisional name for the PCX run decoder called at 0x604071. Retail keeps
-// its state in AX/CX, rewrites a partially consumed run marker, and returns
-// the source-byte count through a local stack slot. VC6 supplies that local
-// and the frame around the assembly block. The body preserves the retail
-// <= 0xc0 literal test and signed 16-bit repeat counter.
-// All 83 bytes agree with global optimization disabled for this assembly
-// kernel group. Ordinary /O2 removes the unused EBX save/restore (81 bytes);
-// /O2 /Og- and /Od both retain the retail frame without an extra source use.
 VA(0x00604510, 0x53)  // anchor-caller loadpcx + RLE marker semantics; external Victor library
 int __cdecl victorDecodeRleBytes(unsigned char* destination,
                                  unsigned char* source, int count)
@@ -58,13 +50,6 @@ int __cdecl victorDecodeRleBytes(unsigned char* destination,
     return consumed;
 }
 
-// Provisional name for loadpcx's four one-bit planes -> palette-index
-// kernel. Retail packs the bit position and mask into CL/CH and the four
-// input bytes into DL/DH/BH/BL. This is recovered assembly source, with
-// symbolic C++ parameters; VC6 supplies the EBP frame and callee saves.
-// The ordinary inline-assembly block reproduces all 99 bytes, including
-// the signed byte decrement and the rotating mask. No naked body or emitted
-// byte directives are used.
 VA(0x00604570, 0x63)  // anchor-caller loadpcx + planar bit semantics; external Victor library
 void __cdecl victorUnpackFourPlanes(unsigned char* destination,
                                     const unsigned char* source,
@@ -117,12 +102,6 @@ void __cdecl victorUnpackFourPlanes(unsigned char* destination,
     }
 }
 
-// Provisional name for loadpcx's planar RGB -> interleaved BGR kernel.
-// The low 16-bit stride is the signed loop counter. EBP is explicitly saved
-// within the assembly block and reused for twice the plane stride; VC6
-// independently adds the surrounding frame and EBX/ESI/EDI saves. That
-// two-level EBP lifetime reproduces retail's unusual double save exactly.
-// A high-level short-counter C++ loop is a 58-byte negative control.
 VA(0x006045e0, 0x34)  // anchor-caller loadpcx + RGB plane layout; external Victor library
 void __cdecl victorInterleaveRgbPlanes(unsigned char* destination,
                                        const unsigned char* source, int stride)

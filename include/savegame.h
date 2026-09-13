@@ -10,7 +10,6 @@
 // selector. NAME UNATTESTED, address-ordinal placeholder in the
 // gUnnamed69ccc4 style; eighteen .text sites read it and none of them is
 // modelled yet, so nothing constrains the role further.
-// Before normalization: gUnnamed699274.
 extern int g_unnamed699274;
 
 #endif  /* HOMM3_SAVEGAME_H */

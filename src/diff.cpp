@@ -5,7 +5,6 @@
 #include "diff.h"
 #include "includes.h"
 
-
 // E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
 // owns this record's single in-class constructor; only this TU uses it.
 class CDiffHeader
@@ -34,18 +33,7 @@ unsigned char* CDiffFile::getData()
     return static_cast<unsigned char*>(static_cast<void*>(this + 1));
 }
 
-// Exact with the payload pointer captured once immediately after allocation,
-// as DC line63 emits GetData before the three offset initializers at65..67.
-// The raw named result local is newSaveGame. Repeated GetData calls inside
-// the loop score99.6429: three scale-one addresses choose the opposite SIB
-// base/index order. The cached source lifetime fixes all three, without a
-// qualifier or optimizer pin. Restoring the ordinary GetData body to its
-// original source order is independently byte-neutral; both facts are kept.
-// Four source-family controls reproduced: uncached99.6429, cached100 with
-// either helper placement. Older cached-pointer/why-reg controls were flat
-// in their then-current source state; they do not bound this reconstruction.
-// E:\gamedcs\diff.cpp:62
-VA(0x00490f60, 0xc5)  // linkorder + body: allocated output size and 12-byte copy/reference records, dc 0x822ec
+VA(0x00490f60, 0xc5)  // dc 0x822ec
 void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
     unsigned char* newSaveGame = new unsigned char[m_numBytes];
@@ -78,8 +66,7 @@ void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     return newSaveGame;
 }
 
-// E:\gamedcs\diff.cpp:107
-VA(0x00491030, 0x20)  // linkorder + 16-byte retail field layout, dc 0x82378
+VA(0x00491030, 0x20)  // dc 0x82378
 CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
                        unsigned char* newData, int newSize)
     : m_oldData(oldData), m_newData(newData),
@@ -103,17 +90,7 @@ int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
     return count;
 }
 
-// Dreamcast diff.cpp:142/144 has nested for-loop scopes; 146..150 has two
-// separate early-failure checks before memcmp. Restoring both source facts
-// closes 84.1667% to 100%: VC6 now emits the failure epilogue before success,
-// exactly as retail does. Changing either alone leaves the old layout.
-// The 24-state family produced 12 distinct objects and ten reproduced elites.
-// CountSameBytes' ordinary TU placement and bounds-break body are independently
-// byte-neutral in MakeDiff, so the canonical definition is retained above.
-// Dreamcast's decorated _N return proves bool despite the dossier rendering
-// that type as unsigned char. The byte-return alternatives are not adopted.
-// E:\gamedcs\diff.cpp:133
-VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
+VA(0x00491050, 0xed)  // dc 0x823d8
 bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
                               int& oldCount, int& newCount)
 {
@@ -154,7 +131,7 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // restores retail's frame and moves the diagnostic from 214 mixed flow/register
 // slots to 111 pure register-visible slots, so that coherent source shape is
 // retained despite the small aggregate-score dip.
-//
+
 // The remaining delta is a callee-saved role swap: retail binds ESI=diffOffset,
 // EDI=this, EBX=newOffset; our CL binds EDI=diffOffset, ESI=this, EBX=newOffset.
 // The allocator-model pass confirms equal pseudo definition slots/order but a

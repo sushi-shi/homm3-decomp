@@ -1,6 +1,5 @@
 // adventureoptionswindow.cpp - E:\gamedcs\adventureoptionswindow.cpp
 // (compiland adventureoptionswindow.obj)
-// HAND-OWNED after admission; retail bytes are authoritative.
 #include <va.h>
 #include "adventureoptionswindow.h"
 #include "border.h"
@@ -17,44 +16,13 @@
 // DC public gAdventureOptionsHelp; retail consumers prove seven THelpText
 // rows at 0x6a6530 (the sixth row is unused by this dialog's ID mapping).
 // Do not conflate it with Dreamcast's separate gAdventureWindowHelp table.
-// Before normalization: gAdventureOptionsHelp.
 DATA(0x006a6530) extern THelpText g_adventureOptionsHelp[7];
 
 // File-static hover latch: the retail initializer at 0x65f46c is -1 and the
 // handler is its only image-wide reader/writer.
-// Before normalization: lastIMHoverID.
 DATA(0x0065f46c) static int g_lastImHoverId = -1;
 
-// E:\gamedcs\adventureoptionswindow.cpp:40
-// EXACT 2026-08-14 (95.1212 -> 100.0). The residual was the usual
-// vector<widget*>::reserve phase - retail's inlined reserve calls the shared
-// _Ucopy/range-destroy helpers while this SP3 compile expanded the
-// element-copy/cleanup loop, adding two branches and perturbing downstream
-// register scheduling. Earlier probes bounded the wrong axes (inline-depth
-// 0/1, a reserve adapter, named-local variants, type-population noise); the
-// input is the /Ob2 budget, solved in mainmenu.cpp and gametypewindow.cpp.
-// Two-axis titration (byte-inert pad statements ahead of `reserve` x xx_nop
-// candidate sites at the tail) puts this constructor in a narrow cell:
-//     M\k        0         1         2         3
-//     0     95.1212  100.0000  100.0000  100.0000
-//     2     95.1212   95.1212  100.0000  100.0000
-//     8     95.1212   95.1212  100.0000  100.0000
-//     16    95.1212   95.1212   95.1212  100.0000
-//     32    95.1212   95.1212   95.1212   95.1212
-// so the supply has to be TWO sites carrying at most a couple of statements of
-// mass. The guarded do-while registration loop below is exactly that: naming
-// `Widgets.begin()` and `Widgets.end()` twice each is +2 candidate sites whose
-// duplicate loads are CSE-folded, and a `for` over a non-empty range is the
-// same guarded do-while the compiler builds anyway. The loop SHAPE is
-// load-bearing on top of the count: every `for`-bodied +2 spelling stops at
-// 99.9720 with retail's `mov esi,[edi+0x34]; mov eax,[edi+0x38]` pair
-// transposed (the hoisted-first guard, a hoisted `last` as well, the bare
-// begin/end guard, the reversed guard, and the guard with `it` hoisted out of
-// the `for`), while `<` instead of `!=` is 99.8322. Also measured and NOT +2:
-// `if (!Widgets.empty())` 93.4662, a pointer local 95.0210,
-// `insert(end(), x)` on the last push_back 95.1072, on `accept` 93.2214, on
-// the background 91.9790.
-VA(0x004051d0, 0x4AA)  // advopts.pcx + advManager caller, dc 0x4cf4
+VA(0x004051d0, 0x4AA)  // dc 0x4cf4
 TAdventureOptionsWindow::TAdventureOptionsWindow()
     : CAdvPopup(255, 106, 289, 387, 0x12)
 {
@@ -120,11 +88,6 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
         } while (++it != m_widgets.end());
     }
 
-    // THE DIG GATE ASKS game::GetCurrHeroId (89.5711 -> 94.3823,
-    // 2026-08-15): dc 0x4cf4 line 90 is a call to
-    // `?GetCurrHeroId@game@@QAAHXZ` where this body read
-    // `gpCurrentPlayer->currHeroId` directly. Same load either way - what
-    // moves is the /Ob2 candidate-site count.
     if (g_game->getCurrHeroId() == -1) {
         widget* dig = getWidget(DIG_ID);
         dig->enable(0);
@@ -140,8 +103,7 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
 
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 
-// E:\gamedcs\adventureoptionswindow.cpp:105
-VA(0x004056c0, 0x6B)  // scalar-dtor callee + derived vtable, dc 0x514c
+VA(0x004056c0, 0x6B)  // dc 0x514c
 TAdventureOptionsWindow::~TAdventureOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -178,32 +140,7 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
-// E:\gamedcs\adventureoptionswindow.cpp:143
-// EXACT 2026-08-28 (99.9367 -> 99.8734 -> 100.0). The old near-match erased
-// Dreamcast's explicit exit-state carrier and duplicated its shared tail;
-// restoring closeDialog also selects retail's EAX/ECX argument staging for
-// the direct line-211 findWidget call. The attested const findWidget pair and
-// distinct gAdventureOptionsHelp identity are restored as well.
-//
-// SOURCE-SHAPE AUDIT 2026-09-01: convertID2HelpID now lives at its attested
-// out-of-class boundary, owns the two bounds, and retains DC's result-local
-// switch. Both call sites remain exact. Keeping the caller bounds as well as
-// the helper's DC negative guard duplicates two blocks (100.0 -> 97.4684);
-// the old header-resident immediate-return body was byte-exact but erased the
-// positive helper boundary and statement shape.
-//
-// Complete moves the campaign-side ShowScenInfo work from this handler into
-// advManager::DoAdventureOptions: retail forwards the selected code through
-// dialogReturn here, and the byte-exact outer switch handles VIEW_SCENARIO_ID
-// unconditionally. Dreamcast splits the same operation between this handler
-// (campaign) and the outer function (non-campaign). This is a paired retail
-// contradiction of the older helper location, not a score-based skew claim.
-// Retail also selects the rollover field for right-click help where Dreamcast
-// loads the other THelpText field; both are direct byte-level Complete changes.
-// DC's nested help/widget scopes preserve the common dispatch epilogue.
-// Restoring them removes all three gotos at 100%; duplicating returns instead
-// falls to 87.4684%. All four independent scope combinations are exact.
-VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
+VA(0x00405730, 0x1FC)  // dc 0x5204
 int TAdventureOptionsWindow::windowHandler(message* msg)
 {
     int result = CAdvPopup::windowHandler(msg);

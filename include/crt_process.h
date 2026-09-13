@@ -1,6 +1,5 @@
 // crt_process.h - the two CRT thread entry points used by the selection UI.
-// HAND-OWNED after admission.
-//
+
 // VC6's <process.h> hides these declarations under _MT, while the retail
 // singleselectionwindow.obj is a /ML compiland that still calls both symbols.
 // Keep the ABI spelling in one reviewed owner instead of repeating it in a

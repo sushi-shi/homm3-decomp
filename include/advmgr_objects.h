@@ -21,22 +21,17 @@ public:
         MOBILE_HERO_CELL_X = 9,
         MOBILE_HERO_CELL_Y = 8
     };
-
-    // Before normalization: obscuring_hero.
-    hero* m_obscuringHero;
-    // Before normalization: obscuring_boat.
-    boat* m_obscuringBoat;
-    // Before normalization: mobile_hero.
-    hero* m_mobileHero;
-
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
     type_cell_adjuster();
     ~type_cell_adjuster();
-    // Before normalization (function): type_cell_adjuster::get_trigger_cell.
-    // Before normalization (locals): map_cell.
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
-    // Before normalization (function): type_cell_adjuster::restore_cell.
     void restoreCell();
+
+protected:
+    hero* m_obscuringHero;
+    boat* m_obscuringBoat;
+    hero* m_mobileHero;
+
 };
 SIZE(type_cell_adjuster, 0xc);
 
@@ -45,18 +40,12 @@ enum ECompleteDrawFps {
 };
 
 class CChatManager;
-// Before normalization (function): UpdateCompleteDrawFps.
 void __cdecl updateCompleteDrawFps(CChatManager* manager, const char* text);
 
-// Before normalization: gCompleteDrawFpsFrame.
-// Before normalization: gCompleteDrawFpsLastTime.
 DATA(0x0065f690) extern int g_completeDrawFpsFrame;
 DATA(0x00691240) extern unsigned long g_completeDrawFpsLastTime;
 DATA(0x0069136c) extern int
-    // Before normalization: gCompleteDrawFpsTimes.
     g_completeDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
-// Before normalization: gCompleteDrawFpsText.
-// Before normalization: gCompleteDrawFpsFormat.
 DATA(0x006912ec) extern char g_completeDrawFpsText[];
 DATA(0x00660388) extern char g_completeDrawFpsFormat[];
 
@@ -149,8 +138,6 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-// Before normalization: gCreatureGenerator1Types.
-// Before normalization: gCreatureGenerator4Types.
 DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
 DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
 
@@ -165,7 +152,6 @@ enum EReadObjectTypeResult {
     READ_OBJECT_TYPE_OK = 1,
     READ_OBJECT_TYPE_DEFAULT_MASK = 100
 };
-
 
 // Complete object-template records are owned by the object-type module.
 #include "objecttype.h"

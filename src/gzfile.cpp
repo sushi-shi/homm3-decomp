@@ -1,6 +1,6 @@
 // gzfile.cpp - the zlib-backed TAbstractFile every savegame, map and
 // campaign write goes through.
-//
+
 // The TGzFile class and compiland are absent from the Dreamcast roster.
 // DC SaveGame calls gzopen/gzclose directly with a void* handle; Complete
 // supplies this TAbstractFile wrapper. Retail's object is the one opened by the
@@ -9,7 +9,7 @@
 // gz virtual slots, the destructor and the four compiler-generated
 // thunks the `throw TOpenFailure()` forces out. It sits one object behind
 // TGzInflateBuf's in the gametypewindow..hero link-order bracket.
-//
+
 // The class, its layout and its TOpenFailure tag are modelled in
 // gzfile.h off the retail bytes; this unit only supplies the bodies.
 // Retail's zlib is FASTCALL (`@gzopen@8`, `@gzread@12`), which is what the
@@ -19,14 +19,7 @@
 #include <zlib.h>
 #include "gzfile.h"
 
-// 0x4d6c50 stores TAbstractFile's vftable, calls @gzopen@8 with the path
-// in ecx and the mode in edx, parks the handle at +4, swaps in TGzFile's
-// own vftable and throws the empty TOpenFailure tag when gzopen fails.
-// The handle is a MEMBER INITIALISER: written as a body assignment VC6
-// folds the two vptr stores into one ahead of the call (92.76%); the
-// initialiser keeps the base store at the top and sinks TGzFile's own
-// behind @gzopen@8, which is retail's order exactly.
-VA(0x004d6c50, 0x76)  // anchor-import @gzopen@8 + anchor-vtable ??_7TGzFile@@6B@, retail-only
+VA(0x004d6c50, 0x76)
 TGzFile::TGzFile(const char* path, const char* mode)
     : m_file(gzopen(path, mode))
 {
@@ -34,32 +27,24 @@ TGzFile::TGzFile(const char* path, const char* mode)
         throw TOpenFailure();
 }
 
-// The four thunks the class pair forces out of the compiler: TGzFile's
-// deleting destructor fills the vftable slot the base declares virtual,
-// and TOpenFailure's destructor / copy constructor / deleting destructor
-// are what __CxxThrowException's catchable-type record points at.
 VA_COMPGEN(0x004d6cd0, 0x21, SCALAR_DELETING_DTOR, TGzFile)
 VA_COMPGEN(0x004d6d00, 0x5, IMPLICIT_DTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d10, 0x1C, IMPLICIT_COPY_CTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, TOpenFailure)
 
-// Exact with TAbstractFile's canonical inline body visible. Moving that
-// body into customcampaign.cpp produces an extra base-destructor call
-// (80%); the seven-byte retained body is an ICF group, not evidence for
-// hiding the base definition from this TU. See abstractfile.h.
-VA(0x004d6d60, 0x19)  // anchor-import @gzclose@4, retail-only
+VA(0x004d6d60, 0x19)
 TGzFile::~TGzFile()
 {
     gzclose(m_file);
 }
 
-VA(0x004d6d80, 0x16)  // anchor-import @gzread@12, retail-only
+VA(0x004d6d80, 0x16)
 int TGzFile::read(void* data, int size)
 {
     return gzread(m_file, data, size);
 }
 
-VA(0x004d6da0, 0x16)  // anchor-import @gzwrite@12, retail-only
+VA(0x004d6da0, 0x16)
 int TGzFile::write(const void* data, int size)
 {
     return gzwrite(m_file, const_cast<void*>(data), size);

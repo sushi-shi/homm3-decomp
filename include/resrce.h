@@ -70,17 +70,11 @@ enum EResourceType {
 // Windows-only filters cite each retained body's retail vtable slot.
 class resource {
 public:
-    // Before normalization: Name.
-    char m_name[13];
-    // Before normalization: resType.
-    EResourceType m_resType;
-    // Before normalization: ReferenceCount.
-    int m_referenceCount;
-
+    resource(const char* newName, EResourceType newType);
+    virtual ~resource();
     // Original: resource::get_resType / get_Name; resrce.h:33/34.
     EResourceType getResType() const { return m_resType; }
     const char* getName() const { return m_name; }
-
     // Original: resource::AddRef; resrce.h:36, dc 0x122af0. Both the
     // CodeView body and Complete's cache-hit paths increment this dword.
     int addRef() { return ++m_referenceCount; }
@@ -92,13 +86,25 @@ public:
             --m_referenceCount;
         return m_referenceCount;
     }
+    // DC resource::GetReferenceCount is public const; retail disposal
+    // callers test the reference-count field through this inline boundary.
+    // Retail dispose paths test this reference-count field.
+    // The DC declaration survives, but no body source location does.
+    // Header ownership is provisional; no source order is claimed.
+    // @dc-declaration-only: 0x185c
+    int getReferenceCount() const { return m_referenceCount; }
 
-    resource(const char* newName, EResourceType newType);
-    virtual ~resource();         // slot 0
-    // Before normalization (function): resource::Dispose.
-    virtual void dispose();      // slot 1, base body 0x55d0f0
-    // Before normalization (function): resource::GetSize.
-    virtual unsigned int getSize() const = 0;  // slot 2, pure at the base
+private:
+    char m_name[13];
+    EResourceType m_resType;
+    int m_referenceCount;
+
+public:
+         // slot 0
+    virtual void dispose();
+      // slot 1, base body 0x55d0f0
+    virtual unsigned int getSize() const = 0;
+  // slot 2, pure at the base
 };
 SIZE(resource, 28);
 

@@ -26,13 +26,13 @@ public:
         if (m_owns && m_ptr)
             m_ptr->dispose();
     }
-
     T* get() const { return m_ptr; }
     T* operator->() const { return m_ptr; }
 
 private:
     mutable unsigned char m_owns;
     T* m_ptr;
+
 };
 
 #endif

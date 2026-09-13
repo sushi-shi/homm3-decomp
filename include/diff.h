@@ -12,7 +12,6 @@ public:
 
     unsigned char* getData();
 
-    // Before normalization (function): CDiffFile::Apply.
     void* apply(unsigned char* oldSaveGame, int oldSaveGameSize);
 };
 
@@ -27,16 +26,12 @@ public:
     CDiffMaker(unsigned char* oldData, int oldSize,
                unsigned char* newData, int newSize);
 
+    CDiffFile* makeDiff(unsigned long& diffSize);
+
 protected:
-    // Before normalization (function): CDiffMaker::CountSameBytes.
     int countSameBytes(int oldOffset, int newOffset);
-    // Before normalization (function): CDiffMaker::FindNextSame.
     bool findNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);
-
-public:
-    // Before normalization (function): CDiffMaker::MakeDiff.
-    CDiffFile* makeDiff(unsigned long& diffSize);
 };
 
 #endif  /* HOMM3_DIFF_H */

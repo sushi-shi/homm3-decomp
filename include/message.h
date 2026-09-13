@@ -1,6 +1,5 @@
 // message.h - the basewin message record (header-only in the original;
 // homm2's BASE/message.h is the template).
-// HAND-OWNED after admission.
 #ifndef HOMM3_MESSAGE_H
 #define HOMM3_MESSAGE_H
 

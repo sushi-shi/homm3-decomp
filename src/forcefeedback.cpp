@@ -1,5 +1,5 @@
 // forcefeedback.cpp - the Immersion iFeel integration, retail-only.
-//
+
 // COMPILAND PROVEN BY RTTI, not by link order: the two throw records in
 // this block name their own source file. 0x64cc18's type descriptor
 // (0x6778c0) reads `.?AVt_initialize_failure@t_initializer@?%C:\Dev\
@@ -8,11 +8,11 @@
 // That is the whole span between font.obj's tail and game.obj's
 // InitializeRandomTavernText - the `font..game` admission bracket - and
 // every import it uses comes from IFC20.dll (IAT 0x63a03c..0x63a0a0).
-//
+
 // The Dreamcast build has no Immersion layer at all, so NOTHING here is
 // attested by a CodeView row: the two class names above are retail's own,
 // everything else is role-derived and provisional.
-//
+
 // All Immersion bodies and their enclosure-tree instantiations are owned
 // here, including the three formerly carried by game.cpp.
 #include <va.h>
@@ -72,11 +72,6 @@ public:
         t_initialize_failure() : std::runtime_error(std::string()) {}
     };
 
-    // Retail 0x4b6260, 1122 bytes: the window origin, the iFeel error
-    // policy, the mouse device, the effect project read from H3Shad.ifr
-    // (with a LOD fallback in its catch), and the three globals it
-    // publishes.
-    // Before normalization (locals): hInst.
     t_initializer(void* instance, void* hwnd);
     // Retail's atexit thunk at 0x4b6910 - the address InitImmMouse hands to
     // _atexit, 58 B - is this destructor EXPANDED, so it is defined inline
@@ -115,16 +110,8 @@ DATA(0x00696d88) CImmCompoundEffect* g_immEffect;
 // ordinary COMDAT placement; the vftable reference is what owns it.
 VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, t_create_failure)
 
-// The Immersion layer's whole bring-up, and ONE function: the carve split
-// it into three entries plus a two-byte hole, which config/
-// retail-functions.tsv now merges (see its 2026-09-05 note). Retail's
-// `catch (...)` funclet sits INSIDE the emitted body, between the try's
-// `jmp` past it and the continuation the funclet returns the address of.
-//
-// Retail's own class name is `t_initializer`, in ForceFeedback.cpp's
 // unnamed namespace, restored above with its nested failure type.
-// Before normalization (locals): hInst.
-VA(0x004b6260, 0x462)  // anchor-import (CImmMouse::Initialize) + anchor-rtti, retail-only
+VA(0x004b6260, 0x462)
 t_initializer::t_initializer(void* instance, void* hwnd)
 {
     g_immWindow = static_cast<HWND>(hwnd);
@@ -176,8 +163,7 @@ VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, t_initialize_failure)
 // construction (guard byte 0x696d58, atexit dtor thunk 0x4b6910);
 // WinMain's post-CreateWindow callee. Construction failure is caught and
 // reported as false; 0x4b68f4/0x4b68fa are the EH handler/catch funclet.
-// Before normalization (locals): hInst.
-VA(0x004b6890, 0x7D)  // anchor-callee + contiguous catch funclets, retail-only
+VA(0x004b6890, 0x7D)
 unsigned char initImmMouse(void* instance, void* hwnd)
 {
     try {
@@ -190,19 +176,14 @@ unsigned char initImmMouse(void* instance, void* hwnd)
     }
 }
 
-// The exit thunk _atexit receives from InitImmMouse above: retail expanded
 // the whole of `~t_initializer` into it, so the 58 bytes are the two
-// singleton teardowns and nothing of the holder itself. The claim binds
-// through canonicalize_data_symbols' owner-free static-destructor arm -
-// nothing in the body relocates `immMouse`, because the unused `this` went
-// with the expansion (build/test_ownerless_static_dtor.py is its control).
 VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)
 
 // ImmMouseWindowMoved: re-derives the client origin via
 // ClientToScreen and offsets every tracked effect rect (linked list
 // in the map whose _Head is at 0x696d64) by the delta; AppWndProc's WM_MOVE
 // callee.
-VA(0x004b6950, 0x9A)  // anchor-callee, retail-only
+VA(0x004b6950, 0x9A)
 void immMouseWindowMoved()
 {
     POINT origin = { 0, 0 };
@@ -224,24 +205,9 @@ void immMouseWindowMoved()
     }
 }
 
-// The loop above retains VC6's real map<CImmEnclosure*, RECT> tree-successor
-// COMDAT. Retail 0x4b7330 has the same nine blocks and 0xa3 bytes; its node
-// consumer independently fixes the pair at +0x0c/+0x10 and `_Nil` at
-// 0x696d8c. Dreamcast's generic STLport _M_increment at dc 0x64214
-// corroborates the helper boundary; the Immersion integration is retail-only.
 VA_COMPGEN(0x004B7330, 0xA3, TREE_CONST_ITERATOR_INC, CImmEnclosure)
 
-// The combat-spell rumble. Destroys whatever effect is still loaded,
-// creates the named one against the default device and starts it for
-// `count` iterations. The first guard returns a BYTE (`xor al,al`) while
-// the two later exits clear the WHOLE register and materialize `1` as a
-// dword - that split is the tell for a trailing `&&`: VC6 gives the
-// short-circuit its own int-width `mov eax,1` / `xor eax,eax` pair and
-// narrows for free at the return, where three separate `return`s put a
-// byte zero at every exit (73.16%) and an if/return-1 pair merges all
-// three (87.50%).
-VA(0x004b69f0, 0x5B)  // anchor-import (CImmProject::CreateEffect), retail-only
-// Before normalization (function): PlayImmEffect.
+VA(0x004b69f0, 0x5B)
 unsigned char playImmEffect(const char* effectName, int count)
 {
     if (g_immProject == 0)
@@ -258,7 +224,7 @@ unsigned char playImmEffect(const char* effectName, int count)
 // back to back; the rectangle is copied into a local and offset by the
 // window origin BEFORE Initialize sees it, and the same offset copy is
 // what goes into the map.
-VA(0x004b6a50, 0x185)  // anchor-import (CImmEnclosure::Initialize), retail-only
+VA(0x004b6a50, 0x185)
 force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
                                          unsigned long b, unsigned long c,
                                          unsigned char d, unsigned char e)
@@ -269,24 +235,16 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     if (!m_enclosure->Initialize(g_immDevice, &bounds, a, a, b, b, c, c,
                                  (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
         throw t_create_failure();
-    // `make_pair`, not `value_type(...)`: the deduced pair's copy is what
-    // orders the five stores right/top/left/bottom behind `first`
-    // (99.99% against 97.98% for either explicit pair spelling).
     g_immEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
 }
 
-// COMDAT pairing: the client-side scalar deleting destructor for the
-// dllimported CImmEnclosure - slot 0 of the vftable at 0x63e640 - and the
-// compiler-generated copy constructor the `throw t_create_failure()`
-// above forces out (CatchableType 0x64cde8 names it at exactly this
-// address, with sizeOrOffset 0x1c).
 VA_COMPGEN(0x004b6c30, 0x22, SCALAR_DELETING_DTOR, CImmEnclosure)
 VA_COMPGEN(0x004b6c60, 0x157, IMPLICIT_COPY_CTOR, t_create_failure)
 
 // The holder TAdventureMapWindow owns at +0x9c. `operator new(8)` for the
 // enclosure wrapper, then auto_ptr's own two stores - the EH frame is the
 // new-expression's, not the constructor body's.
-VA(0x004b6dc0, 0x74)  // anchor-callee (0x401400), retail-only
+VA(0x004b6dc0, 0x74)
 TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
                                  unsigned long c, unsigned char d,
                                  unsigned char e)
@@ -294,32 +252,6 @@ TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
 {
 }
 
-// TAdventureMapWindow's slot-2 Close override (0x4014d0) reaches this body as
-// `mov ecx,edi / call 0x4b6e40 / push edi / call operator delete` on its owned
-// +0x9c member - the split form of `delete`, which types 0x4b6e40 as that
-// member's destructor. The implementation destructor is inlined here as
-// retail's only copy, which is what puts the whole
-// map<CImmEnclosure*, RECT>::erase(const key_type&) chain in this body:
-// _Ubound out of line at 0x4b7e70, lower_bound at 0x4b79b0, the discarded
-// _Distance walk over the claimed const_iterator::_Inc, and erase(first, last)
-// at 0x4b7200. The `_Pairii(lower_bound, upper_bound)` argument pair evaluates
-// right to left, so upper_bound lands first; the count _Distance returns is
-// dead because the caller drops erase's return value.
-//
-// Residual (44.8%): retail carries a C++ EH frame here and this compile does
-// not, which costs the prologue, the epilogue and the two out-of-line
-// iterator helpers retail calls (the 14-byte iterator ctor at 0x4b7da0 and
-// the 25-byte operator== at 0x4b73e0, both expanded here). The frame is not
-// decoration - it is the whole residual, and retail's own EH data says what
-// produces it. FuncInfo 0x64cec8 has one unwind state whose action (0x62b6a0)
-// is `mov ecx,[ebp-0x20] / jmp 0x4b7020`, handing the IMPLEMENTATION pointer
-// to a 19-byte body that is only `if (+0) { if (+4) delete +4; }`. An
-// unwind that DESTROYS a sub-object is not what a delete-expression emits;
-// it is what a destructor body emits while a base or member is still alive.
-// So the implementation is really two levels - a sub-object holding the
-// owned-flag/enclosure pair, and a derived body holding the erase - and
-// 0x4b7020 is that sub-object's own destructor.
-//
 // 2026-09-05: the sub-object is `std::auto_ptr<CImmEnclosure>`, and the
 // holder here is `std::auto_ptr<force_feedback::t_enclosure>`. Both are
 // byte-proven from ForceFeedback.obj's own constructors: 0x4b6dc0 and
@@ -331,7 +263,7 @@ TImmMouseEffect::TImmMouseEffect(const RECT* rect, long a, unsigned long b,
 // in two scores 14.62" measurement was taken with a HAND-WRITTEN
 // sub-object; a real std::auto_ptr member is a different inline
 // candidate, so the body below is now just the implicit member teardown.
-VA(0x004b6e40, 0xE3)  // anchor-callee (TAdventureMapWindow::Close), retail-only
+VA(0x004b6e40, 0xE3)
 TImmMouseEffect::~TImmMouseEffect()
 {
 }
@@ -339,38 +271,23 @@ TImmMouseEffect::~TImmMouseEffect()
 // Two forwarders through both auto_ptrs to the enclosure's own virtuals -
 // slot +0x18 (`?Start@CImmEnclosure@@UAEHK@Z`) and slot +0x14
 // (`?Stop@CImmEnclosure@@UAEHXZ`) of the client vftable at 0x63e640.
-VA(0x004b6f30, 0x13)  // anchor-vtable (0x63e640+0x18), retail-only
-// Before normalization (function): TImmMouseEffect::Start.
+VA(0x004b6f30, 0x13)
 unsigned char TImmMouseEffect::start()
 {
     unsigned char started = m_impl->m_enclosure->Start(0) != 0;
     return started;
 }
 
-VA(0x004b6f50, 0xB)  // anchor-vtable (0x63e640+0x14), retail-only
-// Before normalization (function): TImmMouseEffect::Stop.
+VA(0x004b6f50, 0xB)
 void TImmMouseEffect::stop()
 {
     m_impl->m_enclosure->Stop();
 }
 
-// COMDAT pairings for the enclosure map. The constructor is the one
-// retail's own cinit at 0x4b61b0 calls on 0x696d60; the rest are the
 // Dinkumware red-black-tree members the insert above and the holder
 // teardown reach, and all three sizes are exactly the ones the
-// map<int, type_map_hero_info> instantiation in game.obj carries
-// (0x115 / 0x2F9 / 0xB3), which is the cross-check that they are the
-// same members of a different instantiation. `_Inc`, `_Erase`,
-// `_Lbound`, `_Ubound` and both `erase` overloads of this same tree are
 // claimed below in this same compiland.
 VA_COMPGEN(0x004b6f60, 0xBE, CLASS_CTOR, map)
-// This TU emits four `~auto_ptr<T>` COMDATs - CImmEnclosure and
-// CImmMouse at 19 bytes each, char at 16 and CImmProject at 33 - and
-// all four key to one `auto_ptr_auto_ptr@dtor` group, so the owner
-// names the INSTANTIATION `<Element>_<template>` the way the shared
-// vector-constructor group's `hero_vector` claims do. Retail ICF
-// folded the two 19-byte twins, which is why the length fallback
-// alone cannot decide this one.
 VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
 // ...and the other two of the four, both proven by the callee each one
 // reaches: 0x4b7040 falls straight through to the free `operator delete`
@@ -423,23 +340,7 @@ VA_COMPGEN(0x004b74a0, 0x50F, TREE_ERASE_ITERATOR, CImmEnclosure)
 // at 0x4b79b0, while 0x4b7e70 is called straight from the destructor, which
 // is where upper_bound is expanded. _Erase is erase(iterator, iterator)'s
 // whole-tree arm.
-//
-// NOT claimed here: 0x4b6f60, the 190-byte map<int, type_map_hero_info>
-// constructor this unit also emits. The name is already proven at 0x45bf70 in
-// campaignbrief, so retail carries two un-folded copies of one COMDAT and only
-// the first can hold the label; a second claim is refused as a duplicate
-// proven name, which is the delinker working correctly.
-// COMDAT pairing: the enclosure map's nested-iterator surface, the last
-// three out-of-line rows of this tree. Each is byte-identical to the COMDAT
-// this object emits and each is corroborated from the call graph rather
-// than from length alone, which decides nothing at 25/23/14 bytes:
-//   0x4b73e0  iterator::operator==   `mov eax,[ecx] / cmp eax,[edx] / sete`
-//             - the _Node* compare, and the only `??8` this tree emits;
-//   0x4b79b0  lower_bound            - the out-of-line wrapper, whose ONLY
-//             callee is _Lbound at 0x4b7d50 (claimed above, and 0x4b7d50's
-//             only caller in turn), storing the node into the hidden return;
-//   0x4b7da0  const_iterator(_Node*) - the one-argument iterator ctor,
-//             `ret 4` storing its argument at +0.
+
 VA_COMPGEN(0x004b73e0, 0x19, TREE_ITERATOR_EQUAL, CImmEnclosure)
 VA_COMPGEN(0x004b79b0, 0x17, TREE_LOWER_BOUND, CImmEnclosure)
 VA_COMPGEN(0x004b79d0, 0x7E, TREE_ERASE, CImmEnclosure)

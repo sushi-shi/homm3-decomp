@@ -1,7 +1,6 @@
 // textscroller.h - prototypes of textscroller.cpp, the Complete-era
 // compiland that owns the scenario-description scroller.
-// HAND-OWNED after admission.
-//
+
 // PROVISIONAL UNIT NAME. The Dreamcast roster has no module between
 // text.obj and textntry.obj, and no DC compiland declares either class
 // below, so the 0x5b9f80..0x5ba8cf block is Complete-only: its own
@@ -30,28 +29,18 @@ public:
                        const char* fontName, font::TColor color,
                        slider::EGraphics graphics);
     virtual ~type_text_scroller();
-    // Before normalization (function): type_text_scroller::Open.
     virtual int open(int priority, heroWindow* parent);
-    // Before normalization (function): type_text_scroller::Main.
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    // Before normalization (function): type_text_scroller::Draw.
     virtual void draw() const;
-    // Before normalization (function): type_text_scroller::SetText.
     void setText(const char* text);
-    // Before normalization (function): type_text_scroller::Refresh.
     void refresh(int knobRange);
-
-    // Before normalization: font_filename.
     const char* m_fontFilename;
-    // Before normalization: text_lines.
     std::vector<std::string> m_textLines;
-    // Before normalization: line_images.
     std::vector<textWidget*> m_lineImages;
-    // Before normalization: text_slider.
     type_text_slider* m_textSlider;
-    // Before normalization: background.
     Bitmap16Bit* m_background;
+
 };
 SIZE(type_text_scroller, 0x5c);
 

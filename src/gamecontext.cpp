@@ -13,7 +13,7 @@
 // index this table by the context selector and test individual feature bits.
 // The existing provisional name was gGameContextFeatures before normalization;
 // no surviving symbol supplies an original semantic spelling.
-//
+
 // A plain four-element initializer naturally retains set for its last two
 // elements and reproduces the table's construction and stores. Retail retains
 // set for all four elements. That initializer expansion remains a separate
@@ -32,6 +32,4 @@ std::bitset<4> g_gameContextFeatures[4] = {
     std::bitset<4>(5ul), std::bitset<4>(15ul)
 };
 
-// The table initializer is the sole retail caller. The four-bit bound,
-// Boolean set/reset arms and reference-return ABI match Dinkumware's body.
 VA_COMPGEN(0x004ecde0, 0x60, BITSET_SET, bitset4)

@@ -1,5 +1,5 @@
 // Retail-only Immersion force-feedback mouse integration used by game.obj.
-//
+
 // The Immersion API and globals live in forcefeedback.h. ForceFeedback.cpp
 // owns both implementation classes and every body of this effect holder.
 #ifndef HOMM3_IMM_MOUSE_H

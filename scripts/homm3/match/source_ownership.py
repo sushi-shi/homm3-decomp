@@ -47,6 +47,7 @@ class Definition:
     additional_instances: tuple[tuple[int, str, str], ...] = ()
     return_type: str = ""
     inline_origin: tuple[int, int] = ()
+    declaration_only_type: int = 0
 
 
 @dataclass(frozen=True)
@@ -268,6 +269,17 @@ def inline_origin_hint(raw: str, start: int) -> tuple[tuple[int, int], bool]:
     if len(rows) != 1 or not match:
         return (), True
     return (int(match.group(1), 16), int(match.group(2), 16)), False
+
+
+def declaration_only_hint(raw: str, start: int) -> tuple[int, bool]:
+    rows = [line.strip() for line in attached_prefix(raw, start)
+            if '@dc-declaration-only:' in line]
+    if not rows:
+        return 0, False
+    match = re.fullmatch(r'//\s*@dc-declaration-only:\s*(0x[0-9a-fA-F]+)', rows[0])
+    if len(rows) != 1 or not match:
+        return 0, True
+    return int(match.group(1), 16), False
 
 
 def inline_origins(definitions: list[Definition], origins: list[Origin], symbols):
@@ -581,6 +593,10 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 raw_texts[relative], char_offset(cursor.extent.start.offset))
             if invalid:
                 errors.append(f'INLINE_ORIGIN {relative}:{loc.line}: malformed or repeated annotation')
+            declaration_type, invalid = declaration_only_hint(
+                raw_texts[relative], char_offset(cursor.extent.start.offset))
+            if invalid:
+                errors.append(f'DECLARATION_ONLY {relative}:{loc.line}: malformed or repeated annotation')
             first = len(definitions)
             definitions.append(Definition(
                 relative, loc.line, char_offset(cursor.extent.start.offset),
@@ -597,7 +613,7 @@ def scan_unit(unit: dict, root: Path = ROOT) -> tuple[list[Definition], list[str
                 instances[0][1] if instances else "",
                 return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
                              else cursor.result_type.spelling),
-                inline_origin=inline_origin))
+                inline_origin=inline_origin, declaration_only_type=declaration_type))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
@@ -769,6 +785,33 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             # give them precedence over the existing procedure candidates.
             candidates = [o for o in candidates if not o.declaration_only]
         written = [o for o in candidates if not o.generated]
+        if d.declaration_only_type:
+            # An explicitly reviewed coverage gap carries no invented source
+            # line. Require the exact declared interface and one in-class
+            # header body; it cannot waive a located body or an overload.
+            exact = [o for o in written if o.declaration_only
+                     and o.type_index == d.declaration_only_type
+                     and o.argument_types is not None
+                     and tuple(type_identity(t) for t in o.argument_types)
+                     == tuple(type_identity(t) for t in definition_arguments)
+                     and o.const == d.const and o.return_type and d.return_type
+                     and type_identity(o.return_type) == type_identity(d.return_type)]
+            if (len(exact) != 1 or len(written) != 1 or not d.inline or not d.member
+                    or d.class_offset is None or not d.file.startswith('include/')
+                    or d.inline_origin or d.va is not None):
+                errors.append(f'DECLARATION_ONLY {where}: review must identify one '
+                              'unlocated declaration with the exact interface and an in-class header body')
+                continue
+            identity = ('declaration', procedure_name(exact[0].name), exact[0].type_index)
+            prior = bindings.get(identity)
+            if prior and (prior.file, prior.offset) != (d.file, d.offset):
+                errors.append(f'DUPLICATE {where}: reviewed declaration already binds '
+                              f'{prior.file}:{prior.line}')
+                counts['duplicate'] += 1
+            else:
+                bindings[identity] = d
+                counts['reviewed_unlocated'] += 1
+            continue
         if key in win_only:
             used_win.add(key)
             # A declaration without a source body is not a Windows-only
@@ -962,6 +1005,9 @@ def unpaired_generated_claims(claims) -> list[str]:
 
 def run_gate() -> list[str]:
     result = audit()
+    if result['counts'].get('reviewed_unlocated'):
+        print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
+              "reviewed declaration-only bodies; source location/order remain unknown")
     print(f"[build] source-ownership: {result['definitions']} canonical definitions; "
           f"{len(result['violations'])} violations")
     if result['unpaired_generated_claims']:

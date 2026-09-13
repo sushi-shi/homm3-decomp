@@ -2,7 +2,7 @@
 // plates (Shadow of Death, Armageddon's Blade, Restoration of Erathia, the
 // custom-campaign chooser and Exit) that kb.cpp's DoCampaignWindow opens
 // before any campaign page.
-//
+
 // THIS COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER, and its NAME is an
 // inference the link order bounds rather than proves (the netmsg.obj
 // precedent). Retail's .text is laid out in strict alphabetical compiland
@@ -10,7 +10,7 @@
 // `campaignbrief`: button.obj ends at 0x456e94 and campaignbrief.obj opens
 // at 0x457990. `campaign` is the shortest spelling in that interval and the
 // one the class's role suggests; treat it as provisional.
-//
+
 // The compiland's whole .text contribution is the ten bodies below,
 // bracketed by two static-initializer runs of exactly the shape netmsg.obj
 // carries - a 32-byte guard-byte row at 0x456ea0 opening the object, and
@@ -30,25 +30,16 @@
 #include "window.h"
 #include "winmgr.h"
 
-// The five plate callbacks the constructor address-takes, retail 0x457280 /
-// 0x4572f0 / 0x457360 / 0x4573d0 / 0x457440. Names provisional (nothing
-// attests them); each is named for the sprite its plate carries.
-// Before normalization (function): CampaignSetSodHandler.
 static int campaignSetSodHandler(message& msg);
-// Before normalization (function): CampaignSetArmHandler.
 static int campaignSetArmHandler(message& msg);
-// Before normalization (function): CampaignSetCusHandler.
 static int campaignSetCusHandler(message& msg);
-// Before normalization (function): CampaignSetExitHandler.
 static int campaignSetExitHandler(message& msg);
-// Before normalization (function): CampaignSetRoeHandler.
 static int campaignSetRoeHandler(message& msg);
 
 // The rollover latch the handler keeps between messages: the widget id the
 // mouse was last over, -1 for none. Retail .data 0x660dc8, the one dword in
 // this compiland's own data band ahead of its string pool, written only by
 // the handler below.
-// Before normalization: gCampaignSetHoverId.
 DATA(0x00660dc8)
 static int g_campaignSetHoverId = -1;
 
@@ -58,10 +49,7 @@ static int g_campaignSetHoverId = -1;
 // which is what fixes them as const-array elements and the element type as
 // `short`. Layout order in .rdata is source order (roe, cus, exit), and the
 // run ends exactly on this class's vtable at 0x63bc08. Names INVENTED.
-// Before normalization: gCampaignSetRoeRect.
-// Before normalization: gCampaignSetCusRect.
 DATA(0x0063bbf0) static const short g_campaignSetRoeRect[4] = { 494, 116, 287, 130 };
-// Before normalization: gCampaignSetExitRect.
 DATA(0x0063bbf8) static const short g_campaignSetCusRect[4] = { 554, 358, 169, 110 };
 DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 108 };
 
@@ -71,7 +59,7 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // video-game-state 3, so it also shifts every later widget id down by one
 // when it is absent. `Widgets.reserve(4)` is retail's - one short of the
 // five plates, which is why the vector still grows.
-//
+
 // Residual (99.9458%): ONE BYTE, the `sub esp` immediate - retail reserves
 // 0xc and we reserve 8. Both sides use the same 26 temporary slots and the
 // same eleven EH-state transitions; retail's allocator ALTERNATES its two
@@ -134,9 +122,7 @@ TCampaignSetWindow::TCampaignSetWindow()
 
 VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
 
-// Retail 0x457230. The widget teardown plus the compiler-generated base
-// destruction - the whole body of a window that owns nothing else.
-VA(0x00457230, 0x4E)  // scalar-dtor callee + vtable 0x63bc08 slot 0's target, retail-only
+VA(0x00457230, 0x4E)
 TCampaignSetWindow::~TCampaignSetWindow()
 {
     deleteWidgets();
@@ -145,7 +131,7 @@ TCampaignSetWindow::~TCampaignSetWindow()
 // The five plate callbacks. Each answers a right-click with its own help
 // row and a left-release with the modal result DoCampaignWindow switches
 // on; the Exit plate answers the shared 0x7801 dialog-cancel id.
-VA(0x00457280, 0x64)  // ctor address-take (SoD plate), retail-only
+VA(0x00457280, 0x64)
 static int campaignSetSodHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -162,7 +148,7 @@ static int campaignSetSodHandler(message& msg)
     return 0;
 }
 
-VA(0x004572f0, 0x64)  // ctor address-take (Armageddon's Blade plate), retail-only
+VA(0x004572f0, 0x64)
 static int campaignSetArmHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -179,7 +165,7 @@ static int campaignSetArmHandler(message& msg)
     return 0;
 }
 
-VA(0x00457360, 0x64)  // ctor address-take (custom-campaign plate), retail-only
+VA(0x00457360, 0x64)
 static int campaignSetCusHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -196,7 +182,7 @@ static int campaignSetCusHandler(message& msg)
     return 0;
 }
 
-VA(0x004573d0, 0x64)  // ctor address-take (Exit plate), retail-only
+VA(0x004573d0, 0x64)
 static int campaignSetExitHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -213,7 +199,7 @@ static int campaignSetExitHandler(message& msg)
     return 0;
 }
 
-VA(0x00457440, 0x60)  // ctor address-take (Restoration of Erathia plate), retail-only
+VA(0x00457440, 0x60)
 static int campaignSetRoeHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -230,10 +216,7 @@ static int campaignSetRoeHandler(message& msg)
     return 0;
 }
 
-// Retail 0x4574a0. Not a vtable slot - 0x63bc08 slot 6 is heroWindow's own
-// DoModal - but the same shape plus the menu track, which is what makes the
-// campaign-set page the one that restarts MainMenu.
-VA(0x004574a0, 0x2C)  // anchor-string MainMenu + anchor-callee DoDialog(HeroWindowHandler), retail-only
+VA(0x004574a0, 0x2C)
 void TCampaignSetWindow::doModal()
 {
     g_soundManager->startMP3(
@@ -241,15 +224,7 @@ void TCampaignSetWindow::doModal()
     g_windowManager->doDialog(this, heroWindowHandler, 0);
 }
 
-// Retail 0x4574d0, vtable slot 3. The plate hover sweep: whichever plate is
-// under the mouse gets WIDGET_SET_STATUS 0x10 and the one it replaced gets
-// WIDGET_CLEAR_STATUS 0x10, and the plate band is repainted whenever that
-// changed or the video layer needs it.
-// The DrawWindow bound is written `x = a; if (c) x = b;` and not as a
-// ternary: retail loads 103 unconditionally and overwrites it under `jne`,
-// while `c ? 104 : 103` gives `sete cl / add ecx, 103` (95.13 against
-// 100.00).
-VA(0x004574d0, 0xC4)  // vtable 0x63bc08 slot 3, retail-only
+VA(0x004574d0, 0xC4)
 int TCampaignSetWindow::handleMessage(message& msg)
 {
     unsigned char hoverChanged = 0;

@@ -1,21 +1,19 @@
 // quest.h - retail's seer-hut quest hierarchy (compiland seerhut.obj).
-// HAND-OWNED. Class layouts are NOT fabricated from method symbols;
-// prototypes stay comments until a retail layout is proven.
-//
+
 // Retail replaced the Dreamcast port's TSeerHut::Do*Dialog / GetRewardType
 // monolith with a virtual `type_quest` family: ten classes, each with its own
 // 15-slot vtable at 0x64174c, 0x641788, 0x6417c4, 0x641800, 0x64183c,
 // 0x641878, 0x6418b4, 0x6418f0, 0x64192c and 0x641968. Only the slots this
 // file needs are declared; the rest of the roster, and every byte of the base
 // object below +0x40, are still unattested.
-//
+
 // The class-to-quest-type mapping is now byte-proven end to end: the ten
 // vtables sit in address order and their slot-8 bodies return 1..9 in that
 // same order (0x49a680=1, 0x49a9b0=2, 0x56e3d0=3, 0x56ebc0=4, 0x49acf0=5,
 // 0x49af30=6, 0x49b180=7, 0x5721f0=8, 0x572810=9), which is exactly the h3m
 // quest-type enumeration - level, primary skills, defeat hero, defeat
 // monster, artifacts, creatures, resources, be hero, belong to player.
-//
+
 // SeerHut.h's canonical QuestActiveforPlayer body calls this interface, so
 // that header includes the complete quest type as well as its own layouts.
 #ifndef HOMM3_QUEST_H
@@ -43,8 +41,6 @@ class hero;
 // most of the tree) or by including advmgr.h; the two existing declarators
 // of exactly this shape - gTreeOfKnowledgeName at index 102 and
 // gWitchHutName at index 113 - are the precedent.
-// Before normalization: gQuestGuardName.
-// Before normalization: gSeerName.
 DATA(0x006a7d48) extern const char* g_questGuardName;
 DATA(0x006a7b38) extern const char* g_seerName;
 
@@ -61,8 +57,6 @@ DATA(0x006a7b38) extern const char* g_seerName;
 // of them - ten quest types' worth plus two no body here reaches.
 // Nothing in the admitted surface writes either cell, so both are
 // declared rather than claimed.
-// Before normalization: gQuestTextA.
-// Before normalization: gQuestTextB.
 DATA(0x0068320c) extern std::string (*g_questTextA)[52];
 DATA(0x00683210) extern std::string (*g_questTextB)[52];
 
@@ -99,15 +93,13 @@ public:
     // three std::strings as (int length, length bytes) pairs. The three
     // 16-byte containers close on +0x38 exactly, which is what fixes the
     // whole run.
-    //
+
     // +0x04 is a two-valued selector: slot 7 and slot 14 pick between
     // the two text tables at 0x68320c and 0x683210 on it and on nothing
     // else. +0x38 is the ROW of whichever table that picks, scaled by
     // 832. TSeerHut::getValue proves +0x3c is the quest deadline;
     // NH3API supplies its reference name, limit.
-    // Before normalization: field_04; reference member type_quest::seer_hut.
     unsigned char m_seerHut;
-    // Before normalization: pad_05.
     // Three alignment bytes between the seer-hut byte and strings at +0x08;
     // NH3API explicitly leaves +0x05..+0x07 unnamed. Retail serialization skips them.
     char m_paddingBeforeTexts[3];
@@ -117,15 +109,10 @@ public:
     // back-fills each one from its own column of the text table when it
     // is empty. Nothing in this file proves WHICH dialog reads which,
     // so the roles are read off that order and not off a body.
-    // Before normalization: proposalText.
     std::string m_proposalText;    // +0x08
-    // Before normalization: progressText.
     std::string m_progressText;    // +0x18
-    // Before normalization: completionText.
     std::string m_completionText;  // +0x28
-    // Before normalization: field_38; reference member type_quest::text_variant.
     int m_textVariant;
-    // Before normalization: field_3c.
     // NH3API type_quest::limit at +0x3c. Retail hasExpired (0x56ccb0)
     // returns false for a negative limit, otherwise compares it with the current turn.
     int m_limit;
@@ -141,11 +128,11 @@ public:
     // the tree dispatched on a `type_quest*`, and stopped being invisible
     // when the four TQuestGuard / TSeerHut text builders turned out to call
     // slot 7. The layout is read straight off the ten tables:
-    //
+
     //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
     //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00
     //            0056ce50 0056cf70 00617d9a
-    //
+
     // 0x617d9a is `__purecall` (`push 0x19 / call __amsg_exit`), so every
     // slot holding it is PURE in the base; the four slots that are not
     // (1, 3, 9, 10) are the four whose base bodies the file header already
@@ -160,27 +147,16 @@ public:
     virtual ~type_quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
-    // Before normalization (function): type_quest::GetAIValue.
     virtual int getAIValue(int player);
     // Slot 2 of every quest vtable: does this hero satisfy the quest? It
     // returns a BYTE - the defeat-hero body ends `xor al,al` on its guard
     // path and the monster body `mov al,dl`. The hero is NOT const: the
     // artifact and resource leaves call hero::HasArtifact, which is not.
-    // Before normalization (function): type_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
     // Slot 3: take the quest's price off the hero. The base body at
     // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
     // and the resource leaf debits the player's treasury. Provisional name.
-    // Before normalization (function): type_quest::TakePayment.
-    // Before normalization (locals): current_hero.
     virtual void takePayment(hero* currentHero);
-    // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
-    // `field_3c >= 0 && field_3c < today`, today being the game date's
-    // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
-    // before pricing a quest guard. Provisional name - no DC row carries
-    // it; the deadline comparison seerhut.cpp spells inline is its body.
-    // Before normalization (function): type_quest::has_expired.
     unsigned char hasExpired() const;
     // Slots 4 and 5, IDENTIFIED 2026-08-21: the family's two dialog
     // entry points. Every leaf body is the same shape - take a string
@@ -203,13 +179,9 @@ public:
     // renaming either would touch forty reconstructed leaf bodies for no
     // byte, so the observation is banked here for the lane that closes the
     // two getters.
-    // Before normalization (function): type_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_quest::DoProgressDialog.
     virtual void doProgressDialog();
     // Slot 6. Pure in the base and overridden everywhere.
-    // Before normalization (function): type_quest::GetRequirementText.
     virtual std::string getRequirementText();
     // Slot 7: the second string-returning virtual, and the one the four
     // TQuestGuard / TSeerHut quick-info and rollover builders call on
@@ -220,22 +192,17 @@ public:
     // indexes the player-name table at 0x6a7df8 with the quest's own
     // `required_owner`, so slot 7 is the long, player-facing description
     // where slot 6 is the short requirement line. The NAME is provisional.
-    // Before normalization (function): type_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
     // Slot 8: the quest-type discriminator. Retail's leaf bodies return a
     // bare constant; see the enumeration proof in the file header.
-    // Before normalization (function): type_quest::quest_type.
     virtual int questType();
     // Slot 9 / slot 10: the "this target was defeated" notifications. Both
     // default to the shared `ret 8` stub at 0x5bc7e0, so both take two dword
     // arguments and return nothing. The NAMES are provisional inventions -
     // only the argument shape and the two overriding bodies are attested.
-    // Before normalization (function): type_quest::NotifyHeroDefeated.
-    // Before normalization (locals): hero_id.
     virtual void notifyHeroDefeated(int heroId, int player);
     // Slot 10's monster override is reconstructed at 0x56ed40; see its
     // compiler-generation residual note in seerhut.cpp.
-    // Before normalization (function): type_quest::NotifyMonsterDefeated.
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
     // Slot 11 / slot 12: the two deserializers. Both are loads - every body
     // in the family calls TAbstractFile slot 1 and then stores what came back
@@ -245,24 +212,12 @@ public:
     // h3m encodings (a byte hero id, a dword level). The base bodies agree:
     // 0x56cd00 reads a visited flag and two extra fields that 0x56ce50 does
     // not. `Load` / `LoadFromMap` are provisional names for that split.
-    // Before normalization (function): type_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
-    // Slot 13, IDENTIFIED 2026-08-21: the SERIALIZER, and the mirror of
-    // the two loads above. Every leaf writes its own payload and then
-    // the same base run through TAbstractFile slot 2 (Write): the byte
-    // at +0x04, the dword at +0x38 narrowed to a byte, the dword at
-    // +0x3c, and the three strings as length-prefixed blocks. The base
-    // run is INLINED into all eight leaves - retail emits no call - so
-    // it is spelled longhand in each of them here, which is what the
-    // bytes have.
-    // Before normalization (function): type_quest::Save.
     virtual void save(TAbstractFile* file);
     // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
     // strings above from columns 0/1/2 of its own text group, and only
     // where the string is still empty. NAME provisional.
-    // Before normalization (function): type_quest::SetDefaultText.
     virtual void setDefaultText();
 
     // The one way into the two text tables above, and the shape of every
@@ -292,7 +247,6 @@ public:
     // The five-column group this quest type owns, computed ONCE: slot 14
     // fills three of the columns off one row and retail keeps the group
     // base in a register across all three.
-    // Before normalization (function): type_quest::quest_texts.
     const std::string* questTexts()
     {
         const std::string* row =
@@ -302,9 +256,7 @@ public:
     // The row-selecting half of quest_texts(), emitted out of line at
     // 0x52e6b0.  Large callers use this body while the smaller slot-14
     // functions inline the same field_04/field_38 calculation.
-    // Before normalization (function): type_quest::quest_text_row.
     const std::string* questTextRow();
-    // Before normalization (function): type_quest::quest_text.
     const std::string& questText(int column)
     {
         // The ternary is on the whole INDEXED ROW, not on the table
@@ -317,52 +269,31 @@ public:
         return row[QUEST_TEXT_COLUMNS * questType() + column];
     }
 
-    // Retail 0x56d240 and 0x56d310, the two string getters the dialog
-    // pair above calls - both thiscall with a hidden return buffer and
-    // no argument, both BELOW this compiland's first claimed row, and
-    // neither reconstructed. Declared so the ten dialog bodies can name
-    // them. Same provisional standing as the slots that call them.
-    // Before normalization (function): type_quest::GetProposalDialogText.
     std::string getProposalDialogText();
-    // Before normalization (function): type_quest::GetProgressDialogText.
     std::string getProgressDialogText();
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
-    // Before normalization (function): type_quest::get_completion_text.
     std::string getCompletionText();
     // The exact HD structural twin maps this deadline suffix builder to
     // retail 0x56d040. The two dated dialog getters and the complex skill /
     // creature dialogs are its four callers.
-    // Before normalization (function): type_quest::get_time_limit_text.
     std::string getTimeLimitText();
 };
 
 class type_experience_quest : public type_quest {
 public:
-    // Before normalization: required_level.
     int m_requiredLevel;  // +0x40
 
     type_experience_quest(unsigned char flags);
 
-    // Before normalization (function): type_experience_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_experience_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_experience_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_experience_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
-    // Before normalization (function): type_experience_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_experience_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_experience_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_experience_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_experience_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
@@ -372,109 +303,62 @@ public:
 // read everywhere else.
 class type_skill_quest : public type_quest {
 public:
-    // Before normalization: required_skills.
     signed char m_requiredSkills[4];  // +0x40
 
     type_skill_quest(unsigned char flags);
 
-    // seerhut.obj's shared primary-skill list builder, called with this in
-    // ecx and the four-byte payload as its explicit stack argument.
-    // Before normalization (function): type_skill_quest::skill_requirement_text.
     std::string skillRequirementText(
         const signed char (&skills)[4]);
 
-    // Before normalization (function): type_skill_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_skill_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_skill_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_skill_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_skill_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_skill_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
-    // Before normalization (function): type_skill_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_skill_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_skill_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
 class type_defeat_hero_quest : public type_quest {
 public:
-    // Before normalization: map_hero.
     int m_mapHero;         // +0x40, the h3m identity slot 12 fills
-    // Before normalization: defeated_hero.
     int m_defeatedHero;    // +0x44
-    // Before normalization: satisfied_mask.
     int m_satisfiedMask;   // +0x48, one bit per player
 
     type_defeat_hero_quest(unsigned char flags);
 
-    // Before normalization (function): type_defeat_hero_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_defeat_hero_quest::quest_type.
     virtual int questType();
-    // Before normalization (function): type_defeat_hero_quest::NotifyHeroDefeated.
-    // Before normalization (locals): hero_id.
     virtual void notifyHeroDefeated(int heroId, int player);
-    // Before normalization (function): type_defeat_hero_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_defeat_hero_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_defeat_hero_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_defeat_hero_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_defeat_hero_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_defeat_hero_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_defeat_hero_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
 class type_monster_quest : public type_quest {
 public:
-    // Before normalization: map_monster.
     int m_mapMonster;             // +0x40, the h3m identity slot 12 fills
-    // Before normalization: position.
     TQuestPosition m_position;     // +0x44
-    // Before normalization: monster_id.
     int m_monsterId;       // +0x48
-    // Before normalization: defeated_by.
     int m_defeatedBy;      // +0x4c, -1 until some player kills it
 
     type_monster_quest(unsigned char flags);
 
-    // Before normalization (function): type_monster_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_monster_quest::quest_type.
     virtual int questType();
-    // Before normalization (function): type_monster_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_monster_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_monster_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_monster_quest::NotifyMonsterDefeated.
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
-    // Before normalization (function): type_monster_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_monster_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_monster_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_monster_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
@@ -485,187 +369,114 @@ public:
 // exactly at the +0x40 payload slot every other leaf uses.
 class type_artifact_quest : public type_quest {
 public:
-    // Before normalization: artifacts.
     std::vector<TArtifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
     type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow);
 
-    // Before normalization (function): type_artifact_quest::GetAIValue.
     virtual int getAIValue(int player);
-    // Before normalization (function): type_artifact_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_artifact_quest::TakePayment.
-    // Before normalization (locals): current_hero.
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
-    // Before normalization (function): type_artifact_quest::has_expired.
     unsigned char hasExpired() const;
-    // Before normalization (function): type_artifact_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_artifact_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_artifact_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_artifact_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_artifact_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_artifact_quest::SetDefaultText.
     virtual void setDefaultText();
-    // Before normalization (function): type_artifact_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_artifact_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
 class type_creature_quest : public type_quest {
 public:
-    // Before normalization: counts.
     std::vector<int> m_counts;             // +0x40
-    // Before normalization: types.
     std::vector<TCreatureType> m_types;    // +0x50
 
     type_creature_quest(unsigned char flags);
 
-    // Before normalization (function): type_creature_quest::GetAIValue.
     virtual int getAIValue(int player);
-    // Before normalization (function): type_creature_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_creature_quest::TakePayment.
-    // Before normalization (locals): current_hero.
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
-    // Before normalization (function): type_creature_quest::has_expired.
     unsigned char hasExpired() const;
-    // Before normalization (function): type_creature_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_creature_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_creature_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_creature_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_creature_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_creature_quest::SetDefaultText.
     virtual void setDefaultText();
-    // Before normalization (function): type_creature_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_creature_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
 class type_resource_quest : public type_quest {
 public:
-    // Before normalization: resources.
     int m_resources[7];  // +0x40
 
     type_resource_quest(unsigned char flags);
 
-    // Before normalization (function): type_resource_quest::GetAIValue.
     virtual int getAIValue(int player);
-    // Before normalization (function): type_resource_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_resource_quest::TakePayment.
-    // Before normalization (locals): current_hero.
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
     // `field_3c >= 0 && field_3c < today`, today being the game date's
     // (month * 4 + week - 5) * 7 + day. searchArray::enter_trigger asks it
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
-    // Before normalization (function): type_resource_quest::has_expired.
     unsigned char hasExpired() const;
-    // Before normalization (function): type_resource_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_resource_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_resource_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_resource_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_resource_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
-    // Before normalization (function): type_resource_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_resource_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_resource_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
 class type_be_hero_quest : public type_quest {
 public:
-    // Before normalization: required_hero.
     int m_requiredHero;  // +0x40
 
     type_be_hero_quest(unsigned char flags);
 
-    // Before normalization (function): type_be_hero_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_be_hero_quest::quest_type.
     virtual int questType();
-    // Before normalization (function): type_be_hero_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_be_hero_quest::LoadFromMap.
     virtual void loadFromMap(TAbstractFile* file);
-    // Before normalization (function): type_be_hero_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_be_hero_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_be_hero_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_be_hero_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_be_hero_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 
 class type_belong_to_player_quest : public type_quest {
 public:
-    // Before normalization: required_owner.
     int m_requiredOwner;  // +0x40
 
     type_belong_to_player_quest(unsigned char flags);
 
-    // Before normalization (function): type_belong_to_player_quest::is_satisfied.
-    // Before normalization (locals): current_hero.
     virtual unsigned char isSatisfied(hero* currentHero);
-    // Before normalization (function): type_belong_to_player_quest::quest_type.
     virtual int questType();
-    // Before normalization (function): type_belong_to_player_quest::GetRequirementText.
     virtual std::string getRequirementText();
-    // Before normalization (function): type_belong_to_player_quest::GetQuestDescription.
     virtual std::string getQuestDescription();
-    // Before normalization (function): type_belong_to_player_quest::Load.
     virtual void load(TAbstractFile* file, int version);
-    // Before normalization (function): type_belong_to_player_quest::DoProposalDialog.
-    // Before normalization (locals): current_hero.
     virtual void doProposalDialog(hero* currentHero);
-    // Before normalization (function): type_belong_to_player_quest::DoProgressDialog.
     virtual void doProgressDialog();
-    // Before normalization (function): type_belong_to_player_quest::Save.
     virtual void save(TAbstractFile* file);
-    // Before normalization (function): type_belong_to_player_quest::SetDefaultText.
     virtual void setDefaultText();
 };
 

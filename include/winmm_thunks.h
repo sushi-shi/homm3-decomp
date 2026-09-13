@@ -1,6 +1,5 @@
 // winmm_thunks.h - the PLAIN (thunk-form) winmm import declaration.
-// HAND-OWNED after admission.
-//
+
 // Retail's TUs split on how they reach timeGetTime, and the split is
 // byte-proven per TU:
 //   * kbwin.obj calls through the IAT (`call [__imp__timeGetTime@0]`),

@@ -56,16 +56,15 @@ inline int limit(int minimum, int value, int maximum)
 // Original CodeView fields: Low, NumbersLeft, Available. Project spelling
 // follows the m_ scope prefix and lowerCamelCase convention.
 class TPickANumber {
-public:
+protected:
     int m_low;
+
+public:
     int m_numbersLeft;
     std::vector<unsigned char> m_available;
-
     TPickANumber(int lowBound, int high);
-    // The destructor remains implicit. Dreamcast records the owner boundary
-    // at includes.h:134, while Complete emits the named VC6 public selected
-    // by cmbtmgr.obj and folds the vector<unsigned char> teardown into it.
-    int pick();  // Original: TPickANumber::Pick (misc.cpp:849).
+    int pick();
+  // Original: TPickANumber::Pick (misc.cpp:849).
 };
 
 // E:\gamedcs\includes.h:175/178. The written inline constructor
@@ -74,7 +73,6 @@ public:
 class TPickRandomTownName : public TPickANumber {
 public:
     TPickRandomTownName() : TPickANumber(0, 15) {}
-
     // Original: TPickRandomTownName::Reset; includes.h:178, dc 0xbc7ec.
     void reset()
     {
@@ -82,6 +80,7 @@ public:
             m_available[i] = 1;
         m_numbersLeft = m_available.size();
     }
+
 };
 
 #endif

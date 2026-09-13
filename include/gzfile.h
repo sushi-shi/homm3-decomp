@@ -27,16 +27,12 @@ public:
     // value when opening the output stream fails.
     class TOpenFailure : public std::exception {
     };
-
     TGzFile(const char* path, const char* mode);
     ~TGzFile();
-    // Before normalization (function): TGzFile::Read.
     virtual int read(void* data, int size);
-    // Before normalization (function): TGzFile::Write.
     virtual int write(const void* data, int size);
-
-    // Before normalization: file.
-    void* m_file;  // +0x04, the gzFile handle gzopen returned
+    void* m_file;
+  // +0x04, the gzFile handle gzopen returned
 };
 
 #endif  /* HOMM3_GZFILE_H */

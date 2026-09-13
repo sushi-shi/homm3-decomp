@@ -5,7 +5,4 @@
 
 #include "remote.h"
 
-
-
-
 #endif /* HOMM3_HOTSEAT_H */

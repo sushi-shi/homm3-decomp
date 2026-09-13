@@ -12,7 +12,6 @@ public:
     // transfer implementation from the other ownership operations.
     TAutoArrayPtr(const TAutoArrayPtr& rhs);
     ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
-
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
     {
         if (m_ptr != rhs.m_ptr) {
@@ -26,12 +25,12 @@ public:
         rhs.m_owns = 0;
         return *this;
     }
-
     T* get() const { return m_ptr; }
 
 private:
     mutable unsigned char m_owns;
     T* m_ptr;
+
 };
 
 #endif

@@ -34,9 +34,7 @@ public:
     }
 
 private:
-    // Before normalization: bits_.
     std::bitset<N>* m_bits;
-    // Before normalization: position_.
     size_t m_position;
 };
 

@@ -1,6 +1,4 @@
 // struct.h - the engine's small shared value types (E:\gamedcs\struct.h)
-// HAND-OWNED. Class layouts are NOT fabricated from method symbols;
-// prototypes stay comments until a retail layout is proven.
 #ifndef HOMM3_STRUCT_H
 #define HOMM3_STRUCT_H
 
@@ -33,7 +31,6 @@ public:
     // overview's zero-initialization uses the proven default constructor.
     message(int id, int codeX, int codeY, int qualifier,
             int mouseX, int mouseY, int extra, heroWindow* window);
-
     // Original: message::message; struct.h:42, dc 0x2d58.
     // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
     // setting codeY and passing it to OnWidgetDeselect. The retained body
@@ -50,6 +47,7 @@ public:
         m_extra = 0;
         m_window = 0;
     }
+
 };
 SIZE(message, 32);
 
@@ -58,7 +56,7 @@ SIZE(message, 32);
 // signature of short-based bitfields, where x:10 fills the first
 // 16-bit unit's low bits and y:10 forces a new unit at +2 with z:4
 // tucked into that unit's remaining six.
-//
+
 // Every retail reader agrees on the widths. searchArray::get_danger_value
 // (0x42ed30) and game::get_cell (0x42ed80) both read the field trio as
 //   x: dword @ +0, shl 6, movsx ax, sar 6      -> signed 10 bits @ 0..9
@@ -67,18 +65,11 @@ SIZE(message, 32);
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
 struct type_point {
-    // Before normalization: x.
+public:
     short m_x : 10;
-    // Before normalization: y.
     short m_y : 10;
-    // Before normalization: z.
     short m_z : 4;
-
     type_point() {}
-    // E:\\gamedcs\\struct.h:102. Dreamcast CodeView places the body in the
-    // shared header, and both Dreamcast and Complete expand it at ordinary
-    // call sites. Keep one canonical source definition here so every TU sees
-    // the real helper at the original parse point.
     VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
     type_point(short newX, short newY, short newZ)
     {
@@ -86,6 +77,8 @@ struct type_point {
         m_y = newY;
         m_z = newZ;
     }
+    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
+    bool isValid() const;
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
     VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
@@ -93,18 +86,11 @@ struct type_point {
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
-    // Dreamcast retains this source helper out of line in
-    // AI_AttemptMove; Complete VC6 expands the same three comparisons.
     VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
     bool operator!=(const type_point& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
-    // Before normalization (function): type_point::is_valid.
-    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
-    // Its ordinary body remains in findpath.cpp:36; do not move it here
-    // to force expansions in adventure drawing.
-    bool isValid() const;
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
@@ -114,13 +100,13 @@ struct type_point {
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
-    // Before normalization (function): type_point::DistanceSquared.
     int distanceSquared(const type_point& p2) const
     {
         int dy = m_y - p2.m_y;
         int dx = m_x - p2.m_x;
         return dx * dx + dy * dy;
     }
+
 };
 
 // The shared inclusive rectangle used by the adventure and combat drawing
@@ -129,23 +115,16 @@ struct type_point {
 // Its type-handle collateral is banked in score history rather than hidden
 // behind consumer-specific declarations.
 struct SLimitData {
-    // Before normalization: iMinX.
+public:
     int m_minX;
-    // Before normalization: iMinY.
     int m_minY;
-    // Before normalization: iMaxX.
     int m_maxX;
-    // Before normalization: iMaxY.
     int m_maxY;
-
     SLimitData() {}
     SLimitData(int minx, int miny, int maxx, int maxy)
         : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
-    // Before normalization (function): SLimitData::Width.
     int width() const { return m_maxX - m_minX + 1; }
-    // Before normalization (function): SLimitData::Height.
     int height() const { return m_maxY - m_minY + 1; }
-    // Before normalization (function): SLimitData::Intersects.
     bool intersects(const SLimitData& limits) const
     {
         return m_minX <= limits.m_maxX
@@ -153,12 +132,10 @@ struct SLimitData {
             && m_minY <= limits.m_maxY
             && m_maxY >= limits.m_minY;
     }
-    // Before normalization (function): SLimitData::IsEmpty.
     bool isEmpty() const
     {
         return m_maxX < m_minX || m_maxY < m_minY;
     }
-    // Before normalization (function): SLimitData::Clip.
     void clip(const SLimitData& limits)
     {
         if (m_minX < limits.m_minX)
@@ -170,7 +147,6 @@ struct SLimitData {
         if (m_maxY > limits.m_maxY)
             m_maxY = limits.m_maxY;
     }
-    // Before normalization (function): SLimitData::Include.
     void include(const SLimitData& limits)
     {
         if (m_minX > limits.m_minX)
@@ -182,6 +158,7 @@ struct SLimitData {
         if (m_maxY < limits.m_maxY)
             m_maxY = limits.m_maxY;
     }
+
 };
 SIZE(SLimitData, 0x10);
 
@@ -192,14 +169,12 @@ extern int* g_videoGameState;
 
 class CNetPlayerInfo {
 public:
-    unsigned long m_dpid;   // +0x00
-    char m_name[24];       // +0x04
-    int m_version;          // +0x1c (retail-only extension)
-
-    // E:\gamedcs\struct.h:340. The Dreamcast body initializes the two
-    // shared fields; Complete's added version member belongs to the same
-    // base boundary in the retail selection-window TU.
-    VA(0x0057F720, 0x18)  // DC's ordered dpid/name stores plus Complete's game-version field, dc 0x11f5e4
+    unsigned long m_dpid;
+   // +0x00
+    char m_name[24];
+       // +0x04
+    int m_version;
+    VA(0x0057F720, 0x18)  // dc 0x11f5e4
     CNetPlayerInfo()
     {
         m_dpid = 0;
@@ -213,6 +188,7 @@ public:
         strcpy(m_name, name);
         m_version = *g_videoGameState;
     }
+
 };
 SIZE(CNetPlayerInfo, 32);
 
@@ -220,9 +196,12 @@ SIZE(CNetPlayerInfo, 32);
 // Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.
 class GameTime {
 public:
-    static unsigned long get();             // 0x4f82e0
-    static void delayTil(unsigned long time);  // 0x4f82f0
-    static void delay(int interval);        // 0x4f83c0
+    static unsigned long get();
+             // 0x4f82e0
+    static void delayTil(unsigned long time);
+  // 0x4f82f0
+    static void delay(int interval);
+        // 0x4f83c0
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
@@ -231,7 +210,6 @@ public:
     // argument evaluated ahead of its guard), and the result is tested
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    // Before normalization (function): GameTime::Elapsed.
     // The stop/start subtraction is retained by the upstream mouse timing helper.
     static long elapsed(unsigned long stop, unsigned long start)
     {
@@ -261,6 +239,7 @@ public:
             lag = interval;
         return thisFrame + lag;
     }
+
 };
 
 #endif /* HOMM3_STRUCT_H */

@@ -1,5 +1,5 @@
 // rmg_support.cpp - retained Complete random-map helper bodies.
-//
+
 // Retail keeps these ordinary helpers out of line in CreateRiver.  Their
 // declarations remain visible through rmg.h, while placing the definitions in
 // this companion translation unit reproduces the natural body-visibility
@@ -20,17 +20,7 @@ TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
 {
 }
 
-// Both cinit callers pass a nonempty table (13 river entries, 17 road
-// entries). Retail copies it, clears nine interleaved index/count pairs,
-// then counts each pattern id and records the start of each new run.
-// It reads the first entry without an empty guard and does not validate
-// the pattern ids: both are source-data preconditions, not new runtime checks.
-// The allocation failure retains the canonical exception constructor.
-// Exact: keeping the allocation result in a local gives std::copy retail's
-// single source walk plus a destination displacement. Assigning/checking
-// only the member keeps two pointer walks (93.5294%). Changing the standard
-// copy operation to uninitialized_copy instead gives 92.5000%.
-VA(0x004F9BE0, 0xB7) // anchor-callee 0x55ed7c/0x55f2fc; thiscall, ret 8; retail-only
+VA(0x004F9BE0, 0xB7)
 TRmgLinePatternTable::TRmgLinePatternTable(unsigned int patternCount, const int* patterns)
     : m_patternCount(patternCount), m_patterns(0)
 {
@@ -77,19 +67,7 @@ static const unsigned char g_rmgLineReflections[4][2] = {
     {0, 0}, {0, 1}, {1, 0}, {1, 1}
 };
 
-// The retained shared selector first handles crosses/opposite cardinals,
-// then reflected corners, then ends or straight fallback patterns. The table
-// advertises optional ids 5 and 0 through their occurrence counts. It consumes
-// a byte mask, not the terrain selector's three-way neighbour classifications.
-// Only caller 0x4f9f00 supplies three distinct outputs (id, X flip, Y flip).
-// Exact: each cardinal group shares its constant flip store, while the end
-// case tests south before the complete pattern/X/Y stores in each arm.
-// Moving the common pattern/X stores above that test lets VC6 replace even
-// explicit early returns with SETE (92.3290%). Reversing pattern/X order in
-// the full arms gives 99.9474%; changing the unsigned count test to != 0
-// gives SETNE rather than retail's SETA (99.7368%). Byte and bool availability
-// locals both match. All 590 bytes agree with the five table addresses resolved.
-VA(0x004F9CB0, 0x24E) // anchor-callee 0x4f9fd8; fastcall, ret 0xc; retail-only
+VA(0x004F9CB0, 0x24E)
 void selectRmgLinePattern(
     const unsigned char* neighbours, const TRmgLinePatternTable* table,
     int& pattern, unsigned char& flipX, unsigned char& flipY)
@@ -166,20 +144,13 @@ void selectRmgLinePattern(
     }
 }
 
-// Retail retains this tiny value constructor throughout the RMG pathfinding
-// cluster.  Its three stores and `ret 0xc` fix both the by-value ABI and the
-// 12-byte position layout.
-VA(0x005355C0, 0x1A)  // retail RMG caller cluster; Complete-only helper
+VA(0x005355C0, 0x1A)
 TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
     : m_x(newX), m_y(newY), m_z(newZ)
 {
 }
 
-// The river painter deliberately inherits the generic line walker as its
-// second base.  Retail's calls use `this + 0x10`, which is the natural VC6
-// adjustment for that source relationship.  Its otherwise-empty destructor
-// restores the first base's vtable and is retained out of line.
-VA(0x0055EDA0, 0x07)  // CreateRiver EH cleanup; retail-only RMG helper
+VA(0x0055EDA0, 0x07)
 TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
@@ -193,13 +164,6 @@ TRmgLinePatternTable* TRmgLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
-// All four line-painter tables use this setter. It takes a snapshot of the
-// ten meaningful tile bytes before dispatching adapter slot 1. The copied
-// value, not the original caller-owned tile, is the forwarded argument.
-// Exact with value construction and X-before-Y flip stores. A custom tile
-// copy constructor also matched this body but changed the adapter-return
-// handling in terrain users. Implicit-copy snapshot initialization is 87.23%;
-// reversing these independent flip stores gives 99.82%, not retail order.
 VA(0x0055EDC0, 0x36) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
 void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
@@ -231,19 +195,13 @@ int TRmgLinePainter::canPaint(const TRmgGridPoint& point)
     return 0;
 }
 
-// Vtable 0x641174/0x641190 slot 5 forwards the point to the adapter's
-// getLand slot. The Complete-only RMG hierarchy has no Dreamcast counterpart.
 VA(0x0055EE30, 0x13)
 int TRmgLinePainter::getLand(const TRmgGridPoint& point)
 {
     return m_adapter->getLand(point);
 }
 
-// Exact: all 118 raw bytes after seven relocations. The grid copy constructor
-// keeps both GetSize result stores before the adapter store. An implicit copy
-// interleaves the adapter and second component (99.71%); moving the adapter
-// assignment into the base ctor body puts its vptr store too early (99.10%).
-VA(0x0055EE50, 0x76)  // CreateRiver sole caller; retail-only RMG helper
+VA(0x0055EE50, 0x76)
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgMapAdapterInterface* newAdapter,
     int newRiverType,
@@ -253,9 +211,6 @@ TRmgRiverPainter::TRmgRiverPainter(
 {
 }
 
-// The derived vtable at 0x641190 places this compiler-generated deleting
-// wrapper after the retained constructor. It calls the exact empty derived
-// destructor at 0x55eda0 before conditionally releasing the complete object.
 VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
 
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
@@ -282,22 +237,12 @@ int TRmgRoadLinePainter::canPaint(const TRmgGridPoint& point)
     return 0;
 }
 
-// The river and road line-painter vtables all share this ICF representative.
-// Loading the adapter at +0xc and dispatching its slot +8 proves setOverlay's
-// two-argument forwarding body; the road COMDAT wins retail link order.
 VA(0x0055F330, 0x17)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
 void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
 {
     m_adapter->setOverlay(point, value);
 }
 
-// The painter API writes to an explicit output reference, while its adapter
-// returns a tile by value. Retail therefore uses a 12-byte return temporary
-// and copies its four fields to the caller's output. Both painter classes
-// share the road COMDAT at this vtable slot.
-// Exact with a named returned value followed by canonical assignment. Keep
-// the implicit copy constructor: a custom four-field copy gave 62.96% here
-// and introduced extra returned-value copies in the terrain fill path.
 VA(0x0055F350, 0x34) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
 void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, rmgTerrainTile& tile)
 {
@@ -339,11 +284,7 @@ TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
 
-// Called on the perpendicular edge vector by DrawIrregularZoneBoundary.
-// Retail squares the integer components before converting their sum to
-// double, then truncates sqrt's result. The name is provisional; this
-// Complete geometry helper has no Dreamcast counterpart.
-VA(0x005FCEB0, 0x39) // anchor-callee 0x53c0d1; thiscall; retail-only
+VA(0x005FCEB0, 0x39)
 int TRmgVector::length() const
 {
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
@@ -378,16 +319,6 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
     initialize();
 }
 
-// The diagram constructor allocates pairs using two by-value point/zone
-// pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
-// Both paths expand the ordinary opposite-edge constructor above.
-// Exact: initialize the zone, copy the site in the body, allocate the twin,
-// then share initialize with the twin constructor (cost 126 + 60; the
-// inline stores cost 157 and starve createEdge's second insertion). The 22
-// partial-initializer forms found two exact choices; chaining the -1
-// assignments scores 99.9535%, a temporary TPoint keeps a different
-// final-store schedule, and component site copies (cost 173) lose the
-// first point/zone schedule (97.2093%).
 VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
 TRmgBoundaryVertex::TRmgBoundaryVertex(
     TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
@@ -398,16 +329,6 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
     initialize();
 }
 
-// The two swaps preserve the bidirectional ring after exchanging successors.
-// This ordinary helper is retained by the diagram constructor and expanded
-// twice in detach. The existing +0x10/+0x14 fields prove its semantic owner.
-// Exact with a std::swap of the predecessors and a manual successor swap.
-// Two std::swap calls give the same 49 bytes at /Ob2 cost 52; this form
-// costs 65, and the diagram constructor's diagonal needs 63..71 so that
-// connectEdges' nested budget (197 - 98) refuses createEdge and the second
-// splice while expanding the first (predict-inline --trace 0x5fd010). Four
-// manual temporaries (cost 77/82) or named successors with std::swap (62)
-// break splice, detach or the constructor.
 VA(0x005FCF60, 0x31) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
 void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
 {
@@ -417,11 +338,6 @@ void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
     other->m_next = next;
 }
 
-// addSite calls this before reusing an edge. Save the twin's predecessor
-// before either splice, then detach each half-edge from its own ring.
-// Exact: capture this predecessor first. Twin-first is 89.1667%; rereading
-// the twin predecessor after the first splice is 59.6905% and loses the
-// retail lifetime. The ordinary splice remains shared and auto-inlines here.
 VA(0x005FCFA0, 0x61) // anchor-callee addSite 0x5fd790; thiscall, ret 0; Complete-only
 void TRmgBoundaryVertex::detach()
 {
@@ -431,19 +347,6 @@ void TRmgBoundaryVertex::detach()
     m_twin->splice(twinPrevious);
 }
 
-// Complete starts with a rectangular outer subdivision spanning -200..400.
-// Four paired edges form its perimeter; a fifth connects opposite corners.
-// Each pair is owned through createEdge and joined through the shared splice,
-// as Graphics Gems IV's Subdivision constructor splices ea->Sym() to eb.
-// Exact (2026-09-11): the four fan splices go through getTwin, and the
-// diagonal is connectEdges(fourthEdge, thirdEdge). With 13 candidate sites
-// after the first createEdge its nested budget is (949 - 107) / 13 = 64:
-// the first expansion's second insert wrapper still expands while the
-// later ones (55, 45, 39) call it, as retail does. The diagonal's nested
-// budget of 197 - 98 then refuses createEdge and the second splice but
-// expands the first. Direct m_twin reads (r1 = 9) expand every wrapper and
-// createEdge; getTwin in the diagonal too (r1 = 17) starves the first
-// expansion (66.1639%).
 VA(0x005FD010, 0x316) // anchor-caller 0x53e050 and five createEdge expansions/calls
 TRmgVoronoi::TRmgVoronoi()
 {
@@ -472,16 +375,6 @@ TRmgVoronoi::~TRmgVoronoi()
         delete m_edges[edge];
 }
 
-// Constructor and site insertion share this retained factory. Retail expands
-// the ordinary paired constructor, then inserts each half into the owning
-// vector. The two source insertions have different nested inline decisions:
-// the first push_back's count insert is refused (756 / 2 - 64 < 469), the
-// second's is expanded with a body budget of (609 - 64 - 469) / 2 = 38, so
-// its first size() stays a call like retail's four. Exact (2026-09-12) once
-// the constructors spend 327 units before the second push_back and the
-// twin goes through getTwin(): that temporary is homed in the dead
-// firstZone argument slot (frame 8), while a named twin local or the field
-// itself takes a third local slot (99.82% / 84.27%).
 VA(0x005FD390, 0x21C) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
 TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     TPoint second, TRmgZone* secondZone)
@@ -510,15 +403,6 @@ TRmgBoundaryVertex* TRmgVoronoi::connectEdges(TRmgBoundaryVertex* first,
     return edge;
 }
 
-// Site insertion removes a paired edge from the subdivision: detach both
-// ring links, erase each owned pointer, then free both trivial half-edges.
-// Retail expands detach's first splice but retains the twin's splice call.
-// Both searches use unsigned indices and erase through the vector interface.
-// Exact (2026-09-11): reading the twin through getTwin adds one candidate
-// site after detach, so detach's nested budget is (1000 - 61) / 10 = 93
-// and its second splice (65) is refused after the first, exactly as retail.
-// With the field read (nine sites) the budget is 104 and both expand;
-// the earlier 64 loop/index/erase forms never changed that site count.
 VA(0x005FD5B0, 0xFF) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
 void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 {
@@ -556,17 +440,6 @@ static int isRmgPointRightOfEdge(TPoint point, TRmgBoundaryVertex* edge)
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
 }
 
-// The zone-building callers pass an eight-byte TPoint and receive an edge.
-// Retail first recognizes either site endpoint, then follows the twin,
-// successor or twin-predecessor-twin according to integer orientation.
-// This is a Complete-only subdivision lookup; the role name is provisional.
-// Exact: the shared edge-side predicate restores the eight-byte scratch
-// frame and eliminates the first orientation's endpoint spill. All thirteen
-// blocks, seven branches and 215 unmasked bytes agree, with no relocations.
-// Earlier direct-call forms reached 91.0460%: endpoint scopes improved
-// 75.2529% to 83.7127%, then the successor binding reached that plateau.
-// Named scalar results and early-continue forms were neutral. Keep both
-// canonical helper boundaries rather than pasting orientation arithmetic.
 VA(0x005FD6B0, 0xD7) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
 TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
 {
@@ -666,39 +539,6 @@ static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
     return determinant > 0;
 }
 
-// Complete's incremental subdivision insertion, Graphics Gems IV's
-// InsertSite: reject coincident endpoints, split an edge for a collinear
-// site, connect the incident fan, then flip suspect diagonals with the
-// integer circumcircle determinant (squared norm times orientation widened
-// to signed 64 bits, imul/sbb/adc). Every call decision now matches retail:
-// the accessor sites (getSitePosition/getTwin/getPrevious/getLeftNext...)
-// count as inline candidates, so with 22 sites after the segment predicate
-// its distances are refused, connectEdges gets 38 and calls both fan
-// splices, RightOf gets 54 and calls the orientation, InCircle gets 42 and
-// calls all four, and flipRmgEdge gets 33 and calls detach and both splices
-// (predict-inline --trace 0x5fd790). Field reads instead of accessors gave
-// 45.4167% with the same helpers.
-// Exact. Four spellings fix the frame and the callee-saved roles, and a
-// complete 64-state family (2 x 4 x 4 x 2, all scored) separates each one:
-// - the coincidence test copies each endpoint into its own scoped by-value
-//   TPoint, as locate does, so each copy dies before the next loads and the
-//   compares read eax/ecx then ecx/edx as retail; both copies live in one
-//   scope swap those registers over 14 rows with the same 0x30 frame
-//   (98.5536%), and a single || condition or two bare ifs score 93.7411%;
-// - the fan loop assigns connectEdges back to base before taking its
-//   predecessor, which homes base in [ebp-8] and the connected edge in the
-//   dead zone argument slot; a named next local in any order 90.6-90.9%;
-// - the named predecessor (homed in [ebp-0xc] before and after the
-//   orientation call, as retail) reads its site as getTwin()->
-//   getSitePosition() in both suspect tests, which keeps point.m_y in EDI
-//   and edge in EBX; getOppositeSitePosition there scores 93.7411%, and
-//   re-reading the predecessor twice ranks edge above point.m_y and swaps
-//   EBX/EDI across 176 slots (94.03%);
-// - the segment predicate binds its line origin by reference (see above);
-//   the accessor copy costs 90.3482% here.
-// The loop condition stays getTwin()->getPrevious(); a separate suspect-
-// loop variable or a site local scores 88.39% / 82.83%, and a 40-state
-// include-set sweep of this TU moves no function.
 VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
 void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 {
@@ -741,12 +581,6 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
     }
 }
 
-// addSite tests the orientation of the current site, predecessor's opposite
-// site and opposite site, then reuses the same operation in the circumcircle
-// determinant. All six stack dwords originate in canonical TPoint fields;
-// the body returns the signed cross product, not a normalized predicate.
-// The ordinary externally visible helper emits naturally and matches all
-// 43 bytes; the previous RMG probe's absent body was not an ABI limitation.
 VA(0x005FDAE0, 0x2B) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 {
@@ -754,13 +588,6 @@ int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-// The three calls at 0x5fd7e4/0x5fd7f6/0x5fd80d compare the new site's
-// squared distance to both edge endpoints against the edge's squared length.
-// Two whole site positions, signed subtraction and two integer products
-// establish the operation and its aggregate-by-value calling boundary.
-// Exact: Y then X local capture reproduces retail's register roles.
-// The 24-form arithmetic batch found three exact forms; X-first capture
-// keeps the same 33-byte CFG but scores 99.7143%. No TU score falls here.
 VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
 int getRmgSquaredDistance(TPoint first, TPoint second)
 {

@@ -30,7 +30,7 @@ import json
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from homm3.core import common
@@ -53,7 +53,8 @@ BASELINE_HEADER = """\
 # Scores are observational:
 # evidence/source gates, not a local percentage maximum, decide build validity.
 # Retail RVA carries MAX/HIST across source-label promotion and same-body renames.
-# src_hash fingerprints only the function's own source definition.  It lets
+# src_hash fingerprints the function's own C++ tokens, excluding comments and
+# formatting. Legacy text hashes migrate only on verified unchanged text. It lets
 # `status check` distinguish an edit to that function from collateral codegen
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
@@ -174,7 +175,7 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     return raw[line_start:definition.body_close + 1]
 
 
-def source_hashes() -> dict[tuple[str, str], str]:
+def source_hashes(*, legacy: bool = False) -> dict[tuple[str, str], str]:
     """Hash each VA-owned function's own definition, keyed like objdiff.
 
     The source VA supplies stable retail identity, avoiding a lossy
@@ -185,6 +186,7 @@ def source_hashes() -> dict[tuple[str, str], str]:
     import hashlib
 
     from homm3.build import configure
+    from homm3.core.cpp_tokens import fingerprint
     from homm3.retail_labels import source
 
     by_identity: dict[tuple[str, int], list[tuple[str, str]]] = {}
@@ -213,9 +215,8 @@ def source_hashes() -> dict[tuple[str, str], str]:
                     raw, masked, end + 1, key[1])
                 if definition is None:
                     continue
-                hashes[key] = hashlib.sha1(
-                    definition.encode("utf-8", "replace")
-                ).hexdigest()[:12]
+                hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
+                               if legacy else fingerprint(definition))
     # Canonical header bodies carry their own VA annotations. Their retail
     # comparison carrier may be any emitted TU; identity is the RVA, while
     # the fingerprint must follow the physical header definition.
@@ -233,8 +234,17 @@ def source_hashes() -> dict[tuple[str, str], str]:
             for key in keys_by_rva.get(rva, ()):
                 definition = _canonical_definition_text(raw, masked, end + 1, key[1])
                 if definition is not None:
-                    hashes[key] = hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
+                    hashes[key] = (hashlib.sha1(definition.encode("utf-8", "replace")).hexdigest()[:12]
+                                   if legacy else fingerprint(definition))
     return hashes
+
+
+def migrate_source_hashes(rows: dict, hashes: dict, legacy: dict) -> dict:
+    """Change fingerprint format only when the old text still matches exactly."""
+    return {key: replace(row, src_hash=hashes[key])
+            if (row.src_hash is not None and not row.src_hash.startswith("tokens1:")
+                and row.src_hash == legacy.get(key) and key in hashes)
+            else row for key, row in rows.items()}
 
 
 def load_baseline(path: Path | None = None) -> dict[tuple[str, str], MatchRow]:
@@ -481,8 +491,10 @@ def cmd_update(report: dict) -> int:
     previous = load_baseline()
     previous, recovered = seed_historical_maxima(
         previous, historical_maxima_from_git())
+    hashes = source_hashes()
+    previous = migrate_source_hashes(previous, hashes, source_hashes(legacy=True))
     rows, stats = update_rows(
-        fn_fuzzy(report), previous, function_rvas(), source_hashes())
+        fn_fuzzy(report), previous, function_rvas(), hashes)
     write_baseline(rows)
     print("[status] baseline: "
           f"{stats['added']} added, {stats['migrated']} migrated, "
@@ -529,7 +541,9 @@ def cmd_check(report: dict) -> int:
         print("[status] no baseline yet - run `homm3 status update`")
         return 0
     current = fn_fuzzy(report)
-    drops = checkpoint_drops(current, source_hashes(), rows, function_rvas())
+    hashes = source_hashes()
+    rows = migrate_source_hashes(rows, hashes, source_hashes(legacy=True))
+    drops = checkpoint_drops(current, hashes, rows, function_rvas())
     for (unit, fn), previous_max, historical, value in drops:
         now = f"{value:.2f}%" if value is not None else "MISSING"
         print(f"[status] SOURCE-EDIT MAX DROP {unit} {fn}: "

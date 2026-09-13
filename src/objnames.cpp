@@ -1,7 +1,7 @@
 // objnames.cpp - the Complete-only compiland between advmgr and advspells
 // that owns the adventure-object trait rows, their five .rdata override
 // tables and the objnames.txt name buffer.
-//
+
 // The whole span 0x41b250..0x41c2f0 is this compiland: besides the loader
 // below it holds the Dinkumware string COMDATs retail calls from it
 // (append at 0x41b340, runtime_error's string constructor at 0x41ba90)
@@ -29,7 +29,6 @@ TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 // rows, in the order it walks them. Each is a list of adventure-object
 // ids; only the first carries a second column, the objnames.txt row that
 // id reads its name from.
-// Before normalization: kAdventureObjectNameRows.
 DATA(0x0063a6e4)
 static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
     {165, 114}, {166, 115}, {167, 116}, {168, 117}, {169, 118}, {170,
@@ -43,7 +42,6 @@ static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
     21}, {230, 46}
 };
 
-// Before normalization: kAdventureObjectTrait3Ids.
 DATA(0x0063a854)
 static const int g_adventureObjectTrait3Ids[] = {
     114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
@@ -56,7 +54,6 @@ static const int g_adventureObjectTrait3Ids[] = {
     208, 209, 210, 211
 };
 
-// Before normalization: kAdventureObjectTrait2Ids.
 DATA(0x0063a9d0)
 static const int g_adventureObjectTrait2Ids[] = {
     5, 6, 9, 12, 26, 29, 34, 54, 59, 62, 65, 66, 67, 68, 69, 70, 71, 72,
@@ -64,7 +61,6 @@ static const int g_adventureObjectTrait2Ids[] = {
     215
 };
 
-// Before normalization: kAdventureObjectLandBlockedIds.
 DATA(0x0063aa58)
 static const int g_adventureObjectLandBlockedIds[] = {
     3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 34, 36, 52, 54, 59, 62, 65, 66,
@@ -72,7 +68,6 @@ static const int g_adventureObjectLandBlockedIds[] = {
     85, 86, 92, 93, 95, 101, 214, 215
 };
 
-// Before normalization: kAdventureObjectTrait1Ids.
 DATA(0x0063ab00)
 static const int g_adventureObjectTrait1Ids[] = {
     3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 33, 34, 36, 54, 59, 65, 66, 67,
@@ -80,32 +75,18 @@ static const int g_adventureObjectTrait1Ids[] = {
     86, 93, 101, 111, 212, 214, 215, 219
 };
 
-// Retail 0x41b500, the startup pass that builds the adventure-object
-// trait rows. Called once, from 0x4ed80d.
-//
 // It zeroes all 232 rows (pointing every name at the shared empty
 // literal and seeding nameRow with the row's own index), replays five
 // .rdata override tables over them, then loads objnames.txt, measures
 // the total length of its first 232 lines, buys ONE buffer for all of
 // them through a function-local std::auto_ptr<char> at 0x691688, and
 // re-points each row's name into it.
-//
-// The text resource lives in a scope guard whose destructor the state-0
-// unwind funclet calls, so both throws below release it; the raw pointer
-// beside it is what the two row loops read `Text` through.
-// EXACT since 2026-09-05. The last residual was the second throw: retail
-// EXPANDS TAllocationFailure's constructor here - the literal, the
-// out-of-line TRuntimeError(const char*) at 0x49a0c0, then the 0x63aba8
+
 // vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT. The shared header
 // supplies body visibility to both callers; expansion does not establish
 // the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
-// COMDAT row at 100 with its three throw sites unmoved.
-//
-// Three levers got the rest: an explicit row pointer in the zeroing loop
-// (95.53 -> 97.17, because retail keeps the COUNTER compare and walks a
-// separate pointer), its store order (-> 98.38), and UNSIGNED counters
-// for the two text loops where the zeroing loop's is signed (-> 98.99).
-VA(0x0041b500, 0x28B)  // anchor-global 0x691698 trait rows + 0x660428 pointer; sole caller 0x4ed80d; retail-only
+
+VA(0x0041b500, 0x28B)
 void initializeAdventureObjectNames()
 {
     static std::auto_ptr<char> nameBuffer;

@@ -17,6 +17,42 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_reviewed_declaration_gap_cannot_hide_other_source_facts(self):
+        from dataclasses import replace
+        d = replace(definition(), declaration_only_type=0x1234,
+                    class_offset=1, return_type='void')
+        decl = replace(origin(), file='', line=0, offset='', module='',
+                       argument_types=(), declaration_only=True,
+                       type_index=0x1234, return_type='void')
+        self.assertEqual(compare([d], [decl], {}, {}),
+                         ([], {'reviewed_unlocated': 1}))
+        for bad in (replace(d, return_type='int'), replace(d, argument_types=('int',)),
+                    replace(d, const=True), replace(d, declaration_only_type=0x5678),
+                    replace(d, class_offset=None), replace(d, file='src/widget.cpp'),
+                    replace(d, inline=False), replace(d, va=0x401000)):
+            self.assertTrue(compare([bad], [decl], {}, {})[0], bad)
+        self.assertTrue(compare([d], [replace(decl, declaration_only=False)], {}, {})[0])
+        self.assertTrue(compare([d], [replace(decl, name='Widget::other')], {}, {})[0])
+        errors, counts = compare([d, replace(d, offset=100)], [decl], {}, {})
+        self.assertTrue(any(e.startswith('DUPLICATE ') for e in errors))
+        self.assertEqual(counts['duplicate'], 1)
+
+    def test_declaration_gap_annotation_requires_one_attached_type(self):
+        from homm3.match.source_ownership import declaration_only_hint, scan_unit
+        good = '// @dc-declaration-only: 0x1234\n'
+        self.assertEqual(declaration_only_hint(good, len(good)), (0x1234, False))
+        for bad in (good + good, '// @dc-declaration-only: missing\n'):
+            self.assertTrue(declaration_only_hint(bad, len(bad))[1])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'include').mkdir()
+            (root / 'include/widget.h').write_text(
+                'struct Widget {\n' + good + 'void draw() {}\n};\n')
+            definitions, errors, _ = scan_unit({'source': 'include/widget.h'}, root)
+            self.assertEqual(errors, [])
+            self.assertEqual(definitions[0].declaration_only_type, 0x1234)
+            self.assertIsNotNone(definitions[0].class_offset)
+
     def test_active_stub_gate_uses_active_definitions_and_comment_tokens(self):
         from homm3.match.source_ownership import active_stub_definitions, scan_unit
         with tempfile.TemporaryDirectory() as tmp:

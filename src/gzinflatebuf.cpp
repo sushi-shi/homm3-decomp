@@ -1,12 +1,12 @@
 // gzinflatebuf.cpp - the gzip-inflating streambuf Complete reads .h3c
 // campaign payloads and compressed maps through.
-//
+
 // THIS COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER. Retail's object is
 // the one the cinit run 0x4d5f70..0x4d5fb0 opens and the next unit's cinit
 // at 0x4d6c30 (gzfile.obj) closes, which brackets exactly the nine bodies
 // below. It sits one object ahead of gzfile.obj in the
 // gametypewindow..hero link-order bracket.
-//
+
 // EVERY NAME HERE IS RETAIL-PROVEN RTTI, not a guess: the two throw
 // records this unit references spell `.?AVTDataError@TGzInflateBuf@@` over
 // `.?AVruntime_error@std@@` (0x64e1a8) and `.?AVTAllocationFailure@@` over
@@ -18,7 +18,7 @@
 // string&)`'s COMDAT, and the 249-byte body at 0x49a0c0 - carried as
 // "substantial, unidentified" in dxplay.cpp's next-lane note - is
 // `TRuntimeError::TRuntimeError(const char*)`, not a dxplay method.
-//
+
 // The header-check failures throw a plain `bool` (throw record 0x64e1b8
 // names the type `._N`) and are caught in the constructor itself, which is
 // what leaves the stream in raw pass-through mode with ok == 0.
@@ -47,12 +47,11 @@ public:
 // zlib's own gzio.c spells the pair exactly this way, and the constructor
 // LOADS both rather than testing immediates, which is what proves it is a
 // table rather than two literals.
-// Before normalization: gz_magic.
 DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
-VA(0x004d5fd0, 0x74)  // anchor-bracket, retail-only
+VA(0x004d5fd0, 0x74)
 int TGzInflateBuf::getByte()
 {
     if (m_stream.avail_in == 0) {
@@ -76,7 +75,7 @@ int TGzInflateBuf::getByte()
 // 0x4d6050: build the window, then walk the gzip member header exactly as
 // zlib's gzio.c check_header does. A failed magic pair is caught here and
 // demotes the stream to raw pass-through (ok = 0) rather than propagating.
-//
+
 // The 8-byte local at [ebp-0x30] IS a live `std::auto_ptr<unsigned char>`,
 // contrary to the note this replaces: unwind funclet 2
 // (0x62c913, `lea ecx,[ebp-0x30]; jmp 0x4b7040`) is
@@ -87,7 +86,7 @@ int TGzInflateBuf::getByte()
 // leaves _Owns provably false and VC6 folds both the test and the store
 // away. Constructing it takes the frame from 0x1a8 to retail's 0x1b4 and
 // makes fn+0xbd..0xcf byte-identical (76.4458 -> 77.3300).
-//
+
 // The header walk's two LOOP FORMS, 87.7808 -> 91.6008 in two doses, and
 // the second only pays after the first:
 //  - the six reserved bytes are a counted `for (int skip = 6; skip > 0;
@@ -102,7 +101,7 @@ int TGzInflateBuf::getByte()
 //    skip loop moved (85.93 for both, 86.83/86.89 for either alone against
 //    an 87.78 baseline) and +1.28 after it: a rejected knob is only
 //    rejected for the inline structure it was measured in.
-//
+
 // The header walk is TWO NESTED try blocks, and retail's EH data says so:
 // the FuncInfo at 0x62c8f8 carries nTryBlocks=2 - an inner [4..4] whose
 // HandlerType names 0x4d6288 and an outer [3..5] naming 0x4d62a2, both
@@ -119,7 +118,7 @@ int TGzInflateBuf::getByte()
 // written inline in the gz_magic[1] arm, so a second-byte mismatch pushes
 // back TWICE and a first-byte mismatch once. Writing the nested try:
 // 91.5985 -> 92.6749.
-//
+
 // Residual (92.67%): 61 vs 61 blocks with 55 exact, and TWO branches
 // short. The EH transcript is now 17 state stores against retail's 14 -
 // three surplus, one whole `throw TDataError()` group (its string
@@ -253,7 +252,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
-VA(0x004d65e0, 0xAF)  // anchor-bracket, called from 0x4d6050 / 0x4d6920, retail-only
+VA(0x004d65e0, 0xAF)
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
 {
@@ -268,7 +267,7 @@ VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 // 0x4d6820: hand the source stream back whatever this object read ahead -
 // the raw bytes still in next_in, or, when the member was never a gzip
 // member, the undrained tail of the output window.
-VA(0x004d6820, 0xF6)  // anchor-import @inflateEnd@4, retail-only
+VA(0x004d6820, 0xF6)
 TGzInflateBuf::~TGzInflateBuf()
 {
     if (m_stream.avail_in > 0) {
@@ -288,17 +287,17 @@ TGzInflateBuf::~TGzInflateBuf()
 
 // 0x4d6920: drain the source into the 0x200-byte output half, either
 // through inflate or, for a non-gzip member, by straight copy.
-//
+
 // The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
 // `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
 // are the same test on zlib's `uInt`. 80.8063 -> 81.1188. The second guard
 // really is `== 0` - retail emits `jne` there.
-//
+
 // Retail's raw-copy minimum uses a strict unsigned comparison: spelling
 // avail_in < avail_out ? avail_in : avail_out restores jb and raises this
 // caller from 81.1204% to 81.4346%. std::_cpp_min on copied local counts
 // adds operand homes and scores 79.1832%; keep the direct value expression.
-//
+
 // Residual: retail expands readByte at trailer positions 1,2,5,6 and calls
 // it at 3,4,7,8. The current body expands all eight. A passive VC6 trace
 // measures caller cb=604, budget=1208, and readByte cb=56 before this fix.
@@ -384,7 +383,7 @@ int TGzInflateBuf::underflow()
 // objnames throw expands the shared derived initialization.
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
-VA(0x004d6ba0, 0x81)  // anchor-bracket, called from 0x4d6920, retail-only
+VA(0x004d6ba0, 0x81)
 int TGzInflateBuf::readByte()
 {
     int c = getByte();
@@ -393,29 +392,6 @@ int TGzInflateBuf::readByte()
     return c;
 }
 
-// COMDAT pairing: the two implicit copy constructors of the game's own
-// runtime_error family, made by the throw sites that copy an exception into
-// its exception object. exceptions.h already cited both bodies as its own
-// corroboration for the TDebugBreak-as-separate-empty-base layout - "0x41b7b0
-// and 0x41b920 both open by copying the byte at `[src+0x1d]` into `[dst+0x1d]`
-// before forwarding to `exception::exception(const exception&)` and the string
-// at +0xc" - so the class and the role were settled before this claim; what
-// was missing was the address split. Content sizes settle it: this TU emits
-// the two copies at exactly 361 and 367 bytes, which are exactly the two carve
-// extents, and the wider one is TAllocationFailure's because it carries the
-// extra TRuntimeError subobject. Mnemonic agreement corroborates the same
-// assignment at 0.975 and 0.996.
-// COMDAT pairing: std::runtime_error's `const string&` constructor - the base
-// this family's own constructors call, and the one exceptions.h has named
-// since it decoded the throw records ("0x41ba90 (354 B) is
-// std::runtime_error::runtime_error(const string&)'s COMDAT"). Retail settles
-// both halves of that sentence by itself: the body installs vftable 0x645640,
-// whose RTTI Complete Object Locator reads `.?AVruntime_error@std@@`, and it
-// reaches `??0exception@@QAE@ABQBD@Z` - the const char* form that only
-// `runtime_error(const string&) : exception("") , _Str(_S)` produces, where
-// the copy constructor beside it takes exception's copy form. This TU emits it
-// at exactly 354 bytes against the copy's 345, so the one-claim group binds on
-// size with no ambiguity either way.
 VA_COMPGEN(0x0041ba90, 0x162, CLASS_CTOR, runtime_error)
 VA_COMPGEN(0x0041b7b0, 0x169, IMPLICIT_COPY_CTOR, TRuntimeError)
 VA_COMPGEN(0x0041b920, 0x16F, IMPLICIT_COPY_CTOR, TAllocationFailure)
