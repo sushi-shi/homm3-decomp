@@ -1566,11 +1566,8 @@ std::string armyGroup::getLuckDescription(
     if (ourHero)
         result = ourHero->getLuckDescription();
 
-    // The former applyLuckMagicTerrain wrapper was another inline-budget
-    // extraction. Keep its clover-field arm here: retail tests terrain 5
-    // at 0x44c2d4, selects the town at 0x44c312..0x44c31f, and appends at
-    // 0x44c346 before the enemy-group arm at 0x44c34e. DC 0x4fab4
-    // (armygrp.cpp:1464) has the older cursed-ground-only parameter.
+    // Complete adds the clover-field luck bonus before applying enemy-group
+    // modifiers. Dreamcast has only the cursed-ground terrain parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
             || creature == CREATURE_EARTH_ELEMENTAL

@@ -2531,18 +2531,9 @@ void type_sacrifice_window::updateBackpack()
     m_rightBackpackButton->enable(scrollBackpack);
 }
 
+// Picking up an artifact removes its backpack record. Putting one down inserts
+// it or displays the backpack error.
 // E:\gamedcs\sacrifice_window.cpp:1150
-// The backpack widget's call target and the adjacent DC roster row fix the
-// boundary. Complete's first branch removes and picks up an existing record;
-// the second inserts the held record or presents hero::get_backpack_error.
-// Residual (86.13%): the first 25 semantic blocks agree. This SP3 compile
-// expands update_all_slots at both helper sites (two update_slot calls),
-// while retail expands the pickup site but keeps the final put-down site's
-// update_all_slots call (one of each); it also duplicates the first redraw
-// epilogue where retail cross-jumps to the common redraw. `predict-inline`
-// reports exactly that one over-inline/one under-inline pair. Rewriting the
-// handler in the DC line table's nested if/else-if form is byte-flat, so the
-// closest source-authentic spelling is retained without a per-site pragma.
 VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
 void type_sacrifice_window::backpackClick(
     long slot, unsigned char rightClick)
@@ -3197,14 +3188,6 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
-// RETAIL RESIDUAL (98.3508%, 2026-08-26): every divergence is confined to
-// the final Widgets.push_back(rolloverText) expansion. Retail retains one
-// null-_First guard (51 branches versus 50) that this partial TU lets VC6
-// prove unnecessary; constructor args, EH states, prior vector growth and
-// the terminal loop align. Separate/combined assignment, textWidget*/
-// widget* temporaries, exit-button base typing and a local vector view were
-// compiled and rejected. This is a source-surface/inlining-context plateau,
-// not license for an opaque carrier or a raised exactness claim.
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)

@@ -1931,11 +1931,6 @@ void SCampaign::doPreLoadCustomization()
 }
 #endif
 
-// ScenarioStruct::Read's type-3 arm calls this 33-byte constructor in
-// retail. An implicit-constructor probe removed the standalone VC6 body
-// altogether and left the retained claim unpaired; the prior exact written
-// form preserves the call boundary. This Complete-only class has no DC
-// constructor to prove a different source form (config/win_only.tsv).
 VA(0x004883d0, 0x21)  // anchor-caller(ScenarioStruct::Read's type-3 arm)
 TCampaignStartHeroOption::TCampaignStartHeroOption()
 {

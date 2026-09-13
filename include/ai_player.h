@@ -15,7 +15,7 @@ class town;
 class generator;
 struct type_artifact;
 
-// Original: AI_mark_danger_zones; ai_player.cpp:3013, dc 0x329f8.
+// E:\gamedcs\ai_player.cpp:3013, dc 0x329f8
 void aiMarkDangerZones(hero* currentHero, long* dangerZones);
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
@@ -29,9 +29,9 @@ long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 void aiSwapArtifacts(hero* source, hero* destination);
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
-// Original: AI_get_value_of_artifact; ai_player.cpp:5684, dc 0x37514.
 // This overload values the artifact across a player's heroes. CodeView
 // proves the const reference and long player id; retail retains 0x433aa0.
+// E:\gamedcs\ai_player.cpp:5684, dc 0x37514
 long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 long getFullValue(const hero* ourHero);
 long removeNegativeArtifacts(hero* ourHero);
@@ -175,9 +175,6 @@ public:
                         const armyGroup* sourceArmy,
                         const hero* secondHero,
                         unsigned char newHasAngelicAlliance);
-    // Original: type_AI_creature_swapper::get_army_increase.
-    // E:\gamedcs\ai_player.h:307, dc 0x114bd8: returns army_value_increase
-    // at +0x18. The former getArmyValueIncrease spelling obscured this identity.
     long getArmyIncrease() const { return m_armyValueIncrease; }
 };
 SIZE(type_AI_creature_swapper, 0x20);

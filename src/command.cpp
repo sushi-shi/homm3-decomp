@@ -731,23 +731,7 @@ unsigned char combatManager::isComputerAction()
 // retail's, not a modelling gap: the catapult and first-aid arms
 // dereference get_owner's result unguarded.
 
-// Residual (81.4%): the merged-return family, and nothing else - every
-// instruction, operand and immediate agrees, the two arms that matter
-// are byte-for-byte, and the whole 36-byte gap is three tail-merge
-// decisions our SP3 CL takes and retail does not. Retail lays a LOCAL
-// `return 1` epilogue at the fall-through of the first-aid arm, of the
-// default arm and of the post-switch 0x691209 guard; our CL cross-jumps
-// all three into the shared copy it parked in the catapult arm (and
-// turns the first-aid tail into a bare `jmp` into the catapult tail).
-// Tried and rejected: spelling the default arm's `&&` as two `== 0`
-// breaks with the `return 1` last, which flips the polarity our CL
-// already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
-// CORRECTED 2026-09-05: "every instruction and operand agrees" was not true
-// of the RELOCATION. The owner load's call edge is `army::get_controller`
-// (0x442690), not `get_owner` (0x4426d0) - the flipped-side reader, which is
-// also what the hypnotize ternary below re-derives. objdiff scores relocs at
-// function_reloc_diffs=none, so the wrong callee cost no fuzzy and hid here;
-// the census is now clean and the residual really is the merged-return family.
+// Use the controlling player, which can change when a stack is hypnotized.
 VA(0x00474bf0, 0x188)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {

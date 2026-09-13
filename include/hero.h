@@ -855,7 +855,6 @@ public:
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
     // the boat bit out of `flags` and forwards to the other.
     // Dreamcast hero.cpp:5709/5734; ordinary movement helpers expanded here.
-    // Original names: GetLogisticsFactor, GetNavigationFactor.
     float getLogisticsFactor() const;
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char canSummonBoat() const;
@@ -1107,21 +1106,21 @@ public:
     int getManaCost(int whichSpell, const class armyGroup* enemy,
                     int magicTerrain) const;
     float getCombatValueModifier() const;
-    // Original: hero::HasArmy; Hero.h:702, dc 0xd58f8.
     // The header helper used by GetManaCost's own-stack discount. Complete
     // folds it back to the same armyGroup::IsMember bytes.
+    // E:\gamedcs\Hero.h:702, dc 0xd58f8
     unsigned char hasArmy(TCreatureType type) const
     {
         return m_army.isMember(type);
     }
-    // Original: hero::GetManaCost; Hero.h:707, dc 0x23058.
+    // E:\gamedcs\Hero.h:707, dc 0x23058
     int getManaCost(int whichSpell) const
     {
         return getManaCost(
             whichSpell, 0,
             getSpecialTerrain());
     }
-    // Original: hero::get_spell_level; Hero.h:718, dc 0x2308c.
+    // E:\gamedcs\Hero.h:718, dc 0x2308c
     TSkillMastery getSpellLevel(SpellID spell) const
     {
         return getSpellLevel(spell, getSpecialTerrain());
@@ -1139,14 +1138,14 @@ public:
     // Retail has no out-of-line row; AI_value_of_combat expands this
     // one-field return and preserves its float temporary before widening.
     float getAggression() const { return m_aggression; }
-    // Original: hero::get_artifact; Hero.h:965, dc 0x27e8c.
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
+    // E:\gamedcs\Hero.h:965, dc 0x27e8c
     const type_artifact& getArtifact(TArtifactSlot slot) const
     {
         return m_equipped[slot];
     }
-    // Original: hero::get_backpack; Hero.h:970, dc 0x27e9c.
+    // E:\gamedcs\Hero.h:970, dc 0x27e9c
     const type_artifact& getBackpack(long slot) const
     {
         return m_backpack[slot];

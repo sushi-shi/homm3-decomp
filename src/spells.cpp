@@ -5225,13 +5225,13 @@ unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
     return getElementalType(spell) == m_summonedElemental[side];
 }
 
-// Original: combatManager::GetSpellWallHex; spells.cpp:5928, dc 0x158108.
 // DC line5934 calls the canonical GridY and RowIsOdd header helpers.
 // ONE result variable, defaulted before the row test: retail's
 // expansion in HandleCastWallSpell (0x5a3250) copies baseIndex into
 // the result register ahead of the `rowOffset == 1` branch and
 // stores it once at the join, which three separate returns cannot
 // give (they store per arm, measured 94.08 -> 100 on that body).
+// E:\gamedcs\spells.cpp:5928, dc 0x158108
 int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
 {
     int hex = baseIndex;

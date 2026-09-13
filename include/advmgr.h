@@ -959,10 +959,8 @@ public:
     int m_lastHoverY;  // +0xf0
     int m_scrollX;  // +0xf4, DC advManager::scrollX
     int m_scrollY;  // +0xf8, DC advManager::scrollY
-    // Dreamcast original animFrame/animCtr at +0x110/+0x114;
-    // NH3API confirms retail +0xfc/+0x100 after scrollX/scrollY.
-    // The constructor zeros both. Retail increments and uses the second
-    // for animation modulo, so the former name at +0x100 was shifted.
+    // The constructor zeros both animation counters. The second drives the
+    // frame-selection modulo.
     int m_animFrame;  // +0xfc
     int m_animCtr;  // +0x100
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
@@ -1515,7 +1513,6 @@ public:
     e_looping_sound_id getSoundId(int x, int y, int z);
     void disableButtons();
     void enableButtons();
-    // Original: advManager::MouseInScrollZone (advmgr.cpp:10756, dc 0x1ccf8).
     int mouseInScrollZone();
     void processMapChangeNew(class CMapChange* change);
     void viewWorld(int whatToDraw, int level);
@@ -1525,7 +1522,6 @@ public:
 
 private:
     void garrisonQuickView(int id, int x, int y);
-    // Original: advManager::get_garrison_cursor (advmgr.cpp:4514, dc 0xf23c).
     type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);
     static int getForceModifier(float strengthRatio);

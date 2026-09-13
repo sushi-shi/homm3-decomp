@@ -513,17 +513,8 @@ public:
     // byte on the head it burned, and only when adjust_damage handed
     // back a non-zero fire component.
     unsigned char m_showFireShield;  // +0xe8
-    // NAMED 2026-08-15 from the Dreamcast member table, and the three
-    // bytes come out of it as one run: DC army@212/213/214 are
-    // show_fire_shield / bSomeUnitsDamaged / bAllUnitsKilled against
-    // this band's already-anchored +20 shift (DC hitByCreature 220 =
-    // retail +0xf0, six lines below), so 212 -> +0xe8, 213 -> +0xe9,
-    // 214 -> +0xea. These two keep their previously-recorded writer,
-    // Damage (0x444090): bSomeUnitsDamaged on EVERY hit,
-    // bAllUnitsKilled only once the blow empties the stack - which is
-    // exactly what the DC names say. Pure RENAMES of two bytes that
-    // were already unconditional; the wall is name-independent, so a
-    // rename cannot move it (GetCommand held 92.5714 across it).
+    // Damage sets m_someUnitsDamaged on every hit and m_allUnitsKilled when the
+    // stack becomes empty.
     unsigned char m_someUnitsDamaged; // +0xe9
     unsigned char m_allUnitsKilled;   // +0xea
     // DC army.iPostPowSpellToCast (members.csv army@216, a SpellID -

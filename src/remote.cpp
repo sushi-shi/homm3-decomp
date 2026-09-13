@@ -1061,7 +1061,7 @@ inline int CChatManager::getNextFreeMsgNbr()
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
-// E:\gamedcs\remote.cpp:1065. Original: CChatManager::GetNextMsgNbr.
+// E:\gamedcs\remote.cpp:1065.
 // Retail KillOldChat expands this helper at both surviving call sites.
 inline int CChatManager::getNextMsgNbr(int msgNbr)
 {
@@ -2632,9 +2632,9 @@ void CGameTransferSmack::setPercentage(float pct)
     g_windowManager->updateScreen(m_x, m_y, 160, 160);
 }
 
-// Original: CGameTransferSmack::DrawCurrentFrame; remote.cpp:2784, dc 0x11ede8.
 // DC retains an empty body on the console; retail SetPercentage calls the
 // Windows video draw wrapper through this source helper.
+// E:\gamedcs\remote.cpp:2784, dc 0x11ede8
 inline void CGameTransferSmack::drawCurrentFrame()
 {
     drawCurrentSmackFrame();
@@ -3231,10 +3231,6 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
     return handleNetMsg(netMsg);
 }
 
-// Other measured negatives: a local for GetNetMsgHandler's result, an early
-// null return, nested destructor tests, pOld constness, split assignment,
-// a member-slot alias, and a nested getter call are byte-flat. Volatile
-// creates extra reloads and breaks the setter; no carrier or pin is needed.
 VA(0x005578d0, 0x30)  // anchor-vtable: slot 0 chain of 0x640f14; Complete-only
 CNetMsgHandler::~CNetMsgHandler()
 {

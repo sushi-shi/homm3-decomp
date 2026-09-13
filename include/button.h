@@ -81,7 +81,7 @@ public:
     void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     int select(message& msg);
-    // Original: button::Deselect; button.cpp:401, dc 0x57854.
+    // E:\gamedcs\button.cpp:401, dc 0x57854
     int deselect(message& msg);
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping

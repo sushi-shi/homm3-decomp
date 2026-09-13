@@ -793,9 +793,8 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // tests: VC6 rotated the loop and merged the peeled first-iteration
 // check with the back-edge condition, so ONE compare serves both and
 // _Xran sits above the loop body rather than inside it.
-// DC 0xcb698 owns the same six scalar buffers (original spellings:
-// uint_buffer, ushort_buffer, int_buffer, short_buffer, uchar_buffer,
-// char_buffer). SH4 writes them after copying/narrowing each member; retail
+// DC 0xcb698 uses six scalar buffers, written after copying/narrowing each
+// member. Retail
 // 0x4d80e2..0x4d8121 independently proves the byte/dword scratch writes,
 // followed by virtual Write calls. Its overlapping parameter-home slots
 // do not establish the former writeByteField/writeWordField/writeDwordField
@@ -1819,10 +1818,10 @@ void hero::updateArmies()
     }
 }
 
-// Original: hero::ViewStat; hero.cpp:1709, dc 0xcc708.
 // Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
 // plus the quick/normal dialog type to NormalDialog. DC confirms the same
 // calls and arguments; the old HeroScreenUpdate association was positional.
+// E:\gamedcs\hero.cpp:1709, dc 0xcc708
 VA(0x004d9990, 0x65)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
 void hero::viewStat(int whichStat, int isQuickView)
 {
@@ -2764,9 +2763,6 @@ DATA(0x006a8090) extern const char* g_heroScreenFormationHelp;         // row 31
 DATA(0x006a8094) extern const char* g_heroScreenMixedArmyHelp;         // row 32
 DATA(0x006a5704) extern const char* g_unnamed6a5704;
 
-// WindowHandler retains this call. The 2026-09-09 whole-TU control is
-// code-identical without auto_inline(off); the earlier single-call-site
-// expansion diagnosis no longer applies to the current source state.
 VA(0x004db660, 0x728)  // dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 {
@@ -5210,9 +5206,9 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     return m_skillLevel[whichSS] - oldLevel;
 }
 
-// Original: hero::HasSecondarySkill; hero.cpp:4689, dc 0xd38d8.
 // The DC formal type is non-const, and its source body tests skillOrder.
 // SetupHeroView calls this ordinary TU helper; no header force-inline view.
+// E:\gamedcs\hero.cpp:4689, dc 0xd38d8
 unsigned char hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
@@ -6184,7 +6180,7 @@ float hero::getExperienceBonusFactor() const
 static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
-// E:\gamedcs\hero.cpp:5709, original name hero::GetLogisticsFactor.
+// E:\gamedcs\hero.cpp:5709.
 DC_ONLY(0xd49a8, 0x48)
 float hero::getLogisticsFactor() const
 {
@@ -6197,7 +6193,7 @@ float hero::getLogisticsFactor() const
     return factor + 1.0f;
 }
 
-// E:\gamedcs\hero.cpp:5734, original name hero::GetNavigationFactor.
+// E:\gamedcs\hero.cpp:5734.
 DC_ONLY(0xd49f0, 0x4E)
 long hero::getNavigationFactor() const
 {
@@ -6478,17 +6474,7 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     return bestSchool;
 }
 
-// Canonical const-API checkpoint: IsWieldingArtifact, GetIntelligenceFactor,
-// get_special_terrain, get_spell_level, GetManaCost and artifact rollover
-// retain 100% after their six symbol migrations. Shared-header collateral:
-// CEnterNameEdit::OnKillFocus 100 -> 99.870964%, oldmain 77.025734 -> 77.023056%,
-// CampaignHeaderStruct::Load 53.971493 -> 53.986843%. All historical peaks
-// remain banked; Fly is unchanged at 32.623375% with the canonical overload.
-// The DC LF_MFUNCTION records prove const on this overload and the Hero.h
-// facade. The former second, const-adapter implementation represented this
-// same source function; retain one ordinary body and its canonical calls.
-// DC6071 names GetSpellSchoolLevel and HasArmy as source calls. Complete
-// adds the Armageddon's Blade mastery override before indexing the mana row. Titan's Lightning
+// Complete adds the Armageddon's Blade mastery override before indexing the mana row.
 VA(0x004e5240, 0xEF)  // dc 0xd4f64
 int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     int magicTerrain) const
@@ -6824,10 +6810,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 
 // E:\gamedcs\hero.cpp:6493
 
-// The flat additions at 0x4e621a..0x4e6246 and 0x4e633d..0x4e6377
-// belong to the two specialty arms below. The former addFlatCreatureBonus
-// helper had no DC or retained retail identity and existed only to shrink
-// the caller's /Ob2 budget. Earlier 99.97% measurements used that wrapper.
 VA(0x004e6120, 0x39E)
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const

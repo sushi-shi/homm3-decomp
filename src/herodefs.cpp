@@ -12,13 +12,13 @@ namespace {
 // CodeView field pStr; each loader owns its own private string class.
 class TAutoStrPtr {
 public:
-    // Original: `anonymous namespace'::TAutoStrPtr::TAutoStrPtr; herodefs.cpp:391, dc 0xd60d4.
+    // E:\gamedcs\herodefs.cpp:391, dc 0xd60d4
     TAutoStrPtr() : m_string(0) {}
-    // Original: `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr; herodefs.cpp:394, dc 0xd60dc.
+    // E:\gamedcs\herodefs.cpp:394, dc 0xd60dc
     ~TAutoStrPtr() { delete[] m_string; }
-    // Original: `anonymous namespace'::TAutoStrPtr::set; herodefs.cpp:396, dc 0xd60f4.
+    // E:\gamedcs\herodefs.cpp:396, dc 0xd60f4
     void set(char* value) { m_string = value; }
-    // Original: `anonymous namespace'::TAutoStrPtr::get; herodefs.cpp:398, dc 0xd60f8.
+    // E:\gamedcs\herodefs.cpp:398, dc 0xd60f8
     char* get() const { return m_string; }
 
 private:

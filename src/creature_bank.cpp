@@ -23,7 +23,7 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
-// Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
+// E:\gamedcs\creature_bank.cpp:25, dc 0x7152c
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25
@@ -163,8 +163,6 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // five groups and slot 2 is the candidate, two become 2+3 with slot 3, and
 // three become 2+2 with slot 0.
 
-// Historical match before canonical-helper cleanup (2026-09-07,
-// 98.1132% -> 100%): preserving the `groups` parameter
 VA(0x0047ad90, 0x36E)  // dc 0x712d0
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)

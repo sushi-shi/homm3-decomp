@@ -476,7 +476,6 @@ public:
     // (+0x350/+0x354/+0x358). Retail's adjacent bitmap pointers are
     // +0x360/+0x368, preserving the +0x10 shift and intervening slot.
     // Source/layout recovery; no retail access to this member located.
-    // Replaces synthetic pad_364; original spelling: noDice.
     Bitmap816* m_noDice;  // 0x364
     Bitmap816* m_noHeroBmp;  // 0x368
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
@@ -515,7 +514,6 @@ public:
     // Dreamcast mode is a byte at +0x374 between saveGameEdit (+0x370)
     // and pNewPlayerUpdateMan (+0x378). Both retail pointer anchors shift
     // by +0x10, preserving this slot. No retail mode access located.
-    // Replaces synthetic pad_384; original spelling: mode.
     unsigned char m_mode;  // 0x384
     // +0x385..0x387: alignment before the update-manager pointer.
     CNewPlayerUpdateMan* m_newPlayerUpdateMan;  // 0x388
@@ -556,11 +554,8 @@ public:
     char m_paddingBeforeChatSlider[0x1838 - 0x1835];
 
 private:
-    // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
-    // 2832..2844). fileSlider is the one the WindowHandler scroll arms
-    // SetState through (+0x183c); +0x1840 - previously misfiled as the
-    // file slider - is the DURATION slider DoModal resets to state 11
-    // (the unlimited-turn index) on teardown.
+    // The window handler scrolls the file slider. On teardown, doModal resets
+    // the duration slider to 11 (unlimited turns).
     slider* m_chatSlider;  // 0x1838
     slider* m_fileSlider;  // 0x183c
     slider* m_durationSlider;  // 0x1840
@@ -635,7 +630,7 @@ private:
     CSingleSelectionNetMsgHandler m_netMsgHandler;  // 0x1888
 
 public:
-    // Previously field_1898. Retail 0x58ea00 intersects the seated humans'
+    // Retail 0x58ea00 intersects the seated humans'
     // version feature sets and returns their highest common version.
     // Construction seeds this from the local version; join/drop refresh it.
     // PC-only role-derived name; not a player count or the product string.
@@ -696,7 +691,6 @@ public:
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
     // against the refreshed slot attributes.
     void setHumanSlot();
-    // DC public QAA_NPAVCNetMsg@@AA_N proves bool return / bool& cancel;
     bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
     void onSortMaps(int how);
     unsigned char onBeginGame();

@@ -6,31 +6,16 @@
 // includes.h, so later consumers cannot redefine those shared helpers.
 #include <windows.h>
 
-// E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04. CodeView proves
-// reference parameters and a reference result. The by-value source wrappers
-// belong to includes.h; returning a reference to parameter copies here was
-// an incorrect conflation of those two boundaries.
+// E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04
 template<class T>
 inline const T& cppMax(const T& left, const T& right)
 {
     return left < right ? right : left;
 }
 
-// E:\gamedcs\DC_precompiledheaders.h:41, dc 0x3b88 (int) / 0x4d044
-// (double). Retail operand-home probes previously used file-local by-value
-// selectors in findpath.cpp, ai_combat.cpp and army.cpp. That experiment
-// conflated the reference selector with the by-value includes.h wrapper:
-// CalcTerrainCost 0x4b1818..0x4b1828 selects operand addresses, and replacing
-// only the old selector parameters cost six exact ai_combat functions.
-// The six ai_combat controls were get_resurrection_value 100 -> 92.93,
-// get_spell_damage 100 -> 92.18, get_fastest_speed 100 -> 78.06,
-// get_next_chain_lightning_target 100 -> 89.82, get_damage_spell_value
-// 100 -> 87.25, and get_mass_damage_value 100 -> 85.67. Those are caller
-// expansion results, not evidence that the selector took copies itself.
-// Townmgr's handler probes also distinguish argument order: reversing
-// (floor, elapsed) yielded 98.96 on the blacksmith and 99.80 on the fort
-// page against 100. Their operand-address selection is at 0x5d6c4a..55.
-// Preserve those negative controls while recovering callers' real boundaries.
+// The selectors return operand references; includes.h provides the by-value
+// integer wrappers used by callers that need copies.
+// E:\gamedcs\DC_precompiledheaders.h:41, dc 0x3b88
 template<class T>
 inline const T& cppMin(const T& left, const T& right)
 {

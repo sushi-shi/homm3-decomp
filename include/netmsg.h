@@ -241,8 +241,8 @@ SIZE(t_complex_net_message, 0x18);
 // member extent in the wait-dialog constructor.
 class CCombatInitMsg : public t_complex_net_message {
 public:
-    // Original: CCombatInitMsg::CCombatInitMsg; netmsg.h:264, dc 0x9caa0.
     // Retail expands this member sequence in DoNetCombat and the wait dialog.
+    // E:\gamedcs\netmsg.h:264, dc 0x9caa0
     CCombatInitMsg()
         : t_complex_net_message(RS_COMBAT_INIT)
     {

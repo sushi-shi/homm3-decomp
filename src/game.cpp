@@ -2264,16 +2264,6 @@ void GenerateStandardFileName(char* cLongName, char* cRetName)
 // functions do not anchor, so only rows with independent evidence are
 // claimed here; the rest stay unclaimed on purpose.
 
-// ARITY IS CALIBRATED, not assumed: across the 71 previously claimed
-// game rows, retail `ret N` equals (DC p - 1) * 4 for members and
-// max(0, (p-2))*4 for /Gr free functions, with four documented
-// exceptions where retail carries ONE MORE parameter than the Dreamcast
-// port (generator::Grow, game::GetNewHeroId, game::CreateTownHeroes and
-// playerData::load - the last one being the same save-version argument
-// the mine and garrison loaders take). Every claim below matches the
-// calibrated form exactly.
-// ---------------------------------------------------------------------
-
 // E:\gamedcs\game.cpp:2564
 #endif  // @carcass
 
@@ -2421,7 +2411,7 @@ void game::setupShipyards()
     }
 }
 
-// E:\gamedcs\game.cpp:2654; original name SaveBlackMarkets.
+// E:\gamedcs\game.cpp:2654.
 DC_ONLY(0xa795c, 0xC6)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
@@ -3040,10 +3030,7 @@ int game::load(TAbstractFile* infile)
     return 0;
 }
 
-// Retail retains SCampaign's compiler-generated memberwise assignment
-// immediately after game::Load. Source has no hand-written body: the direct
-// symbol claim binds the emitted COMDAT while max/history banks the including-
-// TU transitions caused by restoring the coherent implicit header state.
+// Retained compiler-generated SCampaign memberwise assignment.
 
 // MEASURED 2026-09-05, and the claim is PROVEN CORRECT: the only reason
 // game.obj does not emit this COMDAT is that our compile expands
@@ -4382,9 +4369,9 @@ static void randomizeScholar(NewmapCell* cell)
     }
 }
 
-// Original: RandomizeArtifact; game.cpp:4524, dc 0xab9d4.
 // Complete's ARTIFACT arm at 0x4c0cc0 retains the customization test,
 // Random call and low-nibble clear; the DC guarded-artifact machinery is absent.
+// E:\gamedcs\game.cpp:4524, dc 0xab9d4
 static void randomizeArtifact(NewmapCell* cell)
 {
     if (!cell->isCustomized()) {
@@ -4454,9 +4441,9 @@ static void randomizeWagon(NewmapCell* cell)
     }
 }
 
-// Original: RandomizeWiseTree; game.cpp:4681, dc 0xabe30.
 // DC 4682..4684 writes the id, clears visit bits, then draws the price.
 // Complete's TREE_OF_KNOWLEDGE arm preserves those same packed lanes.
+// E:\gamedcs\game.cpp:4681, dc 0xabe30
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
     cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
@@ -4485,9 +4472,9 @@ static void randomizeTreasure(NewmapCell* cell)
     }
 }
 
-// Original: randomize_tomb; game.cpp:4724, dc 0xabf78.
 // CodeView names separate i/level locals and the set_tomb boundary. Retail
 // 0x4c1b01 reloads gpGame for the artifact draw and expands the packed setter.
+// E:\gamedcs\game.cpp:4724, dc 0xabf78
 static void randomizeTomb(NewmapCell* cell)
 {
     int level;
@@ -6345,10 +6332,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
             readHeroId(infile, mapVersion);
-        // Retail 0x4c4159 calls readLengthPrefixedString, copies its
-        // c_str() to receiver+0x24, and destroys the local at 0x4c418f.
-        // The former read_map_player_name wrapper and depth pin only
-        // separated these statements; retain the string's block lifetime.
+        // Keep the decoded name alive through the copy into the player slot.
         std::string name = readLengthPrefixedString(infile);
         strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
@@ -7115,7 +7099,6 @@ int NewSMapHeader::get(const char* path, const char* filename,
 }
 
 // DC NewSMapHeader::readString (0xb1110), static with a string reference.
-// Former reconstruction name: readMapString.
 VA(0x004c6010, 0x1CE)  // dc 0xb1110
 int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
@@ -8859,13 +8842,10 @@ void game::RandomizeHeroPool()
     // @stub
 }
 
+// Complete ignores bCheat. Initialize all seven army slots, roll the three
+// starting stacks at 100%/88%/25%, and equip Ballista and First Aid Tent
+// entries as artifacts.
 // E:\gamedcs\game.cpp:8924
-// ARITY: `ret 0xc` = 3 stack args + this = p=4, matching this prototype
-// (iHero, bCheat, minimal) and excluding the p=1 RandomizeHeroPool that
-// precedes it in the DC roster.
-// Retail never reads bCheat. It initializes all seven canonical army slots,
-// rolls the three traits stacks at 100%/88%/25%, and turns the Ballista and
-// First Aid Tent entries into equipped artifacts instead of army stacks.
 #endif  // @carcass
 
 VA(0x004c9730, 0x159)  // dc 0xb5094
@@ -9606,14 +9586,14 @@ inline const char* getRandomTownName(int townType)
     return g_townNames[townType][name];
 }
 
-// Original: resetRandomTownNames; game.cpp:9821, dc 0xb69b8.
+// E:\gamedcs\game.cpp:9821, dc 0xb69b8
 inline void resetRandomTownNames()
 {
     for (int i = 0; i < 9; ++i)
         g_randomTownNames[i].reset();
 }
 
-// E:\gamedcs\game.cpp:9833; original name: ProcessOnMapTowns.
+// E:\gamedcs\game.cpp:9833.
 // DC proves the setup sweep's locals and resize, z/y/x scan, random-town
 // conversion, direct town-name assignment, initialize and ConvertObject order.
 // Complete uses std::string for the name; DC uses strcpy/strncpy. Complete's
@@ -11137,32 +11117,6 @@ VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData)
 
 // E:\gamedcs\game.cpp:11749
-// ONE user statement and the compiler-generated member teardown. Retail's
-// body is `mov [ebp-4],0x17 / call game::clear_event_records` and then
-// twenty-three numbered cleanup sites walking the members from the
-// highest offset down - the vector at +0x4e7bc, eventRecords, the three
-// teleport pools, both eight-element pool ARRAYS through the `vector
-// destructor iterator', rumours, the five object pools, heroes[156],
-// towns, players[8], worldMap, mapHeader, the load-event vector,
-// campaign, heroSetup[156] and scenarioTowns - which is exactly what
-// this class's declaration order emits.
-// Residual (78.8428%): retail CALLS the empty `_Destroy(_First,_Last)`
-// COMDAT at seven of the twenty-four sites - 0x404140 is literally
-// `ret 8`, the whole-image ICF fold of every trivially-destructible
-// element's destroy loop - and our /Ob2 expands it to nothing. That is
-// the only class of difference; base 211 instructions against retail's
-// 229 and the residual is those seven call sequences plus the cleanup
-// states they carry. The depth knob does NOT reach it, measured both
-// ways: `#pragma inline_depth(1)` around this definition is BYTE-FLAT
-// at 78.8428 (so `_Destroy` is expanded at whatever depth the implicit
-// teardown puts it), while `#pragma inline_depth(0)` DOES reach the
-// teardown - it de-inlines `~vector()` itself and costs 36.8 points
-// (-> 42.0349) - which proves the pragma is applied and the boundary
-// simply is not depth. Release-elided call-shaped diagnostics do not reach
-// the implicit teardown boundary either (2026-08-21): 1/2/4 sites are
-// byte-flat at 78.8428%, while 8 overshoots to 75.33624%. The optimizer
-// prices those carriers too late to recover retail's seven nested `_Destroy`
-// calls.
 
 VA(0x004ce5b0, 0x346)  // dc 0xbbd28
 game::~game()

@@ -105,7 +105,7 @@ public:
     // 98.88 -> 66.98, and oldmain 78.94 -> 77.03. The changed include closure
     // also removes kb's retained CSprite::Draw occurrence (MAX 100). No dummy
     // emitter or private alternate body is introduced; all peaks remain banked.
-    // Original: SCampaign::SCampaign; CustomCampaign.h:199, dc 0xbcd90.
+    // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
     VA(0x00489500, 0x88)  // dc 0xbcd90
     SCampaign()
     {
@@ -133,7 +133,7 @@ public:
     void playScenarioEpilogue(void* campaignHeader);
     void applyBriefingChoice(int option);
     void doPreLoadCustomization();
-    // Original: SCampaign::CampaignComplete; CustomCampaign.h:212, dc 0xe6ef8.
+    // E:\gamedcs\CustomCampaign.h:212, dc 0xe6ef8
     VA(0x004897d0, 0x43)  // dc 0xe6ef8
     unsigned char campaignComplete()
     {

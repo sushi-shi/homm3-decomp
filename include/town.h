@@ -200,7 +200,6 @@ SIZE(type_horde_effect, 8);
 // gaps, so they are implicit. No pointer-union view is needed by town.cpp.
 class TownExtra {
 public:
-    // Previously TScenarioTown::castleId; NH3API original: objRef.
     int m_objRef;
     char m_playerOwner;
     char m_customBuildings;
@@ -425,7 +424,6 @@ public:
     long getAssembledLegionBonus(long dwelling);
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
-    // Original: town::get_legion_bonus; CodeView town.cpp:1581, const.
     long getLegionBonus(long dwelling) const;
     // DC Town.h:311 (dc 0x1fdac), selected in advmgr.obj. Line 312
     // calls the canonical three-short type_point constructor with mapX/Y/Z
@@ -439,26 +437,7 @@ public:
         return type_point(m_mapX, m_mapY, m_mapZ);
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
-    // tree's readers had been spelling by hand. The body is canonical
-    // and ungated, in CodeView source order; see the
 
-    // CORRECTION 2026-08-20 - THE SECOND BULLET'S GATE IS GONE AND THIS
-    // COMMENT OUTLIVED IT. `HOMM3_TOWN_HASBUILDING_API`, the macro that
-    // kept the body out of town.obj, was retired by the view audit
-    // (654997d, group 7); the prose survived a merge, the `#if` did not.
-    // town.obj then expanded all eight of its sites and two rows sat
-    // BELOW their recorded peaks with the ratchet clean, because the max
-    // had been re-baselined down: town::BuildBuilding 99.3036 -> 78.5766
-    // and town::get_growth_rate 100.0000 -> 88.4737, both still visible
-    // in `match_baseline.tsv`'s `hist` column. The invariant is now
-    // enforced from the CALL SIDE instead - statement-scoped
-    // `#pragma inline_depth(0)` at each site in town.cpp - which
-    // restores both peaks to the digit and costs no declarator anywhere.
-    // Do not re-add the gate; and if you move a site, pin it.
-    // The DC public decoration `?HasBuilding@town@@QBA_NH_N@Z` proves the
-    // complete source ABI: const member (QB), native-bool return and native-
-    // bool second parameter (_N ... _N). Retail's thiscall lowering is the
-    // same and its selected ai_player.obj COMDAT returns canonical 0/1.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
@@ -468,10 +447,6 @@ public:
             return (m_built & g_bitNumber[buildingId]) != 0;
         }
     }
-    // DC Town.h:337 / :342 header inlines, declaration-only here
-    // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
-    // out of line by the DC linker in game.obj). See the
-    // get_building_mask note above for why they landed together.
     // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
     unsigned char isCastle() const
     {
@@ -587,19 +562,16 @@ public:
     // both this record and gpGame->towns[id] unowned.
     void deallocate();
     void placeInMap(int heroId, long playerId, unsigned char resetFlags);
-    // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     static void initializeHordes();
     static unsigned char initializeBuildingCostsTables();
     const char* getTypeName() const;
     TTerrainType getNativeTerrain() const;
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void removeGarrisonHero();
-    // DC public ?UpgradedDwellingID@town@@SA?AW4type_building_id@@W42@@Z
     static int upgradedDwellingID(int id);
 
 protected:
-    // DC public ?const_horde_effects@town@@1PAY03Utype_horde_effect@@A
-    // - a protected static type_horde_effect[?][4]. Retail .data
+    // Retail .data
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
     // initialize_hordes walks it with a 0x10 (two-entry) inner step
     // nine times, which is what pins the row count at 9.

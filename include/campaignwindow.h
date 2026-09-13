@@ -86,7 +86,6 @@ public:
     // above shift by +8, leaving exactly this tail before the new
     // campaignAvailable array at +0x60. No retail uses of this tail are
     // located; declarations follow source/layout evidence.
-    // Replaces synthetic pad_54; original spellings retained above.
     void* m_saveVideoFile;               // +0x54
     Bitmap816* m_checkMark;              // +0x58
     const widget* m_rolloverWidget;      // +0x5c

@@ -131,7 +131,6 @@ public:
     virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
     void onHeroLevelUpdate(CNetMsg* netMsg);
 };
@@ -154,7 +153,6 @@ public:
     virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
 public:

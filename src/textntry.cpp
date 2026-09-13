@@ -29,7 +29,7 @@ public:
 
     // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
     CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
-    // Original: CTextEntrySave::Save; textntry.cpp:44, dc 0x163750.
+    // E:\gamedcs\textntry.cpp:44, dc 0x163750
     void save(int saveX, int saveY)
     {
         m_saved = 1;
@@ -38,7 +38,7 @@ public:
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch());
     }
-    // Original: CTextEntrySave::IsSaved; textntry.cpp:50, dc 0x16377c.
+    // E:\gamedcs\textntry.cpp:50, dc 0x16377c
     unsigned char isSaved() { return m_saved; }
 };
 

@@ -50,9 +50,7 @@ public:
         // before clipping - retail reads it with
         // `movsx eax, byte ptr [esi+0x22]`.
         char m_baseyoffset;
-        // Original Dreamcast TFontSpec::pad at +7 is explicitly named.
-        // It aligns numpal at +8 after seven byte fields; retain the
-        // original spelling, normalized only with the instance prefix.
+        // Aligns numpal at +8 after seven byte fields.
         char m_pad;
         unsigned long m_numpal;
         unsigned short* m_pal[5];

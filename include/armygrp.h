@@ -745,9 +745,6 @@ DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
 // text): nine threshold bands x three name sets, 12-byte row stride
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
-// NWC's Hungarian-lite is attested by the DC name corpus (b/i/p/gp/
-// gb/psz all in real use: gpGame, pszFormat, iNameSet), but the
-// `apsz` composition specifically is NOT - replace on evidence.
 DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 
 // Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:

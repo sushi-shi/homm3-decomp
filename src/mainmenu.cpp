@@ -55,42 +55,6 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
-// The other window constructors are the SAME wall with different arithmetic.
-// Settled 2026-08-14; see each file for its own ledger:
-//   systemoptionswindow  88.3182 -> 98.1326 (guard +2, then the slot-IV loops)
-//   quicktownwindow      96.3088 -> 98.4193 (last four push_backs as inserts)
-//   gametypewindow       93.7258 -> 100.0   (guard +1 AND five named rows)
-//   quickherowindow      87.8597 -> 90.5272 (last four push_backs as inserts)
-//   adventureoptionswindow 95.1212 -> 100.0 (guarded do-while, +2)
-//   levelupwindow        97.7369 -> 98.8241 (17 named widget locals for the
-//                        mass, then the two named back() results)
-//   combatresultswindow  96.2269 -> 96.3788 (one named widget local; its
-//                        recorded "k>=1 strictly worse" was true and useless -
-//                        the mass axis was the live one)
-//   quickinfowindow      92.7916, k=2 is worth 96.8141, supply now EXISTS
-//                        (see below) but is scaffolding, so unlanded
-//   campaignwindow       82.5365, flat on BOTH axes for k=1..3
-// Converting every push_back in those files is too coarse (+41, +10, +6 and +9
-// sites - all measured, all regressions).
-
-// TWO REFINEMENTS to the rule above, both byte-measured 2026-08-14, and both
-// worth reading BEFORE titrating a new function:
-
-// AND THE RULE FOR WHICH CONSTRUCTS CAN SUPPLY A SITE AT ALL (2026-08-14,
-// measured on quickinfowindow and quickherowindow): A FORWARDING WRAPPER
-// SUPPLIES ZERO SITES, because it REPLACES the top-level call site it wraps -
-// only the nesting moves; only an EXTRA top-level call raises n. An
-// `AppendQuickWidget` in the armygrp `AppendSplitWidget` shape around a
-// `push_back` is byte-exactly flat by reference at inline_depth 2/3/default
-// across one, two and three call sites, costs 0.003-0.04 by value, and at
-// depth 0 or 1 holds `push_back` itself out of line and collapses to 53-90;
-// the `limit`/`t_limit` wrapper pair is byte-flat in quickherowindow for the
-// same reason; and this is the same fact as the rbegin note above.
-// Corollary for the other direction: `insert(end(), x)` is +1 site but ALSO
-// one nesting level shallower, so the 3-argument insert can newly expand -
-// which is why the conversion is byte-neutral in some bodies and catastrophic
-// (58.58 in quickinfowindow) in others.
-
 VA(0x004fb2a0, 0x385)  // dc 0xea2ec
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)

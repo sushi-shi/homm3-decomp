@@ -3914,12 +3914,12 @@ VA_COMPGEN(0x00423820, 0x87, STD_UNGUARDED_PARTITION, army_ptr_func_moves_before
 // COMDAT pairing: std::_Unguarded_insert<army*, func_moves_before>, 0.976.
 VA_COMPGEN(0x004237c0, 0x5E, STD_UNGUARDED_INSERT, army_ptr_func_moves_before)
 
-// Original: func_moves_before::operator(); ai.cpp:597, dc 0x28024.
 // CodeView fixes this ordinary non-const call operator. Retail compares
 // move order at army+0x190, then stack index at +0xf8, and returns a byte
 // with ret 8. The sort calls it at 0x4236be/0x4236d0/0x4236e2, while its
 // unguarded insertion helper expands the same comparison. The written body
 // owns this VA directly, replacing the former FUNCTOR_CALL enrollment.
+// E:\gamedcs\ai.cpp:597, dc 0x28024
 VA(0x004235c0, 0x44)  // retained comparator + CodeView identity
 unsigned char func_moves_before::operator()(const army* a, const army* b)
 {

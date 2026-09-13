@@ -428,7 +428,7 @@ public:
     // The only retail construction site (townManager::Open) expands this
     // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
     // call, followed by the derived vptr and resource-display stores.
-    // Original: CTownNetMsgHandler::CTownNetMsgHandler; townmgr.cpp:1830, dc 0x181418.
+    // E:\gamedcs\townmgr.cpp:1830, dc 0x181418
     CTownNetMsgHandler(TResourceDisplay* display)
     {
         m_resourceDisplay = display;
@@ -437,7 +437,7 @@ public:
     // is a source-local one-liner every caller expands: DoHall 0x5d27b0
     // emits the bare `mov [handler+0xc], bar` at both of its two
     // hand-over sites.
-    // Original: CTownNetMsgHandler::SetResourceDisplay; townmgr.cpp:1836, dc 0x181468.
+    // E:\gamedcs\townmgr.cpp:1836, dc 0x181468
     void setResourceDisplay(TResourceDisplay* display)
     {
         m_resourceDisplay = display;
@@ -5440,12 +5440,7 @@ void townManager::redrawTownScreen()
                                   WINDOW_SCREEN_HEIGHT);
 }
 
-// Drops the two hovered troop selections. The pair of strips it clears
-// is the constructor's +0x12c / +0x134, and the -2 it stores through
-// them is strip::current's own "nothing selected" sentinel - the same
-// value strip's constructor writes - which is what types those two
-// members. The four -2 stores share one register, as the signedness-CSE
-// lever predicts for a repeated small negative.
+// Clear both hovered troop selections; -2 means no slot is selected.
 
 VA(0x005d5530, 0x86)  // dc 0x176f24
 void townManager::resetStrips()
@@ -5608,10 +5603,6 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // / esi=window against our ebx=0 / esi=rows / edi=window) downstream of
 // the same decisions. A third dose is NOT titrated; findpath measured
 // both its extra doses losing, so stop unless the boundary moves.
-
-// The former setBuybuildPalette and clearBuybuildButtons helpers were
-// explicitly /Ob2 budget devices. Their message statements now live in
-// BuyBuild; the historical caller-mass probes above remain as evidence.
 
 // The buy-build window's prerequisite-text formatter. It starts from the
 // town's hierarchy mask for this building, drops the special free-Grail

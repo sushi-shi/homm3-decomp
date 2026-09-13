@@ -68,7 +68,7 @@ protected:
 public:
     int m_currentPlayerId;
 
-    // Original: type_town_threat_checker; ai_player.cpp:89, dc 0x2dd40.
+    // E:\gamedcs\ai_player.cpp:89, dc 0x2dd40
     type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
     virtual void clearMarks() const;
@@ -258,7 +258,7 @@ void type_town_threat_checker::markTown(town* ourTown) const
 }
 class type_garrison_purchaser : public type_town_threat_checker {
 public:
-    // Original: type_garrison_purchaser; ai_player.cpp:195, dc 0x2dfb8.
+    // E:\gamedcs\ai_player.cpp:195, dc 0x2dfb8
     type_garrison_purchaser(int newPlayer)
         : type_town_threat_checker(newPlayer) {}
     virtual void clearMarks() const;
@@ -883,12 +883,6 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 }
 
 #if 0  // @carcass
-
-// RESOLVED, 0x429d50: end_turn's prohibited-creature buffer, the retail
-// production/dwelling scans, and both Complete-only Easy-policy phases prove
-// fill_prohibited_array. The adjacent sum_player_dwellings helper is inlined
-// twice in retail. See the live 99.90% body above; no unclaimed row remains in
-// this ai_player span.
 
 // value_of_dwelling (dc 0x2f4b0) promoted to VA(0x0042b520) in RVA order above.
 // value_of_dwelling_upgrade (dc 0x2f548) promoted to VA(0x0042b5b0) above.
@@ -1709,9 +1703,7 @@ static int __cdecl maxBuyableCreatures(
 }
 
 // E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
-// Ordinary protected purchase_buildings boundary (DC public ...@@IAAXXZ),
-// called by end_turn at DC line 439.
-// Complete expands it in 0x428dd0 and extends the prohibited flag table to 145.
+// Complete extends the prohibited-creature table to 145 entries.
 DC_ONLY(0x31094, 0x60)
 void type_AI_player::purchaseBuildings()
 {
@@ -2005,10 +1997,6 @@ void aiArrangeArmy(armyGroup& current_army)
 {
     // @stub
 }
-
-// split_army (dc 0x325bc) promoted to VA(0x0042dd70) in RVA order below:
-// split_armies (0x42db20) calls it at 0x42dc72/0x42dd32, matching the DC
-// bsr=2 census exactly.
 
 // split_armies (dc 0x32670) is claimed in retail-RVA order below.
 

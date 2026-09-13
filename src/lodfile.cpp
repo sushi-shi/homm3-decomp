@@ -1,25 +1,6 @@
 // lodfile.cpp - E:\gamedcs\lodfile.cpp (compiland lodfile.obj)
 // 61 functions in link order.
 
-// Retail contribution: 0xfa590..0xfaeab. The TU head is LODFile::clear at
-//   0xfa590 (NOT 0xfa610 as first bracketed): levelupwindow's flank ends with
-//   two 8-byte point helpers 0xfa520/0xfa540 and the atexit thunk 0xfa570
-//   (registers border_vslot10 - none touch the LODFile layout). The tail is
-//   the STL-COMDAT row 0xfac40 (0x26b, vector<LODEntry> fill-insert, 32-byte
-//   stride, sole caller LODFile::open - excluded class, stays DC_ONLY);
-//   mainmenu's terrain.h $E head follows at 0xfaeb0.
-// 9 extern spine rows have no retail slot (every inter-claim gap is closed):
-//   getDataPtr - ordinary helper expanded into pointAt, with no retained
-//     retail body; restored from DC's call and retail's seek/index sequence.
-//   GetFileSize, exist, getErrorString, set_filemap, sort -
-//     no standalone retail references, /OPT:REF-stripped (the clear/flush
-//     logic of set_filemap survives only inlined in clear/open/~LODFile);
-//   compare - address only taken by sort, stripped with it (retail open has
-//     no qsort call);
-//   LODEntry::LODEntry - inlined into open's resize temporary (retail keeps
-//     its five zero stores), with no standalone linked row;
-//   LODHeader::LODHeader - visibly inlined in LODFile::LODFile at 0xfa780
-//     ("LOD" strcpy into this+0x11c, +0x120=500, 20 dwords zeroed).
 #include <va.h>
 #include <string.h>
 #include "lodfile.h"

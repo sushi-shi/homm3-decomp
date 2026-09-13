@@ -102,9 +102,7 @@ public:
         ROLLOVER_ID = 504
     };
 
-    // Original member: CHSInputDlg::field1 (DC class 0x4ad2, +0x4c).
-    // This is the first text-entry field, not an unresolved offset label.
-    // The proven four-byte wider PC base puts it at +0x50.
+    // First text-entry field; the wider PC base places it at +0x50.
     CHighScoreEdit* m_field1;
     // Before normalization: header1.
     textWidget* m_header1;

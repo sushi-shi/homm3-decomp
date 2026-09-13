@@ -22,13 +22,6 @@
 // FindFirstFileA/FindNextFileA/FindClose callers in the image are the
 // CRT _find* trio at 0x618113/0x6181df/0x618297.
 
-// Byte-derived closed-file idiom: in Write/Read/Seek/SeekBegin/
-// SeekEnd/SeekCur/GetPosition the guard's return path is a bare `ret`
-// with eax still holding the zero m_hFile (no xor), where Close and
-// GetLength (explicit FALSE / 0) do emit one. This does not prove a
-// pointer-to-integer cast: the 2026-09-09 VC6 control, with the canonical
-// HANDLE field and `return 0`, reproduced the entire TU's code and named
-// relocations. The former integer union arm was unnecessary.
 #include <va.h>
 #include <io.h>
 #include "winfile.h"

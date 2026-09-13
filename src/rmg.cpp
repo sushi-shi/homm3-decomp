@@ -1,8 +1,4 @@
 // rmg.cpp - Complete-only random-map generator support.
-// Evidence lookup spellings retained by the normalized river reconstruction:
-// CreateRiver, ResetMovementCosts, InsertRmgWorkItem, IsRiverTarget,
-// IsImpassable, SetMovementCost, ResetMovement; globals gRmgDirections,
-// gRmgShipyardWaterOffsets, gLandRiverDeltaIndex and gSnowRiverDeltaIndex.
 
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
@@ -2054,10 +2050,7 @@ type_object* type_black_box_spells_def::generate(TRmgObjectPropertiesRef* proper
     return object;
 }
 
-// Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.
-// Its allocation and base initialization match the ordinary factory, followed
-// by the proven ownable-object vptr 0x640aa4. All 83 bytes match while
-// preserving the real constructor.
+// Both dwelling-definition tables share this ownable-object factory.
 VA(0x00534790, 0x53)
 type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator*, TRmgZone*)

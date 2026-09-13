@@ -18,7 +18,6 @@ public:
     // CodeView ResourcePtr.h:44, dc 0x5b294: ownership byte +0, pointer +4.
     // Retail 0x41bd90 keeps those tests and dispatches virtual dispose;
     // objnames' state-0 unwind at 0x627890 calls this retained instance.
-    // Previously modelled separately as TTextResourceGuard.
     // VA instance: TResourcePtr<TTextResource>::~TResourcePtr
     VA(0x0041bd90, 0x12)  // anchor-eh 0x627890 for 0x41b500
     ~TResourcePtr()

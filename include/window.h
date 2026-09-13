@@ -35,10 +35,6 @@ struct THelpText {
     const char* m_rclick;
 };
 
-// The former TQuickViewTextRow began at the second word of a THelpText
-// row and treated the next row's first pointer as pad_04. Retail quick-view
-// selection now uses the canonical adventure help table's rclick member.
-
 // heroWindow::type flag bits. FIXED_LAYER and SAVE_BACKGROUND carry
 // homm2's WindowFlag names and values (byte-proven in Open/Close);
 // 0x10 is retail-only - SaveBackground pads the grab by 8 pixels and

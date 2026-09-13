@@ -3263,9 +3263,6 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
                 if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
-                    // CGiftMsg belongs to netmsg.h (DC line 828). Retail
-                    // 0x5ed651..0x5ed67d writes its giver/resource/quantity
-                    // payload at +0x14/+0x18/+0x1c, subtype 0x432, size 32.
                     CGiftMsg m(g_game->getLocalPlayerGamePos(),
                                g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);

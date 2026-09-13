@@ -45,13 +45,6 @@
 #include "town.h"
 #include "includes.h"
 
-// DC includes.h min/max (0x2da4/0x1ef28) return int by value after
-// calling the reference-returning selectors. Retail 0x4249a1's two argument
-// homes agree. The old templates returned references to their own parameter
-// copies: conflating these two layers was not a valid source reconstruction.
-// The eight-state ownership/valuation-helper family leaves every score fixed
-// except getResurrectionValue's initial 100 -> 92.9310. Naming its capped
-// result below restores 100 without the dangling reference or another wrapper.
 #include "homm3_minmax.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
@@ -449,10 +442,7 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
     }
 }
 
-// E:\gamedcs\ai_combat.cpp:437. Line 444 explicitly calls includes.h's
-// max (dc 0x1ef28). That wrapper owns the operand copies; calling the
-// reference selector directly is the negative control (78.0638%, missing
-// retail's second operand home). Preserve the wrapper and canonical selector.
+// E:\gamedcs\ai_combat.cpp:437
 VA(0x00424960, 0x65)  // dc 0x2a644
 long type_AI_combat_data::getFastestSpeed() const
 {
@@ -760,18 +750,6 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 }
 
 // E:\gamedcs\ai_combat.cpp:871
-// LOCATED: the body dispatches on choice->spell == 0x23 and calls
-// 0x4258a0 five times with (choice, this->my_hero, 0/1) - the
-// defender-side cast_enchantment, not cast_mass_damage_spell.
-// RECONSTRUCTED BUT UNSCORED: the labels overload-group dedup
-// (scripts/homm3/build/labels.py) pairs a claim group against the base
-// object's mangled group only when the counts match, and the sibling
-// three-argument cast_enchantment at 0x4258a0 is still @stub - so
-// neither pairs and objdiff reports 0. Hand-verified against
-// `sema disasm 0x425b10`: same CFG and same five call sites; our body
-// is 0xa0 vs retail's 0xb4 because retail tail-DUPLICATES four
-// epilogues our SP3 CL merges (the merged-return residual class
-// already recorded for path.obj / kbwin AppWndProc).
 VA(0x00425b10, 0xB4)  // dc 0x2af04
 void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {

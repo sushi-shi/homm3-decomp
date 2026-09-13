@@ -179,8 +179,8 @@ struct type_AI_puzzle_tile {
     unsigned char m_paddingAfterVisible : 5;
     char m_tailPadding[3];
 
-    // Original: type_AI_puzzle_tile::type_AI_puzzle_tile; puzzlewindow.cpp:279, dc 0x1154c4.
     // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
+    // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4
     type_AI_puzzle_tile()
     {
         m_objectType = 0;

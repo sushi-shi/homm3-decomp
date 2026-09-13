@@ -72,14 +72,10 @@ class resource {
 public:
     resource(const char* newName, EResourceType newType);
     virtual ~resource();  // slot 0
-    // Original: resource::get_resType / get_Name; resrce.h:33/34.
     EResourceType getResType() const { return m_resType; }
     const char* getName() const { return m_name; }
-    // Original: resource::AddRef; resrce.h:36, dc 0x122af0. Both the
-    // CodeView body and Complete's cache-hit paths increment this dword.
+    // E:\gamedcs\resrce.h:36, dc 0x122af0
     int addRef() { return ++m_referenceCount; }
-    // Original: resource::Release; resrce.h:37. Complete expands this
-    // guarded decrement into both base and sprite disposal paths.
     int release()
     {
         if (m_referenceCount > 0)

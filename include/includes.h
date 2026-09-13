@@ -63,7 +63,6 @@ public:
     std::vector<unsigned char> m_available;
     TPickANumber(int lowBound, int high);
     int pick();
-  // Original: TPickANumber::Pick (misc.cpp:849).
 };
 
 // E:\gamedcs\includes.h:175/178. The written inline constructor
@@ -72,7 +71,7 @@ public:
 class TPickRandomTownName : public TPickANumber {
 public:
     TPickRandomTownName() : TPickANumber(0, 15) {}
-    // Original: TPickRandomTownName::Reset; includes.h:178, dc 0xbc7ec.
+    // E:\gamedcs\includes.h:178, dc 0xbc7ec
     void reset()
     {
         for (int i = 0; i < m_available.size(); ++i)

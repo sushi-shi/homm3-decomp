@@ -790,7 +790,6 @@ void sRand(int seed)
     srand(seed);
 }
 
-// Original: SRandom; misc.cpp:796, dc 0xfe0d0.
 // CodeView proves both degenerate-range returns, then rand at line 805 and
 // the inclusive remainder at 806. Restore this ordinary source body instead
 // of three caller-local adapters to Random. Retail callers reach 0x50b230,
@@ -800,6 +799,7 @@ void sRand(int seed)
 // ?sRandom@@YIHHH@Z --no-build --why-bytes` agrees in every view, including
 // the rand relocation. The two source bodies can therefore share retail's
 // retained code without replacing SRandom's implementation with an adapter.
+// E:\gamedcs\misc.cpp:796, dc 0xfe0d0
 int sRandom(int lower, int upper)
 {
     if (lower == upper)
@@ -828,7 +828,7 @@ TPickANumber::TPickANumber(int lowBound, int high)
 {
 }
 
-// E:\gamedcs\misc.cpp:849. Original: TPickANumber::Pick.
+// E:\gamedcs\misc.cpp:849.
 VA(0x0050c740, 0x52)  // dc 0xfe190
 int TPickANumber::pick()
 {

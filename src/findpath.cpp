@@ -212,11 +212,6 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                            cell->m_groundSet, hasNomad);
 }
 
-// DC findpath.cpp:234/235 computes dest_x and the y coordinate, then line
-// 239 constructs type_point (dc 0x9f1e6) for the destination cell lookup.
-// Use that canonical constructor. The former make_terrain_destination helper
-// only controlled VC6's packed-field load scheduling; the historical exact
-// result with that wrapper does not prove a separate source operation.
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
@@ -1058,12 +1053,7 @@ void searchArray::setMoat(const army* currentArmy)
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
-// E:\gamedcs\findpath.cpp:1136, dc 0xa0970.
-// CodeView proves an ordinary searchArray member, not a free function with
-// an explicit search pointer. Lines 1137/1156/1159 name ValidHex, get_hex
-// and vector::push_back. Retail FindCombatPath expands this tail and retains
-// the native vector insertion call. The former free wrapper/pin was an
-// inline-budget experiment (73.5149 -> 78.9419%), not source ownership.
+// E:\gamedcs\findpath.cpp:1136, dc 0xa0970
 bool searchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
 {

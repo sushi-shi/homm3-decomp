@@ -550,13 +550,6 @@ int TViewArmyWindow::windowHandler(message& msg)
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg.m_codeX == widget::WIDGET_SELECT
             || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            // `text.assign(...)` at all seven help-text stores, not
-            // `text = ...`: basic_string::operator= is a forwarder to
-            // assign that CARRIES the assign call, so spelling the deeper
-            // level directly is worth 92.5744 -> 99.1520 here. Measured and
-            // rejected on top of it: `.append` for the four `text +=`
-            // stores (byte-flat) and a named `const std::string& rclick`
-            // for the default arm's subscript (72.70).
             int helpID = convertID2HelpID(msg.m_codeY);
             int resType = -1;
             std::string text;

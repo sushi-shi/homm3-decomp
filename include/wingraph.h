@@ -15,7 +15,6 @@
 // DC wingraph.cpp:235 names PixelFormat as _DDPIXELFORMAT; line 239 reads
 // its RGB mask members. Retail 0x6014f0 passes this complete 32-byte SDK
 // object at 0x68c850 to GetPixelFormat, then reads masks at +0x10/+0x14/+0x18.
-// Former split names: gPixelFormatPrefix, gColorMask68c860/864/868.
 DATA(0x0068c850) extern DDPIXELFORMAT g_pixelFormat;
 
 inline unsigned rgBto16(int r, int g, int b)

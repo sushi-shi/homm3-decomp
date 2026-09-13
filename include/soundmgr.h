@@ -438,29 +438,7 @@ extern "C" void __cdecl _endthread(void);
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
 
-// Header-ownership checkpoint, 2026-09-06: the canonical header body makes
-// VC6 expand additional callers and omit the retained 0x59a7d0 COMDAT.
-// Whole-tree exact count 3669 -> 3660; fuzzy 95.81 -> 95.69. Measured callers:
-// BinkManager::GetBinkFilePtr 100 -> 65.67, NextBinkFrame 92.92 -> 0,
-// LostGame 100 -> 50.18, StartMouseThread 100 -> 38.33,
-// SmackManager::NextSmackerFrame 90.73 -> 73.42, OpenSmackerTrack 100 -> 69.28,
-// VideoClose 100 -> 7.69, VideoSoundOnOff 100 -> 0,
-// townManager::Main 90.21 -> 88.48. Historical MAX values remain banked.
-// The prior ordinary .cpp definition retained the call decisions, but
-// contradicted the CodeView header owner; recover the natural caller/TU
-// inlining state without moving this body back or forcing its emission.
-// Recovery, 2026-09-09: the exact retained body is currently emitted in
-// singleselectionwindow.obj. Capture the stream after AIL_serve, as retail
-// does, and preserve its three ordered guards as nested scopes. This keeps
-// the retained member exact and recovers showVideo 67.8147 -> 94.1120;
-// every other tracked score holds across all 51 dependent TUs. The combined
-// guard control stays at 67.8147. No declaration or helper owner changes.
-// Definition-placement control: moving the existing Miles/global dependencies
-// before this class is code-identical; defining this same inline body inside
-// the class produces a second object identity but changes no tracked score
-// across all 51 consumers. NextBinkFrame still expands serviceSounds where
-// retail 0x44daa0 calls 0x59a7d0. Keep this placement and its proven guards.
-// Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
+// E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
 VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
 inline void soundManager::serviceSounds()
 {

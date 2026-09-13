@@ -269,7 +269,7 @@ void CMPInputDlg::disableOK()
 // constructor).
 class CMultiPlayerWindowEdit : public textEntryWidget {
 public:
-    // Original: CMultiPlayerWindowEdit::CMultiPlayerWindowEdit; multiplayerwindow.cpp:141, dc 0x101e00.
+    // E:\gamedcs\multiplayerwindow.cpp:141, dc 0x101e00
     CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
                            const char* text, const char* fontName,
                            font::TColor color, unsigned justification,
@@ -386,11 +386,11 @@ public:
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
-    // Original: CMPEdit::SetNextEdit; multiplayerwindow.cpp:269, dc 0x1020b4.
     // DC 0x1020b8 stores the argument at this+0x70.
+    // E:\gamedcs\multiplayerwindow.cpp:269, dc 0x1020b4
     void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
-    // Original: CMPEdit::SetPrevEdit; multiplayerwindow.cpp:274, dc 0x1020bc.
     // DC 0x1020c0 stores the argument at this+0x74.
+    // E:\gamedcs\multiplayerwindow.cpp:274, dc 0x1020bc
     void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
     virtual void setFocus(unsigned char state);
     virtual int onKeyPress(message* msg);
@@ -400,7 +400,7 @@ public:
 
 class CMPInputEdit : public CMPEdit {
 public:
-    // Original: CMPInputEdit::CMPInputEdit; multiplayerwindow.cpp:383, dc 0x102210.
+    // E:\gamedcs\multiplayerwindow.cpp:383, dc 0x102210
     VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
     CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
                  const char* fontName, font::TColor color,
@@ -538,7 +538,7 @@ inline unsigned char CMPInputDlg::onOK()
     return 1;
 }
 
-// Original: CMPInputDlg::DisableOK; multiplayerwindow.cpp:521, dc 0x10286c.
+// E:\gamedcs\multiplayerwindow.cpp:521, dc 0x10286c
 __forceinline void CMPInputDlg::disableOK()
 {
     getWidget(OKAY_ID)->enable(0);
@@ -549,7 +549,7 @@ __forceinline void CMPInputDlg::disableOK()
 // expand into CHotSeatEdit's two overrides below. DC proves that UpdateOK only
 // updates widget 519; OnKillFocus performs the following full-window redraw.
 // Marked `inline` so the TU emits no COMDAT for bodies the image does not have.
-// Original: CHotSeatDlg::OnKillFocus; multiplayerwindow.cpp:729, dc 0x102cc8.
+// E:\gamedcs\multiplayerwindow.cpp:729, dc 0x102cc8
 inline void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
@@ -1270,7 +1270,7 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
     return 1;
 }
 
-// Original: TMultiPlayerWindow::OnDirect; multiplayerwindow.cpp:2043, dc 0x101ca4.
+// E:\gamedcs\multiplayerwindow.cpp:2043, dc 0x101ca4
 inline unsigned char TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;

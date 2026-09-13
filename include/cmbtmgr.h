@@ -1020,8 +1020,7 @@ public:
     // then divides last-first by sizeof(TObstacle) for the bound. The
     // DC roster's std::vector<combatManager::TObstacle> COMDATs say
     // this really is a vector; only its first two members are proven.
-    // Original: Obstacles, std::vector<combatManager::TObstacle> in DC
-    // combatManager type 0x1ed7. Complete uses Dinkumware: allocator at +0,
+    // Complete uses Dinkumware: allocator at +0,
     // pointers at +4/+8/+0xc; TObstacle remains a 0x18-byte value.
     std::vector<TObstacle> m_obstacles;  // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
@@ -1906,8 +1905,8 @@ public:
     {
         return (y & 1) != 0;
     }
-    // Original: combatManager::GridY; CmbtMgr.h:1513, dc 0x27f34.
     // LF_MFUNCTION has no this type: this is a static header helper.
+    // E:\gamedcs\CmbtMgr.h:1513, dc 0x27f34
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
     static int gridX(int index)
     {

@@ -941,10 +941,9 @@ void TOverviewWindow::updateFlaggableIcon(int i)
     }
 }
 
-// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
-// DC refreshes two items and draws overWin through its global pointer.
-// Complete extends the loop to seven and retains ECX as the window receiver
-// at 0x51e7c2/0x51e7c7/0x51e7e2, matching the adjacent converted helpers.
+// Complete refreshes seven items through this window; Dreamcast refreshes two
+// through the global overview-window pointer.
+// E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
 {

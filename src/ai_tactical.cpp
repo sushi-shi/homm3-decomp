@@ -978,7 +978,7 @@ long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caste
                                          m_estimate.m_lowestDefense) / 3;
 }
 
-// DC ai_tactical.cpp:1158/1186. Original name: get_attack_boost_value.
+// DC ai_tactical.cpp:1158/1186.
 // Ordinary const overloads: callers expand them in retail; /OPT:REF drops
 // unreferenced retained bodies. Keep their source order before the callers.
 long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
@@ -1777,7 +1777,7 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 }
 
 // DC ai_tactical.cpp:2116-2129, dc 0x40130. Ordinary const helper;
-// protection value expands it in retail. Original name: get_duration.
+// protection value expands it in retail.
 double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
 {
     double result;

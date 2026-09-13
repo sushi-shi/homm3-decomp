@@ -7,7 +7,7 @@
 #include <va.h>
 #include "quest.h"
 
-// Original: InitializeSeerHutText; seerhut.cpp:50, dc 0x12cd28.
+// E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();
 
 class TAdventureMapWindow;
@@ -162,15 +162,14 @@ private:
     signed char m_nameIndex;
 
 public:
-    // Original: CompletedByPlayer (Dreamcast TSeerHut +0x11).
     // DC save 0x12d8c0 writes the old object in member order. Retail load
     // 0x574a90's version<28 arm reads artifact + reward, then preserves
     // this second legacy byte at +0x12 (store 0x574b01). The surrounding
     // bytes retain QuestCompleted/playerInfo/Type/NameIndex ordering.
-    // Previously field_12; Complete retains it through save/load even
+    // Complete retains this byte through save/load even
     // though completion behavior now belongs to the quest object.
     unsigned char m_completedByPlayer;
-    // Original: TSeerHut::TSeerHut; SeerHut.h:108, dc 0xf4b38.
+    // E:\gamedcs\SeerHut.h:108, dc 0xf4b38
     VA(0x00573580, 0x13)
     TSeerHut()
     {
@@ -197,7 +196,6 @@ public:
     std::string seerHutFn005741B0(int player) const;
     std::string seerHutFn005743E0(int player) const;
     std::string getSeerLogText();
-    // Original: TSeerHut::QuestActiveforPlayer; SeerHut.h:112, dc 0x3250.
     // Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
     // helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
     // Complete's virtual quest model replaces the latter byte with a live quest
@@ -205,6 +203,7 @@ public:
     // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
     // forms a named quest_text_row pointer for SeerHutList, while the exact
     // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
+    // E:\gamedcs\SeerHut.h:112, dc 0x3250
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {

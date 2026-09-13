@@ -12,15 +12,8 @@
 // deallocator as nothrow (the same header contract established by sample.obj).
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
-// E:\gamedcs\bitmap16.cpp:59. bitmap16.obj carries its own copy of the
-// magic-constant float->long helper palette.obj also defines; retail has no
-// out-of-line body because VC6 /Ob2 expands every call into the float
-// Colorize below, which is the only consumer left in this TU.
-// DC 0x50a9c line 62 updates the by-value double parameter; line 63 reads
-// its low word. Preserve that owner, as in bitmap24.cpp's ftol. A separate
-// result union makes eighteen expansion-local scratch slots and leaves
-// Colorize at 98.8301%; updating d allows reuse and gives 100%. The ordinary
-// static helper auto-inlines naturally; no forceinline declaration is needed.
+// Convert using the low word of the biased double representation.
+// E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c
 static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;

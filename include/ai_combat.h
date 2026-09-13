@@ -62,11 +62,7 @@ enum type_speed_catagory {
 //   +0x38 catagory    - get_attack's speed-band gate (0x4263d0).
 //   +0x3c value       - take_damage's per-creature divisor (0x423ec9).
 //   +0x40 total_value - the stack's remaining combat value.
-// Original names from Dreamcast 0x5d4f, corroborated by NH3API:
-// index, type, number, original_number, speed, melee_modifier,
-// final_melee_modifier, ranged_modifier, combat_value_per_hit, catagory,
-// value, total_value. The old hit_points names were misleading: the
-// population code computes value from baseFightValue and forceModifier.
+// Combat value is computed from baseFightValue and forceModifier.
 struct type_monster_data {
 public:
     long m_index;  // +0x00
@@ -150,7 +146,6 @@ class type_AI_combat_data {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const { return m_mana; }
-    // DC original: creatures (previous reconstruction: monsters).
     std::vector<type_monster_data> m_creatures;  // +0x00
     long m_terrain;  // +0x10
 
@@ -158,11 +153,8 @@ protected:
     long m_mana;  // +0x14
 
 public:
-    // DC original: can_cast_spells (previous reconstruction: can_cast).
     unsigned char m_canCastSpells;  // +0x18, natural padding to +0x1c
-    // DC original: total_combat_value (previous reconstruction:
-    // total_hit_points). initializeCreatures adds each unit's combat value,
-    // not its raw hit points (retail 0x424120; DC 0x29f58).
+    // Sum of the units' combat values, rather than their hit points.
     long m_totalCombatValue;  // +0x1c
 
 protected:
@@ -180,18 +172,14 @@ protected:
     long m_tacticsAdvantage;  // +0x20
 
 public:
-    // DC original: current_hero (previous reconstruction: my_hero).
     hero* m_currentHero;  // +0x24
-    // DC original: current_army (previous reconstruction: my_army).
     armyGroup* m_currentArmy;  // +0x28
 
 protected:
     hero* m_enemyHero;  // +0x2c
 
 public:
-    // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
     unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
-    // DC original: wall_speed_limit (previous reconstruction: penalty_distance).
     short m_wallSpeedLimit;  // +0x32
 
     type_AI_combat_data(const hero* newHero, const armyGroup* newArmy,
@@ -262,7 +250,6 @@ protected:
     long getNextChainLightningTarget(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
-    // DC original: has_creature.
     unsigned char hasCreature(TCreatureType creature) const;
     void inflictDamage(long damage, long blockerSpeed);
     long inflictMeleeDamage(long damage, long start, long speedLimit);

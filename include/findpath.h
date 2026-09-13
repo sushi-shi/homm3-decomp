@@ -32,31 +32,10 @@ enum type_search_type {
 // would round sizeof up to 32. Hence pack(1), the same tool hero.h
 // and mapcell.h already use.
 
-// BITFIELD WIDTHS (2026-08-08). The DC dump prints the whole word's
-// LF_BITFIELD records verbatim (dump.txt 0x2687..0x2695): eleven 1-bit
-// flags at 0..10, `direction` 4 bits at 11, `delta_x` 5 SIGNED at 15,
-// `delta_y` 5 SIGNED at 20, `flight_cost` 6 at 25 - 31 bits used. The
-// widths transfer; positions from can_stop onward move up one bit in retail.
-// The packed trailing fields are independently pinned:
-//   * visited stays at bit 0 - SeedCombatPosition (0x4b2da0) gates on
-//     `test cl, 1` against the same word.
-//   * direction is at 12..15, not 11..14: FindCombatPath (0x4b3400)
-//     WRITES it with `and eax,0xf; shl eax,0xc; and dh,0xf; or` and
-//     move_toward (0x41f580) reads it with `shr eax,0xc; and eax,0xf`.
-//     A 5-bit field at 11 would need the 0xf800 mask, not 0xf000.
-//   * flight_cost is at 26..31, not 25..30: both bodies test it with
-//     `test <dword>, 0xfc000000` and read it with `shr esi,0x1a`.
-// Retail's extra flag is bit 9, before can_stop and last_can_stop.
-// Dreamcast PushPoint (0x9f2a4, line 287) copies old_cell.can_stop
-// (bit 9) into point.last_can_stop (bit 10). Retail 0x4b1b0f..21
-// performs that same copy from bit 10 to bit 11 (mask 0x400, shift 1).
-// Path reconstruction uses last_can_stop to select the predecessor's
-// flying/ground cell. The previous layout had mistakenly parked the extra
-// flag at bit 11 and consequently assigned both stopping names one bit early.
-// Retail bit 9 marks starting on an adventure-map trigger: SeedTo sets it
-// before EnterTrigger, and AI_AttemptMove tests it at 0x430080 before
-// invoking DoAIEvent at the hero's current location. startAtTrigger is a
-// role-derived name for this PC-only flag; its original spelling is unknown.
+// Complete adds a starting-trigger flag at bit 9, shifting canStop and
+// lastCanStop to bits 10 and 11, direction to 12..15, and flightCost to 26..31.
+// Path reconstruction uses lastCanStop to select the flying or ground predecessor.
+// The trigger flag lets AI movement process an event at the starting tile.
 #pragma pack(push, 1)
 struct pathCell {
 public:
@@ -70,11 +49,9 @@ public:
     unsigned int m_townPortal : 1;
     unsigned int m_dimensionDoor : 1;
     unsigned int m_castleGate : 1;
-    // PC-only starting-trigger flag; previously misnamed can_stop.
+    // PC-only starting-trigger flag.
     unsigned int m_startAtTrigger : 1;
-    // Original: can_stop. Previously misnamed last_can_stop in this layout.
     unsigned int m_canStop : 1;
-    // Original: last_can_stop. Previously field_04_bit11.
     unsigned int m_lastCanStop : 1;
     unsigned int m_direction : 4;
     int m_deltaX : 5;
@@ -134,13 +111,11 @@ public:
     searchArray();
     ~searchArray();
     void close();
-    // Original: searchArray::get_hex; FindPath.h:194, dc 0x27fe8.
     // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
     // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
     // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
     // expansions of DC mark_enemy's get_hex call.
-    // The old getCellData name came from HD/NH3API; CodeView supplies the
-    // canonical name and const header ownership of this same body.
+    // E:\gamedcs\FindPath.h:194, dc 0x27fe8
     VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
     pathCell* getHex(long x) const
     {
@@ -148,7 +123,6 @@ public:
             return 0;
         return &m_cellData[x];
     }
-    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
     VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
     pathCell* getCell(type_point point, bool flying) const
     {
@@ -157,7 +131,6 @@ public:
         return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
                          * g_mapWidth + point.m_x];
     }
-    // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
@@ -233,15 +206,13 @@ public:
     {
         m_dangerZones = dangerZoneMap;
     }
-    // Original: searchArray::set_rectangle; FindPath.h:257, dc 0x37e84.
+    // E:\gamedcs\FindPath.h:257, dc 0x37e84
     void setRectangle(tagRECT& rect)
     {
         m_validRectangle = rect;
     }
 
 private:
-    // DC publics prove ordinary private methods returning bool/void/bool.
-    // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.
     bool buildCombatPath(const army* currentArmy, int startHex,
                          int endHex, int destination);
     // DC findpath.cpp:1187. ValidHex belongs to the ordinary helper;
@@ -322,14 +293,13 @@ private:
     long* m_dangerZones;
 };
 
-// Original: get_danger_cell; FindPath.h:265, dc 0x37e98. No retail row - /Ob2
-// folds it into every caller, ai_player.obj's get_danger_value included.
+// E:\gamedcs\FindPath.h:265, dc 0x37e98
 inline long* getDangerCell(long* dangerZones, type_point point)
 {
     return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
-// Original: searchArray::get_danger_value; FindPath.h:270, dc 0x37eec.
+// E:\gamedcs\FindPath.h:270, dc 0x37eec
 VA(0x0042ed30, 0x4E)  // dc 0x37eec
 inline long searchArray::getDangerValue(type_point point) const
 {

@@ -12,11 +12,11 @@
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 
-// Original: border::border; border.cpp:34, dc 0x5433c.
 // Ordinary source-local body. Retail expands it in the three derived
 // constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
 // constructor call and a single derived vtable store. No explicit inline
 // declaration is needed to expose this body to those same-TU callers.
+// E:\gamedcs\border.cpp:34, dc 0x5433c
 border::border() {}
 
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)

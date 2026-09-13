@@ -158,8 +158,8 @@ public:
                          int dh, int dpitch, bool hflip,
                          bool alpha) const;
     void setPalette(const unsigned short* pal);
-    // Original: CSprite::SetPalette; CSprite.h:259, dc 0x744e4.
     // Complete expands this wrapper in ResetPalette.
+    // E:\gamedcs\CSprite.h:259, dc 0x744e4
     void setPalette(TPalette16& pal)
     {
         if (m_p)

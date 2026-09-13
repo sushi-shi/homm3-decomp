@@ -401,24 +401,8 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+// The retained source name handles a resource request (RS_GIFT_REQUEST).
 // E:\gamedcs\advmgr.cpp:677
-// OPEN ATTRIBUTION, deliberately NOT acted on by this lane. Withdrawing
-// the row above shortens the bracket by one, and the two surviving
-// handler bodies then read as the OTHER member of the pair each is
-// currently claimed as:
-//   * 0x00406a20 (this row) reads exactly CGiftRequestMsg - m_greedyGuy
-//     at +0x14 and m_resource at +0x18, no quantity anywhere - and
-//     formats general-text row 360, GENERAL_TEXT_AI_SINGLE_RESOURCE_
-//     REQUEST. That is the REQUEST handler.
-//   * 0x00406bf0, claimed and byte-exact as HandleTradeRequestMsg, reads
-//     CGiftMsg's full triple (+0x14/+0x18/+0x1c), formats row 359
-//     GENERAL_TEXT_AI_GIFT_RECEIVED and CREDITS the local player's
-//     resource. That is the GIFT handler.
-// Both sizes land in band under the swap (455/516 = 0.88 and 506/604 =
-// 0.84) where the current mapping needs the 2.79x row above. Acting on
-// it renames a function that is currently EXACT and rewrites its
-// baseline row, so it belongs to whoever owns the netmsg attribution -
-// recorded here rather than done here.
 #endif  // @carcass
 
 VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
@@ -449,10 +433,8 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     resources.clear();
 }
 
-// The retained handler name receives RS_GIFT. Retail 0x406c2d reads
-// the donor at +0x14; 0x406cee/0x406cf1 and 0x406d5e/0x406d61 read
-// quantity/resource at +0x1c/+0x18, matching DC CGiftMsg, not the
-// two-hero CTradeRequestMsg. Former view fields: m_playerPos/m_amount.
+// The retained source name handles a gift (RS_GIFT), using its giver, resource,
+// and quantity payload.
 VA(0x00406bf0, 0x1FA)  // dc 0x6428
 void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
 {

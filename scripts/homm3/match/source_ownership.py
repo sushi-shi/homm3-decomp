@@ -253,7 +253,7 @@ def origin_hint(raw: str, start: int) -> tuple[str, int, str]:
         if m:
             origin_file, origin_line = source_file(m.group(1)), int(m.group(2))
         offsets = re.findall(r"\bdc\s+(0x[0-9a-fA-F]+)\b", line)
-        if offsets and line.lstrip().startswith('VA('):
+        if offsets and (m or line.lstrip().startswith('VA(')):
             dc_offset = hex(int(offsets[-1], 16))
     return origin_file, origin_line, dc_offset
 

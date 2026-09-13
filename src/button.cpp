@@ -351,17 +351,8 @@ int button::select(message& msg)
     return 2;
 }
 
-// Original: button::Deselect; button.cpp:401, dc 0x57854.
-// CodeView's Main calls this member at dc 0x57304/0x574ce/0x57676/
-// 0x576e0/0x57708. Its body owns the selected-bit early return/clear,
-// Draw, UpdateScreen, widget message, endDialog choice and qualifier reset.
-// Complete expands the same member in Main: the first copy clears +0x16
-// at 0x4561d6, draws at 0x4561dc, calls UpdateScreen at 0x456206, then
-// stamps the message and clears gLeftRightSave at 0x45620e..0x45623e.
-// The DC-only combat-screen offset arm at dc 0x5787a..0x578ba is absent
-// in that retail expansion. Keep the reference formal proved by CodeView.
-// Formerly DeselectSelected with an unsupported inline keyword copied from
-// the homm2 reconstruction; use the actual HoMM3 name and source position.
+// Complete omits the combat-screen offset adjustment used in Dreamcast.
+// E:\gamedcs\button.cpp:401, dc 0x57854
 int button::deselect(message& msg)
 {
     if (!(m_status & WIDGET_SELECTED))

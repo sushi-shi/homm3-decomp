@@ -1,29 +1,3 @@
-// mapcell.cpp - E:\gamedcs\mapcell.cpp (compiland mapcell.obj)
-// The ten-bit mask CObjectType carries at +0x34. Its own gate: only this
-// TU constructs a CObjectType, and this header's include closure is
-// measured.
-// SPAN AUDIT 2026-08-19, updated 2026-08-22 - the small compiler-generated
-// rows inside this compiland's claimed span (0x4fbf90..0x505b20) are:
-//   0x4fd1c0 24 B   header-inline ctor COMDAT (char + three zeroed dwords)
-//   0x4fca60 62 B   implicit TreasureData destructor - now claimed exact
-//   0x4fd460 88 B   `??_ENewmapCell` vector deleting destructor - now
-//                   claimed exact
-//   0x504260 46 B   excluded .CRT$XCU initializer for the file-scope
-//                   vector<int> InvalidPlacementList at 0x699690
-//   0x504290 42 B   its registered static destructor - now claimed exact
-//   0x5042c0 421 B  retail-only per-class object-type-index rebuild - now
-//                   claimed at its 99.8854 scheduling/pooled-symbol wall
-// The two larger rows (0x500de0, 0x502b60) are real game code with NO
-// Dreamcast counterpart: the DC roster for mapcell.cpp is exhausted (90
-// rows, every name present in this file bar two $E thunks), and 0x502b60 in
-// particular sits between readGarrisonData (dc line 3229) and readObject (dc
-// line 3290) where the roster has nothing at all. They require retail body
-// evidence, not an order-map. Both are now exact: 0x500de0 is
-// LoadShipyards, and 0x502b60 is SoD_transformRandomDwellings, which walks
-// the 16-byte-element vector at NewfullMap+0xc0, builds a `generator`, and
-// resolves each entry to a town alignment either by finding a matching
-// record in gpGame's 136-byte-stride pool at +0x98 or by calling
-// pick_alignment.
 
 #include <stdio.h>
 #include <string.h>
@@ -741,8 +715,7 @@ void NewfullMap::newfullMapFn004FD950(
     }
 }
 
-// E:\gamedcs\mapcell.cpp:679, dc 0xecb94. Original names: two_layers,
-// sprite_num. The clear calls retain their Dreamcast-proven public APIs.
+// E:\gamedcs\mapcell.cpp:679, dc 0xecb94.
 // Retail reads a signed short seer count and operates on this map's list.
 // The older TSeerHut::LoadSeerList (dc 0x12d854, seerhut.cpp:503) instead
 // accesses the global map and checks an int-returning seer loader; retail's
@@ -1282,7 +1255,6 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
     return size * size;
 }
 
-// Original: NewfullMap::readBoatData, mapcell.cpp:1095, dc 0xed984.
 // DC proves the ordinary helper, boatType/x/y locals and call order.
 // Retail readObject's BOAT arm expands this body and discards status.
 int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
@@ -1367,8 +1339,7 @@ int NewfullMap::readGeneratorData(
     return 0;
 }
 
-// Original: NewfullMap::readHolyGrailData, mapcell.cpp:1199, dc 0xedd14.
-// both read checks and -1/0 status; readObject discards the return, so retail
+// readObject discards the -1/0 status, so retail
 // eliminates the final padding-read comparison from its inline expansion.
 int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 {
@@ -1389,8 +1360,7 @@ int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
     return 0;
 }
 
-// Original: NewfullMap::readShrineData, mapcell.cpp:1224, dc 0xedde8.
-// count local and both read checks. Its discarded final status leaves only
+// The discarded final status leaves only
 // the second virtual read in readObject's retail expansion.
 int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
 {
@@ -2231,8 +2201,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     return count < sizeof(padding) ? -1 : 0;
 }
 
-// Original: NewfullMap::readShipyardData, mapcell.cpp:2383, dc 0xefe28.
-// count/padding locals and two guarded reads. Complete defers the later DC
+// Complete defers the later DC
 // trigger/terrain scan to loadShipyards; its readObject arm only initializes
 // the two boat coordinates after the reads, then discards the status.
 int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)

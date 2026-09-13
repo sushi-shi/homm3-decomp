@@ -436,7 +436,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
             m_occupied = flag != 0;
         }
         {
-            // Previously labeled coord; these serialized values are hero IDs.
+            // These serialized values are hero IDs.
             short heroId;
             infile->read(&heroId, sizeof(heroId));
             m_previousOccupyingHero = heroId;
@@ -986,12 +986,6 @@ type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }
-// Residual (84.04%): the frame is one dword LARGER than retail's (0x14 vs
-// 0x10) and retail keeps the sign-extended count in EBX across the reserve
-// expansion where we home it at [ebp-0x10]; the instruction stream is
-// otherwise identical. Tried and rejected: hoisting `change` out of the
-// loop (byte-flat), `while (count-- > 0)` (83.24), and an indexed
-// `for (int i = 0; i < count; ++i)` (72.56).
 VA(0x0049bc90, 0x151)  // dc 0x8dcd8
 unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {

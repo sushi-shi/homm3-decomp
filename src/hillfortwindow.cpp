@@ -34,18 +34,8 @@ DATA(0x00699194) static THillFortWindow* g_hillFortWindow;
 // aphlf4r/4g/4y string pool.
 DATA(0x0067f184) static int g_hillFortHoverId = -1;
 
-// Use game::GetCurrHero's canonical Game.h:991 body (dc 0x2ed4).
-// The former TU-local copy only existed while another lane owned game.h.
-// Recalculate/UpgradeSlot use the canonical Complete upgrade selector at
-// 0x529710 as well, including the base-map elemental exclusion.
-
-// Recalculate's DC lines 228/332 and UpgradeSlot's dc 0xd71d4 call
-// IsBaseCreature directly. Complete adds the base-map elemental guards at
-// 0x4e7f8d..0x4e7fbb, 0x4e8222..0x4e8240 and 0x4e858c..0x4e85ba.
-// Keep those guards at the call sites. The former CanUpgradeCreature wrapper
-// was introduced to influence VC6's load scheduling; that scheduling does not
-// establish a source helper boundary. Each query snapshots its type before
-// reading the map version, and keeps retail's low-byte test of the result.
+// Complete adds the base-map elemental exclusions to the IsBaseCreature
+// checks. Snapshot the creature type before reading the map version.
 
 // The three .rdata objects hillfortwindow.obj contributes, in retail's own
 // order: the per-slot upgrade-button icons indexed by TUpgradeSlot::state,

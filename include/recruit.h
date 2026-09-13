@@ -96,13 +96,8 @@ extern TRecruitWindow* g_recruitWindow;
 // keeps its promise not to drag <windows.h> into its five consumers.
 extern struct HMENU__* g_recruitSavedMenu;
 
-// Retail initialization 0x4ee430 calls ResourceManager::GetPalette
-// (0x55b3e0) with the game palette name and stores the result at 0x6aacb0.
-// The former SUnnamed6aacb0 was a partial TPalette16 view: its 0x1c-byte
-// prefix is resource, followed by 256 16-bit palette entries. Former
-// field_5a/field_64 are palette indices 31/36 (normal/selected recruit
-// borders); levelUpSelectionColor is index 45; playerColors starts at 64.
-// Former pad_00/pad_5c/pad_66/pad_78 belong to the base or palette array.
+// The game palette uses indices 31 and 36 for normal and selected recruit
+// borders, index 45 for level-up selection, and indices starting at 64 for players.
 extern TPalette16* g_unnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
@@ -165,10 +160,7 @@ public:
     heroWindow* m_errorWin;
     armyGroup* m_currArmyGroup;
     unsigned char m_currArmyGroupIsTownGarrison;
-    // Original: addIndex (Dreamcast recruitUnit +0xa0; NH3API agrees).
-    // The former pad_a0 started at +0x9d, spanning alignment plus one
-    // byte of this int. Natural alignment now places the full member at
-    // +0xa0, between the retail +0x9c flag and +0xa4 updateNeeded.
+    // Naturally aligned at +0xa0 between the +0x9c flag and +0xa4 updateNeeded.
     int m_addIndex;
 
     recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,

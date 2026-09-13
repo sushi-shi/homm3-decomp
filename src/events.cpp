@@ -333,13 +333,7 @@ void advManager::doEventLeanTo(hero* current_hero, NewmapCell* cell, unsigned ch
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2101.  DoEventLibrary was HELD BACK here at
-// 93.47% and is now LANDED EXACT further down this file - see the note
-// over its body.  The residual was never scheduling: the four +2 awards
-// are four inlined hero::AdjustPrimarySkill calls, which the Dreamcast
-// line table (dc 0x93bf8, source lines 2120..2123) names outright. The
-// five spellings rejected on the way are recorded at the landed body so
-// that no later lane re-titrates them.
+// E:\gamedcs\events.cpp:2101
 
 // E:\gamedcs\events.cpp:2140
 DC_ONLY(0x93d34, 0x7A)

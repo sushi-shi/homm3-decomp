@@ -22,23 +22,6 @@
 // DoorCanBeLowered (0x63268), and FreeArmies
 // (0x5e3d8, whose only caller is Close).
 
-// Promoted 2026-09-01 after rechecking the address-takes and named VC6
-// publics: 0x62890/0x628b0 are the Eagle Eye set's ctor closure/dtor,
-// 0x62920/0x62930 are TArcher's ctor/dtor, and 0x66260 is
-// TPickANumber's owner dtor.
-// These are class special members, not anonymous STL tails.  The /MT calls
-// around the Dinkumware tree's shared sentinel independently prove the
-// cmbtmgr.obj profile; the TPickANumber row is the Complete lowering of the
-// destructor boundary Dreamcast records at includes.h:134 (dc 0x63a18).
-// Promoted 2026-08-24 from the retail-only class: 0x639e0, plus the four
-// ordinary helpers at 0x65f20, 0x693a0, 0x69440 and 0x69e50. None has a
-// DC cmbtmgr.obj counterpart, so the unattested functions retain bootstrap
-// or address-ordinal names; their retail bodies and callers now prove their
-// complete roles.
-// Promoted 2026-08-24 after NextArmy closed: its two adjacent retail-only
-// helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
-// selected-stack fear check and strict move-order predicate are now fully
-// pinned by their bodies and sole caller.
 #include <math.h>
 #include <stdlib.h>
 
@@ -3629,13 +3612,6 @@ void combatManager::learnSpellFromEagleEye(int side)
 // The looted_artifacts parameter is a reference: DC's public mangling has
 // AAV (not PAV), despite an older roster rendering it as a pointer.
 
-// Historical probes: the former monolithic candidate's 0% was objdiff's
-// clamp (144 DELETE + 131 INSERT), not a rejected comparison. Removing
-// both appends scored 33.3711%. An equipped-insert pin and artificial
-// isUnlootableArtifact/lootEquippedSlot/lootBackpackSlot splits advanced
-// 0 -> 67.89 -> 84.56 -> 91.55 -> 100%. The splits changed VC6's inline
-// budget but had no independent source evidence; they are now removed.
-// These measurements predate restoring the canonical getters/push_back.
 VA(0x0046a070, 0x2D3)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)

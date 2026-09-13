@@ -1407,7 +1407,7 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
 // each expansion at 0x403f74..0x404083: that is the caller's receiver.
 // Keep the ordinary member and those ten source calls; the former static
 // helper moved receiver selection inside the wrong source boundary.
-// Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
+// E:\gamedcs\adventuremapwindow.cpp:1273, dc 0x1238
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
     widget* w = getWidget(id);

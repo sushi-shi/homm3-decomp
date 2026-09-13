@@ -1893,12 +1893,6 @@ void army::doFireShield(long damageAmount)
 // constructs a std::string it never uses (its dtor constant-folds
 // away over the known-null _Ptr; only the EH state betrays it).
 
-// The shared Vampire/Gorgon source is now the CodeView shape: seven
-// TTextResource::operator[] boundaries, four separate min statements, the
-// dead_vampires/damage_recovered locals, and the Gorgon Random loop in this
-// function. The former drain_amount and roll_death_stares helpers were
-// artificial /Ob2 budget controls with no Dreamcast rows.
-
 // Restoring that source initially moves the byte score through the expected
 // banked dip, but improves retail structure from 122/136 to 131/136 blocks,
 // missing blocks from 14 to 5, and branches from 67/71 to 69/71. The residual
@@ -2652,14 +2646,7 @@ hero* army::getOwner() const
     return g_combatManager->m_heroes[getOwningSide()];
 }
 
-// Original: is_natural_enemy; army.cpp:2708, dc 0x47944.
-// CodeView proves an ordinary free function with two TCreatureType values;
-// ComputeAttackerDamageBonuses calls it at dc 0x48ad8 (source line 3184).
-// Its six return arms at dc 0x4798a/0x479c8/0x479da/0x479ec/0x479fe/
-// 0x47a06 test the same creature pairs as Complete's expanded predicate
-// at 0x443475..0x4434e0, before the half-damage bonus at 0x4434e6.
-// Restore this canonical body after GetOwner and before GetAverageDamage;
-// the former computeHateFlag copy had a guessed name and inline qualifier.
+// E:\gamedcs\army.cpp:2708, dc 0x47944
 unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
 {
     switch (attacker) {
@@ -2979,21 +2966,8 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
     return damage;
 }
 
-// RETAIL-ONLY, no roster row anywhere: the numeric half of
-// ComputeAttackerDamageBonuses (0x443840, immediately below), carrying the
-// SAME five arguments - offense/archery factors, the hero spell bonus and
-// the get_adjusted_attack / get_adjusted_defense pair. The DC build has all
-// of this INSIDE its single 1410-byte ComputeAttackerDamageBonuses; retail
-// split it out because get_estimated_damage (0x443e30) needs the number
-// without the combat message and sound the wrapper adds. NAME IS A
-// BOOTSTRAP INVENTION, same class as get_estimated_damage below.
-// Historical probe (EXACT, 2026-08-26): the former compute_hate_flag
-// inline wrapper retained the singular text temporary's _Tidy call while
-// expanding the plural and text destructors. The real source helper is
-// is_natural_enemy (dc 0x47944), called at army.cpp:3184, dc 0x48ad8.
-// Its ordinary definition now lives in its original source position above.
-// Making total live before controller also recovered ESI/EDI allocation in
-// the final hero-bonus arm; preserve that separate lifetime observation.
+// Complete separates the numeric damage bonus from the combat message and sound
+// so estimated-damage calculations can reuse it. Dreamcast combines these paths.
 
 VA(0x00443320, 0x514)
 int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
@@ -3673,13 +3647,9 @@ void army::cancelIndividualSpell(int spell)
     }
 }
 
-// Original: army::CancelAllSpells; army.cpp:3802, dc 0x499ac.
-// Ordinary member, called by ProcessDeath at dc 0x49420. CodeView's body
-// walks positive spell durations and calls CancelIndividualSpell at dc
-// 0x499d4. Complete expands that member in ProcessDeath, with 81 spell
-// entries instead of DC's 80. Keep the canonical member and its source
-// position after CancelIndividualSpell; the former file-local wrapper
-// duplicated this identity only to control the caller's inline budget.
+// Cancel spells with positive durations. Complete has 81 spell entries;
+// Dreamcast has 80.
+// E:\gamedcs\army.cpp:3802, dc 0x499ac
 void army::cancelAllSpells()
 {
     for (int i = 0; i < 81; i++) {
@@ -4002,9 +3972,6 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
 {
     unsigned char canShootTarget;
     army* other;
-    // Dreamcast line 4163 positively identifies the shared can_shoot
-    // boundary. The former flagform twin duplicated this helper solely to
-    // protect an isolated score plateau and was not an original function.
     if (canShoot(0)) {
         canShootTarget = 1;
     } else {
@@ -4283,9 +4250,7 @@ void army::attackWall(int targetGridIndex)
     g_combatManager->turnOffHighlighter(1);
     TWallTargetId wall;
     {
-        // GetTargetWallIndex has an int retail interface and a DC enum
-        // result. Keep the representation bridge at this consuming call;
-        // the former wall_target_from_int was a reconstruction wrapper.
+        // GetTargetWallIndex returns int in Complete and an enum in Dreamcast.
         wall = TWallTargetId(getTargetWallIndex(targetGridIndex));
     }
     hero* controller = getController();

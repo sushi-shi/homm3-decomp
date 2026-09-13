@@ -1,16 +1,6 @@
 // strip.cpp - E:\gamedcs\strip.cpp (compiland strip.obj)
 // 5 retail functions in link order (of 8 DC procs).
 
-// Retail span: the spells->subwindow gap. The gap's head belongs to
-// spells.cpp's tail (the spell-id probe 0x5a93a0 and the std::map
-// _Lockit template bodies 0x5a9450/0x5a9570/0x5a9870 - the last two
-// are the bracket's two EH-prologue functions, neither strip's) and a
-// cinit run (guard byte 0x6abaa0, ten-iteration bitset initializers,
-// 0x5a9930..0x5a9d1f - excluded class). strip.obj's code is exactly
-// 0x5a9d20..0x5aa31d in DC source order; then subwindow.cpp opens
-// with its own cinit funclet at 0x5aa320 and the TSubWindow ctors at
-// 0x5aa340.
-
 // ~strip (DC :70) IS in retail, but not at an address this compiland
 // can claim: it is empty, so it compiles to a lone `ret` that /OPT:ICF
 // folded into the image-wide empty-body fold at 0x5bc690 (carve name

@@ -254,12 +254,8 @@ void extendedDialog(const char* text,
 // Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
 // three-column tables from it, then walk every row
 
-// Earlier residual (79.88%, before insert(end(), name) restored 100%):
-// a three-way register permutation and one inline decision, both downstream
-// of where `sheet` lands. Retail keeps it in EBX -
-// Original: InitializeSeerHutText; seerhut.cpp:50, dc 0x12cd28.
-// DC initializes the older fixed text table; Complete uses the spreadsheet
-// and separate column loader, but retains this initializer and its source owner.
+// Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
+// E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
 {

@@ -18,20 +18,6 @@
 // on C1XX symbol-handle position, and appending leaves every handle the
 // old include stream numbered alone.
 
-// textwdgt.h carries no call site in the bodies reconstructed so far -
-// it is here as INCLUDE-SET evidence, and it is measured. Adding
-// recruitUnit::Close below (specifically its `delete gpRecruitWindow`,
-// isolated statement by statement) shifts C1XX's type-handle stream by
-// one and costs recruitUnit::Update 90.84 -> 88.24, a pure
-// register-allocation flip: our CL parks the 0x3 widget code in esi
-// instead of the shared zero. Exactly one more type DEFINITION anywhere
-// in the TU puts it back, and it stays back for at least six (0 -> 88.24,
-// 1..6 -> 90.84), so this is the wide side of the plateau, not a knife
-// edge of its own. textWidget is the honest supply: retail's recruit.cpp
-// builds this dialog's text out of it in TRecruitWindow::TRecruitWindow
-// and add_creature_widgets, neither of which is reconstructed yet, so
-// its declaration belongs in this TU's include closure regardless.
-
 // button.h and border.h joined textwdgt.h 2026-08-14, on the same
 // standard and with the same kind of evidence, to buy back the handle
 // position ONE forward declaration in townmgr.h costs (see the +0x1b0

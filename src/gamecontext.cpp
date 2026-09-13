@@ -11,8 +11,6 @@
 // one reused stack temporary, then copies them into 0x699240..0x69924f.
 // Its successive masks are 1, 3, 5 and 15. Game and single-selection readers
 // index this table by the context selector and test individual feature bits.
-// The existing provisional name was gGameContextFeatures before normalization;
-// no surviving symbol supplies an original semantic spelling.
 
 // A plain four-element initializer naturally retains set for its last two
 // elements and reproduces the table's construction and stores. Retail retains

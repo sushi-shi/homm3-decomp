@@ -1689,15 +1689,7 @@ void ResourceManager::Expunge()
 
 #endif  // @carcass
 
-// Original: ResourceManager::GetFromCache; resourcemanager.cpp:2377,
-// dc 0x122928. CodeView names iterator i and the key-ctor/find/end/AddRef
-// sequence. Complete expands that sequence in its cache-first getters and sprite
-// frame lookup.
-// Earlier getter score/probe notes describe those expanded caller forms.
-// Those formerly repeated the helper body (GetBitmap816 also pasted the key
-// constructor). Keep one ordinary helper and the canonical name constructor.
-// The public std::map::find owns the lookup; its underlying tree helper
-// remains a separate library enrollment.
+// A cache hit adds a reference before returning the resource.
 resource* ResourceManager::getFromCache(const char* name)
 {
     TCacheMap::iterator found = g_resourceCache.find(name);

@@ -799,8 +799,8 @@ public:
     int m_townTypes[8];           // +0x5c
     FILETIME m_fileTime;          // +0x7c
 
-    // Original: CMapFileNameMsg::CMapFileNameMsg; singleselectionwindow.cpp:587, dc 0x147c78.
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
+    // E:\gamedcs\singleselectionwindow.cpp:587, dc 0x147c78
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
                     int* townTypes, FILETIME fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
@@ -824,7 +824,7 @@ public:
     // CheckMissingHeaders expansions fix the field order - and the
     // STORE order: number lands before flag on every expansion (the
     // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
-    // Original: CMapHeaderRequestMsg::CMapHeaderRequestMsg; singleselectionwindow.cpp:605, dc 0x147cec.
+    // E:\gamedcs\singleselectionwindow.cpp:605, dc 0x147cec
     CMapHeaderRequestMsg(unsigned char flag, int number)
         : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
     {
@@ -1060,9 +1060,9 @@ public:
     // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
     char m_errText[80];   // +0x28, format string
 
-    // Original: CBadVersionMsg::CBadVersionMsg; singleselectionwindow.cpp:773, dc 0x148038.
     // Both source builds construct the header, then copy the two bounded
     // strings. The retail reply sites use the same 20/80-byte bounds.
+    // E:\gamedcs\singleselectionwindow.cpp:773, dc 0x148038
     CBadVersionMsg(const char* version, const char* errText)
         : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
     {
@@ -1355,7 +1355,7 @@ unsigned char CNetPlayerHandler::SetComputer(int pos)
 
 // DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
 // fallback through it (lea into the computer bank).
-// Original: CNetPlayerHandler::GetCompPlayerInPos; singleselectionwindow.cpp:1089, dc 0x130654.
+// E:\gamedcs\singleselectionwindow.cpp:1089, dc 0x130654
 inline CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 {
     return &m_computerPlayers[pos];
@@ -1365,7 +1365,7 @@ inline CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 // on the not-found arm (DC B1 `mov #-1,r0; bra`) and the playerPos
 // load as the fall-through - the arm order UpdatePlayerPositions'
 // retail expansion keeps (found path in line, -1 jumps to the join).
-// Original: CNetPlayerHandler::GetGamePos; singleselectionwindow.cpp:1138, dc 0x130778.
+// E:\gamedcs\singleselectionwindow.cpp:1138, dc 0x130778
 inline int CNetPlayerHandler::getGamePos(unsigned long dpid)
 {
     int netPos = getNetPos(dpid);
@@ -1374,7 +1374,7 @@ inline int CNetPlayerHandler::getGamePos(unsigned long dpid)
     return m_humanPlayers[netPos].m_playerPos;
 }
 
-// Original: CNetPlayerHandler::GetNetPos; singleselectionwindow.cpp:1193, dc 0x130898.
+// E:\gamedcs\singleselectionwindow.cpp:1193, dc 0x130898
 inline int CNetPlayerHandler::getNetPos(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -1413,7 +1413,7 @@ void t_map_list_update::go()
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
-// Original: CNewPlayerUpdateProc::CNewPlayerUpdateProc; singleselectionwindow.cpp:1262, dc 0x14808c.
+// E:\gamedcs\singleselectionwindow.cpp:1262, dc 0x14808c
 inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 {
     m_dpid = dpid;
@@ -1422,7 +1422,7 @@ inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
     m_lastSendTime = 0;
 }
 
-// Original: CNewPlayerUpdateProc::IsFinished; singleselectionwindow.cpp:1341, dc 0x148338.
+// E:\gamedcs\singleselectionwindow.cpp:1341, dc 0x148338
 inline unsigned char CNewPlayerUpdateProc::isFinished() { return m_finished; }
 
 // DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
@@ -1657,7 +1657,7 @@ void CNewPlayerUpdateMan::tick()
 }
 
 // DC IsSendingHeaders; Complete expands it into each sort-button arm.
-// Original: CNewPlayerUpdateMan::IsSendingHeaders; singleselectionwindow.cpp:1517, dc 0x148928.
+// E:\gamedcs\singleselectionwindow.cpp:1517, dc 0x148928
 inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 {
     for (int i = 0; i < 8; ++i)
@@ -1667,7 +1667,7 @@ inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 }
 
 // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
-// Original: CNewPlayerUpdateMan::GetFirstAvailable; singleselectionwindow.cpp:1533, dc 0x148960.
+// E:\gamedcs\singleselectionwindow.cpp:1533, dc 0x148960
 inline int CNewPlayerUpdateMan::getFirstAvailable()
 {
     for (int i = 0; i < 8; ++i)
@@ -1677,7 +1677,7 @@ inline int CNewPlayerUpdateMan::getFirstAvailable()
 }
 
 // DC GetProc (protected there); the HeaderConfirmed body expands it.
-// Original: CNewPlayerUpdateMan::GetProc; singleselectionwindow.cpp:1544, dc 0x148998.
+// E:\gamedcs\singleselectionwindow.cpp:1544, dc 0x148998
 inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i)
@@ -1715,7 +1715,6 @@ public:
     public:
         unsigned char m_saved;  // +0x38
         CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
-        // Original: CChatSave::IsSaved, non-const; CodeView line 1631.
         unsigned char isSaved() { return m_saved; }
     };
 
@@ -1787,7 +1786,7 @@ public:
 // persisted prefs nickname, and the row's read-only name text widget
 // (id pos+345). player->sName on the not-found path is address arithmetic
 // only, exactly as retail compiles it.
-// Original: CEnterNameEdit::OnEnter; singleselectionwindow.cpp:1820, dc 0x149238.
+// E:\gamedcs\singleselectionwindow.cpp:1820, dc 0x149238
 inline int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
@@ -2611,21 +2610,6 @@ int CEnterNameEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
-// NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
-// restored OnKeyPress once; since then BOTH rows of the pair OSCILLATE
-// between 100.0000 and 99.89/99.87 per delink generation on a pure
-// data-name pairing deadlock (max accepted downward as needed, hist
-// keeps the peaks): the bytes are exact and the deltas are reloc names
-// only -
-// (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
-// the delinker names the merged retail cell 0x63a608 after
-// adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
-// two legitimate names - whichever the synth PDB picks, the other TU's
-// row shows the mismatch); (b) gLocalPlayerName's 0x698817 cell is not
-// carried by the delink data manifest, so the target side keeps the
-// flat data_298817. Closes only via a data-manifest change (a pipeline
-// contract, not a lane edit).
-
 VA(0x0057cee0, 0xFD)  // dc 0x149290
 void CEnterNameEdit::onKillFocus()
 {
@@ -3017,10 +3001,7 @@ void TSingleSelectionWindow::updateFilterWidgets()
         widgetSetStatus(m_randomMapOptions[7] + 0x14b, 0x10);
 }
 
-// The version-data guards in SetupLoadGameMode/SetupNewGameMode use VC6
-// std::auto_ptr<int>: an ownership byte followed by a pointer, with scalar
-// delete on scope exit (retail 0x57f330/0x57f740). The former TAutoPtr copy
-// added no operation; the canonical library owns these inline boundaries.
+// The version-data guards use std::auto_ptr<int>, which performs scalar deletion.
 VA(0x0057F330, 0x3E3)  // dc 0x13575c
 void TSingleSelectionWindow::setupLoadGameMode()
 {
@@ -6365,7 +6346,6 @@ inline int TSingleSelectionWindow::getThisPlayerGamePos()
     return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
 }
 
-// MATCHING (2026-09-04): 70.46 -> 98.49 on the DC line-table shape
 // E:\gamedcs\singleselectionwindow.cpp:6301
 VA(0x00588330, 0x462)  // dc 0x13f770
 void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
@@ -7328,22 +7308,9 @@ void CNewPlayerUpdateMan::requestMapHeaders(unsigned long dpid)
 
 VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 
-// The transfer opener: version-gate the sender (the short EX form
-// carries none - "1.0" stands in), build the never-sent CBadVersionMsg
-// reply and show the mismatch dialog on failure; otherwise arm the
-// transfer state and resize both header lists to the announced count
-// (the temps expand this ctor with the member ctors called - the
-// composition proof), then clear every row's received flag.
-// Residual (81.3): three inline-boundary/cosmetic classes - (1) the
-// clears: retail expands HeadersA's erase but keeps its degenerate
-// copy(Last,Last,First) as a CALL to the 787 B copy COMDAT 0x58f160,
-// and spells SelectionHeaders' teardown through the erase COMDAT
-// 0x58ef20 (a hoist+pin spelling of the second one measured 77.69 -
-// worse - the iterators' formation drifted); (2) size(): retail calls
-// the 0x58eab0 COMDAT five times where we fold two of the compares
-// inline; (3) the reply arm zero-registers: our CNetMsg ctor homes 0
-// in edi (callee-saved, reused for NormalDialog's zero pushes) where
-// retail uses eax and pushes immediates.
+// Reject incompatible sender versions before starting the header transfer.
+// The short message form has no version string, so it uses "1.0".
+// Starting a transfer resizes both header lists and clears their received flags.
 // E:\gamedcs\singleselectionwindow.cpp:7017
 VA(0x0058A440, 0x33E)  // dc 0x140f24
 unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
@@ -8793,7 +8760,7 @@ void TSingleSelectionWindow::onDeleteFile()
     }
 }
 
-// Original: CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler; singleselectionwindow.cpp:8758, dc 0x14514c.
+// E:\gamedcs\singleselectionwindow.cpp:8758, dc 0x14514c
 inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 {
     m_wasCompressed = 0;
@@ -9574,11 +9541,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
         g_saveHeader = 0;
     }
 
-    // DC line 4069 owns this guard. Complete folds the helper to zero bytes,
-    // but C1 still counts the real conditional source operation: flattening
-    // it made HeadersA call the outer row destructor (96.98%, 33/34 blocks),
-    // while this spelling expands that outer boundary, retains the nested
-    // SavedGameHeader destructor, and matches retail at 100%, 34/34.
+    // Dreamcast line 4069 guards this cache cleanup; the Complete helper is empty.
     if (!m_flag65)
         ResourceManager::delSprFromCache();
 }
@@ -9796,38 +9759,6 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // BY_VERSION is a LOSS - it expands there at every site, its two COMDATs
 // stop being emitted and both rows fall to 0.0000 - so only this one
 // carries it.
-
-// TWO source facts closed this row and all seven others in the sort block
-// (2026-09-06), and BOTH had been measured and banked the wrong way round
-// by an earlier lane that could only see one of them at a time:
-//   - the two `return _strcmpi(...)` arms are retail's shape, not the
-//     merged `int order` one. Alone the split arms measure 75.17 here
-//     against the merge's 83.89, which is why they were rejected; with
-//     BY_VERSION delegating to this body (see below) they are worth +11.0
-//     on BY_VERSION and +4.9 / +13.5 on its own _Unguarded_partition and
-//     _Unguarded_insert, +206 weighted bytes net. Retail cross-jumps the
-//     two tails HERE and does not cross-jump them inside BY_VERSION - one
-//     source, two emissions.
-//   - sa and sb are declared AHEAD of the two buffers. That is the whole
-//     of the remaining residual an earlier note attributed to a
-//     literal-CSE / this-homing register wall: with the pointers declared
-//     first, retail's double " " load, its [ebp-4] home for `this` and its
-//     recycled [ebp+8] slot for sb all appear together and BOTH
-//     comparators go EXACT. Declaring only sb ahead measures 73.31 here
-//     and 93.88 on BY_VERSION - the pair is the lever, not either half
-//     (the banked 82.94 for that variant predates the delegation).
-// COMDAT pairings against this compiland's own template instantiations,
-// each the only candidate of its exact size in singleselectionwindow.obj:
-// three vector copy constructors (102 / 141 / 135 B). They share one
-// authority key (`vector_vector`), so they join by content size, which is
-// unambiguous in both directions here.
-
-// SIZE ALONE IS NOT A PAIRING, and 0x58ea00 was the counter-example: it is
-// the only unclaimed 110-byte row in this span and _Tree<int,
-// type_map_hero_info>::_Erase is the only 110-byte COMDAT this obj emits,
-// yet that claim scored 12.15%. Reading the body settled it instead - the
-// 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
-// reconstructed above.
 
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 

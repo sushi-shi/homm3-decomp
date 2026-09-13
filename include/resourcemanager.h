@@ -62,7 +62,6 @@ int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // getItemIndex finds the named entry, then returns that entry's +0x14 size.
 int getBitmapResourceSize(const char* name);
 
-// Original: ResourceManager::GetFromCache, resourcemanager.cpp:2377.
 resource* getFromCache(const char* name);
 
 }
