@@ -188,16 +188,6 @@ public:
 };
 SIZE(type_horde_effect, 8);
 
-// One canonical town setup record, formerly split into TownExtra and
-// TScenarioTown. Dreamcast supplies TownExtra and its member identities;
-// retail readTownData (0x5019f0) proves the expanded PC layout: object
-// reference at +0, armyGroup at +0x1c, custom-name flag at +0x54,
-// std::string at +0x58, full town-type word at +0x68, formation byte at
-// +0x6c, and two bitsets at +0x70/+0x7c. NH3API corroborates these offsets.
-// Former pad_054 contained the custom-name flag/string; pad_069 held the
-// upper town-type bytes, formation flag, and alignment. Former pad_006 and
-// pad_01a are natural alignment. Generated copy/destructor bodies skip the
-// gaps, so they are implicit. No pointer-union view is needed by town.cpp.
 class TownExtra {
 public:
     int m_objRef;
@@ -244,14 +234,6 @@ SIZE(TownExtra, 0x88);
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
 class TTownEvent;
 
-// The 1i64 << n building-bit table every mask builder indexes (DC
-// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
-// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
-// every i < 48, so the four "mask" globals this header used to carry
-// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
-// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
-// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
-// - extern only, no DATA claim (the gpWindowManager pattern).
 extern __int64 g_bitNumber[];
 
 class town {
@@ -286,15 +268,6 @@ public:
     // dock square" sentinel the CanBuildDock family tests.
     unsigned char m_dockSite;
     unsigned char m_dockSiteY;
-    // +0x0a..+0x0b is alignment padding, NOT a member: retail's own
-    // ??4town COMDAT (0x4d3df0) copies +0x00..+0x09 as ten byte moves
-    // and goes straight to the dword at +0x0c - a named pad array here
-    // makes the synthesized memberwise assign COPY it (as a byte loop),
-    // which is what kept ??4town off retail's shape. Removed 2026-08-27;
-    // the same applies to the former pads at +0x15/+0x35/+0x42/+0xc1.
-    // The hero standing inside the town, -1 for none.
-    // remove_garrison_hero moves this id into visitingHeroId and hands
-    // the hero to hero::PlaceInMap; SwapHeroes exchanges the pair.
     int m_garrisonHeroId;
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
@@ -303,15 +276,6 @@ public:
     // BuildBuilding re-reads it with movsx at both spell-count loops
     // and guards them with `cmp cl,1 / jl`.
     signed char m_mageLevel;
-    // +0x15 alignment padding (retail's ??4town skips it).
-    // +0x16, fourteen shorts - the accumulated population of each
-    // dwelling slot, base then upgrade, the same 14-wide slot space
-    // generatorBonus and gTownDwellingCreatures use. Sliced 2026-08-08
-    // by increase_population (0x5bfdd0), which walks `[this+0x16]` with
-    // a two-byte step for exactly fourteen iterations (`cmp di,0xe`)
-    // and adds each slot's growth rate into it as a WORD. 0x16 + 14*2
-    // == 0x32, so the row fills the head of the old pad exactly. Name
-    // provisional (no DC symbol covers it); the role is byte-proven.
     short m_population[14];
     char m_isGrouped;
     unsigned char m_manaVortexFull;
@@ -367,18 +331,6 @@ public:
     armyGroup m_garrison;
 
 protected:
-    // +0x118, fourteen dwords - one per dwelling slot, base then
-    // upgrade. Sliced 2026-08-08 by change_generator_bonus (0x5bfe50),
-    // which is also what fixes the extent from both ends: it indexes
-    // `[this + 4*slot + 0x118]` for the slot it finds in this town's
-    // 14-wide gTownDwellingCreatures row, and adds the same change to
-    // `[this + 4*slot + 0x134]` when slot < 7 - and 0x134 is exactly
-    // 0x118 + 4*7, so the second store is this array's upgrade half,
-    // not a separate field. 0x118 + 14*4 == 0x150, where `built`
-    // starts, so the row fills the old pad exactly. Name taken from
-    // the DC method that writes it; role provisional.
-    // Spelled 14 rather than TOWN_DWELLING_SLOTS because ETownConstants
-    // is declared below this class; the .cpp uses the named constant.
     int m_generatorBonus[14];
 
 public:

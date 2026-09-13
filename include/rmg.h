@@ -666,10 +666,6 @@ struct TRmgGroundTileData {
     unsigned m_riverFlipY : 1;
     unsigned m_roadFlipX : 1;
     unsigned m_roadFlipY : 1;
-    // Retail cell writer 0x532972 maps this bit to flag 0x40 in the
-    // seventh H3M cell byte. Reader 0x4fe220 uses that flag to create
-    // non-water ANCHOR_POINT cells: this is the coastal marker.
-    // Role-derived name; completes recovery of former unknown15.
     unsigned m_coastal : 1;
     // BuildRoadCostMap proves these two Complete-only routing flags at bits
     // 22 and 25.  The first marks an object entrance whose adventure-object

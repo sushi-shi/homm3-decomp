@@ -330,12 +330,6 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 }
 
 // E:\gamedcs\ai_tactical.cpp:511
-// DC 557 assigns the shooting combat value, then 560 subtracts the
-// non-shooting value into the same function-scope double combat_value.
-// Splitting the former combined expression restores that ownership and raises
-// 84.3750% to 92.6167%. Compound and explicit self-subtraction are identical;
-// all sibling scores stay fixed. The remaining allocation/CFG delta is open.
-// Prior local hoists and separate doubles did not test this statement boundary.
 VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
 long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 {
@@ -1100,9 +1094,6 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
     return 0;
 }
 
-// three-operand selector used in the earlier flattened implementation.
-// The canonical AI_value_of_morale boundary now owns that work; its caller
-// retains the negative controls below, and the unused local selector is gone. The two remaining edits were
 VA(0x00438170, 0x142)  // dc 0x3e50c
 long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data caster) const
 {
@@ -1514,24 +1505,6 @@ long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
 
 // The work chance is the FLOAT round-trip (`fild dword / fstp DWORD /
 // fmul dword`), not the double one, as in get_damage_value.
-
-// Residual (96.9%): the two odds-ladder terms are EVALUATED in the
-// opposite order. Retail computes `(odds - time + 1) * total / odds`
-// first, spills it to [ebp-0x20] while it computes the new_time term,
-// then `sub ecx,eax / add value,ecx`; our CL computes the new_time term
-// first (its operand is already live in ESI from the cap) and reloads
-// `time` for the second. The arithmetic, the immediates, the two idivs
-// and the final combine all agree - only which term lands in a register
-// first differs, and it follows from retail parking `time` in EDX
-// across the cap where our CL parks it in EAX and loses it to
-// `lea eax,[ecx+1]`. Register-homing family.
-// Tried and rejected: naming the first term in its own local, and
-// naming the whole difference - both byte-identical at 96.8602, VC6
-// folds either back into the expression. Hoisting the loop index's
-// declaration above `time`, and carrying a named `oldTime` alias
-// through the cap, are byte-identical too; initializing that index
-// before the target-time call worsens the same body to 96.02 because
-// retail does not start its lifetime there.
 
 // Three edits took this from 74.62: inverting the null-target test so
 // the zero arm is the FALL-THROUGH (`if (target == 0) { effect = 0; }
@@ -2190,23 +2163,6 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // which is why neither can be factored into a shared function without
 // putting a body in the image retail does not carry.
 
-// Residual (95.5%): the `last` flag is MEMORY-HOMED on our side and
-// register-merged on retail's. Retail sets EAX to 1 at the loop exit,
-// jumps a cold `xor eax,eax` block in from the end of the function for
-// the break path, and stores AL to choice->field_20 ONCE; our CL gives
-// the flag a stack slot, stores 0 into it on the break path and reloads
-// it at the merge - four instructions and a `jmp` more. Everything else
-// in the body agrees, including both choose_melee_action calls, the
-// field_3c/40/44 reads and the find_AI_targets tail.
-// Tried and rejected: `unsigned char last` instead of `long last`
-// (95.5371 vs 95.5486 - the full-word local is marginally closer but
-// still homed). A shared static helper would give retail's
-// two-paths-merge-in-EAX shape, but the two call sites test different
-// conditions, so there is no single helper to write.
-// RE-TESTED 2026-08-20 with the is_last_action() helper this TU now
-// carries (it is what takes consider_resurrect 94.46 -> 97.10): here
-// it costs 10.7 points, 95.5486 -> 84.8629, so retail's teleport arm
-// really does spell the walk out. Two call sites, two shapes.
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 {
@@ -2380,31 +2336,6 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 // should_attack_now opens with, and retail memory-homes its index the
 // same way.
 
-// Residual (89.1%): ONE callee-saved role, and everything else follows
-// from it. Retail parks `this` in ESI (spilling it to [ebp-0x4] and
-// reloading it there at each loop tail) and gives EDI to the `choice`
-// reference; our CL parks `this` in EDX - using ESI as the scratch for
-// the armies[side] address arithmetic and the count test first - and
-// then hands ESI to `choice`. Every downstream difference is that swap
-// renaming registers, including the `creature_spell` load: retail
-// `mov dl,[esi+0x1d] / test dl,dl / setne al` against our
-// `xor eax,eax / cmp byte ptr [edx+0x1d],al / setne al`. That is the
-// same "flag falls through to DL or CL" delta get_disease_value
-// documents, and its note already records that the flag's register
-// follows from surrounding pressure rather than from the spelling - so
-// naming it does not reach this. why-reg --model: bindings agree at
-// every first definition (the divergence is the DEFINITION ORDER, base
-// #0 esi@12 vs ref esi@5), and the value that must move is `this`, a
-// parameter - the model's own criterion for "no local spelling reaches
-// it". Register-homing family.
-// Tried and rejected: `&gpCombatManager->armies[side][0]` instead of
-// the sibling's `gpCombatManager->armies[side]` for the loop base
-// (byte-identical at 89.0901).
-// DC ai_tactical.cpp:2705 (0x41308..0x4131e) directly indexes
-// akCreatureTypeTraits for the victim's base hit points. Retail expands
-// the same lookup at 0x43b000/0x43b006 (116-byte row, hitPoints at +0x4c).
-// Keep it here; the former creature_base_hit_points wrapper had no
-// evidenced source boundary.
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
 {
@@ -2854,15 +2785,6 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
-// DC3201/3202 calls cannot_attack and get_spell_time before one continue;
-// DC3206/3207 likewise groups target/can_shoot/target_time before continuing.
-// Preserve those canonical helpers and their source scopes. This lowers the
-// former pasted-check body's 95.2778% to 91.3222%; the residual remains the
-// census loop's register assignment, not a semantic difference. Separate
-// guards are byte-flat. A current-record pointer/reference gives 90.0222%;
-// row/index lifetime and for/while controls give no improvement. Retain the
-// before-memset fixed first-army pointer: retail never advances it, so every
-// iteration deliberately re-examines armies[side][0].
 VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
 void type_AI_spellcaster::setMeleeEnemies()
 {
@@ -2914,20 +2836,6 @@ void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_arm
 // so retail's source spells all three out here. Writing them as members
 // would put two bodies in the image that retail does not carry.
 
-// Residual (87.7%): register colouring only - branch sequences AGREE
-// (homm3 sema diff --branches), and every instruction, immediate and
-// call site matches unmasked. Retail colours gpCombatManager/our_army/
-// the attacks[] cursor as esi/edx/edi and materialises the entry zero
-// in EAX (the one the two rep stosd already need); our CL takes
-// ebx/edi/esi... with EDX for the manager and parks a second zero in
-// ESI, which renames the whole body and lets it keep the manager live
-// where retail re-loads it for the inner bound. Same class as
-// set_melee_enemies' own 95.3% residual, which permutes the same three
-// registers. Tried and rejected: `field_14 = field_18 = 0` chained
-// (87.73, identical), the two clears moved BELOW the memsets (84.86),
-// and subscripting armies[side][i] / armies[enemy_side][j] instead of
-// advancing pointers (69.70 - retail strength-reduces both loops, and
-// only the pointer spelling reproduces it).
 VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
 void type_AI_spellcaster::findEnemyAttacks()
 {

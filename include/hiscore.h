@@ -15,7 +15,6 @@ class Bitmap816;
 class highScoreManager : public baseManager {
 public:
 
-
 // ResetHighScores 0x4e8fb0 zeroes exactly 22 0x64-byte records, then copies
 // two 41-byte strings and parses the dwords at +0x54/+0x58. AddScoreToHighScore
 // 0x4e91d0 stores difficulty at +0x5c and its one-byte cheat latch at +0x60;
@@ -73,9 +72,7 @@ DATA(0x0069955c) extern int g_showHighScore;
 static void updateCreatures();
 class CHighScoreEdit : public textEntryWidget {
 public:
-    // Before normalization: nextEdit.
     CHighScoreEdit* m_nextEdit;
-    // Before normalization: prevEdit.
     CHighScoreEdit* m_prevEdit;
 
     // DC179 and its retained public prove writable string-pointer parameters
@@ -87,9 +84,7 @@ public:
                    font::TColor color, font::EJustify justification,
                    char* backgroundIcon, int backgroundFrame, int id,
                    int style, int readType, int insetX, int insetY);
-    // Before normalization (function): CHighScoreEdit::OnKeyPress.
-    // DC195 takes message&. The current shared textEntryWidget pointer
-    // interface still needs a coordinated base/override/caller correction.
+    // DC195 takes message&; the shared text-entry interface still uses message*.
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
 };
 SIZE(CHighScoreEdit, 0x78);
@@ -104,9 +99,7 @@ public:
 
     // First text-entry field; the wider PC base places it at +0x50.
     CHighScoreEdit* m_field1;
-    // Before normalization: header1.
     textWidget* m_header1;
-    // Before normalization: rollover.
     textWidget* m_rollover;
 
     // DC293..326 places the constructor body in hiscore.cpp. The declaration
@@ -114,14 +107,9 @@ public:
     // DC301 forwards maxChars1 to CHighScoreEdit; retail passes 40.
     CHSInputDlg(int maxChars);
     virtual ~CHSInputDlg();
-    // Before normalization (function): CHSInputDlg::WindowHandler.
     virtual int windowHandler(message& msg);
-    // Before normalization (function): CHSInputDlg::OnWidgetDeselect.
-    // Before normalization (locals): bExitFlag.
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CHSInputDlg::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
-    // Before normalization (function): CHSInputDlg::OnOK.
     bool onOK();
 };
 SIZE(CHSInputDlg, 0x5c);

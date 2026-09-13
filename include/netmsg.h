@@ -691,10 +691,6 @@ public:
 };
 SIZE(CMCDeadHero, 0x1c);
 
-// The old model called this 0x20-byte 0x424 record CMCTeleportHero. The
-// Windows dispatcher proves it is the next ladder entry, CMCRecruitHero:
-// hero id at +0x14, point at +0x18 and player position at +0x1c. Dreamcast
-// independently publishes the same three-member class and constructor.
 class CMCRecruitHero : public CMapChange {
 public:
     int m_heroId;

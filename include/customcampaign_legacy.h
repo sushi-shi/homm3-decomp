@@ -10,7 +10,7 @@
 // Dreamcast hero's complete field order, with one-byte packing after the
 // proven 0x18-byte base, reproduces every retail conversion offset and the
 // 0x462 stride exactly. The gaps below therefore retain the old fields,
-// including identifyLevel, which the current hero no longer stores here.
+// including identifyLevel, which the current hero stores elsewhere.
 #pragma pack(push, 1)
 struct LegacyCampaignHero : public type_obscuring_object {
     short m_mana;                              // +0x018
@@ -126,8 +126,6 @@ struct LegacyCampaignSave {
     unsigned char m_secretActive;
     unsigned char m_customCampaign;
     int m_numScenarios;                         // +0x0005
-    // Dreamcast CampaignFilename[61], bScenarioChoosable[8], bMapChoosable[32].
-    // The former 101-byte array incorrectly combined all three declarations.
     char m_campaignFilename[61];                // +0x0009
     unsigned char m_scenarioChoosable[8];        // +0x0046
     unsigned char m_mapChoosable[32];            // +0x004e

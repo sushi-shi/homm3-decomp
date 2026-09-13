@@ -40,16 +40,6 @@ enum type_creature_bank_guard_shape {
 // is kept opaque until initialize_creature_bank names its reward fields.
 struct type_creature_bank_level {
     armyGroup m_guards;
-    // SLICED out of the old pad 2026-09-05 by initialize_creature_bank
-    // (0x47ad90), the only body that reads any of it. Its opening copy is a
-    // `rep movsd` of 14 dwords for the guards, a second of seven for the
-    // resource row, then one dword at +0x54 and one byte at +0x58 - the same
-    // prefix type_creature_bank carries. The six trailing bytes are all read
-    // as SIGNED chars: +0x59 is the weight the level roll walks down, +0x5a
-    // the upgrade roll's threshold, and +0x5b..+0x5e are four artifact
-    // counts whose names come from the class argument each loop hands
-    // game::GetRandomArtifactId - 2, 4, 8 and 16, walked in that reverse
-    // order. Those four names are PROVISIONAL; nothing attests them.
     int m_resources[7];
     TCreatureType m_rewardCreature;
     signed char m_rewardCreatures;

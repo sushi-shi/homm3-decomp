@@ -132,12 +132,6 @@ public:
 // so the caller can chain.
 std::istream& operator>>(std::istream& is, TObjectType& objectType);
 
-// Shared registry at 0x69cb80, guard 0x69cb64. GetImageName's empty-name
-// static has a separate guard at 0x69cb70, proving a shared accessor boundary.
-// That does not prove an inline declaration: C2 classifies this ordinary
-// helper's static as kind 8. The former inline definition made it kind 7,
-// preventing propagation of rows.end() and assigning its temporary EAX
-// where retail uses EDX. See docs/vc6/regalloc.md for the byte-verified trace.
 static TObjectImageNameTable& getObjectImageNames()
 {
     static TObjectImageNameTable imageNames;
@@ -573,42 +567,6 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 
-// Retail catch handler 0x514ff3 belongs to this function: the admitted
-// extent is 644 bytes (0x284), including its 17-byte tail.
-// Residual (73.33% after boundary correction): inside the resize value's TObjectType constructor,
-// retail calls bitset<48>(unsigned long) at 0x5154a0 and expands operator~
-// into its copy plus flip call. The candidate expands the value constructor
-// and calls operator~. It also retains TImageInfo's default constructor and
-// expands one vector::size query that retail calls. The throw/catch and
-// stream-construction EH states already agree.
-// 2026-09-06 controls are byte-flat: implicit resize default, explicit
-// TObjectType() second argument, and a named defaultObject; moving the
-// ordinary TObjectType constructor into this TU is also byte-flat. The
-// default value's expression/lifetime and constructor definition placement
-// do not explain the remaining nested decisions in this build. The exact
-// unsigned-long overload is confirmed from the retail 97-byte callee; a
-// zero-argument bitset constructor would erase a real source boundary.
-// Main-branch controls also measured .flip(), .set(), and default-ctor
-// variants of the bitset initializer. The default constructor can score
-// higher but erases the unsigned-long constructor that retail calls; keep
-// that boundary. The apparent gain is not evidence for the default overload.
-// Current trace: the TObjectType child budget starts at 121, expands the
-// unsigned-long bitset constructor (cost 95), then rejects complement and
-// TImageInfo (cost 42 each) at the remaining 26. Explicit m_imageInfo() and
-// an ordinary TU-local constructor definition are byte-flat. VC6 rejects
-// aggregate initialization of TImageInfo with C2552; its bitset members make
-// that source form unavailable. No constructor or helper changes retained.
-// The real tree-erasure callers now retain _Inc without the former artificial
-// emission wrapper; removing that wrapper is flat across every claimed body.
-// Eight count/row getText versus operator[] and implicit/explicit-zero
-// istrstream-length controls are also byte-flat and emit no ulong bitset ctor.
-// Defining the known {8,6} sentinel in this TU preserves both retail loads
-// and is byte-flat across every function; it does not change this boundary.
-// A minimal record with no user-declared constructors still fails C2552
-// when aggregate-initialized with a point and omitted bitset members.
-// An explicit 0UL argument in the passable-mask initializer is also flat
-// at 73.3263% across this TU and emits no ulong constructor; argument
-// conversion is not what selects the nested inline boundary.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {

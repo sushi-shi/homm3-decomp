@@ -2324,15 +2324,7 @@ void swapManager::swapMons()
     source->swap(m_sourceArmySlot, destination, m_destinationArmySlot);
 }
 
-// E:\gamedcs\swapmgr.cpp:2072
-// Dreamcast preserves the message local, primary-skill and army-widget loops,
-// then the update_all_slots helper call in this order. Complete /Ob2 expands
-// that final helper to the same nested UpdateSlot walk seen in both callers.
-// Direct member expressions in canonical hero::getPrimarySkill reproduce
-// this entire body. The former signed-byte accessor temporary had 25 aligned
-// blocks (24 exact-sized), differing scratch registers and an end-of-side MOV. A
-// named primary-skill temporary and hoisting `side` beside `i` both compile to
-// the same 89.35% bytes; the accessor's source expressions resolve that delta.
+// E:\gamedcs\swapmgr.cpp:2072, dc 0x15ea00
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
 void swapManager::update()
 {

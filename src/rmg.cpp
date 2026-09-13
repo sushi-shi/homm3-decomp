@@ -2716,53 +2716,6 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
             delete m_objectPrototypes[type][prototype];
 }
 
-// rand_trn.txt supplies one rule per nonempty row starting at row three.
-// The two 232x10 vector grids group rules and subtypes by remapped object
-// type and preferred terrain. The final reverse scan gives later rows
-// precedence for the same subtype. Names are provisional; RMG is absent
-// from the Dreamcast build. Retail fixes the record stride at 0x4c.
-// Residual (99.5723%): the rule push_back expands single-value insertion
-// into the count overload, adding one push of 1 where retail calls the
-// retained single-value wrapper at 0x536701. The checked bitset subscript
-// recovers the exception string constructor and the rule's stack homes;
-// direct .test is the 97.5804% negative control.
-// A 48-case append/mask/row-scope/scalar-lifetime matrix and a 32-case
-// independent scalar-append follow-up retain all five exact rule-vector
-// bodies below. Two scalar insert(end(),value) calls with the remaining
-// push_back yield reader 99.5723%; all three direct insertions give 97.3075%.
-// These ordinary public calls recover the parent and child boundaries
-// without changing a library definition. Bank those unchanged-source MAXs
-// separately. A 54-case count-one
-// insertion follow-up does not improve either reader form. No pin remains.
-// A later 60-state container/terrain-array/range-fill family has 31 code
-// identities; twelve direct-insert controls plus the unchanged body have
-// eight, and 54 empty scalar-vector constructor/append forms have thirty.
-// None exceeds 99.7862%. Twelve zero-count constructor forms retain the
-// single-insert call (90.49..92.08%) but add operator new(0)/_Ufill calls
-// absent from retail; the best also grows the frame by four bytes. The minimal
-// direct insert(end(),rule), even without a named iterator, gives 98.0754%
-// and still retains count-insert. All 124 distinct source bodies pass the
-// independent parsed-score/last-matching-rule oracle; retain this source.
-// Sixteen supported empty-temporary/shared-allocator forms (eight code
-// identities) and sixty first-character/row-receiver/row-lifetime forms
-// (sixteen identities) also retain count-insert and do not raise any score.
-// VC6 rejects the parenthesized direct-temporary smoke corner; that failed
-// population is not counted. The five completed families cover 198 distinct
-// bodies, all checked by the parsed-value oracle, without resolving this call.
-// Earlier source controls: initialize row before the vectors, increment it
-// before rule destruction, and explicitly zero both resize calls. Reuse
-// objectType/subtype/terrain across parsing and binding to preserve escaped
-// homes; the old-count reverse scan matches retail. An index-taking rule
-// constructor instead shifts the EH state past the id assignment, so keep
-// default construction followed by assignment. Signed/unsigned prototype
-// indices and combined/nested reverse-loop conditions are byte-neutral.
-// Removed inline-depth diagnostics (1 at push_back, 2 at .test) were also
-// byte-neutral at 97.5804%; the canonical library definitions stay in use.
-// The current eight-state JSON batch confirms that any two scalar insert
-// calls retain both uncovered rule fill/copy_backward bodies at 100%.
-// All push_back scores 99.7862% here but emits neither helper; one insert
-// scores 96.2627% and also omits them. Keep two insertions (99.5723%) and
-// the proven helper boundaries, with the former caller peak in history.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -4807,18 +4760,6 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-// Complete-only terrain coordinator. Borrowed level maps and their brushes
-// have separate lexical lifetimes: underground rock, surface water, then
-// one brush per non-water zone. Progress advances before those destructors.
-// Prior peak (94.0933%): all 36 CFG blocks align. The byte-valued boundary
-// query restores the retail shr/test dl sequence (direct field: 93.01%).
-// The underground map cleanup expands vector deletion where retail calls
-// it; the per-zone cleanup expands in both. Borrowed-map construction and
-// brush-call operands retain scheduling differences. Keep the RAII scopes.
-// The shared borrowed-constructor items/width/height store order closes island
-// painting while moving this unchanged source to 92.2015%. Its ordered 18-call
-// stream is unchanged; the pre-existing underground cleanup over-expansion
-// remains. Retain the prior MAX/HIST rather than inventing a caller-local ctor.
 VA(0x0053E6A0, 0x337)
 void type_random_map_generator::paintZoneTerrain()
 {
@@ -8350,18 +8291,6 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     return 1;
 }
 
-// Complete-only coordinator: weighted rounds select the least-used active
-// value band. Each gets three ordinary attempts, then three alternate
-// attempts before retiring that band. Failed placements release each object
-// through its retained virtual operation before deleting it and resetting.
-// Residual (72.3117%): weighted selection/retry branches agree; reset and
-// vector cleanup expansion leave 60 blocks against retail's 57. The shared
-// reset's dimension snapshots improve this caller together with assembly
-// and reset itself. Its separate 74.6342% peak uses outline resize(0), but
-// loses the stronger reset body. Direct band indexing measured 63.5881%
-// before this inline state; that is a prior probe, not a permanent bound.
-// Preserve the group constructor/reset, virtual cleanup and ordinary helper
-// calls while recovering the remaining caller-specific expansion decisions.
 VA(0x00547360, 0x460)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
@@ -8864,107 +8793,6 @@ void type_random_map_generator::markRiverTargets()
         m_progress->advance(1000);
 }
 
-// The Complete RMG has no Dreamcast counterpart.  Retail nevertheless fixes
-// the whole source-level algorithm: two parallel vectors form a descending
-// cost worklist, four cardinal neighbours relax a randomized Dijkstra search,
-// and the predecessor chain is then painted back from the first river target.
-// The water-wheel caller at 0x549870 and object type 143 selected below prove
-// the river role; the method spelling remains provisional.
-// Retail reuses ESI for every in-bounds neighbour, then tests that same tile
-// at +0x4b7 after the worklist empties.  A separate nextMapItem leaves the
-// final test on the preceding tile and can skip painting a found river.
-// The saved position is reused at +0x53e before the mouth temporarily replaces
-// nextPosition; the delta-direction scan explicitly stops at four directions.
-// The neighbour scan compares a strength-reduced direction-table address
-// with signed JL at +0x491: its source induction variable is the integer
-// direction (0, 2, 4, 6), not a pointer. The pointer loop lowers this to JB
-// and scores 40.29%; restoring the signed index reaches 65.44%. Keeping the
-// canonical coordinate addition also preserves the returned temporary;
-// spelling its component sums directly scores 64.38%.
-// Its point operand is by value: this restores the first-iteration jump over
-// the coordinate reloads and the full relaxation register flow (84.00%).
-// With const-ref, those loop edges differ and the checkpoint is 81.24%.
-// Indexed landPage access keeps _Xran out of line and removes the extra
-// 0x24-byte exception frame (68.45%); direct test() leaves it expanded.
-// The three seed predecessors copy one explicit invalid position, retaining
-// its z home across the first two inserts as retail does (71.86%). Keeping
-// the invalid x/y/z writes directly on each tile instead leaves 68.45%.
-// Keep the reset helper's initial position separate from the worklist position:
-// its out-of-line constructor receives its address. Ending that lifetime
-// lets VC6 remove the relaxation setter's redundant predecessor snapshot,
-// preserve the queue insertion's distinct next-position copy, and recover
-// retail's 0xbc-byte frame (71.47%, with 71.86% banked). A separate but
-// unscoped reset position leaves a 0xc8-byte frame and scores 71.31%.
-// The shared reset helper recovers the seed/worklist vector boundaries.
-// Test blockedDirections as a bitfield at both uses: retail tests AH before
-// shifting and keeps the four-bit mask in each direction test. A cached
-// unsigned value instead normalizes the field up front (75.23% vs 74.77%).
-// The one-bit river/impassable predicates return byte values: bool queries
-// restore all three SHR/TEST-byte sequences (76.51%); unsigned-char queries
-// are identical, while direct field tests select dword masks.
-// The terrain filter compares the field directly: its equality-only uses
-// lower to retail's AND 0x3f (81.24%). A named signed terrain local, even
-// const, instead retains SHL/SAR sign extension (79.82%). The delta-path
-// terrain local remains signed because it is also used as a bitset index.
-// Residual: early-return vector destruction still expands beyond retail.
-// River-target setters/markers are byte-flat. Delta copy constructors,
-// reference components and a TPoint base are also flat. Giving TPoint an
-// empty destructor adds cleanup states absent from retail; using a trivial
-// TPoint for the delta table removes retail's atexit call. Neither resolves
-// the ordered static initialization, so keep the existing type boundary.
-// Map-view body assignments/accessors, explicit final return and a shared
-// zero-cost seed initializer do not restore early cleanup. A separate
-// painting scope changes the frame to 0xac; explicit position copy members
-// change it to 0xb0/0xc8 and lose retail CFG blocks. These are not substitutes
-// for the missing natural boundary. At 81.24%, C2 measures caller cb=1530:
-// the early empty _Destroy helpers cost 49 but receive 68/65. Later map
-// cleanups already retain/expand correctly at budgets 91/251 for cost 97.
-// With the value operand, an empty position destructor changes the frame to
-// 0xd4 and adds four CFG blocks. Default invalid coordinates retain 0xbc but
-// disturb later cleanup. Coordinate/cost getters retain only one early
-// _Destroy and over-expand final map-item cleanup; their 84.22% is not proof
-// of that interface. Loop-local indices, delta constructor body/visibility,
-// a const delta table, a predecessor setter and volume regrouping are flat.
-// A three-dimensional size query leaves an extra GetSize call; output
-// references spill the map pointer instead of retail's height. Moving the
-// map-view ownership write to the end does not recover the constructor.
-// The real virtual GetSize slot (0x532240) returns the two-dimensional size;
-// using it here retains a virtual call absent from retail's reset sequence.
-// With the grid reset recovered, reference dimensions on the map-view ctor
-// do not settle the painter entry: signed refs score 81.50% and lose the exact
-// water-border caller; unsigned refs preserve that caller but score 85.73%
-// without restoring the missing load order. The value signature stays.
-// A copy-and-increment translation body also loses the matching loop flow
-// (76.72%); keep the returned coordinate construction.
-// Direct erase() calls expand even further (61.45% before the seed-copy
-// correction). An explicit predecessor copy and const by-value parameter
-// are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
-// rejected; a combined reset/cost setter and by-value position assignment
-// also fail the reset's constant-cost and copy sequence.
-// Additional controls with the grid reset: reusing the seed position or
-// shortening its scope leaves the cleanup mismatch (84.93/85.34%). Empty
-// sized-vector constructors lose reset/seed regions and may grow the frame
-// to 0xc0. A grid projection constructor and canonical delta addition do not
-// recover the painting lifetimes. A const prototype query scores 86.40% but
-// removes two CFG blocks; named bitset references/results also fail to restore
-// the retained range-check pointer. None is evidence for replacing the
-// current interface or hiding the early vector cleanup mismatch.
-// Paired seed-append helpers retain neither early _Destroy call (84.07%
-// with a value cost, 83.87% with a reference cost; unused-helper control flat).
-// A map/level view overload also misses the painting construction order
-// (80.32%); naming the plane buffer first loses the exact reset homes.
-// Tail-local positions and named grid temporaries remove the z snapshot in
-// some forms but still change the painting stores. Scalar tail lookup reaches
-// 86.24% and restores the final shared cleanup, while incorrectly merging
-// the early return into it and growing the painting loop to 24 instructions
-// versus retail's 21. This is not proof of replacing the position overload.
-// The terrain painter's default-then-assigned grid lifetime does not transfer
-// to the river's start/drawing arguments: separate controls grow the frame to
-// 0xc0, and applying both reaches 86.41% with a non-retail 0xc4 frame.
-// Boolean snow/ownership fields and moving the buffer store into the view's
-// initializer are byte-flat, as is consuming the predecessor assignment result.
-// A grid point built directly from the predecessor instead repeats coordinate
-// loads before lookup (84.75%); it does not recover the retail painting loop.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiver(TRmgMapPosition source)
 {
@@ -9259,7 +9087,6 @@ unsigned char type_random_map_generator::generate()
     for (zone = 0; zone < m_zones.size(); ++zone) {
         placeZoneTreasures(m_zones[zone]);
         if (m_progress)
-            // Retail +0x331 loads 0x1af4 (6900), not the former 7000.
             m_progress->advance(6900 / m_zones.size());
     }
     if (m_map.m_numberLevels > 1)
@@ -9278,40 +9105,6 @@ unsigned char type_random_map_generator::generate()
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
 
-// Canonical VC6 bitset definitions replace nine TU-local test, _Xran, and
-// reference specializations carrying twelve inline-depth pins. Retail retains
-// _Xran for the 128/144/156-bit tests and set for the 129-bit output iterator;
-// the canonical source currently expands them. Removing only the three test
-// copies measures 87.5157%; removing all nine measures 77.9030%, versus
-// 93.2864% with the copies. Every other game-function score is unchanged, but
-// bitset<129>::set stops emitting here. Its identical canonical COMDAT is
-// still emitted and claimed in customcampaign.cpp.
-// The copies are not source evidence for natural nested inlining; keep the
-// original library calls and recover their retention at the caller boundary.
-// Earlier removal of three TU-local string-constructor pins was byte-neutral
-// in ReadObjectPlacementRules; those canonical definitions also remain in use.
-// Historical peak (95.71%): all 164 CFG blocks and all 87 branches align;
-// 152 blocks also have exact emitted sizes.  The remaining twelve are local
-// lowering differences.  Retail's frame is 0x318 versus 0x310 here and its
-// legacy-artifact copy preserves one extra two-word end iterator.  Directly
-// naming all three iterators and default-constructing then assigning the first
-// each regress to 95.66%; making the iterator non-trivial regresses to 93.97%
-// and destroys the matching tail CFG.  Those source-false forms remain out.
-// Canonical library ownership: use the pinned VC6 XSTRING constructors and
-// BITSET test/_Xran/reference definitions. Eleven application-local explicit
-// specializations previously copied those bodies and pinned their nested
-// calls; they were not recovered RMG source and have been removed.
-// The earlier constructor-only negative control measured 95.70% -> 94.10%,
-// grew the frame from 0x32c to 0x334, and added three target-only calls. That
-// explains the old workaround, but does not establish those specializations
-// or the rewritten _Xran temporaries as original application definitions.
-// With all eleven replacements removed, the caller measures 76.5336% versus
-// the preceding 95.6987% (MAX retained). The verified source comparison shows
-// the remaining frontier in library call/expansion decisions and exception
-// paths: 176 candidate blocks versus 164 retail, with 93 versus 87 branches.
-// RMG's retained bitset<129>::set comparison also loses its emitted body
-// (MAX 100). Preserve the canonical library definitions through these dips;
-// no application specialization or inline pin is evidence for fixing them.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {

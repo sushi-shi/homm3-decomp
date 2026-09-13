@@ -640,27 +640,6 @@ static long getDayBonus(EGameResource resource, long weekBonus, long day)
 }
 
 // E:\gamedcs\game.cpp:643
-// DC proves references for the mine, town, player and const hero records,
-// scoped references to seven-element production arrays (but a pointer in the
-// town arm), shared long i/player_id loops, and the EGameResource resource
-// local. IsHuman at line 784 is the canonical range-clamped query. Restoring
-// these interfaces is byte-flat at 95.0560%; the array references and original
-// handicap/index lifetimes then restore retail's 0x20 frame and reach 97.58%.
-// DC lines 699..709 enclose BOTH treasury and pond income in the Rampart,
-// day-one guard. Retail's two branches skip both contributions too; the former
-// pond-outside spelling was a behavior mismatch, not block cross-jumping.
-// Restoring that guard makes the branches agree (97.47%). DC line 753 tests
-// the hero specialty type before line 756 reads its resource. Removing the
-// premature cached resource and retaining that guard raises the score to 98.79%.
-// The shared resource enum and get_day_bonus's enum parameter are byte-flat.
-// Residual (98.79%): only the two constant active-building mask expansions
-// schedule their loads differently. All 71 blocks, 42 branches and named calls
-// agree. The handicap high-word relocation is an addend alias.
-// Earlier controls: omitting IsHuman's bounds clamp lost two retail branches;
-// treating pondAmount as signed emitted jle/movsx rather than jbe/zero-extension.
-// The day-bonus remainder uses (day - resource + 6) % 7 in both builds;
-// discarding resource broke its signed loop branch. Volatile counters lost
-// heavily, and extra counter-address/production-pointer carriers were flat.
 VA(0x004b8af0, 0x573)  // mine/town/player production consumers, dc 0xa3474
 void game::calculateProduction()
 {
@@ -843,23 +822,6 @@ int game::saveSignPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Dreamcast proves function-scope count, x and char_buffer locals; Complete
-// adds the saved-game-version branch below. Reusing count for the pool byte
-// and the three trailing bytes is also visible in retail's single [ebp-8]
-// home. A separate scoped poolCount was a 99.9487% local maximum. Restoring
-// char_buffer's function lifetime keeps its [ebp+0xb] byte live across the
-// inlined resize and prevents VC6 from borrowing that argument word, closing
-// all 25 blocks. Source-shape debt remains: Dreamcast records x as int, while
-// this best non-volatile spelling needs unsigned int. Both a plain signed comparison and
-// an explicit unsigned comparison with int x change the resize inline graph
-// and measure 93.58%; that negative result does not by itself prove skew.
-// Residual (98.8718%, re-audited 2026-09-07): 24/25 blocks are exact and the
-// only five instruction rows are VC6 coalescing the adjacent legacy type and
-// amount bytes into one word load. The historical 100% checkpoint made the
-// legacy record volatile; that codegen shaper is prohibited and stays removed.
-// Testing the fields directly scores 92.16 and perturbs all following register
-// choices; nesting amountValue under the first test is byte-identical to the
-// current plateau. Neither is a source-supported replacement.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
@@ -1287,13 +1249,6 @@ void playerData::clearNetInfo()
     m_isLocal = 0;
 }
 
-// The map and save streams both store hero ids as one unsigned byte.  Their
-// two retained /Gr helpers differ only in the legacy-version predicate:
-// Each ordinary helper owns one body, also visible to inlining callers.
-// Former readMapHeaderHeroId/loadSavedHeroId definitions duplicated these
-// implementations with extra inline qualifiers; no separate ABI exists.
-// original-format maps remap at exactly version 14, while saved records remap
-// every version before the Complete roster landed at version 25.
 VA(0x004ba1c0, 0x50)
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 {
@@ -2093,23 +2048,6 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             weights[heroClass] = 0;
     }
 
-    // Residual (98.9815%): all 60 blocks and every branch agree, but retail
-    // binds the gpGame pointer/value pair to EAX/ECX here and this SP3 compile
-    // chooses ECX/EAX, then hoists alignment across the compare. Measured and
-    // byte-flat on 2026-08-22: nesting this first guard, naming either the
-    // gpGame pointer or f_1f698 value, and reversing it to `2 <= f_1f698`.
-    // The 2026-08-30 Dreamcast pass restored raw-NB11 local names, order and
-    // aligned_count's function lifetime without moving these bytes. Its
-    // THeroClass hero_class type is dc-only: VC6 SP3 rejects enum `++`, and no
-    // Windows operator++ is attested. This is register scheduling, not
-    // missing flow or permission to flatten the recovered source shape.
-    // why-reg v2's bounded negative control named each of three nearby flags
-    // (`counts[hero_class] == 0`, `total_count == 0`, and the preferred-class
-    // test); all three were byte-flat at distance six, classifying the residual
-    // as C1 front-end handle order rather than a missing source value.
-    // DC line 2335 resets total_count for the later class-weight sum; reuse
-    // that original local rather than introducing a separate totalWeight.
-    // This lifetime correction is byte-flat at 98.9815%.
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2684,29 +2622,6 @@ int game::GetSaveGameHeaders(void* infile)
 //     hoisted out of the pin. With the recompute of `count * 28`,
 //     85.1473 -> 86.7504.
 
-// Historical copied-pool controls (before restoring the source helpers):
-// 86.7504 -> 90.0926, 2026-08-20, and the note it replaces was wrong to
-// call the merged-return class unreachable (game::Save carries the full
-// write-up of the lever). Retail emits 39 numbered cleanup sites here and
-// we emitted 43; the four extra are FOUR merges, each one `return -1`
-// reached by two conditions, and a `goto` to a label inside the surviving
-// arm produces every one:
-//   * the event-record count read + the payload read (state 0x8 at
-//     0x4043) - forward goto, label in the SECOND guard, because retail's
-//     teardown is the fall-through successor of the second test;
-//   * the generators count read + the generator::load loop (0x10 at
-//     0x417c) - backward goto, label in the COUNT READ's own `if`, since
-//     both predecessors are jumps and the block is displaced one teardown
-//     down;
-//   * the field_4e3e8 byte + the obeliskFlags read (0x16 at 0x41ec) -
-//     forward goto. The `||`-with-comma spelling banked here as
-//     "MEASURED AND REJECTED, -2.5" was rejecting the wrong thing: the
-//     merge is real, the `||` just lowers it as a two-jump join that
-//     sinks to the end of the function;
-//   * the town count read + the town::load loop (0x1b at 0x430c) -
-//     backward goto.
-// Worth +2.12 for the four together.
-
 // THE TWO SCRATCH BUFFERS MUST BE BLOCK-SCOPED (+1.22, and it is
 // game::Save's own frame lever applied here). At function scope VC6 gives
 // `char_buffer` and `short_buffer` permanent slots (-0xf and -0xe); with
@@ -2727,18 +2642,6 @@ int game::GetSaveGameHeaders(void* infile)
 // named block-scoped local is retail's shape), and the poolCount
 // ternary flipped to `>= 32 ? 8 : 3` is -0.75, so the setl lowering is
 // not the operand order.
-// Historical probe (91.8624 -> 92.3721, 2026-08-21): the invented
-// load_lith_pool_count helper carried retail's `setl al / dec eax /
-// and eax,5 / add eax,3` expression and shifted the gMapExtra failure
-// cleanup across VC6's inliner threshold, retaining `_Tidy` at state 0x4b.
-// That optimizer effect does not establish a source boundary. The same
-// expression now belongs directly to game::Load; retail 0x4bd99e loads
-// saved.version before the arithmetic at 0x4bd9a6..0x4bd9b0. DC's older
-// game::Load is dc 0xa83d0, game.cpp:3026. The earlier direct-expression
-// probe reached 90.4374. `(version < 32 ? 0 : 5) + 3` reached 91.8536;
-// a named bool inside the former helper reached 91.0300; adding `inline`
-// was byte-flat. Keep these observations without restoring the wrapper.
-
 // Residual (92.3721%): base now has 37 `_Tidy` calls against retail's 39
 // and 73 conditional branches against 72. The two remaining depth-one
 // destructor sites are the default `town` temporary after towns.resize
@@ -3004,7 +2907,6 @@ int game::load(TAbstractFile* infile)
     loadVector(infile, m_undergroundGateExits);
     loadVector(infile, m_undergroundGatePairs);
     loadVector(infile, m_universities);
-    // The creature-bank call and final return no longer need depth fences.
     // The post-integration 226-site audit and joint four-state control
     // preserve the entire game object, including every cleanup/call site.
     loadObjectVector(infile, &m_creatureBanks);
@@ -3145,38 +3047,6 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // scalar and six array writes added; 37.18 with the zero and gMapExtra
 // writes on top. The cause is the FRAME, not the statements.
 
-// FRAME DIAGNOSIS CORRECTED 2026-08-20 (the earlier note here said
-// "eight bytes, every named local shifted by 8" and was measured with
-// the tail statements IN; with them out the shift is a uniform TWELVE,
-// and the whole delta is now localised):
-//   * retail is `sub esp,0x5c0`, ours `sub esp,0x5b4`, and every named
-//     local sits exactly 0xc closer to ebp on our side (the fileName
-//     string at [ebp-0x60] vs [ebp-0x6c], the header at [ebp-0x5c0] vs
-//     [ebp-0x5cc], and the -0xdc/-0x2ac/-0x5b0 triple against retail's
-//     -0xe8/-0x2b8/-0x5bc);
-//   * the BIG locals are already byte-for-byte the right size. Subtract
-//     the small-slot region from each frame and both sides give exactly
-//     0x5a4. The entire 0xc is the COUNT of 4-byte slots in the region
-//     between ebp-0xc and the fileName string: retail has SEVEN, we
-//     have FOUR;
-//   * retail's seven are -0x10 (a byte temp at -0xd), -0x14 (the loop
-//     counter i), -0x18 (a second byte temp at -0x15), -0x1c and -0x20
-//     (two dword temps), -0x24 (the 0x9c length constant) and -0x28
-//     (the four-byte literal zero). ALL FIVE of -0x10/-0x18/-0x1c/
-//     -0x20/-0x28 belong to the missing tail;
-//   * retail's NON-tail locals need only TWO real slots, because it
-//     packs char_buffer and short_buffer into the incoming parameter's
-//     home slot - `mov byte [ebp+0xb],dl / lea eax,[ebp+0xb]` for the
-//     byte and `mov [ebp+0x8],edx / cmp word [ebp+0x8],di` for the
-//     short, byte 3 and bytes 0-1 of the same dword, coalesced with the
-//     dead `allocator<char>()` temporary the string construction leaves
-//     at [ebp+0xb]. We spend two real slots (-0x10, -0x18) on the same
-//     two variables and use [ebp+0x8] only as an int loop counter.
-// So the arithmetic is exact: 2 retail non-tail slots + 5 tail slots =
-// 7 = 0x5c0. Ours was 4 non-tail + 5 tail = 9 = 0x5c8, and the two
-// surplus slots WERE char_buffer and short_buffer failing to colour
-// into the parameter home.
-
 // FIXED 2026-08-20 by BLOCK-SCOPING them. Each guarded write now
 // declares its own buffer inside braces instead of reusing two
 // function-scope variables; that cuts their live ranges to a single
@@ -3191,8 +3061,8 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // TAIL LANDED 2026-08-20: 42.3069 -> 73.7978. Three things had to be
 // right at once, and each was measured on its own.
 
-// 1. PLACEMENT. The earlier note here put the missing block after the
-//    five type_point pool writes. It goes BEFORE them - retail's order
+// 1. PLACEMENT. The missing block goes before the five type_point pool
+//    writes. Retail's order
 //    is heroPoolMap loop, then the twelve scalars, six arrays, literal
 //    zero and gMapExtra, and only THEN lithPools. Three independent
 //    proofs: linear disassembly order; the EH-state counter running
@@ -3246,8 +3116,8 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //     Writing it the other way round - the loop inside an `if` with the
 //     `return -1` in a trailing `else` - merges the site but SINKS the
 //     block to the end of the function and scores 0.02 lower.
-//   * Historical flattened ObeliskPool control; the canonical helper below
-//     now owns these early returns and preserves the caller cleanup boundary.
+//   * The canonical ObeliskPool helper owns these early returns and preserves
+//     the caller cleanup boundary.
 //   * field_4e3e8 + obeliskFlags - two adjacent guarded writes. Here the
 //     label goes in the SECOND guard and the first `goto`s FORWARD into
 //     it, because retail's teardown is the fall-through successor of the
@@ -3307,39 +3177,6 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //   * the heroes loop's teardown is emitted after the heroAvailability
 //     write's (0x1e before 0x1c) where retail emits them in order.
 
-// CURRENT 2026-08-21 (94.4495%, from 93.5676%): the two field_1f680
-// writes share one failure teardown in retail.  Its first unsigned failure
-// branch jumps forward into the second write's fall-through cleanup block;
-// our two direct returns opened one extra EH region.  The forward goto below
-// restores that exact source topology, drops register-distance 471 -> 279,
-// and is the measured gain.  The resulting whole-function phase exposes the
-// last structural delta cleanly: on the first lithPools failure retail
-// expands ~SavedGameHeader but calls its nested string::_Tidy, while this C1
-// expands _Tidy, accounting for all three surplus branches (58 vs 55).
-// `inline_depth(1)` on that return is byte-flat, as are one and two
-// release-elided call-shaped diagnostic carriers immediately before the
-// pool loop.  Both keep _Tidy x35 against retail's x36, so the depth and
-// minimum carrier families are bounded at this plateau.
-// Genuine release VERIFY-style evaluation is bounded separately: three and
-// four discarded `saved.fileName.size()` expressions immediately before the
-// pool loop are all byte-flat at 94.4495%. The accessor emits no runtime bytes
-// but also never reprices this nested destructor decision.
-// The DC scalar-local types were re-audited on 2026-08-21. Its second byte
-// and word buffers are unsigned (`uchar_buffer`, `ushort_buffer`), while the
-// first pair are signed/plain (`char_buffer`, `short_buffer`). Restoring the
-// two unsigned buffer types individually is byte-flat at 94.4495%, so they
-// are retained as source evidence but do not move `_Tidy`. DC also calls the
-// map-extra size an `int`; that spelling on top of the neutral buffer pair
-// regresses this function to 94.38246%, so the winning unsigned source form
-// remains in place.
-// Canonical BlackMarkets, TownPool and generator-vector writers remove the
-// remaining shared failure labels. Together with the readers, they raise Save
-// from 80.2448% to 96.5761%; older flattened/pinned observations above are historical.
-// Recovery bound: a 48-state local-type/lifetime family (six emitted objects)
-// leaves SavedGameHeader::reset/save expanded: Save spans 59.2838--59.6005%.
-// Reusing or scoping the byte buffer, the DC unsigned word/int size types,
-// early i and the native-bool writer result do not recover the retained calls.
-// The tiny peak does not fix the 0x750 versus 0x5c0 frame; source is unchanged.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
@@ -3593,9 +3430,6 @@ int compare_heroes(const void* arg1, const void* arg2)
     // @stub
 }
 
-// game::Save is compiled above; the exact SavedGameHeader::Save serializer
-// at 0x4bc5d0 supersedes the old SaveBlackMarkets attribution.
-
 #endif  // @carcass
 
 VA(0x004beea0, 0x2F6)  // dc 0xa99d0
@@ -3839,14 +3673,7 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 }
 
-// DC ValidateVictoryLossConditions (0xaa7e0) calls Game.h::IsHumanTeam
-// (0x37f64); use that canonical member instead of the former local
-// validateIsHumanTeam copy, including its shared IsHuman call.
 // E:\gamedcs\game.cpp:4050
-// Residual wall (89.61%): the semantic blocks, calls, and field offsets are
-// proved.  A compound campaign predicate (73.44%), shared-label gotos
-// (71.68%), a switch (79.20%), direct HeroXYZ fields (87.67%), and the
-// class-member IsHumanTeam spelling (88.74%) all measured worse.
 
 // Retail's campaign chain cross-jumps every `AllowNormalVictory = 0` tail
 // into ONE store at 0x4bf835 and shares a single `je` at 0x4bf840, so each
@@ -4235,10 +4062,6 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 case TOWN_STRONGHOLD:
                 case TOWN_FORTRESS: {
                     amount = random(5, 10);
-                    // DC game.cpp:4407/4408 keeps these additions in
-                    // NewMap. Retail 0x4c0306/0x4c030e stores wood then
-                    // ore using the same Random(5, 10) result. The former
-                    // add_new_map_starting_materials wrapper was unattested.
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
@@ -4417,13 +4240,8 @@ static void randomizeShrine(NewmapCell* cell, const int level)
     info->m_cellVisitedInfo.m_visited = 0;
 }
 
-// E:\gamedcs\game.cpp:4654. These two helpers are expanded into
-// RandomizeEvents. Their packed writes remain calls because the corresponding
-// ExtraInfoUnion methods have retail rows immediately after RandomizeEvents.
-// Ownership probe: moving setWagon(resource, amount) to MapCell.h leaves
-// no retained VC6 body at 0x4c2360. Removing this helper's former
-// __forceinline did not recover the call. DC 0xabda8 is an ordinary static
-// helper; keep that boundary while recovering RandomizeEvents' inline state.
+// E:\gamedcs\game.cpp:4654, dc 0xabda8
+// RandomizeEvents expands this ordinary static helper.
 static void randomizeWagon(NewmapCell* cell)
 {
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
@@ -4519,7 +4337,7 @@ static void randomizePyramid(NewmapCell* cell)
 // Retail builds one availability bit per secondary skill from the scenario's
 // disabled-skill row, draws four distinct set bits, and appends those four
 // skills as one native university record. DC's local and aggregate type agree
-// with retail once Conflux's initializer is no longer a generic constructor.
+// with retail when Conflux's initializer uses its dedicated type.
 // WALL 99.7464%: all 24 blocks, every branch target and every instruction
 // count agree.  The explicit-code residual is one whole-loop register tie:
 // retail keeps the cached availability bound in EBX and each Random ordinal
@@ -4712,23 +4530,6 @@ void game::initRandomArtifacts()
 }
 
 // E:\\gamedcs\\game.cpp:4950
-// Pair each still-unmatched underground gate with the nearest unmatched gate
-// on the other map level.  The pairing vector stores reciprocal signed
-// indices; distance is the truncated Euclidean x/y distance used by retail.
-// DC lines 4977/4978 skip equal-level candidates, and 4985/4986 skip
-// non-improving distances before the assignments at 4988/4989. Preserve those
-// early-continue scopes. DC line 4984 subtracts exit_point from current_gate
-// for both coordinates; retail likewise subtracts their unpacked components.
-// Residual (94.67%): all 18 blocks, 10 branches and both calls agree, but the
-// packed y/z words and coordinate deltas receive different scratch registers.
-// Reversing both y subtractions is algebraically equivalent and reaches the
-// historical 98.3451%, but is not the recovered expression. Nested positive
-// guards versus these early continues do not resolve that register allocation.
-// Other controls: i < size()-1 loses the retail bound lowering (72.87%);
-// reversed z operands gave 98.14%, reversed x deltas 94.76%, and named-delta
-// helper variants 97.86% against the earlier reversed-y source. Adjacent local
-// orders and current_gate/closest assignment order were flat or worse.
-// The sqrt boundary is verified against the pinned VC6 SP3 LIBCMT sqrt.obj.
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
 {
@@ -5370,13 +5171,6 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // artifact/spell masks into the Complete-width live rows, then reads the
 // rumour and hero customization records before handing the remainder to the
 // map-cell owner.
-
-// Dreamcast's older filename-based LoadMap does not prove Complete's
-// serialization paths. Its shared tail does prove separate readString
-// results/early exits (game.cpp:5649-5655, local hr) and clear calls
-// (5665-5669). Preserve those source operations. Retail likewise tests each
-// read separately and expands the final vector erasures; the previous note
-// incorrectly described those expansions as retained calls.
 
 // MAX 78.2855. On 2026-09-07 the inherited body measured 74.47679.
 // Restoring all clear calls alone gives 63.79606, separate reads with the
@@ -6257,17 +6051,6 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // record.  Player heroes are resized from a dword count after the separate
 // one-byte default-placeholder count; their ids use only 0xff as a sentinel.
 
-// Historical shim calibration (95.69718%, 2026-08-26): 58 candidate blocks
-// against retail's 59,
-// with 41 exact skeleton blocks and the complete scalar/vector flow present.
-// The 0x48-vs-0x3c frame comes from three stack-coloring misses: retail reuses
-// the dead input/version slots for the word and count reads and for its two
-// default identities.  The remaining structural split is the established VC6
-// parent/child inline wall: depth two retains basic_string::~basic_string,
-// while depth three expands its _Tidy(true); retail alone expands the parent
-// and retains _Tidy.  Both choices are semantically identical, and the former
-// is the measured 58-block plateau.  Scoped read buffers recover retail's
-// exact fixed-hero helper and 19-instruction custom-name cleanup blocks.
 VA(0x004c3ef0, 0x498)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     TAbstractFile* infile, int mapVersion)
@@ -6340,28 +6123,6 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
         m_nonRandomHeroCustomName[0] = 0;
     }
 
-    // Retail retains std::copy and _Destroy as CALLS inside this clear and
-    // the resize below; this compile expands both. A TU-local derived
-    // access view used to impose that boundary by hand (95.6972 against
-    // 67.5422) at the price of retyping the member - see game.h's field_34
-    // note for the two retail rows that refute it. The residual is the
-    // OVER-inline class on hand-unreachable Dinkumware children.
-    // Further lifetime controls (2026-09-08) also emit no _Destroy:
-    // direct read-result c_str() plus string assignment gives 55.3920;
-    // direct assign(result, 0, npos) gives 49.3803; branch/loop-scoped
-    // named strings give 54.6854. DC NewSMapHeader::Read (0xaf64c,
-    // game.cpp:6584,6668-6669) names strTemp, but its lifetime spans the
-    // older player loop; Complete cleans up at the custom-name branch.
-    // These controls do not settle the later nested copy/_Destroy calls.
-    // Removing the obsolete dummy clear/erase uses from the emission
-    // scaffold below leaves every game.obj comparison row unchanged,
-    // including this reader at 67.5587; only real callers now use the
-    // hero-identity vector in this TU.
-    // Removing the feature-test pin above now naturally emits _Destroy;
-    // the player reader rises from 67.55869% to 71.60329% in that control.
-    // Removing the name-reader pin alone is flat; removing the assignment
-    // pin alone gives 55.81455%. With all three removed, _Destroy still
-    // emits and the caller is 57.89906%. The std::copy boundary is unresolved.
     m_heroes.clear();
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
@@ -6666,13 +6427,6 @@ void game::applyMapHeaderAvailability()
     }
 }
 
-// Scenario-header serialization mirrors Read's compact on-disk layout: the
-// live dword fields are narrowed back to their historical byte/word forms,
-// player custom names use the common length-prefixed string writer, and the
-// PC hero-setup map ends with one packed eight-player availability byte per
-// entry.  Dreamcast CodeView fixes the method identity and local roster; the
-// retail stream calls fix the Complete-only hero-map tail.
-
 // Residual (87.0015%, 2026-08-26): the first fourteen CFG blocks are exact
 // and the player/condition/map-entry write order is complete.  Retail keeps
 // the fixed-name string's constructor and destructor expanded only through
@@ -6864,26 +6618,6 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // records, and per-player availability masks.  The two old campaign hero ids
 // use the same pre-25 remap as the other saved-game readers.
 
-// Residual (92.51176%, 2026-08-26): the branch/return census is exact and the
-// ordinary header path is structurally aligned.  The remaining displacement
-// begins in the custom-hero availability loop: retail keeps bitset<8>::_Xran
-// out of line and selects two branch-local availability temporaries before the
-// shared map insert, while this compile expands _Xran and passes one local.
-// Measured and rejected here: byte-array indexing of the one-byte mask
-// (88.70), branch-local duplicate inserts (74.89), a conditional bitset
-// argument (84.30), and explicit bitset construction in the old arm (83.15).
-// Also rejected 2026-09-06: `availability.set(player, available)` in place of
-// the `availability[player] = available` proxy store, 90.1290 both with and
-// without an explicit `!= 0` on the value.  The house rule that `set(i,v)`
-// gives a CALLED `_Xran` while `[i]=v` gives an expanded one is the right
-// direction here - retail's one target-only call IS `bitset<8>::_Xran` - but
-// the depth this callee expands at moves the four surrounding
-// `_Tidy`/`assign`/`out_of_range`/`__CxxThrowException` sites with it and
-// costs more than the call is worth.
-// The former setSavedHeaderAvailability wrapper only assigned a bitset
-// proxy. Retail's availability mask loop at 0x4c5c50 onward performs that
-// proxy assignment directly; its extra source boundary was unproven.
-// Complete adds saveVersion to the stream reader; retail returns with ret 8.
 VA(0x004c5630, 0x7CD)  // DC Load + saved-header callers + helper edges, dc 0xb0754
 int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 {
@@ -7295,9 +7029,6 @@ int NewSMapHeader::get(const char* filename)
 }
 
 #endif  // @carcass
-
-// DC ClaimTown (0xb1230) names Game.h::GetTeam at both team lookups.
-// Use the canonical member; the former claimTownTeam repeated its body.
 
 VA(0x004c61e0, 0x4A8)  // dc 0xb1230
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
@@ -9593,22 +9324,7 @@ inline void resetRandomTownNames()
         g_randomTownNames[i].reset();
 }
 
-// E:\gamedcs\game.cpp:9833.
-// DC proves the setup sweep's locals and resize, z/y/x scan, random-town
-// conversion, direct town-name assignment, initialize and ConvertObject order.
-// Complete uses std::string for the name; DC uses strcpy/strncpy. Complete's
-// random-town arm also omits DC's owner-dependent pick_alignment operation.
-// Residual (94.3642%): current retail comparison aligns the CFG topology;
-// all 17 candidate calls pair, with one additional retail max_size call in
-// the random-name string assignment. Our VC6 expands that nested helper.
-// The old 80.39% diagnosis of missing _Grow expansion is obsolete: _Grow's
-// branches and _Xlen/_Tidy/_Copy calls now align. Remaining register/frame
-// allocation differs around that assignment (both frames are 0x18c bytes).
-// Prior failed controls: explicit resize 66.13%; assign(ptr, strlen(ptr))
-// 79.45%; operator=(const char*) and temporary inline_depth(3) were byte-flat
-// at the old baseline. Three-argument custom-name assign added the wrong
-// expansion. Synthetic dead statements once altered the inline budget but
-// provide no source evidence and are not a reconstruction strategy.
+// E:\gamedcs\game.cpp:9833
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
 void game::processOnMapTowns()
 {
@@ -10000,7 +9716,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                     return 0;
                 }
                 handlePlayerDrop(confirmMsg->m_dpidFrom);
-                // A dropped broadcast peer no longer owes an end confirmation;
+                // A dropped broadcast peer owes no end confirmation;
                 // share the confirmation tail exactly as the retail switch does.
 
             case RS_GAME_XFER_CONFIRM_END:
@@ -10044,24 +9760,6 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     return 1;
 }
 
-// The five-argument ABI and receive/retransmit/diff/write/UI fingerprint prove
-// the only remaining body between the transfer destructor and DoNewTurn.
-// DC 0xb85c4 supplies the helper boundaries, five parameters, local inventory,
-// nested scopes and statement order. Complete's x86 body independently fixes
-// the 996-byte blocks, 30-block acknowledgement cadence, message switch,
-// retransmit/error paths, diff application and final UI/sound restoration.
-// Three asymmetric revision facts are deliberate: Complete never reads
-// iFullGameCRC, widens DC's char bSChangeSounds local to an x86 dword home,
-// and unlike DC's line-10883 arm emits no RestoreScreen call.
-// Residual (99.2213%): all 85 CFG blocks and their sizes, all 42 branches,
-// and all 112 ordered call positions agree. The only code delta is B22's
-// caller-saved register colouring across the inlined memcpy and its following
-// percentage calculation. Tried and rejected: pointer/subscript destination,
-// multiplication order, C-style packet cast, split pMsg declaration, and both
-// line-gap-plausible block-number/block-size release VERIFYs are byte-flat;
-// a named payload local reaches only 99.2345, does not move the hunk, and is
-// absent from DC's 36-local inventory. The bounded why-reg sweep found 51
-// declaration/local variants flat or worse. Do not add an unproved carrier.
 VA(0x004cbd40, 0xA83)  // retail body + dc 0xb85c4 source shape
 int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                           unsigned char inGame, unsigned char isDiff)
@@ -11051,31 +10749,7 @@ game::game()
     m_week = 0;
     m_month = 0;
     memset(m_heroAvailability, -1, sizeof(m_heroAvailability));
-    // heroPoolMap is touched TWICE in retail and the two sites are
-    // different things - the note that used to stand here read them as
-    // one and sent the statement away as unspellable.
-    //  * fn+0x27a is the COMPILER-GENERATED default construction:
-    //    `lea edi,[esi+0x4dfb4] / mov [ebp-0x14],0x9c` then a 156-trip
-    //    loop `push ebx / mov ecx,edi / call 0x4cff30 / add edi,4`.
-    //    0x4cff30 is `std::bitset<8>::_Tidy(unsigned long)` (`mov
-    //    eax,[ebp+8] / test eax,eax / mov [ecx],eax / je / and eax,0xff
-    //    / mov [ecx],eax / ret 4`) and `push ebx` passes ZERO. Ours is
-    //    the same construction with _Tidy EXPANDED, which VC6 then folds
-    //    to `mov ecx,0x9c / xor eax,eax / rep stosd`. That is one A9
-    //    depth-2 inline decision with no source statement behind it.
-    //  * fn+0x460 is THIS statement, and it is a real 0xff fill:
-    //    `mov ecx,0x9c / mov eax,0xff / lea edi,[esi+0x4dfb4] /
-    //    rep stosd`, sitting between heroAvailability's -1 memset and
-    //    artifactUsed's zero fill exactly as written here.
 
-    // THE FILL ONLY REACHES `rep stosd` WITH THE VALUE IN A NAMED
-    // LOOP-INVARIANT LOCAL. Written as `heroPoolMap[i].set()` the store
-    // lands as an IMMEDIATE - `mov [eax],0xff / add eax,4 / dec ecx /
-    // jne` - and C2's store idiom declines it (31.4012, which is the
-    // 28.2094 the old note banked, re-measured under the corrected
-    // CMapHeaderData layout). Naming the all-set bitset and COPYING it
-    // hoists 0xff into eax and the idiom fires: 86.7493 -> 87.8496, and
-    // the four instructions are retail's in retail's order.
     std::bitset<8> allPlayers;
     allPlayers.set();
     for (int i = 0; i < HERO_COUNT; i++)
@@ -11294,7 +10968,7 @@ VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
 VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
-// The shared bitset<4>::test at 0x4cf960 now expands here and remains
+// The shared bitset<4>::test at 0x4cf960 expands here and remains
 // emitted in singleselectionwindow, alongside its retained _Xran body.
 VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 
@@ -16623,11 +16297,6 @@ void CObjectType::~CObjectType()
 
 #endif  // @carcass
 
-// Retained library bodies keep their canonical VA enrollments. Emission
-// must come from recovered callers and compiler state; the former dummy
-// class/STL callers and their inline-depth pin supplied no game behavior.
-// The bitset<70> cleanup at 0x4cfa10 still emits in hero and mapcell;
-// hero's markArtifactSpells also calls that retained address in retail.
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)

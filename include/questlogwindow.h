@@ -5,11 +5,6 @@
 #include <vector>
 #include "advmgr_popup.h"
 
-// Retail DoQuestLog allocates 0x74 bytes and the CAdvPopup base runs
-// through +0x5f, so 0x14 bytes of derived state follow. Both retail bodies
-// agree on how it is divided, and CORRECT the earlier reading that put the
-// byte first: the vector is the FIRST member, at +0x60.
-
 // The constructor writes `byte [+0x60] = <a byte loaded from a stack
 // local>` and then zeroes +0x64/+0x68/+0x6c - which is VC6's vector
 // copy-constructing its empty allocator from the default argument's

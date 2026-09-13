@@ -87,7 +87,7 @@ SIZE(CAnimatedDlg, 0x78);
 // startTime/lastMsg move to +0x78/+0x7c, the already proven 0x10-byte pause
 // handler occupies +0x80, and the eight player-ready bytes begin at +0x90.
 // Retail's vtable 0x640ecc is CAnimatedDlg's fourteen slots with slot 0 and
-// slot 3 replaced by this class's deleting destructor and message handler.
+// slot 3 holds this class's deleting destructor and message handler.
 class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
     unsigned long m_startTime;  // +0x78

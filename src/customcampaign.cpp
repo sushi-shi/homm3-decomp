@@ -161,10 +161,6 @@ int getCrossoverHeroValue(hero* candidate)
     return skills + primary;
 }
 
-// Module-local campaign sort predicate; the class name is provisional.
-// The written operator owns its retained VA directly. The former
-// FUNCTOR_CALL enrollment worked around an obsolete scanner limitation:
-// the source annotation now supplies the operator's mangled identity.
 struct CrossoverHeroStronger {
     bool operator()(hero& lhs, hero& rhs) const;
 };
@@ -1520,13 +1516,6 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
         > static_cast<signed char>(right.m_powerRating);
 }
 
-// Retail-only lookup boundary, name provisional. PlaceCrossoverHeroes
-// +0x332 snapshots the requested hero ID after erase, +0x341 retains the
-// outer vector::size, and +0x35c retains the current pool's size. The pool
-// itself survives the inner search. A normal member call expands this body
-// with both nested size calls intact; flattening it in the caller (same
-// cached ID, pool reference and post-decrement loops) expands those calls
-// and scores 75.0108 rather than 87.2742 before the packed-point correction.
 hero* SCampaign::findCrossoverHero(int heroId)
 {
     for (int poolIndex = m_carryOverHeroes.size(); poolIndex--;) {
@@ -2021,13 +2010,6 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // TGzInflateBuf for the header block, and again per scenario for the map
 // header the start-options record then folds into the scenario.
 
-// Residual: current 53.9715%; the historical 80.9474% peak remains banked.
-// Retail calls ScenarioStruct's scalar deleting destructor, vector::clear,
-// freeData, basic_streambuf's constructor, CMapHeaderData's constructor and
-// the placeholder vector assignment where this candidate expands them.
-// The expanded base construction and vector assignment introduce most of
-// the extra branches. Keep the canonical helpers and their source calls.
-
 // homm3 vc6 predict-inline's passive trace measures caller cb=1077 and
 // initial budget=2154. The scalar deleting destructor is cb=50 with budget
 // 2112 and 28 sites remaining; freeData is cb=101 with budget 1952 and 26
@@ -2171,30 +2153,6 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     }
 }
 
-// Complete-only prologue/epilogue player. It opens the campaign video,
-// renders the subtitle text into an off-screen strip that scrolls one pixel
-// row per 142 ms, starts either the per-video speech sample or the scenario
-// MP3, and pumps the message loop until all three have been finished for
-// their linger interval or the user clicks or keys out. The four flag/clock
-// pairs (subtitle, speech, video) are what the tail conjunction tests.
-// Residual (83.88%): calls AGREE 38 = 38 and branches agree 55 = 55; the
-// whole gap is TWO ADJACENT BRANCHES SWAPPING PLACES (#24/#25 at fn+0x2c0
-// and fn+0x2e1, base jge/je against retail je/jge). Retail SINKS the
-// `else if (scroll_y < text_height - MARGIN) ++scroll_y;` block below the
-// FillRect argument setup and jumps back to it (`jmp 0x4892fa` at 0x48929f,
-// the block itself at 0x4892a1), where we lay it inline; every one of the
-// 21 target-shifted blocks is that one displacement. Tried and rejected
-// 2026-09-06: inverting the two arms so the !scroll_delay case leads
-// (82.36) and flattening both arms onto `redraw &&` conditions (83.88,
-// byte-flat); nesting the scroll test inside an `if (!scroll_delay)` with
-// `--scroll_delay` in the else (82.36, i.e. the same loss as the inversion -
-// it is the arm ORDER that costs, not the nesting); and, decisively, a
-// `goto scroll_one_row` out of the else-if with `++scroll_y; goto
-// resume_subtitle;` parked at the foot of the strip block, which is EXACTLY
-// retail's `jmp 0x4892fa` / block-at-0x4892a1 shape and is BYTE-FLAT to the
-// digit (83.8848) - C2 folds the goto straight back into the inline
-// position. So the sink is not reachable from the source at all: it is a C2
-// block-placement choice, not the condition order and not a goto.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
@@ -2436,29 +2394,6 @@ const int g_campaignOrdinal18 = 18;
 const int g_campaignMapOrdinal06 = 6;
 const int g_campaignMapOrdinal07 = 7;
 
-// Retail-only end-of-campaign-map bookkeeping.  oldmain's own end-of-game
-// arm fixes the pair: this runs over the freshly loaded campaign header
-// immediately before SaveGame(1) and PlayScenarioEpilogue below runs
-// immediately after it, both on gpGame->campaign.  No Dreamcast row
-// carries either identity - the customcampaign.obj roster stops at
-// give_custom_items - so the names are ROLE-BASED and provisional, read
-// off the bodies: this one banks the finished map's score, allocates the
-// campaign's crossover slot, prunes the pool and collects the winner's
-// heroes.
-// Every crossover append is `push_back`, not `insert(end(), ...)`, and that
-// is the whole of what used to be a 0.00% row. VC6 prices an /Ob2 call site
-// at the CALLEE's front-end size, so `insert(_P, 1, _X)` written directly
-// puts the 740-byte three-argument insert AT the site and it is expanded at
-// three of the six crossover appends; `push_back` puts its own free wrapper
-// there and the nested insert is then priced at budget/sites-remaining and
-// declines at all six, which is retail's call ledger exactly. The two pool
-// appends take the same treatment and reach retail's 2-argument wrapper
-// calls at 0x48c0e0 / 0x48c610. 0.0000 -> 78.6801, and the body went 0xa54
-// -> 0x5fe against retail's 0x600 with 17 of 19 calls pairing in order.
-// Byte-flat control: the hero-loop append spelled `insert(crossover.end(),
-// *GetHero(...))` measures 78.6801 to the digit, so only the six 1-count
-// appends carry the decision.
-
 // PRICED 2026-09-06 - do not spend a lane on the /Ob2 side of this row. An
 // `if (0)` mass titration over N = 1,2,4,8,16,32,64 inert statements is flat
 // at 78.6801 to the digit through N=16, peaks at 79.2549 (N=32) and falls to
@@ -2611,34 +2546,6 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 // exits; `i-- > 0` instead leaves JBE entries. The forward scenario loop
 // ends in signed JL at +0x264, requiring a signed index and comparison.
 
-// Retail keeps the marking, scenario-limit and artifact-gathering phases in
-// this body. The former collectArtifacts, getScenarioCount,
-// markRequiredHeroes, usesCrossoverPool and getMaxCrossoverHeroes wrappers
-// had no independent source or retained-body evidence. Their historical
-// 99.9223% combined result is an inlining-budget observation, not proof of
-// those five function boundaries. The phases belong to this caller.
-
-// Preserve the repeated inflated_size guard: retail reloads it at 0x489fe1
-// after the virtual pool query at 0x489fd6. Preserve the signed total-slot
-// comparison at 0x48a084; GetNumMaps counts only populated scenarios.
-// Keep one const source hero across both artifact loops and one eight-byte
-// artifact temporary. Dreamcast Hero.h:965/970 proves both accessor calls.
-// The max(int,int) helper owns the operand temporaries at +0x210/+0x232;
-// direct std::_cpp_max instead takes addresses of the caller's variables.
-// Keep push_back: direct insert(end(), value) expands a different overload.
-// Historical failed probes: flattening the collector alone gave 71.0389%,
-// header marking 33.82%, and the maximum query 19.3083% (prior MAX 26.1010%).
-// A helper for the entire limit phase lost four virtual calls and produced
-// a 0xd0-byte frame. An early empty return added two CFG blocks (97.5337%).
-// Scoped while, negated-zero, named count/player results, definition moves,
-// the canonical options interface and moving the loop-index declaration
-// were byte-neutral. Those measurements predate this ownership correction;
-// no new compilation or match result is claimed here.
-// Current-source lifetime control (2026-09-09): 36 variants naming a
-// source hero, scenario vector and sort endpoints, plus front()/begin()
-// access, produce 24 objects and no gain above 20.6088. Retained helper
-// calls are the remaining frontier; do not restore the five budget-only
-// wrappers to recover their historical percentage.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 {
@@ -2765,22 +2672,6 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // The earlier typed-header checkpoint was 70.3423%, with 79.2531%
 // retained in HIST (2026-09-08); no new byte-score claim follows this move.
 
-// Residual: the array-constructor iterator and nested vector size/resize
-// helpers still expand where retail retains calls. The 69.5768% trace
-// has caller cb 1816, budget 3632: the legacy iterator costs 49 with budget
-// 63, and modern leading size() costs 42 with budgets 78..125.
-// That older trace retained the string by-length worker. In the current
-// source model the legacy assignment expands _Grow and calls _Eos again;
-// the earlier trace does not describe this residual boundary.
-// Earlier probes that extracted arbitrary portions of legacy promotion
-// into new helpers changed the budget but did not prove source boundaries.
-// Keep field promotion, real STL helpers, std::fill for the seven missing
-// completion flags, and the separate read-then-assign scalar operations.
-// The former readCampaignByte/readCampaignWord wrappers had no DC or retained
-// retail body. Their sole caller owns the virtual reads: 0x48a310's modern
-// arm reads into narrow locals and then promotes each value into its field.
-// Restore the read/assign operations here instead of claiming invented helpers.
-
 // Controlled recovery (2026-09-09): the 64 combinations of six widened,
 // masked read buffers produce two emitted identities but no score change.
 // Thus retail's dword-and-mask instructions do not prove an int source
@@ -2803,12 +2694,6 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     m_carryOverHeroes.clear();
 
     if (saveVersion < 28) {
-        // Retail takes the generated LegacyCampaignHero constructor's address
-        // for its 16-element array iterator (0x4013d0 at 0x48a379). The prior
-        // explicit empty constructor affected emission, but 0x48ae30 contains
-        // only base/member construction and proves no source-written body.
-        // Preserve the implicit constructor and its separate retained claim;
-        // no new compiler result is asserted by this ownership correction.
         LegacyCampaignSave saved;
         infile->read(&saved, sizeof(saved));
 
@@ -3375,7 +3260,7 @@ VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 // way in both directions.
 VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
 
-// ScenarioStruct's deleting wrapper at 0x488eb0 now expands in this TU.
+// ScenarioStruct's deleting wrapper at 0x488eb0 expands in this TU.
 // The same native wrapper remains in campaignbrief, where its enrollment
 // lives; its ordinary destructor at 0x485fe0 remains owned by this file.
 
@@ -3389,14 +3274,6 @@ VA_COMPGEN(0x0048df50, 0x2C9, STD_COPY_BACKWARD, hero_vector)
 VA_COMPGEN(0x0048e4f0, 0x1A0, STD_FILL, type_artifact_vector)
 VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
 
-// COMDAT pairing: codecvt<char,char,int>'s constructor and do_length,
-// agreements 0.900 and 1.000. The facet's other virtuals sit at 0x48ebd0
-// (3 B), 0x48ebe0 (6 B) and 0x48ebf0 (28 B); this note used to leave them
-// unclaimed as "folded bodies that no evidence in the image can separate",
-// which had the fold backwards - a row that IS two functions needs one
-// claim, not two, and the ICF oracle records the second spelling as its
-// alias. All three are claimed at the foot of this file. (do_always_noconv
-// is NOT folded with anything: `mov al,1 / ret` is its own three bytes.)
 VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 

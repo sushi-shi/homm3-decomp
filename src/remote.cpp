@@ -1486,21 +1486,8 @@ CAnimatedDlg::CAnimatedDlg()
 
 VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
-// E:\gamedcs\remote.cpp:1547 - the EH frame, sprite Dispose virtual call and
-// TDialogBox teardown match retail instruction for instruction. CTextDialog's
-// DC-proven implicit destructor now expands the empty intermediate layer,
-// fixing the former CTextDialog/TDialogBox named-call discrepancy at +0x41.
-// Both retail cleanup paths in WaitForReadyToPlayMsg call this exact body
-// out of line, so suppressing its automatic expansion is load-bearing.  The
-// separately emitted implicit CWaitForReadyPlayersDlg destructor instead
-// wants it expanded (current 86.3333%); the four-state implicit-layer/fence
-// control reaches 100% there when the fence is removed, but drops the
-// readiness caller 90.6522% -> 75.0683% and stops emitting CNetMsgHandler::copy.
-// This dependency survives the canonical special-member correction.
-// A twelve-state follow-up crosses the fence with pointer, const-pointer,
-// const-reference, condition-local and guarded object-reference bindings.
-// None preserves the readiness caller and retained copy without the fence;
-// the guarded object reference reaches 83.0186%, the other forms 75.0683%.
+// E:\gamedcs\remote.cpp:1547, dc 0x11d250
+// WaitForReadyToPlayMsg calls this destructor out of line.
 #pragma auto_inline(off)
 VA(0x00554ab0, 0x55)  // dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
@@ -3388,9 +3375,6 @@ void CTurnDuration::checkForWarning()
         m_nextWarning = 0;
 }
 
-// Original IsClose calls IsOn (remote.cpp:2920, dc 0x11f070). Keep the
-// ordinary helper above visible to this caller; the former IsOnInline
-// copy invented a second source boundary to steer its expansion.
 VA(0x00557d00, 0x55)  // dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
@@ -3528,11 +3512,6 @@ CHourGlass::~CHourGlass()
 // not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
 // later destructor both stop the thread, exactly as retail does.
 
-// A previous reading had these two as single-armed (`if (m_thread)` with no
-// else) and recorded the constructor and destructor as having no retail
-// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
-// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
-// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
 inline void CHourGlass::stop()
 {
     if (m_thread)

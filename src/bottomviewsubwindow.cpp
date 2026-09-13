@@ -61,11 +61,6 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 #if 0  // @carcass
 
 // E:\gamedcs\bottomviewsubwindow.cpp:39
-// NOT LOCATED. The old note here read RETAIL_LOCATED(0x004521f0, 0x8D4);
-// that address is TBottomViewTown's constructor - its caller is
-// advManager::UpdBottomViewTown and it stores its own 0x63bb34 vftable.
-// This base constructor is inlined into all seven derived constructors
-// and no separate retail body has been found for it.
 DC_ONLY(0x550b8, 0x5C)
 void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
 {
@@ -697,31 +692,6 @@ static const int g_heroArmyCoords[7][2] = {
 // shared with TBottomViewTown - see the note there on game::GetHero /
 // GetTown arm order.
 
-// THIS ONE IS NOT THE SITE COUNT. Unlike the other three constructors
-// in this file (see TBottomViewKingdom), padding this body with free
-// inline candidates only ever LOSES - 3 sites 95.72, 5 sites 91.56, 8
-// sites 84.60 - and vector<widget*>::size() is already out of line on
-// both sides here, so this body's candidate count is already retail's.
-// The whole delta is the one loop: base 77 blocks against retail's 76,
-// the extra block being the `mov eax,[ebp-0x10]` reload of the second
-// bias at the loop head, plus the ESI/EBX transposition that follows
-// from creating the stats cursor before the coordinate cursor. Retail
-// runs linear-function-test replacement onto the COORDINATE cursor
-// (`cmp esi,&gHeroStatCoords[2]` for the arm, `cmp esi,
-// &gHeroStatCoords[4]` for the exit) and we run it onto the STATS
-// cursor for both, which is an IV-ranking choice inside C2 with no
-// source knob found. Tried and rejected: a hoisted `signed char stat`
-// local for the three-arm clamp (96.51); a `const int* coords` cursor
-// advanced in the body (96.61) or in the for-increment (96.52); a
-// `const int (*coords)[2]` row pointer (96.52); a per-iteration
-// `const int* coords = gHeroStatCoords[i]` (96.61); `i >= 2 ? 1 : 0`
-// (96.52) and `i > 1` (96.53). The two that gain 0.09 do not change the
-// block count and are not worth a spelling that retail's operand order
-// does not independently support. `homm3 vc6 why-branch` and `why-reg`
-// cannot be run here at all: their v1 body locator needs a plain
-// `fn(...) { ... }` definition and rejects a constructor with a member
-// initialiser list.
-
 // THE TWO STRING TEMPORARIES GET SEPARATE SLOTS. The >= 10000 arm and
 // the plain arm each build their own format_string temporary at its own
 // frame offset (-0x40 and -0x50) and tear it down inside the arm, so
@@ -858,25 +828,6 @@ static const int g_townArmyCoords[7][2] = {
 // reloads `i` after every store because the store through that cursor
 // might alias it. Both are what `slots[found++] = i` produces.
 
-// THE CURRENT TOWN COMES FROM game::GetCurrTown, NOT FROM GetTown APPLIED
-// TO THE ID (95.63 -> 97.36, 2026-08-14, and the twin below 96.52 ->
-// 97.77). This was recorded here as an unresolvable conflict - retail
-// sinks the `movsx` into the taken arm, compares the raw byte and puts
-// the null arm LAST, which is the opposite of what TBottomViewKingdom
-// proves for GetTown - and the Dreamcast line table dissolves it:
-// dc 0x55df4 line 359 calls `game::GetCurrTown` and dc 0x558a8 line 229
-// calls `game::GetCurrHero`, two SEPARATE Game.h inlines (Game.h:1023 and
-// :991) whose DC bodies re-read the id rather than take it as a parameter
-// - GetCurrTown even calls GetCurrTownId twice. Re-reading the char field
-// inside the arm is exactly what keeps the compare at byte width, and the
-// two accessors no longer contend with GetTown/GetHero's spelling. The
-// whole `mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al / ... /
-// jmp / mov [ebp+8],esi` block is byte-identical to retail now. The frame
-// is still 8 bytes short: retail allocates two more push_back
-// temporaries where our CL folds them onto the silo array's slots.
-// Tried and rejected: hoisting `slots` to function scope (no change -
-// VC6's slot reuse here is liveness-based, not scope-based).
-
 // PART OF IT IS THE SITE COUNT - see TBottomViewKingdom's note for the
 // mechanism. Padding this body with free inline candidates gives 94.43
 // at one site, 96.13 at three AND at five, and 91.66 at eight, so the
@@ -920,31 +871,6 @@ static const int g_townArmyCoords[7][2] = {
 // mass is. Open: which two candidate sites retail's body has after the
 // declaration that ours does not.
 
-// STILL +2 AFTER THE GetCurrTown LANDING, re-measured 2026-08-14 with real
-// free candidates placed after the declaration: 97.36 base, 97.16 at +1,
-// 98.86 at +2, flat at +3. The Dreamcast line table BOUNDS the search and
-// cannot close it - dc 0x55df4 has NO LINE AT ALL between 476 (the creature
-// icon) and 493 (the loop's closing braces), i.e. the whole quantity-text
-// block is post-Dreamcast, and the DC army loop pushes the icon and nothing
-// else. The two sites are therefore somewhere in those sixteen source lines
-// and nowhere else in 2260 bytes; retail's and our call sequences across the
-// block are otherwise 1:1, so whatever they are, they emit no calls of their
-// own. Tried and rejected on that basis: `quantity_text.rdbuf()->str()` plus
-// `rdbuf()->freeze(false)`, the historical strstream idiom, which is
-// byte-neutral in itself and nets only ONE extra site (97.36 -> 97.16, the
-// same number the +1 probe gives). Conventional release VERIFY accessors are
-// bounded too (2026-08-21, at the landed 98.7476 baseline): one
-// `(void)quantity_text.rdbuf()` and one `(void)quantity_text.good()` both
-// select the same 95.7705 phase; two `rdbuf()` expressions fall to 94.9034.
-// All three builds have 39 branches against retail's 41, so these are not
-// equivalent to the two genuinely free candidate sites measured above. The
-// sibling DC compilands are no help either:
-// TQuickTownWindow::initialize_army_display (dc 0x118564) and
-// TQuickHeroWindow (dc 0x1170bc) both format their counts with
-// `memset`+`sprintf` into a char buffer in the Dreamcast revision - the
-// S_REGREL32 record even names that buffer `quantity_text` - so the
-// ostrstream idiom is post-Dreamcast everywhere it appears.
-
 // ALL SEVEN SITES ARE SOURCE-REAL: town::HasBuilding (restored
 // 2026-08-30). dc 0x55df4 spells the hall ladder (lines
 // 369/371/373, `mov #11/#12/#13,r5 / mov #0,r6`), the fort ladder
@@ -968,18 +894,6 @@ static const int g_townArmyCoords[7][2] = {
 // the seventh call while the surrounding post-Dreamcast quantity-text shape
 // is reconstructed. Keep the Dreamcast-attested helper despite this local
 // maximum; retail remains the final semantic/codegen check.
-
-// Raw NB11 also records the pointer-sized local as `resource` inside the
-// silo block (S_REGREL32 sp+0x64, type 0x3fa1), after procedure-scope
-// `town_size_name`. The silo sweep's own shape is a memory-homed `i`:
-// retail indexes `resource[i]` as `[eax + 4*ecx]` and RELOADS `i` from
-// [ebp-0x2c] after every `slots[found++] = i` store, because that store may
-// alias it, where our CL strength-reduces resource to a cursor and keeps `i`
-// in a register throughout. Tried and rejected on it: `int i` hoisted out of
-// the for-statement, `slots[found] = i; found++;` split, `i < 7` for
-// `i <= 6` (94.23), declaring `slots`/`found` before `resource` (94.03),
-// a `*slot++ = i` pointer cursor (93.25) and widening `slots` to 3..16
-// entries (94.30-94.33, frame-offset noise only).
 
 // get_army() IS CALLED FRESH EVERY TIME, three times per army slot;
 // retail never caches the reference. The quantity text is the same
@@ -1143,24 +1057,6 @@ TBottomViewTown::~TBottomViewTown()
 // because a probe is a score, not a reconstruction - the DC line table
 // then named the statement that carries the sites honestly.
 
-// THE DREAMCAST LINE TABLE IS WHAT NAMED IT (2026-08-14/15,
-// `python3 -m homm3.analysis.dc_lines 0x563b8`). This body has NO
-// post-DC region at all - all 41 DC statements account for retail's
-// body one for one - which ruled out the direction that closed
-// TViewArmyWindow and forced the site to be a statement the Dreamcast
-// build SPELLS DIFFERENTLY. The table named exactly three candidates
-// and the round resolved all three:
-//   * line 524 is a `memset` where we write four assignments. REFUSED,
-//     and the refusal is the asymmetry rule working: retail's bytes
-//     disagree. VC6 under /O2 expands memset as the intrinsic (`mov
-//     ecx,N / rep stosd`, as armyGroup::armyGroup shows), not the four
-//     `mov [ebp-N],eax` stores retail emits here - and an intrinsic is
-//     not a candidate site anyway.
-//   * lines 531/533/535 call `town::HasBuilding` - LANDED, see above.
-//   * lines 554/557 call `TTextResource::operator[]` where we call
-//     `GetText`. Both are one header inline, so the count is unchanged;
-//     untried, and no longer needed for the count.
-
 // The remaining 1.48 is a SECOND, independent divergence: our CL CSEs
 // the constant zero into ESI across the whole prologue (`xor esi,esi`,
 // then `cmp eax,esi` for the new-null test, `push esi` twice for the
@@ -1173,16 +1069,6 @@ TBottomViewTown::~TBottomViewTown()
 // tried: four statements, a chained assignment, an aggregate
 // initializer and a hand-written 3/0/1/2 order all give the same bytes.
 
-// Tried and rejected, all measured: titrating the caller with
-// self-assignments and plain dead stores (byte-flat - the budget is
-// pinned at the clamp's 1000 floor, so caller mass cannot move it); a
-// single 42-stepping `x` local in place of the two `42*i+N` expressions
-// (93.56, worse, which is also what proves smaller IL is not smaller
-// cb); buying the site honestly by spelling one push_back as
-// `Widgets.insert(Widgets.end(), w)` (85.66-87.40 at five different
-// push_backs - unlike in TBottomViewResourceMessage the two forms are
-// NOT byte-identical here); and an index-based tail loop over
-// Widgets.size() in three forms (91.16, 93.83, 94.24).
 VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
 TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)

@@ -194,14 +194,7 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
     return static_cast<unsigned>(infile->read(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
-// E:\gamedcs\mapcell.cpp:232, dc 0xebc90.
-// CodeView owns this reader in TTownEvent, with the base Read call followed
-// by the six-byte building mask, fourteen-byte generator band and padding.
-// Complete adds mapVersion for TTimedEvent::read: readTownData forwards it
-// at 0x501f19..0x501f28. The result is discarded by that caller, so retail
-// checks the first two tail reads at 0x501f3a/0x501f63 but omits the final
-// padding-read check. Preserve the source return behavior and base call;
-// expansion does not turn the member into the former readTownEvent static.
+// E:\gamedcs\mapcell.cpp:232, dc 0xebc90
 int TTownEvent::read(TAbstractFile* infile, int mapVersion)
 {
     unsigned char inBuf[6];
@@ -652,18 +645,6 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // hoisting the quest pointer was 82.2605%. The guarded do/while below is the
 // best source-faithful spelling measured.
 
-// Retail retains this helper as a call from NewfullMap::load at +0x328.
-// The former auto_inline(off) forced that decision but did not recover its
-// source cause. Removing it with the current caller expands this helper,
-// changes load from 77.26911% to 56.67278%, and stops emitting the previously
-// exact std::copy<type_university>; no other claimed body's score changes.
-// The parked std::copy<garrison> still does not emit. The retained helper's
-// own body stays at its prior score. Ordinary resize(count) then recovers
-// load to 56.72171%. Keep this source call while recovering its boundary;
-// the university-copy MAX/HIST and load's all-time HIST remain preserved.
-// An older caller's call-site inline_depth(0) control reached only 84.27%
-// versus that caller's pinned-helper 92.201836%; neither pin is source proof.
-
 // [polish-45] The first `!!` names the remaining shape precisely: retail
 // SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
 // value in ESI across the whole inlined resize and only writes it back to
@@ -715,36 +696,7 @@ void NewfullMap::newfullMapFn004FD950(
     }
 }
 
-// E:\gamedcs\mapcell.cpp:679, dc 0xecb94.
-// Retail reads a signed short seer count and operates on this map's list.
-// The older TSeerHut::LoadSeerList (dc 0x12d854, seerhut.cpp:503) instead
-// accesses the global map and checks an int-returning seer loader; retail's
-// instance-relative list and void load(infile, saveVersion) contradict that
-// interface. The seer block therefore stays in this Complete caller.
-// The former resizeSeerHutList wrapper was a synthetic inline-budget probe;
-// it and the loop's inline-depth pin are removed. The discarded twoLayers
-// expression had no evidence of a meaningful release VERIFY and is removed.
-// Retail's short-read failure shares the forward load_failure tail, and
-// repeated seer subscripts preserve its reloads after the virtual load call.
-// Natural-source controls: 45 valid count/default-value/append/index forms
-// and 32 failure-scope/quest-scope/loop forms reach 77.26911%; 27 additional
-// for-initializer forms are rejected by VC6 because load_failure skips the
-// initializer. The selected scoped default value improves the direct-call
-// baseline (74.24159%); these controls still used the legacy quest-helper
-// pin described above. Its removal leaves the named default at 56.67278%;
-// ordinary resize(count) and an explicit temporary both reach 56.72171%.
-// A const named default is flat; none of these emits either copy helper.
-// Use the ordinary default-argument form in this unpinned context.
-// No valid candidate emits std::copy<garrison> at
-// 0x5095a0. Retail expands garrison clear through erase/copy, then retains
-// seer resize and its size queries; our remaining nested decisions differ.
-// The former 93.4037% peak depended on the removed synthetic boundaries and
-// stays in HIST. Keep the real clear/resize/append calls through this dip.
-// The seer/event phase uses a single failure scope: short-read and town-
-// event failures break to one -1 return. Both do/while(0) and for(;;) forms
-// remove two gotos at 56.7217%, with all sibling scores unchanged. Direct
-// returns at either site instead score 53.5994%; keep the common boundary
-// and the original seer-object lifetime inside this scope.
+// E:\gamedcs\mapcell.cpp:679, dc 0xecb94
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
@@ -831,13 +783,6 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 // static TSeerHut helper over the global pool. NewfullMap's existing friend
 // relationship permits the later loop to call private TSeerHut::save.
 
-// The former free saveSeerHutList helper and its inline_depth pin recovered
-// 93.7123% but had no source ownership evidence. Removing them leaves 57.36%:
-// VC6 still expands saveTimedEventList and disagrees on vector::size calls.
-// This is an unresolved inliner boundary, not permission to widen save's
-// access or reinstate a budget-only split. HIST retains the previous peak.
-// Quest-guard count writes and per-record saves retain retail's unchecked
-// results, unlike the short-write gates for the preceding lists.
 VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
 int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 {
@@ -1631,16 +1576,6 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
 // and `clear()` is already the deepest spelling available.
 
-// Typed-record recovery (2026-09-08): DC SecondarySkillData::type/level and
-// GiveBlackBoxReward's vector<TArtifact> accesses prove the enum members now
-// in mapcell.h. Widen the signed stream bytes before copying their four-byte
-// representations into the skill fields. Artifact ordinals cross locally
-// into TArtifact; the former representation helper had no source identity.
-// This preserves the reads and stores but changes the template/inlining state:
-// 95.3605 -> 70.4307%. In the spell resize, retail calls insert; this compile
-// expands it and retains size/_Ucopy/_Ufill calls inside. Keep the proven
-// element types and the 95.3605 historical peak; do not restore int artifacts
-// merely to merge their vector instantiation with the spell vector.
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
@@ -1937,32 +1872,6 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // local that is then masked - the same asymmetric artifact crossing
 // loadMonsterList has.
 
-// Historical probes with the removed budget wrappers:
-// 89.8635 -> 94.4115 -> 95.0000 (2026-08-21): the residual was the
-// sequential /Ob2 budget. Retail CALLS vector<SecondarySkillData>::erase out
-// of the first resize and, one level later, calls `copy` inside the artifact
-// vector's resize; the original compile expanded both. Lifting the seven
-// resource reads and four primary-skill reads into one-call helpers
-// crosses the first boundary (94.4115). Lifting the two dword bonuses as the
-// third, smaller dose crosses the nested copy boundary too: predict-inline's
-// direct call ledgers are now exact, 9 against 9.
-
-// Residual (95.0000%): the dword helper also changes two early failure exits.
-// Retail keeps an epilogue after each read; this compile inlines the helper
-// and merges its two `return -1` paths, so branch counts happen to agree
-// 46/46 but base has 8 returns against retail's 10 and branch #4/#5 have the
-// opposite fall-through sense. Direct dword reads restore retail's 10 exits
-// but leave `copy` expanded and score 94.4115, so the higher call-exact phase
-// was retained in that historical probe. Calibrated negatives: primary helper alone
-// 89.8380, resource helper alone byte-flat at 89.8635, and replacing the
-// dword helper with the branch-free artifact-list helper overshoots to
-// 89.7463 (10 calls vs retail 9, 45 branches vs 46). The three-helper dose is
-// the measured peak; do not re-spend these boundaries without a new source
-// fact.
-// Typed-record recovery (2026-09-08, see readBlackBox): preserving the DC
-// skill fields and artifact-vector element type gives 91.7100%, with the
-// 95.0000 peak retained in HIST. The checked signed skill-byte reads and
-// unchecked, masked artifact-byte read remain distinct at this boundary.
 VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
@@ -2614,13 +2523,6 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
     return 0;
 }
 
-// Historical spell-mask probes introduced unpackTownSpellMask solely to
-// change nested bitset inlining. set(i, value) reached 94.3896% versus
-// 82.0785% for the earlier spelling; readHeroData's operator[] control behaved
-// differently. These compiler observations do not prove a separate source
-// helper. Both masks now use canonical bitset::set directly in readTownData,
-// preserving the signed /8 and %8 indexing and all seventy bit writes.
-
 // E:\gamedcs\mapcell.cpp:2798
 // The h3m town record, and the fullest statement of this pool's layout there
 // is: every offset game.h's gated view models is written here, and the total
@@ -2648,11 +2550,6 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // The tail resolves a RANDOM_TOWN's faction: the alignment byte's player slot
 // if that slot is playable at all, else the town's own owner, else a roll -
 // widened to nine alignments only when the scenario is expansion-era.
-
-// 94.3896 -> 95.1600 (2026-08-21): the town-event loop counts DOWN from
-// `numTownEvents`, as retail's copy-to-counter / `dec` / `jne` transcript
-// proves.  The former zero-up `count < numTownEvents` loop was the remaining
-// source-level loop mismatch.
 
 // Residual (95.1600%): the call multisets agree at 24/24 and the control-flow
 // census now agrees at 54 conditional branches and 12 returns.  What remains
@@ -2754,10 +2651,6 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        // The single retail `call bitset<70>::_Xran` at 0x501dbb covers BOTH
-        // mask loops - see the historical spelling notes above.  (An older probe wrote
-        // this first mask longhand to split the two range checks apart and
-        // measured 82.0785 -> 79.9793; the split was the wrong reading.)
         for (int spell = 0; spell < 70; ++spell)
             tempTown.m_fixedSpells.set(
                 spell, (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
@@ -2853,17 +2746,6 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 
-// Historical local maximum (2026-08-20/21): a hero-name call-site pin,
-// block-scoped reads, the const-reference string return, and three
-// caller-shrink statics reached 91.6097%.  Restoring the source-level
-// `heroObject->get_trigger()` tail then reached 92.7472% and a 0xd4 frame.
-// That score is preserved as MAX/history, not as permission to keep the
-// statics: Dreamcast gives the secondary-skill, army, equipped-artifact and
-// backpack statements to THIS function, records one shared `int x`, and has
-// no function rows for readHeroSecondarySkills/readHeroArmies.  Removing all
-// three invented helpers restores that positive shape and intentionally puts
-// the current checkpoint at 85.2833%.
-
 // The next structure pass reads the raw symbol nesting, not only the compact
 // roster: all thirteen DC locals appear under S_GPROC32 before the first
 // S_BLOCK32. Restoring one function-scope int_buffer, short_buffer and
@@ -2872,16 +2754,6 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // representation `int` until the 130-entry DC THeroID domain can be reconciled
 // with Complete's 156-entry roster; the local name, width and lifetime are
 // already preserved.
-
-// Current structural frontier (2026-08-31): candidate and retail each have
-// 53 branches and two returns, but enough targets differ that positional
-// pairing is no longer meaningful.  The candidate frame is 0xd8 against
-// retail's 0xc4.  Its emitted call stream has 14 calls against retail's 13;
-// after unclaimed-name pairs are discounted, the one real census difference
-// is the two nested `logic_error(const string&)` constructors that retail
-// calls and this larger caller expands.  That is an over-inline consequence
-// to solve through a real source/header boundary or later coherent source
-// mass—not by recreating source-false caller-shrink helpers.
 
 // Two facts remain deliberate.  Retail reaches __CxxThrowException@8 twice
 // and never calls bitset<70>::_Xran, so both bit stores use `operator[]` ->
@@ -2892,19 +2764,6 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // body has no Random relocation: unlike Dreamcast, an absent custom experience
 // stays zero and is passed unchanged to GetStartingHeroId.
 
-// Historical probes, measured before the recovered inline graph changed:
-//   * lifting the whole post-Restoration tail (54.6514%) or only the
-//     Armageddon's-Blade spell arm (88.8320%) overshot the caller-shrink peak;
-//   * `spells.reset()` reached 84.4847%; a default-constructed `noSpells`
-//     reached 88.6583%; return-by-value `emptyHeroSpellSet()` and named
-//     `noSpells(0)` were byte-flat;
-//   * after the direct trigger helper landed, narrowing the name pragma and
-//     naming `noSpells` were byte-flat; `padding` before `tempText` was also
-//     byte-flat and is retained because Dreamcast records that order;
-//   * widening hero_data's scope was byte-flat and was reverted, while moving
-//     isRandomHero before HeroID lost 92.7472 -> 92.3945 and was reverted.
-// Re-test a rejected codegen probe only after an upstream inline-graph change;
-// none of these measurements is evidence against the recovered source shape.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
@@ -3314,81 +3173,14 @@ void NewfullMap::soDTransformRandomDwellings()
 // original mapcell.cpp positions, and Complete expands those calls here.
 // No standalone retail slot is needed to preserve those source boundaries.
 // The Complete-only placeholder, quest and dwelling records stay in their
-// caller arms. Historical measurements below predate this restoration.
+// caller arms.
 // Restoring all four helpers raises 56.6382 -> 60.0594 in the 76-TU control.
 // The native-vector frontier in QUEST_GUARD remains the large residual;
 // no invented arm wrapper or additional inline-depth pin is introduced.
 
-// MINE and LIGHTHOUSE share a tail: retail cross-jumps the mine's non-
-// abandoned arm into the lighthouse's `readMineData` call rather than
-// duplicating it, which is a compiler transform over two separate cases, not
-// a fallthrough in the source.
-// 45.0977 -> 96.9833 (2026-08-20) ON FIVE `#pragma inline_depth(0)` SITE
-// PINS. MATCHING_DEBT: those narrow site pins remain necessary to reproduce
-// VC6's caller-budget cutoff; they are not source evidence. The note this
-// entry used to carry had the diagnosis right and the arithmetic wrong. Read
-// the correction before re-deriving any of it.
-
-// The old text said the wall was "id-218 (RANDOM_DWELLING_FACTION) at 574
-// bytes against retail's 149" and that its "two siblings at 155 and 140
-// already match". That last half is what misled three attempts. Retail
-// CALLS the insert at ALL THREE dwelling arms - its three calls sit at
-// fn+0x521, +0x5ad and +0x642 with nothing between them - while our compile
-// called it at the FIRST arm only and expanded it at the other two. So the
-// lever was never "make the FACTION arm behave like its siblings"; it was
-// "pin the two arms the budget ran out on". Pinning FACTION alone is what
-// every earlier measurement did, and it loses because arm two is still
-// expanding underneath it.
-
-// THE OVERLOAD IS READ OFF THE PUSH SEQUENCE, NOT GUESSED. `push_back`
-// reaches insert(iterator, const T&), which reaches
-// insert(iterator, size_type, const T&), and retail stops at a DIFFERENT
-// depth per site - so an explicit spelling has to name the right one:
-//   * the three RANDOM_DWELLING arms and the SEER arm's mapObjectData site
-//     push THREE arguments -> insert(iterator, size_type, const T&);
-//   * the SEER arm's SeerHutList site and both QUEST_GUARD sites push TWO
-//     -> insert(iterator, const T&).
-// Getting this wrong still scores well, because objdiff pairs the two
-// overloads' relocations positionally - the three-argument spelling at the
-// two-argument sites reached 95.1950 and only the extra `push 1` at each
-// site was wrong - but it is a real byte difference and worth 1.7 points.
-
-// `end()` must be HOISTED out of every pin: the pragma is statement-granular
-// and would otherwise turn `end()` itself into a call retail does not have.
-
-// One more pin, and it is the same reading applied to a non-insert callee:
-// retail CALLS vector<TQuestGuard>::size (0x1066e0, 32 B) at the QUEST_GUARD
-// arm's `extraInfo = size() - 1`, immediately after the insert with
-// &QuestGuardList still live in esi. This was a historical diagnostic; the
-// QUEST_GUARD pins were removed with its unsupported wrapper. The SEER
-// arm's size() was inlined on both sides.
-
-// Kept from the old note because they still hold:
-//   * `#pragma inline_depth(2)` and `(1)` around the body are ignored under
-//     /O2 /Ob2, byte-identical at 42.5589. Only 0 bites.
-//   * the Dreamcast CodeView roster proves one function-scope `char_buffer`
-//     and one `padding[5]`. On the current retail reconstruction, reusing the
-//     entry byte for the mutually-exclusive byte reads and the five-byte
-//     padding for the dwelling arms raises 96.9833 -> 97.1293. A generated
-//     383-candidate lifetime tree selected that shape; another 840-candidate
-//     tree over the DC-proven `int_buffer`/`count` roster was flat or worse.
-//     A final five-candidate expression tree raises this to 97.4369 by
-//     spelling the RANDOM_DWELLING_LVL level stores directly. This moves the
-//     first store before insert setup, toward retail's order. The residual is
-//     explicit in the bytes: our compile reloads the level and leaves the
-//     second store late; retail loads it once and performs both stores first.
-//   * the multi-site hypothesis is DISPROVED: a throwaway second growth site
-//     for vector<TQuestGuard> in another function of this TU moved readObject
-//     by exactly nothing. The /Ob2 budget is per CALLER.
-//   * the former readQuestGuardArm wrapper measured 42.6246 -> 45.0977.
-//     Its sole rationale was /Ob2 budgeting, with no independent source or
-//     retained-body evidence. The code is now restored to the QUEST_GUARD
-//     case, with the wrapper's inline-depth pins removed. Preserve the
-//     canonical TQuestGuard::read call (0x503460), both two-argument inserts
-//     (0x503472/0x50349c) and size query (0x503479). Historical probes found
-//     this wrapper ineffective once the dwelling inserts changed, and an
-//     equivalent dwelling wrapper scored 33.0580. These measurements and
-//     the residual below predate the ownership correction.
+// MINE and LIGHTHOUSE share a compiler-generated tail. Retail calls the three
+// dwelling inserts, both quest-guard inserts, and the quest-guard size query;
+// the site-level inline pins preserve those call boundaries.
 
 // Residual (97.4369%): register/home only, with the branch sequence intact.
 // Retail's frame is 0x28 and ours is 0x2c. Retail spills three of the arms'
@@ -4654,22 +4446,6 @@ static void missingMapObjectDefinition()
     throw std::out_of_range("Map object definition not found");
 }
 
-// 0x505ea0 (game::ConvertObject's helper, declared game.h:475) reverse-scans
-// objectTypeIndex[objectType] for the record whose `extra` (CObjectType+0x3c)
-// equals `extra`. Retail returns &objectTypeIndex[objectType][-1] on a miss.
-// The size()-1..0 reverse-scan tell
-// with _First re-read per pass; same idiom as NewfullMapFn_005042C0 above.
-// No direct DC counterpart: older game::InsertObject uses a flat forward
-// search, not proof of an inline copy of this Complete per-class helper.
-// Safety correction: convertObject and both high-score window paths require
-// an existing definition and dereference the result. Throw on a miss before
-// forming a pointer; returning null alone would leave those callers unsafe.
-// Residual (84.0566%): the deliberate failure branch/call is absent in retail.
-// Checked vector::at measured 45.2642%; the ordinary shared throw preserves
-// the reverse loop and caller contract without inliner directives.
-// A further 16-state paired failure-boundary family reproduces all objects:
-// reverse-index/exit, postdecrement failure and predecrement failure score
-// 69.4340%, 48.3962% and 43.4906%; the retained shared-throw form stays best.
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
 CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 {
@@ -4756,36 +4532,6 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
 // The four 48-cell masks are transposed cell by cell through the class's own
 // _getBitPos(x, y) = 47 - y * 8 - x.
 
-// Residual (62.10%): the bitset members, and only them. Retail CALLS
-// bitset<48>::test at two of the four reads and expands the range check at
-// the other two; our /Ob2 budget expands more of them, which is the block
-// surplus and the surplus out_of_range throw path.
-// The DEPTH LADDER (docs/vc6/inliner.md 6b) moved this row 39.16 -> 62.10:
-// the five WRITES spelled `bits[i] = v` rather than `bits.set(i, v)`.
-// Titrated, all measured at the same delink generation:
-//   writes .set  + reads .test  (the old spelling)      39.1636
-//   writes [i]   + reads .test  (SHIPPED)               62.0970
-//   writes [i]   + reads [i]                            36.4970
-//   inner-4 [i]  + mask_34 .set                         43.3576
-//   inner-4 .set + mask_34 [i]                          34.6000
-// so the five writes only pay TOGETHER, and flipping the reads costs 25.6.
-// Retail retains two `test` calls. Repeating _getBitPos at all accessors
-// falls to 31.22%; separate input/output indices are byte-flat at 58.55%.
-// Explicit bool read values are 58.57%, const recommended-mask access is
-// 44.32%, and at() reads add checks (37.03%). None recovers those two calls.
-// Both retail grid backedges use jb; paired unsigned indices recover that
-// shape at 61.08% in this header state. The DC _getBitPos helper likewise
-// takes unsigned x/y (MapCell.h:565). A fixed-grid do/while is only 57.67%.
-// The prior 62.35% remains banked; these controls do not settle the missing
-// per-site compiler state.
-// Mixed read subscripts also fail: draw/passable [] with shadow/trigger
-// .test is 40.45%; the inverse is 38.82% (both 576 bytes). Neither recovers
-// retail's pair of retained test calls; keep all four source reads as .test.
-// A const input view with all four [] reads is 38.28% (608 bytes): the
-// byte-verified trace admits every depth-two test (cost 58, budgets
-// 63/67/74/88). Direct .test likewise admits all four at depth one, with
-// budgets 956/814/672/465. Const access alone does not explain the frontier.
-
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
 // terrainMask stay with the editor template.
@@ -4859,7 +4605,7 @@ VA_COMPGEN(0x005089e0, 0x30A, VECTOR_INSERT, RandomDwellingData)
 VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
 // The mutable/const-source int-copy helpers at 0x5093c0/0x54df40 now expand
 // in mapcell. Both canonical <algorithm> specializations still emit in rmg,
-// where their enrollments live. The former is also called for folded pointer
+// where their enrollments live. The mutable form is also called for folded pointer
 // arrays; BlackBoxData's implicit assignment calls the separate const form.
 VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TTimedEvent)
 VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)

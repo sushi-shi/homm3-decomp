@@ -668,9 +668,6 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     return 0;
 }
 
-// the former pointer overload made target address-taken and recovered the
-// retail frame homes. The canonical header operator now takes that same
-// target by const reference.
 VA(0x005f2e40, 0xD9)  // dc 0x19074c
 unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)

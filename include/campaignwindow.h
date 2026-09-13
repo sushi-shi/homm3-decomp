@@ -143,11 +143,6 @@ struct SCampaignPreview {
 SIZE(SCampaignPreview, 0x50);
 extern SCampaignPreview g_campaignPreviews[20];
 
-// Retail 0x45ef6d's caption base 0x6a5f88 is row 1 of this table.
-// initializeHelpText at 0x5b9ad1..0x5b9af7 loads 24 eight-byte pairs
-// at 0x6a5f80: spreadsheet column 0 is text, column 1 right-click help.
-// The former SCampaignCaption::pad_04 was that second pointer, not padding.
-// Dreamcast THelpText names the members Rollover and RightClick.
 extern THelpText g_campaignWindowHelp[24];
 
 // The twenty campaign data-file names the handler hands to

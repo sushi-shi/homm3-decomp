@@ -464,10 +464,6 @@ public:
     char m_goldBox[0x88 - 0x84];
     Bitmap816* m_flags[8];  // 0x88, DC name; adopflg%c.pcx
     Bitmap816* m_panels[8];  // 0xa8, DC name; adop_cpnl.pcx
-    // Dreamcast's 130-entry HeroPix field is a single array. Complete widens
-    // the same destructor walk to 164 pointers at +0xc8..+0x357; the former
-    // +0x354 `GoldBox` split was a model artifact (DC's real GoldBox precedes
-    // Flags and has no Complete counterpart at this offset).
     Bitmap816* m_heroPix[164];  // 0xc8..0x357, expanded retail roster
     char m_pad358[0x35c - 0x358];
     Bitmap816* m_randomTownBmp;  // 0x35c
@@ -584,10 +580,6 @@ private:
     // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
     // focuses its id on chat-open. Base-typed until its widget lands.
     textEntryWidget* m_chatEdit;  // 0x1858
-    // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
-    // an earlier note here claimed; OnNewHostMsg resets it on the host
-    // handover (the dword store 0x58b510+0xd5 the old model read as a
-    // chatEdit null).
     int m_sortWhich;  // 0x185c
 
 public:
@@ -765,16 +757,6 @@ public:
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
-    // Retail 0x58e700 (past the stale span end) hands the whole incoming
-    // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
-    // alone. Provisional widening.
-    // Retail 0x58e700 (past the stale span end) takes the incoming
-    // CNetPlayerInfo record itself: OnNewPlayerMsg hands it
-    // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
-    // (derived-to-base). DC's takes the dpid alone.
-    // ...and it returns nothing: the retail body sets no result on any of
-    // its four exits, and every one of its nine call sites discards the
-    // value. DC's is `unsigned char`.
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void setupLoadGameMode();
     void setupNewGameMode();

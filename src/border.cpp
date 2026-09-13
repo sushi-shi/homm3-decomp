@@ -101,7 +101,6 @@ int border::main(message& msg)
 // UAA_N_N0 signature proves native bool for the return and both parameters.
 // Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
 // Keep border's canonical source body without a duplicate retail claim.
-// Before normalization (locals): down_click, right_click.
 DC_ONLY(0x54590, 0x4)
 bool border::handleClick(bool downClick, bool rightClick)
 {

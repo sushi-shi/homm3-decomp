@@ -71,7 +71,6 @@ int font::getColor(font::TColor colorScheme, bool highlighted)
 }
 
 // E:\gamedcs\font.cpp:81
-// Before normalization (locals): new_palette.
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
 void font::setPalette(const TPalette16& newPalette)
 {
@@ -127,42 +126,9 @@ void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
     drawCharacter('_', bitmap, x, y, color + highlighted);
 }
 
-// E:\gamedcs\font.cpp:138
-// EXACT 2026-09-01. Dreamcast's local roster contains color, highlighted,
-// and currPos, but no `curX`: the source mutates its existing x parameter.
-// Removing the invented curX local makes VC6 keep `this` in ESI and x in
-// EDI, exactly closing every residual byte (98.4598 -> 100).
-//
-// Historical 98.46% diagnosis (retained as negative-control evidence):
-// all 37 blocks agreed in size, flow kind and target
-// (`homm3 sema diff 0x4b5260` reports 37/37 exact); every immediate,
-// displacement, memory operand and jump-table byte agrees. The ONLY
-// residual is the unit's known callee-saved role swap: retail parks
-// `this` in ESI and `curX` in EDI, ours the mirror image (edi->esi x15,
-// esi->edi x13), which also moves the shrink-wrapped `push edi` three
-// slots. DrawCharacter above carries the SAME mirror-image swap, so the
-// signature is TU-wide, not statement-local. See the residual ledger at
-// the end of this comment.
-//
-// THE PARTITION, and it was the one open question in the decode: the
-// jump table at 0x4b547c has two targets, 0x4b53a6 and 0x4b53dc,
-// selected by the byte table at 0x4b5484. That table is
-// {0,1,1,0,1,1,0,1,1,0} over color_scheme 1..10 - the earlier note read
-// it shifted by one and got {1,2,5,8}. Arm 0 is therefore
-// color_scheme in {1,4,7,10} = {PRIMARY, WHITE, HEADING, WHITE_PLAYER},
-// i.e. THE BASE COLOUR OF EACH TRIPLE, and everything else (plus the
-// default) is arm 1.
-
-//     if (color_scheme & CUSTOM_COLOR) return color_scheme & ~CUSTOM_COLOR;
-//     color = color_scheme + 9;
-//     if (highlighted && (color_scheme == PRIMARY ||
-//                         color_scheme == WHITE || color_scheme == HEADING))
-//         color++;
-//     return color;
-
+// E:\gamedcs\font.cpp:138, dc 0xa1e5c
 VA(0x004b5260, 0x22E)  // dc 0xa1e5c
 void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
-                             // Before normalization (locals): color_scheme.
                              int x, int y, font::TColor colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
                              int cursorPos)
@@ -284,36 +250,9 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // register/long/initializer/address-taken spellings (96.81), and removing
 // or bypassing the loop guard (95-96% allocation cascades).
 
-// HISTORICAL NEGATIVE CONTROL: what the volatile does, read off the bytes
-// 2026-08-14. The residual
-// is exactly three memory instructions and nothing else: retail spends
-// `imul eax,ecx / cmp eax,edi / jge / mov ecx,edi / sub ecx,eax /
-// mov [ebp-4],ecx` with `total` living only in EAX, where the volatile
-// forces `mov [ebp-0x10],eax` and reloads it for both reads. The frame
-// is the SAME six slots on both sides (-4,-8,-0xc,-0x10,-0x14,-0x18);
-// retail touches -0x10 four times, we touch it seven. What the volatile
-// buys is slot ORDER, not the slot count: with a plain `total` the pair
-// at [ebp-4] and [ebp-0xc] SWAPS against retail (visible as retail's
-// `mov eax,[ebp-0xc] / mov edi,[ebp-4] / lea eax,[edi+2*eax]` becoming
-// `mov eax,[ebp-4] / mov edi,[ebp-0xc] / lea eax,[eax+2*edi]`) and an
-// EDX/EDI scratch cascade opens through the whole tail - 96.81.
-// Rejected 2026-08-14: all sixteen single-variable relocations of the
-// eight function-scope declarations (each of pos/limit/currY/lineStart/
-// okWidthIndex/iOrigPixelWidth/iHeight/width moved to the front and to
-// the back of the block), crossed with plain and volatile `total` -
-// every one of the 32 compiles is 96.8123 or 98.7864 to four decimals,
-// so VC6's slot assignment here is NOT driven by source declaration
-// order. `why-reg --model` on the plain base declines (bindings agree at
-// every first definition). The /Ob2 two-axis probe (mass 0..32 x 0..8
-// tail candidate sites) is flat in all sixteen cells.
-// DC-informed height reads and wrap-local lifetime controls (13 source
-// states, three distinct objects) also leave the best at 96.8123. Reading
-// height directly only in the centering arm loses 0.0259; direct reads in
-// both regions and block-scoped wrapping locals do not improve the match.
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
 void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
-                             // Before normalization (locals): color_scheme.
                              font::TColor colorScheme, unsigned justification,
                              int cursorPos)
 {
@@ -322,9 +261,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     int currY;
     int lineStart;
     int okWidthIndex;
-    // Before normalization (locals): iOrigPixelWidth.
     int origPixelWidth;
-    // Before normalization (locals): iHeight.
     int height;
     int width;
 
@@ -599,30 +536,6 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
 // NH3API corroborates the name and the parameter shape only.
 
-// Three lengths are live at once: `lineWidth` is what the built line
-// already costs, `spaceWidth`/`spaceCount` are the run of blanks not yet
-// committed to it, and `wordWidth` is the next word measured ahead of
-// its copy. A word that cannot fit even an empty line is broken
-// character by character in the inner loop.
-// Default construction followed by assignment places the live EH state at
-// +0x3c, before the empty-literal scan at +0x3f, as retail does. Constructing
-// directly from "" instead marks the string live after assign. The nineteen
-// named calls agree in both forms; the supported lifetime raises 87.9484%
-// to 88.6275% without changing any sibling.
-// Residual: 52 candidate CFG blocks versus 49 retail blocks. The first extra
-// scan-entry/backedge blocks precede the later space-count zero propagation;
-// that later branch is not the sole cause. Retail homes this at -0x20 and
-// spaceCount at -0x1c; the candidate homes this at -0x1c and keeps the count
-// in EDX during the blank scan. At overflow retail stores zero to spaceCount
-// and spaceWidth before branching to the append guard; the candidate elides
-// the count store and threads the zero-count path past that guard.
-// Exhausted controls: 60 scan/string-construction/declaration-order states
-// (42 objects, ten reproduced elites) select only the lifetime change above.
-// Another 64 scalar-scope/string-lifetime states yield only the two original
-// objects; hoisting spaceWidth, spaceCount, blankWidth, wordWidth or wordEnd
-// adds nothing. Earlier chained/swapped zero assignments were byte-flat;
-// a '<' append guard fell to 87.81%, and moving blankWidth before the counters
-// fell to 86.72%. Preserve these as failed probes, not a compiler-only verdict.
 VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)

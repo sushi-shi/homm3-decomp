@@ -1,16 +1,5 @@
 // army.cpp - E:\gamedcs\army.cpp (compiland army.obj)
 
-// EH CENSUS of this TU's open bodies, measured 2026-08-20 by scanning
-// retail .text for the `mov eax, fs:[0]` prologue: seven of the
-// twenty-three carried EH frames. THE P2.2 PARK IS LIFTED - the
-// corrected doctrine makes them ordinary work, and FaerieDragonSpell
-// (0x447510) is the proof: reconstructed EXACT 2026-08-20, its /GX
-// frame, inlined string c_str/dtor and unwind funclet all pairing
-// (the push-immediate delta in the EH prologue is the reloc addend,
-// masked). Still open with EH frames: do_post_attack 0x440bc0,
-// DrawToBuffer 0x43e140, animate_missile 0x43f2c0,
-// compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
-// 0x443840, new_turn 0x446e30.
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
@@ -196,17 +185,8 @@ void army::stopSample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 
-// THE INLINER WALL IS BROKEN (0.00 -> 92.63, 2026-08-20), and not by
-// the second-call-site theory the old note here staked out. That
-// theory was tested: CancelIndividualSpell (0x444510) landed with the
-// second 0x448db0 site and our CL STILL inlined erase into this body -
-// the one-site rule was never the mechanism. What works is the
-// statement-granular `#pragma inline_depth(0)` lever (game::Load
-// precedent): spell clear() through its own body with begin()/end()
-// hoisted into UNPINNED statements - their 16-byte temps must build
-// inline, so they cannot sit inside the pinned one - and pin only the
-// erase call. Both erase sites in the TU now carry the pin and the
-// 766-byte COMDAT is called exactly where retail calls it.
+// Retail calls vector<SpellID>::erase at both clear sites. Keep begin() and
+// end() outside the pinned erase statement.
 
 // Residual (92.6261%): the register-homing family. Retail fills the
 // two by-value iterator temps through EDI as scratch with EAX/EDX
@@ -738,20 +718,6 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 // count ternary and the effect flags both home in [ebp+8]); count_text
 // is char[12] (the frame is 0x458, and the affinity temp overlays it).
 
-// Residual (94.95%): register-homing mirror, all four sites cosmetic
-// renames of the same bytes - (a) drawX materializes Width into a
-// register before x (ours folds the deref into sub) and the stdIcon/
-// gpCombatManager push schedule shifts one slot; (b) numbox homes
-// step/scaled-index as esi/edx where retail uses eax/esi, so ours
-// recomputes 112*(gridIndex+step) at the third cell test; (c) the pow
-// switch mirrors ex/ey/cell-base esi<->edi throughout plus a 2-insn
-// shuffle on the flags load; (d) the affinity double temp anchors at
-// -0x28, retail -0x2c. Tried and rejected: index local n (83.3),
-// xoff/yoff reuse for the numbox coords (92.8), +-22 spelled if/else
-// (92.6 - the ternary already emits retail's sbb idiom), step/ex/ey
-// declaration reorders and &x two-step casts (all inert), cell-pointer
-// local (80.1 - longhand cells[gridIndex + step] is what retail
-// spells, and is kept).
 VA(0x0043e140, 0x8C0)  // anchor-global, dc 0x444a8
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
@@ -815,16 +781,6 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         if (m_isAreaEffectTarget)
             highlight = 0x70;
 
-        // 2026-09-06, polish lane 35: the four tint constructions below take
-        // GetPalette()->data, not GetPalette(). Retail's four calls at
-        // +0x187/+0x243/+0x2bf/+0x337 are all ??0TPalette16@@QAE@PBG@Z, the
-        // raw `const unsigned short*` constructor claimed at 0x5226a0; the
-        // `TPalette16(const palette*)` overload this used to select was a
-        // bodiless second declaration of that same constructor and is
-        // withdrawn from palette.h. Score-neutral here (the report ignores
-        // relocation NAMES) but it takes DrawToBuffer's real call
-        // divergences 6 -> 2 and its real relocation divergences 6 -> 2, and
-        // do_attack gained 0.04 tree-wide with nothing falling.
         TPalette16 saved;
         unsigned char restore = 0;
         if (is(1u << 29)) {
@@ -1450,36 +1406,9 @@ void army::animateMissile(army* armyToAttack)
 // assigned under `if (a)`, so an armyless hex adds the PREVIOUS
 // iteration's values into the totals.
 
-// The three creature-name selections are GetName's body inlined where
-// the luck message got a call - the same budget drain LoadResources'
-// note records; spelled as calls at all four sites.
-// Residual (95.7033%): 88.9058 -> 90.9874 -> 93.3846 -> 95.7033, and TWO of
-// the three shapes the old note filed as register-homing were source facts
-// (2026-08-20).  Declaration order: `slot` is read BEFORE `side` in BOTH scan
-// loops - retail's `movsx edx,byte [ecx+0x1b]` lands ahead of the `movsx
-// ebx,al` that reuses the already-tested armySide byte - worth +2.08 in the
-// Magog loop and +2.32 in the Lich loop.  And the damage_message target is an
-// IF, not a ternary: retail branches over the argument where
-// `multiple != 0 ? 0 : first` makes VC6 if-convert to neg/sbb/not/and, +2.40.
-
 // What is genuinely left is the first shape, and the frame still says so
 // (0x24 against retail's 0x20).
 
-// Old text, still true of what remains:
-// (1) In both effect blocks retail spills the CELL BASE to the dead
-// [ebp+8] arg slot and keeps x in ECX where ours homes x immediately
-// and keeps the base registered - downstream, our x -= Width/2 becomes
-// neg/add. (2) Retail runs the effect frame counter in EDI and homes
-// y; ours inverts the pair (hoisting the counter declaration is
-// byte-inert, measured). (3) Retail reuses the armySlot temp's slot
-// for fire_damage (sub esp 0x20 vs our 0x24); neither dropping the
-// side/slot locals for longhand re-reads (88.63) nor closing them in a
-// nested block (88.89) reaches it.  Naming the target cell is measured
-// NEGATIVE in the new structure too, both spellings: `const hexcell&`
-// 88.9058 -> 86.9294 before the declaration-order fix, `hexcell*`
-// 95.7033 -> 93.2700 after it.  Splitting `y` into three statements is
-// byte-flat. Branch structure and the call
-// multiset agree in full.
 VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::rangeAttack(army* armyToAttack)
 {
@@ -1546,13 +1475,6 @@ void army::rangeAttack(army* armyToAttack)
             killed += killedNow;
         }
         if (damage > 0) {
-            // NOT the ternary `multiple != 0 ? 0 : first` this used to be:
-            // retail branches over the argument (`test al,al / je / xor
-            // ecx,ecx / jmp`) where a ternary makes VC6 if-convert it to
-            // `neg/sbb/not/and`.  Worth +2.40.  The fuller `army* reported;
-            // if (multiple) reported = 0; else reported = first;` is NOT
-            // better - it measures 95.7033 -> 93.3328, because retail loads
-            // `first` unconditionally and only the zero arm is branched.
             army* reported = first;
             if (multiple)
                 reported = 0;
@@ -2106,39 +2028,6 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // Named side/index arguments select retail's address association in both
 // MarkCreatureEffect expansions.
 
-// Residual (99.9962%): ordering the result locals as damage, killed, damage2,
-// total_life, fire_shield_damage, killed2 selects retail's adjacent EDI/EBX
-// restores after do_multi_head_attack. Only two zero-initialization stores then
-// use the opposite total_life/killed2 stack homes. Branches agree 58/58,
-// returns 1/1 and all 106 blocks agree. A generated 1,090-variant
-// ordinary-source search covered argument temporaries, declaration order and
-// grouping, zero spellings and schedules, output roles, nested lifetimes,
-// positive/negative/duplicated null arms, named call arguments and pointer
-// aliases. No volatile, carrier, view, macro or new pragma was used.
-// Naming normalization: 98.9251 -> 98.8868, solely the independent EDI/EBX
-// reload order after doMultiHeadAttack (+0x2e5/+0x2e8). A 34-build Gruntz
-// forest/local-name product found two states; six disposable forest trials
-// recovered the pre-pass masked bytes. The tree-wide 30-forest sweep repeated
-// that result for this unchanged 2cfc7442c153 body: trial 29 reached 98.9251%
-// twice, so that score is banked as MAX. No probe declarations were retained.
-// A target-local 240-trial follow-up on 2026-09-07 crossed the twelve
-// non-include Gruntz state families and found no state above that 98.9251%
-// MAX. The remaining two-store residual stays a source-matching problem.
-// The result-local order documented above measured 98.8829 here and was
-// rejected. See docs/name-normalization.md; MAX/history remain preserved.
-// After removing the false game selector declaration, initializing behind
-// at its declaration before ResetHitByCreature and keeping an explicit final
-// else raises 98.8868% to 99.9424%, above the former 98.9251% peak. Retail
-// initializes that pointer before the reset call; initialization after it
-// plus the same else remains 98.9251%. DC retains the separate reset/target
-// initialization and final result branches. No compiler-state noise is kept.
-// The remaining differences are commuted base/index registers in the three
-// MarkCreatureEffect expansions; all 106 blocks and 31 named calls agree.
-// University ownership collateral: the corrected generic aggregate in game.h
-// moves this unchanged body to 99.9040% (address-register allocation and an
-// independent reload schedule). Restoring only the old constructor declaration
-// in the two-state header control recovers 99.9424%; it is not a valid type
-// model for generic university records. MAX/HIST retain the earlier peaks.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::doAttack(army* armyToAttack, int direction)
 {
@@ -2626,13 +2515,6 @@ inline double army::getDefenseDamageModifier(
 
 //   0x442690 (57 B)  heroes[hypnotizeFlag ? 1 - combatSide : combatSide]
 //   0x4426d0 (20 B)  heroes[combatSide]
-
-// WITHDRAWN as a proof: the is_enemy (0x442880) semantic argument an
-// earlier revision of this note used third. is_enemy compares
-// `this->get_controlling_side() != arg->combatSide` - one side
-// flipped, one raw - so it answers a hypnotized `this` correctly and
-// a hypnotized `arg` incorrectly under EITHER reading of +0xf4. It is
-// symmetric and settles nothing; only 1 and 2 do.
 
 VA(0x00442690, 0x39)  // dc 0x47904
 hero* army::getController() const
@@ -3435,8 +3317,6 @@ unsigned long army::strength()
 //   access at all. It is a dead parameter, transcribed faithfully, and
 //   that is also why C2 could turn the recursion into the loop.
 
-//     the mechanism). The former CancelAllSpells_ wrapper measured the
-//     same effect; the proven army::CancelAllSpells member now owns it.
 VA(0x00444120, 0x3A6)  // dc 0x493a0
 void army::processDeath(int fadeElementals)
 {
@@ -3555,7 +3435,7 @@ inline void army::adjustHitpoints()
 // binder teardown, HYPNOTIZE's remove_aura/add_aura helper pair, then the
 // seven stat restores. BIND's vector::clear, the aura helper boundary, and
 // AGE's adjust_hitpoints boundary are all positive CodeView facts; none may
-// be replaced by their lower-level implementation to protect a local score.
+// be substituted with their lower-level implementation to protect a local score.
 
 // The AGE arm re-reads spellInfluence[SPELL_AGE] AFTER the entry code
 // zeroed it, so its 0.5f halving arm is dead at runtime - the
@@ -3570,21 +3450,6 @@ inline void army::adjustHitpoints()
 // built on the stack - the second and last call site of the
 // deque::erase COMDAT at 0x448db0.
 
-// Restoring those three boundaries raises 96.2713% to 97.3596% and changes
-// 52/50 blocks with two extra candidate branches into an exact 50/50 block
-// count and exact 24-branch sequence. Forty-nine blocks are byte-shaped
-// exactly. The sole size residual is BIND's source-true clear: candidate VC6
-// keeps vector::erase as one call (7 instructions), while retail expands it
-// one level and retains std::copy/_Destroy calls (14 instructions). Raising
-// inline_depth to 255 is byte-inert; explicit erase(begin,end) was the former
-// source-false plateau and may not return.
-// Residual (97.3596%): the frame, 0x28 against retail's 0x38, and one block.
-// Retail's SPELL_BIND arm ends the binder teardown with an out-of-line
-// `_Destroy(_First, _Last)` followed by `_Last = _First` - the erase tail -
-// where we expand a different lowering of the same clear. MEASURED AND
-// REJECTED 2026-09-06: spelling the clear as
-// `binders.erase(binders.begin(), binders.end())`, which is what Dinkumware's
-// own clear() expands to, costs 11.1 (97.3596 -> 86.2600).
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::cancelIndividualSpell(int spell)
 {
@@ -3943,30 +3808,6 @@ void army::decrementSpellRounds()
 // side except this one and the arrow towers, kept only while it ties or
 // beats the closest distance seen so far.
 
-// Dreamcast lines 4163, 4187, 4195, and 4197 positively recover the
-// can_shoot, searchArray::get_hex, vector::clear, and vector::push_back
-// boundaries. The former flagform twin plus raw cellData and erase/insert
-// spellings were score-local duplicates, not source facts.
-
-// Restoring the complete chain initially exposed the expected inliner-state
-// dip. Carrying it through enemy_is_adjacent -> get_second_grid_index ->
-// Is(1) returns this function to 92.5170% with the full retail 42-block
-// count and exact 27-branch/one-return symbolic sequence. The residual is
-// instruction/register placement, not a missing helper or CFG edge.
-// Removing the artificial twin initially left OffsetToFront's army COMDAT
-// un-emitted. Restoring the real get_attack_direction inline state below
-// recovers that exact row, confirming the twin was never needed.
-// Retail counts the per-side stack loop DOWN: `mov esi,eax / dec eax /
-// test esi,esi / jle` at fn+0x4a tests the PRE-decrement count and then
-// `inc eax` restores the trip count into the reused [ebp+8] slot - the
-// signed `count-- > 0` form, not `while (count--)` (which would emit `je`).
-// The pointer advance stays in the `for` increment because retail's three
-// `continue` edges all land on `add edx,0x548`. 92.5170 -> 94.1648.
-// Tried and rejected 2026-09-06: retail materialises `best` in the entry
-// block (`mov [ebp-0xc], 0` before the can_shoot chain) and homes `this`
-// at [ebp-0x18] where we do the reverse; moving `long best = 0;` above the
-// can_shoot test measures 88.72 at BOTH placements (before and after the
-// canShoot/other declarations) against 92.52 for the natural order.
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::getBerserkTargets(std::vector<army*>& armies) const
 {
@@ -4650,10 +4491,6 @@ int army::otherArmyAdjacent(int OAgroup, int OAindex)
 // E:\gamedcs\army.cpp:4891
 #endif  // @carcass
 
-// Dreamcast lines 4902 and 4924 prove the two source-visible Is(1) helper
-// boundaries. They compile identically to the former raw creatureId tests;
-// that byte-flat result is not grounds to discard the recovered source fact.
-
 // Residual (91.7125%): control flow is exact. Candidate CL hoists the literal
 // 1 into EBX, costing a push/pop and replacing retail's immediate tests,
 // stores, and final animation argument with BL. Literal facing values and
@@ -5175,32 +5012,6 @@ unsigned char army::canCastSpell(long hex) const
 // `return !can_shoot(0);` (87.02) because our expansion of the
 // negated call diverges harder than the flag form's exits.
 
-// Residual (91.0744%): the stale-CL flag-threading class, same family
-// as can_shoot's own 92.00. (1) In the two expanded tail arms retail
-// THREADS bCanShoot's constant stores into two cloned sete epilogues
-// (`xor al,al`/`mov al,1` + `sete cl; mov al,cl`) where our CL
-// materializes the flag in EBX (`mov ebx,1`/`mov bl,1`, `xor ebx,ebx`)
-// and funnels one merged `mov al,bl` exit. (2) Precision's depth-3
-// OffsetToFront(-1) site: retail REJECTS it (`push -1 / call` on the
-// 0x445cd0 COMDAT), ours expands the neg/sbb longhand; no
-// statement-scoped pin can reach inside can_shoot's expansion without
-// also de-inlining the accessors retail keeps inline. (3) The three
-// loop-guard `jle` exits target retail's shared zero block at +0x32d
-// where ours picks each arm's local copy - displacement-only. Tried
-// and rejected: longhand Precision with pinned OffsetToFront (87.41),
-// `return !can_shoot(0)` Bloodlust (87.02). Not tried:
-// `inline_depth(2)` over the tail arms - it would reject
-// get_controlling_side's depth-3 expansion retail keeps, trading a
-// 5-instruction gap for a 10-instruction one.
-// Residual (92.6970, 2026-08-21): the shooter arm's can_shoot expansion
-// computes the wide second hex inline (`neg/sbb/and 2/dec/add`, the
-// folded get_second_grid_index) where retail's expansion CALLS the
-// OffsetToFront COMDAT (`push -1 / call ?OffsetToFront / add gridIndex`).
-// Respelling can_shoot's second hex as `gridIndex + OffsetToFront(-1)`
-// reaches that shape here but breaks the shared body's other sites
-// (can_shoot 100 -> 96.59, get_total_combat_value 100 -> 97.80,
-// consider_attack 100 -> 98.22 - measured and reverted); the depth
-// split is per-site budget state the one source cannot carry.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spellIsValidOnTarget(int spell, const army* target)
@@ -5335,10 +5146,6 @@ unsigned char group_has_dragons(long group)
 }
 
 // E:\gamedcs\army.cpp:5488
-// WITHDRAWN 2026-08-20: 0x447a80 is NOT this function. It takes TWO
-// fastcall register arguments and is the shared worker described below,
-// reached by tail-jump from 0x447eb0 - which is where
-// is_valid_caliph_spell is actually claimed. The row has no DC name.
 unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 {
     // @stub

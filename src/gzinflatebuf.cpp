@@ -34,10 +34,6 @@
 #include "exceptions.h"
 #include "gzinflatebuf.h"
 
-// Only this implementation throws the nested error type. The retail throw
-// descriptor names TGzInflateBuf::TDataError; all recovered throw sites use
-// its default constructor, retained at 0x4d65e0 and also expanded by VC6.
-// The former string-taking overload had no caller or supporting evidence.
 class TGzInflateBuf::TDataError : public std::runtime_error {
 public:
     TDataError();
@@ -102,68 +98,6 @@ int TGzInflateBuf::getByte()
 //    an 87.78 baseline) and +1.28 after it: a rejected knob is only
 //    rejected for the inline structure it was measured in.
 
-// The header walk is TWO NESTED try blocks, and retail's EH data says so:
-// the FuncInfo at 0x62c8f8 carries nTryBlocks=2 - an inner [4..4] whose
-// HandlerType names 0x4d6288 and an outer [3..5] naming 0x4d62a2, both
-// with the `._N` (bool) type descriptor. 0x4d6288 is
-// `--stream.next_in; ++stream.avail_in; throw;` off `this` reloaded from
-// [ebp-0x18]; 0x4d62a2 is `ok = 0` returning the continuation address
-// fn+0x262. So the "SECOND pushback block, sunk and reloading this" an
-// earlier note here chased as a duplicated source statement is the INNER
-// CATCH, and the state stores bracket it exactly: state 3 at fn+0xea
-// covers only the first byte's EOF test, state 4 at fn+0x191 opens right
-// before the gz_magic[0] compare, and state 2 at fn+0x26d closes both.
-// That is zlib check_header's pushback rule reproduced arm for arm - the
-// `if (len != 0)` pushback is the inner catch, the `if (c != EOF)` one is
-// written inline in the gz_magic[1] arm, so a second-byte mismatch pushes
-// back TWICE and a first-byte mismatch once. Writing the nested try:
-// 91.5985 -> 92.6749.
-
-// Residual (92.67%): 61 vs 61 blocks with 55 exact, and TWO branches
-// short. The EH transcript is now 17 state stores against retail's 14 -
-// three surplus, one whole `throw TDataError()` group (its string
-// temporary, its exception object, and the return to state 2). Retail
-// expands the TDataError CONSTRUCTION at three sites and calls
-// ??0TDataError at nine; we expand at four and call at eight.
-// Read positionally (the census says how many sites disagree, only the
-// order says which) the two streams are IDENTICAL for their first 27
-// entries and part company at exactly one place: retail has a THIRD
-// consecutive `call get_byte` at +0x432 followed by two ??0TDataError
-// calls at +0x442 / +0x45e, where we open the expanded group at +0x448
-// instead. Counting the whole body, retail issues TWELVE `call get_byte`
-// against our TEN with twelve TDataError sites on both sides - so retail's
-// source has TWO MORE read positions than ours, not a different inline
-// dose, and they are in the `(flags & 4)` extra-field block where retail
-// reads three bytes in a row (+0x40a, +0x422, +0x432) and we read two.
-// MEASURED, and it CORRECTS this note's own earlier reading. The two
-// missing positions are the name/comment skip loops: written
-// `while (read_byte() != 0) { }` VC6 PEELS the condition and emits
-// read_byte at the guard AND at the bottom, and the note above had called
-// that peel the CAUSE of "one surplus get_byte". It is the opposite -
-// retail HAS the peeled arity. Peeling both loops brings our census to
-// 12 get_byte against retail's 12 and carries the positional agreement
-// five entries further (they now part company at index 32, not 27), and
-// it still scores 90.7660 against 92.6749, so it is not shipped.
-// What it exposes is the real residual: with the arity right, the ONE
-// TDataError construction we expand sits at read site 10 (the comment
-// loop) where retail's sits at site 12 (the second header-CRC byte), and
-// we then CALL at 11 and 12 because the expansion at 10 already spent the
-// budget. Expanding too EARLY in the site order is the caller-too-large
-// signature, so the direction is caller-shrink - and a retail-only TU with
-// no DC roster has no named helper to lift into. Do not re-measure the
-// loop FORM again (while(1)+break 83.40, explicit decrement 88.67, counted
-// for 89.52, peel 90.77): the form is settled and the arity is a separate,
-// now-known fact.
-// Retail also loads gz_magic[0] into EBX ahead of the first compare
-// where we read it as a memory operand, and CALLS basic_string::_Tidy on
-// the TDataError path where we expand it. Measured and rejected for the
-// second pushback: the same statement in the gz_magic[0] arm (85.22), in
-// the second EOF arm (85.72), and nested inside the gz_magic[1] arm
-// (88.97); for the compare, a named `int magic0 = gz_magic[0]` hoisted
-// above the read (90.50) or taken after it (byte-flat), and folding the
-// EOF and magic tests into one `||` (83.60). The `extra` skip loop is
-// likewise at a local maximum: while(1)+break 83.40, an explicit
-// decrement 88.67, a counted `for` 89.52.
 VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     : m_source(newSource),

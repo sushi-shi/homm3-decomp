@@ -16,9 +16,6 @@
 // duplicate free helpers. The direct != body preserves retail's three tests;
 // negating operator== instead scored 64.78% in the earlier buildPath probe.
 
-// Using the canonical comparisons changes buildPath from 82.5524% to
-// 81.4143%; its 86.3333% historical peak remains recorded below and in HIST.
-
 // E:\gamedcs\search.cpp:32
 // Residual (86.3333%): two enregistration choices, both measured unreachable
 // on 2026-08-14. (1) retail materialises `this + 0x48` (the `result` vector)
@@ -503,18 +500,6 @@ void searchArray::checkTownPortal(const hero* currentHero,
 }
 
 // E:\gamedcs\search.cpp:621
-// Dreamcast supplies the source-level statement groups, six locals and the
-// retained helper boundaries. Complete corroborates the same setup/queue
-// algorithm and adds the initial lith/underground-gate trigger arm below.
-// Residual (94.82%): all 78 branch decisions agree. Retail's frame is 0x6c
-// because it assigns monster after check_summon_boat's inlined temporaries;
-// this compiler assigns it first and uses 0x68. Retail also keeps the two
-// obscure_cell return tails separate while this object cross-jumps them.
-// Tried and rejected: direct/copy monster initialization, earlier monster or
-// native-terrain declarations, cell/monster declaration order, an explicit
-// inline keyword on the ordinary static helper, and restoring the canonical
-// constructor at its true struct.h parse point (source-correct but byte-flat
-// here). Do not replace either residue with an inline pragma or dummy local.
 VA(0x0056b440, 0x8EC)  // exhaustive search.obj order-map, dc 0x12c36c
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,

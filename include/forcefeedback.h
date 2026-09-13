@@ -159,8 +159,6 @@ protected:
     unsigned long m_lastStopped; // +14, SDK m_dwLastStopped.
     unsigned long m_lastLoaded;  // +18, SDK m_dwLastLoaded.
     CImmDevice* m_immDevice;      // +1c, SDK m_pImmDevice; GetDevice 0x1470.
-    // Reset at 0x6b20 zeros 0x48 bytes and points axes/directions at the
-    // following arrays. The old version has no embedded m_Envelope.
     FEELIT_EFFECT m_effect;       // +20, SDK m_Effect (API field spellings).
     unsigned long m_axes[2];     // +68, SDK m_dwaAxes.
     long m_directions[2];        // +70, SDK m_laDirections.

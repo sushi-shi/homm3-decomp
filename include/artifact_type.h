@@ -207,10 +207,8 @@ enum TArtifact {
     // byte-proves twice - Power of the Dragon Father 0x86 (134) and
     // Bow of the Sharpshooter 0x89 (137).
     ARTIFACT_RING_OF_THE_MAGI = 0x8b,
-    // Combat-side artifact gates formerly declared as EArtifactId.
     // Retail GetArmyMorale/GetLuck prove the morale/luck constants; spell
-    // immunity gates prove the pendant, sphere and orb constants. Original
-    // NH3API spellings were admitted through those retail behaviors.
+    // immunity gates prove the pendant, sphere and orb constants.
     // combatManager::can_cast_spells (0x41f890) gates a hero cast on
     // slot 0 and then refuses every cast when either combat hero
     // wields 0x7e - the pair the decode note above already calls out

@@ -18,30 +18,6 @@ class message;
 // remaining dword lands at [0x2c]. DC's `focusable` and `on` have no
 // retail home: retail is exactly DC minus those two, plus field_2C.
 
-// CORRECTION 2026-08-08 (this replaces the earlier "[0x2c] is
-// focusable" reading, which was a name carried over from the DC
-// fieldlist onto an offset DC does not use for it). field_2C is the
-// retail-only SLEEP NESTING COUNTER, byte-proven three ways:
-//   * heroWindow's slot-8 body 0x5ff5f0 walks the window's Widgets
-//     vector and, per widget, runs
-//       on ? (if ([+0x2c]++ == 0) vslot12(1))
-//          : (if (--[+0x2c] == 0) vslot12(0))
-//     - a ++/-- nest counter with a 0<->1 virtual edge, which a
-//     focus-permission flag cannot be. It is store-for-store the same
-//     shape heroWindow::SleepAllWidgets (0x5ff5b0, exact) runs on its
-//     own counter heroWindow::field_48.
-//   * widget::Main 0x5fe4f0 and button::Main 0x456190 both open with
-//     `if ([+0x2c] > 0) return 0;` - asleep widgets drop every
-//     message. DC's widget::Main (dc 0x196cd0) has NO such guard at
-//     all; it enters the message switch directly.
-//   * DC's own sleeping is a different design: `widget::sleep`
-//     (dc 0x2dec, ?sleep@widget@@QAAX_N@Z, Widget.h:244) is
-//     send_message(on ? WIDGET_SET_STATUS : WIDGET_CLEAR_STATUS,
-//     WIDGET_ASLEEP) - a status BIT, no counter and no virtual. Retail
-//     rewrote it into the counter + hook below.
-// The counter itself is unnamed in every source we may read, so the
-// field keeps the house ordinal placeholder.
-
 // Virtual roster PROVEN by the retail widget vtable 0x243c90 -
 // THIRTEEN slots, not twelve (config/retail-vtables.tsv row 0x243c90;
 // heroWindow's own vtable begins immediately after at 0x243cc4 =
@@ -92,9 +68,6 @@ protected:
     unsigned char m_freeText;
 
 public:
-    // Sleep nesting depth; see the CORRECTION note above. Name is the
-    // house ordinal placeholder - the role is proven, the spelling is
-    // not attested anywhere we may read.
     int m_sleepCount;
     // Dreamcast widget::EStatusFlags, values byte-corroborated by the
     // retail ctor (status = WIDGET_ACTIVE | WIDGET_DRAWN) and enable

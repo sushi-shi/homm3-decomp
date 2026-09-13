@@ -11,21 +11,6 @@ class message;
 // prevManager@8, id@12, priority@16, cMgrName@20 char[32], status@52),
 // corroborated store-for-store by the retail ctor (0x44d530).
 
-// CORRECTION 2026-08-08: the vtable 0x63b9bc has THREE slots, not six,
-// and the three "unidentified retail bodies" the old note listed at
-// slots 3-5 (0x44e020, 0x55d0f0, 0x44e240) were rows of the NEXT
-// table. Two independent sources say three:
-//   * config/retail-vtables.tsv row `0x23b9bc 3 baseManager`, and the
-//     following table starts at 0x23b9c8 = 0x23b9bc + 3*4, which
-//     bounds the count exactly.
-//   * the DC fieldlist for baseManager (dump.txt "Size = 56, class
-//     name = baseManager") lists precisely three PURE INTRO methods -
-//     Open@vfptr 0, Close@4, Main@8 - one VANILLA SetStatus, and no
-//     destructor at all. Every derived manager's own table is the same
-//     three slots wide plus whatever IT introduces (mouseManager's
-//     0x640028 is four: Open, Close, Main, then its own ??_G).
-// All three slots are _purecall (0x617d9a) in this table, as DC's PURE
-// INTRO says they must be.
 class baseManager {
 public:
     // STATUS_SUSPENDED is executive::CallManager's own suspend mode: the

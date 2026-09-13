@@ -265,13 +265,6 @@ public:
     }
 };
 
-// CNewPlayerUpdateProc owns the header-transfer state and three virtual
-// operations. CodeView names its constructor at dc 0x14808c and teardown
-// at dc 0x148a28; the latter destroys the request container directly.
-// Complete's 0x641d44 vtable contains Go/Tick/Finish. The derived map-list
-// implementation overrides those slots through 0x641d38 without adding
-// data. No evidence supports the former abstract CNewPlayerUpdateTask base;
-// its novtable annotation existed solely to influence destructor codegen.
 class CNewPlayerUpdateProc {
 public:
     CNewPlayerUpdateProc(unsigned long dpid);
@@ -1815,18 +1808,6 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
-// Complete retail preserves Dreamcast's end/filter/scroll/setup message
-// sequence, mutually exclusive pane click, current-difficulty click, roster
-// transfer, face validation and final face broadcast. The three pane widget
-// ids and the difficulty bias are Complete's independently visible revision.
-// Residual (87.0155; historical max 89.5855): all 14 blocks and all 7
-// symbolic branches agree, and every instruction outside the scenario/filter
-// click constructors is exact. Retail expands CClickMsg but calls its CNetMsg
-// base in the Complete-only filter arm; our /Ob2 does the inverse across the
-// pair. A filter-site inline_depth(0) raised the percentage but called the
-// WHOLE CClickMsg and perturbed later scheduling, so it is rejected: retail
-// keeps only the nested child out of line. Moving the class body inline,
-// nesting the else scope and inline_depth(1) were byte-flat.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
 void CNewPlayerUpdateProc::finish()
@@ -1874,68 +1855,6 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
-// MATCHING (2026-09-04): 75.00 -> 89.49, 437/437 blocks, 202/203 branches.
-// The body was incomplete: retail continues past the scnrback button for
-// ~0x310 B (DC 2491..2625) - the Widgets.begin()/end() AddWidget(w,-1)/
-// MemError flush, the sprite/bitmap preloads, the mode setup calls, the
-// help table, the two 8-dword fills, the save-mode focus block and the
-// 107..111 disable loop - all now present. Also restored: the
-// CNetPlayerHandler constructor body (DC 1005..1017) which retail expands
-// between the m_players and netMsgHandler member constructions; the
-// single-copy 102/103 border block; CreateFilterWidgets() inside the mode
-// textButton block; chatMan.SetPosition(-1) (was SetFocus(-1)); the
-// pDPlay null test before SetNetMsgHandler; the 391/392 widgets hidden by
-// pointer; the heading selector evaluated inside the argument list; the
-// DC accessor sites (GetWidth/GetHeight, IsMultiPlayer x6).
-// Residual: (a) inliner - retail rejects vector<widget*>::insert at the
-// 128 textButton and accepts it at 130, we do the reverse; the nested
-// budget is budget/(sites-remaining) and retail's source has one more
-// candidate after 128 that ours lacks: UpdateMainWindow (0x57fb90, still
-// a carcass stub here, so not an /Ob2 candidate in this TU). Landing its
-// body should flip both sites. (b) register homing downstream of that
-// and of the m_players ctor expansion (retail keeps the earlier zero in
-// EDI across the two seat-array ctor loops and homes the loop pointer in
-// [ebp-0x14]). (c) frame: CLOSED 2026-09-06 at `sub esp,0x314`, retail's
-// exactly (93.6778 -> 95.6922), and the earlier note that read "every
-// scoping variant byte-flat, layout left as written" was looking at the
-// wrong construct. The flag-row loop indexes TWO different colour arrays,
-// not one: `AOFLGB%c.DEF` takes the uppercase local flagColors[] while
-// `adopb2%c.def` takes the LOWERCASE literal - the same "rbygopts" the
-// preload loop below already used, which retail pools once at 0x641ae0
-// and reads at all three sites (`mov eax,offset const_241ae0 / sub
-// eax,edi` here, `movsx [edi + const_241ae0]` twice in the preload loop).
-// Writing both sprintfs off the one local array made `&flagColors + i`
-// the loop's only induction variable, so VC6 had to precompute THIRTEEN
-// `K - &flagColors` biases into stack slots (0xc7 0xcf 0xd7 0xdf 0xe7
-// 0xef 0xf7 0xff 0x159 0x161 0x16a 0x172 0x17a) - exactly the 0x30 of
-// surplus frame. With two arrays the induction is retail's `edi = 263+i`
-// with every other widget id derived by `lea`, and only the two biased
-// bases (`&flagColors - 263`, `"rbygopts" - 263`) are homed. Still open
-// in the preheader: retail keeps rowY itself in EBX (`mov ebx,0x85`, then
-// `sub edx,y / sub edx,3`) where this compiler reassociates the -3 into
-// the induction (`mov ebx,0x82`).
-// THE FRAME, 2026-09-06.  Same size as retail (`sub esp,0x314`) and the same
-// 25 ebp-relative slots but for TWO facts, both of them array PACKING:
-//   * ours homes an extra array at [ebp-0x2c4].  Retail has exactly three -
-//     the inlined GetModuleFileNameA path buffer at [ebp-0x320] (0x15f B),
-//     `flagName` at [ebp-0x1c0] (256 B) and a 100-byte buffer at [ebp-0xc0] -
-//     and it uses that LAST one for BOTH the `adopb2%c.def` sprintf inside
-//     the flag loop and the `adop%cpnl.pcx` sprintf 200 lines later, i.e.
-//     retail's temp_str and tempName share storage while ours do not, and
-//     retail's module-path buffer does NOT share with flagName while ours
-//     does.  Two probes: `char temp_str[100]` repacks into a different
-//     layout entirely (slots 0xc0/0x124/0x228/0x284) and is byte-flat,
-//     95.7079 -> 95.7071; bracing the tempName loop into a sibling scope
-//     GROWS the frame (0x324) and costs 95.7079 -> 94.9511.  Both rejected.
-//   * `this` spills to [ebp-0x1c] where retail spills it to [ebp-0x20] and
-//     puts the widget* temporary at -0x1c - the pair is swapped, which is
-//     the function's FIRST divergent byte (+0x33) and costs a displacement
-//     on roughly 25 instructions.  Retail therefore homes one more 4-byte
-//     entity above the this-spill than we do; it is not in the slot SET, so
-//     it shares a slot with something already there.
-// One real missing instruction, in the flag-loop button: retail computes the
-// y as `mov edx,ebx / sub edx,[ecx+0x1c] / sub edx,3` where we fold the -3
-// into the induction variable (our ebx is rowY-3, retail's is rowY).
 
 // Measured byte-flat: `int i` function- vs block-scoped for every loop;
 // a ternary-of-two-news for the 128 textButton (85.98, rejected); the
@@ -2674,20 +2593,6 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // mapFilter/filterSize members describe the existing scenario-file filter.
 // These desktop random-map helpers retain provisional semantic names.
 
-// Historical probes before removing the artificial setHighlightFrame
-// wrapper (2026-09-04, 60.93 -> 100%): retail calls
-// Dreamcast button.h:99; set_highlight_frame was an unproven twin).
-// Keep the proven disabled-frame helper and direct highlight-field stores;
-// matching the inline budget does not establish a second source helper.
-// Recovery, 2026-09-09: named allocation results, a real vector reference,
-// and loop-local button/widget pointers recover 84.8995 -> 92.9883 without
-// the unproven highlight helper. The six loops use public single insert;
-// standalone widgets keep push_back. Retail keeps the append call and its
-// pointer argument on the frame. The 54-state initial family plus 61-state
-// refinement preserve all 56 constructors, defaults, field stores and order.
-// Direct loop push_back and unnamed conversion controls remain below this
-// result. CEnterNameEdit::onKeyPress changes 100 -> 99.8868 with its source
-// unchanged; its MAX/HIST stay 100. See docs/vc6/source-families.md.
 VA(0x0057D170, 0x1DF7)
 void TSingleSelectionWindow::createFilterWidgets()
 {
@@ -3236,20 +3141,6 @@ void TSingleSelectionWindow::setupFilterOptions()
 // every seat's hero/town choice, redraws, and mirrors the new positions to
 // the other machines through SendPlayerPositions.
 
-// Residual (81.8719%; former history 81.7345%): retain a reference to the
-// local row from its header assignment through AssignData/SetText. Retail
-// reuses EBX for that row and saves the window separately. Binding before
-// the title/description copies scores 73.73684%; a pointer is byte-identical
-// there. Per-seat references score 79.17162%, per-slot references 80.97941%.
-// Swapping the independent playable/difficulty stores and the count-sum
-// operands leaves the score unchanged. Keep the original statement order.
-// Remaining boundaries: retail calls both local string constructors,
-// expands only the second AssignData string assignment through _Grow, and
-// calls the first message-array seat constructor while expanding the second
-// down to CNetPlayerInfo. Our trace expands the first string constructor,
-// both assignments through _Grow, and both seat constructors. The message
-// helper and header constructor retain their Dreamcast-proven operations;
-// this Complete-only caller supplies no DC source for a missing boundary.
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 {
@@ -4151,22 +4042,6 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // indexed read earlier also discards the description's proved lifetime and
 // is not retained (55.0450% with the old pins; 49.0856% without them).
 
-// The 67.9099% MAX was banked with two inline-depth pins inside AssignData.
-// Those pins suppressed all four string operators, while retail expands
-// three down to assign(ptr,len) and the final site through _Grow/_Eos.
-// Both pins are removed. Current 34.0405% preserves the header transfers and
-// corrected final reload; one base assignment and one string assignment now
-// expand too far. A qualified base operator= is byte-flat. The explicit local
-// header pointer follows retail's materialized base across the copy bands
-// (34.0405% versus 34.1577% with direct member expressions); no guessed
-// assertion or synthetic helper is used to steer these remaining boundaries.
-// The verified trace gives the second base assignment cost 315 and budget
-// 325. Expanding it leaves only 10 for the two string operators. Resolving
-// the row separately for setup/availability, then retaining only its
-// description through AssignData/SetText, reaches 58.8784% (976 bytes) but
-// reloads currentMap and SelectionHeaders between the copy bands; retail
-// retains one row address there. Moving the selected reference after those
-// two copies also fails (0.0%, 1040 bytes, confirmed symbol pairing).
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::updateGameVars()
@@ -4327,14 +4202,6 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // directly at 0x5894a3 before deleting the allocation. It destroys only
 // m_requests, whose pointer triple is at +0x10/+0x14/+0x18 in Complete.
 
-// Historical probes on the removed CNewPlayerUpdateTask surrogate: an
-// abstract novtable base with non-virtual destructor reproduced 0x583ef0
-// but did not emit its claimed scalar deleting wrapper. Making the base
-// destructor virtual added a fourth vtable slot; removing novtable from
-// that surrogate added a vptr reset. Those failures describe the artificial
-// hierarchy, not an unreachable retail function or an original base class.
-// The empty teardown now belongs to the CodeView-named concrete class;
-// both claims follow that owner, with the diagnostic inline pin removed.
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateProc)  // dc 0x1489f0
 VA(0x00583ef0, 0x26)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
 CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
@@ -4483,34 +4350,7 @@ int TSingleSelectionWindow::MaxPlayers()
 
 #endif  // @carcass
 
-// Selection counts use the native vector query at each site. The former
-// getMapCount wrapper had no independent source identity or retained body.
-// For example, GetFileName 0x583f20 repeats the null/bounds/0xca4-stride
-// calculation at 0x583f76 and 0x583fa2; preserve both reads rather than
-// caching the count. Large callers may retain vector::size at 0x58eab0.
-// E:\gamedcs\singleselectionwindow.cpp:4239. Retail dropped the message
-// parameter: the no-arg redraw member OnGameTransmitInitMsg (99.6%)
-// provably calls at its failure path and the m_flag64 handlers tail-call.
-// Retail also split DC's monolith (dc 0xd84): the selected-map panel went
-// to DrawBasicMapInfo (0x5840f0), the row names come back through
-// GetMapName, and DC's MaxPlayers left no retail row. Before the headers
-// arrive only the hosting hint is painted: general-text 510 under
-// !pDPlay->IsHost(). The three panel sections mirror the mode bytes -
-// scenario rows (players "%d/%d", size text, the three icon strips, the
-// name column), advanced options (names, titles, turn duration, the
-// per-seat DrawHeroAdvancedOption walk), and the retail-only filter
-// panel (739/740 + UpdateFilterWidgets).
-// Residual (96.9): the TU's documented register-homing/CSE class (the
-// WindowHandler note): all three vector-size expansions CSE the header
-// vector's _First (esi) where retail reloads it per expansion in eax
-// and lets the imul clobber it - the hdr lea/spill scheduling and the
-// version load fold drift with it. Also the hero walk's two provably-
-// equal counters coalesce onto one register where retail keeps i/pos
-// split (edi/esi) - tried and rejected: named-local index (spill,
-// worse), reusing the names-loop counter re-zeroed (byte-flat).
-// Structure exact otherwise: guarded do/while over the rows,
-// switch-with-ternary-default for the version icon, if/else over two
-// SetText calls, GetWidget receiver named before the argument.
+// E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
 VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
 {
@@ -5298,9 +5138,6 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 VA(0x005860E0, 0x4CC)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
-    // Former locals players/humans/teams/alliances/monsters/water were
-    // misleading: the request-to-generator bridge 0x54bf60 proves the
-    // following player/team counts and water/monster option identities.
     int humanPlayerCount = m_randomMapOptions[2];
     int humanTeamCount = m_randomMapOptions[3];
     int computerPlayerCount = m_randomMapOptions[4];
@@ -6066,24 +5903,6 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
 // matching slot (absent slots keep their zero), and returns the slot with the
 // smallest stamp - i.e. the free slot if there is one, otherwise the oldest.
 
-// Residual (99.4390%): three bytes. Retail keeps the sprintf loop counter in
-// EDX behind its own `xor edx,edx`, while our compile CSEs it onto the EAX
-// zero the memset intrinsic already materialised. Tried and rejected:
-// `i = 0;` written above the memset (98.95), the memset moved below the loop
-// (89.16), and hoisting `int i;` to the declaration block (byte-flat - a bare
-// declaration creates no pseudo). Byte-flat as well (2026-09-05, 99.44 to the
-// digit): scoping the counter into the `for` and deleting the function-scope
-// declaration, declaring `int i;` FIRST of all the locals, and rewriting the
-// loop as `i = 0; while (i < 15) { ...; ++i; }`.
-// The residual is retail's `xor edx,edx` ahead of the times[] clear - it
-// keeps `i` in its own register across the memset where we spend the
-// memset's zero on it. Pairing the counter with the memset the way
-// docs/vc6 records for the prologue-counter lever is WORSE, measured
-// 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
-// with a `while` alike), and moving the memset BELOW the sprintf loop
-// 89.1584. An unsigned counter flips the loop branch signedness and falls to
-// 99.15%. why-reg tested five additional catalog mutations; three were flat,
-// one worse, one invalid, and none moved the EAX/EDX divergence.
 VA(0x005879A0, 0x219)
 std::string getRandomMapName()
 {
@@ -6607,10 +6426,6 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
     return 0;
 }
 
-// The RS_CLICK message constructor is canonical in struct.h. Its selected
-// retail body at 0x589190 zeroes the eight message words; the former local
-// lobby_message subtype duplicated it and incorrectly cited DC Update.
-
 VA(0x005891b0, 0x45)  // dc 0x1477b0
 int CHostWaitDlg::handleMessage(message& msg)
 {
@@ -6704,27 +6519,7 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
     return missing;
 }
 
-// Re-read one broadcast row's header from disk and mirror it into the
-// announced list plus the SelectionHeaders copy; when the file is
-// missing or stale (fileTime disagrees), ask the sender for the wire
-// header instead. The directory ternary is written out twice - retail
-// reloads all three literals at both sites. Both chdir("..") returns
-// stay per-arm (the miss arm carries its own). The pinned third assign
-// is retail's call (both arm assigns expand, the mirror is called);
-// the subscript is hoisted out of the pin per doctrine.
-// Residual (90.2): (1) the stale-arm CMapHeaderRequestMsg base ctor -
-// we expand CNetMsg(int,ulong)'s five stores in place, retail calls
-// its 0x4f2930 COMDAT (the tail arm's twin site already calls); a pin
-// on that statement takes the DERIVED ctor out of line too and loses
-// 12.6 (77.60, measured). (2) push ebx sits in our prologue where
-// retail defers it past the head guards (declaring pMsg after the
-// chdir is byte-flat - not the lever). (3) the third-site &temp push
-// precedes retail's index math, ours follows it. (4) cosmetic reloc
-// names: ??0NewSMapHeader/??0SGameSetupOptions/??4NewSMapHeader/
-// ??4SavedGameHeader COMDATs unclaimed at 0x45a7a0/0x45ac20/0x45cd10/
-// 0x5792c0.
-// E:\gamedcs\singleselectionwindow.cpp:6723. The 6-byte DC body is the
-// VMU stub; retail's is the real one (owns the random_maps path).
+// E:\gamedcs\singleselectionwindow.cpp:6723
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
@@ -8417,31 +8212,6 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
     return 0;
 }
 
-// One advanced-options seat row: the row highlight and flag plate, then
-// per-column art and arrows. The network arm (m_flag64) paints the
-// committed setup values with no arrow logic; the local arm derives the
-// shown town (attribute band or pick_alignment), gates each arrow pair
-// through the CanChoose accessors, and repairs an impossible
-// resource-bonus pick in place (no town chosen -> the seat's record is
-// rewritten to random). A -1 position recomputes the visible row the
-// same way CalcPosition (DC-only) does.
-// Residual (90.6, round 3: the MakeHeroFilter-precedent inline_depth(0)
-// pin on the town condition keeps HasMultipleTowns retail's CALL,
-// +0.78; why-reg v2 reports first-def bindings AGREEING - the
-// remaining 361-slot distance is all downstream homing): the
-// register-homing/scheduling family. Retail homes
-// the arm-scoped locals in the dead parameter slots ([ebp+8] iconY,
-// [ebp+0x10] alignment/q, [ebp+0xb] canChooseHero) and re-reads them
-// per site, while our CL keeps register copies - the resource-bonus
-// arm's self-store ternary elides with it, textY takes an add-in-place
-// where ours preserves rowY's register, and every draw block's push
-// schedule drifts around those homes. Structure is exact: block count
-// 96 vs 98 with the only extra target block being that elided
-// self-store, and all seven DrawBoundedString sites cross-jump onto
-// shared tails exactly as retail lays them out. Tried and rejected:
-// slot-pointer vs longhand attribute reads (byte-flat); assigning the
-// alignment through the spent `position` parameter is KEPT (it lands
-// the [ebp+0x10] home retail has).
 // E:\gamedcs\singleselectionwindow.cpp:8297
 VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
 void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,

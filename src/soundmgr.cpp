@@ -30,15 +30,6 @@ DATA(0x00684ae0) int g_soundMaxSamples = 14;
 DATA(0x0069fe80) AILWaveFormat g_soundWaveFormat;
 DATA(0x00698a28) int g_unk698a28;
 
-// The ordinary GetSampleInfo member below owns both sample queries. Its
-// operation-4 arm tests gbNoSound, this->ds and the sample, enters the sound
-// critical section, compares AIL_sample_status with 4, then leaves it.
-// Retail expands that same sequence in PauseSamples (0x599cd5), WaitSample
-// (0x599f07), AdjustSoundVolumes (0x59a14a), WaitEndSample (0x59a507) and
-// the worker (0x59a712): these are the status-call addresses. Keep the
-// canonical member calls and each caller's this/global receiver. The former
-// SamplePlaying wrapper duplicated this arm under an unattested boundary.
-
 VA(0x005994b0, 0x210)  // dc 0x14b07c
 void soundManager::setMusicVolume()
 {
@@ -583,20 +574,7 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         _beginthread(waitEndSampleThread, 0, launched);
 }
 
-// The address taken by launch_sample is a cdecl thread entry.  Its packet
-// fields, 100-ms elapsed-time loop, live-waiter accounting, and final
-// ClearMemSample expansion are all independently visible in retail.
-// Historical probe (92.00%) with the former SamplePlaying wrapper:
-// candidate and retail each emitted 95 instructions, the
-// same 13 symbolic branches and the same ten calls. The 17/18-block view is
-// one path-dependent reload schedule inside the provisional SamplePlaying
-// expansion: retail keeps the manager in EAX on early exits and inserts a
-// one-instruction reload block after the loop; this C1 allocation uses ESI
-// and reloads later in ClearMemSample. Swapping the helper's two parameters
-// and naming its critical-section pointer are both byte-flat across this row
-// and its four exact sibling callers. Those optimizer results did not
-// establish a separate helper; the canonical GetSampleInfo now owns the query.
-// E:\gamedcs\soundmgr.cpp:911/976 vicinity; PC worker has no DC row.
+// E:\gamedcs\soundmgr.cpp:911
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {

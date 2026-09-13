@@ -939,8 +939,8 @@ void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 }
 
 // Own-terrain checks share the predicates used with the selected paint
-// terrain. Retail retains the nested predicate in the former and expands
-// the latter at the four adjacent-row/column probes.
+// terrain. Retail retains the nested predicate in the horizontal check and expands
+// the vertical check at the four adjacent-row/column probes.
 unsigned char rmgTerrainPainter::isHorizontalGap(const TRmgGridPoint& point)
 {
     return isHorizontalGap(point, getTerrain(point));
@@ -1393,12 +1393,6 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Both diagonal queries use the canonical includes.h tLimit (DC t_limit,
-// includes.h:124, dc 0x20d2c): three const int& operands and const int& result.
-// Retail 0x5b6c9e..0x5b6caf and 0x5b6f0c..0x5b6f1d select the lower,
-// upper or value address before dereferencing it. The former local
-// clampRmgTerrainCoordinate duplicated that helper with a different argument
-// order; use tLimit(minimum, value, maximum) and preserve reference lifetimes.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)

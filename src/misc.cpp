@@ -149,10 +149,6 @@ void checkConfigFile()
 }
 
 // E:\gamedcs\misc.cpp:352
-// These statement boundaries are byte-significant after inlining into
-// SetGameDefaults: retail places the movement speeds last, after the window
-// scroll store. The spell-book store that used to close this body belongs to
-// SetDefaultCombatOptions - see the promotion note there.
 
 // NOT promotable, checked 2026-08-13 against the same evidence that promoted
 // its sibling: there is no retail body to promote. Source order would emit it
@@ -414,7 +410,7 @@ void readPrefs()
 
 // E:\gamedcs\misc.cpp:525
 // Retail's query order is deliberately kept distinct from the writer's
-// order. One shared cbData is reused without being restored after every
+// order. One shared cbData is reused without being reset after every
 // call; only the three differently-sized values reset it. The first music
 // query is a probe, so it appears once in the guard and again in the normal
 // read run. Canonical source ends with strcpy(CDDrive, AppPath). Retail was
@@ -464,8 +460,6 @@ void readPrefsFromRegistry()
             return;
         }
 
-        // Former READ_REG_PREF expansion. cbData is shared in/out state:
-        // preserve query order and the explicit size resets below.
         RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_unnamed698758.m_musicVolume)), &cbData);

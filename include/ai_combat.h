@@ -106,20 +106,6 @@ SIZE(type_monster_data, 0x48);
 // pointers, retail reading _First at +0x04 and _Last at +0x08 and the
 // ctor (0x423f08) zeroing all three.
 
-// P2.3 IS ANSWERED (2026-08-07): retail links VC6's own Dinkumware
-// <vector>, not STLport, and this very class is one of the proofs.
-// The copy ctor 0x004276c0 opens `mov al,[esi] / mov [edi],al` - a
-// ONE-BYTE copy at +0 before any pointer - then `size()` from
-// [esi+4]/[esi+8], `if (_N<0) _N=0`, `operator new(_N*72)`. That byte
-// is Dinkumware's EMPTY `allocator` SUBOBJECT, which sits at vector+0
-// and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
-// such member. The vector therefore starts at type_AI_combat_data+0x00
-// and is 16 bytes, rather than being a 12-byte pointer head at +0x04.
-// DC members.csv calls this member `creatures`, with the actual std::vector
-// type. The former type_monster_vector derived shim was not an original
-// container: its mutable const subscript bypassed the vendor's begin().
-// Use the real owner, including the native const-reference interface.
-
 // type_AI_combat_data - the quick-combat simulation side. Offsets are
 // byte-proven from the ctor's store sequence (0x423ee0) plus each
 // accessor:
@@ -203,9 +189,7 @@ protected:
     void castMassDamageSpell(type_spell_choice& choice,
                                 const hero* castingHero);
     void getSummoningValue(type_spell_choice& choice) const;
-    // Before normalization: cast_summoning.
     void castSummoning(type_spell_choice& choice);
-    // Before normalization (function): type_AI_combat_data::cast_spell.
     void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
     void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
     void checkWallArcheryPenalty(const town* enemyTown);

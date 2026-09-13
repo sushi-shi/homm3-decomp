@@ -181,42 +181,6 @@ void type_text_scroller::refresh(int firstLine)
 // Re-wraps the whole scroller around a new string. The wrap width is
 // re-tried at the narrow measure only when the wide one already fits, and
 // the slider is re-ranged or hidden from the resulting line count.
-// Residual (99.4444%): one instruction - our `push_back` expands the
-// `insert(iterator, const T&)` forwarder and calls the three-argument
-// primary (`push 1`), where retail calls the forwarder itself.  The whole
-// budget ladder was swept: `erase(begin(), end())` in place of `clear()`
-// 73.40, a direct two-argument `insert(end(), X)` 97.03, a direct
-// three-argument `insert(end(), 1, X)` 39.40. These controls leave the
-// source of the caller's different expansion decision unresolved.
-// The padding loop's push_back lowers to vector<string>::insert(pos, n, value)
-// here where retail calls insert(pos, value) - the two-argument overload that
-// returns an iterator.  Spelling the site as that overload directly
-// (`text_lines.insert(text_lines.end(), std::string(""))`) is MEASURED AND
-// REJECTED 2026-09-06 at 97.0339 against 99.4361: it produces retail's callee
-// but loses the surrounding block.  push_back stays.
-// The verified retail body constructs the padding temp, scans the empty
-// literal and assigns it before insertion, then destroys it each iteration.
-// The older default-constructor-only interpretation was incorrect; its probe
-// lost that real assign path (89.7838%). Thirteen further source states
-// (six objects, all independently reproduced) test implicit empty-string
-// conversion, a named per-iteration string, and signed padding indices.
-// push_back remains 99.4444%; direct insert remains 97.0317%, with no sibling
-// movement. No source change from this family is retained.
-// A passive C2 trace reproduces the unchanged object: the insert forwarder
-// has cb 64 and fits the push_back child budget 68. Four actual padding/refresh
-// loop-scope combinations are flat (one object), as are eighteen refresh
-// element-access/lifetime forms (twelve objects, ten reproduced elites).
-// Four further padding-construction forms produce four reproduced objects:
-// copy initialization stays at 99.4444%; default construction followed by either
-// operator= or assign scores 98.8095%, moves the EH-live transition ahead of
-// assignment, and still calls the wrong insert overload. All siblings are
-// unchanged. Keep the per-iteration temporary's constructor/assign/destructor
-// path and canonical push_back; none of these alternatives is retained.
-// Twelve further states (93d6a3b51ac327888fe5) cross the constructor max
-// correction with named/const string values and const references that extend
-// the padding temporary's lifetime. Ten objects and eight reproduced elites
-// remain at 99.4444%; neither explicit nor implicit reference initialization
-// recovers retail's retained insert forwarder. No padding edit is retained.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {

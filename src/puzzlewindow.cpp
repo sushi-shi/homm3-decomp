@@ -316,9 +316,6 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
             continue;
         int piece = g_puzzlePieceOrder[puzzle * 48 + i];
         Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
-        // The same signed-word rows as UpdatePuzzle. In the historical
-        // pasted-body caller, separate row/piece indexing scored 97.1621%
-        // versus 96.6598% for flattened indices; retain that source evidence.
         const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
         const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
         bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
@@ -352,26 +349,7 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
     }
 }
 
-// E:\gamedcs\puzzlewindow.cpp:614
-// Retail expands the Dreamcast roster's mark_AI_puzzle (dc 0x115838) and
-// create_AI_puzzle_map (dc 0x115944) here - both are file statics with a
-// single call site, so /Ob2 leaves no out-of-line body for either - and
-// calls only match_puzzle. The 0x15d4-byte frame is exactly the two
-// arrays: 19x17 sixteen-byte tiles at ebp-0x15d4 (0x1430) followed by the
-// 17x19 visibility mask at ebp-0x1a4 (0x143) and get_puzzle_bitmap's
-// forty-byte name buffer at ebp-0x60.
-// Residual (89.3151%): the recovered ordinary helpers expose nested
-// bitset::test and NewfullMap::cell expansions where retail retains calls.
-// The six-state boundary family scores flattened control 97.1621%, mark
-// alone 95.2785%, create alone 91.2100% (named cell) / 88.8128% (direct),
-// both 89.3151% / 86.9292%. Preserve the positive helper/array-reference
-// evidence and remove the two old caller pins rather than pasting bodies.
-// The frame is now 0x15dc versus retail 0x15d4. Twelve subsequent flat-visible
-// owner/compound-guard/origin-construction states emit four objects; neither
-// compound guards nor direct initialization improve it, and assignment loses
-// to 86.79%. The historical flattened 97.1621% remains in HIST.
-// DC proves visible is a flat unsigned char[156] in its 13x12 revision;
-// Complete retains that ownership with 19*17 bytes, not row subobjects.
+// E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {

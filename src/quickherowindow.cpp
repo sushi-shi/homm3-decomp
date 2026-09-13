@@ -20,13 +20,11 @@
 // morale/luck sites; homm3_limit.h owns the integer reference selector.
 
 // DC static skill_loc (type 0x1ae5): const POINT[4].
-// Before normalization: skill_loc; formerly gQuickHeroSkillPositions.
 DATA(0x00640688) static const POINT g_skillLoc[4] = {
     {74, 62}, {101, 62}, {129, 62}, {157, 62}
 };
 
 // DC static army_pos (type 0x3fa2): int[7][2].
-// Before normalization: army_pos; formerly gQuickHeroArmyPositions.
 DATA(0x00682378) static int g_armyPos[7][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
@@ -38,28 +36,13 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // 100-byte sprintf buffer with an owning ostrstream; the per-arm textWidget
 // constructions and freeze(false) follow retail's EH lifetimes.
 
-// Restoring those constructor scopes removes the former unclaimed helper,
-// whose only justification was caller-budget manipulation. The resulting
-// ostrstream construction expands basic_ostream and retains basic_ios::init
-// at 0x52f440 plus the strstreambuf constructor, exactly as retail does.
-// Eight hypotheses crossed scan placement, the existing mana inline-depth
-// pin, and push_back/insert at the quantity arm. All four constructor-scope
-// candidates emit init; none of the helper candidates do. Ordinary push_back
-// gives 94.1662% here, versus 92.7752% for insert(end(), value). Removing the
-// old mana pin is byte-flat in both contexts, so it is not retained.
-
 // Residual (94.1662%): the first source difference is reserve's temporary
 // stack home (-0x18 versus -0x14); primary-stat addressing and register roles
-// also differ. The mana string's _Tidy now expands where retail calls it,
+// also differ. The mana string's _Tidy expands where retail calls it,
 // contributing four extra CFG blocks and three branches. Keep its meaningful
 // temporary lifetime rather than adding an inliner gate. The init helper and
 // both window destructors are independently exact.
 
-// Retained failed probes from the earlier context: sharing the troop-text
-// push after the arms loses their separate cleanup regions; indexed/shared
-// ostrstream construction scored 75.28%, a pointer primary-stat loop 85.31%,
-// a named mana string with a depth-zero destructor 85.07%, and a depth-zero
-// whole mana expression 86.54%. Those pins were diagnostics, not source.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)

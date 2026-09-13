@@ -67,10 +67,6 @@
 // and the initializer funclets are the cinit excluded class - never
 // claimed as functions either.
 
-// The shift amounts below are written as literals on purpose.  The shared
-// enum now lives in lightweight terrain_type.h; keeping it separate prevents
-// an enum-only consumer from acquiring this header's ten dynamic statics.
-
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
 // file column. Scanning config/retail-functions.tsv for the size run
 // [89, 96, 97, 95, 95, 95, 95, 95, 95, 95] finds the ten-funclet tail in

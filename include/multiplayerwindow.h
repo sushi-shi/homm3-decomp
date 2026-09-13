@@ -9,8 +9,6 @@
 #include "textntry.h"
 #include "netgame.h"
 #include "va.h"
-// CDPlaySession and CAutoArray<T> live with their owning compiland; this
-// header used to carry private copies of both behind a per-TU macro.
 #include "dxplay.h"
 #include "hotseat.h"
 

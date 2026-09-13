@@ -1086,15 +1086,6 @@ void game::recordClaimTown(long id, long newOwner)
     m_eventRecords.push_back(new type_record_claim_town(id, newOwner));
 }
 // E:\gamedcs\event_record.cpp:1061
-// Residual (88.70%): the inlined vector insert. Retail expands _Ufill's
-// single-element fill down to one _Construct call where we stop at a call
-// to _Ufill itself, and the two constructor arguments land in the opposite
-// scratch registers behind that. Tried and rejected: writing the site as
-// insert(end(), 1, x) rather than push_back (70.75).
-// advManager::EraseObj is the caller. Retail expands the whole chain: the
-// 0x18-byte allocation, the two vtable stores, the four field copies out of
-// the cell (evaluated right-to-left - objectIndex, extraInfo,
-// object_type_index) and the vector's insert.
 VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
 void game::recordEraseObject(NewmapCell* cell, type_point point)
 {

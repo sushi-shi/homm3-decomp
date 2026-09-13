@@ -62,10 +62,6 @@ const int g_townNameFixedLength = 13;
 // holds the spilled `this` - retail [ebp-8], ours [ebp-4]. Swapping the
 // two locals' declaration order is byte-flat, measured.
 
-// The lever that got here was the NAME ASSIGNMENT: retail expands
-// `cName = gText` INSIDE BOTH arms of the version test (two _Xlen, six
-// _Tidy, two _Copy), not once after the join. Writing it once cost eight
-// branches and six calls, 88.56 against 98.00.
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
@@ -623,9 +619,9 @@ void town::removeGarrisonHero()
 }
 
 // E:\gamedcs\town.cpp:1111
-// Exchanges the two resident heroes, removes the former visitor from the
+// Exchanges the two resident heroes, removes the departing visitor from the
 // acting player's roster and map cell, broadcasts the hide change, then
-// places the former garrison hero on the town tile. Retail clears the two
+// places the departing garrison hero on the town tile. Retail clears the two
 // adventure-view latches only when the hidden hero was both current and
 // locally owned. Dreamcast splits the exchange over lines 1115-1117; the
 // precise source spelling is unknown because no temporary survives CodeView.
@@ -759,26 +755,6 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
-// ORs the building's 64-bit bit into `built` and strips the buildings
-// its included_buildings row supersedes, then walks the four horde
-// columns: building a horde over an upgraded dwelling (or upgrading the
-// dwelling under a built horde) swaps the argument for the next slot's
-// upgraded horde. A base dwelling seeds its population column from the
-// creature's growth rate; an upgraded dwelling moves the base count
-// into the upgraded column. Rampart/Necropolis/Conflux hall tiers
-// recursively raise their EXTRA building.
-// Residual (85.9771%): the CFG agrees 14/14; retail memory-homes the
-// mutated `building` argument in its param slot (storing every swap
-// back to [ebp+8]) and keeps both table cursors in frame slots, while
-// our CL enregisters building in ESI - the whole delta is that homing
-// choice rippling. why-reg v2 classifies the pair as front-end handle
-// state (C1); an int-for-enum signature A/B measured byte-identical,
-// and direct subscripts beat an effect-cursor local 85.98 vs 81.55.
-// A tail-local live-range split (`type_building_id result = building;`
-// after the horde loop, tail reads result) measured byte-flat to the
-// digit 2026-08-20 - VC6 copy-propagates the plain copy, so the
-// two-pseudo shape behind retail's EDX-then-EDI homing has no plain-
-// assignment spelling either. The C1 verdict stands.
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::createBuilding(type_building_id building)
 {
@@ -872,22 +848,6 @@ void town::destroyExtraCapitol()
 void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
-// The public build entry: snapshots the fort-line/Capitol state,
-// delegates to create_building, sets the ownership flag on real builds
-// (not the boat dock), rebuilds `active` from the included_buildings
-// rows, recomputes mage-guild spell counts (twice-over when the Tower
-// Library lands), refreshes the adventure object when the fort line or
-// Capitol first appears, runs the upgrade victory check, applies the
-// Tower Lookout/Skyship visibility, and re-applies special building
-// effects to both resident heroes.
-// The former 99.3036% high-water source flattened four Dreamcast-proven
-// boundaries: IsCastle, IsCapitol, update_full_building_mask and both calls
-// to set_spells_available. Restoring the original source shape deliberately
-// moves the current checkpoint to 92.5627%; max/history retain the old peak.
-// All 72 retail CFG blocks still align. The first spell-count expansion is
-// exact, while the residual is frame/local colouring plus the second helper's
-// register schedule and one teamInfo base/index encoder tie-break. Do not
-// recover the historical percentage by flattening these helpers again.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
@@ -1259,39 +1219,6 @@ void showCreatureRewards(const town* thisTown,
 static const int g_rewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Residual (90.8986%): 86.7098 -> 90.8287 on 2026-08-20, and the fix
-// CONTRADICTS the "tried and rejected" line that stood here. That line
-// recorded "event-field re-reads instead of the short growth local
-// (85.8)" as refuted. The re-read IS retail's spelling; what was missing
-// beside it is the TYPE. `TTownEvent::generatorBonuses` is
-// `unsigned short[7]` (timedevent.h), so a `short growth` local converts
-// it to SIGNED and every use came out `movsx`. Retail's three reads of
-// that field are all ZERO-extended - `mov ax,[ebx] / test ax,ax` for the
-// guard, a reload for `add word ptr [edi+0xe],ax`, and a third
-// `xor eax,eax / mov ax,[ebx]` for the packed qualifier - and the
-// creature half is a WORD read out of a DWORD-strided table
-// (`mov dx, word ptr [4*ecx]` against gTownDwellingCreatures' 4-byte
-// elements). So the pack is
-// `((unsigned short)bonus << 16) | (unsigned short)creature`, which is
-// MAKELONG's exact shape. Spell the re-reads AND both truncations and
-// the row moves 4.1 points; EITHER ALONE IS A LOSS - the truncations
-// with the local still in place measure 86.2972, below the old baseline.
-// This is "do not cache what retail reloads" with a type error hiding
-// under it: the re-read looked refuted because the operands were signed.
-// What is LEFT, read off the unmasked pair: retail materialises the
-// guard operand (`mov ax,[ebx] / test ax,ax`) where we compare in memory
-// (`cmp word ptr [ebx],0`); retail CROSS-JUMPS the two arms' shared
-// push_back tail into one block where we still emit both call copies.
-// Before the function-scope correction our arms also used two stack
-// pairs; they now share retail's [ebp-0x20]/[ebp-0x1c] pair, but VC6
-// still does not perform the retail cross-jump.
-// Two source corrections landed on 2026-08-21. Declaring the zero
-// `grantable` mask before loading `eventBuildings` makes the two zero
-// stores consecutive like retail (90.8287 -> 90.8916). Dreamcast has
-// one `reward` local for the whole function, and retail reuses one stack
-// pair in both loops; restoring that scope moves 90.8916 -> 90.8986.
-// This broader, source-proven scope is distinct from the earlier narrow
-// two-arm hoist that lost 0.007 points.
 
 // Still open: branch topology #12 lands one block off (the D3
 // jump-threading class - why-branch's catalog found no applicable
@@ -1643,28 +1570,6 @@ void town::updateFullBuildingMask()
 }
 
 // E:\gamedcs\town.cpp:2097
-// "Buildable right now": the town record's own veto byte, the legal
-// mask, the dock/capitol special cases, then requirements-not-yet-met.
-// The Castle exception drops the Blacksmith prerequisite from the
-// Griffin Tower row when gpGame's flag byte is set.
-// Residual (89.6%): structurally exact, including the merged fail block
-// (nested ifs with ONE `return 0` - the flat guard chain with several
-// `return 0` statements duplicates the epilogue inline and scores 64.2,
-// and an explicit `if (...) return 0; return 1;` tail scores 62.6).
-// What is left is homing: retail forms the bit-number index in EDX where
-// this compile uses ESI and re-reads the short parameter through AX where
-// this compile retains it in DX. The former volatile town-type byte gave the
-// byte retail's stack home and raised the old 81.2% body to 89.6%, but it did
-// not model mutable state and is now only a negative control. An explicit
-// promoted integer loses that home and returns to 81.2%; a volatile building
-// parameter fell to 67.6%. Also
-// tried and rejected: an int temp for the bitNumber index (no change - VC6
-// CSEs it back), and calling is_legal_building (short -> type_building_id
-// needs an explicit cast).
-// Measured and rejected 2026-08-20: the named `__int64 activeMask = active;`
-// local that took get_buildable_mask 81.21 -> 89.59 costs THIS row 1.92
-// (89.6018 -> 87.6852). The lever is positional - it works where retail's
-// prologue loads `active` FIRST and ours does not, and here it already does.
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {

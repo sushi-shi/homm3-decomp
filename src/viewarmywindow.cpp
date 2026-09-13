@@ -41,12 +41,6 @@ int viewArmyCastSpellHandler(message& msg);
 // header stays as small as its own consumers need.
 const unsigned int g_ctaShooter = 0x4;
 
-// The Dendroid's hold used to be a TU-local `const int SPELL_BIND` here,
-// byte-proven by the folded `akSpellTraits + 0x2650` row address. It is
-// armygrp.h's own ungated ESpellId enumerator as of 2026-08-20 - the
-// local copy became a hard C2373 - and the two spell it in the same
-// place with the same value, so the substitution is byte-inert.
-
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
 const int g_moraleHelpIndex = 9;
@@ -85,20 +79,6 @@ DATA(0x006a532c) extern const char* g_luckTexts[25];
 // and Upgrade are NOT in the list - the first two are written from the
 // body just before their icon rows, and Upgrade is never written here
 // at all.
-
-// Source-boundary recovery: DC ArmyType is TCreatureType, line 70 calls
-// army::GetName, and lines 98/107 append the help strings. Restoring these
-// together allows both description depth fences and the local enum union
-// to go: 91.2989 -> 92.6780. All other tracked rows in six header consumers
-// stay unchanged except the group constructor's improvement below. A
-// 32-state family independently reproduced the all-corrections/unpinned
-// corner. Retaining only the luck fence gives 93.5871, but keeps an override;
-// deleting both without GetName gives 87.4391 with the typed member.
-// The append correction is score-flat because the report masks relocation
-// names; its evidence is the actual retail calls, not that scalar score.
-// The current call sequence now recovers both mem-init _Tidy calls, reserve's
-// size/_Destroy calls, and the morale temporary's _Tidy. The luck temporary
-// still expands its cleanup (34 conditional branches versus retail's 31).
 
 // Remaining nested-inline/lifetime differences are not permission to
 // manufacture compiler work. Earlier bounded controls: mem-init depth 1/2
@@ -141,10 +121,6 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     m_widgets.reserve(NWIDGETS);
 
-    // The plate is recoloured for the stack's CONTROLLER, falling back to
-    // the local player when it has no hero - retail's relocation order is
-    // `call get_controller` immediately ahead of the bitmapBorder ctor.
-    // (The note that stood here said OWNER; see the correction above.)
     createBackgroundWidget(thisArmy->getController());
 
     // DC line 70 calls army::GetName; its canonical inline definition owns
@@ -250,21 +226,6 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 //  * `Upgrade` is written from the BODY, after the vptr, because the
 //    !show_ok early clean-up rewrites its incoming value first.
 
-// Retail takes TEN arguments (`ret 0x28`), one more than the Dreamcast
-// nine: a trailing alignment-grouping byte forwarded to GetArmyMorale's
-// arg5 and get_morale_description's arg8.
-// The shared includes.h limit/t_limit chain replaces the former
-// declared-only cppClamp. DC create_morale_widget/create_luck_widget
-// (0x1927d4/0x19288c) call limit; its by-value parameters provide the
-// three homes before the reference selector. This raises the one-army
-// constructor 90.1633 -> 91.2989 and this constructor 90.9521 -> 92.2569.
-// Retail retains tLimit at the morale site and expands it at the luck
-// site. Restoring ArmyType's enum ownership and GetArmyName below recovers
-// that decision too: 93.7569 -> 97.4452, with all CFG edges agreeing. The
-// remaining differences are local scheduling/homing and folded STL labels,
-// not another source helper to paste into this constructor.
-// Bypassing limit and calling tLimit directly at the two widget sites
-// lowers the constructors to 88.5008 and 90.1918, respectively.
 // E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
@@ -718,7 +679,6 @@ int TViewArmyWindow::windowHandler(message& msg)
 // the five NOPs before the next function at 0x5f5060 are padding, so the
 // missing retail inventory row owns 43 bytes. The authored fastcall
 // message-reference body reproduces all 43 bytes without relocations.
-// Before normalization (function): ViewArmyCastSpellHandler.
 VA(0x005f5030, 0x2B)  // Complete-only callback: address taken by battle constructor
 int viewArmyCastSpellHandler(message& msg)
 {
@@ -740,7 +700,6 @@ int viewArmyCastSpellHandler(message& msg)
 // the battle constructor byte-neutral under /Ob2; ordinary forms additionally
 // emit unpaired helper bodies. That does not establish new retail claims.
 
-// Before normalization (locals): this_hero.
 inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
 {
     bitmapBorder* plate = new bitmapBorder(
@@ -772,7 +731,6 @@ inline void TViewArmyWindow::createNameWidget(const char* name)
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
 // E:\gamedcs\viewarmywindow.cpp:646
-// Before normalization (locals): sprite_name, town_type.
 VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
 void TViewArmyWindow::createPortraitWidget(const char* spriteName,
                                              int townType, int count)
@@ -847,15 +805,9 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 // name/exception-handler owner relabeling. The shots helper has the same
 // reference/accessor evidence at rows 735/738 and preserves its 669 bytes.
 //
-// The former !Widgets.empty() release-invariant experiment is unnecessary
-// in the current compiler context. Its removal is byte-neutral independently
-// of these two source corrections in the nine-state, six-consumer family.
-// The older one-inline-site budget explanation does not justify retaining
-// the expression. No VERIFY, dummy size call, or depth override remains here.
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
-                                           // Before normalization (locals): our_hero.
                                            const hero* ourHero)
 {
     m_widgets.push_back(new textWidget(
@@ -889,8 +841,6 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 // E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
 void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
-                                          // Before normalization (locals): normal_shots,
-                                          // current_shots.
                                           int normalShots, int currentShots)
 {
     if (traits.m_attributes & g_ctaShooter) {
@@ -965,7 +915,6 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
         font::PRIMARY, SPEED_ID, 6, 0, 8));
 }
 
-// Before normalization (function/parameter): create_morale_widget/new_morale.
 // DC 0x1927ea stores the member before allocation; 0x1927f6 reloads it for
 // limit. Retail's battle constructor likewise reloads +0x68 after allocation.
 // The helper owns this store; caching the getter result in each caller loses
@@ -979,7 +928,6 @@ inline void TViewArmyWindow::createMoraleWidget(int newMorale)
         limit(-3, m_morale, 3) + 3, 0, 0, 0, 0x10));
 }
 
-// Before normalization (function/parameter): create_luck_widget/new_luck.
 // DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
 // store-then-reload ownership as createMoraleWidget.
 inline void TViewArmyWindow::createLuckWidget(int newLuck)

@@ -24,25 +24,7 @@
 // the corresponding compiland-local pointer at 0x1bf12c.
 static TCombatWindow* g_combatWindow;
 
-// E:\gamedcs\combatwindow.cpp:42. SendChat is the sole retail caller;
-// Dreamcast supplies the reference ABI, local TCheatCode and statement map.
-// DC sets a recognized-cheat flag in each accepted arm (50/64/77), then
-// guards the shared chat/cheater updates at 91..97. Its optimized register
-// local is visible even though the local roster names only TCheatCode.
-// Restore that flag and the braced spell/campaign scopes. The 19-state
-// family tested flag type, lifetime and string binding: three emitted
-// objects reproduced, best 89.4690%, with the chat siblings still exact.
-// The artifact enum now restores the TArtifact overload and retail {0,-1}
-// spellbook record; the former split enum selected a scroll {1,0}.
-// Complete calls 0x4693a0 for the two defeated-side arms; that ordinary
-// helper owns DC50/64 TurnOffHighlighter and DC58/71 ProcessDeath.
-// Residual (90.2966%): string::_Tidy expansion and resulting frame/register
-// choices. The subsequent 18-state construction/input-lifetime family emits
-// three objects and reproduces all three: direct/converting construction,
-// named c_str pointers and shorter code scope stay at 90.2966%; explicit
-// temporary copy initialization falls to 83.6690/83.7034%. All 24 siblings
-// stay exact. The early-return control has no advantage over the proven flag.
-// E:\gamedcs\combatwindow.cpp:42
+// E:\gamedcs\combatwindow.cpp:42, dc 0x69638
 VA(0x00472010, 0x1C0)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
@@ -84,13 +66,9 @@ void checkCombatCheatCode(std::string& chatString)
     }
 }
 
-// DC139 calls CGameChatEdit's constructor, and every CCombatChatEdit
-// method originates in this .cpp. Retail vtable 0x63d4bc has 27 slots:
-// slots 25/26 are the inherited CGameChatEdit::sendChatCleanup (0x402280)
-// and activate (0x4022b0). The base owns activated at +0x70 and alignment;
-// the former direct CChatEdit base with duplicated fields omitted two slots.
-// The existing private header holds the class declaration; methods stay here.
-
+// DC139 calls CGameChatEdit's constructor. Retail vtable 0x63d4bc has
+// 27 slots; slots 25/26 are CGameChatEdit::sendChatCleanup and activate.
+// The base owns activated at +0x70 and its alignment.
 
 // Retail expands this ordinary forwarding constructor into TCombatWindow.
 // The canonical CGameChatEdit base owns the +0x70 clear.
@@ -182,18 +160,7 @@ int CCombatChatEdit::onKeyPress(message* msg)
     return 0;
 }
 
-// Vtable 0x63d4bc slot 24. Local combat accepts cheat text before the common
-// network/local chat path; both modes then close the editor and restore the
-// combat control bar.
 // E:\gamedcs\combatwindow.cpp:171
-// Residual (93.35%): one over-inline - retail CALLS basic_string::_Eos out
-// of line inside the chatString construction where our CL expands it
-// (`mov ecx,[ebp-0x18] / mov [ebp-0x14],eax / mov byte [ecx+eax],0`).
-// Tried and rejected: `std::string chatString = sChat;` (byte-flat at
-// 93.35), default construction then `chatString = sChat` (77.57), and
-// default construction then `assign(sChat, strlen(sChat))` (77.57) - both
-// assign forms lose the whole construction shape, the opposite of what the
-// adventuremapwindow twin's note reports for ITS body.
 VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
 void CCombatChatEdit::sendChat(const char* chat, int toWho)
 {
@@ -425,7 +392,6 @@ void TCombatWindow::combatMessage(const char* newText,
         return;
     }
 
-    // Before normalization: cTemp.
     std::string temp(newText);
     unsigned int split = temp.find('\n');
     m_combatMessageTime = GameTime::get();

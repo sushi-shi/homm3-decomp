@@ -190,13 +190,6 @@ public:
     // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
     // enemy occupied cells marked when they border that reachable set.
     void markTeleport(const army* currentArmy, long currentGroup);
-    // 0x4b2da0. PARAMETER LIST CORRECTED 2026-08-08 to the DC roster's
-    // (thisArmy, current_group, limit, in_placement_phase, base_speed);
-    // the earlier all-long (target, side, budget, start, limit) guess is
-    // withdrawn. The retail body settles it: [ebp+0x14] is read as a
-    // BYTE and tested before every placement-boundary call, and
-    // [ebp+0x18] is the value it compares each cell's cost against and
-    // forwards as FindCombatPath's base_speed.
     void seedCombatPosition(const army* thisArmy, long currentGroup,
                             long limit, unsigned char inPlacementPhase,
                             long baseSpeed);

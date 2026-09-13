@@ -3546,43 +3546,6 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // command; subtype 0xe right-clicks a slot into its info popup. Hover copies
 // the rollover string.
 
-// The DC line table fixes the source order as Select -> Quick View ->
-// Activate, with separate exit/update flags and one shared tail. Retail's
-// select jump table is a Complete-only correction: slots 13..17 all reach
-// NormalDialog, whereas the older DC-era reconstruction admitted 13..15.
-// Keep that retail-corroborated semantic skew while preserving the DC
-// scopes, command order, accessor, and named rotation/trade helpers.
-// The former note saw retail duplicating the Quick View popup/epilogue
-// across its equipped/backpack arms and kept the shared DC-shaped statement
-// anyway (66 blocks against 65, four returns against five).  Retail is the
-// authority here and its bytes are unambiguous: `call ViewArtifact / mov
-// eax,1 / ret 4` appears TWICE, once at 0xe8d8 ending the equipped arm and
-// once at 0xe92d ending the backpack arm, with no shared join between them.
-// Both predecessors of the DC-shaped join are jumps, which is exactly the
-// case VC6 sinks rather than merges, so the single statement can never
-// produce that pair.  Writing the call and the return inside each arm:
-//   66/65 blocks -> 63/63, four returns -> five, the one-sided ViewArtifact
-//   reference gone (20 calls agreeing, none one-sided), 89.7288 -> 90.6801.
-// Historical fenced residual (90.6792%): 484 instruction rows differed across the two
-// nested jump-table switches, and `--branches` reports the arm pairing as
-// meaningless, so the remaining debt is arm LAYOUT in those tables rather
-// than any further statement.  The slots 13..17 NormalDialog skew is
-// retail-corroborated and stays; it is what beat the discarded 87.20%
-// parent whose 13..15 contradicted retail.
-
-// DC rows 2961/2990 share SetupNewTrade from both resource/artifact selection
-// arms. Keep that canonical source call here, like the existing arrow arms;
-// the former flattened ComputeTradeRatios + gRightAmount store needed the
-// TU's last inline_depth fence. The twelve-state accessor/value/setup family
-// removes it with no other scored row changed, at 81.9322% here. Retail's
-// resource arm retains ComputeTradeRatios (function +0x509), whereas this
-// natural source expands it and then shares a selection tail. C2's verified
-// trace admits the 153-byte-cost nested callee against budgets 189 and 188
-// at the first two setup sites. The caller-budget/source-state gap remains;
-// it does not disprove SetupNewTrade. A direct unfenced flattened control
-// falls to 80.5105%; named right-value lifetime and accessor flattening do
-// not restore the missing call. No artificial assertion or compiler mass
-// replaces the retired fence. Preserve the fenced peak in HIST.
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::windowHandler(message& msg)
 {

@@ -24,13 +24,6 @@
 #include "town.h"
 #include "victorylossconditions.h"
 #include "creaturetype_fwd.h"
-// hero.h supplies herospec.h's canonical TSkillMastery domain. The former
-// AI-only int typedef was removed when the typed hero helper was restored.
-// NewfullMap's object pools are std::vector<CObjectType> and
-// std::vector<CObject>: VC6 needs both element types COMPLETE at the
-// member declaration, or every later `CObject*` declarator in this
-// header misparses (C2275) in any TU that has not included the types
-// itself (view audit 2026-08-20).
 #include "advmgr_objects.h"
 #include "seerhut.h"
 #include "customcampaign.h"
@@ -42,12 +35,6 @@ enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
 };
 
-// 0x4ba1c0, 80 B, in a compiland this tree has not admitted. One stream byte
-// masked to 0xff, -1 for the 0xff sentinel, and on the oldest map format two
-// campaign ids remapped (0x80 -> 0x92, 0x81 -> 0x9c) - which is what makes
-// the second argument the map version rather than anything of the file's.
-// Reached from readHeroData; the NAME is invented from that role, on
-// the former role-derived string-reader name's precedent.
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion);
 
@@ -355,7 +342,7 @@ SIZE(type_map_hero_identity, 0x14);
 // campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
 // 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
 // type_map_hero_identity copy ctor through the base copy - is bought back
-// by the plain field_34 vector below - an argument that no longer
+// by the plain field_34 vector below - an argument that does not
 // stands either way: that "retained copy ctor" was 0x517c30, and
 // 0x517c30 is objecttype's `pair<const string, int>` constructor.
 // The map keyed by hero ID has a different first-word role from the player
@@ -721,10 +708,6 @@ public:
 };
 SIZE(SavedGameHeader, 0x5a4);
 
-// Dreamcast CodeView supplies the name and sole member; retail's NewMap and
-// Load/Save paths independently prove the 28-byte record and seven-artifact
-// contiguous payload.  This replaces the anonymous byte record formerly used
-// only to hold the vector's stride.
 struct TBlackMarket {
 public:
     TArtifact m_artifacts[7];
@@ -867,16 +850,6 @@ public:
     // side.
     type_point m_puzzleGuess;
     char m_deathCountDown;  // +0x3d
-    // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
-    // town::Deallocate (0x5be2d0), which is the whole proof: it walks
-    // `i < movsx [player+0x3e]` comparing `[player + i + 0x40]` against
-    // town::id, closes the hole by copying `[j+1]` down over `[j]`,
-    // stores -1 into `[player + count + 0x3f]` (i.e. townIds[count-1]),
-    // and finishes with a BYTE `dec` of +0x3e. The count is SIGNED
-    // (movsx, and the `test/jle` entry guard) and the ids are plain
-    // char - all three -1 stores in that body share the one `or ebx,-1`
-    // (the signedness-CSE lever), which is also what re-types
-    // currTownId from the unsigned char this header used to carry.
     char m_numTowns;  // +0x3e
     char m_currTownId;  // +0x3f (advManager::DeactivateCurrTown stores -1)
 #pragma pack(pop)
@@ -997,7 +970,6 @@ public:
     // Dreamcast game::newGameWin is heroWindow* at +0; spellAllocInfo
     // follows at +4 in both builds. Retail preserves the four-byte slot
     // before that array, with no located access to the pointer itself.
-    // Restored from source/layout evidence, not a retail use-site name.
     heroWindow* m_newGameWin;
     // +0x04 and +0x4a, the current draw mask and scenario prohibition mask
     // used by game::GetRandomSpell; mapcell.obj's readScholarData rolls a
@@ -1077,11 +1049,6 @@ public:
     SGameSetupOptions m_setup;  // +0x1f6a0
     NewSMapHeader m_mapHeader;  // +0x1f86c
     NewfullMap m_worldMap;  // +0x1fb70
-    // Former pad_20acc: four compiler alignment bytes. playerData has
-    // eight-byte alignment through AI::resource_value (double[7]), so
-    // its array starts at +0x20ad0 after worldMap ends at +0x20acc.
-    // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
-    // with 45*owner scaled by 8).
     playerData m_players[8];
     // +0x21610. The scenario's town pool, and it is a std::vector, not
     // a bare pointer: game::GetTownId (0x4bb870) reads _First at
@@ -1093,21 +1060,6 @@ public:
     // town::Deallocate writes gpGame->towns[this->id].owner, both with
     // that same 360-byte stride.
     std::vector<town> m_towns;
-    // The scenario's 156 hero records. BOTH the base and the extent are
-    // byte-proven by one loop, the hero sweep at 0x4be841:
-    //     lea edi, [gpGame + 0x21620]      ; &heroes[0]
-    //   L: push esi / mov ecx,edi / call ...
-    //     add edi, 0x492                   ; += sizeof(hero) == 1170
-    //     inc eax / cmp eax, 0x9c / jb L   ; 156 iterations, unsigned
-    // and 0x21620 + 156*1170 == 0x4df18 clears the next known member
-    // (this line used to read 0x4ded8 - an arithmetic slip, corrected
-    // 2026-08-08 when the pools below were sliced and came out 0x40 low)
-    // (the 156-dword band at +0x4dfb4 that 0x4bf2a2 fills with -1 via
-    // `mov ecx,0x9c` / `rep stosd`, itself a second witness for 156).
-    // Every retail reader indexes it with the same 65*9*2 chain
-    // (`shl r,6` / `add r,id` / `lea r,[r+8*r]` / `lea r,[gpGame+2*r+
-    // 0x21620]`), which is how town.obj's five hero-touching bodies
-    // reach it.
     enum { HERO_COUNT = 156 };
     hero m_heroes[HERO_COUNT];
     char m_heroAvailability[0x9c];  // +0x4df18
@@ -1604,7 +1556,7 @@ public:
     //     tests `!= -1` and returns the pointer first.
     // GetHero/GetTown keep the opposite spelling because TBottomViewKingdom
     // and playerData::HasCapitol prove theirs; these are separate members,
-    // so the two spellings no longer contend.
+    // so the two spellings do not contend.
     // A THIRD body agrees on the arm order: advManager::DoEvent (0x4aaaa0)
     // expands GetCurrHero with the non-null arm falling through and the
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
@@ -1794,13 +1746,6 @@ void __cdecl aiExamineMap();
 // its notify call.
 extern int g_inSetup698400;
 
-// The world's x- and y-extents are the DATA-claimed MAP_WIDTH / MAP_HEIGHT
-// pair above (0x6783c8 / 0x6783cc); game::SetMapSize in this TU is what
-// WRITES them. A second, provisionally-named `gMapWidth`/`gMapHeight` pair
-// used to be declared here and in findpath.h, advspells.h and
-// event_record.h for the same two words - one retail global under two C++
-// symbols. Unified 2026-09-06 onto the Dreamcast-proven spelling.
-
 // --- the local-player pair, read by GetLocalPlayer and
 // GetLocalPlayerGamePos (both in this TU). The mode selector they
 // branch on is iMPNetProtocol, in netgame.h.
@@ -1808,11 +1753,6 @@ extern int g_inSetup698400;
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
 extern int g_netLocalGamePos;                // .bss 0x69cca8
-// 0x69ccc4: the acting player's bit (1 << gamePos), stamped by advmgr's
-// SaveGame around the local-player switch and by StartLocalPlayerTurn's
-// gosolo DECLINE arm's sibling at 0x69ccbc (gMapVisibilityBit). This is
-// the byte the WRONG 2026-08-20-corrected gMapVisibilityBit claim used
-// to sit on - a real, distinct cell. Name stays ordinal.
 extern unsigned char g_unnamed69ccc4;
 
 void startAITheme();
@@ -1852,13 +1792,6 @@ inline SavedGameHeader::SavedGameHeader()
     m_version = 42;
 }
 
-// Complete fills the expanded save snapshot with the implicit campaign and
-// map-header assignments, then the bool IsHuman results. The upstream
-// 54-state assignment/flag family removed copied member walks, three pins
-// and the empty resetAssignmentSurface helper. The actual bool result leaves
-// a measured spill-width residual (98.2888% in that state); the former byte/
-// dword union matched it artificially. Keep these operations in the proven
-// header owner and retain older peaks in HIST.
 // E:\gamedcs\Game.h:1312, dc 0xbcf00
 VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
 inline void SavedGameHeader::reset()

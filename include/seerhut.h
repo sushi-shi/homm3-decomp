@@ -122,13 +122,6 @@ public:
 };
 SIZE(TSeerReward, 0xc);
 
-// Original CodeView class: TSeerData (type 0x266a), the private base of
-// TSeerHut. Complete replaces its fixed artifact requirement with a quest
-// pointer/visited mask and a separate reward record. Retail TSeerHut ctor
-// 0x573580 initializes reward +5 before writing quest +0 and visited +4.
-// An implicit TSeerData constructor initializes only its reward member;
-// TSeerHut's own body then writes the scalar state. The former TQuestGuard
-// base and empty integer-tag constructor were reconstruction artifacts.
 struct TSeerData {
     type_quest* m_quest;              // Prior role: quest.
     unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
@@ -182,11 +175,6 @@ public:
     // Complete-era body replaces the monolith with the virtual quest family.
     void doSeerEvent(hero* currentHero, bool humanPlayer);
     int getValue(hero* currentHero);
-    // The SeerHutList twin of TQuestGuard::read, reached the same way from
-    // readObject's SEER arm. Each record owns its own reader. VOID,
-    // corrected 2026-09-05 when the body came
-    // in: retail's 0x574610 sets no return register at any exit, exactly as
-    // TQuestGuard::read does, and its one caller discards the result.
     void read(TAbstractFile* infile);
 
 private:

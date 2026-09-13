@@ -185,33 +185,6 @@ enum TAdventureObjectType {
     TERRAIN_WILLOW_TREE        = 159,
     TERRAIN_YUCCA_TREE         = 160,
     TERRAIN_REEF               = 161,
-    // THE EIGHT SoD MAGIC TERRAINS, admitted 2026-08-08. The Dreamcast
-    // enum stops at 165 and these ids are outside it, but retail's
-    // NewmapCell::get_special_terrain (0x4fce20) answers with exactly
-    // ten values - 0x15, 0x2e and this block - and nothing else, so the
-    // block IS a domain of this enum on the retail side, and the block
-    // named here is EXACTLY that answer set - the two SoD ids that
-    // merely duplicate an RoE original (223 Cursed Ground, 230 Magic
-    // Plains) are NOT among the ten and are not named. The two RoE
-    // members of that answer set are CURSED_GROUND (21) and
-    // MAGIC_PLAINS (46), both already named above, which is what fixes
-    // the block's meaning: these are their SoD siblings.
-    // THE SPELLINGS ARE PROVISIONAL AND BEHAVIOUR-DERIVED, not roster
-    // names - no DC row and no string reaches any of them. Only one is
-    // independently pinned by retail bytes: findpath's CalcTerrainCost
-    // (0x4b1740) takes a THIRD off the cost of every step on terrain 8
-    // (Water) when the cell answers 0xe1, and a sea-movement bonus is
-    // what Favorable Winds is; the other seven keep the order the
-    // id block itself imposes. CLOVER_FIELD_2 takes the `_2` suffix the
-    // RANDOM_ARTIFACT_1..4 rows already use because an RoE
-    // CLOVER_FIELD (14) is named above; none of the eight collides
-    // with armygrp.h's separate MAGIC_TERRAIN_* mode enum.
-    // The two map-EDITOR placeholder types advManager::EventSound has to
-    // 212 BORDER_GATE, 214 HERO_PLACEHOLDER and 215 QUEST_GUARD are NOT
-    // spelled here: none is in the Dreamcast enum, and the whole
-    // byte-proven post-Dreamcast block (readObject's 0x502e00 jump
-    // table) lives in advmgr.h's EAdvmgrRetailObjectType, the one copy
-    // (view audit 2026-08-20 folded this enum's former duplicates in).
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
@@ -399,18 +372,6 @@ SIZE(TreasureInfo, 4);
 // is ever read on a given visit, which is what the award selects. GATED
 // for MonsterInfo's reason.
 
-// ScholarInfo is the one arm mapcell.obj needs as well as events.obj:
-// readScholarData (0x500b30) writes all four lanes and then switches on a
-// SIGNED three-bit award read back out of the field. It is pulled out of
-// the events-only block above rather than widening that block's gate,
-// which would put SIX type definitions into the mapcell view's closure
-// instead of one - the include-set sensitivity class charges by type
-// population, so the narrow gate is the cheap one.
-// The award selector's own domain, DC-attested: enums.csv carries
-// ScholarAwards with exactly these three enumerators and values.
-// readScholarData (mapcell.obj) cases on the names and DoEventScholar
-// (events.obj) compares them; this is the one copy (view audit
-// 2026-08-20 folded events.h's former duplicate into it).
 enum ScholarAwards {
     const_scholar_primary_skill = 0,
     const_scholar_secondary_skill = 1,
@@ -932,9 +893,6 @@ public:
     // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
     // retail's generated assignment skips these bytes.
     std::bitset<48> m_drawCells;
-    // +0x1c, sliced out of the old pad: saveObjectType packs FOUR masks,
-    // not three, and this is the second of them. DC name PassableMask; the
-    // spelling follows its three siblings here rather than the DC's.
     std::bitset<48> m_passableCells;
     std::bitset<48> m_shadowCells;
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
@@ -1085,7 +1043,7 @@ public:
     // NOT SLICED OUT, and the reason is the include-set sensitivity
     // class again, MEASURED 2026-08-08: splitting this one bitfield
     // into `flags_00_05:6 / Passable:1 / flags_07_11:5` - three named
-    // members where there was one, no new type, no semantic change -
+    // members within one existing record, with no new type or semantic change -
     // takes initialize_game_data 96.0880 -> 26.1806, one of the values
     // that class's own struct sweep produced. So the sensitivity is to
     // the MEMBER population of this header's types, not only to the
@@ -1097,7 +1055,7 @@ public:
     // (`mov si, word ptr [cell+0xc]`), and get_special_terrain tests it
     // with `test word ptr [cell+0xc], 0x1000`. Both use the canonical
     // cellFlags overlay below. Earlier include-set experiments predated
-    // this shared representation and no longer justify a local offset view.
+    // this shared representation and do not justify a local offset view.
     union {
         struct {
             unsigned short m_flags0011 : 12;
@@ -1233,12 +1191,6 @@ public:
     // enum here would put a cast on every crossing.  ARTIFACT_NONE still
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
     int m_artifact;
-    // loadMonsterList's resize temp proves a header-inline constructor: the
-    // default argument `_Ty()` that Dinkumware's resize materializes stores
-    // -1 into Artifact right after the base string is tidied, and nothing in
-    // resize can be doing that.  readMonsterData's own temp shows the same
-    // single store, so the assignment it used to spell by hand is this
-    // constructor's and has been removed there.
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
     MonsterData() { m_artifact = ARTIFACT_NONE; }
 };
@@ -1880,18 +1832,6 @@ private:
     unsigned char m_hasTwoLevels;
 
 public:
-    // +0xdc, and it is a MEMBER, not the pad `game` used to carry after
-    // worldMap: NewfullMap::NewfullMap (0x4fd060) hands `this+0xdc` to the
-    // `vector constructor iterator' with count 0xe8 and stride 0x10, and
-    // ~NewfullMap (0x4fd1e0) hands the same triple to the `vector
-    // destructor iterator'. The element ctor 0x4fd1c0 is a bare Dinkumware
-    // vector default constructor (allocator byte + three null pointers) and
-    // the element dtor 0x506260 walks its range with a stride of 0x44 =
-    // sizeof(CObjectType), calling CObjectType::~CObjectType (0x4fca60) -
-    // so the element type is vector<CObjectType> and nothing else fits.
-    // 232 is one past the largest TAdventureObjectType (ROCKLANDS = 231);
-    // NewfullMapFn_00505EA0 subscripts it as `this+0xdc+16*objectType`.
-    // Layout-neutral: the 0xe80 it occupies came out of game's pad_1fc4c.
     std::vector<CObjectType> m_objectTypeIndex[232];
     // DC records this public const MapCell.h accessor; retail callers
     // read the same size member used by zCell's row and level strides.
@@ -2097,10 +2037,7 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // 38-byte stride in place. The retail COMDAT is what an inline's
 // out-of-line copy looks like when one TU's call sites decline it.
 
-// Canonical header definition. The retained retail copy is carried by
-// advmgr.obj; its former per-TU body/pin is removed. Earlier pin-removal
-// probes reduced DoAdvCommand and ProcessHover; their peaks remain in
-// history while callers recover their natural source/inlining state.
+// The retained retail copy of this header inline is carried by advmgr.obj.
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
@@ -2392,7 +2329,7 @@ inline void ExtraInfoUnion::setWitchSkill(int skill)
 // the ABI-equivalent int spelling is used at the declaration and callers
 // cross into the enum domain explicitly. Dreamcast masks the older
 // seven-bit object index; Complete's inlined artifact readers load the
-// full signed word, proving that the later accessor no longer masks it.
+// full signed word, proving that the later accessor preserves it.
 inline TArtifact NewmapCell::getArtifactIndex() const
 {
     // The packed signed ordinal crosses the enum boundary in this source

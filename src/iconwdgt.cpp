@@ -181,7 +181,6 @@ void iconWidget::zBufferDraw()
 // vtable at 0x63ec48 stores it in slot 13, and the body's `ret 8`
 // matches the DC's three parameters (this + two). Both arguments are
 // dead - retail returns a bare zero.
-// Before normalization (locals): down_click, right_click.
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x004eab10, 0x5)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
 bool iconWidget::handleClick(bool downClick, bool rightClick)

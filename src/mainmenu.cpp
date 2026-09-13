@@ -24,10 +24,8 @@
 #include "winmgr.h"
 
 // DC S_LPROC32 identifies this ordinary callback as TU-local.
-// Before normalization (function): MainMenuHandler.
 static int mainMenuHandler(message& msg);
 
-// Before normalization: gpMainMenu.
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
 // its own DC-named static below.
@@ -127,19 +125,6 @@ void TMainMenu::doModal()
 // The hover call also really passes Y then X here - retail loads +0x10 first,
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
 
-// Residual (93.1606%): base has 38 branches to retail's 37 because retail
-// cross-jumps the two string temporaries' delete tails. This compile clears
-// the earlier temporary's three fields instead, materializes zero in ESI,
-// and reuses that zero through the rest of the handler; the downstream
-// register delta is one consequence of that cleanup choice. Tried and
-// rejected: two named string values (90.0704), two const-reference bindings
-// (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
-// A -1 help id and positive help guard remove the default-arm goto at the
-// unchanged 93.1746%. Moving updatePlease before the quit confirmation and
-// clearing it on cancellation falls to 92.2451%. A separate confirmation
-// result preserves the original updatePlease assignments and removes the
-// final goto at 93.1746%. Bool, byte and int results are score-identical;
-// a do/while(0) confirmation scope instead lowers it to 91.5690%.
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 static int mainMenuHandler(message& msg)
 {

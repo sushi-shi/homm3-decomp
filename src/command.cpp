@@ -237,37 +237,6 @@ void combatManager::doAnimations()
 }
 
 // E:\gamedcs\command.cpp:291
-// Dreamcast names the dispatcher, its message-owner local, and every called
-// helper; retail fixes the Complete-only DirectPlay cases and payload offsets.
-// The former note read the AI/human dispatch as "laid out in the opposite
-// order despite the same successors" and banked it as code-shape debt.  It
-// was a source fact, and `--calls` named it exactly: this compile called
-// ProcessCombatMsg where retail calls CheckGetAIMove and CheckGetAIMove
-// where retail calls ProcessCombatMsg - a swapped pair, not a permutation.
-// Retail's `jne` on IsQuickCombat lands INSIDE the CheckGetAIMove block
-// (0x8c1) and its `je` on is_computer_action sinks the ProcessCombatMsg arm
-// to the function tail, so CheckGetAIMove is the FALL-THROUGH arm reached by
-// two predecessors, one of them a jump.  A merged `||` cannot spell that:
-// VC6 canonicalises `if (A || B) X; else Y;` into two `jne`s at X and sinks
-// X, and swapping the arms under `||` is byte-flat to the digit (96.2267
-// either way).  Splitting the guard and jumping into the surviving arm is
-// what merges it in place - the shape the sibling windows use.
-// Residual (97.6611%): all 77 blocks now agree EXACTLY, branches are clean
-// at 46/46 with five returns, and the call streams agree with no real
-// mismatch.  What is left is 24 instruction rows of scratch-register naming
-// (eax/ecx and ecx/edx transposed around get_current_army's index chain and
-// the ProcessNextAction argument push).
-// DC line 448 calls the ordinary nullary IsComputerAction adapter. Its
-// canonical call removes ai_move while preserving 97.6611%; copying its
-// quick-combat OR policy condition into this caller measures 96.2267%.
-// The remaining process_action exit follows sRand in RS_COMBAT_MAIN and
-// leaves CMessageKill's scope before processing the received action. DC's
-// remote-message arm has that same ownership boundary. Guarding the skipped
-// local-action checks with a bool/byte received-action result preserves the
-// destructor but lowers 97.6611% to 81.5489%; retain this shared action join.
-// A single do/while(0) scope with continue from RS_COMBAT_MAIN also runs
-// CMessageKill's destructor before the shared action, but scores 86.8449%
-// versus 97.6611%. Keep the canonical owner and the received-action join.
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
 {
@@ -1423,14 +1392,6 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 
 // E:\gamedcs\command.cpp:1964
 
-// RECONSTRUCTED 2026-08-13. NOT A SWITCH: an earlier note on this lane
-// called it "a 22-case jump table". There is no jump table anywhere in
-// the 1322 bytes - the twenty-two are the COMMAND IDS this body returns
-// (0..7, 15, 16, 17, 20, 21, 22), and the body is a straight-line ladder
-// of guards that answers "what would clicking hex `newIndex` do right
-// now". The retail `ret 4` and the single stack argument agree with the
-// DC prototype.
-
 // THE LADDER, in retail's own test order. -1 (no hex) answers 0. A
 // network game in which this side is not under interactive control
 // (field_132b4 clear) short-circuits the whole thing and answers the
@@ -1469,38 +1430,6 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // a whole register whose low byte only is loaded, the ordinary
 // unsigned char argument form.
 
-// Residual (92.6%): ONE class. The old note claimed two; the first was
-// WITHDRAWN 2026-08-14 on a direct measurement.
-// (1) WITHDRAWN. The old reading was that four unclaimed callees
-//     (army::can_cast_spell twice, army::can_shoot, army::can_cast_resurrect)
-//     cost this body their reloc names, and that reconstructing them in
-//     army.obj would close half the residual for free. The delinker half of
-//     that is true - army::can_shoot was reconstructed and claimed on
-//     2026-08-14 and its edge here now reads
-//     `?can_shoot@army@@QBEEPBV1@@Z` on BOTH sides where the target
-//     previously read `army_can_shoot`. The SCORE half is false: this
-//     function reads 92.57143 before and 92.57143 after, to six
-//     significant figures. objdiff's fuzzy score does not weigh a call
-//     relocation's SYMBOL NAME, exactly as the match doctrine already
-//     records for data relocations (the DoDialog precedent) - so a
-//     name-only row is cosmetic on code as well. The same control ran on
-//     findpath's FindCombatPath with army::GetSpeed and
-//     army::get_total_hit_points: 46.458397 before, 46.458397 after.
-//     Reconstructing a carcass callee is worth doing for the CALLEE's own
-//     row; it buys its callers nothing.
-// (2) One register-lifetime split, and it is the whole gap. Retail lets its `newIndex` copy DIE
-//     at the bounds check and recycles EBX for the &cells[newIndex]
-//     pointer (and later for field_132f4), re-reading the parameter
-//     from [ebp+8] at all eight later uses; our CL keeps newIndex in
-//     EBX for the whole body and therefore parks the cell pointer in a
-//     stack slot and `target` in the now-free parameter slot. Byte
-//     counts and the whole CFG agree - the two differ only in which
-//     value owns EBX at each point. Tried and rejected: hoisting the
-//     cell into an explicit `hexcell* cell = &cells[newIndex]` local
-//     and driving armySide / get_army / armySlot / field_4a / field_4b
-//     off it. That is what retail's own EBX holds, but our CL folds the
-//     +0x1c4 into the lea and still spills it (92.57 -> 92.46), because
-//     the register it would need is the one newIndex is sitting in.
 VA(0x00476490, 0x52A)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
 {
@@ -2408,35 +2337,7 @@ void combatManager::checkGetAIMove()
     doCompAI(m_currentSide);
 }
 
-// E:\gamedcs\command.cpp:3131. The retail command-order bracket places this
-// body exactly between CheckGetAIMove and ResetMouse; Dreamcast independently
-// publishes the GetControl name, void thiscall signature and the same UI/AI
-// call graph. Complete adds the network/local-human gates visible below.
-// The former note called the 87.77473% plateau a compiler layout choice -
-// "retail keeps the three-block automated-control arm in front of the long
-// local-human arm, while this SP3 C1 stream permutes it behind that arm" -
-// after finding positive/negative conditions, a nested form and explicit
-// local labels all byte-identical.  Every one of those spellings still fed
-// VC6 a MERGED guard, and a merged `||` cannot produce retail's layout:
-// `if (A || B) X; else Y;` lowers to two `jne`s at a SUNK X.  Retail instead
-// jumps INTO the automated arm from the IsQuickCombat test (`jne 0x4826`)
-// and sinks the local-human arm off the is_computer_action test
-// (`je 0x4881`), so the automated block is the FALL-THROUGH reached by two
-// predecessors, one of them a jump.  Splitting the guard and labelling the
-// surviving arm - the same lever combatManager::Main needed two functions
-// up - reproduces it exactly: 79-vs-79 blocks with 21 flow-kind and 19
-// target-shift mismatches becomes 79 EXACT blocks, `--branches` goes from
-// many-flips to clean at 52/52, and the score 87.7747 -> 98.2810.
-// Residual (98.2810%): an ECX/EAX scratch pair around get_current_army's
-// index chain and the DisableAllButtons receiver load, nothing structural.
-// The semantic corrections the old note records still stand: the ordinary
-// button updates stay nested under the non-placement arm, and duplicating
-// the final tail (69.56%) and named player/hero locals (79.98%/86.46%)
-// remain rejected.
-// DC line 3171 calls the nullary is_computer_action. Complete's
-// retained adapter includes the quick-combat test. Calling it here
-// removes both control labels with unchanged 98.2830%; spelling its
-// condition in this caller instead changes expansion and gives 87.7747%.
+// E:\gamedcs\command.cpp:3131
 VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
 void combatManager::getControl()
 {

@@ -264,19 +264,6 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // arm laid out first, and the click-side help lookup is a fifteen-case
 // switch on the resource-bar ids.
 
-// Residual (93.67%): a register-rotation wall confined to the click path
-// (the hover path is byte-exact). Retail computes quickView in eax,
-// homes it at [ebp+8] and reuses eax for the switch index, so the
-// NormalDialog ternary is reloaded and BRANCHED (test/je); our CL keeps
-// the flag in edx (branchless neg/sbb) and hoists the index into edi.
-// Downstream of that, bitNumber[b].hi rides edi (ours edx), codeY rides
-// ebx (ours esi), and the two band arms' strcpy expansions pick different
-// length temps in retail (eax/edx) so only the pushes cross-jump, while
-// ours merge whole. Tried and rejected (all byte-flat): `? 1 : 0`,
-// `(q >> 9) & 1`, declare-then-assign, unsigned char, quickView in the
-// enclosing block or at function scope, `i` at function scope, a named
-// infoOnly local, text-band arm first. why-reg: bindings agree at every
-// first def; why-branch: D8/D13 named, its one mutation flat.
 VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
 int THallWindow::windowHandler(message& msg)
 {

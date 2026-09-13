@@ -234,7 +234,7 @@ std::string formatString(const char* format, ...);
 // walk this array in lockstep with their seven-dword payload.
 DATA(0x006a5e64) extern const char* g_resourceNames[7];
 
-// The nine compass phrases used to describe a quest monster's map region.
+// The nine compass phrases describing a quest monster's map region.
 // Retail reaches every cell directly from the initializer below; their
 // clockwise order is north, north-east, east, south-east, south, south-west,
 // west, north-west, then centre.
@@ -438,20 +438,6 @@ void type_quest::save(TAbstractFile* file)
 // with the 832-byte product duplicated into both arms, exactly as
 // quest_text()'s own note describes.
 
-// The date is computed in SIXTEEN bits (`shl ax,2 / add ax / add dx`) and
-// sign-extended once into an int slot, which is what the short cast around
-// the whole expression produces; a `short` local would reload it with movsx
-// at the subtraction instead.
-// Residual (85.11%): a three-way register permutation (retail keeps the
-// zero AND the strlen result in EBX and the return pointer in ESI; we hoist
-// one `xor edi,edi` to the prologue and pay the whole rename downstream),
-// plus the four bytes that costs at [ebp-0x14] - retail materialises that
-// zero as an immediate. Diagnosed register-homing, reg-distance 90,
-// flow-distance 1. Tried and rejected: the row ternary written inline in
-// the format_string call (byte-flat to the digit) and `std::string text = " "`
-// in place of default-ctor-then-assign (73.94 - it moves the EH state store
-// but loses three blocks).
-// E:\gamedcs\seerhut.cpp
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
@@ -603,28 +589,6 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // formats the missing-skill list into the table's progress column and appends
 // the common deadline suffix before showing the same pictures.
 
-// Residual (82.9730%; historical 83.2252% before the signed-loop correction):
-// The retained source restores the Dreamcast-attested hero::GetPrimarySkill
-// accessor, and retail corroborates its fully expanded clamp body. Pasting
-// that body reached 90.8649% but removed the positive helper boundary; retain
-// the accessor and keep that experiment documented. This state has retail's 30 blocks,
-// 13 branches and one return. Temporary statement-scoped pins reproduce the
-// two out-of-line vector constructors/destructors, direct two-argument insert
-// calls (with end() evaluated outside the pin), and the deadline temporary's
-// single cleanup path. A widened required-skill local plus loop-persistent
-// dialog record fixes the frame/slot family. The remaining call-level delta
-// is at the string scope exits: this state calls destructor wrappers, while
-// retail inlines those wrappers and calls nested `_Tidy`. Natural cleanup
-// duplicates six branches and two exits; inline_depth(1) is identical to
-// natural cleanup; a shared invented dialog helper measured 57.9685% and was
-// removed. Do not replace the accessor with its manual expansion or add raw
-// storage.
-// The 36-state input-binding, exhaustive 64-subset fence and 48-state returned-
-// string lifetime families found no removable fence. All other 118 scores stay
-// fixed. A native const-byte reference is score-flat; the first dialog loop's
-// signed index matches retail's jl and costs 83.2252 -> 82.9730. Do not reject
-// that source fact because the old unsigned back edge scored slightly higher.
-// E:\gamedcs\seerhut.cpp
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
@@ -803,18 +767,6 @@ std::string type_skill_quest::skillRequirementText(
     }
     return joinTextList(requirements);
 }
-// E:\gamedcs\seerhut.cpp
-// Residual (96.53%): the CFG is exact (13 branches and two returns on both
-// sides). Retail keeps format_string's second return value in eax while it
-// calls string::assign and then destroys that temporary; spelling the value
-// as a named local makes our CL address the same stack slot through ecx and
-// schedules the EH-state store two instructions later. Tried and rejected:
-// the natural assignment (over-inlines assign, 49.37), inline_depth(1)
-// (byte-flat), inline_depth(0) over the whole expression (79.05), a const
-// reference (byte-identical to the named value), and a direct three-argument
-// assign (over-inlines further, 24.45). Combining that direct assign with
-// inline_depth(1) remains 24.45, while depth 0 moves to 82.78; neither keeps
-// retail's direct EAX argument and its separately inlined temporary cleanup.
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
@@ -1193,11 +1145,6 @@ int type_artifact_quest::getAIValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-        // Retail stores the artifact id and -1 directly. DC's TArtifact
-        // constructor has exactly that order (hero.h:209..213); the former
-        // two-int convenience overload is unnecessary. Historical 100/70
-        // measurements compared a hidden/visible default constructor before
-        // the typed value construction was restored.
         type_artifact wanted(m_artifacts[i]);
 
         total += aiGetValueOfArtifact(wanted, player);
@@ -1646,15 +1593,6 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
     }
     type_quest::loadFromMap(file);
 }
-
-// Historical probe (99.9632 -> 100%): invented WriteCreatureType and
-// WriteCreatureCount wrappers made VC6 reuse a four-byte argument home for
-// the short and int payloads. That codegen observation does not establish
-// either source helper. Keep each scalar copy in this serializer instead:
-// retail 0x5712cb loads the short before the two-byte write at 0x5712d8,
-// then 0x5712e2 loads the count before the four-byte write at 0x5712ee.
-// Separate scopes preserve the temporary lifetimes and the original short
-// conversion without introducing an int/short pointer alias.
 
 VA(0x00571280, 0x137)
 void type_creature_quest::save(TAbstractFile* file)
@@ -2351,26 +2289,6 @@ int TSeerHut::getValue(hero* currentHero)
 // The old inline-keyword probe removed that standalone body; it is not
 // needed. Both has_expired and getValue remain ordinary TU definitions.
 
-// Remaining frontier: DoEmptyDialog and DoCompletionDialog stay out of
-// line in this frameless caller (26 versus 59 blocks). Dreamcast's
-// DoCompletionDialog owns acceptance, payment and reward; keep that source
-// ownership. Banked MAX 46.3642 predates the ownership correction.
-// Historical controls: helper definitions moved before the caller,
-// inline/forceinline declarations, scoped rand/format_string depth pins,
-// a GetRewardExtra auto-inline fence, the completion line-gap invariant,
-// and named string temporaries did not remove the frontier. Eight dead
-// plain statements were flat; one dead std::string enabled both helpers
-// (83.56%), and a two-string diagnostic reached 95.1173 with four _Tidy
-// calls against retail's three plus delete. These were instruments only;
-// no dead objects, synthetic carrier or inline fence belongs in this body.
-// The byte-verified native candidate trace now locates the refusal before
-// budget testing: C2 0x1a418..0x1a427 sees caller body flags 0 and callee
-// flags 0x568/0x5c8 for the two dialog helpers. Their 0x100 bits fail the
-// caller-state gate. hasExpired/getValue pass; changing cb or the budget
-// cannot remove this prior veto. See docs/vc6/inliner.md for the state test.
-// Main-branch controls additionally found dropping inline from GetRewardType
-// byte-flat. Its unframed early-no-quest variant measured 36.4529%; that
-// control does not settle source order after the helper expansions return.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 {
@@ -2811,14 +2729,6 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // [ebp-1] and below and the whole frame walks. One declaration per arm is
 // what puts them back.
 
-// The single-artifact constructor shared with load restores retail's direct
-// SetDefaultText call and allocation-failure guard: 83.20 -> 86.81%.
-// The flattened post-new setup is the negative control: it dereferences a null
-// allocation and dispatches SetDefaultText virtually. Retail has three EH
-// states (allocation, completed base, completed artifact member); the remaining
-// member-constructor/insert expansion mismatch still needs natural compiler
-// state. The old note calling this unreachable without an inline pin was wrong.
-
 // Residual (94.24%, raised from 86.81%): the one-byte Morale, Luck and Primary
 // bonuses are unsigned-char conversions, and the two-byte creature count is an
 // unsigned-short conversion. Those four source types recover the entire switch
@@ -2987,16 +2897,6 @@ void TSeerHut::read(TAbstractFile* infile)
     m_nameIndex = chosen;
 }
 
-// Historical probe: the invented ReadSeerByte wrapper reproduced all 586
-// bytes outside relocations, all ten CFG blocks, and EH states 0/1/2.
-// Those optimizer effects do not prove an additional source helper. Each
-// byte read now belongs directly to this serializer, with a separate local
-// and the same unsigned conversion, ignored status and consumption order.
-// Retail's six legacy reads are at 0x574ae3/0x574af8/0x574b0b/0x574b1e/
-// 0x574b2b/0x574b43; the fourth remains a discarded reserved byte. Modern
-// quest-kind and trailer reads are at 0x574c5f/0x574c98/0x574cab/0x574cbe.
-// Retail retains four
-// The earlier flattened-byte probe left 35.3825%, a 0x1c rather than 0x14 frame, and
 VA(0x00574A90, 0x24A)  // dc 0x12d8e4
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {

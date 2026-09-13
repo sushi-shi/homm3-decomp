@@ -1608,7 +1608,6 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
 bool type_doll_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1622,7 +1621,6 @@ bool type_doll_slot_widget::handleClick(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd10, 0x26)
 bool type_backpack_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1636,7 +1634,6 @@ bool type_backpack_slot_widget::handleClick(
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd40, 0x26)
 bool type_artifact_offering_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1663,7 +1660,6 @@ VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
 bool type_army_slot_widget::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {
@@ -1758,33 +1754,6 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
-// DC fixes the function identity, local roster, reserve and callee counts.
-// Complete independently exposes all nineteen equipment coordinates, the
-// five-slot backpack strip, the 5/5/5/5/2 offering grid, every callback and
-// help row, and the insertion order into Widgets and artifact_widgets.
-// Residual (99.9983%, MAX 100% banked before the armyGroup const-interface
-// correction): all 102 CFG blocks, all 50 symbolic branch targets, both
-// returns, and the 92-call count agree. The only byte delta is the order of
-// two adjacent `-1` stores for the inlined type_artifact base of
-// `artifact_offering`: retail writes extra then artifactId, while this C1
-// state writes the DC-proven constructor order artifactId then extra. The
-// mismatch is four masked slots and every later instruction is identical.
-// why-reg's model finds no register-binding divergence; its 24 guided
-// declaration/store/lifetime controls are either byte-flat or worse (making
-// item_count volatile adds 75 slots). Swapping the semantic constructor
-// stores is forbidden: DC Hero.h:211-212 and retail value_of_town prove the
-// shared id-then-extra source order. Preserve the coherent header state and
-// the banked exact peak; this is a measured C1 handle-order collateral wall.
-// TownExtra consolidation collateral: 99.9983% -> 99.5918%. The masked
-// difference is the EBX reload placement at the artifact-row loop boundary;
-// the retained source calls and types stay proven. A disposable Gruntz
-// forest probe before this function (seed 20260906, baseline + 16 trials)
-// finds two islands, 99.5918% and 99.9983%; all 16 forests recover the prior
-// score. No probe noise is retained; the production residual remains.
-// A target-local manual follow-up on 2026-09-07 covered 240 trials across
-// Gruntz's typedef, enum, struct, class, packed, member, extern, static-data,
-// prototype, function, forest and stride-one typedef-count families. None
-// exceeded 99.9983%, so the DC-proven constructor order remains authoritative.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     long& widgetId, int curPlayer)
@@ -3156,7 +3125,6 @@ VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x12876
 // The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
 bool type_transformer_slot::handleClick(
-    // Before normalization (locals): down_click, right_click.
     bool downClick, bool rightClick)
 {
     if (downClick) {

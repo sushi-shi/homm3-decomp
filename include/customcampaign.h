@@ -160,11 +160,6 @@ public:
 };
 SIZE(SCampaign, 0x7c);
 
-// Retail's reference cell at 0x66c218 contains 0x66c090, the same
-// SCampaignMusicCue table populated by initializeCampaignMusicTable.
-// The former TCampaignMusicTraits::field_04 was its track pointer, not an
-// integer: the loader at 0x45e250 stores pooled CmpMusic.txt strings there.
-// Keep the canonical record from campaignmusic.h for both readers/writer.
 extern const SCampaignMusicCue* g_campaignMusicTraits;
 
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the

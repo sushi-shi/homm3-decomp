@@ -191,11 +191,6 @@ DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
 
 void setWinText(heroWindow* win, int which);
 
-// Historical constructor probes: smithAffordable/shipyardAffordable were
-// artificial single-call wrappers to alter vector inlining (98.12 -> 100%
-// and 75.73 -> 100%). Their price checks now live in the owning constructors;
-// preserve both shipyard GetLocalPlayerGamePos calls and their order.
-
 char* getBuildingInfo(const town* thisTown, int buildingId,
                       unsigned char includeTitle, unsigned char extended);
 
@@ -1388,23 +1383,6 @@ inline townObject::~townObject()
 // built, which is what the +7 slot shift is, and the picture itself
 // comes from the creature-traits table's sprite name.
 
-// Residual (98.09%): ONE five-instruction schedule permutation, in the
-// preheader between NewStrips and the dwelling sweep. Both sides emit
-// the identical instruction multiset and the seven member stores in
-// retail's own order; retail defines eax=-2, edi=&MonPix[0], edx=type
-// and ecx=0 all BEFORE the first store, where our CL interleaves them.
-// `predict-inline` reports 34 out-of-line calls on BOTH sides and every
-// listed divergence is a delinker symbol-name pair, so no inline
-// decision differs, and `diagnose` puts the whole distance at 20 with
-// flow-distance 0.
-// Tried and rejected: the -2 stores ahead of the faction store (98.38,
-// but the store order then contradicts retail's - a false win, banked
-// only as the note that VC6 emits this group in SOURCE order); the
-// three -2 stores as one chained assignment (98.09, byte-identical);
-// walking MonPix through a `CSprite**` local so its `lea` becomes a
-// source statement ahead of the block (96.61 - it also removes the
-// strength reduction retail keeps).
-
 // Ordinary members proven by the DC declarations and calls; Main
 // expands them in retail. DoTownKnob dc 0x16b074 calls UpdateTownLocators
 // inside the helper. Retail Main 0x5d47b5..0x5d4804 and 0x5d4931..0x5d49fd
@@ -2408,42 +2386,6 @@ DATA(0x006aa660) extern armyGroup g_creatureArmies[];
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
 // row (inlined into the ctor/SetupThievesGuild).
 
-// SetRolloverText DECODE (2026-08-25, for the next lane). A dispatch over
-// codeY = the hovered widget id, writing the rollover into gText:
-//   - codeY 1..27  : VC6 COMPRESSED JUMP TABLE (byte-index at func+0x204,
-//                    jump table of 4 entries at func+0x1f4 - both embedded in
-//                    the body as self-relocs, the high-repro-risk part).
-//                    Decoded byte-index (codeY-1 = 0..26) and jt targets:
-//                      codeY 1..8   -> sprintf(gText, gRankFormat[0]=0x6a5390)
-//                      codeY 10..17 -> sprintf(gText, gRankFormat[1]=0x6a5394)
-//                      codeY 20..27 -> sprintf(gText, gRankFormat[2]=0x6a5398)
-//                      codeY 9,18,19-> default (adventureRolloverEmptyText)
-//   - codeY 30..37 : sprintf(gText, gRankFormat[3]=0x6a539c) - a range test
-//                    (`cmp 0x1e/jge`) SPLIT OUT ahead of the jump table.
-//   - codeY 750..757 (0x2ee..0x2f5): heroIdx = table 0x6a9e00[codeY]; if not
-//                    -1, strcpy(gText, gpGame heroes[heroIdx].name) with hero
-//                    stride 1170 (0x492) at gpGame+0x21620, name at hero+0x23.
-//   - codeY 850..857 (0x352..0x359): idx = 0x6a98ec[codeY]; slot =
-//                    0x6aa660[7*(codeY-0x352)+idx]; if 0<=slot<=0x96 strcpy the
-//                    creature-traits name at akCreatureTypeTraits+0x18 (base
-//                    0x6747b0, stride 0x2c) else adventureRolloverEmptyText.
-//   - codeY 0x7800 : strcpy(gText, gpGeneralText->GetText(601)).
-//   - else         : strcpy(gText, adventureRolloverEmptyText).
-// Tail (all arms): BroadcastMessage(0x200,3,0x29,gText) then vslot20(0,0x28,
-//   0x29) then gpWindowManager->UpdateScreen(x+8, y+0x22c, 0x2e0, 0x12).
-// The four gRankFormat char* (0x6a5390..0x6a539c) and the widget->hero/creature
-// maps (0x6a9e00, 0x6a98ec, 0x6aa660) are unmodelled; reconstruction needs the
-// compressed-switch reproduced AND those tables + the hero-record stride
-// declared. Deferred as the flagged high-repro-risk class.
-// The rollover-line setter, reconstructed 2026-08-25 from the prior lane's
-// decode. codeY is the hovered widget id: 1..27 index a VC6 COMPRESSED SWITCH
-// (byte table + 4-entry jump table) onto gPrimarySkillNames[0..2], 30..37 add
-// gPrimarySkillNames[3] as a range test, the 0x2ee..0x2f5 window is a hero
-// portrait (heroWidgetMap -> gpGame->heroes[].name, null-safe via the ternary),
-// the 0x352..0x359 window a creature portrait (creatureWidgetMap1 column into
-// the 14-wide creatureSlotMap, then akCreatureTypeTraits[].m_plural_name), and
-// 0x7800 the general-text exit line; everything else copies emptyRolloverText.
-
 // Residual (94.18%): the register-homing family plus the compressed-switch
 // encoding, and why-branch finds no source-addressable lever (all D9 case-order
 // mutations are byte-flat). The block SHAPE now matches retail (168 instrs both
@@ -3018,12 +2960,6 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // retail computes it with the `neg / sbb / and 3 / inc` chain off the
 // masked qualifier at both sites.
 
-// E:\gamedcs\townmgr.cpp
-// Residual (97.3926%): a `push ebx` scheduled one instruction early and one
-// SIB encoder tie-break (`[esi + ecx + 0xbc]` against retail's
-// `[ecx + esi + 0xbc]` - same effective address, base and index swapped,
-// which is the B18 class and not source-addressable). The Holy Grail text
-// row is corrected to 715 above; the remaining bytes are those two.
 VA(0x005ce370, 0x1F0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
 int TMageGuildWindow::windowHandler(message& msg)
 {
@@ -3561,11 +3497,6 @@ int type_garrison_base_window::windowHandler(message& msg)
     return 1;
 }
 
-// The join-offer window's constructor, and the second of the two rows
-// that free a withdrawn ??_G: it is the only body that stores vftable
-// 0x643854, so emitting the store emits the table and its slot-0
-// wrapper at 0x5d0d60 with it.
-
 // One text widget over the base window, titled either with the generic
 // join prompt (the flags arm) or with the offered stack's own creature
 // name - singular when exactly one is offered, plural otherwise, and the
@@ -3576,20 +3507,6 @@ int type_garrison_base_window::windowHandler(message& msg)
 // The third parameter is a BYTE: retail tests it with `test al,al` off
 // [ebp+0x10], which an int parameter does not produce, and both entry
 // points push a literal 0 there so neither call site moves.
-
-// Residual (93.88%): the slot scan is rotated - our CL peels the first
-// `armies[0] == -1` load in front of the loop and duplicates the
-// compare, where retail keeps one top-tested block with a single
-// backward jl, and the peel costs `this` and `monsters` their
-// esi/edi assignment for the rest of the body. Tried and rejected:
-// `while (a && ++i < 7);`, `while (a) { if (++i >= 7) break; }`,
-// `for (;;)` with two breaks, a single-label `goto` with the `&&`
-// condition, and a two-label goto that spells retail's block graph
-// exactly - all five compile to the same rotated shape, so this is C2
-// loop inversion, not a source spelling. Everything else in the body -
-// the base call, the vptr, the byte at +0x6c, both title arms with
-// their string temporaries, the widget and the AddWidget - is
-// byte-identical.
 
 // E:\gamedcs\townmgr.cpp:5136
 VA(0x005d0b40, 0x21F)  // anchor-vtable 0x643854 + ??_G call edge + arity, dc 0x172f34
@@ -3632,12 +3549,6 @@ VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
 // CodeView dc 0x181638: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
-
-// The constructor the previous lane predicted would free this class's
-// ??_G, and it does: it is the ONLY body that stores vftable 0x643890
-// (the empty destructor above inlines its base and drops the derived
-// store), so nothing else in the TU references the table - emit the
-// store and the table and its slot-0 wrapper come with it.
 
 VA(0x005d0e00, 0x28C)  // dc 0x1730b8
 TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
@@ -3872,7 +3783,7 @@ int TBlacksmithWindow::windowHandler(message& msg)
 
 // The blacksmith, opened both from the town page and from the adventure
 // map. `heroId` is the buyer; -1 means nobody is standing here, and the
-// dialog is replaced by a one-line refusal.
+// dialog is a one-line refusal.
 
 // The purchase is settled by the DIALOG RETURN, not by the handler: the
 // window closes, and only then does this function look at the window
@@ -3886,21 +3797,6 @@ int TBlacksmithWindow::windowHandler(message& msg)
 // harmless because a war machine costs gold and nothing else, so the
 // other six terms are zero - but it is what the bytes say, and the
 // fixed +0xb4 displacement inside the loop is the proof.
-
-// Residual (90.75%): REGISTER BINDING, schedule aligned. Both sides emit
-// 139 instructions, the same opcodes with the same immediates in the
-// same order, and `vc6 why-reg` measures the divergence as pure binding
-// (edx->ecx x8, eax->edx x6, ecx->eax x2, ebx->edx x1) with no
-// unpaired slot. What it comes down to is one scheduling choice at
-// three sites: for `Base[index]` on an indirect base, retail emits the
-// index chain first and loads the base pointer LAST, while this CL
-// loads the base first and keeps the chain in the other register. Not
-// source-addressable so far - the guided search's whole catalog came
-// back empty, and the same expression compiles base-FIRST on both
-// sides two rows up in SetRolloverText, so the spelling is not what
-// selects it. Tried and rejected: naming the object expression as a
-// statement (`hero* buyer = &gpGame->heroes[heroId];` - VC6 coalesces
-// it away, byte-flat); the un-hoisted cost expression (65.92%).
 
 // E:\gamedcs\townmgr.cpp:5361
 VA(0x005d1d30, 0x1BE)  // anchor-callee(TBlacksmithWindow ctor 0x5d1360) + arity, dc 0x173ce0
@@ -4224,16 +4120,6 @@ type_university* type_university::initializeMagicSkills()
     return this;
 }
 
-// Residual (93.6951%): a townToView CSE this compile makes and retail does
-// not. Retail keeps this in EBX and re-reads [ebx+0x38] at each use, including
-// universityInfoDialog; we cache the town pointer in EBX. Each source use is
-// still m_townToView, so this is compiler allocation, not an explicit cache.
-// The Conflux initializer ownership correction leaves this entire body flat.
-// Earlier inline-dialog controls, before universityInfoDialog recovery:
-// default string then operator= 79.45%; uninitialized townHero with explicit
-// null else or an earlier gpGame binding 87.48%; copy-initialized string
-// 89.77%, byte-identical to direct initialization. A B-class why-reg search
-// moved nothing. Those historical scores do not describe the current body.
 VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
 void townManager::doUniversity()
 {
@@ -4247,9 +4133,6 @@ void townManager::doUniversity()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (!townHero) {
-        // Complete 0x5d2e47..0x5d2ecc constructs and destroys this local
-        // string in the no-hero branch. The former wrapper existed only
-        // to steer /Ob2 and had no independent source identity.
         std::string info(getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
         normalDialog(info.c_str(), 1, -1, -1, m_townToView->m_type + 0x16,
                      EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
@@ -4433,62 +4316,7 @@ void townManager::drawTown(int update, int incFrame,
         g_windowManager->updateScreen(0, 0, 800, 374);
 }
 
-// Residual (90.27%, from 66.81): what closed the first 23 points was
-// STRUCTURE the Dreamcast dossier hands over verbatim - the `exitFlag`
-// local tested once after the switch (retail's single shared return-1
-// epilogue, 3 rets not 41; VC6 threads the constant through the tail
-// test), the two `return ExitTownManager(msg)` head exits, the
-// constructor-form `std::string info(GetBuildingInfo(..))`, the quick
-// windows' `x`/`y` stores, and above all the ARM ORDER of `switch
-// (code)`: retail numbers its EH states DWELLING(0) HORDE(1) HORDE_2(2)
-// CASTLE(3..5) strings(6,7) TQuickTown(8) TQuickHero(9,10), which is
-// the DC's line order and NOT the layout order the previous spelling
-// copied - VC6 lays a sparse switch out as a value-ordered TREE of
-// clusters (0..23 table, 24/25, 26..153 table, 155..157, 158..178,
-// the resource ids) and keeps source order only WITHIN a cluster.
-// The DC helper call sites (ResetStrips, DoTownKnob, bonus_right_click,
-// DrawTown, GetHero/GetTown) then put `_Grow` back out of line.
-// What remains is the FRAME ORDER: retail homes `player` at [ebp-0x1c]
-// above the block-scoped overlay region ([-0x3c] message / [-0x2c]
-// string) where ours allocates it below it at [-0x3c] and shifts the
-// overlay up by 4; with it the string's `_Tidy(false)` ctor and `_Eos`
-// still expand here where retail calls both (budget/divisor, not
-// depth), and the min temp/`delta` pair sits swapped ([-0x10]/[-0x18]).
-// Declaring the locals in the DC CodeView order (exitFlag, text,
-// player, netMsgSeen) was byte-inert, as were the accessor call sites.
-// The town manager's modal message loop, the third of the three pure
-// managers and the compiland's largest control body. The head runs the
-// turn-duration/network abort check, drains the build-cheat latch at
-// 0x67832c, and paces the panorama animation off the shared frame
-// stamp; the dispatch is the same merged hotspot/widget domain as
-// SetCommandAndText (codeY 0..43 remapped through the town screen's
-// zBuffer word under the mouse), with the qualifier's bit 9 carrying
-// the right-button state into every arm. TTownScreenWindow::DoTownKnob
-// and ::bonus_right_click are single-call-site DC helpers /Ob2 folded
-// into this body (their arms are the locator-knob and creature-popup
-// blocks below); ChangeTown's roster twin is the town-switch tail the
-// locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
-// Eleven copied per-arm popup bodies lower 90.2738% to 73.3704%. DC also
-// directly branches these arms to one shared popup (e.g. lines 6006/6017);
-// no separate helper is evidenced there, so the popup join remains.
-// Building-popup flag control: bool and int flags remove all eleven joins
-// but both score 87.0077% against 90.2738%; eleven copied popup bodies score
-// 73.3704%. DC's arms reach one common popup action, and no distinct helper
-// boundary is evidenced here. Retain the common action pending better scopes.
-// Eight result/lifetime controls include a byte-sized flag and declaration
-// before code selection or at function scope. Every structured flag form
-// emits the same 87.0077% object; changing its width/lifetime does not help.
-// Individual popup copies also lose: Hall 86.6755%, Mage Guild 86.6195%,
-// Castle 86.6774%, Tavern 88.4013%, Dock 88.6837%, Marketplace 88.4592%,
-// Silo 88.6132%, Blacksmith 88.6379%, Extra 1 88.5200%, Extra 2 88.6987%,
-// Special 88.4172%, versus 90.2738%. Each was scored separately; retain
-// these joins and the original string, popup and exit-helper boundaries.
-// A positive popup-handled result with plain/do/for dispatch scopes also
-// scores 87.0077% for bool/byte/int, covering all eleven exits. A post-switch
-// normal-return scope scores 76.1869% or 78.7779%. These tested scopes do
-// not recover the current 90.2738%; absence of a named DC helper is not
-// proof against an inline expansion.
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
 int townManager::main(message& msg)
 {
@@ -5336,7 +5164,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
 // human runs it at all - a remote or computer player reaches the same
 // state through the network path - and the move can be refused, which
 // is the one message this page puts up. Once the hero has actually
-// moved, both troop strips are stale, so they are dropped and NewStrips
+// moved, both troop strips are invalid, so they are dropped and NewStrips
 // rebuilds them around the new arrangement.
 
 VA(0x005d5150, 0xC2)  // dc 0x176b88
@@ -5582,18 +5410,6 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // gain under it is only the /Ob2 accounting moving, and confirms the
 // direction below rather than the header.
 
-// 68.08 -> 95.12 2026-08-20: THE CALLER-SHRINK CLOSED THE KNIFE EDGE the
-// old note had measured but had no lever for. The note's own probe (+20
-// dead statements -> 67.65) proved this body carries MORE front-end mass
-// than retail's; findpath's numerator device is that lever run backward,
-// and two doses paid +27.04: lifting the palette message block into
-// set_buybuild_palette above (+7.33: _Construct x10 -> x9), then the
-// quick-view broadcasts into clear_buybuild_buttons (+19.71). After the
-// second dose the call multisets AGREE 43 = 43 - _Ucopy x7, _Ufill x4,
-// size x2, _Destroy x2, _Construct x1 against retail's synth labels -
-// where before we were four calls short. Neither dose moved any other
-// townmgr row (THallWindow 85.99, TTownScreenWindow 95.59 both pinned).
-
 // Residual (95.12%): the multiset matches but the per-site DEPTH
 // alternates - at one insert site retail expands _Ucopy's loop and CALLS
 // _Construct per element (the cmp/je loop around 0x404dc0) where we call
@@ -5617,23 +5433,6 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // refusal; otherwise the assembled list (or GetText(220) when nothing is
 // missing) becomes the rollover text.
 
-// The three runtime message pointers at 0x6a7428/2c/30 are filled by an
-// unlocated init TU (retail writer near 0x461cxx) and only read here; the
-// SetArmyCommand round-1 precedent above DATA-claims such townmgr-consumed
-// message globals - kept on townmgr as nearest consumer until that TU lands.
-// Residual (87.42%): a register-homing wall (why-reg: flow-distance 0,
-// register-distance 68). Retail keeps lineStart in ebx across both
-// get_string_width calls and spills namePos to [ebp-0xc]; our CL makes the
-// opposite choice (namePos in ebx, lineStart reloaded from its slot), so the
-// two locals' ebx/slot bindings and the count/namePos slot pair are swapped.
-// The branch graph and schedule align exactly. why-reg tried nine catalog
-// mutations (decl-order swap, flag naming, zero-store hoist, count/local
-// volatile) and NONE moved the divergence - the knob is outside its library.
-// The one remaining data delta is the gHierarchyMask high-dword read
-// (`[8*ecx+4]` vs the delinker's split bss_29779c symbol at +4), an __int64
-// symbol-split artifact no source form reaches. Tried and rejected:
-// `lineStart = gText` in the count==0 arm (87.42 -> 80.04); reversing the
-// lineStart/namePos decl order (byte-flat).
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
 void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
@@ -5828,20 +5627,6 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 // arm and the call itself is written once - so the two cases are spelled
 // separately here and left to the compiler to merge, which it does.
 
-// Residual (98.02%): TWO BYTES, and they are an encoder tie-break rather
-// than a spelling. Retail materialises the message id (`mov eax,[esi]`
-// then `cmp eax,4`); our CL folds the load into the compare
-// (`cmp [esi],4`), which is two bytes shorter and shifts every later
-// displacement. Everything else - both epilogue paths, the inline
-// strcpy, both switch arms and the merged sprintf tail - is byte for
-// byte retail's, and `vc6 diagnose` reports flow-distance 0 with
-// register-distance 3. Tried and rejected, all six folding identically:
-// `switch (msg->id)` over the single case, `MESSAGE_MOUSE_MOVE ==
-// msg->id`, the early-return form `if (msg->id != MESSAGE_MOUSE_MOVE)
-// return 1;`, a named `int id` local, and that local hoisted above the
-// base handler's result test so the load sits in its own block, and an
-// identical duplicated conjunct (byte-flat, 2026-08-22).
-
 // E:\gamedcs\townmgr.cpp:7513
 VA(0x005d6810, 0xFB)  // anchor-vtable 0x643944 slot 9 + arity, dc 0x1799bc
 int TBuyBuildWindow::windowHandler(message& msg)
@@ -5945,24 +5730,6 @@ void townManager::cycleOutline(int objectIndex, int x, int y, int w, int h)
 // townManager::DrawTown, so /Ob2 expanded it at every site. The first
 // expansion differs from the other two - no zBuffer clear, and the
 // objects draw with hotspots OFF.
-
-// Residual (98.84%): the two -1 initialisations of the hall arm, and
-// nothing else - every branch, both fizzle rectangles, all three redraw
-// expansions, the dwelling re-sync and both epilogues are retail's
-// instruction for instruction. Retail materialises the constant ONCE as
-// an immediate store into the dead parameter slot (`mov [ebp+8], -1`)
-// and has the switch's default path RELOAD it from there (`jmp` +
-// `mov edx, [ebp+8]`); our CL keeps it in a register instead
-// (`or edx, -1` + `mov [ebp+8], edx`) and lets the default fall
-// through with edx already set. Tried and rejected: swapping the two
-// declarations (98.84, identical), `int extraId = extraIndex;` so the
-// second initialiser is a load rather than a constant (98.84,
-// identical), an empty `default: break;` (98.84, identical), moving
-// `extraIndex`'s declaration below the switch (91.00), and an explicit
-// `default:` arm carrying the assignment - both `= -1` and
-// `= extraIndex` (90.68 each; a default arm with a BODY restructures the
-// whole compare chain and costs eight points). A register-allocation
-// tie-break on a rematerialised constant, not a statement.
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
@@ -8123,15 +7890,6 @@ DATA(0x006a5c40) extern const char* g_unnamed6a5c40;
 // natural ways round - high band first, `== EXIT_BUTTON_ID` first - the
 // same instructions land in the wrong blocks and the row sits at 64.03.
 
-// The earlier note here - "the entire delta is TAIL MERGING", not
-// source-addressable - was wrong, and wrong because it could never be
-// measured: this body sits behind the `#if 0 // @carcass` stub near the
-// top of the file, so every solver silently read the carcass instead.
-// With the locator fixed, `sema diff --branches` reports 12 branches and
-// 1 ret on BOTH sides - identical CFG - and names the two polarity flips
-// outright. Retail does expand the inlined strcpy five times, but so do
-// we; that was never the delta.
-
 // Residual (97.8%): 13 bytes in two encoder/schedule classes, neither
 // source-reachable. The dwelling read is `[ecx+eax+0x1bb]` against
 // retail's `[eax+ecx+0x1bb]` - one SIB byte, base and index transposed
@@ -8431,7 +8189,7 @@ int TCastleWindow::windowHandler(message& msg)
 
 // Statement ORDER decides the second loop: the third line's codeY must be
 // assigned BEFORE the row creature is looked up. Written after it - the
-// order that reads naturally - VC6 can no longer reach the saved i+0x21
+// order that reads naturally - VC6 cannot reach the saved i+0x21
 // and builds a THIRD induction base for i+0x19, which costs a frame dword
 // and 92.96 against 98.58.
 
@@ -8599,32 +8357,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // retail image; the guild-count -> category-count ladder is the
 // 9/8/6/4/2 chain with the ==2 arm's sbb ternary.
 
-// Residual (93.38%, from 87.33): two STRUCTURAL levers closed six
-// points before the register wall the earlier note describes was
-// reached. (1) D2: the flag-row loop is `while (1) { if (start == ..)
-// break; .. if (x >= 0x313) break; }` - the `for (;;)` spelling let VC6
-// rotate it (guard duplicated at the bottom, first iteration peeled
-// with `start == 0` folded) where retail keeps the single top test
-// with the `jl` back edge landing on a `xor esi,esi` re-zero block.
-// (2) The guild-count ladder is NESTED, not flat: every retail `cmp
-// [ebp+8],N / jl` goes to the column loop's increment, and the `>= 2`
-// test is `mov esi,2; cmp eax,esi` with the 2 reused as the textWidget
-// EH state - so `>= 1 { .. if (bestHero) {portrait}; >= 2 { if
-// (bestHero) {skills}; >= 3 { personality; >= 4 { creature } } } }`,
-// byte-identical in meaning to the flat chain. GetHero/GetTown as the
-// game.h accessors (DC calls them) add the candidate sites the /Ob2
-// divisor wants. What is left is homing: retail keeps `numDisabled` in
-// ecx across the skipped first BroadcastMessage loop (the second
-// guard's reload block is entered only from the taken loop), reads
-// `who`/`column` from their frame slots where ours keeps them in ebx,
-// calls vector<widget*>::_Destroy a third time in the push_back
-// expansions, and its column-loop increment carries a `mov ebx,1`
-// hoist (9i vs our 8i). why-reg's model call (2026-08-27) stands for
-// the permutation.
 // E:\gamedcs\townmgr.cpp:9296
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): three of the
-// six zero-initialised counters here are `unsigned int`.  94.0399 -> 95.5153,
-// greedily; the other three fall back.
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 {

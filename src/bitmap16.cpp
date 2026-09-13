@@ -180,32 +180,7 @@ void Bitmap16Bit::clear()
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
-// destination origin by walking the source in, clip the far edge against
-// the destination extent, then copy row by row. The last parameter selects
-// the keyed path - pixels equal to it are left alone - and the plain path
-// goes through the inline memcpy intrinsic.
-// Earlier residual (83.5794%): the source width must be a LOCAL - as a modified
-// parameter the body scores 45.22, because retail keeps that value live in
-// EDI across both clips while the height stays in its parameter slot and is
-// reloaded. The one block still unpaired is retail's else-arm that
-// establishes EDI on the not-clipped path (base 25 blocks vs 26). Tried and
-// rejected: locals for BOTH extents (78.59), a local for the height alone
-// (44.34), the explicit `int w; if (..) {..; w = srcWidth;} else {w =
-// srcWidth;}` shape - which DOES pair all 26 blocks with zero flow-kind
-// mismatches but scores 80.33 - the local declared after the first clip
-// (73.56), after both clips (72.32), and a top-initialised local re-read
-// from the parameter inside the clip (77.13).
-// Rechecked after the const-reference pixel recovery: both `w = srcWidth +
-// dstX` and split `w = srcWidth; w += dstX` spellings remain byte-identical
-// at 83.17. They pair all 26 blocks (21 exact, five size-only) but worsen the
-// then-current 83.5794 score, so the natural Dreamcast-shaped initialization stays.
-// Row-boundary repair: cursors now denote allocation row starts; column
-// offsets are applied only to visited pixels/copies. Their final step is at
-// most one-past, never end+srcX/dstX. DC's GetMap, loops and keyed const-ref
-// pixel remain. Residual (75.0079%): changed column addressing plus the prior
-// clip/register delta. Last-row guards 56.0635%, next-row guards 51.1270%,
-// visited-row offsets 68.3413%; all reproduced with the other safe row fixes.
+// E:\gamedcs\bitmap16.cpp:541
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
@@ -260,24 +235,7 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:625. Copy a rectangle of the SOURCE surface into
-// this bitmap, clipping a negative origin by walking the destination in
-// instead. Rows go through the inline memcpy intrinsic with the byte count
-// (2*w) held in a loop-invariant slot.
-// Earlier residual (97.7%): one register-allocation bit at entry, cascading.
-// Retail keeps `w` in EBX and materializes the zero in ECX, which the second
-// clip test then consumes (`test ecx,ecx`); ours holds `w` in EAX and keeps
-// the zero in EBX across both tests (`cmp ecx,ebx`). Every block, branch and
-// frame slot pairs. All 24 declaration permutations of the four locals were
-// swept: the spread is 97.65 .. 97.71 and none reaches 100.
-// Row-boundary residual (82.5698%): independent integral byte displacements
-// in the for header form pointers only for visited rows. Final guards score
-// 75.4186%, next-row guards 56.7442%; unchecked 97.7093% is not a safe parent.
-// DC 635/636 and 644/645 adjust saved dimensions during negative clipping;
-// reloading m_width/m_height instead created the old register cascade.
-// Correcting that arithmetic and grouping the origin initializations before
-// w/h gives exact retail bytes in the unchecked row-walk control. The bounded
-// cursor below retains the source facts while avoiding a final end+x pointer.
+// E:\gamedcs\bitmap16.cpp:625
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
 void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)

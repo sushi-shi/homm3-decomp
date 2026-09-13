@@ -61,28 +61,6 @@ enum EAttackCriteria {
     ATTACK_CRITERIA_OCCUPIED = 0x2
 };
 
-// Cancellation moments accepted by army::CancelSpellType.  Retail's
-// switch at 0x4444d0 independently proves the attack/damage values; the
-// zero move value is corroborated by the exact FlyTo consumer.  Names
-// follow the mature HoMM2 sibling domain, whose behavior is homologous.
-// EArmySpellRowId RETIRED 2026-08-20. It held four spell-row indices -
-// SPELL_FRENZY 0x38, SPELL_COUNTERSTRIKE 0x3a, SPELL_BIND 0x48,
-// SPELL_AGE 0x4b - as a SECOND, gate-separated copy of names armygrp.h's
-// ESpellId also carried behind a different gate; the two arms never met
-// in one TU, which is the only reason it compiled. ESpellId now carries
-// all four ungated, so this copy is a hard C2371 and had to go. The
-// evidence it recorded is preserved on ESpellId's own rows, and the
-// arithmetic it argued from is unchanged: 0x3a is the slot between
-// SPELL_TITANS_LIGHTNING_BOLT 0x39 and SPELL_BERSERK 0x3b and its row
-// adds army::counterstrokeBonus to the round's retaliation allowance;
-// 0x4b sits four past SPELL_POISON 0x47 and its row halves the stack's
-// recomputed maximum hit points; 0x48 is the row remove_binding
-// (0x43ee10) cancels the moment a bound stack's `binders` list empties,
-// the same index 72 the +0x2b8 bindRounds field pairs from the other
-// side; 0x38 is the one row ResetRound refuses to decrement, matching
-// frenzyRounds' own +0x278 == +0x198 + 56*4. Byte-inert: same names,
-// same values, one declaration.
-
 // The eight rows of combatManager::wallTargets. Retail DamageWall dispatches
 // on all eight values; names remain ordinal because no local roster names
 // the individual segments.
@@ -258,17 +236,6 @@ public:
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
 
-    // NAMES ARE WRONG AND THE CORRECTION IS EVIDENCED, not acted on
-    // (the rename would touch ai.cpp, command.cpp and findpath.cpp,
-    // which this lane does not own - the same reason bitIndex below
-    // still carries its provisional name). These are the DC roster's
-    // groupToAttack (army@16) and indexToAttack (army@20), i.e. the
-    // side and slot of the stack this one is ATTACKING, not its own:
-    // range_attack (0x440160) forms `armies[+0x10][+0x14]` and fires
-    // at it, ai.cpp already assigns `target->combatSide` /
-    // `target->bitIndex` into them, and command.cpp fills them from
-    // the HOVERED cell's armySide/armySlot. This stack's own side and
-    // slot are combatSide (+0xf4) and bitIndex (+0xf8).
     int m_side;                     // +0x10 == DC groupToAttack
     int m_slot;                     // +0x14 == DC indexToAttack
     // Retype in place: army's own constructor (0x43d250) zeroes this slot
@@ -393,99 +360,10 @@ public:
     // `[army + 0x78]` to GetHeroSpellBonus as the target LEVEL, which
     // is sMonInfo + 4, TCreatureTypeTraits::level.
 
-    // WHAT SETTLED THE EXTENT (2026-09-05): army's compiler-generated
-    // copy constructor (0x437a00, ai_tactical.obj) copies this band with
-    // ONE `rep movsd` of 0x1d dwords at fn+0xe7 - 116 bytes, exactly
-    // sizeof(TCreatureTypeTraits), running from +0x74 to +0xe8 - where
-    // the nineteen flat slices this header used to carry gave nineteen
-    // load/store pairs. That single difference was the FIRST byte-level
-    // divergence in the whole body (the preceding 0xe7 bytes were
-    // already exact) and most of the row's 48.92% / 912 recoverable
-    // bytes. MEASURED AND REJECTED as a shortcut: wrapping the band in
-    // an anonymous union `{ int sMonInfoRow[29]; struct { <slices> }; }`
-    // - VC6 memberwise-copies BOTH union alternatives, emitting retail's
-    // `rep movsd` AND then all nineteen pairs, 48.92 -> 26.47. Only the
-    // named sub-object gives the single `rep movsd`.
-
     // The include cost is NIL: every one of the 24 TUs whose closure
     // reaches army.h already had armygrp.h in that closure, so the
     // `#include "armygrp.h"` this member needs adds no declarator to any
     // consumer's include-set population.
-
-    // The evidence for each field of the row follows, in offset order,
-    // as it was recorded while the fields were sliced out one at a time.
-    // -> sMonInfo.townType        (+0x74, row +0x00)
-    // -> sMonInfo.level           (+0x78, row +0x04)
-    // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven
-    // by LoadResources (0x43d9f0): every one of its eight sprintf's
-    // hands this pointer to a "%s....82M" format. Pad slice.
-    // -> sMonInfo.cSamplePrefix   (+0x7c, row +0x08)
-    // -> sMonInfo.m_sprite_name   (+0x80, row +0x0c)
-    // A BITFIELD word, not an id: bit 0 is the two-hex marker in
-    // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
-    // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read
-    // bits 6, 21 and 22 out of ONE dword load with shr/test.
-    // (Corrected 2026-08-08: the note here used to say "the IsWinner
-    // walk tests the full int against -1". It does not - the -1
-    // empty-slot test in both 0x465830 and 0x4658b0 is on +0x34,
-    // creatureType. Both functions are byte-exact on that reading.)
-    // -> sMonInfo.attributes      (+0x84, row +0x10)
-    // Three more slices out of the SAME embedded traits row, byte-proven
-    // by TCombatResultsWindow's constructor (0x4702d0): when a side has no
-    // hero it names that side's strongest stack, reading +0x88 for one
-    // creature and +0x8c for several, and it ranks the stacks by +0xb4.
-    // Against TCreatureTypeTraits at sMonInfo == +0x74 those are exactly
-    // m_name (+0x14), m_plural_name (+0x18) and AI_value (+0x40) - the
-    // same three-field spacing the struct already has, which is what makes
-    // the pairing positional rather than nominal.
-    // -> sMonInfo.m_name          (+0x88, row +0x14)
-    // -> sMonInfo.m_plural_name   (+0x8c, row +0x18)
-    // -> sMonInfo.special_ability (+0x90) and cost[7] (+0x94..+0xb0)
-    // -> sMonInfo.AI_value        (+0xb4, row +0x40)
-    // -> sMonInfo.growthRate/horde_growth_rate (+0xb8/+0xbc)
-    // Hit points per creature: AI_get_attack_damage (0x435980) and the
-    // attack-hex chooser ctor (0x4360c0) both divide a stack's total
-    // hit points by it with the (hp + total - 1)/hp ceiling idiom.
-    // -> sMonInfo.hitPoints       (+0xc0, row +0x4c)
-    // Per-creature threat weight the hypnotize pricer multiplies by the
-    // spell's turn count before seeding the combat search
-    // (get_hypnotize_value 0x43a500). Name pending a writer.
-    // -> sMonInfo.speed           (+0xc4, row +0x50)
-    // The stack's attack rating: get_attack_skill_value (0x437800)
-    // copies the army and adds the spell's bonus to THIS word on the
-    // copy before re-pricing its damage. Name provisional.
-    // -> sMonInfo.attackSkill     (+0xc8, row +0x54)
-    // The stack's defense rating: get_defense_skill_value (0x438910)
-    // copies the army, adds the spell's bonus to THIS word on the copy
-    // and re-prices the enemy's damage against it (0x443e30 twice).
-    // Name provisional - no roster attests it.
-    // -> sMonInfo.defenseSkill    (+0xcc, row +0x58)
-    // The damage figure a Curse takes its bite out of: get_curse_value
-    // (0x43b370) subtracts SPELL_CURSE's mastery row from THIS word,
-    // floors the result at 1 and divides it by the stack's own
-    // get_average_damage(), then prices the stack down by
-    // `1 - sqrt(that)`. The quotient is only below 1 - i.e. the spell
-    // only scores positive for the caster - when the word is the LOW
-    // end of the damage range, which is exactly what Curse forces a
-    // stack to roll. Name provisional; no roster attests it.
-    // -> sMonInfo.damageLowBound  (+0xd0, row +0x5c)
-    // The high end of the same range, byte-proven by get_bless_value
-    // (0x437430): Bless adds SPELL_BLESS's mastery row to THIS word and
-    // divides the sum by the stack's own get_average_damage(), which is
-    // above 1 - the spell scores POSITIVE for the caster - exactly when
-    // the word is the range's top. The mirror of minDamage's proof, and
-    // the two sit adjacent. Name provisional; no roster attests it.
-    // -> sMonInfo.damageHighBound (+0xd4, row +0x60)
-    // Shots remaining. can_shoot (0x4428f0) refuses a shooter whose
-    // count here has fallen to zero or below - the second half of the
-    // "is this stack a shooter right now" test, after the creature's
-    // own shooter bit Is(1u << 2).
-    // -> sMonInfo.numShots        (+0xd8, row +0x64)
-    // Spell charges left on this stack, the word straight after
-    // shotsLeft in the same embedded traits row: can_cast_resurrect
-    // (0x4473d0) refuses an Archangel or a Pit Lord whose count here
-    // has fallen to zero or below, ahead of every other test - the
-    // "once per combat" rule both creature spells carry.
 
     // THE SLOT IS FIXED BY THE RECORD, not by a roster. The DC
     // TCreatureTypeTraits run hitPoints 60 / speed 64 / attackSkill 68
@@ -546,26 +424,6 @@ public:
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
     int m_bitIndex;                 // +0xf8
-    // +0x110 is an EMBEDDED copy of the creature's ANIMATION traits row
-    // - the DC roster's `SMonFrameInfo sMonFrameInfo` at 252, whose
-    // 84-byte layout monframeinfo.h already carries - ADOPTED AS SUCH
-    // 2026-09-05, the same correction sMonInfo above just took. The
-    // pairing is positional and exact: DC 336 stdIcon lands on retail
-    // +0x164 and DC 348 armySample on the +0x170 play_sample already
-    // proved, so retail +0x110 == DC 252 with no shift across the
-    // record, and the eight fields the bodies below read land on the
-    // record's own offsets with no shift either.
-
-    // WHAT SETTLED IT: army's compiler-generated copy constructor
-    // (0x437a00) copies this band with ONE `rep movsd` of 0x15 dwords
-    // at fn+0x17f - 84 bytes, exactly sizeof(SMonFrameInfo), running
-    // from +0x110 to +0x164 - where the flat slices gave three dword
-    // pairs, a short `rep movsd` of 0xc and seven more pairs. It was
-    // the first byte-level divergence left in the body once sMonInfo
-    // was adopted. The old note here said modelling the record "would
-    // put monframeinfo.h in every army.h consumer's include closure";
-    // it does, and the cost is measured in the commit rather than
-    // assumed - monframeinfo.h is one struct, one extern and va.h.
 
     // The evidence for each field follows in offset order, as it was
     // recorded while the fields were sliced out one at a time.
@@ -678,38 +536,6 @@ public:
     // They stay source-visible in every TU; replacing them with padding in
     // selected consumers changed the class declaration stream seen by C1.
     int m_numSpellInfluences;       // +0x194
-    // Original Dreamcast spellInfluence[80]; Complete adds one entry.
-    // ResetRound (0x447120) walks 81 dwords at +0x198, and get_cancel_value
-    // (0x439a80) reads this row 0x144 bytes before the mastery row.
-    // Former anonymous overlay fields were aliases of these spell slots,
-    // not separate members; its ten pad_* spans were ordinary array entries.
-    // Proven retail offset: +0x198 + 4 * SpellID. Former semantic aliases:
-    //   [27] shieldRounds
-    //   [28] airShieldRounds
-    //   [29] fireShieldRounds
-    //   [30] protectionFromAirRounds
-    //   [31] protectionFromFireRounds
-    //   [32] protectionFromWaterRounds
-    //   [33] protectionFromEarthRounds
-    //   [36] magicMirrorRounds
-    //   [41] blessRounds
-    //   [42] curseRounds
-    //   [43] bloodlustRounds
-    //   [44] precisionRounds
-    //   [49] moraleBonusRounds
-    //   [50] moralePenaltyRounds
-    //   [51] luckBonusRounds
-    //   [52] luckPenaltyRounds
-    //   [54] slowRounds
-    //   [55] slayerRounds
-    //   [56] frenzyRounds
-    //   [59] berserkFlag
-    //   [60] hypnotizeFlag
-    //   [61] forgetfulnessRounds
-    //   [62] disabled290
-    //   [70] disabled2b0
-    //   [72] boundFlag
-    //   [74] disabled2c0
     int m_spellInfluence[81];          // +0x198 .. +0x2db
     // THE SECOND ROW, and it is the one the spellInfluence note above
     // already predicted: "DC's own spellInfluence[80] at 388 with
@@ -1152,18 +978,6 @@ private:
 
 #if 0  // superseded unordered/view-fragmented declaration reconstruction
 
-    // CONSTNESS THROUGHOUT THIS CLASS IS THE DUMP'S S_PUB32 MANGLED-NAME
-    // RUN, not the roster text. The CodeView roster's printed prototypes
-    // (evidence/dreamcast/functions.csv, and the CODEVIEW comment block
-    // at the foot of this header) DROP the return type, the `this`
-    // cv-qualifier and reference-vs-pointer; the publics run
-    // (evidence/dreamcast/publics.csv) carries all three. A full pass
-    // over army's 148 publics on 2026-08-14 corrected 27 declarations
-    // here and in army.cpp - see the lane note above army::is_enemy.
-    // Where retail bytes and the roster disagree the bytes win (GetName
-    // below is the standing example: DC has two const members, retail a
-    // /Gr static), but nothing in x86 codegen can contradict a `this`
-    // cv-qualifier, so the mangling is the only evidence there is.
     int findPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
     unsigned char validPath(int destIndex, unsigned char bLiteralTest);
@@ -1183,15 +997,6 @@ private:
     // takes as its second parameter.
     long getAttackDirection(long our_hex, const army* enemy,
                               long enemy_hex) const;
-    // 0x4458b0, the two-argument overload: it does not take the enemy's
-    // hex but SEARCHES for it, walking this stack's own neighbours and
-    // asking the combat grid which army stands there.
-    // CONST, corrected 2026-08-14: the note here used to read "non-const
-    // - the carcass prototype and the retail body agree", and the
-    // carcass prototype is exactly the roster text that cannot express
-    // it. ?get_attack_direction@army@@QBAJJPBV1@@Z is a const member,
-    // and the retail body reads creatureId / facing and calls
-    // get_adjacent_hex (const) and nothing else.
     inline long getAttackDirection(long our_hex, const army* enemy) const;
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
@@ -1245,24 +1050,6 @@ private:
     // one measured pass over the whole family (bool is not free in VC6
     // - it normalizes), and this lane only needed the declarations.
     unsigned char simpleMove(int hex, unsigned char restore_facing);
-    // BEHIND A VIEW, MEASURED: declaring WalkTo to every consumer of
-    // this header costs command.obj's combatManager::GetCommand
-    // 92.5714 -> 92.5357 with no semantic change anywhere - the
-    // include-set class, and the third distinct trigger shape this
-    // header has produced (two member declarations, three enumerators,
-    // now one). Bisected against the other three declarations added in
-    // the same change: only this one and cmbtmgr.h's mark_moving_army
-    // fire it. army.cpp is the only consumer.
-    // 0x445cd0 (56 B), CORRECTED 2026-08-15. This row carried the name
-    // `move_to` in an earlier link-order join and it is refuted by the
-    // body: it takes ONE stack argument, answers 1 for direction ids
-    // 0..2, -1 for 3..5 and `facing ? 1 : -1` for anything else, and
-    // ends `ret 4` - which is army::OffsetToFront (DC Army.h:736, dc
-    // 0x27c9c) statement for statement. move_to's real body is
-    // 0x445d10, exactly as the correction beside it already recorded.
-    // The row is the COMDAT copy of the header inline, emitted because
-    // attack_hex's own expansion of can_shoot leaves a real call to it
-    // at depth 2 while army::Walk inlines it at depth 1.
     unsigned char moveTo(int hex, unsigned char restore_facing);
     // ProcessNextAction's two dispatch-only army calls.
     void attackWall(int iTargetGridIndex);
@@ -1746,7 +1533,7 @@ public:
 
     // Header-inline declarations. Their exact positions in the LF_FIELDLIST
     // are audited separately; their bodies follow the class in Army.h source
-    // order and must never be replaced by TU-specific score scaffolding.
+    // order; keep them instead of TU-specific score scaffolding.
     unsigned char canCastResurrect() const;
     int getMorale(unsigned char apply_limits) const;
     int getLuck(unsigned char apply_limits) const;
@@ -2025,31 +1812,14 @@ unsigned char isValidCaliphSpell(int spell, const army* target);
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
 unsigned char spellIsValidOnTarget(int spell, const army* target);
 
-// ====================================================================
-// THE CODEVIEW BLOCK BELOW IS ROSTER *TEXT*, AND ROSTER TEXT IS LOSSY.
-// It is a faithful transcription of what the dump prints, kept that way
-// on purpose - but the printed prototypes drop the `this` cv-qualifier
-// and render every REFERENCE as a pointer (they also truncate template
-// arguments, which is why the std::vector rows read `std::vector<army*
-// array`). The dump's S_PUB32 mangled-name run
-// (evidence/dreamcast/publics.csv) carries all of it. Measured over
-// army's 148 publics on 2026-08-14: 27 of these rows are const members
-// the text shows as non-const, and 5 take a reference the text shows as
-// a pointer (add_item / erase_item's array, is_adjacent's other army,
-// can_retaliate's, attack_wall's ballistics traits, and _cpp_min's own
-// operands). NEVER promote a row out of this block on its printed
-// prototype alone - demangle its public first. Rows already promoted
-// into the class above and into army.cpp carry the corrected form.
-// ====================================================================
-// --- globals ---
-// CODEVIEW(E:\gamedcs\army.cpp:917, dc 0x44e14) unsigned char add_item(std::vector<army* array, army* arg);
-// CODEVIEW(E:\gamedcs\army.cpp:2708, dc 0x47944) unsigned char is_natural_enemy(TCreatureType attacker, TCreatureType defender);
-// CODEVIEW(E:\gamedcs\army.cpp:4436, dc 0x4a8c8) TWallTargetId choose_wall_target(TWallTargetId wall, const TWallTargetId* targets, long count);
-// CODEVIEW(E:\gamedcs\army.cpp:5433, dc 0x4c0f0) unsigned char group_has_melee(long group);
-// CODEVIEW(E:\gamedcs\army.cpp:5451, dc 0x4c154) unsigned char group_has_shooters(long group);
-// CODEVIEW(E:\gamedcs\army.cpp:5469, dc 0x4c1b8) unsigned char group_has_dragons(long group);
-// CODEVIEW(E:\gamedcs\includes.h:117, dc 0x4c9c0) double min(double a, double b);
-// CODEVIEW(E:\gamedcs\DC_precompiledheaders.h:41, dc 0x4d044) const double* _cpp_min(const double* _X, const double* _Y);
+// E:\gamedcs\army.cpp:917, dc 0x44e14
+// E:\gamedcs\army.cpp:2708, dc 0x47944
+// E:\gamedcs\army.cpp:4436, dc 0x4a8c8
+// E:\gamedcs\army.cpp:5433, dc 0x4c0f0
+// E:\gamedcs\army.cpp:5451, dc 0x4c154
+// E:\gamedcs\army.cpp:5469, dc 0x4c1b8
+// E:\gamedcs\includes.h:117, dc 0x4c9c0
+// E:\gamedcs\DC_precompiledheaders.h:41, dc 0x4d044
 
 // --- Bitmap16Bit ---
 // CODEVIEW(E:\gamedcs\Bitmap16.h:156, dc 0x4ca7c) const unsigned short* Bitmap16Bit::GetMap(int x, int y);

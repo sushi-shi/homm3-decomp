@@ -87,7 +87,6 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
     int textX;
     int spacing;
     int borderWidth;
-    // Retail reloads the original flag from [ebp+0xc] here and after the loop.
     if (isSmall) {
         textX = 0x1d;
         spacing = 0x4c;
@@ -146,8 +145,7 @@ TResourceDisplay::~TResourceDisplay()
 }
 
 // E:\gamedcs\resourcedisplay.cpp:150
-// ARITY CORRECTED 2026-08-08: the declarator carried the Dreamcast
-// THREE-parameter prototype (draw, update, inMap); retail takes TWO.
+// Dreamcast has three parameters (draw, update, inMap); retail takes two.
 // Proof: the body ends `ret 8`, reads the gate byte at [ebp+8] and
 // forwards the dword at [ebp+0xc] as the update flag of
 // TSubWindow::Draw(update, -0xffff, 0xffff) - there is no third slot.
@@ -163,7 +161,6 @@ TResourceDisplay::~TResourceDisplay()
 // in retail; recruitUnit::close supplies push 0 / push 1 at 0x55033a.
 // DC156 proves playerData&; DC168/201 prove operator[] for the three
 // date labels in Update/Clear. Retail expands those canonical accessors.
-// Before normalization (locals): draw.
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::update(bool drawRequested, bool update)
 {

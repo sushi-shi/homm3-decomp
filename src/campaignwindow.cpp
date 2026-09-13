@@ -71,29 +71,6 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // newCampaign`, both slots reused as temps once dead. EH frame with twelve
 // unwind states and `sub esp, 0x8c`.
 
-// The four modelling decisions the decoded map left open are taken here:
-// TCampaignWindow's +0x4c/+0x50 scalars and the 21-byte availability block
-// at +0x60, gCampaignPreviews' 0x50-byte row type, the caption block at
-// 0x6a5f88, and - the one that reaches into a shared header - the shape of
-// `gpGame->campaign = SCampaign()`.  Retail expands the assignment and the
-// temporary's teardown member by member, except for the one nested destructor
-// boundary described below, which is the whole evidence for
-// game.h's SCampaign:
-//   +0x00/+0x01/+0x02 bytes, +0x04/+0x08 dwords, +0x0c byte, +0x10 dword -
-//     copied straight;
-//   +0x14 `assign(that, 0, npos)` through 0x404860 with the npos word at
-//     0x63a60c and `_Tidy(true)` in the teardown, i.e. a std::string;
-//   +0x24 twenty-one bytes copied by an inlined byte loop -
-//     campaignCompleted[21];
-//   +0x3c, +0x4c, +0x5c, +0x6c: four sub-object assignments (0x45f5e0,
-//     0x45f810, 0x45f9e0, 0x50ac00) whose mirror teardowns are 0x45f560,
-//     0x45f7b0, the out-of-line 0x46a650 and an inline int-vector destructor
-//     that still CALLS `_Destroy` before `operator delete`/zero
-//     triple.  0x45f560 and 0x45f7b0 are vector-of-vector teardowns (inner
-//     stride 0x10; 0x45f560's leaves are 0x492 bytes each), 0x50ac00 is a
-//     four-byte-element vector::operator=, and mapScores is the +0x5c one.
-// game.h now carries all four as real members.
-
 // FIXED 82.5365% -> 98.4726% (2026-08-21): the newGame arm, in two steps.
 // Retail's SCampaign copy assignment and destructor are compiler-generated;
 // it expands the outer operations HERE, where game::Load calls the same two
@@ -126,22 +103,6 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 
-// Residual (97.2737%, peak 98.4726%): one whole-body EBX/EDI role swap, with
-// 549 instructions
-// against retail's 548. Retail binds this->EDI and the SCampaign temporary,
-// then newCampaign, to EBX; this compile makes the opposite assignment.
-// why-reg's forty store/chain/order probes are byte-flat (one volatile probe
-// and the global/store swap worsen), and both nested type declaration order
-// and a named `this` alias are byte-flat too. The v2 model independently
-// localizes the class: both images bind ESI at instruction 10, then candidate
-// binds EBX/EDI at 15/30 where retail binds EDI/EBX; its best creation-order
-// and store-order mutations are flat or worse. Naming the SCampaign temporary
-// regresses to 96.5110%, and naming the destination pointer regresses to
-// 97.3850%. This is the bounded register-homing class. Release-elided
-// diagnostic tails at one, two and four sites were already byte-flat, so
-// caller mass is not a remaining lever.
-// The old two-axis grid below was measured on the explicit-member phase and
-// remains historical evidence.
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
@@ -324,68 +285,6 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId;
 
 // E:\gamedcs\campaignwindow.cpp:291
 
-// Residual (81.6%): D-family block placement only - the shared end-dialog
-// join. Retail gives the fall-through into it to the widget arm (`jne
-// consume`, then straight into the tail) and sends the campaign-pick and
-// key-down arms back with `jmp`s; our CL sinks the same three-predecessor
-// join past the key-down arm, costing one `jmp` at the widget arm and
-// re-aligning everything downstream. Both layouts spend exactly two
-// unconditional jumps, so it is an internal tie-break on IL block creation
-// order rather than a spelling - tried and rejected: forward `goto
-// pick_campaign` with the arm parked behind the `ret` (VC6 folds the branch
-// and hoists the arm back, 75.4), inverted arms `if (id <= LAST) {...} else
-// if (...)` (75.4), the three-site inlined-helper spelling that would let
-// tail-merge pick the surviving copy (VC6 constant-folds the key-down
-// copy's dialogReturn and merges only the epilogue, 80.1), `goto` inside
-// the switch case (81.6), explicit `goto end_dialog` in both arms (81.6),
-// if/else-if chain (81.6). `if (id == CANCEL) goto end_dialog; goto
-// consume;` and plain `return MESSAGE_DISPATCH_CONSUME` both reach 84.4576%
-// but only by DUPLICATING the consume epilogue, which retail does not have
-// (3 candidate `ret`s against retail's 2) - alignment luck, not a match, so
-// both are rejected. Duplicating the shared end-dialog source at its first
-// predecessor preserves the exact 17-branch/2-ret symbolic sequence and
-// reaches 81.7119%, but VC6 tail-merges only its suffix: 32 candidate blocks
-// against retail's 30 and an extra jump through the split copy. Volatile `id`
-// and hover locals worsen why-reg distance by 13 and 25 respectively, while
-// why-branch finds no recognized control mutation. Everything else in the
-// body is register-exact.
-// 2026-08-14: `sema diff --branches` now reports the branch sequences AGREE
-// (17/17 mnemonics and symbolic targets, 2 rets each) - what is left is block
-// PLACEMENT plus one reloc split. Retail emits the shared end-dialog exit
-// (`msg.id = MESSAGE_WIDGET; dialogReturn = ...; codeX = codeY = END_DIALOG;
-// return FORWARD`) immediately after its first predecessor while our CL sinks
-// it past the remaining compares. The other row, our `mov edx,[4*eax-0x1b0]`
-// against retail's `mov edx,[4*eax]`, is the same delinker symbol+addend split
-// documented in initialize.cpp's create_included_mask - identical once linked.
-// Also disproved here: binding the GetWidget objects to pointer locals (the
-// lever that moved TLevelUpWindow::WindowHandler) COSTS 1.2 points, 81.64 ->
-// 80.44, so retail genuinely uses the fused `GetWidget(id)->send_message(...)`
-// spelling in this handler. The same edit costs MainMenuHandler 1.1 (90.07 ->
-// 88.94). The lever is per-call-site, not a house style.
-// 2026-09-05: the sunk-join lever moved it 81.6402 -> 84.4595. Hoisting `id` to
-// a bodyless function-scope declaration (so the key-down arm may `goto` into
-// the widget block) and writing the end-dialog tail INSIDE the surviving
-// `id > CAMPAIGN_LAST_ID` arm, with the select arm `goto end_dialog`-ing back
-// into it, buys retail's `jle` forward to the select arm and its 13-instruction
-// else block. Residual (84.4595%): retail falls through the CANCEL guard into
-// end_dialog (`jne consume`) while our CL inverts it (`je end_dialog`) and
-// inlines a THIRD copy of the 6-instruction consume epilogue - 3 rets against
-// retail's 2 - because end_dialog's LAST layout predecessor is the key-down arm
-// and VC6 parks a join after its last predecessor, not its first. Measured and
-// rejected: `goto select_campaign` forward out of the guard (VC6 hoists the arm
-// back inline, 75.4242); writing the end-dialog tail a second time at the
-// key-down site per the two-jump-predecessor recipe (cross-jumper splits it
-// three ways, 32 blocks, 83.9316); inverting the CANCEL nesting to
-// `if (id == CANCEL) { ... } goto consume;` (byte-flat, VC6 canonicalises both).
-// The six consume edges can be ordinary returns: this retains 84.4576%
-// and all sibling scores. The end-dialog layout remains a separate residual.
-// A shared exit flag with the original helper calls removes both joins but
-// scores 83.7571% versus 84.4576%; its cleanup layout still needs refinement.
-// One breakable dispatch scope removes both source gotos without changing
-// any of the 621 compiled bytes or 43 relocation names/addends at 84.4576%.
-// Do/while(0) and for/break reproduce the same result; keeping only selection
-// fallthrough also works but leaves the keyboard join. The common message
-// stores remain after selection/Bink pause and the keyboard close action.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {

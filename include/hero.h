@@ -188,7 +188,6 @@ private:
 };
 SIZE(type_obscuring_object, 0x18);
 
-// Preserve the caller's packing for boat, as at its former location.
 #pragma pack(pop)
 
 // boat - the adventure-map vessel. It lives here for the same reason
@@ -235,18 +234,6 @@ SIZE(boat, 0x28);
 
 #pragma pack(push, 1)
 
-// The 8-byte artifact record - what an equipped slot or a backpack
-// slot actually holds. NAME CORRECTED 2026-08-08: this header used to
-// call it TArtifactSlot, but on the Dreamcast build TArtifactSlot is
-// the ENUM of wearable positions (eArtifactSlotHead 0 ..
-// eArtifactSlotSpellbook 17) and `type_artifact` is the record - DC
-// members.csv gives it exactly these two dwords, `TArtifact type` at 0
-// and `SpellID spell` at 4. Retail agrees: hero::add_to_backpack
-// (0x4e2f90) takes a `const type_artifact*`, reads its two dwords and
-// copies them straight into a backpack slot. Every carcass declarator
-// in this tree already used the DC meaning of both names, so the live
-// struct was the odd one out. The member spellings stay provisional
-// (no retail body names them).
 struct type_artifact {
 public:
     TArtifact m_artifactId;
@@ -523,10 +510,6 @@ public:
     // `x * 0.05f + 1.0f`. That is HoMM3's per-level specialty growth,
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short m_level;  // +0x55
-    // This visit-flag run is fixed by SetRolloverText's retail loads and
-    // the uniform retail/DC hero-layout repack described below. These are
-    // canonical members: the former pad-vs-fields include personality was
-    // unnecessary because both arms had the same layout.
     unsigned long m_trainingGroundsFlags;  // +0x57
     unsigned long m_defenseTowerFlags;  // +0x5b
     unsigned long m_gardenOfRevelationFlags;  // +0x5f
@@ -575,35 +558,6 @@ public:
     // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
     // to armyGroup::get_AI_value as a this pointer.
     armyGroup m_army;
-    // Secondary-skill mastery bytes, a 28-entry band starting at 0xc9,
-    // all read as SIGNED chars. THREE slots are byte-proven, and each
-    // lands exactly where the standard secondary-skill order puts it -
-    // which is what promotes the band from a guess to a model:
-    //   +0xd0 slot 7  Wisdom     - do_aftermath's inlined do_eagle_eye
-    //                              (0x426f44) caps the learnable spell
-    //                              level at wisdom + 2
-    //   +0xd3 slot 10 Ballistics - check_wall_archery_penalty (0x424848)
-    //                              subtracts it from the wall distance
-    //   +0xd4 slot 11 Eagle Eye  - do_aftermath (0x426eee) gates the
-    //                              spell-learning pass on it and adds 1
-    //                              to it as the level bound (0x426f20)
-    // The 28-entry extent, the SIGNED element type and the 0xc9 base are
-    // byte-proven by the SS trio (0x4e2210 SetSS / 0x4e2250 TakeSS /
-    // 0x4e22d0 GiveSS): all three address the band as
-    // `[iWhichSS + this + 0xc9]`, load it with `movsx`, and TakeSS's
-    // companion sweep over the 0xe5 band runs `cmp ebx,0x1c` - 28.
-    // PLAIN ARRAY, and it must stay one: the union that used to carry a
-    // named-slot second arm (wisdomLevel/ballisticsLevel/eagleEyeLevel
-    // over pad arrays) made VC6's synthesized memberwise operator=
-    // copy the band ONCE PER UNION ARM - DoCombat's inline hero copies
-    // showed the 28-byte loop followed by the pads' 7/2/16-byte loops
-    // over the same bytes, where retail runs the single 0x1c loop
-    // (found 2026-08-27; the town.h pad-array retirement is the same
-    // disease). Consumers spell the proven slots through the enum:
-    // skillLevel[eSecSkillWisdom] +0xd0, [eSecSkillSiegeBallistics]
-    // +0xd3, [eSecSkillEagleEye] +0xd4, and Artillery
-    // [eSecSkillBattlefieldBallistics] +0xdd - all byte-identical
-    // addressing (see the trio note above for the slot proofs).
     signed char m_skillLevel[28];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
@@ -947,19 +901,6 @@ public:
     // "first free".
     unsigned char addToBackpack(const type_artifact* artifact, long slot);
     std::string getBackpackError(TArtifact artifact) const;
-    // 0x004e3070 - gives or equips one artifact and performs the optional
-    // end-condition check. ProcessSearch calls it for the Holy Grail.
-    // SIGNATURE CORRECTED FROM RETAIL (2026-08-20): `ret 0xc`, and BOTH
-    // flags are read as BYTES (`mov al,[ebp+0xc]` / `mov al,[ebp+0x10]`)
-    // against the dword reads GiveExperience's two `int` parameters take
-    // in its now-exact body; the inlined allocator temporary lives at
-    // [ebp+0xf], inside parameter 2's home, which only exists as padding
-    // if that parameter is one byte wide. The 0x4e3bf8 exit is
-    // `mov al,1`, so the return is an 8-bit value, not void. The DC row
-    // declares `void ... int bCheckEnd, unsigned char equip_it`; retail's
-    // SECOND flag gates the combination announcement and its THIRD gates
-    // CheckForArtifactWin, so the DC names do not carry over. `bAnnounce`
-    // is an invented spelling for a byte-proven role.
     unsigned char giveArtifact(const type_artifact* artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
@@ -1360,12 +1301,7 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 DATA(0x00679dd0) extern THeroTraits g_heroTraitsStorage[156];
 DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\hero.cpp:267, dc 0xca7e8) unsigned char initialize_move_constants();
-// Complete returns the 70-bit grant set by value; game::LoadMap consumes it
-// when a scenario disables a spell supplied by an artifact.
-// Provisional name: markArtifactSpells. The former mark_spells label belongs
-// to hero.cpp's school helper, whose DC signature is recorded below.
+// E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);
 // CODEVIEW(E:\gamedcs\hero.cpp:1527, dc 0xcc360) void mark_spells(unsigned char* spell_list, TSpellSchool school);
 // CODEVIEW(E:\gamedcs\hero.cpp:2014, dc 0xccf78) TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded);

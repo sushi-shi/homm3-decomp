@@ -13,8 +13,6 @@
 // attested by a CodeView row: the two class names above are retail's own,
 // everything else is role-derived and provisional.
 
-// All Immersion bodies and their enclosure-tree instantiations are owned
-// here, including the three formerly carried by game.cpp.
 #include <va.h>
 
 #include <fstream>

@@ -203,7 +203,6 @@ namespace GameTime {
     // argument evaluated ahead of its guard), and the result is tested
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    // Before normalization (function): GameTime::Elapsed.
     // The stop/start subtraction is retained by the upstream mouse timing helper.
     inline long elapsed(unsigned long stop, unsigned long start)
     {

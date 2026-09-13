@@ -73,20 +73,7 @@ public:
 };
 SIZE(CScenarioPlayerInfoWidget, 0x60);
 
-// E:\gamedcs\scenarioinfo.cpp:258
-// Residual (98.4998%): frame 0xa68 versus retail 0xa78, local homes and
-// row-value/store scheduling; the canonical call sequence agrees. The
-// Complete row widget has no DC body. Two source families (30/57 states,
-// 10/16 distinct objects, ten reproduced retained states each) tested direct
-// stores, captured locals, ordinary/in-class setters, y induction, buffer
-// declaration order, constructor argument ownership/order, optional-hero
-// initialization, and parameter/member portrait reads. None improved the
-// corrected baseline. Setters recover retail's 0x1f7d4/0x1f640 loop bases
-// and frame 0xa74, but still schedule the row stores differently (98.42%).
-// Keep the recorded vc/lc pointers, pre-map-name lifetime and helper calls.
-// The named Widgets-vector reference makes reserve read through the vector
-// address; direct member spelling previously scored lower. Do not infer
-// missing named locals from the frame-size difference alone.
+// E:\gamedcs\scenarioinfo.cpp:258, dc 0x129db4
 VA(0x00567290, 0x2109)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
 CScenarioInfoDlg::CScenarioInfoDlg()
     // DC 258 centers against SCREEN_WIDTH/HEIGHT; retail +0x2f/+0x31
@@ -95,10 +82,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
                 (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
     char tempText[256];
-    // Before normalization (locals): LossText.
     char lossText[1024];
     char tempName[256];
-    // Before normalization (locals): VictoryText.
     char victoryText[1024];
 
     // The widget vector NAMED AS A REFERENCE across all 42 uses:
@@ -302,8 +287,6 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         ++rowPosition;
     }
 
-    // DC 415..418 and 424..427 place SetIconFrame in each condition arm.
-    // Retail merges their common call after selecting the frame argument.
     iconWidget* victory = new iconWidget(
         417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);

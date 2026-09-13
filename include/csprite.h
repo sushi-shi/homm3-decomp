@@ -316,7 +316,6 @@ public:
     // CSprite.h:450/451 (dc drawing.obj:0x8757c) preserves the same
     // bitmap forwarding boundary. The public suffix HH_N1@Z proves both
     // Boolean parameters; its four bitmap accessors remain source calls.
-    // Before normalization (function): CSprite::DrawSpellEffect.
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, Bitmap16Bit* dst, int dx, int dy,
                          bool hflip, bool alpha) const
