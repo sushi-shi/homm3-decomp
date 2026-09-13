@@ -94,12 +94,12 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
     sprintf(g_text, "%d", m_sourceTroops);
     msg.m_codeY = 4;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_destinationTroops);
     msg.m_codeY = 5;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -300,7 +300,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = 6;
@@ -312,7 +312,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
         g_splitWindow->m_sourceMustKeep = 0;
         msg.m_extra = g_splitWindow->m_totalTroops + 1;
     }
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     if (inDestRestricted && ag->getNumArmies() == 1)
         g_splitWindow->m_minimumTransfer = 1;
@@ -322,7 +322,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     msg.m_codeX = widget::WIDGET_SET_SLIDER_STATE;
     msg.m_extra = g_splitWindow->m_destinationTroops
         - g_splitWindow->m_minimumTransfer;
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     g_splitWindow->m_destinationEntry->setFocus(1);
     g_splitWindow->updateSplitArmy(0);
@@ -383,30 +383,30 @@ inline void TSplitWindow::setRolloverText(int codeY)
 // maximum, not source proof. UpdateSplitArmy and SetRolloverText retain their
 // CodeView-proven helper boundaries and inline into this exact retail body.
 VA(0x0044a180, 0x2DF)  // dc 0x4e428 (+ 0x4e388 inlined)
-int TSplitWindow::windowHandler(message* msg)
+int TSplitWindow::windowHandler(message& msg)
 {
     unsigned char closeDialog = false, updateArmy = false;
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            msg->m_codeX = widget::WIDGET_GET_TEXT;
+            msg.m_codeX = widget::WIDGET_GET_TEXT;
             broadcastMessage(msg);
 
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SPLIT_WIDGET_SOURCE_ENTRY:
-                m_sourceTroops = atoi(msg->m_extraText);
+                m_sourceTroops = atoi(msg.m_extraText);
                 m_sourceTroops = limit(0, m_sourceTroops, m_totalTroops);
                 m_destinationTroops = m_totalTroops - m_sourceTroops;
                 m_destinationEntry->setFocus(0);
                 break;
 
             case SPLIT_WIDGET_DESTINATION_ENTRY:
-                m_destinationTroops = atoi(msg->m_extraText);
+                m_destinationTroops = atoi(msg.m_extraText);
                 m_destinationTroops = limit(
                     0, m_destinationTroops, m_totalTroops);
                 m_sourceTroops = m_totalTroops - m_destinationTroops;
@@ -420,10 +420,10 @@ int TSplitWindow::windowHandler(message* msg)
             break;
 
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case DIALOG_RETURN_SPLIT_CLOSE:
             case DIALOG_RETURN_SPLIT_CANCEL:
-                g_windowManager->m_dialogReturn = msg->m_codeY;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
                 break;
             case DIALOG_RETURN_SPLIT_ACCEPT:
                 g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
@@ -436,18 +436,18 @@ int TSplitWindow::windowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         return MESSAGE_DISPATCH_CONSUME;
 
     }
 
     if (closeDialog == true) {
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (updateArmy)
@@ -542,15 +542,27 @@ const std::bitset<9>& armyGrpFn0044A460()
 // The same corrected behavior with the old pendant join scores 76.8554%;
 // a post-switch artifact selector scores 75.4607%. Initializing chance at
 // function entry gives 95.0429%; keep its assignment after the spell gates.
+// Exact: DC342/343/344 orders creature row, attributes, then spell row.
+// Restoring that order gives 98.3393%; the combined Destroy Undead condition
+// at DC464/466 removes one extra return and gives 99.9821%. DC367/369 also
+// groups Blind's pendant, Troglodyte and undead tests into one condition;
+// preserving that shared return closes the final two branch targets.
+// All 1,326 bytes, 101 blocks and nine named helper calls agree with retail.
+// The 32-state order/guard/const family preserves all 36 exact siblings;
+// its four-state Blind follow-up independently reproduces the exact result.
+// Death Ripple's combined condition follows DC456/458 and is byte-flat.
+// Keep the two proven const hero* const parameters and the direct const
+// GetMagicResistanceFactor call; the former const_cast is obsolete. The
+// shared SpellID integer alias remains a separate enum-domain audit finding.
 // Before normalization: get_spell_work_chance, target_army_type,
 // casting_hero, target_hero.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* castingHero, const hero* targetHero)
+float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
     const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
-    const SSpellTraits* spellRec = &g_spellTraits[spell];
     unsigned int attrs = creatureRec->m_attributes;
+    const SSpellTraits* spellRec = &g_spellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
         && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
         return 0.0f;  // Power of the Dragon Father
@@ -568,12 +580,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         return 0.0f;
     switch (spell) {
     case SPELL_BLIND:
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
-            return 0.0f;
-        if (targetArmyType == CREATURE_TROGLODYTE || targetArmyType == CREATURE_INFERNAL_TROGLODYTE)
-            return 0.0f;
-        if (attrs & g_ctaUndead)
+        if ((targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
+            || targetArmyType == CREATURE_TROGLODYTE
+            || targetArmyType == CREATURE_INFERNAL_TROGLODYTE
+            || (attrs & g_ctaUndead))
             return 0.0f;
         break;
     case SPELL_BERSERK:
@@ -627,17 +638,15 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_DEATH_RIPPLE:
-        if (attrs & g_ctaUndead)
-            return 0.0f;
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
+        if ((attrs & g_ctaUndead)
+            || (targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE)))
             return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
-        if (!(attrs & g_ctaUndead))
-            return 0.0f;
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
+        if ((!(attrs & g_ctaUndead))
+            || (targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH)))
             return 0.0f;
         break;
     case SPELL_MIRTH:
@@ -710,8 +719,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 return 0.0f;
             }
             if (targetHero)
-                chance -= 1.0f - const_cast<hero*>(targetHero)
-                                         ->getMagicResistanceFactor();
+                chance -= 1.0f - targetHero->getMagicResistanceFactor();
         }
         if (spellRec->m_karma > 0) {
             return 1.0f;
@@ -1716,131 +1724,44 @@ std::string armyGroup::getMoraleDescription(
     return result;
 }
 
-// E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
-// creature argument and full-width magic-terrain mode; the older Dreamcast
-// prototype omits the former and calls the latter a boolean.
-// Semantic transcription complete; residual 82.5689%. The bounded
-// variable-creature name lookup raised the body to 74.7874%; a function-wide
-// shared result regresses.
+// E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4. The older signature proves
+// int luck and const hero/town/group pointers. Complete adds creature and
+// widens the cursed-ground flag to a magic-terrain mode (ret 20h).
+// DC1478/1479 constructs result after GetLuck; DC1482 assigns the hero
+// description. DC1494 calls GetArmyName(type, 2), DC1499 calls HasBuilding,
+// and DC1504/1506 subtracts the computed luck before appending the remainder.
+// These canonical calls survive independently of their expansion decisions.
 //
-// THE CURSED-GROUND ARM RETURNS THE LITERAL, no local at all (74.79 ->
-// 82.57, 2026-08-14). The EH cleanup transcript is what named it
-// (docs/vc6/eh-cleanup.md): retail's states run [0,1,0,2,0,3,0,4,0,5,0] -
-// state 0 is `result`, each temporary opens N and closes back to 0 - while
-// ours ran [reg,-1,1,2,1,3,1,4,1,5,1,6,1], one whole extra lifetime ahead of
-// everything else and every close landing on 1 instead of 0. That leading
-// region was the branch-local `std::string result` this arm used to build
-// and then COPY into the return object. Retail builds the return object
-// itself: `mov [esi],al / call _Tidy / <strlen> / call assign` with
-// esi = [ebp+8], which is `basic_string(const char*)` expanded straight onto
-// the NRV - i.e. `return gCursedGroundLuckText;`. The hourglass arm below
-// is the same shape from the other side: retail passes [ebp+8] as
-// format_string's hidden return slot, so `return format_string(...)` elides
-// too. The eh signal line is now absent from `diagnose` on this row.
+// Retail builds both early returns directly into the hidden result object:
+// the cursed-ground literal uses the char-pointer string constructor and
+// the Hourglass arm passes that return slot directly to formatString.
+// Its subsequent EH states are [0,1,0,2,0,3,0,4,0,5,0], with result at zero.
+// A branch-local string followed by a return copy adds a wrong lifetime.
 //
-// What is left is a pure inline-depth divergence, 41 conditional branches
-// against retail's 33: retail CALLS basic_string::assign(const char*,
-// size_t) where we expand it into _Grow + rep movs + _Eos, and the same one
-// level too deep repeats at the other string sites.
+// Clover Field subtracts TWO FROM THE INCOMING luck, not currentLuck:
+// retail +0x166 loads [ebp+10h], +0x16f subtracts two, and +0x174 writes
+// [ebp+10h]. GetLuck's result is separately stored at [ebp+14h]; that home
+// supplies the Halfling threshold and the final subtraction at +0x300.
+// Decrementing currentLuck both invents a Halfling-floor message when the
+// computed luck is already positive and reverses the terrain contribution
+// in the final modifier. The native oracle covers 19,008 terrain/luck
+// combinations and rejects that old-accumulator negative control.
 //
-// THE HERO ARM ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-08-14). The
-// Dreamcast line table says so directly - dc 0x4fab4 line 1482 reaches
-// `basic_string::operator=` and no operator+= - and retail's own call at
-// that slot is `assign(const basic_string&, uint, uint)` (0x404860) where
-// ours was `append(...)` (0x41b250); every other call in the body already
-// lined up 1:1. `result` is empty there, so the two are behaviourally the
-// same and the argument sequence is identical - only the relocation target
-// differs, which objdiff does not score. Recorded because it is what retail
-// wrote and because the call multiset is what `predict-inline` reads.
+// Six accumulator/tail forms produce four objects, all reproduced. Correcting
+// the Clover home reaches 82.5808%; local, compound and explicit-assignment
+// tail forms tie, with all 37 exact siblings preserved. Compound subtraction
+// also follows the DC1504 source group. The empty-allocator scratch byte
+// now agrees at [ebp+13h] without changing the proven int parameter type.
+// Residual: retail calls _Tidy for the
+// Halfling temporary and append for the final modifier where VC6 expands
+// them here.
 //
-// WHAT THE LINE TABLE CAN AND CANNOT SAY HERE. The DC compiland is an
-// older revision with no `creature` parameter, and it has NO line at all
-// for two blocks retail has: the clover-field arm (between DC 1482 and
-// 1485) and the halfling arm (between DC 1502 and 1505) - retail's four
-// `format_string`/append groups against DC's three corroborate the second
-// exactly. So the +4 candidate sites this row is measured to be short of
-// (docs/vc6/inliner.md §5.12) must live in those two blocks; the table
-// bounds them negatively and cannot name them. The clover arm's own
-// bytes - including its longhand four-way elemental compare, which is the
-// `is_base_elemental` shape landed in viewarmywindow - already match
-// retail exactly, so it is a site count and not a spelling.
-//
-// A DC-census lead that does NOT transfer (2026-08-14): the xref graph
-// records `GetArmyName` (dc 0x1ef94, E:\gamedcs\CreatureType.h:296) from
-// both this body (x1) and get_morale_description (x3), and that helper is
-// what closed ??0TQuickCreatureWindow. Respelling
-// `armygrp_creature_plural_name(x)` as `GetArmyName(x, 0)` - the same
-// lookup, with the count test folding away - costs this row 1.9 points and
-// is byte-flat on get_morale_description (67.5649) and
-// get_spell_work_chance (88.5071). The plain plural lookup with no count
-// parameter is retail's x86 spelling in this compiland; the census counts
-// (x1/x3 against our x2/x2) already said the port's bodies differ.
-// Two further census leads are real but not reachable from this file:
-// `town::HasBuilding` x1 (E:\gamedcs\Town.h:324) where we read
-// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h carries
-// the declaration - and `std::string::operator+=`
-// x3 against our mixed `+=`/`append`.
-// THE SITE COUNT IS RE-MEASURED AND THE SEARCH IS NARROWED TO ONE BLOCK
-// (2026-08-15). The deficit is still exactly FOUR free candidate sites,
-// but the probe has to be a USER-DEFINED inline to register at all -
-// `armygrp_clamp(0, luck, 3);` steps 82.5689 flat through +3 and jumps to
-// 95.1557 at +4, while `result.size()` / `result.capacity()` (Dinkumware
-// members) are inert until they start doing harm. And POSITION decides it:
-//   clover arm  x4  -> 95.1557      halfling arm x4  -> 80.5000
-//   devil block x4  -> 95.1557      after the tail   x4  -> 80.5000
-//   any 1/3, 2/2 or 3/1 split across clover+halfling -> 80.5000
-// So the four sites are at or BEFORE the Rampart gate, which EXCLUDES the
-// halfling arm - half of what the line table's negative bound allowed -
-// and leaves the clover arm as the only post-Dreamcast block they can live
-// in. Two real sites are now landed inside that window (`is_base_elemental`
-// in the clover gate, `town::HasBuilding` in the Rampart gate); both are
-// byte-flat, which is expected on a threshold this sharp. Open: which four
-// statements the clover arm carries. Nothing is padded - the probe is an
-// instrument, and the baseline row is deliberately left at 82.5689.
-//
-// THE RAMPART GATE IS A town::HasBuilding CALL (byte-flat, 2026-08-15):
-// dc 0x4fab4 line 1499 is `mov #21,r5 / mov #1,r6 / jsr` on
-// `?HasBuilding@town@@QBA_NH_N@Z` where this body tested `active &
-// bitNumber[EXTRA_0_ID]`. It buys ONE candidate site, and this row is
-// short FOUR, so the score does not move - recorded because it is the
-// statement retail wrote and because it narrows the outstanding deficit
-// to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
-// gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
-//
-// Historical extraction probes for the former apply_luck_magic_terrain:
-// the arm now belongs directly to getLuckDescription. An inline-budget
-// improvement alone does not establish a helper boundary.
-// THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
-// 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
-// `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
-// lifting the clover arm into `apply_luck_magic_terrain` pushed it the
-// same direction with real code instead of padding.  Same lever, same round,
-// +12.20 on get_morale_description.  Two further doses measured on top of
-// this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
-// devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
-// body, like its twin, peaked at the magic-terrain extraction in that
-// experiment.  The old +4-site probe has now been re-measured against this baseline
-// (2026-08-21): four `limit` candidates in the lifted clover helper regress
-// 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
-// VERIFY family is not the remaining lever at the retained source shape.
-//
-// [2026-08-21] +5.69 (84.5060 -> 90.1916) from the nine-town switch routing
-// below, and the two sides' instruction counts now agree exactly (332 = 332,
-// one `ret` each). What is left is a parameter-home family: retail spills
-// `currentLuck` into the dead `ourHero` parameter slot ([ebp+0x14]) the
-// moment GetLuck returns while this compile keeps it in EBX for the whole
-// body, and retail's empty-allocator scratch byte sits in the [ebp+0x10]
-// slot's high byte ([ebp+0x13]) where ours sits in the [ebp+0xc] slot's
-// ([ebp+0xf]). By the recorded scratch-slot rule that second fact reads as
-// retail's SECOND parameter being narrower than the `int luck` modelled
-// here - worth testing, but it is a non-additive change to a declarator
-// viewarmywindow.cpp also calls, so it needs an owner who can re-measure
-// that unit's rows in the same build.
-// [2026-08-26] Scoping a signed-byte snapshot of `ourTown->type` under the
-// nonnull gate raises 90.1916 -> 92.3623. The cache preserves retail's 33
-// conditional branches and symbolic branch targets. A generated one-line
-// town-type accessor reaches the same bytes, but no such accessor is attested
-// in the Dreamcast class record; the ordinary local is retained instead.
+// Historical extraction controls reached 92.3623%, but their invented terrain
+// helper has no positive source evidence. The Complete-only clover arm stays
+// in this caller, with both canonical GetArmyName calls. Old synthetic inline
+// probes measured compiler thresholds; their site counts and missing DC rows
+// cannot establish omitted operations or reject a proven helper call. Neither
+// those probes nor alternative helper declarations belong in retained source.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::getLuckDescription(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -1896,7 +1817,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            currentLuck -= 2;
+            luck -= 2;
             result.append(g_cloverFieldLuckText);
             break;
         default:
@@ -1932,9 +1853,9 @@ std::string armyGroup::getLuckDescription(
         currentLuck = 1;
     }
 
-    int otherModifier = luck - currentLuck;
-    if (otherModifier)
-        result += formatString(g_otherStatModifiersFormat, otherModifier);
+    luck -= currentLuck;
+    if (luck)
+        result += formatString(g_otherStatModifiersFormat, luck);
 
     return result;
 }

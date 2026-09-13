@@ -39,7 +39,7 @@ public:
 
     virtual ~TQuestLogWindow();
     // Before normalization (function): TQuestLogWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
     // 0x52e270, dc 0x116bd8. SINGULAR - it takes the row index and
     // refreshes one log line; the plural UpdateQuestLocators has no retail

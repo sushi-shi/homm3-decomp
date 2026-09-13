@@ -52,6 +52,13 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
+// Six byte-binding/advance forms emit five reproduced objects. Keeping
+// the read and pointer increment separate preserves the best callers:
+// *next_in++ still leaves getByte/readByte exact but lowers the constructor
+// to 87.8227% and underflow to 66.1989%. Const byte is flat here but lowers
+// the constructor to 92.2931%. Decrementing avail_in before advancing the
+// pointer loses both retained reader matches. Retail's ebp-4 byte binding
+// and zero-extended return remain the source model.
 VA(0x004d5fd0, 0x74)  // anchor-bracket, retail-only
 int TGzInflateBuf::getByte()
 {
@@ -253,6 +260,10 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
+// A 16-state empty-message/readByte-guard family emits sixteen objects,
+// with eight reproduced finalists and no gain. Implicit/explicit empty
+// literals add a string assignment absent from this retained body;
+// explicit zero length is also non-exact. Keep the default string object.
 VA(0x004d65e0, 0xAF)  // anchor-bracket, called from 0x4d6050 / 0x4d6920, retail-only
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
@@ -384,6 +395,11 @@ int TGzInflateBuf::underflow()
 // objnames throw expands the shared derived initialization.
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
+// Success-first early returns keep this retained body exact but lower
+// underflow from 81.4346% to 73.1099% and the constructor from 92.6749%
+// to 72.0419%. Binding c in the failure test is also exact here and flat
+// in underflow, but lowers the constructor to 87.8227%. Neither restores
+// retail's trailer call positions; helper exactness alone is insufficient.
 VA(0x004d6ba0, 0x81)  // anchor-bracket, called from 0x4d6920, retail-only
 int TGzInflateBuf::readByte()
 {

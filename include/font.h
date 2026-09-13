@@ -33,14 +33,14 @@ public:
         // Win32 ABC widths - `int abcA` (left side bearing, SIGNED: it is
         // the `field_0 < 0` leading-bearing test in DrawStringExecute),
         // `unsigned abcB` (the inked width DrawCharacter loops over), and
-        // `int abcC` (right side bearing). The names are left as field_N
-        // because other lanes' sources already spell them that way; the
-        // identity is recorded rather than renamed.
+        // `int abcC` (right side bearing). DC type indices are 0x74/0x75/0x74.
+        // DrawCharacter copies abcB into its proven signed int width local;
+        // the retail signed loop test does not imply a signed table member.
         struct myABC {
             // Before normalization: field_0; reference member font::TFontSpec::myABC::abcA.
             int m_abcA;
             // Before normalization: field_4; reference member font::TFontSpec::myABC::abcB.
-            int m_abcB;
+            unsigned int m_abcB;
             // Before normalization: field_8; reference member font::TFontSpec::myABC::abcC.
             int m_abcC;
         };
@@ -156,17 +156,21 @@ public:
 
     // Before normalization (function): font::DrawStringExecute.
     // Before normalization (locals): color_scheme.
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
     // Before normalization (function): font::DrawBoundedString.
     // Before normalization (locals): color_scheme.
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
     // Before normalization (function): font::GetCharacterWidth.
     int getCharacterWidth(unsigned char currChar) const;
     // Before normalization (function): font::SetPalette.
     // Before normalization (locals): new_palette.
-    void setPalette(const TPalette16* newPalette);
+    void setPalette(const TPalette16& newPalette);
     // Before normalization (function): font::DrawCharacter.
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
+    // Original DrawCursor, font.cpp:123; ordinary member, expanded in retail.
+    void drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+                    int clipX, int clipY, int clipWidth, int clipHeight,
+                    bool highlighted);
     // Before normalization (function): font::get_string_width.
     long getStringWidth(const char* arg) const;
     // Before normalization (function): font::LineLength.
@@ -188,6 +192,10 @@ public:
     // Before normalization (function): font::FillLinesVector.
     void fillLinesVector(const char* str, int boxWidth,
                          std::vector<std::string>& result);
+private:
+    // Original GetColor, font.cpp:56; ordinary member.
+    int getColor(font::TColor colorScheme, bool highlighted);
+
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

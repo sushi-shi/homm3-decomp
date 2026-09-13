@@ -3878,7 +3878,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         drawWindow(0, 0xffff0001, 0xffff);
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(503), g_windowManager->m_screenBitmap,
-            123, 122, 184, 25, 4, 5, -1);
+            123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
         if (g_videoPaused && !g_dPlay->isHost() && !m_flag65)
@@ -4954,7 +4954,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
     else
         name = getFileName(m_currentMap);
     g_bigFont->drawBoundedString(name, g_windowManager->m_screenBitmap,
-                                 422, 45, 324, 30, 8, 0, -1);
+                                 422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_flag64 != 0 || m_flag65 != 0 || m_flag66 != 0)) {
         _FILETIME localTime;
@@ -4968,15 +4968,15 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
         g_unnamed698a08->drawBoundedString(dateBuf,
-            g_windowManager->m_screenBitmap, 422, 27, 278, 18, 4, 6, -1);
+            g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
     }
     g_unnamed698a08->drawBoundedString(g_unnamed6a77ec[hdr->m_difficulty],
-        g_windowManager->m_screenBitmap, 414, 454, 89, 48, 4, 5, -1);
+        g_windowManager->m_screenBitmap, 414, 454, 89, 48, font::WHITE, 5, -1);
     char ratingBuf[256];
     sprintf(ratingBuf, DATA_COMPGEN(0x006831e4, percentFormat, "%d%%"),
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
     g_unnamed698a08->drawBoundedString(ratingBuf,
-        g_windowManager->m_screenBitmap, 666, 454, 83, 48, 4, 5, -1);
+        g_windowManager->m_screenBitmap, 666, 454, 83, 48, font::WHITE, 5, -1);
     if (m_chatShowing != 0)
         return;
     // The victory line copies the description TWICE, and retail proves it:
@@ -5000,9 +5000,9 @@ void TSingleSelectionWindow::drawBasicMapInfo()
     char lcText[256];
     strcpy(lcText, g_lossConditionDesc[lc->m_type + 1]);
     g_unnamed698a08->drawBoundedString(vcText,
-        g_windowManager->m_screenBitmap, 456, 305, 288, 32, 4, 4, -1);
+        g_windowManager->m_screenBitmap, 456, 305, 288, 32, font::WHITE, 4, -1);
     g_unnamed698a08->drawBoundedString(lcText,
-        g_windowManager->m_screenBitmap, 456, 364, 288, 32, 4, 4, -1);
+        g_windowManager->m_screenBitmap, 456, 364, 288, 32, font::WHITE, 4, -1);
     if (vc->m_type >= 0 && vc->m_type <= 11)
         m_victoryIcon->draw(0, vc->m_type, 0, 0,
             m_victoryIcon->m_width, m_victoryIcon->m_height,
@@ -5072,7 +5072,7 @@ int TSingleSelectionWindow::update()
             return 1;
         g_unnamed698a08->drawBoundedString(
             g_generalText->getText(510), g_windowManager->m_screenBitmap,
-            433, 46, 210, 23, 4, 4, -1);
+            433, 46, 210, 23, font::WHITE, 4, -1);
     } else {
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
@@ -5081,7 +5081,7 @@ int TSingleSelectionWindow::update()
                 rows = m_selectionHeaders.size();
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(511), g_windowManager->m_screenBitmap,
-                25, 52, 132, 32, 2, 5, -1);
+                25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
                 int y = 123;
@@ -5142,7 +5142,7 @@ int TSingleSelectionWindow::update()
                                 hdr->m_header.m_numPlayers, hdr->m_header.m_maxNumHumanPlayers);
                         g_unnamed698a08->drawBoundedString(
                             text, g_windowManager->m_screenBitmap,
-                            26, y - 1, 30, 25, color, 5, -1);
+                            26, y - 1, 30, 25, font::TColor(color), 5, -1);
                         const char* sizeText;
                         if (hdr->m_header.m_size == MAP_DIMENSION_SMALL)
                             sizeText = g_generalText->getText(512);
@@ -5155,7 +5155,7 @@ int TSingleSelectionWindow::update()
                         strcpy(text, sizeText);
                         g_unnamed698a08->drawBoundedString(
                             text, g_windowManager->m_screenBitmap,
-                            59, y - 1, 30, 25, color, 5, -1);
+                            59, y - 1, 30, 25, font::TColor(color), 5, -1);
                         if (frame >= 0)
                             m_versionIcon->draw(0, frame, 0, 0,
                                 m_versionIcon->m_width, m_versionIcon->m_height,
@@ -5163,7 +5163,7 @@ int TSingleSelectionWindow::update()
                         g_unnamed698a08->drawBoundedString(
                             getMapName(m_currentIndex + i),
                             g_windowManager->m_screenBitmap,
-                            125, y - 1, 184, 25, color, 5, -1);
+                            125, y - 1, 184, 25, font::TColor(color), 5, -1);
                         if (hdr->m_header.m_victoryCondition.m_type >= 0
                                 && hdr->m_header.m_victoryCondition.m_type <= 11)
                             m_victoryIcon->draw(0,
@@ -5206,13 +5206,13 @@ int TSingleSelectionWindow::update()
             }
             g_bigFont->drawBoundedString(
                 g_generalText->getText(516), g_windowManager->m_screenBitmap,
-                58, 24, 334, 25, 8, 1, -1);
+                58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(517), g_windowManager->m_screenBitmap,
-                58, 48, 334, 34, 4, 1, -1);
+                58, 48, 334, 34, font::WHITE, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
-                g_windowManager->m_screenBitmap, 256, 556, 134, 18, 4, 5, -1);
+                g_windowManager->m_screenBitmap, 256, 556, 134, 18, font::WHITE, 5, -1);
             pos = 0;
             for (int i = 0; i < 8; ++i) {
                 if (g_game->m_setup.m_playerPos[i] >= 0
@@ -5225,10 +5225,10 @@ int TSingleSelectionWindow::update()
         if (m_inFilterOptions) {
             g_bigFont->drawBoundedString(
                 g_generalText->getText(739), g_windowManager->m_screenBitmap,
-                58, 24, 334, 25, 8, 1, -1);
+                58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
             g_unnamed698a08->drawBoundedString(
                 g_generalText->getText(740), g_windowManager->m_screenBitmap,
-                58, 48, 334, 34, 4, 1, -1);
+                58, 48, 334, 34, font::WHITE, 1, -1);
             updateFilterWidgets();
         }
     }
@@ -5611,7 +5611,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
                 msg.m_extra = 4;
                 break;
             }
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             static_cast<CScrollTextWidget*>(m_descriptionWidget)
                 ->setText(g_game->m_mapHeader.m_mapDescription.c_str());
         } else {
@@ -5678,7 +5678,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
             msg.m_extra = 4;
             break;
         }
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         if (!g_videoPaused || g_dPlay->isHost())
             updateAllyEnemyFlags(update);
         if (g_videoPaused && !m_flag65 && g_dPlay->isHost()
@@ -5720,7 +5720,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
         }
         deselect.m_codeX = 5;
         deselect.m_codeY = 107 + g_game->m_setup.m_difficulty;
-        broadcastMessage(&deselect);
+        broadcastMessage(deselect);
     }
     if (update) {
         if (m_mapChanged) {
@@ -5828,7 +5828,7 @@ void TSingleSelectionWindow::setFilter(int size)
         msg.m_extra = 4;
         break;
     }
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
     drawWindow(0, 0xffff0001, 0xffff);
@@ -5860,7 +5860,7 @@ void TSingleSelectionWindow::setDifficultyHiLite()
     }
     select.m_codeX = widget::WIDGET_SET_STATUS;
     select.m_codeY = SSW_DIFFICULTY_FIRST + g_game->m_setup.m_difficulty;
-    broadcastMessage(&select);
+    broadcastMessage(select);
 }
 
 // Generates a map after resolving any random filter rungs. Its single
@@ -6740,7 +6740,7 @@ std::string getRandomMapName()
 // the shared end-dialog command exactly as the tradpost handlers do.
 // E:\gamedcs\singleselectionwindow.cpp:5933
 VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
-int TSingleSelectionWindow::exitDialog(message* msg)
+int TSingleSelectionWindow::exitDialog(message& msg)
 {
     if (!m_flag64 && !m_flag65) {
         if (g_videoPaused)
@@ -6768,9 +6768,9 @@ int TSingleSelectionWindow::exitDialog(message* msg)
                             "This player was not found"));
     }
 
-    msg->m_id = 0x200;
-    g_windowManager->m_dialogReturn = msg->m_codeY;
-    msg->m_codeX = msg->m_codeY = 10;
+    msg.m_id = 0x200;
+    g_windowManager->m_dialogReturn = msg.m_codeY;
+    msg.m_codeX = msg.m_codeY = 10;
     return 2;
 }
 
@@ -6795,7 +6795,7 @@ int TSingleSelectionWindow::exitDialog(message* msg)
 // vs inline respelling of the KP_8 arm measured byte-flat (90.02 both).
 // E:\gamedcs\singleselectionwindow.cpp:5976
 VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
-int TSingleSelectionWindow::windowHandler(message* msg)
+int TSingleSelectionWindow::windowHandler(message& msg)
 {
     unsigned char redraw = 0;
     pollSound();
@@ -6827,13 +6827,13 @@ int TSingleSelectionWindow::windowHandler(message* msg)
         if (networkMsg) {
             redraw = handleNetMsg(networkMsg, cancel);
             if (redraw && cancel)
-                msg->m_codeY = 0x7801;
+                msg.m_codeY = 0x7801;
         }
     }
 
-    if (!redraw && msg->m_id != MESSAGE_NONE) {
-        if (msg->m_id == MESSAGE_KEY_DOWN) {
-            switch (msg->m_codeX) {
+    if (!redraw && msg.m_id != MESSAGE_NONE) {
+        if (msg.m_id == MESSAGE_KEY_DOWN) {
+            switch (msg.m_codeX) {
             case KEYCODE_KP_DECIMAL:
                 onDeleteFile();
                 break;
@@ -6896,11 +6896,11 @@ int TSingleSelectionWindow::windowHandler(message* msg)
                     redraw = saveValid(m_saveGameEdit->m_text.c_str());
                 break;
             }
-        } else if (msg->m_id == MESSAGE_WIDGET) {
-            if (msg->m_codeX == widget::WIDGET_DESELECT)
-                onWidgetDeselect(msg, &redraw, 0);
-        } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-            int id = findWidget(msg->m_mouseX, msg->m_mouseY);
+        } else if (msg.m_id == MESSAGE_WIDGET) {
+            if (msg.m_codeX == widget::WIDGET_DESELECT)
+                onWidgetDeselect(&msg, &redraw, 0);
+        } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+            int id = findWidget(msg.m_mouseX, msg.m_mouseY);
             if (id != g_lastImHoverId) {
                 if (id >= 0x107 && id <= 0x10e) {
                     if (g_lastImHoverId != -1) {
@@ -6930,7 +6930,7 @@ int TSingleSelectionWindow::windowHandler(message* msg)
 
     if (redraw)
         return exitDialog(msg);
-    msg->m_id = 0;
+    msg.m_id = 0;
     return 1;
 }
 
@@ -9426,7 +9426,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
         g_tinyFont->drawBoundedString(g_unnamed6a74f4[position],
-            g_windowManager->m_screenBitmap, 164, textY, 71, 16, 4, 5, -1);
+            g_windowManager->m_screenBitmap, 164, textY, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
             m_heroPix[face]->draw(0, 0, m_heroPix[0]->m_width,
@@ -9434,13 +9434,13 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 252, iconY, 0);
             const char* name = getHeroName(playerPos);
             g_tinyFont->drawBoundedString(name,
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
                 -1);
         } else {
             m_noHeroBmp->draw(0, 0, m_noHeroBmp->m_width, m_noHeroBmp->m_height,
                 g_windowManager->m_screenBitmap, 252, iconY, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(524),
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
                 -1);
         }
         int bonus = g_game->m_setup.m_startingBonus[playerPos];
@@ -9463,11 +9463,11 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                          g_windowManager->m_screenBitmap, 328, iconY, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, 4, 5,
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
                 -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, 4, 5,
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
                 -1);
     } else {
         CNetPlayerHandlerPlayer* q = m_players.getPlayerInPos(playerPos);
@@ -9508,14 +9508,14 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 176, rowY + 130, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
-                4, 5, -1);
+                font::WHITE, 5, -1);
         } else {
             m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->m_width,
                 m_townPix->m_height, g_windowManager->m_screenBitmap, 176,
                 rowY + 130, 0, 1);
             g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
-                4, 5, -1);
+                font::WHITE, 5, -1);
         }
         int face = getDisplayFace(playerPos);
         widget* heroLeft = getWidget(playerPos + 231);
@@ -9553,7 +9553,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(524),
                     g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
-                    16, 4, 5, -1);
+                    16, font::WHITE, 5, -1);
             } else {
                 m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->m_width,
                     m_randomHeroBmp->m_height,
@@ -9561,7 +9561,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(523),
                     g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
-                    16, 4, 5, -1);
+                    16, font::WHITE, 5, -1);
             }
         } else {
             const char* name = getHeroName(playerPos);
@@ -9570,7 +9570,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 252, rowY + 130, 0);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, rowY + 162, 71, 16,
-                4, 5, -1);
+                font::WHITE, 5, -1);
         }
         widget* bonusLeft = getWidget(playerPos + 247);
         widget* bonusRight = getWidget(playerPos + 255);
@@ -9600,11 +9600,11 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
                 g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
-                4, 5, -1);
+                font::WHITE, 5, -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
                 g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
-                4, 5, -1);
+                font::WHITE, 5, -1);
         m_resource->draw(0, frame, 0, 0, m_resource->m_width,
             m_resource->m_height, g_windowManager->m_screenBitmap, 328,
             rowY + 130, 0, 1);

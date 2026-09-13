@@ -19,7 +19,11 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 // of them into AdjustHSV, leaving no separate x86 bodies in this TU. The ftol
 // dossier proves its double parameter and sole named local, const unsigned long
 // magic; reusing d's representation is what gives retail its shared qword home.
-static __forceinline long ftol(double d)
+// DC bitmap24.cpp:40 initializes magic, line 42 updates d, and line 43 reads
+// its low word. Removing the unsupported __forceinline attribute produces
+// the same code object: AdjustHSV stays 95.7470% and all seven exact siblings
+// hold. The ordinary static helper expands naturally through HSVToRGB.
+static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
     d += *static_cast<const float*>(static_cast<const void*>(&magic));
@@ -298,7 +302,8 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // Bitmap16Bit wrapper above.
 // Row-boundary residual (85.0312%): advance source/destination only before
 // a following row; final-row guards score 72.2734%, unchecked control 100%.
-// DC's separate GetPitch/dpitch and channel work are retained. Native tests
+// DC's const source bytes and channel scales, separate GetPitch/dpitch
+// boundaries and channel work are retained. Native tests
 // use different pitches and clipped origins at the last allocation row.
 VA(0x0044f010, 0x161)  // source-order bracket + RGB mask/data flow, dc 0x52968
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
@@ -320,16 +325,16 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = m_data + sy * getPitch() + sx * 3;
+        const unsigned char* src = m_data + sy * getPitch() + sx * 3;
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
         // Complete's x86 relocation and byte schedule require this later-
         // revision declaration order. It retains all three DC-named scale
         // locals while assigning bm1/rm1/gm1 to retail's ESI/stack/EBX roles.
-        unsigned int bm1 = (g_colorMaskBlue << 1) & ~g_colorMaskBlue;
-        unsigned int gm1 = (g_colorMaskGreen << 1) & ~g_colorMaskGreen;
-        unsigned int rm1 = (g_colorMaskRed << 1) & ~g_colorMaskRed;
+        const unsigned int bm1 = (g_colorMaskBlue << 1) & ~g_colorMaskBlue;
+        const unsigned int gm1 = (g_colorMaskGreen << 1) & ~g_colorMaskGreen;
+        const unsigned int rm1 = (g_colorMaskRed << 1) & ~g_colorMaskRed;
 
         for (int y = 0; y < sh; ++y) {
             if (y) {
@@ -338,7 +343,7 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                     + dpitch));
                 src += getPitch();
             }
-            unsigned char* in = src;
+            const unsigned char* in = src;
             unsigned short* out = dst;
             for (int x = 0; x < sw; ++x) {
                 unsigned int red =

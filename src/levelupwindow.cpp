@@ -250,7 +250,7 @@ TLevelUpWindow::~TLevelUpWindow()
 // The former LevelUpSkillName helper and TLevelUpSkillTraits table copy
 // had no separate CodeView source boundary.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
-int TLevelUpWindow::windowHandler(message* msg)
+int TLevelUpWindow::windowHandler(message& msg)
 {
     if (!g_dialogDeadline697784) {
         int result = CAdvPopup::windowHandler(msg);
@@ -265,16 +265,16 @@ int TLevelUpWindow::windowHandler(message* msg)
 
     unsigned long deadline = g_dialogDeadline697784;
     if (deadline && GameTime::isPast(deadline)) {
-        msg->m_id = MESSAGE_WIDGET;
+        msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = 9999;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case LEVELUP_SELECT_RIGHT_KEY: {
             if (g_levelUpWindow->m_rightSkill == -1)
                 break;
@@ -310,17 +310,17 @@ int TLevelUpWindow::windowHandler(message* msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
         }
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = g_levelUpWindow->findWidget(msg->m_mouseX, msg->m_mouseY);
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = g_levelUpWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             g_lastImHoverId = hoverID;
             if (hoverID != -1)
                 g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
                 normalDialog(
@@ -338,10 +338,10 @@ int TLevelUpWindow::windowHandler(message* msg)
             }
             // The right-click arm shares the selection tail below.
         case widget::WIDGET_DESELECT:
-            if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+            if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
                 break;
 
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID: {
                 widget* rightBorder =
@@ -380,10 +380,10 @@ int TLevelUpWindow::windowHandler(message* msg)
             }
 
             case LEVELUP_ACCEPT_ID:
-                msg->m_id = MESSAGE_WIDGET;
+                msg.m_id = MESSAGE_WIDGET;
                 g_windowManager->m_dialogReturn = g_levelUpWindow->m_selected;
-                msg->m_codeY = widget::WIDGET_END_DIALOG;
-                msg->m_codeX = widget::WIDGET_END_DIALOG;
+                msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.m_codeX = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             return 0;

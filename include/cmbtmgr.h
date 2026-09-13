@@ -1183,7 +1183,9 @@ public:
     // Before normalization: adjacentCells.
     short m_adjacentCells[187][6];      // +0x13468
     // Before normalization: field_13d2c; reference member combatManager::SaveBiggestExtent.
-    unsigned char m_saveBiggestExtent;        // +0x13d2c
+    // DrawArcher forwards this field to ComputeExtent's public _N argument
+    // without a truth conversion in retail; the byte record lowers bool.
+    bool m_saveBiggestExtent;                 // +0x13d2c
     // Before normalization: pad_13d2d.
     // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
     // dword; retail preserves this alignment boundary at +0x13d2c/30.
@@ -1529,7 +1531,7 @@ public:
     // Before normalization (function): combatManager::SpellEffect.
     // Before normalization (locals): target_army, iDelay, bDoWince, leave_last_frame.
     void spellEffect(int effect, army* targetArmy, int delay,
-                     unsigned char doWince);
+                     bool doWince);
     // Before normalization (function): combatManager::FreeIcons.
     void freeIcons();
     // Before normalization (function): combatManager::Close.
@@ -1624,11 +1626,14 @@ public:
                          unsigned char forceUpdate);
     // Before normalization (function): combatManager::UpdateMouseGrid.
     void updateMouseGrid(int gridIndex, int allowDuringAction);
-    // Fly's two Complete-era header folds. The retail viewport never scrolls,
-    // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
-    // to UpdateScreen, matching drawing.cpp's retained inline copy.
+    // The retail viewport never scrolls. The ordinary drawing.cpp ScrollTo
+    // helpers expand away; UpdateCombatArea expands to UpdateScreen.
     // Before normalization (function): combatManager::ScrollTo.
     bool scrollTo(SLimitData extent, bool draw,
+                  bool doscrollX, bool doscrollY);
+    // drawing.cpp:679/680, dc 0x84248. Public symbol QAA_NHHHH_N00
+    // proves the Boolean return and flags despite lowered T_UCHAR records.
+    bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY);
     // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
     // Complete has no out-of-line copy, and the exact retail expansion in
@@ -1638,45 +1643,47 @@ public:
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
     // 197..212). Keep even the helpers which Complete inlines away: their
     // declaration order and source boundaries are compiler-state evidence.
+    // DC public suffix _N00H00 proves DrawFrame's five Boolean flags.
+    // Its T_UCHAR formal records describe lowering, not unsigned-char source.
     // Before normalization (function): combatManager::DrawFrame.
-    void drawFrame(unsigned char update,
+    void drawFrame(bool update,
                    // Before normalization (locals): bLimitCreatureEffect, bLimitDraw, iDelay,
                    // bRefreshBackground, bDoDelayTil.
-                   unsigned char limitCreatureEffect,
-                   unsigned char limitDraw, int delay,
-                   unsigned char refreshBackground,
-                   unsigned char doDelayTil);
+                   bool limitCreatureEffect,
+                   bool limitDraw, int delay,
+                   bool refreshBackground,
+                   bool doDelayTil);
     // Complete extends the DC DrawArcher signature with a trailing palette-row
     // selector. The retail caller passes it immediately after isFlipped.
     // Before normalization (function): combatManager::DrawArcher.
     int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
-                   unsigned char isFlipped, unsigned char colorRow);
+                   bool isFlipped, unsigned char colorRow);
     // 0x4951b0, the per-stack blit (drawing.cpp:1699, dc 0x85a48);
     // army::DrawToBuffer calls it, the body stays drawing's.
     // Before normalization (function): combatManager::DrawCreature.
     int drawCreature(const CSprite* sprite, int sequence, int frame,
                      // Before normalization (locals): psLimitData, iColor.
                      int x, int y, struct SLimitData* limitData,
-                     int id, unsigned char isFlipped, int color);
+                     int id, bool isFlipped, int color);
     // Before normalization (function): combatManager::DrawCreatureAlpha.
     int drawCreatureAlpha(const CSprite* sprite, int sequence, int frame,
                           int x, int y, SLimitData* limits,
                           // Before normalization (locals): iColor.
-                          unsigned char isFlipped, int color);
+                          bool isFlipped, int color);
     // Before normalization (function): combatManager::DrawCombatHero.
     int drawCombatHero(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits,
-                       unsigned char isFlipped);
+                       bool isFlipped);
     // Before normalization (function): combatManager::DrawSpriteObject.
     int drawSpriteObject(const CSprite* sprite, int frame, int x, int y,
-                         unsigned char isFlipped);
+                         bool isFlipped);
     // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
     // dc 0x85d00); army::range_attack's two splash-effect loops call it
     // once per frame with (sprite, frame, x, y, 0, 0).
     // Before normalization (function): combatManager::DrawSpellEffect.
     int drawSpellEffect(const CSprite* sprite, int frame, int x, int y,
-                        unsigned char isFlipped, unsigned char isAlpha);
+                        bool isFlipped, bool isAlpha);
     // Before normalization (function): combatManager::DrawWall.
     int drawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
@@ -1741,7 +1748,7 @@ public:
 
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
-                       unsigned char saveBiggestExtent);
+                       bool saveBiggestExtent);
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     // Before normalization (function): combatManager::do_animations.
@@ -2446,7 +2453,7 @@ public:
     // morale view above. The body stays drawing.cpp's.
     // Before normalization (function): combatManager::SpellEffect.
     void spellEffect(int effect, int hex, int delay,
-                     unsigned char leaveLastFrame);          // 0x496a10
+                     bool leaveLastFrame);          // 0x496a10
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.

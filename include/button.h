@@ -13,20 +13,16 @@
 #include "resource.h"
 #include "font.h"
 
-// Player-color palette targets. Both overloads of the free
-// SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
-// out of a global table; the two differ in stride and destination
-// offset (16 dwords -> +0x1c0 vs 24 dwords -> +0x2bc), which is what
-// proves they are distinct types. Opaque here - only the pointers
-// cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
+// Player-color painters from wingraph.cpp. Dreamcast records raw 16-bit
+// entries and a TPalette24 reference; retail uses the same two targets.
 class palette;
 class paletteHiColor;
 class TPalette24;
 class sample;
 
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
 
 // The widget base lives in widget.h (owner: widget.obj). Button's
@@ -37,8 +33,10 @@ void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 // heroWindow's table starts at 0x243c90 + 13*4 - and 0x456a10 is
 // button's OVERRIDE of widget slot 12, its whole body being an
 // explicit `widget::_vslot12(arg)` call.) Overrides with retail bodies
-// outside the button band: zBufferDraw (slot 3, 0x5bc7e0) and Dim
-// (slot 8, 0x5bc690) - homes unproven.
+// outside the button band fold to shared representatives: zBufferDraw
+// (slot 3, 0x5bc7e0), Dim (slot 8, 0x5bc690), GetRealHeight/GetRealWidth
+// (slots 5/6, 0x4eab30/0x4eab20). Their distinct button overrides are
+// source-proven by DC and reproduce all four physical bodies exactly.
 //
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
 // 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
@@ -77,10 +75,16 @@ public:
     // Before normalization: click_sample.
     static sample* s_clickSample;
 
+    // Original button.cpp helpers: SetPalette:104 and initialize:115.
+    void setPalette(const char* paletteName);
+    void initialize(int x, int y, int w, int h, int id, const char* image,
+                    int normal, int selected, unsigned char end,
+                    int hotkey, int style);
+
     button();
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Before normalization (function): button::Select.
-    int select(message* msg);
+    int select(message& msg);
     // Original: button::Deselect; button.cpp:401, dc 0x57854.
     int deselect(message& msg);
 
@@ -97,21 +101,10 @@ public:
     // sequence is reproduced only with this setter in its six loops.
     // Before normalization (function): button::set_disabled_frame.
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
-    // The pointer local is load-bearing, and every caller's whole
-    // register allocation hangs off it. Retail materialises the inlined
-    // `this` for the insert BEFORE the const-ref argument temp - `lea
-    // ecx,[button+0x48]` then `lea edx,[ebp-N]` - and that pair consumes
-    // two scratch registers, which sets the phase of the round-robin
-    // ecx/edx alternation running through the rest of the caller. Naming
-    // the sub-object directly (`hotKeyCodes.insert(hotKeyCodes.end(), 1,
-    // code)`) defers the object address to the call and consumes ECX
-    // twice instead, inverting that phase for the entire body. The
-    // rewrite below is otherwise byte-identical - `end()` still folds to
-    // `[button+0x50]`, no address is materialised that retail lacks -
-    // and it took ??0TCombatOptionsWindow 98.47% -> 100%,
-    // ??0TPuzzleWindow 98.64% -> 100%, create_ok_widget 98.66% -> 100%,
-    // ??0TAdventureOptionsWindow 89.57% -> 95.12%, create_dismiss_widget
-    // and create_upgrade_widget 88.11% -> 89.88% in one build.
+    // Original: button::set_hotkey. An earlier reconstruction flattened
+    // push_back into insert and introduced a pointer local to steer caller
+    // register allocation. The positive source call below supersedes that
+    // hypothesis; each caller's expansion must be matched with this helper.
     VA(0x004e1370, 0x1AF)
     void setHotkey(int code)
     {
@@ -128,9 +121,15 @@ public:
     // Before normalization (function): button::Main.
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
+    // Before normalization (function): button::GetRealWidth.
+    virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
+    // Before normalization (function): button::GetRealHeight.
+    virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     // Before normalization (function): button::Draw.
     virtual void draw() const;  // slot 4, retail 0x456940
+    // Before normalization (function): button::Dim.
+    virtual void dim() const;   // slot 8, folded retail 0x5bc690
 
     virtual ~button();  // retail 0x4560f0
 
@@ -151,10 +150,10 @@ public:
     // Before normalization: Font.
     font* m_font;
     // Before normalization: textColor.
-    int m_textColor;
+    font::TColor m_textColor;
 
     // Before normalization (locals): text_, font_name, new_color.
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
 
     // Before normalization (function): textButton::Draw.
     virtual void draw() const;    // slot 4, retail 0x456ca0

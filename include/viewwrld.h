@@ -79,7 +79,7 @@ public:
     using CAdvPopup::drawWindow;
     void drawWindow();
     // Before normalization (function): TViewWorldWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     int convertID2HelpID(int id) const;

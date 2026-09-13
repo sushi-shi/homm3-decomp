@@ -797,27 +797,27 @@ void swapManager::reset()
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = 103;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 104;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 107;
     msg.m_extra = limit(-3, m_heroes[0]->getMorale(0, 0, 1), 3) + 3;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 108;
     msg.m_extra = limit(-3, m_heroes[1]->getMorale(0, 0, 1), 3) + 3;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 109;
     msg.m_extra = limit(-3, m_heroes[0]->getLuck(0, 0, 1), 3) + 3;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = 110;
     msg.m_extra = limit(-3, m_heroes[1]->getLuck(0, 0, 1), 3) + 3;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:655
@@ -857,14 +857,14 @@ int swapManager::open(int newPriority)
     msg.m_codeX = 13;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
     msg.m_codeY = kSwapRefreshLeft;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
     msg.m_codeY = kSwapRefreshRight;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     // Before normalization (locals): iHero, iSkill.
     for (int hero = 0; hero < 2; hero++) {
@@ -883,23 +883,23 @@ int swapManager::open(int newPriority)
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = hero + 87;
         msg.m_extraText = g_text;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
 
         if (m_heroes[hero]->m_experience < 10000)
             sprintf(g_text, "%d", m_heroes[hero]->m_experience);
         else
             sprintf(g_text, "%dk", m_heroes[hero]->m_experience / 1000);
         msg.m_codeY = hero + 81;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
 
         sprintf(g_text, "%d", m_heroes[hero]->m_mana);
         msg.m_codeY = hero + 83;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
 
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = hero + 105;
         msg.m_extra = m_heroes[hero]->m_id;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
 
         for (int skillIndex = 0; skillIndex < 8; ++skillIndex) {
             if (skillIndex < m_heroes[hero]->m_skillCount) {
@@ -913,7 +913,7 @@ int swapManager::open(int newPriority)
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = widget::WIDGET_DRAWN;
             }
-            m_parent->broadcastMessage(&msg);
+            m_parent->broadcastMessage(msg);
         }
     }
 
@@ -1098,11 +1098,11 @@ inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
     {
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = artifact;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
     }
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:940
@@ -1212,11 +1212,11 @@ void swapManager::updateBackpackItem(int hero, int i)
     {
         msg.m_codeX = 4;
         msg.m_extra = artifact.m_artifactId;
-        m_parent->broadcastMessage(&msg);
+        m_parent->broadcastMessage(msg);
         msg.m_codeX = 5;
         msg.m_extra = 4;
     }
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:1004
@@ -1233,18 +1233,18 @@ void swapManager::updateBackpack(int hero)
     msg.m_codeX = (m_heroes[hero]->getLastBackpackIndex() + 1 > 5) ? 6 : 5;
     msg.m_extra = 0x1000;
     msg.m_codeY = hero + 0x63;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = hero + 0x65;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeX = (m_heroes[hero]->getLastBackpackIndex() + 1 <= 5) ? 6 : 5;
     msg.m_extra = 2;
     msg.m_codeY = hero + 0x63;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 
     msg.m_codeY = hero + 0x65;
-    m_parent->broadcastMessage(&msg);
+    m_parent->broadcastMessage(msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:1031
@@ -2410,10 +2410,11 @@ void swapManager::swapMons()
 // Dreamcast preserves the message local, primary-skill and army-widget loops,
 // then the update_all_slots helper call in this order. Complete /Ob2 expands
 // that final helper to the same nested UpdateSlot walk seen in both callers.
-// The retail and candidate CFGs are exact (25 blocks, 24 exact-sized): the
-// residual is VC6 scratch-register scheduling plus one end-of-side MOV.  A
+// Direct member expressions in canonical hero::getPrimarySkill reproduce
+// this entire body. The former signed-byte accessor temporary had 25 aligned
+// blocks (24 exact-sized), differing scratch registers and an end-of-side MOV. A
 // named primary-skill temporary and hoisting `side` beside `i` both compile to
-// the same 89.35% bytes, so neither is a valid carrier for that allocator wall.
+// the same 89.35% bytes; the accessor's source expressions resolve that delta.
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
 void swapManager::update()
 {
@@ -2431,7 +2432,7 @@ void swapManager::update()
             sprintf(g_text,
                     DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
                     m_heroes[side]->getPrimarySkill(i));
-            m_parent->broadcastMessage(&msg);
+            m_parent->broadcastMessage(msg);
         }
 
         for (i = 0; i < 7; ++i)
@@ -2446,11 +2447,11 @@ void swapManager::update()
             {
                 msg.m_codeX = 5;
                 msg.m_extra = 4;
-                m_parent->broadcastMessage(&msg);
+                m_parent->broadcastMessage(msg);
                 msg.m_codeX = 4;
                 msg.m_extra = m_heroes[side]->m_army.m_armies[i] + 2;
             }
-            m_parent->broadcastMessage(&msg);
+            m_parent->broadcastMessage(msg);
         }
 
         for (i = 0; i < 7; ++i)
@@ -2465,14 +2466,14 @@ void swapManager::update()
             {
                 msg.m_codeX = 5;
                 msg.m_extra = 4;
-                m_parent->broadcastMessage(&msg);
+                m_parent->broadcastMessage(msg);
                 msg.m_codeX = 3;
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
                         m_heroes[side]->m_army.m_numTroops[i]);
                 msg.m_extraText = g_text;
             }
-            m_parent->broadcastMessage(&msg);
+            m_parent->broadcastMessage(msg);
         }
     }
 

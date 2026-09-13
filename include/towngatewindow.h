@@ -57,7 +57,7 @@ public:
     // Before normalization (function): TTownGateWindow::DoModal.
     void doModal();
     // Before normalization (function): TTownGateWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 };
 SIZE(TTownGateWindow, 0x7c);
 

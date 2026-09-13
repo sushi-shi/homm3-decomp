@@ -241,24 +241,30 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 // RestoreUnderlying are ordinary members whose expansions retain their
 // argument homes and private RECTs in retail's Update stack frame.
 //
-// DC mousemgr.cpp:639/700 and 648/708 prove separate branch-local
-// window_origin POINTs and ddsd descriptors. Keep those scopes, substituting
-// the retail-proven Windows v1 descriptor for DC's Surface4 descriptor.
-// The 32-state helper/scope family reproduced 32 distinct objects and ten
-// elites with every sibling exact. Rectangle-copy initialization and ordinary
-// helpers reach 99.8420 with the old shared origin, 99.7141 with the proven
-// origins retained; old forced/interleaved construction was 94.1675.
+// The NB11 variable owner scopes prove more than two branch-local origins:
+// only new_rect and lock belong to the procedure. Scope feea4..feff2 owns
+// front_rect/copy_rect, and ff022..ff1c4 owns front_work_rect/work_rect/
+// old_rect/dst_rect/src_rect; each also owns window_origin and ddsd.
+// Preserve all eight rectangle identities. In particular, DC663 copies
+// front_rect (sp+0x60) back into new_rect (sp+0x40), then DC664 offsets it;
+// the earlier six-rectangle reconstruction invented a separate clientRect
+// for that path and reused rectangle objects across both paths.
+// Both structured path orders reproduce all retail bytes in a two-state
+// control (two reproduced objects, all siblings unchanged). Retain DC's
+// nonoverlap635..690 then overlap696..757 source order: VC6 emits overlap
+// first. Complete uses the Windows v1 descriptor rather than Surface4.
+// Earlier 32-state helper/origin probes predated these rectangle identities
+// and plateaued at 99.8420%; that is not a bound on the recovered scopes.
+// DC public ?Update@mouseManager@@QAAX_N@Z proves native bool even though
+// NB11 lowers its formal to T_UCHAR. The retail parameter is a byte test.
 // Before normalization (locals): bForceIt.
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
-void mouseManager::update(unsigned char forceIt)
+void mouseManager::update(bool forceIt)
 {
     TCSLock lock(&m_sectionMouse);
-    RECT pointerRect;
-    RECT combinedRect;
-    RECT clientRect;
-    RECT surfaceRect;
-    RECT oldRect;
-    RECT scratchRect;
+    // The new rectangle belongs to the outer procedure scope.
+    // Before normalization: new_rect.
+    RECT newRect;
 
     if (g_mouseInUpdate)
         return;
@@ -290,108 +296,53 @@ void mouseManager::update(unsigned char forceIt)
     m_imageX = m_currentX - g_mouseHotSpots[m_set][m_frame].x;
     m_imageY = m_currentY - g_mouseHotSpots[m_set][m_frame].y;
 
-    pointerRect.left = m_imageX;
-    pointerRect.top = m_imageY;
-    pointerRect.right = m_imageX + m_sprite->m_width;
-    pointerRect.bottom = m_imageY + m_sprite->m_height;
-    if (pointerRect.left < 0)
-        pointerRect.left = 0;
-    if (pointerRect.top < 0)
-        pointerRect.top = 0;
-    if (pointerRect.right > 800)
-        pointerRect.right = 800;
-    if (pointerRect.bottom > 600)
-        pointerRect.bottom = 600;
+    newRect.left = m_imageX;
+    newRect.top = m_imageY;
+    // DC 587/588 records these CSprite dimension accessors.
+    newRect.right = m_imageX + m_sprite->getWidth();
+    newRect.bottom = m_imageY + m_sprite->getHeight();
+    if (newRect.left < 0)
+        newRect.left = 0;
+    if (newRect.top < 0)
+        newRect.top = 0;
+    if (newRect.right > 800)
+        newRect.right = 800;
+    if (newRect.bottom > 600)
+        newRect.bottom = 600;
 
-    if (pointerRect.left < m_savedRect.right
-            && pointerRect.right > m_savedRect.left
-            && pointerRect.top < m_savedRect.bottom
-            && pointerRect.bottom > m_savedRect.top) {
-        UnionRect(&combinedRect, &pointerRect, &m_savedRect);
-
+    if (newRect.left >= m_savedRect.right
+            || newRect.right <= m_savedRect.left
+            || newRect.top >= m_savedRect.bottom
+            || newRect.bottom <= m_savedRect.top) {
+        // Before normalization: front_rect.
+        RECT frontRect;
+        frontRect = newRect;
+        // Before normalization: window_origin.
         POINT windowOrigin;
         windowOrigin.x = 0;
         windowOrigin.y = 0;
         ClientToScreen(g_hwndApp, &windowOrigin);
-        OffsetRect(&combinedRect, windowOrigin.x, windowOrigin.y);
+        OffsetRect(&frontRect, windowOrigin.x, windowOrigin.y);
 
+        // Complete uses the v1 descriptor.
+        // Before normalization: ddsd.
         DDSURFACEDESC surfaceDesc;
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
         g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
-        if (combinedRect.left < 0)
-            combinedRect.left = 0;
-        if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            combinedRect.right = surfaceDesc.dwWidth;
-        if (combinedRect.top < 0)
-            combinedRect.top = 0;
-        if (combinedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            combinedRect.bottom = surfaceDesc.dwHeight;
+        if (frontRect.left < 0)
+            frontRect.left = 0;
+        if (frontRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            frontRect.right = surfaceDesc.dwWidth;
+        if (frontRect.top < 0)
+            frontRect.top = 0;
+        if (frontRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            frontRect.bottom = surfaceDesc.dwHeight;
 
-        clientRect = combinedRect;
-        OffsetRect(&clientRect, -windowOrigin.x, -windowOrigin.y);
-
-        surfaceRect.left = 0;
-        surfaceRect.top = 0;
-        surfaceRect.right = combinedRect.right - combinedRect.left;
-        surfaceRect.bottom = combinedRect.bottom - combinedRect.top;
-        ddBlit(g_ddsMouseScratchSurface, surfaceRect,
-            g_ddsPrimary,
-            combinedRect, DDBLT_WAIT);
-
-        oldRect = m_savedRect;
-        OffsetRect(&oldRect, -clientRect.left, -clientRect.top);
-        restoreUnderlying(g_ddsMouseScratchSurface, oldRect);
-
-        if (pointerRect.left < -windowOrigin.x)
-            pointerRect.left = -windowOrigin.x;
-        if (pointerRect.right
-                > static_cast<long>(surfaceDesc.dwWidth) - windowOrigin.x)
-            pointerRect.right = surfaceDesc.dwWidth - windowOrigin.x;
-        if (pointerRect.top < -windowOrigin.y)
-            pointerRect.top = -windowOrigin.y;
-        if (pointerRect.bottom
-                > static_cast<long>(surfaceDesc.dwHeight) - windowOrigin.y)
-            pointerRect.bottom = surfaceDesc.dwHeight - windowOrigin.y;
-
-        m_savedRect = pointerRect;
-        OffsetRect(&pointerRect, -clientRect.left, -clientRect.top);
-        saveAndDraw(g_ddsMouseScratchSurface, g_ddsMouseSaveSurface,
-            pointerRect, m_imageX - clientRect.left,
-            m_imageY - clientRect.top);
-
-        scratchRect.left = 0;
-        scratchRect.top = 0;
-        scratchRect.right = combinedRect.right - combinedRect.left;
-        scratchRect.bottom = combinedRect.bottom - combinedRect.top;
-        ddBlit(
-            g_ddsPrimary,
-            combinedRect, g_ddsMouseScratchSurface, scratchRect, DDBLT_WAIT);
-    } else {
-        combinedRect = pointerRect;
-        POINT windowOrigin;
-        windowOrigin.x = 0;
-        windowOrigin.y = 0;
-        ClientToScreen(g_hwndApp, &windowOrigin);
-        OffsetRect(&combinedRect, windowOrigin.x, windowOrigin.y);
-
-        DDSURFACEDESC surfaceDesc;
-        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-        surfaceDesc.dwSize = sizeof(surfaceDesc);
-        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
-        if (combinedRect.left < 0)
-            combinedRect.left = 0;
-        if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            combinedRect.right = surfaceDesc.dwWidth;
-        if (combinedRect.top < 0)
-            combinedRect.top = 0;
-        if (combinedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            combinedRect.bottom = surfaceDesc.dwHeight;
-
-        clientRect = combinedRect;
-        OffsetRect(&clientRect, -windowOrigin.x, -windowOrigin.y);
+        newRect = frontRect;
+        OffsetRect(&newRect, -windowOrigin.x, -windowOrigin.y);
         saveAndDraw(g_ddsPrimary,
-            g_ddsMouseScratchSurface, combinedRect,
+            g_ddsMouseScratchSurface, frontRect,
             m_imageX + windowOrigin.x, m_imageY + windowOrigin.y);
 
         OffsetRect(&m_savedRect, windowOrigin.x, windowOrigin.y);
@@ -406,13 +357,89 @@ void mouseManager::update(unsigned char forceIt)
         restoreUnderlying(g_ddsPrimary,
             m_savedRect);
 
-        scratchRect.left = 0;
-        scratchRect.top = 0;
-        scratchRect.right = clientRect.right - clientRect.left;
-        scratchRect.bottom = clientRect.bottom - clientRect.top;
-        ddBlit(g_ddsMouseSaveSurface, scratchRect,
-            g_ddsMouseScratchSurface, scratchRect, DDBLT_WAIT);
-        m_savedRect = clientRect;
+        // Before normalization: copy_rect.
+        RECT copyRect;
+        copyRect.left = 0;
+        copyRect.top = 0;
+        copyRect.right = newRect.right - newRect.left;
+        copyRect.bottom = newRect.bottom - newRect.top;
+        ddBlit(g_ddsMouseSaveSurface, copyRect,
+            g_ddsMouseScratchSurface, copyRect, DDBLT_WAIT);
+        m_savedRect = newRect;
+    } else {
+        // Before normalization: front_work_rect.
+        RECT frontWorkRect;
+        UnionRect(&frontWorkRect, &newRect, &m_savedRect);
+
+        // Before normalization: window_origin.
+        POINT windowOrigin;
+        windowOrigin.x = 0;
+        windowOrigin.y = 0;
+        ClientToScreen(g_hwndApp, &windowOrigin);
+        OffsetRect(&frontWorkRect, windowOrigin.x, windowOrigin.y);
+
+        // Complete uses the v1 descriptor.
+        // Before normalization: ddsd.
+        DDSURFACEDESC surfaceDesc;
+        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+        surfaceDesc.dwSize = sizeof(surfaceDesc);
+        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
+        if (frontWorkRect.left < 0)
+            frontWorkRect.left = 0;
+        if (frontWorkRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            frontWorkRect.right = surfaceDesc.dwWidth;
+        if (frontWorkRect.top < 0)
+            frontWorkRect.top = 0;
+        if (frontWorkRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            frontWorkRect.bottom = surfaceDesc.dwHeight;
+
+        // Before normalization: work_rect.
+        RECT workRect;
+        workRect = frontWorkRect;
+        OffsetRect(&workRect, -windowOrigin.x, -windowOrigin.y);
+
+        // Before normalization: dst_rect.
+        RECT dstRect;
+        dstRect.left = 0;
+        dstRect.top = 0;
+        dstRect.right = frontWorkRect.right - frontWorkRect.left;
+        dstRect.bottom = frontWorkRect.bottom - frontWorkRect.top;
+        ddBlit(g_ddsMouseScratchSurface, dstRect,
+            g_ddsPrimary,
+            frontWorkRect, DDBLT_WAIT);
+
+        // Before normalization: old_rect.
+        RECT oldRect;
+        oldRect = m_savedRect;
+        OffsetRect(&oldRect, -workRect.left, -workRect.top);
+        restoreUnderlying(g_ddsMouseScratchSurface, oldRect);
+
+        if (newRect.left < -windowOrigin.x)
+            newRect.left = -windowOrigin.x;
+        if (newRect.right
+                > static_cast<long>(surfaceDesc.dwWidth) - windowOrigin.x)
+            newRect.right = surfaceDesc.dwWidth - windowOrigin.x;
+        if (newRect.top < -windowOrigin.y)
+            newRect.top = -windowOrigin.y;
+        if (newRect.bottom
+                > static_cast<long>(surfaceDesc.dwHeight) - windowOrigin.y)
+            newRect.bottom = surfaceDesc.dwHeight - windowOrigin.y;
+
+        m_savedRect = newRect;
+        OffsetRect(&newRect, -workRect.left, -workRect.top);
+        saveAndDraw(g_ddsMouseScratchSurface, g_ddsMouseSaveSurface,
+            newRect, m_imageX - workRect.left,
+            m_imageY - workRect.top);
+
+        // Before normalization: src_rect.
+        RECT srcRect;
+        srcRect.left = 0;
+        srcRect.top = 0;
+        srcRect.right = frontWorkRect.right - frontWorkRect.left;
+        srcRect.bottom = frontWorkRect.bottom - frontWorkRect.top;
+        ddBlit(
+            g_ddsPrimary,
+            frontWorkRect, g_ddsMouseScratchSurface, srcRect, DDBLT_WAIT);
     }
 
     g_mouseInUpdate = 0;
@@ -593,14 +620,19 @@ void mouseManager::getPointerPosition()
 // boundary. Restoring the proven function statics is byte-flat. A two-form
 // class-placement probe (header versus immediately before the first mouse
 // function, following DC's ctor/dtor source rows 291/298) also emits one
-// object. Retain the canonical header under the project's single-view rule;
-// neither placement recovers the natural inline decision.
-// Follow-up: ordinary ctor/dtor definitions at DC source lines 291/298
-// retain every caller's bytes and emit the ctor body naturally. CheckUpdate
-// still over-expands that ctor at the nested HidePointer site.
+// object. The canonical class now lives in this TU at DC source lines
+// 291/298, with in-class bodies. Neither placement recovers the natural
+// inline decision; the claimed 25-byte ctor is currently not emitted.
 // The 16-state constructor/hotspot family emits six objects: body assignment
 // is byte-flat, while passing the parameter instead of m_section to Enter
 // drops CheckUpdate to 89.3669%. No variant restores the nested ctor call.
+// Further controls: four IsIconic-guard/bool-literal forms emit two objects
+// (positive guard 94.1834%, literals flat); eight static grouping/initializer
+// forms emit one object. Seven NextFrameTime clamp forms emit four objects
+// across nine consuming TUs: none improves this caller, and split returns
+// lose four exact siblings. Four HidePointer compound/nested guard-scope
+// forms emit two objects, all holding 96.1361% and thirteen exact siblings.
+// None restores the retained nested constructor. No inline pin is retained.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::checkUpdate()
 {
@@ -654,15 +686,13 @@ void mouseManager::checkUpdate()
 // E:\gamedcs\mousemgr.cpp:291
 // Byte-identified: the 25-byte body at 0x50d890 stores the CS* at
 // [this], EnterCriticalSection's it, and returns this - the
-// retained body of the ordinary ctor above, which
+// retained body of the in-class ctor above, which
 // CheckUpdate (+0x141) calls for its inner lock instead of inlining.
 // Retail emits it here, between CheckUpdate and LoadFrame, not at the
 // DC tail position (0xff7e0).
-// EXACT 2026-08-09: CheckUpdate's block-scoped inline-depth override makes
-// VC6 emit this ordinary constructor COMDAT and use it only for the inner
-// lock. The outer constructor and both destructors remain inlined. The
-// source-authority label pass then joins this already-reviewed claim to the
-// newly present ??0TCSLock public symbol.
+// The removed block-scoped inline-depth override formerly emitted this
+// COMDAT and used it for the inner lock. With canonical helper calls and
+// natural inlining restored, this retained retail body is emission debt.
 // Canonical TCSLock body and VA are at the class definition above.
 
 #endif  // @carcass
@@ -738,9 +768,12 @@ void mouseManager::loadFrame(int newFrame)
 }
 
 // E:\gamedcs\mousemgr.cpp:1120
+// Public ?ShowSystemCursor@mouseManager@@QAAX_N@Z proves bool; the NB11
+// T_UCHAR formal is its lowered storage record. Preserve the separate helper
+// calls at DC1123/1124 and1128/1129 and retail's byte-tested flag.
 // Before normalization (locals): show_it.
 VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
-void mouseManager::showSystemCursor(unsigned char showIt)
+void mouseManager::showSystemCursor(bool showIt)
 {
     if (showIt) {
         ShowCursor(1);

@@ -7,6 +7,7 @@
 
 #include "advmgr_popup.h"
 #include "spellschool.h"
+#include "herospec.h"
 
 class armyGroup;
 class bitmapBackedTextWidget;
@@ -100,17 +101,17 @@ public:
         // Before normalization: School.
         TSpellSchool m_school;
         // Before normalization: Mastery.
-        int m_mastery;
+        TSkillMastery m_mastery;
 
         TSpellbookEntry(SpellID id, TSpellSchool school,
-                        int mastery)
+                        TSkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
         bool operator<(const TSpellbookEntry& y) const;
     };
 
-    TSpellbookWindow(const hero* h, const armyGroup* g,
+    TSpellbookWindow(const hero& h, const armyGroup* g,
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
     // Before normalization (function): TSpellbookWindow::Open.
@@ -118,7 +119,7 @@ public:
     // Before normalization (function): TSpellbookWindow::Close.
     virtual void close(unsigned char update);
     // Before normalization (function): TSpellbookWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
     // E:\gamedcs\SpellbookWindow.h:222
     void setSchool(TSpellSchool school)
@@ -223,7 +224,7 @@ SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);
 // --- TSpellbookWindow ---
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:69, dc 0x14bc58) void TSpellbookWindow::Reset();
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:128, dc 0x14bcf4) std::basic_string<char,std::char_traits<char>,std::allocator<char> TSpellbookWindow::get_spell_description(__$ReturnUdt, SpellID spell, const hero* current_hero, unsigned char rollover);
-// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:180, dc 0x14be88) void TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbookWindow::TSpellContext context, unsigned char on_magic_plains);
+// CODEVIEW(E:\gamedcs\spellbookwindow.cpp:180, dc 0x14be88) void TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbookWindow::TSpellContext context, unsigned char on_magic_plains);
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:474, dc 0x14c864) void TSpellbookWindow::~TSpellbookWindow();
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:490, dc 0x14c8d4) int TSpellbookWindow::Open(int newPriority, unsigned char update);
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:510, dc 0x14c8f0) void TSpellbookWindow::Close(unsigned char update);

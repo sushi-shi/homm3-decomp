@@ -21,13 +21,15 @@
 // DC includes.h:134 supplies the shared limit wrapper called at both
 // morale/luck sites; homm3_limit.h owns the integer reference selector.
 
-// Before normalization: gQuickHeroSkillPositions.
-DATA(0x00640688) static const POINT g_quickHeroSkillPositions[4] = {
+// DC static skill_loc (type 0x1ae5): const POINT[4].
+// Before normalization: skill_loc; formerly gQuickHeroSkillPositions.
+DATA(0x00640688) static const POINT g_skillLoc[4] = {
     {74, 62}, {101, 62}, {129, 62}, {157, 62}
 };
 
-// Before normalization: gQuickHeroArmyPositions.
-DATA(0x00682378) static int g_quickHeroArmyPositions[7][2] = {
+// DC static army_pos (type 0x3fa2): int[7][2].
+// Before normalization: army_pos; formerly gQuickHeroArmyPositions.
+DATA(0x00682378) static int g_armyPos[7][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
 };
@@ -48,12 +50,27 @@ DATA(0x00682378) static int g_quickHeroArmyPositions[7][2] = {
 // gives 94.1662% here, versus 92.7752% for insert(end(), value). Removing the
 // old mana pin is byte-flat in both contexts, so it is not retained.
 //
-// Residual (94.1662%): the first source difference is reserve's temporary
-// stack home (-0x18 versus -0x14); primary-stat addressing and register roles
-// also differ. The mana string's _Tidy now expands where retail calls it,
-// contributing four extra CFG blocks and three branches. Keep its meaningful
-// temporary lifetime rather than adding an inliner gate. The init helper and
-// both window destructors are independently exact.
+// Binding the real widget vector by reference recovers 96.8447% and
+// retail's retained string::_Tidy at the mana full-expression cleanup.
+// All 111 CFG flows, 54 branches and 59 named calls now agree (the two
+// vector COMDAT names are folded retail representatives). A 40-state family
+// emitted 32 objects and reproduced ten retained states. Coordinate-value
+// captures did not improve the peak; split stream-output/terminator forms
+// scored lower. Allocation still precedes formatString, and the owning
+// ostrstream, separate quantity-widget arms and freeze(false) remain intact.
+// Residual: reserve's temporary stack home (-0x18 versus -0x14), primary-stat
+// address induction and downstream register choices. No current inlining
+// mismatch remains; the init helper and both destructors remain exact.
+// Canonical getPrimarySkill's direct member expressions subsequently raise
+// this to 97.5654%; its retained body stays exact and two other callers close.
+// The primary-stat address induction is therefore sensitive to the accessor's
+// source expression, even when its standalone bytes are unchanged.
+// A follow-up with that accessor tested 40 index-declaration, signed-bound
+// and POINT-capture states (eight reproduced objects), without improvement.
+// Retail compares the coordinate induction pointer with skillLoc+16/+32;
+// the best candidate still keeps an integer index for those comparisons.
+// Twelve prefix/postfix/compound counter-update states also reproduce one
+// unchanged object; counter-update spelling does not explain this residual.
 //
 // Retained failed probes from the earlier context: sharing the troop-text
 // push after the arms loses their separate cleanup regions; indexed/shared
@@ -66,7 +83,8 @@ VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
-    m_widgets.reserve(NWIDGETS);
+    std::vector<widget*>& widgets = m_widgets;
+    widgets.reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
@@ -74,13 +92,13 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         thisHero->m_owner >= 0
             ? thisHero->m_owner
             : g_game->getLocalPlayerGamePos());
-    m_widgets.push_back(background);
+    widgets.push_back(background);
 
-    m_widgets.push_back(new bitmapBorder(
+    widgets.push_back(new bitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
         g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    m_widgets.push_back(new textWidget(
+    widgets.push_back(new textWidget(
         75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", font::WHITE,
         NAME_ID, 0, 0, 8));
 
@@ -88,28 +106,28 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         int widgetId = PRIMARY_SKILL_1_ID;
         for (int stat = 0; stat < 4; ++stat) {
             sprintf(g_text, "%d", thisHero->getPrimarySkill(stat));
-            m_widgets.push_back(new textWidget(
-                g_quickHeroSkillPositions[stat].x,
-                g_quickHeroSkillPositions[stat].y,
+            widgets.push_back(new textWidget(
+                g_skillLoc[stat].x,
+                g_skillLoc[stat].y,
                 23, 16, g_text, "smalfont.fnt", font::WHITE,
                 widgetId, 1, 0, 8));
             ++widgetId;
         }
 
-        m_widgets.push_back(new textWidget(
+        widgets.push_back(new textWidget(
             154, 104, 27, 13,
             formatString("%d", thisHero->m_mana).c_str(), "tiny.fnt",
             font::WHITE, MANA_ID, 1, 0, 8));
 
         int morale = limit(
             -3, thisHero->getMorale(0, 0, 1), 3);
-        m_widgets.push_back(new iconWidget(
+        widgets.push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = limit(
             -3, thisHero->getLuck(0, 0, 1), 3);
-        m_widgets.push_back(new iconWidget(
+        widgets.push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));
     }
@@ -160,9 +178,9 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             if (disguiseCreature != CREATURE_NONE)
                 creature = disguiseCreature;
 
-            m_widgets.push_back(new iconWidget(
-                g_quickHeroArmyPositions[displaySlot][0],
-                g_quickHeroArmyPositions[displaySlot][1], 32, 32, widgetId++,
+            widgets.push_back(new iconWidget(
+                g_armyPos[displaySlot][0],
+                g_armyPos[displaySlot][1], 32, 32, widgetId++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
             int count;
@@ -177,17 +195,17 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                 else
                     quantityText << count / 1000 << "k" << std::ends;
 
-                m_widgets.push_back(new textWidget(
-                    g_quickHeroArmyPositions[displaySlot][0],
-                    g_quickHeroArmyPositions[displaySlot][1] + 34, 32, 11,
+                widgets.push_back(new textWidget(
+                    g_armyPos[displaySlot][0],
+                    g_armyPos[displaySlot][1] + 34, 32, 11,
                     quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             } else {
                 quantityText << armyGroup::getArmySizeName(count, 0)
                               << std::ends;
-                m_widgets.push_back(new textWidget(
-                    g_quickHeroArmyPositions[displaySlot][0],
-                    g_quickHeroArmyPositions[displaySlot][1] + 34, 32, 11,
+                widgets.push_back(new textWidget(
+                    g_armyPos[displaySlot][0],
+                    g_armyPos[displaySlot][1] + 34, 32, 11,
                     quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             }
@@ -196,7 +214,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
     }

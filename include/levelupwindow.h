@@ -46,7 +46,7 @@ public:
                    int firstChoice, int secondChoice);
     virtual ~TLevelUpWindow();
     // Before normalization (function): TLevelUpWindow::WindowHandler.
-    virtual int windowHandler(message* msg); // slot 9
+    virtual int windowHandler(message& msg); // slot 9
 
     // Before normalization: left_skill.
     int m_leftSkill;   // +0x60 retail (+0x58 DC)

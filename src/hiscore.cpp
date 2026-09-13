@@ -22,6 +22,7 @@
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textresource.h"
+#include "textntry.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 
@@ -47,6 +48,126 @@ DATA(0x006993cc) highScoreManager* g_highScoreManager;
 // Before normalization (function): HighScoreWindowHandler.
 DATA(0x0069955c) int g_showHighScore;
 int highScoreWindowHandler(message& msg);
+
+// These two classes are hiscore.cpp-local in the DC source corpus; no
+// other authored TU uses them. Keep one canonical definition per class.
+class CHighScoreEdit : public textEntryWidget {
+public:
+    // Before normalization: nextEdit.
+    CHighScoreEdit* m_nextEdit;
+    // Before normalization: prevEdit.
+    CHighScoreEdit* m_prevEdit;
+
+    // DC179 and its retained public prove writable string-pointer parameters
+    // and font::EJustify, independently of textEntryWidget's current API.
+    // The remaining DC int colorIndex / base TColor disagreement needs the
+    // owning text-entry constructor review, not an invented overload here.
+    CHighScoreEdit(int x, int y, int w, int h, int textSize,
+                   char* text, char* fontName,
+                   font::TColor color, font::EJustify justification,
+                   char* backgroundIcon, int backgroundFrame, int id,
+                   int style, int readType, int insetX, int insetY);
+    // Before normalization (function): CHighScoreEdit::OnKeyPress.
+    // DC195 takes message&. The current shared textEntryWidget pointer
+    // interface still needs a coordinated base/override/caller correction.
+    virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
+};
+SIZE(CHighScoreEdit, 0x78);
+
+// DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
+// Retail's proven CHeroWindowEx is four bytes wider, putting them at
+// +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
+// last shifted offset.
+class CHSInputDlg : public CHeroWindowEx {
+public:
+    enum EWidgetIDs {
+        FIELD1_ID = 501,
+        OKAY_ID = 503,
+        ROLLOVER_ID = 504
+    };
+
+    // Original member: CHSInputDlg::field1 (DC class 0x4ad2, +0x4c).
+    // This is the first text-entry field, not an unresolved offset label.
+    // The proven four-byte wider PC base puts it at +0x50.
+    CHighScoreEdit* m_field1;
+    // Before normalization: header1.
+    textWidget* m_header1;
+    // Before normalization: rollover.
+    textWidget* m_rollover;
+
+    // DC293..326 places this constructor in hiscore.cpp. The class has no
+    // other source owner or external users. Keeping its body in the local
+    // class makes it implicitly inline, as required by the retained expansion.
+    // The ordinary out-of-class control did not save this large C1 body.
+    // Keep the canonical DC305 text-resource accessor.
+    // DC301 forwards maxChars1 to CHighScoreEdit. Retail's expanded call
+    // passes 40, so the caller supplies that limit; the reserve count of three
+    // is independent. The old reconstruction ignored maxChars and passed 3.
+    DC_ONLY(0xd8ebc, 0x290)
+    CHSInputDlg(int maxChars)
+        : CHeroWindowEx(284, 194, 232, 212, 0x12)
+    {
+        m_widgets.reserve(3);
+        m_widgets.push_back(new bitmapBorder(
+            0, 0, m_width, m_height, 500,
+            DATA_COMPGEN(0x0067f4e8, highScoreNameBackground, "HighName.pcx"),
+            0x800));
+
+        m_field1 = new CHighScoreEdit(
+            18, 105, 199, 23, maxChars,
+            DATA_COMPGEN(0x00691210, highScoreInputEmptyText, ""),
+            DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+            font::WHITE, font::VERT_CENTER_JUSTIFIED, 0, 0, FIELD1_ID,
+            0x100, 0, 7, 5);
+        m_header1 = new textWidget(
+            13, 13, 205, 100, (*g_generalText)[97],
+            DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+            font::WHITE, -1, 1, 0, 8);
+        m_widgets.push_back(m_field1);
+        m_widgets.push_back(m_header1);
+        m_widgets.push_back(new button(
+            84, 143, 64, 32, OKAY_ID,
+            DATA_COMPGEN(0x0067f4dc, highScoreOkayButton, "mubchck.def"),
+            0, 1, 0, 28, 2));
+
+        m_rollover = new textWidget(
+            8, 186, 216, 18, 0,
+            DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+            font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
+        m_widgets.push_back(m_rollover);
+
+        addWidgetsToMessageStream();
+        setFocus(m_field1->m_id);
+        m_field1->setFocus(1);
+        m_field1->setAutoDraw(1);
+    }
+    virtual ~CHSInputDlg();
+    // Before normalization (function): CHSInputDlg::WindowHandler.
+    virtual int windowHandler(message& msg);
+    // Before normalization (function): CHSInputDlg::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
+    // Before normalization (function): CHSInputDlg::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
+    // Before normalization (function): CHSInputDlg::OnOK.
+    bool onOK();
+};
+SIZE(CHSInputDlg, 0x5c);
+
+// DC360/362 rejects an active empty field, then DC366 returns success.
+// OnWidgetDeselect names this ordinary helper at DC338; retail expands it.
+// Its retained DC public is QAA_NXZ (bool); SH4 debug types expose the
+// underlying byte as unsigned char. Preserve the public return type.
+DC_ONLY(0xd91cc, 0x38)
+bool CHSInputDlg::onOK()
+{
+    if (m_field1->m_status & widget::WIDGET_ACTIVE) {
+        if (!strlen(m_field1->getText()))
+            return 0;
+    }
+    return 1;
+}
+
 void unnamed4f3a60(char* filename);
 void memError();
 
@@ -90,7 +211,10 @@ highScoreManager::~highScoreManager()
 }
 
 // Slot 0 of vtable 0x63eb8c.  Retail's 0x898-byte read from +0x38 bounds
-// the private score table independently of its unrecovered record type.
+// the private score table independently of its record type. DC690..701 uses
+// a temporary Buffer and VMLoadFile for VMU storage. Retail instead retains
+// sprintf/_open/_read/_close and reads directly into m_highScores; the VMU
+// temporary and its destructor have no PC lifetime.
 // E:\gamedcs\hiscore.cpp:658
 VA(0x004e90a0, 0x66)  // vtable-slot + HiScore.dat, dc 0xd7b28
 int highScoreManager::open(int newPriority)
@@ -114,51 +238,11 @@ int highScoreManager::open(int newPriority)
 VA(0x004e9110, 0xC0)  // ctor/update/dialog-handler xrefs, dc 0xd7bd0
 void highScoreManager::viewHiScore()
 {
-    THighScoreWindow window;
-    window.update();
-    g_windowManager->doDialog(&window, highScoreWindowHandler, 0);
+    // Original local: high_score_window. DC733/734 retains this modal call.
+    THighScoreWindow highScoreWindow;
+    highScoreWindow.doModal();
 }
 
-// The retail build inlines this sole constructor use into
-// AddScoreToHighScore.  Every widget argument below is byte-visible in that
-// expansion; the three-entry reserve followed by four pushes also explains
-// the one reallocating final insertion.
-inline CHSInputDlg::CHSInputDlg(int maxChars)
-    : CHeroWindowEx(284, 194, 232, 212, 0x12)
-{
-    m_widgets.reserve(3);
-    m_widgets.push_back(new bitmapBorder(
-        0, 0, m_width, m_height, 500,
-        DATA_COMPGEN(0x0067f4e8, highScoreNameBackground, "HighName.pcx"),
-        0x800));
-
-    m_field1 = new CHighScoreEdit(
-        18, 105, 199, 23, 40,
-        DATA_COMPGEN(0x00691210, highScoreInputEmptyText, ""),
-        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
-        font::WHITE, 4, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
-    m_header1 = new textWidget(
-        13, 13, 205, 100, g_generalText->getText(97),
-        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
-        font::WHITE, -1, 1, 0, 8);
-    m_widgets.push_back(m_field1);
-    m_widgets.push_back(m_header1);
-    m_widgets.push_back(new button(
-        84, 143, 64, 32, OKAY_ID,
-        DATA_COMPGEN(0x0067f4dc, highScoreOkayButton, "mubchck.def"),
-        0, 1, 0, 28, 2));
-
-    m_rollover = new textWidget(
-        8, 186, 216, 18, 0,
-        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
-        font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
-    m_widgets.push_back(m_rollover);
-
-    addWidgetsToMessageStream();
-    setFocus(m_field1->m_id);
-    m_field1->setFocus(1);
-    m_field1->setAutoDraw(1);
-}
 
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
 // 351-byte cBuf local even in the VMU port. Retail's two caller expansions
@@ -193,15 +277,15 @@ VA(0x004e91d0, 0x4CC)  // body + score-table/file/global xrefs, dc 0xd7c3c
 int highScoreManager::addScoreToHighScore(int score, int days,
     int difficulty, int scoreType, const char* land)
 {
-    unsigned char cheated = g_game->m_isCheater == 1;
+    unsigned char cheater = g_game->m_isCheater == 1;
     m_highScoreType = scoreType;
     HighScoreRec* scores = m_highScores[scoreType];
     int rank;
 
     if (!scoreType && g_game->m_campaign.m_isCheater) {
-        cheated = 1;
+        cheater = 1;
         rank = 10;
-    } else if (cheated) {
+    } else if (cheater) {
         rank = 10;
     } else {
         for (rank = 0; rank < 10; ++rank) {
@@ -220,20 +304,20 @@ int highScoreManager::addScoreToHighScore(int score, int days,
     g_mouseManager->showPointer(false);
 
     {
-        CHSInputDlg input(3);
-        input.m_field1->setText(g_game->getLocalPlayer()->getName());
-        input.doModal(0);
+        CHSInputDlg hsDlg(40);
+        hsDlg.m_field1->setText(g_game->getLocalPlayer()->getName());
+        hsDlg.doModal(0);
 
         memset(&scores[rank], 0, sizeof(scores[rank]));
-        strcpy(scores[rank].m_playerName, input.m_field1->m_text.c_str());
+        strcpy(scores[rank].m_playerName, hsDlg.m_field1->getText());
     }
 
     strcpy(scores[rank].m_land,
-        cheated ? g_generalText->getText(261) : land);
+        cheater ? (*g_generalText)[261] : land);
     scores[rank].m_score = score;
     scores[rank].m_days = days;
     scores[rank].m_difficulty = difficulty;
-    scores[rank].m_cheated = cheated;
+    scores[rank].m_cheated = cheater;
     g_highScoreRanks[scoreType == 1] = rank;
 
     writeHighScores();
@@ -247,8 +331,8 @@ int highScoreManager::addScoreToHighScore(int score, int days,
 // E:\gamedcs\hiscore.cpp:179
 VA(0x004e96a0, 0x62)  // base-call + vtable-store, dc 0xd8d2c
 CHighScoreEdit::CHighScoreEdit(int x, int y, int w, int h, int textSize,
-    const char* text, const char* fontName, font::TColor color,
-    unsigned justification, const char* backgroundIcon, int backgroundFrame,
+    char* text, char* fontName, font::TColor color,
+    font::EJustify justification, char* backgroundIcon, int backgroundFrame,
     int id, int style, int readType, int insetX, int insetY)
     : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
                       justification, backgroundIcon, backgroundFrame, id,
@@ -289,8 +373,7 @@ VA(0x004e9790, 0x53)  // vtable-slot, dc 0xd9190
 int CHSInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == OKAY_ID) {
-        if (!(m_field1->m_status & widget::WIDGET_ACTIVE)
-            || strlen(m_field1->m_text.c_str())) {
+        if (onOK()) {
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
             return 1;
@@ -314,7 +397,10 @@ VA_COMPGEN(0x004e9800, 0x21, SCALAR_DELETING_DTOR, CHSInputDlg)
 
 // The first score family uses fifths, then both families walk the same
 // signed-short {threshold, creature} table.  The no-bound loop is byte-proven:
-// the table's terminal threshold is the sentinel.
+// the table's terminal threshold is the sentinel. DC847 loads the result;
+// binding that signed-short value to an int before returning preserves this
+// retained body and both callers, while restoring the constructor's lookup
+// and argument registers. Direct return is the 95.6792% caller control.
 // E:\gamedcs\hiscore.cpp:837
 VA(0x004e9830, 0x48)  // body/table-xref, dc 0xd7e0c
 int highScoreManager::getMonType(int score, int scoreType)
@@ -325,31 +411,42 @@ int highScoreManager::getMonType(int score, int scoreType)
     int i = 0;
     while (score > g_highScoreCreatureTable[i][0])
         ++i;
-    return g_highScoreCreatureTable[i][1];
+    int monsterType = g_highScoreCreatureTable[i][1];
+    return monsterType;
 }
 
 // Four controls precede the two 11-icon score families.  The family-one
 // records are emitted first into the second pointer bank, then family zero;
 // constant-folding GetMonType in each loop accounts for the one inline divide
 // by five in the latter family only.
-// Residual (90.7049%, measured 2026-09-01): all 46 CFG flows and the complete
-// 35-call multiset agree; only four blocks differ in size.  Retail binds zero,
-// this, and the widget-vector walk to EBX/ESI/EDI, while this compile binds the
-// same call-crossing pseudos to EDI/EBX/ESI and strength-reduces each icon id
-// instead of retaining `i` in a stack home.  The VC6 allocator model reports
-// identical definition slots but different front-end processing state (C1
-// class); its `i`/`y` declaration swap is byte-flat.  Negative controls:
-// `volatile int i` falls to 77.7892%, and routing only the two icon ids through
-// an int-reference alias falls to 90.6581%.  The DC-proven base construction,
-// selector/frame/time setup, controls, icon families, widget registration,
-// captured backgrounds, and active-family reveal remain in source order.
+// Residual (99.9766%): all 46 CFG flows and 35 named call sites agree.
+// DC884..911 assigns, hides and registers each icon; the Complete layout
+// uses two eleven-row families. Computing y as 26 + 50 * i restores retail's
+// retained index and its call-crossing zero/this/vector registers, including
+// the complete setup/control prefix. The old independent y induction reached
+// 90.7049%; its index-bound control falls to 86.4942%. Binding GetMonType's
+// return value to int then restores the lookup and argument registers, leaving
+// one EAX/ECX SIB base/index order in the second family's score load. The
+// displayed +2 table-result offsets resolve to retail's separately named
+// second column. This is no longer a whole-function C1 wall.
+// The 24-state row/button/helper family emitted six distinct objects, all six
+// reproduced, with all other 18 hiscore rows exact. Button declaration/reuse
+// and ordinary GetMonType for/while forms do not improve the coordinate form.
+// The subsequent 36-state icon/index/return family emitted 16 objects with ten
+// reproduced elites. The int result reaches 99.9766% with all 18 siblings
+// exact; a short result loses the exact retained helper, and per-row index
+// scopes stop at 99.9578%. No slot reference or allocation-result alias is
+// needed by the retained form. A further 24-state bank-access, result-site
+// and prefix/postfix increment family emits one object, flat at 99.9766%.
+// Earlier controls: i/y declaration order and canonical hide/show calls were
+// byte-flat at 90.7049%; volatile i reached 77.7892%, reference-bound IDs
+// 90.6581%. No diagnostic qualifiers or alternate helper bodies are retained.
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
 THighScoreWindow::THighScoreWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
     int i;
-    int y;
     button* okay;
 
     m_isStandard = g_highScoreManager->m_highScoreType == 1;
@@ -379,32 +476,28 @@ THighScoreWindow::THighScoreWindow()
         0, 1, 0, 31, 2));
 
     memset(m_creatureFrames, 0, sizeof(m_creatureFrames));
-    for (i = 0, y = 26; y < 576; ++i, y += 50) {
+    for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
-            649, y, 64, 64, 1004 + i,
+            649, 26 + 50 * i, 64, 64, 1004 + i,
             g_game->m_worldMap.newfullMapFn00505EA0(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[1][i].m_score,
                     1))->m_imageName.c_str(),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
-        m_creatures[1][i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_creatures[1][i]->hide();
         m_widgets.push_back(m_creatures[1][i]);
     }
-    for (i = 0, y = 26; y < 576; ++i, y += 50) {
+    for (i = 0; i < 11; ++i) {
         m_creatures[0][i] = new iconWidget(
-            649, y, 64, 64, 1015 + i,
+            649, 26 + 50 * i, 64, 64, 1015 + i,
             g_game->m_worldMap.newfullMapFn00505EA0(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][i].m_score,
                     0))->m_imageName.c_str(),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
-        m_creatures[0][i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_creatures[0][i]->hide();
         m_widgets.push_back(m_creatures[0][i]);
     }
 
@@ -422,9 +515,17 @@ THighScoreWindow::THighScoreWindow()
 
     for (i = 0; i < 11; ++i) {
         g_highScoreWindow->m_creatures[g_highScoreWindow->m_isStandard][i]
-            ->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            ->show();
     }
+}
+
+// DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
+// helper at DC734; its retail body contains the corresponding expansion.
+DC_ONLY(0xd8400, 0x22)
+void THighScoreWindow::doModal()
+{
+    update();
+    g_windowManager->doDialog(this, highScoreWindowHandler, 0);
 }
 
 // DC 0xd92c8 proves destructor -> conditional operator-delete.  Retail's
@@ -457,7 +558,7 @@ THighScoreWindow::~THighScoreWindow()
 // selector's polarity: a STANDARD sheet shows days (field_58) at x=0x213 in a
 // 0x34-wide box and the score (field_54) again at 0x259, while a campaign
 // sheet shows the score alone at 0x213 in a 0x7a-wide box. Text indices are
-// raw here, as highScoreManager::AddScoreToHighScore's own GetText(261) is.
+// selected through the canonical text-resource operator[], as in DC985/986.
 //
 // The row colour is retail's `(gHighScoreRanks[bIsStandard] == i) ? 8 : 1`
 // materialized as `sub/neg/sbb/and 0xfffffff9/add 8` - font::PRIMARY for
@@ -495,19 +596,19 @@ void THighScoreWindow::update()
                                    false);
 
     g_mediumFont->drawBoundedString(
-        g_generalText->getText(434), g_windowManager->m_screenBitmap,
+        (*g_generalText)[434], g_windowManager->m_screenBitmap,
         0x58, 0xb, 0x3a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     g_mediumFont->drawBoundedString(
-        g_generalText->getText(435), g_windowManager->m_screenBitmap,
+        (*g_generalText)[435], g_windowManager->m_screenBitmap,
         0xa3, 0xb, 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     // Before normalization (locals): cLandHeading, cValueHeading, iY, iValue.
     const char* landHeading;
     if (m_isStandard)
-        landHeading = g_generalText->getText(436);
+        landHeading = (*g_generalText)[436];
     else
-        landHeading = g_generalText->getText(673);
+        landHeading = (*g_generalText)[673];
     g_mediumFont->drawBoundedString(
         landHeading, g_windowManager->m_screenBitmap,
         0x12f, 0xb, 0xd2, 0x1a, font::PRIMARY,
@@ -515,16 +616,16 @@ void THighScoreWindow::update()
 
     const char* valueHeading;
     if (m_isStandard)
-        valueHeading = g_generalText->getText(437);
+        valueHeading = (*g_generalText)[437];
     else
-        valueHeading = g_generalText->getText(76);
+        valueHeading = (*g_generalText)[76];
     g_mediumFont->drawBoundedString(
         valueHeading, g_windowManager->m_screenBitmap,
         0x213, 0xb, m_isStandard ? 0x34 : 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (m_isStandard) {
         g_mediumFont->drawBoundedString(
-            g_generalText->getText(76), g_windowManager->m_screenBitmap,
+            (*g_generalText)[76], g_windowManager->m_screenBitmap,
             0x259, 0xb, 0x34, 0x1a, font::PRIMARY,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     }
@@ -534,43 +635,43 @@ void THighScoreWindow::update()
         int color = g_highScoreRanks[m_isStandard] == i
                         ? font::HEADING_HIGHLIGHT
                         : font::PRIMARY;
-        HighScoreRec* currentRec =
-            &g_highScoreManager->m_highScores[m_isStandard][i];
+        highScoreManager::HighScoreRec& currentRec =
+            g_highScoreManager->m_highScores[m_isStandard][i];
 
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
                 i + 1);
         g_mediumFont->drawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
-            0x58, y, 0x3a, 0x1a, color,
+            0x58, y, 0x3a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         g_mediumFont->drawBoundedString(
-            currentRec->m_playerName, g_windowManager->m_screenBitmap,
-            0xa3, y, 0x7a, 0x1a, color,
+            currentRec.m_playerName, g_windowManager->m_screenBitmap,
+            0xa3, y, 0x7a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         g_mediumFont->drawBoundedString(
-            currentRec->m_land, g_windowManager->m_screenBitmap,
-            0x12f, y, 0xd2, 0x1a, color,
+            currentRec.m_land, g_windowManager->m_screenBitmap,
+            0x12f, y, 0xd2, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
         int value;
         if (m_isStandard)
-            value = currentRec->m_days;
+            value = currentRec.m_days;
         else
-            value = currentRec->m_score;
+            value = currentRec.m_score;
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
                 value);
         g_mediumFont->drawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
-            0x213, y, m_isStandard ? 0x34 : 0x7a, 0x1a, color,
+            0x213, y, m_isStandard ? 0x34 : 0x7a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
         if (m_isStandard) {
             sprintf(g_text,
                     DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
-                    currentRec->m_score);
+                    currentRec.m_score);
             g_mediumFont->drawBoundedString(
                 g_text, g_windowManager->m_screenBitmap,
-                0x259, y, 0x34, 0x1a, color,
+                0x259, y, 0x34, 0x1a, font::TColor(color),
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
         }
     }
@@ -606,6 +707,10 @@ static void updateCreatures()
 // before incrementing at 1168; retaining those references separates the
 // animation tail from the category tail. Lines 1179-1184 prove the final
 // dialog-exit flag; switch breaks feed that exit instead of direct returns.
+// DC1042/1043 looks up two widgets before dispatch. Retail begins dispatch
+// immediately after PollSound, with neither lookup nor its expansion. The
+// Complete constructor/handler use the four PC controls and no DC scrolling
+// controls; keep this platform difference separate from helper restoration.
 // The animation index is signed, as retail's back-edge jl proves.
 //
 // The reset arm binds getMonType's result to monsterType before the object
@@ -650,7 +755,7 @@ int highScoreWindowHandler(message& msg)
 
         case THighScoreWindow::RESET_ID:
             {
-            normalDialog(g_generalText->getText(667), 2, -1, -1, -1, 0, -1,
+            normalDialog((*g_generalText)[667], 2, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 return MESSAGE_DISPATCH_CONSUME;
@@ -797,13 +902,6 @@ void THighScoreWindow::THighScoreWindow()
     // @stub
 }
 
-// E:\gamedcs\hiscore.cpp:940
-DC_ONLY(0xd8400, 0x22)
-void THighScoreWindow::doModal()
-{
-    // @stub
-}
-
 // E:\gamedcs\hiscore.cpp:953
 DC_ONLY(0xd8424, 0x76)
 void THighScoreWindow::~THighScoreWindow()
@@ -888,13 +986,6 @@ void CHighScoreEdit::~CHighScoreEdit()
     // @stub
 }
 
-// E:\gamedcs\hiscore.cpp:293
-DC_ONLY(0xd8ebc, 0x290)
-void CHSInputDlg::CHSInputDlg(int maxChars1)
-{
-    // @stub
-}
-
 // E:\gamedcs\hiscore.cpp:329
 DC_ONLY(0xd914c, 0x44)
 void CHSInputDlg::~CHSInputDlg()
@@ -909,13 +1000,6 @@ int CHSInputDlg::onWidgetDeselect(int id, bool& bExitFlag)
     // @stub
 }
 
-// E:\gamedcs\hiscore.cpp:357
-DC_ONLY(0xd91cc, 0x38)
-unsigned char CHSInputDlg::onOK()
-{
-    // @stub
-}
-
 // E:\gamedcs\hiscore.cpp:369
 DC_ONLY(0xd9204, 0x6)
 textWidget* CHSInputDlg::getRolloverWidget()
@@ -925,7 +1009,7 @@ textWidget* CHSInputDlg::getRolloverWidget()
 
 // E:\gamedcs\hiscore.cpp:371
 DC_ONLY(0xd920c, 0x88)
-int CHSInputDlg::windowHandler(message* msg)
+int CHSInputDlg::windowHandler(message& msg)
 {
     // @stub
 }

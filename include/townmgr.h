@@ -451,7 +451,7 @@ public:
     // Before normalization (function): TThievesGuildWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TThievesGuildWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5c9930
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
 };
 
 // The town hall page: one background per town type over a grid of
@@ -480,7 +480,7 @@ public:
     THallWindow(int which);
     virtual ~THallWindow();
     // Before normalization (function): THallWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;
+    virtual int windowHandler(message& msg) OVERRIDE;
 };
 
 // The mage guild, one full-screen page of five spell rows: twenty frame
@@ -498,7 +498,7 @@ public:
     // Before normalization (function): TMageGuildWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TMageGuildWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5ce370
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5ce370
 };
 
 class type_garrison_base_window : public CAdvPopup {
@@ -565,7 +565,7 @@ public:
     // Before normalization (function): type_garrison_base_window::SetCommandAndText.
     void setCommandAndText(message* msg);
     // Before normalization (function): type_garrison_base_window::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d0910
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d0910
 };
 
 // The two derived garrison windows have EMPTY destructors: retail inlines
@@ -624,7 +624,7 @@ public:
     // Before normalization (function): TBlacksmithWindow::SetRolloverText.
     void setRolloverText(int id);
     // Before normalization (function): TBlacksmithWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d1c60
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d1c60
 };
 
 // The shipyard dialog. Constructor 0x5d1ef0 writes both members past
@@ -649,7 +649,7 @@ public:
     TShipWindow(int type);
     virtual ~TShipWindow();
     // Before normalization (function): TShipWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d25a0
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d25a0
 };
 
 // The "build this?" confirmation popup. Both members past CAdvPopup's
@@ -679,7 +679,7 @@ public:
     // Before normalization (locals): current_town.
     void setPrerequisiteText(const town* currentTown, int building);
     // Before normalization (function): TBuyBuildWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d6810
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d6810
 };
 
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
@@ -736,7 +736,7 @@ public:
     // Before normalization (function): TTavernWindow::Close.
     virtual void close(unsigned char update);            // slot 2
     // Before normalization (function): TTavernWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;    // slot 9, 0x5d7b30
+    virtual int windowHandler(message& msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 
 // The fort page: one row per creature dwelling - a separator strip, a
@@ -825,7 +825,7 @@ public:
     // Before normalization (function): TCastleWindow::Recruit.
     void recruit(int i);
     // Before normalization (function): TCastleWindow::WindowHandler.
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5dcf80
 };
 
 #include "basemgr.h"

@@ -75,7 +75,7 @@ public:
 // Before normalization (function): AI_quick_combat.
 // Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup* defendingArmy, town* defendingTown,
+                              armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 // Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
 // Before normalization (function): split_armies.

@@ -203,7 +203,7 @@ public:
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
     // Before normalization (function): TMultiPlayerWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     virtual int onWidgetDeselect(int id, bool& exitFlag);

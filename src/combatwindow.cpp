@@ -3,7 +3,6 @@
 // 72 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatwindow.h"
-#include "combatwindowchatedit.h"
 #include "cmbtmgr.h"
 #include "border.h"
 #include "combatcontrolsubwindow.h"
@@ -29,57 +28,99 @@ static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42. SendChat is the sole retail caller;
 // Dreamcast supplies the reference ABI, local TCheatCode and statement map.
-// The 28-block CFG is retail-identical. The 90.2966% residual is one measured
-// VC6 inline decision: predict-inline reports that only _Tidy(false) expands
-// here while retail calls it; direct operator=/assign/count/wrapper spellings
-// are byte-flat, so keep the natural source rather than model string internals.
+// DC sets a recognized-cheat flag in each accepted arm (50/64/77), then
+// guards the shared chat/cheater updates at 91..97. Its optimized register
+// local is visible even though the local roster names only TCheatCode.
+// Restore that flag and the braced spell/campaign scopes. The 19-state
+// family tested flag type, lifetime and string binding: three emitted
+// objects reproduced, best 89.4690%, with the chat siblings still exact.
+// The artifact enum now restores the TArtifact overload and retail {0,-1}
+// spellbook record; the former split enum selected a scroll {1,0}.
+// Complete calls 0x4693a0 for the two defeated-side arms; that ordinary
+// helper owns DC50/64 TurnOffHighlighter and DC58/71 ProcessDeath.
+// Residual (90.2966%): string::_Tidy expansion and resulting frame/register
+// choices. The subsequent 18-state construction/input-lifetime family emits
+// three objects and reproduces all three: direct/converting construction,
+// named c_str pointers and shorter code scope stay at 90.2966%; explicit
+// temporary copy initialization falls to 83.6690/83.7034%. All 24 siblings
+// stay exact. The early-return control has no advantage over the proven flag.
 // E:\gamedcs\combatwindow.cpp:42
-VA(0x00472010, 0x1C0)
+VA(0x00472010, 0x1C0)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
     hero* currentHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
     std::string* chat = &chatString;
+    bool recognized = 0;
     TCheatCode code(chat->c_str());
 
     if (code.compare(DATA_COMPGEN(
             0x0063d490, combatCheatBluePill, "ajpoyhrcvyy"))) {
+        recognized = 1;
         g_combatManager->unnamed4693a0(g_combatManager->m_currentSide);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063d49c, combatCheatRedPill, "ajperqcvyy"))) {
+        recognized = 1;
         g_combatManager->unnamed4693a0(1 - g_combatManager->m_currentSide);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063d4a8, combatCheatAllSpells,
                    "ajpgurervfabfcbba"))
                && currentHero) {
+        recognized = 1;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(&spellbook, 1, 1);
         }
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             currentHero->addSpell(spell);
-    } else {
-        return;
+        }
     }
 
-    *chat = (*g_generalText)[261];
-    g_game->m_isCheater = 1;
-    if (g_unk69774c)
-        g_game->m_campaign.m_isCheater = 1;
+    if (recognized) {
+        *chat = (*g_generalText)[261];
+        g_game->m_isCheater = 1;
+        if (g_unk69774c) {
+            g_game->m_campaign.m_isCheater = 1;
+        }
+    }
 }
 
-// Retail inlines this compiland-private forwarding constructor into its sole
-// use below: the base call is followed by the +0x70 clear and 0x63d4bc vptr.
-inline CCombatChatEdit::CCombatChatEdit(
+// DC139 calls CGameChatEdit's constructor, and every CCombatChatEdit
+// method originates in this .cpp. Retail vtable 0x63d4bc has 27 slots:
+// slots 25/26 are the inherited CGameChatEdit::sendChatCleanup (0x402280)
+// and activate (0x4022b0). The base owns activated at +0x70 and alignment;
+// the former direct CChatEdit base with duplicated fields omitted two slots.
+// Keep this one private class definition beside its source-owned methods.
+class CCombatChatEdit : public CGameChatEdit {
+public:
+    CCombatChatEdit(int x, int y, int w, int h, int textSize, char* text,
+                    char* fontName, font::TColor color,
+                    font::EJustify justification, char* backgroundIcon,
+                    int backgroundFrame, int id, int style, int readType,
+                    int insetX, int insetY);
+    // Before normalization (function): CCombatChatEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);              // slot 15
+    // Before normalization (function): CCombatChatEdit::UpdateScreen.
+    virtual void updateScreen();                       // slot 19
+    // Before normalization (function): CCombatChatEdit::OnEscape.
+    virtual int onEscape(message msg);                 // slot 21
+    // Before normalization (function): CCombatChatEdit::SendChat.
+    virtual void sendChat(const char* text, int toWho); // slot 24
+};
+SIZE(CCombatChatEdit, 0x74);
+
+// Retail expands this ordinary forwarding constructor into TCombatWindow.
+// The canonical CGameChatEdit base owns the +0x70 clear.
+DC_ONLY(0x6a3ec, 0x98)
+CCombatChatEdit::CCombatChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
     font::TColor color, font::EJustify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
-    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
+    : CGameChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
                 backgroundIcon, backgroundFrame, id, style, readType,
-                insetX, insetY),
-      m_activated(0)
+                insetX, insetY)
 {
 }
 
@@ -157,11 +198,7 @@ int CCombatChatEdit::onKeyPress(message* msg)
         return CChatEdit::onKeyPress(msg);
 
     if (getCharPressed(msg) == KEYCODE_TAB) {
-        if (g_combatWindow->m_controlSubWindow
-            && g_combatWindow->m_controlSubWindow->m_rolloverWidget) {
-            g_combatWindow->m_controlSubWindow->m_rolloverWidget->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_CLEAR_STATUS);
-        }
+        g_combatWindow->onChatActivate(1);
         m_activated = 1;
         setFocus(1);
         m_parentWindow->setFocus(m_id);
@@ -177,36 +214,26 @@ int CCombatChatEdit::onKeyPress(message* msg)
 // network/local chat path; both modes then close the editor and restore the
 // combat control bar.
 // E:\gamedcs\combatwindow.cpp:171
-// Residual (93.35%): one over-inline - retail CALLS basic_string::_Eos out
-// of line inside the chatString construction where our CL expands it
-// (`mov ecx,[ebp-0x18] / mov [ebp-0x14],eax / mov byte [ecx+eax],0`).
-// Tried and rejected: `std::string chatString = sChat;` (byte-flat at
-// 93.35), default construction then `chatString = sChat` (77.57), and
-// default construction then `assign(sChat, strlen(sChat))` (77.57) - both
-// assign forms lose the whole construction shape, the opposite of what the
-// adventuremapwindow twin's note reports for ITS body.
+// Exact with the ordinary OnChatActivate helper, its widget::show/hide
+// calls, and DC's braced local-cheat gate (176..179). The flattened helper
+// control leaves string::_Eos incorrectly expanded at 93.3486%; restoring
+// the source boundary retains retail's _Eos call. Direct, copy and explicit
+// allocator construction all reproduce the exact body and exact chat siblings.
 // Before normalization (locals): sChat.
 VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
 void CCombatChatEdit::sendChat(const char* chat, int toWho)
 {
     std::string chatString(chat);
-    if (!g_game->isMultiplayer())
+    if (!g_game->isMultiplayer()) {
         checkCombatCheatCode(chatString);
+    }
 
     m_activated = 0;
     ::sendChat(chatString.c_str(), toWho);
     m_parentWindow->setFocus(-1);
     setFocus(0);
 
-    type_combat_sub_window*& combatSubWindow =
-        g_combatWindow->m_controlSubWindow;
-    if (combatSubWindow) {
-        if (combatSubWindow->m_rolloverWidget) {
-            combatSubWindow->m_rolloverWidget->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
-        }
-        combatSubWindow->draw(1, -0xffff, 0xffff);
-    }
+    g_combatWindow->onChatActivate(0);
 }
 
 // Vtable 0x63d4bc slot 21. Escape closes the edit without sending, redraws
@@ -220,15 +247,7 @@ int CCombatChatEdit::onEscape(message msg)
     setFocus(0);
     draw();
 
-    type_combat_sub_window*& combatSubWindow =
-        g_combatWindow->m_controlSubWindow;
-    if (combatSubWindow) {
-        if (combatSubWindow->m_rolloverWidget) {
-            combatSubWindow->m_rolloverWidget->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
-        }
-        combatSubWindow->draw(1, -0xffff, 0xffff);
-    }
+    g_combatWindow->onChatActivate(0);
     return 1;
 }
 
@@ -452,10 +471,11 @@ int TCombatWindow::scrollDown(message& msg)
 // range. Retail fixes the live combat-manager guards and the +0x54 message
 // vector shared with show_messages and the destructor.
 // Before normalization (locals): new_text, cTemp.
-VA(0x00472e90, 0x35E)
+// DC's public QAAXPBD_N1 encodes bool for both flags; T_UCHAR formals
+// are lowered records. The retail callers pass those same Boolean values.
+VA(0x00472e90, 0x35E)  // dc 0x69fbc, source/calls + exact retail body
 void TCombatWindow::combatMessage(const char* newText,
-                                   unsigned char keep,
-                                   unsigned char priority)
+                                   bool keep, bool priority)
 {
     if (g_combatManager->isQuickCombat())
         return;
@@ -475,6 +495,7 @@ void TCombatWindow::combatMessage(const char* newText,
         return;
     }
 
+    // Before normalization: cTemp.
     std::string temp(newText);
     unsigned int split = temp.find('\n');
     m_combatMessageTime = GameTime::get();
@@ -624,12 +645,29 @@ void TCombatWindow::DrawChatEdit(unsigned char update)
     // @stub
 }
 
-// E:\gamedcs\combatwindow.cpp:633
-DC_ONLY(0x6a310, 0xB0)
-void TCombatWindow::OnChatActivate(unsigned char m_active)
+#endif  // @carcass
+
+// E:\gamedcs\combatwindow.cpp:633..649. Original name: OnChatActivate.
+// DC calls this ordinary member from SendChat:189 and OnEscape:201.
+// Complete expands the same conditional show/hide and subwindow redraw.
+// Keep the shared helper and widget::show/hide source calls.
+void TCombatWindow::onChatActivate(unsigned char active)
 {
-    // @stub
+    if (!active) {
+        if (m_controlSubWindow) {
+            if (m_controlSubWindow->m_rolloverWidget) {
+                m_controlSubWindow->m_rolloverWidget->show();
+            }
+            m_controlSubWindow->draw(1, -0xffff, 0xffff);
+        }
+    } else {
+        if (m_controlSubWindow && m_controlSubWindow->m_rolloverWidget) {
+            m_controlSubWindow->m_rolloverWidget->hide();
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\combatwindow.cpp:652
 DC_ONLY(0x6a3c0, 0x28)

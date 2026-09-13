@@ -28,52 +28,9 @@ public:
         ICON_STYLE_CREATURE = 0x12
     };
 
-    // The EResourceType values Draw's two jump tables span: DC
-    // RType_sprite..RType_combat_hero, 64..73 (evidence/dreamcast/
-    // enums.csv), byte-proven contiguous by those tables' `resType - 64`
-    // bound of 9 and by each arm calling the CSprite entry point its
-    // type is named after. SPRITEDEF (65) and SPRITEFRAME (72) are the
-    // two that fall to the default, which is why both tables carry a
-    // default at index 1 and index 8; they are listed because that gap
-    // is what fixes the span.
-    //
-    // These belong in resource.h's EResourceType and are deliberately
-    // NOT there yet. resource.h sits at the head of recruit.obj's
-    // include closure and recruitUnit::Update is knife-edge on
-    // symbol-handle position, dropping 90.8376% -> 88.2360% when the
-    // enum grows (the same-sized edit made to csprite.h instead is
-    // inert).
-    //
-    // WHAT MOVES IT IS A BUDGET OF FOUR, not "a single enumerator" -
-    // corrected 2026-08-14 by bisection after RESOURCE_TYPE_FONT = 80
-    // was appended for font::font 0x4b5070 and nothing in the tree
-    // moved. With that enumerator in place, adding N more probe
-    // enumerators immediately before RESOURCE_TYPE_SFX gives
-    //     N = 1,2,3,4 -> 90.8376 (inert)
-    //     N = 5,6,8,10 -> 88.2360
-    // and the step is the same whether the names are appended past the
-    // last value or inserted among the existing ones, so it is the
-    // COUNT that matters, not the position. The earlier note here read
-    // its own sweep as flat from N = 1; it was not, and the low counts
-    // were never the ones that fired.
-    //
-    // Practical consequence: three more enumerators can be added to
-    // EResourceType for free, but this ten-name block still cannot
-    // move. Scoping the names to iconWidget keeps them collision-free
-    // for the lane that eventually does add them, once
-    // recruitUnit::Update is closed.
-    enum ESpriteResType {
-        SPRITE_RES_SPRITE = 64,
-        SPRITE_RES_SPRITEDEF = 65,
-        SPRITE_RES_CREATURE = 66,
-        SPRITE_RES_ADVOBJ = 67,
-        SPRITE_RES_HERO = 68,
-        SPRITE_RES_TILESET = 69,
-        SPRITE_RES_POINTER = 70,
-        SPRITE_RES_INTERFACE = 71,
-        SPRITE_RES_SPRITEFRAME = 72,
-        SPRITE_RES_COMBAT_HERO = 73
-    };
+    // Resource dispatch uses resrce.h's EResourceType (DC RType_sprite
+    // through RType_combat_hero, 64..73). The former ESpriteResType copy
+    // was an unsupported workaround for recruit's compiler-state score.
 
     // Before normalization: Sprite.
     CSprite* m_sprite;
@@ -82,7 +39,11 @@ public:
     // Before normalization: seqId.
     int m_seqId;
     // Before normalization: IsFlipped.
-    unsigned char m_isFlipped;
+    // DC stores a lowered T_UCHAR record, but the constructor public symbol
+    // (dc0xd9350, ...HH_NIH1@Z) encodes a bool input. Retail Draw forwards
+    // this field to native-bool sprite methods without test/setne; bool
+    // restores that behavior while keeping the one-byte field layout.
+    bool m_isFlipped;
     // Before normalization: PostPostWalkSequence.
     int m_postPostWalkSequence;
     // Before normalization: BackColor.
@@ -99,7 +60,7 @@ public:
     // widening the parameter off the old `unsigned char focusable`
     // changes no caller's bytes.
     iconWidget(int x, int y, int w, int h, int id, const char* image,
-               int frame, int sequence, unsigned char flipped,
+               int frame, int sequence, bool flipped,
                unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     // Before normalization (function): iconWidget::Main.
@@ -122,8 +83,8 @@ public:
     // border_vslot13.
     // Before normalization (function): iconWidget::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 
     // Before normalization (function): iconWidget::SetIconFrame.
     void setIconFrame(int newFrame);

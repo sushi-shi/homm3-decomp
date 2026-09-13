@@ -21,8 +21,8 @@ public:
     std::string m_text;
     // Before normalization: Font.
     font* m_font;
-    // Before normalization: Color.
-    int m_color;
+    // Original: Color, DC member +0x44, type font::TColor; same retail layout.
+    font::TColor m_color;
     // Before normalization: BackColor.
     int m_backColor;
     // Before normalization: Justify.

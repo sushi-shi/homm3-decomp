@@ -17,17 +17,21 @@ const int g_creatureTypeLast = 0x96;
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
 // events.cpp also expands this at monsters_flee/join/sell_out, passing a
 // literal count so each singular/plural selection folds at its call site.
+// DC observes the range guard at299, empty return301, else boundary303 and
+// singular/plural selection305. A conditional return inside that else keeps
+// the retained 62-byte body exact and recovers the nested name expansions in
+// showCreatureSpellError and processNextAction with their canonical wrappers.
+// Four forms were checked across all66 header consumers: this form has no
+// score regressions; the early-return alternatives change later inline
+// decisions in morale/failure-reason callers. Keep the guard's else scope.
 VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
     } else {
-        if (count == 1) {
-            return g_creatureTypeTraits[type].m_name;
-        } else {
-            return g_creatureTypeTraits[type].m_pluralName;
-        }
+        return count == 1 ? g_creatureTypeTraits[type].m_name
+                          : g_creatureTypeTraits[type].m_pluralName;
     }
 }
 

@@ -306,7 +306,7 @@ public:
     virtual int doModal(unsigned char fadeIn);                 // slot 6
 protected:
     // Before normalization (function): type_sacrifice_window::ExitDialog.
-    virtual int exitDialog(message* msg);                      // slot 14
+    virtual int exitDialog(message& msg);                      // slot 14
 private:
     // Before normalization (function): type_sacrifice_window::create_artifact_widgets.
     // Before normalization (locals): widget_id, cur_player.
@@ -379,8 +379,8 @@ public:
 
     // Before normalization (function): type_doll_slot_widget::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_doll_slot_widget, 0x4c);
 
@@ -395,8 +395,8 @@ public:
 
     // Before normalization (function): type_backpack_slot_widget::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_backpack_slot_widget, 0x4c);
 
@@ -412,8 +412,8 @@ public:
 
     // Before normalization (function): type_artifact_offering_widget::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_artifact_offering_widget, 0x4c);
 
@@ -436,8 +436,8 @@ public:
 
     // Before normalization (function): type_army_slot_widget::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_army_slot_widget, 0x50);
 
@@ -491,7 +491,7 @@ public:
     // Before normalization (locals): current_widget.
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     // Before normalization (function): type_skeleton_window::WindowHandler.
-    virtual int windowHandler(message* msg);                   // slot 9
+    virtual int windowHandler(message& msg);                   // slot 9
 private:
     // Before normalization (function): type_skeleton_window::all_creatures.
     static int allCreatures(message& msg);
@@ -529,8 +529,8 @@ public:
 
     // Before normalization (function): type_transformer_slot::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_transformer_slot, 0x50);
 

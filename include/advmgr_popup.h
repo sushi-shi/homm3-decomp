@@ -28,11 +28,14 @@ public:
     CAdvPopup(int winX, int winY, int winWidth, int winHeight,
               unsigned winType);
     virtual ~CAdvPopup();
+    // DC advmgr.cpp:11539 / :11528 (0x1ecb4 / 0x1ec80) declare
+    // WindowHandler and ExitDialog with message&. Retail slots 9/14
+    // forward and update the same non-null message at 0x41b1c0/0x41b190.
     // Before normalization (function): CAdvPopup::WindowHandler.
-    virtual int windowHandler(message* msg);             // slot 9
+    virtual int windowHandler(message& msg);             // slot 9
 protected:
     // Before normalization (function): CAdvPopup::ExitDialog.
-    virtual int exitDialog(message* msg);                 // slot 14
+    virtual int exitDialog(message& msg);                 // slot 14
 };
 SIZE(CAdvPopup, 0x60);
 

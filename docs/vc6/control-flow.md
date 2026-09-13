@@ -517,9 +517,11 @@ cleanly, and the split says which tool to point at them:
   `get_morale_description` rungs and expands three; retail leaves
   `vector<long>::size()` out of line in `find_attack_hexes`' reallocate
   path. **This group is `predict-inline`'s, not `why-branch`'s** — and
-  under the current cleanliness floor (inline-depth pins 355, falling
-  only) it is closed, because the only levers that move it are a statement
-  pin or a caller-size change.
+  the old conclusion that it was closed under the inline-pin floor was
+  unsupported. Preserve canonical helpers and inspect their measured nested
+  budgets; real callee expressions and caller source can change those decisions
+  without a pin. The drawing name-wrapper trace is documented in regalloc.md
+  section 6d.
 - **`clean` / `flips POLARITY` with both counts equal (23 of 56)** —
   register-homing or block layout; `why-reg` territory.
 
@@ -976,3 +978,40 @@ The DC spell-time accessor and separate retaliation guard are independently
 neutral. Eight states produce eight reproduced objects, with no sibling
 movement. The former register-allocation plateau was a missing helper and
 return boundary, not an exhausted compiler limit.
+
+### Shared spell-immunity returns follow source condition groups
+
+`getSpellWorkChance` (0x44a4d0) closes from 96.6018% by restoring the
+table-read order observed at DC342/343/344 and the condition groups at
+DC367/369, 456/458 and 464/466. Reading creature attributes before forming
+the spell-record pointer gives 98.3393%. Combining Destroy Undead's trait
+and pendant checks removes an extra zero-return block and gives 99.9821%.
+The remaining two Blind branches then target the late dragon-immunity
+epilogue instead of retail's shared middle epilogue.
+
+DC367 attributes Blind's pendant, Troglodyte-pair and undead checks together,
+with all rejection paths joining the return at DC369. One short-circuit OR
+preserves their evaluation order and reproduces all 1,326 retail bytes and
+101 blocks. Combining only the creature checks is also byte-exact, but the
+full condition better follows the observed line grouping. Death Ripple's
+matching group is byte-neutral. The 32-state first family preserves all 36
+exact siblings; the four-state Blind follow-up reproduces both exact forms.
+
+The same change restores the proven `const hero* const` parameters. VC6
+keeps the old `PBVhero` decoration when only the definition has pointer-level
+const, but uses `QBVhero` after the shared declaration is updated too. The
+function's bytes remain identical. A fast build therefore reports a missing
+old symbol until the full build regenerates source labels and migrates the
+checkpoint by RVA; do not treat that intermediate report as a code regression.
+
+## Check accessor identity before attributing branch order to C2
+
+`advManager::checkAdjacentMon` at `0x481900` previously differed only in the
+initial hero lookup's null-arm placement. Dreamcast positively attributes
+`game::GetCurrHero` at `game.h:991/992`; the source called `GetHero(id)`.
+Restoring the canonical current-hero accessor recovers all 449 bytes,
+16 blocks and nine named calls, reaching 100% from 95.3191%. The four-state
+caller/`StopCursor` experiment produces two reproduced objects. Restoring
+`GetCurrHero` inside `StopCursor` is byte-flat but preserves its independent
+source attribution. The exact generic accessor and other callers did not
+establish which accessor this function originally used.

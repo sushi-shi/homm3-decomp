@@ -31,14 +31,14 @@ void TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 DC_ONLY(0x829a0, 0x1E2)
-int TDimensionDoorWindow::windowHandler(message* msg)
+int TDimensionDoorWindow::windowHandler(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 DC_ONLY(0x82b84, 0x16)
-int TDimensionDoorWindow::exitDialog(message* msg)
+int TDimensionDoorWindow::exitDialog(message& msg)
 {
     // @stub
 }
@@ -59,7 +59,7 @@ void TSkuttleBoatWindow::~TSkuttleBoatWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 DC_ONLY(0x82d14, 0x1BC)
-int TSkuttleBoatWindow::windowHandler(message* msg)
+int TSkuttleBoatWindow::windowHandler(message& msg)
 {
     // @stub
 }
@@ -180,7 +180,7 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 VA(0x00491900, 0x1B9)  // vtable slot 9 + source order, dc 0x829a0
-int TDimensionDoorWindow::windowHandler(message* msg)
+int TDimensionDoorWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -192,13 +192,13 @@ int TDimensionDoorWindow::windowHandler(message* msg)
         g_advManager->updateScreen(0, 0);
     }
 
-    int mouseX = msg->m_mouseX;
-    int mouseY = msg->m_mouseY;
+    int mouseX = msg.m_mouseX;
+    int mouseY = msg.m_mouseY;
 
     bool exitFlag = false;
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_KEY_DOWN:
-        if (msg->m_codeX == DIALOG_CLOSE_KEY) {
+        if (msg.m_codeX == DIALOG_CLOSE_KEY) {
             g_windowManager->m_dialogReturn = 0;
             exitFlag = true;
         }
@@ -232,23 +232,23 @@ int TDimensionDoorWindow::windowHandler(message* msg)
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->m_codeY != 0)
+            if (msg.m_codeY != 0)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_DESELECT:
-            if (msg->m_codeY == DIALOG_RETURN_CANCEL) {
+            if (msg.m_codeY == DIALOG_RETURN_CANCEL) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
             }
             break;
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->m_codeY == 0) {
+            if (msg.m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
             }
@@ -257,8 +257,8 @@ int TDimensionDoorWindow::windowHandler(message* msg)
         break;
     }
     if (exitFlag) {
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -270,10 +270,10 @@ int TDimensionDoorWindow::windowHandler(message* msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 VA(0x00491ac0, 0x2C)  // vtable slot 14 + source order, dc 0x82b84
-int TDimensionDoorWindow::exitDialog(message* msg)
+int TDimensionDoorWindow::exitDialog(message& msg)
 {
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = msg->m_codeY = 10;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = msg.m_codeY = 10;
     g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }
@@ -314,7 +314,7 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 // DC 0x82d14 uses the same exit-flag/common message tail. Restoring it removes
 // two gotos at 100%; duplicated direct exits score 81.9421%.
 VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
-int TSkuttleBoatWindow::windowHandler(message* msg)
+int TSkuttleBoatWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -326,13 +326,13 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
         g_advManager->updateScreen(0, 0);
     }
 
-    int mouseX = msg->m_mouseX;
-    int mouseY = msg->m_mouseY;
+    int mouseX = msg.m_mouseX;
+    int mouseY = msg.m_mouseY;
 
     bool exitFlag = false;
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_KEY_DOWN:
-        if (msg->m_codeX == DIALOG_CLOSE_KEY) {
+        if (msg.m_codeX == DIALOG_CLOSE_KEY) {
             g_windowManager->m_dialogReturn = 0;
             exitFlag = true;
         }
@@ -366,17 +366,17 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->m_codeY != 0)
+            if (msg.m_codeY != 0)
                 break;
             if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg->m_id = MESSAGE_WIDGET;
-            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->m_codeY == 0) {
+            if (msg.m_codeY == 0) {
                 g_windowManager->m_dialogReturn = 0;
                 exitFlag = true;
             }
@@ -385,8 +385,8 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
         break;
     }
     if (exitFlag) {
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -394,10 +394,10 @@ int TSkuttleBoatWindow::windowHandler(message* msg)
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
 VA(0x00491eb0, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
-int TSkuttleBoatWindow::exitDialog(message* msg)
+int TSkuttleBoatWindow::exitDialog(message& msg)
 {
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeX = msg->m_codeY = 10;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = msg.m_codeY = 10;
     g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }

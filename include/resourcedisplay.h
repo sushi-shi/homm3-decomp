@@ -43,26 +43,26 @@ public:
         RESOURCE_BORDER_6_ID = 0x3f7
     };
 
-    // Before normalization: isSmall.
+    // Before normalization: IsSmall (earlier reconstruction: isSmall).
     unsigned char m_isSmall;
     // Before normalization: pad_35.
     // Dreamcast places IsSmall immediately before three alignment
     // bytes and the widget array; NH3API confirms the PC +0x34/+0x38 offsets.
     char m_paddingBeforeResourceWidgets[3];
-    // Before normalization: resourceWidgets.
+    // Before normalization: ResourceWidgets.
     textWidget* m_resourceWidgets[7];
-    // Before normalization: resourceBorders.
-    border* m_resourceBorders[7];
-    // Before normalization: resourceBackground.
-    bitmapBorder* m_resourceBackground;
-    // Before normalization: statusWidget.
-    textWidget* m_statusWidget;
+    // Before normalization: ResourceIconWidgets (earlier reconstruction: resourceBorders).
+    border* m_resourceIconWidgets[7];
+    // Before normalization: BackgroundWidget (earlier reconstruction: resourceBackground).
+    bitmapBorder* m_backgroundWidget;
+    // Before normalization: DayWidget (earlier reconstruction: statusWidget).
+    textWidget* m_dayWidget;
 
     // Before normalization (locals): is_small.
-    TResourceDisplay(heroWindow* parent, unsigned char isSmall);
+    TResourceDisplay(heroWindow* parent, bool isSmall);
     virtual ~TResourceDisplay();
     // Before normalization (function): TResourceDisplay::Update.
-    void update(unsigned char draw, unsigned char update);
+    void update(bool draw, bool update);
     // Before normalization (function): TResourceDisplay::Clear.
     void clear();
 };

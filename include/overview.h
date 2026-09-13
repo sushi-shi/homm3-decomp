@@ -111,7 +111,7 @@ public:
     TOverviewWindow();
     virtual ~TOverviewWindow();
     // Before normalization (function): TOverviewWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
     // Public because game::Overview drives the strip directly: retail
     // expands this body inline there (the seven-call loop plus the

@@ -24,12 +24,13 @@
 // (Correction of an earlier note that read the NOP fill at
 // 0x5a9d77..0x5a9d80 as proof the destructor was absent.)
 //
-// Absent from retail (documented, not forced): DrawNumber (DC :124)
-// and DrawSelector (DC :253) - both survive only /Ob2-inlined inside DrawIcons
-// 0x5a9db0 (the sprintf/SET_TEXT pair; three selector expansions at
-// msg slots -0x48/-0x68/-0x68). The `inline` definitions below
-// reproduce the absence under the non-/Gy profile (winfile Exists
-// precedent).
+// No standalone retail slot has been located for DrawNumber (DC :124)
+// or DrawSelector (DC :253). Their ordinary definitions remain in source
+// order below; VC6 expands their calls in DrawIcons. Removing the earlier
+// emission-suppressing inline keywords leaves every existing function byte
+// and relocation unchanged, while retaining two additional helper bodies
+// in the candidate object. Candidate emission does not establish retail
+// ownership, so those bodies have no address claims.
 #include <va.h>
 #include <stdio.h>
 #include "strip.h"
@@ -107,9 +108,9 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 }
 
 // E:\gamedcs\strip.cpp:124
-// No retail body: the single call site above is /Ob2-inlined into
-// DrawIcons (msg at its -0x28 slot); `inline` reproduces the absence.
-inline void strip::drawNumber(int i)
+// DC125 constructs message,126 sets its id; DrawIcons expands this ordinary
+// helper. The 12-state source-fact family preserves all five tracked bodies.
+void strip::drawNumber(int i)
 {
     message msg;
     msg.m_qualifier = 0;
@@ -123,104 +124,68 @@ inline void strip::drawNumber(int i)
     else
         msg.m_codeY = i + 133;
     msg.m_extraText = g_text;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
 }
 
 // E:\gamedcs\strip.cpp:139
-// Residual (93.37%): one basic block - the pos!=0 WIDGET_SET_IMAGE
-// broadcast at retail +0x163. Retail schedules
-//   frame load / base load (edx) / codeX store / lea-shl-sub (ecx) /
-//   cell load (eax) / call setup / extraText store
-// where this compile emits the call setup (`lea ecx,[ebp-0x20];
-// push ecx; mov ecx,[esi+0x68]`) first, computes the row index into
-// edx, and only then loads the base - into EAX, which takes the 5-byte
-// `A1` accumulator form where retail's edx takes the 6-byte modrm form
-// (the whole function is exactly 1 byte short of retail as a result,
-// so the byte multisets are NOT identical - this is register
-// allocation, not post-RA scheduling). The pos==0 twin of the same
-// block compiles retail-identical.
-//   The block is pinned between two defects. Any spelling that reads
-// the portrait name INLINE in the msg.extraText store gets retail's
-// early codeX store back but lets VC6 cross-jump this arm's closing
-// broadcast into the pos==0 arm's (78.11); reading it into a local
-// first breaks the merge but sinks the codeX store (93.37).
-// Tried and rejected (2026-08-08, 20 spellings): name local before
-// codeX (93.37, kept), `char*` local (93.37), row reference / row
-// pointer / base pointer / index locals (78.11 - all merge),
-// base-local + name-local pair (93.37), `(akHeroTraits+frame)->` and
-// `&...[0]` forms (93.37), plain inline (78.11), name local scoped in
-// braces or placed below the codeX store (78.11/84.59), extraText
-// before codeX (74.87), codeY=124 duplicated into both arms (73.55)
-// or into the else arm alone (77.44), a redundant `msg.extra=0` /
-// `msg.qualifier=0` / `msg.window=0` / `msg.id=` store ahead of the
-// read (78.68/73.40 - refutes the "two stores give the scheduler
-// slack" theory), if/else instead of the pos==0 early return (no
-// change), and all 24 permutations of the entry preamble. Statement
-// SEMANTICS match store for store on every path.
-//   2026-08-08 (closeout lane), instruction-level re-measure: the two
-// defects are ONE register-allocation decision, not two. Our compile
-// picks EAX for the base (`A1` accumulator form, 5 B) instead of
-// retail's EDX (`8B 15`, 6 B); EAX still holds `frame` until the
-// index chain's last `sub`, so an EAX base CANNOT be issued before
-// the chain and the load sinks below it - which then leaves the
-// closing broadcast schedule identical to the pos==0 arm's and lets
-// the cross-jumper fire. The pos==0 twin escapes only because its
-// extra `codeY = 122` store keeps EAX live across the base load, so
-// EDX gets picked there. Also re-measured today: base-pointer local
-// (`const THeroTraits* traits = akHeroTraits;`) is folded away
-// entirely - byte-identical to the plain inline, 78.11, not a
-// distinct spelling. No source-level lever reaches the EDX choice
-// without emitting a store retail does not have.
+// DC140 constructs message,141 sets MESSAGE_WIDGET, and 143 tests pos.
+// The shared constructor owns zero initialization. Removing the redundant
+// caller stores and obsolete portrait const_casts is byte-neutral.
+// Residual (93.1783%): the constructor expansion retains an extra codeX=0
+// store before the branch. In the pos!=0 portrait arm, VC6 selects EAX for
+// the traits base and EDX for the row index; retail uses EDX/ECX and loads
+// the base before storing codeX. All eleven CFG blocks and ten named calls
+// align apart from these instruction/size differences.
+// The named portrait snapshot below avoids a different suffix merge. Prior
+// direct-expression, row/base bindings and initialization-order controls
+// did not resolve it; those bounded probes do not prove that no natural
+// source form can produce retail's allocation. DC204 sets codeX and 205
+// stores the portrait; no named portrait local is recorded.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::drawOwner(int frame)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     if (m_pos == 0) {
         if (m_iconFrame == -1) {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
             msg.m_codeY = 100;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
             msg.m_codeY = 122;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
         } else if (m_icons == STRIP_PORTRAIT_FRAME_SET) {
             msg.m_codeY = 100;
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = frame;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
             msg.m_codeY = 122;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
         } else {
             msg.m_codeY = 122;
             msg.m_codeX = widget::WIDGET_SET_IMAGE;
-            msg.m_extraText = const_cast<char*>(g_heroTraits[frame].m_largePortraitName);
-            m_win->broadcastMessage(&msg);
+            msg.m_extraText = g_heroTraits[frame].m_largePortraitName;
+            m_win->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
             msg.m_codeY = 100;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
-            m_win->broadcastMessage(&msg);
+            m_win->broadcastMessage(msg);
         }
         msg.m_codeY = 123;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        m_win->broadcastMessage(&msg);
+        m_win->broadcastMessage(msg);
         return;
     }
     msg.m_codeY = 124;
@@ -233,16 +198,16 @@ void strip::drawOwner(int frame)
         // above the claim).
         const char* name = g_heroTraits[frame].m_largePortraitName;
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
-        msg.m_extraText = const_cast<char*>(name);
-        m_win->broadcastMessage(&msg);
+        msg.m_extraText = name;
+        m_win->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
     }
     msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
     msg.m_codeY = 125;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
 }
 
 // E:\gamedcs\strip.cpp:221
@@ -262,19 +227,19 @@ void strip::drawMonster(int i, int frame)
     if (frame == 0) {
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        m_win->broadcastMessage(&msg);
+        m_win->broadcastMessage(msg);
         if (m_pos == 0)
             msg.m_codeY = i + 108;
         else
             msg.m_codeY = i + 133;
-        m_win->broadcastMessage(&msg);
+        m_win->broadcastMessage(msg);
     } else {
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = frame;
-        m_win->broadcastMessage(&msg);
+        m_win->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        m_win->broadcastMessage(&msg);
+        m_win->broadcastMessage(msg);
     }
     if (m_pos == 0)
         msg.m_codeY = i + 115;
@@ -282,14 +247,14 @@ void strip::drawMonster(int i, int frame)
         msg.m_codeY = i + 140;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
 }
 
 // E:\gamedcs\strip.cpp:253
-// No retail body: all three call sites are /Ob2-inlined into
-// DrawIcons; `inline` reproduces the absence. i counts 1..7 for army
-// slots and 0 for the owner's selector widget.
-inline void strip::drawSelector(int i)
+// Ordinary helper expanded at all three DrawIcons call sites. DC254
+// constructs message and 255 sets its id. i counts 1..7 for army slots and
+// zero for the owner's selector widget.
+void strip::drawSelector(int i)
 {
     message msg;
     msg.m_qualifier = 0;
@@ -310,5 +275,5 @@ inline void strip::drawSelector(int i)
     }
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(&msg);
+    m_win->broadcastMessage(msg);
 }

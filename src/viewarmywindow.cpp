@@ -28,15 +28,6 @@
 
 
 
-// The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
-// 48 bytes sitting in this TU's own band that
-// config/retail-functions.tsv has NO row for (the 0x5f4850 row's 2007
-// bytes end at 0x5f5027 and the next row is 0x5f5060 - a carve defect,
-// reported not fixed). The body is
-// `if (msg->codeX == 13 && !(msg->qualifier & 0x200)) { msg->id =
-// MESSAGE_WIDGET; msg->codeX = 10; msg->codeY = OK_ID; return
-// MESSAGE_DISPATCH_FORWARD; } return 0;`. DECLARED ONLY - defining it
-// would put an unpaired function in this object.
 // Before normalization (function): ViewArmyCastSpellHandler.
 int viewArmyCastSpellHandler(message& msg);
 
@@ -84,62 +75,6 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 DATA(0x006a57bc) extern const char* g_moraleTexts[42];
 DATA(0x006a532c) extern const char* g_luckTexts[25];
 
-// The five inlined-away rows, spelled as the Dreamcast members they
-// are. `inline` (not a plain out-of-line definition) is what models
-// retail's link: each of the three constructors expands them, nothing
-// references the COMDAT, and /OPT:REF drops it - which is why the carve
-// has no row for any of the five. Spending the /Ob2 budget on them here
-// is also what keeps basic_string::_Tidy and the [-3, 3] selector OUT
-// of line in the constructor, exactly as retail has them.
-
-// Before normalization (locals): this_hero.
-inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
-{
-    bitmapBorder* plate = new bitmapBorder(
-        0, 0, 298, 311, BACKGROUND_ID,
-        DATA_COMPGEN(0x0068c698, viewArmyPlate, "CrStkPU.pcx"),
-        0x800);
-    plate->setPlayerPaletteColors(
-        thisHero != 0 && thisHero->m_owner >= 0
-            ? thisHero->m_owner
-            : g_game->getLocalPlayerGamePos());
-    m_widgets.push_back(plate);
-}
-
-inline void TViewArmyWindow::createNameWidget(const char* name)
-{
-    m_widgets.push_back(new textWidget(
-        20, 21, 258, 19, name, "smalfont.fnt",
-        font::HEADING, NAME_ID, 5, 0, 8));
-}
-
-// Before normalization (locals): new_morale.
-inline void TViewArmyWindow::createMoraleWidget(int newMorale)
-{
-    m_widgets.push_back(new iconWidget(
-        23, 189, 42, 38, MORALE_ID,
-        DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
-        limit(-3, newMorale, 3) + 3, 0, 0, 0, 0x10));
-}
-
-// Before normalization (locals): new_luck.
-inline void TViewArmyWindow::createLuckWidget(int newLuck)
-{
-    m_widgets.push_back(new iconWidget(
-        77, 189, 42, 38, LUCK_ID,
-        DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
-        limit(-3, newLuck, 3) + 3, 0, 0, 0, 0x10));
-}
-
-inline void TViewArmyWindow::createRolloverWidget()
-{
-    m_rolloverWidget = new bitmapBackedTextWidget(
-        7, 285, 284, 19, 0, "smalfont.fnt",
-        DATA_COMPGEN(0x0068c674, viewArmyRolloverBack, "VARBack.pcx"),
-        font::PRIMARY, ROLLOVER_ID, 1, 8);
-    m_widgets.push_back(m_rolloverWidget);
-}
-
 // The single-stack popup: one army's whole record laid out over the
 // 298x311 CrStkPU.pcx plate. EH-bearing (`push -1 / push __ehhandler$ /
 // fs:[0]`) with thirteen unwind states, one per live widget allocation
@@ -164,9 +99,26 @@ inline void TViewArmyWindow::createRolloverWidget()
 // deleting both without GetName gives 87.4391 with the typed member.
 // The append correction is score-flat because the report masks relocation
 // names; its evidence is the actual retail calls, not that scalar score.
-// The current call sequence now recovers both mem-init _Tidy calls, reserve's
-// size/_Destroy calls, and the morale temporary's _Tidy. The luck temporary
-// still expands its cleanup (34 conditional branches versus retail's 31).
+// The battle constructor now recovers all 67 retail CFG blocks, 31 branches
+// and the fourth _Tidy call for the luck temporary. Canonical max (DC65),
+// getOwningSide (DC81), and getControllingSide in the Complete-only action
+// gate replace the copied selector/accessor expressions. The background's
+// two palette-call arms and morale/luck member ownership recover further
+// retail schedules. The full checkpoint measures 97.2049. Seven blocks
+// still differ: the max argument home (-0x18 versus retail -0x1c) and five
+// morale/luck setup blocks with different local homes/register schedules.
+// The callback's former windowHandler+0x7e0 label is resolved by its own
+// verified 43-byte claim; it contributes no runtime offset.
+//
+// Bounded controls: separate/direct melee getter, pointer/reference traits
+// bindings, scalar attack/flag types, adjacent declarator lists, braces on
+// the real town/OK arms, and frame-bias operand order do not close the gap.
+// A single traits alias with direct accesses to the other row changes retail
+// loads and nested inlining; keep both cached rows. DC proves a const traits
+// reference, but its optimized home does not identify which row it names.
+// Moving the null-town initialization earlier reaches 97.6487 and recovers
+// more stack homes, but does not prove a Complete source-order difference;
+// preserve the observed DC order pending stronger retail evidence.
 //
 // Remaining nested-inline/lifetime differences are not permission to
 // manufacture compiler work. Earlier bounded controls: mem-init depth 1/2
@@ -207,8 +159,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     int attack = thisArmy->getAdjustedAttack(0, shooting);
     int defense = thisArmy->getAdjustedDefense(0, 1);
     if (shooting) {
-        int melee = thisArmy->getAdjustedAttack(0, 0);
-        attack = cppMax(attack, melee);
+        attack = max(attack, thisArmy->getAdjustedAttack(0, 0));
     }
 
     m_widgets.reserve(NWIDGETS);
@@ -227,53 +178,52 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
                            stackTraits->m_townType, thisArmy->m_numTroops);
     createAttackWidget(typeTraits->m_attackSkill, attack);
     createDefenseWidget(typeTraits->m_defenseSkill, defense);
-    createShotsWidget(stackTraits, typeTraits->m_numShots,
+    createShotsWidget(*stackTraits, typeTraits->m_numShots,
                         stackTraits->m_numShots);
-    createDamageWidget(stackTraits, thisArmy->getController());
+    createDamageWidget(*stackTraits, thisArmy->getController());
     createHitpointsWidget(typeTraits->m_hitPoints, stackTraits->m_hitPoints);
     createHitpointsLeftWidget(stackTraits->m_hitPoints
                                  - thisArmy->m_topCreatureDamage);
     createSpeedWidget(typeTraits->m_speed, thisArmy->getSpeed());
 
-    m_morale = thisArmy->getMorale(0);
-    createMoraleWidget(m_morale);
+    createMoraleWidget(thisArmy->getMorale(0));
 
-    int side = thisArmy->m_combatSide;
-    const hero* ourHero = thisArmy->getOwner();
-    const town* ourTown = 0;
-    armyGroup* ourGroup = g_combatManager->m_armyGroups[side];
-    const hero* enemyHero = g_combatManager->m_heroes[1 - side];
-    const armyGroup* enemyGroup = g_combatManager->m_armyGroups[1 - side];
+    int side = thisArmy->getOwningSide();
+    hero* thisHero = thisArmy->getOwner();
+    hero* enemyHero = g_combatManager->m_heroes[1 - side];
+    armyGroup* group = g_combatManager->m_armyGroups[side];
+    armyGroup* enemies = g_combatManager->m_armyGroups[1 - side];
     unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
+    const town* ourTown = 0;
     if (side == 1)
         ourTown = g_combatManager->m_defendingTown;
     // DC lines 98/107 append the returned strings, and retail retains the
     // append calls. Complete reloads ArmyType for each added creature arg.
-    m_moraleHelp += ourGroup->getMoraleDescription(
-        m_armyType, m_morale, ourHero, ourTown,
-        enemyHero, enemyGroup, g_combatManager->m_magicTerrain,
+    m_moraleHelp += group->getMoraleDescription(
+        m_armyType, m_morale, thisHero, ourTown,
+        enemyHero, enemies, g_combatManager->m_magicTerrain,
         groupAlignments);
 
-    m_luck = thisArmy->getLuck(0);
-    createLuckWidget(m_luck);
-    m_luckHelp += ourGroup->getLuckDescription(
-        m_armyType, m_luck, ourHero, ourTown,
-        enemyHero, enemyGroup, g_combatManager->m_magicTerrain);
+    createLuckWidget(thisArmy->getLuck(0));
+    m_luckHelp += group->getLuckDescription(
+        m_armyType, m_luck, thisHero, ourTown,
+        enemyHero, enemies, g_combatManager->m_magicTerrain);
 
     createSpellInfluenceWidgets(thisArmy);
     if (showOk)
         createOkWidget();
 
-    // The message strip along the bottom, kept in RolloverWidget so
-    // WindowHandler can retarget its text.
+    // Complete places the rollover before the Faerie Dragon action slot;
+    // retail calls this builder before the button/blurb branch. The older
+    // DC rows 113/114 instead put its blurb before create_rollover_widget.
+    // WindowHandler retains this widget to retarget its text.
     createRolloverWidget();
 
     // The bottom-left action slot: the Faerie Dragon's own cast button
     // when it is this side's turn and the stack still has its spell,
     // otherwise the creature's special-ability blurb.
     if (showOk
-            && (thisArmy->m_spellInfluence[60] ? 1 - thisArmy->m_combatSide
-                                         : thisArmy->m_combatSide)
+            && thisArmy->getControllingSide()
                    == g_combatManager->m_currentSide
             && thisArmy->m_creatureType == CREATURE_FAERIE_DRAGON
             && stackTraits->m_hasSpell > 0
@@ -283,7 +233,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
             "Box46x32.pcx",  // pooled with create_upgrade_widget's 0x68c664
             0x800));
         m_widgets.push_back(new type_func_button(
-            75, 237, 46, 32, OK_ID,
+            75, 237, 48, 36, OK_ID,
             DATA_COMPGEN(0x0066ffd4, viewArmyCastButton, "icm005.def"),
             viewArmyCastSpellHandler, 0, 1));
     } else if (stackTraits->m_specialAbility) {
@@ -304,6 +254,10 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 // the virtual destructor below and precedes the remaining out-of-line rows.
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
+// Current group-constructor score: 88.5394 versus the preceding 91.1781;
+// HIST retains 97.4452. The background's recorded palette-call arms and the
+// morale/luck helpers' owning member stores are positive source facts. Keep
+// those boundaries while recovering this caller's remaining nested inlining.
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
@@ -385,20 +339,18 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     createAttackWidget(typeTraits->m_attackSkill, traits.m_attackSkill);
     createDefenseWidget(typeTraits->m_defenseSkill, traits.m_defenseSkill);
-    createShotsWidget(&traits, traits.m_numShots, traits.m_numShots);
-    createDamageWidget(&traits, thisHero);
+    createShotsWidget(traits, traits.m_numShots, traits.m_numShots);
+    createDamageWidget(traits, thisHero);
     createHitpointsWidget(typeTraits->m_hitPoints, traits.m_hitPoints);
     createSpeedWidget(typeTraits->m_speed, traits.m_speed);
 
-    m_morale = group->getArmyMorale(iarmy, thisHero, thisTown, -1,
-                                  groupAlignments, 0);
-    createMoraleWidget(m_morale);
+    createMoraleWidget(group->getArmyMorale(
+        iarmy, thisHero, thisTown, -1, groupAlignments, 0));
     m_moraleHelp = group->getMoraleDescription(
         m_armyType, m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
 
-    m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
-    createLuckWidget(m_luck);
+    createLuckWidget(group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1));
     m_luckHelp = group->getLuckDescription(
         m_armyType, m_luck, thisHero, thisTown,
         0, 0, -1);
@@ -537,8 +489,8 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
     createDefenseWidget(traits->m_defenseSkill, traits->m_defenseSkill);
-    createShotsWidget(traits, traits->m_numShots, traits->m_numShots);
-    createDamageWidget(traits, 0);
+    createShotsWidget(*traits, traits->m_numShots, traits->m_numShots);
+    createDamageWidget(*traits, 0);
     createHitpointsWidget(traits->m_hitPoints, traits->m_hitPoints);
     createSpeedWidget(traits->m_speed, traits->m_speed);
 
@@ -709,7 +661,7 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // - see the width sweep recorded at that declaration.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
-int TViewArmyWindow::windowHandler(message* msg)
+int TViewArmyWindow::windowHandler(message& msg)
 {
     // Before normalization (locals): bExitFlag, iResType, army_type, upgrade_type, shown_type.
     unsigned char exitFlag;
@@ -720,9 +672,9 @@ int TViewArmyWindow::windowHandler(message* msg)
         return result;
 
     exitFlag = 0;
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->m_codeX == widget::WIDGET_SELECT
-            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
             // `text.assign(...)` at all seven help-text stores, not
             // `text = ...`: basic_string::operator= is a forwarder to
             // assign that CARRIES the assign call, so spelling the deeper
@@ -730,7 +682,7 @@ int TViewArmyWindow::windowHandler(message* msg)
             // rejected on top of it: `.append` for the four `text +=`
             // stores (byte-flat) and a named `const std::string& rclick`
             // for the default arm's subscript (72.70).
-            int helpID = convertID2HelpID(msg->m_codeY);
+            int helpID = convertID2HelpID(msg.m_codeY);
             int resType = -1;
             std::string text;
             switch (helpID) {
@@ -775,9 +727,9 @@ int TViewArmyWindow::windowHandler(message* msg)
                 normalDialog(text.c_str(), 4, -1, -1, resType, 0, -1, 0,
                              -1, 0, -1, 0);
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        if (msg->m_codeX == widget::WIDGET_DESELECT) {
-            switch (msg->m_codeY) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            switch (msg.m_codeY) {
             case UPGRADE_ID: {
                 long cost[7];
                 int amount;
@@ -818,8 +770,8 @@ int TViewArmyWindow::windowHandler(message* msg)
                 break;
             }
         }
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastViewArmyHoverId) {
             const char* rollover = g_emptyRolloverText;
             g_lastViewArmyHoverId = hoverID;
@@ -891,10 +843,10 @@ int TViewArmyWindow::windowHandler(message* msg)
     }
 
     if (exitFlag) {
-        msg->m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg->m_codeY;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -910,6 +862,59 @@ int TViewArmyWindow::windowHandler(message* msg)
                 VIEW_ARMY_DELAY);
     }
     return MESSAGE_DISPATCH_CONSUME;
+}
+
+// Complete-only Faerie Dragon cast-button callback. The battle constructor
+// takes 0x5f5030 as its handler address. Its two returns end at 0x5f505a;
+// the five NOPs before the next function at 0x5f5060 are padding, so the
+// missing retail inventory row owns 43 bytes. The authored fastcall
+// message-reference body reproduces all 43 bytes without relocations.
+// Before normalization (function): ViewArmyCastSpellHandler.
+VA(0x005f5030, 0x2B)  // Complete-only callback: address taken by battle constructor
+int viewArmyCastSpellHandler(message& msg)
+{
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = TViewArmyWindow::OK_ID;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return 0;
+}
+
+// The five inline helpers keep one definition and their source calls. Their
+// relative positions follow DC rows 617/635, 809/823 and 917. Retail expands
+// them in the constructors and retains no standalone bodies. Their real
+// branches and member accesses affect the callers' nested string cleanup and
+// selector inlining. A 32-state explicit/ordinary inline diagnostic leaves
+// the battle constructor byte-neutral under /Ob2; ordinary forms additionally
+// emit unpaired helper bodies. That does not establish new retail claims.
+
+// Before normalization (locals): this_hero.
+inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
+{
+    bitmapBorder* plate = new bitmapBorder(
+        0, 0, 298, 311, BACKGROUND_ID,
+        DATA_COMPGEN(0x0068c698, viewArmyPlate, "CrStkPU.pcx"),
+        0x800);
+    // DC rows 620/622/623 give the two palette-call arms; SH4 merges the
+    // final call. In the battle constructor, the shared ternary-call probe
+    // changes the following widget insert/GetName schedules. These original
+    // arms recover their retail instructions under VC6.
+    if (thisHero != 0 && thisHero->m_owner >= 0) {
+        plate->setPlayerPaletteColors(thisHero->m_owner);
+    } else {
+        plate->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    }
+    m_widgets.push_back(plate);
+}
+
+inline void TViewArmyWindow::createNameWidget(const char* name)
+{
+    m_widgets.push_back(new textWidget(
+        20, 21, 258, 19, name, "smalfont.fnt",
+        font::HEADING, NAME_ID, 5, 0, 8));
 }
 
 // The creature portrait: the town-alignment backdrop, the creature's own
@@ -996,54 +1001,30 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 // its `skill >= 2 ? 1 : 0` floor folds to `xor edi,edi` for skill 0,
 // which is what fixes the index as Attack.
 //
-// EXACT 2026-08-21 (96.4286 -> 100.0): the body was byte-identical to retail
-// up to and including the second textWidget, and diverged by ONE inline decision
-// inside the last push_back's growth path. Dinkumware's `insert` needs
-// the vector's size twice - once folded into `max(size(), 1)`, once for
-// the new capacity - and retail CALLS vector::size() for the second one
-// where our budget expands it (one extra conditional branch, base 21 vs
-// retail 20). A7 /Ob2 budget, not a spelling: the two SIBLING builders
-// with the identical three-push_back shape, create_portrait_widget and
-// create_shots_widget, are EXACT and retail inlines the same size()
-// there - what separates this row is that its own two GetPrimarySkill
-// expansions spend budget the siblings do not. Tried and rejected:
-// `#pragma inline_depth(2)` around the last push_back (an exact no-op -
-// VC6 expands bottom-up, so the depth counter never exceeds 1 and only
-// depth 0 does anything, which would cost the push_back itself), and
-// the Dreamcast's own `const TCreatureTypeTraits&` parameter, which is
-// byte-identical here and only renames the row.
-// RE-OPENED 2026-08-20 with the if(0) instrument, and the deficit was
-// now QUANTIFIED: one dead `Widgets.size();` site ahead of the last
-// push_back measures 100.0000 EXACT - the whole residual is precisely
-// one minimal /Ob2 candidate charge our source lacks before that site.
-// insert(end(), x) buys the site but
-// rewrites the push_back's own expansion (95.4595, below the plateau),
-// and a self-assignment dose carries caller cb, the wrong axis (this
-// row needs a CHARGE, i.e. our budget run DOWN). Same conclusion as
-// type_garrison_base_window's "one <=0x28 inline call after widget 42":
-// the honest source difference is a small inline call retail's compile
-// priced here that our headers did not present.
+// DC 707 types traits as const TCreatureTypeTraits&, and row 708 calls
+// TTextResource::operator[]. Restoring both interfaces and all three callers
+// preserves the 706 retail instruction bytes after the legitimate function
+// name/exception-handler owner relabeling. The shots helper has the same
+// reference/accessor evidence at rows 735/738 and preserves its 669 bytes.
 //
-// The missing honest carrier is conventional release VERIFY. After the
-// first push_back, `VERIFY(!Widgets.empty())` is a valid invariant; its
-// release expansion below lets VC6 price vector::empty(), then erases the
-// result. It produces no runtime check yet makes the last growth path exact,
-// including all 20 branches and two returns. ASSERT/TRACE-style preprocessor
-// elision cannot supply that charge. Retail cannot prove the macro's spelling,
-// so the source keeps its release expansion rather than asserting the name.
+// The former !Widgets.empty() release-invariant experiment is unnecessary
+// in the current compiler context. Its removal is byte-neutral independently
+// of these two source corrections in the nine-state, six-consumer family.
+// The older one-inline-site budget explanation does not justify retaining
+// the expression. No VERIFY, dummy size call, or depth override remains here.
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
-void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits* traits,
+void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
                                            // Before normalization (locals): our_hero.
                                            const hero* ourHero)
 {
     m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
-    int low = traits->m_damageLowBound;
-    int high = traits->m_damageHighBound;
+    int low = traits.m_damageLowBound;
+    int high = traits.m_damageHighBound;
     if (ourHero != 0 && m_armyType == CREATURE_BALLISTA) {
         low *= ourHero->getPrimarySkill(0) + 1;
         high *= ourHero->getPrimarySkill(0) + 1;
@@ -1056,8 +1037,6 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits* traits,
                                     "%d - %d"),
                 low, high);
 
-    // Conventional release expansion of VERIFY(!Widgets.empty()).
-    static_cast<void>(!m_widgets.empty());
     m_widgets.push_back(new textWidget(
         154, 103, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, DAMAGE_ID, 6, 0, 8));
@@ -1069,15 +1048,15 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits* traits,
 // the same presentation the primary skills use, on one shared y.
 // E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
-void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits* traits,
+void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
                                           // Before normalization (locals): normal_shots,
                                           // current_shots.
                                           int normalShots, int currentShots)
 {
-    if (traits->m_attributes & g_ctaShooter) {
+    if (traits.m_attributes & g_ctaShooter) {
         m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
-            g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
+            (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],
             "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
         if (normalShots == currentShots)
@@ -1142,22 +1121,32 @@ void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 // Speed values are clamped to zero before the usual base/modified display.
 // The zero-first max ordering is retail-significant: it selects the
 // zero temporary when the input is exactly zero as well as when negative.
-// Residual (99.9611%): the by-value/reference helper reproduces both clamps
-// and all 19 branches exactly. Only the central-text pointer-chain schedule
-// differs, as in the two hitpoint rows.
+// Both clamps use the canonical by-value max wrapper. Direct cppMax<int>
+// references omit two retail argument-copy stores and score 98.7432%; max
+// restores all 702 bytes, including stack homes. The five-state family
+// 5f3d6d62ff32e9f39fc4 reproduces all candidates and preserves all 22 siblings.
+// Fixing only the first or second clamp scores 99.5525% or 99.6109%.
+// DC 0x1926d4, line 792 calls limit(0, speed, 20) twice; Complete removes
+// that upper cap and retains only the lower clamps. The old limit form is
+// a negative control (87.0272%), not retail behavior to restore.
+// DC line 790 also proves the text-resource subscript. Restoring that
+// canonical accessor is byte-neutral here; all 23 scores hold in the
+// four-state accessor/clamp family b6c3c9bd8f233401dd9b. The remaining audit
+// finding is the documented platform change from limit to max.
 // E:\gamedcs\viewarmywindow.cpp:789
+// Before normalization (function): TViewArmyWindow::create_speed_widget.
 // Before normalization (locals): normal_speed, current_speed.
-VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
+VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats, dc 0x1926d4
 void TViewArmyWindow::createSpeedWidget(int normalSpeed,
                                           int currentSpeed)
 {
     m_widgets.push_back(new textWidget(
         154, 161, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED],
         "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
-    normalSpeed = cppMax<int>(0, normalSpeed);
-    currentSpeed = cppMax<int>(0, currentSpeed);
+    normalSpeed = max(0, normalSpeed);
+    currentSpeed = max(0, currentSpeed);
     if (normalSpeed == currentSpeed)
         sprintf(g_text, "%d", normalSpeed);
     else
@@ -1166,6 +1155,32 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
     m_widgets.push_back(new textWidget(
         154, 161, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, SPEED_ID, 6, 0, 8));
+}
+
+// Before normalization (function/parameter): create_morale_widget/new_morale.
+// DC 0x1927ea stores the member before allocation; 0x1927f6 reloads it for
+// limit. Retail's battle constructor likewise reloads +0x68 after allocation.
+// The helper owns this store; caching the getter result in each caller loses
+// that reload. The group constructor uses the same canonical helper.
+inline void TViewArmyWindow::createMoraleWidget(int newMorale)
+{
+    m_morale = newMorale;
+    m_widgets.push_back(new iconWidget(
+        23, 189, 42, 38, MORALE_ID,
+        DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
+        limit(-3, m_morale, 3) + 3, 0, 0, 0, 0x10));
+}
+
+// Before normalization (function/parameter): create_luck_widget/new_luck.
+// DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
+// store-then-reload ownership as createMoraleWidget.
+inline void TViewArmyWindow::createLuckWidget(int newLuck)
+{
+    m_luck = newLuck;
+    m_widgets.push_back(new iconWidget(
+        77, 189, 42, 38, LUCK_ID,
+        DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
+        limit(-3, m_luck, 3) + 3, 0, 0, 0, 0x10));
 }
 
 // The fixed three-slot row shows the newest standing spell influences. The
@@ -1330,6 +1345,15 @@ void TViewArmyWindow::createDismissWidget()
         0, 1, 0, 0, 2);
     dismiss->setHotkey(32);
     m_widgets.push_back(dismiss);
+}
+
+inline void TViewArmyWindow::createRolloverWidget()
+{
+    m_rolloverWidget = new bitmapBackedTextWidget(
+        7, 285, 284, 19, 0, "smalfont.fnt",
+        DATA_COMPGEN(0x0068c674, viewArmyRolloverBack, "VARBack.pcx"),
+        font::PRIMARY, ROLLOVER_ID, 1, 8);
+    m_widgets.push_back(m_rolloverWidget);
 }
 
 // COMDAT pairing: basic_string<char>::assign(const basic_string&, size_t,

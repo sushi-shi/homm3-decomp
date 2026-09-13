@@ -115,11 +115,12 @@ public:
     // and the one combatManager's morale/damage bodies print through.
     // Before normalization (function): TCombatWindow::combat_message.
     // Before normalization (locals): new_text.
-    void combatMessage(const char* newText, unsigned char keep,
-                        unsigned char priority);
+    // DC public QAAXPBD_N1 proves native bool for keep and priority.
+    void combatMessage(const char* newText, bool keep, bool priority);
     // combatwindow.cpp:603, DC 0x6a264; retail body 0x473290.
     // Before normalization (function): TCombatWindow::DrawChatText.
     void drawChatText(unsigned char update);
+    void onChatActivate(unsigned char active);
 };
 SIZE(TCombatWindow, 0x8c);
 

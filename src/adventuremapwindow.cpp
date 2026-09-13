@@ -1543,8 +1543,15 @@ void TAdventureMapWindow::clearBottomView()
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1253
+// DC public ?UpdateResourceDisplay@TAdventureMapWindow@@QAAX_N0@Z
+// proves native bools despite the lowered T_UCHAR formal records. Both this
+// forwarding interface and TResourceDisplay::update must preserve that ABI:
+// a byte-to-bool boundary inserts two setne conversions absent at 0x403f00.
+// Retail has the !draw reset and unconditional two-argument Update only.
+// DC1257's update guard and DC1261's UpdateScreen call are port-specific;
+// the 30-byte retail body has neither extra branch nor screen update.
 VA(0x00403f00, 0x1E)  // anchor-global, dc 0x11bc
-void TAdventureMapWindow::updateResourceDisplay(unsigned char draw, unsigned char update)
+void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 {
     if (!draw)
         update = 0;
@@ -1621,7 +1628,7 @@ void TAdvMenu::~TAdvMenu()
 
 // E:\gamedcs\adventuremapwindow.cpp:1486
 DC_ONLY(0x1ab8, 0x64E)
-int TAdvMenu::windowHandler(message* msg)
+int TAdvMenu::windowHandler(message& msg)
 {
     // @stub
 }

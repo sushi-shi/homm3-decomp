@@ -7,6 +7,7 @@
 
 #include <va.h>
 #include "abstractfile.h"
+#include "artifact_type.h"
 
 // This header used to pull in "game.h" for its consumers' convenience.
 // It cannot any more: game.h owns `class game`, whose hero array needs
@@ -755,51 +756,7 @@ const unsigned int g_ctaNoMorale = 0x20000;
 // Before normalization: CTA_ALIVE.
 const unsigned int g_ctaAlive = 0x10;
 
-// Artifact ids as the IsWieldingArtifact gates surface them (NH3API
-// artifact.hpp spellings; every name is corroborated by the byte-
-// proven behavior at its call site). 0x54 zeroes POSITIVE morale
-// (GetArmyMorale 0x44b23a); 0x55 zeroes luck for BOTH sides when
-// either hero wields it (GetLuck 0x44b2e4). The rest are
-// get_spell_work_chance's immunity gates: the eight pendants block
-// exactly their lore spells, the Badge blocks the mind family, the
-// Sphere of Permanence blocks Dispel, the Orb of Vulnerability makes
-// work certain, and 0x86 - Power of the Dragon Father - blocks
-// level<=4 spells (the decode note's "Orb of Inhibition" inference
-// does not survive the NH3API roster: inhibition is 0x7e).
-enum EArtifactId {
-    // combatManager::can_cast_spells (0x41f890) gates a hero cast on
-    // slot 0 and then refuses every cast when either combat hero
-    // wields 0x7e - the pair the decode note above already calls out
-    // (spellbook first, inhibition 0x7e).
-    ARTIFACT_SPELLBOOK = 0x0,
-    ARTIFACT_BADGE_OF_COURAGE = 0x31,
-    ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54,
-    ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55,
-    // The two obstacle-penalty bows: combatManager::ShotIsThroughWall
-    // (0x467510) waives the town-wall penalty for a shooter whose own
-    // hero wields either of them, pushing 0x5b then 0x89 into
-    // hero::IsWieldingArtifact. Exactly two artifacts in HoMM3 cancel
-    // the obstacle/wall penalty - the Golden Bow and its combination
-    // successor, the Bow of the Sharpshooter - so the semantics pin
-    // the pairing. NH3API spellings; both values retail-proven by the
-    // pushed immediates. (0x89 is also CREATURE_SHARPSHOOTER's id in
-    // the unrelated creature domain - a coincidence of numbering, not
-    // a shared enum.)
-    ARTIFACT_GOLDEN_BOW = 0x5b,
-    ARTIFACT_SPHERE_OF_PERMANENCE = 0x5c,
-    ARTIFACT_ORB_OF_VULNERABILITY = 0x5d,
-    ARTIFACT_PENDANT_OF_DISPASSION = 0x64,
-    ARTIFACT_PENDANT_OF_SECOND_SIGHT = 0x65,
-    ARTIFACT_PENDANT_OF_HOLINESS = 0x66,
-    ARTIFACT_PENDANT_OF_LIFE = 0x67,
-    ARTIFACT_PENDANT_OF_DEATH = 0x68,
-    ARTIFACT_PENDANT_OF_FREE_WILL = 0x69,
-    ARTIFACT_PENDANT_OF_NEGATIVITY = 0x6a,
-    ARTIFACT_PENDANT_OF_TOTAL_RECALL = 0x6b,
-    ARTIFACT_ORB_OF_INHIBITION = 0x7e,
-    ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86,
-    ARTIFACT_BOW_OF_THE_SHARPSHOOTER = 0x89
-};
+
 
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
@@ -1000,8 +957,8 @@ SIZE(armyGroup, 56);
 // Before normalization (function): get_spell_work_chance.
 // Before normalization (locals): target_army_type, casting_hero, target_hero.
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
-                            const class hero* castingHero,
-                            const class hero* targetHero);            // 0x44a4d0
+                            const class hero* const castingHero,
+                            const class hero* const targetHero);      // 0x44a4d0
 // Before normalization (function): modify_spell_damage.
 long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
 

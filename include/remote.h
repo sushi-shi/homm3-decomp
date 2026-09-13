@@ -324,7 +324,8 @@ public:
     // no retail out-of-line copy survives. The DC public decoration proves
     // that the original member is non-const.
     // Before normalization (function): CChatManager::ChatChanged.
-    unsigned char chatChanged() { return m_changed || m_chatKilled; }
+    // DC public ?ChatChanged@CChatManager@@QAA_NXZ proves native bool.
+    bool chatChanged() { return m_changed || m_chatKilled; }
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);

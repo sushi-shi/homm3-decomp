@@ -454,10 +454,13 @@ unsigned long GameTime::get()
 // pump included); the guard/bottom timeGetTime pair is the rotated
 // while condition. Signed wrap-safe compare, DC prototype's unsigned
 // arg.
+// DC831's hoisted indirect call resolves to IsPast (r9 loaded from e80e0
+// at e8076). Keep the canonical predicate and its ElapsedSince/Elapsed
+// chain; the loop exits when IsPast is true in both architectures.
 VA(0x004f82f0, 0xCD)  // linkorder, dc 0xe806c
 void GameTime::delayTil(unsigned long time)
 {
-    while (static_cast<int>(get() - time) < 0) {
+    while (!GameTime::isPast(time)) {
         process1WindowsMessage();
         pollSound();
     }
@@ -469,7 +472,7 @@ void GameTime::delayTil(unsigned long time)
 VA(0x004f83c0, 0xD0)  // linkorder, dc 0xe8098
 void GameTime::delay(int interval)
 {
-    delayTil(get() + interval);
+    GameTime::delayTil(GameTime::get() + interval);
 }
 
 #if 0  // @carcass

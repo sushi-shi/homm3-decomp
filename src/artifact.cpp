@@ -15,10 +15,11 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
-// Retail retains bitset<19>::_Tidy for the first slot-mask initializer.  An
-// explicit class instantiation before this TU's first bitset use makes VC6
-// emit that canonical Dinkumware COMDAT; the linker may discard the other
-// unreferenced members independently.
+// Retail retains bitset<19>::_Tidy and set. The explicit class instantiation
+// currently supplies set's retained body; real uses already emit _Tidy.
+// Removing it is flat for InitializeArtifactTraitsTable at 80.8218% but
+// loses the exact set enrollment. It does not recover the proxy-to-set
+// inline boundary below; the declaration's original presence is unproven.
 template class std::bitset<19>;
 namespace {
 
@@ -195,8 +196,18 @@ static void initializeArtifactTraits(int id,
 // a char*& buffer parameter to the helper is a weaker retail hypothesis.
 // The resource guards and static array owners reproduce retail cleanup.
 //
-// Residual (81.376236%): the nested bitset<19> _Tidy and equality calls stay
-// out of line where retail expands them. The first size loop still hoists
+// Retail owns two pooled char arrays (0x694c90/0x694c98), each with a
+// guarded allocation and atexit destructor, rather than DC's per-string
+// TAutoStrPtr arrays and vector-constructor iterator. The resource exits
+// test ownership/pointer and dispatch virtual dispose through TResourcePtr;
+// this replaces DC's explicit ResourceManager::Dispose calls at 65/81/92/106.
+// These allocation and cleanup differences explain the audit's five leads.
+//
+// Residual (80.8218% after restoring the repeated class-cell calls below):
+// the nested bitset<19> _Tidy and equality calls stay
+// out of line where retail expands them. The restored reference assignment
+// also remains a call; retail expands it through the retained set body.
+// The first size loop still hoists
 // the sheet's row-vector base, and late range-error construction differs.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
@@ -324,11 +335,30 @@ unsigned char initializeArtifactTraitsTable()
 
 // Before normalization: InitializeArtifactTraits, static, dc 0x50058.
 // DC's signature is void(int, const vector<char*>&). Retail replaces the
-// individual name/description allocations with the caller's pooled copies,
-// and its 0x44cf32 call has the checked bitset::set(size_t,bool) body.
+// individual name/description allocations with the caller's pooled copies.
+// DC132..149 calls operator[], reference::operator=(bool), and its empty
+// destructor for each of 18 slots. Retail's 19-slot counted loop is a port
+// difference, but its 0x44cf32 set call does not disprove proxy assignment:
+// Dinkumware's reference assignment delegates to that canonical set body.
+// Restore the proxy expression. Three reproduced source forms emit three
+// objects: direct set 81.3762%, proxy with named bool 80.8594%, and proxy
+// expression 81.9921%, with all seven exact siblings preserved. The proxy
+// call still needs to expand naturally to recover retail's named call stream.
 // Direct field subscripts instead of the traits reference give 79.619804%;
 // copy-initializing the mask gives 81.19604%; spelling !(mask == other) is
-// byte-neutral. Keep the default mask constructor and canonical set call.
+// byte-neutral. Keep the default mask constructor and proxy interface.
+// DC153/155/157/159 each calls vector::operator[] and tests the first
+// character against R/J/N/T. Preserve four resource[21][0] expressions;
+// the port used column 20 before Complete added the nineteenth slot column.
+// Caching the character erased these source calls and gave 81.9921%.
+// The two-form control reproduces 80.8218% with the recovered calls and
+// preserves all seven exact siblings. A lower score does not contradict
+// the positive source-call evidence; the cached form remains a failed lead.
+// Passive VC6 traces keep the outer caller at cb=1056/budget=2112. Restoring
+// the reads changes this helper from cb=330 to 351 and its child budget from
+// 65 to 64. The proxy assignment still exceeds its remaining budget (43 vs
+// 23), while _Tidy and equality remain rejected at the next nesting level.
+// The residual is not explained by the removed cache alone.
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {
@@ -339,24 +369,21 @@ static void initializeArtifactTraits(int id,
     int column;
     for (column = 2; column < 21; ++column) {
         int bit = g_artifactSlotColumnBits[column - 2];
-        bool allowed = resource[column][0] != 0
+        allowableSlots[bit] = resource[column][0] != 0
             && resource[column][0] != ' ';
-        allowableSlots.set(bit, allowed);
     }
     int mask = 0;
     while (allowableSlots != g_artifactSlotMasks[mask])
         ++mask;
     traits.m_allowableSlotMask = mask;
 
-    const char* classCell = resource[21];
-    char artifactClass = classCell[0];
-    if (artifactClass == 'R')
+    if (resource[21][0] == 'R')
         traits.m_artifactClass = 16;
-    else if (artifactClass == 'J')
+    else if (resource[21][0] == 'J')
         traits.m_artifactClass = 8;
-    else if (artifactClass == 'N')
+    else if (resource[21][0] == 'N')
         traits.m_artifactClass = 4;
-    else if (artifactClass == 'T')
+    else if (resource[21][0] == 'T')
         traits.m_artifactClass = 2;
     else
         traits.m_artifactClass = 1;

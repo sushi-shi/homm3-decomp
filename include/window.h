@@ -141,7 +141,8 @@ public:
     // Before normalization (function): heroWindow::RemoveWidget.
     void removeWidget(widget* killWidget);
     // Before normalization (function): heroWindow::BroadcastMessage.
-    int broadcastMessage(message* msg);
+    // DC window.cpp:381: BroadcastMessage(message& msg).
+    int broadcastMessage(message& msg);
     // Before normalization (function): heroWindow::BroadcastMessage.
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     // Before normalization (function): heroWindow::WidgetSetStatus.
@@ -244,9 +245,14 @@ public:
     VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
     virtual int handleMessage(message& msg)
     {
-        return windowHandler(&msg);
+        return windowHandler(msg);
     }
-    virtual int windowHandler(message* msg);                            // slot 9
+    // DC window.cpp:1036 (0x197eb4) declares WindowHandler(message&).
+    // Slot 9 and the Window.h:210 HandleMessage forwarder pass that same
+    // message address in retail (0x5ff820 / 0x405680). The reference type
+    // is shared by every derived handler; the old pointer declarations
+    // came from the earlier lossy CodeView rendering.
+    virtual int windowHandler(message& msg);                            // slot 9
     // Before normalization (function): CHeroWindowEx::ProcessHover.
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     // Before normalization (function): CHeroWindowEx::ProcessRightSelect.

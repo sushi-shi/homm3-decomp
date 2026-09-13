@@ -180,7 +180,7 @@ public:
     // Before normalization (function): TTradeResourceWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TTradeResourceWindow::WindowHandler.
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TTradeResourceWindow();
 };
 SIZE(TTradeResourceWindow, 0x68);
@@ -213,7 +213,7 @@ public:
     // Before normalization (function): TGiveResourceWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TGiveResourceWindow::WindowHandler.
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TGiveResourceWindow();
 };
 SIZE(TGiveResourceWindow, 0x8c);
@@ -229,7 +229,7 @@ public:
     // Before normalization (function): TBuyArtifactWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TBuyArtifactWindow::WindowHandler.
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TBuyArtifactWindow();
 };
 SIZE(TBuyArtifactWindow, 0x64);
@@ -267,7 +267,7 @@ public:
     // Before normalization (function): TSellArtifactWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TSellArtifactWindow::WindowHandler.
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellArtifactWindow();
 };
 SIZE(TSellArtifactWindow, 0x64);
@@ -297,7 +297,7 @@ public:
     // Before normalization (function): TSellCreatureWindow::SetRolloverText.
     void setRolloverText(int codeY);
     // Before normalization (function): TSellCreatureWindow::WindowHandler.
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellCreatureWindow();
 };
 SIZE(TSellCreatureWindow, 0x68);

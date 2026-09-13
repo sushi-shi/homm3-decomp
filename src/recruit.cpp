@@ -459,7 +459,7 @@ int recruitUnit::open(int newPriority)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     const char* creatureName;
     if (m_monsterType >= 0 && m_monsterType <= 150)
@@ -472,14 +472,14 @@ int recruitUnit::open(int newPriority)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     if (m_altResource != -1) {
         sprintf(g_text, "%d", m_resourcesPerTroop);
@@ -487,43 +487,43 @@ int recruitUnit::open(int newPriority)
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 0x204;
         msg.m_extraText = g_text;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x1fc;
         msg.m_extra = m_altResource;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x211;
         msg.m_extra = m_altResource;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
     } else {
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x1fc;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x211;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x204;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x213;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        g_recruitWindow->broadcastMessage(&msg);
+        g_recruitWindow->broadcastMessage(msg);
     }
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -576,7 +576,7 @@ int recruitUnit::open(int newPriority)
 // spells as a tail jump.
 //
 // This body is what TYPES townManager's +0x13c: it calls
-// ?Update@TResourceDisplay@@QAEXEE@Z through the member, so townmgr.h's
+// TResourceDisplay::update through the member, so townmgr.h's
 // old heroWindow* declaration is retyped here rather than cast around.
 VA(0x005502d0, 0x8C)  // anchor-bracket + body(RemoveWindow/ResetStrips), dc 0x119ce4
 void recruitUnit::close()
@@ -699,7 +699,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     m_numAvail = m_available[slot];
     if (g_creatureTypeTraits[m_monsterType].m_attributes & g_ctaSiegeWeapon) {
@@ -715,7 +715,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x209;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     long maxGold = g_currentPlayer->m_resources[6] / m_goldPerTroop;
     if (m_altResource != -1) {
@@ -760,7 +760,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = RECRUIT_QUANTITY_ID;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     m_totalGold = m_goldPerTroop * m_numberToBuy;
     sprintf(g_text, "%d", m_totalGold);
@@ -768,14 +768,14 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x212;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_goldPerTroop);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     if (m_altResource == -1)
         m_resourcesPerTroop = 0;
@@ -785,44 +785,44 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x213;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_resourcesPerTroop);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x204;
     msg.m_extraText = g_text;
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_0_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_1_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_2_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_3_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[31];
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
     msg.m_extra = g_unnamed6aacb0->m_data[36];
-    g_recruitWindow->broadcastMessage(&msg);
+    g_recruitWindow->broadcastMessage(msg);
 }
 
 #if 0  // @carcass
@@ -1061,7 +1061,7 @@ int recruitUnit::main(message& msg)
                 if (exitFlag)
                     break;
                 msg.m_codeX = widget::WIDGET_GET_TEXT;
-                g_recruitWindow->broadcastMessage(&msg);
+                g_recruitWindow->broadcastMessage(msg);
                 m_numberToBuy = atoi(msg.m_extraText);
                 if (m_numberToBuy < 0)
                     m_numberToBuy = 0;
@@ -1402,7 +1402,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    recruitWindow->broadcastMessage(&msg);
+    recruitWindow->broadcastMessage(msg);
 
     recruitWindow->addWidget(new textWidget(0, 20, 161, 20,
         monType >= 0 && monType <= 150
@@ -1466,7 +1466,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x200;
     msg.m_extraText = g_text;
-    recruitWindow->broadcastMessage(&msg);
+    recruitWindow->broadcastMessage(msg);
 
     if (altResource != -1) {
         sprintf(g_text,
@@ -1476,25 +1476,25 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 0x204;
         msg.m_extraText = g_text;
-        recruitWindow->broadcastMessage(&msg);
+        recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = 0x1fc;
         msg.m_extra = altResource;
-        recruitWindow->broadcastMessage(&msg);
+        recruitWindow->broadcastMessage(msg);
     } else {
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x1fc;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        recruitWindow->broadcastMessage(&msg);
+        recruitWindow->broadcastMessage(msg);
 
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x204;
         msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        recruitWindow->broadcastMessage(&msg);
+        recruitWindow->broadcastMessage(msg);
     }
 
     g_windowManager->doQuickView(recruitWindow);

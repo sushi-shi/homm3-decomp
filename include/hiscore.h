@@ -7,57 +7,13 @@
 
 #include "basemgr.h"
 #include "window.h"
-#include "textntry.h"
 #include "bitmap16.h"
 
 class message;
 class textWidget;
 class iconWidget;
 class Bitmap816;
-class CHighScoreEdit : public textEntryWidget {
-public:
-    // Before normalization: nextEdit.
-    CHighScoreEdit* m_nextEdit;
-    // Before normalization: prevEdit.
-    CHighScoreEdit* m_prevEdit;
 
-    CHighScoreEdit(int x, int y, int w, int h, int textSize,
-                   const char* text, const char* fontName,
-                   font::TColor color, unsigned justification,
-                   const char* backgroundIcon, int backgroundFrame, int id,
-                   int style, int readType, int insetX, int insetY);
-    // Before normalization (function): CHighScoreEdit::OnKeyPress.
-    virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
-};
-SIZE(CHighScoreEdit, 0x78);
-
-// ResetHighScores 0x4e8fb0 zeroes exactly 22 0x64-byte records, then copies
-// two 41-byte strings and parses the dwords at +0x54/+0x58. AddScoreToHighScore
-// 0x4e91d0 stores difficulty at +0x5c and its one-byte cheat latch at +0x60;
-// the three trailing bytes remain padding.
-// Semantic names below are retail-derived: addScoreToHighScore 0x4e91d0
-// copies the local player's edited name at +0, land at +0x29, and its
-// score/days/difficulty arguments at +0x54/+0x58/+0x5c. No original record
-// field spellings were recovered in the current DC/NH3API corpora.
-struct HighScoreRec {
-    // Before normalization: field_00.
-    char m_playerName[41];
-    // Before normalization: field_29.
-    char m_land[41];
-    // Before normalization: pad_52.
-    char m_paddingAfterNames[2]; // +0x52: align the first int to four bytes
-    // Before normalization: field_54.
-    int m_score;
-    // Before normalization: field_58.
-    int m_days;
-    // Before normalization: field_5c.
-    int m_difficulty;
-    // Before normalization: cheated.
-    unsigned char m_cheated;
-    // Before normalization: pad_61.
-    char m_paddingAfterCheated[3]; // +0x61: round the 0x64-byte record stride
-};
-SIZE(HighScoreRec, 0x64);
 
 // Retail ctor 0x4e9070 proves the baseManager head, vtable 0x63eb8c,
 // and the trailing score-table selector at +0x8d0.  Open 0x4e90a0 reads
@@ -65,6 +21,34 @@ SIZE(HighScoreRec, 0x64);
 // records modeled above and the total class size.
 class highScoreManager : public baseManager {
 public:
+    // DC Update local currentRec proves highScoreManager::HighScoreRec.
+    // ResetHighScores 0x4e8fb0 zeroes exactly 22 0x64-byte records, then copies
+    // two 41-byte strings and parses the dwords at +0x54/+0x58. AddScoreToHighScore
+    // 0x4e91d0 stores difficulty at +0x5c and its one-byte cheat latch at +0x60;
+    // the three trailing bytes remain padding.
+    // Semantic names below are retail-derived: addScoreToHighScore 0x4e91d0
+    // copies the local player's edited name at +0, land at +0x29, and its
+    // score/days/difficulty arguments at +0x54/+0x58/+0x5c. No original record
+    // field spellings were recovered in the current DC/NH3API corpora.
+    struct HighScoreRec {
+        // Before normalization: field_00.
+        char m_playerName[41];
+        // Before normalization: field_29.
+        char m_land[41];
+        // Before normalization: pad_52.
+        char m_paddingAfterNames[2]; // +0x52: align the first int to four bytes
+        // Before normalization: field_54.
+        int m_score;
+        // Before normalization: field_58.
+        int m_days;
+        // Before normalization: field_5c.
+        int m_difficulty;
+        // Before normalization: cheated.
+        unsigned char m_cheated;
+        // Before normalization: pad_61.
+        char m_paddingAfterCheated[3]; // +0x61: round the 0x64-byte record stride
+    };
+
     // Before normalization: highScores.
     HighScoreRec m_highScores[2][11];
     // Before normalization: highScoreType.
@@ -89,6 +73,7 @@ public:
     // Before normalization (function): highScoreManager::GetMonType.
     static int getMonType(int score, int scoreType);
 };
+SIZE(highScoreManager::HighScoreRec, 0x64);
 SIZE(highScoreManager, 0x8d4);
 
 // Retail oldmain opens this manager and invokes ViewHiScore through the
@@ -98,40 +83,7 @@ SIZE(highScoreManager, 0x8d4);
 DATA(0x006993cc) extern highScoreManager* g_highScoreManager;
 DATA(0x0069955c) extern int g_showHighScore;
 
-// DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
-// Retail's proven CHeroWindowEx is four bytes wider, putting them at
-// +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
-// last shifted offset.
-class CHSInputDlg : public CHeroWindowEx {
-public:
-    enum EWidgetIDs {
-        FIELD1_ID = 501,
-        OKAY_ID = 503,
-        ROLLOVER_ID = 504
-    };
 
-    // Original member: CHSInputDlg::field1 (DC class 0x4ad2, +0x4c).
-    // This is the first text-entry field, not an unresolved offset label.
-    // The proven four-byte wider PC base puts it at +0x50.
-    CHighScoreEdit* m_field1;
-    // Before normalization: header1.
-    textWidget* m_header1;
-    // Before normalization: rollover.
-    textWidget* m_rollover;
-
-    CHSInputDlg(int maxChars);
-    virtual ~CHSInputDlg();
-    // Before normalization (function): CHSInputDlg::WindowHandler.
-    virtual int windowHandler(message* msg);
-    // Before normalization (function): CHSInputDlg::OnWidgetDeselect.
-    // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CHSInputDlg::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
-    // Before normalization (function): CHSInputDlg::OnOK.
-    unsigned char onOK();
-};
-SIZE(CHSInputDlg, 0x5c);
 
 // DC names the two eleven-entry icon arrays Creatures and their matching
 // frame slots CreatureFrames.  Retail retains both arrays at +0x4c/+0xa4,

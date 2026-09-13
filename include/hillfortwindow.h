@@ -133,8 +133,10 @@ public:
         long m_cost[7];             // +0x20
         // Before normalization: resourceIndex.
         int m_resourceIndex;        // +0x3c
-        // Before normalization: type.
-        int m_type;                 // +0x40 (TCreatureType domain)
+        // Before normalization: type. DC preserves only TUpgradeSlot's
+        // forward declaration. The enum storage is inferred from the typed
+        // GetCreatureType accessor (header:170) and retail's direct field load.
+        TCreatureType m_type;        // +0x40
         // Before normalization: count.
         int m_count;                // +0x44
         // Before normalization: level.
@@ -173,6 +175,14 @@ public:
     void upgradeSlot(int which, unsigned char showMessage);
     // Before normalization (function): THillFortWindow::HandleClick.
     void handleClick(message& msg);
+
+private:
+    // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
+    friend int hillFortWindowHandler(message& msg);
+    // Original: UpgradeAll, hillfortwindow.cpp:500.
+    void upgradeAll();
+    // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
+    TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
 SIZE(THillFortWindow, 0x2a0);
 

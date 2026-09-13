@@ -25,6 +25,10 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// DC S_LPROC32 identifies this ordinary callback as TU-local.
+// Before normalization (function): MainMenuHandler.
+static int mainMenuHandler(message& msg);
+
 // Before normalization: gpMainMenu.
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
@@ -499,20 +503,16 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
 // artefact count is the larger half, the printed score is a floor the source
 // cannot lift.
 // E:\gamedcs\mainmenu.cpp:66
-// Residual (97.0098%): the whole delta sits in ONE of the five button
-// push_backs - the reallocating one. Retail keeps the Dinkumware
-// destroy-range helper OUT OF LINE there (`mov ecx,esi; push [esi+8];
-// push [esi+4]; call` - the delinked object names it sample_vslot03, an
-// ICF-folded empty pointer-destroy body) and only then frees the old
-// block, while this compile elides that call entirely and folds the
-// bookkeeping into the surrounding stores; the EAX/ECX/EDX rotation
-// across `lea [edi+0x28]` / `lea [edi+4*eax]` follows from it. Same
-// under-inline family as viewarmywindow's create_upgrade_widget,
-// levelupwindow's constructor and quicktownwindow: per docs/vc6/inliner.md
-// the /Ob2 budget is clamp(2*caller_cb,1000,35000), so the lever is caller
-// body mass, not a vector spelling. Everything else - all five button
-// recipes, the coordinate table, the EH state ladder and the resolution
-// tail - agrees; the remaining `movsx` rows are reloc-name-only.
+// Exact with the canonical vector::push_back and widget::hide calls. DC
+// records push_back for the four older buttons and hide at lines 102/103;
+// Complete adds the fifth button. Restoring hide while spelling insertion
+// as insert(end(), ...) lowered the constructor to 93.3443% by changing
+// the reserve/reallocation helper expansions. The 72-state source family
+// (32 distinct objects, ten reproduced elites) crossed both APIs, vector
+// access forms and hide locals with the handler's CD-dialog alternatives:
+// all 36 push_back states are exact, whereas insert states remain at
+// 93.3443% or below. The adopted direct member calls match all 35 CFG blocks
+// and 29 calls, including the retained ICF-folded empty destroy helper.
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
@@ -520,25 +520,24 @@ TMainMenu::TMainMenu()
     g_mainMenu = this;
     m_showCdMessage = g_noCdRom && !g_cdMessageShown;
 
-    std::vector<widget*>* widgets = &m_widgets;
-    widgets->reserve(NWIDGETS);
-    widgets->insert(widgets->end(), new button(
+    m_widgets.reserve(NWIDGETS);
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[0].m_x, g_mainMenuButtonRects[0].m_y,
         g_mainMenuButtonRects[0].m_width, g_mainMenuButtonRects[0].m_height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[1].m_x, g_mainMenuButtonRects[1].m_y,
         g_mainMenuButtonRects[1].m_width, g_mainMenuButtonRects[1].m_height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[2].m_x, g_mainMenuButtonRects[2].m_y,
         g_mainMenuButtonRects[2].m_width, g_mainMenuButtonRects[2].m_height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[3].m_x, g_mainMenuButtonRects[3].m_y,
         g_mainMenuButtonRects[3].m_width, g_mainMenuButtonRects[3].m_height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[4].m_x, g_mainMenuButtonRects[4].m_y,
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
@@ -552,10 +551,9 @@ TMainMenu::TMainMenu()
 
     if (g_dPlayReady) {
         if (g_dPlay && g_dPlay->isHost()) {
-            widget* disabledWidget = getWidget(HIGH_SCORE_ID);
-            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            disabledWidget = getWidget(CREDITS_ID);
-            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            // DC mainmenu.cpp:102/103 calls widget::hide at both sites.
+            getWidget(HIGH_SCORE_ID)->hide();
+            getWidget(CREDITS_ID)->hide();
         }
         g_lastDiskSpaceCheck = GameTime::get();
     }
@@ -583,34 +581,44 @@ void TMainMenu::doModal()
 }
 
 // E:\gamedcs\mainmenu.cpp:135
-// 90.0704 -> 93.1606: both CD-dialog arms pass format_string's temporary
-// directly to NormalDialog, so VC6 reuses one EH slot; caching gpGeneralText
-// or naming either std::string creates the wrong live ranges/stack slots.
-// The hover call also really passes Y then X here - retail loads +0x10 first,
-// pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
+// DC 148/160/230 calls TTextResource::operator[] for dialog text; preserve
+// that canonical accessor throughout the Complete dialog arms. Both CD
+// arms pass formatString's temporary directly to normalDialog. The hover
+// call passes Y then X: retail loads +0x10 first and pushes it, then loads
+// and pushes +0x14 as findWidget's first stack argument.
 //
-// Residual (93.1606%): base has 38 branches to retail's 37 because retail
-// cross-jumps the two string temporaries' delete tails. This compile clears
-// the earlier temporary's three fields instead, materializes zero in ESI,
-// and reuses that zero through the rest of the handler; the downstream
-// register delta is one consequence of that cleanup choice. Tried and
-// rejected: two named string values (90.0704), two const-reference bindings
-// (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
-// A -1 help id and positive help guard remove the default-arm goto at the
-// unchanged 93.1746%. Moving updatePlease before the quit confirmation and
-// clearing it on cancellation falls to 92.2451%. A separate confirmation
-// result preserves the original updatePlease assignments and removes the
-// final goto at 93.1746%. Bool, byte and int results are score-identical;
-// a do/while(0) confirmation scope instead lowers it to 91.5690%.
+// The DC TMainMenu field record makes show_cd_message public and the
+// rollover widget private; S_LPROC makes mainMenuHandler TU-local. These
+// declarations are retained at 94.0704% (the older external-handler source
+// peaked at 94.0845%). The frame is 0x24 bytes versus retail's 0x14, with
+// 68 versus 65 CFG blocks and 26 versus 25 calls. The extra call is a
+// duplicated operator delete cleanup; the substantive call sequence agrees.
+// The function-local jump table is at +0x46c versus retail's +0x470.
+// The earlier 72-state constructor/CD family left the cleanup residual.
+// With the recovered declarations, 74 branch/order/string-lifetime forms
+// emit 65 objects and reproduce ten elites. All 72 branch-local forms keep
+// the 0x24 frame; the two whole conditional expressions use 0x28. The
+// direct generic-first form remains best at 94.0704%; drive-first reaches
+// 93.4704%, const-reference arms 90.2845%/90.3127%, and a conditional
+// dialog expression 82.1268%. Nine shared-format-result forms emit four
+// reproduced objects and fall to 78.4479%/79.7211%. The four exact siblings
+// remain exact throughout; no lifetime-family alternative is retained.
+// Earlier controls: c_str()/data() were byte-identical; a separate quit
+// confirmation result preserves updatePlease assignments and removes the
+// default-arm goto. Bool, byte and int confirmation results were flat,
+// while a do/while(0) confirmation scope lowered the score. Moving
+// updatePlease before confirmation and clearing it on cancellation also
+// failed. Keep those source facts separate from the remaining EH lifetime
+// and cleanup-sharing problem.
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
-int mainMenuHandler(message& msg)
+static int mainMenuHandler(message& msg)
 {
     unsigned char updatePlease = 0;
     unsigned char hoverChanged = 0;
 
     if (g_checkDiskSpace) {
         if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
-            normalDialog(g_generalText->m_text[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
+            normalDialog((*g_generalText)[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
             g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
@@ -619,26 +627,23 @@ int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = g_generalText->getText(
-            GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
+        const char* fill = (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT];
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
-            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
-            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
-                : g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+        if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
+            g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                g_generalText->getText(
-                    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
-                drive, fill, fill, fill, fill).c_str(),
+                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT],
+                fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
+            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
+                ? (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5]
+                : (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6];
             normalDialog(formatString(
-                g_generalText->getText(
-                    GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
-                fill, fill, fill, fill).c_str(),
+                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT],
+                drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         g_cdMessageShown = 1;
@@ -675,7 +680,7 @@ int mainMenuHandler(message& msg)
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_dPlayReady) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     videoResume();
@@ -759,7 +764,7 @@ void VideomodeChoice::Test()
 
 // E:\gamedcs\mainmenu.cpp:410
 DC_ONLY(0xeb248, 0xF4)
-int VideomodeChoice::windowHandler(message* msg)
+int VideomodeChoice::windowHandler(message& msg)
 {
     // @stub
 }

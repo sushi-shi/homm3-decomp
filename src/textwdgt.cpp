@@ -46,6 +46,9 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // LITERAL 8, and the vtable store names 0x642db0. The trailing `style`
 // parameter is read nowhere in the body - retail carries it dead, exactly as
 // the header's declarator does.
+// Dreamcast additionally accepts focusable and stores it at widget+0x20 on
+// line 72. Complete's widget layout has no focusable field, and ret 0x2c
+// proves that this constructor omits that parameter and store.
 //
 // Residual (99.9130%): ONE instruction, and it is inside the inlined
 // `basic_string::assign(const char*)`, not in this body. Retail terminates
@@ -54,6 +57,10 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // (`[eax+ecx]`). All 16 blocks, 9 branches, 7 calls and 9 relocations agree
 // exactly; the operand roles are chosen inside a vendored Dinkumware header
 // this TU may not respell.
+// Four initialization controls (implicit/explicit short base conversions,
+// implicit/explicit string default initialization) produce two reproduced
+// objects, all at 99.9130%, with all ten exact siblings unchanged. Restoring
+// Color's proven font::TColor member type is also neutral at this site.
 //
 // The three trailing member stores WERE reachable, +0.05: retail emits them
 // backColor -> 0x48, justify -> 0x4c, color -> 0x44, and VC6 rotates the
@@ -114,12 +121,17 @@ int textWidget::main(message& msg)
 // Dreamcast textwdgt.cpp:140..160 places widget commands first; line 152
 // calls the canonical SetColor header helper, lines 169..173 compute X then
 // Y, and lines 187/210 update Status directly. Preserve those source facts.
-// The 32-state source family also checked cached status, byte/bool disabled
-// locals, case order, coordinate order and the flattened color store: four
-// distinct code results reproduced, all at 98.4931%. The remaining retail
-// difference is register assignment; no artificial local or inline qualifier
-// is needed to retain this score and the retail control flow.
-VA(0x005bc440, 0x1AD)
+// Restoring lines 180..194's common message-id/widget-id/return tail after
+// the right/left select arms closes the former 98.4931% register mismatch.
+// All eight combinations with the inactive-message branch order (125..128)
+// and positive selected scope (205..223) reproduce. The common down-event
+// tail is decisive: all four forms with it are exact; all four with the
+// duplicated tail remain 98.4931%. The retained form restores all three
+// positive source shapes. All 149 instructions, 34 CFG blocks, 25 branches,
+// seven returns and two named calls agree; every scored sibling is unchanged.
+// Earlier cached-status, disabled-type, case-order and coordinate-order
+// controls were flat because they preserved the duplicated message tail.
+VA(0x005bc440, 0x1AD)  // vtable 0x642db0 slot 2 + widget-message protocol, dc 0x164dd4
 int textWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
@@ -127,9 +139,11 @@ int textWidget::main(message& msg)
     }
 
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
+        if (msg.m_id == MESSAGE_WIDGET) {
+            return widget::main(msg);
+        } else {
             return 0;
-        return widget::main(msg);
+        }
     }
 
     bool isDisabled = false;
@@ -163,21 +177,21 @@ int textWidget::main(message& msg)
             return 0;
         short mouseX = msg.m_codeX - m_parentWindow->m_x;
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
-        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
-            || mouseY >= m_y + m_height)
-            return 0;
-        if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg.m_codeX = WIDGET_RIGHT_SELECT;
+        if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
+            && mouseY < m_y + m_height) {
+            if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                msg.m_codeX = WIDGET_RIGHT_SELECT;
+            } else {
+                m_status |= WIDGET_SELECTED;
+                msg.m_codeX = WIDGET_SELECT;
+            }
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeY = m_id;
             return MESSAGE_DISPATCH_FORWARD;
+        } else {
+            return 0;
         }
-        m_status |= WIDGET_SELECTED;
-        msg.m_codeX = WIDGET_SELECT;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = m_id;
-        return MESSAGE_DISPATCH_FORWARD;
     }
 
     case MESSAGE_LEFT_BUTTON_UP:
@@ -185,16 +199,21 @@ int textWidget::main(message& msg)
             return 0;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(m_status & WIDGET_DRAWN)
-            || !(m_status & WIDGET_SELECTED))
+        if (!(m_status & WIDGET_DRAWN)) {
             return 0;
-        m_status &= ~WIDGET_SELECTED;
-        if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
-            msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_DESELECT;
-        msg.m_codeY = m_id;
-        return MESSAGE_DISPATCH_FORWARD;
+        }
+        if (m_status & WIDGET_SELECTED) {
+            m_status &= ~WIDGET_SELECTED;
+            if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP) {
+                msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            }
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = WIDGET_DESELECT;
+            msg.m_codeY = m_id;
+            return MESSAGE_DISPATCH_FORWARD;
+        } else {
+            return 0;
+        }
 
 
     }
@@ -233,7 +252,7 @@ void textWidget::draw() const
             colorScheme = m_color;
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                                 drawX, drawY, m_width, m_height,
-                                colorScheme, m_justify, -1);
+                                font::TColor(colorScheme), m_justify, -1);
     }
 }
 
@@ -399,14 +418,17 @@ void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // E:\gamedcs\textwdgt.cpp:348
 // Slot 4 of vtable 0x642de8 and the ONLY reference to 0x5bc7f0 in the
 // image. Blits the backing bitmap clamped to its own extent, then runs the
-// base text draw.
+// base text draw. DC 354/355 calls Bitmap816::GetWidth/GetHeight and the
+// by-value includes.h::min wrapper; retain those canonical boundaries.
+// Exact: the direct-field/cppMin control scores 75.1154%; canonical calls
+// reproduce all retail instructions and leave the sibling scores unchanged.
 VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
 void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
-    int blitWidth = cppMin<int>(m_image->m_width, m_width);
-    int blitHeight = cppMin<int>(m_image->m_height, m_height);
+    int blitWidth = min(m_image->getWidth(), m_width);
+    int blitHeight = min(m_image->getHeight(), m_height);
     m_image->draw(0, 0, blitWidth, blitHeight,
                 g_windowManager->m_screenBitmap, drawX, drawY, 0);
     textWidget::draw();

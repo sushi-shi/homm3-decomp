@@ -239,7 +239,7 @@ TCombatOptionsWindow::~TCombatOptionsWindow()
 // E:\gamedcs\combatoptionswindow.cpp:194
 // Retail inlines this mapping into CombatOptionsWindowHandler; no separate
 // entry exists between the destructor and DoModal.
-inline int TCombatOptionsWindow::convertID2HelpID(int id) const
+int TCombatOptionsWindow::convertID2HelpID(int id) const
 {
     if (id == DIALOG_RETURN_SPLIT_ACCEPT)
         return 0;
@@ -265,9 +265,10 @@ void TCombatOptionsWindow::doModal()
 // inlined `this` in EDI across the whole three-widget sweep, which is what
 // retail's Default and speed cases do and what a direct
 // `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
-// Spelled `inline` so no out-of-line copy lands in this obj either.
+// Keep ordinary definitions in their recorded source order; retail makes
+// the automatic expansion decision without an authored inline qualifier.
 // E:\gamedcs\combatoptionswindow.cpp:230
-inline void TCombatOptionsWindow::highlightCombatSpeed()
+void TCombatOptionsWindow::highlightCombatSpeed()
 {
     for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
         getWidget(speed)->sendMessage(widget::WIDGET_CLEAR_STATUS,
@@ -277,95 +278,58 @@ inline void TCombatOptionsWindow::highlightCombatSpeed()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:243
-inline void TCombatOptionsWindow::highlightGrid()
+void TCombatOptionsWindow::highlightGrid()
 {
     getWidget(SHOW_GRID_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_showCombatGrid);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:254
-inline void TCombatOptionsWindow::highlightMovementShadow()
+void TCombatOptionsWindow::highlightMovementShadow()
 {
     getWidget(MOVEMENT_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_combatShadeLevel);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:265
-inline void TCombatOptionsWindow::highlightMouseShadow()
+void TCombatOptionsWindow::highlightMouseShadow()
 {
     getWidget(MOUSE_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_showCombatMouseHex);
 }
 
-// Dreamcast homes this helper after the handler, but retail inlines it at
-// both call sites (the next retail entry after the handler, 0x46fee0, is an
-// unrelated cinit). Both sites pass 0, so the gate folds away.
-// Before normalization (function): UpdateCombatOptions.
-// Before normalization (locals): bFirstUpdate.
-__forceinline void updateCombatOptions(unsigned char firstUpdate)
-{
-    if (!firstUpdate)
-        g_combatOptionsWindow->m_prefsChanged = 1;
-    g_combatOptionsWindow->drawWindow(1, 0xffff0001, 0xffff);
-}
+// Original: UpdateCombatOptions(int bFirstUpdate), DC 0x68098,
+// combatoptionswindow.cpp:651..654. The helper only redraws when firstUpdate
+// is zero; preference-member writes belong to the individual handler cases.
+// Its original source position is after the handler.
+static void updateCombatOptions(int firstUpdate);
 
-// E:\gamedcs\combatoptionswindow.cpp:278
+// E:\gamedcs\combatoptionswindow.cpp:278, DC 0x67b7c.
 //
-// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
-// retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
-// TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
-// - based off the function's own end, which retail places 0x58 later than
-// ours because retail's body is that much longer.  No TCombatOptionsWindow
-// member is involved.
+// The select/deselect command switch follows DC line 314's source group and
+// retail's sub eax,12 / dec eax dispatch. Twelve dispatch/flag states yield
+// four reproduced objects: that inner switch raises 85.9186% to 96.4205%;
+// case order and byte/bool flags are neutral. An outer message switch changes
+// the layout (85.8977%), so retain the existing retail key/widget guard and
+// DC's select-before-deselect source order. All four exact siblings are flat.
 //
-// Residual (83.4%): the tail-block class, in both directions. Retail parks
-// the translate-command and audio-unavailable arms at the tail and reaches
-// them with `je`, where our CL hoists each to its single goto site; and
-// retail expands every case's own `GetWidget(id)->send_message(...)` plus
-// the `bPrefsChanged = 1` and shares only the DrawWindow tail, where our CL
-// tail-merges the case bodies through a shared push sequence. The same
-// class, mirrored, is CampaignWindowHandler's residual - two independent
-// functions in this window family now show our SP3 CL taking the opposite
-// tail-block placement from retail's, which is the standing
-// compiler-generation suspect (match skill, "merged-return blocks"). The
-// last register row is the right-click arm's `return`: retail spends the
-// hoisted `mov eax,ebx` where ours re-materialises the immediate.
-// The constant 1 is NOT a source variable - it is VC6's own B8 hoist into
-// EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
-// for it; with the highlight helpers landed the hoist happens by itself and
-// the plain literals score identically, so the crutch is gone.
-// An accessor-bearing conventional release VERIFY at entry is byte-flat
-// (2026-08-21): `(void)gpCombatOptionsWindow->Widgets.size()` leaves
-// 83.35985 and the same 28-vs-27 partial branch census/two polarities.
-// Validation mass therefore cannot select retail's tail phase here.
-// Four direct source-shape probes now bound the two tail classes as well
-// (2026-08-21). Giving SHOW_GRID/MOVEMENT_SHADOW/MOUSE_SHADOW private
-// `UpdateCombatOptions` returns leaves the two missing GetWidget/send_message
-// pairs merged and falls to 80.0076; open-coding those three helper bodies is
-// byte-flat at 83.35985. Making DIALOG_RETURN_SPLIT_ACCEPT an outlier `case`
-// in the dense switch adds four branches and falls to 77.4735. Finally, the
-// positive audio-enabled spelling (`if (volume || ds) { ... } else goto`) is
-// byte-identical to the retained negative guard. The two polarity flips and
-// the three-way widget-tail merge are therefore not source-addressable here.
-// WHY retail's cross-jumper declined, read off the bytes (2026-09-05): the
-// SHOW_GRID / MOVEMENT_SHADOW / MOUSE_SHADOW arms are NOT identical in
-// retail.  Each reloads gpCombatOptionsWindow after `send_message` into a
-// DIFFERENT register - `mov ecx,[0x694f90]` at 0x46f95f, `mov edx,...` at
-// 0x46f990, `mov eax,...` at 0x46f9c1 - before the shared
-// `mov byte ptr [reg+0x4c], bl`.  Three differing tails cannot be merged, so
-// the merge we perform is downstream of an ALLOCATOR divergence, not of a
-// statement shape: no arm spelling can suppress it while all three arms
-// allocate the same register here.  This is behaviour-catalog D7 and it is
-// the same class as hero::THeroScreenWindow::WindowHandler's six help arms
-// and game::ValidateVictoryLossConditions' shared `je`.
-// Goto audit: Replacing consume jumps with direct returns scores
-// 81.7140% versus 83.3598%; other dispatch joins are unchanged by this probe.
-// DC 0x67b7c initializes an exit flag, records preference changes within the
-// selected case, and tests both before the redraw/message tails (lines 627-639).
-// Restoring those scopes and each audio-error dialog removes all nine gotos,
-// raising 83.3598% to 85.9186%. Keeping the shared audio label within this
-// recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
-// Older flattened-dispatch measurements above do not describe this source.
+// Preference writes belong to each option case, not to UpdateCombatOptions.
+// DC lines 605/606, 613/614 and 621/622 separately set the local redraw flag
+// and the window member at +0x44; the other cases join those tails. Retail
+// corroborates the same member at +0x4c, with separate ECX/EDX/EAX reloads
+// after the grid/movement/mouse messages. Restoring all fifteen member stores
+// closes the remaining mismatch. UpdateCombatOptions takes int and only
+// conditionally redraws (DC 651..654); it has no preference-member store.
+// Keep its ordinary definition after this handler, where DC records it.
+//
+// The former shared-store reconstruction caused VC6 to merge those case
+// tails, which falsely looked like an unreachable register-allocation limit.
+// Splitting only three update calls, flattening highlight helpers, hoisting
+// a constant-one local, entry accessor/VERIFY controls, and moving the accept
+// id into the dense switch did not fix that false source model. Earlier goto
+// and audio-label controls are also superseded: keep the local redraw/exit
+// scopes and each audio-error exit, as DC records at 627..639. No pragma,
+// inline override, copied helper body or validation padding is required.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int combatOptionsWindowHandler(message& msg)
 {
@@ -384,7 +348,8 @@ int combatOptionsWindowHandler(message& msg)
             }
         }
     } else if (msg.m_id != MESSAGE_KEY_DOWN && msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_SELECT) {
+        switch (msg.m_codeX) {
+        case widget::WIDGET_SELECT: {
             int id = g_combatOptionsWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
             if (id >= TCombatOptionsWindow::AUTO_CREATURES_ID
                     && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
@@ -395,7 +360,8 @@ int combatOptionsWindowHandler(message& msg)
                 g_soundManager->memorySample(button::s_clickSample);
             }
             return MESSAGE_DISPATCH_CONSUME;
-        } else if (msg.m_codeX == widget::WIDGET_DESELECT) {
+        }
+        case widget::WIDGET_DESELECT: {
             int id = msg.m_codeY;
             if (id == DIALOG_RETURN_SPLIT_ACCEPT) {
                 exitFlag = 1;
@@ -443,6 +409,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_animateSpellBook);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -476,6 +443,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME, g_unk698760);
                     g_soundManager->adjustMusicVolumes();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -511,6 +479,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME, g_unk698764);
                     g_soundManager->adjustSoundVolumes();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -521,6 +490,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_animateSpellBook);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CREATURES_ID:
@@ -530,6 +500,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatAutoCreatures);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_SPELLS_ID:
@@ -539,6 +510,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatAutoSpells);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CATAPULT_ID:
@@ -548,6 +520,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatCatapult);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_BALLISTA_ID:
@@ -557,6 +530,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatBallista);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
@@ -566,6 +540,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatFirstAidTent);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::COMBAT_SPEED_0_ID:
@@ -575,6 +550,7 @@ int combatOptionsWindowHandler(message& msg)
                         id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
                     g_combatOptionsWindow->highlightCombatSpeed();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -595,6 +571,7 @@ int combatOptionsWindowHandler(message& msg)
                         g_unnamed698758.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID:
@@ -614,24 +591,28 @@ int combatOptionsWindowHandler(message& msg)
                         g_unnamed698758.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::SHOW_GRID_ID:
                     g_unnamed698758.m_showCombatGrid ^= 1;
                     g_combatOptionsWindow->highlightGrid();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
                     g_unnamed698758.m_combatShadeLevel ^= 1;
                     g_combatOptionsWindow->highlightMovementShadow();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOUSE_SHADOW_ID:
                     g_unnamed698758.m_showCombatMouseHex ^= 1;
                     g_combatOptionsWindow->highlightMouseShadow();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 default:
@@ -640,6 +621,9 @@ int combatOptionsWindowHandler(message& msg)
                 if (prefsChanged)
                     updateCombatOptions(0);
             }
+
+        }
+        break;
         }
     }
     if (exitFlag) {
@@ -651,6 +635,14 @@ int combatOptionsWindowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
+// DC combatoptionswindow.cpp:651..654, source-private ordinary helper.
+static void updateCombatOptions(int firstUpdate)
+{
+    if (!firstUpdate) {
+        g_combatOptionsWindow->drawWindow(1, 0xffff0001, 0xffff);
+    }
+}
+
 
 // E:\gamedcs\combatoptionswindow.cpp:171
 #if 0  // @carcass -- represented by VA_COMPGEN above

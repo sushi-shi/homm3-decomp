@@ -131,13 +131,6 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width,
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags);                        // 0x6001d0
-// The DDERR_WRONGMODE arm of DDBlit's two primary-surface retry loops, and
-// its only caller: it re-establishes the display when Restore reports the
-// mode changed under us, taking the blit's own working rectangle so the
-// windowed path can re-origin it against the moved client area. Complete
-// only; the Dreamcast roster has no row for it and the NAME is provisional.
-// Before normalization (function): DDResetDisplayMode.
-void ddResetDisplayMode(tagRECT* region);                // 0x6003c0
 // The screen blit winmgr hands a rectangle to: heroWindowManager's
 // UpdateScreen (0x602bd0) and both fades (0x6030e0 / 0x6032e0) call
 // 0x5ffe70 with `lea ecx, <rect>` and nothing else, i.e. the /Gr

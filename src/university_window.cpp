@@ -71,9 +71,10 @@ type_university_skill_button::type_university_skill_button(
 
 // E:\gamedcs\university_window.cpp:75
 VA(0x005ef490, 0x6A)  // vtable slot 13 + skill_click call, dc 0x18e728
-unsigned char type_university_skill_button::handleClick(
+// The public UAA_N_N0 signature preserves native Boolean click values.
+bool type_university_skill_button::handleClick(
     // Before normalization (locals): down_click, right_click.
-    unsigned char downClick, unsigned char rightClick)
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         if (rightClick) {
@@ -115,49 +116,32 @@ void type_university_window::skillClick(TSecondarySkill skill)
     // @stub
 }
 
-// E:\gamedcs\university_window.cpp:404
-DC_ONLY(0x18f7e4, 0x84)
-int type_university_window::windowHandler(message* msg)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
-// E:\gamedcs\university_window.cpp:102. Dreamcast supplies the original
-// 89-statement constructor shape; retail corroborates every shared widget and
-// adds the bTownUniversity image arm plus the Complete purchase view.
-// Residual (87.8950%) MEASURED AS CALLER MASS, 2026-09-05.  An `if (0)`
-// carrier after `long widget_id = 100;` - the measuring instrument, NOT a fix,
-// and deliberately not shipped - gives
-//   N = 2,5 -> 86.74 | 10 -> 82.07 | 20 -> 82.16 |
-//   N = 30,35,40,45 -> 94.7025 (a four-wide plateau) | 50 -> 93.63 | 60 -> 93.31
-// so roughly 30-45 statements of caller_cb are missing and the whole
-// under-inline (retail expands vector<widget*>::_Ucopy/_Ufill/size 16/8/16
-// times against our 12/6/12, and the cancel button's `vector<int>::insert`)
-// follows from that one threshold.
-// LOCALISED 2026-09-05, and it is ONE SITE: every block up to the rollover
-// widget's construction pairs, and the final AddWidget loop pairs (retail
-// 0x5f077e..0x5f07a7 against our own), so the entire 568 B is the LAST
-// `Widgets.push_back(rollover_widget)`. Retail expands it whole - the
-// capacity test at 0x5f069e, the realloc arm 0x5f06b9..0x5f075c (size/size/
-// size/operator new/_Ucopy/_Ufill/_Ucopy/_Destroy/operator delete) and the
-// shift arm 0x5f0761..0x5f07e6 - roughly 0x148 B; we emit the two size()
-// calls and then CALL vector<widget*>::insert. Nothing else in the body
-// diverges structurally, so the lever is caller_cb at that final site and
-// nothing local to the statement. New inline-depth pins are not available
-// (the cleanliness floor is falling-only), so this needs the real missing
-// mass, not a knob.  The widget roster itself is NOT short:
-// the normalised constructor-call streams agree element for element, and
-// retail's single extra `operator new` (28 vs 27) sits in a run of
-// ctor-less allocations - it is a vector REALLOCATION bought by the extra
-// inlined growth path, not a missing widget.  The Dreamcast roster (89 source
-// rows, 28 ctors) matches this body statement for statement, including both
-// `set_hotkey` calls on the exit button, the SetIconFrame/two-TTextResource
-// help text, and the tuition sprintf.  Do not ship the carrier.
-// Declaring `widget_id` as the FIRST body statement - retail spills 100 to
-// its own slot BEFORE the five member stores, we spilled it after - is
-// worth 87.8950 -> 88.1490 and makes the `this` home agree at [ebp-0x18].
+// DC 124/133/236 use TTextResource::operator[] for all four text lookups.
+// E:\gamedcs\university_window.cpp:102. Exact with the original helper
+// calls and recovered pointer lifetimes. DC records widget* new_widget;
+// the typed background/exit/cancel locals below are inferred from retail's
+// derived-to-base argument temporaries, not recovered local names. Direct
+// skill-array access restores the cancel hotkey's vector<int>::insert
+// expansion without changing the canonical setHotkey/push_back boundary.
+// DC 147 and retail both reread university->skills for the skill-button
+// constructor. DC 199..201 keeps the second background in new_widget and
+// calls push_back twice; unlike 187/188, 247/248 and 255/256, there is no
+// back() call at this site. Complete adds the townUniversity image arm;
+// its third parameter is proven by both retail callers and the branch.
+//
+// Negative controls: the 54-state access/lifetime family leaves cached
+// record references/pointers at 88.1141..88.1533%, versus 95.1581..95.2402%
+// for direct indexing (four objects, four reproduced). The next 54-state
+// typed-local family reaches 98.9215% (18 objects, ten reproduced). In the
+// final 33-state family, reading the stored skill stays at 99.5480% and
+// using back() for the second background at 99.3736%; restoring both is
+// exact for all eight tested scope/declaration combinations (five objects,
+// five reproduced). All other TU functions stay unchanged in these tests.
+// The apparent +4 coordinate-load differences are the same addresses:
+// g_topBarPositions+4 and retail const_243b64. All 154 calls agree after
+// verifying the six folded vector-helper aliases against their retail bodies.
 VA(0x005ef500, 0x1252)  // Univers1.pcx + two call-site modes, dc 0x18e790
 type_university_window::type_university_window(
     // Before normalization (locals): new_hero, bTownUniversity, widget_id, new_widget,
@@ -175,15 +159,15 @@ type_university_window::type_university_window(
     m_height = 388;
     m_type = 18;
 
-    widget* newWidget = new bitmapBorder(
+    bitmapBorder* background = new bitmapBorder(
         0, 0, 465, 388, widgetId++, "univers1.pcx", 0x800);
-    static_cast<bitmapBorder*>(newWidget)->setPlayerPaletteColors(
+    background->setPlayerPaletteColors(
         g_game->getLocalPlayerGamePos());
-    m_widgets.push_back(newWidget);
-    m_selectionWidgets.push_back(newWidget);
+    m_widgets.push_back(background);
+    m_selectionWidgets.push_back(background);
 
-    newWidget = new textWidget(
-        21, 16, 422, 20, g_generalText->getText(603), "medfont.fnt",
+    widget* newWidget = new textWidget(
+        21, 16, 422, 20, (*g_generalText)[603], "medfont.fnt",
         font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_selectionWidgets.push_back(newWidget);
@@ -200,46 +184,45 @@ type_university_window::type_university_window(
     m_selectionWidgets.push_back(newWidget);
 
     newWidget = new textWidget(
-        27, 129, 410, 70, g_generalText->getText(604), "smalfont.fnt",
+        27, 129, 410, 70, (*g_generalText)[604], "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_selectionWidgets.push_back(newWidget);
 
     for (int i = 0; i < 4; ++i) {
-        type_university_skill& entry = m_skills[i];
-        entry.m_skill = university->m_skills[i];
+        m_skills[i].m_skill = university->m_skills[i];
 
-        entry.m_button = new type_university_skill_button(
+        m_skills[i].m_button = new type_university_skill_button(
             g_buttonPositions[i].x, g_buttonPositions[i].y, 44, 44,
-            widgetId++, "SecSkill.def", entry.m_skill);
-        m_widgets.push_back(entry.m_button);
-        m_selectionWidgets.push_back(entry.m_button);
+            widgetId++, "SecSkill.def", university->m_skills[i]);
+        m_widgets.push_back(m_skills[i].m_button);
+        m_selectionWidgets.push_back(m_skills[i].m_button);
 
-        entry.m_topBar = new iconWidget(
+        m_skills[i].m_topBar = new iconWidget(
             g_topBarPositions[i].x, g_topBarPositions[i].y, 100, 18,
             widgetId++, "Univcolr.def", 0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
-        m_widgets.push_back(entry.m_topBar);
-        m_selectionWidgets.push_back(entry.m_topBar);
+        m_widgets.push_back(m_skills[i].m_topBar);
+        m_selectionWidgets.push_back(m_skills[i].m_topBar);
 
-        entry.m_bottomBar = new iconWidget(
+        m_skills[i].m_bottomBar = new iconWidget(
             g_topBarPositions[i].x, g_topBarPositions[i].y + 70, 100, 18,
             widgetId++, "Univcolr.def", 0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
-        m_widgets.push_back(entry.m_bottomBar);
-        m_selectionWidgets.push_back(entry.m_bottomBar);
+        m_widgets.push_back(m_skills[i].m_bottomBar);
+        m_selectionWidgets.push_back(m_skills[i].m_bottomBar);
 
-        entry.m_textWidget = new textWidget(
-            entry.m_topBar->m_x, entry.m_topBar->m_y,
-            entry.m_topBar->m_width, entry.m_topBar->m_height,
-            g_sSkillTraits[entry.m_skill].m_name, "smalfont.fnt",
+        m_skills[i].m_textWidget = new textWidget(
+            m_skills[i].m_topBar->m_x, m_skills[i].m_topBar->m_y,
+            m_skills[i].m_topBar->m_width, m_skills[i].m_topBar->m_height,
+            g_sSkillTraits[m_skills[i].m_skill].m_name, "smalfont.fnt",
             font::PRIMARY, -1, 1, 0, 8);
-        m_widgets.push_back(entry.m_textWidget);
-        m_selectionWidgets.push_back(entry.m_textWidget);
+        m_widgets.push_back(m_skills[i].m_textWidget);
+        m_selectionWidgets.push_back(m_skills[i].m_textWidget);
 
         newWidget = new textWidget(
-            entry.m_bottomBar->m_x, entry.m_bottomBar->m_y,
-            entry.m_bottomBar->m_width, entry.m_bottomBar->m_height,
+            m_skills[i].m_bottomBar->m_x, m_skills[i].m_bottomBar->m_y,
+            m_skills[i].m_bottomBar->m_width, m_skills[i].m_bottomBar->m_height,
             g_skillMasteryNames[0], "smalfont.fnt",
             font::PRIMARY, -1, 1, 0, 8);
         m_widgets.push_back(newWidget);
@@ -250,18 +233,19 @@ type_university_window::type_university_window(
         199, 312, 66, 32, -1, "box64x30.pcx", 0x800));
     m_selectionWidgets.push_back(m_widgets.back());
 
-    newWidget = new type_func_button(
+    type_func_button* exitButton = new type_func_button(
         200, 313, 64, 30, widgetId++, "iOkay.def",
         exitClick, 0, 1);
-    static_cast<type_func_button*>(newWidget)->setHotkey(1);
-    static_cast<type_func_button*>(newWidget)->setHotkey(28);
-    newWidget->setHelpText(g_universityWindowHelp[1].m_text, 0, 1);
-    m_widgets.push_back(newWidget);
-    m_selectionWidgets.push_back(newWidget);
+    exitButton->setHotkey(1);
+    exitButton->setHotkey(28);
+    exitButton->setHelpText(g_universityWindowHelp[1].m_text, 0, 1);
+    m_widgets.push_back(exitButton);
+    m_selectionWidgets.push_back(exitButton);
 
-    m_widgets.push_back(new bitmapBorder(
-        0, 0, 465, 388, widgetId++, "univers2.pcx", 0x800));
-    m_purchaseWidgets.push_back(m_widgets.back());
+    newWidget = new bitmapBorder(
+        0, 0, 465, 388, widgetId++, "univers2.pcx", 0x800);
+    m_widgets.push_back(newWidget);
+    m_purchaseWidgets.push_back(newWidget);
 
     m_selectedSkill.m_topBar = 0;
     m_selectedSkill.m_textWidget = new textWidget(
@@ -293,7 +277,7 @@ type_university_window::type_university_window(
         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
     resourceIcon->setIconFrame(6);
     resourceIcon->setHelpText(
-        g_generalText->getText(626), g_generalText->getText(243), 1);
+        (*g_generalText)[626], (*g_generalText)[243], 1);
     m_widgets.push_back(resourceIcon);
     m_purchaseWidgets.push_back(resourceIcon);
 
@@ -318,13 +302,13 @@ type_university_window::type_university_window(
         251, 299, 66, 34, -1, "box64x32.pcx", 0x800));
     m_purchaseWidgets.push_back(m_widgets.back());
 
-    newWidget = new type_func_button(
+    type_func_button* cancelButton = new type_func_button(
         252, 300, 64, 32, widgetId++, "iCancel.def",
         cancelClick, 0, 1);
-    newWidget->setHelpText(g_universityWindowHelp[0].m_text, 0, 1);
-    static_cast<type_func_button*>(newWidget)->setHotkey(1);
-    m_widgets.push_back(newWidget);
-    m_purchaseWidgets.push_back(newWidget);
+    cancelButton->setHelpText(g_universityWindowHelp[0].m_text, 0, 1);
+    cancelButton->setHotkey(1);
+    m_widgets.push_back(cancelButton);
+    m_purchaseWidgets.push_back(cancelButton);
 
     m_rolloverWidget = new textWidget(
         8, 362, 448, 18, g_emptyRolloverText, "smalfont.fnt",
@@ -482,16 +466,29 @@ void type_university_window::skillClick(TSecondarySkill skill)
         m_currentHero->getPlayer()->m_resources[GOLD] >= TUITION);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
-// Residual (98.3269%): one register role. Retail loads
-// selected_skill.button into EAX and stores the two button fields
-// through it; the inline set_skill call makes it the member call's
-// `this` and our compile keeps it in ECX, which renames the two stores
-// and the text-widget load that follows. Tried and rejected: a named
-// `type_university_skill_button* button` local (byte-flat at 98.3269)
-// and moving `selected_skill.skill = skill` below the set_skill call
-// (98.2560). Naming the skill string is what bought the 5.9 before it -
-// retail computes akSSkillTraits[skill].name ONCE into EDI and pushes
-// that register at all three sites (92.4767 -> 98.3269).
+// Earlier skillClick controls at 98.3269%: naming a button pointer was
+// byte-flat and moving the selected-skill store below setSkill fell to
+// 98.2560%. Retaining the named skill string and canonical setSkill/show/
+// hide calls is exact in the current TU; the old register-only diagnosis
+// no longer describes this object.
+
+// E:\gamedcs\university_window.cpp:404
+// DC 405/407/408/411 proves the base-handler result guard followed by
+// ConvertToHover for mouse movement. Retail's university vtable 0x643bd8
+// slot 9 points to 0x5666f0, the identical body owned by
+// type_skeleton_window::windowHandler; inheriting CAdvPopup's 0x41b1c0
+// handler loses this derived hover step. Retain the separate source
+// override without claiming the folded retail address twice.
+DC_ONLY(0x18f7e4, 0x84)
+int type_university_window::windowHandler(message& msg)
+{
+    int result = CAdvPopup::windowHandler(msg);
+    if (result)
+        return result;
+    if (msg.m_id == MESSAGE_MOUSE_MOVE)
+        return g_windowManager->convertToHover(msg);
+    return 0;
+}
 
 // Identified by shape: heroWindow slot 4 (one widget* argument, `ret 4`),
 // reading widget::RollOver at +0x20 and dispatching slot 13
@@ -501,10 +498,12 @@ void type_university_window::skillClick(TSecondarySkill skill)
 VA(0x005f0dc0, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x18f868
 void type_university_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!currentWidget->m_rollOver)
+    // DC 420 obtains the help pointer once before the 422..425 arms.
+    const char* helpText = currentWidget->getHelpText();
+    if (!helpText)
         m_rolloverWidget->setText(g_emptyRolloverText);
     else
-        m_rolloverWidget->setText(currentWidget->m_rollOver);
+        m_rolloverWidget->setText(helpText);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -556,21 +555,30 @@ int type_university_window::exitClick(message& msg)
 // (13) pays 2,000 gold, teaches one level, restores the two widget groups,
 // refreshes all four offer rows and clears the selection.
 //
-// Dreamcast CodeView records the branch-local `result` string and the shared
-// set_selection_mode helper. Restoring that helper gives Complete's exact
-// 28-block/15-branch CFG while keeping the positive source boundary intact.
+// Dreamcast records the branch-local result string and set_selection_mode.
+// Exact with result constructed before the window/skill reads (DC 482 before
+// 484/486), and skillName bound before formatString (DC's name load at 487
+// before the call at 490). The original late construction gave 94.7553%;
+// restoring its order gave 98.8298%. A 54-state format/mastery/local family
+// exhausted eight objects without improving it. Adding skill-name bindings
+// in 24 states gave seven reproduced objects: six variants are exact, while
+// eagerly binding mastery text remains below exact. The adopted pointer and
+// skillName form agrees on all 28 blocks, 11 calls and six data references.
 // E:\gamedcs\university_window.cpp:479
-VA(0x005f0f60, 0x21D)  // constructor callback xref + selected-skill tail
+VA(0x005f0f60, 0x21D)  // constructor callback xref + selected-skill tail, dc 0x18f97c
 int type_university_window::purchaseClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        // DC 482 constructs result before the window/skill reads at 484/486;
+        // retail likewise initializes the string before loading msg.window.
+        std::string result;
         type_university_window* window =
             static_cast<type_university_window*>(msg.m_window);
         int skill = window->m_selectedSkill.m_skill;
-        std::string result;
+        const char* skillName = g_sSkillTraits[skill].m_name;
         result = formatString(
             g_universitySkillHelpFormat, g_skillMasteryNames[0],
-            g_sSkillTraits[skill].m_name, 2000);
+            skillName, 2000);
         normalDialog(result.c_str(), 4, -1, -1,
                      20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);
         return 1;
@@ -593,11 +601,11 @@ int type_university_window::purchaseClick(message& msg)
 
 // E:\gamedcs\university_window.cpp:515
 VA(0x005f1180, 0x2D)  // link order + vtable slot 14, dc 0x18faa4
-int type_university_window::exitDialog(message* msg)
+int type_university_window::exitDialog(message& msg)
 {
-    msg->m_id = MESSAGE_WIDGET;
+    msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = 0;
-    msg->m_codeX = msg->m_codeY = 10;
+    msg.m_codeX = msg.m_codeY = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
 

@@ -273,6 +273,8 @@ public:
                     unsigned char shootersBlocked) const;
     // Before normalization (function): type_AI_combat_data::get_final_melee_value.
     long getFinalMeleeValue() const;
+    // DC ai_combat.h:245-246, dc 0x2c6a4; original get_mana.
+    long getMana() const { return m_mana; }
     // Before normalization (function): type_AI_combat_data::get_army.
     armyGroup* getArmy() const { return m_currentArmy; }
     // Before normalization (function): type_AI_combat_data::get_total.
@@ -305,6 +307,10 @@ public:
                           unsigned char increase);
     // Before normalization (function): type_AI_combat_data::cast_enchantment.
     void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
+    // Before normalization: get_summoning_value.
+    void getSummoningValue(type_spell_choice& choice) const;
+    // Before normalization: cast_summoning.
+    void castSummoning(type_spell_choice& choice);
     // Before normalization (function): type_AI_combat_data::cast_spell.
     void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
     // Before normalization (function): type_AI_combat_data::cast_spells.
@@ -327,17 +333,17 @@ public:
     void simulateCombat(type_AI_combat_data& defender);
     // Before normalization (function): type_AI_combat_data::do_aftermath.
     // Before normalization (locals): enemy_town.
-    void doAftermath(type_AI_combat_data* defender, const town* enemyTown);
+    void doAftermath(type_AI_combat_data& defender, town* enemyTown);
 };
 
 // Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup* defendingArmy, town* defendingTown,
+                              armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 // Before normalization (locals): attacking_hero, defending_hero, attacking_army, defending_army,
 // defending_town.
 void aiAutoCombat(hero* attackingHero, hero* defendingHero,
-                    armyGroup* attackingArmy, armyGroup* defendingArmy,
+                    armyGroup& attackingArmy, armyGroup& defendingArmy,
                     const town* defendingTown, NewmapCell* cell);
 // Before normalization (function): AI_value_of_combat.
 // Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
@@ -349,7 +355,7 @@ long aiValueOfCombat(const hero* attackingHero,
 
 // Before normalization (locals): current_hero, current_army.
 long aiApproximateStrength(const hero* currentHero);
-long aiApproximateStrength(const hero* currentHero, const armyGroup* currentArmy);
+long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);

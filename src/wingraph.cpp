@@ -73,21 +73,7 @@ void setPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
 
 // E:\gamedcs\wingraph.cpp:83
 DC_ONLY(0x198b1c, 0x2A)
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer)
-{
-    // @stub
-}
-
-// E:\gamedcs\wingraph.cpp:109
-DC_ONLY(0x198b48, 0x1E)
-void DDCreatePrimary()
-{
-    // @stub
-}
-
-// E:\gamedcs\wingraph.cpp:130
-DC_ONLY(0x198b68, 0x64)
-void DDSetupClipper()
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
     // @stub
 }
@@ -120,13 +106,6 @@ void DDAppBlitX(const tagRECT* region, int dx, int dy)
     // @stub
 }
 
-// E:\gamedcs\wingraph.cpp:719
-DC_ONLY(0x1990e4, 0x86)
-void DDRestoreFrontBuffer(tagRECT* dst_rect)
-{
-    // @stub
-}
-
 // E:\gamedcs\wingraph.cpp:861
 DC_ONLY(0x19916c, 0x4)
 void DDBlitFromFront()
@@ -155,30 +134,9 @@ IDirectDrawSurface4* BMCreateSurface(unsigned long width, unsigned long height)
     // @stub
 }
 
-// E:\gamedcs\wingraph.cpp:1238
-DC_ONLY(0x199598, 0x134)
-void DDCreateMouseSurfaces()
-{
-    // @stub
-}
-
-// E:\gamedcs\wingraph.cpp:1289
-DC_ONLY(0x1996cc, 0x58)
-void DDReleaseMouseSurfaces()
-{
-    // @stub
-}
-
 // E:\gamedcs\wingraph.cpp:1476
 DC_ONLY(0x19a09c, 0x76)
 void ddCleanUpWinGraphics()
-{
-    // @stub
-}
-
-// E:\gamedcs\wingraph.cpp:1691
-DC_ONLY(0x19a20c, 0x28)
-void ResizeWindow()
 {
     // @stub
 }
@@ -199,21 +157,72 @@ unsigned char ddSetFullScreenStatus(int iNewStatus)
 // for the 16-bit target, 32 RGB triples for the 24-bit one. The +0x1c source
 // bias is the resource head both TPalette16 and TPalette24 carry, and the
 // destination offsets (0x1c0 and 0x2bc) are what fix entry 224 as the range's
-// first colour in each layout.
+// first colour in each layout. DC proves unsigned short* and TPalette24&
+// parameters; the retail offsets and fastcall argument locations agree.
 // E:\gamedcs\wingraph.cpp:72
 VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
-void setPlayerPaletteColors(palette* pal, int whichPlayer)
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 {
-    memcpy(&pal->m_data[224], &g_playerPalette->m_data[whichPlayer * 32],
+    memcpy(pal + 224, &g_playerPalette->m_data[whichPlayer * 32],
            32 * sizeof(unsigned short));
 }
 
 // E:\gamedcs\wingraph.cpp:83
 VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
-    memcpy(pal->m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
+    memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
            32 * 3);
+}
+
+// DDCreatePrimary and DDSetupClipper are ordinary source-static helpers.
+// DC DDInitGraphics calls them at 231/247, on opposite sides of the pixel
+// format publication. Retail 0x6014f0 expands these same surface/clipper
+// operations; its v1 interfaces replace the port's Surface4 API. The
+// WinCE DDSetupClipper body is empty, while the PC clipper calls are live.
+// Original names: DDCreatePrimary, DDSetupClipper.
+// E:\gamedcs\wingraph.cpp:109
+static void ddCreatePrimary()
+{
+    HRESULT result;
+    g_ddsPrimary = ddCreateSurface(800, 600, 1);
+    if (g_ddClipper) {
+        result = g_ddsPrimary->SetClipper(0);
+        if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
+            ddsd(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x6e);
+        g_ddClipper->Release();
+        g_ddClipper = 0;
+    }
+}
+
+// E:\gamedcs\wingraph.cpp:130
+static void ddSetupClipper()
+{
+    HRESULT result;
+    if (!g_windowedMode) {
+        result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
+        if (result != DD_OK)
+            ddsd(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x81);
+        result = g_ddClipper->SetHWnd(0, g_hwndApp);
+        if (result != DD_OK)
+            ddsd(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x86);
+        result = g_ddsPrimary->SetClipper(g_ddClipper);
+        if (result != DD_OK)
+            ddsd(result,
+                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+                 0x8b);
+    }
+
 }
 
 // The screen blit: unlock the back buffer, put the damaged rectangle up on
@@ -323,13 +332,17 @@ void robAppBlit(tagRECT* combRect)
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x14a);
 }
 
+// Original source-static DDRestoreFrontBuffer; its retained body follows
+// the first caller in retail emission order.
+static void ddRestoreFrontBuffer(tagRECT& dstRect);
+
 // Every surface-to-surface copy in the game goes through here, and the
 // whole body is three copies of one retry loop: blit, and while DirectDraw
 // answers DDERR_SURFACELOST, restore whatever was lost and blit again. The
 // three arms differ only in which surface is the primary - retail RELOADS
 // gpDDSPrimary at each of its six uses rather than naming it - and the two
 // arms that touch the primary take a LOCAL COPY of the rectangle that
-// belongs to it, because DDResetDisplayMode re-origins that copy in place
+// belongs to it, because DDRestoreFrontBuffer re-origins that copy in place
 // when the mode changed underneath. The discarded GameTime::Get() before
 // each loop is retail's, not an artifact.
 //
@@ -379,7 +392,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
                 HRESULT result = g_ddsPrimary->Restore();
                 if (result == DDERR_WRONGMODE)
-                    ddResetDisplayMode(&region);
+                    ddRestoreFrontBuffer(region);
                 else if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1b4);
@@ -406,7 +419,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
                 HRESULT result = g_ddsPrimary->Restore();
                 if (result == DDERR_WRONGMODE)
-                    ddResetDisplayMode(&region);
+                    ddRestoreFrontBuffer(region);
                 else if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1ef);
@@ -443,15 +456,21 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // caps re-read, and - unless the desktop is itself 16-bit - the window is
 // pushed into fullscreen (popup style, topmost, no menu) with the blit's own
 // rectangle re-origined against the moved client area, which is why the
-// caller hands its working copy in. Either way the primary is rebuilt and,
-// if we ended up fullscreen, the preference is written back.
+// caller hands its working copy in. The windowed recovery rebuilds the
+// primary and writes preferences when it switches into fullscreen.
 //
-// The desktop-caps block is GetDesktopInfo expanded: it is a small extern
-// with an out-of-line body further down this TU, so /Ob2 takes it here and
-// leaves the emitted copy for the other callers.
-// E:\gamedcs\wingraph.cpp
-VA(0x006003c0, 0x22D)  // anchor-caller(DDBlit, both primary retry loops), retail-only
-void ddResetDisplayMode(tagRECT* region)
+// DC DDRestoreFrontBuffer:725/729/733 calls SetCooperativeLevel,
+// SetDisplayMode and primary Restore in that order; :775 creates a primary
+// surface. Retail 0x6003c0 has the same recovery sequence, with the PC
+// windowed-mode/clipper path in the source region elided by WinCE. Its body
+// follows DDBlit, which calls it on both DDERR_WRONGMODE paths: the retained
+// source-static emission pattern. This identifies the earlier provisional
+// name DDResetDisplayMode as DDRestoreFrontBuffer, rather than a PC-only
+// helper. DC's mutable tagRECT& parameter fits the retail OffsetRect use.
+// GetDesktopInfo remains an ordinary same-TU call expanded by VC6.
+// E:\gamedcs\wingraph.cpp:719
+VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission, dc 0x1990e4
+static void ddRestoreFrontBuffer(tagRECT& dstRect)
 {
     if (g_windowedMode) {
         HRESULT result = g_directDraw->SetCooperativeLevel(
@@ -484,7 +503,7 @@ void ddResetDisplayMode(tagRECT* region)
         origin.x = 0;
         origin.y = 0;
         ScreenToClient(g_hwndApp, &origin);
-        OffsetRect(region, origin.x, origin.y);
+        OffsetRect(&dstRect, origin.x, origin.y);
         g_ddClipper->Release();
         g_ddClipper = 0;
         g_windowedMode = 1;
@@ -571,14 +590,102 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
     return surface;
 }
 
+// DC DDInitGraphics:248 and DDCleanUpWinGraphics:1524 retain these
+// ordinary source-static calls. Retail expands the three create/release
+// sequences in 0x6014f0/0x6018a0. DDSURFACEDESC (108 bytes) is the retail
+// v1 API replacement for DC's DDSURFACEDESC2 (124 bytes).
+// Original names: DDCreateMouseSurfaces, DDReleaseMouseSurfaces;
+// locals ddsd and color_key. DC:1256 calls RGBto16 separately for both key
+// endpoints; VC6 may eliminate the second expansion naturally.
+// E:\gamedcs\wingraph.cpp:1238
+static void ddCreateMouseSurfaces()
+{
+    HRESULT result;
+    DDSURFACEDESC surfaceDesc;
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+    surfaceDesc.ddsCaps.dwCaps =
+        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+    surfaceDesc.dwHeight = 64;
+    surfaceDesc.dwWidth = 64;
+    result = g_directDraw->CreateSurface(
+        &surfaceDesc,
+        &g_ddsMouseSurface,
+        0);
+    if (result != DD_OK)
+        ddsd(result,
+             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+             0x28b);
+
+    DDCOLORKEY colorKey;
+    colorKey.dwColorSpaceLowValue = rgBto16(0, 255, 255);
+    colorKey.dwColorSpaceHighValue = rgBto16(0, 255, 255);
+    g_ddsMouseSurface->SetColorKey(DDCKEY_SRCBLT, &colorKey);
+
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+    surfaceDesc.ddsCaps.dwCaps =
+        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+    surfaceDesc.dwHeight = 64;
+    surfaceDesc.dwWidth = 64;
+    result = g_directDraw->CreateSurface(
+        &surfaceDesc,
+        &g_ddsMouseSaveSurface,
+        0);
+    if (result != DD_OK)
+        ddsd(result,
+             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+             0x29c);
+
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+    surfaceDesc.ddsCaps.dwCaps =
+        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
+    surfaceDesc.dwHeight = 128;
+    surfaceDesc.dwWidth = 128;
+    result = g_directDraw->CreateSurface(
+        &surfaceDesc,
+        &g_ddsMouseScratchSurface,
+        0);
+    if (result != DD_OK)
+        ddsd(result,
+             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
+             0x2aa);
+}
+
+// E:\gamedcs\wingraph.cpp:1289
+static void ddReleaseMouseSurfaces()
+{
+    if (g_ddsMouseSurface) {
+        g_ddsMouseSurface->Release();
+        g_ddsMouseSurface = 0;
+    }
+    if (g_ddsMouseSaveSurface) {
+        g_ddsMouseSaveSurface->Release();
+        g_ddsMouseSaveSurface = 0;
+    }
+    if (g_ddsMouseScratchSurface) {
+        g_ddsMouseScratchSurface->Release();
+        g_ddsMouseScratchSurface = 0;
+    }
+
+}
+
 // The Dreamcast line table groups the re-entry test, RestoreDisplayMode,
 // error-name switch, formatter and shutdown into the same source statements
 // retained here.  Complete's x86 body independently proves the 200-byte
 // cTemp extent, every HRESULT case, one MessageBeep, the low-word error code
 // passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
 // supplies the source lineage; its smaller error roster is not copied blindly.
+// E:\gamedcs\wingraph.cpp:1313
 // Before normalization (locals): iDDErr, cFile, iLine, cTemp.
-VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
+VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage, dc 0x199724
 void ddsd(int ddErr, char* file, int line)
 {
     char temp[200];
@@ -1219,10 +1326,13 @@ void initGraphics()
 // Retail's DirectDraw setup is the Win32 expansion of DC's DDInitGraphics:
 // create the v1 interface, select fullscreen/windowed cooperative mode,
 // create the primary/back surfaces, publish the 16-bit channel masks, then
-// allocate the three system-memory mouse surfaces. The called vtable slots,
+// allocate the three system-memory mouse surfaces. Unlike DC:159, retail
+// starts with the busy guard and DirectDrawCreate, without a cleanup call;
+// it has neither mode/reinit arguments nor the temporary Surface4 query.
+// The called vtable slots,
 // dimensions, caps and diagnostic line numbers are all direct retail bytes.
 // E:\gamedcs\wingraph.cpp:156
-VA(0x006014f0, 0x32F)  // wrapper tail-jump + DirectDrawCreate lifecycle
+VA(0x006014f0, 0x32F)  // wrapper tail-jump + DirectDrawCreate lifecycle, dc 0x198bcc
 void ddInitGraphics()
 {
     if (g_winGraphBusy)
@@ -1258,17 +1368,7 @@ void ddInitGraphics()
                  0xaa);
     }
 
-    g_ddsPrimary = ddCreateSurface(800, 600, 1);
-    if (g_ddClipper) {
-        result = g_ddsPrimary->SetClipper(0);
-        if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
-            ddsd(result,
-                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-                 0x6e);
-        g_ddClipper->Release();
-        g_ddClipper = 0;
-    }
+    ddCreatePrimary();
     g_ddsPrimary->GetPixelFormat(&g_pixelFormat);
 
     ResourceManager::setPixelFormat(
@@ -1276,86 +1376,11 @@ void ddInitGraphics()
     SmackManager::setPixelFormat(
         g_pixelFormat.dwRBitMask, g_pixelFormat.dwGBitMask, g_pixelFormat.dwBBitMask);
 
-    if (!g_windowedMode) {
-        result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
-        if (result != DD_OK)
-            ddsd(result,
-                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-                 0x81);
-        result = g_ddClipper->SetHWnd(0, g_hwndApp);
-        if (result != DD_OK)
-            ddsd(result,
-                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-                 0x86);
-        result = g_ddsPrimary->SetClipper(g_ddClipper);
-        if (result != DD_OK)
-            ddsd(result,
-                 DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                              "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-                 0x8b);
-    }
+    ddSetupClipper();
 
     g_ddsBack = ddCreateSurface(800, 600, 0);
 
-    DDSURFACEDESC surfaceDesc;
-    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-    surfaceDesc.dwSize = sizeof(surfaceDesc);
-    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
-    surfaceDesc.ddsCaps.dwCaps =
-        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-    surfaceDesc.dwHeight = 64;
-    surfaceDesc.dwWidth = 64;
-    result = g_directDraw->CreateSurface(
-        &surfaceDesc,
-        &g_ddsMouseSurface,
-        0);
-    if (result != DD_OK)
-        ddsd(result,
-             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-             0x28b);
-
-    DDCOLORKEY colorKey;
-    unsigned long color = rgBto16(0, 255, 255);
-    colorKey.dwColorSpaceLowValue = color;
-    colorKey.dwColorSpaceHighValue = color;
-    g_ddsMouseSurface->SetColorKey(DDCKEY_SRCBLT, &colorKey);
-
-    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-    surfaceDesc.dwSize = sizeof(surfaceDesc);
-    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
-    surfaceDesc.ddsCaps.dwCaps =
-        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-    surfaceDesc.dwHeight = 64;
-    surfaceDesc.dwWidth = 64;
-    result = g_directDraw->CreateSurface(
-        &surfaceDesc,
-        &g_ddsMouseSaveSurface,
-        0);
-    if (result != DD_OK)
-        ddsd(result,
-             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-             0x29c);
-
-    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
-    surfaceDesc.dwSize = sizeof(surfaceDesc);
-    surfaceDesc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
-    surfaceDesc.ddsCaps.dwCaps =
-        DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
-    surfaceDesc.dwHeight = 128;
-    surfaceDesc.dwWidth = 128;
-    result = g_directDraw->CreateSurface(
-        &surfaceDesc,
-        &g_ddsMouseScratchSurface,
-        0);
-    if (result != DD_OK)
-        ddsd(result,
-             DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
-                          "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
-             0x2aa);
+    ddCreateMouseSurfaces();
 }
 
 // E:\gamedcs\wingraph.cpp:1882
@@ -1397,7 +1422,7 @@ void cleanUpWinGraphics()
 // vtable slots independently fix every interface generation: IDirectDraw
 // RestoreDisplayMode/SetCooperativeLevel and IDirectDrawSurface::SetClipper.
 // E:\gamedcs\wingraph.cpp:1476
-VA(0x006018a0, 0x100)  // wrapper tail-jump + DirectDraw release chain
+VA(0x006018a0, 0x100)  // wrapper tail-jump + DirectDraw release chain, dc 0x19a09c
 void ddCleanUpWinGraphics()
 {
     if (g_directDraw) {
@@ -1424,18 +1449,7 @@ void ddCleanUpWinGraphics()
             g_ddsBack->Release();
             g_ddsBack = 0;
         }
-        if (g_ddsMouseSurface) {
-            g_ddsMouseSurface->Release();
-            g_ddsMouseSurface = 0;
-        }
-        if (g_ddsMouseSaveSurface) {
-            g_ddsMouseSaveSurface->Release();
-            g_ddsMouseSaveSurface = 0;
-        }
-        if (g_ddsMouseScratchSurface) {
-            g_ddsMouseScratchSurface->Release();
-            g_ddsMouseScratchSurface = 0;
-        }
+        ddReleaseMouseSurfaces();
 
         HRESULT result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_NORMAL);
@@ -1472,6 +1486,24 @@ unsigned char setFullScreenStatus(int fullScreenOn)
     return changed;
 }
 
+// E:\gamedcs\wingraph.cpp:1691..1707. Original name: ResizeWindow.
+// The decorated DC signature is void(int, int), and DDSetFullScreenStatus
+// line 1791 passes the saved window coordinates. The WinCE body is empty;
+// retail 0x601a00 expands the windowed AdjustWindowRectEx/MoveWindow/WritePrefs
+// sequence. Keep this ordinary helper and its two argument evaluations.
+void resizeWindow(int windowX, int windowY)
+{
+    if (!g_windowedMode) {
+        RECT windowRect = {0, 0, 800, 600};
+        AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
+        MoveWindow(g_hwndApp, windowX, windowY,
+                   windowRect.right - windowRect.left,
+                   windowRect.bottom - windowRect.top, 1);
+        writePrefs();
+    }
+
+}
+
 // E:\gamedcs\wingraph.cpp:1712 - the mode change itself, emitted straight
 // after its wrapper, which is the file-static emission pattern the header
 // note already records. The whole body is one linear sequence and the
@@ -1487,19 +1519,16 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 // the remap only runs when DirectDraw came back in a different pixel
 // format - which is what bitmap16.h's own note about `0x7e0 ? 6 : 5`
 // describes from the other end.
-// Residual (94.58%): register allocation only - all 14 branches and all 31
-// calls agree, and 23 of 28 blocks are byte-exact. What is left is which
-// scratch register each of the three mask compares and the Grab/Draw
-// argument loads land in (retail runs Width through ESI where we use ECX,
-// and rotates EAX/ECX/EDX one place through the mask block), plus the
-// resulting `push esi` save point. Three source levers were measured and
-// two paid: hoisting GetDesktopInfo into a named local, which is what makes
-// the desktop query UNCONDITIONAL and puts iStatus in its own frame slot
-// (85.4440 -> 91.8531, and it is what closes every branch); reading
-// iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
-// where retail loads them (91.8567 -> 94.5813); and declaring the three
-// saved masks blue/green/red rather than red/green/blue, worth 0.0036.
+// Exact after restoring the Bitmap16.h Grab(const Bitmap16Bit*,int,int)
+// and Draw(...,Bitmap16Bit*,...) overloads called at DC 1738/1783. Keeping
+// either wrapper expanded by hand loses the match. The nine-state family
+// emitted eight distinct objects; all four forms using both canonical
+// overloads reproduce 100% for this body and all 17 siblings, with either
+// direct arguments or short-lived screen pointers. GetFrame and ordinary
+// ResizeWindow remain canonical; their flattened control was 94.5840%.
 // Before normalization (locals): iNewStatus, iStatus, bChanged, bDesktopOk.
+// DC names: result -> changed; saved_bitmap -> savedScreen.
+// E:\gamedcs\wingraph.cpp:1712
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order, dc 0x19a234
 unsigned char ddSetFullScreenStatus(int newStatus)
 {
@@ -1522,9 +1551,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     unsigned long savedGreen = 0;
     unsigned long savedRed = 0;
     if (!g_closingApp) {
-        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        savedScreen.grab(screen->m_map, 0, 0, screen->m_width, screen->m_height,
-                         screen->m_pitch);
+        savedScreen.grab(g_windowManager->m_screenBitmap, 0, 0);
         savedBlue = g_colorMaskBlue;
         savedGreen = g_colorMaskGreen;
         savedRed = g_colorMaskRed;
@@ -1559,28 +1586,13 @@ unsigned char ddSetFullScreenStatus(int newStatus)
                                   : BITMAP_GREEN_BITS_1555);
             ResourceManager::remapGraphics();
         }
-        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        savedScreen.draw(0, 0, 800, 600, screen->m_map, 0, 0, screen->m_width,
-                         screen->m_height, screen->m_pitch, false);
+        savedScreen.draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0, false);
     }
 
     g_mouseManager->reset();
-    g_mouseManager->loadFrame(g_mouseManager->m_frame);
+    g_mouseManager->loadFrame(g_mouseManager->getFrame());
 
-    int windowX = g_windowX;
-    int windowY = g_windowY;
-    if (!g_windowedMode) {
-        RECT windowRect;
-        windowRect.left = 0;
-        windowRect.top = 0;
-        windowRect.right = 800;
-        windowRect.bottom = 600;
-        AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
-        MoveWindow(g_hwndApp, windowX, windowY,
-                   windowRect.right - windowRect.left,
-                   windowRect.bottom - windowRect.top, 1);
-        writePrefs();
-    }
+    resizeWindow(g_windowX, g_windowY);
 
     kbChangeMenu(0);
     videoRealignBuffers();

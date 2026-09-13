@@ -8,15 +8,20 @@
 
 // E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
 // owns this record's single in-class constructor; only this TU uses it.
+// The public ??0CDiffHeader@@QAA@H_NH@Z proves native bool for copy;
+// the CodeView T_UCHAR formal is its lowered storage representation.
+// The complete class record has exactly three fields at 0/4/8 and size 12.
+// Its final three bytes are ABI padding, not a fourth source member. The
+// 16-state constructor/layout/name family preserves every function byte
+// and all tracked scores with the native bool and implicit padding restored.
 class CDiffHeader
 {
 public:
     int m_numBytes;
     int m_oldNumBytes;
     unsigned char m_copy;
-    unsigned char m_tailPadding[3];
 
-    CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
+    CDiffHeader(int numBytes, bool copy, int oldNumBytes)
         : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
     {
     }
@@ -146,14 +151,20 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
     }
 }
 
-// Residual (current 83.9244%, banked MAX 83.9477%): exact 447-byte extent,
-// exact 14-block retail CFG, and the exact 0x3c retail frame.  Dreamcast proves
+// Residual (current/MAX/HIST 83.9593%): the current body is 436
+// bytes versus retail 447, with fourteen matching CFG flows and frame 0x3c.
+// Dreamcast proves
 // the max/CountSameBytes/FindNextSame helpers, three scoped CDiffHeader objects,
 // and both payload memcpy arms.  Its lower-bound local inventory and tail line
 // rows favor no separately named `count`; spelling m_newSize-newOffset directly
 // restores retail's frame and moves the diagnostic from 214 mixed flow/register
 // slots to 111 pure register-visible slots, so that coherent source shape is
 // retained despite the small aggregate-score dip.
+// The three scoped records retain DC's diffHeader name. Their repeated name
+// remains an explicit scope-correlation gap in the source audit; all three
+// declarations use CDiffHeader. Restoring its bool parameter and natural
+// tail padding changes only compiler-local relocation ordinals elsewhere;
+// it does not resolve this function's register allocation.
 //
 // The remaining delta is a callee-saved role swap: retail binds ESI=diffOffset,
 // EDI=this, EBX=newOffset; our CL binds EDI=diffOffset, ESI=this, EBX=newOffset.
@@ -164,14 +175,25 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // store swap) are flat or worse.  Earlier exhaustive controls also reject all
 // 120 prologue orderings, ternary max, mutable-offset CountSameBytes,
 // placement-new headers, a shared terminal tail, function-scope sameCount,
-// register hints, and inert type-count probes.  This is a measured C1
-// front-end-handle wall, not license to invent an alias local absent from DC.
+// register hints, and inert type-count probes. These controls leave the C1
+// front-end processing order unresolved; they do not justify an alias local.
+// The 24-state allocation-owner family (5cb0d43dafe69b8969a4) is flat for
+// the current initialization order; moving allocation before diffSize's
+// initialization scores 78.7558 and contradicts retail's initial size store.
+// The 16-state copy-operand family (75922f0d8c44cd926995) finds pointer-add
+// commutation byte-neutral. Restoring newOffset before oldOffset in the
+// changed-data arm, as DC lines 214/215 show, raises 83.9244 to 83.9593.
+// The 16-state comparison family (cad26bea333fe0344900) keeps that gain:
+// integer-index commutation is flat; reversing CountSameBytes' equality
+// operands falls to 76.6105 with the restored increment order. All three
+// exact siblings hold in these families. The same-data arm retains its
+// distinct oldOffset/newOffset order from DC lines 242/243.
 // E:\gamedcs\diff.cpp:174
 // DC diff.cpp:204/211, 222/226 and 237 use the whole output buffer
 // plus diffOffset as their memcpy destinations (first pair 0x82500/0x82510).
 // GetBase was an unattested header wrapper subtracting the size member
-// from GetData's array address. The modeled payload array starts after the
-// size prefix, so subtract that prefix from the whole-buffer offsets here.
+// from GetData's array address. These copies instead cast the allocation
+// directly to its whole-buffer byte address, including the size prefix.
 // Apply keeps its separate payload-relative GetData accesses.
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
@@ -191,19 +213,19 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             int oldCount = 0;
             int newCount = 0;
             if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
-                CDiffHeader header(newCount, 1, oldCount);
+                CDiffHeader diffHeader(newCount, 1, oldCount);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
-                       &header, sizeof(CDiffHeader));
+                       &diffHeader, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        m_newData + newOffset, newCount);
                 diffOffset += newCount;
-                oldOffset += oldCount;
                 newOffset += newCount;
+                oldOffset += oldCount;
             } else {
-                CDiffHeader header(m_newSize - newOffset, 1, 0);
+                CDiffHeader diffHeader(m_newSize - newOffset, 1, 0);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
-                       &header, sizeof(CDiffHeader));
+                       &diffHeader, sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
                 memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
                        m_newData + newOffset, m_newSize - newOffset);
@@ -213,9 +235,9 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
                 return diff;
             }
         } else {
-            CDiffHeader header(sameCount, 0, 0);
+            CDiffHeader diffHeader(sameCount, 0, 0);
             memcpy(static_cast<unsigned char*>(static_cast<void*>(diff)) + diffOffset,
-                   &header, sizeof(CDiffHeader));
+                   &diffHeader, sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);
             oldOffset += sameCount;
             newOffset += sameCount;

@@ -334,6 +334,13 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 // Earlier controls: naming boatIcons[currBoat->type] costs 98.2385 ->
 // 98.1467; hoisting heroX/heroY coordinates costs 75.1244. Keep the proven
 // caller shape and the header expression; see docs/vc6/regalloc.md 6f.
+// Restoring DrawHero's four Bitmap16Bit accessor calls leaves only the
+// final class-icon GetMap out of line (95.3089%). The original native-bool
+// GetHflip result does not resolve that call. Four final-argument lifetime
+// states and 46 receiver/destination/value states reproduce 4 and 37
+// objects: preparing frame/sequence can expand GetMap, but the best 97.4417%
+// still changes register allocation. Keep those helpers; no candidate is
+// adopted merely for reducing the call count.
 VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
 void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
@@ -1421,7 +1428,7 @@ TViewWorldWindow::TViewWorldWindow()
     msg.m_codeY = 17;
     msg.m_codeX = 5;
     msg.m_extra = 16;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     m_undergroundButton->sendMessage(
         widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
@@ -1770,13 +1777,13 @@ void TViewWorldWindow::updateViewWorld(message* msg)
         msg2.m_codeY = i + 16;
         msg2.m_codeX = 6;
         msg2.m_extra = 16;
-        broadcastMessage(&msg2);
+        broadcastMessage(msg2);
     }
     msg2.m_id = MESSAGE_WIDGET;
     msg2.m_codeY = msg->m_codeY;
     msg2.m_codeX = 5;
     msg2.m_extra = 16;
-    broadcastMessage(&msg2);
+    broadcastMessage(msg2);
 
     type_point center(m_origin.m_x + g_viewHalfWidth,
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
@@ -1845,7 +1852,7 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 // The radar drag is a pump: hold the button, keep the LAST mouse-move
 // seen, and re-centre once per outer pass until the button comes up.
 VA(0x005fcb10, 0x37F)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
-int TViewWorldWindow::windowHandler(message* msg)
+int TViewWorldWindow::windowHandler(message& msg)
 {
     message rMsg;
     message rSaveMsg;
@@ -1862,18 +1869,18 @@ int TViewWorldWindow::windowHandler(message* msg)
         g_soundManager->switchAmbientMusic(
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
 
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case KEYCODE_ESCAPE:
         case KEYCODE_ENTER:
-            g_windowManager->m_dialogReturn = msg->m_codeY;
-            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+            g_windowManager->m_dialogReturn = msg.m_codeY;
+            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->m_codeY != RADAR_ID)
+            if (msg.m_codeY != RADAR_ID)
                 break;
             if (m_viewableWidth == g_mapWidth && m_viewableHeight == g_mapHeight)
                 break;
@@ -1891,7 +1898,7 @@ int TViewWorldWindow::windowHandler(message* msg)
                 radarDivisor = 1.0f;
                 break;
             }
-            updateRadar(msg->m_mouseX, msg->m_mouseY, radarDivisor);
+            updateRadar(msg.m_mouseX, msg.m_mouseY, radarDivisor);
             do {
                 process1WindowsMessage();
                 rSaveMsg = rMsg = g_inputManager->getEvent();
@@ -1908,21 +1915,21 @@ int TViewWorldWindow::windowHandler(message* msg)
             } while (rMsg.m_id != MESSAGE_LEFT_BUTTON_UP);
             break;
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case MAGNIFY_FAR_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case PUZZLE_ID:
                 g_windowManager->fadeScreen(1, 4, 0);
@@ -1939,8 +1946,8 @@ int TViewWorldWindow::windowHandler(message* msg)
                 g_windowManager->updateScreen(0, 0, 800, 600);
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
-                g_windowManager->m_dialogReturn = msg->m_codeY;
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
+                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;

@@ -43,7 +43,7 @@ public:
     virtual ~TAdventureOptionsWindow();
     int convertID2HelpID(int id) const;
     // Before normalization (function): TAdventureOptionsWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 };
 SIZE(TAdventureOptionsWindow, 0x64);
 

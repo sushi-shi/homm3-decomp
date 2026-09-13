@@ -98,7 +98,7 @@ inline void TCampaignBrief::resetMapAndDescription(int which)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = MAP_NAME_ID;
     msg.m_extraText = m_scenarios[which].m_mapName.c_str();
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
 }
 
@@ -158,7 +158,7 @@ void TCampaignBrief::select(int which)
         msg.m_extra = 4;
         break;
     }
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
         widget* ok = getWidget(DIALOG_RETURN_OK);

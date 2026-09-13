@@ -635,31 +635,63 @@ compile instead of a sweep. Encoder-level tie-breaks (B17 length
 feedback, B18 SIB operand order) are not allocator decisions and are
 out of scope.
 
-### 6d. The one-line forwarder is a DEPTH level (2026-09-06, polish 30)
+### 6d. Preserve the name forwarder; inspect its nested budget
 
-`army::GetName()` is `return GetArmyName(creatureType, numTroops);`, so a
-statement written through it reaches the trait lookup one /Ob2 level deeper
-than a direct `GetArmyName(a->creatureType, a->numTroops)` call - and that one
-level is the whole difference between the leaf being CALLED and being expanded
-with its range guard, its 116-byte stride and its +0x14/+0x18 name pair
-inline. In `drawing.obj`: `show_creature_spell_error` **82.4044 -> 92.3889**
-on one pair of sites, `CombatMessage` **90.2999 -> 92.7545** on nine.
+`army::getName()` delegates to the canonical `getArmyName` lookup. Both
+inline declarations and that source call are proven by Dreamcast Army.h
+810/815. The drawing caller's higher score after bypassing the wrapper was
+an inlining diagnostic, not evidence that the original source bypassed it.
 
-Three bounds, all measured:
+The restored `combatMessage` has a measured pre-inline cost of 1062 and an
+initial budget of 2124. Its first three name-wrapper sites pass nested budgets
+70, 75 and 84 to a `getArmyName` body costing 86. All three leaf expansions
+are rejected; later sites with budgets 96 and above expand. Retail calls the
+lookup in the walk arm and expands it in the fly arm. This is a specific
+nested-budget boundary to recover through the real helper and caller source.
+It does not prove a hard inline-depth limit.
 
-* **all-or-nothing per body** - converting two of CombatMessage's nine sites
-  scores 86.42, BELOW the untouched baseline;
-* **coupled across a caller edge** - converting only `show_creature_spell_error`
-  costs `CombatMessage` 3.22 and gives it an EH frame retail has not got, so
-  the caller has to be converted in the same change;
-* **per body, not global** - the identical rewrite at `ModifySpellDamage`'s
-  four name sites costs 16.2 (88.49 -> 72.25), because retail CALLS the lookup
-  there. The screen that tells them apart is a census of
-  `?GetArmyName@@YIPBDHH@Z` call sites, base object against delinked target;
-  after the drawing fix no other sub-100 row in the tree disagrees.
+A four-form canonical-header family resolves part of it: keeping the outer
+`else` and returning the singular/plural conditional expression makes
+`showCreatureSpellError` and `processNextAction` exact, while `combatMessage`
+rises to 94.5176%. The retained 62-byte name helper stays exact. All 66 header
+consumers were compared; the selected form reproduces with no score losses.
+Early-return controls cause collateral inline changes, so removing the guard's
+`else` is not equivalent compiler state. The new trace leaves the caller at
+1062/2124 but lowers the real lookup's cost from 86 to 71: the budget 70 walk
+site still calls it, while the budget 75 fly site now expands it. Every actual
+name-helper call decision agrees with retail; the remaining predictor entries
+are self-symbol jump-table targets, not additional recursive source calls.
 
-Keeping the forwarder and passing a CONSTANT count is not a substitute
-(81.66): the constant then has to be materialised for a call that stays.
+A six-state caller/helper family then restores the wall-message scope shown
+by DC lines 431/433/434 and the Complete Faerie Dragon null-arm ordering.
+The wall correction alone reaches 96.8698%; either null-first if/else or
+null-first switch break reaches 98.0662%. All six candidates and distinct
+objects reproduce, and every exact drawing sibling remains exact. The
+selected if/else form has all 128 retail CFG targets and all named calls.
+Scope and branch placement explained the extra block without altering inlining.
+
+The remaining two address-calculation differences expose a semantic error:
+First Aid indexes by the manager's acting side, as DC line 445's +0x12984
+load and retail's reused acting-side product both prove. Reading the army's
+own side field prevented sharing that product and changed the initial lookup
+allocation. Correcting the owner reaches 99.98826%. The ranged message's
+retail text index is 297 (displacement 0x4a4), not the authored 41. Correcting
+that index and reversing the wall comparison operands gives 100%, with all
+2,958 non-relocation bytes and all 180 relocation positions agreeing. This
+residual was source semantics and compiler CSE, not an allocator plateau.
+
+The drawing source-fact family separately restores both functions' name calls,
+grid-setup accessor calls and const locals: 64 source states, 16 emitted
+objects, reproduced controls. Restoring the names gives `combatMessage`
+90.2999% and `showCreatureSpellError` 88.2444%; their former 92.7545% and
+100% peaks remain in history. The other four source restorations retain exact
+scores. The full checkpoint leaves all other TUs unchanged.
+
+Keep the older flattening experiments as negative controls: converting only
+two combat-message sites scored 86.42%; rewriting four name sites in
+`modifySpellDamage` lost 16.2 points. Passing a constant count through the
+wrapper also failed to reproduce the desired decisions. None justifies
+pasting the lookup into a caller or removing the recorded wrapper call.
 
 ### 6c. REFUTED: the `_Ufill` / `_Destroy` surplus is a delink NAMING artifact
 (2026-09-06, polish 32)
@@ -1508,6 +1540,12 @@ load/store order. Sixteen source states produce eight reproduced objects;
 removing `__forceinline`, restoring plain pixel pointers, and moving the
 zero-area check to an early return independently leave scores unchanged.
 
+The corresponding bitmap24 helper (DC 0x525b4, lines 39–43) also needs no
+`__forceinline` attribute. Its two-state declaration control produces one
+reproduced code object: `adjustHSV` stays at 95.7470% and all seven exact
+siblings hold. The remaining rectangle row-address calculation differs from
+retail independently of the conversion helper's natural expansion.
+
 ### Field-bound references, scoped copies, and loop-variable reuse (addSite)
 
 `TRmgVoronoi::addSite` (0x5fd790) closed from 97.6518% to 100% with every
@@ -1543,3 +1581,269 @@ decision, so `predict-inline --trace` cannot see them; a family that holds
 the inline state fixed and varies only lifetimes and access spellings is
 the tool. None of these is a recovered Dreamcast scope: RMG has no
 symbols, and the spellings are period-style guesses that VC6 confirms.
+
+### Sprite crop accessors and widget extent lifetimes
+
+`iconWidget::draw` (0x4eab40) remains exact with its original `GetWidth`,
+`GetHeight`, `GetCroppedWidth`, `GetCroppedX`, resource-type accessor and
+bitmap drawing facades. Restoring those calls initially exposed a 99.3129%
+sequence/frame-chain register difference in the creature crop arm. Ten
+crop-expression/case-order states did not remove it. A follow-up of 56
+unique source states produced twelve objects and ten reproduced elites;
+reading the widget extents directly recovers 100%. Extra `boxWidth` and
+`boxHeight` locals changed that schedule. The retained form also removes
+an unnecessary sprite alias and preserves DC's plain/centered/creature
+case order. No frame-pointer or bitmap-field copies are needed in the caller.
+
+This is a caller value-lifetime result, not a reason to flatten the proven
+accessors. Named crop-width/bounds values alone and sequential offset
+accumulation are negative controls. The full checkpoint preserves all
+other scores; the separate `DrawHero`/`GetHflip` Boolean and bitmap-facade
+restoration has explicit caller inlining residuals in the hero-part renderers.
+
+### Shared message tails determine status-register allocation
+
+`textWidget::main` (0x5bc440) reaches 100% from 98.4931% when the right/left
+button-down branches share the message-id, widget-id and return tail.
+Dreamcast textwdgt.cpp:180..188 places the qualifier/command and status/command
+updates in separate arms, followed by those common statements at 191..194.
+Duplicating the tail makes VC6 keep status in DX and the disabled flag in BL;
+the shared source tail produces retail's BX/DL allocation and the subsequent
+mouse-coordinate register choices. All 149 instructions then agree.
+
+Eight source states isolate this change from the inactive-message branch order
+and the button-up selected scope. All four with the common tail reproduce at
+100%; all four with duplicated tails remain 98.4931%. The retained form also
+restores those two positive source shapes. Earlier status-local and case-order
+controls held the duplicated tail fixed, so their flat result did not establish
+an allocator limit.
+
+### Per-case state writes prevent false shared tails
+
+`combatOptionsWindowHandler` (0x46f7b0) closes at 100% after restoring its
+command switch and the ownership of its preference writes. The inner switch
+alone reaches 96.4205% from 85.9186%; a twelve-state dispatch/flag family
+reproduces that result with either case order or byte/bool flags. The retained
+case order follows Dreamcast's select-before-deselect source grouping.
+
+The remaining case tails were merged because an earlier reconstruction moved
+the window's `m_prefsChanged` store into `updateCombatOptions`. DC lines
+605/606, 613/614 and 621/622 explicitly distinguish the local redraw flag
+from the per-case window-member store. Retail corroborates those stores with
+three different scratch-register reloads. Restoring them recovers all 63 CFG
+blocks and the complete call sequence. The helper itself takes `int` and only
+conditionally redraws, as DC 651..654 records; its ordinary definition after
+the caller still auto-inlines correctly. The five mapping/highlight helpers
+also remain exact after removing their unsupported `inline` keywords.
+
+This was missing statement ownership, not an unreachable allocator state.
+Changing only the final three call sites or flattening their highlight helpers
+did not repair the shared-store model. Inspect the statements on both sides
+of a helper boundary before attributing merged tails to compiler differences.
+
+### Coordinate and helper result lifetimes can move constructor registers
+
+`THighScoreWindow::THighScoreWindow` (0x4e9880) rises from 90.7049% to
+99.9766% through two source changes: compute each icon's Y coordinate as
+`26 + 50 * i`, and bind `getMonType`'s signed-short table result to an `int`
+before returning. The coordinate expression restores the complete setup and
+control prefix, retained stack index, and EBX/ESI/EDI allocation. The helper
+result then restores the lookup, argument and insertion registers while its
+retained body and all 18 hiscore siblings remain exact. The one remaining
+real instruction operand is the second score load's EAX/ECX SIB base/index
+order. Two displayed `+2` table-result offsets resolve to retail's separately
+named second column.
+
+The 24-state button/row/helper family emits six objects and reproduces all six.
+The coordinate change alone reaches 95.6792%. A 36-state icon/index/result
+family emits 16 objects and reproduces ten elites, reaching 99.9766%. A further
+24-state bank-access/result-declaration/prefix-postfix-increment family emits
+one object and is flat. An absent named DC local does not rule out the int
+result: the debug local roster is only a lower bound, and DC847 records the
+result load.
+
+Changing only the old loop bound to `i < 11` scores 86.4942%; moving its
+increments into the body and changing the tested button-result lifetimes are
+flat. A short helper result loses the exact retained body, and separate
+row-index scopes stop at 99.9578%. No slot reference, allocation-result alias,
+forced inlining or compiler-state padding is retained. Retail still carries a
+Y induction register: optimized induction does not identify the source loop.
+
+### Check overload selection before explaining register residuals
+
+The combat cheat handler (0x472010) had the correct named spellbook constant
+but constructed `{1,0}` instead of retail's `{0,-1}`. `ARTIFACT_SPELLBOOK`
+was in the reconstruction's separate `EArtifactId` enum. Consequently VC6
+selected `type_artifact(SpellID)` through the current `int` alias, rather
+than `type_artifact(TArtifact)`. DC combatwindow.cpp:82 names the latter
+constructor explicitly, and its enum corpus places eArtifactSpellbook in
+TArtifact. The instruction diff exposed both wrong immediate stores even
+though the control-flow skeleton agreed.
+
+Consolidating the admitted artifact constants in `artifact_type.h` restores
+that domain without importing artifact traits or STL into army-only consumers.
+A full 95-TU rebuild improves the cheat handler from 89.4690% to 90.2966%,
+restores exact `hero::equipArtifact` and `townManager::handleMageGuildClick`,
+and improves the adventure cheat, crossover-hero and combat-command callers.
+No function score decreases. The spellbook caller bodies need no casts,
+new constructor overloads, or field-by-field workaround.
+
+The combat handler still expands string::_Tidy where retail calls it. An
+18-state family tests direct/copy/converting TCheatCode construction, real
+c_str input bindings and the code object's dispatch/function lifetime.
+Three objects reproduce; direct and converting forms stay at 90.2966%,
+while explicit temporary-copy construction falls to 83.6690/83.7034%.
+All 24 combatwindow siblings remain exact. No family alternative is adopted.
+
+### Exact functions do not establish the complete derived vtable
+
+CCombatChatEdit previously derived directly from CChatEdit and duplicated
+CGameChatEdit's activated field. Its tracked functions were exact, but its
+vtable omitted two inherited slots. DC combatwindow.cpp:139 calls the
+CGameChatEdit constructor, and retail vtable 0x63d4bc has 27 entries, with
+CGameChatEdit::sendChatCleanup and activate at slots 25 and 26.
+
+Restoring that base and keeping the single private class in combatwindow.cpp
+preserves the 0x74 layout and all 24 exact functions. The ordinary forwarding
+constructor still auto-inlines in TCombatWindow; its former explicit inline
+keyword is unnecessary. The emitted vtable has the correct 108-byte extent
+and the two inherited method relocations. Its deleting destructor uses a COFF
+weak alias to the scalar wrapper, whose 33 bytes agree with retail outside the
+two call operands. The existing external widget::vslot12 remains separately
+documented in widget.h; function exactness does not close that missing body.
+
+### Shared exit state and explicit dialog branches in the hall handler
+
+THallWindow::windowHandler at 0x461ab0 reached an apparent register-allocation
+plateau at 93.6672%. DC castle.cpp supplies two missing source structures:
+line 581 initializes the exit flag, line 829 assigns BuyBuild's result, and
+877/880 test the flag and finish the message; lines 843..846 and 858..861
+contain explicit quick-view if/else calls to NormalDialog in both resource
+widget bands. Complete omits the older hall-page controls, but its retained
+click paths support these same structures.
+
+Restoring both structures reproduces all 0x767 admitted bytes, including the
+three jump-table pools, outside identical relocation sites. All 74 data
+references resolve correctly and all 14 control-flow references agree.
+A 16-state family separates their effects: the shared exit flag with ternary
+dialog arguments reaches 94.6181%; explicit dialog branches with early returns
+reach 92.4342%; the joint source form reaches 100%. Native bool quickView
+instead of int gives 95.8162% in the joint form. The two exact sibling helpers
+and setupCastle's 98.0447% remain unchanged.
+
+This case makes a register-allocation diagnosis conditional on recovered
+source control flow. Locally equivalent rewrites can erase distinct call
+statements or a shared exit lifetime, and restoring one structure alone can
+lower similarity even when the combined source is exact.
+
+The shared message& declaration is now restored through CHeroWindowEx,
+CAdvPopup and their overrides, including ExitDialog. DC window.cpp:1036 and
+advmgr.cpp:11528/11539 prove the base declarations; the same message address
+passes through retail slots 9/14 and the HandleMessage forwarder. All 41
+implemented handlers preserve that reference parameter, with explicit address
+arguments at the fifteen calls to remaining pointer-based helpers.
+
+The 90-consumer full rebuild preserves every current score: 4058/4763 exact,
+95.87% overall. All 152 normalized code objects are identical after the explicit
+signature rename, and all 42 emitted vtables retain their bytes, extents and
+method relocations. The raw herodefs object differs only in local BSS symbol
+offsets; its instruction bytes and named references agree. Forty ledger names
+migrate automatically. Three townmgr rows whose CUR already trailed MAX reset
+MAX on the proven source edit; their 100% HIST remains preserved.
+
+This closes the message-parameter audit finding. Other helper/platform review
+leads and existing Clang coverage gaps remain explicit. The omitted DC page
+controls and the renamed building-legality predicate are documented beside
+the hall handler.
+
+### String cleanup state distinguishes identical named call sequences
+
+font::fillLinesVector at 0x4b5b90 calls `_Tidy` and `assign` both when a
+string is constructed from an empty literal and when it is default-constructed
+then assigned that literal. Those matching calls do not establish the source
+lifetime. Retail marks the string live for EH cleanup at +0x3c, before scanning
+the literal at +0x3f. Only default construction followed by assignment reproduces
+that ordering; literal construction records the live state after assign.
+
+The supported form raises 87.9484% to 88.6275%, preserving all fifteen exact
+font siblings and drawBoundedString at 96.8123%. A 60-state family covers six
+word-scan forms, five string constructions and two declaration orders; 42
+objects are distinct and ten retained elites reproduce. The minimal winning
+edit changes only string construction. A 64-state follow-up crosses five scalar
+declaration lifetimes with the two string forms and yields only the original
+two objects. Those scope alternatives provide no further improvement.
+
+The function remains open: 52 candidate CFG blocks versus 49 retail blocks,
+with scan-entry/backedge differences before the later space-count zero-store
+and branch-threading difference. The old diagnosis attributing all residual
+blocks to the zero store was too narrow. Equal named calls and a prominent
+branch mismatch do not establish either source lifetime or the sole cause.
+
+The accompanying field review restores myABC::abcB to unsigned int, as DC
+fieldlist 0x2372/type 0x75 records. DrawCharacter's signed loop belongs to its
+separately proven int width local, not to the table field. This type correction
+preserves every font instruction and named relocation. The 65-consumer full
+checkpoint also preserves all 151 other normalized code objects and every
+other current score. Restored currX, iOrigPixelWidth and limit names close
+the font local-name audit gaps; the documented highlighted bool discrepancy
+and destructor audit coverage gap remain explicit.
+
+### Distinct object identities can retain identical code and data
+
+LossConditionStruct::checkForDefeatedHeroLoss at 0x5f2a40 retained a mutable
+hero alias and const_cast after hero::hasArtifact had recovered its const
+member declaration. DC victorylossconditions.cpp:463 proves the const hero*
+loser parameter. Using that parameter directly removes the obsolete cast
+without importing the older port's entry guard or loss-state writes.
+
+The legacy alias, const alias and direct parameter produce three reproducible
+source-family object identities, all at 82.0170% with nineteen exact siblings.
+Raw COFF review establishes a stronger result: all 76 code/data sections,
+11,399 bytes and 385 relocation targets agree. Forty-seven references use
+renumbered local labels or compiler temporaries; their section and offset
+remain identical. Normalization derives different anonymous-data names from
+those inputs, so the strict object identity distinguishes them despite no
+machine-code change. Keep that distinction explicit when reporting search
+diversity; do not treat identity counts alone as instruction-level variation
+or alter matching normalization to erase the evidence.
+
+The direct const parameter is retained for source fidelity. It does not
+resolve the remaining switch-tail placement or seventeen-versus-nineteen
+return discrepancy.
+
+## Parameter writes can change empty-allocator scratch homes
+
+`armyGroup::getLuckDescription` at `0x44c1c0` previously used `[ebp+0xb]`
+for its empty `allocator<char>` byte, while retail used `[ebp+0x13]`.
+That difference did not prove a narrow `luck` parameter: Dreamcast records
+`int luck`, and retail subtracts two from its full dword home at `[ebp+0x10]`.
+The source instead subtracted two from `currentLuck`, whose retail home is
+`[ebp+0x14]`. Correcting that semantic error also recovers both allocator
+scratch loads without a signature change. The Clover Field arm then agrees
+instruction for instruction; later string expansion differences remain.
+
+The six-state negative-control family crosses both accumulator choices with
+local, compound and explicit-assignment tail differences. It produces four
+reproduced objects; all corrected forms score 82.5808%, compared with
+82.5689% for the old behavior, preserving all 37 exact siblings. The native
+`test_luck_description` checks 19,008 combinations and rejects subtracting
+the terrain bonus from the computed luck. Inspect the operand's actual
+updates before interpreting scratch homes as parameter-type evidence.
+
+## Separate an index from the value it selects
+
+`advManager::animateMove` at `0x480380` reaches 100% by preserving the
+preference index separately from `walkSpeed`, then assigning the pixel step
+before the delay. Dreamcast lines 520/521 attribute those two table loads;
+522 divides 32 by the step. The pinned table contents confirm which load
+selects pixels and which selects milliseconds. VC6 schedules the delay load
+first, yet the source order selects EDI for the pixel step and restores the
+following division, spill and scroll-origin load sequence.
+
+Fifteen index/timer-lifetime states produce three reproduced objects. A
+separate index with delay-first stays at 97.7237%; a late snapshot of the
+reused `walkSpeed` index with pixels-first falls to 95.6513%. All three timer
+lifetimes are neutral. The extra index is an evidence-supported source
+hypothesis; it is not a recovered named Dreamcast local. All other cursor
+scores hold. The two `startVals+4` operands resolve to retail's separately
+labelled `const_23d6f4`; they do not represent different table elements.

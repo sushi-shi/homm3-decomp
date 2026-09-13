@@ -37,8 +37,8 @@ public:
                                  TSecondarySkill newSkill);
     // Before normalization (function): type_university_skill_button::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
     // Before normalization (function): type_university_skill_button::set_skill.
     // Before normalization (locals): new_skill, new_click.
     void setSkill(TSecondarySkill newSkill, unsigned char newClick);
@@ -114,11 +114,18 @@ public:
     // Before normalization (locals): bFade.
     virtual int doModal(unsigned char fade);  // slot 6
 
+    // Before normalization (function): type_university_window::WindowHandler.
+    // Retail slot 9 at 0x643bd8 folds this override with the skeleton
+    // window's 0x5666f0 body. DC records message& for this shared
+    // interface, restored together with the base and other overrides.
+    virtual int windowHandler(message& msg);  // slot 9
+
     // Before normalization (function): type_university_window::handle_widget_hover.
     // Before normalization (locals): current_widget.
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     // Before normalization (function): type_university_window::ExitDialog.
-    virtual int exitDialog(message* msg);  // slot 14
+    // DC and the shared base virtual declare message&.
+    virtual int exitDialog(message& msg);  // slot 14
 
     // Public in the Dreamcast field list. The derived skill button calls it
     // through widget::parentWindow; Complete keeps that exact relationship.

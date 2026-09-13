@@ -24,6 +24,9 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Original file-static UpdateHillFort; definition follows the handler.
+static void updateHillFort(unsigned char firstUpdate);
+
 // Retail's constructor stores the active dialog here and its destructor
 // clears the same slot before the widget-vector teardown.
 // Before normalization: gpHillFortWindow.
@@ -75,8 +78,7 @@ const float g_afUpgradeCostFactor[7] = {
 // ID locals plus the sixth derived ID row, three seven-entry loops, widget
 // order, and AddWidget sweep. Retail
 // independently corroborates all seventeen allocation/constructor sites and
-// replaces Dreamcast's final UpdateHillFort call with the Complete palette
-// broadcast below.
+// expands the final UpdateHillFort call into the palette broadcast.
 // E:\gamedcs\hillfortwindow.cpp:65
 VA(0x004e75f0, 0x7E9)  // anchor-vtable + anchor-global + constructor/string order, dc 0xd641c
 THillFortWindow::THillFortWindow()
@@ -198,12 +200,7 @@ THillFortWindow::THillFortWindow()
             memError();
     }
 
-    message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.m_codeY = BACKGROUND_ID;
-    msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_hillFortWindow->broadcastMessage(&msg);
+    updateHillFort(1);
 }
 
 // Retail emits the generated wrapper between the constructor and destructor;
@@ -251,107 +248,24 @@ inline bool canAfford(const long* cost, const long* playerRes)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:203
-// Residual (82.2872%, 2026-08-21): the CFG is closed at 34 branches / one
-// return on both sides, with every mnemonic and symbolic target agreeing.
-// Restoring the CodeView-named CanAfford helper below removed our redundant
-// post-loop `a == 7` test (79.6984 -> 80.0868); putting the resourceIndex ==
-// -1 arm first, as retail's sole polarity difference required, then reached
-// 82.2872. Both sides now reserve the same 0x40-byte frame.
+// EXACT 2026-09-12 with the typed slot field and TTextResource::operator[]
+// source calls restored. The slot's enum storage is inferred from the const
+// GetCreatureType accessor; the DC struct is only forward-declared. Direct
+// enum reads replace the prior artificial int-to-enum memcpy conversions.
+// Together these changes remove the remaining slot-cursor displacement bias
+// (95.2727 -> 100%); every other scored sibling retains its previous match.
 //
-// The dominant remainder is one cascading strength-reduction choice. Retail
-// homes the 0xd4-based widget ID in [ebp-8] and bases the slot induction on
-// slot[i].count (this+0x90, `add ebx,0x50`). This compile homes the slot index
-// and bases the induction on slot[i].cost[6] (this+0x84), adding ID LEAs and
-// shifting most member displacements by 0xc. The out-of-line ledger is 23 vs
-// retail's 24, solely BroadcastMessage x14 vs x15. Raw disassembly proves
-// this is not an expanded callee: our C2 tail-merges the identical occupied-
-// and empty-arm upgrade-button update, while retail keeps two call sites.
-//
-// Dreamcast's loop block names six ID locals, in emission order: res_cost_id,
-// res_icon_id, button_id, gold_icon_id, num_id, gold_cost_id; it names no i.
-// Reintroducing all six beside the current i/reference scores 79.60, and a
-// num_id-driven no-i form scores 79.08. Adding only button_id scores 77.7066
-// and still leaves the merged call. Earlier bounded loop forms: direct
-// slot[i] (78.83), id <= CREATURE_NUM_7_ID (78.66), separate i/id induction
-// (77.12), and id-driven without the reference (68.18). The retained
-// i/id/reference form is therefore the measured x86 winner. The clear order
-// at entry is byte-proven: szGoldCost, szResourceCost, resourceIndex, szCount.
-// 2026-09-06, polish lane 22 (82.2872 -> 83.9500): the affordability verdict
-// is NOT a ternary. Retail stores UPGRADE_STATE_TOO_EXPENSIVE and
-// UPGRADE_STATE_AFFORDABLE as two separate constant stores ON THE LOOP'S
-// TWO EXITS (`jg -> mov [edi+0x4c],2` and loop-completion ->
-// `mov [edi+0x4c],1`), with no post-loop compare at all; the ternary makes
-// VC6 fold the verdict into arithmetic on the counter (`inc edx / mov
-// [edi+0x4c],edx`). Assigning inside the loop and `goto`-ing past the
-// fall-through assignment reproduces retail's threading and takes the branch
-// census clean at 34/34. Measured: plain `if/else` after the loop 83.24 (one
-// branch too many), `continue` instead of the trailing `else` byte-flat at
-// 83.95, `int` flags 83.23, memset before the flags 83.42, mixed int/uchar
-// flags 83.30 and 83.79, swapping the two flag declarations 83.96 (noise).
-// Residual (83.95%): the merged BroadcastMessage the note above describes is
-// still merged - retail's 25th call at fn+0x405 is the occupied arm's
-// SET_ICON_NAME, ours cross-jumps into the empty arm's SET_STATUS at fn+0x4e4
-// (`push eax / jmp`) - and retail additionally SHARES one inline strcpy tail
-// between two emptyRolloverText copies where we duplicate it, so the two
-// cross-jump decisions run in OPPOSITE directions in one body. Also open:
-// retail's slot induction pointer sits at &slot[i]+0x44, ours at +0x40, which
-// is what shifts every `[ebx +/- N]` displacement by four.
-// Residual (84.0329%), 2026-09-06.  Structure is now exact: 62/62 blocks
-// with 47 of them byte-identical (it was 3), 34/34 branches and no missing
-// block; the one remaining one-sided call is the if-arm's own
-// SET_ICON_NAME BroadcastMessage, whose two-instruction tail
-// (`mov ecx,esi / call`) our cross-jumper merges into the else arm's last
-// call site where retail keeps both.  What is left is TWO INDUCTION-ANCHOR BIASES that shift
-// a displacement on every touched instruction and nothing else:
-//   * the widget id lives at [ebp-8] as 0xcd (CREATURE_PORTRAIT_1_ID) where
-//     retail parks 0xd4 (CREATURE_NUM_1_ID), so every codeY is +7 off;
-//   * the slot cursor is `esi+0x8c` (anchored on `s.type`, record +0x40)
-//     where retail uses `esi+0x90` (anchored on `s.count`, record +0x44),
-//     so every `[ebx+N]` is 4 off.
-// Both are C2 anchor choices over the SAME effective addresses.  Measured
-// and rejected against 84.0329: spelling every codeY with its absolute
-// enum name (CREATURE_NUM_1_ID + i, GOLD_COST_1_ID + i, ...) and dropping
-// `id` - 83.9081; keeping `msg.codeY = id - 7;` for the portrait rather than
-// `CREATURE_PORTRAIT_1_ID + i` - 83.9081; moving `msg.codeX` after
-// `msg.extraText` in the SET_ICON_NAME statement - byte-flat; and carrying
-// `totalID` the same way in the totals loop below - 83.4988, so the lever is
-// specific to the loop whose derived id feeds six different widget bands.
-//
-// 2026-09-06, polish lane 36 (84.0331 -> 95.2727), the DC LOCAL-SCOPE SWEEP.
-// The Dreamcast procedure block declares SEVEN per-iteration id variables at
-// hillfortwindow.cpp:271..277, one statement each, computed unconditionally
-// BEFORE the `s.type != CREATURE_NONE && s.count > 0` gate at :279 - six of
-// them named in the CodeView local list (num_id sp+0x18, res_icon_id sp+0x14,
-// button_id sp+0x1c, res_cost_id sp+0x20, gold_icon_id sp+0x24, gold_cost_id
-// sp+0x28) and the seventh, the portrait id, register-allocated into r4 and
-// consumed at :284.  The SH4 constants close the identification exactly:
-// :271 K1, :272 K1+7, :273 K1+14 with K1 = CREATURE_PORTRAIT_1_ID = 205, then
-// :274 K2 = GOLD_COST_1_ID, :275 K2+7 = RES_ICON_1_ID, :276 K3 =
-// RES_COST_1_ID, :277 K3+21 = UPGRADE_BUTTON_1_ID.  Writing all seven and
-// DROPPING the carried `id` took the row 84.0331 -> 94.0227 in one edit (54
-// exact blocks, then 59 after the delink refresh); VC6 still CSEs them back
-// onto retail's single [ebp-8] home and re-derives `+0xe` from it, which is
-// why the earlier note's "reintroducing all six BESIDE the current i/reference
-// scores 79.60" measured something else - that probe kept `id`.
-// The state verdict is the DC's `CanAfford` call, not the hand-written loop:
-// :332 `if (!IsBaseCreature(...)) state = 0;` / :337 `else if (CanAfford(
-// s.cost, gpCurPlayer->resources)) state = 1;` / :345 `else state = 2;`,
-// worth a further 94.0227 -> 95.2727 and it retires the `goto have_state`.
-// That call needs `TUpgradeSlot::cost` to be `long[7]` - the DC CanAfford
-// takes `const long*` - so the whole `get_upgrade_cost` out-parameter family
-// (recruit.h/.cpp plus the four caller-local `cost` arrays in viewarmywindow,
-// game and philai) widened with it; that retype is byte-flat tree-wide, only
-// the mangled name moves (PAH -> PAJ).
-// The DC line table orders the entry clears szCount, szGoldCost,
-// szResourceCost, resourceIndex; that order is byte-flat against the previous
-// one, so the older note's "byte-proven" claim for the other order is only a
-// statement that both compile the same.
-// Residual (95.2727%): three size-only blocks and the SAME single anchor bias
-// the note above names - retail's slot cursor is `esi+0x90` (&slot[0].count),
-// ours `esi+0x8c` (&slot[0].type), shifting every `[ebx-N]` by four.  The
-// widget-id half of that bias is now GONE (both sides home 0xd4 at [ebp-8]).
-// Before normalization (locals): DrawDimmedButtons, pHero, bAnyUpgradable, bNoneUpgradable,
-// portrait_id, num_id, gold_icon_id, gold_cost_id, res_icon_id, res_cost_id, button_id.
+// Preserve the seven scoped widget ids in DC271..277 order, the early cache
+// clears, the canonical CanAfford call and long[7] resource arrays. Restoring
+// the ids and CanAfford previously raised 84.0331 -> 95.2727. Earlier probes
+// that retained an extra carried id scored 77..83%; those were a different
+// source model. Direct slot indexing, flag/local permutations, a ternary
+// affordability verdict and a carried total-id local did not close it.
+// The old tail-merge/register hypotheses described downstream symptoms of
+// those missing source boundaries; no inline-depth instrumentation remains.
+// Original locals: DrawDimmedButtons, currHero, upgrade_all_valid,
+// all_upgraded, totalCostText, portrait_id, num_id, gold_icon_id,
+// gold_cost_id, res_icon_id, res_cost_id, button_id.
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
@@ -365,10 +279,10 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     msg.m_extra = 0;
     msg.m_window = 0;
 
-    hero* currentHero = g_game->getCurrHero();
+    hero* currHero = g_game->getCurrHero();
 
-    unsigned char anyUpgradable = 0;
-    unsigned char noneUpgradable = 1;
+    unsigned char upgradeAllValid = 0;
+    unsigned char allUpgraded = 1;
     memset(m_totalCost, 0, sizeof m_totalCost);
 
     // Retail carries `id` itself as the loop's induction variable and
@@ -382,43 +296,31 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         s.m_goldCost[0] = 0;
         s.m_resourceCost[0] = 0;
         s.m_resourceIndex = -1;
-        s.m_type = currentHero->m_army.m_armies[i];
-        s.m_count = currentHero->m_army.m_numTroops[i];
+        s.m_type = currHero->m_army.m_armyTypes[i];
+        s.m_count = currHero->m_army.m_numTroops[i];
         s.m_level = g_creatureTypeTraits[s.m_type].m_level;
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
-        TCreatureType type;
-        {
-            int ordinal = s.m_type;
-            memcpy(&type, &ordinal, sizeof type);
-        }
+        TCreatureType type = s.m_type;
         if ((g_game->m_f1f698 != 0
              || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
                  && type != CREATURE_FIRE_ELEMENTAL
                  && type != CREATURE_WATER_ELEMENTAL))
             && static_cast<unsigned char>(isBaseCreature(type))) {
-            anyUpgradable = 1;
-            noneUpgradable = 0;
+            upgradeAllValid = 1;
+            allUpgraded = 0;
             if (s.m_level == 0) {
-                strcpy(s.m_goldCost, g_generalText->getText(345));
+                strcpy(s.m_goldCost, (*g_generalText)[345]);
                 strcpy(s.m_resourceCost, g_emptyRolloverText);
             } else {
                 TCreatureType upgraded;
                 {
-                    TCreatureType baseType;
-                    {
-                        int ordinal = s.m_type;
-                        memcpy(&baseType, &ordinal, sizeof baseType);
-                    }
+                    TCreatureType baseType = s.m_type;
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
                 {
-                    TCreatureType baseType;
-                    {
-                        int ordinal = s.m_type;
-                        memcpy(&baseType, &ordinal, sizeof baseType);
-                    }
+                    TCreatureType baseType = s.m_type;
                     getUpgradeCost(baseType, upgraded, s.m_count, s.m_cost);
                 }
                 s.m_cost[6] = static_cast<int>(
@@ -438,7 +340,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                             s.m_cost[s.m_resourceIndex]);
             }
         } else {
-            strcpy(s.m_goldCost, g_generalText->getText(346));
+            strcpy(s.m_goldCost, (*g_generalText)[346]);
         }
 
         int portraitId = CREATURE_PORTRAIT_1_ID + i;
@@ -454,44 +356,40 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = portraitId;
             msg.m_extra = s.m_type + 2;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = numId;
             msg.m_extraText = s.m_countText;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = goldCostId;
             msg.m_extraText = s.m_goldCost;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             if (s.m_resourceIndex == -1) {
                 msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = resIconId;
                 msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-                broadcastMessage(&msg);
+                broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = resIconId;
                 msg.m_extra = s.m_resourceIndex;
-                broadcastMessage(&msg);
+                broadcastMessage(msg);
 
                 msg.m_id = MESSAGE_WIDGET;
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = resCostId;
                 msg.m_extraText = s.m_resourceCost;
-                broadcastMessage(&msg);
+                broadcastMessage(msg);
             }
 
-            TCreatureType stateType;
-            {
-                int ordinal = s.m_type;
-                memcpy(&stateType, &ordinal, sizeof stateType);
-            }
+            TCreatureType stateType = s.m_type;
             if ((g_game->m_f1f698 == 0
                  && (stateType == CREATURE_AIR_ELEMENTAL
                      || stateType == CREATURE_EARTH_ELEMENTAL
@@ -509,70 +407,70 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             msg.m_codeX = widget::WIDGET_SET_ICON_NAME;
             msg.m_codeY = buttonId;
             msg.m_extraText = g_aszUpgradeIcons[s.m_state];
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
         } else {
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = portraitId;
             msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = numId;
             msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = goldIconId;
             msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = resIconId;
             msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_codeY = buttonId;
             msg.m_extra = drawDimmedButtons ? widget::WIDGET_DIMMED
                                           : widget::WIDGET_DIMMED_NODRAW;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
         }
     }
 
-    char text[12];
+    char totalCostText[10];
     for (int t = 0; t < armyGroup::ARMY_GROUP_SLOT_COUNT; t++) {
         int totalID = TOTAL_RES_COST_1_ID + t;
         if (m_totalCost[t] > 0) {
-            sprintf(text, "%d", m_totalCost[t]);
+            sprintf(totalCostText, "%d", m_totalCost[t]);
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
-            msg.m_extraText = text;
-            broadcastMessage(&msg);
+            msg.m_extraText = totalCostText;
+            broadcastMessage(msg);
         } else {
-            strcpy(text, g_emptyRolloverText);
+            strcpy(totalCostText, g_emptyRolloverText);
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
-            msg.m_extraText = text;
-            broadcastMessage(&msg);
+            msg.m_extraText = totalCostText;
+            broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = totalID - 7;
             msg.m_extra = widget::WIDGET_CLEAR_STATUS;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
         }
     }
 
-    if (canAfford(m_totalCost, g_currentPlayer->m_resources) && anyUpgradable)
+    if (canAfford(m_totalCost, g_currentPlayer->m_resources) && upgradeAllValid)
         m_upgradeAllButtonState = UPGRADE_STATE_AFFORDABLE;
-    else if (noneUpgradable)
+    else if (allUpgraded)
         m_upgradeAllButtonState = UPGRADE_STATE_NONE;
     else
         m_upgradeAllButtonState = UPGRADE_STATE_TOO_EXPENSIVE;
@@ -581,7 +479,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     msg.m_codeX = widget::WIDGET_SET_ICON_NAME;
     msg.m_codeY = UPGRADE_ALL_BUTTON_ID;
     msg.m_extraText = g_aszUpgradeAllIcons[m_upgradeAllButtonState];
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 }
 
 // E:\gamedcs\hillfortwindow.cpp:458
@@ -592,17 +490,13 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
     switch (m_slot[which].m_state) {
     case UPGRADE_STATE_NONE:
         if (showMessage)
-            normalDialog(g_generalText->getText(314), 1, -1, -1,
+            normalDialog((*g_generalText)[314], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
 
     case UPGRADE_STATE_AFFORDABLE:
         if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
-            TCreatureType type;
-            {
-                int ordinal = m_slot[which].m_type;
-                memcpy(&type, &ordinal, sizeof type);
-            }
+            TCreatureType type = m_slot[which].m_type;
             if ((g_game->m_f1f698 != 0
                  || (type != CREATURE_AIR_ELEMENTAL
                      && type != CREATURE_EARTH_ELEMENTAL
@@ -611,11 +505,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
                 && static_cast<unsigned char>(isBaseCreature(type))) {
                 TCreatureType upgraded;
                 {
-                    TCreatureType baseType;
-                    {
-                        int ordinal = m_slot[which].m_type;
-                        memcpy(&baseType, &ordinal, sizeof baseType);
-                    }
+                    TCreatureType baseType = m_slot[which].m_type;
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
 
@@ -628,23 +518,33 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
     case UPGRADE_STATE_TOO_EXPENSIVE:
         if (showMessage)
-            normalDialog(g_generalText->getText(315), 1, -1, -1,
+            normalDialog((*g_generalText)[315], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
 }
 
-#if 0  // @carcass: remaining located bodies
-// E:\gamedcs\hillfortwindow.cpp:500
-// UpgradeAll has NO retail row of its own: /Ob2's single-call-site rule
-// inlined it into the dialog handler, where 0x4e8944's `xor esi,esi` /
-// UpgradeSlot(esi, 0) / `cmp esi,7` loop is its body verbatim.
-DC_ONLY(0xd7258, 0x9C)
-void THillFortWindow::UpgradeAll()
+// E:\gamedcs\hillfortwindow.cpp:500..519. Original: UpgradeAll.
+// DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
+// calls. Retail expands this ordinary helper in the handler at 0x4e8944.
+// No retained retail row is required for the source boundary to exist.
+void THillFortWindow::upgradeAll()
 {
-    // @stub
+    switch (m_upgradeAllButtonState) {
+    case UPGRADE_STATE_NONE:
+        normalDialog((*g_generalText)[316], 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case UPGRADE_STATE_TOO_EXPENSIVE:
+        normalDialog((*g_generalText)[317], 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case UPGRADE_STATE_AFFORDABLE:
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+            upgradeSlot(i, 0);
+        break;
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\hillfortwindow.cpp:530
 // The carcass attributed this row to UpgradeAll; it takes a message& and
@@ -661,7 +561,7 @@ void THillFortWindow::handleClick(message& msg)
     switch (msg.m_codeY) {
     case HERO_PORTRAIT_ID:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                 g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
         if (rightClick)
             normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -687,7 +587,7 @@ void THillFortWindow::handleClick(message& msg)
     case CREATURE_PORTRAIT_7_ID:
         {
             int creature =
-                g_hillFortWindow->m_slot[msg.m_codeY - CREATURE_PORTRAIT_1_ID].m_type;
+                g_hillFortWindow->getCreatureType(msg.m_codeY - CREATURE_PORTRAIT_1_ID);
             if (creature == CREATURE_NONE)
                 break;
             TViewArmyWindow viewArmy(creature, 0x77, 0x20, !rightClick);
@@ -702,96 +602,64 @@ void THillFortWindow::handleClick(message& msg)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:612
-// Residual (91.94%): retail places the DIALOG_RETURN_OK arm as the LAST
-// code block of the function - after the hover tail - even though it is
-// reached by a single forward `je` from the first test the deselect arm
-// makes. This VC6 SP3 compile threads that single-predecessor block into
-// its branch every way it can be spelled: as an inline if/return before
-// the codeY switch, as its own `case DIALOG_RETURN_OK:` (which also
-// forces the whole chain into 0x10b/0x105/0xcc/0x7802 order instead of
-// retail's 0x7802/0xcc/0x104/0x10b), as a goto to a tail label, as a goto
-// to a label parked just before the mouse-move branch, and with
-// `dialogReturn = msg.codeY` in place of the folded immediate. All five
-// give 91.56-91.94; the two register swaps left in the UpgradeAll
-// NormalDialog arms (retail EAX->ECX->ECX, ours ECX->EAX->ECX) and the
-// hover tail's `mov eax,1` / `pop edi` order are downstream of the same
-// placement. A control probe confirms the mechanism: giving the label a
-// SECOND predecessor stops the threading and takes the row to 95.96,
-// which is not a spelling this handler can have - the fall-through for an
-// unrecognised message id must return CONSUME, not FORWARD.
-// Everything else agrees: the outer id chain, both switch shapes, all
-// five hover arms, the sprintf recipes and the shared epilogues.
-// The accept arm can own its stores and direct forward return: all 881
-// compiled bytes and 49 relocation names/addends remain unchanged at
-// 91.9430%. The placement residual above survives either spelling; the
-// former claim that only a source label reproduced it was too strong.
+// EXACT 2026-09-12 with the ordinary UpgradeAll/UpdateHillFort helpers,
+// typed GetCreatureType accessor, and the two original dispatch flags.
+// DC616 initializes the close flag; 645 sets it; 749 tests it before the
+// final stores at 751..754. DC649 initializes a scoped refresh flag, both
+// upgrade arms set it at 662/666, and 670 guards UpdateHillFort at 671.
+// The seven-state family emits three objects: bool/uchar/int if-chains all
+// reach 100%; outer switches score 90.4966%. All seven siblings stay exact.
+//
+// Historical 91.9430% early-return forms lost the deferred close scope.
+// Tail labels, moving the accept block and separate DIALOG_RETURN_OK cases
+// stayed at 91.56..91.94. A fake second predecessor reached 95.96 but changed
+// behavior and was rejected. Restoring the actual flags naturally puts the
+// closing block last and recovers both dialog-call register schedules.
 VA(0x004e8850, 0x369)  // DoModal address-take, dc 0xd7458
 int hillFortWindowHandler(message& msg)
 {
     pollSound();
+    bool closeWindow = 0;
 
-    if (msg.m_id == MESSAGE_KEY_DOWN)
-        return MESSAGE_DISPATCH_CONSUME;
-
-    if (msg.m_id == MESSAGE_WIDGET) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT:
             g_hillFortWindow->handleClick(msg);
-            return MESSAGE_DISPATCH_CONSUME;
-
+            break;
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIALOG_RETURN_OK) {
-                msg.m_id = MESSAGE_WIDGET;
-                g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
-                msg.m_codeY = widget::WIDGET_END_DIALOG;
-                msg.m_codeX = widget::WIDGET_END_DIALOG;
-                return MESSAGE_DISPATCH_FORWARD;
-            }
-            switch (msg.m_codeY) {
-            case THillFortWindow::UPGRADE_BUTTON_1_ID:
-            case THillFortWindow::UPGRADE_BUTTON_2_ID:
-            case THillFortWindow::UPGRADE_BUTTON_3_ID:
-            case THillFortWindow::UPGRADE_BUTTON_4_ID:
-            case THillFortWindow::UPGRADE_BUTTON_5_ID:
-            case THillFortWindow::UPGRADE_BUTTON_6_ID:
-            case THillFortWindow::UPGRADE_BUTTON_7_ID:
-                g_hillFortWindow->upgradeSlot(
-                    msg.m_codeY - THillFortWindow::UPGRADE_BUTTON_1_ID, 1);
-                break;
-
-            case THillFortWindow::UPGRADE_ALL_BUTTON_ID: {
-                THillFortWindow* window = g_hillFortWindow;
-                switch (window->m_upgradeAllButtonState) {
-                case THillFortWindow::UPGRADE_STATE_NONE:
-                    normalDialog(g_generalText->getText(316), 1, -1, -1,
-                                 -1, 0, -1, 0, -1, 0, -1, 0);
+                closeWindow = 1;
+            } else {
+                bool refreshWindow = 0;
+                switch (msg.m_codeY) {
+                case THillFortWindow::UPGRADE_BUTTON_1_ID:
+                case THillFortWindow::UPGRADE_BUTTON_2_ID:
+                case THillFortWindow::UPGRADE_BUTTON_3_ID:
+                case THillFortWindow::UPGRADE_BUTTON_4_ID:
+                case THillFortWindow::UPGRADE_BUTTON_5_ID:
+                case THillFortWindow::UPGRADE_BUTTON_6_ID:
+                case THillFortWindow::UPGRADE_BUTTON_7_ID:
+                    g_hillFortWindow->upgradeSlot(
+                        msg.m_codeY - THillFortWindow::UPGRADE_BUTTON_1_ID, 1);
+                    refreshWindow = 1;
                     break;
-                case THillFortWindow::UPGRADE_STATE_AFFORDABLE: {
-                    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
-                        window->upgradeSlot(i, 0);
+
+                case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
+                    g_hillFortWindow->upgradeAll();
+                    refreshWindow = 1;
+                    break;
+
+                default:
                     break;
                 }
-                case THillFortWindow::UPGRADE_STATE_TOO_EXPENSIVE:
-                    normalDialog(g_generalText->getText(317), 1, -1, -1,
-                                 -1, 0, -1, 0, -1, 0, -1, 0);
-                    break;
-                }
-                break;
+                if (refreshWindow)
+                    updateHillFort(0);
             }
-
-            default:
-                return MESSAGE_DISPATCH_CONSUME;
-            }
-            g_hillFortWindow->recalculate(1);
-            g_hillFortWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
-                                         WINDOW_ALL_WIDGETS_HIGH);
-            return MESSAGE_DISPATCH_CONSUME;
+            break;
         }
-        return MESSAGE_DISPATCH_CONSUME;
-    }
-
-    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = g_hillFortWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID == g_hillFortHoverId)
             return MESSAGE_DISPATCH_CONSUME;
@@ -802,13 +670,13 @@ int hillFortWindowHandler(message& msg)
         switch (hoverID) {
         case THillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
             msg.m_extraText = g_text;
             break;
 
         case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
-            msg.m_extraText = g_generalText->getText(433);
+            msg.m_extraText = (*g_generalText)[433];
             break;
 
         case THillFortWindow::CREATURE_PORTRAIT_1_ID:
@@ -819,9 +687,8 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::CREATURE_PORTRAIT_6_ID:
         case THillFortWindow::CREATURE_PORTRAIT_7_ID:
             msg.m_extraText = g_creatureTypeTraits[
-                g_hillFortWindow->m_slot[
-                    hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID]
-                    .m_type].m_pluralName;
+                g_hillFortWindow->getCreatureType(
+                    hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID)].m_pluralName;
             break;
 
         case THillFortWindow::UPGRADE_BUTTON_1_ID:
@@ -831,11 +698,10 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::UPGRADE_BUTTON_5_ID:
         case THillFortWindow::UPGRADE_BUTTON_6_ID:
         case THillFortWindow::UPGRADE_BUTTON_7_ID:
-            sprintf(g_text, g_generalText->getText(319),
+            sprintf(g_text, (*g_generalText)[319],
                     g_creatureTypeTraits[
-                        g_hillFortWindow->m_slot[
-                            hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID]
-                            .m_type].m_pluralName);
+                        g_hillFortWindow->getCreatureType(
+                            hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
             msg.m_extraText = g_text;
             break;
 
@@ -848,37 +714,40 @@ int hillFortWindowHandler(message& msg)
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = THillFortWindow::ROLLOVER_ID;
-        g_hillFortWindow->broadcastMessage(&msg);
+        g_hillFortWindow->broadcastMessage(msg);
         g_hillFortWindow->drawWindow(1, THillFortWindow::ROLLOVER_ID,
                                      THillFortWindow::ROLLOVER_ID);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
+    if (closeWindow) {
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-#if 0  // @carcass: remaining located bodies
-// E:\gamedcs\hillfortwindow.cpp:763
-// NOT LOCATED. The carcass named 0x004e8fb0 for this, but that row is
-// hiscore.obj's: it zeroes 0x898 bytes at this+0x38 and re-fills the
-// 22 x 0x64 record table that 0x4e90a0 reads back out of hiscore.dat,
-// and hillfortwindow.obj's own contribution ends at 0x4e8bb9 (the
-// funclet block 0x4e8bc0..0x4e8faf is hiscore's $E head). UpdateHillFort
-// is the sole caller of the constructor, so /Ob2's single-call-site
-// rule most likely inlined it into the adventure-object handler.
-DC_ONLY(0xd76ec, 0xBD)
-void UpdateHillFort(unsigned char bFirstUpdate)
+// E:\gamedcs\hillfortwindow.cpp:763..780. Original: UpdateHillFort.
+// DC764 branches on firstUpdate: 766..773 builds the initial palette message;
+// 777..778 recalculates and redraws. These are the constructor's final block
+// and the handler's post-upgrade block in retail. The older note incorrectly
+// described this helper as constructing the window. It has no retail row:
+// 0x4e8fb0 belongs to hiscore, beyond this TU's end at 0x4e8bb9.
+static void updateHillFort(unsigned char firstUpdate)
 {
-    // @stub
+    if (firstUpdate) {
+        message msg;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+        msg.m_codeY = THillFortWindow::BACKGROUND_ID;
+        msg.m_extra = g_game->getLocalPlayerGamePos();
+        g_hillFortWindow->broadcastMessage(msg);
+    } else {
+        g_hillFortWindow->recalculate(1);
+        g_hillFortWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                     WINDOW_ALL_WIDGETS_HIGH);
+    }
 }
-
-// E:\gamedcs\HillFortWindow.h:170
-DC_ONLY(0xd7764, 0x10)
-TCreatureType THillFortWindow::GetCreatureType(int slotnum)
-{
-    // @stub
-}
-
-// E:\gamedcs\hillfortwindow.cpp:165 is represented by VA_COMPGEN above.
-
-#endif  // @carcass

@@ -31,9 +31,9 @@ public:
     TDimensionDoorWindow();
     virtual ~TDimensionDoorWindow();
     // Before normalization (function): TDimensionDoorWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     // Before normalization (function): TDimensionDoorWindow::ExitDialog.
-    virtual int exitDialog(message* msg);
+    virtual int exitDialog(message& msg);
 };
 SIZE(TDimensionDoorWindow, 0x64);
 
@@ -48,9 +48,9 @@ public:
     TSkuttleBoatWindow();
     virtual ~TSkuttleBoatWindow();
     // Before normalization (function): TSkuttleBoatWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     // Before normalization (function): TSkuttleBoatWindow::ExitDialog.
-    virtual int exitDialog(message* msg);
+    virtual int exitDialog(message& msg);
 };
 SIZE(TSkuttleBoatWindow, 0x64);
 

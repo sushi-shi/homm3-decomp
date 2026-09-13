@@ -306,15 +306,25 @@ void BinkManager::closeBink()
 // the same field_84 latch, the same `if (w < 0) vw = video->Width` pair, the
 // same F4-exempt abort filter around PollSound/Process1WindowsMessage, and
 // the same `aborted && fadeOnAbort` tail.
-// Residual (88.1839%): the register-homing family, and it is a clean MIRROR.
-// The call stream agrees 15 = 15, the branch count and the single return
-// agree, and every value lands in the right place - retail just keeps `vh` in
-// EBX with `vw` recycled into the `h` parameter home at [ebp+0x10], where our
-// CL keeps `vw` in EBX with `vh` in the `w` home at [ebp+0xc], and the zero it
-// compares against materialises in EAX on one side and not the other.
-// Tried: swapping the vw/vh declaration order (+0.22 and no slot change),
-// handing OpenBinkVideo `vw, vh` instead of `w, h` and testing `vw < 0`
-// instead of `w < 0` - the twin's own spelling, kept - both byte-flat.
+// Residual (88.1802%): retail keeps adjusted height in EBX, copies its
+// initial value to [ebp-8], and reuses the h parameter home for adjusted
+// width. This compile keeps width in EBX and height in the argument home.
+// Retail's non-default-height reload at +0x71 adds a block: current 29 versus
+// retail 30, with the same fifteen branches, one return and fifteen calls.
+// Most later playback/cleanup instructions agree once the geometry prefix
+// is aligned. The buffer calculation also uses different scratch registers.
+//
+// Five bounded families score 186 states (172 distinct sources, 22 emitted
+// objects): dimension lifetimes/input tests/POINT coordinates; SDK unsigned
+// dimension types; definite assignment in both default branches; integer
+// buffer-expression operand order; and result/abort flag types and scopes.
+// All four exact siblings hold and none improves 88.1802%. The explicit-width
+// default reaches retail's initial EBX/EDI choice but scores 86.6221%, places
+// its extra block on the width default, and misses the height reload. The
+// unsigned-dimension and expression-order controls do not resolve this.
+// These probes leave the original scalar model in place; they do not prove
+// a compiler defect or justify synthetic locals, operations or inline pins.
+//
 // The shared closeBink call replaces the duplicated pause/close/reset block
 // at the same 88.1802%. Retail retains the four SDK calls in that expansion;
 // the native cleanup oracle verifies both track orders and all flag resets.

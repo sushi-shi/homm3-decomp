@@ -58,7 +58,7 @@ public:
     // Before normalization (locals): new_text.
     virtual void setRollover(const char* newText);
     // Before normalization (function): type_combat_sub_window::set_rollover_buttons.
-    virtual void setRolloverButtons(int first, int second);
+    virtual void setRolloverButtons(long first, long second);
     // Before normalization (function): type_combat_sub_window::DisableAllButtons.
     virtual void disableAllButtons();
 };
@@ -83,6 +83,10 @@ public:
     // Before normalization (function): TCombatControlSubWindow::set_rollover.
     // Before normalization (locals): new_text.
     virtual void setRollover(const char* newText);
+    // Before normalization: set_rollover_buttons; retained DC public: JJ.
+    virtual void setRolloverButtons(long first, long second);
+    // Before normalization: DisableAllButtons; DC271 delegates to the base.
+    virtual void disableAllButtons();
 };
 SIZE(TCombatControlSubWindow, 0x40);
 
@@ -196,7 +200,7 @@ public:
     // pointer ABI.  They remain out of line just like the sibling hero
     // panel methods.
     // Before normalization (function): TCombatCreatureSubWindow::Update.
-    void update(const army* info, const hero* owner);
+    void update(const army& info, const hero* owner);
     // Before normalization (function): TCombatCreatureSubWindow::Show.
     void show();
 
@@ -209,9 +213,8 @@ public:
     // two bodies are the same loop over Widgets); the DC roster's only
     // nullary TCombatCreatureSubWindow members are Show and UnShow, and
     // this site closes panels; and it sits after the four other
-    // creature-panel bodies, in the DC roster's own order. The BODY is
-    // not reconstructed here - combatcontrolsubwindow.cpp still carries
-    // it as a carcass.
+    // creature-panel bodies, in the DC roster's own order. The body is reconstructed in combatcontrolsubwindow.cpp and matches
+    // the retained retail implementation.
     // Before normalization (function): TCombatCreatureSubWindow::UnShow.
     void unShow();
 };

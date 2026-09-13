@@ -772,11 +772,11 @@ public:
     // Before normalization (function): TSingleSelectionWindow::DoModal.
     virtual int doModal(unsigned char fadeIn);
     // Before normalization (function): TSingleSelectionWindow::WindowHandler.
-    virtual int windowHandler(message* msg);  // slot 9
+    virtual int windowHandler(message& msg);  // slot 9
     // Before normalization (function): TSingleSelectionWindow::ProcessRightSelect.
     virtual unsigned char processRightSelect(int id);  // slot 11
     // Before normalization (function): TSingleSelectionWindow::ExitDialog.
-    virtual int exitDialog(message* msg);   // slot 14
+    virtual int exitDialog(message& msg);   // slot 14
     // Before normalization (function): TSingleSelectionWindow::UpdateAllyEnemyFlags.
     void updateAllyEnemyFlags(unsigned char update);
     // Before normalization (function): TSingleSelectionWindow::OnFileMenuSlider.

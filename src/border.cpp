@@ -134,6 +134,17 @@ int border::main(message& msg)
     return 0;
 }
 
+// E:\gamedcs\border.cpp:153/154. The DC body returns zero; its public
+// UAA_N_N0 signature proves native bool for the return and both parameters.
+// Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
+// Keep border's canonical source body without a duplicate retail claim.
+// Before normalization (locals): down_click, right_click.
+DC_ONLY(0x54590, 0x4)
+bool border::handleClick(bool downClick, bool rightClick)
+{
+    return false;
+}
+
 // E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
 // constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
 // dwords; six of them go to widget::initialize in x,y,w,h,id,style order
@@ -252,13 +263,6 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 // E:\gamedcs\border.cpp:67
 DC_ONLY(0x54408, 0x36)
 void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:153
-DC_ONLY(0x54590, 0x4)
-unsigned char border::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -406,8 +410,8 @@ void bitmapBorder::setImage(const char* bitmapName)
 VA(0x00450520, 0x2D)  // anchor-global, dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(&m_image->m_p16.m_colors, whichPlayer);
-    ::setPlayerPaletteColors(&m_image->m_p24, whichPlayer);
+    ::setPlayerPaletteColors(m_image->m_p16.m_colors.m_data, whichPlayer);
+    ::setPlayerPaletteColors(m_image->m_p24, whichPlayer);
 }
 
 // E:\gamedcs\border.cpp:355 - promoted from DC_ONLY 2026-08-14, slot 2 of

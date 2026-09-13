@@ -2683,10 +2683,12 @@ void unnamed526d20(int playerId, int* costs, int flag)
 // Dreamcast fixes the negative artifact guard, four scalar assignments and
 // helper call. Complete additionally expands GetPrimarySkill/GetMaxMana and
 // therefore exposes the byte-proven 1..99 clamps before the helper body.
-// Residual (64.3242%): control flow agrees through the entire seven-slot
-// scan. Inside std::sort, retail calls the
-// short-path _Insertion_sort_1 and expands the long-path copy; VC6 makes the
-// opposite per-site choice (39 versus 37 blocks, one extra branch). Moving
+// Exact after restoring direct member expressions in canonical GetPrimarySkill.
+// Its former signed-byte temporary left this caller at 64.3242%: inside
+// std::sort, VC6 expanded the short-path _Insertion_sort_1 and called the
+// long-path copy, opposite retail (39 versus 37 blocks, one extra branch).
+// The accessor edit restores both decisions without touching the sort.
+// Moving
 // the helper back to its DC lexical position and adding explicit `inline`
 // were byte-flat; why-reg's first definitions all agree. A guarded early
 // return instead of the outer else is also byte-flat, as is restoring the

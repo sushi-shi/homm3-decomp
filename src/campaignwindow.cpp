@@ -11,16 +11,11 @@
 #include "game.h"
 #include "kb.h"
 #include "message.h"
+#include "smackmgr.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-
-// smackmgr.obj's video opener (retail 0x597570), for OpenPreview below.
-// Declared file-locally rather than through smackmgr.h so this compiland's
-// include closure does not widen: the constructor here is a measured
-// register-homing plateau and nothing else in the file needs that header.
-void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
@@ -40,14 +35,15 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // register-visible and is what the handler's EBX is: the inlined `this` is
 // loaded once from gpCampaignWindow ahead of the sweep and reused by every
 // GetWidget in it, where a direct global load would be reloaded per call.
-// Spelled `inline` so no out-of-line copy is emitted here either.
-inline void TCampaignWindow::hideText()
+// DC line 81 calls widget::hide; keep the ordinary helper and its source
+// calls. Complete adds a null guard: both retail handler expansions test
+// GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
+void TCampaignWindow::hideText()
 {
     for (int line = PREVIEW_FIRST_ID; line <= PREVIEW_LAST_ID; ++line) {
         widget* text = getWidget(line);
         if (text)
-            text->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            text->hide();
     }
 }
 
@@ -138,22 +134,28 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 //
-// Residual (97.2737%, peak 98.4726%): one whole-body EBX/EDI role swap, with
-// 549 instructions
-// against retail's 548. Retail binds this->EDI and the SCampaign temporary,
-// then newCampaign, to EBX; this compile makes the opposite assignment.
-// why-reg's forty store/chain/order probes are byte-flat (one volatile probe
-// and the global/store swap worsen), and both nested type declaration order
-// and a named `this` alias are byte-flat too. The v2 model independently
-// localizes the class: both images bind ESI at instruction 10, then candidate
-// binds EBX/EDI at 15/30 where retail binds EDI/EBX; its best creation-order
-// and store-order mutations are flat or worse. Naming the SCampaign temporary
-// regresses to 96.5110%, and naming the destination pointer regresses to
-// 97.3850%. This is the bounded register-homing class. Release-elided
-// diagnostic tails at one, two and four sites were already byte-flat, so
-// caller mass is not a remaining lever.
-// The old two-axis grid below was measured on the explicit-member phase and
-// remains historical evidence.
+// Current residual (84.3047%; historical MAX 97.2737, HIST 98.4726):
+// canonical SCampaign header restoration changed the expansion decision.
+// Retail calls SCampaign() at the reset; this build expands it and retains
+// its string _Tidy and vector<int> constructor calls instead. The complete
+// call sequence is 41 versus 39, including an extra widget-vector size call.
+// This precedes the old register-only residual; prior declaration/store-order
+// probes at 97.27 do not establish a wall in the current source state.
+// Unnamed, named and const named reset temporaries all reproduce 84.3047.
+// DC line 93 calls SCampaign::clear, whose lines 114..136 reset the older
+// fixed arrays, map traits and carryover pools. Complete replaces that layout
+// with string/vectors and proves temporary construction, memberwise assignment
+// and teardown here; the older clear implementation cannot replace this arm.
+// Forty-eight reset-scope/widget-result/registration lifetime controls produce
+// 24 objects (ten reproduced elites), with 84.3047% still best and all seven
+// exact siblings unchanged. Byte-verified C2 traces compare caller cb1403
+// with cb1451: SCampaign's cb226 fits both initial budgets (2806/2902), and
+// its last vector constructor still fails the child budget (51 > 1/8).
+// The reserve's size call likewise remains (42 > 27/28). Those meaningful
+// local bindings change the budget without recovering the required decisions.
+// Four assignment-form controls produce two reproduced objects: explicit
+// operator= is flat; const-reference temporary binding falls to 81.8376%.
+// No scope, binding, assignment form or alternate helper is retained.
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
@@ -348,120 +350,96 @@ void TCampaignWindow::doModal()
 DATA(0x0066cad8) static int g_lastCampaignHoverId;
 
 // E:\gamedcs\campaignwindow.cpp:291
+// DC line 294 initializes the exit flag, line 329 sets it at the common
+// campaign/cancel action, lines 342/343 set it before the close-key result,
+// and lines 410..415 consume it in the common message tail. Line 308's
+// campaign-ID range and cancel comparison support grouped switch labels;
+// the campaign cases fall through to the cancel action after selection.
+// The outer dispatch follows the widget/key/mouse source order (302/335/350),
+// and the changed-hover scope follows lines 356..406. Complete adds the
+// twenty-row selection helper and Bink snapshot/pause/restart operations.
 //
-// Residual (81.6%): D-family block placement only - the shared end-dialog
-// join. Retail gives the fall-through into it to the widget arm (`jne
-// consume`, then straight into the tail) and sends the campaign-pick and
-// key-down arms back with `jmp`s; our CL sinks the same three-predecessor
-// join past the key-down arm, costing one `jmp` at the widget arm and
-// re-aligning everything downstream. Both layouts spend exactly two
-// unconditional jumps, so it is an internal tie-break on IL block creation
-// order rather than a spelling - tried and rejected: forward `goto
-// pick_campaign` with the arm parked behind the `ret` (VC6 folds the branch
-// and hoists the arm back, 75.4), inverted arms `if (id <= LAST) {...} else
-// if (...)` (75.4), the three-site inlined-helper spelling that would let
-// tail-merge pick the surviving copy (VC6 constant-folds the key-down
-// copy's dialogReturn and merges only the epilogue, 80.1), `goto` inside
-// the switch case (81.6), explicit `goto end_dialog` in both arms (81.6),
-// if/else-if chain (81.6). `if (id == CANCEL) goto end_dialog; goto
-// consume;` and plain `return MESSAGE_DISPATCH_CONSUME` both reach 84.4576%
-// but only by DUPLICATING the consume epilogue, which retail does not have
-// (3 candidate `ret`s against retail's 2) - alignment luck, not a match, so
-// both are rejected. Duplicating the shared end-dialog source at its first
-// predecessor preserves the exact 17-branch/2-ret symbolic sequence and
-// reaches 81.7119%, but VC6 tail-merges only its suffix: 32 candidate blocks
-// against retail's 30 and an extra jump through the split copy. Volatile `id`
-// and hover locals worsen why-reg distance by 13 and 25 respectively, while
-// why-branch finds no recognized control mutation. Everything else in the
-// body is register-exact.
-// 2026-08-14: `sema diff --branches` now reports the branch sequences AGREE
-// (17/17 mnemonics and symbolic targets, 2 rets each) - what is left is block
-// PLACEMENT plus one reloc split. Retail emits the shared end-dialog exit
-// (`msg.id = MESSAGE_WIDGET; dialogReturn = ...; codeX = codeY = END_DIALOG;
-// return FORWARD`) immediately after its first predecessor while our CL sinks
-// it past the remaining compares. The other row, our `mov edx,[4*eax-0x1b0]`
-// against retail's `mov edx,[4*eax]`, is the same delinker symbol+addend split
-// documented in initialize.cpp's create_included_mask - identical once linked.
-// Also disproved here: binding the GetWidget objects to pointer locals (the
-// lever that moved TLevelUpWindow::WindowHandler) COSTS 1.2 points, 81.64 ->
-// 80.44, so retail genuinely uses the fused `GetWidget(id)->send_message(...)`
-// spelling in this handler. The same edit costs MainMenuHandler 1.1 (90.07 ->
-// 88.94). The lever is per-call-site, not a house style.
-// 2026-09-05: the sunk-join lever moved it 81.6402 -> 84.4595. Hoisting `id` to
-// a bodyless function-scope declaration (so the key-down arm may `goto` into
-// the widget block) and writing the end-dialog tail INSIDE the surviving
-// `id > CAMPAIGN_LAST_ID` arm, with the select arm `goto end_dialog`-ing back
-// into it, buys retail's `jle` forward to the select arm and its 13-instruction
-// else block. Residual (84.4595%): retail falls through the CANCEL guard into
-// end_dialog (`jne consume`) while our CL inverts it (`je end_dialog`) and
-// inlines a THIRD copy of the 6-instruction consume epilogue - 3 rets against
-// retail's 2 - because end_dialog's LAST layout predecessor is the key-down arm
-// and VC6 parks a join after its last predecessor, not its first. Measured and
-// rejected: `goto select_campaign` forward out of the guard (VC6 hoists the arm
-// back inline, 75.4242); writing the end-dialog tail a second time at the
-// key-down site per the two-jump-predecessor recipe (cross-jumper splits it
-// three ways, 32 blocks, 83.9316); inverting the CANCEL nesting to
-// `if (id == CANCEL) { ... } goto consume;` (byte-flat, VC6 canonicalises both).
-// The six consume edges can be ordinary returns: this retains 84.4576%
-// and all sibling scores. The end-dialog layout remains a separate residual.
-// A shared exit flag with the original helper calls removes both joins but
-// scores 83.7571% versus 84.4576%; its cleanup layout still needs refinement.
-// One breakable dispatch scope removes both source gotos without changing
-// any of the 621 compiled bytes or 43 relocation names/addends at 84.4576%.
-// Do/while(0) and for/break reproduce the same result; keeping only selection
-// fallthrough also works but leaves the keyboard join. The common message
-// stores remain after selection/Bink pause and the keyboard close action.
+// Current source-family controls: restoring ordinary hideText, its canonical
+// widget::hide call, widget::show at DC line 372 and the smackmgr header took
+// the former breakable dispatch from 84.4576 to 86.7175. That control still
+// duplicates the consume epilogue (31 blocks, three returns; retail 30/two).
+// Thirty dispatch/flag/temporary states produced ten objects: a range-if
+// shared flag gave 82.1751, independent message tests 59.9548..67.5593, and
+// an outer switch 73.1243. Naming or const-qualifying the constructor's
+// reset temporary left its 84.3047 unchanged. Thirteen grouped-ID controls
+// produced four objects: outer if/else 86.0169 for int, byte and bool flags;
+// outer switch 72.5367..73.7458. A positive changed-hover scope and an early
+// consume return compile identically. Keep the positive source facts rather
+// than the older breakable scope's higher alignment score. The follow-up
+// 48-state tail/ID-binding/flag-lifetime/command-dispatch family produced
+// 24 objects and ten reproduced controls. Returning CONSUME when !exitFlag
+// reaches 88.2203 in all twelve combinations (DC line 410 tests the flag
+// for zero before the message stores). Keeping the positive return tail
+// stays at 86.0169; a conditional return gives 69.7119; a result local gives
+// 78.2712..78.3559. ID local/const/direct access, flag lifetime across video
+// refresh, and if/switch command dispatch do not improve the adopted tail.
+// Residual (88.2203%): all 18 named calls agree, but 31 blocks/three returns
+// versus retail 30/two. VC6 lets selection fall through into the closing
+// stores and duplicates the consume epilogue after the cancel comparison;
+// retail lets cancel fall through into those stores and jumps back from
+// selection. No alternate helper declarations or inline pins are used.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {
-    do {
-        int id;
+    int exitFlag = 0;
 
-        if (g_binkDirty) {
-            g_campaignWindow->drawWindow(0, 0x80, 0x86);
-            g_windowManager->updateScreen(g_binkX, g_binkY,
-                g_binkUpdateWidth, g_binkUpdateHeight);
-        }
-
-        if (msg.m_id == MESSAGE_WIDGET) {
-            if (msg.m_codeX != widget::WIDGET_DESELECT)
-                return MESSAGE_DISPATCH_CONSUME;
-            id = msg.m_codeY;
-            if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
-                return MESSAGE_DISPATCH_CONSUME;
-            if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
-                if (id != DIALOG_RETURN_CANCEL)
-                    return MESSAGE_DISPATCH_CONSUME;
-                break;
-            } else {
+    if (g_binkDirty) {
+        g_campaignWindow->drawWindow(0, 0x80, 0x86);
+        g_windowManager->updateScreen(g_binkX, g_binkY,
+            g_binkUpdateWidth, g_binkUpdateHeight);
+    }
+    if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            int id = msg.m_codeY;
+            switch (id) {
+            case TCampaignWindow::CAMPAIGN_FIRST_ID:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 1:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 2:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 3:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 4:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 5:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 6:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 7:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 8:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 9:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 10:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 11:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 12:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 13:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 14:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 15:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 16:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 17:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 18:
+            case TCampaignWindow::CAMPAIGN_FIRST_ID + 19:
                 g_game->m_campaign.selectCampaign(
                     id - TCampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
                 g_binkPaused = 1;
                 _BinkPause(g_binkVideo, 1);
+                // Fall through: selection and cancel both close the dialog.
+            case DIALOG_RETURN_CANCEL:
+                exitFlag = 1;
                 break;
             }
         }
-
-        if (msg.m_id == MESSAGE_KEY_DOWN) {
-            switch (msg.m_codeX) {
-            case TCampaignWindow::DIALOG_CLOSE_KEY:
-                msg.m_codeY = DIALOG_RETURN_CANCEL;
-                break;
-            default:
-                return MESSAGE_DISPATCH_CONSUME;
-            }
+    } else if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
+        case TCampaignWindow::DIALOG_CLOSE_KEY:
+            exitFlag = 1;
+            msg.m_codeY = DIALOG_RETURN_CANCEL;
             break;
         }
-
-        if (msg.m_id != MESSAGE_MOUSE_MOVE)
-            return MESSAGE_DISPATCH_CONSUME;
-
-        {
-            int hoverID = g_campaignWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
-            if (hoverID == g_lastCampaignHoverId)
-                return MESSAGE_DISPATCH_CONSUME;
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE)
+    {
+        int hoverID = g_campaignWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
+        if (hoverID != g_lastCampaignHoverId) {
             g_lastCampaignHoverId = hoverID;
 
             if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
@@ -476,9 +454,7 @@ int campaignWindowHandler(message& msg)
                         - TCampaignWindow::CAMPAIGN_FIRST_ID];
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
-                        - g_campaignWindow->m_firstCampaign - 7)->sendMessage(
-                    widget::WIDGET_SET_STATUS,
-                    widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+                        - g_campaignWindow->m_firstCampaign - 7)->show();
                 memcpy(&g_binkVideo, preview->m_binkState, 12 * sizeof(int));
                 g_binkPaused = 0;
                 _BinkPause(g_binkVideo, 0);
@@ -499,10 +475,9 @@ int campaignWindowHandler(message& msg)
             g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                 WINDOW_SCREEN_HEIGHT);
         }
-
+    }
+    if (!exitFlag)
         return MESSAGE_DISPATCH_CONSUME;
-    } while (0);
-
     msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = msg.m_codeY;
     msg.m_codeY = widget::WIDGET_END_DIALOG;

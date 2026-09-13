@@ -13,7 +13,7 @@ class army;
 class armyGroup;
 class hero;
 class town;
-class textWidget;
+class bitmapBackedTextWidget;
 class iconWidget;
 struct TCreatureTypeTraits;
 
@@ -22,19 +22,35 @@ struct TCreatureTypeTraits;
 // expands to a 16-byte VC6 string. Retail's destructor independently
 // confirms their data pointers at +0x70/+0x84 and the total allocation
 // sites bound the resulting 0xb8-byte object.
+// The DC class records agree on method order and private helper/member
+// ownership. Retail allocation and member accesses independently fix layout.
 class TViewArmyWindow : public CAdvPopup {
 public:
-    // The Dreamcast CodeView type record splits these across three
-    // enums - EOtherWidgetIDs (LF_ENUM 0x2744, the 26 members 200..225),
-    // EWidgetIDs (LF_ENUM 0x273e, UPGRADE_ID alone) and an unnamed one
-    // (NWIDGETS/VIEW_ARMY_DELAY/NSPELLS). They are kept in two enums
-    // here so this header defines no more TYPES than it did before the
-    // names landed; cmbtmgr.cpp includes it and the include-set class is
-    // sensitive to that count. The dump settles ROLLOVER_ID = 224, which
-    // the one-army constructor had only inferred from its push. OK_ID,
-    // ACCEPT_ID and DISMISS_ID are NOT in either Dreamcast enum; their
-    // values stay byte-proven from the call sites.
+    // Complete retains public action IDs; the older DC enum records UPGRADE_ID.
     enum EWidgetIDs {
+        UPGRADE_ID = 300,
+        OK_ID = 301,
+        ACCEPT_ID = 0x7802,
+        DISMISS_ID = 0x7803
+    };
+
+    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
+    TViewArmyWindow(const army* thisArmy, int x0, int y0,
+                    unsigned char showOk);
+    // Complete adds the tenth groupAlignments argument (ret 0x28) and
+    // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
+    TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
+                    const town* thisTown, int x0, int y0, int upgrade,
+                    unsigned char showDismiss, unsigned char showOk,
+                    unsigned char groupAlignments);
+    virtual ~TViewArmyWindow();
+    // Before normalization: DoModal, QuickView, WindowHandler.
+    void doModal();
+    void quickView();
+    virtual int windowHandler(message& msg);
+
+private:
+    enum EOtherWidgetIDs {
         BACKGROUND_ID = 200,
         SPRITE_ID = 201,
         SPRITE_BACKGROUND_ID = 202,
@@ -64,13 +80,48 @@ public:
         // spell row and the only widget id in the popup that is not
         // already named.
         ROLLOVER_ID = 224,
-        OK_BORDER_ID = 225,
-        UPGRADE_ID = 300,
-        OK_ID = 301,
-        ACCEPT_ID = 0x7802,
-        DISMISS_ID = 0x7803
+        OK_BORDER_ID = 225
     };
     enum { NWIDGETS = 28, VIEW_ARMY_DELAY = 100, NSPELLS = 3 };
+
+    // Original declaration order from both complete DC class records,
+    // 0x1a93/0x4aff. Bodies and named source-call boundaries remain in the TU.
+    // Before normalization: create_background_widget, this_hero.
+    void createBackgroundWidget(const hero* thisHero);
+    // Before normalization: create_name_widget.
+    void createNameWidget(const char* name);
+    // Before normalization: create_portrait_widget, sprite_name, town_type.
+    void createPortraitWidget(const char* spriteName, int townType, int count);
+    // Before normalization: create_attack_widget, normal_attack_skill, current_attack_skill.
+    void createAttackWidget(int normalAttackSkill, int currentAttackSkill);
+    // Before normalization: create_defense_widget, normal_defense_skill, current_defense_skill.
+    void createDefenseWidget(int normalDefenseSkill, int currentDefenseSkill);
+    // Before normalization: create_damage_widget, our_hero.
+    void createDamageWidget(const TCreatureTypeTraits& traits, const hero* ourHero);
+    // Before normalization: create_shots_widget, normal_shots, current_shots.
+    void createShotsWidget(const TCreatureTypeTraits& traits,
+                           int normalShots, int currentShots);
+    // Before normalization: create_hitpoints_widget, normal_hitpoints, current_hitpoints.
+    void createHitpointsWidget(int normalHitpoints, int currentHitpoints);
+    // Before normalization: create_hitpoints_left_widget, hitpoints_left.
+    void createHitpointsLeftWidget(int hitpointsLeft);
+    // Before normalization: create_speed_widget, normal_speed, current_speed.
+    void createSpeedWidget(int normalSpeed, int currentSpeed);
+    // Before normalization: create_morale_widget, new_morale.
+    void createMoraleWidget(int newMorale);
+    // Before normalization: create_luck_widget, new_luck.
+    void createLuckWidget(int newLuck);
+    // Before normalization: create_spell_influence_widgets, this_army.
+    void createSpellInfluenceWidgets(const army* thisArmy);
+    // Before normalization: create_ok_widget.
+    void createOkWidget();
+    // Before normalization: create_upgrade_widget.
+    void createUpgradeWidget();
+    // Before normalization: create_dismiss_widget.
+    void createDismissWidget();
+    // Before normalization: create_rollover_widget.
+    void createRolloverWidget();
+    int convertID2HelpID(int id) const;
 
     // Before normalization: ArmyType. DC CodeView proves TCreatureType;
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
@@ -93,118 +144,23 @@ public:
     unsigned char m_showingDismissButton;
     // Before normalization: ShowingOkButton.
     unsigned char m_showingOkButton;
-    // Before normalization: pad_97.
-    // The preceding byte field and following four-byte field establish
-    // this alignment gap; the reference layout retains the same boundary.
-    unsigned char m_paddingBeforeInfluence;
+    // The three flag bytes leave one byte of natural four-byte alignment
+    // before Influence. DC records 14 real members and no padding field.
     // Before normalization: Influence.
     int m_influence[3];
     // Before normalization: Duration.
     int m_duration[3];
     // Before normalization: RolloverWidget.
-    textWidget* m_rolloverWidget;
+    bitmapBackedTextWidget* m_rolloverWidget;
     // Before normalization: SpriteWidget.
     iconWidget* m_spriteWidget;
 
-    // Before normalization (locals): this_army, show_ok, this_hero, this_town, show_dismiss,
-    // group_alignments, army_type.
-    TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                    unsigned char showOk);
-    // TEN arguments in retail (`ret 0x28`), not the Dreamcast's nine:
-    // the trailing unsigned char is the alignment-grouping byte, passed
-    // straight through to GetArmyMorale's arg5 and get_morale_description's
-    // arg8 - the same value the one-army constructor reads out of
-    // gpCombatManager->field_54b2. `group` is non-const because
-    // GetArmyMorale and GetArmyLuck are; the Dreamcast prototype's
-    // `const armyGroup&` predates them.
-    TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
-                    const town* thisTown, int x0, int y0, int upgrade,
-                    unsigned char showDismiss, unsigned char showOk,
-                    unsigned char groupAlignments);
-    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
-    virtual ~TViewArmyWindow();
-    // Before normalization (function): TViewArmyWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
-    int convertID2HelpID(int id) const;
-    // Before normalization (function): TViewArmyWindow::QuickView.
-    void quickView();
-    // Before normalization (function): TViewArmyWindow::DoModal.
-    void doModal();
-    // The four row builders the one-army constructor CALLS rather than
-    // inlines, located 2026-08-14 from its own reloc census: the ctor's
-    // argument lists match the Dreamcast prototypes term for term
-    // (portrait takes sprite/townType/count off the stack's embedded
-    // traits row, shots takes that row plus the table's and the row's
-    // own numShots, damage takes the row and army::get_owner()'s hero,
-    // spell-influence takes the army). `town_type` is spelled int
-    // rather than TTownType so this header does not need mapcell.h;
-    // same width, same codegen.
-    // The five rows retail INLINES at every call site, so /OPT:REF
-    // dropped their COMDATs and the carve has no row for any of them.
-    // Their Dreamcast argument lists are what the inline expansions
-    // read: create_morale_widget's by-value `new_morale` is the
-    // caller-side home whose ADDRESS the [-3, 3] selector receives, and
-    // create_background_widget/create_name_widget take their hero and
-    // name from the caller because the ctor computes both before the
-    // allocation.
-    // Before normalization (function): TViewArmyWindow::create_background_widget.
-    // Before normalization (locals): this_hero.
-    void createBackgroundWidget(const hero* thisHero);
-    // Before normalization (function): TViewArmyWindow::create_name_widget.
-    void createNameWidget(const char* name);
-    // Before normalization (function): TViewArmyWindow::create_morale_widget.
-    // Before normalization (locals): new_morale.
-    void createMoraleWidget(int newMorale);
-    // Before normalization (function): TViewArmyWindow::create_luck_widget.
-    // Before normalization (locals): new_luck.
-    void createLuckWidget(int newLuck);
-    // Before normalization (function): TViewArmyWindow::create_rollover_widget.
-    void createRolloverWidget();
-    // Before normalization (function): TViewArmyWindow::create_portrait_widget.
-    // Before normalization (locals): sprite_name, town_type.
-    void createPortraitWidget(const char* spriteName, int townType,
-                                int count);                      // 0x5f5060
-    // Before normalization (function): TViewArmyWindow::create_damage_widget.
-    void createDamageWidget(const TCreatureTypeTraits* traits,
-                              // Before normalization (locals): our_hero.
-                              const hero* ourHero);             // 0x5f5860
-    // Before normalization (function): TViewArmyWindow::create_shots_widget.
-    void createShotsWidget(const TCreatureTypeTraits* traits,
-                             // Before normalization (locals): normal_shots, current_shots.
-                             int normalShots, int currentShots);  // 0x5f5b30
-    // Before normalization (function): TViewArmyWindow::create_spell_influence_widgets.
-    // Before normalization (locals): this_army.
-    void createSpellInfluenceWidgets(const army* thisArmy);   // 0x5f65b0
-    // Before normalization (function): TViewArmyWindow::create_attack_widget.
-    // Before normalization (locals): normal_attack_skill, current_attack_skill.
-    void createAttackWidget(int normalAttackSkill,
-                              int currentAttackSkill);
-    // Before normalization (function): TViewArmyWindow::create_defense_widget.
-    // Before normalization (locals): normal_defense_skill, current_defense_skill.
-    void createDefenseWidget(int normalDefenseSkill,
-                               int currentDefenseSkill);
-    // Before normalization (function): TViewArmyWindow::create_hitpoints_widget.
-    // Before normalization (locals): normal_hitpoints, current_hitpoints.
-    void createHitpointsWidget(int normalHitpoints,
-                                 int currentHitpoints);
-    // Before normalization (function): TViewArmyWindow::create_hitpoints_left_widget.
-    // Before normalization (locals): hitpoints_left.
-    void createHitpointsLeftWidget(int hitpointsLeft);
-    // Before normalization (function): TViewArmyWindow::create_speed_widget.
-    // Before normalization (locals): normal_speed, current_speed.
-    void createSpeedWidget(int normalSpeed, int currentSpeed);
-    // Before normalization (function): TViewArmyWindow::create_ok_widget.
-    void createOkWidget();
-    // Before normalization (function): TViewArmyWindow::create_upgrade_widget.
-    void createUpgradeWidget();
-    // Before normalization (function): TViewArmyWindow::create_dismiss_widget.
-    void createDismissWidget();
 };
 SIZE(TViewArmyWindow, 0xb8);
 
 // --- TViewArmyWindow ---
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:55, dc 0x190abc) void TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0, unsigned char show_ok);
-// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:140, dc 0x190e78) void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok);
+// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:140, dc 0x190e78) void TViewArmyWindow::TViewArmyWindow(const armyGroup& group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:274, dc 0x19148c) void TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:318, dc 0x191660) void TViewArmyWindow::~TViewArmyWindow();
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:325, dc 0x1916d4) int TViewArmyWindow::convertID2HelpID(int id);
@@ -216,8 +172,8 @@ SIZE(TViewArmyWindow, 0xb8);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:646, dc 0x191f2c) void TViewArmyWindow::create_portrait_widget(const char* sprite_name, TTownType town_type, int count);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:671, dc 0x192080) void TViewArmyWindow::create_attack_widget(int normal_attack_skill, int current_attack_skill);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:689, dc 0x192160) void TViewArmyWindow::create_defense_widget(int normal_defense_skill, int current_defense_skill);
-// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:707, dc 0x19226c) void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits, const hero* our_hero);
-// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:735, dc 0x1923c0) void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits, int normal_shots, int current_shots);
+// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:707, dc 0x19226c) void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits& traits, const hero* our_hero);
+// CODEVIEW(E:\gamedcs\viewarmywindow.cpp:735, dc 0x1923c0) void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits& traits, int normal_shots, int current_shots);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:756, dc 0x1924b0) void TViewArmyWindow::create_hitpoints_widget(int normal_hitpoints, int current_hitpoints);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:774, dc 0x1925d4) void TViewArmyWindow::create_hitpoints_left_widget(int hitpoints_left);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:789, dc 0x1926d4) void TViewArmyWindow::create_speed_widget(int normal_speed, int current_speed);

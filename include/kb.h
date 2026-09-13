@@ -125,8 +125,8 @@ public:
                              EGameResource resource, long qualifier);
     // Before normalization (function): type_normal_dialog_frame::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
 };
 SIZE(type_normal_dialog_frame, 0x40);
 

@@ -26,8 +26,8 @@ public:
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
     // Before normalization (function): border::handle_click.
     // Before normalization (locals): down_click, right_click.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    // DC public UAA_N_N0 proves bool for the result and both click flags.
+    virtual bool handleClick(bool downClick, bool rightClick);
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -134,11 +134,11 @@ class palette;
 class paletteHiColor;
 class TPalette24;
 // Before normalization (function): SetPlayerPaletteColors.
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 // Before normalization (function): SetPlayerPaletteColors.
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 // Before normalization (function): SetPlayerPaletteColors.
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);

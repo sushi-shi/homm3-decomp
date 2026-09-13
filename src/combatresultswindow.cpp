@@ -64,11 +64,18 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // Dreamcast line 280's one positive lexical scope around loss aggregation
 // first carried the shared CodeView-proven `amount` past the old 99.84615%
 // maximum. Restoring line 319's one statement group then dipped to 99.65748;
-// source-gap line 320 supplied the optimized-away `accept = 0` initializer
-// before line 321's construction assignment and recovered 2067 vs 2067 real
-// instructions at 99.860664%. The former named `acceptBox` split was only a
-// percentage lever, not the attested source. A checkpoint is not allowed to
-// erase any of these facts.
+// a null-initialized accept pointer then recovered 2067 vs 2067 real
+// instructions at 99.860664%. That initializer was a hypothesis, not text
+// recovered from unrecorded line 320. The current 36-state construction
+// family proves direct initialization with new emits the identical object,
+// so keep the simpler construction and remove the redundant null store.
+// Named background-result controls reach only 99.8582%/99.8563%; moving the
+// scoped numMons declarations and making the AI-value copies const is flat.
+// All three distinct objects reproduce and all six siblings remain exact.
+// Sixteen placements of the real PC videoId/accept declarations then emit
+// one identical object; declaration lifetime alone does not fix the homes.
+// The former named acceptBox split does not establish original statement
+// ownership; line 319 only records the box construction/push group.
 //
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
@@ -157,25 +164,32 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // mass axis has a three-statement window, and naming more widgets overshoots
 // it (M=20 is 95.5336, M=24 96.1640). What is left is the frame-slot
 // permutation described above, not the inliner.
+// Native bool is_siege is proved by DC public
+// ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
+// record is a lowered storage type; retail also consumes the flag as a byte.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     // Before normalization (locals): my_side, winning_side, is_siege, iDeadArmyTypes,
     // iDeadArmyNumTroops, my_hero, iTtlDeadArmies, cText, cTemp, iMaxToShow.
     const hero* defender, int mySide, int winningSide,
-    unsigned char isSiege, int experience)
+    bool isSiege, int experience)
     : heroWindow(165, 19, 470, 561, 0x10)
 {
     g_combatResultsWindow = this;
 
     long amount;
     TCreatureType type;
+    // Before normalization (locals): iDeadArmyTypes.
     int deadArmyTypes[2][20];
+    // Before normalization (locals): iDeadArmyNumTroops.
     int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
     const hero* const myHero = mySide == 0 ? attacker : defender;
 
+    // Before normalization (locals): iTtlDeadArmies.
     int ttlDeadArmies[2];
+    // Before normalization (locals): cText.
     char text[100];
     int firstX;
 
@@ -301,6 +315,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         else
             strcpy(g_text, (*g_generalText)[305]);
         if (myHero) {
+            // Before normalization (locals): cTemp.
             char temp[150];
             sprintf(temp, (*g_generalText)[306],
                 myHero->m_name, experience);
@@ -359,25 +374,35 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         68, 202, 332, 70, g_text, "smalfont.fnt", font::WHITE,
         RESULTS, 5, 0, 8));
 
+    // DC277 writes the enum to sp+0x38 and DC279 the loss count to
+    // sp+0x3c, the locations recorded for type/amount. Reuse those typed
+    // locals here; source identity cannot be inferred from slot sharing
+    // alone, but this preserves the named declarations and statement order.
+    // Thirty VC6 states tested independent/together reuse, typed separate
+    // locals, hero-choice orientation and array declarator grouping. Reuse
+    // is score-flat at 99.8607%; reversing the hero choice costs 99.7300%.
+    // Six objects and six reproduced elites preserve all six exact siblings.
+    // Direct initialization of the const hero pointer (also with an extra
+    // parenthesis pair) is rejected by VC6 as a function declaration.
     // Losses, aggregated per side into (creature, count) rows: the display
     // is data-driven, so every icon and every count text it emits carries
     // BACKGROUND_ID rather than one of the Dreamcast-only LOSS ids.
     for (int side = 0; side < 2; side++) {
         ttlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
-            int creature = g_combatManager->m_armies[side][slot].m_creatureType;
-            int lost = g_combatManager->m_armies[side][slot].m_origNumTroops
+            type = g_combatManager->m_armies[side][slot].m_creatureType;
+            amount = g_combatManager->m_armies[side][slot].m_origNumTroops
                 - g_combatManager->m_armies[side][slot].m_numTroops;
-            if (creature != -1 && lost > 0) {
+            if (type != -1 && amount > 0) {
                 int row;
                 for (row = 0; row < ttlDeadArmies[side]; row++)
-                    if (deadArmyTypes[side][row] == creature)
+                    if (deadArmyTypes[side][row] == type)
                         break;
                 if (row < ttlDeadArmies[side]) {
-                    deadArmyNumTroops[side][row] += lost;
+                    deadArmyNumTroops[side][row] += amount;
                 } else {
-                    deadArmyTypes[side][row] = creature;
-                    deadArmyNumTroops[side][row] = lost;
+                    deadArmyTypes[side][row] = type;
+                    deadArmyNumTroops[side][row] = amount;
                     ttlDeadArmies[side]++;
                 }
             }
@@ -390,6 +415,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             m_widgets.push_back(new textWidget(
                 42, rowY + 10, 384, 36, (*g_generalText)[32],
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+        // Before normalization (locals): iMaxToShow.
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;
         for (int row = 0; row < maxToShow; row++) {
@@ -407,8 +433,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     m_widgets.push_back(new bitmapBorder(
         384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
 
-    button* accept = 0;
-    accept = new button(
+    button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
     accept->setHotkey(28);
@@ -462,6 +487,10 @@ void TCombatResultsWindow::close(unsigned char update)
 }
 
 // E:\gamedcs\combatresultswindow.cpp:392
+// DC394..401 resets combat cursor state, calls MoveCursorCombatXY, writes
+// mouse coordinates and brackets the dialog with a combat-state byte. Retail
+// 0x471b70 is just the 20-byte DoDialog call; those DC input-device operations
+// have no instructions or state writes here and are a platform boundary.
 VA(0x00471b70, 0x14)  // handler address-take, dc 0x69268
 void TCombatResultsWindow::doModal()
 {
@@ -487,9 +516,11 @@ int combatResultsWindowHandler(message& msg)
             exitFlag = 1;
     }
 
+    // DC445 calls IsPast; retail 0x471bc5 expands Get/sub/js. Preserve
+    // the canonical helper, including its ElapsedSince delegation.
     unsigned long deadline = g_dialogDeadline697784;
     if (deadline > 0
-        && static_cast<long>(GameTime::get() - deadline) >= 0) {
+        && GameTime::isPast(deadline)) {
         msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
         exitFlag = 1;
     }

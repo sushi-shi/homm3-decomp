@@ -105,7 +105,7 @@ public:
     void setPointer(int newFrame, EPointerSet newSet);
     // Before normalization (function): mouseManager::Update.
     // Before normalization (locals): bForceIt.
-    void update(unsigned char forceIt);
+    void update(bool forceIt);
     // Before normalization (function): mouseManager::SaveAndDraw.
     // Before normalization (locals): dst_surface, save_surface, dst_rect.
     void saveAndDraw(IDirectDrawSurface* dstSurface,
@@ -148,7 +148,7 @@ public:
     void reset();                 // 0x50cc80
     // Before normalization (function): mouseManager::ShowSystemCursor.
     // Before normalization (locals): show_it.
-    void showSystemCursor(unsigned char showIt);
+    void showSystemCursor(bool showIt);
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

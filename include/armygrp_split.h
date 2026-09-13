@@ -58,7 +58,7 @@ public:
     // Before normalization (function): TSplitWindow::SetRolloverText.
     inline void setRolloverText(int codeY);
     // Before normalization (function): TSplitWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 };
 SIZE(TSplitWindow, 0x80);
 

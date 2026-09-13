@@ -51,12 +51,12 @@ public:
     // Before normalization (function): TMainMenu::DoModal.
     void doModal();
 
-    // Before normalization (function): MainMenuHandler.
-    friend int mainMenuHandler(message& msg);
-
-private:
+    // DC TMainMenu field list 0x46fa records bShowCDMessage as public;
+    // the mainmenu.cpp-local handler accesses it without a friend boundary.
     // Before normalization: bShowCDMessage.
     unsigned char m_showCdMessage;
+
+private:
     // Before normalization: pad_4d.
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
@@ -66,7 +66,6 @@ private:
 };
 SIZE(TMainMenu, 0x54);
 
-int mainMenuHandler(message& msg);
 
 // SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
 // oldmain both dispatch on this value before the front-end is opened.

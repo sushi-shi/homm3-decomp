@@ -51,7 +51,7 @@ public:
     TPuzzleWindow(int puzzlenum);
     virtual ~TPuzzleWindow();
     // Before normalization (function): TPuzzleWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     // Before normalization (function): TPuzzleWindow::UpdatePuzzle.
     int updatePuzzle(int full);
 

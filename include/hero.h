@@ -394,7 +394,10 @@ public:
     // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
     // twin call this header helper at each sprite draw; retail folds the
     // branchless facing > 4 body into the caller.
-    unsigned char getHflip()
+    // The public DC symbol ?GetHflip@hero@@QAA_NXZ proves native bool;
+    // its LF_MFUNCTION result is lowered to T_UCHAR. Preserve the public
+    // result type when forwarding it to the Boolean DrawHero interface.
+    bool getHflip()
     {
         return m_facing > kFacingS;
     }
@@ -876,14 +879,23 @@ public:
     // cast_spell and initialize_creatures fix the clamp and signed-byte
     // source: attack/defense are confined to 0..99, while power/knowledge
     // use 1 as their floor.
+    // Hero.h:672/673, 675 and 677 retain these conditions and returns;
+    // no local is recorded (not proof that one was absent). Direct member
+    // expressions preserve the exact retained body and reproduce retail's
+    // expansions in type_spellvalue::type_spellvalue and swapManager::update.
+    // A six-state, nineteen-TU family emitted four objects: a signed-byte
+    // temporary kept the body exact but left those callers at 64.32/89.35%;
+    // direct reads make both exact. Const-byte is flat, a byte reference
+    // loses four exact callers, and int temporaries lose nineteen. The
+    // direct form improves nine callers and lowers three non-exact callers
+    // (setupThievesGuild, setupDynamicStuff, perDay); no exact caller is lost.
     VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
     int getPrimarySkill(int skill) const
     {
-        signed char value = m_stats[skill];
-        if (value > 99)
+        if (m_stats[skill] > 99)
             return 99;
-        if (value > 0)
-            return value;
+        if (m_stats[skill] > 0)
+            return m_stats[skill];
         return skill >= 2 ? 1 : 0;
     }
     // The four primary skills (DC name `stats`), byte-proven by
@@ -1863,7 +1875,7 @@ public:
     THeroScreenWindow();
     virtual ~THeroScreenWindow();
     // Before normalization (function): THeroScreenWindow::WindowHandler.
-    virtual int windowHandler(class message* msg);
+    virtual int windowHandler(class message& msg);
     // Before normalization (function): THeroScreenWindow::update_slot.
     void updateSlot(TArtifactSlot slot);
     // Before normalization (function): THeroScreenWindow::update_all_slots.
@@ -1886,7 +1898,7 @@ public:
     // Before normalization (function): THeroScreenWindow::SetupHeroView.
     void setupHeroView();
     // Before normalization (function): THeroScreenWindow::ExitDialog.
-    virtual int exitDialog(class message* msg);
+    virtual int exitDialog(class message& msg);
 };
 SIZE(THeroScreenWindow, 0x68);
 

@@ -106,7 +106,7 @@ public:
     // Before normalization (function): TSystemOptionsWindow::DoModal.
     void doModal();
     // Before normalization (function): TSystemOptionsWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     // Before normalization (function): TSystemOptionsWindow::UpdateSystemOptions.
     // Before normalization (locals): bFirstUpdate.
     void updateSystemOptions(unsigned char firstUpdate);

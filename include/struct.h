@@ -115,10 +115,17 @@ struct type_point {
     // plane takes no part, which is what makes it a MAP distance.
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
     // Before normalization (function): type_point::DistanceSquared.
+    // DC121/124/122 has nonmonotonic attribution and no named locals;
+    // it does not prove Y must be declared first. With TownGate's canonical
+    // int max facade restored, X-before-Y matches its retail expansion.
+    // The 24-state helper/caller controls give 100 for X-first, 99.9914 for
+    // Y-first, and 95.7232 for direct expressions without the two locals.
+    // Both return-term orders emit the same exact object. No caller copy
+    // of this calculation or alternate interface is needed.
     int distanceSquared(const type_point& p2) const
     {
-        int dy = m_y - p2.m_y;
         int dx = m_x - p2.m_x;
+        int dy = m_y - p2.m_y;
         return dx * dx + dy * dy;
     }
 };
@@ -218,11 +225,13 @@ SIZE(CNetPlayerInfo, 32);
 
 // GameTime has header-inline helpers in struct.h (DC lines 411-438);
 // Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.
-class GameTime {
-public:
-    static unsigned long get();             // 0x4f82e0
-    static void delayTil(unsigned long time);  // 0x4f82f0
-    static void delay(int interval);        // 0x4f83c0
+// The public names use @@YA (namespace functions), and their NB11 records
+// are LF_PROCEDURE; static class members in the same corpus use @@SA and
+// member-function records. GameTime has no object type or instance users.
+namespace GameTime {
+    unsigned long get();             // 0x4f82e0
+    void delayTil(unsigned long time);  // 0x4f82f0
+    void delay(int interval);        // 0x4f83c0
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
@@ -233,15 +242,20 @@ public:
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
     // Before normalization (function): GameTime::Elapsed.
     // The stop/start subtraction is retained by the upstream mouse timing helper.
-    static long elapsed(unsigned long stop, unsigned long start)
+    inline long elapsed(unsigned long stop, unsigned long start)
     {
         return static_cast<long>(stop - start);
     }
-    static long elapsedSince(unsigned long time)
+    // DC struct.h:412 explicitly calls Get then Elapsed(stop, start).
+    // Retain the canonical call even where retail expands the subtraction.
+    inline long elapsedSince(unsigned long time)
     {
-        return static_cast<long>(get() - time);
+        return elapsed(get(), time);
     }
-    static unsigned char isPast(unsigned long time)
+    // DC public ?IsPast@GameTime@@YA_NK@Z proves native bool although
+    // NB11 lowers its return record to T_UCHAR. DC struct.h:420 calls
+    // ElapsedSince then tests the sign, as retail caller expansions do.
+    inline bool isPast(unsigned long time)
     {
         return elapsedSince(time) >= 0;
     }
@@ -253,14 +267,16 @@ public:
     // which a hand-spelled `timer += lag` (two independent global
     // loads) cannot produce, and the clamp compares `cmp interval, lag;
     // jle`, i.e. the INTERVAL is the left operand.
-    static unsigned long nextFrameTime(unsigned long thisFrame,
+    // DC struct.h:439 calls ElapsedSince before the clamp/add at line442.
+    // The old direct subtraction erased that proven helper boundary.
+    inline unsigned long nextFrameTime(unsigned long thisFrame,
                                        long interval)
     {
-        long lag = static_cast<long>(get() - thisFrame);
+        long lag = elapsedSince(thisFrame);
         if (interval > lag)
             lag = interval;
         return thisFrame + lag;
     }
-};
+} // namespace GameTime
 
 #endif /* HOMM3_STRUCT_H */

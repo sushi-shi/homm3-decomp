@@ -17,7 +17,7 @@ class TCombatResultsWindow : public heroWindow {
 public:
     TCombatResultsWindow(const hero* attacker, const hero* defender,
         // Before normalization (locals): my_side, winning_side, is_siege.
-        int mySide, int winningSide, unsigned char isSiege,
+        int mySide, int winningSide, bool isSiege,
         int experience);
     virtual ~TCombatResultsWindow();
     // Before normalization (function): TCombatResultsWindow::Open.

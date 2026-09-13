@@ -1081,11 +1081,11 @@ int combatManager::processCombatMsg(message& msg)
                             == TCombatOptionsWindow::
                                 CREATURE_INFO_LEVEL_VERBOSE) {
                         if (stack->m_combatSide == 0) {
-                            m_combatWindow->m_creatureSubWindows[0]->update(stack,
+                            m_combatWindow->m_creatureSubWindows[0]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[0]->show();
                         } else if (stack->m_combatSide == 1) {
-                            m_combatWindow->m_creatureSubWindows[1]->update(stack,
+                            m_combatWindow->m_creatureSubWindows[1]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[1]->show();
                         }
@@ -1093,11 +1093,11 @@ int combatManager::processCombatMsg(message& msg)
                                == TCombatOptionsWindow::
                                    CREATURE_INFO_LEVEL_COMPACT) {
                         if (stack->m_combatSide == 0) {
-                            m_combatWindow->m_creatureSubWindows[2]->update(stack,
+                            m_combatWindow->m_creatureSubWindows[2]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[2]->show();
                         } else if (stack->m_combatSide == 1) {
-                            m_combatWindow->m_creatureSubWindows[3]->update(stack,
+                            m_combatWindow->m_creatureSubWindows[3]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[3]->show();
                         }
@@ -1402,7 +1402,7 @@ void combatManager::autoResolveCombat()
     // declarator crosses command.obj's measured GetCommand handle wall.
     // Before normalization (function): AI_auto_combat.
     void aiAutoCombat(hero* attackingHero, hero* defendingHero,
-                        armyGroup* attackingArmy, armyGroup* defendingArmy,
+                        armyGroup& attackingArmy, armyGroup& defendingArmy,
                         const town* defendingTown, NewmapCell* cell);
 
     armyGroup localArmies[2];
@@ -1410,7 +1410,7 @@ void combatManager::autoResolveCombat()
     for (side = 0; side < 2; side++)
         localArmies[side] = *m_armyGroups[side];
 
-    aiAutoCombat(m_heroes[0], m_heroes[1], &localArmies[0], &localArmies[1],
+    aiAutoCombat(m_heroes[0], m_heroes[1], localArmies[0], localArmies[1],
                    m_defendingTown, m_combatCell);
 
     for (side = 0; side < 2; side++) {
@@ -2893,12 +2893,12 @@ void combatManager::processFirstAid(army* currentArmy)
 // switch domain and source calls. Retail independently fixes all twelve
 // pending-action arms and shows that VC6 expanded ResetMouse,
 // ResetCycleTimers and CheckChangeSelector into this body.
-// RESIDUAL (98.5272%): the four GetName -> GetArmyName expansions now agree.
-// The remaining structural delta is one defend-arm std::string cleanup:
-// retail expands _Tidy while this header state retains the call (three branch
-// edges); inline_depth(255) is byte-flat. The independent early byte delta is
-// the iCombatControlNetPos base immediate (0 versus 4). Do not recover the old
-// exact score by flattening either Dreamcast-proven helper boundary.
+// Exact with every GetName -> GetArmyName and timer/selector boundary intact.
+// The canonical name lookup's conditional return inside the existing else
+// recovers all4180 retail bytes and all163 relocation positions; the prior
+// explicit inner if/else left99.7272%. Removing the outer else changes other
+// callers' inline decisions, so retain that source scope. No inline-depth pin
+// or copied helper body is needed.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {

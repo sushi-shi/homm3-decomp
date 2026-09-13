@@ -67,7 +67,7 @@ VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 // has to run before the vptr store there.
 VA(0x004ea720, 0x8C)  // anchor-bracket + arity (`ret 0x2c`), dc 0xd9350
 iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
-                       int frame, int sequence, unsigned char flipped,
+                       int frame, int sequence, bool flipped,
                        unsigned backColor, int style)
     : widget(x, y, w, h, id, style),
       m_frame(frame),
@@ -92,15 +92,28 @@ iconWidget::~iconWidget()
 // calls the ordinary SetPalette helper; restore that canonical call rather
 // than its copied load/dispose body. Both helpers expand naturally here.
 //
-// DC 190..217 and 229..245 retain nested mouse-hit and selected scopes.
-// The positive selected scope lets VC6 merge the zero epilogues. Together
-// with positive hit testing, all five old goto returns become direct exits
-// and Main improves 95.7040% to 99.9639%. The whole 756-byte body and all
-// relocation references agree except two scratch-register operands:
-// +0x113 movsx and +0x117 mov use EDX where retail uses ECX for widget id.
-// All-direct returns with the old negative selected guard lose score;
-// moving default/base delegation into separate switch arms gives at most
-// 91.8050%. Neither failed form establishes an unavoidable source goto.
+// DC 190..217 and 229..245 retain positive mouse-hit and selected scopes.
+// Lines 202/203 and 207/208 join before the single 211/212 message-id and
+// widget-id tail; line 135 snapshots the incoming message id for the switch
+// and first HandleClick argument. Keep those source facts, the positive
+// command-id gate at 138 and the final default arm at 248/249.
+// The former duplicated tail peaked at 99.9639%; the shared source tail
+// reaches 99.9278%, with all 11 siblings exact. A 61-state family (3 emitted
+// objects, all reproduced) varied snapshot type/constness, default position
+// and scope, command-gate polarity and byte/bool flag representation. None
+// closed the remaining scratch-register operands in the command-id test and
+// expanded SetSprite disposal; the previous left-select tail now agrees.
+// A further eight-state family (six objects, six reproduced elites) varied
+// comparison operand order, case-scoped signed-short/promoted-int id reads
+// and an if-bound old sprite owner in SetSprite. None improves 99.9278%;
+// swapping the comparison operands reaches 99.8881%. All siblings stay exact.
+// Sixty entry-flag/command-selector lifetime states (30 objects) and 24
+// field-reference/setter-owner/Boolean states (7 objects) also leave the
+// best at 99.9278%. The positive inactive-widget branch follows DC124..127;
+// native Boolean predicates/literals preserve the public click interface.
+// Both remaining differences are scratch-register operands; all 49 CFG
+// blocks and the 13 named calls agree. A passive 66-store C2 trace passed
+// whole-object byte identity but does not expose retail's temporary order.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::main(message& msg)
 {
@@ -109,44 +122,40 @@ int iconWidget::main(message& msg)
     }
 
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
-        return widget::main(msg);
+        if (msg.m_id == MESSAGE_WIDGET)
+            return widget::main(msg);
+        return 0;
     }
 
-    unsigned char isDisabled = 0;
+    bool isDisabled = false;
     if (m_status & WIDGET_DISABLED)
-        isDisabled = 1;
+        isDisabled = true;
 
-    switch (msg.m_id) {
+    int messageId = msg.m_id;
+    switch (messageId) {
     case MESSAGE_WIDGET:
-        if (msg.m_codeY != m_id)
-            break;
-        switch (msg.m_codeX) {
-        case WIDGET_SET_ICON_NAME:
-            setSprite(msg.m_extraText);
-            return 1;
-        case WIDGET_SET_ICON_FRAME:
-            setIconFrame(msg.m_extra & 0xFFFF);
-            return 1;
-        case WIDGET_SET_ICON_SEQUENCE:
-            setIconSequence(msg.m_extra & 0xFFFF);
-            return 1;
-        case WIDGET_SET_ICON_COLOR:
-            m_backColor = static_cast<unsigned short>(msg.m_extra);
-            return 1;
-        case WIDGET_SET_PALETTE:
-            setPalette(msg.m_extraText);
-            return 1;
-        case WIDGET_SET_PLAYER_PALETTE_COLORS:
-            setPlayerPaletteColors(msg.m_extra);
-            return 1;
+        if (msg.m_codeY == m_id) {
+            switch (msg.m_codeX) {
+            case WIDGET_SET_ICON_NAME:
+                setSprite(msg.m_extraText);
+                return 1;
+            case WIDGET_SET_ICON_FRAME:
+                setIconFrame(msg.m_extra & 0xFFFF);
+                return 1;
+            case WIDGET_SET_ICON_SEQUENCE:
+                setIconSequence(msg.m_extra & 0xFFFF);
+                return 1;
+            case WIDGET_SET_ICON_COLOR:
+                m_backColor = static_cast<unsigned short>(msg.m_extra);
+                return 1;
+            case WIDGET_SET_PALETTE:
+                setPalette(msg.m_extraText);
+                return 1;
+            case WIDGET_SET_PLAYER_PALETTE_COLORS:
+                setPlayerPaletteColors(msg.m_extra);
+                return 1;
+            }
         }
-        break;
-
-    default:
-        if (isDisabled)
-            return 0;
         break;
 
     case MESSAGE_LEFT_BUTTON_DOWN:
@@ -158,17 +167,15 @@ int iconWidget::main(message& msg)
         short mouseY = msg.m_codeY - m_parentWindow->m_y;
         if (mouseX >= m_x && mouseY >= m_y && mouseX < m_x + m_width
             && mouseY < m_y + m_height) {
-            if (handleClick(1, msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN))
+            if (handleClick(true, messageId == MESSAGE_RIGHT_BUTTON_DOWN))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
                 msg.m_codeX = WIDGET_RIGHT_SELECT;
-                msg.m_id = MESSAGE_WIDGET;
-                msg.m_codeY = m_id;
-                return 2;
+            } else {
+                m_status |= WIDGET_SELECTED;
+                msg.m_codeX = WIDGET_SELECT;
             }
-            m_status |= WIDGET_SELECTED;
-            msg.m_codeX = WIDGET_SELECT;
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeY = m_id;
             return 2;
@@ -186,13 +193,18 @@ int iconWidget::main(message& msg)
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = WIDGET_DESELECT;
             msg.m_codeY = m_id;
-            if (handleClick(0, 0))
+            if (handleClick(false, false))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
             return 2;
         }
         return 0;
+
+    default:
+        if (isDisabled)
+            return 0;
+        break;
     }
 
     return widget::main(msg);
@@ -219,7 +231,8 @@ void iconWidget::zBufferDraw()
 // dead - retail returns a bare zero.
 // Before normalization (locals): down_click, right_click.
 VA(0x004eab10, 0x5)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
-unsigned char iconWidget::handleClick(unsigned char downClick, unsigned char rightClick)
+// The public UAA_N_N0 signature preserves native Boolean click values.
+bool iconWidget::handleClick(bool downClick, bool rightClick)
 {
     return 0;
 }
@@ -236,14 +249,14 @@ unsigned char iconWidget::handleClick(unsigned char downClick, unsigned char rig
 VA(0x004eab20, 0x7)  // anchor-vtable (slot 6 of 0x63ec48), dc 0xd96bc
 int iconWidget::getRealWidth() const
 {
-    return m_sprite->m_width;
+    return m_sprite->getWidth();
 }
 
 // E:\gamedcs\iconwdgt.cpp:269
 VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
 int iconWidget::getRealHeight() const
 {
-    return m_sprite->m_height;
+    return m_sprite->getHeight();
 }
 
 // E:\gamedcs\iconwdgt.cpp:280
@@ -285,14 +298,19 @@ int iconWidget::getRealHeight() const
 // shared assumption. Only prototypes land here; the bodies stay
 // csprite's.
 //
-// The type domain is iconWidget::ESpriteResType rather than ten new
-// EResourceType enumerators, and that is a measurement, not taste - see
-// the note on the enum in iconwdgt.h. resource.h sits at the head of
-// recruit.obj's include closure and recruitUnit::Update is knife-edge
-// on symbol-handle position: growing EResourceType by FIVE or more
-// enumerators drops it 90.8376% -> 88.2360%. Corrected 2026-08-14 by
-// bisection - the threshold is five, not one; the first four are free,
-// and RESOURCE_TYPE_FONT (font::font 0x4b5070) now spends one of them.
+// DC 290/338 call resource::get_resType; the size queries at 292..389
+// call CSprite accessors. Lines 389 and 320/368 additionally preserve the
+// crop accessors and DrawCombatHero bitmap facade. Complete expands these
+// boundaries to the resource/extent/frame loads and raw drawing calls.
+// Resource values use their canonical EResourceType owner in resrce.h.
+// Ten crop-lifetime/case-order candidates did not improve 99.3129%.
+// The follow-up's 56 unique candidates (12 objects, 10 reproduced elites)
+// recover 100% with direct widget extents: the extra boxWidth/boxHeight
+// locals changed the sequence/frame-chain register schedule. Keep the
+// DC plain/centered/creature case order, the named sw/sx/sy locals and
+// canonical crop/size/bitmap calls. No raw frame or bitmap load copies
+// are needed; this direct-member receiver form also removes the invented
+// sprite alias. Width/bounds temporaries alone were negative controls.
 //
 // The creature path is the one with real arithmetic: it centres on the
 // crop box of the FIRST FRAME OF THE cs_wait SEQUENCE (Sprite->s[2]
@@ -307,28 +325,106 @@ void iconWidget::draw() const
     int drawY = m_y + m_parentWindow->m_y;
 
     switch (m_style) {
+    case ICON_STYLE_PLAIN:
+        switch (m_sprite->getResType()) {
+        case RESOURCE_TYPE_SPRITE:
+            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
+            break;
+        case RESOURCE_TYPE_CREATURE:
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+            break;
+        case RESOURCE_TYPE_ADVENTURE_OBJECT:
+            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_HERO:
+            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_TILESET:
+            m_sprite->drawTile(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+            break;
+        case RESOURCE_TYPE_POINTER:
+            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap,
+                drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_INTERFACE:
+            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_COMBAT_HERO:
+            m_sprite->drawCombatHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        }
+        break;
+
+    case ICON_STYLE_CENTERED:
+        if (m_sprite->getWidth() < m_width)
+            drawX += (m_width - m_sprite->getWidth()) / 2;
+        if (m_sprite->getHeight() + 2 < m_height)
+            drawY += m_height - m_sprite->getHeight() - 2;
+        switch (m_sprite->getResType()) {
+        case RESOURCE_TYPE_SPRITE:
+            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
+            break;
+        case RESOURCE_TYPE_CREATURE:
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+            break;
+        case RESOURCE_TYPE_ADVENTURE_OBJECT:
+            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_HERO:
+            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_TILESET:
+            m_sprite->drawTile(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 0);
+            break;
+        case RESOURCE_TYPE_POINTER:
+            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap,
+                drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_INTERFACE:
+            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        case RESOURCE_TYPE_COMBAT_HERO:
+            m_sprite->drawCombatHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped);
+            break;
+        }
+        break;
+
     case ICON_STYLE_CREATURE: {
-        CSprite* sprite;
-        CSpriteFrame* frame;
         int sx;
         int sy;
         int sw;
         int sh;
-        int boxWidth;
-        int boxHeight;
         int offX;
         int offY;
 
         sx = 0;
         sy = 0;
-        sprite = m_sprite;
-        sw = sprite->m_width;
-        sh = sprite->m_height;
-        frame = sprite->m_s[cs_wait]->m_f[0];
-        boxWidth = m_width;
-        offX = boxWidth / 2 - frame->m_croppedWidth / 2 - frame->m_croppedX;
-        boxHeight = m_height;
-        offY = boxHeight - 275;
+        sw = m_sprite->getWidth();
+        sh = m_sprite->getHeight();
+        offX = m_width / 2 - m_sprite->getCroppedWidth(cs_wait, 0) / 2 - m_sprite->getCroppedX(cs_wait, 0);
+        offY = m_height - 275;
         if (offX < 0) {
             sx = -offX;
             sw += offX;
@@ -339,149 +435,15 @@ void iconWidget::draw() const
             sh += offY;
             offY = 0;
         }
-        if (offX + sw > boxWidth)
-            sw = boxWidth - offX;
-        if (offY + sh > boxHeight)
-            sh = boxHeight - offY;
-        sprite->drawCreature(m_seqId, m_frame, sx, sy, sw, sh,
-            g_windowManager->m_screenBitmap->m_map, offX + drawX, offY + drawY,
-            g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, 0, 0);
+        if (offX + sw > m_width)
+            sw = m_width - offX;
+        if (offY + sh > m_height)
+            sh = m_height - offY;
+        m_sprite->drawCreature(m_seqId, m_frame, sx, sy, sw, sh,
+            g_windowManager->m_screenBitmap, offX + drawX, offY + drawY, 0, 0);
         break;
     }
 
-    case ICON_STYLE_CENTERED:
-        if (m_sprite->m_width < m_width)
-            drawX += (m_width - m_sprite->m_width) / 2;
-        if (m_sprite->m_height + 2 < m_height)
-            drawY += m_height - m_sprite->m_height - 2;
-        switch (m_sprite->m_resType) {
-        case SPRITE_RES_SPRITE:
-            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 1);
-            break;
-        case SPRITE_RES_CREATURE:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        case SPRITE_RES_ADVOBJ:
-            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_HERO:
-            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_TILESET:
-            m_sprite->drawTile(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        case SPRITE_RES_POINTER:
-            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->m_map,
-                drawX, drawY, g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_INTERFACE:
-            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_COMBAT_HERO:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        }
-        break;
-
-    case ICON_STYLE_PLAIN:
-        switch (m_sprite->m_resType) {
-        case SPRITE_RES_SPRITE:
-            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 1);
-            break;
-        case SPRITE_RES_CREATURE:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        case SPRITE_RES_ADVOBJ:
-            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_HERO:
-            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_TILESET:
-            m_sprite->drawTile(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        case SPRITE_RES_POINTER:
-            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->m_map,
-                drawX, drawY, g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_INTERFACE:
-            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
-            break;
-        case SPRITE_RES_COMBAT_HERO:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
-            break;
-        }
-        break;
     }
 }
 
@@ -524,10 +486,15 @@ DC_ONLY(0xd9ce0, 0x84)
 void iconWidget::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_sprite->getPalette(), whichPlayer);
-    ::setPlayerPaletteColors(m_sprite->m_p24, whichPlayer);
+    // DC 465 calls the non-const GetPalette24 reference accessor.
+    ::setPlayerPaletteColors(m_sprite->getPalette24(), whichPlayer);
 }
 
 // E:\gamedcs\iconwdgt.cpp:470
+// DC line 472 calls ResourceManager::Dispose. Complete moves that operation
+// into virtual CSprite::dispose: retail loads the sprite vtable and calls
+// slot 1 at 0x4eb03f. Preserve the PC member call; the older namespace body
+// belongs to resourcemanager.cpp and cannot expand across this TU boundary.
 // Before normalization (locals): new_sprite.
 VA(0x004eb030, 0x22)  // anchor-global, dc 0xd9d64
 void iconWidget::setSprite(const char* newSprite)

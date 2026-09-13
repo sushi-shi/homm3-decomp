@@ -841,7 +841,7 @@ public:
     // Before normalization (function): TAdventureMapWindow::SetElevationToggleImage.
     unsigned char setElevationToggleImage(int level);
     // Before normalization (function): TAdventureMapWindow::UpdateResourceDisplay.
-    void updateResourceDisplay(unsigned char draw, unsigned char update);
+    void updateResourceDisplay(bool draw, bool update);
     // Before normalization (function): TAdventureMapWindow::UpdateButtons.
     void setAdvWinButtonPalette(int id, int player);
     void updateButtons(unsigned char draw, unsigned char update);
@@ -2069,18 +2069,18 @@ public:
     // Before normalization (function): advManager::CheckCastSpell.
     void checkCastSpell();
     // Before normalization (function): advManager::CastSpell.
-    void castSpell(int whichSpell);
+    void castSpell(SpellID whichSpell);
     // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
     // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
     // 0x22510). SkuttleBoat and TownGate retain the DC-proven mastery enum.
     // Its former AI int typedef has been removed; there is one canonical
     // TSkillMastery definition in herospec.h.
     // Before normalization (function): advManager::SummonBoat.
-    void summonBoat(int level);
+    void summonBoat(TSkillMastery level);
     // Before normalization (function): advManager::SkuttleBoat.
     void skuttleBoat(TSkillMastery level);
     // Before normalization (function): advManager::DimensionDoor.
-    void dimensionDoor(int level);
+    void dimensionDoor(TSkillMastery level);
     // Before normalization (function): advManager::TownGate.
     void townGate(TSkillMastery level);
     // The four handlers RETAIL HAS NO BODY FOR. Dreamcast keeps each one out
@@ -2089,13 +2089,13 @@ public:
     // of CastSpell's jump table - so /Ob2 expands them all, and their 668 DC
     // bytes are what makes retail's CastSpell 1028 against the DC's 344.
     // Before normalization (function): advManager::Identify.
-    void identify(int level);
+    void identify(TSkillMastery level);
     // Before normalization (function): advManager::WaterWalk.
-    void waterWalk(int level);
+    void waterWalk(TSkillMastery level);
     // Before normalization (function): advManager::Disguise.
-    void disguise(int level);
+    void disguise(TSkillMastery level);
     // Before normalization (function): advManager::Flight.
-    void flight(int level);
+    void flight(TSkillMastery level);
     // Before normalization (function): advManager::MobilizeCurrHero.
     // Before normalization (locals): bInMove.
     void mobilizeCurrHero(int inMove, unsigned char waitingPlayer,
@@ -2224,11 +2224,13 @@ public:
     // that order: the direction is the cell's own high nibble, standEnd
     // is `i == 0`, and both `int*` slots are read back immediately
     // after the call as the no-move / fought-battle verdicts.
+    // Dreamcast records trigger_point as type_point&. Retail callers pass
+    // the same address; this reference also preserves the recovered interface.
     // Before normalization (function): advManager::MoveHero.
     NewmapCell* moveHero(int direction, unsigned char standEnd,
                          // Before normalization (locals): trigger_point, bNoMove, bComputerMove,
                          // bFoughtBattle, bIsRemoteMove.
-                         type_point* triggerPoint, int* noMove,
+                         type_point& triggerPoint, int* noMove,
                          unsigned char computerMove, int* foughtBattle,
                          unsigned char isRemoteMove);
     // cursor.obj's 0x481ed0 (cursor.cpp:1124, dc 0x7c1d8). Retail expands

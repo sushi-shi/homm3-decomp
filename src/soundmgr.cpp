@@ -192,6 +192,10 @@ soundManager::soundManager()
 // result-carrier loop below (84.53%), and an explicit long-lived
 // set-preference pointer (same bytes). The remaining layout/RA choice is not
 // source-addressable without distorting the proven retry semantics.
+// The pointer probe is removed: five direct AIL_set_preference source calls
+// preserve 84.5280% and clear the audit's five unresolved indirect-call gaps.
+// Retail's cached import pointer is an optimizer result, not source proof of
+// a local function pointer. Further source hypotheses remain possible.
 VA(0x005997d0, 0x2BF)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
@@ -202,11 +206,9 @@ int soundManager::open(int newPriority)
     if (!g_noSound) {
         AIL_startup();
         if (!g_unk698a28 && !m_ds) {
-            typedef int (__stdcall* SetPreferenceProc)(int, int);
-            SetPreferenceProc setPreference = AIL_set_preference;
-            setPreference(15, 0);
-            setPreference(33, 1);
-            setPreference(34, 100);
+            AIL_set_preference(15, 0);
+            AIL_set_preference(33, 1);
+            AIL_set_preference(34, 100);
 
             AILDigitalDriver* driver;
             AILDigitalDriver* result;
@@ -248,7 +250,7 @@ int soundManager::open(int newPriority)
                         break;
                     }
                     AIL_waveOutClose(driver);
-                    setPreference(15, 1);
+                    AIL_set_preference(15, 1);
                 } else if (AIL_get_preference(15)) {
                     g_soundSampleRate /= 2;
                     if (g_soundSampleRate >= 11025)
@@ -261,7 +263,7 @@ int soundManager::open(int newPriority)
                     result = 0;
                     break;
                 }
-                setPreference(15, 1);
+                AIL_set_preference(15, 1);
             }
             m_ds = result;
         }
@@ -470,6 +472,10 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // PC-only query used by the remote chat sample path.  Operation 1 returns
 // the Miles volume and operation 4 reduces the status to the playing bit;
 // every other operation retains the initialized zero result.
+// Four result-lifetime controls leave waitEndSampleThread at 92.0000%.
+// Initializing before the guards reduces this retained body to 87.1667%;
+// initializing after EnterCriticalSection reduces it to 96.6667%. Moving
+// only the declaration is byte-flat. Keep initialization after the guards.
 VA(0x0059a030, 0x87)  // remote call sites + Miles imports, retail-only
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
@@ -728,6 +734,10 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 // and naming its critical-section pointer are both byte-flat across this row
 // and its four exact sibling callers. Those optimizer results did not
 // establish a separate helper; the canonical GetSampleInfo now owns the query.
+// Thirty-two worker/SDK controls produce eight reproducible object identities.
+// Loop/manager binding and packet pointer/reference forms leave 92.0000% best;
+// moving elapsed inside the initial guard falls to 88.5790%. All twenty-six
+// exact siblings hold, and no variant recovers the extra manager-reload block.
 // E:\gamedcs\soundmgr.cpp:911/976 vicinity; PC worker has no DC row.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)

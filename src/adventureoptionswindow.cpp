@@ -204,7 +204,7 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 // Restoring them removes all three gotos at 100%; duplicating returns instead
 // falls to 87.4684%. All four independent scope combinations are exact.
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
-int TAdventureOptionsWindow::windowHandler(message* msg)
+int TAdventureOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -213,22 +213,22 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
     unsigned char closeDialog = false;
     pollSound();
 
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->m_codeX == widget::WIDGET_SELECT
-            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            int helpID = convertID2HelpID(msg->m_codeY);
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            int helpID = convertID2HelpID(msg.m_codeY);
             if (helpID != -1)
                 normalDialog(g_adventureOptionsHelp[helpID].m_text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        if (msg->m_codeX == widget::WIDGET_DESELECT
-            && (msg->m_codeY == ADVENTURE_OPTION_ACCEPT_ID
-                || (msg->m_codeY > 0 && msg->m_codeY <= 5))) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_DESELECT
+            && (msg.m_codeY == ADVENTURE_OPTION_ACCEPT_ID
+                || (msg.m_codeY > 0 && msg.m_codeY <= 5))) {
             closeDialog = true;
         }
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             g_lastImHoverId = hoverID;
             const char* rollover = "";
@@ -246,10 +246,10 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
     }
 
     if (closeDialog) {
-        msg->m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg->m_codeY;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
