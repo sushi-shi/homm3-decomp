@@ -175,6 +175,13 @@ public:
     // Before normalization: schoolMask.
     int m_schoolMask;
 
+    // Retail roster 0x538b10 installs the derived vtable before these three
+    // field stores. Sixteen initializer/store forms keep the current body
+    // closest; the all-member form moves fields before that vtable store.
+    // Sixteen input-ownership forms and 55 roster recombinations do not
+    // improve the remaining nested base-constructor decision. One borrowed
+    // input recovers the early prefix but loses later insertion/constructor
+    // choices. Retain the value interface and this ordered inline body.
     inline type_black_box_spells_def(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
         : type_treasure_def(6, 0, value, 2)
@@ -1745,6 +1752,8 @@ struct TRmgZone {
     // its retained connection predicate compares center distance and size.
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
+    // Provisional role-derived helper; retail removal expands its count update.
+    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const

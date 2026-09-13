@@ -29,9 +29,26 @@ class ObjectRemovalTests(unittest.TestCase):
         current=module.definition(source)
         original=module.scalar_seed(current)
         forms=[("current",current)]+list(module.variants(original))
+        zone_methods=[]
+        if "void TRmgZone::decrementObjectCount(" in source:
+            zone_methods.append(definition(source,"TRmgZone::decrementObjectCount"))
         for path in filter(None,os.environ.get("HOMM3_OBJECT_REMOVAL_MANIFEST","").split(os.pathsep)):
             payload=json.loads(Path(path).read_text())
-            forms += [(o["name"],o["replace"]) for o in payload["axes"][0]["options"]]
+            for option in payload["axes"][0]["options"]:
+                body=option["replace"]
+                helpers=[edit["text"] for edit in option.get("extra_edits",[])
+                         if edit.get("source")=="src/rmg.cpp" and
+                         "void TRmgZone::decrementObjectCount(" in edit.get("text","")]
+                if helpers:
+                    self.assertEqual(len(helpers),1)
+                    helper=definition(helpers[0],"TRmgZone::decrementObjectCount")
+                    # Keep each actual helper signature/body with its caller;
+                    # distinct fixture names avoid coexisting overload ambiguity.
+                    name="decrementObjectCountCandidate%d"%len(zone_methods)
+                    body=body.replace("decrementObjectCount(",name+"(")
+                    helper=helper.replace("decrementObjectCount(",name+"(")
+                    zone_methods.append(helper)
+                forms.append((option["name"],body))
         forms=list(dict((body,name) for name,body in forms).items())
         positives=len(forms)
         negatives=[
@@ -51,6 +68,15 @@ class ObjectRemovalTests(unittest.TestCase):
         for name,old,new in negatives:
             self.assertEqual(original.count(old),1,name)
             forms.append((original.replace(old,new),name))
+        negative_count=len(negatives)
+        if "void TRmgZone::decrementObjectCount(" in source:
+            bad_helper=definition(source,"TRmgZone::decrementObjectCount")
+            self.assertEqual(bad_helper.count("--m_objectCountByType[objectType];"),1)
+            bad_helper=bad_helper.replace("decrementObjectCount(","incrementObjectCountBad(")
+            bad_helper=bad_helper.replace("--m_objectCountByType[objectType];","++m_objectCountByType[objectType];")
+            zone_methods.append(bad_helper)
+            forms.append((current.replace("->decrementObjectCount(","->incrementObjectCountBad("),"wrong_count_helper"))
+            negative_count+=1
 
         def block(text,prefix):
             start=text.index(prefix+" {")
@@ -82,7 +108,10 @@ class ObjectRemovalTests(unittest.TestCase):
         text+=definition(header,"getMapItem",parameters="int x, int y, int z")+"\n};\n"
         text+=definition(source,"type_random_map::getMapItem",parameters="TRmgMapPosition point")+"\n"
         counts=next(line.split("//")[0].strip() for line in header.splitlines() if "m_objectCountByType[" in line)
-        text+="struct TRmgZone { "+counts+" };\n"
+        text+="struct TRmgZone { "+counts+"\n"
+        for helper in zone_methods:
+            text+=helper.split("\n{",1)[0].replace("TRmgZone::","")+";\n"
+        text+="};\n"+"\n".join(zone_methods)+"\n"
         text+="struct GeneratorFixture { type_random_map m_map; std::vector<TRmgZone*> m_zones; "+counts+" std::vector<type_object*> m_positions; std::vector<unsigned char> m_disabledKeyTents; int m_nextKeyTentColor; };\n"
         text+=r'''
 static void removeFirst(std::vector<type_object*>& values,type_object* object) {
@@ -201,7 +230,7 @@ template<class Candidate> bool check() {
         text+="int main() {\n"
         for index,(body,name) in enumerate(forms):
             text+='if(check<N%d::type_random_map_generator>() != %s) { std::fprintf(stderr,"failed %s\\n"); return 1; }\n'%(index,"true" if index<positives else "false",name)
-        text+='std::printf("%d removal forms; 18432 scenarios each; twelve negative controls rejected\\n");}\n'%positives
+        text+='std::printf("%d removal forms; 18432 scenarios each; %d negative controls rejected\\n");}\n'%(positives,negative_count)
         with tempfile.TemporaryDirectory(prefix="homm3-object-removal-") as directory:
             source_path=Path(directory)/"oracle.cpp";source_path.write_text(text)
             executable=Path(directory)/"oracle"

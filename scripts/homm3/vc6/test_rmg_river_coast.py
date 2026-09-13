@@ -1,5 +1,6 @@
 """Coastal lifetime family roundtrip and affine-path behavioral controls."""
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -45,6 +46,15 @@ class RiverCoastTests(unittest.TestCase):
             checks.append('if (' + ('!' if good else '') + 'check<' + name + '>()) { std::fprintf(stderr, "failed ' + name + '\\n"); return 1; }')
         for i, (_, body) in enumerate(self.module.forms()):
             candidate("Candidate" + str(i), body, True)
+        manifest = os.environ.get("HOMM3_RIVER_COAST_MANIFEST")
+        if manifest:
+            _, originals, axes = source_families.load_manifest(Path(manifest), self.root)
+            if len(axes) != 1:
+                raise ValueError("expected one coastal full-function axis")
+            for i in range(len(axes[0].options)):
+                rendered = source_families.render(originals, axes, (i,))
+                body = self.module.helpers().definition(rendered[self.module.SOURCE], self.module.FUNCTION)
+                candidate("Manifest" + str(i), body, True)
         # Representatives span the full coordinate/step/counter families and
         # include all ten distinct retained parents of the measured first run.
         forms = list(self.module.forms())

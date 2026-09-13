@@ -9,6 +9,7 @@
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
 #include <va.h>
 #include <algorithm>
+#include <functional>
 #include <bitset>
 #include <ctype.h>
 #include <math.h>
@@ -293,21 +294,20 @@ static void __fastcall assignRmgTeams(
 
 template <unsigned int N>
 // Before normalization (function): set_available_rmg_heroes.
+// WriteMapHeader's retail hero loops carry an output owner/index pair at
+// EBP-0x14/-0x10, matching the bitset iterator used for artifact ranges.
+// The canonical transform with a copied output iterator naturally retains
+// bitset<156/128>::set and removes the former inline-depth pin. A scalar
+// loop without that pin expands both calls (header 71.3920%); this form
+// reaches 82.2089%. Direct/temporary iterator construction and bool-input
+// logical_not do not reproduce the same surrounding expansion decisions.
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
     unsigned char* heroFlag,
     unsigned char* end)
 {
-    int heroIndex = 0;
-    while (heroFlag != end) {
-        bool available = !*heroFlag;
-        // WriteMapHeader -> bitset<N>::set: retail retains both call sites.
-#pragma inline_depth(0)
-        availableHeroes->set(heroIndex, available);
-#pragma inline_depth()
-        ++heroFlag;
-        ++heroIndex;
-    }
+    bitset_iterator<N> output = bitset_iterator<N>(*availableHeroes, 0);
+    std::transform(heroFlag, end, output, std::logical_not<unsigned char>());
 }
 
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
@@ -1304,6 +1304,12 @@ TRmgMapPosition TRmgZone::getLevelPosition() const
 
 // Candidate placement loads all three coordinates before writing the zone,
 // consistent with passing the coordinate value through an ordinary setter.
+// Seven whole/scalar-store bodies retain this declaration and all callers.
+// X/Y/Z scalar stores remove appendZonePositions' two middle-copy moves
+// (98.2444%), but disturb the early register schedule of filterZonePositions
+// (99.7635 -> 86.1959%) and recenterZone (95.5000 -> 78.4239%), plus three
+// other callers. Their CFG/call sequences remain intact. This does not
+// establish a better common body; retain the whole-coordinate assignment.
 void TRmgZone::setLevelPosition(TRmgMapPosition position)
 {
     m_levelPosition = position;
@@ -1311,10 +1317,20 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 
 
 
+// Provisional ordinary zone bookkeeping boundary, not a Dreamcast recovery.
+// removeObject 0x54bc50 expands this method into B8's indexed memory DEC.
+// Flattening the body back into that caller splits the update and leaves
+// 98.4000%; enum/int value and enum-reference arguments recover all 686
+// retail bytes, while an int-reference parameter leaves 97.3733%.
+void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
+{
+    --m_objectCountByType[objectType];
+}
+
 // FilterZonePositions calls this predicate at 0x53b4b7 and 0x53b5ae.
 // The two center coordinates, template sizes and map-level comparison prove
 // its role independently of the provisional name. Return value is in al.
-// Residual: otherSize and combinedSize exchange ECX/EBX (96.38%).
+// Residual: otherSize and combinedSize exchange ECX/EBX (96.4286%).
 // A separate branch-local minimum reproduces the value-select sequence;
 // min(otherSize, thisSize) and _cpp_min force addressable operands instead
 // (84.74/87.06%). A conditional minimum, clamping thisSize in place, or
@@ -1335,6 +1351,25 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // scalar ownership policies gives 36 states and twelve objects. It retains
 // that same 97.7922% ceiling and split field load, with no sibling movement.
 // All 146 prior/new source forms pass the signed integer-distance oracle.
+// Another 64 size-accessor/value/reference, query-order and addition-order
+// forms produce 26 objects with no sibling movement. The existing getSize
+// interface does not remove the 97.7922% finalists' split load at +0x4f
+// or reversed LEA operands. Ten finalists reproduce; all 210 ownership
+// forms pass 122,018 integer-distance scenarios and four bad controls fail.
+// Preserve the original single-load shape rather than adopt that extra op.
+// Forty-nine copied/borrowed level and predicate lifetimes, including both
+// comparison orders, emit five objects and do not improve 96.4286%.
+// Thirty-two whole-zone receiver/value/reference bindings emit ten TU
+// objects but only the same two predicate bodies (168/170 bytes). A further
+// 52 parent/result-ownership controls emit 21 objects and five bodies;
+// immutable sums and late clearances retain the same 97.7922% split load.
+// Early clearance moves SUB ahead of minimum selection (91.2987/80.7792%);
+// borrowing both result temporaries adds register transfers (81.8052%).
+// Both batches pass the signed-distance oracle; neither changes this body.
+// Moving the existing getSize body out of the class, before or after this
+// function, leaves each of sixteen field/getter ownership forms byte-identical
+// across all three definitions (48 states, all seven header consumers).
+// That ordinary getter boundary does not resolve the scalar register exchange.
 VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
@@ -2486,6 +2521,9 @@ int type_quest_creature_def::getValue(TRmgZone* zone, type_random_map_generator*
 // also without improvement. A position-base experiment restores this row
 // incidentally, but neither that gain nor its unchanged copy sites proves
 // the inheritance; the three-direct-field position model remains.
+// Fifty-four local-lifetime forms (pointer declaration order/placement,
+// artifact last-use scope, and count/reward scope) emit one identical object.
+// The two failure-arm loads are insensitive to this local-lifetime family.
 VA(0x00534B90, 0xE7) // anchor-vtable + canonical hut/wrapper allocations; ret 0xc
 type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
@@ -2792,10 +2830,10 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 // the direction as the point operand removes the four-byte table-base bias;
 // the first-failure join below restores retail's three early branch targets
 // (98.8042%). A shared final failure is lower, not an equivalent CFG match.
-// Residual: entry loads/register homes and the first map-dimension load order.
-// Position/trigger copies (using TObjectType's own nested TPoint), trigger
-// references and prototype references do not improve the second-generation
-// peak. Full map-position queries previously reached only 86.3757%. Native
+// The former scalar-origin residual was entry loads/register homes and the
+// first map-dimension load order. Position/trigger copies (using TObjectType's
+// own nested TPoint), trigger references and prototype references alone did
+// not improve it. Full map-position queries reached only 86.3757%. Native
 // controls check scan order and helper arguments; no helper is flattened or
 // given a false inline declaration to obtain these source-lifetime results.
 // Individual direct-failure returns score 98.7778% (first scan) and
@@ -2804,26 +2842,39 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 // A positive fits result guarding the second scan and the placement tail
 // scores 90.7619% for bool/byte/int; negative blocked results reach only
 // 89.0476%. Both preserve scan order but remain below 98.8042%.
+// Sixty object-kind int/enum ownership and prototype qualifier/reference
+// states, in both kind/coordinate declaration orders, emit three objects.
+// All three finalists reproduce without improvement or sibling movement;
+// the 256-body ordered-query oracle rejects all six negative controls.
+// Exact: copy the nested trigger point, translate one TRmgVector from the
+// incoming coordinate, and pass that displacement to each point addition.
+// This restores the early Y load, EBX object-kind home and first dimension
+// schedule. A 49-state origin family finds five exact forms; the direct
+// vector-use form below reproduces all 505 retail bytes. Replacing its
+// trigger copy by fields/reference leaves 98.8042%; moving kind after the
+// origin leaves 98.0794%. The old scalar form stays 98.8042%; copy and vector
+// lifetime jointly matter. Every scan, failure join and placement call stays
+// canonical. The 246-body mask oracle rejects all six incorrect controls.
 VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
     int objectType = prototype->m_objectType;
-    int x = position.m_x;
-    int y = position.m_y;
-    x -= prototype->m_triggerCell.m_x;
-    y -= prototype->m_triggerCell.m_y;
+    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TRmgVector origin(position.m_x, position.m_y);
+    origin.m_x -= trigger.m_x;
+    origin.m_y -= trigger.m_y;
     if (!g_adventureObjectLandBlocked[objectType][1]) {
         for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
-            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            TPoint nearby = g_rmgDirections[direction] + origin;
             if (m_map.getMapItem(nearby.m_x, nearby.m_y, 0)->isRoadEntrance())
                 goto placementFailure;
         }
     }
     {
         for (int direction = 0; direction < 5; ++direction) {
-            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
             if (item->isRoadEntrance()) {
                 int neighborType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
@@ -2843,7 +2894,7 @@ placementFailure:
             return 0;
         int direction;
         for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
-            TPoint nearby = g_rmgDirections[direction] + TRmgVector(x, y);
+            TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
             if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
                 && item->m_tile.m_landType != eTerrainRock && !item->hasBorderObject())
@@ -3175,6 +3226,13 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 // All push_back scores 99.7862% here but emits neither helper; one insert
 // scores 96.2627% and also omits them. Keep two insertions (99.5723%) and
 // the proven helper boundaries, with the former caller peak in history.
+// Thirteen implicit/in-class/ordinary rule-constructor controls preserve the
+// helpers but do not improve the reader. An ordinary definition before the
+// reader removes the intermediate EH-state store and reaches only 98.8004%.
+// Recombining all four reproduced constructor objects with eight scalar
+// append choices (32 states) retains the same tradeoff: 99.7862% loses six
+// exact rule-vector helpers; the best two-insert forms retain them at 99.5723%.
+// Preserve the implicit constructor and current append calls.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
@@ -3923,53 +3981,139 @@ void readRmgTemplateZones(
     }
 }
 
-// Complete-only object-generator roster.  Retail proves the source-level
-// `push_back(new ...)` chain through all three stages of VC6's real inline
-// ladder: early sites retain vector::insert(pos, value), middle sites retain
+// Complete-only object-generator roster. Retail's constructor arguments and
+// registration sequence follow all three stages of VC6's real inline ladder:
+// early sites retain vector::insert(pos, value), middle sites retain
 // vector::insert(pos, 1, value), and late sites retain vector::push_back.
 // Those are compiler expansion choices for one honest source operation, not
 // three manually selected overloads.  The four loops below are likewise the
 // only repeated structures present in retail; every other registration is an
 // unrolled source statement.
+// Earlier direct-new source (97.4646%) expanded value insert one step early
+// after the key-tent loop and retained extra begin/treasure-constructor calls
+// at the quest boundary. Sixty creature/key/dwelling count-lifetime and descending
+// loop-header forms produce forty objects and ten reproduced finalists,
+// without improving any tracked score. Eight pointer-lifetime forms then
+// reach 98.6796%; 38 section combinations reach 99.1090%. The retained scoped
+// base pointers in the initial and middle rosters recover begin's expansion
+// and the late constructor decision, with all 413 CFG blocks corresponding.
+// Naming pointers in the key/quest loops is neutral at that peak; the final
+// roster stays direct. All factory arguments, allocation and registration
+// order, and canonical constructors/push_back calls remain unchanged.
+// Residual: nine blocks differ in instruction count, including one extra
+// treasure constructor in the (15000, 1, 5, 4) spell-box registration;
+// total calls 286 versus 285, with a three-byte
+// final displacement. The other tracked functions retain their scores.
+// Fifty-five canonical member-initializer/roster controls do not improve
+// this peak; three/four initializers also lose the retained constructor's
+// exact body. Keep its original stores. Allocation/argument/registration
+// traces and key state agree in 288 scenarios per body; four wrong controls
+// fail. Factory spies verify the roster edits, not factory implementations.
+// Further controls retain this 99.1090% body: 16 spell-box initialization
+// forms, 16 value/reference input forms, 55 input/roster recombinations and
+// eight key-fill/reset forms do not improve it. A single borrowed spell-box
+// input matches the first 0x8f1 bytes with relocation operands masked, but
+// restores an extra late constructor and different insert expansions.
+// Named zero fill/reset values retain all key-state behavior without fixing
+// the call boundaries. See the owning spell-box constructor evidence too.
+// Do not replace individual sites with different insertion overloads to
+// manufacture retail's inlining ladder.
 VA(0x00538B10, 0x2241)
 void type_random_map_generator::initializeObjectGenerators()
 {
-    m_objectGenerators.push_back(new type_treasure_def(2, 0, 100, 20));
-    m_objectGenerators.push_back(new type_treasure_def(4, 0, 3000, 50));
+    {
+        type_treasure_def* allocated = new type_treasure_def(2, 0, 100, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(4, 0, 3000, 50);
+        m_objectGenerators.push_back(allocated);
+    }
 
     {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
-                m_objectGenerators.push_back(
-                    new type_black_box_creature_def(creature));
+            if (g_creatureTypeTraits[creature].m_level >= 0) {
+                type_treasure_def* allocated = new type_black_box_creature_def(creature);
+                m_objectGenerators.push_back(allocated);
+            }
         }
     }
 
-    m_objectGenerators.push_back(
-        new type_black_box_experience_def(6000, 5000));
-    m_objectGenerators.push_back(
-        new type_black_box_experience_def(12000, 10000));
-    m_objectGenerators.push_back(
-        new type_black_box_experience_def(18000, 15000));
-    m_objectGenerators.push_back(
-        new type_black_box_experience_def(24000, 20000));
+    {
+        type_treasure_def* allocated = new type_black_box_experience_def(6000, 5000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_experience_def(12000, 10000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_experience_def(18000, 15000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_experience_def(24000, 20000);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_black_box_gold_def(5000, 5000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(10000, 10000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(15000, 15000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(20000, 20000));
+    {
+        type_treasure_def* allocated = new type_black_box_gold_def(5000, 5000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_gold_def(10000, 10000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_gold_def(15000, 15000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_gold_def(20000, 20000);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(10000, 3, 3, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(12500, 4, 4, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 5, 5, 15));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 1));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 2));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 4));
-    m_objectGenerators.push_back(new type_black_box_spells_def(15000, 1, 5, 8));
-    m_objectGenerators.push_back(new type_black_box_spells_def(30000, 1, 5, 15));
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(5000, 1, 1, 15);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(7500, 2, 2, 15);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(10000, 3, 3, 15);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(12500, 4, 4, 15);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(15000, 5, 5, 15);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(15000, 1, 5, 1);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(15000, 1, 5, 2);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(15000, 1, 5, 4);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(15000, 1, 5, 8);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_black_box_spells_def(30000, 1, 5, 15);
+        m_objectGenerators.push_back(allocated);
+    }
 
     {
         int player = m_objectPrototypes[10].size();
@@ -3984,77 +4128,262 @@ void type_random_map_generator::initializeObjectGenerators()
         }
     }
 
-    m_objectGenerators.push_back(new type_treasure_def(7, 0, 8000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(11, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(12, 0, 2000, 500));
-    m_objectGenerators.push_back(new type_treasure_def(13, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(13, 1, 10000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(13, 2, 7500, 20));
-    m_objectGenerators.push_back(new type_treasure_def(14, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 0, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 1, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 2, 2000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 3, 5000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 4, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 5, 3000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(16, 6, 9000, 100));
+    {
+        type_treasure_def* allocated = new type_treasure_def(7, 0, 8000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(11, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(12, 0, 2000, 500);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(13, 0, 5000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(13, 1, 10000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(13, 2, 7500, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(14, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 0, 3000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 1, 2000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 2, 2000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 3, 5000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 4, 1500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 5, 3000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(16, 6, 9000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
 
     int dwelling = 80;
     if (m_mapVersion < 1)
         dwelling = 58;
-    for (; dwelling--;)
-        m_objectGenerators.push_back(new type_map_dwelling_def(dwelling));
+    for (; dwelling--;) {
+        type_treasure_def* allocated = new type_map_dwelling_def(dwelling);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_treasure_def(22, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(23, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(24, 0, 4000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(25, 0, 10000, 100));
-    m_objectGenerators.push_back(new type_treasure_def(28, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(29, 0, 500, 1000));
-    m_objectGenerators.push_back(new type_treasure_def(30, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(31, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(32, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(35, 0, 7000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(38, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(39, 0, 500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(41, 0, 12000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(47, 0, 1000, 50));
-    m_objectGenerators.push_back(new type_treasure_def(48, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(49, 0, 250, 100));
-    m_objectGenerators.push_back(new type_treasure_def(51, 0, 1500, 100));
-    m_objectGenerators.push_back(new type_treasure_def(52, 0, 100, 100));
-    m_objectGenerators.push_back(new type_treasure_def(55, 0, 500, 50));
-    m_objectGenerators.push_back(new type_treasure_def(56, 0, 100, 50));
-    m_objectGenerators.push_back(new type_treasure_def(57, 0, 3500, 200));
-    m_objectGenerators.push_back(new type_treasure_def(58, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(60, 0, 750, 100));
-    m_objectGenerators.push_back(new type_treasure_def(61, 0, 1500, 100));
+    {
+        type_treasure_def* allocated = new type_treasure_def(22, 0, 500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(23, 0, 1500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(24, 0, 4000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(25, 0, 10000, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(28, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(29, 0, 500, 1000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(30, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(31, 0, 100, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(32, 0, 1500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(35, 0, 7000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(38, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(39, 0, 500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(41, 0, 12000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(47, 0, 1000, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(48, 0, 500, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(49, 0, 250, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(51, 0, 1500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(52, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(55, 0, 500, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(56, 0, 100, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(57, 0, 3500, 200);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(58, 0, 750, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(60, 0, 750, 100);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(61, 0, 1500, 100);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_prison_def(2500, 0));
-    m_objectGenerators.push_back(new type_prison_def(5000, 5000));
-    m_objectGenerators.push_back(new type_prison_def(10000, 15000));
-    m_objectGenerators.push_back(new type_prison_def(20000, 90000));
-    m_objectGenerators.push_back(new type_prison_def(30000, 500000));
-    m_objectGenerators.push_back(new type_treasure_def(63, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_treasure_def(64, 0, 100, 100));
+    {
+        type_treasure_def* allocated = new type_prison_def(2500, 0);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_prison_def(5000, 5000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_prison_def(10000, 15000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_prison_def(20000, 90000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_prison_def(30000, 500000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(63, 0, 5000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(64, 0, 100, 100);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_artifact_def(66, 2000));
-    m_objectGenerators.push_back(new type_artifact_def(67, 5000));
-    m_objectGenerators.push_back(new type_artifact_def(68, 10000));
-    m_objectGenerators.push_back(new type_artifact_def(69, 20000));
+    {
+        type_treasure_def* allocated = new type_artifact_def(66, 2000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_artifact_def(67, 5000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_artifact_def(68, 10000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_artifact_def(69, 20000);
+        m_objectGenerators.push_back(allocated);
+    }
 
-    m_objectGenerators.push_back(new type_resource_lump_def(76, 0, 1500, 2000));
-    m_objectGenerators.push_back(new type_treasure_def(78, 0, 5000, 20));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 0, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 2, 1400, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 1, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 3, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 4, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 5, 2000, 300));
-    m_objectGenerators.push_back(new type_resource_lump_def(79, 6, 750, 300));
-    m_objectGenerators.push_back(new type_treasure_def(80, 0, 100, 50));
-    m_objectGenerators.push_back(new type_scholar_def());
-    m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(76, 0, 1500, 2000);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(78, 0, 5000, 20);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 0, 1400, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 2, 1400, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 1, 2000, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 3, 2000, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 4, 2000, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 5, 2000, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_resource_lump_def(79, 6, 750, 300);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(80, 0, 100, 50);
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_scholar_def();
+        m_objectGenerators.push_back(allocated);
+    }
+    {
+        type_treasure_def* allocated = new type_treasure_def(82, 0, 1500, 500);
+        m_objectGenerators.push_back(allocated);
+    }
 
     for (int quest = 0; quest < m_objectPrototypes[83].size(); ++quest) {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
@@ -4159,23 +4488,47 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // placed and its 12-byte position vector. Retail samples offsets around
 // the center and appends positions accepted by canPlaceZone. Provisional
 // role name; Complete-only, no Dreamcast counterpart.
-// Residual (83.4857%): scalar maximum selection restores the retail
-// second-ring radius branch (41.52 -> 79.02%); direct coordinate stores
-// restore its field addressing (83.49%). The first two push_back sites
-// retain count-insert, while the last expands it with extra size/cleanup
-// branches. Explicit count-insert at all three sites changes that frontier
-// substantially; retain the canonical vector calls and accessor copies.
+// Partial 98.1270%: binding each rounded Y temporary by const reference
+// restores retail's Y-before-X conversion and 0x3c frame. The ordinary
+// middle-position setter restores the retained vector size at target +1de;
+// all twenty call decisions agree. The first +0..+be bytes and the final
+// 632 bytes agree after relocation masking; shared vector callee bodies
+// were checked separately. B4/B5 remain different: the middle value copy
+// clobbers ECX, adding two moves/five bytes before the placement call.
+// Controls: plain-value constructor inputs evaluated X first with a 0x48
+// frame in the earlier 95.3175% store-order context. A named double Y
+// scores 96.6159% but spills/reloads it and grows the frame to 0x4c.
+// Reference inputs plus three direct middle stores recover the first loop
+// but expand the first size call, giving 34 blocks against 31. Level/point
+// lifetimes and accepted-value ownership do not restore that boundary.
+// Whole middle assignment and the existing by-value setter both restore it.
+// Copying the center then changing its level scores 98.5048% but emits an
+// extra Z store absent from retail; it is not adopted. Direct X/Y stores
+// with late level calculation recover the middle schedule but expand size
+// again. Independent push_back/single-insert/count-insert forms do not fix
+// that boundary. Keep the three post-predicate getter reads and push_back.
+// Earlier field/constructor mixtures, staged inputs and destination scopes
+// also fail to recover all boundaries. The bounded integer-ring oracle
+// checks snapshots, late radius reads, accepted values and output order;
+// every tested body passes and all five incorrect controls are rejected.
+// A scalar-body setter control removes the two moves (98.2444%) but still
+// differs in middle-level scheduling and perturbs five other callers; see
+// the canonical setter's owning comment. No shared helper edit is retained.
+// Fifty-six middle coordinate/receiver bindings and seeded-level subtraction
+// forms emit 21 objects without improving 98.1270% or changing a sibling.
+// The two extra moves persist across these argument-lifetime hypotheses.
 VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 void type_random_map_generator::appendZonePositions(TRmgZone* center,
     TRmgZone* zone, std::vector<TRmgMapPosition>& candidates)
 {
     int radius = center->m_slot->m_size + zone->m_slot->m_size;
     TRmgMapPosition position = center->getLevelPosition();
+    TRmgMapPosition candidate;
     for (int direction = 0; direction < 32; ++direction) {
-        TRmgMapPosition candidate;
-        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
-        candidate.m_z = position.m_z;
+        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate = TRmgMapPosition(
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
+            y, position.m_z);
         zone->m_levelPosition.m_x = candidate.m_x;
         zone->m_levelPosition.m_y = candidate.m_y;
         zone->m_levelPosition.m_z = candidate.m_z;
@@ -4185,22 +4538,18 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     if (m_map.m_size.m_z == 1)
         return;
     int level = 1 - position.m_z;
-    TRmgMapPosition candidate;
-    candidate.m_x = position.m_x;
-    candidate.m_y = position.m_y;
-    candidate.m_z = level;
-    zone->m_levelPosition.m_x = candidate.m_x;
-    zone->m_levelPosition.m_y = candidate.m_y;
-    zone->m_levelPosition.m_z = candidate.m_z;
+    candidate = TRmgMapPosition(position.m_x, position.m_y, level);
+    zone->setLevelPosition(candidate);
     if (canPlaceZone(zone))
         candidates.push_back(zone->getLevelPosition());
     radius = center->m_slot->m_size;
     if (radius < zone->m_slot->m_size)
         radius = zone->m_slot->m_size;
     for (direction = 0; direction < 32; ++direction) {
-        candidate.m_y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
-        candidate.m_x = static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]);
-        candidate.m_z = level;
+        const int& y = static_cast<int>(position.m_y + radius * g_rmgDirectionSines[direction]);
+        candidate = TRmgMapPosition(
+            static_cast<int>(position.m_x + radius * g_rmgDirectionCosines[direction]),
+            y, level);
         zone->m_levelPosition.m_x = candidate.m_x;
         zone->m_levelPosition.m_y = candidate.m_y;
         zone->m_levelPosition.m_z = candidate.m_z;
@@ -5494,6 +5843,12 @@ void type_random_map_generator::paintZoneTerrain()
 // scope states produce only three objects, all at 99.9545%. A four-value
 // midpoint constructor, crossed with persistent-record/scalar sample locals
 // in the caller, also leaves this helper unchanged across nine controls.
+// Forty-five independent midpoint value/const-reference and center-sample
+// copy/borrow forms all emit the same subdivision bytes and relocations.
+// Retail center/Y/X homes remain -4/-0xc/-8 versus -8/-4/-0xc here; all
+// schedules and 32 block boundaries agree. The sample-lattice oracle passes
+// these forms and rejects four incorrect controls. Scalar references alone
+// cannot recover the missing layout; no source change is adopted from them.
 VA(0x0053E9E0, 0x31E) // anchor-callee 0x53ed91; Complete-only, fastcall ret 0x34
 void subdivideRmgNoiseRegion(std::vector<TRmgNoiseRegion>& pending,
     int centerValue, TRmgNoiseRegion region, TRmgNoiseMidpoints midpoints)
@@ -6119,6 +6474,13 @@ void type_random_map_generator::repairWaterZoneBorders()
 // all siblings hold. Trigger scopes and canonical compound translation do
 // not raise the peak. See generate-rmg-add-object-family.py; the independent
 // 159-body distance oracle passes with ten wrong controls rejected.
+// Paired-vector ownership (17 states, both member orders, direct/reference
+// access and four lifetimes) adds retained construction/cleanup boundaries
+// and lowers the best paired form to 62.4691%. Crossing ten reproduced
+// owners with public pop/parity choices (50 states) only recovers the old
+// separate-vector 75.7527% ceiling; paired forms reach 63.2036%. VC6's
+// pop_back delegates to erase(end()-1), but neither context recovers the
+// retail seed, position-erase and sorted-insert boundaries. No form adopted.
 VA(0x005402A0, 0x32A) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -6521,6 +6883,13 @@ void type_random_map_generator::markBorderObjectArea(
 // Measured constructor collateral: GroundConnection 78.07%, ConnectZones
 // 93.62%, OpenConnectionPath 79.97%, CreateRiver 85.73%. Prior peaks stay
 // banked; lower scores do not refute these newly proven constructor calls.
+// With the constructor in its retail owner, 55 translated scalar-input and
+// return-lifetime forms emit 42 objects; another 44 existing TPoint accessor
+// forms emit 44 objects. All still expand both coastal constructors and keep
+// frames of 0xc/0x10 rather than retail's 0x20. Named results score 68.8295%
+// there without recovering that boundary. The affine coast oracle imports
+// each rendered helper and caller; all 88 distinct sources pass. Keep the
+// direct translated construction until the retained calls are recovered.
 TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
 {
     return TRmgMapPosition(m_x + offset.m_x, m_y + offset.m_y, m_z);
@@ -7314,6 +7683,11 @@ unsigned char type_random_map_generator::placeMonolithBorder(
 // (92.6892%), but its own lookup loses the exact body (76%, extra ESI).
 // All six projection orders and direct/named returns leave that callee at
 // 74.2667/76%; do not adopt the caller gain without recovering the callee.
+// The addition helper's reference-X/constant-result/Y-accessor form reaches
+// 92.7548%, but keeps both wrong scalar lookups, the extra first size call,
+// the 0x28 frame and 66 versus 67 CFG blocks. It also changes four other
+// callers plus coast without recovering coast's constructors. This shared
+// helper probe is not adopted; see generate-rmg-position-add-accessors.py.
 VA(0x00542CE0, 0x554) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
 void type_random_map_generator::createMonolithConnection(
     TRmgZone* source, TRmgZoneConnection* connection, int prototypeIndex)
@@ -8629,6 +9003,11 @@ void type_random_map_generator::placeMines()
 // give 60 states and 47 identities, again no gain and no sibling movement.
 // The loader's direct-read solution therefore does not explain this selector's
 // ESI/EDI exchange. Checked-mask throws and ordered random selection remain.
+// Fifty-three copied/borrowed input-parameter bindings emit seven TU objects
+// but identical selector bytes. Nine ordinary prototype-range accessor
+// controls across all seven header consumers likewise retain that exact
+// 321-byte candidate body and every tracked score. Neither boundary nor
+// input ownership resolves the terrain/range register exchange.
 VA(0x00546040, 0x141) // anchor-callee openConnectionPath; thiscall, ret 0x0c
 TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     int terrain, int objectType, int subtype)
@@ -9104,7 +9483,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // copy: 88.41%; shared policy rejection: 90.50%; position-before-properties:
 // 90.81%. Explicit if/else assigning a separate direction removes a branch
 // (83.17% with the copy probes). Preserve real bounds, snapshots and calls.
-// Residual (99.9850%): five 60-state populations (244 distinct sources,
+// Earlier constructor-hidden context (99.9850%): five 60-state populations (244 distinct sources,
 // 158 code/relocation identities) restore retail's 65 blocks, all branch
 // destinations, three calls and 0x48 frame. Point-plus-vector recovers the
 // direction join (97.1072%); the post-call guard-point copy restores constructor
@@ -9134,6 +9513,16 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // A separate blocked-entrance result reaches 98.2893%; head-tested scans
 // whose exhaustion arm owns the guard-policy assignment reach 99.2993%
 // with for/while/do headers. Both remain below 99.9850%.
+// Current residual (96.8953%): restoring the ordinary TRmgMapPosition
+// constructor to its evidenced rmg.cpp owner exposes its body here. VC6
+// expands it, whereas retail retains the call at +0xbd; the frame is 0x44
+// rather than retail's 0x48. Twenty-four direct-construction/position-plus-
+// point forms with copied/borrowed guard inputs and result lifetimes produce
+// seventeen objects and ten reproduced finalists. All still expand that
+// constructor; their best 96.9476% does not restore the missing boundary.
+// The behavioral oracle accepts the forms and rejects fourteen wrong-policy,
+// lookup-order, snapshot and live-vector-bound controls. No form is adopted;
+// retain the canonical constructor body, declaration and TU ownership.
 VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -9730,7 +10119,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
 // three dry entrance-free cells beside them, then four cells inland.
 // Preserve retail's asymmetric x > width versus y >= height bounds check.
 // The last inland cell gains a river target and an approach-direction bit.
-// Partial 79.7557%: separate water/dry/inland counter lifetimes recover
+// Earlier constructor-hidden context (79.7557%): separate water/dry/inland counter lifetimes recover
 // the dry loop's memory counter and instruction order. Two 60-state families
 // tested counter scopes, coordinate/step lifetimes, item bindings and receiver
 // locals; all 339 other RMG scores stay unchanged for the retained version.
@@ -9740,6 +10129,17 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
 // A separate inland coordinate or earlier step snapshot does not improve
 // the peak; a water-item binding/direction local reaches only 79.6875%.
 // A copy-based operator+ removes the retail constructor calls (65.57%).
+// Current 67.3409% with the constructor in its evidenced owner: both retail
+// constructor calls are expanded, reducing the frame to 0x10 versus 0x20.
+// Fifty named/scoped value/reference translation-result and step bindings
+// emit 18 objects without recovering either call. A borrowed step reaches
+// 71.2670% but reloads its global X/Y fields inside the loop, where retail
+// uses saved copies, and still lacks both calls. It is not adopted. The
+// affine-path oracle checks all forms alongside the earlier families and
+// rejects seven incorrect controls, including the asymmetric X boundary.
+// The separate 55-input/44-accessor addition-helper families also leave both
+// constructors expanded. Every emitted coastal body was checked for calls;
+// the 68.8295% peaks reduce the frame further to 0xc and are not adopted.
 VA(0x00548A40, 0x222)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)
 {
@@ -10303,6 +10703,40 @@ unsigned char type_random_map_generator::generate()
 // form keeps the original player declarations; no sibling score changes.
 // The focused mask oracle checks actual packing and output-region order
 // through all 156 hero positions, both map-era widths and nonbinary flags.
+// Artifact-end recovery (80.1714%): copy-initialize the named range end
+// passed to std::copy. Retail retains separate source/end owner homes in
+// its legacy-artifact traversal. Twenty-four buffer/scope controls do not
+// improve the previous source; 25 canonical-iterator controls and 61 end
+// construction/lifetime controls isolate this change without other scopes.
+// A temporary end or direct-initialized named end in the original scope
+// remains at 79.2606%; default construction plus assignment gives 78.5642%.
+// The const traversal adapter does not recover retail's test/set calls.
+// The gain changes natural exception/string expansion: two _Eos calls and
+// one exception/string-copy pair disappear, while one _Tidy and one
+// logic_error construction remain calls. The frame is still 0x304 versus
+// 0x318, with 174/164 blocks and 92/87 branches; bitset inlining stays open.
+// The artifact oracle checks all 144 bit positions, legacy truncation,
+// reserved bytes and callback-driven trait/version changes. It covers
+// these output regions, not the complete header.
+// Natural hero iteration reached 82.2089% through setAvailableRmgHeroes:
+// both hero set calls and the legacy-artifact set call remain without pins.
+// The residual is 169/164 blocks, 90/87 branches and the same 0x304/0x318
+// frame difference; the other bitset and string call decisions remain open.
+// Read-interface/extent recovery (83.9734%): use canonical subscripts for
+// packing, borrowed const artifact views, and each bitset's size as its bound.
+// These preserve the unsigned range and restore the legacy artifact test/set
+// pair. Sixty-four read forms and sixty size-bound forms preserve every sibling
+// score; another 61 coupled initializer forms do not improve this parent.
+// Residual: the hero initializer now retains two output-subscript calls absent
+// in retail, and packing _Xran paths still expand. The frame is 0x31c versus
+// 0x318; 170/164 blocks and 90/87 branches remain. These interface hypotheses
+// do not establish the missing natural expansion decisions. The two focused
+// mask oracles cover all edited regions, not the complete serialization body.
+// Twenty-four map-name initialization/length-query forms yield six objects.
+// Default construction plus assignment reaches 83.9953% but still expands
+// assign and moves the EH state before it, unlike retail's completed-string
+// boundary. Copy/const construction and size/length choices do not improve
+// the current constructor; none of these alternatives is adopted.
 VA(0x00549CB0, 0xE90)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 {
@@ -10632,8 +11066,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                 &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
 
             memset(packedHeroes, 0, sizeof(packedHeroes));
-            for (unsigned int heroBit = 0; heroBit < 156; ++heroBit) {
-                if (availableHeroes.test(heroBit))
+            for (unsigned int heroBit = 0; heroBit < availableHeroes.size(); ++heroBit) {
+                if (availableHeroes[heroBit])
                     packedHeroes[heroBit >> 3] |= 1 << (heroBit & 7);
             }
         }
@@ -10645,8 +11079,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
         unsigned char packedHeroes[16];
         memset(packedHeroes, 0, sizeof(packedHeroes));
-        for (unsigned int roeHeroBit = 0; roeHeroBit < 128; ++roeHeroBit) {
-            if (availableHeroes.test(roeHeroBit))
+        for (unsigned int roeHeroBit = 0; roeHeroBit < availableHeroes.size(); ++roeHeroBit) {
+            if (availableHeroes[roeHeroBit])
                 packedHeroes[roeHeroBit >> 3] |= 1 << (roeHeroBit & 7);
         }
         outfile->write(packedHeroes, sizeof(packedHeroes));
@@ -10676,25 +11110,28 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     if (m_mapVersion >= 2) {
         unsigned char packedArtifacts[18];
         memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int artifactBit = 0; artifactBit < 144;
+        const std::bitset<144>& disabledArtifactsRead = disabledArtifacts;
+        for (unsigned int artifactBit = 0; artifactBit < disabledArtifacts.size();
              ++artifactBit) {
-            if (disabledArtifacts.test(artifactBit))
+            if (disabledArtifactsRead[artifactBit])
                 packedArtifacts[artifactBit >> 3] |=
                     1 << (artifactBit & 7);
         }
         outfile->write(packedArtifacts, sizeof(packedArtifacts));
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
+        bitset_iterator<144> artifactEnd = bitset_iterator<144>(disabledArtifacts, 129);
         std::copy(
             bitset_iterator<144>(disabledArtifacts, 0),
-            bitset_iterator<144>(disabledArtifacts, 129),
+            artifactEnd,
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         unsigned char packedArtifacts[17];
         memset(packedArtifacts, 0, sizeof(packedArtifacts));
-        for (unsigned int legacyArtifactBit = 0; legacyArtifactBit < 129;
+        const std::bitset<129>& legacyDisabledArtifactsRead = legacyDisabledArtifacts;
+        for (unsigned int legacyArtifactBit = 0; legacyArtifactBit < legacyDisabledArtifacts.size();
              ++legacyArtifactBit) {
-            if (legacyDisabledArtifacts.test(legacyArtifactBit))
+            if (legacyDisabledArtifactsRead[legacyArtifactBit])
                 packedArtifacts[legacyArtifactBit >> 3] |=
                     1 << (legacyArtifactBit & 7);
         }
@@ -10706,8 +11143,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             std::bitset<70> disabledSpells;
             unsigned char packedSpells[9];
             memset(packedSpells, 0, sizeof(packedSpells));
-            for (unsigned int spell = 0; spell < 70; ++spell) {
-                if (disabledSpells.test(spell))
+            for (unsigned int spell = 0; spell < disabledSpells.size(); ++spell) {
+                if (disabledSpells[spell])
                     packedSpells[spell >> 3] |= 1 << (spell & 7);
             }
             outfile->write(packedSpells, sizeof(packedSpells));
@@ -10717,8 +11154,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
             std::bitset<28> disabledSkills;
             unsigned char packedSkills[4];
             memset(packedSkills, 0, sizeof(packedSkills));
-            for (unsigned int skill = 0; skill < 28; ++skill) {
-                if (disabledSkills.test(skill))
+            for (unsigned int skill = 0; skill < disabledSkills.size(); ++skill) {
+                if (disabledSkills[skill])
                     packedSkills[skill >> 3] |= 1 << (skill & 7);
             }
             outfile->write(packedSkills, sizeof(packedSkills));
@@ -11030,39 +11467,50 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 // original zone (ret 8). Distances become randomized ascending priorities;
 // junction/water/origin zones and unreachable scores are excluded. The
 // final loop calls the canonical treasure-group placement with spacing 1.
-// Residual (93.5302%): all 27 blocks, 15 branches and both return paths
-// align. Single-element source insertion expands to retail's retained
-// count-insert call; direct count insertion expands further and gives 0%.
-// Guard scopes and all four signed/unsigned loop-index combinations are
-// flat. Remaining differences are local/register and cleanup scheduling.
+// Exact: all 395 bytes. One zone pointer shared across the three phases
+// restores retail's EBP-0x10 stores, including the final placement store,
+// and its receiver/index/distance registers (93.5302% -> 98.5168%). Naming
+// the non-unit-distance priority before assignment restores B5's receiver
+// reload and arithmetic destination. Flattening it returns 98.5168%.
+// Thirteen phase-lifetime forms and twenty-one priority forms reproduce
+// five/four object identities. The stable-priority oracle checks 155,520
+// score, exclusion, tie, random, live-bound and early-success cases per form;
+// five negative controls fail. Other RMG scores remain unchanged.
+// Keep single-element insertion: its expansion retains count-insert, whose
+// 521-byte body matches retail 0x54d120 despite its widget-pointer ICF label.
+// Direct count insertion expands further and gives 0%. Guard scopes and
+// all four signed/unsigned loop-index combinations do not close the old body.
 VA(0x0054B300, 0x18B) // anchor-callee + placement call + zone fields; retail-only
 unsigned char type_random_map_generator::placeQuestGroup(
     TRmgTreasureGroup* group, TRmgZone* origin)
 {
     std::vector<TRmgZone*> candidates;
+    TRmgZone* sharedZone;
     calculateQuestZoneDistances(origin);
     for (unsigned int index = 0; index < m_zones.size(); ++index) {
-        TRmgZone* zone = m_zones[index];
-        int distance = zone->m_questPlacementScore;
+        sharedZone = m_zones[index];
+        int distance = sharedZone->m_questPlacementScore;
         if (distance == 1)
-            zone->m_questPlacementScore = 1000 + rand() % 10;
-        else
-            zone->m_questPlacementScore = distance * 10 + rand() % 10;
+            sharedZone->m_questPlacementScore = 1000 + rand() % 10;
+        else {
+            int priority = distance * 10 + rand() % 10;
+            sharedZone->m_questPlacementScore = priority;
+        }
     }
     for (index = 0; index < m_zones.size(); ++index) {
-        TRmgZone* zone = m_zones[index];
-        if (zone == origin || zone->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
-            || zone->m_questPlacementScore > 2000 || zone->m_terrain == eTerrainWater)
+        sharedZone = m_zones[index];
+        if (sharedZone == origin || sharedZone->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
+            || sharedZone->m_questPlacementScore > 2000 || sharedZone->m_terrain == eTerrainWater)
             continue;
         unsigned int insertion = 0;
         while (insertion < candidates.size()
-            && zone->m_questPlacementScore >= candidates[insertion]->m_questPlacementScore)
+            && sharedZone->m_questPlacementScore >= candidates[insertion]->m_questPlacementScore)
             ++insertion;
-        candidates.insert(candidates.begin() + insertion, zone);
+        candidates.insert(candidates.begin() + insertion, sharedZone);
     }
     for (index = 0; index < candidates.size(); ++index) {
-        TRmgZone* zone = candidates[index];
-        if (placeTreasureGroup(group, zone, 1))
+        sharedZone = candidates[index];
+        if (placeTreasureGroup(group, sharedZone, 1))
             return 1;
     }
     return 0;
@@ -11077,12 +11525,18 @@ static const int g_rmgQuestArtifactClass = 2;
 // and generator masks fix ownership and selection semantics. Failure
 // substitutes ordinary treasure; success reserves the artifact and advances
 // the seer-hut prototype cursor. Complete-only, original spelling unknown.
-// Residual (72.6899%): the inline three-coordinate outline accessor and
+// Earlier context (72.6899%): the inline three-coordinate outline accessor and
 // named base-object pointer raise 59.7318% to 71.1899%; scoped eligibility
 // statements reach this peak (either scope alone is flat). The group vector
 // construction/destruction and failure-path map accessor still expand
 // differently. The writable caller remains exact; all controls change only
 // this worker among other RMG functions.
+// Current residual (71.3017%): sixteen selected-artifact capture and
+// seer-hut/base-pointer conversion lifetimes produce seven objects and
+// seven reproduced finalists, topping out at 72.8017%. The selected value
+// still stays in EAX through prototype lookup rather than retail's EBX,
+// and the failure lookup/cleanup boundaries remain different. These forms
+// do not establish the observed copy; no source body is adopted.
 VA(0x0054B490, 0x42E) // anchor-caller + artifact/group/generator fields; retail-only
 unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 {
@@ -11223,13 +11677,28 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // 0x2c frame, coordinate homes and complete footprint-loop instruction stream.
 // The 60-state coordinate and finite 41-state level families reproduce
 // 95.6800% without sibling movement. Retain the real position accessor.
-// Residual: the zone count still expands to load/decrement/store instead
-// of retail's memory decrement; entrance arithmetic and color registers
-// differ. Sixty counter-spelling/type-cache probes are neutral per parent.
+// Earlier residual: zone count load/decrement/store, entrance arithmetic
+// and color registers. Sixty counter-spelling/type-cache probes were neutral.
 // Sixty zone-type/item/owner probes reach 95.7022% only through different
 // color registers, not the missing counter sequence; no such edit adopted.
 // Earlier scalar controls: positive bounds and iterator scope are neutral;
 // shared mask index 77.3911%, entrance position/accessor 85.0578%.
+// Copied trigger coordinates, the typed object index before the query and
+// a borrowed count array recover entrance/global-count/color scheduling
+// (98.4000%). The 51 count-binding and 49 trigger forms, followed by 58
+// recombinations and 61 decrement-expression forms, retain all siblings.
+// Former residual: only B8's instruction count differed (six versus three); its
+// split zone decrement added seven bytes. All 45 CFG blocks correspond.
+// The retained _Destroy call has the artifact-vector ICF label in retail;
+// both real bodies are ret 8. Keep the object-pointer container type.
+// Signed int/long counter types (four states across seven consumers) emit
+// identical code. Forty-eight signed zone-index and pointer/reference owner
+// states emit twelve objects, with no improvement or sibling movement.
+// Fifty-two vector/counter bindings emit four objects and retain the split
+// update. Nine ordinary decrementObjectCount boundary controls across all
+// seven header consumers recover exact bytes with no sibling score changes.
+// Keep the typed value parameter and ordinary source call: VC6 expands the
+// helper into retail's three-instruction B8, removing the seven extra bytes.
 // See generate-rmg-object-removal-family.py and its independent cell oracle.
 VA(0x0054BC50, 0x2AE) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
@@ -11241,10 +11710,13 @@ void type_random_map_generator::removeObject(type_object* object)
     if (found) {
         m_positions.erase(found);
         --m_objectCountByType[prototype->m_objectType];
-        int zone = m_map.getMapItem(position.m_x - prototype->m_triggerCell.m_x,
-            position.m_y - prototype->m_triggerCell.m_y, position.m_z)->m_zoneState.m_zone;
-        if (zone >= 0)
-            --m_zones[zone]->m_objectCountByType[prototype->m_objectType];
+        TAdventureObjectType objectType = prototype->m_objectType;
+        TObjectType::TPoint trigger = prototype->m_triggerCell;
+        int zone = m_map.getMapItem(position.m_x - trigger.m_x,
+            position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
+        if (zone >= 0) {
+            m_zones[zone]->decrementObjectCount(objectType);
+        }
     }
     if (prototype->m_objectType == BORDER_GUARD) {
         m_disabledKeyTents[prototype->m_subtype] = 0;
@@ -11383,7 +11855,7 @@ VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
 VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 
 // Retail's 129-bit setter is claimed from its identical canonical COMDAT in
-// customcampaign.cpp; this TU expands it after removing the reference pin.
+// customcampaign.cpp; this TU now retains its canonical iterator call.
 
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded

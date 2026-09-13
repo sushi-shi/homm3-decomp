@@ -170,8 +170,11 @@ class RmgGroupPlaceTests(unittest.TestCase):
         lookup = header[at:header.index("\n    }", at) + 6]
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
         helper = self.module.helpers()
+        position_accessor = helper.definition(self.source, "type_object::getPosition")
         value_helpers = [helper.definition(self.source, "TRmgMapPosition::TRmgMapPosition"),
-                         helper.definition(self.source, "type_object::getPosition"),
+                         helper.definition(self.source, "TRmgMapPosition::operator+"),
+                         helper.definition(self.source, "TRmgMapPosition::operator+="),
+                         position_accessor,
                          helper.definition(self.source, "type_random_map::getMapItem",
                                            parameters="TRmgMapPosition point")]
         # Select the canonical point/vector overload, not another operator+.
@@ -227,7 +230,7 @@ class RmgGroupPlaceTests(unittest.TestCase):
             checks.append("if (check<" + label + ">()) { std::fprintf(stderr, \"missed " + label + "\\n\"); return 2; }")
         program = template
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)),
-                ("POSITION_ACCESSOR_DECL", value_helpers[1].split("{", 1)[0].replace("type_object::", "").strip() + ";"),
+                ("POSITION_ACCESSOR_DECL", position_accessor.split("{", 1)[0].replace("type_object::", "").strip() + ";"),
                 ("OBJECT_ENUM", block((self.root / "include/mapcell.h").read_text(), "enum TAdventureObjectType {")),
                 ("PROTOTYPE_POINT", prototype_point),
                 ("PROTOTYPE_FIELDS", fields(prototype, ("m_objectType", "m_triggerCell"))),

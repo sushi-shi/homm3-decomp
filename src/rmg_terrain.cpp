@@ -95,6 +95,14 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 // retain 97.3461%; borrowing the escaped selector output gives 91.5154%.
 // None recovers the parameter homes or the direct memory comparison, and
 // no sibling score changes. Keep the independent post-tile-read value.
+// Forty-eight borrowed input/receiver and availability-mask scope forms
+// produce three objects; sixteen reproduced-parent comparison-order and
+// signed int/long value forms produce six. Neither exceeds 97.3461% or
+// changes a sibling score. Sixty distinct bodies pass 110,592 callback/query
+// scenarios each across the two families; five wrong-input, mask, output-
+// lifetime, random-range and flip controls fail. The checks use authored
+// mask/proxy methods and controlled painter/selector/random dependencies.
+// Parameter homes and B5's extra pattern load/copy remain unresolved.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {

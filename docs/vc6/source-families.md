@@ -18,6 +18,23 @@ tracked score in all seven consumers unchanged. The full build verifies the
 adopted constructor; restoring the value ID parameter is the negative control.
 Generator: `scripts/experiments/generate-rmg-prison-argument-family.py`.
 
+`placeQuestGroup` recovers all 395 bytes by sharing one zone pointer across
+randomization, sorted insertion and placement, then naming the non-unit-distance
+priority before storing it. Retail writes the pointer to EBP-0x10 in all three
+phases; insertion takes that local's address. Separate phase locals let VC6 keep
+the first pointer in a register and spill the receiver instead. Sharing the
+local restores the receiver/index/distance registers (93.5302% to 98.5168%);
+the named priority restores the final reload/arithmetic schedule. This is a
+useful lifetime diagnostic when a later address-taking operation explains
+earlier stack stores. Thirteen lifetime and twenty-one priority forms preserve
+all sibling scores. The independent stable-order oracle checks 155,520 cases
+per body, including live zone-list growth and five negative controls. Its
+`--snapshot` option accepts the frozen source-family snapshot for a historical
+manifest and also checks the current authored body. Generators and verifier:
+`generate-rmg-quest-group-zone-lifetime.py`,
+`generate-rmg-quest-group-priority-frontier.py`, and
+`verify-rmg-quest-group-zone-lifetime.py` under `scripts/experiments/`.
+
 The direction and shipyard-offset initializers are separately admitted from
 their retail stores at `0x530da0` and `0x541910`, reproducing 127 and 69 bytes.
 Their VC6 `$E` functions reference anonymous-namespace data with a
@@ -459,6 +476,30 @@ all 60 receiver forms and every selected optional frontier form, covering
 ordered candidates, empty ranges, invalid checked-mask indices, exceptional
 cleanup paths and exactly one random draw on successful selection. Five
 wrong subtype, water, mask, random and candidate-order controls must fail.
+
+`generate-rmg-selector-input-bindings.py` tests direct uses, immutable copies
+and references to the three actual value parameters before or after candidate
+vector construction. Its 53 states in `30a6a1d883664c43c268` compile into seven
+TU objects and reproduce seven finalists. Every state retains the same
+321-byte selector instruction/relocation stream and 99.6581%; all other
+tracked scores are unchanged.
+
+`generate-rmg-selector-range-helper.py` tests a provisional ordinary accessor
+on the actual `TRmgGeneratorBase` owner. It returns the existing vector by
+mutable or const reference, takes the index by value or const reference, and
+has its definition before or after the caller. All nine controls in
+`8fa72a3f1f6388082f3a` compile and reproduce across seven header consumers.
+They emit nine TU objects but the identical selector body seen in the input
+family. Every tracked score holds. The range-accessor hypothesis is not
+adopted; the terrain/range register exchange remains unresolved.
+
+The selector oracle renders each actual caller and any range accessor body,
+placing the vector on its base-class owner in the native fixture. The input
+manifest checks 232 combined forms; the range manifest checks 188. Each
+passes 33,696 selection/exception/RNG scenarios and the same five bad controls
+fail. These fixture checks establish behavior; the identical-byte result
+comes from the independent VC6 objects, including relocations through the
+selector's final `ret 0xc`.
 The fixture supplies public STL semantics and reduced owner records, not
 retail layout or original class declarations; VC6 remains the byte verdict.
 Both tests pass with the receiver family and with the return frontier.
@@ -535,6 +576,38 @@ new family changes the game body. Together the five completed families have
 203 scored states containing 198 distinct source bodies; their full native
 value/binding oracle passes, including all nine broken controls. The failed
 smoke population is excluded from those counts.
+
+`generate-rmg-rule-constructor-boundary.py` tests the rule object's own
+default-construction boundary. It keeps both vector members default-constructed
+and leaves scalar assignment in the reader. Thirteen implicit, in-class and
+ordinary before/after definitions, with four member-initializer combinations,
+compile across seven header consumers in `3d24bc8aeb9f89129ab6`. They produce
+four TU code identities and four reproduced finalists. The reader remains
+99.5723%, except for ordinary definitions before it, which reach 98.8004%.
+All other tracked scores hold, including the exact rule-vector helpers.
+
+The before-reader form omits the intermediate EH-state store before the
+retained second member-vector constructor and records state 3 after construction,
+where the implicit form records state 4. It also changes the allocator-byte
+store order. Both unwanted scalar count-insert calls remain. This source-order
+effect is observed in VC6 instructions; it does not justify changing the rule's
+construction model or claiming different parsed-row semantics.
+
+`generate-rmg-rule-constructor-appends.py` verifies all four parent snapshots,
+renderings and repeated score/object/source identities, then crosses them with
+all eight public scalar append choices. All 32 states in `8480e20c55ff6f7f9e1b`
+compile, emit 32 objects and reproduce ten finalists. The best reader is still
+99.7862%, and those all-`push_back` forms omit six exact rule-vector bodies:
+single insert, `_Destroy`, `_Ucopy`, `_Ufill`, `fill` and `copy_backward`.
+The best forms retaining every helper remain 99.5723%. Only the reader and
+these six emission scores vary; no constructor or append edit is adopted.
+
+The reader oracle accepts multi-axis manifests and imports each rendered rule
+declaration and any ordinary constructor with its actual reader. The 13-state
+manifest checks 211 combined models; the 32-state manifest checks 230. Both
+pass 432 parsed-sheet/binding scenarios per model and reject the nine existing
+bad controls. As above, allocation failure and x86 layout are outside this
+native fixture's claim; VC6 call and helper-coverage results remain separate.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-rule-reader-family.py build/rmg-rule-reader.json
@@ -728,6 +801,36 @@ Reduced owners establish this behavioral contract, not retail ABI or allocation
 failure behavior. Old checkpoints remain tied to their original snapshots.
 The final full VC6 build passes with no ledger changes, and all 28 experiment
 regressions pass. This checkpoint does not close the object-distance flood.
+
+`generate-rmg-add-queue-ownership.py` tests one owner for the position and cost
+vectors using `std::pair`, both member orders, direct member access or named
+references, and four construction lifetimes. This is a source hypothesis for
+the retail cleanup boundaries, not a recovered Dreamcast declaration. All 17
+states in `299648243bc0cc9da8de` compile, emit 17 distinct TU objects and
+reproduce ten finalists. The unchanged separate vectors remain best at
+69.5855%; paired forms range from 56.6036% to 62.4691%. The best pair retains
+an extra position-vector constructor and both vector destructors, where retail
+deletes the storage directly. Its seed/pop/sorted-insert boundaries remain wrong.
+
+The pinned VC6 `VECTOR` implements `pop_back` through `erase(end()-1)`.
+`generate-rmg-add-queue-pop-frontier.py` therefore crosses every reproduced
+owner with four public pop combinations and one position-pop/byte-parity
+control. It verifies the parent snapshots, rendered sources, repeated choices,
+scores and object/source hashes, preserving the paired forms' utility include.
+All 50 states in `4dd24cd7f791ec861fa5` compile, emit 50 distinct objects and
+reproduce ten finalists. They range from 56.4364% to 75.7527%; paired forms
+reach 63.2036%. The separate-vector leader again has 32 candidate blocks
+against 27 retail blocks and the previously documented wrong call boundaries.
+Neither batch changes the game body. Across both batches the only sibling
+movement is `writeMapHeader`, from 83.9812% to 83.9734% in paired contexts.
+
+The native fixture imports the rendered bodies and now includes `utility` for
+the actual pair type. The ownership manifest checks 76 distinct bodies and
+the pop frontier checks 105, including the existing controls in each run.
+Both pass 3,888 distance/counter/storage scenarios per body and reject all ten
+wrong controls. These results retain the fixture's existing allocation-failure
+and native-ABI scope limits. Paired ownership is a failed finite probe; it does
+not explain the remaining retail library expansion decisions.
 
 ```sh
 PYTHONPATH=scripts python scripts/experiments/generate-rmg-add-object-family.py build/rmg-add-object.json
@@ -4318,6 +4421,33 @@ elites. They retain the previous 97.7922% ceiling and split field load; no
 `canConnect` change is adopted. The existing integer-distance oracle now
 checks these forms alongside its 110 earlier controls.
 
+`generate-rmg-connect-zone-bindings.py` extends ownership to the two whole
+zone receivers. Its 32 states in `e26cf4c67a8fb04e7774` produce ten TU objects
+and ten reproduced elites, but only two distinct predicate bodies when
+instruction bytes and relocations are compared through the final return.
+Every copied-size form retains the 168-byte 96.4286% body; every borrowed-size
+form retains the 170-byte 97.7922% body. The latter still splits the field
+load into `add ecx,8` and `mov ecx,[ecx]` and reverses the sum's SIB operands.
+
+`generate-rmg-connect-result-ownership.py` verifies those parent snapshots,
+rendered sources and repeated results, then adds 42 sum/clearance ownership
+and lifetime forms. Its 52 distinct source controls in `5e64373071b648ea4c35`
+produce 21 TU objects, five predicate bodies and ten reproduced elites.
+Late clearance and immutable sums retain the existing two bodies. Early
+clearance moves subtraction before minimum selection (91.2987% with a copied
+size, 80.7792% with a borrowed size). Borrowing both result temporaries with
+a borrowed size adds register transfers and reaches 81.8052%. No form
+improves the 97.7922% ceiling; no predicate body change is adopted.
+
+Both contexts also observe `writeMapHeader` at 83.9734–83.9812%; all other
+tracked siblings remain unchanged. The native integer-distance oracle accepts
+an optional `HOMM3_CONNECT_ZONE_MANIFEST` and checks every rendered body,
+including whole-zone aliases, against 122,018 scenarios plus identity calls
+per body. Both manifests pass alongside the 259 earlier controls; the four
+incorrect level, strictness, minimum and distance controls fail. This checks
+predicate behavior in a reduced native fixture; VC6/retail supplies the
+instruction, register and ABI evidence.
+
 The filter's canonical `countPlacedZoneConnections` helper has a separate
 ownership result. `generate-rmg-connection-count-bindings.py` produces 54
 states and eighteen objects in `b8ee29d0ab96969d6e2b`. Borrowing the destination
@@ -4567,3 +4697,751 @@ write; all fail. All 48 historical forms and the actual adopted body pass.
 The oracle accepts an explicit recorded snapshot after source adoption;
 it does not silently apply stale anchors to current source. It covers these
 mask regions, not player, artifact or complete-header serialization.
+
+### Map-header artifact ranges and buffer lifetimes
+
+`generate-rmg-header-artifact-lifetimes.py` crosses the artifact region's
+scope, the reserved array's scope and declaration point, and the legacy
+bitset/packed-buffer lifetimes. Retail uses EBP-0x64 and -0x88 for the two
+artifact masks, versus the previous candidate's -0x9c and -0x6c. All 24
+states in `6b2d0021fc2aa2de264d` compile, produce four objects and reproduce
+four elites. None exceeds 79.2606%; no sibling score changes.
+
+`generate-rmg-header-artifact-iterators.py` verifies those four parents'
+complete snapshots, rendered source and repeated object identities before
+crossing mutable/const adapters with temporary/named iterator operands.
+Its 25 states in `c845e6e4a6caf6b7e9fc` produce 24 objects and ten reproduced
+elites. Naming only the mutable range end reaches 80.1714%. The const
+adapter does not recover the retained retail test/set boundaries and
+expands both `_Xran` paths; its best header score is 77.4961%. Adding its
+header also makes the unrelated quest-creature factory exact, illustrating
+TU compiler-state sensitivity, but that dependency is not adopted.
+
+The same generator's `--end-lifetimes` mode tests direct, copy, const and
+default-plus-assigned end construction at three declaration/scope points.
+It includes the original source scope alongside all four reproduced
+parents. All 61 states in `a25d9f7112eb8bfe7b4d` compile across two generations,
+produce eighteen objects and reproduce ten elites. Every sibling score
+holds. Copy initialization in the original scope reaches the same 80.1714%
+without buffer-lifetime changes. State `87c3ce432aca7d50f668ac60` is separately
+recompiled through the runner and its full object identity and score vector
+reproduce before adoption. Direct initialization in the original scope
+remains 79.2606%; default construction plus assignment gives 78.5642%.
+
+The selected source preserves `std::copy` and the canonical mutable adapter.
+Its frame remains 0x304 versus retail's 0x318, with 174/164 blocks and 92/87
+branches. The named call streams show unchanged bitset boundaries. Relative
+to the previous writer, two `_Eos` calls and one exception/string-copy
+constructor pair disappear, while one `_Tidy` and one `logic_error`
+constructor remain calls. This reduces the call total by two; the comparison
+still has 49 same, three different, 28 candidate-only and 17 retail-only
+entries. Those natural expansion changes improve the partial match but
+do not establish complete CFG or iterator-home agreement.
+
+`verify-rmg-header-artifact-scopes.py` imports the rendered reserved/artifact
+regions and actual mutable/const iterator headers. Native `iterator_traits`
+specializations supply modern `std::copy`'s compile-time interface without
+changing the adapters. For each form, 1,920 cases cover all 144 single-set
+and single-clear positions, mixed masks, all three map eras, special bits
+0/63, legacy truncation, write sizes/order and input preservation. A stream
+callback changes artifact traits and map version during the reserved write,
+verifying that subsequent reads remain live. Five deliberately wrong
+special-bit, predicate, final-bit, copy-end and packing-shift controls fail.
+All 24 scope, 25 adapter and 61 end-lifetime forms pass. This is a focused
+serialization check; it does not model trait layout or the rest of the header.
+
+### Quest merge and natural hero output iteration
+
+`generate-rmg-quest-local-lifetimes.py` tests pointer declaration placement
+and order, the artifact query result's last-use scope, and the reward count's
+declaration and scope. All 54 forms in `3c9f850484ee12e255cc` emit one object,
+which reproduces. The quest-creature factory remains 99.7349%: its allocation
+failure arm still reverses two pointer reloads. All other scores hold. These
+are uninitialized scalar declaration/scope changes only; no alternative is
+adopted and no runtime behavior claim rests on this code-generation search.
+
+The hero initializer offers stronger positive evidence. Retail stores an
+output bitset owner and position together at EBP-0x14/-0x10, applies logical
+not to each input byte and increments both input and output. The previous
+scalar-index helper forced the retained `set` calls with an inline-depth
+directive. `generate-rmg-hero-output-iterator.py` removes that directive in
+every alternative and tests a scalar loop, canonical iterator loop, and
+`std::transform` with temporary/direct/copied output iterators. It also checks
+const input pointers and byte/bool `std::logical_not` parameters.
+
+All seventeen states in `2953e56d0edb8da18e3a` compile, produce twelve objects
+and reproduce ten elites. The scalar loop without the directive gives
+71.3920%, losing both retained hero `set` calls. A copied output iterator
+with `std::logical_not<unsigned char>` reaches 82.2089% from 80.1714%, retaining
+both calls naturally. It also restores the legacy artifact `bitset<129>::set`
+call; its previous expansion retained only `_Xran`. State
+`00e5105380e29abcad3069e2` is adopted after full snapshot, rendered source,
+repeated object identity and score-vector checks. Every sibling score holds.
+The ordinary helper and both source calls remain. `<functional>` is included
+for the actual standard predicate, and the last RMG inline-depth pin is removed.
+
+The resulting header has 169/164 blocks (98 exact, eight size-only, nine
+shifted, 49 differing flow kinds, five missing) and 90/87 branches. Its frame remains 0x304
+versus retail's 0x318; this does not close the header's other canonical
+bitset and string expansion differences. A higher score is not evidence
+that every remaining iterator temporary or call boundary agrees.
+
+`verify-rmg-header-mask-scopes.py` now imports each rendered initializer,
+rather than sharing one unchanged initializer across all forms. Static-member
+placement isolates each helper in the native fixture; its template index is
+adapted to native bitset's `size_t` as before. All seventeen forms pass 1,044
+hero/magic cases each, including nonbinary input flags and all single-bit
+patterns. A fifth bad control reverses the availability predicate; it fails
+alongside the previous four packing/range/output controls. The fixture covers
+these initializer and mask regions, not the entire map header. The adopted
+body and all sixteen rebased forms pass too; the generator retains the
+unpinned scalar-loop control without reintroducing the historical directive.
+
+### Mask read interfaces and extent queries
+
+VC6's mutable bitset subscript returns a proxy, while its const subscript
+delegates to `test`. `generate-rmg-mask-read-surfaces.py` compares those
+canonical interfaces with direct/borrowed-const `test` receivers in the hero,
+artifact and magic packing groups. All 64 forms in `ab5bdda33903372cc4b0`
+compile across two generations, produce 54 objects and reproduce ten elites.
+The best reaches 83.6495% from 82.2089%; every sibling score holds. This first
+family changes string expansion boundaries but leaves the named bitset call
+multiset unchanged. The generator can rebase adopted read interfaces to its
+test control without changing current loop bounds.
+
+`generate-rmg-mask-size-bounds.py` verifies the full snapshots, rendered source
+and repeated identities of all ten parents. It crosses literal bounds with
+real `bitset::size()` queries in all loops or selected era/mask groups. All
+60 forms in `85a2128dac01c7320c28` compile, produce sixty objects and reproduce
+ten elites. State `39344c16e34ca218f3578e91` reaches 83.9734% with size queries
+in all six packing loops, mutable subscripts for heroes/magic and borrowed
+const subscripts for artifacts. Every other tracked score remains fixed.
+The legacy-artifact loop now retains both retail `test<144>` and `set<129>`
+calls. The hero initializer also gains two output-subscript calls absent
+in retail; this remaining discrepancy is not concealed by an inline pin.
+
+`generate-rmg-mask-initializer-frontier.py` carries all ten reproduced size
+parents and revisits temporary/direct/copied transform outputs and const
+input ownership in their changed caller contexts. All 61 forms in
+`544e31a1e1e01be1c2e5` compile, produce 31 objects and reproduce ten elites;
+none exceeds 83.9734% or changes a sibling score. The existing copied output
+and mutable input signature remain. The selected size/read body is adopted
+after its full source rendering, repeated object hash and score vector agree.
+
+The adopted writer has a 0x31c frame versus retail's 0x318, 170/164 blocks
+and 90/87 branches. The global block alignment shifts substantially with
+the changed string expansions (16 exact blocks, 29 size-only, 15 shifted,
+104 differing flow kinds and six missing). The named call comparison has
+59 same, nine different, twelve candidate-only and one retail-only entries.
+These partial improvements do not prove CFG closure: hero output-subscript
+retention, packing `_Xran` expansion and other string boundaries remain open.
+
+Both focused mask oracles check all 64 read, 60 extent and 61 coupled forms.
+For each candidate, hero/magic coverage is 1,044 cases and reserved/artifact
+coverage is 1,920 cases, including callback changes to traits and map era.
+Each oracle rejects its five bad controls. Their shortened-range controls
+accept either a literal or the actual size query, so the adopted code is
+tested without restoring the previous spelling. The rebased 64-form read
+family includes the actual adopted source and passes both checks. These
+fixtures do not cover the entire header or validate its exception expansions.
+
+### Map-name construction and coverage evidence
+
+`generate-rmg-header-name-construction.py` tests direct/copy/const construction,
+default construction followed by assignment or `assign`, and both length-query
+interfaces. All 24 forms in `4142dc66d1076677b7bc` compile, produce six objects
+and reproduce six elites. Default construction gives 83.9953% versus 83.9734%,
+but still expands `assign` and establishes cleanup state before it. Retail
+establishes that state after its retained assignment. The construction-boundary
+evidence takes precedence over the small score increase; no variant is adopted.
+
+A coverage refresh exposed source-origin leakage in `homm3.analysis.link_order`:
+the unclaimed `getGameVersion` inline body donated its origin to an unrelated
+710-byte COMDAT at 0x48e220, producing a false million-byte span overlap.
+The parser now expires pending origins at intervening declarations/bodies,
+using the existing lexical masker to ignore comments and literals. Four focused
+regressions pass. Review of the 42 expired associations found intervening
+bodies, prototypes or data declarations; the tool conservatively requires a
+new annotation instead of inferring which later declaration was intended.
+Regeneration restores alphabetical order and removes the false overlap.
+The generated README now refreshes its statistics and states the coverage limits.
+
+The bounded retail interval `[0x530d40, 0x54c11c)` contains 238 admitted function
+starts: 227 have RMG source claims and matching-size ledger entries, and eleven
+are compiler initializers. Direct disassembly of all eleven shows one shared
+guard/atexit initializer and ten single-bit `bitset<10>` initializers. They are
+excluded compiler artifacts under the matching rules, not unimplemented game
+methods. This is only a core-interval coverage check: scattered support/terrain
+code, shared COMDAT tails and the outer boundaries still need independent
+ownership review. The origin-based link-order report does not span the three
+RMG files because they lack proven original-file origin annotations; none are
+invented to obtain a coverage result. RMG remains incomplete.
+
+### Connection size accessor boundary
+
+`generate-rmg-connect-accessor-bindings.py` crosses direct field and existing
+`TRmgZone::getSize()` reads, copied and borrowed scalar results, query order
+and addition order. The 64-state family in `4df3dd7c00e00bbf70f5` emits 26
+objects and reproduces ten finalists, with no sibling score changes. It does
+not improve the prior 97.7922% experimental peak. Raw finalist disassembly
+still has `add ecx,8` and `mov ecx,[ecx]` instead of retail's single field
+load, and reverses the sum's LEA operands. The authored 96.4286% body remains;
+the new evidence rules out these accessor call/ownership choices as a remedy
+for that residual in the current compiler context.
+
+The integer-distance oracle now checks all 210 prior and new ownership forms
+against 122,018 scenarios each, including signed sizes and self-aliasing.
+It imports the authored size accessor body; all four deliberately wrong
+level, strictness, minimum and distance controls fail. These checks establish
+the tested predicate behavior, not byte identity or whole-RMG closure.
+
+`generate-rmg-connect-size-boundary.py` tests the getter's definition boundary
+after the ordinary count method resolves removal's memory-update residual.
+It preserves the existing `int getSize() const` interface and body, comparing
+the in-class definition with one ordinary definition before or after
+`canConnect`. Sixteen copied/borrowed field/getter caller forms cross those
+three definition positions in context `880dc73b7a5d6c7e100e`.
+
+All 48 states compile across seven header consumers and ten finalists
+reproduce. Instruction bytes and relocations show four predicate bodies:
+168 bytes at 96.4286%, 170 at 97.7922%, and two 172-byte bodies at 85.6364%
+and 93.1169%. Each of the sixteen caller forms emits exactly the same body
+at all three definition positions. No getter boundary edit is adopted.
+The size accessor's ordinary definition therefore does not transfer the
+count method's memory-operation improvement to this register residual.
+
+The oracle now renders multi-axis manifests and imports each candidate's
+actual in-class or ordinary getter definition with its caller. These 48
+forms pass 122,018 integer-distance scenarios and identity calls per body,
+alongside the 259 previous controls; four bad controls fail. Definition
+placement affects the native fixture only through the actual declaration and
+body; the byte conclusion comes from the separate VC6 objects.
+
+The subsequent `generate-rmg-connect-level-lifetimes.py` family checks copied
+and borrowed level values, a predicate local, four live ranges after `sqrt`
+and both comparison orders. Its 49 forms in `6714d7cddace9292a13a` produce
+five objects and five reproduced finalists; none improves 96.4286% or changes
+a sibling. The predicate oracle now covers all 259 ownership/lifetime forms,
+with the same 122,018 scenarios and four rejected controls per family.
+
+### Removal trigger and counter ownership
+
+`generate-rmg-removal-counter-bindings.py` separates array/element lvalues
+from copied int/enum and borrowed enum index lifetimes. All 51 states in
+`dcfe72434cc6512881b9` compile, produce eight objects and reproduce eight
+finalists. The best reaches 95.9244%, but direct disassembly of all 51 still
+shows a split decrement where retail updates the zone count in memory.
+
+The register discrepancy starts earlier: the candidate holds entrance Y in
+ESI, while retail frees that register for the object type. The 49-state
+`generate-rmg-removal-trigger-frontier.py` carries all eight verified parents
+and tests the existing trigger point's copied/borrowed lifetime and named
+coordinate differences. Its `5199315054246daeed26` population emits 28 objects
+and reproduces ten finalists. Copying `TObjectType::TPoint`, capturing the
+typed object index before the map query, and borrowing the count array
+recover retail's entrance arithmetic, global decrement and color registers,
+raising removal from 95.6800% to 98.4000%.
+
+Some counter source forms emitted identical objects before the trigger copy.
+`generate-rmg-removal-trigger-counters.py` revisits all those source forms in
+the changed context, retaining all ten parents: 58 states, thirteen objects
+and ten reproduced finalists in `4fd2d5e24d5d89ba47e7`, still 98.4000%.
+`generate-rmg-removal-decrement-frontier.py` then checks postfix, compound,
+assignment and previous-value expressions on the same lvalue. Its 61 states
+in `5c8f0cc2a2c28406cdbe` emit nineteen objects and reproduce ten finalists,
+without improvement. Every sibling score remains unchanged in all four
+families. Parent snapshots, manifest renderings, full score vectors and
+repeated object identities are checked before recombination and adoption.
+
+The adopted mutable trigger-copy form keeps the 0x2c frame and all 45 CFG
+blocks. Forty-four block sizes match; B8 has six instructions versus retail's
+three, adding seven bytes through the split zone decrement. Branch topology
+agrees. The only differing call label is the object-pointer vector `_Destroy`
+versus retail's artifact-vector ICF owner; both bodies contain `ret 8`.
+That label does not justify changing the actual container type.
+
+The removal oracle tests all four manifests alongside the existing coordinate
+forms: 111, 109, 118 and 121 distinct bodies respectively, with 18,432
+scenarios per body and twelve deliberately wrong controls rejected. It checks
+counts, ordered first-occurrence removal, map footprints, flags, scores and
+color release using the authored types and accessors. Its existing contract
+excludes nonempty lists missing the object because retail tests the returned
+iterator against null, not end. The adopted source is checked separately.
+At this checkpoint the remaining decrement prevents this function's byte
+closure; the ordinary-method experiment below resolves it.
+
+`generate-rmg-count-integer-types.py` checks the remaining signed base-type
+distinction: retail clears dwords and uses signed `jge` for both counter
+limits, which admits Win32 `int` and `long`. The four combinations in
+`47e7e48cb164724af4d5` emit one code identity across all seven header consumers,
+with every score unchanged. These are VC6 target-ABI probes; host LP64 `long`
+is not used to infer retail layout. The authored arrays remain `int`.
+
+`generate-rmg-removal-zone-owners.py` revisits signed zone-index widths and
+copied/borrowed index and owner bindings in the recovered trigger context.
+All 48 states in `f2ebdc8a032aae174c69` compile, produce twelve objects and
+reproduce ten finalists. None improves 98.4000% or changes another score.
+The removal oracle checks its 108 combined bodies against 18,432 scenarios
+each and rejects all twelve negative controls. No owner/type edit is adopted.
+
+`generate-rmg-removal-vector-bindings.py` extends those controls to the actual
+zone vector, crossing mutable/const references and pointers, three query/branch
+lifetimes, and four counter lvalues. All 52 states in `e9769f659f8b3c85ea37`
+compile, emit four TU objects and reproduce four finalists. They produce only
+two removal bodies, both 693 bytes: array bindings retain 98.4000%, while
+element bindings reach 95.7733%. Both retain the split decrement. No sibling
+score changes. The existing removal oracle passes all rendered forms.
+
+`generate-rmg-removal-count-helper.py` tests an ordinary zone method for the
+count update. Its nine controls in `2db04b795563f0666744` cover the flattened
+caller and enum/int value/reference parameters with the definition among zone
+methods or beside the caller. All nine compile and reproduce across the seven
+header consumers. Six helper forms reach 100%: enum value, enum reference and
+int value, at either source position. The int-reference form reaches 97.3733%;
+the flattened control remains 98.4000%. Every other tracked score is unchanged.
+
+The adopted `TRmgZone::decrementObjectCount(TAdventureObjectType)` uses the
+existing typed index and an ordinary method declaration. VC6 expands its body
+into retail B8's three instructions, removing seven bytes. The standalone
+emission contains the indexed memory decrement and `ret 4`; removal retains
+no call to it. All 686 normalized caller bytes, 45 blocks and 31 branches
+agree. The vector `_Destroy` relocation still uses a different ICF owner name;
+both actual callee bodies are the same `ret 8`. No container substitution or
+inlining directive is involved. The helper name and boundary remain a retail
+codegen hypothesis; the experiment does not uniquely recover the original
+source text or locate a separate retail helper body.
+
+The native removal oracle imports each actual helper signature/body with its
+caller, using distinct fixture method names only to avoid overload collisions.
+Before adoption its 69 source forms pass 18,432 scenarios each and twelve
+negative controls fail. After adoption it checks 70 forms and a thirteenth
+control that deliberately increments through the helper; all pass or fail as
+expected. Counts, ordered removal, footprints, flags, scores and color release
+retain the oracle's existing iterator contract. The final full build supplies
+the matching checkpoint; RMG as a whole remains incomplete.
+
+### Group-fit object-kind ownership
+
+`generate-rmg-fit-kind-ownership.py` tests the entry of `canFitObject` while
+retaining its recovered three scans, two placement-helper calls and failure
+join. Retail loads placement Y earlier and uses EBX for the object kind;
+the candidate uses EDX and delays Y. Sixty copied/borrowed int/enum object
+kinds, prototype pointer/reference qualifiers and declaration-order forms in
+`22cb91a8c8e62034ec2d` produce three objects and three reproduced finalists.
+None improves 98.8042% or changes a sibling. The existing behavioral oracle
+checks all 256 distinct old/new bodies through 61,952 scenarios each,
+including ordered surface queries, helper arguments and unchanged inputs;
+all six intentionally wrong controls fail. Those kind bindings leave the
+entry mismatch open; the following origin family resolves it.
+
+`generate-rmg-fit-origin-vector.py` closes that entry mismatch by testing the
+translated origin as one `TRmgVector` value. Four construction forms cross
+three trigger bindings, object-kind declaration order and direct/reconstructed
+vector arguments at all three scans; the unchanged scalar body makes 49 states.
+Context `d656345afd860ab26abd` scores all 49, emits 33 distinct TU objects and
+reproduces ten finalists. Five forms reach 100% for `canFitObject`, from
+98.8042%; all use the prototype's own nested trigger-point copy with the object
+kind declared first. The adopted form constructs the vector from placement
+X/Y, subtracts the copied trigger fields, and reuses it in each point addition.
+It reproduces all 505 retail bytes and preserves the 25-block CFG, all branch
+destinations and both placement calls. Direct trigger fields or a trigger
+reference leave 98.8042%; moving kind after this vector leaves 98.0794%.
+Keeping scalar origin coordinates with a trigger copy had also failed: their
+joint ownership explains the previously missing early Y load and register
+schedule.
+
+The only sibling score movement is `writeMapHeader` at 83.9812% to 83.9734%;
+its unchanged-function MAX/HIST remain held. No exact sibling is lost. The
+native oracle now admits finite manifest sizes and imports the real point
+subtraction for that construction control. All 246 combined bodies pass
+61,952 mask/query/input-preservation scenarios each and reject the six wrong
+controls. This checks behavioral semantics, not native versus x86 layout.
+The original generator admits the reviewed origin forms by exact membership
+so its unchanged-source and changed-rule controls remain usable after adoption.
+An initial search was rejected because the fixture was corrected while it
+ran; its observations are excluded from these counts. The fresh context above
+completed after that correction and supplied the adopted reproduced body.
+The full VC6 checkpoint banks `canFitObject` at CUR/MAX/HIST 100%, passes
+all gates and raises RMG's current exact count to 286/368. Its final sema
+view has zero differing instruction rows; remaining raw relocation labels
+resolve under the normal comparison. The post-adoption three-test suite
+also passes with the same 246-body oracle coverage.
+
+### Pending placement-origin lifetime experiment
+
+`generate-rmg-placement-origin-lifetimes.py` prepares 49 states for
+`type_random_map::canPlaceObject` at `0x531cf0`. The saved comparison of the
+current 91.1848% body shows 24 candidate blocks against 23 retail blocks,
+with all three retained helper calls agreeing. Retail holds X/Y in EDI/EBX
+across those calls and shares the passability/rock failure epilogue. Earlier
+scalar lifetime and guard probes did not combine the trigger-copy and vector
+ownership that subsequently closed `canFitObject`.
+
+The new matrix crosses vector, point, map-position and scalar origins; direct,
+copied and borrowed trigger fields; early/late placement snapshots; and the
+separate/combined first failure test. Trigger reads remain after the callbacks
+and trigger-presence guard. Earlier snapshots capture only the by-value
+placement input. The map-position lookup, helper arguments and later tests
+remain intact. This is a hypothesis for this caller, not an inference of exact
+code from the other caller's result.
+
+The verified source-label pass and VC6 search subsequently completed. Context
+`b0d510dd0478b8204035` scores all 49 states, emits 24 distinct TU objects and
+reproduces ten finalists. The caller ranges from 50.0543% to 93.1522%; its
+unchanged-source control is 91.1848%. The only sibling movement is the already
+non-exact `writeMapHeader` between 83.9734% and 83.9812%. Matching work paused
+before semantic validation and adoption review. These are experimental
+observations only: no candidate from this family is adopted, and no matching
+ledger or exact-count change is claimed.
+
+### Zone-position construction and vector inlining
+
+`appendZonePositions` at `0x53ae80` has no mapped Dreamcast counterpart.
+Its earlier 83.4857% reconstruction had 39 blocks against retail's 31:
+the final `push_back` expanded vector insertion differently, losing a
+retained `size` and `_Ucopy` call. The retained `_Ucopy` itself already
+matched retail, so the caller's expansion decision needed attention.
+
+`generate-rmg-append-position-lifetimes.py` tests working-coordinate scopes,
+alternate-level bindings and accepted-value ownership. Its sixty states in
+`46506449342c38c18835` produce 32 objects and ten reproduced finalists.
+The best 85.4444% still has 38 blocks and the incorrect insertion boundary.
+`generate-rmg-append-helper-frontier.py` preserves five reproduced parents
+and tests the existing setter and three-coordinate constructor. Its sixty
+states in `1819c19014b5baa58782` produce sixty objects and ten reproduced
+finalists. A shared working coordinate assigned through the ordinary
+constructor raises the function to 92.6984%, with all 31 block boundaries
+and twenty call positions agreeing. The adopted source changes no sibling
+score. Flattening construction into field stores restores the earlier
+incorrect insertion expansion. The final source operation remains
+`push_back(zone->getLevelPosition())` after the placement predicate.
+
+Call labels for vector `size`, `_Ucopy`, `_Ufill` and `_Destroy` refer to
+different retained template owners. Separate body comparisons verify these
+shared bodies; the `size` comparison's normalized raw bytes agree even
+though its symbol comparison reports a difference. The labels provide no
+reason to change the position-vector type.
+
+`generate-rmg-append-direct-construction.py` then tests direct initialization,
+coordinate scopes and staged Y/X constructor inputs. All 36 states in
+`b6f9707cc64870734ace` score, emitting twenty objects and ten reproduced
+finalists, without improving the function. None is adopted. The current
+frame remains 0x48 against retail's 0x3c. Retail converts Y before X and
+reuses the output-reference argument slot for the first converted value;
+the current source converts X first and uses a local temporary. Coordinate
+register assignments also differ in the second ring.
+
+`verify-rmg-append-position-lifetimes.py` checks each family and the adopted
+body against 18,432 scenarios per body, rejecting five incorrect controls.
+It imports the authored direction tables, coordinate constructor, setter
+and getter, and independently computes bounded geometry using integer
+coefficients. A controlled predicate checks center snapshots, late radius
+reads, accepted-position reads, query order and existing output prefixes.
+This fixture checks the caller's behavior; it does not implement the
+placement predicate's terrain and spacing rules. Full VC6 build gates pass
+after adoption; the remaining instruction differences prevent closure.
+
+`generate-rmg-append-store-order.py` varies the two rings independently
+through six field-write orders and whole-coordinate assignment. Its 49
+states in `ae19282853ce61495994` produce 49 objects and ten reproduced
+finalists, with no sibling movement. Y/X/Z source writes at both rings
+restore the first accepted-position copy's register sequence and raise
+the function to 95.3175%. All 31 block boundaries and twenty call positions
+remain aligned. This does not fix conversion order: X still precedes Y,
+and the 0x48 frame still exceeds retail's 0x3c.
+
+`generate-rmg-append-constructor-destination.py` carries all ten reproduced
+store-order parents, then tests two parents with independent direct local
+construction, temporary references, and direct constructor expressions at
+the zone field/setter. The 55 states in `06febc9d997de721dc5c` emit 48 objects
+and reproduce ten finalists, without improving 95.3175%. Its slight header
+score movement belongs to unadopted alternatives.
+
+`generate-rmg-append-mixed-construction.py` retains the same ten parents and
+tests the three placement stages independently: constructor expressions,
+X/Y/Z or Y/X/Z ring fields, and alternate-center fields or copy/level edits.
+All 63 states in `b42406d318aba68e00d2` score over a sixty-state population
+and the three remaining combinations, emitting 55 objects and reproducing
+ten final elites. None improves the store-order parent. The first-ring
+Y/X/Z field control restores Y-first evaluation but produces 34 blocks
+against 31 and loses a retained call, so its conversion order alone is
+insufficient. The adopted source retains all three canonical constructor
+expressions. All three families pass the integer-geometry oracle's 18,432
+scenarios per body and reject its five incorrect controls.
+
+The next coordinate-input families recover the conversion order and frame.
+The `generate-rmg-append-scalar-inputs.py` population tests named integer
+and double Y/YX inputs, with scalar temporary references, in either or both
+rings. Its 96.6159% double-Y candidate computes Y first but spills it before
+converting X, enlarging the frame to 0x4c and shifting the call offsets.
+That higher score is not adopted. The lower-scoring reference-to-integer
+Y candidate instead reproduces retail's first 201 bytes after masking the
+verified call/table relocations, including the 0x3c frame. Its remaining
+three extra blocks come from expanding the first vector `size()`.
+
+`generate-rmg-append-reference-frontier.py` tests level bindings, working
+coordinate scopes and final accepted-value ownership without recovering
+that call. `generate-rmg-append-reference-setters.py` then tests each of
+the three destinations independently. A whole middle assignment or the
+existing ordinary setter restores all twenty call decisions and reaches
+98.1270%. The setter form is adopted. The first 190 bytes and the final
+632 bytes agree after relocation masking; the suffix starts at candidate
+`+0xf7` and retail `+0xf2`. The remaining level check and middle assignment
+use different registers, with two extra moves adding five bytes. All 31
+blocks agree in topology, and thirty agree in instruction count.
+
+The opposite-center family tests constructor arguments and copy/level
+ordering. Its 98.5048% copy-then-level candidate retains an extra Z store
+absent from retail, so it is rejected despite the score. Direct center
+X/Y writes followed by level calculation recover that statement schedule
+but expand `size()` again. The public-insertion family tests `push_back`,
+single insert and count insert independently at all three sites; none
+improves the supported setter parent. VC6's actual vector header delegates
+`push_back` through single insert to count insert; no helper body or
+declaration is changed for these probes.
+
+Each population retains ten reproduced finalists and checks every RMG
+sibling. These counts separate successfully scored source states from
+distinct emitted objects; populations share parent controls.
+
+| Generator suffix (`generate-rmg-append-*.py`) | Context | States | Objects |
+| --- | --- | ---: | ---: |
+| `scalar-inputs` | `83f0a0dacca36c47e2c7` | 56 | 46 |
+| `reference-frontier` | `6c6c426874b16d2e8ff8` | 54 | 32 |
+| `reference-setters` | `4dc403a11ef7c3ddef3e` | 62 | 48 |
+| `opposite-center` | `029fb408a116516126a5` | 45 | 32 |
+| `center-fields` | `94bb09047c1e1c68a528` | 35 | 31 |
+| `insertion-frontier` | `ef82bcaac6e01f513303` | 64 | 54 |
+
+All six populations pass the existing 18,432-scenario integer-geometry
+oracle per body, with all five incorrect controls rejected. The adopted
+source keeps the same snapshots, late radius maximum and post-predicate
+coordinate reads. Byte closure still requires the middle block correction.
+
+`generate-rmg-zone-setter-fields.py` checks the common helper body itself,
+preserving its by-value declaration and all callers. The seven states in
+`022031aae205ab2204e4` produce seven objects and seven reproduced finalists.
+Scalar X/Y/Z stores eliminate the two extra middle-copy moves and score
+98.2444% in append, but its level calculation still differs. Five other
+callers move away from retail: boundaries 96.3209→93.7329%, filtering
+99.7635→86.1959%, initialization 90.6395→89.6803%, positioning
+96.8731→95.3198%, and recentering 95.5000→78.4239%. Filtering and recentering
+retain their CFG/call sequences, with register/load differences beginning
+near entry. These results do not establish a better common setter body;
+the whole-coordinate assignment is retained. This helper-only batch is
+separate from the caller-body geometry populations above.
+
+`generate-rmg-append-middle-bindings.py` checks the remaining middle setter
+argument and receiver lifetimes while keeping the canonical helper body.
+Its 56 states in `b6165729c9a20a759e67` produce 21 objects and ten reproduced
+finalists. Named mutable/const/reference coordinates, receiver references,
+pointer bindings and seeded-level subtraction neither improve 98.1270%
+nor change a sibling. All forms pass the 18,432-scenario geometry oracle
+and reject its five incorrect controls.
+
+### Coastal constructor return lifetimes
+
+The current `markRiverCoastTarget` comparison at `0x548a40` differs from
+its earlier 79.7557% context: the canonical three-coordinate constructor
+now resides in its evidenced TU, and both retail calls are expanded.
+The current 67.3409% body has a 0x10 frame versus retail's 0x20. No
+Dreamcast counterpart exists. Retail's two constructor return values are
+read through EAX, motivating explicit returned-coordinate lifetimes.
+
+`generate-rmg-coast-return-lifetimes.py` preserves both canonical helpers
+and independently binds each translated coordinate as a direct, named,
+const or scoped reference/value result. It also compares copied and borrowed
+side steps. The fifty states in `c72fefa57f75a48ef73d` produce eighteen
+objects and ten reproduced finalists. None restores either constructor
+call. The borrowed step's 71.2670% uses table-field reloads inside the loop
+instead of retail's saved copies, and still has the 0x10 frame. It is not
+adopted; no other RMG score changes.
+
+The coastal oracle accepts an optional `HOMM3_RIVER_COAST_MANIFEST` to test
+additional full-function families. This population passes alongside the
+earlier two families, using the actual coordinate helpers, direction table
+and packed tile declarations. Each body is checked against 1,800 affine
+sampling scenarios, and seven incorrect controls are rejected. The oracle
+preserves the unusual accepted `x == width` boundary and checks the final
+target tile, approach bit and unrelated tile fields. The retained-call
+mismatch remains the next matching problem.
+
+### Coordinate-addition inputs and accessors
+
+The two coastal constructor calls also motivate testing the canonical
+`TRmgMapPosition::operator+` itself. Its by-value `TPoint` declaration,
+the constructor's retail source position, and all caller expressions stay
+unchanged. `generate-rmg-position-add-inputs.py` compares translated X/Y
+sums as direct expressions, values, constants or references, with direct,
+named, const and reference return values. Each body constructs the already
+translated coordinate once; none copies an untranslated coordinate or adds
+an artificial operation.
+
+| Family | Context | Scored sources | Distinct objects | Reproduced finalists |
+| --- | --- | ---: | ---: | ---: |
+| Scalar inputs and return lifetimes | `ca5c2f3ef8301d8661fe` | 55 | 42 | 10 |
+| Existing direction-coordinate accessors | `123d746c0cff87b6c5a2` | 44 | 44 | 10 |
+
+`generate-rmg-position-add-accessors.py` validates the first population's
+snapshot, rendered sources and repeated scores/object identities before
+carrying all ten finalists. It independently replaces the offset's field
+reads with its existing `getX()` and `getY()` calls. Every coastal body in
+both populations still has zero calls versus retail's two, and a 0xc or
+0x10 frame versus 0x20. Their 68.8295% coastal peak therefore does not
+recover the retained constructor boundary.
+
+The reproduced `6632d865e9a44260a1514809` specialist binds X's sum by const
+reference, reads Y through `getY()`, and returns a named constant coordinate.
+It raises monolith connection from 90.5751% to 92.7548%, beyond its 91.9027%
+historical peak, but still calls both scalar map lookups instead of the
+position overloads, retains the extra first occupancy size call, and keeps
+66 blocks versus 67 with a 0x28 frame versus 0x1c. Its ground/guard gains
+come with changed river callers, and it does not recover coast's constructor
+calls. No shared-helper source is adopted from these populations.
+
+`verify-rmg-coast-helper-family.py` imports each rendered helper and caller
+into a separate namespace, together with the actual coordinate classes,
+direction table, map accessor and packed tile fields. The existing affine
+oracle passes all 88 distinct source combinations across the two manifests,
+with 1,800 scenarios per combination, and rejects seven incorrect controls.
+This checks helper edits under their own definitions; the older optional
+full-caller manifest path alone would have used the current shared helper.
+
+### Noise subdivision scalar references
+
+The verified source comparison for `subdivideRmgNoiseRegion` at `0x53e9e0`
+confirms matching instruction order and all 32 block boundaries. Retail
+stores center/Y/X at EBP-4/-0xc/-8; the current source uses EBP-8/-4/-0xc.
+The first difference is the center spill at function offset 0xc. No
+Dreamcast counterpart was found. The retained `_Destroy` relocation uses
+an artifact specialization's folded label in retail; the differing scalar
+stack displacements remain real byte differences.
+
+`generate-rmg-noise-scalar-bindings.py` tests independent value, constant
+and const-reference midpoint results, plus a direct, copied or borrowed
+center sample named before or after the midpoint declarations. Its 45
+states in `c5d26afc40337f026f61` produce six distinct TU objects and six
+reproduced finalists. Direct byte-and-relocation comparisons across every
+candidate show only one emitted subdivision body: all remain at 99.9545%
+with the original stack layout. The only tracked collateral is a possible
+writeMapHeader decrease from 83.9812% to 83.9734%; no candidate is adopted.
+
+The existing `HOMM3_NOISE_REGION_MANIFEST` path in
+`test_rmg_noise_midpoint.py` adds all new forms to the earlier midpoint
+family. Both tests pass. Its independent 3x3 sample lattice checks 3,136
+region cases per body, including negative origins and degenerate bounds,
+and rejects four incorrect midpoint, sample, degeneracy and variation
+controls. The next hypothesis must change something beyond these scalar
+reference/copy bindings, which VC6 eliminates identically.
+
+### Object-generator registration pointer lifetimes
+
+`initializeObjectGenerators` at `0x538b10` improves from 97.4646% to
+99.1090% by naming scoped base pointers in its initial and middle rosters.
+The key-tent loop, quest loop and final roster keep their direct new
+arguments. Every allocation, constructor argument and `push_back` operation
+stays in the same order. No Dreamcast counterpart was found; the source
+hypothesis comes from retail's stack-held allocation results and retained
+constructor/insertion sequence, not from recovered variable declarations.
+
+| Family | Context | Scored sources | Distinct objects | Reproduced finalists |
+| --- | --- | ---: | ---: | ---: |
+| Uniform allocated-pointer lifetimes | `6fc40faface3c27ef39d` | 8 | 8 | 8 |
+| Lifetimes in five existing roster sections | `4d62ac855855cd90bc19` | 38 | 38 | 10 |
+| Canonical constructor member-initializer prefixes | `c500a894b0e41573f7f3` | 55 | 55 | 10 |
+
+The generators are `generate-rmg-roster-pointer-lifetimes.py`,
+`generate-rmg-roster-pointer-sections.py`, and
+`generate-rmg-roster-constructor-initializers.py`. Follow-ups validate the
+frozen source, rendered parent definitions and repeated scores/object
+identities before carrying every retained parent. The section family crosses
+direct and scoped-base-pointer forms in the initial roster, key-tent loop,
+middle roster, quest loop and final roster; all eight uniform forms remain
+controls. Named derived pointers and references do not recover the same
+insertion sequence. A shared function-wide pointer reaches only 90.1780%.
+
+The adopted `e3189c8bfa3c6d57fb0f319f` (`sections_10100`) removes the
+unwanted vector `begin` call and restores the constructor expansion at the
+quest/final-roster boundary. Naming pointers inside either the key or quest
+loop is neutral at the 99.1090% peak, so those sections stay direct. All
+other tracked scores are unchanged. All 413 control-flow blocks correspond;
+nine have differing instruction counts. The remaining extra constructor
+is in `type_black_box_spells_def(15000, 1, 5, 4)`, identified by the verified
+source comparison. Calls total 286 versus 285, and the final body ends three
+bytes later than retail. This is a partial recovery, not closure.
+
+The canonical treasure constructor remains unchanged. Moving its first one
+or two stores to member initializers preserves its exact body without
+improving the roster. Moving three or four lowers the constructor itself
+to 97.7857% or 97.3571%. None of the 55 constructor/roster states improves
+the selected caller beyond 99.1090%.
+
+`verify-rmg-roster-pointer-family.py` uses factory spies to record constructor
+identity and all arguments while executing the rendered registrations with
+real `std::vector` operations. Its 288 scenarios per body cover three map
+versions, four creature-filter patterns, varying key/quest prototype counts,
+existing registrations and prefilled key state. All 38 distinct roster
+forms pass; the adopted formatted body also passes. Four wrong controls
+change creature filtering, experience arguments, key reset or quest count,
+and each fails. This verifies the roster transformations; it does not retest
+the unchanged factory implementations. `--snapshot` preserves the original
+direct-new reference when rerunning historical manifests after adoption.
+
+### Spell-box constructor and key-state follow-ups
+
+The remaining roster constructor at `+0x5e8` belongs to the spell box
+`(15000, 1, 5, 4)`. No Dreamcast procedure was found for its class. Its
+ten roster calls pass literals, while the base constructor retains its
+separately proven four-value ABI. The follow-ups preserve one inline derived
+constructor, its base call and all seven object fields.
+
+| Family | Context | Scored sources | Distinct objects | Reproduced finalists |
+| --- | --- | ---: | ---: | ---: |
+| Derived member initializers and body-store order | `63a8c4568bd693727312` | 16 | 16 | 10 |
+| Value/const-reference constructor inputs | `0c19f9436d97015314a8` | 16 | 8 | 8 |
+| Reproduced roster layouts with single-reference inputs | `86cb1d8c711c87023ef8` | 55 | 33 | 10 |
+| Key-state fill and reset values | `70383441a4100ba853f0` | 8 | 6 | 6 |
+
+The first three families compile all seven `rmg.h` consumers. The key-state
+family changes only the RMG caller. None improves the retained 99.1090%
+roster. Generators are `generate-rmg-spellbox-initialization.py`,
+`generate-rmg-spellbox-input-ownership.py`,
+`generate-rmg-spellbox-roster-frontier.py`, and
+`generate-rmg-roster-key-fill.py`.
+
+The first ordinary spell-box allocation gives positive ordering evidence:
+retail installs its derived vtable at `+0x3a0`, then writes minimum level,
+maximum level and school mask at `+0x3a6/+0x3a9/+0x3ac`. The current body
+matches those instructions. The all-member-initializer control writes all
+three fields before the derived vtable instead, and still retains the extra
+base-constructor call. All tested initializer/store alternatives are lower
+than the current ordered body, ranging down to 98.3719%.
+
+One borrowed input removes the early extra constructor but restores the
+unwanted late constructor and insertion choices (97.0686%). The reproduced
+minimum-level-reference control `e0649535752ebc2db319db62` matches the first
+`0x8f1` bytes through the key-tent loop when only four-byte relocation
+operands are masked; stack, register and branch bytes remain unmasked.
+It still has 286 calls versus 285 and thirteen blocks with different
+instruction counts. The 55-state frontier validates the frozen definitions,
+repeated scores and object identities, then combines all ten retained roster
+parents, the original direct roster and current formatting with value or
+single-reference inputs. The adopted parent duplicates the current body
+after whitespace normalization, yielding eleven distinct caller forms.
+Those combinations do not surpass 99.1090%. The value interface stays.
+
+The key-state controls retain `resize` and the complete reset loop, testing
+implicit/explicit zero fill and named byte, flag or integer disabled values
+used by both operations. They produce five distinct roster bodies, ranging
+from 93.7657% to 99.1090%, without improving the call boundaries. No source
+body or interface is adopted from these four populations.
+
+`verify-rmg-spellbox-initialization.py` imports the actual class declarations
+and both constructors. Each of the sixteen initialization forms and sixteen
+input-ownership forms passes 2,016 seven-field checks; four incorrect
+controls fail. Unused virtual factory methods have fixture stubs, so this
+is constructor-value evidence, not native ABI or factory-behavior evidence.
+The roster parents retain their earlier allocation/registration trace
+checks; the frontier combines those verified components. All eight key-state
+forms separately pass 288 allocation/registration/key-state scenarios and
+four negative controls in `verify-rmg-roster-pointer-family.py`.

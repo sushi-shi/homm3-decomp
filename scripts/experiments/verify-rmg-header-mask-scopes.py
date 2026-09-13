@@ -37,21 +37,37 @@ def main():
     _, originals, axes = load_manifest(args.manifest, source_root)
     if len(axes) != 1:
         raise ValueError('expected one mask lifetime axis')
-    pairs = [regions(render(originals, axes, (i,))['src/rmg.cpp']) for i in range(len(axes[0].options))]
+    rendered = [render(originals, axes, (i,))['src/rmg.cpp'] for i in range(len(axes[0].options))]
+    pairs = [regions(source) for source in rendered]
+    helper = generator('generate-rmg-position-family.py')
+    setups = [helper.definition(source, 'setAvailableRmgHeroes') for source in rendered]
     count = len(pairs)
     heroes, magic = pairs[0]
+    hero_bound = ('heroBit < 156', 'heroBit < 155') if 'heroBit < 156' in heroes else (
+        'heroBit < availableHeroes.size()', 'heroBit < availableHeroes.size() - 1')
     for old, new in (
-            ('heroBit < 156', 'heroBit < 155'),
+            hero_bound,
             ('1 << (heroBit & 7)', '1 << ((heroBit + 1) & 7)'),
             ('m_disabledHeroes + 128', 'm_disabledHeroes + 127')):
         assert heroes.count(old) == 1
         pairs.append((heroes.replace(old, new), magic))
+        setups.append(setups[0])
     assert magic.count('hero < 156') == 1
     pairs.append((heroes, magic.replace('hero < 156', 'hero < 155')))
-    helper = generator('generate-rmg-position-family.py')
-    setup = helper.definition((source_root / 'src/rmg.cpp').read_text(), 'setAvailableRmgHeroes')
-    program = ['#include <bitset>\n#include <vector>\n#include <cstring>\n#include <cstdio>\n',
-               'template<size_t N>\n', setup, r'''
+    setups.append(setups[0])
+    bad_setup = setups[0]
+    if 'std::logical_not<' in bad_setup:
+        bad_setup = bad_setup.replace('std::logical_not<', 'std::negate<')
+    elif 'bool available = !*heroFlag;' in bad_setup:
+        bad_setup = bad_setup.replace('bool available = !*heroFlag;', 'bool available = *heroFlag != 0;')
+    elif '*output = !*heroFlag;' in bad_setup:
+        bad_setup = bad_setup.replace('*output = !*heroFlag;', '*output = *heroFlag != 0;')
+    else:
+        raise ValueError('review the initializer before defining its bad-predicate control')
+    pairs.append((heroes, magic))
+    setups.append(bad_setup)
+    program = ['#include <algorithm>\n#include <functional>\n#include <bitset>\n#include <vector>\n#include <cstring>\n#include <cstdio>\n',
+               (source_root / 'include/bitset_iterator.h').read_text(), r'''
 struct Sink {
     std::vector<unsigned char> data;
     std::vector<unsigned> sizes;
@@ -63,7 +79,10 @@ struct Sink {
 struct Owner { int m_mapVersion; unsigned char m_disabledHeroes[156]; };
 ''']
     for i, (heroes, magic) in enumerate(pairs):
-        program += ['struct Generator' + str(i) + ' : Owner {\n    void heroes(Sink* outfile) {\n',
+        # Static-member placement isolates each actual rendered helper body;
+        # the template index spelling is the sole native bitset adaptation.
+        program += ['struct Generator' + str(i) + ' : Owner {\n',
+                    'template<size_t N>\n', setups[i], '\n    void heroes(Sink* outfile) {\n',
                     heroes, '    }\n    void magic(Sink* outfile) {\n', magic, '    }\n};\n']
     program += [r'''
 template<class Generator> bool check() {
@@ -94,7 +113,7 @@ int main() {
 ''']
     for i in range(len(pairs)):
         program.append('    if (' + ('!' if i < count else '') + 'check<Generator' + str(i) + '>()) { std::printf("failed form ' + str(i) + '\\n"); return 1; }\n')
-    program.append('    std::puts("' + str(count) + ' mask regions: 1044 cases each; four bad controls rejected");\n}\n')
+    program.append('    std::puts("' + str(count) + ' mask regions: 1044 cases each; five bad controls rejected");\n}\n')
     with tempfile.TemporaryDirectory(prefix='rmg-header-mask-oracle-') as folder:
         cpp, exe = Path(folder) / 'oracle.cpp', Path(folder) / 'oracle'
         cpp.write_text(''.join(program))

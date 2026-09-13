@@ -58,7 +58,7 @@ class AddObjectTests(unittest.TestCase):
         def field(text, name):
             return next(line.split("//")[0].strip() for line in text.splitlines() if name + ";" in line)
 
-        text = "#include <vector>\n#include <cstring>\n#include <cstdio>\n"
+        text = "#include <vector>\n#include <utility>\n#include <cstring>\n#include <cstdio>\n"
         for name in ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgMovementCost",
                      "TRmgZoneCellState", "TRmgGroundTile", "TRmgGroundTileData", "TRmgConnectionDecoration"):
             text += block(header, "struct " + name) + "\n"
