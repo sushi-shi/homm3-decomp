@@ -495,16 +495,16 @@ CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
 // Before normalization: gVictoryConditionDesc.
 DATA(0x0069fc28) static TTextResource* g_victoryConditionText;
 // Before normalization: gpLossConditionText.
-DATA(0x0069fb70) static char* g_victoryConditionDesc[14];
+DATA(0x0069fb70) static const char* g_victoryConditionDesc[14];
 // Before normalization: gLossConditionDesc.
 DATA(0x0069fbf4) static TTextResource* g_lossConditionText;
 // Before normalization: gpTurnDurationText.
-DATA(0x0069fc18) static char* g_lossConditionDesc[4];
+DATA(0x0069fc18) static const char* g_lossConditionDesc[4];
 // External linkage is retail-proven: scenarioinfo.obj reads the same table
 // while constructing CScenarioInfoDlg.
 DATA(0x0069fb14) static TTextResource* g_turnDurationTextResource;
 // Before normalization: gTurnDurationMinutes.
-DATA(0x0069fb44) char* g_turnDurationText[11];
+DATA(0x0069fb44) const char* g_turnDurationText[11];
 DATA(0x00641ae8) static const int g_turnDurationMinutes[10] = {
     1, 2, 4, 6, 8, 10, 15, 20, 25, 30
 };
@@ -593,7 +593,7 @@ unsigned char initializeVCDescriptions()
     if (!g_victoryConditionText)
         return 0;
     for (int i = 0; i < 14; i++)
-        g_victoryConditionDesc[i] = g_victoryConditionText->m_text[i];
+        g_victoryConditionDesc[i] = g_victoryConditionText->getText(i);
     return 1;
 }
 
@@ -607,7 +607,7 @@ unsigned char initializeLCDescriptions()
     if (!g_lossConditionText)
         return 0;
     for (int i = 0; i < 4; i++)
-        g_lossConditionDesc[i] = g_lossConditionText->m_text[i];
+        g_lossConditionDesc[i] = g_lossConditionText->getText(i);
     return 1;
 }
 
@@ -621,7 +621,7 @@ unsigned char initializeTurnDurationText()
     if (!g_turnDurationTextResource)
         return 0;
     for (int i = 0; i < 11; i++)
-        g_turnDurationText[i] = g_turnDurationTextResource->m_text[i];
+        g_turnDurationText[i] = g_turnDurationTextResource->getText(i);
     return 1;
 }
 
@@ -2042,20 +2042,20 @@ void CChatWidget::draw()
             int py = m_y + m_parentWindow->m_y;
             int px = m_x + m_parentWindow->m_x;
             save->m_saved = 1;
-            save->grab(g_windowManager->m_screenBitmap->m_map, px, py,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch);
+            save->grab(g_windowManager->m_screenBitmap->getMap(0, 0), px, py,
+                       g_windowManager->m_screenBitmap->getWidth(),
+                       g_windowManager->m_screenBitmap->getHeight(),
+                       g_windowManager->m_screenBitmap->getPitch());
             textWidget::draw();
             return;
         }
     } else {
         save->draw(0, 0, m_width, m_height,
-                   g_windowManager->m_screenBitmap->m_map,
+                   g_windowManager->m_screenBitmap->getMap(0, 0),
                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                   g_windowManager->m_screenBitmap->m_width,
-                   g_windowManager->m_screenBitmap->m_height,
-                   g_windowManager->m_screenBitmap->m_pitch, 0);
+                   g_windowManager->m_screenBitmap->getWidth(),
+                   g_windowManager->m_screenBitmap->getHeight(),
+                   g_windowManager->m_screenBitmap->getPitch(), 0);
     }
     textWidget::draw();
 }
@@ -3053,16 +3053,16 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
                 if (g_videoPaused && !g_dPlay->isHost())
                     return;
-                char** text;
+                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText->m_text.begin();
-                    gameType = text[746];
+                    text = g_generalText;
+                    gameType = text->getText(746);
                 } else {
-                    text = g_generalText->m_text.begin();
-                    gameType = text[747];
+                    text = g_generalText;
+                    gameType = text->getText(747);
                 }
-                const char* compatibilityMessage = text[744];
+                const char* compatibilityMessage = text->getText(744);
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3080,16 +3080,16 @@ void TSingleSelectionWindow::setupAdvancedOptions()
             if (m_commonGameVersion < mapVersionClass) {
                 if (!g_dPlay->isHost())
                     return;
-                char** text;
+                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText->m_text.begin();
-                    gameType = text[746];
+                    text = g_generalText;
+                    gameType = text->getText(746);
                 } else {
-                    text = g_generalText->m_text.begin();
-                    gameType = text[747];
+                    text = g_generalText;
+                    gameType = text->getText(747);
                 }
-                const char* compatibilityMessage = text[745];
+                const char* compatibilityMessage = text->getText(745);
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -4143,19 +4143,19 @@ void TSingleSelectionWindow::drawBasicMapInfo()
         g_windowManager->m_screenBitmap, 456, 364, 288, 32, 4, 4, -1);
     if (vc->m_type >= 0 && vc->m_type <= 11)
         m_victoryIcon->draw(0, vc->m_type, 0, 0,
-            m_victoryIcon->m_width, m_victoryIcon->m_height,
+            m_victoryIcon->getWidth(), m_victoryIcon->getHeight(),
             g_windowManager->m_screenBitmap, 420, 308, 0, 1);
     else
         m_victoryIcon->draw(0, 11, 0, 0,
-            m_victoryIcon->m_width, m_victoryIcon->m_height,
+            m_victoryIcon->getWidth(), m_victoryIcon->getHeight(),
             g_windowManager->m_screenBitmap, 420, 308, 0, 1);
     if (lc->m_type >= 0)
         m_lossIcon->draw(0, lc->m_type, 0, 0,
-            m_lossIcon->m_width, m_lossIcon->m_height,
+            m_lossIcon->getWidth(), m_lossIcon->getHeight(),
             g_windowManager->m_screenBitmap, 420, 365, 0, 1);
     else
         m_lossIcon->draw(0, 3, 0, 0,
-            m_lossIcon->m_width, m_lossIcon->m_height,
+            m_lossIcon->getWidth(), m_lossIcon->getHeight(),
             g_windowManager->m_screenBitmap, 420, 365, 0, 1);
 }
 
@@ -4327,7 +4327,7 @@ int TSingleSelectionWindow::update()
                             59, y - 1, 30, 25, color, 5, -1);
                         if (frame >= 0)
                             m_versionIcon->draw(0, frame, 0, 0,
-                                m_versionIcon->m_width, m_versionIcon->m_height,
+                                m_versionIcon->getWidth(), m_versionIcon->getHeight(),
                                 g_windowManager->m_screenBitmap, 91, y, 0, 1);
                         g_unnamed698a08->drawBoundedString(
                             getMapName(m_currentIndex + i),
@@ -4337,24 +4337,24 @@ int TSingleSelectionWindow::update()
                                 && hdr->m_header.m_victoryCondition.m_type <= 11)
                             m_victoryIcon->draw(0,
                                 hdr->m_header.m_victoryCondition.m_type, 0, 0,
-                                m_victoryIcon->m_width,
-                                m_victoryIcon->m_height,
+                                m_victoryIcon->getWidth(),
+                                m_victoryIcon->getHeight(),
                                 g_windowManager->m_screenBitmap, 309, y, 0, 1);
                         else
                             m_victoryIcon->draw(0, 11, 0, 0,
-                                m_victoryIcon->m_width,
-                                m_victoryIcon->m_height,
+                                m_victoryIcon->getWidth(),
+                                m_victoryIcon->getHeight(),
                                 g_windowManager->m_screenBitmap, 309, y, 0, 1);
                         if (hdr->m_header.m_lossCondition.m_type >= 0)
                             m_lossIcon->draw(0,
                                 hdr->m_header.m_lossCondition.m_type, 0, 0,
-                                m_lossIcon->m_width,
-                                m_lossIcon->m_height,
+                                m_lossIcon->getWidth(),
+                                m_lossIcon->getHeight(),
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                         else
                             m_lossIcon->draw(0, 3, 0, 0,
-                                m_lossIcon->m_width,
-                                m_lossIcon->m_height,
+                                m_lossIcon->getWidth(),
+                                m_lossIcon->getHeight(),
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
@@ -7236,7 +7236,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
-    playerEnterMsg(&g_chatMan, g_generalText->getText(526),
+    g_chatMan.playerEnterMsg(g_generalText->getText(526),
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -7411,8 +7411,8 @@ void TSingleSelectionWindow::displayChat()
 {
     if (g_videoPaused) {
         g_chatMan.updateWidget(m_chatWidget, 0, 8);
-        m_chatSlider->setResolution(g_chatMan.m_msgCount);
-        m_chatSlider->setState(g_chatMan.m_position);
+        m_chatSlider->setResolution(g_chatMan.getCount());
+        m_chatSlider->setState(g_chatMan.getPosition());
         if (m_chatShowing) {
             m_chatWidget->draw();
             m_chatSlider->draw();
@@ -7540,7 +7540,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
 VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbNoCDRom gate, size 2.2x dc 0x1c4, dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
-    systemMsg(&g_chatMan, g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(471));
     displayChat();
     CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
     transmitRemoteDataDPID(&msg, 0, false, true);
@@ -7655,7 +7655,7 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     else
         sprintf(text, g_generalText->getText(529),
                 DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
-    systemMsg(&g_chatMan, text);
+    g_chatMan.systemMsg(text);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
 }
@@ -7889,16 +7889,16 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
         if (!static_cast<const std::bitset<4>&>(
                 g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-            char** text;
+            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText->m_text.begin();
-                gameType = text[746];
+                text = g_generalText;
+                gameType = text->getText(746);
             } else {
-                text = g_generalText->m_text.begin();
-                gameType = text[747];
+                text = g_generalText;
+                gameType = text->getText(747);
             }
-            normalDialog(formatString(text[744], gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text->getText(744), gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7911,16 +7911,16 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 > MAP_FORMAT_RESTORATION_OF_ERATHIA;
 
         if (m_commonGameVersion < mapVersionClass) {
-            char** text;
+            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText->m_text.begin();
-                gameType = text[746];
+                text = g_generalText;
+                gameType = text->getText(746);
             } else {
-                text = g_generalText->m_text.begin();
-                gameType = text[747];
+                text = g_generalText;
+                gameType = text->getText(747);
             }
-            normalDialog(formatString(text[745], gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text->getText(745), gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -8528,8 +8528,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
     }
     getWidget(playerPos + 263)->draw();
     int rowY = position * 50;
-    m_panels[playerPos]->draw(0, 0, m_panels[0]->m_width,
-                                 m_panels[0]->m_height,
+    m_panels[playerPos]->draw(0, 0, m_panels[0]->getWidth(),
+                                 m_panels[0]->getHeight(),
                                  g_windowManager->m_screenBitmap, 57,
                                  rowY + 128, 1);
     getWidget(playerPos + 199)->draw();
@@ -8544,8 +8544,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         // exists against that memory home).
         position = g_game->m_setup.m_alignment[playerPos];
         int iconY = rowY + 130;
-        m_townPix->draw(0, position * 2 + 2, 0, 0, m_townPix->m_width,
-                        m_townPix->m_height, g_windowManager->m_screenBitmap,
+        m_townPix->draw(0, position * 2 + 2, 0, 0, m_townPix->getWidth(),
+                        m_townPix->getHeight(), g_windowManager->m_screenBitmap,
                         176, iconY, 0, 1);
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
@@ -8553,15 +8553,15 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             g_windowManager->m_screenBitmap, 164, textY, 71, 16, 4, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
-            m_heroPix[face]->draw(0, 0, m_heroPix[0]->m_width,
-                m_heroPix[0]->m_height, g_windowManager->m_screenBitmap,
+            m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
+                m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
                 252, iconY, 0);
             const char* name = getHeroName(playerPos);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
                 -1);
         } else {
-            m_noHeroBmp->draw(0, 0, m_noHeroBmp->m_width, m_noHeroBmp->m_height,
+            m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
                 g_windowManager->m_screenBitmap, 252, iconY, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(524),
                 g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
@@ -8582,8 +8582,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             position = 10;
             break;
         }
-        m_resource->draw(0, position, 0, 0, m_resource->m_width,
-                         m_resource->m_height,
+        m_resource->draw(0, position, 0, 0, m_resource->getWidth(),
+                         m_resource->getHeight(),
                          g_windowManager->m_screenBitmap, 328, iconY, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
@@ -8627,15 +8627,15 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             townRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
         }
         if (town == -1) {
-            m_randomTownBmp->draw(0, 0, m_randomHeroBmp->m_width,
-                m_randomHeroBmp->m_height, g_windowManager->m_screenBitmap,
+            m_randomTownBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
+                m_randomHeroBmp->getHeight(), g_windowManager->m_screenBitmap,
                 176, rowY + 130, 0);
             g_tinyFont->drawBoundedString(g_generalText->getText(523),
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
                 4, 5, -1);
         } else {
-            m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->m_width,
-                m_townPix->m_height, g_windowManager->m_screenBitmap, 176,
+            m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
+                m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
                 rowY + 130, 0, 1);
             g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
                 g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
@@ -8672,15 +8672,15 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                            .m_hasRandomHero == 0
                     && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
                            .m_generateHero == 0) {
-                m_noHeroBmp->draw(0, 0, m_noHeroBmp->m_width, m_noHeroBmp->m_height,
+                m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
                     g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(524),
                     g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
                     16, 4, 5, -1);
             } else {
-                m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->m_width,
-                    m_randomHeroBmp->m_height,
+                m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
+                    m_randomHeroBmp->getHeight(),
                     g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
                 g_tinyFont->drawBoundedString(
                     g_generalText->getText(523),
@@ -8689,8 +8689,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             }
         } else {
             const char* name = getHeroName(playerPos);
-            m_heroPix[face]->draw(0, 0, m_heroPix[0]->m_width,
-                m_heroPix[0]->m_height, g_windowManager->m_screenBitmap,
+            m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
+                m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
                 252, rowY + 130, 0);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, rowY + 162, 71, 16,
@@ -8729,8 +8729,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
                 g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
                 4, 5, -1);
-        m_resource->draw(0, frame, 0, 0, m_resource->m_width,
-            m_resource->m_height, g_windowManager->m_screenBitmap, 328,
+        m_resource->draw(0, frame, 0, 0, m_resource->getWidth(),
+            m_resource->getHeight(), g_windowManager->m_screenBitmap, 328,
             rowY + 130, 0, 1);
         unsigned char townChosen = 1;
         if (town == -1)

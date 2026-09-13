@@ -322,8 +322,6 @@ public:
     virtual unsigned int getSize() const;
     // Before normalization (function): TSpreadsheetResource::GetNumberOfRows.
     int getNumberOfRows() const { return m_spreadsheet.size(); }
-    // Before normalization (function): TSpreadsheetResource::GetRow.
-    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
     // Before normalization: TSpreadsheetResource::GetSpreadsheet.
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
     // indexes the row and cell vectors directly. High-score defaults call
@@ -331,6 +329,8 @@ public:
     const char* getSpreadsheet(int r, int c) const {
         return (*m_spreadsheet[r])[c];
     }
+    // Before normalization (function): TSpreadsheetResource::GetRow.
+    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
 
 private:
     // Before normalization: Spreadsheet.
@@ -364,12 +364,12 @@ public:
     // E:\gamedcs\TextResource.h:73
     const char* operator[](int i) const { return getText(i); }
 
-public:
-    // Canonical backing vector. Public while the decompilation still has
-    // direct retail consumers; this replaces the former fake +0x20 view.
+    // DC-private backing vector. Callers use GetText or operator[];
+    // retail expands the indexing at the same +0x20 vector pointer.
     // Before normalization: Text.
-    TTextArray m_text;  // +0x1c (_First +0x20)
+
 private:
+    TTextArray m_text;  // +0x1c (_First +0x20)
     // Before normalization: Data.
     char* m_data;       // +0x2c
 };

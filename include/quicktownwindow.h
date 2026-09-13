@@ -52,14 +52,14 @@ public:
     TQuickTownWindow(const town* thisTown, TViewLevel viewLevel);
     TQuickTownWindow(const garrison* thisGarrison, TViewLevel viewLevel);
     virtual ~TQuickTownWindow();
-    // Before normalization (function): TQuickTownWindow::initialize_army_display.
-    // Before normalization (locals): army_group, view_level.
-    void initializeArmyDisplay(const armyGroup& currentArmyGroup,
-                                 TViewLevel viewLevel);
     // Before normalization (locals): new_x, new_y.
     void center(long newX, long newY);
     // Before normalization (function): TQuickTownWindow::QuickWindowWait.
     void quickWindowWait();
+    // Before normalization (function): TQuickTownWindow::initialize_army_display.
+    // Before normalization (locals): army_group, view_level.
+    void initializeArmyDisplay(const armyGroup& currentArmyGroup,
+                                 TViewLevel viewLevel);
 };
 SIZE(TQuickTownWindow, 0x4c);
 

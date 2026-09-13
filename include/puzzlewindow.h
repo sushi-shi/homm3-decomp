@@ -103,6 +103,15 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforePuzzleResourceBar[3];
+
+    TPuzzleWindow(int puzzlenum);
+    virtual ~TPuzzleWindow();
+    // Before normalization (function): TPuzzleWindow::UpdatePuzzle.
+    int updatePuzzle(int full);
+    // Before normalization (function): TPuzzleWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+
+private:
     // Before normalization: puzzleResourceBar.
     TResourceDisplay* m_puzzleResourceBar;
     // Before normalization: puzzlePieces.
@@ -110,14 +119,6 @@ public:
     // Before normalization: puzWhich.
     int m_puzWhich;
 
-    TPuzzleWindow(int puzzlenum);
-    virtual ~TPuzzleWindow();
-    // Before normalization (function): TPuzzleWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
-    // Before normalization (function): TPuzzleWindow::UpdatePuzzle.
-    int updatePuzzle(int full);
-
-private:
     int convertID2HelpID(int id) const;
 };
 SIZE(TPuzzleWindow, 0x12c);

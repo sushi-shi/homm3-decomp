@@ -970,7 +970,7 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
     Bitmap16Bit* frame = ResourceManager::getBitmap16(frameName);
 
     videoOpen(videoId, 80, 187, 0, 0, 0, 0, 1);
-    frame->draw(0, 0, frame->m_width, frame->m_height,
+    frame->draw(0, 0, frame->getWidth(), frame->getHeight(),
                 g_windowManager->m_screenBitmap, 0, 0, false);
     videoNextFrame();
     g_inputManager->flush();
@@ -2248,7 +2248,7 @@ int interpretCommandLine()
     g_unnamed6989c8 = 0;
     g_noSound = 0;
     g_unnamed6994f0 = 0;
-    strcpy(g_mapName, g_generalText->m_text[101]);
+    strcpy(g_mapName, g_generalText->getText(101));
     length = strlen(g_commandLine);
     _strupr(g_commandLine);
     for (i = 0; i < length; i++) {
@@ -2281,7 +2281,7 @@ int interpretCommandLine()
         }
     }
     if (showUsage)
-        shutDown(g_generalText->m_text[444]);
+        shutDown(g_generalText->getText(444));
     return 1;
 }
 
@@ -2659,7 +2659,7 @@ void playerDead(int whichPlayer)
     }
 
     for (i = 0; i < g_game->m_generators.size(); i++) {
-        if (g_game->m_generators[i].m_playerOwner == whichPlayer)
+        if (g_game->m_generators[i].getOwner() == whichPlayer)
             g_game->claimGenerator(i, -1);
     }
 
@@ -4287,11 +4287,11 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
     font* currentFont = ResourceManager::getFont("HiScore.fnt");
     const char* labels[5] = {
-        g_generalText->m_text[439],
-        g_generalText->m_text[440],
-        g_generalText->m_text[441],
-        g_generalText->m_text[442],
-        g_generalText->m_text[677]
+        g_generalText->getText(439),
+        g_generalText->getText(440),
+        g_generalText->getText(441),
+        g_generalText->getText(442),
+        g_generalText->getText(677)
     };
     char temp[100];
     message msg;
@@ -4471,7 +4471,7 @@ void showCongrats(int hsType)
                        ? g_creatureTypeTraits[monType].m_name
                        : "");
     if (g_game->m_isCheater)
-        strcpy(temp, g_generalText->m_text[261]);
+        strcpy(temp, g_generalText->getText(261));
     temp[0] = static_cast<char>(toupper(temp[0]));
     videoOpen(0x23, 0, 0, 0, 0, 1, 0, 1);
     g_soundManager->startMP3(
@@ -4514,7 +4514,7 @@ void memError()
         sprintf(g_text,
             DATA_COMPGEN(0x0067f694, memErrorFormat,
                 "\n%s\n\nHeroes III encountered an error\n\n"),
-            g_generalText->m_text[GENERAL_TEXT_OUT_OF_MEMORY]);
+            g_generalText->getText(GENERAL_TEXT_OUT_OF_MEMORY));
         shutDown(g_text);
         g_inMemError = 0;
     }

@@ -131,11 +131,11 @@ int type_text_scroller::main(message& msg)
         case WIDGET_DRAW:
             if (!m_background) {
                 m_background = new Bitmap16Bit(m_width, m_height);
-                m_background->grab(g_windowManager->m_screenBitmap->m_map,
+                m_background->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
                                  m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                                 g_windowManager->m_screenBitmap->m_width,
-                                 g_windowManager->m_screenBitmap->m_height,
-                                 g_windowManager->m_screenBitmap->m_pitch);
+                                 g_windowManager->m_screenBitmap->getWidth(),
+                                 g_windowManager->m_screenBitmap->getHeight(),
+                                 g_windowManager->m_screenBitmap->getPitch());
             }
             break;
         case WIDGET_SET_STATUS:
@@ -158,11 +158,11 @@ VA(0x005BA600, 0xD7)  // anchor-callee (0x5b9fa0) + Bitmap16Bit::Draw, retail-on
 void type_text_scroller::refresh(int firstLine)
 {
     m_background->draw(0, 0, m_width - 16, m_height,
-                     g_windowManager->m_screenBitmap->m_map,
+                     g_windowManager->m_screenBitmap->getMap(0, 0),
                      m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                     g_windowManager->m_screenBitmap->m_width,
-                     g_windowManager->m_screenBitmap->m_height,
-                     g_windowManager->m_screenBitmap->m_pitch, false);
+                     g_windowManager->m_screenBitmap->getWidth(),
+                     g_windowManager->m_screenBitmap->getHeight(),
+                     g_windowManager->m_screenBitmap->getPitch(), false);
 
     for (unsigned int i = 0; i < m_lineImages.size(); i++) {
         textWidget* lineWidget = m_lineImages[i];

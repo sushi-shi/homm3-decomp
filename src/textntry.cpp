@@ -19,10 +19,10 @@
 inline void CTextEntrySave::save(int saveX, int saveY)
 {
     m_saved = 1;
-    grab(g_windowManager->m_screenBitmap->m_map, saveX, saveY,
-        g_windowManager->m_screenBitmap->m_width,
-        g_windowManager->m_screenBitmap->m_height,
-        g_windowManager->m_screenBitmap->m_pitch);
+    grab(g_windowManager->m_screenBitmap->getMap(0, 0), saveX, saveY,
+        g_windowManager->m_screenBitmap->getWidth(),
+        g_windowManager->m_screenBitmap->getHeight(),
+        g_windowManager->m_screenBitmap->getPitch());
 }
 
 #if 0  // @carcass
@@ -485,11 +485,11 @@ void textEntryWidget::draw()
             saveBackground();
         else
             m_saveBack->draw(0, 0, m_boxWidth, m_boxHeight,
-                g_windowManager->m_screenBitmap->m_map,
+                g_windowManager->m_screenBitmap->getMap(0, 0),
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, 0);
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), 0);
     }
 
     if (m_type == FIELD_68_SCROLLED) {

@@ -729,11 +729,11 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
         if (width > 0 && height > 0) {
             delete m_bmpFizzleSource;
             m_bmpFizzleSource = new Bitmap16Bit(width, height);
-            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->m_map,
+            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
                            startX, startY,
-                           g_windowManager->m_screenBitmap->m_width,
-                           g_windowManager->m_screenBitmap->m_height,
-                           g_windowManager->m_screenBitmap->m_pitch);
+                           g_windowManager->m_screenBitmap->getWidth(),
+                           g_windowManager->m_screenBitmap->getHeight(),
+                           g_windowManager->m_screenBitmap->getPitch());
         }
     }
 }
@@ -836,9 +836,9 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
 
             RECT rect;
             Bitmap16Bit destination(width, height);
-            destination.grab(m_screenBitmap->m_map, startX, startY,
-                             m_screenBitmap->m_width, m_screenBitmap->m_height,
-                             m_screenBitmap->m_pitch);
+            destination.grab(m_screenBitmap->getMap(0, 0), startX, startY,
+                             m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
+                             m_screenBitmap->getPitch());
 
             for (int frame = 0; frame < 8; frame++) {
                 unsigned long deadline = GameTime::get() + fadeTime;
@@ -892,9 +892,9 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                 GameTime::delayTil(deadline);
             }
 
-            destination.draw(0, 0, width, height, m_screenBitmap->m_map,
-                             startX, startY, m_screenBitmap->m_width,
-                             m_screenBitmap->m_height, m_screenBitmap->m_pitch,
+            destination.draw(0, 0, width, height, m_screenBitmap->getMap(0, 0),
+                             startX, startY, m_screenBitmap->getWidth(),
+                             m_screenBitmap->getHeight(), m_screenBitmap->getPitch(),
                              false);
             rect.left = startX;
             rect.top = startY;
@@ -1033,16 +1033,16 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     RECT screenRect;
 
-    fadeFrom.grab(m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
-        m_screenBitmap->m_height, m_screenBitmap->m_pitch);
+    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
     for (int shift = 0; shift < 3; shift++) {
         unsigned long deadline = GameTime::get() + 50;
         unsigned long started = GameTime::get();
         unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.m_map));
+            static_cast<void*>(fadeFrom.getMap(0, 0)));
         unsigned char* destinationBytes = static_cast<unsigned char*>(
-            static_cast<void*>(m_screenBitmap->m_map));
+            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             unsigned long* src = static_cast<unsigned long*>(
                 static_cast<void*>(sourceBytes));
@@ -1056,8 +1056,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
                 dst[x] = (red & maskRed) | (green & maskGreen)
                     | (blue & maskBlue);
             }
-            sourceBytes += fadeFrom.m_pitch;
-            destinationBytes += m_screenBitmap->m_pitch;
+            sourceBytes += fadeFrom.getPitch();
+            destinationBytes += m_screenBitmap->getPitch();
         }
         screenRect.left = 0;
         screenRect.top = 0;
@@ -1077,8 +1077,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     ddAppBlit(&screenRect);
     if (expectFadein) {
         fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-            m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
-            m_screenBitmap->m_height, m_screenBitmap->m_pitch, 0);
+            m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+            m_screenBitmap->getHeight(), m_screenBitmap->getPitch(), 0);
     }
 }
 
@@ -1100,17 +1100,17 @@ void heroWindowManager::fadeFromBlack(int speed)
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     RECT screenRect;
 
-    fadeFrom.grab(m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
-        m_screenBitmap->m_height, m_screenBitmap->m_pitch);
+    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + 50;
         unsigned long started = GameTime::get();
         // Before normalization (locals): pSrc, pDst.
         unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.m_map));
+            static_cast<void*>(fadeFrom.getMap(0, 0)));
         unsigned char* destinationBytes = static_cast<unsigned char*>(
-            static_cast<void*>(m_screenBitmap->m_map));
+            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             unsigned long* src = static_cast<unsigned long*>(
                 static_cast<void*>(sourceBytes));
@@ -1124,8 +1124,8 @@ void heroWindowManager::fadeFromBlack(int speed)
                 dst[x] = (red & maskRed) | (green & maskGreen)
                     | (blue & maskBlue);
             }
-            sourceBytes += fadeFrom.m_pitch;
-            destinationBytes += m_screenBitmap->m_pitch;
+            sourceBytes += fadeFrom.getPitch();
+            destinationBytes += m_screenBitmap->getPitch();
         }
         screenRect.left = 0;
         screenRect.top = 0;
@@ -1138,8 +1138,8 @@ void heroWindowManager::fadeFromBlack(int speed)
     }
 
     fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-        m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width, m_screenBitmap->m_height,
-        m_screenBitmap->m_pitch, 0);
+        m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
+        m_screenBitmap->getPitch(), 0);
     screenRect.left = 0;
     screenRect.top = 0;
     screenRect.right = WINDOW_SCREEN_WIDTH;

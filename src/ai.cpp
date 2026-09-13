@@ -349,7 +349,7 @@ unsigned char combatManager::aiCheckRetreat()
                 long combatValue = 0;
                 type_artifact artifact;
                 { for (long i = 0; i < 19; i++) {
-                        artifact = m_heroes[m_currentSide]->m_equipped[i];
+                        artifact = m_heroes[m_currentSide]->getArtifact(i);
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
                         long artifactValue = aiGetValueOfArtifact(
@@ -361,7 +361,7 @@ unsigned char combatManager::aiCheckRetreat()
                     }
                 }
                 { for (long i = 0; i < 64; i++) {
-                        artifact = m_heroes[m_currentSide]->m_backpack[i];
+                        artifact = m_heroes[m_currentSide]->getBackpack(i);
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
                         long artifactValue = aiGetValueOfArtifact(
@@ -1023,10 +1023,10 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
     if (!currentArmy->m_spellInfluence[72] && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
                                       m_creaturePlacement, 0x7f, -1);
-        if (static_cast<long>(g_searchArray->m_result.size()) > 0) {
+        if (static_cast<long>(g_searchArray->getPathSteps()) > 0) {
             m_nextAction = 2;
             long moveLeft = currentArmy->getSpeed();
-            long pathIndex = g_searchArray->m_result.size() - 1;
+            long pathIndex = g_searchArray->getPathSteps() - 1;
             long step;
             long startDanger;
             long limit;
@@ -1063,11 +1063,10 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                     if (moveLeft <= 0)
                         break;
                     hex = const_cast<army*>(currentArmy)->getAdjacentCellIndex(
-                            hex, g_searchArray->m_result[pathIndex]->m_direction);
+                            hex, g_searchArray->getStep(pathIndex));
                     if (hex < 0 || hex >= 187)
                         break;
-                    const pathCell* cell = g_searchArray->m_cellData == 0
-                            ? 0 : &g_searchArray->m_cellData[hex];
+                    const pathCell* cell = g_searchArray->getHex(hex);
                     if (cell->m_flightCost == 0) {
                         long secondHex = (currentArmy->m_monInfo.m_attributes & 1)
                                 ? hex + (currentArmy->m_facing != 0 ? 1 : -1) : hex;
@@ -1091,10 +1090,10 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                         }
                         if ((static_cast<unsigned char>(static_cast<unsigned>(
                                         currentArmy->m_monInfo.m_attributes) >> 1) & 1) == 0) {
-                            if (g_searchArray->m_isMoatSlowed[
-                                        static_cast<short>(hex)]
-                                    || g_searchArray->m_isMoatSlowed[
-                                            static_cast<short>(secondHex)])
+                            if (g_searchArray->isMoat(
+                                        static_cast<short>(hex))
+                                    || g_searchArray->isMoat(
+                                            static_cast<short>(secondHex)))
                                 moveLeft = 0;
                         }
                     }
@@ -1195,7 +1194,7 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
         hero* castingHero = m_heroes[side];
         long best = 0;
         for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
-            if (!castingHero->m_availableSpells[spell])
+            if (!castingHero->spellIsAvailable(spell))
                 continue;
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
                     || spell == SPELL_INFERNO
@@ -1418,9 +1417,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
             continue;
         if (!m_cells[other->m_gridIndex].m_validMove)
             continue;
-        const pathCell* cell = currentSearchArray->m_cellData == 0
-                ? 0
-                : &currentSearchArray->m_cellData[other->m_gridIndex];
+        const pathCell* cell = currentSearchArray->getHex(other->m_gridIndex);
         if (cell->m_cost > enemy->getSpeed())
             continue;
         unsigned char counted[COMBAT_GRID_CELLS];
@@ -1491,9 +1488,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop,
         long hex = ourArmy->getAdjacentHex(targetHex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        const pathCell* cell = currentSearchArray->m_cellData == 0
-                ? 0
-                : &currentSearchArray->m_cellData[hex];
+        const pathCell* cell = currentSearchArray->getHex(hex);
         if (!cell->m_visited)
             continue;
         if (cell->m_cost > limitCost)
@@ -1553,9 +1548,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
                 continue;
             if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            const pathCell* cell = g_searchArray->m_cellData == 0
-                    ? 0
-                    : &g_searchArray->m_cellData[friendly->m_gridIndex];
+            const pathCell* cell = g_searchArray->getHex(friendly->m_gridIndex);
             if (m_cells[friendly->m_gridIndex].m_validMove
                     && cell->m_cost <= enemy->getSpeed())
                 break;
@@ -1572,9 +1565,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
         if (value >= 0)
             continue;
         for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-            const pathCell* cell = g_searchArray->m_cellData == 0
-                    ? 0
-                    : &g_searchArray->m_cellData[hex];
+            const pathCell* cell = g_searchArray->getHex(hex);
             if (!cell->m_visited)
                 continue;
             enemyAttacks[hex] += value;
@@ -1584,19 +1575,15 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
         if (enemy->m_monInfo.m_attributes & 1) {
             long direction = enemy->m_facing ? 1 : 4;
             for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-                const pathCell* cell = g_searchArray->m_cellData == 0
-                        ? 0
-                        : &g_searchArray->m_cellData[hex];
+                const pathCell* cell = g_searchArray->getHex(hex);
                 if (!cell->m_visited)
                     continue;
-                if (g_searchArray->m_isMoatSlowed[static_cast<short>(hex)])
+                if (g_searchArray->isMoat(static_cast<short>(hex)))
                     continue;
                 long adjacent = m_adjacentCells[hex][direction];
                 if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
                     continue;
-                const pathCell* other = g_searchArray->m_cellData == 0
-                        ? 0
-                        : &g_searchArray->m_cellData[adjacent];
+                const pathCell* other = g_searchArray->getHex(adjacent);
                 if (other->m_visited)
                     continue;
                 enemyAttacks[adjacent] += value;
@@ -1652,9 +1639,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         if (occupant != 0 && occupant != currentArmy)
             continue;
         (*openHexes)++;
-        const pathCell* path = currentSearchArray->m_cellData == 0
-                ? 0
-                : &currentSearchArray->m_cellData[hex];
+        const pathCell* path = currentSearchArray->getHex(hex);
         if (!path->m_visited)
             continue;
         long time = m_creaturePlacement
@@ -1789,9 +1774,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
     long bestDistance = 0;
     long bestHex = -1;
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        const pathCell* cell = currentSearchArray->m_cellData;
-        if (cell)
-            cell += hex;
+        const pathCell* cell = currentSearchArray->getHex(hex);
         if (!cell->m_visited || cell->m_flightCost > 0)
             continue;
 
@@ -2547,9 +2530,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
         if (currentArmy->getSpeed() == 0 || currentArmy->m_spellInfluence[72]) {
-            const pathCell* stand = g_searchArray->m_cellData == 0
-                    ? 0
-                    : &g_searchArray->m_cellData[enemy->m_gridIndex];
+            const pathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
             if (stand->m_cost > 0)
                 continue;
         }
@@ -2569,9 +2550,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT
                 && currentArmy->m_creatureType != CREATURE_AMMO_CART
                 && !(enemy->is(1u << 19))) {
-            const pathCell* reach = g_searchArray->m_cellData == 0
-                    ? 0
-                    : &g_searchArray->m_cellData[enemy->m_gridIndex];
+            const pathCell* reach = g_searchArray->getHex(enemy->m_gridIndex);
             if (reach->m_cost <= currentArmy->getSpeed())
                 change = getAttackChange(currentArmy, enemy, *estimate);
         }
@@ -2587,32 +2566,30 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                 && currentArmy->m_creatureType != CREATURE_AMMO_CART) {
             long distance = 0;
             if (chooser.m_bestAttackTime == 1) {
-                const pathCell* attackCell = g_searchArray->m_cellData == 0
-                        ? g_searchArray->m_cellData
-                        : &g_searchArray->m_cellData[chooser.m_bestHex];
+                const pathCell* attackCell = g_searchArray->getHex(chooser.getBestHex());
                 distance = attackCell->m_cost;
             }
             change += estimate->getSimpleAttackEffect(*(currentArmy), *(enemy), 0, distance);
         }
 
-        if (chooser.m_bestValue <= 0 || (currentArmy->is(1u << 22))
+        if (chooser.getHexValue() <= 0 || (currentArmy->is(1u << 22))
                 || (g_game->m_setup.m_difficulty == 0 && !m_sideIsAi[side])) {
-            change += chooser.m_bestValue;
+            change += chooser.getHexValue();
         } else if (currentArmy->m_creatureType == CREATURE_HARPY
                    || currentArmy->m_creatureType == CREATURE_HARPY_HAG) {
-            if (change < chooser.m_bestValue) {
+            if (change < chooser.getHexValue()) {
                 flag = 1;
-                change = chooser.m_bestValue;
+                change = chooser.getHexValue();
             }
         } else if (change < 0 && hasRangedAdvantage(estimate)) {
-            change = chooser.m_bestValue;
+            change = chooser.getHexValue();
             flag = 1;
         } else {
-            change += chooser.m_bestValue;
+            change += chooser.getHexValue();
         }
         if (change < 0
                 && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
-                && chooser.m_bestValue < enemyAttacks[chooser.m_bestHex])
+                && chooser.getHexValue() < enemyAttacks[chooser.getBestHex()])
             continue;
 
         long random = ::random(75, 100);
@@ -2639,14 +2616,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                             continue;
                         if (bestEnemy->m_topCreatureDamage
                                 == enemy->m_topCreatureDamage) {
-                            const pathCell* held = g_searchArray->m_cellData == 0
-                                    ? 0
-                                    : &g_searchArray->m_cellData[bestHex];
+                            const pathCell* held = g_searchArray->getHex(bestHex);
                             const pathCell* offered
-                                    = g_searchArray->m_cellData == 0
-                                    ? 0
-                                    : &g_searchArray
-                                               ->m_cellData[chooser.m_bestHex];
+                                    = g_searchArray->getHex(chooser.getBestHex());
                             if (held->m_cost < offered->m_cost)
                                 continue;
                         }
@@ -2656,9 +2628,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         }
         bestEnemy = enemy;
         bestFlag = flag;
-        bestHex = chooser.m_bestHex;
+        bestHex = chooser.getBestHex();
         bestTroops = troops;
-        bestTime = chooser.m_bestValue * random / (troops * 100);
+        bestTime = chooser.getHexValue() * random / (troops * 100);
         bestValue = score / troops;
     }
 
@@ -2690,9 +2662,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
         if (m_fortificationLevel > 0 && m_currentSide == 0) {
             long hex = g_castleWallColumns[currentArmy->m_gridIndex / 17];
             while (hex > currentArmy->m_gridIndex) {
-                const pathCell* cell = g_searchArray->m_cellData == 0
-                        ? 0
-                        : &g_searchArray->m_cellData[hex];
+                const pathCell* cell = g_searchArray->getHex(hex);
                 if (cell->m_visited) {
                     if (!isInMoat(hex, 0)) {
                         if (!(currentArmy->m_monInfo.m_attributes & 1))
@@ -2965,11 +2935,11 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         hex = target->getSecondGridIndex();
     g_searchArray->findCombatPath(currentArmy, -1, hex, m_creaturePlacement,
                                   127, -1);
-    if (g_searchArray->m_result.size() == 0) {
+    if (g_searchArray->getPathSteps() == 0) {
         m_nextAction = 12;
         return;
     }
-    if (g_searchArray->m_result.size() == 1) {
+    if (g_searchArray->getPathSteps() == 1) {
         m_nextAction = 6;
         m_nextActionExtra = currentArmy->m_gridIndex;
         m_nextActionGridIndex = target->m_gridIndex;
@@ -2977,9 +2947,8 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
             m_playDoh[target->m_combatSide] = 1;
         return;
     }
-    long step = g_searchArray->m_result[1]->m_point.m_x;
-    const pathCell* cell = g_searchArray->m_cellData == 0
-        ? 0 : &g_searchArray->m_cellData[target->m_gridIndex];
+    long step = g_searchArray->getStepCell(1)->m_point.m_x;
+    const pathCell* cell = g_searchArray->getHex(target->m_gridIndex);
     if (cell->m_cost > currentArmy->getSpeed()) {
         currentArmy->m_side = -1;
         currentArmy->m_slot = -1;

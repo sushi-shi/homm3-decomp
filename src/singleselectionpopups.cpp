@@ -226,7 +226,7 @@ unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame
         return 0;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - sprite->m_width) / 2, 60, sprite, frame));
+    add(new CSpriteWidget((m_width - sprite->getWidth()) / 2, 60, sprite, frame));
     add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
@@ -261,8 +261,8 @@ CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
     m_frame = frameArg;
     m_x = xPos;
     m_y = yPos;
-    m_width = sprite->m_width;
-    m_height = sprite->m_height;
+    m_width = sprite->getWidth();
+    m_height = sprite->getHeight();
     m_frame %= sprite->getNumFrames(0);
 }
 
@@ -285,7 +285,7 @@ unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const ch
         return 0;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
-    add(new CBitmapWidget((m_width - image->m_width) / 2, 60, image));
+    add(new CBitmapWidget((m_width - image->getWidth()) / 2, 60, image));
     add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
@@ -309,7 +309,7 @@ int CSpriteWidget::main(message& msg)
 VA(0x00575a20, 0x3e)  // anchor-vtable CBitmapWidget vtbl 0x641a34 slot4 (Draw override), calls Bitmap816::Draw, dc 0x12f1fc
 void CBitmapWidget::draw()
 {
-    m_image->draw(0, 0, m_image->m_width, m_image->m_height,
+    m_image->draw(0, 0, m_image->getWidth(), m_image->getHeight(),
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
         m_y + m_parentWindow->m_y, 1);
 }
@@ -323,8 +323,8 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
     m_image = image;
     m_x = xPos;
     m_y = yPos;
-    m_width = image->m_width;
-    m_height = image->m_height;
+    m_width = image->getWidth();
+    m_height = image->getHeight();
 }
 
 // The 5-byte body lies exactly between CBitmapWidget::Draw and CHeroDlg's
@@ -361,7 +361,7 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
     add(new textWidget(30, 26, m_width - 60, 36,
         g_generalText->getText(78), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CBitmapWidget((m_width - heroPick->m_width) / 2, 56, heroPick));
+    add(new CBitmapWidget((m_width - heroPick->getWidth()) / 2, 56, heroPick));
 
     sprintf(tempText, DATA_COMPGEN(
         0x0066033c, rolloverOwnedObjectFormat, "%s - %s"), heroName, desc);
@@ -371,9 +371,9 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
     add(new textWidget(30, 122, m_width - 60, 36,
         g_generalText->getText(79), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - specialtyIcon->m_width) / 2, 149,
+    add(new CSpriteWidget((m_width - specialtyIcon->getWidth()) / 2, 149,
         specialtyIcon, frame));
-    add(new textWidget(30, specialtyIcon->m_height + 151, m_width - 60, 36,
+    add(new textWidget(30, specialtyIcon->getHeight() + 151, m_width - 60, 36,
         specialtyName, "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
     return 1;
 }
@@ -414,7 +414,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     add(new textWidget(10, 26, m_width - 20, 36,
         g_generalText->getText(81), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - town->m_width) / 2, 60, town, frame));
+    add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
         g_unnamed6a74f4[townType], "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
@@ -801,20 +801,20 @@ void TRandomMapProgress::loadProgFn00577180()
     m_window->drawWindow(0, 0xffff0001, 0xffff);
 
     for (int i = 0; i < fullRow; i++) {
-        m_barSprite->draw(0, i, 0, 0, m_barSprite->m_width, m_barSprite->m_height,
-                        g_windowManager->m_screenBitmap->m_map,
+        m_barSprite->draw(0, i, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
+                        g_windowManager->m_screenBitmap->getMap(0, 0),
                         m_window->m_x + i * 18 + 16, m_window->m_y + 0x3c,
-                        g_windowManager->m_screenBitmap->m_width,
-                        g_windowManager->m_screenBitmap->m_height,
-                        g_windowManager->m_screenBitmap->m_pitch, 0, 0);
+                        g_windowManager->m_screenBitmap->getWidth(),
+                        g_windowManager->m_screenBitmap->getHeight(),
+                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
     }
     for (int j = 0; j < partialRow; j++) {
-        m_barSprite->draw(0, j, 0, 0, m_barSprite->m_width, m_barSprite->m_height,
-                        g_windowManager->m_screenBitmap->m_map,
+        m_barSprite->draw(0, j, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
+                        g_windowManager->m_screenBitmap->getMap(0, 0),
                         m_window->m_x + j * 18 + 16, m_window->m_y + 0x50,
-                        g_windowManager->m_screenBitmap->m_width,
-                        g_windowManager->m_screenBitmap->m_height,
-                        g_windowManager->m_screenBitmap->m_pitch, 0, 0);
+                        g_windowManager->m_screenBitmap->getWidth(),
+                        g_windowManager->m_screenBitmap->getHeight(),
+                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
     }
 
     g_windowManager->updateScreen(m_window->m_x + 16, m_window->m_y + 0x3c, 0x120, 16);

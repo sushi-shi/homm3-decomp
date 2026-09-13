@@ -43,6 +43,11 @@ public:
     // Dreamcast textwdgt.cpp:257, original spelling Dim. Retail slot 8
     // is empty, overriding widget::Dim's screen darkening operation.
     virtual void dim() const;
+
+    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
+    // Main calls this canonical header helper at textwdgt.cpp:152; retail
+    // expands its single member store in the WIDGET_SET_COLOR arm.
+    void setColor(font::TColor newColor) { m_color = newColor; }
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
     // /Gy header COMDAT far outside textwdgt.obj's band: it takes one
@@ -62,11 +67,6 @@ public:
     // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     const char* getText() { return m_text.c_str(); }
-
-    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
-    // Main calls this canonical header helper at textwdgt.cpp:152; retail
-    // expands its single member store in the WIDGET_SET_COLOR arm.
-    void setColor(font::TColor newColor) { m_color = newColor; }
 };
 
 class Bitmap816;

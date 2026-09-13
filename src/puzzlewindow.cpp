@@ -166,7 +166,7 @@ int TPuzzleWindow::updatePuzzle(int full)
             // into both loads (96.4516%); typed row pointers are exact.
             const short* xCoordinate = g_puzzlePieceX + m_puzWhich * 96;
             const short* yCoordinate = g_puzzlePieceY + m_puzWhich * 96;
-            bitmap->draw(0, 0, bitmap->m_width, bitmap->m_height,
+            bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(),
                          g_windowManager->m_screenBitmap,
                          xCoordinate[piece], yCoordinate[piece], 1);
             ++piecesNotFound;

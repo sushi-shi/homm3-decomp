@@ -140,6 +140,11 @@ public:
     virtual int main(message& msg);              // slot 2, retail 0x5bb150
     // Before normalization (function): textEntryWidget::Draw.
     virtual void draw();                         // slot 4, retail 0x5bb400
+    // Before normalization (function): textEntryWidget::SetupDisplayString.
+    // Before normalization (locals): cCore.
+    void setupDisplayString(char* core, unsigned short inCursorIndex);
+    // Before normalization (function): textEntryWidget::GetCharPressed.
+    char getCharPressed(message* msg);
     // Before normalization (function): textEntryWidget::OnSetFocus.
     virtual void onSetFocus();                   // slot 10, retail 0x5bba50
     // Before normalization (function): textEntryWidget::OnKillFocus.
@@ -155,11 +160,7 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16, retail 0x5bba20
     // Before normalization (function): textEntryWidget::SetAutoDraw.
     virtual void setAutoDraw(unsigned char b);   // slot 17, retail 0x5bbac0
-    // Before normalization (function): textEntryWidget::GetCharPressed.
-    char getCharPressed(message* msg);
-    // Before normalization (function): textEntryWidget::SetupDisplayString.
-    // Before normalization (locals): cCore.
-    void setupDisplayString(char* core, unsigned short inCursorIndex);
+
 protected:
     // Before normalization (function): textEntryWidget::SaveBackground.
     virtual void saveBackground() const;         // slot 18, retail 0x5bba70

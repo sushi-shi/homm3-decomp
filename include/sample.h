@@ -41,6 +41,8 @@ public:
     // newName/type 0x20; src/len initialize the owned sample buffer.
     sample(const char* newName, const void* src, long len,
            long channel, long volume, long loop);
+    // DC records an ordinary destructor. Complete resource's virtual
+    // destructor requires this override; slot 0 of 0x6416d0 proves it.
     virtual ~sample();  // retail 0x566e60; vtable 0x6416d0
     // Before normalization (function): sample::GetSize.
     virtual unsigned int getSize() const;

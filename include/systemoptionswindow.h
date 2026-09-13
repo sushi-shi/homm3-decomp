@@ -97,12 +97,9 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeQuickCombatSave[3];
-    // Before normalization: quickCombatSave.
-    int m_quickCombatSave;           // +0x64
 
     TSystemOptionsWindow();
     virtual ~TSystemOptionsWindow();
-    int convertID2HelpID(int id) const;
     // Before normalization (function): TSystemOptionsWindow::DoModal.
     void doModal();
     // Before normalization (function): TSystemOptionsWindow::WindowHandler.
@@ -110,6 +107,11 @@ public:
     // Before normalization (function): TSystemOptionsWindow::UpdateSystemOptions.
     // Before normalization (locals): bFirstUpdate.
     void updateSystemOptions(unsigned char firstUpdate);
+
+private:
+    // Before normalization: quickCombatSave.
+    int m_quickCombatSave;           // +0x64
+    int convertID2HelpID(int id) const;
 };
 SIZE(TSystemOptionsWindow, 0x68);
 

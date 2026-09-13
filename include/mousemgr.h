@@ -110,16 +110,46 @@ public:
     // Before normalization (function): mouseManager::Main.
     virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
     virtual ~mouseManager() { DeleteCriticalSection(&m_sectionMouse); }
-    // Before normalization (function): mouseManager::MouseCoords.
-    void mouseCoords(int& x, int& y);
-    // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
-    void getPointerPosition();
+    // Before normalization (function): mouseManager::HidePointer.
+    void hidePointer();
+    // Before normalization (function): mouseManager::ShowPointer.
+    void showPointer(bool restore);
     // Before normalization (function): mouseManager::SetPointer.
     // Before normalization (locals): new_frame, new_set.
     void setPointer(int newFrame, EPointerSet newSet);
+    // Before normalization (function): mouseManager::MouseCoords.
+    void mouseCoords(int& x, int& y);
     // Before normalization (function): mouseManager::Update.
     // Before normalization (locals): bForceIt.
     void update(unsigned char forceIt);
+    // Before normalization (function): mouseManager::CheckUpdate.
+    void checkUpdate();
+    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
+    // mutating it in this build. SetPointer discards both results, so retail
+    // has no call or count update. Keep the canonical source boundaries.
+    int enable() { return m_disableCount; }
+    int disable() { return m_disableCount; }
+    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
+    // source helper while Complete's /Ob2 lowers it to the field_68 test.
+    // Before normalization (function): mouseManager::IsVis.
+    unsigned char isVis() const { return m_hideCount == 0; }
+    // Before normalization (function): mouseManager::GetFrame.
+    int getFrame() const
+    {
+        return m_frame;
+    }
+    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
+    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
+    // +0x4c/+0x50 loads at their call sites.
+    // Before normalization (function): mouseManager::GetSet.
+    EPointerSet getSet() const
+    {
+        return m_set;
+    }
+
+private:
+    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
+    bool isBusy() const { return m_busy != 0; }
     // Before normalization (function): mouseManager::SaveAndDraw.
     // Before normalization (locals): dst_surface, save_surface, dst_rect.
     void saveAndDraw(IDirectDrawSurface* dstSurface,
@@ -129,44 +159,23 @@ public:
     void restoreUnderlying(IDirectDrawSurface* surface,
                            // Before normalization (locals): dst_rect.
                            const RECT& dstRect);
-    // Before normalization (function): mouseManager::HidePointer.
-    void hidePointer();
-    // Before normalization (function): mouseManager::ShowPointer.
-    void showPointer(bool restore);
-    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
-    // mutating it in this build. SetPointer discards both results, so retail
-    // has no call or count update. Keep the canonical source boundaries.
-    int enable() { return m_disableCount; }
-    int disable() { return m_disableCount; }
-    // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
-    // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
-    // +0x4c/+0x50 loads at their call sites.
-    // Before normalization (function): mouseManager::GetSet.
-    EPointerSet getSet() const
-    {
-        return m_set;
-    }
-    // Before normalization (function): mouseManager::GetFrame.
-    int getFrame() const
-    {
-        return m_frame;
-    }
-    // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
-    // source helper while Complete's /Ob2 lowers it to the field_68 test.
-    // Before normalization (function): mouseManager::IsVis.
-    unsigned char isVis() const { return m_hideCount == 0; }
-    // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
-    bool isBusy() const { return m_busy != 0; }
-    // Before normalization (function): mouseManager::CheckUpdate.
-    void checkUpdate();
+    // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
+    void getPointerPosition();
+
+public:
     // Before normalization (function): mouseManager::LoadFrame.
     // Before normalization (locals): new_frame.
-    void loadFrame(int newFrame);
-    // Before normalization (function): mouseManager::Reset.
-    void reset();                 // 0x50cc80
+    // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
+    // retail 0x601a00 retains that call. Preserve this specific friend.
+    friend unsigned char ddSetFullScreenStatus(int newStatus);
     // Before normalization (function): mouseManager::ShowSystemCursor.
     // Before normalization (locals): show_it.
     void showSystemCursor(unsigned char showIt);
+    // Before normalization (function): mouseManager::Reset.
+    void reset();                 // 0x50cc80
+
+private:
+    void loadFrame(int newFrame);
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

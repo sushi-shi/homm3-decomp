@@ -26,8 +26,6 @@ public:
 
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
-    // Before normalization (function): TFileVersionInfo::GetVersionInfo.
-    unsigned char getVersionInfo(const char* name, std::string* buffer);
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
     // Before normalization (function): TFileVersionInfo::GetProductVersion.
@@ -35,6 +33,10 @@ public:
     {
         return getVersionInfo("ProductVersion", productVersion);
     }
+
+private:
+    // Before normalization (function): TFileVersionInfo::GetVersionInfo.
+    unsigned char getVersionInfo(const char* name, std::string* buffer);
 };
 SIZE(TFileVersionInfo, 4);
 

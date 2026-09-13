@@ -433,7 +433,11 @@ public:
     // Spelled 14 rather than TOWN_DWELLING_SLOTS because ETownConstants
     // is declared below this class; the .cpp uses the named constant.
     // Before normalization: generatorBonus.
+
+protected:
     int m_generatorBonus[14];
+
+public:
     // Three 64-bit building bitfields, all read as pairs of dwords by
     // retail's __int64 lowering (the DC's own set_mask/
     // get_buildable_mask signatures are __int64 too; the DC build
@@ -455,6 +459,16 @@ public:
     __int64 m_active;
     // Before normalization: available.
     __int64 m_available;
+    // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
+    // (dc 0x165da4) and town::town (dc 0x166408) is
+    // ApplySpecialBuildingEffect, and the retail bracket has exactly one
+    // unclaimed body in that slot; the SH4 span 0x165ea0..0x166408 is
+    // 1384 bytes against retail's 1361, inside the band. Declared for
+    // townManager::DoTownTavern, which calls it on the town's visiting
+    // hero right after the tavern hire, and on a gate of its own because
+    // town.cpp must not see a new declarator.
+    // Before normalization (function): town::ApplySpecialBuildingEffect.
+    void applySpecialBuildingEffect(hero* townHero);
 
     // Before normalization (function): town::CanBuildDock.
     unsigned char canBuildDock();
@@ -471,8 +485,28 @@ public:
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
     // Retail's +0x158 band is m_active; getBuildableMask expands this read.
     __int64 getBuildingMask() const { return m_active; }
+    // Before normalization (function): town::get_castle_growth_bonus.
+    long getCastleGrowthBonus(TCreatureType creature) const;
+    // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
+    // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     // Before normalization (function): town::get_generator_bonus.
-    long getGeneratorBonus(long dwelling) const;
+    long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
+    // Before normalization (function): town::get_gold_income.
+    // Before normalization (locals): include_silo.
+    short getGoldIncome(unsigned char includeSilo) const;
+    // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
+    // gHordeBuildings row is int and an enum return would need a cast
+    // (the UpgradedDwellingID precedent).
+    // Before normalization (function): town::get_horde.
+    int getHorde(long dwelling) const;
+    // Before normalization (function): town::get_horde_bonus.
+    long getHordeBonus(long dwelling) const;
+    // NOT const: retail 0x5bf810 is `ret 4` with the town in ecx and
+    // reads only members, but nothing proves constness either way, so
+    // it follows get_castle_growth_bonus' neighbour rather than
+    // asserting one.
+    // Provisional retail-only name; DC get_legion_bonus is the next method.
+    long getLegionBonus(long dwelling);
     // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
     // linker kept an out-of-line copy in advmgr.obj). Packs the town's
     // three map bytes into a type_point and returns it BY VALUE - the
@@ -507,6 +541,8 @@ public:
         point.m_z = m_mapZ;
         return point;
     }
+    // Before normalization (function): town::CalcNumLevelArchers.
+    void calcNumLevelArchers(int* numArchers, int* archerLevel);
     // DC `town::HasBuilding` (dc 0x1fe14, E:\gamedcs\Town.h:324) - an
     // INLINE MEMBER of this header, not a town.obj method. Retail's
     // out-of-line copy at 0x4305a0 is the COMDAT VC6 emits for the call
@@ -562,19 +598,6 @@ public:
     unsigned char isCastle() const;
     // Before normalization (function): town::IsCapitol.
     unsigned char isCapitol() const;
-    // Before normalization (function): town::CalcNumLevelArchers.
-    void calcNumLevelArchers(int* numArchers, int* archerLevel);
-    // Before normalization (function): town::get_castle_growth_bonus.
-    long getCastleGrowthBonus(TCreatureType creature) const;
-    // Before normalization (function): town::get_gold_income.
-    // Before normalization (locals): include_silo.
-    short getGoldIncome(unsigned char includeSilo) const;
-    // 0x5bd700. Portrait row = faction*2 when a fort is active, or the
-    // no-fort band at +18; the town-state and small-icon flags select the
-    // adjacent variants. DC's `_N` parameter proves native bool.
-    // Before normalization (function): town::GetPortraitFrame.
-    // Before normalization (locals): is_small.
-    int getPortraitFrame(bool isSmall) const;
     // 0x5bd750, the body immediately after GetPortraitFrame and the DC
     // roster's next town.cpp row (town::SetSummoningGenerator, dc
     // 0x165da4). Void and argument-less: retail calls it with the town
@@ -585,58 +608,35 @@ public:
     // see a new declarator.
     // Before normalization (function): town::SetSummoningGenerator.
     void setSummoningGenerator();
-    // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
-    // (dc 0x165da4) and town::town (dc 0x166408) is
-    // ApplySpecialBuildingEffect, and the retail bracket has exactly one
-    // unclaimed body in that slot; the SH4 span 0x165ea0..0x166408 is
-    // 1384 bytes against retail's 1361, inside the band. Declared for
-    // townManager::DoTownTavern, which calls it on the town's visiting
-    // hero right after the tavern hire, and on a gate of its own because
-    // town.cpp must not see a new declarator.
-    // Before normalization (function): town::ApplySpecialBuildingEffect.
-    void applySpecialBuildingEffect(hero* townHero);
-    // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
-    // gHordeBuildings row is int and an enum return would need a cast
-    // (the UpgradedDwellingID precedent).
-    // Before normalization (function): town::get_horde.
-    int getHorde(long dwelling) const;
-    // Before normalization (function): town::get_horde_bonus.
-    long getHordeBonus(long dwelling) const;
-    // NOT const: retail 0x5bf810 is `ret 4` with the town in ecx and
-    // reads only members, but nothing proves constness either way, so
-    // it follows get_castle_growth_bonus' neighbour rather than
-    // asserting one.
-    // Provisional retail-only name; DC get_legion_bonus is the next method.
-    long getLegionBonus(long dwelling);
+    // 0x5bd700. Portrait row = faction*2 when a fort is active, or the
+    // no-fort band at +18; the town-state and small-icon flags select the
+    // adjacent variants. DC's `_N` parameter proves native bool.
+    // Before normalization (function): town::GetPortraitFrame.
+    // Before normalization (locals): is_small.
+    int getPortraitFrame(bool isSmall) const;
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
     // Before normalization (function): town::TownFn_005BF900.
     long townFn005BF900(long dwelling);
-    // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
-    // growth for one dwelling slot.
-    // Before normalization (function): town::get_growth_rate.
-    short getGrowthRate(short dwelling);
-    // 0x5bfdd0.
-    // Before normalization (function): town::increase_population.
-    // Before normalization (locals): bonus_creature, alternate_bonus, bonus_amount.
-    void increasePopulation(TCreatureType bonusCreature,
-                             TCreatureType alternateBonus, long bonusAmount);
-    // 0x5bfe50.
-    // Before normalization (function): town::change_generator_bonus.
-    void changeGeneratorBonus(TCreatureType creature, long change);
+    town();
     // Before normalization (function): town::can_build.
     // Before normalization (locals): building_id.
     unsigned char canBuild(short buildingId) const;
-    // 0x5bede0. DC signature; buy_building is the only claimed caller
-    // and it pushes exactly these three.
-    // Before normalization (function): town::BuildBuilding.
-    // Before normalization (locals): SetBuiltFlag, apply_special_effect.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
-                                   unsigned char applySpecialEffect);
+    // Before normalization (function): town::can_ever_build.
+    // Before normalization (locals): building_id.
+    unsigned char canEverBuild(int buildingId) const;
+    // 0x5bfe50.
+    // Before normalization (function): town::change_generator_bonus.
+    void changeGeneratorBonus(TCreatureType creature, long change);
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     // Before normalization (function): town::create_building.
     type_building_id createBuilding(type_building_id building);
+    // 0x5bf3c0. `building` is an INT (the can_ever_build asymmetry):
+    // retail reads [ebp+8] as a full dword for both band compares and
+    // for the inlined get_build_cost_array row arithmetic.
+    // Before normalization (function): town::buy_building.
+    unsigned char buyBuilding(type_building_id building);
     // 0x5bec60. Downgrades this town's duplicate Capitol when another
     // owned town already carries one. The declaration is scoped by VIEW
     // because member population affects VC6 output elsewhere; events.obj
@@ -644,6 +644,38 @@ public:
     // ClaimTown on both of its capture paths.
     // Before normalization (function): town::destroy_extra_capitol.
     void destroyExtraCapitol();
+    // Before normalization (function): town::get_build_cost.
+    void getBuildCost(type_building_id building, int* resources) const;
+    // DC town.cpp:2224 proves the EGameResource* output domain.
+    // Before normalization (function): town::get_build_cost.
+    short getBuildCost(type_building_id building, EGameResource* types,
+                         int* amounts) const;
+    // Before normalization (function): town::get_build_cost_array.
+    int* getBuildCostArray(type_building_id building) const;
+    // Before normalization (function): town::get_buildable_mask.
+    __int64 getBuildableMask() const;
+    // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
+    // growth for one dwelling slot.
+    // Before normalization (function): town::get_growth_rate.
+    short getGrowthRate(short dwelling);
+    // Before normalization (function): town::get_horde_effect.
+    type_horde_effect* getHordeEffect(type_building_id building) const;
+    // Before normalization (function): town::get_silo_income.
+    int* getSiloIncome() const;
+    // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
+    // in the owning TU; gated so no other view of this class gains the
+    // declarators.
+    // Before normalization (function): town::give_event_reward.
+    void giveEventReward(const TTownEvent* thisEvent);
+    // 0x5bfdd0.
+    // Before normalization (function): town::increase_population.
+    // Before normalization (locals): bonus_creature, alternate_bonus, bonus_amount.
+    void increasePopulation(TCreatureType bonusCreature,
+                             TCreatureType alternateBonus, long bonusAmount);
+    // Before normalization (locals): town_setup.
+    void initialize(const TownExtra* townSetup);
+    // Before normalization (function): town::is_legal_building.
+    unsigned char isLegalBuilding(type_building_id building) const;
     // Dreamcast's LF_FIELDLIST puts these immediately before update_shipyard,
     // in this order. BuildBuilding calls both, and retail inlines both into
     // that owner.
@@ -655,40 +687,14 @@ public:
     // with the object occupying the town's dock square.
     // Before normalization (function): town::update_shipyard.
     void updateShipyard();
-    // 0x5bf3c0. `building` is an INT (the can_ever_build asymmetry):
-    // retail reads [ebp+8] as a full dword for both band compares and
-    // for the inlined get_build_cost_array row arithmetic.
-    // Before normalization (function): town::buy_building.
-    unsigned char buyBuilding(type_building_id building);
-    // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
-    // in the owning TU; gated so no other view of this class gains the
-    // declarators.
-    // Before normalization (function): town::give_event_reward.
-    void giveEventReward(const TTownEvent* thisEvent);
-    // Before normalization (locals): town_setup.
-    void initialize(const TownExtra* townSetup);
-    // Before normalization (function): town::can_ever_build.
-    // Before normalization (locals): building_id.
-    unsigned char canEverBuild(int buildingId) const;
-    // Before normalization (function): town::get_buildable_mask.
-    __int64 getBuildableMask() const;
-    // Before normalization (function): town::get_build_cost_array.
-    int* getBuildCostArray(type_building_id building) const;
-    // Before normalization (function): town::get_build_cost.
-    void getBuildCost(type_building_id building, int* resources) const;
-    // DC town.cpp:2224 proves the EGameResource* output domain.
-    // Before normalization (function): town::get_build_cost.
-    short getBuildCost(type_building_id building, EGameResource* types,
-                         int* amounts) const;
-    // Before normalization (function): town::get_horde_effect.
-    type_horde_effect* getHordeEffect(type_building_id building) const;
-    // Before normalization (function): town::get_silo_income.
-    int* getSiloIncome() const;
-    // Before normalization (function): town::is_legal_building.
-    unsigned char isLegalBuilding(type_building_id building) const;
     // Before normalization (function): town::HasGarrison.
     int hasGarrison();
-    town();
+    // 0x5bede0. DC signature; buy_building is the only claimed caller
+    // and it pushes exactly these three.
+    // Before normalization (function): town::BuildBuilding.
+    // Before normalization (locals): SetBuiltFlag, apply_special_effect.
+    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
+                                   unsigned char applySpecialEffect);
     int load(TAbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
@@ -699,6 +705,9 @@ public:
     // member declarator on a class this widely included is the
     // include-set wall's own trigger shape.
     int save(TAbstractFile* outfile);
+    // 0x5c12e0. Charges and places one of the player's tavern offers.
+    // Before normalization (locals): new_hero, player_id.
+    void hire(hero* newHero, long playerId);
 // game.obj joins the gate for GiveSpells alone: CreateTownHeroes
 // (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
 // after PlaceInMap. Widening the existing guard rather than adding a
@@ -717,9 +726,6 @@ public:
     // Before normalization (function): town::View.
     // Before normalization (locals): bAlreadyFaded.
     void view(int alreadyFaded);
-    // 0x5c12e0. Charges and places one of the player's tavern offers.
-    // Before normalization (locals): new_hero, player_id.
-    void hire(hero* newHero, long playerId);
     // 0x5be450. Exchanges the garrison and visiting heroes.
     // Before normalization (function): town::SwapHeroes.
     void swapHeroes();
@@ -727,29 +733,13 @@ public:
     // Before normalization (function): town::initialize_spells.
     // Before normalization (locals): town_setup.
     void initializeSpells(const TownExtra* townSetup);
-    // 0x5be2d0. Removes this town from its owner's roster and marks
-    // both this record and gpGame->towns[id] unowned.
-    // Before normalization (function): town::Deallocate.
-    void deallocate();
-    // The garrisoned hero steps out onto the town tile (0x5be390).
-    // Before normalization (function): town::remove_garrison_hero.
-    void removeGarrisonHero();
-    // 0x5c13b0. `hero_id` is an INT, not the DC's THeroID: retail reads
-    // [ebp+8] as a full dword for both the -1 test and the heroes[]
-    // index. The town's map cell goes to hero::PlaceInMap as a packed
-    // type_point built on an UNINITIALISED local - retail's three
-    // bitfield writes are read-modify-writes over stack garbage, the
-    // same shape can_take_town uses.
-    // Before normalization (function): town::PlaceInMap.
-    // Before normalization (locals): hero_id, player_id, reset_flags.
-    void placeInMap(int heroId, long playerId, unsigned char resetFlags);
-    // 0x5c1440 / 0x5c1450, both `movsx eax,[this+4]` table reads keyed
-    // on the town type. Spelled const because neither touches anything
-    // else; retail's thiscall is identical either way.
-    // Before normalization (function): town::GetNativeTerrain.
-    TTerrainType getNativeTerrain() const;
-    // Before normalization (function): town::GetTypeName.
-    const char* getTypeName() const;
+
+    // DC public ?included_buildings@town@@2PAY0CM@_JA (44-slot __int64
+    // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
+    // (the DC build carries eight); filled by initialize.cpp's
+    // create_included_masks. Definition + DATA claim in src/town.cpp.
+    // Before normalization: included_buildings.
+    static __int64 s_includedBuildings[9][44];
     // 0x5c1460. The DC carries the pair
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     // only the const half has a proven retail reader so far
@@ -776,12 +766,42 @@ public:
     // reference.
     // Before normalization (function): town::get_army.
     class armyGroup& getArmy();
+    // 0x5be2d0. Removes this town from its owner's roster and marks
+    // both this record and gpGame->towns[id] unowned.
+    // Before normalization (function): town::Deallocate.
+    void deallocate();
+    // 0x5c13b0. `hero_id` is an INT, not the DC's THeroID: retail reads
+    // [ebp+8] as a full dword for both the -1 test and the heroes[]
+    // index. The town's map cell goes to hero::PlaceInMap as a packed
+    // type_point built on an UNINITIALISED local - retail's three
+    // bitfield writes are read-modify-writes over stack garbage, the
+    // same shape can_take_town uses.
+    // Before normalization (function): town::PlaceInMap.
+    // Before normalization (locals): hero_id, player_id, reset_flags.
+    void placeInMap(int heroId, long playerId, unsigned char resetFlags);
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp
     // from initialize_game_data (no this), confirming static.
     // Before normalization (function): town::initialize_hordes.
     static void initializeHordes();
+
+    // building.txt's reader, and a STATIC member: retail's body never
+    // touches ECX and kb's start-up table run calls it with no receiver.
+    // Promoted from a CODEVIEW comment 2026-09-06 with the body; the three
+    // cost tables below are the ones it fills.
+    // Before normalization (function): town::InitializeBuildingCostsTables.
+    static unsigned char initializeBuildingCostsTables();
+    // Before normalization (function): town::GetTypeName.
+    const char* getTypeName() const;
+    // 0x5c1440 / 0x5c1450, both `movsx eax,[this+4]` table reads keyed
+    // on the town type. Spelled const because neither touches anything
+    // else; retail's thiscall is identical either way.
+    // Before normalization (function): town::GetNativeTerrain.
+    TTerrainType getNativeTerrain() const;
+    // The garrisoned hero steps out onto the town tile (0x5be390).
+    // Before normalization (function): town::remove_garrison_hero.
+    void removeGarrisonHero();
     // DC public ?UpgradedDwellingID@town@@SA?AW4type_building_id@@W42@@Z
     // - SA is a public STATIC, which retail confirms: 0x5c14a0 takes
     // its only argument in ecx (/Gr fastcall, no this) and returns with
@@ -791,19 +811,16 @@ public:
     // Before normalization (function): town::UpgradedDwellingID.
     static int upgradedDwellingID(int id);
 
-    // building.txt's reader, and a STATIC member: retail's body never
-    // touches ECX and kb's start-up table run calls it with no receiver.
-    // Promoted from a CODEVIEW comment 2026-09-06 with the body; the three
-    // cost tables below are the ones it fills.
-    // Before normalization (function): town::InitializeBuildingCostsTables.
-    static unsigned char initializeBuildingCostsTables();
-
-    // DC public ?included_buildings@town@@2PAY0CM@_JA (44-slot __int64
-    // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
-    // (the DC build carries eight); filled by initialize.cpp's
-    // create_included_masks. Definition + DATA claim in src/town.cpp.
-    // Before normalization: included_buildings.
-    static __int64 s_includedBuildings[9][44];
+protected:
+    // DC public ?const_horde_effects@town@@1PAY03Utype_horde_effect@@A
+    // - a protected static type_horde_effect[?][4]. Retail .data
+    // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
+    // initialize_hordes walks it with a 0x10 (two-entry) inner step
+    // nine times, which is what pins the row count at 9.
+    // Before normalization: const_horde_effects.
+    static type_horde_effect s_constHordeEffects[9][4];
+    // Before normalization: DwellingCosts.
+    static int s_dwellingCosts[9][14][NUM_RESOURCES];
 
     // The three build-cost tables get_build_cost_array switches
     // between, all DC-attested town statics whose retail .bss extents
@@ -828,16 +845,6 @@ public:
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
     // Before normalization: SpecialBuildingCosts.
     static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
-    // Before normalization: DwellingCosts.
-    static int s_dwellingCosts[9][14][NUM_RESOURCES];
-
-    // DC public ?const_horde_effects@town@@1PAY03Utype_horde_effect@@A
-    // - a protected static type_horde_effect[?][4]. Retail .data
-    // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
-    // initialize_hordes walks it with a 0x10 (two-entry) inner step
-    // nine times, which is what pins the row count at 9.
-    // Before normalization: const_horde_effects.
-    static type_horde_effect s_constHordeEffects[9][4];
 };
 SIZE(town, 360);
 

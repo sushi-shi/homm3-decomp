@@ -151,11 +151,11 @@ void openBinkVideo(int id, int x, int y, int w, int h, int loop,
     g_binkY = y;
     g_binkUpdateWidth = w;
     g_binkUpdateHeight = h;
-    g_binkBuffer = 2 * x + g_windowManager->m_screenBitmap->m_pitch * y
+    g_binkBuffer = 2 * x + g_windowManager->m_screenBitmap->getPitch() * y
         + static_cast<unsigned char*>(
-              static_cast<void*>(g_windowManager->m_screenBitmap->m_map));
-    g_binkPitch = g_windowManager->m_screenBitmap->m_pitch;
-    g_binkHeight = g_windowManager->m_screenBitmap->m_height;
+              static_cast<void*>(g_windowManager->m_screenBitmap->getMap(0, 0)));
+    g_binkPitch = g_windowManager->m_screenBitmap->getPitch();
+    g_binkHeight = g_windowManager->m_screenBitmap->getHeight();
     g_binkFrameReady = 1;
 }
 
@@ -340,9 +340,9 @@ int playBinkVideo(int id, int x, int y, int w, int h)
             vh = g_binkVideo->m_height;
         }
         g_binkBuffer = 2 * g_binkX
-            + g_windowManager->m_screenBitmap->m_pitch * g_binkY
+            + g_windowManager->m_screenBitmap->getPitch() * g_binkY
             + static_cast<unsigned char*>(
-                  static_cast<void*>(g_windowManager->m_screenBitmap->m_map));
+                  static_cast<void*>(g_windowManager->m_screenBitmap->getMap(0, 0)));
         aborted = 0;
         g_inputManager->flush();
         while (1) {

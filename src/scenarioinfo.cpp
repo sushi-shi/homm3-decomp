@@ -314,10 +314,10 @@ void CScenarioPlayerInfoWidget::draw()
     int windowX = m_parentWindow->m_x;
     int windowY = m_parentWindow->m_y;
 
-    m_panel->draw(0, 0, m_panel->m_width, m_panel->m_height,
+    m_panel->draw(0, 0, m_panel->getWidth(), m_panel->getHeight(),
                 g_windowManager->m_screenBitmap,
                 windowX + 54, windowY + m_playerPosition * 50 + 122, 1);
-    m_flag->draw(0, 0, m_flag->m_width, m_flag->m_height,
+    m_flag->draw(0, 0, m_flag->getWidth(), m_flag->getHeight(),
                g_windowManager->m_screenBitmap,
                windowX + 11, windowY + m_playerPosition * 50 + 124, 1);
 
@@ -339,7 +339,7 @@ void CScenarioPlayerInfoWidget::draw()
     }
 
     m_townSprite->draw(0, m_townType * 2 + 2, 0, 0,
-                     m_townSprite->m_width, m_townSprite->m_height,
+                     m_townSprite->getWidth(), m_townSprite->getHeight(),
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
                      0, 1);
@@ -350,7 +350,7 @@ void CScenarioPlayerInfoWidget::draw()
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
     if (m_heroPortrait) {
-        m_heroPortrait->draw(0, 0, m_heroPortrait->m_width, m_heroPortrait->m_height,
+        m_heroPortrait->draw(0, 0, m_heroPortrait->getWidth(), m_heroPortrait->getHeight(),
                            g_windowManager->m_screenBitmap,
                            windowX + 249,
                            windowY + m_playerPosition * 50 + 124, 0);
@@ -386,7 +386,7 @@ void CScenarioPlayerInfoWidget::draw()
         break;
     }
     m_bonusSprite->draw(0, bonusFrame, 0, 0,
-                      m_bonusSprite->m_width, m_bonusSprite->m_height,
+                      m_bonusSprite->getWidth(), m_bonusSprite->getHeight(),
                       g_windowManager->m_screenBitmap,
                       windowX + 325, windowY + m_playerPosition * 50 + 124,
                       0, 1);

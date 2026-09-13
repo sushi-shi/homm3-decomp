@@ -98,6 +98,14 @@ inline CHeroLevelUpdateMsg::CHeroLevelUpdateMsg(int hero, int numSSs,
     m_numSSs = numSSs;
 }
 
+// Retail DoCombat's level-update packet reads the raw primary-skill band.
+// This ordinary member boundary preserves those bytes; GetPrimarySkill
+// would clamp them. The helper name is provisional (no DC declaration).
+void hero::copyPrimarySkills(signed char* stats) const
+{
+    memcpy(stats, m_stats, sizeof(m_stats));
+}
+
 // E:\gamedcs\events.cpp:6248/6261 (dc 0x9ce40 / 0x9ceb0) - the RAII pause
 // DoCombat holds across a whole battle; the class shape lives in
 // events.h, the two bodies are this TU's own (their DC line numbers are
@@ -2192,10 +2200,10 @@ DATA(0x00696a18) static TTextResource* g_adventureEventText;
 // Before normalization: gArtifactEventText.
 DATA(0x00696a1c) static TTextResource* g_randomSignTextResource;
 // Before normalization: gpArtifactEventText.
-DATA(0x00696a2c) static char* g_artifactEventText[144];
+DATA(0x00696a2c) static const char* g_artifactEventText[144];
 // Before normalization: gRandomSignText.
 DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
-DATA(0x00696c74) static char* g_randomSignText[25];
+DATA(0x00696c74) static const char* g_randomSignText[25];
 
 // E:\gamedcs\events.cpp:61.  Loads advevent.txt and reports whether the
 // resource manager found it; the `test` lands before the store because
@@ -2226,7 +2234,7 @@ bool initializeArtifactEventText()
     if (!g_artifactEventTextResource)
         return false;
     for (int i = 0; i < 144; i++)
-        g_artifactEventText[i] = g_artifactEventTextResource->m_text[i];
+        g_artifactEventText[i] = g_artifactEventTextResource->getText(i);
     return true;
 }
 
@@ -2242,7 +2250,7 @@ bool initializeRandomSignText()
     if (!g_randomSignTextResource)
         return false;
     for (int i = 0; i < 25; i++)
-        g_randomSignText[i] = g_randomSignTextResource->m_text[i];
+        g_randomSignText[i] = g_randomSignTextResource->getText(i);
     return true;
 }
 
@@ -2442,7 +2450,7 @@ void advManager::doEventArena(hero* currentHero, NewmapCell* cell,
         whichStat = 1;
     }
 
-    currentHero->m_stats[whichStat] += 2;
+    currentHero->adjustPrimarySkill(whichStat, 2);
     currentHero->setVisitedArena(cell);
 }
 
@@ -3659,7 +3667,7 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
     if (humanPlayer)
         normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_DEFENSE_TOWER),
                      1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->m_stats[1]++;
+    currentHero->adjustPrimarySkill(1, 1);
     g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
     currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
 }
@@ -3904,7 +3912,7 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
     if (humanPlayer)
         normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_GARDEN),
                      1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->m_stats[3]++;
+    currentHero->adjustPrimarySkill(3, 1);
     g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
     currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
 }
@@ -4358,10 +4366,7 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
         return;
     }
 
-    int knowledge = currentHero->m_stats[3] > 99
-                        ? 99
-                        : (currentHero->m_stats[3] > 0 ? currentHero->m_stats[3]
-                                                      : 1);
+    int knowledge = currentHero->getPrimarySkill(3);
     int cap = static_cast<int>(currentHero->getIntelligenceFactor()
                                * (knowledge * 10)) * 2;
     if (currentHero->m_mana >= cap) {
@@ -4402,10 +4407,7 @@ void advManager::doEventMagicWell(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     cell->m_value = 0;
-    int knowledge = currentHero->m_stats[3] > 99
-                        ? 99
-                        : (currentHero->m_stats[3] > 0 ? currentHero->m_stats[3]
-                                                      : 1);
+    int knowledge = currentHero->getPrimarySkill(3);
     int cap = static_cast<int>(currentHero->getIntelligenceFactor()
                                * (knowledge * 10));
     if (currentHero->m_mana >= cap) {
@@ -4445,7 +4447,7 @@ void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
     if (humanPlayer)
         normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_MERC_CAMP),
                      1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->m_stats[0]++;
+    currentHero->adjustPrimarySkill(0, 1);
     g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
     currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
 }
@@ -4620,7 +4622,7 @@ void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
     if (humanPlayer)
         normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_POWER_SCHOOL),
                      1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->m_stats[2]++;
+    currentHero->adjustPrimarySkill(2, 1);
     g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
     currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
 }
@@ -5286,7 +5288,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
     g_game->setInfoFlag(type, g_netLocalGamePos);
     cell->setCellVisited(currentHero->m_owner);
 
-    if (currentHero->m_inSpellbook[spell]) {
+    if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
             return;
         result += g_adventureEventText->getText(174);
@@ -6611,7 +6613,7 @@ void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
             whichStat = 1;
     }
 
-    currentHero->m_stats[whichStat]++;
+    currentHero->adjustPrimarySkill(whichStat, 1);
     currentHero->m_warSchoolFlags |= 1 << cell->m_value;
     g_currentPlayer->m_resources[GOLD] -= 1000;
 }
@@ -9069,9 +9071,10 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                 && g_combatManager->m_winner == 1) {
                 if (g_game->isLocalHuman(rightHero->m_owner)) {
                     rightHero->checkLevel();
+                    signed char stats[4];
+                    rightHero->copyPrimarySkills(stats);
                     CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
-                                            rightHero->m_skillLevel,
-                                            rightHero->m_stats);
+                                            rightHero->m_skillLevel, stats);
                     transmitRemoteData(&msg, g_netLocalGamePos, 0, 1);
                 } else {
                     CLevelPickWaitDlg dlg2;

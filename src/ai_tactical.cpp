@@ -590,7 +590,7 @@ inline long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell)
     if (m_speed == 0)
         return 0 < cell->m_cost ? 100 : 1;
     long turns = (cell->m_cost + m_speed - 1) / m_speed;
-    if (m_searchData->m_isMoatSlowed[cell->m_point.m_x])
+    if (m_searchData->isMoat(cell->m_point.m_x))
         turns++;
     if (turns < 1)
         turns = 1;
@@ -4374,7 +4374,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
     if (retreating)
         m_estimate.m_killsOnly = 1;
     for (long spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if (!m_ourHero->m_availableSpells[spell])
+        if (!m_ourHero->spellIsAvailable(spell))
             continue;
         if ((g_spellTraits[spell].m_flags & 1) == 0)
             continue;

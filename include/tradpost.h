@@ -51,6 +51,7 @@ class TTradeResourceWindow : public CAdvPopup {
     void computeTradeRatios(int inLeftResource, int inRightResource,
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);
+
 public:
     TTradeResourceWindow(int x2, int y2);
     // Before normalization (function): TTradeResourceWindow::Update.
@@ -100,6 +101,7 @@ SIZE(TGiveResourceWindow, 0x8c);
 class TBuyArtifactWindow : public CAdvPopup {
     // Before normalization: lastHoverId.
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
+
 public:
     TBuyArtifactWindow(int x2, int y2);
     // Before normalization (function): TBuyArtifactWindow::Update.
@@ -124,6 +126,7 @@ class TSellArtifactWindow : public CAdvPopup {
     void incrementBackpackStart();
     // Before normalization (function): TSellArtifactWindow::decrement_backpack_start.
     void decrementBackpackStart();
+
 public:
     TSellArtifactWindow(int x2, int y2);
     // Before normalization (function): TSellArtifactWindow::update_sell_artifact_widget.
@@ -156,6 +159,7 @@ class TSellCreatureWindow : public CAdvPopup {
     slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     // Before normalization: lastHoverId.
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
+
 public:
     TSellCreatureWindow(int x2, int y2);
     // Before normalization (function): TSellCreatureWindow::SetWidgetOn.

@@ -391,7 +391,7 @@ VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
 int bitmapBorder::getRealWidth()
 {
     if (m_image)
-        return m_image->m_width;
+        return m_image->getWidth();
     return 0;
 }
 
@@ -400,7 +400,7 @@ VA(0x004504b0, 0xE)  // anchor-vtable (slot 5 of 0x63ba94), dc 0x54968
 int bitmapBorder::getRealHeight()
 {
     if (m_image)
-        return m_image->m_height;
+        return m_image->getHeight();
     return 0;
 }
 
@@ -410,7 +410,7 @@ VA(0x004504c0, 0x5B)  // anchor-global, dc 0x549c0
 void bitmapBorder::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
-        if (strcmp(m_image->m_name, bitmapName) == 0)
+        if (strcmp(m_image->getName(), bitmapName) == 0)
             return;
         m_image->dispose();
     }
@@ -536,9 +536,9 @@ void bitmapBorder16::draw()
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen->m_map,
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, screen->m_width,
-            screen->m_height, screen->m_pitch, 0);
+        m_image->draw(0, 0, m_width, m_height, screen->getMap(0, 0),
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, screen->getWidth(),
+            screen->getHeight(), screen->getPitch(), 0);
     }
 }
 
@@ -548,8 +548,8 @@ void bitmapBorder16::draw2()
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen->m_map, m_x, m_y, screen->m_width,
-            screen->m_height, screen->m_pitch, 0);
+        m_image->draw(0, 0, m_width, m_height, screen->getMap(0, 0), m_x, m_y, screen->getWidth(),
+            screen->getHeight(), screen->getPitch(), 0);
     }
 }
 
@@ -576,7 +576,7 @@ void bitmapBorder16::draw2()
 void bitmapBorder16::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
-        if (strcmp(m_image->m_name, bitmapName) == 0)
+        if (strcmp(m_image->getName(), bitmapName) == 0)
             return;
         m_image->dispose();
     }

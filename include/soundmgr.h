@@ -257,6 +257,11 @@ public:
     // volume. Name provisional until stronger PC-source evidence appears.
     // Before normalization (function): soundManager::GetSampleInfo.
     int getSampleInfo(ds_memsample* inSample, short operation);
+    // Before normalization (function): soundManager::SwitchAmbientMusic.
+    void switchAmbientMusic(int newMusicFileId);
+    // Before normalization (function): soundManager::StopAllSamples.
+    // Before normalization (locals): bStopMusicToo.
+    void stopAllSamples(int stopMusicToo);
     // Before normalization (function): soundManager::StopSample.
     void stopSample(ds_memsample* inSample);
     // Before normalization (function): soundManager::WaitSample.
@@ -266,11 +271,6 @@ public:
     void modifySample(ds_memsample* inSample, short functionId, long value);
     // Before normalization (function): soundManager::AdjustSoundVolumes.
     void adjustSoundVolumes();
-    // Before normalization (function): soundManager::StopAllSamples.
-    // Before normalization (locals): bStopMusicToo.
-    void stopAllSamples(int stopMusicToo);
-    // Before normalization (function): soundManager::SwitchAmbientMusic.
-    void switchAmbientMusic(int newMusicFileId);
     // Before normalization (function): soundManager::AdjustMusicVolumes.
     void adjustMusicVolumes();
     // Before normalization (function): soundManager::MusicPlaying.

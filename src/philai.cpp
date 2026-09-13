@@ -2004,7 +2004,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                     break;
                 int* cost =
                     currentTown->getBuildCostArray(EXTRA_2_ID);
-                int value = currentHero->m_valueOfKnowledge;
+                int value = currentHero->getValueOfKnowledge();
                 int owner = currentHero->m_owner;
 #pragma inline_depth(0)
                 if (value > aiResourceCost(
@@ -2018,7 +2018,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                     break;
                 int* cost =
                     currentTown->getBuildCostArray(EXTRA_2_ID);
-                int value = currentHero->m_valueOfPower;
+                int value = currentHero->getValueOfPower();
                 int owner = currentHero->m_owner;
 #pragma inline_depth(0)
                 if (value > aiResourceCost(
@@ -3016,7 +3016,7 @@ long type_spellvalue::getBestSpellValue(long bits) const
         return 0;
 
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if (!m_ourHero->m_availableSpells[spell])
+        if (!m_ourHero->spellIsAvailable(spell))
             continue;
         if (!(g_spellTraits[spell].m_flags & bits))
             continue;
@@ -3442,7 +3442,7 @@ void aiVisitHillFort(hero* currentHero)
 VA(0x00527cd0, 0x1b)  // anchor: value_of_power/knowledge compare + caller DoEventMagicSchool, dc 0x111808
 int aiChooseMagicSkill(hero* currentHero)
 {
-    return currentHero->m_valueOfPower < currentHero->m_valueOfKnowledge
+    return currentHero->getValueOfPower() < currentHero->getValueOfKnowledge()
         ? 3 : 2;
 }
 
@@ -4016,7 +4016,7 @@ VA(0x005298d0, 0x4b)  // anchor-callee {IsWieldingArtifact, AI_get_spell_value t
 long valueOfLearning(const hero* currentHero, SpellID spell)
 {
     if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
-        || currentHero->m_inSpellbook[spell]
+        || currentHero->isInSpellbook(spellIdFromInt(spell))
         || !currentHero->isWieldingArtifact(
                ARTIFACT_SPELLBOOK))
         return 0;
@@ -4051,11 +4051,11 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     short generatorId = g_game->getGeneratorId(x, y, z);
     currentGenerator = g_game->m_generators[generatorId];
 
-    if (currentGenerator.m_playerOwner != g_netLocalGamePos
-        && g_game->onSameTeam(currentGenerator.m_playerOwner,
+    if (currentGenerator.getOwner() != g_netLocalGamePos
+        && g_game->onSameTeam(currentGenerator.getOwner(),
                               g_netLocalGamePos))
         return 0;
-    if (currentGenerator.m_playerOwner != g_netLocalGamePos
+    if (currentGenerator.getOwner() != g_netLocalGamePos
         && currentGenerator.m_guards.hasCreatures()) {
         value = aiValueOfCombat(currentHero, 0,
                                    currentGenerator.m_guards, 0, cell);
@@ -4075,7 +4075,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         g_currentPlayer->m_resources, hasAngelicAlliance);
 
     if (moveCost >= 400
-        && currentGenerator.m_playerOwner == g_netLocalGamePos
+        && currentGenerator.getOwner() == g_netLocalGamePos
         && purchaser.getArmyValueIncrease()
                < currentHero->m_army.getAIValue() / 3)
         purchaseValue = 0;
@@ -4086,7 +4086,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                 g_netLocalGamePos))
         && g_game->m_mapHeader.m_victoryCondition.m_type
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
-        && !g_game->onSameTeam(currentGenerator.m_playerOwner,
+        && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
         && (g_game->m_f1f698 != 0
             || (currentGenerator.m_type[0] != CREATURE_AIR_ELEMENTAL
@@ -4200,8 +4200,8 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
         return 0;
 
     return static_cast<int>(
-        maxRef<long>(currentHero->m_valueOfPower,
-                      currentHero->m_valueOfKnowledge)
+        maxRef<long>(currentHero->getValueOfPower(),
+                      currentHero->getValueOfKnowledge())
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
@@ -4326,7 +4326,7 @@ int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
         return 0;
-    return currentHero->m_valueOfPower;
+    return currentHero->getValueOfPower();
 }
 
 // E:\gamedcs\philai.cpp:2794.  A Prison holds a hero to free; its value is the
@@ -4372,9 +4372,9 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     if (currentHero->m_skillLevel[eSecSkillWisdom] >= 3) {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_pyramidSpellLevel) {
-                if (!currentHero->m_availableSpells[spell]) {
+                if (!currentHero->spellIsAvailable(spell)) {
                     long spellValue;
-                    if (currentHero->m_inSpellbook[spell])
+                    if (currentHero->isInSpellbook(spellIdFromInt(spell)))
                         spellValue = 0;
                     else if (currentHero->isWieldingArtifact(
                                  ARTIFACT_SPELLBOOK))
@@ -4415,7 +4415,7 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
         if (cell->m_type != MAGIC_WELL && cell->m_type != MAGIC_SPRING)
             return 0;
     }
-    return currentHero->m_valueOfWell;
+    return currentHero->getValueOfWell();
 }
 
 // E:\gamedcs\philai.cpp:2865.  The Rally Flag: +1 morale, +1 luck and a
@@ -4808,7 +4808,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
                      slot < currentTown->m_mageGuildSpellCounts[level];
                      slot++) {
                     int spell = currentTown->m_mageGuildSpells[level][slot];
-                    if (!currentHero->m_inSpellbook[spell])
+                    if (!currentHero->isInSpellbook(spellIdFromInt(spell)))
                         value += aiGetSpellValue(currentHero, spell);
                 }
             }
@@ -4822,11 +4822,11 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     switch (currentTown->m_type) {
     case TOWN_TOWER:
         if (currentTown->hasBuilding(EXTRA_2_ID, 1))
-            value += currentHero->m_valueOfKnowledge;
+            value += currentHero->getValueOfKnowledge();
         break;
     case TOWN_INFERNO:
         if (currentTown->hasBuilding(EXTRA_2_ID, 1))
-            value += currentHero->m_valueOfPower;
+            value += currentHero->getValueOfPower();
         break;
     case TOWN_DUNGEON:
         if (currentTown->hasBuilding(EXTRA_2_ID, 1))
@@ -5014,7 +5014,7 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
             && destination->m_type != MAGIC_SPRING)
             return 0;
     }
-    return currentHero->m_valueOfSpring;
+    return currentHero->getValueOfSpring();
 }
 
 // E:\gamedcs\philai.cpp:3796.  A witch hut: an unknown hut is priced as a
@@ -5056,12 +5056,10 @@ void __cdecl aiExamineMap()
     long waterCells = 0;
     long extraMovement[3] = {0, 0, 0};
 
-    for (; point.m_z < g_game->m_worldMap.m_hasTwoLevels + 1; point.m_z++) {
+    for (; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
-                NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-                    (point.m_z * g_game->m_worldMap.m_size + point.m_y)
-                        * g_game->m_worldMap.m_size + point.m_x];
+                NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
                 if ((cell->m_flags0011 & 0x40)
                         && cell->m_groundSet != eTerrainRock) {
                     passableCells++;

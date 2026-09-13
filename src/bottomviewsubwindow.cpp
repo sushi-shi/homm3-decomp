@@ -591,8 +591,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
     if (res >= 0) {
         CSprite* sprite = ResourceManager::getSprite("resour82.def");
 
-        m_widgets.push_back(new iconWidget((m_width - sprite->m_width) / 2, 50,
-            sprite->m_width, sprite->m_height, 0x837, "resour82.def", res,
+        m_widgets.push_back(new iconWidget((m_width - sprite->getWidth()) / 2, 50,
+            sprite->getWidth(), sprite->getHeight(), 0x837, "resour82.def", res,
             0, 0, 0, 0x10));
 
         // Before normalization (locals): quantity_text.
@@ -603,7 +603,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         int fontHeight = g_unnamed698a08->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
-            sprite->m_height + 55, textWidth, fontHeight,
+            sprite->getHeight() + 55, textWidth, fontHeight,
             quantityText.str(), "smalfont.fnt", font::PRIMARY, 0x836,
             1, 0, 8));
 
@@ -843,13 +843,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     for (int i = 0; i < 4; i++) {
-        int value;
-        if (who->m_stats[i] > 99)
-            value = 99;
-        else if (who->m_stats[i] > 0)
-            value = who->m_stats[i];
-        else
-            value = (i >= 2);
+        int value = who->getPrimarySkill(i);
         sprintf(g_text, "%d", value);
         m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],
             g_heroStatCoords[i][1], 23, 16, g_text, "smalfont.fnt",

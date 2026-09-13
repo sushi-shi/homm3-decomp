@@ -29,15 +29,17 @@ public:
     // Before normalization: height.
     int m_height;
     // Before normalization: Widgets.
+
+protected:
     std::vector<widget*> m_widgets;
     // Before normalization: parentWindow.
     heroWindow* m_parentWindow;
+
+public:
     // Before normalization: lowId.
     int m_lowId;
     // Before normalization: highId.
     int m_highId;
-    // Before normalization: background.
-    Bitmap16Bit* m_background;
 
     TSubWindow();
     // Before normalization (locals): parent_window.
@@ -57,6 +59,10 @@ public:
     void saveBackground();
     // Before normalization (function): TSubWindow::RestoreBackground.
     void restoreBackground();
+
+private:
+    // Before normalization: background.
+    Bitmap16Bit* m_background;
 };
 SIZE(TSubWindow, 0x34);
 

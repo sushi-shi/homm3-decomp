@@ -449,7 +449,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case WHIRLPOOL:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_whirlpools, WHIRLPOOL,
+        enterLith(currentHero, &g_game->getWhirlpools(), WHIRLPOOL,
                    mapCell->m_extraInfo, cell, limit, searchType);
         return 0;
     case TOWN:
@@ -606,7 +606,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     // Dreamcast's older source calls is_on_map here, but its bool facade
     // normalizes the value; the retail load is direct evidence for this
     // later-revision spelling.
-    unsigned char wasOnMap = currentHero->m_valid;
+    unsigned char wasOnMap = currentHero->isOnMap();
     currentHero->restoreCell();
 
     m_limitReached = 0;
@@ -712,14 +712,9 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
         cell.m_moveLeft = curTempMobility;
         cell.m_canStop = 1;
 
-        if ((!(currentHero->m_flags & 0x40000)
-             && (currentHero->m_flightLevel != eMasteryInvalid
-                 || currentHero->isWieldingArtifact(0x48))
-             && !currentHero->canLand())
-            || (!(currentHero->m_flags & 0x40000)
-                && (currentHero->m_waterWalkLevel != eMasteryInvalid
-                    || currentHero->isWieldingArtifact(0x5a))
-                && !currentHero->canLand()))
+        // Complete adds terrain-aware stopping here. Use the canonical
+        // Hero.h helpers (checkTerrain=1), which own the private canLand call.
+        if (currentHero->isFlying(1) || currentHero->canWalkOnWater(1))
             cell.m_canStop = 0;
 
         // Complete inserts the can-land rule before materializing this value;

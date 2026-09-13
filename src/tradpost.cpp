@@ -1727,14 +1727,14 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 {
     type_artifact art;
     if (i < 18) {
-        art = g_marketHero->m_equipped[i];
+        art = g_marketHero->getArtifact(i);
     } else {
         long numInBackpack = g_marketHero->getNumberInBackpack(1);
         if (numInBackpack < 6)
-            art = g_marketHero->m_backpack[i - 18];
+            art = g_marketHero->getBackpack(i - 18);
         else
-            art = g_marketHero->m_backpack[
-                ((g_backpackStart & 0xff) + i - 18) % numInBackpack];
+            art = g_marketHero->getBackpack(
+                ((g_backpackStart & 0xff) + i - 18) % numInBackpack);
     }
 
     if (art.m_artifactId == -1) {
@@ -3896,7 +3896,7 @@ int TSellArtifactWindow::windowHandler(message* msg)
                 int numInBackpack = g_marketHero->getNumberInBackpack(1);
                 int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
                            % numInBackpack;
-                artifact = g_marketHero->m_backpack[slot];
+                artifact = g_marketHero->getBackpack(slot);
                 g_marketHero->viewArtifact(&artifact, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             }
@@ -4014,11 +4014,11 @@ void TSellArtifactWindow::setRolloverText(int codeY)
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
         type_artifact artifact;
         if (slot < 18) {
-            artifact = g_marketHero->m_equipped[slot];
+            artifact = g_marketHero->getArtifact(slot);
         } else {
             long backpackIndex = ((g_backpackStart & 0xff) + slot - 18)
                                  % g_marketHero->getNumberInBackpack(1);
-            artifact = g_marketHero->m_backpack[backpackIndex];
+            artifact = g_marketHero->getBackpack(backpackIndex);
         }
         strcpy(g_text, g_artifactTraits[artifact.m_artifactId].m_name);
         break;

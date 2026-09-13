@@ -55,13 +55,13 @@ public:
 
     CScenarioInfoDlg();
     virtual ~CScenarioInfoDlg();
+    // Before normalization (function): CScenarioInfoDlg::UpdateAllyEnemyFlags.
+    void updateAllyEnemyFlags();
     // Before normalization (function): CScenarioInfoDlg::ProcessRightSelect.
     virtual unsigned char processRightSelect(int id);
     // Before normalization (function): CScenarioInfoDlg::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CScenarioInfoDlg::UpdateAllyEnemyFlags.
-    void updateAllyEnemyFlags();
     // Before normalization (function): CScenarioInfoDlg::SetDifficultyHiLite.
     void setDifficultyHiLite();
 };
