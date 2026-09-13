@@ -166,10 +166,6 @@ public:
     // Before normalization: RolloverWidget.
     widget* m_rolloverWidget;                                // +0x29c
 
-    // DC free HillFortWindowHandler (0xd7458) calls these private methods;
-    // retail 0x4e8850 retains the same callback relationship.
-    friend int hillFortWindowHandler(message& msg);
-private:
     // Before normalization (function): THillFortWindow::Recalculate.
     void recalculate(unsigned char drawDimmedButtons);
     // Before normalization (function): THillFortWindow::UpgradeSlot.

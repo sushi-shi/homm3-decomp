@@ -225,21 +225,21 @@ def candidate_scan_variants(original):
 
 def upper_bound_variants(original):
     """Retail uses ADD -4 at both inset limits; current C++ emits SUB 4."""
-    width = "    bounds.m_maximumX = min(bounds.m_maximumX, m_map.m_size.m_x - 4);"
-    height = "    bounds.m_maximumY = min(bounds.m_maximumY, m_map.m_size.m_y - 4);"
+    width = "    bounds.m_maximumX = min(bounds.m_maximumX, m_map.m_mapWidth - 4);"
+    height = "    bounds.m_maximumY = min(bounds.m_maximumY, m_map.m_mapHeight - 4);"
     if original.count(width) != 1 or original.count(height) != 1:
         raise ValueError("review changed inset upper bounds")
     for label, x, y in (("width_add", True, False), ("height_add", False, True), ("both_add", True, True)):
         body = original
         if x:
-            body = body.replace(width, width.replace("m_size.m_x - 4", "m_size.m_x + -4"))
+            body = body.replace(width, width.replace("m_mapWidth - 4", "m_mapWidth + -4"))
         if y:
-            body = body.replace(height, height.replace("m_size.m_y - 4", "m_size.m_y + -4"))
+            body = body.replace(height, height.replace("m_mapHeight - 4", "m_mapHeight + -4"))
         yield label, body
     for label, operation in (("named_limits", " - 4"), ("named_add_limits", " + -4")):
-        body = original.replace(width, "    int maximumX = m_map.m_size.m_x" + operation + ";\n"
+        body = original.replace(width, "    int maximumX = m_map.m_mapWidth" + operation + ";\n"
             "    bounds.m_maximumX = min(bounds.m_maximumX, maximumX);")
-        body = body.replace(height, "    int maximumY = m_map.m_size.m_y" + operation + ";\n"
+        body = body.replace(height, "    int maximumY = m_map.m_mapHeight" + operation + ";\n"
             "    bounds.m_maximumY = min(bounds.m_maximumY, maximumY);")
         yield label, body
 

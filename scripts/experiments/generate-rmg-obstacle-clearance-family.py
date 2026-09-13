@@ -52,11 +52,11 @@ def clamp_block(lower_offset, upper_offset, form):
         x, y = "lower.m_x", "lower.m_y"
     lines.extend([f"bounds.m_minimumY = max({y}, 0);", f"bounds.m_minimumX = max({x}, 0);"])
     if form:
-        lines.extend(["int height = m_map.m_size.m_y;", f"bounds.m_maximumY = min({upper_y}, height);",
-                      "int width = m_map.m_size.m_x;", f"bounds.m_maximumX = min({upper_x}, width);"])
+        lines.extend(["int height = m_map.m_mapHeight;", f"bounds.m_maximumY = min({upper_y}, height);",
+                      "int width = m_map.m_mapWidth;", f"bounds.m_maximumX = min({upper_x}, width);"])
     else:
-        lines.extend([f"bounds.m_maximumY = min({upper_y}, m_map.m_size.m_y);",
-                      f"bounds.m_maximumX = min({upper_x}, m_map.m_size.m_x);"])
+        lines.extend([f"bounds.m_maximumY = min({upper_y}, m_map.m_mapHeight);",
+                      f"bounds.m_maximumX = min({upper_x}, m_map.m_mapWidth);"])
     return "                {\n" + "\n".join("                    " + line for line in lines) + "\n                }"
 
 
@@ -93,8 +93,8 @@ def upper_block(lower_offset, upper_offset, form):
             x, y = "lower.m_x", "lower.m_y"
     lines.extend([f"bounds.m_minimumY = max({y}, 0);",
                   f"bounds.m_minimumX = max({x}, 0);",
-                  f"bounds.m_maximumY = min({uy}, m_map.m_size.m_y);",
-                  f"bounds.m_maximumX = min({ux}, m_map.m_size.m_x);"])
+                  f"bounds.m_maximumY = min({uy}, m_map.m_mapHeight);",
+                  f"bounds.m_maximumX = min({ux}, m_map.m_mapWidth);"])
     return "                {\n" + "\n".join("                    " + line for line in lines) + "\n                }"
 
 
@@ -133,11 +133,11 @@ def refine(parent, form):
     elif form == 4:
         start, end, offsets, text = spans[2]
         text = text.replace("                    bounds.m_maximumY = min(",
-                            "                    int height = m_map.m_size.m_y;\n                    bounds.m_maximumY = min(")
-        text = text.replace(", m_map.m_size.m_y);", ", height);")
+                            "                    int height = m_map.m_mapHeight;\n                    bounds.m_maximumY = min(")
+        text = text.replace(", m_map.m_mapHeight);", ", height);")
         text = text.replace("                    bounds.m_maximumX = min(",
-                            "                    int width = m_map.m_size.m_x;\n                    bounds.m_maximumX = min(")
-        text = text.replace(", m_map.m_size.m_x);", ", width);")
+                            "                    int width = m_map.m_mapWidth;\n                    bounds.m_maximumX = min(")
+        text = text.replace(", m_map.m_mapWidth);", ", width);")
         edits.append((start, end, text))
     else:
         for phase, shape in ((0, 1 + (form - 5) % 3), (1, 1 + (form - 5) // 3)):

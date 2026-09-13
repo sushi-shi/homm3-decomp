@@ -238,9 +238,6 @@ def _aliases(source: str, node: dict) -> list[str]:
     for line in reversed(preceding[-5:]):
         if not line.strip():
             continue
-        # An access label may separate the owning annotation from its member.
-        if re.fullmatch(r"\s*(public|protected|private)\s*:\s*", line):
-            continue
         if not line.lstrip().startswith("//"):
             break
         match = re.search(r"Before normalization(?:\s*\([^)]*\))?:\s*(.*?)\.\s*$", line)

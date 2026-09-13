@@ -9,8 +9,8 @@ iterator/endpoint lifetimes. 0x5443a0 agrees except for the neighbour lookup's
 level/height multiply scheduling; preserve canonical getMapItem overloads.
 Complete-only RMG has no Dreamcast counterpart for these three routines.
 
-Six bounds states x seven pending-endpoint states x five query states = 210.
-Keep the adopted push_back control alongside the older insert probes, using
+Six bounds states x six pending-endpoint states x five query states = 180.
+Use three 60-state populations, keeping aggregate and specialist parents with
 the existing source-family runner. No helper body is pasted into a caller,
 no source qualifier or layout is changed, and no artificial work is added.
 """
@@ -69,7 +69,6 @@ def bounds_forms():
 
 def pending_forms():
     declare = "    std::vector<TPoint> pending;\n"
-    yield "push_back", declare + "    pending.push_back(to);\n"
     yield "direct", declare + "    pending.insert(pending.end(), to);\n"
     yield "named_iterator", declare + ("    std::vector<TPoint>::iterator end = pending.end();\n"
                                        "    pending.insert(end, to);\n")
@@ -125,7 +124,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     source_families.load_manifest(args.output, HOMM3_DIR)
-    print("generated 210 spatial states ->", args.output)
+    print("generated 180 spatial states (three populations of 60) ->", args.output)
 
 
 if __name__ == "__main__":

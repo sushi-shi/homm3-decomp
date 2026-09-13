@@ -33,7 +33,7 @@ class WaterPrepareTests(unittest.TestCase):
         types = "\n".join(block(name) for name in (
             "TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds",
             "TRmgMovementCost", "TRmgZoneCellState", "TRmgGroundTileData"))
-        types += "\n" + definition(source, "TRmgMapPosition::TRmgMapPosition")
+        types += "\n" + definition(support, "TRmgMapPosition::TRmgMapPosition")
         types += """
 struct TRmgMapItem {
     TRmgMovementCost m_movement;
@@ -41,7 +41,7 @@ struct TRmgMapItem {
     TRmgGroundTileData m_tileData;
 };
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
 """ + definition(header, "getMapItem", parameters="int x, int y, int z") + """
     TRmgMapItem* getMapItem(TRmgMapPosition point);
@@ -79,15 +79,15 @@ struct type_random_map_generator {
         m_sourceZone->m_bounds.m_maximumY=0;
         m_sourceZone->m_levelPosition.m_z=1-point.m_z;
         const int costs[6]={19,20,27,36,54,72};
-        for(int i=0;i<m_map.m_size.m_x*m_map.m_size.m_y*2;++i)
+        for(int i=0;i<m_map.m_mapWidth*m_map.m_mapHeight*2;++i)
             if(m_map.m_mapItems[i].m_movement.m_zonePathCost>=100)
                 m_map.m_mapItems[i].m_movement.m_zonePathCost=costs[i%6];
     }
     void createWaterZoneIsland(TRmgZoneBounds area,int level) {
         m_trace.push_back(2);m_trace.push_back(area.m_minimumX);m_trace.push_back(area.m_minimumY);
         m_trace.push_back(area.m_maximumX);m_trace.push_back(area.m_maximumY);m_trace.push_back(level);
-        for(int i=0;i<m_map.m_size.m_x*m_map.m_size.m_y*2;++i) {
-            int x=i%m_map.m_size.m_x,y=(i/m_map.m_size.m_x)%m_map.m_size.m_y,z=i/(m_map.m_size.m_x*m_map.m_size.m_y);
+        for(int i=0;i<m_map.m_mapWidth*m_map.m_mapHeight*2;++i) {
+            int x=i%m_map.m_mapWidth,y=(i/m_map.m_mapWidth)%m_map.m_mapHeight,z=i/(m_map.m_mapWidth*m_map.m_mapHeight);
             if(z==level && x>=area.m_minimumX && x<area.m_maximumX && y>=area.m_minimumY && y<area.m_maximumY)
                 m_map.m_mapItems[i].m_movement.m_zonePathCost=0;
         }
@@ -121,8 +121,8 @@ struct type_random_map_generator {
             ("int radius = rand() % range + 3", "int radius = rand() % range + 2"),
             ("createWaterZoneIsland(island, position.m_z)", "createWaterZoneIsland(island, 0)"),
             ("int zoneIndex = zone->m_slot->m_zoneIndex", "const int& zoneIndex = zone->m_slot->m_zoneIndex"),
-            ("bounds.m_maximumX, m_map.m_size.m_x - 4", "bounds.m_maximumX, m_map.m_size.m_x - 3"),
-            ("bounds.m_maximumY, m_map.m_size.m_y - 4", "bounds.m_maximumY, m_map.m_size.m_y - 3"),
+            ("bounds.m_maximumX, m_map.m_mapWidth - 4", "bounds.m_maximumX, m_map.m_mapWidth - 3"),
+            ("bounds.m_maximumY, m_map.m_mapHeight - 4", "bounds.m_maximumY, m_map.m_mapHeight - 3"),
         ]
         for old, new in negatives:
             self.assertIn(old, original)
@@ -130,7 +130,7 @@ struct type_random_map_generator {
         oracle = r"""
 void reference(type_random_map_generator& owner,TRmgZone zone) {
     if(zone.m_terrain!=8) return;
-    int w=owner.m_map.m_size.m_x,h=owner.m_map.m_size.m_y,level=zone.m_levelPosition.m_z;
+    int w=owner.m_map.m_mapWidth,h=owner.m_map.m_mapHeight,level=zone.m_levelPosition.m_z;
     int zoneIndex=zone.m_slot->m_zoneIndex;
     int left=zone.m_bounds.m_minimumX,top=zone.m_bounds.m_minimumY;
     int right=zone.m_bounds.m_maximumX,bottom=zone.m_bounds.m_maximumY;
@@ -192,8 +192,8 @@ bool check() {
         }
         std::vector<TRmgMapItem> expected=cells;
         type_random_map_generator actual,model;
-        actual.m_map.m_size.m_x=model.m_map.m_size.m_x=w;
-        actual.m_map.m_size.m_y=model.m_map.m_size.m_y=h;
+        actual.m_map.m_mapWidth=model.m_map.m_mapWidth=w;
+        actual.m_map.m_mapHeight=model.m_map.m_mapHeight=h;
         actual.m_map.m_mapItems=&cells[1];model.m_map.m_mapItems=&expected[1];
         actual.m_sourceZone=&zone;model.m_sourceZone=&expectedZone;
         g_randomMode=randomMode;g_randomCount=0;g_randomTrace.clear();

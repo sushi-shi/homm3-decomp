@@ -7,7 +7,7 @@
 // @TYPES@
 struct TRmgMapItem { unsigned m_guard; TRmgZoneCellState m_zoneState; };
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
     // @ACCESSOR@
 };
@@ -55,7 +55,7 @@ template<class T> static bool check() {
             if (value == index) { ++count; sumX += x; sumY += y; }
         }
         T candidate;
-        candidate.m_map.m_size.m_x = width; candidate.m_map.m_size.m_y = height;
+        candidate.m_map.m_mapWidth = width; candidate.m_map.m_mapHeight = height;
         candidate.m_map.m_mapItems = &items[1];
         candidate.recenterZone(&zone);
         TRmgMapPosition expected = saved.m_levelPosition;

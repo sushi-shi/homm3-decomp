@@ -1,8 +1,9 @@
 // rmg_support.cpp - retained Complete random-map helper bodies.
 //
-// This reconstruction groups retained painter and geometry helper families.
-// Original source ownership remains provisional where no compiland survives;
-// a retained call alone does not establish body invisibility in its caller.
+// Retail keeps these ordinary helpers out of line in CreateRiver.  Their
+// declarations remain visible through rmg.h, while placing the definitions in
+// this companion translation unit reproduces the natural body-visibility
+// boundary without source-false inline controls.
 #include <va.h>
 #include <algorithm>
 #include <math.h>
@@ -163,6 +164,15 @@ void selectRmgLinePattern(
         flipX = 0;
         flipY = 0;
     }
+}
+
+// Retail retains this tiny value constructor throughout the RMG pathfinding
+// cluster.  Its three stores and `ret 0xc` fix both the by-value ABI and the
+// 12-byte position layout.
+VA(0x005355C0, 0x1A)  // retail RMG caller cluster; Complete-only helper
+TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
+    : m_x(newX), m_y(newY), m_z(newZ)
+{
 }
 
 // The river painter deliberately inherits the generic line walker as its

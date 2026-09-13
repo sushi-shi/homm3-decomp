@@ -49,7 +49,7 @@ struct type_random_map {
     // same cell. This is the independently proven ret-8 call-site contract.
     TRmgMapItem* getMapItem(int x, int y, int z) {
         g_events.push_back(Event(4, 0, x, y, z));
-        return m_mapItems + (z * m_size.m_y + y) * m_size.m_x + x;
+        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
     }
 };
 struct ResetRoot {
@@ -97,9 +97,9 @@ template<class Candidate> static bool checkCase(int width, int height, int level
     for (int object = 0; object != 3; ++object) objects[object].m_identity = object + 19;
     Candidate group;
     group.m_map.m_mapItems = &cells[1];
-    group.m_map.m_size.m_x = width;
-    group.m_map.m_size.m_y = height;
-    group.m_map.m_size.m_z = levels;
+    group.m_map.m_mapWidth = width;
+    group.m_map.m_mapHeight = height;
+    group.m_map.m_numberLevels = levels;
     group.m_map.m_ownsMapItems = 0;
     group.m_bounds.m_minimumX = -8; group.m_bounds.m_minimumY = 3;
     group.m_bounds.m_maximumX = 13; group.m_bounds.m_maximumY = 24;
@@ -135,8 +135,8 @@ template<class Candidate> static bool checkCase(int width, int height, int level
     if (g_objectDestructions != destructions || !group.m_objects.empty() || !group.m_outline.empty()
         || group.m_objects.capacity() != objectCapacity || group.m_outline.capacity() != outlineCapacity
         || group.m_hasGuard || group.m_ready || group.m_map.m_mapItems != &cells[1]
-        || group.m_map.m_size.m_x != width || group.m_map.m_size.m_y != height
-        || group.m_map.m_size.m_z != levels || group.m_map.m_ownsMapItems != 0
+        || group.m_map.m_mapWidth != width || group.m_map.m_mapHeight != height
+        || group.m_map.m_numberLevels != levels || group.m_map.m_ownsMapItems != 0
         || group.m_bounds.m_minimumX != -8 || group.m_bounds.m_minimumY != 3
         || group.m_bounds.m_maximumX != 13 || group.m_bounds.m_maximumY != 24
         || group.m_guardPosition.m_x != 7 || group.m_guardPosition.m_y != -5

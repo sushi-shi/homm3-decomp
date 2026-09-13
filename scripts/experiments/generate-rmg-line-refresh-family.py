@@ -118,14 +118,6 @@ def make_axes(header, source):
             options.append(dict(name=name, replace=prototype, extra_edits=[
                 dict(source=SOURCE, find=getter, replace=body),
                 dict(source=SOURCE, find=query[3], replace=call)]))
-    axes = [helper.axis("proxy_constructor", SOURCE, constructor,
-                        constructor_forms(constructor_parameter(source))),
-            helper.axis("proxy_return", SOURCE, returned, return_forms()),
-            dict(name="proxy_tile_query", source=HEADER, find=query[1], options=options)]
-    # The recovered grid template translates through TPoint's free sum.
-    # Its former member-sum axis is no longer an authored source alternative.
-    if "struct TRmgGridPointT {" in header:
-        return axes
     start = header.index("    TRmgGridPoint operator+(const TPoint& offset) const")
     end = header.index("\n};", start)
     method = header[start:end]
@@ -134,7 +126,11 @@ def make_axes(header, source):
         raise ValueError("review the grid translation's result lifetime")
     close = method.rindex("\n    }")
     translation = method[statement.start():close]
-    return axes + [helper.axis("grid_translation", HEADER, translation, grid_forms())]
+    return [helper.axis("proxy_constructor", SOURCE, constructor,
+                        constructor_forms(constructor_parameter(source))),
+            helper.axis("proxy_return", SOURCE, returned, return_forms()),
+            dict(name="proxy_tile_query", source=HEADER, find=query[1], options=options),
+            helper.axis("grid_translation", HEADER, translation, grid_forms())]
 
 
 def main():

@@ -22,8 +22,8 @@ FUNCTION = "type_random_map_generator::markRiverCoastTarget"
 
 
 def baseline():
-    bounds = """        if (point.m_x < 0 || point.m_x > m_map.m_size.m_x
-            || point.m_y < 0 || point.m_y >= m_map.m_size.m_y)
+    bounds = """        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
             return;
 """
     return """void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)

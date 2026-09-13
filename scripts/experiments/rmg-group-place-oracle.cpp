@@ -16,7 +16,7 @@ struct TRmgObjectPropertiesRef { // @PROPERTY_FIELDS@
 };
 struct type_object {
     // @OBJECT_FIELDS@
-    // @POSITION_ACCESSOR_DECL@
+    TRmgMapPosition getPosition() const;
 };
 struct TRmgMapItem {
     TRmgGroundTile m_tile;
@@ -30,7 +30,7 @@ struct TRmgZone { // @ZONE_FIELDS@
 };
 struct Fixture;
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
     std::vector<TRmgMapItem> m_cells;
     Fixture* m_fixture;
@@ -95,7 +95,7 @@ struct Fixture {
 };
 
 void type_random_map::record(int x, int y, int z) {
-    if (x < 0 || x >= m_size.m_x || y < 0 || y >= m_size.m_y || z < 0 || z > 1
+    if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight || z < 0 || z > 1
         || m_fixture->m_trace.size() > 7000) throw std::runtime_error("invalid map query");
     event(m_fixture->m_trace, m_identity, x, y, z);
 }
@@ -127,7 +127,7 @@ unsigned char type_random_map::hasConnectedOutline(const std::vector<TPoint>& ou
 
 static void fill(type_random_map& map, Fixture& f, const std::vector<Cell>& cells,
     int width, int height, int identity) {
-    map.m_size.m_x = width; map.m_size.m_y = height;
+    map.m_mapWidth = width; map.m_mapHeight = height;
     map.m_cells.clear(); map.m_cells.resize(cells.size()); map.m_mapItems = &map.m_cells[0];
     map.m_fixture = &f; map.m_identity = identity;
     for (unsigned i = 0; i < cells.size(); ++i) {
@@ -277,8 +277,8 @@ template<class Candidate> static bool one(const Scenario& s) {
     if (f.m_zone.m_slot != &f.m_slot || f.m_zone.m_terrain != (s.m_water ? eTerrainWater : eTerrainDirt)
         || f.m_group.m_hasGuard != (s.m_guard ? 255 : 0)
         || f.m_group.m_guardPosition != TPoint(s.m_guardX, s.m_guardY)
-        || f.m_group.m_map.m_size.m_x != 9 || f.m_group.m_map.m_size.m_y != 9
-        || candidate.m_map.m_size.m_x != s.m_width || candidate.m_map.m_size.m_y != s.m_height) return false;
+        || f.m_group.m_map.m_mapWidth != 9 || f.m_group.m_map.m_mapHeight != 9
+        || candidate.m_map.m_mapWidth != s.m_width || candidate.m_map.m_mapHeight != s.m_height) return false;
     return true;
 }
 

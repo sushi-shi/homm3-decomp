@@ -2058,34 +2058,14 @@ the trace lists UNDER/OVER callees:
   sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
   retail's four size calls all reappear.
 - `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
-  directly before `canFitObject`, so it belongs in `rmg.cpp`. Its former
-  `rmg_support.cpp` placement prevented every rmg.cpp expansion. The older
-  probe deferred this source correction because caller scores fell; that
-  score-based rejection was unsupported. The body is now restored beside
-  `canFitObject`. All 26 retained bytes remain exact, with member initializers
-  and X/Y/Z body stores producing identical code. canPlaceObject improves
-  86.68 -> 91.18 and createRoads 72.69 -> 80.44. With the borrowed position
-  accessor, monolith moves 88.75 -> 90.58, while commitTreasureGroup falls
-  from 100 to 93.41 and other path/river callers over-expand the constructor.
-  The subsequent dimension-member correction changes several caller source
-  hashes and resets their MAX; HIST retains their earlier peaks. Recover
-  those call decisions through real caller/helper context; do not hide the
-  constructor again.
-- The owned map's three signed dimensions at +0xc/+0x10/+0x14 form a
-  `TRmgMapPosition m_size` subobject. This retail-only ownership hypothesis
-  preserves both the retained 160-byte map constructor and the 251-byte
-  generator-base constructor, including its call to that map constructor.
-  Independent scalar fields instead expand it (base 48.05%), and all 128
-  scalar-map/progress/version initializer combinations fail to restore both.
-  Nine coordinate-member construction pairs distinguish body stores from
-  member initialization and assigned values: only body stores at owned/view
-  construction preserve all those constructor bodies. Default subobject
-  construction contributes real compiler state without emitted extra work.
-  With this member, `carveBranchingPaths` must borrow the dimensions to keep
-  its previous 73.02% code and retained exact `list<TPoint>::_Buynode`.
-  Entry and per-level references are byte-identical; direct reads lose the
-  retained helper, and value/scalar snapshots worsen carving. The eight-state
-  follow-up preserves the retail-proven container lifetimes throughout.
+  directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in
+  `rmg_support.cpp` today so no rmg.cpp caller can expand it. Moving it makes
+  it a candidate at every three-argument construction: canPlaceObject
+  86.68 -> 91.18, createMonolithConnection 86.74 -> 88.81 and createRoads
+  72.69 -> 80.44 gain, but connectZones 93.62 -> 83.24, commitTreasureGroup
+  99.91 -> 93.30, canPlaceTreasureGroup 99.99 -> 96.90, createRiver,
+  markRiverCoastTarget and createRiverToObject lose 6-12 points, so the move
+  needs those callers' site counts settled first. Not adopted.
 - `openConnectionPath` (0x5408e0): retail calls the by-value-position
   `getMapItem` overload at the entry lookup (budget 1120, cb 41) and expands
   the same call at the loop end; no budget rule explains the first refusal,
@@ -2258,80 +2238,26 @@ the structures the replay admits. What it found:
   retail's first block does.
 - A helper wrapping a read cannot starve it: the helper's cost is
   subtracted before the division by its remaining siblings, a few units.
-- The STL `_Tree::insert` row at `0x5b7cd0` closes at 100% with a
-  **coordinate class template and a function-template comparison**. The
-  const-coordinate-reference constructor at `0x5b76b0` supports generic
-  coordinates; retail's comparison at `0x5b8ca0`, between `_Distance`
-  (`0x5b8c70`) and `_Construct` (`0x5b8cc0`), supports deferred template
-  emission. `TRmgGridPointT<Coordinate>` and its free `operator<` reproduce
-  that order without changing any painter statement. The unsigned alias
-  retains the existing `TRmgGridPoint` role; original template names and
-  any additional specializations remain unknown (there is no DC RMG TU).
-  All 342 insert bytes and all 15 CFG blocks match after the full build.
-  Its retained comparator and the bound-search expansions remain present.
-
-  The negative control keeps the coordinate class template but replaces
-  its function-template comparison with an ordinary fixed-type inline
-  overload using the identical expression. C1XX then emits the comparator
-  immediately after `paintPoint`; C2 knows it cannot throw when compiling
-  insert, drops `_Lockit`'s unwind scope, and returns to 79.8254%.
-  Thus a header-inline function and a function template are materially
-  different source hypotheses even when their retained bodies agree.
-  The previous "instantiation-batch wall" diagnosis overlooked this kind
-  of source definition.
-
-  Four earlier controls crossed ordinary `.cpp`/header-inline comparison
-  with broad `rmg.h`/painting-only dependencies. All four left insert at
-  79.8254%; the narrow inline case still emitted the comparator after
-  `paintPoint`. `<stdexcept>` is required by the real `TAllocationFailure`
-  throw at `0x5b7250`; removing it would discard supported source.
-  Explicit tree/set instantiation likewise failed and disrupted retail's
-  first-use member order. None of those alternatives was adopted.
-
-  Full-build collateral: quest-creature `generate` (`0x534b90`) changes
-  from 100% to 99.7349%, omitting the parameter reload at `+0xca`; its
-  source, CFG, calls and recorded MAX/HIST remain unchanged. All other
-  tracked current scores hold. Reproduce the comparator control across
-  all seven header consumers with:
-
-  ```sh
-  PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-comparator-family.py build/rmg-grid-comparator.json
-  PYTHONPATH=scripts python -m homm3.vc6.source_families build/rmg-grid-comparator.json --width 60 --keep 8 --jobs 2
-  ```
-
-  Both states compile and reproduce, yielding two distinct code results.
-  The fixed-type control also restores quest-creature generation to 100%
-  and changes `loadTemplates` from 80.8461% to 80.8308%; all other tracked
-  scores agree. The template definition is retained for its constructor,
-  comparator-emission and exception-scope evidence.
-
-  The label join now recognizes tree keys that are global class templates
-  with one primitive type argument, preserving both parts in the claim
-  owner (`TRmgGridPointT_unsigned_int`). Equal-size signed/unsigned trees
-  are tested independently; multi-argument and namespaced templates do
-  not borrow this key. This changes symbol identification only, not the
-  byte comparison or Dinkumware implementation.
-
-### Retained lookup boundaries and scalar temporary references
-
-The ordinary position lookup at `0x5378e0` currently delegates to its scalar
-overload at cost 41. In monolith's two `placeGuard` expansions, nested budgets
-70 and 88 allow it and refuse the scalar callee, while retail retains the
-position overload. Value/borrowed coordinate getters alone do not change
-that wrong overload and add an unwanted occupancy-size call.
-
-Binding three value-getter results to const scalar references makes the
-position wrapper large enough to retain both retail calls and expand both
-occupancy sizes (monolith 90.5751% to 92.6892%). Its retained body, however,
-loads the level through ESI, adding a save/restore and dropping from 100% to
-76%. All six projection orders and both return forms leave that body at
-74.2667% or 76%. Sixty row/index/result spellings of the canonical scalar
-formula also fail to restore the retained body. These probes use real
-coordinate projections and preserve the scalar formula in its owner; they
-introduce no dummy operations or inline-depth controls.
-
-The native cell-offset and aliased-dimension checks pass all 107 forms, but
-behavior equivalence and corrected caller calls do not establish the complete
-source model. Keep the current source while recovering a projection that
-also reproduces the retained callee. All source/header consumers were scored;
-these alternative implementations were never banked into the current MAX.
+- The STL `_Tree::insert` row (79.8) is an exception-frame difference:
+  retail compiled the instantiation before the grid-point comparator's
+  body, so the `_Lockit` scope needs a frame; our comparator, a regular
+  function or an inline one emitted at its first use, is compiled first
+  and known not to throw. Only declaring it restores the frame (100%) but
+  removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
+  places the comparator between the two `_Distance` instantiations, but
+  spelling it inline in either header, as an in-class friend, or inline
+  early in the file leaves every row byte-identical (2026-09-12). The
+  mechanism, measured on small units through `cc_wrap`: C1XX writes an
+  inline function's body right after the function whose processing first
+  needs it; template member bodies always go to the deferred region, and
+  an inline comparator referenced only from `less<T>::operator()` lands
+  there too (after `insert`, which then gets its frame) unless the
+  instantiation batch runs at the end of a regular function, which
+  happens once enough distinct instantiations are pending (a unit with
+  vector/list/set traffic in its constructor pulled the comparator out
+  right after the first set user). In `rmg_terrain` that batch runs at
+  `paintPoint`'s end, so the comparator is compiled before `insert`;
+  every `paintPoint` edit that defers it (dropping the secondary find
+  guard, an arm, the loop or the tail) also changes `paintPoint`'s
+  retained calls, and the trigger is not monotone in the number of set
+  calls. Open.

@@ -45,10 +45,10 @@ def scan_body(loop, initialization, dimensions):
         ("    TPoint position;\n    position = TPoint(0, 0);\n", ""),
     )
     result, y_initialize = setups[initialization]
-    height, width = ("height", "width") if dimensions == 0 else ("m_map.m_size.m_y", "m_map.m_size.m_x")
+    height, width = ("height", "width") if dimensions == 0 else ("m_map.m_mapHeight", "m_map.m_mapWidth")
     if dimensions == 0:
-        result += "    int height = m_map.m_size.m_y;\n"
-    row_width = "        int width = m_map.m_size.m_x;\n" if dimensions == 0 else ""
+        result += "    int height = m_map.m_mapHeight;\n"
+    row_width = "        int width = m_map.m_mapWidth;\n" if dimensions == 0 else ""
     lookup = "            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);\n"
     test = "            if (" + PREDICATE + ")\n"
     if loop == 1:
@@ -95,7 +95,7 @@ def make_axes(source):
     helper = helpers()
     original = helper.definition(source, FUNCTION)
     start = original.index("    TPoint position")
-    end = original.index("    if (position.m_x == m_map.m_size.m_x)\n")
+    end = original.index("    if (position.m_x == m_map.m_mapWidth)\n")
     scan = original[start:end]
     forms = list(scan_forms())
     if scan not in dict(forms).values():
@@ -158,7 +158,7 @@ def make_parent_axes(source, parents):
 
     def scan(text):
         method = helper.definition(text, FUNCTION)
-        return method[method.index("    TPoint position"):method.index("    if (position.m_x == m_map.m_size.m_x)\n")]
+        return method[method.index("    TPoint position"):method.index("    if (position.m_x == m_map.m_mapWidth)\n")]
 
     if original.count(WALK_START) != 1 or len(parents) != 10:
         raise ValueError("review ten scan parents and the perimeter start")

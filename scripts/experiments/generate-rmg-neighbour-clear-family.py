@@ -103,14 +103,13 @@ def make_axes(terrain, rmg):
     separator = neighbour.index("\n\n")
     original_bounds = neighbour[:separator]
     original_visits = neighbour[separator + 2:neighbour.rindex("\n}")]
-    reads = [text for text in ("    TRmgConnectionDecoration connection = m_connection;",
-             "    TRmgGroundTile tile = m_tile;", "    TRmgGroundTileData tileData = m_tileData;")
-             if text in clear]
+    reads = ["    TRmgConnectionDecoration connection = m_connection;",
+             "    TRmgGroundTile tile = m_tile;", "    TRmgGroundTileData tileData = m_tileData;"]
     update_start = clear.index("    connection.m_present")
     update_end = clear.index("    m_connection = connection;")
     original_updates = clear[update_start:update_end].rstrip("\n")
     groups = ["\n".join(line for line in original_updates.splitlines() if line.startswith("    " + name + "."))
-              for name in ("connection", "tile" if "    TRmgGroundTile tile = m_tile;" in clear else "m_tile", "tileData")]
+              for name in ("connection", "tile", "tileData")]
     if "\n".join(groups) != original_updates or any(clear.count(read) != 1 for read in reads):
         raise ValueError("clear baseline changed; review the family anchors")
     begin = clear.index("\n{\n") + 3
@@ -125,7 +124,7 @@ def make_axes(terrain, rmg):
          "    std::vector<type_object*>::iterator first = m_objects.begin();\n    m_objects.erase(first, last);\n"),
     ]
     setups = []
-    for order, (label, call) in itertools.product(itertools.permutations(range(len(reads))), iterators):
+    for order, (label, call) in itertools.product(itertools.permutations(range(3)), iterators):
         text = "".join(reads[index] + "\n" for index in order[:before]) + call
         text += "".join(reads[index] + "\n" for index in order[before:]) + "\n"
         setups.append(("".join(map(str, order)) + "+" + label, text))
@@ -152,7 +151,7 @@ def main():
     axes = make_axes((HOMM3_DIR / "src/rmg_terrain.cpp").read_text(),
                      (HOMM3_DIR / "src/rmg.cpp").read_text())
     payload = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=axes,
-                   evidence="Retail 0x5b68a0: clamped N/S/W/E coordinates; eight ordered terrain queries and classifier calls, final classifier retained. Retail 0x530f10: STL erase and three packed-field masks, EDI reused after the vector copy guard. Preserve the current terrain ownership and vary actual snapshot/query/iterator lifetimes and independent field update order; preserve canonical helpers and packed-bit semantics.")
+                   evidence="Retail 0x5b68a0: clamped N/S/W/E coordinates; eight ordered terrain queries and classifier calls, final classifier retained. Retail 0x530f10: STL erase and three packed-field snapshots/masks, EDI connection lifetime spans the vector copy guard. Vary meaningful point/query/iterator lifetimes and independent field update order; preserve canonical helpers and packed-bit semantics.")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     load_manifest(args.output, HOMM3_DIR)

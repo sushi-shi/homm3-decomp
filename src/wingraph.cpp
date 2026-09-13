@@ -1565,7 +1565,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     }
 
     g_mouseManager->reset();
-    g_mouseManager->loadFrame(g_mouseManager->getFrame());
+    g_mouseManager->loadFrame(g_mouseManager->m_frame);
 
     int windowX = g_windowX;
     int windowY = g_windowY;

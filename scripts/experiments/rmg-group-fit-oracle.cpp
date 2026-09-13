@@ -25,7 +25,7 @@ struct TRmgMapItem {
 static unsigned char traits[232][16];
 static const unsigned char (*g_adventureObjectLandBlocked)[16] = traits;
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
     std::vector<TRmgMapItem> m_cells;
     std::vector<int> m_queries;
@@ -34,7 +34,7 @@ struct type_random_map {
     TRmgObjectPropertiesRef* argument;
     TRmgMapPosition placement;
     void record(int x, int y, int z) {
-        if (x < 0 || x >= m_size.m_x || y < 0 || y >= m_size.m_y || z < 0 || z > 1
+        if (x < 0 || x >= m_mapWidth || y < 0 || y >= m_mapHeight || z < 0 || z > 1
             || m_queries.size() >= 60) throw std::runtime_error("invalid neighbor walk");
         m_queries.push_back(x); m_queries.push_back(y); m_queries.push_back(z);
     }
@@ -86,7 +86,7 @@ template<class Candidate> static bool one(Candidate& actual, int entrances,
     // vector element, not the last or an aggregate, determines compatibility.
     traits[TOWN][1] = traits[TOWN][2] = ((traitOne & traitTwo) == 255) ? 0 : 255;
     type_random_map& map = actual.m_map;
-    map.m_size.m_x = map.m_size.m_y = 4;
+    map.m_mapWidth = map.m_mapHeight = 4;
     map.m_cells.clear(); map.m_cells.resize(32); map.m_mapItems = &map.m_cells[0];
     map.m_queries.clear(); map.calls = 0; map.blocked = blocked;
     map.argument = 0; map.zone = map.rejectBorder = 77;
@@ -142,7 +142,7 @@ template<class Candidate> static bool one(Candidate& actual, int entrances,
         || std::memcmp(beforeTraits, traits, sizeof traits)) return false;
     if (reachesHelper && (map.argument != &properties || !samePosition(map.placement, position)
         || map.zone != -1 || map.rejectBorder != (kind == 0))) return false;
-    if (map.m_size.m_x != 4 || map.m_size.m_y != 4 || map.m_mapItems != &map.m_cells[0]
+    if (map.m_mapWidth != 4 || map.m_mapHeight != 4 || map.m_mapItems != &map.m_cells[0]
         || map.m_cells.size() != before.size() || map.blocked != blocked) return false;
     for (unsigned i = 0; i < before.size(); ++i) {
         if (std::memcmp(&before[i].m_tile, &map.m_cells[i].m_tile, sizeof(TRmgGroundTile))

@@ -1276,8 +1276,9 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 // the initial empty-path guard and the same body decrement.
 // Restoring both HideRoute sites plus the IsFlying/CanWalkOnWater mode
 // helpers improves the current caller from 83.3621% to 84.9679%, without TU
-// collateral in that checkpoint. Hero.h:645/654 owns the CanLand checks;
-// the caller now passes checkTerrain=1 instead of flattening that branch.
+// collateral. Complete's explicit CanLand checks remain after the mode
+// queries. Restoring just one mode site can lose 0.0288 points; the complete
+// source-boundary combination is the reproduced winner.
 // Before normalization (locals): trigger_point, bNoMove, bFoughtBattle.
 // Goto audit: a positive initial guard and nested breaks remove seven route
 // jumps without changing any TU score. DC 1349..1357 sets bBreak, exits the
@@ -1387,7 +1388,10 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
                     if (g_unnamed69777c)
                         break;
 
-                    if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
+                    if (!(currHero->isFlying(0)
+                        && !currHero->canLand())
+                        && !(currHero->canWalkOnWater(0)
+                        && !currHero->canLand())) {
                         process1WindowsMessage();
                         message msg = g_inputManager->getEvent();
                         while (msg.m_id) {
@@ -3146,7 +3150,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
         // spelling this through GetHero would retain its redundant null arm.
         m_mobileHero = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
         if (m_mobileHero && !m_mobileHero->m_valid) {
-            m_mobileHero->obscureCell();
+            m_mobileHero->obscureCell(HERO, m_mobileHero->m_id);
             return mapCell;
         }
         m_mobileHero = 0;
@@ -4606,20 +4610,15 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
     return 1;
 }
 
-// DC advmgr.cpp:4514..4524 proves the private member get_garrison_cursor.
-// ProcessHover's retail GARRISON arm expands it and retains getNormalCursor.
-// Before normalization (function): advManager::get_garrison_cursor.
+// E:\gamedcs\advmgr.cpp:4514
+#if 0  // @carcass
+DC_ONLY(0xf23c, 0x84)
 type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 {
-    if (currCell->m_isTrigger) {
-        // Before normalization (locals): this_garrison.
-        const garrison* thisGarrison = g_game->getGarrison(currCell->m_extraInfo);
-        if (!g_game->onSameTeam(thisGarrison->m_playerOwner, g_netLocalGamePos)
-            && thisGarrison->m_garrisonArmy.hasCreatures())
-            return ADV_SWORD_POINTER;
-    }
-    return getNormalCursor(currCell);
+    // @stub
 }
+
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4530
 // Chooses the base cursor before ProcessHover adds its multi-turn offset.
@@ -4631,10 +4630,6 @@ type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
 // the auto-inline override while preserving all TU section bytes and 4105
 // relocation destinations. Negative control: omit it and getNormalCursor
 // expands in processHover (91.6263 -> 63.9466); its own body stays exact.
-// Access recovery restores getGarrisonCursor as a member before this body.
-// ProcessHover remains 88.1523% versus HIST 91.6263%; its call diff retains
-// getNormalCursor but still expands a NewfullMap::cell call retail retains.
-// The old free-static ownership is not a valid recovery of the higher peak.
 VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
 type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
@@ -4659,6 +4654,45 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
     }
     return ADV_WALK_POINTER;
 }
+
+// DC advmgr.cpp:4514 `?get_garrison_cursor@advManager@@AAA?AW4type_adventure_cursor@@PAVNewmapCell@@@Z`
+// (dc 0xf23c, 132 B): the hover cursor over a garrison cell - the fight
+// cursor when a manned garrison belongs to another team, otherwise the
+// cell's normal cursor. ProcessHover's GARRISON arm calls it and /Ob2
+// folds it (no retail row); a static like MouseInScrollZone above.
+// Before normalization (function): get_garrison_cursor.
+static int getGarrisonCursor(advManager* mgr, NewmapCell* currCell)
+{
+    if (currCell->m_isTrigger) {
+        garrison& mapGarrison = g_game->m_garrisons[currCell->m_extraInfo];
+        if (!g_game->onSameTeam(mapGarrison.m_playerOwner, g_netLocalGamePos)
+            && mapGarrison.m_garrisonArmy.hasCreatures())
+            return 5;
+    }
+    return mgr->getNormalCursor(currCell);
+}
+
+// DC advmgr.cpp:10756 `?MouseInScrollZone@advManager@@QAAHXZ` (110 B): true
+// when the pointer sits in the 16-pixel scroll border of the 800x600
+// screen. Both hover handlers expand it in place (retail homes its two
+// coordinates in the dead mouseX/mouseY parameter slots); a static here
+// because no retail row is claimed for it and it reads nothing from
+// `this`.
+// Before normalization (function): MouseInScrollZone.
+static int mouseInScrollZone()
+{
+    int rx;
+    int ry;
+    g_mouseManager->mouseCoords(rx, ry);
+    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
+        || ry >= advManager::HOVER_SCREEN_HEIGHT)
+        return 0;
+    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
+        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
+        return 0;
+    return 1;
+}
+
 
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
@@ -4939,7 +4973,7 @@ int advManager::processHover(int mouseX, int mouseY)
                 break;
             }
             case GARRISON:
-                newCursor = getGarrisonCursor(currCell);
+                newCursor = getGarrisonCursor(this, currCell);
                 break;
             case TOWN: {
                 town* currentTown = g_game->getTown(currCell->m_extraInfo);
@@ -8986,7 +9020,7 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
         else
             currHero = 0;
         stopCursor(1);
-        currHero->obscureCell();
+        currHero->obscureCell(HERO, currHero->m_id);
 
         type_point point;
         point = type_point(currHero->m_x, currHero->m_y, currHero->m_z);
@@ -10180,24 +10214,17 @@ void advManager::checkScreenScroll()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-// DC advmgr.cpp:10756 records MouseInScrollZone as an ordinary public member.
-// Complete expands this body in ProcessHover; lack of a retained body does
-// not change its source ownership.
-// Before normalization (function): advManager::MouseInScrollZone.
+#if 0  // @carcass
+
+// E:\gamedcs\advmgr.cpp:10756
+DC_ONLY(0x1ccf8, 0x6E)
 int advManager::mouseInScrollZone()
 {
-    int rx;
-    int ry;
-    g_mouseManager->mouseCoords(rx, ry);
-    if (rx < 0 || rx >= advManager::HOVER_SCREEN_WIDTH || ry < 0
-        || ry >= advManager::HOVER_SCREEN_HEIGHT)
-        return 0;
-    if (rx >= advManager::HOVER_SCROLL_MARGIN && rx <= advManager::HOVER_SCROLL_RIGHT
-        && ry >= advManager::HOVER_SCROLL_MARGIN && ry <= advManager::HOVER_SCROLL_BOTTOM)
-        return 0;
-    return 1;
+    // @stub
 }
 
+// E:\gamedcs\advmgr.cpp:10842
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10778
 // Centres the adventure view at the start of a turn. Retail picks the

@@ -1,14 +1,11 @@
 """Independent integer-distance predicate oracle for size-binding forms."""
 from pathlib import Path
-import itertools
-import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 
 from homm3.vc6.test_rmg_families import generator
-from homm3.vc6 import source_families
 
 
 class ConnectionOwnerTests(unittest.TestCase):
@@ -16,17 +13,7 @@ class ConnectionOwnerTests(unittest.TestCase):
     def test_all_forms_and_negative_controls(self):
         module = generator("generate-rmg-connect-owners-family.py")
         root = Path(__file__).resolve().parents[2]
-        source = (root / "src/rmg.cpp").read_text()
-        header = (root / "include/rmg.h").read_text()
-        original = module.definition(source)
-        definition = generator('generate-rmg-position-family.py').definition
-        def size_accessor(header_text, source_text):
-            zone = header_text[header_text.index('struct TRmgZone {'):]
-            if '    int getSize() const;' in zone:
-                return True, definition(source_text, 'TRmgZone::getSize')
-            return False, definition(zone, 'getSize')
-        default_accessor = size_accessor(header, source)
-        accessors = {}
+        original = module.definition((root / "src/rmg.cpp").read_text())
         forms = list(module.variants(original))
         self.assertEqual(len(forms), 60)
         self.assertEqual(len({body for _, body in forms}), 60)
@@ -34,40 +21,15 @@ class ConnectionOwnerTests(unittest.TestCase):
         forms += list(module.variants(original, snapshots=True))
         positive_count = len(forms)
         self.assertEqual(positive_count, 110)
-        slot_forms = list(generator('generate-rmg-connect-slot-bindings.py').variants(original))
-        self.assertEqual(len(slot_forms), 36)
-        forms += slot_forms
-        accessor_forms = list(generator('generate-rmg-connect-accessor-bindings.py').variants(original))
-        self.assertEqual(len(accessor_forms), 64)
-        forms += accessor_forms
-        level_forms = list(generator('generate-rmg-connect-level-lifetimes.py').variants(original))
-        self.assertEqual(len(level_forms), 49)
-        forms += level_forms
-        if os.environ.get('HOMM3_CONNECT_ZONE_MANIFEST'):
-            _, originals, axes = source_families.load_manifest(Path(os.environ['HOMM3_CONNECT_ZONE_MANIFEST']), root)
-            for choices in itertools.product(*(range(len(axis.options)) for axis in axes)):
-                rendered = source_families.render(originals, axes, choices)
-                name = 'manifest_' + '_'.join(map(str, choices))
-                rendered_source = rendered.get('src/rmg.cpp', source)
-                forms.append((name, module.definition(rendered_source)))
-                accessors[name] = size_accessor(rendered.get('include/rmg.h', header), rendered_source)
-        positive_count = len(forms)
         forms += [("wrong_level", original.replace("m_z != m_levelPosition.m_z", "m_z == m_levelPosition.m_z")),
                   ("wrong_strictness", original.replace("combinedSize > minimumSize", "combinedSize >= minimumSize")),
                   ("wrong_minimum", original.replace("otherSize < minimumSize", "otherSize > minimumSize")),
                   ("wrong_distance", original.replace("dx * dx + dy * dy", "dx * dx"))]
         text = "#include <cmath>\n#include <cstdio>\nusing std::sqrt;\n"
         text += "struct TRmgTownSlot { int m_size; }; struct Position { int m_x,m_y,m_z; };\n"
-        for index, (name, body) in enumerate(forms):
-            ordinary, accessor = accessors.get(name, default_accessor)
+        for index, (_, body) in enumerate(forms):
             text += f"struct Zone{index} {{ Position m_levelPosition; TRmgTownSlot* m_slot;\n"
-            if ordinary:
-                text += accessor.split('\n{', 1)[0].replace('TRmgZone::', '') + ';\n'
-            else:
-                text += accessor + '\n'
-            text += body.replace("TRmgZone::", "").replace("TRmgZone", f"Zone{index}") + "\n};\n"
-            if ordinary:
-                text += accessor.replace('TRmgZone', f'Zone{index}') + '\n'
+            text += body.replace("TRmgZone::", "").replace("const TRmgZone*", f"const Zone{index}*") + "\n};\n"
         text += r"""
 template<class T> bool check() {
     int sizes[] = {-9,-3,-1,0,1,2,3,4,5,9,16,31,64};

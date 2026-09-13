@@ -83,13 +83,6 @@ def make_axes(header, source):
     entry = next((body for _, body in entry_forms() if body in refresh), None)
     if entry is None:
         raise ValueError("review the refresh's real entry proxy initialization")
-    axes = [dict(name="proxy_copy", source=HEADER, find=declaration, options=copies),
-            helper.axis("proxy_return", SOURCE, helper.definition(source, "TRmgLinePainterInterface::at"),
-                        parent().return_forms()),
-            helper.axis("entry_proxy", SOURCE, refresh,
-                        ((name, refresh.replace(entry, body)) for name, body in entry_forms()))]
-    if "struct TRmgGridPointT {" in header:
-        return axes
     header_start = header.index("    TRmgGridPoint operator+(const TPoint& offset) const")
     method = header[header_start:header.index("\n};", header_start)]
     statement = re.search(r"^        TRmgGridPoint result\b", method, re.M)
@@ -99,7 +92,12 @@ def make_axes(header, source):
     grid_forms = [(name, body) for name, body in parent().grid_forms() if name.startswith("assigned+")]
     if translation not in dict(grid_forms).values():
         raise ValueError("the proxy-copy follow-up requires the reviewed assigned grid translation")
-    return axes + [helper.axis("grid_translation", HEADER, translation, grid_forms)]
+    return [dict(name="proxy_copy", source=HEADER, find=declaration, options=copies),
+            helper.axis("proxy_return", SOURCE, helper.definition(source, "TRmgLinePainterInterface::at"),
+                        parent().return_forms()),
+            helper.axis("entry_proxy", SOURCE, refresh,
+                        ((name, refresh.replace(entry, body)) for name, body in entry_forms())),
+            helper.axis("grid_translation", HEADER, translation, grid_forms)]
 
 
 def main():

@@ -50,9 +50,8 @@ class RiverOverlayTests(unittest.TestCase):
                 declaration("TRmgGroundTile"), "\n",
                 declaration("TRmgGroundTileData"), "\n",
                 "struct TRmgGridPoint { unsigned int m_x, m_y; };\n",
-                "struct TPoint;\n", declaration("TRmgMapPosition"), "\n",
                 "struct TRmgMapItem { unsigned char prefix[0x24]; TRmgGroundTile m_tile; TRmgGroundTileData m_tileData; unsigned int tail; };\n",
-                "struct type_random_map { TRmgMapItem* m_mapItems; TRmgMapPosition m_size; };\n",
+                "struct type_random_map { TRmgMapItem* m_mapItems; int m_mapWidth; };\n",
                 "struct TRmgMapAdapter { type_random_map* m_map; void setOverlay(const TRmgGridPoint&, int); };\n",
                 body, "\n", r"""
 int check() {
@@ -75,7 +74,7 @@ int check() {
             | (static_cast<unsigned int>(values[value] != 0) << 29);
         std::memcpy(&expected[cell].m_tile, &kind, sizeof(kind));
         std::memcpy(&expected[cell].m_tileData, &flags, sizeof(flags));
-        type_random_map map; map.m_mapItems = items; map.m_size.m_x = 3;
+        type_random_map map; map.m_mapItems = items; map.m_mapWidth = 3;
         TRmgMapAdapter adapter; adapter.m_map = &map;
         TRmgGridPoint point; point.m_x = cell % 3; point.m_y = cell / 3;
         adapter.setOverlay(point, values[value]);

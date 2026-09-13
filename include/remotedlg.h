@@ -80,12 +80,10 @@ protected:
     // Before normalization (function): CAnimatedDlg::CalcSpriteDimensions.
     void calcSpriteDimensions(CSprite* sprite, int& maxWidth,
                               int& maxHeight, int& minY);
-public:
     // Before normalization (function): CAnimatedDlg::DrawSprite.
     void drawSprite();
     // Before normalization (function): CAnimatedDlg::TickAnimation.
     void tickAnimation();
-protected:
     unsigned long m_lastTick;    // +0x58
     int m_spriteX;               // +0x5c
     int m_spriteY;               // +0x60
@@ -360,9 +358,7 @@ public:
     // Before normalization (function): CGameTransferSmack::SetPercentage.
     void setPercentage(float pct);
     // Before normalization (function): CGameTransferSmack::DrawCurrentFrame.
-    protected:
     void drawCurrentFrame() { drawCurrentSmackFrame(); }
-    public:
     // Before normalization (function): CGameTransferSmack::Stop.
     void stop();
     // Before normalization (function): CGameTransferSmack::SaveScreen.

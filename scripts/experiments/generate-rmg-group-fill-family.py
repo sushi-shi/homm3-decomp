@@ -59,8 +59,8 @@ BASELINE = """int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
         return 0;
     TObjectType* prototype = selected->m_properties->m_prototype;
     type_object* object = selected;
-    position.m_x = (group->m_map.m_size.m_x + static_cast<unsigned>(prototype->getWidth())) / 2;
-    position.m_y = (group->m_map.m_size.m_y + static_cast<unsigned>(prototype->getHeight())) / 2;
+    position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
+    position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
     group->m_objects.push_back(object);
     group->m_map.addObject(object, position);
@@ -115,14 +115,14 @@ def forms():
     binding = ("    TObjectType* prototype = selected->m_properties->m_prototype;\n"
                "    type_object* object = selected;\n")
     centers = [center,
-        "    int mapWidth = group->m_map.m_size.m_x;\n" + center.replace("group->m_map.m_size.m_x", "mapWidth"),
-        "    int mapWidth = group->m_map.m_size.m_x;\n    int mapHeight = group->m_map.m_size.m_y;\n"
-        + center.replace("group->m_map.m_size.m_x", "mapWidth").replace("group->m_map.m_size.m_y", "mapHeight"),
-        "    unsigned centerX = group->m_map.m_size.m_x + static_cast<unsigned>(prototype->getWidth());\n"
-        "    unsigned centerY = group->m_map.m_size.m_y + static_cast<unsigned>(prototype->getHeight());\n"
+        "    int mapWidth = group->m_map.m_mapWidth;\n" + center.replace("group->m_map.m_mapWidth", "mapWidth"),
+        "    int mapWidth = group->m_map.m_mapWidth;\n    int mapHeight = group->m_map.m_mapHeight;\n"
+        + center.replace("group->m_map.m_mapWidth", "mapWidth").replace("group->m_map.m_mapHeight", "mapHeight"),
+        "    unsigned centerX = group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth());\n"
+        "    unsigned centerY = group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight());\n"
         "    position.m_x = centerX / 2;\n    position.m_y = centerY / 2;\n    position.m_z = 0;\n",
-        "    TRmgVector dimensions(group->m_map.m_size.m_x, group->m_map.m_size.m_y);\n"
-        + center.replace("group->m_map.m_size.m_x", "dimensions.m_x").replace("group->m_map.m_size.m_y", "dimensions.m_y")]
+        "    TRmgVector dimensions(group->m_map.m_mapWidth, group->m_map.m_mapHeight);\n"
+        + center.replace("group->m_map.m_mapWidth", "dimensions.m_x").replace("group->m_map.m_mapHeight", "dimensions.m_y")]
     bindings = [binding,
         "    type_object* object = selected;\n    TObjectType* prototype = selected->m_properties->m_prototype;\n",
         "    TRmgObjectPropertiesRef* properties = selected->m_properties;\n"
@@ -191,11 +191,11 @@ def center_refinements(body):
     start = at + match.start()
     stop = body.index("position.m_z = 0;", start) + len("position.m_z = 0;\n")
     original = body[start:stop]
-    receiver_match = re.search(r"(group->m_map\.|map\.|map->)m_size.m_x", original)
+    receiver_match = re.search(r"(group->m_map\.|map\.|map->)m_mapWidth", original)
     if receiver_match is None:
         raise ValueError("review the first-object map receiver")
     receiver = receiver_match.group(1)
-    width, height = receiver + "m_size.m_x", receiver + "m_size.m_y"
+    width, height = receiver + "m_mapWidth", receiver + "m_mapHeight"
     x, y = "prototype->getWidth()", "prototype->getHeight()"
     stores = ["position.m_x = centerX / 2;", "position.m_y = centerY / 2;"]
     dims = ["unsigned centerX = " + width + ";", "unsigned centerY = " + height + ";"]

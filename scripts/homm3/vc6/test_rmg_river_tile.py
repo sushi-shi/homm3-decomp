@@ -54,11 +54,10 @@ class RiverTileTests(unittest.TestCase):
                 declaration(header, "TRmgGroundTileData"), "\n",
                 declaration(terrain, "rmgTerrainTile"), "\n",
                 "struct TPoint { int m_x, m_y; };\n",
-                declaration(header, "TRmgMapPosition"), "\n",
                 declaration(header, "TRmgZoneBounds"), "\n",
                 "struct TRmgGridPoint { unsigned int m_x, m_y; };\n",
                 "struct TRmgMapItem { unsigned char prefix[0x24]; TRmgGroundTile m_tile; TRmgGroundTileData m_tileData; unsigned int tail; };\n",
-                "struct type_random_map { TRmgMapItem* m_mapItems; TRmgMapPosition m_size; };\n",
+                "struct type_random_map { TRmgMapItem* m_mapItems; int m_mapWidth, m_mapHeight; };\n",
                 "struct TRmgMapAdapter { type_random_map* m_map; void setTile(const TRmgGridPoint&, const rmgTerrainTile&); };\n",
                 "int min(int a, int b) { return a < b ? a : b; }\n",
                 "int max(int a, int b) { return a < b ? b : a; }\n",
@@ -85,11 +84,11 @@ int check() {
         }
         std::memcpy(expected, items, sizeof(items));
         type_random_map map;
-        map.m_mapItems = items; map.m_size.m_x = sizes[size][0]; map.m_size.m_y = sizes[size][1];
-        TRmgGridPoint point; point.m_x = cell % map.m_size.m_x; point.m_y = cell / map.m_size.m_x;
+        map.m_mapItems = items; map.m_mapWidth = sizes[size][0]; map.m_mapHeight = sizes[size][1];
+        TRmgGridPoint point; point.m_x = cell % map.m_mapWidth; point.m_y = cell / map.m_mapWidth;
         rmgTerrainTile tile; tile.m_terrain = kinds[kind]; tile.m_frame = frames[shape];
         tile.m_flipX = flips[shape][0]; tile.m_flipY = flips[shape][1];
-        for (int item = 0; item != map.m_size.m_x * map.m_size.m_y; ++item) {
+        for (int item = 0; item != map.m_mapWidth * map.m_mapHeight; ++item) {
             unsigned int ground, flags;
             std::memcpy(&ground, &expected[item].m_tile, 4);
             std::memcpy(&flags, &expected[item].m_tileData, 4);
@@ -102,8 +101,8 @@ int check() {
                     | ((static_cast<unsigned int>(tile.m_flipY) & 1u) << 18)
                     | (static_cast<unsigned int>(tile.m_terrain != 0) << 29);
             }
-            int dx = item % map.m_size.m_x - static_cast<int>(point.m_x);
-            int dy = item / map.m_size.m_x - static_cast<int>(point.m_y);
+            int dx = item % map.m_mapWidth - static_cast<int>(point.m_x);
+            int dy = item / map.m_mapWidth - static_cast<int>(point.m_y);
             if (tile.m_terrain != 0) {
                 if (-1 <= dx && dx <= 1 && -1 <= dy && dy <= 1) flags |= 0x80000000u;
                 if (-2 <= dx && dx <= 2 && -2 <= dy && dy <= 2 && !(ground & 0x3c000u))

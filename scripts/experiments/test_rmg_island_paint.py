@@ -50,7 +50,7 @@ int rand() { event(1); return g_pattern; }
 struct type_random_map {
     unsigned char m_ownsMapItems;
     TRmgMapItem* m_mapItems;
-    TRmgMapPosition m_size;
+    int m_mapWidth,m_mapHeight,m_numberLevels;
     type_random_map() : m_ownsMapItems(1) {}
     ~type_random_map() { if(!m_ownsMapItems) event(5); }
 """
@@ -64,7 +64,7 @@ struct TRmgTerrainBrush {
     int m_terrain;
     TRmgTerrainBrush(type_random_map* map,int terrain,int strength) : m_map(map),m_terrain(terrain) {
         event(2,terrain,strength);
-        if(map->m_size.m_x!=g_width || map->m_size.m_y!=g_height || map->m_size.m_z!=1 ||
+        if(map->m_mapWidth!=g_width || map->m_mapHeight!=g_height || map->m_numberLevels!=1 ||
            map->m_ownsMapItems || map->m_mapItems!=g_cells+g_level*g_width*g_height) g_valid=false;
     }
     ~TRmgTerrainBrush() {
@@ -177,8 +177,8 @@ bool check() {
         g_width=width;g_height=height;g_level=level;g_pattern=pattern;
         g_extentWidth=ex;g_extentHeight=ey;g_cells=&cells[0];g_valid=true;g_events.clear();
         type_random_map_generator owner;
-        owner.m_map.m_size.m_x=width;owner.m_map.m_size.m_y=height;
-        owner.m_map.m_size.m_z=2;owner.m_map.m_mapItems=&cells[0];
+        owner.m_map.m_mapWidth=width;owner.m_map.m_mapHeight=height;
+        owner.m_map.m_numberLevels=2;owner.m_map.m_mapItems=&cells[0];
         owner.m_progress=(pattern&1) ? &progress:0;
         TRmgZoneBounds oldBounds=bounds;
         owner.createWaterZoneIsland(bounds,level);

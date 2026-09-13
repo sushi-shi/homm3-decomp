@@ -43,18 +43,13 @@ class PrototypePolishTests(unittest.TestCase):
         bodies = list(dict.fromkeys(body for branches in (False, True) for _, body in self.module.bodies(branches)))
         bodies += [option["replace"] for option in generator(
             "generate-rmg-prototype-receiver-family.py").variants(self.source)]
-        range_helpers = {}
         if os.environ.get("HOMM3_PROTOTYPE_SELECTOR_MANIFEST"):
             from homm3.vc6 import source_families
             payload, originals, axes = source_families.load_manifest(
                 Path(os.environ["HOMM3_PROTOTYPE_SELECTOR_MANIFEST"]), self.root)
             helper = generator("generate-rmg-position-family.py")
-            for index in range(len(axes[0].options)):
-                rendered = source_families.render(originals, axes, (index,))["src/rmg.cpp"]
-                body = helper.definition(rendered, "type_random_map_generator::selectObjectPrototype")
-                if 'getObjectPrototypes(objectType)' in body:
-                    range_helpers[len(bodies)] = helper.definition(rendered, 'TRmgGeneratorBase::getObjectPrototypes')
-                bodies.append(body)
+            bodies += [helper.definition(source_families.render(originals, axes, (index,))["src/rmg.cpp"],
+                       "type_random_map_generator::selectObjectPrototype") for index in range(len(axes[0].options))]
         seed = bodies[0]
         positive_count = len(bodies)
         bodies += [seed.replace("m_subtype != subtype", "m_subtype == subtype"),
@@ -73,17 +68,13 @@ struct TObjectType {
     std::bitset<10> m_recommendedTerrainMask;
 };
 struct TRmgObjectPropertiesRef { TObjectType* m_prototype; };
-struct TRmgGeneratorBase {
+struct type_random_map_generator {
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232];
-""", (range_helpers[index].split('\n{', 1)[0].replace('TRmgGeneratorBase::', '') + ';\n'
-       if index in range_helpers else ''), r"""
-};
-struct type_random_map_generator : TRmgGeneratorBase {
     TRmgObjectPropertiesRef* selectObjectPrototype(int, int, int);
 };
 int g_draw, g_calls;
 int rand() { ++g_calls; return g_draw; }
-""", range_helpers.get(index, ''), "\n", body, "\n", r"""
+""", body, "\n", r"""
 int check() {
     const int groups[] = {0, 17, 231};
     const int terrains[] = {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};

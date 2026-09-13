@@ -51,42 +51,6 @@ POINT_ERASE_OVERLOADS = (
 
 
 class TreeMemberKeyTest(unittest.TestCase):
-    def test_coordinate_template_tree_keeps_its_type_argument(self):
-        unsigned_tree = POINT_TREE.replace(
-            "UTRmgGridPoint@@", "U?$TRmgGridPointT@I@@")
-        signed_tree = unsigned_tree.replace("TRmgGridPointT@I", "TRmgGridPointT@H")
-        for tree, owner in ((unsigned_tree, "trmggridpointt_unsigned_int"),
-                            (signed_tree, "trmggridpointt_int")):
-            self.assertEqual(source._demangle_key(f"?_Init@{tree}IAEXXZ"),
-                             f"{owner}@tree_init")
-            self.assertEqual(source._demangle_key(
-                f"?_Dec@const_iterator@{tree}QAEXXZ"),
-                f"{owner}@tree_const_iterator_dec")
-
-    def test_equal_size_coordinate_template_claims_join_by_owner(self):
-        names = tuple(f"?_Init@{POINT_TREE}IAEXXZ".replace(
-            "UTRmgGridPoint@@", f"U?$TRmgGridPointT@{code}@@")
-            for code in ("I", "H"))
-        with tempfile.TemporaryDirectory() as temporary:
-            path = Path(temporary) / "rmg_terrain.cpp"
-            path.write_text(
-                "VA_COMPGEN(0x005b8670, 0xa8, TREE_INIT, TRmgGridPointT_unsigned_int)\n"
-                "VA_COMPGEN(0x005b9670, 0xa8, TREE_INIT, TRmgGridPointT_int)\n")
-            rows = source.scan_file(path, {0x1b8670, 0x1b9670})
-        groups = {source._demangle_key(name): [(name, 0xa8)]
-                  for name in reversed(names)}
-        self.assertEqual(len(groups), 2)
-        with mock.patch.object(source, "_base_authority_scan", return_value=(groups, {})):
-            source.join_unit("rmg_terrain", rows)
-        self.assertEqual([row.get("joined") for row in rows], list(names))
-
-    def test_coordinate_template_owner_requires_one_primitive_argument(self):
-        for element in ("U?$TRmgGridPointT@HI@@", "U?$TRmgGridPointT@H@geometry@@",
-                        "U?$TRmgGridPointT@VCoordinate@@@@"):
-            symbol = f"?_Init@{POINT_TREE}IAEXXZ".replace("UTRmgGridPoint@@", element)
-            self.assertNotEqual(source._demangle_key(symbol),
-                                "trmggridpointt_int@tree_init")
-
     def test_const_end_keeps_its_owner_and_overload(self):
         symbol = f"?end@{TREE}QBE?AVconst_iterator@12@XZ"
         self.assertEqual(source._demangle_key(symbol),

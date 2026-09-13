@@ -128,8 +128,8 @@ struct SelectionRoot {
             m_cells[i].m_zoneState.m_zone = scenario.m_cells[i].m_zone;
             m_cells[i].m_zoneState.m_connectionEligibility = -23;
         }
-        m_map.m_mapItems = &m_cells[0]; m_map.m_size.m_x = mapWidth;
-        m_map.m_size.m_y = mapHeight; m_map.m_owner = this;
+        m_map.m_mapItems = &m_cells[0]; m_map.m_mapWidth = mapWidth;
+        m_map.m_mapHeight = mapHeight; m_map.m_owner = this;
         g_activeSelection = this;
     }
     unsigned char canPlaceTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position, TRmgZone* zone) {

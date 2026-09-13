@@ -585,11 +585,6 @@ def write_readme(report: dict) -> None:
     unit_module = {u["unit"]: module_of(u["source"]) for u in units}
     maxima = load_baseline()
     rvas = function_rvas()
-    # Apply the same universe to both halves of every displayed fraction.
-    # Explicitly tracked compiler initializers and import thunks retain
-    # their ledger rows but are not independent full-engine targets.
-    from homm3.match import universe
-    category, _sizes, tally = universe.summary()
     maxima_by_rva = {}
     for row in maxima.values():
         if row.rva is not None:
@@ -612,9 +607,6 @@ def write_readme(report: dict) -> None:
                 candidates = maxima_by_rva.get(rvas.get(key), ())
                 if len(candidates) == 1:
                     row = candidates[0]
-            rva = rvas.get(key, row.rva if row else None)
-            if rva in category and category[rva] not in ("target", "zlib"):
-                continue
             best = max(fuzzy, row.best if row else 0.0)
             agg["fns"] += 1
             agg["exact"] += fuzzy >= 100.0 - 1e-6
@@ -625,6 +617,8 @@ def write_readme(report: dict) -> None:
 
     # the full-engine denominator + excluded categories (single authority:
     # homm3.match.universe - every consumer uses it so filters cannot drift)
+    from homm3.match import universe
+    _category, _sizes, tally = universe.summary()
     target_fns = tally.get("target", (0, 0))[0]
     zlib_fns = tally.get("zlib", (0, 0))[0]
     covered = sum(a["fns"] for a in per_module.values())

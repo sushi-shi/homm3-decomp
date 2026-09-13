@@ -69,8 +69,6 @@ class MapWriterTests(unittest.TestCase):
         header = (root / "include/rmg.h").read_text()
         start = header.index("struct TRmgMapPosition {")
         position = header[start:header.index("\n};", start) + 3]
-        position += "\n" + generator("generate-rmg-position-family.py").definition(
-            source, "TRmgMapPosition::TRmgMapPosition")
         # Actual coordinate declaration and abstract stream, reduced other owners.
         fixture = r'''
 #include <vector>
@@ -102,7 +100,7 @@ struct type_object { TRmgObjectPropertiesRef* m_properties; int id;
 struct Progress { void advance(int amount) {record(5,amount);} };
 static unsigned char g_adventureObjectLandBlocked[232][13];
 void writeRmgObjectPrototype(TAbstractFile*,TObjectType* p);
-struct Map {TRmgMapItem* m_mapItems; TRmgMapPosition m_size;};
+struct Map {TRmgMapItem* m_mapItems; int m_numberLevels,m_mapHeight,m_mapWidth;};
 struct type_random_map_generator {
     Map m_map;
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232];
@@ -110,7 +108,7 @@ struct type_random_map_generator {
     Progress* m_progress;
     int m_mapVersion;
     bool mutate;
-    void writeMapHeader(TAbstractFile*) {record(0,m_mapVersion); if(mutate) ++m_map.m_size.m_x;}
+    void writeMapHeader(TAbstractFile*) {record(0,m_mapVersion); if(mutate) ++m_map.m_mapWidth;}
     METHODS
 };
 static type_random_map_generator* active;
@@ -137,7 +135,7 @@ int main() {
             type_random_map_generator g;
             TRmgMapItem cells[64]; for(int i=0;i<64;++i) cells[i].id=i;
             const int width=shape%4, height=(shape/4)+1, levels=shape%3;
-            g.m_map={cells,TRmgMapPosition(width,height,levels)}; g.mutate=(mode&1)!=0;
+            g.m_map={cells,levels,height,width}; g.mutate=(mode&1)!=0;
             Progress progress; g.m_progress=(mode&2)?&progress:0; g.m_mapVersion=pattern+14;
             TObjectType types[12]; TRmgObjectPropertiesRef props[12]; type_object objects[12];
             const int buckets[12]={0,0,7,71,71,124,124,180,200,230,231,231};
@@ -169,7 +167,7 @@ int main() {
                 events.clear(); callbacks=0; throwAt=stop;
                 active=&g; appended=&props[11]; appendOnWrite=(mode&4)!=0;
                 g.m_objectPrototypes[231].resize(2);
-                g.m_map.m_size.m_x=width;
+                g.m_map.m_mapWidth=width;
                 for(int i=0;i<12;++i) props[i].m_prototypeIndex=-100-i;
                 bool threw=false; int result=-1;
                 try {result=(g.*writers[form])(&sink);} catch(int code) {threw=code==1;}

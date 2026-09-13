@@ -27,7 +27,8 @@ public:
 };
 class type_random_map {
 public:
-    TRmgMapPosition m_size;
+    int m_mapWidth;
+    int m_mapHeight;
     void addObject(type_object*, TRmgMapPosition);
 };
 struct TRmgTreasureGroup {
@@ -60,8 +61,8 @@ struct State {
     bool m_bad;
     State(const Scenario& scenario) : m_scenario(scenario), m_creation(0),
         m_fits(0), m_outValue(0), m_bad(false) {
-        m_group.m_map.m_size.m_x = 117;
-        m_group.m_map.m_size.m_y = 239;
+        m_group.m_map.m_mapWidth = 117;
+        m_group.m_map.m_mapHeight = 239;
         m_properties.m_prototype = &m_prototype;
         m_prototype.m_imageInfo.m_objectSize.m_x = 17;
         m_prototype.m_imageInfo.m_objectSize.m_y = 29;
@@ -96,8 +97,8 @@ type_object* FillRoot::createTreasureObject(TRmgZone* zone, int minimum,
     int index = state.m_creation++;
     if (index >= 24) return 0;
     *outValue = state.m_scenario.m_cost[index];
-    state.m_group.m_map.m_size.m_x = state.m_scenario.m_width;
-    state.m_group.m_map.m_size.m_y = state.m_scenario.m_height;
+    state.m_group.m_map.m_mapWidth = state.m_scenario.m_width;
+    state.m_group.m_map.m_mapHeight = state.m_scenario.m_height;
     state.m_prototype.m_imageInfo.m_objectSize.m_x = state.m_scenario.m_objectWidth;
     state.m_prototype.m_imageInfo.m_objectSize.m_y = state.m_scenario.m_objectHeight;
     if (!state.m_scenario.m_exists[index]) return 0;

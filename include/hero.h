@@ -248,9 +248,7 @@ struct type_obscuring_object {
     class town* getObscuredTown();
     // Before normalization (function): type_obscuring_object::obscure_cell.
     // Before normalization (locals): new_type.
-protected:
     void obscureCell(TAdventureObjectType newType, long id);
-public:
     // Before normalization (function): type_obscuring_object::restore_cell.
     void restoreCell();
     bool load(void* infile);
@@ -376,6 +374,7 @@ public:
 
     // Dreamcast names this header inline; hide-hero undo proves its retail
     // expansion as the base operation with the hero object type and id.
+    using type_obscuring_object::obscureCell;
     // Before normalization (function): hero::obscure_cell.
     void obscureCell()
     {
@@ -967,9 +966,7 @@ public:
     void addSpell(int whichSpell);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
     // Before normalization (function): hero::update_spell_list.
-    private:
     void updateSpellList();
-    public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long getEquippedArtifacts(unsigned char countWarMachines);
     long getNumberInBackpack(unsigned char countWarMachines);
@@ -1122,9 +1119,7 @@ public:
     void walkOnWater(int level);
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     // Before normalization (function): hero::can_land.
-private:
-    unsigned char canLand() const;
-public:
+    unsigned char canLand();
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     // Before normalization (function): hero::can_summon_boat.
     unsigned char canSummonBoat() const;
@@ -1312,25 +1307,23 @@ public:
     unsigned char isMobile();
     // Hero.h source helpers retained as calls by Dreamcast and expanded in
     // Complete's AI_AttemptMove and cursor movement family. check_terrain is
-    // honored by the Hero.h:645/654 can_land call. The movement driver
-    // uses checkTerrain=1; Complete expands the helper before calling canLand.
+    // false at the recovered sites; the later build additionally treats
+    // Angel Wings and Boots of Levitation as persistent movement modes.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
     // Before normalization (function): hero::IsFlying.
     // Before normalization (locals): check_terrain.
-    __forceinline unsigned char isFlying(unsigned char checkTerrain) const
+    __forceinline unsigned char isFlying(unsigned char checkTerrain)
     {
         return !(m_flags & 0x40000)
-            && (m_flightLevel != -1 || isWieldingArtifact(0x48))
-            && (!checkTerrain || !canLand());
+            && (m_flightLevel != -1 || isWieldingArtifact(0x48));
     }
     // Before normalization (function): hero::CanWalkOnWater.
     // Before normalization (locals): check_terrain.
-    __forceinline unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    __forceinline unsigned char canWalkOnWater(unsigned char checkTerrain)
     {
         return !(m_flags & 0x40000)
-            && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
-            && (!checkTerrain || !canLand());
+            && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a));
     }
     // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and

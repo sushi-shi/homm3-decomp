@@ -372,13 +372,6 @@ public:
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
     // Before normalization (function): CDPlay::AddGroupEnum.
-    // DC free enum callbacks 0x8bbc4..0x8bc28 call the protected virtuals;
-    // retail 0x499e50..0x499ed0 preserves their address-taken stdcall ABI.
-    friend int __stdcall enumSession(const DPSESSIONDESC2* dpSessionDesc, unsigned long* lpdwTimeOut, unsigned long flags, void* context);
-    friend int __stdcall enumConnectionsCallback(const GUID* lpguidSP, void* connection, unsigned long connectionSize, const DPNAME* name, unsigned long flags, void* context);
-    friend int __stdcall enumGroupsCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
-    friend int __stdcall enumPlayersCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
-protected:
     virtual unsigned char addGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     // Before normalization (function): CDPlay::AddPlayerEnum.
@@ -392,7 +385,6 @@ protected:
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-public:
 
 protected:
     // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
@@ -497,12 +489,8 @@ protected:
 public:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     // Before normalization (function): CDPlayLobby::AddAddressEnum.
-    // DC 0x8bba4 and retail 0x499e20 directly call this protected virtual.
-    friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
-protected:
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
-public:
 
 private:
     // Before normalization: m_lpLobby.

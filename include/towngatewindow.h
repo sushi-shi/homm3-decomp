@@ -12,9 +12,6 @@
 // Retail's proven base is eight bytes wider and its VC6 vector is four bytes
 // wider, placing the same fields at +0x60/+0x70/+0x74/+0x78. advManager's
 // stack instance spans exactly 0x7c bytes, proving the canonical total size.
-// Internal callback declared before its friend declaration.
-static void townGateSliderCallback(int state, heroWindow* parentWindow);
-
 class TTownGateWindow : public CAdvPopup {
 public:
     // Dreamcast CodeView publishes this nested enum in full. Complete's
@@ -54,15 +51,9 @@ public:
     // Before normalization (locals): new_town.
     void addTown(int newTown);
     // Before normalization (function): TTownGateWindow::UpdateTownLocator.
-    private:
     void updateTownLocator(int i);
-    public:
     // Before normalization (function): TTownGateWindow::UpdateTownLocators.
-    // DC callback 0x169ba8 calls this private method; retail 0x5c2980 agrees.
-    friend void townGateSliderCallback(int state, heroWindow* parentWindow);
-private:
     void updateTownLocators();
-public:
     // Before normalization (function): TTownGateWindow::DoModal.
     void doModal();
     // Before normalization (function): TTownGateWindow::WindowHandler.

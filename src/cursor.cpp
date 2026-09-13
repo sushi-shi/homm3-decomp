@@ -433,9 +433,6 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 // E:\gamedcs\cursor.cpp:570
 // Before normalization (locals): trigger_point, bNoMove, bComputerMove, bFoughtBattle,
 // bIsRemoteMove, became_boat, iOrigX, iOrigY.
-// Access recovery: DC cursor.cpp:731/750/905 switches to hero.h:641/645
-// for IsFlying, including its can_land call. Complete expands that same
-// checkTerrain=1 wrapper; canLand is private, not a direct cursor API.
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point* triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
@@ -580,7 +577,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                                          origX, origY, standEnd,
                                          foughtBattle);
             }
-            if (!curr->isFlying(1))
+            if (!curr->isFlying(0) || curr->canLand())
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
@@ -606,7 +603,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 
         default:
             if (g_adventureObjectTraits[destCell->m_type][0]
-                && (!curr->isFlying(1)))
+                && (!curr->isFlying(0) || curr->canLand()))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
@@ -708,7 +705,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         if ((!curr->isFlying(0)
              || curr->getTarget() == *triggerPoint)
             && (!g_adventureObjectTraits[eventCell->m_type][0]
-                || !curr->isFlying(1)
+                || !curr->isFlying(0) || curr->canLand()
                 || eventCell->m_type == BOAT))
             returnCell = eventCell;
 

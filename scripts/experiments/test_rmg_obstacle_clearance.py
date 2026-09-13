@@ -33,7 +33,7 @@ class ClearanceTests(unittest.TestCase):
             "TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds",
             "TRmgZoneConnection", "TRmgZoneCellState", "TRmgGroundTile",
             "TRmgGroundTileData", "TRmgConnectionDecoration"))
-        types += "\n" + definition(source, "TRmgMapPosition::TRmgMapPosition")
+        types += "\n" + definition(support, "TRmgMapPosition::TRmgMapPosition")
         types += """
 struct TRmgMapItem {
     TRmgZoneCellState m_zoneState;
@@ -43,7 +43,7 @@ struct TRmgMapItem {
     std::vector<void*> m_objects;
 };
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight, m_numberLevels;
     TRmgMapItem* m_mapItems;
 """ + definition(header, "getMapItem", parameters="int x, int y, int z") + """
     TRmgMapItem* getMapItem(TRmgMapPosition point);
@@ -104,8 +104,8 @@ struct type_random_map_generator {
             forms.append(original.replace(old, new))
         oracle = r"""
 void reference(type_random_map_generator& owner,int policy[3][3]) {
-    int w=owner.m_map.m_size.m_x,h=owner.m_map.m_size.m_y;
-    int count=w*h*owner.m_map.m_size.m_z;
+    int w=owner.m_map.m_mapWidth,h=owner.m_map.m_mapHeight;
+    int count=w*h*owner.m_map.m_numberLevels;
     for(int i=0;i<count;++i) {
         TRmgMapItem& current=owner.m_map.m_mapItems[i];
         int zone=current.m_zoneState.m_zone;
@@ -170,9 +170,9 @@ bool check() {
         }
         std::vector<TRmgMapItem> expected=cells;
         Progress trace,expectedTrace;type_random_map_generator actual,model;
-        actual.m_map.m_size.m_x=model.m_map.m_size.m_x=w;
-        actual.m_map.m_size.m_y=model.m_map.m_size.m_y=h;
-        actual.m_map.m_size.m_z=model.m_map.m_size.m_z=levels;
+        actual.m_map.m_mapWidth=model.m_map.m_mapWidth=w;
+        actual.m_map.m_mapHeight=model.m_map.m_mapHeight=h;
+        actual.m_map.m_numberLevels=model.m_map.m_numberLevels=levels;
         actual.m_map.m_mapItems=&cells[1];model.m_map.m_mapItems=&expected[1];
         actual.m_progress=progress?&trace:0;model.m_progress=progress?&expectedTrace:0;
         for(int a=0;a<3;++a) actual.m_zones.push_back(&zones[a]);

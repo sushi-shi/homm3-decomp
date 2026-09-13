@@ -48,7 +48,7 @@ BASELINE = """void TRmgTreasureGroup::reset()
     m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0);
-    int count = m_map.m_size.m_x * m_map.m_size.m_y;
+    int count = m_map.m_mapWidth * m_map.m_mapHeight;
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
@@ -58,7 +58,7 @@ EMPTY = (("erase", "{name}.erase({name}.begin(), {name}.end());"),
          ("clear", "{name}.clear();"),
          ("resize", "{name}.resize(0);"))
 WALK = """    TRmgMapItem* item = m_map.getMapItem(0, 0);
-    int count = m_map.m_size.m_x * m_map.m_size.m_y;
+    int count = m_map.m_mapWidth * m_map.m_mapHeight;
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
@@ -78,23 +78,23 @@ def walks():
     yield "item_then_count", WALK
     yield "count_then_item", WALK.replace(
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n"
-        "    int count = m_map.m_size.m_x * m_map.m_size.m_y;\n",
-        "    int count = m_map.m_size.m_x * m_map.m_size.m_y;\n"
+        "    int count = m_map.m_mapWidth * m_map.m_mapHeight;\n",
+        "    int count = m_map.m_mapWidth * m_map.m_mapHeight;\n"
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n")
     yield "assigned_item", WALK.replace(
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n",
         "    TRmgMapItem* item;\n    item = m_map.getMapItem(0, 0);\n")
     yield "for_postdecrement", (
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n"
-        "    for (int count = m_map.m_size.m_x * m_map.m_size.m_y; count--; ++item)\n"
+        "    for (int count = m_map.m_mapWidth * m_map.m_mapHeight; count--; ++item)\n"
         "        item->setTerrain(eTerrainDirt, 0, 0, 0);\n")
     yield "positive_for", (
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n"
-        "    for (int count = m_map.m_size.m_x * m_map.m_size.m_y; count > 0; --count) {\n"
+        "    for (int count = m_map.m_mapWidth * m_map.m_mapHeight; count > 0; --count) {\n"
         "        item->setTerrain(eTerrainDirt, 0, 0, 0);\n        ++item;\n    }\n")
     yield "guarded_do", (
         "    TRmgMapItem* item = m_map.getMapItem(0, 0);\n"
-        "    int count = m_map.m_size.m_x * m_map.m_size.m_y;\n"
+        "    int count = m_map.m_mapWidth * m_map.m_mapHeight;\n"
         "    if (count > 0) {\n        do {\n"
         "            item->setTerrain(eTerrainDirt, 0, 0, 0);\n            ++item;\n"
         "        } while (--count != 0);\n    }\n")
@@ -157,7 +157,7 @@ def lifetime_refinements(text):
     yield "byte_zero_flags", text.replace(flags,
         "    unsigned char cleared = 0;\n    m_hasGuard = cleared;\n    m_ready = cleared;\n")
     lookup = re.search(r"    (?:TRmgMapItem\* item = |item = )(m_map|map)\.getMapItem\(0, 0\);\n", text)
-    dimensions = re.search(r"(m_map|map)\.m_size.m_x \* \1\.m_size.m_y", text)
+    dimensions = re.search(r"(m_map|map)\.m_mapWidth \* \1\.m_mapHeight", text)
     if lookup is None or dimensions is None:
         raise ValueError("review the surface lookup and cached dimensions")
     receiver = lookup.group(1)
@@ -166,8 +166,8 @@ def lifetime_refinements(text):
         yield label, text.replace(lookup.group(), initializer + lookup.group().replace(
             ".getMapItem(0, 0)", ".getMapItem(origin.m_x, origin.m_y)"))
     for reverse in (False, True):
-        reads = ("    int width = " + receiver + ".m_size.m_x;\n",
-                 "    int height = " + receiver + ".m_size.m_y;\n")
+        reads = ("    int width = " + receiver + ".m_mapWidth;\n",
+                 "    int height = " + receiver + ".m_mapHeight;\n")
         result = text.replace(dimensions.group(), "width * height")
         # Some retained parents snapshot count before the pure lookup. Keep
         # that placement, and declare both dimensions before their first use.
@@ -175,7 +175,7 @@ def lifetime_refinements(text):
         yield "dimension_copies_" + ("yx" if reverse else "xy"), (
             result[:line] + "".join(reversed(reads) if reverse else reads) + result[line:])
     yield "dimension_product_yx", text.replace(dimensions.group(),
-        receiver + ".m_size.m_y * " + receiver + ".m_size.m_x")
+        receiver + ".m_mapHeight * " + receiver + ".m_mapWidth")
     # Bind the existing receiver across both phases, not a duplicate map.
     mapped = text.replace("    type_random_map& map = m_map;\n", "")
     mapped = re.sub(r"\bmap\.", "m_map.", mapped).replace("m_map.", "map.")

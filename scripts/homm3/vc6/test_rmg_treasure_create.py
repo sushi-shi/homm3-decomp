@@ -93,7 +93,7 @@ class RmgTreasureCreateTests(unittest.TestCase):
             self.assertIn(before, self.module.BASELINE)
             candidate("Wrong" + label, self.module.BASELINE.replace(before, after), False)
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)),
-                ("VALUE_HELPERS", self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")),
+                ("VALUE_HELPERS", self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")),
                 ("ACCESSORS", "\n".join(accessors)), ("BIT_POSITION", bit_position.group()),
                 ("CANDIDATES", "\n".join(methods)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)

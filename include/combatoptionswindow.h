@@ -78,15 +78,14 @@ public:
 
     TCombatOptionsWindow();
     virtual ~TCombatOptionsWindow();
-private:
     int convertID2HelpID(int id) const;
-public:
     // Before normalization (function): TCombatOptionsWindow::DoModal.
     void doModal();
-    // DC CombatOptionsWindowHandler (0x67b7c) directly calls these private
-    // methods; retail 0x46f7b0 expands them. Preserve the callback friendship.
-    friend int combatOptionsWindowHandler(message& msg);
-private:
+    // Retail emits no out-of-line body for any of the four: /Ob2 expands
+    // them at every call site, and the free handler is one of those sites,
+    // so they cannot be private. HighlightCombatSpeed's expansion is
+    // register-visible - the inlined `this` is the EDI retail holds across
+    // the whole speed sweep, where a direct global load reloads per call.
     // Before normalization (function): TCombatOptionsWindow::HighlightCombatSpeed.
     void highlightCombatSpeed();
     // Before normalization (function): TCombatOptionsWindow::HighlightGrid.

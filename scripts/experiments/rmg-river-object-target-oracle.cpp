@@ -10,7 +10,7 @@
 // @TILE_DATA@
 struct TRmgMapItem { unsigned m_guard; TRmgGroundTileData m_tileData; };
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
     // @SCALAR_ACCESSOR@
     TRmgMapItem* getMapItem(TRmgMapPosition);
@@ -72,7 +72,7 @@ struct State {
     bool m_bad;
     State(const Scenario& input, TargetRoot* root) : m_root(root), m_scenario(input),
         m_cells(input.m_width * input.m_height * 2 + input.m_width + 2), m_expected(reference(input)), m_progressCalls(0), m_bad(false) {
-        root->m_map.m_size.m_x = input.m_width; root->m_map.m_size.m_y = input.m_height;
+        root->m_map.m_mapWidth = input.m_width; root->m_map.m_mapHeight = input.m_height;
         root->m_map.m_mapItems = &m_cells[1]; root->m_progress = input.m_progress ? &m_progress : 0;
         for (unsigned i = 0; i < m_cells.size(); ++i) {
             uint32_t initial = initialWord(i, input.m_seed);

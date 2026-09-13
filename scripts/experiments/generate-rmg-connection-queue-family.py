@@ -56,8 +56,8 @@ BASELINE = """void type_random_map::floodConnectionCosts(TRmgMapPosition positio
             nextPosition.m_x = currentPosition.m_x + g_rmgDirections[direction].m_x;
             nextPosition.m_y = currentPosition.m_y + g_rmgDirections[direction].m_y;
             nextPosition.m_z = currentPosition.m_z;
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_size.m_x
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_size.m_y)
+            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_mapWidth
+                || nextPosition.m_y < 0 || nextPosition.m_y >= m_mapHeight)
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_roadPassable

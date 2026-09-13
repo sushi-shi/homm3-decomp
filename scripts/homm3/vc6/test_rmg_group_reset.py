@@ -43,7 +43,7 @@ class RmgGroupResetTests(unittest.TestCase):
         helper = self.module.helpers()
         with self.assertRaisesRegex(ValueError, "expected one definition"):
             helper.definition(self.source, "type_random_map::getMapItem")
-        self.assertIn("y * m_size.m_x + x", helper.definition(
+        self.assertIn("y * m_mapWidth + x", helper.definition(
             self.source, "type_random_map::getMapItem", parameters="int x, int y"))
         self.assertIn("point.m_z", helper.definition(
             self.source, "type_random_map::getMapItem", parameters="TRmgMapPosition point"))
@@ -149,10 +149,10 @@ class RmgGroupResetTests(unittest.TestCase):
             ("EarlyFlags", "    m_map.clear();\n    m_hasGuard = 0;\n    m_ready = 0;",
              "    m_hasGuard = 0;\n    m_ready = 0;\n    m_map.clear();"),
             ("WrongTerrain", "setTerrain(eTerrainDirt, 0, 0, 0)", "setTerrain(eTerrainWater, 0, 0, 0)"),
-            ("WrongPlaneCount", "m_map.m_size.m_x * m_map.m_size.m_y;",
-             "m_map.m_size.m_x * m_map.m_size.m_y * m_map.m_size.m_z;"),
+            ("WrongPlaneCount", "m_map.m_mapWidth * m_map.m_mapHeight;",
+             "m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;"),
             ("MissingLastCell", "while (count--)", "while (count-- > 1)"),
-            ("ExtraCell", "m_map.m_size.m_x * m_map.m_size.m_y;", "m_map.m_size.m_x * m_map.m_size.m_y + 1;"),
+            ("ExtraCell", "m_map.m_mapWidth * m_map.m_mapHeight;", "m_map.m_mapWidth * m_map.m_mapHeight + 1;"),
         )
         for label, before, after in controls:
             self.assertIn(before, self.module.BASELINE)
@@ -164,7 +164,7 @@ class RmgGroupResetTests(unittest.TestCase):
                 ("CELL_FIELDS", fields(block("struct TRmgMapItem {"), (
                     "m_objects", "m_previousTile", "m_movement", "m_zoneState", "m_tile", "m_tileData", "m_connection"))),
                 ("MAP_FIELDS", fields(block("class type_random_map :"), (
-                    "m_ownsMapItems", "m_mapItems", "m_size"))),
+                    "m_ownsMapItems", "m_mapItems", "m_mapWidth", "m_mapHeight", "m_numberLevels"))),
                 ("GROUP_FIELDS", fields(block("struct TRmgTreasureGroup {"), (
                     "m_map", "m_bounds", "m_objects", "m_outline", "m_hasGuard", "m_guardPosition", "m_position", "m_ready"))),
                 ("HELPERS", "\n".join(definitions)), ("CANDIDATES", "\n".join(programs)), ("CHECKS", "\n".join(checks))):

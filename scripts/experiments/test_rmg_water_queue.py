@@ -31,7 +31,7 @@ class WaterQueueTests(unittest.TestCase):
         types = "\n".join(block("struct " + name) for name in (
             "TRmgVector", "TPoint", "TRmgMapPosition", "TRmgMovementCost",
             "TRmgZoneCellState", "TRmgGroundTileData"))
-        types += "\n" + definition(source, "TRmgMapPosition::TRmgMapPosition")
+        types += "\n" + definition(support, "TRmgMapPosition::TRmgMapPosition")
         types += "\n" + definition(source, "TRmgMapPosition::operator+=")
         types += """
 struct TRmgMapItem {
@@ -40,7 +40,7 @@ struct TRmgMapItem {
     TRmgGroundTileData m_tileData;
 };
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth, m_mapHeight;
     TRmgMapItem* m_mapItems;
 """ + definition(header, "getMapItem", parameters="int x, int y, int z") + """
     TRmgMapItem* getMapItem(TRmgMapPosition point);
@@ -130,7 +130,7 @@ bool check() {
         std::vector<TRmgMapItem> expected=cells;
         reference(expected,w,h,seed,zone);
         type_random_map_generator owner;
-        owner.m_map.m_size.m_x=w;owner.m_map.m_size.m_y=h;owner.m_map.m_mapItems=&cells[0];
+        owner.m_map.m_mapWidth=w;owner.m_map.m_mapHeight=h;owner.m_map.m_mapItems=&cells[0];
         TRmgMapPosition position(seed%w,(seed/w)%h,level);
         owner.floodWaterZoneDistances(position,zone);
         for(unsigned i=0;i<cells.size();++i)

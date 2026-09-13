@@ -3409,11 +3409,8 @@ int SavedGameHeader::load(TAbstractFile* infile)
 // boats temporarily expose the object below their occupied cell; the same
 // obscurer is restored once that cell has been inspected. The y/x loop order
 // and its width/height bounds are retail's own packed-type_point schedule.
-// Earlier flattened version was exact: clear() expanded clear and erase
-// while retaining the empty POD _Destroy helper. Restoring the DC-proven
-// hero/boat obscureCell wrappers leaves them expanded correctly, but VC6
-// now retains std::copy in the earlier clear path (81.3920%, HIST 100%).
-// Keep the wrappers and diagnose that separate inliner decision.
+// EXACT 2026-08-22: clear() is load-bearing - VC6 expands clear and erase but
+// retains the empty POD _Destroy helper; explicit erase over-inlines it away.
 VA(0x004bcb30, 0x26C)  // sole caller game::Load, dc 0xa8144
 void game::setupShipyards()
 {
@@ -3455,11 +3452,13 @@ void game::setupShipyards()
                 }
 
                 if (obscuringHero) {
-                    obscuringHero->obscureCell();
+                    obscuringHero->type_obscuring_object::obscureCell(
+                        HERO, obscuringHero->m_id);
                     obscuringHero = 0;
                 }
                 if (obscuringBoat) {
-                    obscuringBoat->obscureCell();
+                    obscuringBoat->type_obscuring_object::obscureCell(
+                        BOAT, obscuringBoat->m_id);
                     obscuringBoat = 0;
                 }
             }
@@ -8878,7 +8877,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
     }
 
     if (obscuringHero) {
-        obscuringHero->obscureCell();
+        obscuringHero->obscureCell(HERO, obscuringHero->m_id);
     }
 }
 

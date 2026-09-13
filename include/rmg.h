@@ -175,13 +175,6 @@ public:
     // Before normalization: schoolMask.
     int m_schoolMask;
 
-    // Retail roster 0x538b10 installs the derived vtable before these three
-    // field stores. Sixteen initializer/store forms keep the current body
-    // closest; the all-member form moves fields before that vtable store.
-    // Sixteen input-ownership forms and 55 roster recombinations do not
-    // improve the remaining nested base-constructor decision. One borrowed
-    // input recovers the early prefix but loses later insertion/constructor
-    // choices. Retain the value interface and this ordered inline body.
     inline type_black_box_spells_def(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
         : type_treasure_def(6, 0, value, 2)
@@ -598,22 +591,13 @@ int getRmgSquaredDistance(TPoint first, TPoint second);
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
 // at 0x5b76b0 reads both arguments through pointers. This role name is
 // provisional; the signed geometry TPoint is a separate recovered surface.
-// The coordinate-template model is supported by two independent boundaries:
-// const-coordinate-reference construction at 0x5b76b0 and the comparison
-// emitted among the terrain tree templates at 0x5b8ca0. Its template body
-// stays unknown to the optimizer until after insert is emitted, preserving
-// retail's _Lockit exception scope (0x5b7cd0). An ordinary inline comparison
-// on this same specialization is compiled at paintPoint and loses that frame.
-// TRmgGridPointT is a provisional template name; TRmgGridPoint preserves the
-// existing unsigned-coordinate role spelling at its uses.
-template<class Coordinate>
-struct TRmgGridPointT {
+struct TRmgGridPoint {
     // Before normalization: x.
-    Coordinate m_x;
+    unsigned int m_x;
     // Before normalization: y.
-    Coordinate m_y;
+    unsigned int m_y;
 
-    TRmgGridPointT() {}
+    TRmgGridPoint() {}
     // Trivially copyable: no user-written copy constructor. Retail's proxy
     // factory at() (0x4fa050) and rmg's getSize (0x532240) copy a grid
     // point as the compiler's memberwise copy, x before y; a written copy
@@ -640,9 +624,9 @@ struct TRmgGridPointT {
     // The river-painter constructor at 0x55ee50 stays exact; its earlier
     // 99.71% implicit-copy reading predates the retained compound add.
 
-    TRmgGridPointT(const Coordinate& newX, const Coordinate& newY)
+    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
-    TRmgGridPointT(const TPoint& point);
+    TRmgGridPoint(const TPoint& point);
 
     // Coordinate accessors: each use is a free inline site, and the terrain
     // painter's diagonal checks need those sites to divide their budgets so
@@ -650,14 +634,14 @@ struct TRmgGridPointT {
     // paintRectangle walks its rectangle through them so its body stays
     // above the saved-body cliff. Every other body still reads the public
     // fields, and each migration is measured on its own.
-    Coordinate getX() const { return m_x; }
-    Coordinate getY() const { return m_y; }
-    void setX(Coordinate newX) { m_x = newX; }
-    void setY(Coordinate newY) { m_y = newY; }
+    unsigned int getX() const { return m_x; }
+    unsigned int getY() const { return m_y; }
+    void setX(unsigned int newX) { m_x = newX; }
+    void setY(unsigned int newY) { m_y = newY; }
 
     // paintTransitions steps one column with a grid-side compound add; the
     // retained add at 0x4fa540 is TPoint's, so this one stays inline.
-    TRmgGridPointT& operator+=(const TPoint& offset)
+    TRmgGridPoint& operator+=(const TPoint& offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;
@@ -669,13 +653,9 @@ struct TRmgGridPointT {
     }
 };
 
-typedef TRmgGridPointT<unsigned int> TRmgGridPoint;
-
-template<class Coordinate>
-bool operator<(const TRmgGridPointT<Coordinate>& left, const TRmgGridPointT<Coordinate>& right)
-{
-    return left.m_y < right.m_y || (left.m_y == right.m_y && left.m_x < right.m_x);
-}
+// The retained comparison at 0x5b8ca0 receives both point addresses in
+// ECX/EDX and returns without popping arguments: a free fastcall boundary.
+bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
 
 struct TRmgZoneBounds {
     // Before normalization: minimumX.
@@ -954,9 +934,7 @@ public:
     // Retail retains this body at 0x5330e0 beneath derived construction.
     // No Dreamcast inline declaration exists for this Complete-only type.
     type_object(TRmgObjectPropertiesRef* newProperties);
-    // Placement callers own their coordinate snapshots. The borrowed result
-    // distinguishes its former exact transfer model; see the source evidence.
-    const TRmgMapPosition& getPosition() const;
+    TRmgMapPosition getPosition() const;
 
     // The constructor and placement scorer share this five-byte reset.
     // The method name is provisional; retail preserves the store order.
@@ -1169,7 +1147,7 @@ public:
     int m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, const int& objectId, int heroIndex,
+        type_random_map_generator* generator, int objectId, int heroIndex,
         int experience);
 
     virtual void unknownOperation();
@@ -1338,11 +1316,12 @@ public:
     char m_paddingBeforeMapItems[3];
     // Before normalization: mapItems.
     TRmgMapItem* m_mapItems;                // +0x08
-    // Before normalization: mapWidth, mapHeight, numberLevels.
-    // Retail-only ownership hypothesis: this coordinate subobject preserves
-    // the exact owned-map body and its retained call from TRmgGeneratorBase;
-    // three independent integers preserve only the former. No DC declaration.
-    TRmgMapPosition m_size; // +0x0c: signed width, height and level count
+    // Before normalization: mapWidth.
+    int m_mapWidth;                         // +0x0c
+    // Before normalization: mapHeight.
+    int m_mapHeight;                        // +0x10
+    // Before normalization: numberLevels.
+    int m_numberLevels;                     // +0x14
 
     // Owning constructor retained at 0x530fb0, called by the generator base
     // and temporary treasure-group maps. Three dimensions, thiscall ret 0xc.
@@ -1365,9 +1344,9 @@ public:
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
         m_mapItems = items;
-        m_size.m_x = width;
-        m_size.m_y = height;
-        m_size.m_z = 1;
+        m_mapWidth = width;
+        m_mapHeight = height;
+        m_numberLevels = 1;
         m_ownsMapItems = 0;
     }
 
@@ -1390,7 +1369,7 @@ public:
     // Before normalization (function): type_random_map::GetMapItem.
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
-        return m_mapItems + (z * m_size.m_y + y) * m_size.m_x + x;
+        return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
     }
     // Before normalization (function): type_random_map::GetMapItem.
     TRmgMapItem* getMapItem(TRmgMapPosition point);
@@ -1752,8 +1731,6 @@ struct TRmgZone {
     // its retained connection predicate compares center distance and size.
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
-    // Provisional role-derived helper; retail removal expands its count update.
-    void decrementObjectCount(TAdventureObjectType objectType);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const

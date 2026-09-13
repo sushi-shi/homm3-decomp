@@ -625,9 +625,7 @@ public:
     // Before normalization (function): TSingleSelectionWindow::WindowHandler.
     virtual int windowHandler(message* msg);  // slot 9
     // Before normalization (function): TSingleSelectionWindow::ProcessRightSelect.
-    private:
     virtual unsigned char processRightSelect(int id);  // slot 11
-    public:
     // Before normalization (function): TSingleSelectionWindow::ExitDialog.
     virtual int exitDialog(message* msg);   // slot 14
     // Before normalization (function): TSingleSelectionWindow::UpdateAllyEnemyFlags.
@@ -937,7 +935,6 @@ public:
 private:
     // Before normalization (function): TSingleSelectionWindow::GetThisPlayer.
     CNetPlayerHandlerPlayer* getThisPlayer();
-public:
     // Before normalization (function): TSingleSelectionWindow::CalcPosition.
     int calcPosition(int playerPos);
 };

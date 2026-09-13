@@ -22,15 +22,15 @@ class MapAccessorTests(unittest.TestCase):
             if body not in {body for _, body in forms}:
                 forms.append((label, body))
         positive_count = len(forms)
-        forms += [("wrong_height", original.replace("z * m_size.m_y", "z * m_size.m_x")),
+        forms += [("wrong_height", original.replace("z * m_mapHeight", "z * m_mapWidth")),
                   ("wrong_width", original.replace(
-                      "(z * m_size.m_y + y) * m_size.m_x", "(z * m_size.m_y + y) * m_size.m_y")),
-                  ("missing_level", original.replace("z * m_size.m_y + y", "y")),
+                      "(z * m_mapHeight + y) * m_mapWidth", "(z * m_mapHeight + y) * m_mapHeight")),
+                  ("missing_level", original.replace("z * m_mapHeight + y", "y")),
                   ("wrong_x", original.replace("+ x;", "+ y;")),
                   ("mutated_base", original.replace("return m_mapItems +", "m_mapItems +=").replace("+ x;", "+ x;\n        return m_mapItems;"))]
         text = "#include <cstdio>\nstruct TRmgMapItem { int marker; };\n"
         header = (root / "include/rmg.h").read_text()
-        for name in ("TRmgVector", "TPoint", "TRmgMapPosition"):
+        for name in ("TRmgVector", "TPoint"):
             start = header.index("struct " + name + " {")
             text += header[start:header.index("\n};", start) + 3] + "\n"
         # An intentionally oversized allocation also keeps wrong controls'
@@ -38,18 +38,18 @@ class MapAccessorTests(unittest.TestCase):
         # offsets, not a substituted retail object layout, are the oracle.
         text += "static TRmgMapItem cells[200000];\n"
         for index, (_, body) in enumerate(forms):
-            text += f"struct Map{index} {{ TRmgMapItem* m_mapItems; TRmgMapPosition m_size;\n{body}\n}};\n"
+            text += f"struct Map{index} {{ TRmgMapItem* m_mapItems; int m_mapWidth, m_mapHeight;\n{body}\n}};\n"
         text += "template<class T> bool check() { T map; map.m_mapItems = cells + 16;\n"
         text += "int sizes[] = {1,2,3,7,36,72,144};\n"
         text += "for (int wi=0; wi<7; ++wi) for(int hi=0; hi<7; ++hi) {\n"
-        text += "map.m_size.m_x=sizes[wi]; map.m_size.m_y=sizes[hi];\n"
-        text += "int xs[]={0,map.m_size.m_x/2,map.m_size.m_x-1}; int ys[]={0,map.m_size.m_y/2,map.m_size.m_y-1};\n"
+        text += "map.m_mapWidth=sizes[wi]; map.m_mapHeight=sizes[hi];\n"
+        text += "int xs[]={0,map.m_mapWidth/2,map.m_mapWidth-1}; int ys[]={0,map.m_mapHeight/2,map.m_mapHeight-1};\n"
         text += "for(int z=0;z<2;++z) for(int xi=0;xi<3;++xi) for(int yi=0;yi<3;++yi) {\n"
-        text += "long expected=xs[xi]; for(int level=0;level<z;++level) expected += long(map.m_size.m_x)*map.m_size.m_y;\n"
-        text += "for(int row=0;row<ys[yi];++row) expected += map.m_size.m_x;\n"
-        text += "TRmgMapItem* before=map.m_mapItems; int width=map.m_size.m_x,height=map.m_size.m_y;\n"
+        text += "long expected=xs[xi]; for(int level=0;level<z;++level) expected += long(map.m_mapWidth)*map.m_mapHeight;\n"
+        text += "for(int row=0;row<ys[yi];++row) expected += map.m_mapWidth;\n"
+        text += "TRmgMapItem* before=map.m_mapItems; int width=map.m_mapWidth,height=map.m_mapHeight;\n"
         text += "if(map.getMapItem(xs[xi],ys[yi],z) != before+expected) return false;\n"
-        text += "if(map.m_mapItems!=before || map.m_size.m_x!=width || map.m_size.m_y!=height) return false;\n}} return true; }\nint main(){\n"
+        text += "if(map.m_mapItems!=before || map.m_mapWidth!=width || map.m_mapHeight!=height) return false;\n}} return true; }\nint main(){\n"
         for index in range(len(forms)):
             condition = f"!check<Map{index}>()" if index < positive_count else f"check<Map{index}>()"
             text += f'if({condition}) {{ std::printf("failed form {index}\\n"); return 1; }}\n'

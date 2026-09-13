@@ -26,14 +26,11 @@ HARNESS = r'''
 #include <cstdlib>
 using std::memset;
 @ENUMS@
-struct TPoint;
-@MAP_POSITION@
 std::vector<int> events;
 int randomValue, randomCalls;
 int scriptedRand() { ++randomCalls; return randomValue; }
 struct TRmgTownSlot { int m_kind, m_playerIndex; };
-struct TRmgTemplate { std::string m_name; std::vector<TRmgTownSlot*> m_zones; @TEMPLATE_METHODS@ };
-@TEMPLATE_METHOD_DEFINITIONS@
+struct TRmgTemplate { std::string m_name; std::vector<TRmgTownSlot*> m_zones; };
 struct TRmgZone {
     TRmgTownSlot* m_slot;
     int m_terrain, m_alignment, id;
@@ -41,7 +38,7 @@ struct TRmgZone {
 };
 struct Progress { void advance(int n) { events.push_back(10000+n); } };
 struct Map {
-    TRmgMapPosition m_size;
+    int m_numberLevels;
     void markCoastalTiles() { events.push_back(900); }
 };
 struct type_random_map_generator {
@@ -67,7 +64,7 @@ struct type_random_map_generator {
     }
     void buildZoneBoundaries(TRmgTemplate* t, int level) {
         events.push_back(200 + (t==replacement ? 10 : 0) + level);
-        if (mutate && level==0 && m_map.m_size.m_z==1) m_map.m_size.m_z=2;
+        if (mutate && level==0 && m_map.m_numberLevels==1) m_map.m_numberLevels=2;
     }
     void paintZoneTerrain() { events.push_back(300); }
     void placePrimaryTown(TRmgZone* z) {
@@ -151,7 +148,7 @@ bool check(Fn fn, int mask, int hMode, int cMode, bool mutate, bool progress, in
     std::fill(g.m_activeZoneCountsByAlignment,g.m_activeZoneCountsByAlignment+9,42);
     g.m_activeZoneCount=42;
     g.m_templateName="before";
-    g.m_map.m_size.m_z=levels;
+    g.m_map.m_numberLevels=levels;
     g.m_progress=progress ? &sink:0;
     std::vector<int> expected;
     expected.push_back(100+g.selected);
@@ -213,12 +210,7 @@ def main():
     parser.add_argument("--manifest", type=Path, action="append", default=[])
     args = parser.parse_args()
     family = generator("generate-rmg-coordinator-family.py")
-    game_source = (HOMM3_DIR / "src/rmg.cpp").read_text()
-    authored = family.definition(game_source)
-    helper = generator("generate-rmg-position-family.py")
-    template_methods = set()
-    if "TRmgTemplate::getName" in game_source:
-        template_methods.add(helper.definition(game_source, "TRmgTemplate::getName"))
+    authored = family.definition((HOMM3_DIR / "src/rmg.cpp").read_text())
     original = family.variant(authored, 0, 0, 0)
     bodies = [family.variant(original, *v) for v in itertools.product(range(5), range(4), range(3))]
     for path in args.manifest:
@@ -226,9 +218,6 @@ def main():
         for axis in payload["axes"]:
             for option in axis["options"]:
                 body = option["replace"]
-                for edit in option.get("extra_edits", []):
-                    if edit.get("source") == "src/rmg.cpp" and "TRmgTemplate::getName" in edit.get("replace", ""):
-                        template_methods.add(helper.definition(edit["replace"], "TRmgTemplate::getName"))
                 if body not in bodies:
                     bodies.append(body)
     positive_count = len(bodies)
@@ -256,15 +245,7 @@ def main():
         header = (HOMM3_DIR / "include" / file).read_text()
         start = header.index("enum " + name + " {")
         enums.append(header[start:header.index("};", start) + 2])
-    if len(template_methods) > 1:
-        raise ValueError("template-name helpers disagree across manifests")
-    source = source.replace("@TEMPLATE_METHODS@", "\n".join(
-        method.split("{", 1)[0].replace("TRmgTemplate::", "").strip() + ";" for method in sorted(template_methods)))
-    source = source.replace("@TEMPLATE_METHOD_DEFINITIONS@", "\n".join(sorted(template_methods)))
     source = source.replace("@ENUMS@", "\n".join(enums))
-    header = (HOMM3_DIR / "include/rmg.h").read_text()
-    at = header.index("struct TRmgMapPosition {")
-    source = source.replace("@MAP_POSITION@", header[at:header.index("\n};", at) + 3])
     source = source.replace("@BODIES@", "\n".join(projected))
     source = source.replace("@FUNCTIONS@", ",".join("&type_random_map_generator::generate%d" % i for i in range(len(bodies))))
     source = source.replace("@POSITIVE_COUNT@", str(positive_count))

@@ -55,7 +55,7 @@ class JunctionPrepareTests(unittest.TestCase):
                      "TRmgGroundTileData", "TRmgConnectionDecoration"):
             start = header.index("struct " + name + " {")
             text += header[start:header.index("\n};", start) + 3] + "\n"
-        text += definition(source, "TRmgMapPosition::TRmgMapPosition") + "\n"
+        text += definition(support, "TRmgMapPosition::TRmgMapPosition") + "\n"
         text += "enum { eTerrainWater=8 };\nstruct TRmgMapItem {\nstd::vector<int*> m_objects; TRmgMapPosition m_previousTile; TRmgMovementCost m_movement; TRmgZoneCellState m_zoneState; TRmgGroundTile m_tile; TRmgGroundTileData m_tileData; TRmgConnectionDecoration m_connection;\n"
         text += definition(header, "resetMovement") + "\n};\n"
         text += r'''
@@ -66,7 +66,7 @@ void appendCell(std::vector<int>& trace,const TRmgMapItem& cell) {
     trace.push_back(word(&cell.m_tileData));trace.push_back(word(&cell.m_connection));trace.push_back(cell.m_objects.size());
 }
 struct type_random_map {
-    TRmgMapPosition m_size;
+    int m_mapWidth,m_mapHeight;
     TRmgMapItem* m_mapItems;
     std::vector<int>* m_trace;
     int m_mode;
@@ -76,11 +76,11 @@ struct type_random_map {
         text += r'''
     void floodConnectionCosts(TRmgMapPosition point,unsigned char flag) {
         m_trace->push_back(1);m_trace->push_back(point.m_x);m_trace->push_back(point.m_y);m_trace->push_back(point.m_z);m_trace->push_back(flag);
-        int count=m_size.m_x*m_size.m_y*2;
+        int count=m_mapWidth*m_mapHeight*2;
         for(int i=0;i<count;++i) appendCell(*m_trace,m_mapItems[i]);
         m_seed=point;
         for(int i=0;i<count;++i) {
-            int x=i%m_size.m_x,y=(i/m_size.m_x)%m_size.m_y,z=i/(m_size.m_x*m_size.m_y);
+            int x=i%m_mapWidth,y=(i/m_mapWidth)%m_mapHeight,z=i/(m_mapWidth*m_mapHeight);
             int distance=std::abs(x-point.m_x)+std::abs(y-point.m_y)+std::abs(z-point.m_z);
             m_mapItems[i].m_movement.m_cost=distance ? (m_mode==0 ? distance*2 : m_mode==1 ? 30000 : m_mode==2 ? 30001 : 0) : 0;
             TRmgMapPosition previous(x,y,z);
@@ -109,14 +109,14 @@ struct GeneratorFixture {
         m_trace.push_back(to.m_x);m_trace.push_back(to.m_y);
         // Opaque source mutation checks that the original level remains owned.
         zone->m_levelPosition.m_z=1-zone->m_levelPosition.m_z;
-        if(++m_connectCount==1) zone->m_entrances.push_back(TPoint(0,m_map.m_size.m_y-1));
+        if(++m_connectCount==1) zone->m_entrances.push_back(TPoint(0,m_map.m_mapHeight-1));
     }
 };
 void reference(GeneratorFixture& owner,TRmgZone* zone) {
     int level=zone->m_levelPosition.m_z;
-    int count=owner.m_map.m_size.m_x*owner.m_map.m_size.m_y*2;
+    int count=owner.m_map.m_mapWidth*owner.m_map.m_mapHeight*2;
     for(int i=0;i<count;++i) {
-        int x=i%owner.m_map.m_size.m_x,y=(i/owner.m_map.m_size.m_x)%owner.m_map.m_size.m_y,z=i/(owner.m_map.m_size.m_x*owner.m_map.m_size.m_y);
+        int x=i%owner.m_map.m_mapWidth,y=(i/owner.m_map.m_mapWidth)%owner.m_map.m_mapHeight,z=i/(owner.m_map.m_mapWidth*owner.m_map.m_mapHeight);
         TRmgMapItem& item=owner.m_map.m_mapItems[i];
         if(z!=level || x<zone->m_bounds.m_minimumX || x>=zone->m_bounds.m_maximumX || y<zone->m_bounds.m_minimumY || y>=zone->m_bounds.m_maximumY) continue;
         if(item.m_zoneState.m_zone!=zone->m_slot->m_zoneIndex || item.m_tile.m_landType==eTerrainWater) continue;
@@ -172,7 +172,7 @@ template<class Candidate> bool check() {
         TRmgZone zb=za;
         Candidate actual;GeneratorFixture expected;
         actual.m_connectCount=expected.m_connectCount=0;
-        actual.m_map.m_size.m_x=expected.m_map.m_size.m_x=width;actual.m_map.m_size.m_y=expected.m_map.m_size.m_y=height;
+        actual.m_map.m_mapWidth=expected.m_map.m_mapWidth=width;actual.m_map.m_mapHeight=expected.m_map.m_mapHeight=height;
         actual.m_map.m_mapItems=&a[4];expected.m_map.m_mapItems=&b[4];
         actual.m_map.m_trace=&actual.m_trace;expected.m_map.m_trace=&expected.m_trace;
         actual.m_map.m_mode=expected.m_map.m_mode=mode;

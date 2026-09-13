@@ -1,6 +1,5 @@
 """Coastal lifetime family roundtrip and affine-path behavioral controls."""
 import json
-import os
 from pathlib import Path
 import re
 import shutil
@@ -46,15 +45,6 @@ class RiverCoastTests(unittest.TestCase):
             checks.append('if (' + ('!' if good else '') + 'check<' + name + '>()) { std::fprintf(stderr, "failed ' + name + '\\n"); return 1; }')
         for i, (_, body) in enumerate(self.module.forms()):
             candidate("Candidate" + str(i), body, True)
-        manifest = os.environ.get("HOMM3_RIVER_COAST_MANIFEST")
-        if manifest:
-            _, originals, axes = source_families.load_manifest(Path(manifest), self.root)
-            if len(axes) != 1:
-                raise ValueError("expected one coastal full-function axis")
-            for i in range(len(axes[0].options)):
-                rendered = source_families.render(originals, axes, (i,))
-                body = self.module.helpers().definition(rendered[self.module.SOURCE], self.module.FUNCTION)
-                candidate("Manifest" + str(i), body, True)
         # Representatives span the full coordinate/step/counter families and
         # include all ten distinct retained parents of the measured first run.
         forms = list(self.module.forms())
@@ -70,12 +60,12 @@ class RiverCoastTests(unittest.TestCase):
             ("Entrance", "item->isRoadEntrance()", "false"),
             ("Inland", "count < 4", "count < 3"),
             ("Shore", "count < 3", "count < 2"),
-            ("Bound", "point.m_x > m_map.m_size.m_x", "point.m_x >= m_map.m_size.m_x"),
+            ("Bound", "point.m_x > m_map.m_mapWidth", "point.m_x >= m_map.m_mapWidth"),
             ("Direction", "direction - 4", "direction - 2"),
             ("Target", "m_riverTarget = 1", "m_hasRiver = 1")):
             candidate("Wrong" + name, self.module.baseline().replace(before, after), False)
         direction = re.search(r"TPoint g_rmgDirections\[[^]]+\] = \{.*?\n};", self.source, re.S)[0].replace("RMG_DIRECTION_COUNT", "8")
-        helper = self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")
+        helper = self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")
         helper += "\n" + "\n".join(self.module.helpers().definition(self.source, "TRmgMapPosition::operator" + op) for op in ("+", "+="))
         program = (self.root / "scripts/experiments/rmg-river-coast-oracle.cpp").read_text()
         for marker, value in (("TYPES", types), ("HELPERS", helper), ("DIRECTIONS", direction),

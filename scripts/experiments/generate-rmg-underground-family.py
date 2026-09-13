@@ -26,13 +26,13 @@ def baseline_definition(source):
         return current
     body = current.replace("    TRmgMapPosition scan;\n    scan.m_z = 1;\n", "")
     body = body.replace("m_map.getMapItem(0, 0, scan.m_z)", "m_map.getMapItem(0, 0, 1)")
-    body = body.replace("    TPoint dimensions(m_map.m_size.m_x, m_map.m_size.m_y);\n", "")
+    body = body.replace("    TPoint dimensions(m_map.m_mapWidth, m_map.m_mapHeight);\n", "")
     body = body.replace("    type_random_map map(item, dimensions.m_x, dimensions.m_y);",
-                        "    type_random_map map(item,\n        m_map.m_size.m_x, m_map.m_size.m_y);")
-    body = body.replace("for (scan.m_y = 0; scan.m_y < m_map.m_size.m_y; ++scan.m_y)",
-                        "for (int y = 0; y < m_map.m_size.m_y; ++y)")
-    body = body.replace("for (scan.m_x = 0; scan.m_x < m_map.m_size.m_x; ++scan.m_x, ++item)",
-                        "for (int x = 0; x < m_map.m_size.m_x; ++x, ++item)")
+                        "    type_random_map map(item,\n        m_map.m_mapWidth, m_map.m_mapHeight);")
+    body = body.replace("for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y)",
+                        "for (int y = 0; y < m_map.m_mapHeight; ++y)")
+    body = body.replace("for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item)",
+                        "for (int x = 0; x < m_map.m_mapWidth; ++x, ++item)")
     body = body.replace("paintRectangle(scan.m_x, scan.m_y,", "paintRectangle(x, y,")
     body = body.replace("        scan = m_zones[zone]->getLevelPosition();",
                         "        TRmgMapPosition position = m_zones[zone]->getLevelPosition();")
@@ -91,13 +91,13 @@ def coordinates(original, form):
 def dimensions(body, form):
     if not form:
         return body
-    old = "    type_random_map map(item,\n        m_map.m_size.m_x, m_map.m_size.m_y);"
+    old = "    type_random_map map(item,\n        m_map.m_mapWidth, m_map.m_mapHeight);"
     if form == 1:
-        replacement = "    int width = m_map.m_size.m_x;\n    int height = m_map.m_size.m_y;\n    type_random_map map(item, width, height);"
+        replacement = "    int width = m_map.m_mapWidth;\n    int height = m_map.m_mapHeight;\n    type_random_map map(item, width, height);"
     elif form == 2:
-        replacement = "    int height = m_map.m_size.m_y;\n    int width = m_map.m_size.m_x;\n    type_random_map map(item, width, height);"
+        replacement = "    int height = m_map.m_mapHeight;\n    int width = m_map.m_mapWidth;\n    type_random_map map(item, width, height);"
     else:
-        replacement = "    TPoint dimensions(m_map.m_size.m_x, m_map.m_size.m_y);\n    type_random_map map(item, dimensions.m_x, dimensions.m_y);"
+        replacement = "    TPoint dimensions(m_map.m_mapWidth, m_map.m_mapHeight);\n    type_random_map map(item, dimensions.m_x, dimensions.m_y);"
     if body.count(old) != 1:
         raise ValueError("changed underground borrowed-map constructor")
     return body.replace(old, replacement)
@@ -141,8 +141,8 @@ def origin_variant(parent, form):
     elif form == 4:
         declarations = [line for line in head.splitlines() if line.startswith(("    int width =", "    int height =", "    TPoint dimensions("))]
         if not declarations:
-            declarations = ["    int width = m_map.m_size.m_x;", "    int height = m_map.m_size.m_y;"]
-            head = head.replace("type_random_map map(item,\n        m_map.m_size.m_x, m_map.m_size.m_y);", "type_random_map map(item, width, height);")
+            declarations = ["    int width = m_map.m_mapWidth;", "    int height = m_map.m_mapHeight;"]
+            head = head.replace("type_random_map map(item,\n        m_map.m_mapWidth, m_map.m_mapHeight);", "type_random_map map(item, width, height);")
         else:
             for declaration in declarations:
                 head = head.replace(declaration + "\n", "")
@@ -208,7 +208,7 @@ def constructor_family(source, checkpoint_path, controls=False):
     helper = generator("generate-rmg-position-family.py")
     header = (HOMM3_DIR / "include/rmg.h").read_text()
     old = helper.definition(header, "type_random_map", parameters="TRmgMapItem* items, int width, int height")
-    statements = ("        m_size.m_x = width;", "        m_size.m_y = height;", "        m_mapItems = items;")
+    statements = ("        m_mapWidth = width;", "        m_mapHeight = height;", "        m_mapItems = items;")
     anchors = ["\n".join(statements[i] for i in order) for order in itertools.permutations(range(3))]
     matched = [anchor for anchor in anchors if old.count(anchor) == 1]
     if len(matched) != 1:

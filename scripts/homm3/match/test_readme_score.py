@@ -10,36 +10,6 @@ from homm3.match import status
 
 
 class ReadmeScoreTest(unittest.TestCase):
-    def test_tracked_generated_functions_are_excluded_from_both_sides(self):
-        report = {"units": [{"name": "unit", "functions": [
-            {"name": "ordinary", "size": 10, "fuzzy_match_percent": 100},
-            {"name": "initializer", "size": 20, "fuzzy_match_percent": 100},
-            {"name": "import", "size": 6, "fuzzy_match_percent": 100},
-        ]}]}
-        with tempfile.TemporaryDirectory() as tmp:
-            readme = Path(tmp) / "README.md"
-            readme.write_text("before\n")
-            with patch.object(status, "README_PATH", readme), \
-                    patch.object(status, "load_baseline", return_value={
-                        ("unit", "initializer"): status.MatchRow(100, 100, 100, 0x200),
-                    }), \
-                    patch.object(status, "function_rvas", return_value={
-                        ("unit", "ordinary"): 0x100, ("unit", "import"): 0x300,
-                    }), \
-                    patch("homm3.build.configure.load_manifest", return_value=(
-                        {}, {}, [{"unit": "unit", "source": "src/unit.cpp"}])), \
-                    patch("homm3.match.universe.summary", return_value=(
-                        {0x100: "target", 0x200: "init-thunk", 0x300: "import-thunk"}, {},
-                        {"target": (2, 20), "init-thunk": (1, 20), "import-thunk": (1, 6)})), \
-                    contextlib.redirect_stdout(io.StringIO()):
-                status.write_readme(report)
-                text = readme.read_text()
-        self.assertIn("**Executable matched: 50.00%**", text)
-        self.assertIn("**Match score** — 1 / 2 functions exact", text)
-        self.assertIn("(1 in linked units)", text)
-        self.assertIn("**Function exact MAX** — 1 / 2", text)
-        self.assertRegex(text, r"\| `\(unmatched\)`\s*\|\s*—\s*\|\s*0 / 1")
-
     def test_exact_max_uses_current_implementation_not_historical_peaks(self):
         functions = [
             {"name": "exact", "size": 10, "fuzzy_match_percent": 100},

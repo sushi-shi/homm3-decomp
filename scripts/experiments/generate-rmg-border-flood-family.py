@@ -37,8 +37,8 @@ def axis(name, original, alternatives):
 
 def border(original, storage, order):
     names = ("minimumX", "maximumX", "minimumY", "maximumY")
-    values = ("max(position.m_x - 1, 0)", "min(position.m_x + 2, m_map.m_size.m_x)",
-              "max(position.m_y - 1, 0)", "min(position.m_y + 2, m_map.m_size.m_y)")
+    values = ("max(position.m_x - 1, 0)", "min(position.m_x + 2, m_map.m_mapWidth)",
+              "max(position.m_y - 1, 0)", "min(position.m_y + 2, m_map.m_mapHeight)")
     fields = ("m_minimumX", "m_maximumX", "m_minimumY", "m_maximumY")
     old_shapes = [(["    int " + name + " =" for name in names], names),
                   (["    TRmgZoneBounds bounds;"], ["bounds." + field for field in fields]),

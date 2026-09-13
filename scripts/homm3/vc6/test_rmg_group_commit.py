@@ -63,11 +63,10 @@ class RmgGroupCommitTests(unittest.TestCase):
         lookup = header[at:header.index("\n    }", at) + 6]
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
         helper = self.module.helpers()
-        value_helpers = [helper.definition(self.source, "TRmgMapPosition::TRmgMapPosition"),
+        value_helpers = [helper.definition(support, "TRmgMapPosition::TRmgMapPosition"),
                          helper.definition(self.source, "type_object::getPosition"),
                          helper.definition(self.source, "type_random_map::getMapItem",
-                                           parameters="TRmgMapPosition point"),
-                         helper.definition(self.source, "TRmgMapPosition::operator+")]
+                                           parameters="TRmgMapPosition point")]
         original = helper.definition(self.source, self.module.FUNCTION)
         programs, checks = [], []
 
@@ -80,7 +79,7 @@ class RmgGroupCommitTests(unittest.TestCase):
         methods["current"] = original
         if os.environ.get("HOMM3_GROUP_COMMIT_MANIFEST"):
             _, originals, axes = source_families.load_manifest(Path(os.environ["HOMM3_GROUP_COMMIT_MANIFEST"]), self.root)
-            for index in range(len(axes[0].options)):
+            for index in range(60):
                 rendered = source_families.render(originals, axes, (index,))[self.module.SOURCE]
                 methods["manifest_" + str(index)] = helper.definition(rendered, self.module.FUNCTION)
         for index, method in enumerate(dict.fromkeys(methods.values())):
@@ -108,7 +107,6 @@ class RmgGroupCommitTests(unittest.TestCase):
         checks.append("if (check<WrongCachedSize>()) return 2;")
         program = template
         for marker, replacement in (("VALUE_TYPES", "\n".join(types)), ("PREDICATES", "\n".join(predicates)),
-                ("POSITION_ACCESSOR_DECL", value_helpers[1].split("{", 1)[0].replace("type_object::", "").strip() + ";"),
                 ("OBJECT_POSITION", field(block("class type_object {"), "m_position")),
                 ("GROUP_POSITION", field(block("struct TRmgTreasureGroup {"), "m_position")),
                 ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", "\n".join(value_helpers)),

@@ -54,7 +54,7 @@ class RmgGroupFitTests(unittest.TestCase):
         self.assertEqual(len(options) - 1 - len(parents), 49)
         semantic = {text for _, text in self.module.semantic_forms()}
         self.assertEqual(len(semantic), 198)
-        self.assertTrue({option["replace"] for option in options} <= semantic | {original})
+        self.assertTrue({option["replace"] for option in options} <= semantic)
         payload = dict(schema=1, units=["rmg", "rmg_support", "rmg_terrain"], axes=axes)
         with tempfile.TemporaryDirectory(prefix="rmg-group-fit-frontier-") as raw:
             path = Path(raw) / "manifest.json"
@@ -94,7 +94,6 @@ class RmgGroupFitTests(unittest.TestCase):
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
         at = self.source.index("TPoint operator+(TPoint point, TRmgVector offset)\n")
         addition = self.source[at:self.source.index("\n}", at) + 2]
-        subtraction = self.module.helpers().definition(self.source, "operator-")
         original = self.module.helpers().definition(self.source, self.module.FUNCTION)
         programs, checks = [], []
 
@@ -112,8 +111,9 @@ class RmgGroupFitTests(unittest.TestCase):
         if manifest:
             _, originals, axes = source_families.load_manifest(Path(manifest), self.root)
             self.assertEqual(len(axes), 1)
+            self.assertEqual(len(axes[0].options), 60)
             self.assertEqual(set(originals), {self.module.SOURCE})
-            for i in range(len(axes[0].options)):
+            for i in range(60):
                 rendered = source_families.render(originals, axes, (i,))[self.module.SOURCE]
                 methods["manifest" + str(i)] = self.module.helpers().definition(rendered, self.module.FUNCTION)
         for index, body in enumerate(dict.fromkeys(methods.values())):
@@ -141,7 +141,7 @@ class RmgGroupFitTests(unittest.TestCase):
                 ("PROTOTYPE_POINT", prototype_point),
                 ("PROPERTY_FIELDS", fields(block(header, "struct TRmgObjectPropertiesRef {"), ("m_prototype",))),
                 ("OBJECT_FIELDS", fields(block(header, "class type_object {"), ("m_properties",))),
-                ("PREDICATES", "\n".join(predicates)), ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", addition + "\n" + subtraction),
+                ("PREDICATES", "\n".join(predicates)), ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", addition),
                 ("DIRECTIONS", block(self.source, "TPoint g_rmgDirections[")),
                 ("CANDIDATES", "\n".join(programs)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)
@@ -155,7 +155,6 @@ class RmgGroupFitTests(unittest.TestCase):
             self.assertEqual(compiled.returncode, 0, compiled.stderr[-10000:])
             checked = subprocess.run([str(executable)], capture_output=True, text=True, timeout=120)
             self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
-        print(len(dict.fromkeys(methods.values())), "group-fit bodies: ordered mask oracle passes; six bad controls rejected")
 
 
 if __name__ == "__main__":

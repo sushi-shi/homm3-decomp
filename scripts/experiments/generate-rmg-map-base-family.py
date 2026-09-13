@@ -23,7 +23,7 @@ def variants(original):
     seen = set()
     for base, offset, dimensions in itertools.product(range(5), range(4), range(3)):
         lines = []
-        height, width = "m_size.m_y", "m_size.m_x"
+        height, width = "m_mapHeight", "m_mapWidth"
         pointer = "m_mapItems"
         pointer_line = ""
         if base:
@@ -33,10 +33,10 @@ def variants(original):
             if base != 2:
                 lines.append(pointer_line)
         if dimensions == 1:
-            lines += ["int width = m_size.m_x;", "int height = m_size.m_y;"]
+            lines += ["int width = m_mapWidth;", "int height = m_mapHeight;"]
             width, height = "width", "height"
         elif dimensions == 2:
-            lines.append("TPoint dimensions(m_size.m_x, m_size.m_y);")
+            lines.append("TPoint dimensions(m_mapWidth, m_mapHeight);")
             width, height = "dimensions.m_x", "dimensions.m_y"
         index = f"(z * {height} + y) * {width} + x"
         if offset == 1:

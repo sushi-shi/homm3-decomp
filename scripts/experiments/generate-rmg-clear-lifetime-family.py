@@ -2,7 +2,7 @@
 """Generate map-cell reset variants around the real vector clearing boundary.
 
 Retail 0x530f10 expands the pointer-vector erase and then updates three
-packed words, reusing EDI after the copy guard. Compare public clear,
+packed words, keeping EDI live across the copy guard. Compare public clear,
 erase and zero-size resize calls and the lifetimes of the three real field
 snapshots. The vector owns raw pointers, not pointed-to objects: clearing it
 does not invoke game code or change the surrounding cell fields. Preserve
@@ -33,25 +33,7 @@ def helpers():
     return module
 
 
-def copied_control(original):
-    """Recover the prior three-copy control from the adopted mixed ownership.
-
-    This is a measured negative control, not a proposed replacement of the
-    now-exact direct terrain writes. Preserve the source's actual field values.
-    """
-    if '    m_tile.m_landType = ' not in original:
-        return original
-    result = original.replace('    m_tile.m_', '    tile.m_')
-    declaration = '    TRmgGroundTileData tileData = m_tileData;'
-    assert result.count(declaration) == 1
-    result = result.replace(declaration, '    TRmgGroundTile tile = m_tile;\n' + declaration)
-    store = '    m_connection = connection;\n'
-    assert result.count(store) == 1
-    return result.replace(store, store + '    m_tile = tile;\n')
-
-
 def variants(original):
-    original = copied_control(original)
     begin = original.index("\n{\n") + 3
     updates = original.index("    connection.m_present = 0;", begin)
     tail = original[updates:]

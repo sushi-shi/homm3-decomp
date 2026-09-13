@@ -1,6 +1,5 @@
 """Noise midpoint forms preserve quadrant bounds, samples and append order."""
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -37,14 +36,6 @@ class NoiseMidpointTests(unittest.TestCase):
             methods.append(body.replace("subdivideRmgNoiseRegion", name))
             checks.append("if (" + ("!" if good else "") + "check(" + name + ")) { std::fprintf(stderr, \"failed " + name + "\\n\"); return 1; }")
         options = self.module.make_axes(self.source)[0]["options"]
-        if os.environ.get("HOMM3_NOISE_REGION_MANIFEST"):
-            manifest = Path(os.environ["HOMM3_NOISE_REGION_MANIFEST"])
-            _, originals, axes = source_families.load_manifest(manifest, self.root)
-            for index in range(len(axes[0].options)):
-                rendered = source_families.render(originals, axes, (index,))["src/rmg.cpp"]
-                body = generator("generate-rmg-position-family.py").definition(rendered, "subdivideRmgNoiseRegion")
-                if body not in [option["replace"] for option in options]:
-                    options.append({"replace": body})
         for index, option in enumerate(options):
             candidate("candidate" + str(index), option["replace"], True)
         baseline = options[0]["replace"]

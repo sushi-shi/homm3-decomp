@@ -65,9 +65,9 @@ class RmgRiverTargetTests(unittest.TestCase):
             ("Level", "TRmgMapPosition(x, y, z)", "TRmgMapPosition(x, y, 0)"),
             ("Cursor", "++x, ++item", "++x"),
             ("LeftEdge", "            m_map.getMapItem(0, y, z)->m_tileData.m_riverTarget = 1;", ""),
-            ("RightEdge", "            m_map.getMapItem(m_map.m_size.m_x - 1, y, z)->m_tileData.m_riverTarget = 1;", ""),
+            ("RightEdge", "            m_map.getMapItem(m_map.m_mapWidth - 1, y, z)->m_tileData.m_riverTarget = 1;", ""),
             ("TopEdge", "            m_map.getMapItem(x, 0, z)->m_tileData.m_riverTarget = 1;", ""),
-            ("BottomEdge", "            m_map.getMapItem(x, m_map.m_size.m_y - 1, z)->m_tileData.m_riverTarget = 1;", ""),
+            ("BottomEdge", "            m_map.getMapItem(x, m_map.m_mapHeight - 1, z)->m_tileData.m_riverTarget = 1;", ""),
             ("PresenceBit", "m_tileData.m_riverTarget = 1", "m_tileData.m_hasRiver = 1"),
             ("Progress", "advance(1000)", "advance(1)"),
         )
@@ -76,7 +76,7 @@ class RmgRiverTargetTests(unittest.TestCase):
             candidate("Wrong" + label, self.module.BASELINE.replace(before, after), False)
         for marker, replacement in (("CONSTANTS", "enum { eTerrainWater = " + water.group(1) + " };"),
                 ("VALUE_TYPES", "\n".join(block(name) for name in ("TRmgVector", "TPoint", "TRmgMapPosition"))),
-                ("VALUE_HELPERS", self.module.helpers().definition(self.source, "TRmgMapPosition::TRmgMapPosition")),
+                ("VALUE_HELPERS", self.module.helpers().definition(support, "TRmgMapPosition::TRmgMapPosition")),
                 ("TILE_TYPES", "\n".join(block(name) for name in ("TRmgGroundTile", "TRmgGroundTileData"))),
                 ("ACCESSOR", scalar.group()), ("CANDIDATES", "\n".join(methods)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)
