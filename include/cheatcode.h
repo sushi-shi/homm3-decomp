@@ -17,17 +17,13 @@ public:
         return _strcmpi(m_code, value) == 0;
     }
 
-    // Before normalization (function): TCheatCode::GetCode.
     const char* getCode() const { return m_code; }
 
 private:
     void encode(const char* value);
 
-    // Before normalization: a.
     static const char* s_a;
-    // Before normalization: b.
     static const char* s_b;
-    // Before normalization: code.
     char m_code[200];
 };
 SIZE(TCheatCode, 200);

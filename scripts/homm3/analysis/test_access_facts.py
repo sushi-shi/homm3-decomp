@@ -20,6 +20,20 @@ def authored(parameters=(), const=False):
 
 
 class AccessFactsTest(unittest.TestCase):
+    def test_convention_fallback_without_comments_is_unambiguous(self):
+        field = {"class_key": "widget", "member_key": "mhasfocus",
+                 "name": "m_hasFocus", "kind": "member", "is_method": False}
+        recorded = {"display": "Widget::bHasFocus", "kind": "member", "access": "private"}
+        dc = {("widget", "bhasfocus"): [recorded]}
+        self.assertEqual(facts.correlate(field, dc), (recorded, None))
+        alternate = dict(recorded, display="Widget::HasFocus", access="public")
+        dc[("widget", "hasfocus")] = [alternate]
+        self.assertEqual(facts.correlate(field, dc), (None, "ambiguous"))
+        field.update(name="HasFocus", member_key="hasfocus")
+        self.assertEqual(facts.correlate(field, dc), (alternate, None))
+        field.update(name="m_somethingElse", member_key="msomethingelse")
+        self.assertEqual(facts.correlate(field, dc), (None, "name"))
+
     def test_member_order_preserves_layout_slots_and_overloads(self):
         import importlib.util
         script = Path(__file__).resolve().parents[2] / "experiments/recover-member-order.py"

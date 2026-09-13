@@ -16,15 +16,11 @@ public:
         PLAYER_NAME_SIZE = 21
     };
 
-    // Before normalization: playerCount.
     int m_playerCount;
-    // Before normalization: names.
     char m_names[MAX_PLAYERS][PLAYER_NAME_SIZE];
 
     CHotSeatMan() : m_playerCount(0) {}
-    // Before normalization (function): CHotSeatMan::Clear.
     void clear() { m_playerCount = 0; }
-    // Before normalization (function): CHotSeatMan::AddPlayer.
     void addPlayer(const char* name)
     {
         if (m_playerCount < MAX_PLAYERS) {
@@ -32,12 +28,10 @@ public:
             ++m_playerCount;
         }
     }
-    // Before normalization (function): CHotSeatMan::GetName.
     char* getName(int player);
 };
 SIZE(CHotSeatMan, 0xac);
 
-// Before normalization: gpHotSeatMan.
 DATA(0x0069ca50) extern CHotSeatMan* g_hotSeatMan;
 
 #endif /* HOMM3_HOTSEAT_H */

@@ -1,5 +1,5 @@
 // savegame.h - the save-file plumbing game::SaveGame (0x4beea0) needs.
-//
+
 // NEITHER DECLARATION HAS A PROVEN OWNER COMPILAND, which is why they
 // are here rather than in an existing header: TGzFile's three bodies sit
 // in the gametypewindow..hero link-order bracket with four candidate
@@ -26,7 +26,7 @@
 // SIZE 8 IS BYTE-PROVEN twice over: the constructor writes only +0 and
 // +4, and game::SaveGame's frame puts the object at ebp-0x1c with the
 // next local at ebp-0x14.
-//
+
 // DEFINED IN src/gzfile.cpp since 2026-09-05, which is the compiland the
 // cinit pair 0x4d6c30 / 0x4d6dc0 brackets; the eight bodies there are
 // exact. A consumer still only needs the layout and the two entry points -
@@ -44,12 +44,9 @@ public:
 
     TGzFile(const char* path, const char* mode);
     ~TGzFile();
-    // Before normalization (function): TGzFile::Read.
     virtual int read(void* data, int size);
-    // Before normalization (function): TGzFile::Write.
     virtual int write(const void* data, int size);
 
-    // Before normalization: file.
     void* m_file;  // +0x04, the gzFile handle gzopen returned
 };
 
@@ -59,7 +56,6 @@ public:
 // selector. NAME UNATTESTED, address-ordinal placeholder in the
 // gUnnamed69ccc4 style; eighteen .text sites read it and none of them is
 // modelled yet, so nothing constrains the role further.
-// Before normalization: gUnnamed699274.
 extern int g_unnamed699274;
 
 #endif  /* HOMM3_SAVEGAME_H */

@@ -1,5 +1,5 @@
 // rmg_terrain.cpp - Complete-only random-map terrain transition support.
-//
+
 // The Dreamcast build contains no random-map generator compiland. Function
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
@@ -123,19 +123,6 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     }
 }
 
-// Retail 0x4fa050: thiscall with a hidden twelve-byte return and point
-// reference on the stack (ret 8). The retained call at 0x4f9f86 uses this
-// same proxy that the refresh's entry expands; keep one ordinary helper.
-// A separate VC6 ABI control with this real grid class passes a by-value
-// point as eight stack bytes, not an indirect pointer. With a hidden result
-// that would require ret 0xc, contradicting this body; retain the reference.
-// A separate 112-case explicit proxy-copy/return family produced 18 distinct
-// objects but no gain in this retained body. Its best refresh score (67.3461%)
-// traded this helper down to 63.7647%; no independent copy-constructor evidence
-// justifies adopting that tradeoff. Keep those sources as experimental parents.
-// All 192 constructor-binding variants (27 distinct objects) were also tested.
-// A copied coordinate parameter retains the ordinary proxy ctor plus a result
-// copy in at(); retail expands both. It does not improve either retained body.
 VA(0x004FA050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
 TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 {
@@ -160,20 +147,6 @@ int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsig
     return at(nearby).getLand();
 }
 
-// Retail clears the rectangle row-major, then refreshes left, right, top and
-// bottom borders in that order. The shared point local survives each call.
-// Keep the asymmetric right-border lower reach: 0x4fa18c decrements height
-// before comparing the bottom extent; the left border at 0x4fa125 does not.
-// These bounds are unsigned and end-exclusive, including empty rectangles.
-// Direct construction through the ordinary proxy ctor removes the extra
-// factory-result copy: 86.0093% -> 92.6465%, with all ten retail calls retained.
-// The selected entry-family source preserves all other RMG peaks. Moving
-// the lower-y expression into the for clause instead falls to 82.9395%; its
-// value is computed before the upper bound in retail but stored afterward.
-// A named lower bound followed by for-clause assignment restores that order
-// (94.5070%). All 300 neighbour-family combinations compiled, producing 105
-// distinct code results; no point-painting variant improved its prior peak.
-// Named/direct border proxies add no gain over the existing factory temporary.
 VA(0x004FA080, 0x1FB) // anchor-callee 0x4fa42c; fastcall, no stack args
 void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
 {
@@ -227,13 +200,6 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
     }
 }
 
-// Both final painters call this ordinary constructor with their second-base
-// address. Retail initializes the type/painter pair, copies the start point,
-// then paints that member (not the caller's input) through 0x4fa3c0.
-// Keep the shared walker on this side of the painting-library boundary:
-// defining it even after the final constructors in rmg_support.cpp expands
-// it into both 0x55ee50/0x55f3b0, lowering their exact bodies to 69.83%.
-// This source partition preserves the calls; it is not a recovered TU name.
 VA(0x004FA280, 0x30) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
     TRmgLinePainterInterface* newPainter,
@@ -244,16 +210,6 @@ TRmgLineWalker::TRmgLineWalker(
     paintPoint(m_position);
 }
 
-// Retail uses two axis records, not independent x/y induction variables.
-// It visits destination first, stepping back toward m_position; a minor-axis
-// advance emits a second point before the major-axis advance. The final
-// error test also applies when the distance is zero. Keep this ordering and
-// the canonical point-painting calls; those calls can update neighbouring tiles.
-// Exact: reference-bound axis arguments and a cached unsigned count-up bound
-// reproduce all 272 bytes, including VC6's resulting countdown loop. The
-// initial value-argument/countdown form was 79.13%; a reference-bound countdown
-// reaches 99.45% but uses JE rather than retail's initial JBE. Reversing the
-// major/minor arms preserves semantics but leaves their polarity at 99.41%.
 VA(0x004FA2B0, 0x110) // anchor-caller 0x548040 and createRiver; thiscall ret 4
 void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
 {
@@ -285,26 +241,6 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
     m_position = destination;
 }
 
-// The line walk's shared point operation first removes an old line, assigns
-// the new type and refreshes this tile. It snapshots every neighbouring type
-// before refreshing any neighbour. Both passes use north-first tile directions;
-// the first retains compound addition at 0x4fa489, the second expands it.
-// Direct entry construction removes a retained implicit proxy copy and raises
-// 70.1938% -> 79.9380%, without changing the factory's proven neighbour calls.
-// The first neighbour pass retains += where retail does once the query
-// goes through the painter's neighbour-land helper and the tile proxy is
-// built from its initializer list (80.64 -> 87.12%; the body-assigned
-// proxy 78.03%). The 300-case neighbour family over sum bindings and
-// point construction with the query inline never exceeded 79.94%: the
-// three sites cannot be refused at this body's own budget.
-// The rectangle constructor takes its size as a grid point, so the one-cell
-// rectangle constructs a unit size: retail materializes both unit extents
-// from one register copied into another (87.12 -> 95.61%). A width/height
-// pair, one extent, reference extents and a named extent are flat; a named
-// rectangle 83.56%. The painter alias and the availability mask scoped to
-// the first pass give retail's 0x3c frame (95.84%). The neighbour proxy's
-// store order then follows the named sum in getNeighbourLand (exact,
-// 2026-09-12).
 VA(0x004FA3C0, 0x156) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
@@ -338,26 +274,12 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
 }
 
-// Refresh 0x4f9f77 builds the grid argument of the retained proxy call at
-// 0x4f9f86 from the copied TPoint sum through this one-argument
-// constructor. It is not the grid copy: retail's at() and getSize copy grid
-// points memberwise, and a written copy constructor of any spelling
-// reschedules them (see TRmgGridPoint in rmg.h). The conversion from the
-// signed TPoint reproduces all 22 raw bytes without relocations.
 VA(0x004FA520, 0x16) // anchor-callee 0x4f9f77; thiscall, ret 4
 TRmgGridPoint::TRmgGridPoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {
 }
 
-// TPoint's compound add: the receiver at refresh 0x4f9f51..0x4f9f5d is the
-// TPoint copy of a grid point, so this is not the grid type's operator.
-// Refresh 0x4f9f60 and line paintPoint's first neighbour pass retain this
-// same two-dword add, returning the receiver for the subsequent value copy.
-// There is no Dreamcast RMG inline declaration. One ordinary definition in
-// this painting TU emits all 33 raw retail bytes while staying available for
-// auto-inlining. The 168-state placement/lifetime family (48 code results)
-// leaves every other tracked RMG score unchanged with this placement alone.
 VA(0x004FA540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
 TPoint& TPoint::operator+=(const TPoint& offset)
 {
@@ -366,11 +288,6 @@ TPoint& TPoint::operator+=(const TPoint& offset)
     return *this;
 }
 
-// Constructor 0x5b3780 copies five caller arguments into the rule prefix,
-// initializes 58 range records, then groups entries by frame/special flag.
-// The base vptr survives through array initialization; the derived vptr is
-// installed before the scan. Complete-only, with no Dreamcast counterpart.
-// All 179 bytes match, including the shared range constructor's expansion.
 VA(0x005B3780, 0xB3)
 TRmgPatternTerrainRule::TRmgPatternTerrainRule(
     unsigned char blendsWithOtherTerrain, unsigned char allowsSeparatedNeighbours,
@@ -402,8 +319,6 @@ unsigned char TRmgPatternTerrainRule::hasEntries()
     return 0 < m_ranges[1].m_count;
 }
 
-// Both concrete terrain-rule deleting destructors call this retained base
-// boundary. Retail restores the six-slot pure base vtable at 0x642c80.
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
 TRmgTerrainRule::~TRmgTerrainRule()
 {
@@ -480,18 +395,6 @@ int TRmgPatternTerrainRule::selectTransitionFrame(
 DATA(0x006A4158)
 TRmgTerrainPatternTable g_rmgTerrainPatternRanges;
 
-// Static initializer 0x5b3a10 passes the global at 0x6a4158. Retail clears
-// its 116 ranges, then groups the 48 fixed records by transition and flips.
-// No Dreamcast counterpart exists for this Complete-only table owner.
-// Exact (2026-09-12): unsigned indexing restores the retail branch
-// signedness (signed indexing 95.76%), and indexing the fixed table at
-// every use anchors the strength-reduced scan pointer at the X-flip byte
-// as retail does; a named entry pointer anchors it at the Y-flip byte
-// (96.61%, 98.28% with the flip tests reversed) and an explicit
-// record-pointer loop compares the table's end address (92.38%). The
-// frame, X-flip, Y-flip order of both the test and the reloads is the only
-// one that closes; the other 35 orders land between 81.9 and 98.2%. Flat
-// flip fields and the nested flip pair emit the same constructor bytes.
 VA(0x005B3940, 0xC5)
 TRmgTerrainPatternTable::TRmgTerrainPatternTable()
 {
@@ -514,18 +417,11 @@ TRmgTerrainPatternTable::TRmgTerrainPatternTable()
     }
 }
 
-// The sole caller is the static initializer at 0x5b3da0. Retail clears the
-// two inherited rule flags and installs vtable 0x642cb0.
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
 TRmgTableTerrainRule::TRmgTableTerrainRule()
 {
 }
 
-// Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
-// constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
-// painter method at 0x5b3dd0 place it in this Complete-only compiland.  There
-// is no Dreamcast RMG counterpart; `xor al, al; ret` fixes the byte return.
-// The direct constant-false body matched on the first scored candidate.
 VA(0x005B3A40, 0x03)
 unsigned char TRmgTableTerrainRule::hasEntries()
 {
@@ -537,17 +433,12 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 // at 0x5b3850 and has the same complete-object delete semantics.
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
-// Vtable 0x642cb0 slot 3 indexes the first dword of the fixed eight-byte
-// transition records at 0x6424a8. There is no Dreamcast RMG counterpart.
 VA(0x005B3A80, 0x11)
 int TRmgTableTerrainRule::getEntry(int index)
 {
     return g_rmgTerrainPatterns[index].m_frame;
 }
 
-// Slot 4 chooses from the first generated range when there is no old frame or
-// the old pattern has a nonzero frame tag. A zero-tagged pattern preserves the
-// caller's old index; keeping that index in EAX gives retail's shared return.
 VA(0x005B3AA0, 0x31)  // vtable 0x642cb0 slot 4; Complete-only table rule
 int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
 {
@@ -559,13 +450,6 @@ int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
     return oldFrame;
 }
 
-// Vtable 0x642cb0 slot 5. Reuse the old frame only when the fixed record
-// matches the transition and both requested flips; otherwise choose from
-// the corresponding four-way range. Table entries already encode flips,
-// so the selected output flip is zero. Complete-only, no DC counterpart.
-// Exact on the first candidate (116 bytes). The four data references name
-// the fixed table at 0x6424a8, its +4/+5 flip fields, and ranges at 0x6a4158;
-// the delinked image still labels these external data declarations by RVA.
 VA(0x005B3AE0, 0x74)
 int TRmgTableTerrainRule::selectTransitionFrame(
     int transition, TRmgTerrainFlip requestedFlip,
@@ -583,15 +467,11 @@ int TRmgTableTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
-// Provisional role spelling. The fastcall ABI and two-byte output are fixed
-// by the call at 0x5b5f4e. All selector names are provisional retail roles.
-// Before normalization (function): SelectTerrainTransition.
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
 
 // Four reflections of the eight neighbour slots. Read from the pinned
 // retail image; both flip bytes index this table independently.
-// Before normalization: gRmgReflectedNeighbours.
 DATA(0x00642C00)
 const int g_rmgReflectedNeighbours[2][2][8] = {
     {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
@@ -604,19 +484,12 @@ const int g_rmgReflectedNeighbours[2][2][8] = {
 // them at ebp-8 and ebp-4 (99.93%); replacing the helper calls with direct
 // construction changes the fourth reflection loop's registers (99.7991%).
 // An explicit empty flip destructor prevents the helper from auto-inlining.
-// Before normalization (function): MakeTerrainFlip.
 static TRmgTerrainFlip makeTerrainFlip(unsigned char x, unsigned char y)
 {
     return TRmgTerrainFlip(x, y);
 }
 
-// The retained fill is exact. A 60-case tile-lifetime / packed-receiver /
-// existing-setter matrix leaves paintRectangle at 72.8497%; crossing its
-// top ten parents with six orders of the cache query/terrain/dimension
-// helpers also leaves that caller flat. Both batches move other terrain
-// bodies, but none improves a current score. Preserve this canonical fill;
-// its missing expansion in paintRectangle remains a caller-boundary lead.
-VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
+VA(0x005B3DD0, 0x6F)
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, unsigned int index)
 {
@@ -629,19 +502,7 @@ void rmgTerrainPainter::initializePackedCell(
     packed.m_initialized = 1;
 }
 
-// Provisional role spelling. BuildNeighbourKinds expands this ordinary
-// classifier seven times and retains the final southeast call at 0x5b6b8e.
-// ECX/EDX hold the two terrain indices; both rule flags are read at +4.
-// Retail returns no edge for equal terrain or a sand center, hard edge if
-// either rule forbids blending, otherwise the center's non-dirt predicate.
-// Exact. Named rule pointers with nested tests give this helper the inline
-// cost buildNeighbourKinds needs (87..104 with plain point locals): with
-// the plain `&&` form (cost 70) or named rules alone (82) the caller's
-// seven expansions leave 114 units and the eighth kind test expands where
-// retail calls it (77.66% / 87.59%); a byte local, two byte locals or a
-// nested conditional return are byte-identical alternatives, and splitting
-// the first test breaks the body (67.27%). 108-state family, 2026-09-12.
-VA(0x005B3E40, 0x38)  // anchor-callee 0x5b6b8e; fastcall; retail-only
+VA(0x005B3E40, 0x38)
 int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
 {
     if (terrain == neighbourTerrain || terrain == eTerrainSand)
@@ -655,12 +516,10 @@ int __fastcall getRmgTerrainNeighbourKind(int terrain, int neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
-VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f4e; retail-only
+VA(0x005B3E80, 0x75F)
 int __fastcall selectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
-    // Retail +0x09..+0x7b: guarded local-static construction in this order,
-    // with a registered empty cleanup. No Dreamcast RMG counterpart.
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
         makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
@@ -847,20 +706,7 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The dimensions are one grid-point member assigned straight from the
-// adapter's virtual size result; the packed-cell count is the product of the
-// ordinary getWidth/getHeight queries. That assignment keeps both retained
-// set _Init calls and the expanded packed-vector insert, and the two free
-// query sites leave the area product reading the width back from the member
-// (mov ecx, edx; imul ecx, [edi+0xc]), which is retail's first block.
-// Two scalar members with direct dimension stores held 97.92% through five
-// families (dimension snapshots, area operands, assignment-result references,
-// named products, size lifetimes): the stores and the multiply never matched.
-// With the grid member, reading the product from the fields (23.13%) or from
-// a named size copy (99.36%) or setting the fields one by one (98.94%) all
-// change the earlier call boundaries. The retained brush constructor calls
-// this ordinary body at 0x5b7297.
-VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
+VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
@@ -962,35 +808,7 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
     return 1;
 }
 
-// The brush forwards its four unsigned bounds to this body at 0x5b76a6.
-// Retail walks one mutable grid point, paints cells of a different terrain,
-// and refreshes the base frame for cells already using the selected terrain.
-// This ordinary caller precedes paintPoint in the retail terrain cluster;
-// there is no Dreamcast RMG compiland or recovered source spelling.
-// Residual (72.8497%): all 13 CFG blocks have the retail destinations, but
-// initializePackedCell is called where retail expands the adapter read and
-// cache fill. The bound loads, loop registers and tile-zero stores also differ.
-// Sixty bounds/predicate/tile-lifetime candidates lift 69.9804% to this peak
-// with named endpoints and the canonical isPaintTerrain call. Ten retained
-// parents crossed with six for/while/guarded-do forms are all byte-flat here;
-// no other terrain score changes. The nested cache-fill boundary stays open.
-// Restoring this predecessor is byte-neutral for paintPoint's eight-byte
-// multiplication residual. Sharing the base-frame/constructed-tile sequence
-// through another helper leaves selectBaseFrame, the tile constructor and
-// setTile called in paintPoint, contradicting its retail expansion (81.6203%).
-// Exact (2026-09-12). Three things had to hold at once. Retail expands the
-// cache read inside the terrain test AND its fill, which needs the test's
-// nested budget above 346: with a direct `m_paintTerrain != getTerrain`
-// test and the base-tile work in one ordinary helper there are two
-// candidate sites from the test on (500 units; the predicate helper or an
-// inline else branch leave 250). That helper alone drops this body to
-// cost 157, a saved candidate the brush wrapper at 0x5b7690 then expands;
-// walking the rectangle through the grid point's accessors keeps the body
-// unsaved so the wrapper's retained call survives. The paint terrain reads
-// first in the test for the retained compare order. paintPoint keeps its
-// own inline copy of the base-tile block: sharing the helper costs it
-// 98.68 -> 76.68/78.68%.
-VA(0x005B4960, 0x1B2) // anchor-callee 0x5b7690; thiscall, ret 16; retail-only
+VA(0x005B4960, 0x1B2)
 void rmgTerrainPainter::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
@@ -1009,157 +827,6 @@ void rmgTerrainPainter::paintRectangle(
     }
 }
 
-// Paint a base tile, refresh its cache, then reconcile the two repair sets.
-// Terrain rules that permit separated neighbours only release cardinal gaps;
-// the other rules recheck every matching neighbour. The rectangle painter
-// calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
-// Names are provisional: this Complete-only code has no Dreamcast body.
-// Exact: all 1483 retail bytes, including all 61 named relocations. Pass the
-// constructed tile directly to setTile, ending its lifetime before the sets,
-// and name the direction-table entry by const reference before translating.
-// These source boundaries retain the guard-return terrain predicate and the
-// compound grid-addition return. The temporary restores both width-first
-// products; the direction reference restores the caller's inlining budget.
-// Without that reference, the distance wrapper expands and loop registers
-// change. Copying the direction value instead leaves 174 raw differences.
-// No inlining pragma, dummy operation, or modified compiler is used. The
-// passive compiler observations and identity controls are in regalloc.md 6n.
-//
-// The following controls refer to earlier named-tile checkpoints.
-// At 99.9204%, eight raw bytes differ. The expanded cache
-// products at 0x5b4f06/0x5b4fee load y and multiply by width; retail loads
-// width and multiplies by y. All 61 named relocations, branch destinations,
-// the 1483-byte length, 0x50-byte frame, and point translation are exact.
-// The guard-return isPaintTerrain costs 47 rather than the comparison-return
-// form's 38, crossing VC6's free-expansion cutoff of 40. This restores the
-// inner three-argument _Distance call. With that boundary recovered, return
-// the compound grid-addition result: a separate named return leaves 99.0163%
-// with the wrong direction/translation registers. Reversing the compound
-// field additions instead retains an unwanted helper (97.4864%).
-//
-// With the earlier comparison-return predicate, constructor + both accessors
-// left 98.2893% under direct coordinate initialization. Copy initialization
-// restored the original-x store (98.5805%); a named return then fixed the
-// translation registers (99.5389%); ending the frame/tile lifetime before
-// the worklists fixed the frame (99.5570%). The named-return observation
-// does not transfer to the recovered guard-return predicate. Separate nearby
-// declaration/assignment or direct initialization was neutral. Explicit zero
-// flips, default flip arguments, and the flip factory had the same score.
-//
-// Negative controls before the point-copy recovery: plain terrain comparison
-// and tile-field assignments leave 97.0506%, over-inlining the first cache
-// read. A predicate without its configured-terrain accessor is neutral there;
-// the two-accessor predicate alone restores the first call but expands the
-// final one (96.6293%). The tile constructor alone blocks the inner tree find
-// (85.7667%). Flattening setTile leaves 78.4213%; flattening frame selection
-// leaves 90.9367% with a named frame or 92.2405% with direct frame assignment
-// and the wrong entry load schedule. A by-value tile writer adds an entry
-// copy (95.7884%); a nested packed-cell writer retains a call absent in retail
-// (81.9566%). One nearby point shared across branches leaves 91.1519%.
-// Explicit fieldwise grid copy construction retains an unwanted copy call
-// (91.8861%); assignment-based copy construction is neutral. Direct sum
-// construction, value offset arguments, signed-direction conversion (95.7902%)
-// and free value-origin addition (92.3924%) change the translation schedule.
-// Origin copy assignment leaves 93.5063%; coordinate accessors leave 97.0036%.
-// Const results, named coordinates/terrain/index, loop guards, and index
-// declaration before the mask do not restore the missing copy. A named set
-// iterator changes find/end evaluation (89.1573%). A by-value terrain point
-// adds input copies (72.9584%); cache-hit early return breaks the exact cache
-// helper (93.4211% there). The recovered neighbour queue body is caller-neutral.
-//
-// A budget-preserving scratch C2 rejection of only the two unwanted copies
-// reproduces the named retail call sequence at the old 97.0506% checkpoint,
-// but keeps its storage deltas. This isolated the point-copy/lifetime problem;
-// no modified-compiler object enters a matching build. Outer inline_depth(1)
-// is byte-neutral, while pinning a direct cache read changes later decisions
-// (91.4213%). All pragma probes were removed. Nested return-value selection
-// in needsTerrainRepair changes the exact destructors' byte-result tests
-// (95.0543% here); adjacent guards and cache multiplication operand reversal
-// and a native-bool terrain predicate are neutral at the current checkpoint.
-//
-// Further controls at 99.5570%: coupled native-bool repair/separation returns,
-// a byte result local, shared gap-return block, signed index/dimensions,
-// named width, stepwise indexing,
-// a width accessor, a cache-reference return, consistent configured-terrain
-// accessors, early loop continues, negated iterator equality, and direct frame
-// selection in the tile constructor leave the caller score unchanged. Grouping
-// dimensions into a point also leaves this caller unchanged. Tile copy
-// initialization adds two entry instructions (98.3183%); an owned flip value
-// or explicit assignment-based grid copy constructor gives 98.5986%.
-//
-// The other direction-table caller at 0x4f9f00 retains a 22-byte point
-// copy/conversion at 0x4fa520 and 33-byte compound addition at 0x4fa540. These
-// prove operation boundaries there, not the classes' names or signedness.
-// Applying signed-direction conversion before same-type grid addition here
-// gives 98.0759%; signed translation followed by grid conversion gives
-// 98.5986%. Both change the direction load schedule and keep the wrong erase
-// overload. Preserve the current mixed-type arithmetic pending stronger proof.
-//
-// The retained three-argument _Distance body matches all 43 retail bytes at
-// 0x5b8c70, including its _Inc call. A current-source scratch C2 rejection of
-// only the inner wrapper expansion gives retail's 1483-byte length, but also
-// changes earlier translation/backedge registers and leaves both commuted
-// products. Thus the inline decision and storage deltas remain coupled;
-// the diagnostic object is excluded from matching and the normal shim restored.
-// At 99.9204%, product/addition commutation, coordinate locals, const nearby
-// points, logically const queries with a mutable cache, and a linear-index
-// helper with value/reference width arguments leave the same eight-byte
-// caller residual. Unsigned long grid coordinates were neutral at 99.5570%.
-// A named cache-cell reference, a pointer rather than reference cache parameter,
-// and signed row/width intermediates also leave those eight bytes unchanged.
-// Binding nearby to the translated temporary by const reference instead gives
-// 98.5986% and over-expands the distance wrapper; named reference operands in
-// the cache calculation disturb translation/backedge registers. Both were
-// reverted. The restored rectangle caller supplies an independent instance
-// of the retail width-first product without changing this caller's bytes.
-// Passive C2 write watchpoints locate both operand reversals in its second
-// expression pass, before native lowering. A diagnostic-only compiler swap
-// of those two source lists reproduces all 1483 retail bytes; ordinary VC6
-// still leaves the eight-byte residual. See docs/vc6/regalloc.md section 6n
-// for the operand ranking, identity controls, and limits of that experiment.
-// Current-checkpoint controls that initialize index from width or row, then
-// apply *= and += in getPackedCell, also leave the same eight raw differences.
-// With the corrected hash-tie evidence, named terrain return values, const
-// entry frame/tile values, and a named direction reference remain byte-flat.
-// A named cell pointer/reference in getTerrain leaves 235 raw differences;
-// predicate comparison locals or a direct frame argument over-expand _Distance.
-// A copied direction value changes the function extent. These controls retain
-// no source changes; the actual sort ranks and hash inputs are in section 6n.
-// Following the width-address creation back to setTile, a pointer cache alias,
-// reversed product, and x-first sum remain byte-flat. A named setter index,
-// a braced if/else predicate, and a flag-result predicate over-expand _Distance
-// and still emit both residual products row-first. A named setter width also
-// reverses the already-exact entry product. Reversing the predicate guard is
-// byte-flat. All of these controls were compiled separately and reverted.
-// At the same checkpoint, explicit copy initialization at all four cardinal
-// sites leaves 117 raw differences; translating them through the existing
-// point-addition helper grows the section to 1552 bytes. Both keep the two
-// row-first products. Defaulted flip constructor parameters and assigning
-// the two zero flips in the constructor body remain at eight differences.
-// A used width reference bound before or after the setter's adapter call also
-// over-expands _Distance and keeps both products row-first.
-// Nesting the strength call directly in selectBaseFrame's virtual-call
-// argument grows the section to 1504 bytes and keeps both products row-first.
-// Implicit rather than explicit tile padding leaves the same eight bytes;
-// frame-first constructor assignments leave 25. An owned flip value and
-// reference constructor parameters over-expand _Distance and keep row first.
-// Directly binding the constructed tile to setTile fixes both products;
-// retaining a named tile via copy initialization or const-reference binding
-// also fixes those products but changes the entry schedule/extent. With the
-// direct temporary, comparison-return isPaintTerrain leaves 98.68% (including
-// the four-argument distance call and translation registers); a named grid
-// return or direct frame argument does not close that coupled residual. The
-// retained guard predicate plus named direction reference closes it entirely.
-// Exact (2026-09-12). The loop erase's three-argument _Distance wrapper
-// must be refused (retail calls it) while the final insert's pair
-// constructor expands; at 98.68% the wrapper's nested budget was 47
-// against cost 41 with the comparison-return predicate free at 38. A
-// replay of the budget arithmetic showed that only a predicate costing
-// 41-52 units, or a caller 17-26 units cheaper, flips that one decision;
-// the guard-return predicate costs 47 and does exactly that (a named
-// terrain result or a conditional return stay free, 99.10%; a named
-// configured terrain 86.51%). A free site added after the erase instead
-// refuses the loop find and expands the last cache read.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
@@ -1231,30 +898,6 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         queueOtherTerrainNeighbours(point);
 }
 
-// The first differing vertical neighbour and first differing horizontal
-// neighbour enter the secondary set. The four diagonals additionally require
-// a terrain rule that forbids separated neighbours. North/south and west/east
-// are alternative arms: retail 0x5b5159 and 0x5b521f skip the opposite arm.
-// The cardinal probes construct a fresh point for insertion; the diagonal
-// probes retain their point and terrain value for the rule test and insertion.
-// Exact (2026-09-12; 63.63% with field reads). Retail expands set::insert
-// in all eight arms and calls the node insert everywhere; the result-pair
-// copy (41 units) is called in the north, south and west arms (the first
-// two share one tail) and expanded from the east arm on; the cache read
-// (90) is called through the north-east arm, expanded in the south-west
-// arm with its fill (128) called, and expanded with the fill in the
-// south-east arm. A nested budget is the running budget over the remaining
-// candidate sites, so the arms need the site count to fall steeply:
-// reading every coordinate through the grid point's accessors in the
-// guards and constructions gives the pair copies 32/35/39 units then 46,
-// the reads 31/34/38/44/53/68 then 105 (fill 7) and 463 (fill 186), with
-// the caller at 1066 units and a 2132 budget. With field reads the first
-// insert already expands its pair copy (25 sites). A secondary-queue
-// helper nesting the insert refuses the whole insert in the north and
-// south arms (54/62 against 64) and cannot give the north-west arm 105
-// while the north-east read stays under 90 (78.19%); paint-terrain and
-// rule accessors or a direct south-east insert on top of it move nothing,
-// and a helper that also tests the terrain starves its own insert.
 VA(0x005B50F0, 0x34E) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void rmgTerrainPainter::queueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
@@ -1463,40 +1106,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
     }
 }
 
-// The unsigned grid/ref-argument correction is independently proved by the
-// set comparator and the retained grid constructor. It changes the nested
-// accessor expansion here (74.76 -> 42.02%). Shared SetTile initially lowers
-// that to 38.6271%; shared strength-then-base-frame selection restores
-// 74.7320% with the unsigned type intact. MAX/history retain 74.7623%.
-// Before the unsigned-grid correction (74.7623%), the candidate retained
-// seven of retail's first twelve GetPackedCell calls and expanded five only
-// as far as InitializePackedCell. Both cache helpers remain exact.
-// Retail also evaluates GetTransitionStrength before loading the rule's
-// virtual receiver (as in neighboring 0x5b4960); spelling two strength locals
-// reproduced that order but changed earlier inlining (41.51%). Earlier
-// rejected controls: GetTerrain via GetTile adds eleven calls (75.28%);
-// reversed dimension product, explicit vector fill, postfix edge increments,
-// function-scope terrain, transition initializer, and earlier tile declaration
-// are byte-flat. These do not establish the missing source/helper state.
-// Scoped neighbour coordinates followed by the canonical += translation
-// restore the retained vector _Ufill call and reach 81.5196%. A value-returning
-// point + offset instead introduces 11 copy-ctor and six += calls (74.9229%);
-// copying the point into each scoped local rather than constructing from its
-// coordinates is 78.6334%. Translating the three left-edge neighbours is
-// byte-identical to the retained direct-coordinate form.
-// Dimension accessor calls then reach 84.0645% (2240 bytes, 68/66 blocks).
-// Exact (2026-09-12). Retail refuses all twelve pre-loop cache reads and
-// expands the two bottom-edge reads with their fills refused; the
-// right-edge south-west read needs five more candidate sites after it
-// (104 units at 29 remaining sites against 90). Reading the point through
-// its accessors in the edge-count indices, the loop increments and the
-// neighbour constructions supplies them (93.74%, decisions all as retail),
-// and constructing each neighbour directly from the offset coordinates
-// instead of a compound add of a TPoint settles the registers (the
-// scoped-block and named-local forms are one object). Loop conditions
-// through the accessors are byte-identical; edge constructions through
-// them 93.21%; the increments as ++field 88.29%.
-VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
+VA(0x005B5A70, 0x8A7)
 void rmgTerrainPainter::paintTransitions()
 {
     std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
@@ -1623,22 +1233,7 @@ void rmgTerrainPainter::paintTransitions()
     }
 }
 
-// These ordinary gap predicates are both retained and expanded within
-// RepairTerrainPoint. Their unsigned edge checks corroborate the grid type.
-// The retained 263/262-byte bodies do not distinguish int from byte return;
-// the callers' test al,al proves that only the byte result is consumed.
-// Both bodies and the reference-taking grid constructor pass a raw-byte
-// audit after resolving their real retail relocation destinations.
-// Under the 157638d4 context, 60 named-point lifetime/scope/site combinations
-// do not improve any terrain score: best repairTerrainPoint is 90.4604%,
-// while its modified vertical predicate falls to 78.9709%. Crossing the ten
-// best parents with six orders of these predicates and paintTransitions
-// also gives no gain. Keep both exact canonical bodies and the original order.
-// Retail's repair caller binds the unchanged coordinate of each neighbour
-// to the two-reference constructor through a fresh copy; spelling that
-// coordinate, both coordinates, or the caller's neighbours through the
-// grid accessors is flat or worse (32 states, 86.93-93.63%).
-VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
+VA(0x005B6320, 0x107)
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
@@ -1647,7 +1242,7 @@ unsigned char rmgTerrainPainter::isHorizontalGap(
         && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
 }
 
-VA(0x005B6430, 0x106) // anchor-callee 0x5b545f; retail-only
+VA(0x005B6430, 0x106)
 unsigned char rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
@@ -1712,22 +1307,7 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
         && getTerrain(TRmgGridPoint(high.getX(), high.getY())) == terrain;
 }
 
-// The final top-tested loop reuses the preceding scan's known zero entry.
-// A do/infinite-for form duplicates its increment and false epilogue
-// (85.17%); putting the increment in the mask test leaves an extra test
-// (91.27%). Separate false returns leave three short branches at
-// +0x20/+0x52/+0x72 choosing the +0x64 epilogue instead of retail's +0x44
-// (99.7458%); native bool is neutral. Sharing the return in the first
-// empty-run scan reproduces all 132 raw bytes, including those destinations.
-// The initial scan can return directly while the two later backward joins
-// retain that early epilogue: all 132 bytes and the helper relocation are
-// unchanged. Eight independent return combinations check each source edge;
-// removing either remaining join changes its branch destination. Keep the
-// direction lifetime; VC6 still duplicates the later +0x64 false epilogue.
-// Positive continue-scan/else-return scopes score 87.7966% for the first
-// surviving join and 99.6610% for the final one, versus 100%. A shared
-// bool/byte/int false result is lower (81.5254..81.8644%).
-VA(0x005B6810, 0x84) // anchor-callee 0x5b58e4; retail-only
+VA(0x005B6810, 0x84)
 unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
     unsigned char matches[TILE_DIR_COUNT];
@@ -1760,19 +1340,7 @@ noSeparation:
     return 1;
 }
 
-// Retail reads the center, clamps north/south/west/east, then classifies
-// N/S/W/E/NW/NE/SW/SE in that order. Every cache query is retained. The final
-// classifier call is the source boundary shared with seven earlier expansions.
-// Source-family result: scoped reference-bound point temporaries and named
-// terrain results recover all ten call boundaries and all 61 retail blocks
-// (87.5851 -> 94.9255). Direct temporaries expand the last classifier too.
-// Residual: register scheduling begins to differ at +0xb4; bounds-accessor
-// spelling and independent MapItem::clear snapshot order do not improve it.
-// Exact (2026-09-12): plain point locals per block (a const reference bound
-// to a constructed temporary adds a copy site each) and the neighbour-kind
-// helper's cost window keep all nine cache calls and retail's single kind
-// call for the south-east block; see the helper above.
-VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f45; retail-only
+VA(0x005B68A0, 0x2FF)
 void rmgTerrainPainter::buildNeighbourKinds(
     const TRmgGridPoint& point, int* neighbours)
 {
@@ -1851,24 +1419,7 @@ static const int& clampRmgTerrainCoordinate(
         return value;
 }
 
-// Retail's guarded table at 0x6a5260 has two signed offsets per reflection.
-// The first query clamps y then x; the second assigns x before clamping y.
-// TPoint supplies the canonical signed two-dword construction. As with the
-// selector's flips array, VC6 owns the local-static guard and cleanup thunk.
-// Source-family result: real dimension accessors, staged point fields and
-// the early-return reference clamp reach 89.7363 (direct member extents and
-// a constructed/reused point start at 78.2388). The signed offset initializer
-// already agrees byte-for-byte. Cache-call expansion and stack homes remain.
-// Exact (2026-09-12). Grid-point and TPoint accessors give the first
-// neighbour query eleven remaining sites, so its cache read stays a call as
-// in retail while the last query expands the read and its fill. The first
-// point is constructed from both clamps: VC6 evaluates constructor
-// arguments right to left, and retail clamps y before x (height, pair.y,
-// then width, pair.x), which the setter form (x then y) cannot reproduce
-// (90.71%). The second query reuses that point through the setters; a
-// separate second point costs a frame slot (0x30 against 0x28, 93.06%)
-// and assigning a second constructed point 93.18%.
-VA(0x005B6BA0, 0x24C)  // transition 2/8 tests; retail-only
+VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
@@ -1895,37 +1446,7 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     return getTerrain(nearby) == terrain;
 }
 
-// Four signed two-cell offsets at 0x6a3d68 use the same flip index. The
-// first query changes only x; the second changes only y. Either terrain
-// mismatch succeeds. The final cache query expands in the retail body.
-// Copy-initializing the first point and naming a separate second point
-// raises its checkpoint from 70.7500 to 71.9615. The shared clamp's early-return
-// form gives CUR 70.3141 without changing this body: MAX stays 71.9615.
-// Residual: the center cache query expands where retail retains its call.
-// Grid-point/TPoint accessors, the width and height accessors and the else
-// chain in the shared clamp put the first neighbour query at ten remaining
-// sites and 894 units (89 < 90), so its cache read stays a call as in
-// retail and the second query expands the read and its fill: 71.96 ->
-// 94.83% with copy-initialized points, 99.19% constructing the first point
-// directly. Exact (2026-09-12) with one point reused through the setters
-// (a separate second point costs a frame slot, 0x30 against 0x28) and
-// the last read through the cell pointer: reusing the point drops the
-// default constructor site and the first read expands at 99 units
-// (77.98%), so the last query needs one more candidate site, which the
-// cell pointer supplies as two depth-one sites (99.23%). The remaining
-// row was the order of the clamp's minimum store against the value
-// store: with the height limit and the offset sum evaluated into locals
-// before the call (limit first), the literal minimum is materialized
-// last as in retail (locals in the other order or only one of them
-// 97.4/99.2; the sum before the x assignment 96.5; y before x 95.9).
-// Also refuted: sibling-scoped points (coalesce but fold y into the
-// clamp temporary, 0x24, 97.64%), a block-scoped second point, either
-// point declared first, a constructed second point, re-indexed offsets
-// through flip accessors, ternary/nested/reference clamps (54/66/74
-// units), a terrain-test helper (its cost divides by the remaining
-// sites, 77.98/73.08%), and signed-point sums through operator+ (right
-// frame and decisions, wrong registers, 91.5-98.7%).
-VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
+VA(0x005B6E00, 0x1B3)
 unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
@@ -1947,40 +1468,7 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     return getPackedCell(nearby)->getTerrain() != terrain;
 }
 
-// Complete-only retail 0x5b6fd0: inspect west, north, east, then south.
-// Each in-bounds neighbour of the requested terrain halves the unsigned
-// strength only when the rule's slot-2 frame predicate succeeds. The two
-// separate cache queries and the scoped point value are visible in retail;
-// the later queries expand further than the first four retained calls.
-// SHR at +0x6a/+0xb6/+0x121/+0x25c proves logical, not signed division.
-// Exact (2026-09-12; 70.10% with direct cell reads). Retail calls both
-// west and north reads, calls the east read but expands its frame read
-// with the fill called, and expands both south reads with their fills.
-// The frame read therefore sits in a getFrame sibling of getTerrain
-// (its cost divides like the terrain read's), the guards and the point
-// go through the coordinate accessors, and each point is constructed at
-// the cell and stepped by one setter, which gives the south arm the six
-// candidate sites its 371-unit read needs while the east read stays
-// under 90 (accessor constructions alone 76.27%, the signed conversion
-// 83.91%, a signed sum 44%). The step reads the parameter's coordinate
-// again (retail computes y + 1 into a fresh register; stepping the
-// point's own coordinate shifts in place and keeps the terrain parameter
-// in EBX where retail keeps the rule pointer, 92.63%), with the strength
-// local declared before the rule (rule first 97.09; a rule reference or
-// a terrain copy 97.09; a default-constructed point set twice 89.44).
-// Residual: the first frame query expands getPackedCell where retail calls
-// it; later source call/expansion decisions are also displaced. No pins.
-// A 60-case point/query matrix and a 60-case follow-up crossing ten parents
-// with canonical cache-helper definition order both retain 70.1029% as best,
-// with no collateral gain. Shared/copied points and named frame queries lower
-// the score; moving the existing helper definitions leaves the leading caller
-// unchanged. Reopening this family requires new evidence, not resampling it.
-// Retail keeps five of the eight cache reads as calls, expands the east
-// frame read with its fill called and both south reads with their fills
-// expanded; here the four frame reads all expand (2026-09-12 trace). A
-// painter-level getFrame(point) sibling of getTerrain drops this body to
-// 32.53%; it is not the boundary.
-VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
+VA(0x005B6FD0, 0x271)
 int rmgTerrainPainter::getTransitionStrength(
     const TRmgGridPoint& point, int terrain)
 {
@@ -2069,32 +1557,12 @@ TRmgTerrainBrush::TRmgTerrainBrush(
         throw TAllocationFailure();
 }
 
-// Residual (78.6021%): ownership cleanup and the completion worklist expand,
-// but needsTerrainRepair remains a call where retail expands it and retains
-// its nested cache/gap queries. The standalone painter destructor is exact.
-// Sixty snapshot/condition/loop forms, ten parents crossed with six predicate
-// forms, and ten joint parents crossed with six helper orders do not improve
-// this boundary. Keep canonical auto_ptr cleanup and the ordinary finish;
-// the predicate family independently improves repairTerrainPoint above.
-// Fifty independent primary/secondary snapshot combinations also stay at
-// this peak or lower: the two snapshot sites do not expose an intermediate
-// expansion state in the measured five-lifetime/two-condition family.
-// Copy-through-assignment grid construction expands the predicate (92.1398%),
-// but loses the retained copy body and lowers exact changeTerrain to 81.3309%.
-// Mixed construction, explicit assignment and returned-value controls do not
-// recover all three boundaries together; the canonical copy interface stays.
 VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
 }
 
-// Exact: all 362 raw bytes after 14 relocations; all 13 blocks agree.
-// Retail expands erase(key) and the three-argument _Distance wrapper but
-// calls its tagged four-argument body at 0x5b8cd0; that call needs the
-// erase body under 231 units, which the painter's changeTerrain cost sets
-// (see its note). The final getPackedCell expansion keeps its nested
-// initializePackedCell call, as retail does.
-VA(0x005B7520, 0x16A) // anchor-callee 0x5401c3; retail-only
+VA(0x005B7520, 0x16A)
 void TRmgTerrainBrush::changeTerrain(int terrain, int strength)
 {
     m_painter->changeTerrain(terrain, strength);
@@ -2141,12 +1609,6 @@ VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
 // The naturally emitted body matches all 179 bytes.
 VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
 
-// PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
-// obtains upper/lower bounds, counts their iterator range, erases that
-// range, and returns size_type (ret 4). This is public erase(key), not
-// private _Erase(node): the old TREE_ERASE probe paired the wrong body
-// and scored 36.62%. The existing set calls naturally emit this overload,
-// which matches all 89 bytes under the correct TREE_ERASE_KEY claim.
 VA_COMPGEN(0x005B7F60, 0x59, TREE_ERASE_KEY, TRmgGridPoint)
 
 // The retained erase(key) calls 0x5b7e30 with two iterators and a hidden
@@ -2167,28 +1629,10 @@ VA_COMPGEN(0x005B85F0, 0x7E, TREE_ERASE, TRmgGridPoint)
 // wrapper in rmg.cpp. The two specializations have distinct nil symbols.
 VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TRmgGridPoint)
 
-// The one-point lookup calls _Lbound and tests y/x before returning an
-// iterator through the hidden result pointer (ret 8). Residual 99.4634%:
-// ECX/EDX roles differ in the expanded comparison; CFG and calls agree.
-// Banked MAX 100%: two comparator batches (24 branch/binding forms, then
-// 108 capture/operand forms) found 28 exact observations. A full build with
-// `unsigned int ry = right.m_y; unsigned int ly = left.m_y;` before the
-// lexical comparison verified and banked find's exact body. That form lowers
-// standalone operator< to 98.75%; restoring its direct expression recovers
-// its 100% while find's unchanged-source MAX retains the exact observation.
-// Simultaneous CUR exactness remains unresolved; no candidate closes both.
 VA_COMPGEN(0x005B7FC0, 0x57, TREE_FIND, TRmgGridPoint)
 
-// The terrain painter constructor erases a range of packed two-byte cells.
-// The naturally emitted specialization agrees with all 53 retail bytes.
 VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
-// paintTransitions' edge-count vector constructor retains this byte fill
-// after the recovered neighbour scopes and coordinate translation. Retail's
-// zero-count guard, null destination guard and one-byte stride identify the
-// canonical unsigned-char specialization independently of the caller. All
-// 36 bytes agree on the first full checkpoint; the parked entry predated
-// the caller's recovered neighbour scopes.
 VA_COMPGEN(0x005B8060, 0x24, VECTOR_UFILL, unsigned_char)
 
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
@@ -2202,8 +1646,6 @@ VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
 VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgGridPoint)
 VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgGridPoint)
 
-// The painter owns std::set<TRmgGridPoint> work queues. Their retained tree
-// teardown, allocator release, and VC6 lock scope identify this destructor.
 VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 
 // erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
@@ -2213,18 +1655,6 @@ VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
 VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
-// The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
-// y-then-x ordering also appears in the tree's expanded comparisons.
-// Retail emits it between the two _Distance instantiations, after the
-// tree insert, whose lock scope then carries an exception frame because
-// the comparator is not yet known not to throw. An inline comparator does
-// land there in a small unit (and insert gets its frame), but in this unit
-// the instantiation batch at paintPoint's end pulls it out right after
-// paintPoint, before every template; spelling it inline here or in either
-// header, as a friend, or early in this file leaves every row unchanged
-// (insert 79.83%). Every paintPoint change that defers the batch (dropping
-// the secondary find guard, an arm, the loop, or the tail) also changes
-// paintPoint's retained calls, so the frame stays open.
 VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
 {

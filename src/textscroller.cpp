@@ -1,7 +1,6 @@
 // textscroller.cpp - the Complete-era scenario-description scroller
 // compiland (provisional unit name; see include/textscroller.h).
-// HAND-OWNED after admission.
-//
+
 // LINK-ORDER BRACKET: text.obj's last row ends at 0x5b9f7c and
 // textntry.obj's own cinit/atexit thunk opens at 0x5ba8d0, so this
 // compiland is exactly 0x5b9f80..0x5ba8cf - its own atexit thunk
@@ -28,7 +27,6 @@
 // with two LEAs, which no value-returning spelling produces, and the TU
 // needs no other <algorithm> surface.
 template <class _TYPE>
-// Before normalization (locals): _X, _Y.
 inline const _TYPE& cppMax(_TYPE x, _TYPE y)
 {
     return (x < y ? y : x);
@@ -38,18 +36,13 @@ inline const _TYPE& cppMax(_TYPE x, _TYPE y)
 // slot it overrides. Thirteen bytes, no frame: it reads the slider's own
 // currentState and the owner at +0x68 and tail-calls the scroller's
 // repaint.
-VA(0x005B9FA0, 0xD)  // anchor-vtable 0x642cc8 slot 16, retail-only
+VA(0x005B9FA0, 0xD)
 void type_text_slider::close()
 {
     m_owner->refresh(m_currentState);
 }
 
-// The scroller constructor. Retail fixes the whole argument list: the
-// first five go to the widget base as (x, y, w, h) with a literal -1 id
-// and style 1, the sixth is kept in the +0x30 font name, the seventh is
-// forwarded to every per-line textWidget as its colour, and the eighth
-// reaches the slider constructor's EGraphics slot.
-VA(0x005B9FB0, 0x2FF)  // anchor-vtable 0x642d0c + slider/textWidget ctors, retail-only
+VA(0x005B9FB0, 0x2FF)
 type_text_scroller::type_text_scroller(const char* text, int x, int y,
                                        int w, int h, const char* fontName,
                                        font::TColor color,
@@ -90,7 +83,7 @@ VA_COMPGEN(0x005BA2B0, 0x21, SCALAR_DELETING_DTOR, type_text_scroller)
 // Slot 1. Hands every line widget and the slider to the opening window at
 // consecutive priorities above the scroller's own, then folds the slider
 // away when the text fits without scrolling.
-VA(0x005BA2E0, 0xC6)  // anchor-vtable 0x642d0c slot 1 + AddWidget, retail-only
+VA(0x005BA2E0, 0xC6)
 int type_text_scroller::open(int newPriority, heroWindow* parent)
 {
     int result = widget::open(newPriority, parent);
@@ -109,9 +102,7 @@ int type_text_scroller::open(int newPriority, heroWindow* parent)
     return 0;
 }
 
-// The destructor. It owns every line widget, the slider and the grabbed
-// backdrop; the two vector teardowns and ~widget are compiler-generated.
-VA(0x005BA3B0, 0x101)  // anchor-vtable 0x642d0c slot 0 callee, retail-only
+VA(0x005BA3B0, 0x101)
 type_text_scroller::~type_text_scroller()
 {
     for (unsigned int i = 0; i < m_lineImages.size(); i++)
@@ -123,7 +114,7 @@ type_text_scroller::~type_text_scroller()
 // Slot 2. Only MESSAGE_WIDGET reaches the body: WIDGET_DRAW grabs the
 // backdrop once, WIDGET_SET_STATUS / WIDGET_CLEAR_STATUS are relayed to
 // every line and, when the text overflows, to the slider.
-VA(0x005BA4C0, 0x13D)  // anchor-vtable 0x642d0c slot 2 + Grab, retail-only
+VA(0x005BA4C0, 0x13D)
 int type_text_scroller::main(message& msg)
 {
     if (msg.m_id == MESSAGE_WIDGET) {
@@ -154,7 +145,7 @@ int type_text_scroller::main(message& msg)
 
 // The repaint the slider's state-change hook drives: restore the grabbed
 // backdrop, then re-text and redraw every visible line from `firstLine`.
-VA(0x005BA600, 0xD7)  // anchor-callee (0x5b9fa0) + Bitmap16Bit::Draw, retail-only
+VA(0x005BA600, 0xD7)
 void type_text_scroller::refresh(int firstLine)
 {
     m_background->draw(0, 0, m_width - 16, m_height,

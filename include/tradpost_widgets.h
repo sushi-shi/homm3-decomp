@@ -29,7 +29,6 @@ public:
 
 // The free-function overload the give path calls (remote.h:438); declared here
 // to avoid pulling remote.h's DirectPlay closure into this TU.
-// Before normalization (locals): pMsg.
 int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg,
                        bool guaranteed);
 

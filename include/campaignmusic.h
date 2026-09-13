@@ -1,5 +1,5 @@
 // campaignmusic.h - prototypes of campaignmusic.cpp.
-//
+
 // THE COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER and its name is an
 // inference the link order bounds rather than proves (the netmsg.obj
 // precedent): retail's .text is strictly alphabetical by compiland, and this
@@ -22,9 +22,7 @@
 // "Win Scenario" and the six Armageddon's Blade campaign cues). Names
 // INVENTED - no Dreamcast row covers this table.
 struct SCampaignMusicCue {
-    // Before normalization: name.
     const char* m_name;
-    // Before normalization: track.
     char* m_track;
 };
 SIZE(SCampaignMusicCue, 8);
@@ -40,13 +38,8 @@ enum ECampaignMusicConstants {
 // data and this compiland's own static initializer emits them; declared here
 // without a definition (the bitNumber pattern) so the loader's relocations
 // have source authority without fabricating the initializer.
-// Before normalization: gCampaignMusicCues.
 extern SCampaignMusicCue g_campaignMusicCues[CAMPAIGN_MUSIC_CUE_COUNT];
 
-// Retail 0x45e250, called once from kb.obj's EarlySetup between
-// InitializeHeroSpecificAbilitiesTable and InterpretCommandLine. Name
-// INVENTED, in the family spelling EarlySetup's other callees use.
-// Before normalization (function): InitializeCampaignMusicTable.
 unsigned char initializeCampaignMusicTable();
 
 #endif  /* HOMM3_CAMPAIGNMUSIC_H */

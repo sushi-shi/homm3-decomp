@@ -37,7 +37,6 @@ public:
     {
         m_enabled = 1;
     }
-    // Before normalization (locals): _enabled.
     CTimer(unsigned char enabled)
         : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
           m_isRunning(0), m_enabled(enabled)
@@ -45,20 +44,14 @@ public:
     }
 
 private:
-    // Before normalization: startTime.
     unsigned long m_startTime;
-    // Before normalization: stopTime.
     unsigned long m_stopTime;
-    // Before normalization: elapsedTime.
     unsigned long m_elapsedTime;
-    // Before normalization: _IsRunning.
     unsigned char m_isRunning;
-    // Before normalization: enabled.
     unsigned char m_enabled;
 };
 SIZE(CTimer, 16);
 
-// Before normalization: GlobalTimer.
 extern CTimer g_globalTimer;
 
 #endif  // HOMM3_TIMER_H

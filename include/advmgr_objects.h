@@ -25,18 +25,12 @@ public:
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
     type_cell_adjuster();
     ~type_cell_adjuster();
-    // Before normalization (function): type_cell_adjuster::get_trigger_cell.
-    // Before normalization (locals): map_cell.
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
-    // Before normalization (function): type_cell_adjuster::restore_cell.
     void restoreCell();
 
 protected:
-    // Before normalization: obscuring_hero.
     hero* m_obscuringHero;
-    // Before normalization: obscuring_boat.
     boat* m_obscuringBoat;
-    // Before normalization: mobile_hero.
     hero* m_mobileHero;
 };
 SIZE(type_cell_adjuster, 0xc);
@@ -46,18 +40,12 @@ enum ECompleteDrawFps {
 };
 
 class CChatManager;
-// Before normalization (function): UpdateCompleteDrawFps.
 void __cdecl updateCompleteDrawFps(CChatManager* manager, const char* text);
 
-// Before normalization: gCompleteDrawFpsFrame.
-// Before normalization: gCompleteDrawFpsLastTime.
 DATA(0x0065f690) extern int g_completeDrawFpsFrame;
 DATA(0x00691240) extern unsigned long g_completeDrawFpsLastTime;
 DATA(0x0069136c) extern int
-    // Before normalization: gCompleteDrawFpsTimes.
     g_completeDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
-// Before normalization: gCompleteDrawFpsText.
-// Before normalization: gCompleteDrawFpsFormat.
 DATA(0x006912ec) extern char g_completeDrawFpsText[];
 DATA(0x00660388) extern char g_completeDrawFpsFormat[];
 
@@ -150,8 +138,6 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-// Before normalization: gCreatureGenerator1Types.
-// Before normalization: gCreatureGenerator4Types.
 DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
 DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
 
@@ -171,7 +157,6 @@ enum EReadObjectTypeResult {
 // Random: an in-class member body's non-dependent names are looked up at the
 // closing brace of the class, and mapcell.cpp reaches misc.h only later in
 // its include list.
-// Before normalization (function): Random.
 int __fastcall random(int minimum, int maximum);
 
 class CObject {
@@ -180,7 +165,7 @@ public:
     // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
     // which no mask spelling over the plain dword produces. Only that one
     // arm is carried here; the other five typed views stay events-only.
-    //
+
     // readObject (0x502e00) adds two more arms of the same dword, and both
     // are bitfield stores no mask spelling over the plain dword produces:
     // its SHIPYARD arm clears the low byte with `and cl,0` before merging
@@ -189,50 +174,35 @@ public:
     // reads off the CELL - the same encoding, because the object's dword is
     // what ends up in NewmapCell::extraInfo.
     union {
-        // Before normalization: extraInfo.
         unsigned long m_extraInfo;
-        // Before normalization: scholar_info.
         ScholarInfo m_scholarInfo;
-        // Before normalization: shipyard_info.
         ShipyardInfo m_shipyardInfo;
-        // Before normalization: shrine_info.
         ShrineInfo m_shrineInfo;
     };
-    // Before normalization: x.
     unsigned char m_x;
-    // Before normalization: y.
     unsigned char m_y;
-    // Before normalization: z.
     unsigned char m_z;
-    // Before normalization: pad_07.
     // Dreamcast CObject has z at +6 and TypeID at +8. NH3API
     // confirms this alignment byte between them in the PC record.
     unsigned char m_paddingBeforeTypeId;
-    // Before normalization: typeIndex.
     unsigned short m_typeIndex;
-    // Before normalization: animationOffset.
     unsigned char m_animationOffset;
-    // Before normalization: pad_0b.
     // Dreamcast ends its fields with frameOffset at +0xa in a
     // 12-byte CObject. NH3API confirms the trailing alignment byte.
     unsigned char m_paddingAfterFrameOffset;
-    // Before normalization (function): CObject::FindTrigger.
     void findTrigger(int& resultX, int& resultY) const;
     // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
     // FindTrigger's AAH parameters are references, and get_trigger is the
     // source helper which retail expands into get_trigger_cell.
-    // Before normalization (function): CObject::get_trigger.
     type_point getTrigger() const;
 
-    // Before normalization (function): CObject::get_object_type_ptr.
     CObjectType* getObjectTypePtr() const;
-    // Before normalization (function): CObject::get_type.
     TAdventureObjectType getType() const;
 
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
     // dword, and each dynamic object receives a random animation phase.
-    //
+
     // The DEFAULT ARGUMENTS are byte-proven from the other end, by
     // loadMapObjects' `objects.resize(count)`: the `_Ty()` temporary
     // Dinkumware's resize materialises at the call site stores 0xff into
@@ -272,9 +242,7 @@ struct TObjectType {
     };
 
     struct TPoint {
-        // Before normalization: x.
         int m_x;
-        // Before normalization: y.
         int m_y;
     };
     struct TImageInfo {
@@ -284,11 +252,8 @@ struct TObjectType {
         TImageInfo() {}
         explicit TImageInfo(const TPoint& size) : m_objectSize(size) {}
 
-        // Before normalization: objectSize.
         TPoint m_objectSize;
-        // Before normalization: drawMask.
         std::bitset<48> m_drawMask;
-        // Before normalization: shadowMask.
         std::bitset<48> m_shadowMask;
     };
 
@@ -300,50 +265,27 @@ struct TObjectType {
     // which is why it has no initializer here either.
     TObjectType();
 
-    // Before normalization: imageNumber.
     int m_imageNumber;
-    // Before normalization: passableMask.
     std::bitset<48> m_passableMask;
-    // Before normalization: triggerMask.
     std::bitset<48> m_triggerMask;
-    // Before normalization: terrainMask.
     std::bitset<10> m_terrainMask;
-    // Before normalization: recommendedTerrainMask.
     std::bitset<10> m_recommendedTerrainMask;
-    // Before normalization: objectType.
     TAdventureObjectType m_objectType;
-    // Before normalization: subtype.
     int m_subtype;
-    // Before normalization: slotCategory.
     int m_slotCategory;
-    // Before normalization: isUnderlay.
     unsigned char m_isUnderlay;
-    // Before normalization: hasTrigger.
     unsigned char m_hasTrigger;
-    // Before normalization: triggerCell.
     TPoint m_triggerCell;
-    // Before normalization: imageInfo.
     TImageInfo m_imageInfo;
 
-    // Retail 0x514960, thiscall with no arguments. DECLARED ONLY: the body
-    // belongs to the unadmitted Complete-only .msk/objects compiland in the
-    // newgame..overview gap, where two function-local statics cache a table
-    // of image records and this member returns the +0x0c string of the row
-    // `imageNumber` selects (or a static empty string when the index is out
-    // of range). The ROLE is proven by its one caller - the result is what
-    // CObjectType's conversion constructor assigns into ImageName - and the
-    // NAME follows the role; nothing attests it.
     const std::basic_string<char, std::char_traits<char>,
-                            // Before normalization (function): TObjectType::GetImageName.
                             std::allocator<char> >& getImageName();
 
     // CObjectType's conversion loads each dimension as a dword before
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
-    // Before normalization (function): TObjectType::GetWidth.
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
-    // Before normalization (function): TObjectType::GetHeight.
     int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
 
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
@@ -375,7 +317,6 @@ SIZE(TObjectType, 0x4c);
 // dimensions - in .rdata at 0x640278. Both of its consumers, the default
 // constructor above and TObjectType::setTriggerMask's else arm, issue both
 // loads before either store. objecttype.cpp owns the definition.
-// Before normalization: gNoTriggerCell.
 extern const TObjectType::TPoint g_noTriggerCell;
 
 // Shared header definition for the resize default value. Retail expands
@@ -395,7 +336,6 @@ inline TObjectType::TObjectType()
 
 class TObjectTypeTable {
 public:
-    // Before normalization: objectTypes.
     std::vector<TObjectType> m_objectTypes;
     void load(char* filename);
 };
@@ -405,7 +345,6 @@ class CObjectType {
 public:
     // MapCell.h:565. Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
-    // Before normalization (function): CObjectType::_getBitPos.
     static unsigned getBitPos(unsigned x, unsigned y)
     {
         return 47 - y * 8 - x;
@@ -419,27 +358,20 @@ public:
     // string from 12 to 16 bytes and every offset after it moves by four,
     // which saveObjectType then confirms one Write at a time.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        // Before normalization: ImageName.
         m_imageName;
     // Dreamcast field list 0x309c records Width/Height as T_RCHAR.
-    // Before normalization: width.
     char m_width;
-    // Before normalization: height.
     char m_height;
     // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
     // retail's generated assignment skips these bytes.
-    // Before normalization: drawCells.
     std::bitset<48> m_drawCells;
     // +0x1c, sliced out of the old pad: saveObjectType packs FOUR masks,
     // not three, and this is the second of them. DC name PassableMask; the
     // spelling follows its three siblings here rather than the DC's.
-    // Before normalization: passableCells.
     std::bitset<48> m_passableCells;
-    // Before normalization: shadowCells.
     std::bitset<48> m_shadowCells;
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
-    // Before normalization: triggerCells.
     std::bitset<48> m_triggerCells;
     // +0x34, FOUR bytes and unchanged in layout, but not padding: the
     // default constructor CObjectType's `resize` temporary runs calls SIX
@@ -451,24 +383,19 @@ public:
     // DC's Type at 48 maps to retail 52 = 0x34, yet saveObjectType
     // byte-proves objectType at 0x38 - retail inserted one 4-byte member
     // the DC record does not have, and this is it.
-    //
+
     // The mask's MEANING is unproven and its name is deliberately ordinal:
     // no serializer in this compiland reads or writes it, readObjectType
     // included.
-    // Before normalization: mask_34.
     std::bitset<10> m_mask34;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
-    // Before normalization: objectType.
     TAdventureObjectType m_objectType;
-    // Before normalization: extra.
     int m_extra;
-    // Before normalization: suppressDraw.
     unsigned char m_suppressDraw;
     // +0x41 remains implicit alignment, but retail's generated assignment
     // explicitly copies a word at +0x42; the old pad_41[3] hid that real
     // field and also made VC6 copy the otherwise-skipped +0x41 byte.
-    // Before normalization: field_42; reference member CObjectType::objectTypeIndex.
     unsigned short m_objectTypeIndex;
 };
 SIZE(CObjectType, 0x44);
@@ -479,7 +406,5 @@ inline TAdventureObjectType CObject::getType() const
 {
     return getObjectTypePtr()->m_objectType;
 }
-
-
 
 #endif /* HOMM3_ADVMGR_OBJECTS_H */
