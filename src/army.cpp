@@ -153,11 +153,6 @@ void army::playSample(army::TSampleID id)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:101
-#endif  // @carcass
-
 VA(0x0043d580, 0x37)  // dc 0x4386c
 void army::stopSample(army::TSampleID id)
 {
@@ -262,10 +257,6 @@ void army::initClean()
     m_auraClients.clear();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\army.cpp:109
 // No retail out-of-line copy survives, but the Dreamcast call graph proves
 // this member boundary in range_attack. VC6 folds the inline definition into
@@ -279,39 +270,6 @@ inline void army::waitSample(army::TSampleID which)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:150
-// DECODED IN FULL 2026-08-20 AND BLOCKED ON ONE LAYOUT CHANGE, so that
-// the next lane does not repeat the decode. The body is: InitClean(),
-// creatureType/numTroops/+0x8, then a `rep movsd ecx=0x1d` COPY OF THE
-// WHOLE 116-BYTE TRAITS ROW from akCreatureTypeTraits[type] into +0x74,
-// a ternary that re-writes the row's first dword to -1 for creature ids
-// 0x70..0x73 when the +0x1f698 game flag is clear, an optional
-// hero::HeroFn_004E6120(type, &row), the native-terrain latch at +0x4d8
-// and its three counter bumps, then the parameter stores (combatSide,
-// facing = 1 - side, bitIndex, gridIndex, +0x10/+0x14 = -1), six byte
-// clears and poisonPenalty = 1.0f.
-
-// THE BLOCKER IS THE `rep movsd`: it is a POD STRUCT ASSIGNMENT,
-// `sMonInfo = akCreatureTypeTraits[type]`, and army.h currently models
-// +0x74 as fifteen INDIVIDUAL SLICES rather than as the embedded
-// TCreatureTypeTraits the DC roster has (see the note on
-// monInfoTownType). The clean fix is the shape this header already
-// uses for the +0x198 spell row - a union of the whole record with the
-// existing named-slice struct, so every consumer keeps its names:
-//     union {
-//         TCreatureTypeTraits sMonInfo;   // +0x74, 116 B
-//         struct { int monInfoTownType; ... int spellsLeft; };
-//     };
-// It needs `#include "armygrp.h"` in army.h, which is NOT a cycle
-// (armygrp.h does not include army.h) but IS a large include-graph
-// change. For calibration: this lane measured `#include <deque>` in
-// army.h at exactly ZERO cost across all 131 units, so the change is
-// worth measuring rather than assuming - do it as its own commit with
-// nothing else in it.
-#endif  // @carcass
-
 VA(0x0043d730, 0x17D)  // dc 0x439b0
 void army::initialize(int type, long number, const hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
@@ -324,10 +282,7 @@ void army::initialize(int type, long number, const hero* owner,
     *traits = g_creatureTypeTraits[type];
     traits->m_townType =
         (g_game->m_f1f698 == 0
-         && (type == CREATURE_AIR_ELEMENTAL
-             || type == CREATURE_EARTH_ELEMENTAL
-             || type == CREATURE_FIRE_ELEMENTAL
-             || type == CREATURE_WATER_ELEMENTAL))
+         && isBaseElemental(type))
             ? -1
             : g_creatureTypeTraits[type].m_townType;
     if (owner != 0)
@@ -680,11 +635,6 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
     }
     m_luck = value;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:540
-#endif  // @carcass
 
 // Complete extends the DC signature with a seventh, byte-wide alignment gate:
 VA(0x0043e000, 0x139)  // dc 0x443b4
@@ -1686,39 +1636,6 @@ void army::rangeAttack(army* armyToAttack)
     }
 }
 
-#if 0  // @carcass
-
-// WITHDRAWN 2026-08-14: the `dc-bracket forced` run 0x440100 /
-// 0x440140 / 0x440160 was mapped onto the DC rows range_attack() /
-// get_clockwise / get_counter_clockwise purely by ORDER, and all
-// three pairings are wrong. Retail's three slots are 62 / 31 / 422 B
-// against DC's 336 / 70 / 70 - ratios 0.18, 0.44 and 6.03, every one
-// outside the 0.3-2.5 band - and the bodies refute them outright:
-//   0x440100 takes TWO fastcall register arguments (`cmp edx, 1` with
-//     no prior load) and indexes akCreatureTypeTraits by ecx for the
-//     +0x14 / +0x18 name pair, i.e. it is the creature-NAME accessor
-//     the HD crossbuild also names army::GetName(count) at this exact
-//     rva. `army::range_attack()` is a member with no arguments and
-//     cannot use edx.
-//   0x440140 is a bare `ret`, so it takes NO stack argument;
-//     `get_clockwise(long direction)` would be `ret 4`.
-//   0x440160 (422 B) is what the HD crossbuild names range_attack()
-//     here, and 422/336 = 1.26 against the DC row - so the whole run
-//     is shifted, not merely mislabelled.
-// DC's get_clockwise / get_counter_clockwise have no retail slot in
-// this bracket at all (0x440160 + 0x1a6 = 0x440306, and the next
-// carve row is 0x440310): retail inlined or dropped both.
-
-#endif  // @carcass
-
-// Army.h:800 proves this is a class-body inline. The active out-of-class
-// definition that stood here changed the source form to retain the current
-// local score. Keep only the retail-address claim; VC6 must decide where the
-// header COMDAT survives from the coherent class source.
-#if 0  // claim-only home for the Army.h COMDAT
-// Canonical body and VA: include/army.h.
-#endif
-
 // One stack's whole shooting turn: resolve the target it was told to
 // attack, turn to face it, fire between one and three volleys, turn
 // back, and drop the spells an attack cancels.
@@ -1827,11 +1744,6 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
                                     *damageAmount, firstTarget, *killed);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:1717
-#endif  // @carcass
-
 // The on-attack debuff roll: does THIS attacker's special land on
 // `target`? The switch is over the ATTACKER's creatureType (source
 // order = layout order for the jump table), each arm rolls its chance,
@@ -1927,9 +1839,6 @@ unsigned char army::checkSpecialAttack(army* target)
     }
     return 0;
 }
-
-#if 0  // @carcass
-#endif  // @carcass
 
 // The retaliation a Fire Shield charges the attacker, and the one body
 // in this TU that repaints the WHOLE field: every stack the shield
@@ -2653,11 +2562,6 @@ long army::getAdjustedAttack(const army* enemy,
     return attack;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2623
-#endif  // @carcass
-
 VA(0x00442550, 0x35)  // dc 0x477b8
 long army::getAttackModifier(const army* enemy,
                                unsigned char rangedAttack) const
@@ -2665,11 +2569,6 @@ long army::getAttackModifier(const army* enemy,
     return getAdjustedAttack(enemy, rangedAttack)
         - g_creatureTypeTraits[m_creatureType].m_attackSkill;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2633
-#endif  // @carcass
 
 VA(0x00442590, 0xC2)  // dc 0x477e8
 long army::getAdjustedDefense(const army* enemy,
@@ -2788,20 +2687,6 @@ unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2740
-// Located 2026-08-08 from a call site, not from the roster order: the
-// ai_tactical pricer get_curse_value (0x43b370) calls this address with
-// `mov ecx, enemy` and NO stack arguments and consumes st(0) as a
-// double divisor, which is the no-argument overload's exact shape - the
-// five-argument sibling two rows down is `ret 0x10`. The carve row is
-// 0x4426f0/139 B, it sits in the DC roster's own order (2708
-// is_natural_enemy -> 2740 this -> 2756 the five-argument overload ->
-// 2790 can_shoot, all of whose retail slots are consecutive), and the
-// HD crossbuild names the same body at its own 0x442410.
-#endif  // @carcass
-
 VA(0x004426f0, 0x8B)  // dc 0x47a14
 double army::getAverageDamage() const
 {
@@ -2834,16 +2719,6 @@ long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long 
     return damage;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2776
-// Located by the DC-order slot directly before can_shoot (claimed
-// 0x4428f0) and the body: null/self reject, berserk (+0x284) returns
-// true for everyone, hypnotize (+0x288) flips the effective side, then
-// a controlling-side/owning-side inequality. path.cpp's ValidAttack
-// criteria-1 arm calls it on the target cell's army.
-#endif  // @carcass
-
 VA(0x00442880, 0x68)  // dc 0x47bcc
 unsigned char army::isEnemy(const army* arg) const
 {
@@ -2855,79 +2730,6 @@ unsigned char army::isEnemy(const army* arg) const
         return getControllingSide() != arg->getOwningSide();
     return 1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2790
-// RECONSTRUCTED AND WITHDRAWN 2026-08-14, body kept for the next lane.
-// The predicate below is verified instruction-for-instruction against
-// the retail slot - the ballista and the arrow tower shoot
-// unconditionally; otherwise the creature's shooter bit Is(1u << 2) and a
-// positive shotsLeft are required; then, unless the controlling hero
-// carries the Bow of the Sharpshooter, an adjacent enemy on EITHER hex
-// disqualifies the shot; and finally advanced-or-better Forgetfulness
-// stops it regardless. Every field it reads is sliced in army.h off
-// this body.
-
-// THE "EDI SHRINK-WRAP REGISTER WALL" RECORDED HERE WAS WRONG, and the
-// re-run that overturned it is the cheapest measurement of this lane.
-// The note above used to say the residual was the register-homing
-// family and not source-addressable; re-measured 2026-08-14 with the
-// body claimed for the duration, `homm3 vc6 diagnose` answers
-// register-distance 48 | flow-distance 18, "CFG skeletons differ (20 vs
-// 18 blocks), opposite branch sense", i.e. the CONTROL-FLOW class, and
-// `why-reg --model` explicitly declines it ("no register-binding
-// divergence in this model's slice"). Three source facts then took the
-// body 60.00 -> 92.00:
-
-//   1. THE TWO HEAD EARLY-OUTS ARE ONE GUARD. Written as two separate
-//      `if (...) return 0;` statements our CL materialises an epilogue
-//      at each; `||` in one guard - or the equivalent positive
-//      `if ((Is(1u << 2)) && shotsLeft > 0) { ... }` wrapper, measured
-//      byte-identical at 73.5366 - sinks them into the ONE `xor al,al`
-//      block retail jumps to from both. Worth 13.54.
-//   2. THE LATE ARMS SHARE ONE RESULT AND ONE RETURN (89.6098, +16.07).
-//      That is what splits the epilogue WIDTHS the way retail's do -
-//      retail's late blocks are `mov eax,1` / `xor eax,eax` (dword)
-//      where its head blocks are `mov al,1` / `xor al,al` (byte), which
-//      is only possible if the late value is an `int` variable and the
-//      head values are byte return constants. AND IT IS WHAT BUYS THE
-//      EDI SHRINK-WRAP: once the head's `return 0` is no longer
-//      byte-identical to the late one, VC6 cannot tail-merge them, the
-//      merged block no longer forces a `pop edi` on the head path, and
-//      the `push edi` sinks to the get_controlling_side join exactly
-//      where retail puts it. The shrink-wrap was never the cause - it
-//      was the CONSEQUENCE of a tail-merge our four-return spelling
-//      forced.
-//   3. `int bCanShoot = 1;` MUST BE DECLARED AFTER `get_controller()`
-//      (92.00, +2.39). Declared before it, our CL common-subexpresses
-//      its literal 1 with the `1 - combatSide` inside
-//      get_controlling_side's expansion and parks the pair in EBX
-//      (`push ebx` / `mov ebx,1` / `mov eax,ebx`); retail materialises
-//      that 1 on its own. Same literal-into-EBX hoist army::Turn's
-//      residual note records, reached from the other side.
-
-// Residual (92.00%): `bCanShoot` survives in EBX to a single
-// `xor ebx,ebx` / `mov al,bl` exit where retail constant-folds it into
-// two CLONED epilogues (`pop edi; mov eax,1` and `pop edi; xor eax,eax`).
-// Everything from the prologue through the second enemy_is_adjacent is
-// byte-identical.
-
-// WHAT THIS COSTS ITS CALLER, measured: get_total_combat_value
-// (0x442e60) inlines this body with `excluded` constant-folded to 0,
-// and without the inline it sits at 49.64 - everything from the
-// get_unit_combat_value call onward is already byte-identical, so the
-// whole gap is the missing expansion. The inline IS reachable: marking
-// this definition `inline` fires it and takes the caller to 81.97 -
-// but VC6 then emits no out-of-line body at all (can_shoot 0.0), which
-// retail plainly has, so the keyword is not the answer. And the
-// merged function brings its own divergence: our CL hoists the literal
-// 0 into EBX across the inlined arms (`xor ebx,ebx` / `cmp [numTroops],
-// ebx` / `mov [ranged], bl`) where retail materializes each constant,
-// which is exactly the literal-into-EBX hoist army::Turn's residual
-// note records. So the caller does not reach 100 by winning the inline
-// either, and BOTH rows are parked rather than landed low.
-#endif  // @carcass
 
 //   spelling                          can_shoot  AI_target_time  berserk
 //   `inline`, every site expands         (none)      100.0000    92.5170
@@ -2963,11 +2765,6 @@ inline unsigned char army::canShoot(const army* excluded) const
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2804
-#endif  // @carcass
-
 VA(0x004429f0, 0x5C)  // dc 0x47c74
 unsigned char army::enemyIsAdjacent(const army* excluded) const
 {
@@ -2978,10 +2775,6 @@ unsigned char army::enemyIsAdjacent(const army* excluded) const
             this, getSecondGridIndex(), excluded);
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The Artillery multipliers get_unit_combat_value's ballista arm
 // indexes by the controller's skill level, at .rdata 0x63b7f0 -
@@ -3098,11 +2891,6 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
                              * value / m_monInfo.m_hitPoints);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2928
-#endif  // @carcass
-
 VA(0x00442fd0, 0xA9)  // dc 0x482f0
 long army::getLossCombatValue(long lowestAttack, long lowestDefense,
                                  unsigned char ranged, long damage,
@@ -3119,11 +2907,6 @@ long army::getLossCombatValue(long lowestAttack, long lowestDefense,
         lost = m_topCreatureDamage;
     return static_cast<long>((lost + damage) * value / m_monInfo.m_hitPoints);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:2960
-#endif  // @carcass
 
 VA(0x00443080, 0x50)  // dc 0x48454
 long army::getTotalHitPoints(unsigned char simulated) const
@@ -3313,20 +3096,6 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
     return total;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:3076
-// CONFIRMED against 0x443320, which has the SAME arity (ret 0x14) and a
-// better size ratio, and which an order-map alone picks instead. The DC
-// callgraph settles it: DC ComputeAttackerDamageBonuses has exactly ONE
-// caller, adjust_damage, and retail's 0x443f40 (adjust_damage, claimed)
-// calls 0x443840 and never 0x443320; DC's row also calls LoadPlaySample /
-// WaitEndSample / GetName, which 0x443840 does and 0x443320 does not.
-// 0x443320 (0x514 B) is a RETAIL-ONLY worker split out of this body -
-// the offense/archery/spell-bonus arithmetic, same five arguments - and
-// it is called from here and from the retail-only 0x443e30.
-#endif  // @carcass
-
 // The Artillery double-damage chance per mastery, at .rdata 0x63b810 -
 // {0, 50, 75, 100} read from the hash-verified image. Name is a
 // source-facing invention like kArtilleryFactors below; no roster row
@@ -3442,11 +3211,6 @@ double army::computeAttackerDamageReduction(const army* defender,
                     * reduction;
     return reduction;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:3319
-#endif  // @carcass
 
 VA(0x00443d90, 0x9C)  // dc 0x48fc4
 double army::computeDefenderDamageReduction(unsigned char isShooting) const
@@ -4318,11 +4082,6 @@ long army::getAttackDirection(long ourHex, const army* enemy,
     return -1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4273
-#endif  // @carcass
-
 VA(0x004458b0, 0x9D)  // dc 0x4a610
 inline long army::getAttackDirection(long ourHex, const army* enemy) const
 {
@@ -4346,11 +4105,6 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
             return best;
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4303
-#endif  // @carcass
 
 // One stack, one hex, whichever way it travels: a flyer flies, a devil
 // teleports, everything else walks. The grid identity is INVALIDATED
@@ -4511,13 +4265,6 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
     return chosen;
 }
 
-#if 0  // @carcass: claim-only home for the header COMDAT below
-
-// E:\gamedcs\Army.h:736
-// Canonical body and VA: include/army.h.
-
-#endif  // @carcass
-
 VA(0x00445d10, 0x14)
 unsigned char army::moveTo(int hex, unsigned char restoreFacing)
 {
@@ -4539,12 +4286,7 @@ void army::attackWall(int targetGridIndex)
         // GetTargetWallIndex has an int retail interface and a DC enum
         // result. Keep the representation bridge at this consuming call;
         // the former wall_target_from_int was a reconstruction wrapper.
-        union {
-            int m_value;
-            TWallTargetId m_wall;
-        } storage;
-        storage.m_value = getTargetWallIndex(targetGridIndex);
-        wall = storage.m_wall;
+        wall = TWallTargetId(getTargetWallIndex(targetGridIndex));
     }
     hero* controller = getController();
     long level;
@@ -4984,11 +4726,6 @@ void army::turn(unsigned char animateTurn)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4956
-#endif  // @carcass
-
 // Capture the battlefield without this stack on it, once, before an
 // animation starts: widen the draw limits to the whole combat area,
 // draw this stack's cell into the buffer, take one full frame with
@@ -5323,17 +5060,6 @@ bool army::canCastResurrect(long hex) const
         return 0;
     return getResurrectionSize(target) > 0;
 }
-
-#if 0  // @carcass
-
-// RETAIL-ONLY, no DC row in this run: a member with NO arguments (bare
-// `ret`), which none of the three DC rows left in the bracket
-// (can_cast_spell / cast_resurrect / cast_demonic_resurrect, one argument
-// each) can be. combatManager::SetNextArmy (0x465330) calls it and
-// 0x447fe0 at the top of a stack's turn; it walks the +0xdc spell list
-// against the table at 0x63b850 and picks one with `rand`. Name is
-// army.h's, provisional.
-#endif  // @carcass
 
 // The Faerie Dragon's lottery: (spell, weight) pairs, -1-terminated,
 // read from the hash-verified image at 0x63b850 (.rdata, so const).
@@ -5988,11 +5714,6 @@ long army::getAITargetTime(long speed) const
         return 1;
     return turns;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:5790
-#endif  // @carcass
 
 VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 

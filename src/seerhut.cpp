@@ -1359,12 +1359,7 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
         file->read(&id, sizeof(id));
         TArtifact artifact;
         {
-            union {
-                int m_value;
-                TArtifact m_artifact;
-            } storage;
-            storage.m_value = id;
-            artifact = storage.m_artifact;
+            artifact = TArtifact(id);
         }
         m_artifacts.push_back(artifact);
     }
@@ -1386,12 +1381,7 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
         file->read(&id, sizeof(id));
         TArtifact artifact;
         {
-            union {
-                int m_value;
-                TArtifact m_artifact;
-            } storage;
-            storage.m_value = id;
-            artifact = storage.m_artifact;
+            artifact = TArtifact(id);
         }
         m_artifacts.push_back(artifact);
         g_game->m_artifactDisabled[artifact] = 1;
@@ -1625,12 +1615,7 @@ void type_creature_quest::load(TAbstractFile* file, int version)
         file->read(&type, sizeof(short));
         TCreatureType creature;
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = type & 0xffff;
-            creature = storage.m_creature;
+            creature = TCreatureType(type & 0xffff);
         }
         file->read(&number, sizeof(number));
         int amount = number;
@@ -1656,12 +1641,7 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
         file->read(&type, sizeof(short));
         TCreatureType creature;
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = type & 0xffff;
-            creature = storage.m_creature;
+            creature = TCreatureType(type & 0xffff);
         }
         file->read(&number, sizeof(short));
         int amount = number & 0xffff;
@@ -2644,12 +2624,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         if (currentHero->getNumberInBackpack(1) < 64) {
             type_artifact artifact(ARTIFACT_NONE);
             {
-                union {
-                    int m_value;
-                    TArtifact m_artifact;
-                } storage;
-                storage.m_value = m_value.m_dwords[0];
-                artifact.m_artifactId = storage.m_artifact;
+                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
             }
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
@@ -2671,24 +2646,14 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
             if (humanPlayer) {
                 TCreatureType creature;
                 {
-                    union {
-                        int m_value;
-                        TCreatureType m_creature;
-                    } storage;
-                    storage.m_value = m_value.m_creature.m_creatureType;
-                    creature = storage.m_creature;
+                    creature = TCreatureType(m_value.m_creature.m_creatureType);
                 }
                 doMonsterJoinDialog(currentHero, creature,
                     m_value.m_creature.m_count);
             } else {
                 TCreatureType creature;
                 {
-                    union {
-                        int m_value;
-                        TCreatureType m_creature;
-                    } storage;
-                    storage.m_value = m_value.m_creature.m_creatureType;
-                    creature = storage.m_creature;
+                    creature = TCreatureType(m_value.m_creature.m_creatureType);
                 }
                 aiJoinDecision(currentHero, creature,
                     m_value.m_creature.m_count);

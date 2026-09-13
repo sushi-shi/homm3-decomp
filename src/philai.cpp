@@ -1,5 +1,6 @@
 // philai.cpp - E:\gamedcs\philai.cpp (compiland philai.obj)
 #include <va.h>
+#include "creaturetype.h"
 #include <algorithm>
 #include <functional>
 #include <math.h>
@@ -1209,22 +1210,19 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 VA(0x00524630, 0x60)
 int hero::soDGetSeerSkillValue(int skill, int level)
 {
-    union {
-        int m_value;
-        TSecondarySkill m_skill;
-    } typedSkill;
-    typedSkill.m_value = skill;
+    int typedSkill;
+    typedSkill = skill;
 
     if (m_skillLevel[skill] >= level)
         return 0;
     if (m_skillLevel[skill] == 0) {
         if (m_skillCount >= 8)
             return 0;
-        if (!wantsSkill(this, typedSkill.m_skill, 1))
+        if (!wantsSkill(this, TSecondarySkill(typedSkill), 1))
             return 0;
     }
     return getSkillValue(
-        this, typedSkill.m_skill, static_cast<unsigned char>(1));
+        this, TSecondarySkill(typedSkill), static_cast<unsigned char>(1));
 }
 
 // E:\gamedcs\philai.cpp:3469.  Retail 0x524690/1668 B: (ecx=hero, edx=skill,
@@ -2457,9 +2455,7 @@ static const struct {
     { 4.19, 0.041, 3.755, 0.023 },
     { 4.33, 0.032, 3.947, 0.016 },
     { 4.44, 0.025, 4.112, 0.01  },
-    {
-        4.53, 0.0,   4.53,  0.0
-    }
+    { 4.53, 0.0,   4.53,  0.0 }
 };
 
 VA(0x005270e0, 0xDF)  // dc 0x10f404
@@ -2921,10 +2917,7 @@ void aiVisitHillFort(hero* currentHero)
         if (creature == CREATURE_NONE)
             continue;
         if (g_game->m_f1f698 == 0
-            && (creature == CREATURE_AIR_ELEMENTAL
-                || creature == CREATURE_EARTH_ELEMENTAL
-                || creature == CREATURE_FIRE_ELEMENTAL
-                || creature == CREATURE_WATER_ELEMENTAL))
+            && isBaseElemental(creature))
             continue;
 
         TCreatureType upgrade = upgradedCreatureType(creature);
@@ -3391,16 +3384,6 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     return 0;
 }
 
-#if 0  // @carcass: claim-only homes for retained header COMDATs
-
-// Canonical body and VA: include/mapcell.h.
-
-// Canonical body and VA: include/game.h.
-
-// Complete-only upgrade selector: canonical body and VA in include/game.h.
-
-#endif  // @carcass
-
 VA(0x00529750, 0x78)  // dc 0x10d91c
 static long getArtifactPurchaseValue(
     TArtifact artifactId, long marketCount, long* funds);
@@ -3521,11 +3504,6 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     return value;
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:2306
-#endif  // @carcass
-
 VA(0x00529cb0, 0x2d9)  // dc 0x11105c
 long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short moveCost, NewmapCell* cell)
 {
@@ -3645,12 +3623,9 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a140, 0x96)  // dc 0x111a9c
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point)
 {
-    union {
-        int m_value;
-        TCreatureType m_creature;
-    } typedCreature;
-    typedCreature.m_value = cell->m_objectIndex;
-    TCreatureType type = typedCreature.m_creature;
+    int typedCreature;
+    typedCreature = cell->m_objectIndex;
+    TCreatureType type = TCreatureType(typedCreature);
     armyGroup monsters(type,
         static_cast<unsigned short>(cell->m_extraInfo) & 0xfff);
     long value = aiValueOfCombat(currentHero, 0, monsters, 0, cell);
@@ -3842,13 +3817,6 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* play
         + static_cast<double>(combatValue));
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:2931.  Exact cross-TU callee set {hero::get_number_in_backpack,
-// hero::get_player}; value_of_black_market (subset, single callee) ruled out by the
-// two-element exact match.
-#endif  // @carcass
-
 VA(0x0052a870, 0x4F)  // dc 0x1123ac
 int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
@@ -3859,11 +3827,6 @@ int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
             + player->m_ai.m_resourceValue[GOLD] * 1200.0);
     return static_cast<int>(player->m_ai.m_resourceValue[GOLD] * 1200.0);
 }
-
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:2964
-#endif  // @carcass
 
 VA(0x0052a8c0, 0x9a)  // dc 0x112510
 int valueOfScroll(const hero* currentHero, NewmapCell* cell)
@@ -3889,10 +3852,6 @@ int valueOfScroll(const hero* currentHero, NewmapCell* cell)
         value += aiGetValueOfArtifact(artifact, currentHero, false, false);
     return value;
 }
-
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-#endif  // @carcass
 
 VA(0x0052a960, 0x158)  // dc 0x1126d0
 int valueOfSirens(const hero* currentHero)

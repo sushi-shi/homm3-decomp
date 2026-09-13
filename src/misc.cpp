@@ -27,13 +27,6 @@
 // filename into a 500-byte frame buffer, then NormalDialog.
 void unnamed4f3a60(char* filename);
 
-// Unimplemented carcass stubs stay lexically present (labels and the
-// va-claims gate scan text) but outside compilation until each body
-// is reconstructed.
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // Use the timer during video playback so the game RNG sequence stays unchanged.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)

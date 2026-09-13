@@ -102,10 +102,6 @@ textEntryWidget::~textEntryWidget()
         delete m_saveBack;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x005bab50, 0x49)  // dc 0x162b50
 void textEntryWidget::setFocus(unsigned char state)
 {
@@ -116,10 +112,6 @@ void textEntryWidget::setFocus(unsigned char state)
             m_width, m_height);
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005baba0, 0xA4)  // dc 0x162bbc
 char textEntryWidget::getCharPressed(message* msg)

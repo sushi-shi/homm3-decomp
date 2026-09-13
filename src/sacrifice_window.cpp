@@ -2201,14 +2201,6 @@ void type_sacrifice_window::updateSlot(long slot)
     }
 }
 
-// Header-inline on Dreamcast (Widget.h:263) and in widget.h here; the
-// Complete linker retained the COMDAT copy this compiland emitted. Its DC
-// signature and the HD masked identity agree. Claimed as a carcass row so
-// the one source body stays the header's.
-#if 0 // @carcass
-// Canonical body and VA: include/widget.h.
-#endif
-
 VA(0x005629e0, 0x33)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
 {

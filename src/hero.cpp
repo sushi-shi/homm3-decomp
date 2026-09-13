@@ -437,11 +437,6 @@ void type_obscuring_object::initialize()
     m_extraInfo = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:418
-#endif  // @carcass
-
 VA(0x004d74f0, 0xD6)  // dc 0xcab54
 bool type_obscuring_object::load(void* inputHandle)
 {
@@ -532,11 +527,6 @@ bool type_obscuring_object::save(void* outputHandle)
     return success;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:523
-#endif  // @carcass
-
 VA(0x004d7890, 0x64)  // dc 0xcae60
 void hero::hire(int playerId, type_point point)
 {
@@ -550,11 +540,6 @@ void hero::hire(int playerId, type_point point)
     placeInMap(playerId, point, 1);
     g_game->finishTownHire(playerId, recruitSlot);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:549
-#endif  // @carcass
 
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
 void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
@@ -1122,12 +1107,7 @@ void hero::initialize(short index)
                g_heroTraits[index].m_secondSkillLevel);
     }
     if (g_heroTraits[index].m_startsWithSpellbook) {
-        union {
-            int m_integer;
-            TArtifact m_artifact;
-        } converted;
-        converted.m_integer = ARTIFACT_SPELLBOOK;
-        m_equipped[17].m_artifactId = converted.m_artifact;
+        m_equipped[17].m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
     }
     if (g_heroTraits[index].m_startingSpell != -1)
         addSpell(g_heroTraits[index].m_startingSpell);
@@ -1503,10 +1483,6 @@ unsigned char hero::hasArtifact(int whichArtifact) const
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004d91f0, 0x70)  // dc 0xcc26c
 unsigned char hero::isWieldingArtifact(int whichArtifact) const
 {
@@ -1770,18 +1746,6 @@ void hero::updateSpellList()
     } while (--remaining);
 }
 
-#if 0  // @carcass
-
-// RETIRED 2026-08-28: the old positional arity sweep assigned DC names to
-// this retail block by link-order slot. That mapping put UpdateArmies on
-// the artifact-dialog body at 0x4d9a00 and HeroMessageUpdate on the actual
-// seven-slot army repaint at 0x4d97f0. Dreamcast statement/call shape plus
-// retail semantics disprove the positional assignment: 0x4d97f0 is
-// UpdateArmies. The remaining identities in this block stay unsettled;
-// neither their old slot names nor a generic "revision drift" explanation
-// is evidence.
-#endif  // @carcass
-
 // E:\gamedcs\hero.cpp:1632
 // Dreamcast's UpdateArmies source shape and retail agree: one message
 // local, a seven-army-slot loop, and the same empty/populated/selected
@@ -1855,11 +1819,6 @@ void hero::updateArmies()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:1606
-#endif  // @carcass
-
 // Original: hero::ViewStat; hero.cpp:1709, dc 0xcc708.
 // Retail reads both arguments, expands GetPrimarySkill, and passes gStatDesc
 // plus the quick/normal dialog type to NormalDialog. DC confirms the same
@@ -1876,10 +1835,6 @@ void hero::viewStat(int whichStat, int isQuickView)
                  statValue | PRIMARY_STAT_RESOURCE_QUANTITY,
                  -1, 0, -1, 0, -1, 0);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // the same dialog-type pair viewStat uses (4 quick, 1 normal),
 VA(0x004d9a00, 0x128)  // dc 0xcc75c
@@ -1899,10 +1854,6 @@ void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
                      -1, 0);
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // Complete-only combination-artifact prompt.
 // Retail is `ret 4` with one artifact-id argument and never reads ECX.
@@ -2578,21 +2529,12 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
                 chance = 1;
             roll -= chance;
             if (roll <= 0) {
-                union {
-                    int m_index;
-                    TSecondarySkill m_skill;
-                } drawn;
-                drawn.m_index = i;
-                return drawn.m_skill;
+                return TSecondarySkill(i);
             }
         }
     }
     return eSecSkillNone;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:2340. Ordinary update_artifact_slot(long, TArtifact)
 // helper: retail expands its four updateSlot calls. Absence of a retained
@@ -2617,10 +2559,6 @@ void updateArtifactSlot(long id, TArtifact artifact)
     }
     g_heroScreenWindow->broadcastMessage(&msg);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004daf90, 0x23A)  // dc 0xcd6e8
 void THeroScreenWindow::updateSlot(TArtifactSlot slot)
@@ -2672,10 +2610,6 @@ void THeroScreenWindow::updateAllSlots()
          slot < ARTIFACT_SLOT_COUNT; slot++)
         updateSlot(TArtifactSlot(slot));
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:2393
 // No retail row: the one call site below is /Ob2-inlined into
@@ -2734,10 +2668,6 @@ void type_artifact::getRolloverText(char* buffer) const
         sprintf(buffer, g_artifactRolloverFormat,
                 g_artifactTraits[m_artifactId].m_name);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:2450
 // Only free row between get_rollover_text (0x004db350, claimed) and
@@ -3061,17 +2991,6 @@ long hero::getLastBackpackIndex() const
     }
     return -1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:2809
-// Inlines get_last_backpack_index, saves backpack[last], shifts every
-// slot UP by one (`[edx-8] -> [edx]`, edx walking down) and drops the
-// saved slot into backpack[0]. The left/right pair is separated by DC
-// SOURCE ORDER only (both are 0-arg hero members with mirror bodies);
-// the DC names describe the ARROW pressed, not the direction the array
-// moves.
-#endif  // @carcass
 
 VA(0x004dbdb0, 0x57)  // dc 0xce168
 void hero::rotateBackpackLeft()
@@ -5229,18 +5148,6 @@ void THeroScreenWindow::setupHeroView()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:4589
-// The SS trio 0x004e2210 / 0x004e2250 / 0x004e22d0 is byte-decoded and
-// mutually pinned: SetSS tail-calls TakeSS with a literal 3 when the new
-// level is 0 and GiveSS when the skill is not yet known, and CheckLevel
-// (0x004da720) calls GiveSS directly. All three index the two 28-entry
-// secondary-skill bands the hero model carries (mastery at +0xc9 read
-// with movsx, acquisition order at +0xe5 compared UNSIGNED) and the
-// skill count at +0x101, and all three are `ret 8`.
-#endif  // @carcass
-
 VA(0x004e2210, 0x3F)  // dc 0xd36e0
 void hero::setSS(int whichSS, int levelToSet)
 {
@@ -5314,10 +5221,6 @@ int hero::creatureTypeCount(int creatureType)
     return count;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e2370, 0x26)  // dc 0xd3874
 void hero::upgradeCreatures(int sourceCreatureType, int destCreatureType)
 {
@@ -5372,17 +5275,6 @@ void hero::transferArtifacts(hero* src)
         src->removeBackpackArtifact(index);
     }
 }
-
-#if 0  // @carcass
-
-// RETAIL-ONLY x2. Nothing sits between TransferArtifacts (0xd38ec) and
-// equip_artifact (0xd39d8) in the Dreamcast roster, but retail carves
-// two more bodies plus one /GX unwind funclet (0x004e29dc, which calls
-// equip_artifact and rethrows - compiler-generated, no claim). Both are
-// hero members, both `ret 8`, and both work the 32-byte-stride artifact
-// table at 0x660b68 against the 19 equipped slots. ORDINAL PLACEHOLDER
-// names, flagged unattested.
-#endif  // @carcass
 
 // Can `artifact` be worn in `slot` (or, with slot -1, in ANY of the 19)?
 // NOT EH-bearing: retail leaves all four bitset::_Xran sites out of line,
@@ -5754,10 +5646,6 @@ void hero::removeBackpackArtifact(short slot)
     m_backpackCount--;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e2dd0, 0xFC)  // dc 0xd3bec
 unsigned char hero::removeArtifact(TArtifact artifact)
 {
@@ -6016,10 +5904,6 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
     return applyLimits ? limit(-3, luck, 3) : luck;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e39b0, 0x2A9)  // dc 0xd41fc
 int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
                     unsigned char applyLimits) const
@@ -6065,23 +5949,6 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
         morale += 500;
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
-
-#if 0  // @carcass
-
-// hero::GetNecromancyCreature - NO Dreamcast row; the name is the
-// PROVISIONAL one hero.h already carries (HD-crossbuild + IDA lineage,
-// flagged there). The SLOT and the SIGNATURE are retail-proven here:
-// ai_combat's create_skeletons (0x426df0) calls GetNecromancyFactor and
-// then this address with no argument, and the body returns creature
-// types 0x38/0x3a/0x3c/0x40 (Skeleton / Walking Dead / Wight / Lich)
-// off the Necromancy mastery byte at +0xd5 after testing artifact 0x82
-// across the 19 equipped slots and hero::IsWieldingArtifact.
-// The three upper rungs share ONE exit with the artifact-absent path:
-// retail loads 0x3a and only then tests `>= 1`, so the last rung is a
-// SELECTOR on the return value, not a fourth if - `mov eax,0x3a / jge
-// <ret> / mov eax,0x38` is a ternary, and the outer "no cloak" branch
-// jumps straight onto that same `mov eax,0x38`.
-#endif  // @carcass
 
 VA(0x004e3c60, 0x70)
 TCreatureType hero::getNecromancyCreature()
@@ -6171,11 +6038,6 @@ int hero::getVisibility() const
     return visibility;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:5455
-#endif  // @carcass
-
 VA(0x004e4160, 0x143)  // dc 0xd45d8
 float hero::getArcheryFactor() const
 {
@@ -6193,10 +6055,6 @@ float hero::getArcheryFactor() const
     }
     return factor;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004e42b0, 0x60)  // dc 0xd4664
 float hero::getOffenseFactor() const
@@ -6261,10 +6119,6 @@ float hero::getEagleEyeChance() const
     return factor;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e4580, 0x15C)  // dc 0xd482c
 float hero::getSurrenderCostFactor() const
 {
@@ -6304,10 +6158,6 @@ float hero::getMagicResistanceFactor() const
         factor = 1.0f;
     return 1.0f - factor;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004e4840, 0x66)  // dc 0xd4960
 float hero::getExperienceBonusFactor() const
@@ -6473,10 +6323,6 @@ int hero::getMobility() const
     return getMobility((m_flags >> 18) & 1);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e4db0, 0x10D)  // dc 0xd4db0
 int hero::getSpellDurationBonus() const
 {
@@ -6491,17 +6337,6 @@ int hero::getSpellDurationBonus() const
         bonus += 50;
     return bonus;
 }
-
-#if 0  // @carcass
-
-// RETAIL-ONLY: no DC row between GetSpellDurationBonus (0xd4db0) and
-// get_special_terrain (0xd4df0). `ret 0`, and it unpacks a five-byte
-// packed point out of `this` - word[+0], word[+2], byte[+4] masked with
-// 0x3ff / 0x3ff / 0xf - i.e. the hero's own map coordinate, exactly the
-// three coordinate words hero::initialize fills with -1. ORDINAL
-// PLACEHOLDER name, flagged unattested (the HD crossbuild map offers
-// `hero::GetGroundModifier`, NH3API lineage, not admitted here).
-#endif  // @carcass
 
 VA(0x004e4ec0, 0xD6)
 TAdventureObjectType hero::heroFn004E4EC0()
@@ -6666,10 +6501,6 @@ int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     return cost;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004e5330, 0x43)  // dc 0xd4fe0
 int hero::getMobilityFrame() const
 {
@@ -6698,10 +6529,6 @@ int hero::getManaFrame() const
         frame = 24 + (currentMana >= 170);
     return frame;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004e53c0, 0x1E)  // dc 0xd5060
 bool hero::visitedArena(const NewmapCell* cell) const

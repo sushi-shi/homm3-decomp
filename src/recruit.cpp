@@ -77,10 +77,6 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
     }
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0054e7c0, 0x31)  // dc 0x118b38
 void getMonsterCost(int monId, int* resCost)
 {
@@ -340,10 +336,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         slot + 0x21e,
         g_creatureBackgrounds[
             g_game->m_f1f698 == 0
-                && (creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL)
+                && isBaseElemental(creature)
             ? -1 : g_creatureTypeTraits[creature].m_townType],
         0x800));
 
@@ -1281,10 +1274,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
         g_creatureBackgrounds[
             g_game->m_f1f698 == 0
-                && (monType == CREATURE_AIR_ELEMENTAL
-                    || monType == CREATURE_EARTH_ELEMENTAL
-                    || monType == CREATURE_FIRE_ELEMENTAL
-                    || monType == CREATURE_WATER_ELEMENTAL)
+                && isBaseElemental(monType)
             ? -1 : g_creatureTypeTraits[monType].m_townType],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,

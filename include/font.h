@@ -123,8 +123,7 @@ public:
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
     font(const char* name, const TFontSpec& fontspec, int dsize,
-         unsigned char* d);
-  // retail 0x4b5070
+         unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
     void setPalette(const TPalette16* newPalette);

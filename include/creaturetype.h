@@ -27,6 +27,10 @@ inline const char* getArmyName(int type, int count)
     }
 }
 
+#define isBaseElemental(type) \
+    ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \
+        || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
 

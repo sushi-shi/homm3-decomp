@@ -442,16 +442,6 @@ TAdventureMapWindow::TAdventureMapWindow()
     m_resourceDisplay = new TResourceDisplay(this, 0);
 }
 
-#if 0  // @carcass: active header-inline bodies emit these COMDATs
-
-// widget.h's two accessor slots, emitted here because CAdventurMapChatEdit's
-// vtable is the reference that instantiates them.
-// Canonical body and VA: include/widget.h.
-
-// Canonical body and VA: include/widget.h.
-
-#endif  // @carcass
-
 // Defined at its retail address below; SendChat is its only caller and
 // precedes it in the retail link order.
 void checkAdvCheatCode(std::string& chatString);

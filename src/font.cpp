@@ -407,12 +407,6 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\font.cpp:413
-
-#endif  // @carcass
-
 VA(0x004b57a0, 0x25)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {

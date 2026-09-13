@@ -285,10 +285,6 @@ void bitmapBorder::setImage(const char* bitmapName)
     m_image = ResourceManager::getBitmap816(bitmapName);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00450520, 0x2D)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
@@ -328,10 +324,6 @@ int bitmapBorder::main(message& msg)
     }
     return border::main(msg);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00450690, 0x8C)  // dc 0x54a98
 bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,

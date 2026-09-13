@@ -36,12 +36,6 @@
 // DC includes.h:134 names limit at the split-window and army-rating
 // sites below. homm3_limit.h owns its shared reference-selector chain.
 
-// The former isBaseElemental wrapper existed to add /Ob2 candidates.
-// Keep the retail four-comparison conditions at their source sites; the
-// earlier wrapper probe moved TSplitWindow 98.4605 -> 99.9895 but did not
-// establish a source helper. Shared alignment/name queries use game.h and
-// creaturetype.h instead of local copies.
-
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
 
@@ -84,13 +78,6 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
-
-// Unimplemented carcass stubs stay lexically present (labels and the
-// va-claims gate scan text) but outside compilation until each body
-// is reconstructed.
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004496a0, 0x16)  // dc 0x4dae4
 unsigned char armyGroup::hasCreatures() const
@@ -140,15 +127,6 @@ unsigned char armyGroup::hasCreatures() const
 //     static bitset<9> at 0x693884 that GetMorale reads.  It is
 //     armygrp.cpp's static-set accessor, promoted out of this block
 //     below.  It has no DC row because the DC build linked STLport.
-
-// UpdateSplitArmy and SetRolloverText are therefore inlined-and-
-// eliminated (the HasSomeUndead pattern in this same file): single
-// call site, /Ob2 inlines, /OPT:REF drops the now-unreferenced body.
-// ===================================================================
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:82
-#endif  // @carcass
 
 VA(0x004496c0, 0xC3)  // dc 0x4db88
 void splitSliderCallback(int state, heroWindow*)
@@ -238,11 +216,6 @@ TSplitWindow::~TSplitWindow()
             delete *it;
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:143
-#endif  // @carcass
 
 VA(0x00449e90, 0x2EF)  // dc 0x4e180
 void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
@@ -661,10 +634,6 @@ int armyGroup::save(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044aa40, 0x3A)  // dc 0x4ea78
 int armyGroup::load(TAbstractFile* infile)
 {
@@ -675,20 +644,12 @@ int armyGroup::load(TAbstractFile* infile)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044aa80, 0x1F)  // dc 0x4eab8
 armyGroup::armyGroup()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044aaa0, 0x5A)  // dc 0x4ead0
 armyGroup::armyGroup(TCreatureType type, int amount)
@@ -704,20 +665,12 @@ armyGroup::armyGroup(TCreatureType type, int amount)
     }
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ab00, 0x1D)  // dc 0x4eb2c
 void armyGroup::initialize()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ab20, 0x3A)  // dc 0x4eb50
 unsigned char armyGroup::hasAllUndead() const
@@ -753,10 +706,6 @@ void armyGroup::dismiss(int whichIndex)
     m_numTroops[whichIndex] = 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ab80, 0x21)  // dc 0x4ebd0
 unsigned char armyGroup::isMember(TCreatureType monType) const
 {
@@ -766,10 +715,6 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044abb0, 0x97)  // dc 0x4ebf0
 int armyGroup::getAlignments(unsigned char* alignments) const
@@ -785,10 +730,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && (m_armies[i] == CREATURE_AIR_ELEMENTAL
-            || m_armies[i] == CREATURE_EARTH_ELEMENTAL
-            || m_armies[i] == CREATURE_FIRE_ELEMENTAL
-            || m_armies[i] == CREATURE_WATER_ELEMENTAL))
+        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
             alignment = -1;
         else
             alignment = traits.m_townType;
@@ -823,10 +765,6 @@ int armyGroup::canJoin(int monType) const
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ac80, 0x39)  // dc 0x4ecdc
 long armyGroup::getAIValue() const
 {
@@ -838,10 +776,6 @@ long armyGroup::getAIValue() const
     return value;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044acc0, 0x14)  // dc 0x4ed28
 int armyGroup::getNumArmies() const
 {
@@ -852,10 +786,6 @@ int armyGroup::getNumArmies() const
     }
     return numArmies;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ace0, 0x76)  // dc 0x4ed4c
 int armyGroup::add(int armyType, int newNumTroops, int newIndex)
@@ -884,10 +814,6 @@ int armyGroup::add(int armyType, int newNumTroops, int newIndex)
     m_numTroops[newIndex] += newNumTroops;
     return 1;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ad60, 0x36)  // dc 0x4edcc
 void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
@@ -1013,10 +939,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !(type == CREATURE_AIR_ELEMENTAL
-            || type == CREATURE_EARTH_ELEMENTAL
-            || type == CREATURE_FIRE_ELEMENTAL
-            || type == CREATURE_WATER_ELEMENTAL)) {
+        if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
             do {
                 switch (g_creatureTypeTraits[type].m_townType) {
                 case TOWN_CASTLE:
@@ -1040,10 +963,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
             int type = m_armies[index];
-            if (g_game->m_f1f698 != 0 || !(type == CREATURE_AIR_ELEMENTAL
-            || type == CREATURE_EARTH_ELEMENTAL
-            || type == CREATURE_FIRE_ELEMENTAL
-            || type == CREATURE_WATER_ELEMENTAL)) {
+            if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
                 switch (g_creatureTypeTraits[type].m_townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
@@ -1108,10 +1028,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL)) {
+        if (g_game->m_f1f698 != 0 || !isBaseElemental(creature)) {
             do {
                 switch (g_creatureTypeTraits[creature].m_townType) {
                 case TOWN_CASTLE:
@@ -1352,10 +1269,7 @@ std::string armyGroup::getMoraleDescription(
     // currentMorale at the tail, as proved by retail 0x44b960.
     {
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-            && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL))) {
+            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
             switch (g_creatureTypeTraits[creature].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1383,10 +1297,7 @@ std::string armyGroup::getMoraleDescription(
             goto moraleTerrainDone;
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-            && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL))) {
+            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
             switch (g_creatureTypeTraits[creature].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1657,10 +1568,7 @@ std::string armyGroup::getLuckDescription(
     // 0x44c346 before the enemy-group arm at 0x44c34e. DC 0x4fab4
     // (armygrp.cpp:1464) has the older cursed-ground-only parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))) {
+        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a
         // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
@@ -1733,10 +1641,7 @@ TTerrainType armyGroup::getNativeTerrain() const
         if (m_armies[i] == CREATURE_NONE)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && (m_armies[i] == CREATURE_AIR_ELEMENTAL
-            || m_armies[i] == CREATURE_EARTH_ELEMENTAL
-            || m_armies[i] == CREATURE_FIRE_ELEMENTAL
-            || m_armies[i] == CREATURE_WATER_ELEMENTAL))
+        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;

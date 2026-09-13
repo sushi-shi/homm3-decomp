@@ -55,10 +55,6 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004560f0, 0x9A)  // dc 0x571ec
 inline button::~button()
 {
@@ -277,10 +273,6 @@ int button::main(message& msg)
     return 2;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00456860, 0xDA)  // dc 0x57730
 int button::select(message* msg)
 {
@@ -468,10 +460,6 @@ textButton::~textButton()
     m_font->dispose();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00456ca0, 0x82)  // dc 0x57b98
 void textButton::draw() const
 {
@@ -496,10 +484,6 @@ void textButton::draw() const
     m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                             drawX, drawY, m_width, m_height, color, 5, -1);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00456d30, 0x46)  // dc 0x57c4c
 type_func_button::type_func_button(long x, long y, long w, long h, long id,

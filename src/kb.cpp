@@ -1613,25 +1613,6 @@ static int doNewGame()
     return g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
 }
 
-// The two Bitmap16Bit header inlines kb.obj emits out of line, both
-// unclaimed-in-span between oldmain and DoCampaignWindow. 0x4efff0 is
-// GetMap: 25 B, `this+0x2c * y + this+0x30 + 2*x` with `ret 8`, which is
-// the accessor verbatim. 0x4f0010 is the eight-argument forwarding Draw
-// overload: it loads the destination bitmap's Pitch/Height/Width/map from
-// +0x2c/+0x28/+0x24/+0x30 and tail-calls the eleven-argument raw-pointer
-// Draw at 0x44e2b0, with `ret 0x20` for its eight stack arguments. Both
-// bodies live in bitmap16.h, so the claims sit here in the compiland that
-// emits the COMDATs and carry declarators only.
-#if 0  // @carcass: header inlines emitted by this compiland
-
-// Canonical body and VA: include/bitmap16.h.
-
-// Canonical body and VA: include/bitmap16.h.
-
-// Canonical body and VA: include/csprite.h.
-
-#endif  // @carcass
-
 // CORRECTION 2026-09-06: the note that used to stand here read "Retail's
 // kb.obj emits that COMDAT and ours does not, so some kb.cpp body still to be
 // reconstructed calls it". It outlived its cause - this object now emits
@@ -2945,13 +2926,6 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 
     return gameWon || gameLost;
 }
-
-// The 35-byte row immediately following DisplayVCWinLoss is the selected
-// out-of-line copy of the header constructor: five stores in exactly the
-// CNetMsg(eRS_Messages, unsigned long) source order and `ret 8`.
-#if 0  // claim-only home for the netmsg.h COMDAT selected by kb.obj
-// Canonical body and VA: include/netmsg.h.
-#endif
 
 // DC kb.cpp:3419..3436 names this ordinary function and its nested
 // GetLocalPlayerGamePos/GetTeamMask calls. Retail expands the enemy scan in
@@ -4308,12 +4282,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 g_game->m_campaign.m_isCheater = 1;
             TArtifact artifactId;
             {
-                union {
-                    int m_integer;
-                    TArtifact m_artifact;
-                } converted;
-                converted.m_integer = idItem - APP_MENU_ARTIFACT_FIRST;
-                artifactId = converted.m_artifact;
+                artifactId = TArtifact(idItem - APP_MENU_ARTIFACT_FIRST);
             }
             type_artifact artifact(artifactId);
             if (currentHero)
@@ -4331,12 +4300,7 @@ int handleAppSpecificMenuCommands(int idItem)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                     {
-                        union {
-                            int m_integer;
-                            TArtifact m_artifact;
-                        } converted;
-                        converted.m_integer = ARTIFACT_SPELLBOOK;
-                        artifact.m_artifactId = converted.m_artifact;
+                        artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
                     }
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
@@ -5024,15 +4988,6 @@ void normalDialogTimeOut(const char* text, int mbType, int timeOut,
                  resType2, resExtra2, special, timeOut,
                  resType3, resExtra3);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\kb.cpp:5499
-// Located by shape + call graph: 12-arg fastcall taking cText in ecx
-// (strlen via repne scasb), vector-ctor of 8 0x4c widgets, callers
-// include TAdventureMapWindow::ProcessRightSelect and AppCommand's
-// fullscreen-failure arm.
-#endif  // @carcass
 
 // E:\gamedcs\kb.cpp:5499
 // The twelve-argument front door: fill a TNormalDialogInfo (the three

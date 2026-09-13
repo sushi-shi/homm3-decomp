@@ -1,5 +1,6 @@
 // townmgr.cpp - E:\gamedcs\townmgr.cpp (compiland townmgr.obj)
 #include <va.h>
+#include "creaturetype.h"
 #include <stdio.h>
 #include <string.h>
 // hero.h's type_artifact::get_description declarator, for the
@@ -2599,9 +2600,7 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 5, 1, 4, 6, 3 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 5, 1, 3, 4, 6 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
-        {
-            0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0
-        }
+        { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
     };
     const int hallY[9][18] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
@@ -2612,9 +2611,7 @@ THallWindow::THallWindow(int which)
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 1, 1, 2 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 1 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 },
-        {
-            3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0
-        }
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 }
     };
 
     int i;
@@ -2807,21 +2804,6 @@ THallWindow::THallWindow(int which)
             memError();
     }
 }
-
-// The sixteen bytes the linker parked between THallWindow's constructor
-// and its ??_G are TTextResource::GetText's /Gy COMDAT: `mov eax,
-// [ecx+0x20]` is Text._First, `mov eax,[eax+ecx*4]` the subscript, and
-// `ret 4` the one-int declarator. textresource.h defines it inline, and
-// every other caller in the image expands it - this compiland emits it
-// out of line because the 11.5 KB constructor above is the one caller
-// whose /Ob2 budget cannot afford it (its call site is the bigfont
-// header's text). The claim therefore belongs to townmgr.obj even
-// though nothing here is compiled: the body below is the header's,
-// reproduced for the reader inside the carcass gate.
-#if 0  // @carcass: claim-only - the definition lives in textresource.h
-// E:\gamedcs\TextResource.h:66
-// Canonical body and VA: include/textresource.h.
-#endif  // @carcass
 
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
 
@@ -3545,12 +3527,7 @@ int type_garrison_base_window::windowHandler(message* msg)
                 townManager* mgr = g_townManager;
                 enum TCreatureType creature;
                 {
-                    union {
-                        int m_value;
-                        TCreatureType m_creature;
-                    } storage;
-                    storage.m_value = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
-                    creature = storage.m_creature;
+                    creature = TCreatureType(mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
                 }
                 mgr->m_divideStatus = 1;
                 g_townManager->m_garrisonStrip->draw(creature);
@@ -5117,12 +5094,7 @@ building_popup:
             case TTownScreenWindow::DIVIDE_ID: {
                 enum TCreatureType id;
                 {
-                    union {
-                        int m_value;
-                        TCreatureType m_creature;
-                    } storage;
-                    storage.m_value = m_srcStrip->m_group->m_armies[m_srcIndex];
-                    id = storage.m_creature;
+                    id = TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
                 }
                 m_garrisonStrip->draw(id);
                 m_heroStrip->draw(id);
@@ -5437,12 +5409,7 @@ void townManager::redrawTownScreen()
     TCreatureType creature = CREATURE_NONE;
     if (m_divideStatus)
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = m_srcStrip->m_group->m_armies[m_srcIndex];
-        creature = storage.m_creature;
+        creature = TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
     }
     m_resourceDisplay->update(1, 0);
     m_garrisonStrip->drawIcons(0, creature);
@@ -5734,9 +5701,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         {  44, 124, 204, 284,   0,   0,   0 },
         {  84, 164, 244, 124, 204,   0,   0 },
         {  84, 164, 244,  84, 164, 244,   0 },
-        {
-             44, 124, 204, 284,  84, 164, 244
-        }
+        { 44, 124, 204, 284,  84, 164, 244 }
     };
     int resourceY[7][7] = {
         { 340,   0,   0,   0,   0,   0,   0 },
@@ -5745,9 +5710,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         { 340, 340, 340, 340,   0,   0,   0 },
         { 303, 303, 303, 377, 377,   0,   0 },
         { 303, 303, 303, 377, 377, 377,   0 },
-        {
-            303, 303, 303, 303, 377, 377, 377
-        }
+        { 303, 303, 303, 303, 377, 377, 377 }
     };
     EGameResource types[7];
     int amounts[7];
@@ -6152,12 +6115,9 @@ void townManager::setupMage(heroWindow* mageWin)
             // Retail passes the loop counter to IsLegalBuilding
             // (`mov edx,[ebp-4]; push edx`) in the same representation.
             {
-                union {
-                    int m_value;
-                    type_building_id m_building;
-                } storage;
-                storage.m_value = level;
-                if (!m_townToView->isLegalBuilding(storage.m_building))
+                int storage;
+                storage = level;
+                if (!m_townToView->isLegalBuilding(type_building_id(storage)))
                     state = 0;
             }
             if (slot < m_townToView->m_mageGuildSpellCounts[level])
@@ -7604,10 +7564,7 @@ TCastleWindow::TCastleWindow()
         int summoned = g_townManager->m_townToView->m_summoningType;
         strcpy(g_text, g_townCastleDefNames[
                    ((!g_game->m_f1f698
-                     && (summoned == CREATURE_AIR_ELEMENTAL
-                         || summoned == CREATURE_EARTH_ELEMENTAL
-                         || summoned == CREATURE_FIRE_ELEMENTAL
-                         || summoned == CREATURE_WATER_ELEMENTAL))
+                     && isBaseElemental(summoned))
                         ? -1
                         : g_creatureTypeTraits[summoned].m_townType)
                    + 1]);
@@ -8668,9 +8625,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         { 0, 12, 24, 36, 18, 0, 0, 0 },
         { 0, 12, 24, 36, 18, 30, 0, 0 },
         { 0, 12, 24, 36, 6, 18, 30, 0 },
-        {
-            0, 12, 24, 36, 6, 18, 30, 42
-        }
+        { 0, 12, 24, 36, 6, 18, 30, 42 }
     };
     int flagY[8][8] = {
         { 1, 0, 0, 0, 0, 0, 0, 0 },
@@ -8680,9 +8635,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         { 1, 1, 1, 1, 5, 0, 0, 0 },
         { 1, 1, 1, 1, 5, 5, 0, 0 },
         { 1, 1, 1, 1, 5, 5, 5, 0 },
-        {
-            1, 1, 1, 1, 5, 5, 5, 5
-        }
+        { 1, 1, 1, 1, 5, 5, 5, 5 }
     };
 
     int gamePos = g_game->getLocalPlayerGamePos();

@@ -69,9 +69,6 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 {
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
 // E:\gamedcs\swapmgr.cpp:210. Dreamcast proves the source-level sequence:
 // reserve the widget roster, construct one widget per line, append the two
 // late-owned controls, then register every non-null widget in vector order.
@@ -1110,32 +1107,26 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         && m_heroes[hero]->heroFn004E2840(
                g_heroScreenDraggedArtifact.m_artifactId, slot))
     {
-        union {
-            int m_integer;
-            TArtifact m_artifact;
-        } converted;
-        converted.m_integer = artifact;
+        int converted;
+        converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
-            converted.m_artifact);
-        converted.m_integer = 0x90;
+            TArtifact(converted));
+        converted = 0x90;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            converted.m_artifact);
+            TArtifact(converted));
     }
     else
     {
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
-        union {
-            int m_integer;
-            TArtifact m_artifact;
-        } converted;
-        converted.m_integer = artifact;
+        int converted;
+        converted = artifact;
         updateArtifactWidget(
             hero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            converted.m_artifact);
+            TArtifact(converted));
     }
 }
 

@@ -372,9 +372,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             memcpy(&type, &ordinal, sizeof type);
         }
         if ((g_game->m_f1f698 != 0
-             || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
-                 && type != CREATURE_FIRE_ELEMENTAL
-                 && type != CREATURE_WATER_ELEMENTAL))
+             || !isBaseElemental(type))
             && static_cast<unsigned char>(isBaseCreature(type))) {
             anyUpgradable = 1;
             noneUpgradable = 0;
@@ -471,10 +469,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 memcpy(&stateType, &ordinal, sizeof stateType);
             }
             if ((g_game->m_f1f698 == 0
-                 && (stateType == CREATURE_AIR_ELEMENTAL
-                     || stateType == CREATURE_EARTH_ELEMENTAL
-                     || stateType == CREATURE_FIRE_ELEMENTAL
-                     || stateType == CREATURE_WATER_ELEMENTAL))
+                 && isBaseElemental(stateType))
                 || !static_cast<unsigned char>(isBaseCreature(stateType))) {
                 s.m_state = UPGRADE_STATE_NONE;
             } else if (canAfford(s.m_cost, g_currentPlayer->m_resources)) {
@@ -580,10 +575,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
                 memcpy(&type, &ordinal, sizeof type);
             }
             if ((g_game->m_f1f698 != 0
-                 || (type != CREATURE_AIR_ELEMENTAL
-                     && type != CREATURE_EARTH_ELEMENTAL
-                     && type != CREATURE_FIRE_ELEMENTAL
-                     && type != CREATURE_WATER_ELEMENTAL))
+                 || !isBaseElemental(type))
                 && static_cast<unsigned char>(isBaseCreature(type))) {
                 TCreatureType upgraded;
                 {

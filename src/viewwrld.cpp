@@ -69,7 +69,6 @@ DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 DATA(0x006aac30)
 static unsigned char g_viewHeroes;
 
-
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
 // the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop

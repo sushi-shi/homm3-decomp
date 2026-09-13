@@ -378,10 +378,6 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
     return value;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:575
 // How many turns this stack needs to reach the hex `cell` describes.
 // No retail body - the carve cuts nothing between the chooser's
@@ -499,22 +495,6 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         m_bestAttackTime = turns;
     }
 }
-
-#if 0  // @carcass
-
-// THE TWO SEVEN-PARAMETER STATICS, moved here from their DC line
-// positions (109 and 155). Retail emits them immediately after
-// check_adjacent_hexes, their caller - the same static-after-caller
-// inversion this TU's value_of_luck_and_morale already shows and that
-// ai.obj shows twice more. Three signals fix them regardless of
-// position: both rows are /Gr FREE functions returning `ret 0x14`,
-// which is SEVEN parameters, and get_multi_head_bonus and
-// get_breath_bonus are the only seven-parameter bodies in the entire
-// ai_tactical roster; the sizes are 1.24x and 0.84x; and multi-head
-// and breath bonuses are exactly what a routine scoring the hexes
-// adjacent to a target computes.
-
-#endif  // @carcass
 
 // The kills_only argument here is a LITERAL 0, not estimate's own byte
 // (`push 0` where get_breath_bonus pushes estimate->kills_only), and
@@ -2102,10 +2082,6 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
     }
     return best;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0043a670, 0x291)  // dc 0x40bb8
 void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group) const

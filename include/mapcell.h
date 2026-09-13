@@ -2221,30 +2221,22 @@ inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
 // reads all four lanes signed. Preserve the recovered enum return types.
 inline ScholarAwards ExtraInfoUnion::getScholarAward() const
 {
-    union { int m_integer; ScholarAwards m_value; } converted;
-    converted.m_integer = m_scholarInfo.m_award;
-    return converted.m_value;
+    return ScholarAwards(m_scholarInfo.m_award);
 }
 
 inline TPrimarySkill ExtraInfoUnion::getScholarPrimarySkill() const
 {
-    union { int m_integer; TPrimarySkill m_value; } converted;
-    converted.m_integer = m_scholarInfo.m_primary;
-    return converted.m_value;
+    return TPrimarySkill(m_scholarInfo.m_primary);
 }
 
 inline TSecondarySkill ExtraInfoUnion::getScholarSecondarySkill() const
 {
-    union { int m_integer; TSecondarySkill m_value; } converted;
-    converted.m_integer = m_scholarInfo.m_secondary;
-    return converted.m_value;
+    return TSecondarySkill(m_scholarInfo.m_secondary);
 }
 
 inline SpellID ExtraInfoUnion::getScholarSpell() const
 {
-    union { int m_integer; SpellID m_value; } converted;
-    converted.m_integer = m_scholarInfo.m_spell;
-    return converted.m_value;
+    return SpellID(m_scholarInfo.m_spell);
 }
 
 // Original: ExtraInfoUnion::SetScholar; MapCell.h:1089, dc 0xbca4c.
@@ -2418,9 +2410,7 @@ inline TArtifact NewmapCell::getArtifactIndex() const
 {
     // The packed signed ordinal crosses the enum boundary in this source
     // accessor; no separate artifactFromInt helper is evidenced.
-    union { int m_integer; TArtifact m_artifact; } converted;
-    converted.m_integer = m_objectIndex;
-    return converted.m_artifact;
+    return TArtifact(m_objectIndex);
 }
 
 // E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line

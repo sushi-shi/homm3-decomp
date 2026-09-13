@@ -418,12 +418,7 @@ unsigned char generator::load(TAbstractFile* infile)
         infile->read(&loaded, 1);
         int creature = loaded & 0xff;
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = creature;
-            m_type[slot] = storage.m_creature;
+            m_type[slot] = TCreatureType(creature);
         }
         if (creature == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
@@ -509,10 +504,7 @@ void generator::updateBonus()
     playerData* player = &g_game->m_players[m_playerOwner];
     int creature = m_type[0];
     if (!g_game->m_f1f698 &&
-        (creature == CREATURE_AIR_ELEMENTAL ||
-         creature == CREATURE_EARTH_ELEMENTAL ||
-         creature == CREATURE_FIRE_ELEMENTAL ||
-         creature == CREATURE_WATER_ELEMENTAL))
+        isBaseElemental(creature))
         return;
 
     int townType = g_creatureTypeTraits[creature].m_townType;
@@ -537,10 +529,7 @@ inline void generator::setOwner(long owner)
         playerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
-            (creature != CREATURE_AIR_ELEMENTAL &&
-             creature != CREATURE_EARTH_ELEMENTAL &&
-             creature != CREATURE_FIRE_ELEMENTAL &&
-             creature != CREATURE_WATER_ELEMENTAL)) {
+            !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
@@ -595,10 +584,7 @@ void generator::initialize(long newOwner)
         playerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
-            (creature != CREATURE_AIR_ELEMENTAL &&
-             creature != CREATURE_EARTH_ELEMENTAL &&
-             creature != CREATURE_FIRE_ELEMENTAL &&
-             creature != CREATURE_WATER_ELEMENTAL)) {
+            !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
@@ -616,10 +602,7 @@ void generator::initialize(long newOwner)
         playerData* player = &g_game->m_players[m_playerOwner];
         int creature = m_type[0];
         if (g_game->m_f1f698 ||
-            (creature != CREATURE_AIR_ELEMENTAL &&
-             creature != CREATURE_EARTH_ELEMENTAL &&
-             creature != CREATURE_FIRE_ELEMENTAL &&
-             creature != CREATURE_WATER_ELEMENTAL)) {
+            !isBaseElemental(creature)) {
             int townType = g_creatureTypeTraits[creature].m_townType;
             if (townType != -1) {
                 for (int index = 0; index < player->m_numTowns; index++) {
@@ -645,56 +628,6 @@ void generator::grow(int unusedArg)
         }
     }
 }
-
-#if 0  // @carcass
-
-// ---------------------------------------------------------------------
-// BRACKET generator::Grow (0x4b8a60) .. playerData::playerData (0x4b9df0)
-// - ten carve rows, settled by the CALL GRAPH, not by rank.
-
-// Eight of the ten are the save/load pool pairs, and their direction is
-// mechanical: every Load calls the TAbstractFile vtable slot at +4
-// (read), every Save calls the slot at +8 (write). They alternate
-// Load/Save exactly as the DC roster's line order does, and each Load is
-// called by 0x4bcda0 while each Save is called by 0x4be3f0 - the two
-// bodies that both reference the literal 'H3SVG' at 0x677d38, i.e.
-// game::Load and game::Save.
-
-// WHICH pool is which is pinned by CLAIMED anchors, not by order:
-//   - game::ClaimMine (0x4c66e0) reads [game+0x4e38c], the _First of the
-//     vector that 0x4b9340/0x4b9580 load and store;
-//   - game::ClaimGarrison (0x4c6960) reads [game+0x4e3ac], the _First of
-//     the vector that 0x4b96f0/0x4b98c0 use.
-// (VC6's Dinkumware vector puts the empty allocator at +0, so _First is
-// at base+4 - hence the 0x4e388 / 0x4e3a8 bases.)
-// The boat pair calls type_obscuring_object::load/save (0x4d74f0 /
-// 0x4d77b0) - a boat obscures the cell it floats on - and the sign pair
-// is the only one left; it is also the only pair that touches strings
-// (the sign text), through the loadString/saveString helpers at
-// 0x4bb990 / 0x4bbb60.
-
-// ARITY DIVERGES FROM THE DC PORT on two rows and the reason is visible
-// in the bytes: LoadMinePool and LoadGarrisonPool are `ret 8`, and the
-// second argument is a SAVE-GAME VERSION - 0x4b9340 branches on
-// `cmp eax,0x19` (25) and 0x4b96f0 on `cmp eax,0x1c` (28), taking
-// armyGroup::load on the new path and a two-byte legacy stack read plus
-// armyGroup::Add on the old one. The Dreamcast port dropped the
-// parameter (its saves have one version); retail kept it. The other six
-// pool bodies are `ret 4` exactly as the DC prototypes say.
-
-// The TENTH row, 0x4b9230 (62 B), is NOT claimed and must not be: it is
-// a Dinkumware string COMDAT, not a game.cpp body - it decrements the
-// refcount byte at [p-1], frees through 0x60ab30 when the count is 0 or
-// 0xff, and then zeroes the three-word representation at +8/+0xc/+0x10.
-// Its one caller is outside this span (0x5bcd0). Excluded class.
-
-// TWO DC ROWS HAVE NO RETAIL SLOT and are therefore inlined away:
-// get_day_bonus (0xa341c) - calculate_production is its only caller -
-// and the Obelisk pair (0xa4c08/0xa4c68, 94 SH4 bytes each), which would
-// have to sit between 0x4b9ded and 0x4b9df0.
-// ---------------------------------------------------------------------
-
-#endif  // @carcass
 
 // DC game.cpp:627 fixes the resource parameter as EGameResource.
 static long getDayBonus(EGameResource resource, long weekBonus, long day)
@@ -736,7 +669,6 @@ void game::calculateProduction()
     EGameResource resource;
     // DC calculate_production keeps its EGameResource induction variable.
     // Widen the ordinal locally without adding a conversion call boundary.
-    union { int m_integer; EGameResource m_resource; } resourceValue;
     double playerHandicap;
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!m_playerDisabled[playerId]) {
@@ -781,13 +713,10 @@ void game::calculateProduction()
         // const get_army overload, and the Dreamcast-public QB query then
         // consumes its const armyGroup directly.
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = g_productionCreatureCrystalDragon;
+            int storage;
+            storage = g_productionCreatureCrystalDragon;
             if (static_cast<const town&>(currentTown).getArmy()
-                    .getCreatureTotal(storage.m_creature) > 0)
+                    .getCreatureTotal(TCreatureType(storage)) > 0)
                 crystalDragonIncome[currentTown.m_owner] = 1;
         }
 
@@ -827,12 +756,9 @@ void game::calculateProduction()
         if (currHero.m_owner == -1)
             continue;
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = g_productionCreatureCrystalDragon;
-            if (currHero.m_army.getCreatureTotal(storage.m_creature) > 0)
+            int storage;
+            storage = g_productionCreatureCrystalDragon;
+            if (currHero.m_army.getCreatureTotal(TCreatureType(storage)) > 0)
                 crystalDragonIncome[currHero.m_owner] = 1;
         }
         long (&production)[NUM_RESOURCES] =
@@ -860,7 +786,7 @@ void game::calculateProduction()
             production[ORE] += getDayBonus(
                 ORE, production[ORE] * 7 / 4, m_day);
             for (resource = WOOD; resource < GOLD;
-                 resource = (resourceValue.m_integer = resource + 1, resourceValue.m_resource)) {
+                 resource = EGameResource(resource + 1)) {
                 long weeklyBonus = (m_setup.m_difficulty - 2) * production[resource];
                 production[resource] += getDayBonus(
                     resource, weeklyBonus, m_day);
@@ -875,7 +801,7 @@ void game::calculateProduction()
         playerHandicap = g_productionHandicap[m_setup.m_handicap[playerId]];
         long (&production)[NUM_RESOURCES] = currentPlayer.m_ai.m_turnProductionResource;
         for (resource = WOOD; resource < GOLD;
-                 resource = (resourceValue.m_integer = resource + 1, resourceValue.m_resource))
+                 resource = EGameResource(resource + 1))
             production[resource] -= production[resource] * playerHandicap;
     }
 }
@@ -899,11 +825,6 @@ int game::loadSignPool(TAbstractFile* infile)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:868
-#endif  // @carcass
-
 VA(0x004b9270, 0xCF)  // dc 0xa3d50
 int game::saveSignPool(TAbstractFile* outfile)
 {
@@ -921,11 +842,6 @@ int game::saveSignPool(TAbstractFile* outfile)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:896
-#endif  // @carcass
 
 // Dreamcast proves function-scope count, x and char_buffer locals; Complete
 // adds the saved-game-version branch below. Reusing count for the pool byte
@@ -995,11 +911,6 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:964
-#endif  // @carcass
-
 VA(0x004b9580, 0x165)  // dc 0xa410c
 int game::saveMinePool(TAbstractFile* outfile)
 {
@@ -1032,11 +943,6 @@ int game::saveMinePool(TAbstractFile* outfile)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1024
-#endif  // @carcass
 
 VA(0x004b96f0, 0x1CB)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
@@ -1075,11 +981,6 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1072
-#endif  // @carcass
-
 VA(0x004b98c0, 0x139)  // dc 0xa4548
 int game::saveGarrisonPool(TAbstractFile* outfile)
 {
@@ -1109,11 +1010,6 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1114
-#endif  // @carcass
 
 VA(0x004b9a00, 0x239)  // dc 0xa46e8
 int game::loadBoatPool(TAbstractFile* infile)
@@ -1167,11 +1063,6 @@ int game::loadBoatPool(TAbstractFile* infile)
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1178
-#endif  // @carcass
 
 VA(0x004b9c40, 0x1AD)  // dc 0xa4980
 int game::saveBoatPool(TAbstractFile* outfile)
@@ -2022,11 +1913,6 @@ NewfullMap* game::getWorldMapData()
     return &m_worldMap;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2089
-#endif  // @carcass
-
 VA(0x004bb170, 0xD6)  // dc 0xa65d4
 int game::getNewBoatId()
 {
@@ -2043,11 +1929,6 @@ int game::getNewBoatId()
     }
     return -1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2112
-#endif  // @carcass
 
 VA(0x004bb250, 0x1AA)  // dc 0xa6690
 int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
@@ -2449,11 +2330,6 @@ int game::saveRumours(TAbstractFile* outfile)
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2607
-#endif  // @carcass
-
 VA(0x004bbe40, 0x294)  // dc 0xa77c8
 int game::loadRumours(TAbstractFile* infile)
 {
@@ -2481,11 +2357,6 @@ int game::loadRumours(TAbstractFile* infile)
     }
     return 1;
 }
-
-#if 0  // @carcass - inline body lives in game.h
-// E:\gamedcs\VictoryLossConditions.h:77
-// Canonical body and VA: include/victorylossconditions.h.
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:2975
 // Rebuilds the per-player shipyard indices after loading a map. Heroes and
@@ -2549,10 +2420,6 @@ void game::setupShipyards()
         }
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:2654; original name SaveBlackMarkets.
 DC_ONLY(0xa795c, 0xC6)
@@ -4128,12 +3995,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
             {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = thisCell->m_objectIndex;
-                victory.m_creatureType = storage.m_creature;
+                victory.m_creatureType = TCreatureType(thisCell->m_objectIndex);
             }
         } else {
             victory.m_type = -1;
@@ -4514,10 +4376,8 @@ static void randomizeScholar(NewmapCell* cell)
         static_cast<void*>(&cell->m_extraInfo));
     if (info->getScholarAward() != const_scholar_primary_skill) {
         // DC game.cpp:4515 keeps Random inside the SetScholar expression.
-        // Preserve that expression and its enum ABI with a local bridge.
-        union { int m_integer; TPrimarySkill m_skill; } primary;
         info->setScholar(info->getScholarAward(),
-            (primary.m_integer = random(0, 3), primary.m_skill),
+            TPrimarySkill(random(0, 3)),
             info->getScholarSecondarySkill(), info->getScholarSpell());
     }
 }
@@ -4584,9 +4444,7 @@ static void randomizeWagon(NewmapCell* cell)
     int i = random(0, 99);
     // DC game.cpp:4662 has both Random calls in SetWagon's expression.
     // Keep them there; the conversion itself has no recovered helper.
-    union { int m_integer; EGameResource m_resource; } resourceValue;
-    info->setWagon((resourceValue.m_integer = random(0, 5),
-                    resourceValue.m_resource),
+    info->setWagon(EGameResource(random(0, 5)),
         static_cast<short>(random(2, 5)));
     if (i < 10)
         info->emptyWagon();
@@ -4715,12 +4573,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         for (;;) {
             if (!availableSkills.test(skill)) {
                 {
-                    union {
-                        int m_integer;
-                        TSecondarySkill m_skill;
-                    } converted;
-                    converted.m_integer = skill + 1;
-                    skill = converted.m_skill;
+                    skill = TSecondarySkill(skill + 1);
                 }
                 continue;
             }
@@ -4728,12 +4581,7 @@ void game::randomizeUniversity(NewmapCell* cell)
                 break;
             --choice;
             {
-                union {
-                    int m_integer;
-                    TSecondarySkill m_skill;
-                } converted;
-                converted.m_integer = skill + 1;
-                skill = converted.m_skill;
+                skill = TSecondarySkill(skill + 1);
             }
         }
 
@@ -5102,12 +4950,9 @@ void game::randomizeEvents()
                             | (tempCell->m_extraInfo & ~poolIndexBits);
                         type_creature_bank bank;
                         {
-                            union {
-                                int m_integer;
-                                type_creature_bank_type m_bankType;
-                            } converted;
-                            converted.m_integer = tempCell->m_objectIndex;
-                            initializeCreatureBank(&bank, converted.m_bankType);
+                            int converted;
+                            converted = tempCell->m_objectIndex;
+                            initializeCreatureBank(&bank, type_creature_bank_type(converted));
                         }
                         m_creatureBanks.push_back(bank);
                     }
@@ -5256,12 +5101,7 @@ void game::randomizeEvents()
                         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
                             static_cast<void*>(&tempCell->m_extraInfo));
                         {
-                            union {
-                                int m_integer;
-                                EGameResource m_resource;
-                            } converted;
-                            converted.m_integer = random(0, 5);
-                            resType = converted.m_resource;
+                            resType = EGameResource(random(0, 5));
                         }
                         resQty = static_cast<unsigned char>(random(1, 5));
                         info->setLeanTo(numLeanTo++, resQty, resType);
@@ -5516,12 +5356,7 @@ void game::randomizeEvents()
                             static_cast<void*>(&tempCell->m_extraInfo));
                         resQty = static_cast<unsigned char>(random(3, 6));
                         {
-                            union {
-                                int m_integer;
-                                EGameResource m_resource;
-                            } converted;
-                            converted.m_integer = random(1, 5);
-                            resType = converted.m_resource;
+                            resType = EGameResource(random(1, 5));
                         }
                         info->setWindmill(resType, resQty);
                     }
@@ -5933,23 +5768,13 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
             {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = intBuffer & 0xff;
-                m_victoryCondition.m_creatureType = storage.m_creature;
+                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
             }
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
             {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = shortBuffer;
-                m_victoryCondition.m_creatureType = storage.m_creature;
+                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
             }
         }
         {
@@ -6232,12 +6057,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
         int creature;
         infile->read(&creature, sizeof(char));
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = creature & 0xff;
-            m_victoryCondition.m_creatureType = storage.m_creature;
+            m_victoryCondition.m_creatureType = TCreatureType(creature & 0xff);
         }
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
@@ -7584,10 +7404,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
             playerData* player = &g_game->m_players[thisGenerator->getOwner()];
             int creature = thisGenerator->m_type[0];
             if (!g_game->m_f1f698 &&
-                (creature == CREATURE_AIR_ELEMENTAL ||
-                 creature == CREATURE_EARTH_ELEMENTAL ||
-                 creature == CREATURE_FIRE_ELEMENTAL ||
-                 creature == CREATURE_WATER_ELEMENTAL))
+                isBaseElemental(creature))
                 continue;
 
             int townType = g_creatureTypeTraits[creature].m_townType;
@@ -7700,18 +7517,6 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
         obscuringHero->obscureCell();
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7507
-// ARITY, on the only DC row in the bracket. 0x4c6c50 is the single
-// carve row between ClaimShipyard (ends 0x4c6c4f) and StartAITheme
-// (0x4c6f40), and the DC roster has exactly one row between
-// ClaimShipyard (line 7461) and GetRandomNumTroops (line 7572): this
-// one. It is `ret 0x20` - eight stack arguments plus `this` - and the DC
-// prototype is p=9. Eight is a distinctive arity; no other row in the
-// span has it.
-#endif  // @carcass
 
 VA(0x004c6c50, 0x2EB)  // dc 0xb1c8c
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
@@ -8430,12 +8235,7 @@ void game::setRecruits(int playerPos)
             otherClass = kNumHeroClasses;
         else
         {
-            union {
-                int m_integer;
-                THeroClass m_heroClass;
-            } converted;
-            converted.m_integer = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
-            otherClass = converted.m_heroClass;
+            otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
         }
 
         int heroId;
@@ -8491,12 +8291,7 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     playerData* player = &m_players[playerPos];
     if (player->m_recruits[1 - recruitSlot] != -1)
     {
-        union {
-            int m_integer;
-            THeroClass m_heroClass;
-        } converted;
-        converted.m_integer = getHero(player->m_recruits[1 - recruitSlot])->m_heroClass;
-        otherClass = converted.m_heroClass;
+        otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
     }
 
     int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
@@ -8550,10 +8345,7 @@ void game::perWeek()
         for (align = m_f1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if ((m_f1f698
-                 || (align != CREATURE_AIR_ELEMENTAL
-                     && align != CREATURE_EARTH_ELEMENTAL
-                     && align != CREATURE_FIRE_ELEMENTAL
-                     && align != CREATURE_WATER_ELEMENTAL))
+                 || !isBaseElemental(align))
                 && g_creatureTypeTraits[align].m_townType != -1
                 && g_creatureTypeTraits[align].m_level >= 0)
                 ++i;
@@ -8563,10 +8355,7 @@ void game::perWeek()
         for (align = m_f1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if ((m_f1f698
-                 || (align != CREATURE_AIR_ELEMENTAL
-                     && align != CREATURE_EARTH_ELEMENTAL
-                     && align != CREATURE_FIRE_ELEMENTAL
-                     && align != CREATURE_WATER_ELEMENTAL))
+                 || !isBaseElemental(align))
                 && g_creatureTypeTraits[align].m_townType != -1
                 && g_creatureTypeTraits[align].m_level >= 0) {
                 if ((m_f1f698
@@ -8581,12 +8370,7 @@ void game::perWeek()
         }
         g_weekTypeExtra = align;
         {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = align;
-            bonusCreature = storage.m_creature;
+            bonusCreature = TCreatureType(align);
         }
     }
 
@@ -8595,20 +8379,10 @@ void game::perWeek()
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, 0)) {
             g_weekType = g_weekTypeInfernoGrail;
             {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = g_creatureImpId;
-                bonusCreature = storage.m_creature;
+                bonusCreature = TCreatureType(g_creatureImpId);
             }
             {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } storage;
-                storage.m_value = g_creatureFamiliarId;
-                alternateBonus = storage.m_creature;
+                alternateBonus = TCreatureType(g_creatureFamiliarId);
             }
             bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
             g_weekTypeExtra = g_creatureImpId;
@@ -8725,12 +8499,7 @@ void game::perWeek()
                     int resQty = random(3, 6);
                     EGameResource resType;
                     {
-                        union {
-                            int m_integer;
-                            EGameResource m_resource;
-                        } converted;
-                        converted.m_integer = random(1, 5);
-                        resType = converted.m_resource;
+                        resType = EGameResource(random(1, 5));
                     }
                     info->setWindmill(resType, resQty);
                     break;
@@ -8981,18 +8750,8 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         }
         ++x;
     }
-    union {
-        int m_value;
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = x;
-    return storage.m_creature;
+    return TCreatureType(x);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:8749
-#endif  // @carcass
 
 VA(0x004c94d0, 0xCD)  // dc 0xb4c84
 TArtifact game::getRandomArtifactId(int artifactClass)
@@ -9027,12 +8786,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
             }
         }
         m_artifactUsed[i] = 1;
-        union {
-            int m_integer;
-            TArtifact m_artifact;
-        } converted;
-        converted.m_integer = i;
-        return converted.m_artifact;
+        return TArtifact(i);
     } else {
         curCount = 0;
         for (i = 0; i < 144; ++i) {
@@ -9188,10 +8942,6 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
     m_worldMap.placeObject(m_worldMap.m_objects.size() - 1, 1);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\game.cpp:9195
 // The materializer ProcessRandomObjects hands each rolled cell. It CLONES
 // the object's current CObjectType onto the back of objectTypes,
@@ -9299,10 +9049,6 @@ void game::convertObject(NewmapCell* tempCell)
         }
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The artifact arguments are artraits.txt class bits: 2 treasure,
 // 4 minor, 8 major, 16 relic, and RANDOM_ARTIFACT's 14 is
@@ -9492,16 +9238,6 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:9539
-// `ret 0x10` - a thiscall member with FOUR stack arguments, which is
-// GiveArmy's arity and nothing else's in this bracket. Body: when slot
-// >= 0 it writes group->type[slot] and group->count[slot] (the +0x0 /
-// +0x1c pair of armyGroup's 56-byte layout), otherwise it scans the
-// seven slots for a matching creature type first.
-#endif  // @carcass
 
 VA(0x004ca340, 0x6F)  // dc 0xb6054
 void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
@@ -10821,16 +10557,6 @@ int game::getNumThievesGuilds(int whichPlayer)
     return count;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11205
-// Whole body: stores the two arguments into the map-extent globals
-// 0x6783c8 / 0x6783cc and then calls searchArray::Close (0x4b1500,
-// claimed in findpath.obj) on the global search array 0x699284 - the
-// pathfinder has to drop its map-sized tables when the extent changes.
-// `ret 8`, two int arguments.
-#endif  // @carcass
-
 VA(0x004ccef0, 0x23)  // dc 0xb9b24
 void game::setMapSize(int width, int height)
 {
@@ -11214,9 +10940,6 @@ void game::checkForTownEvent()
         }
     }
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004cdb80, 0x231)  // dc 0xbb0e4
 unsigned char game::getRandomLith(const std::vector<type_point>* points,
@@ -11276,10 +10999,6 @@ unsigned char game::getRandomLithExit(long color, type_point* result) const
 {
     return getRandomLith(&m_lithExitPools[color], result, 0x2c, -1);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
 unsigned char game::getRandomLith(long color, long excluded, type_point* result) const
@@ -11404,49 +11123,6 @@ game::game()
     m_isTutorial = 0;
     m_grailAsked = 0;
 }
-
-#if 0  // @carcass
-
-// ---------------------------------------------------------------------
-// BRACKET game::game (0x4cdf20) .. game::~game (0x4ce5b0) - three carve
-// rows, and the proof is ADDRESS-TAKES, not order.
-
-// None of the three has a rel32 caller. All three are referenced as
-// DATA, which is what a per-element construct/destruct helper handed to
-// a container routine looks like:
-//   0x4ce4b0  address-taken once, in game::game at +0x46
-//   0x4ce520  address-taken in game::game (+0x41), game::~game (+0x306)
-//             and two /GX unwind funclets
-//   0x4ce570  address-taken in game::game (+0x20a), game::~game (+0x2ae),
-//             oldmain twice, and two unwind funclets
-
-// 0x4ce570 is playerData::~playerData, and the CLAIMED constructor
-// proves it: playerData::playerData (0x4b9df0) zeroes exactly the triple
-// [this+0x90] / [+0x94] / [+0x98], and 0x4ce570 releases that same
-// triple - the Dinkumware three-word string representation - by
-// decrementing nothing and calling the deallocator at 0x60ab30, then
-// re-zeroing all three words. (playerData's OTHER name field is a
-// char[20] at +0xcc, written by the claimed SetName with a 20-byte
-// copy, so this is a second, distinct string member.) Size 50 B against
-// the DC row's 54 is 0.93x.
-
-// NOTE THE WORKING LABEL WAS WRONG: the delink named 0x4ce570
-// `playerData_playerData`. It is the DESTRUCTOR.
-
-// 0x4ce4b0 fills 19 8-byte slots at +0x68 and 64 8-byte slots at +0x100
-// with -1, sets a byte at +0x308 and zeroes a string triple at +0x30c -
-// the 19-equipped/64-backpack artifact shape hero.h already carries,
-// plus a name. That is HeroExtra, and its DC row is 96 B against 104
-// (1.08x).
-
-// 0x4ce520 is the matching element DESTRUCTOR for that same class - it
-// releases the +0x30c triple - and it is address-taken immediately
-// beside 0x4ce4b0 in game::game. It is compiler-generated: the DC
-// roster has no row for it. The owner-specific IMPLICIT_DTOR contract
-// now binds it to VC6's exact HeroExtra destructor COMDAT.
-// ---------------------------------------------------------------------
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:11746
 // CodeView dc 0xbd5f4 marks the default constructor compgenx. The

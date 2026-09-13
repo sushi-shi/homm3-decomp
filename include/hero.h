@@ -758,7 +758,6 @@ public:
     hero();
     void initialize(short index);
 
-
 private:
     // +0x47e..0x491. Dreamcast names the same five-dword tail in this
     // order; retail independently proves every dword boundary through the

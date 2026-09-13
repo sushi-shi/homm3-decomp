@@ -88,7 +88,6 @@ public:
     unsigned short m_adjustedCost;
     unsigned short m_moveLeft;
 
-
     // CodeView dc 0xa115c explicitly marks the default constructor generated
     // (compgenx). Its type_point members already make construction nontrivial;
     // searchArray::Init's array preamble does not prove a user-written body.

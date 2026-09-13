@@ -190,10 +190,6 @@ inputManager::inputManager()
     m_prevDialog = 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004ec4d0, 0x6D)  // dc 0xdd9e4
 int inputManager::open(int keyboardFilter)
 {

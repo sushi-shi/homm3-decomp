@@ -20,8 +20,7 @@ public:
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
     virtual unsigned char handleClick(unsigned char downClick,
                                        unsigned char rightClick);
-    virtual ~border();
-  // retail 0x44ff50
+    virtual ~border();  // retail 0x44ff50
 };
 
 // Head model only, exactly like border above: the retail dtor 0x4501d0

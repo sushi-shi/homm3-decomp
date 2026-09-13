@@ -275,10 +275,6 @@ int combatManager::open(int newPriority)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00463260, 0x105)  // dc 0x5dc70
 void combatManager::close()
 {
@@ -3352,10 +3348,6 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00469670, 0xD2)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
@@ -3592,10 +3584,7 @@ void combatManager::raiseSkeletons(int side)
         if (!added) {
             TCreatureType upgradedType = m_raisedCreatureType;
             if (!g_game->m_f1f698
-                && (upgradedType == CREATURE_AIR_ELEMENTAL
-                    || upgradedType == CREATURE_EARTH_ELEMENTAL
-                    || upgradedType == CREATURE_FIRE_ELEMENTAL
-                    || upgradedType == CREATURE_WATER_ELEMENTAL)) {
+                && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;
             } else {
                 upgradedType = upgradedCreatureType(upgradedType);
@@ -3625,38 +3614,6 @@ void combatManager::learnSpellFromEagleEye(int side)
             m_heroes[side]->addSpell(spell);
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:4886
-// SURVEYED 2026-08-20 (not reconstructed), and the survey starts with a
-// correction: an out-of-tree note had this body at 0x469f40, which is
-// wrong - that address is inside LearnSpellFromEagleEye (0x00469fe0,
-// 0x88). The claim below is the carve's and is the one that matches.
-
-// The body is hero::TransferArtifacts (src/hero.cpp:2630, already
-// reconstructed) with GiveArtifact in place of add_to_backpack and a
-// vector append on the end. Byte-verified here: the two flag guards, the
-// looted hero as `heroes[1 - side]` (retail forms it as
-// `[this + 4*(0x14f4 - side)]`, and 0x14f4*4 == 0x53d0 == &heroes[1]),
-// the winner as heroes[side], equipped at dead+0x12d walked 19 slots of
-// 8 bytes, backpack at dead+0x3cc walked DOWNWARDS from 63, and the same
-// seven-way refusal chain in the same compare order (-1, 2, 0, 3, 4, 5,
-// 6) that artifact.h already names in full.
-
-// TWO THINGS TO SETTLE BEFORE WRITING IT, neither of them about bytes:
-//   * hero::GiveArtifact is declared `void` in hero.h but retail returns
-//     in al and this body branches on it (`test al,al / je`). Fixing that
-//     is a hero.h edit, and a sibling lane owns src/hero.cpp - coordinate
-//     rather than race it. The change is a retype at constant declarator
-//     count, which this lane measured to be include-set inert.
-//   * the append is a real out-of-line call to the three-argument
-//     vector insert at 0x54d330, reached as `insert(_Last, 1, &artifact)`
-//     with the vector in ecx. Whether to spell that `push_back` (the DC
-//     roster carries the push_back row) or the insert directly depends on
-//     how the STL surface is modelled here; place_obstacle's own
-//     obstacle vector now uses the canonical std::vector interface.
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
 // DC 0x63704 owns both artifact loops and their local artifact copies.
@@ -3764,22 +3721,6 @@ bool combatManager::isQuickCombat() const
     }
     return g_unnamed698758.m_quickCombat != 0;
 }
-
-// Two combatManager grid workers that live in the retail cmbtmgr.obj tail
-// (the 0x6a511..0x6b610 gap before combatcontrolsubwindow), both proven to
-// belong to the combat manager by the huge [this+0x14031] this-relative
-// scratch-map offset - only combatManager is 0x14000+ B, so no window or
-// STL COMDAT can carry that offset. Located, not reconstructed: @stub
-// bodies, admitted for the denominator. Neither has a DC cmbtmgr.obj row
-// (the SH4 build folds the worker back into its army-side wrapper).
-#if 0  // @carcass claim
-
-// 0x46a520 (68 B, `ret 4`): thiscall worker over an army*. Clears the
-// 187-cell scratch map at [this+0x14031] (rep stosd 0x2e + stosw + stosb =
-// COMBAT_GRID_CELLS) then marks the stack's primary grid index ([army+0x38])
-// and, when the stack's second-hex flag ([army+0x84] & 1) is set, its
-// army::get_second_grid_index cell. Called from army.obj (carve 0x45950).
-#endif  // @carcass claim
 
 VA(0x0046a520, 0x44)
 void combatManager::unnamed46a520(army* stack)

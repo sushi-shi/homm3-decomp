@@ -394,4 +394,3 @@ unsigned char SmackSoundUseMSS(void* DigDriver)
 {
     // @stub
 }
-

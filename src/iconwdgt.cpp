@@ -479,10 +479,6 @@ void iconWidget::nextRandomFrame()
     setIconSequence(chosen);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004eb250, 0xED)  // dc 0xd9ee8
 void iconWidget::nextRandomSiegeEngineFrame()
 {

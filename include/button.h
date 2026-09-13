@@ -120,12 +120,11 @@ public:
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
     virtual void draw() const;  // slot 4, retail 0x456ca0
 
-    virtual ~textButton();
+    virtual ~textButton();  // retail 0x456bf0
 
 private:
     font* m_font;
     int m_textColor;
-  // retail 0x456bf0
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down
@@ -140,8 +139,7 @@ public:
                      int normal, int selected);
     virtual int main(message& msg);  // slot 2, retail 0x456e50
 
-    virtual ~type_func_button();
-  // retail 0x456db0
+    virtual ~type_func_button();  // retail 0x456db0
 };
 
 #endif  /* HOMM3_BUTTON_H */

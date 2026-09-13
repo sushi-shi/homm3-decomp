@@ -2697,10 +2697,10 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     for (int i = 0; i < 4; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
-                union { int m_integer; EGameResource m_resource; } rewardType;
-                rewardType.m_integer = RES_PRIMARY_SKILL_ATTACK + i;
+                int rewardType;
+                rewardType = RES_PRIMARY_SKILL_ATTACK + i;
                 addReward(message, alternate, rewards,
-                          rewardType.m_resource,
+                          EGameResource(rewardType),
                            blackBox->m_primarySkillBonus[i]);
             }
             gave = 1;
@@ -2788,17 +2788,17 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     for (int k = 0; k < 7; k++) {
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
-                union { int m_integer; EGameResource m_resource; } rewardType;
-                rewardType.m_integer = k;
+                int rewardType;
+                rewardType = k;
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(message, formatString(
                         g_adventureEventText->getText(183),
-                        currentHero->m_name), rewards, rewardType.m_resource,
+                        currentHero->m_name), rewards, EGameResource(rewardType),
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(message, formatString(
                         g_adventureEventText->getText(182),
-                        currentHero->m_name), rewards, rewardType.m_resource,
+                        currentHero->m_name), rewards, EGameResource(rewardType),
                                blackBox->m_resQty[k] - 100000);
                 }
             }
@@ -2874,12 +2874,9 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         } else if (humanPlayer) {
             joinFailed = 1;
         } else {
-            union {
-                int m_value;
-                TCreatureType m_creature;
-            } storage;
-            storage.m_value = type;
-            aiJoinDecision(currentHero, storage.m_creature, count);
+            int storage;
+            storage = type;
+            aiJoinDecision(currentHero, TCreatureType(storage), count);
         }
         gave = 1;
     }
@@ -4317,12 +4314,7 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
     short available = cell->m_extraInfo;
     TCreatureType creature;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        creature = storage.m_creature;
+        creature = TCreatureType(cell->m_objectIndex);
     }
     if (currentHero->belongsToHuman()) {
         recruitUnit dialog(&currentHero->m_army, 0, creature, &available,
@@ -4666,11 +4658,6 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                      9, spell, -1, 0, -1, 0, -1, 0);
     currentHero->addSpell(spell);
 }
-
-#if 0  // @carcass: source-authority claim for game.h's emitted inline COMDAT
-// E:\gamedcs\game.h:865
-// Canonical body and VA: include/game.h.
-#endif
 
 int aiVisitSirens(const hero* currentHero, armyGroup& army);
 
@@ -5185,12 +5172,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        monType = storage.m_creature;
+        monType = TCreatureType(cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
     int survived = combatMonsterEvent(currentHero, monType, &numMons,
@@ -5229,12 +5211,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        monType = storage.m_creature;
+        monType = TCreatureType(cell->m_objectIndex);
     }
 
     if (humanPlayer) {
@@ -5270,12 +5247,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        monType = storage.m_creature;
+        monType = TCreatureType(cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
 
@@ -5322,12 +5294,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        monType = storage.m_creature;
+        monType = TCreatureType(cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
     int cost = g_creatureTypeTraits[monType].m_cost[GOLD] * numMons;
@@ -5396,18 +5363,12 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     TCreatureType like;
 
     if ((!g_game->m_f1f698
-         && (creature == CREATURE_AIR_ELEMENTAL
-             || creature == CREATURE_EARTH_ELEMENTAL
-             || creature == CREATURE_FIRE_ELEMENTAL
-             || creature == CREATURE_WATER_ELEMENTAL))
+         && isBaseElemental(creature))
         || g_creatureTypeTraits[creature].m_townType == -1) {
         like = CREATURE_NONE;
     } else {
         if (!g_game->m_f1f698
-            && (creature == CREATURE_AIR_ELEMENTAL
-                || creature == CREATURE_EARTH_ELEMENTAL
-                || creature == CREATURE_FIRE_ELEMENTAL
-                || creature == CREATURE_WATER_ELEMENTAL))
+            && isBaseElemental(creature))
             like = CREATURE_NONE;
         else
             like = upgradedCreatureType(creature);
@@ -5464,12 +5425,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        monType = storage.m_creature;
+        monType = TCreatureType(cell->m_objectIndex);
     }
     int numTroops = cell->m_monsterInfo.m_qty;
     int disposition = cell->m_monsterInfo.m_disposition;
@@ -7121,9 +7077,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         },
         {
             { 1, 2, 3, 0, 4, 5, 6 },
@@ -7132,9 +7086,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 1, 4, 2, 0, 5, 3, 6 },
             { 3, 1, 4, 0, 5, 2, 6 },
             { 2, 3, 0, 4, 1, 5, 6 },
-            {
-                1, 2, 3, 0, 4, 5, 6
-            }
+            { 1, 2, 3, 0, 4, 5, 6 }
         },
         {
             { 2, 3, 0, 4, 1, 5, 6 },
@@ -7143,9 +7095,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 4, 0, 2, 5, 3, 1, 6 },
             { 3, 0, 4, 2, 5, 1, 6 },
             { 2, 3, 0, 4, 1, 5, 6 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         },
         {
             { 3, 0, 4, 1, 5, 2, 6 },
@@ -7154,9 +7104,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 0, 4, 1, 3, 5, 2, 6 },
             { 3, 0, 4, 1, 5, 2, 6 },
             { 0, 0, 0, 0, 0, 0, 0 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         },
         {
             { 0, 4, 1, 5, 2, 6, 3 },
@@ -7165,9 +7113,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 0, 4, 1, 5, 2, 6, 3 },
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         },
         {
             { 0, 1, 5, 2, 6, 3, 4 },
@@ -7176,9 +7122,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         },
         {
             { 0, 1, 2, 6, 3, 4, 5 },
@@ -7187,9 +7131,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
-            {
-                0, 0, 0, 0, 0, 0, 0
-            }
+            { 0, 0, 0, 0, 0, 0, 0 }
         }
     };
 
@@ -7251,36 +7193,24 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     }
 
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = monType;
+        int storage;
+        storage = monType;
         if ((g_game->m_f1f698
-             || (monType != CREATURE_AIR_ELEMENTAL
-                 && monType != CREATURE_EARTH_ELEMENTAL
-                 && monType != CREATURE_FIRE_ELEMENTAL
-                 && monType != CREATURE_WATER_ELEMENTAL))
+             || !isBaseElemental(monType))
             && static_cast<unsigned char>(
-                   isBaseCreature(storage.m_creature))
+                   isBaseCreature(TCreatureType(storage)))
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
             && random(1, 100) <= 50) {
             TCreatureType upgraded;
             if (!g_game->m_f1f698
-                && (monType == CREATURE_AIR_ELEMENTAL
-                    || monType == CREATURE_EARTH_ELEMENTAL
-                    || monType == CREATURE_FIRE_ELEMENTAL
-                    || monType == CREATURE_WATER_ELEMENTAL))
+                && isBaseElemental(monType))
                 upgraded = CREATURE_NONE;
             else {
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } upgradeType;
-                upgradeType.m_value = monType;
-                upgraded = upgradedCreatureType(upgradeType.m_creature);
+                int upgradeType;
+                upgradeType = monType;
+                upgraded = upgradedCreatureType(TCreatureType(upgradeType));
             }
             currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
         }
@@ -7320,12 +7250,9 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     int result = doCombat(point, who, &who->m_army, -1, 0, 0,
                           &currentArmyGroup, eventSeed, 1, 0);
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = monType;
-        *numMons = currentArmyGroup.getCreatureTotal(storage.m_creature);
+        int storage;
+        storage = monType;
+        *numMons = currentArmyGroup.getCreatureTotal(TCreatureType(storage));
     }
     mobilizeCurrHero(0, 0, 1);
     return result;

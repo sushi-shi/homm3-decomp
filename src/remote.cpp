@@ -42,9 +42,7 @@ VA_COMPGEN(0x00552260, 0x2A, STATIC_CTOR, g_logFile)
 
 DATA(0x0063dc18) const GUID guidHeroes3 = {
     0x8b743aa0, 0x53b2, 0x11d2,
-    {
-        0x80, 0x8a, 0x00, 0x60, 0x08, 0x95, 0xfb, 0x43
-    }
+    { 0x80, 0x8a, 0x00, 0x60, 0x08, 0x95, 0xfb, 0x43 }
 };
 
 // DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
@@ -1714,13 +1712,6 @@ void waitForReadyToPlayMsg()
     }
     dlg.wait();
 }
-
-// E:\gamedcs\remote.h:632 - the canonical body lives with its accessors
-// in remote.h. Dreamcast calls IsInPopup before the virtual abort-message
-// getter; retail expands the first accessor and retains vtable slot 2.
-#if 0  // @carcass: claim-only, header-origin Copy body
-// Canonical body and VA: include/remote.h.
-#endif
 
 VA(0x00555190, 0x319)  // dc 0x11f9f0
 int CWaitForReadyPlayersDlg::handleMessage(message& msg)

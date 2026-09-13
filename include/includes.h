@@ -48,7 +48,6 @@ inline int limit(int minimum, int value, int maximum)
     return tLimit(minimum, value, maximum);
 }
 
-
 // The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
 // VC6 generic vector<unsigned char> representation at +8: allocator
 // byte, _First, _Last, _End. Dreamcast instead instantiated STLport's

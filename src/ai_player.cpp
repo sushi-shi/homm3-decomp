@@ -6,6 +6,7 @@
 // find_all_destinations' grail-spot tail expands the canonical game::getCell
 // wrapper and naturally retains its nested NewfullMap::cell call.
 #include <va.h>
+#include "creaturetype.h"
 #include <algorithm>
 #include <functional>
 #include <math.h>
@@ -276,12 +277,6 @@ void type_garrison_purchaser::markTown(town* ourTown) const
                           1, hasAngelicAlliance);
 }
 
-// The original header owns the constructor; retain its selected retail
-// COMDAT claim here without a second source definition.
-#if 0  // @carcass
-// Canonical body and VA: include/ai_player.h.
-#endif
-
 VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
 
 VA(0x00428710, 0x2D)  // dc 0x2e15c
@@ -333,14 +328,11 @@ void type_AI_player::calculateDemand()
         town* currentTown = g_game->getTown(
             player->m_townIds[buildingTownIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
-        union {
-            int m_index;
-            type_building_id m_id;
-        } building;
-        for (building.m_index = 0; building.m_index < 44; building.m_index++) {
-            if (g_bitNumber[building.m_index] & buildMask) {
+        int building;
+        for (building = 0; building < 44; building++) {
+            if (g_bitNumber[building] & buildMask) {
                 int* buildCost = currentTown->getBuildCostArray(
-                    building.m_id);
+                    type_building_id(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < 7; buildResource++)
                     m_resourceDemand[buildResource] = cppMax(
@@ -421,32 +413,29 @@ void type_AI_player::calculateDemand()
     markets = limit(1, markets, 10);
     double efficiency = g_tradingPostEfficency[markets];
 
-    union {
-        int m_index;
-        EGameResource m_id;
-    } valueResource;
-    for (valueResource.m_index = 0; valueResource.m_index < 7;
-         valueResource.m_index++) {
+    int valueResource;
+    for (valueResource = 0; valueResource < 7;
+         valueResource++) {
         double totalValue;
-        if (m_resourceDemand[valueResource.m_index] == 0) {
+        if (m_resourceDemand[valueResource] == 0) {
             totalValue = efficiency;
         } else {
-            totalValue = m_resourceDemand[valueResource.m_index];
-            if (m_resourceDemand[valueResource.m_index]
-                <= m_resourceSupply[valueResource.m_index]) {
-                totalValue += (m_resourceSupply[valueResource.m_index]
-                    - m_resourceDemand[valueResource.m_index]) * efficiency;
-                totalValue /= m_resourceSupply[valueResource.m_index];
+            totalValue = m_resourceDemand[valueResource];
+            if (m_resourceDemand[valueResource]
+                <= m_resourceSupply[valueResource]) {
+                totalValue += (m_resourceSupply[valueResource]
+                    - m_resourceDemand[valueResource]) * efficiency;
+                totalValue /= m_resourceSupply[valueResource];
             } else {
-                if (m_resourceSupply[valueResource.m_index] > 1)
-                    totalValue /= m_resourceSupply[valueResource.m_index];
+                if (m_resourceSupply[valueResource] > 1)
+                    totalValue /= m_resourceSupply[valueResource];
                 if (totalValue > 1.0 / efficiency)
                     totalValue = 1.0 / efficiency;
             }
         }
-        totalValue *= getMarketValue(valueResource.m_id);
-        m_resourceValue[valueResource.m_index] = totalValue;
-        player->m_ai.m_resourceValue[valueResource.m_index] = totalValue;
+        totalValue *= getMarketValue(EGameResource(valueResource));
+        m_resourceValue[valueResource] = totalValue;
+        player->m_ai.m_resourceValue[valueResource] = totalValue;
     }
 
     long averageValue = 0;
@@ -455,24 +444,6 @@ void type_AI_player::calculateDemand()
         averageValue = static_cast<long>(averageValue
             + m_resourceValue[averageResource]);
     player->m_ai.m_averageResourceValue = averageValue / 5;
-    // /Ob2 NUMERATOR device (2026-08-20), findpath find_queue_slot's class -
-    // a codegen instrument, NOT a claim about retail's source. The budget is
-    // `clamp(2 * caller_cb, 1000, 35000)` and nested expansions get
-    // `budget / sites-remaining`; this body's pre-inline mass sits exactly
-    // SIX front-end statements under what retail's fuller source earned, and
-    // below that line our CL calls _Unguarded_insert at _Sort_0's tail loop
-    // where retail expands it inline (93.4028 with five statements, 97.4340
-    // with six - the whole 92-line tail hunk flips at once). Real-mass
-    // spellings all perturb bytes: named supply-loop locals 96.53, named
-    // demand/supply rows 88.09, a named 1.0/efficiency ceiling 92.31, the
-    // clamp as an if-chain 95.79. Self-assignments of a spent local are the
-    // one measured-inert carrier.
-    averageValue = averageValue;
-    averageValue = averageValue;
-    averageValue = averageValue;
-    averageValue = averageValue;
-    averageValue = averageValue;
-    averageValue = averageValue;
 }
 
 VA(0x00428dd0, 0x33E)  // dc 0x2e7d8
@@ -759,33 +730,6 @@ void type_AI_player::resetMagusHutValue()
 {
     m_magusHutValue = findMagusHutValue(m_team, 0);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_player.cpp:752
-// The row immediately after the reset_magus_hut_value anchor, exactly
-// as the DC roster is ordered, and every independent signal agrees:
-// `ret` with no stack arguments is the DC parameter count of ONE
-// (`this` alone), the body is thiscall with an EH frame, its only
-// caller is the start_turn slot at 0x4297c0 - which is what schedules
-// a turn's reserve - and it drives GetMonsterCost, the price of the
-// creatures a reserve is being held for. 640 B against the DC body's
-// 558 is 1.15x. Retail then proves the complete algorithm: build one
-// 12-byte value record per populated dwelling, sort ascending, price the
-// last two records, and retain the per-resource maximum over all towns.
-// The multiply deliberately narrows through short before the long store.
-
-// Residual (96.4566%): the full 640-byte size, CFG, stack frame, calls,
-// arithmetic, and all code after the dwelling scan agree. The remaining
-// span is one VC6 register-allocation cycle: retail keeps vector finish,
-// dwelling, and population in ESI/EBX/EDI; this compile chooses ECX/EDI/ESI.
-// Volatile pointer homes once recovered retail's two memory reads and town
-// spill, but those qualifiers were allocator steering rather than source
-// evidence and are now retained only as a negative-control result. Plain
-// indexed/pointer loops, int/short indices, declaration order,
-// register hints, combined for-initializers, and explicit vector insert
-// forms were tested; none exceeded this source-equivalent plateau.
-#endif  // @carcass
 
 // Tried and rejected 2026-09-06: retail homes the sort's `_Last` at
 // [ebp-0x14] where we keep it in EDI; naming `creatures.end()` in an
@@ -1165,9 +1109,9 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 * efficiency + marketValue);
         } else if (supply[i] != 0) {
             long onHand = player->m_resources[i];
-            union { int m_integer; EGameResource m_resource; } resourceValue;
-            resourceValue.m_integer = i;
-            long value = getMarketValue(resourceValue.m_resource);
+            int resourceValue;
+            resourceValue = i;
+            long value = getMarketValue(EGameResource(resourceValue));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
                     baseCost[j] += (tradeQty[j] * cost[i] - onHand)
@@ -1744,12 +1688,6 @@ long valueOfHall(town* currentTown, type_building_id building)
     }
 }
 
-#if 0  // @carcass: claim-only home for the game.h COMDAT below
-
-// Canonical body and VA: include/game.h.
-
-#endif  // @carcass
-
 // E:\gamedcs\ai_player.cpp:1808, dc 0x31030.
 static int __cdecl maxBuyableCreatures(
     const long* funds, TCreatureType type, int limit)
@@ -1892,25 +1830,22 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 VA(0x0042beb0, 0x187)  // dc 0x31398
 void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
 {
-    union {
-        int m_index;
-        type_building_id m_id;
-    } building;
-    building.m_index = currentTown->m_mageLevel;
+    int building;
+    building = currentTown->m_mageLevel;
 
-    if (building.m_index >= 5
-        || building.m_index >= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-        || !currentTown->canBuild(building.m_index))
+    if (building >= 5
+        || building >= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+        || !currentTown->canBuild(building))
         return;
 
     if ((currentHero->getPrimarySkill(2) < 3
          || currentHero->getPrimarySkill(3) < 3)
-        && (building.m_index > 0
+        && (building > 0
             || currentHero->spellIsAvailable(SPELL_CURE)
             || currentHero->spellIsAvailable(SPELL_DISPEL)))
         return;
 
-    if (building.m_index > 0
+    if (building > 0
         || m_resourceSupply[WOOD] < m_resourceDemand[WOOD]
         || m_resourceSupply[ORE] < m_resourceDemand[ORE]) {
         playerData* player = &g_game->m_players[m_team];
@@ -1918,7 +1853,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
              ++townIndex) {
             town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
             int otherLevel = otherTown->m_mageLevel;
-            if (otherLevel > building.m_index
+            if (otherLevel > building
                 && otherLevel < currentHero->m_skillLevel[eSecSkillWisdom] + 2
                 && otherTown->canBuild(otherTown->m_mageLevel))
                 return;
@@ -1926,11 +1861,11 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
     }
 
     int cost[7];
-    currentTown->getBuildCost(building.m_id, cost);
+    currentTown->getBuildCost(type_building_id(building), cost);
     tradeResources(cost, 1);
-    if (canBuy(currentTown, building.m_index)
+    if (canBuy(currentTown, building)
         && !g_game->m_towns[currentTown->m_id].m_builtThisTurn)
-        currentTown->buyBuilding(building.m_id);
+        currentTown->buyBuilding(type_building_id(building));
 }
 
 #if 0  // @carcass
@@ -2857,10 +2792,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         if (checkAlignments) {
             int alignment;
             if (g_game->m_f1f698 == 0
-                && (type == CREATURE_AIR_ELEMENTAL
-                    || type == CREATURE_EARTH_ELEMENTAL
-                    || type == CREATURE_FIRE_ELEMENTAL
-                    || type == CREATURE_WATER_ELEMENTAL)) {
+                && isBaseElemental(type)) {
                 alignment = -1;
             } else {
                 alignment = g_creatureTypeTraits[type].m_townType;
@@ -2923,10 +2855,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     int alignment;
     if (g_game->m_f1f698 == 0
-        && (type == CREATURE_AIR_ELEMENTAL
-            || type == CREATURE_EARTH_ELEMENTAL
-            || type == CREATURE_FIRE_ELEMENTAL
-            || type == CREATURE_WATER_ELEMENTAL)) {
+        && isBaseElemental(type)) {
         alignment = -1;
     } else {
         alignment = traits->m_townType;
@@ -2943,10 +2872,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         int minimumMorale;
         if (g_game->m_f1f698 == 0
-            && (type == CREATURE_AIR_ELEMENTAL
-                || type == CREATURE_EARTH_ELEMENTAL
-                || type == CREATURE_FIRE_ELEMENTAL
-                || type == CREATURE_WATER_ELEMENTAL)) {
+            && isBaseElemental(type)) {
             minimumMorale = 1;
         } else {
             minimumMorale = 2;
@@ -3872,16 +3798,6 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     return rawValue;
 }
 
-#if 0  // @carcass: claim-only homes for retained header COMDATs
-
-// Canonical body and VA: include/struct.h.
-
-// Canonical body and VA: include/hero.h.
-
-// Canonical body and VA: include/findpath.h.
-
-#endif  // @carcass
-
 #if 0  // @carcass
 
 // E:\gamedcs\Town.h:299
@@ -4072,10 +3988,6 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
     return currentValue;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // Residual (77.61%): all 30 blocks and every edge agree (25 exact blocks,
 // five size-only) after the ==0-arm swap and j-- reverse walk. The 0x98 vs
 // 0x9c frame and remaining ecx<->eax / edx<->ecx family are confined to the
@@ -4250,10 +4162,6 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
         result = 1;
     return result;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 void aiSetHeroBonuses(hero* ourHero);
 void aiBuildShip(const hero* ourHero, long x, long y, long z);
@@ -4728,12 +4636,6 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
     }
 }
 
-#if 0  // @carcass: claim-only home for the Town.h COMDAT below
-
-// Canonical body and VA: include/town.h.
-
-#endif  // @carcass
-
 VA(0x00430610, 0x384)  // dc 0x343c4
 static void buildPath(hero* currentHero, searchArray* currentSearchArray,
                        std::vector<pathCell>& path,
@@ -4908,12 +4810,6 @@ bool type_AI_player::hireHeroes()
         return false;
     return considerHiring(m_team, second);
 }
-
-#if 0  // @carcass: claim-only home for the game.h COMDAT below
-
-// Canonical body and VA: include/game.h.
-
-#endif  // @carcass
 
 // Local prototypes, the events.cpp pattern: value_of_hiring's body follows
 // consider_hiring below (retail 0x431bd0); AI_resource_cost is philai.obj's
@@ -5502,10 +5398,7 @@ long type_angelic_alliance_artifact::getValue(
             if (creature == CREATURE_NONE)
                 continue;
             if (g_game->m_f1f698 == 0
-                && (creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL)) {
+                && isBaseElemental(creature)) {
                 continue;
             }
             int alignment = g_creatureTypeTraits[creature].m_townType;
@@ -5527,10 +5420,7 @@ long type_angelic_alliance_artifact::getValue(
             if (creature == CREATURE_NONE)
                 continue;
             if (g_game->m_f1f698 == 0
-                && (creature == CREATURE_AIR_ELEMENTAL
-                    || creature == CREATURE_EARTH_ELEMENTAL
-                    || creature == CREATURE_FIRE_ELEMENTAL
-                    || creature == CREATURE_WATER_ELEMENTAL)) {
+                && isBaseElemental(creature)) {
                 continue;
             }
             int alignment = g_creatureTypeTraits[creature].m_townType;
@@ -5907,13 +5797,6 @@ long getFullValue(const hero* ourHero)
     }
     return value;
 }
-
-#if 0  // @carcass
-
-// add_artifact: retail 447B ~= DC 448 (r=0.998); calls hero::equip_artifact,
-// add_to_backpack, get_number_in_backpack, get_full_value - the DC add_artifact
-// callee set. ret 0x18 = 6 stack dwords (type_artifact passed by value spans two).
-#endif  // @carcass
 
 VA(0x00433e20, 0x1bf)  // dc 0x37898
 unsigned char addArtifact(hero* ourHero, type_artifact artifact,

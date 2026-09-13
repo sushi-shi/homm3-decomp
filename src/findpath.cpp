@@ -139,9 +139,7 @@ DATA(0x0063e510) const long g_terrainCost[13][4] = {
     {   0,   0,   0,   0 },
     {  75,  75,  75,  75 },
     {  65,  65,  65,  65 },
-    {
-         50,  50,  50,  50
-    }
+    { 50,  50,  50,  50 }
 };
 // 0x3fb504f3 exactly - the float nearest sqrt(2), and the multiplier
 // every diagonal step pays. Written as a named `const float` because
@@ -1007,22 +1005,6 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:1080
-// The clearest identification in the span. `ret 4` = one stack
-// argument over `this`, the DC count exactly, and the first thing the
-// body does is zero ONE HUNDRED AND EIGHTY-SEVEN bytes at [this+0x68]
-// (`mov ecx,0x2e; rep stosd; stosw; stosb` = 46*4+2+1) - bIsMoatSlowed
-// at its proven offset, at the proven combat-grid size. It then stamps
-// the moat hexes from two eleven-entry byte tables at 0x63bce8 and
-// 0x63bcf4, re-opens the two drawbridge hexes from 0x63bced/0x63bcf9,
-// walks the 187-cell combatManager array at +0x1d4 (stride 0x70, bound
-// 0x51d0 = 187*0x70) and finally clears the defender's own hex and,
-// for a two-hex stack, army::get_second_grid_index().
-
-#endif  // @carcass
 
 // The two eleven-entry hex tables the body stamps. Both are read
 // element by element in one 0..10 loop and then indexed by the literal

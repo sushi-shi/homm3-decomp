@@ -5,6 +5,7 @@
 // customcampaign/dialogbox gaps remain ambiguous, so the older-revision
 // carcass is not force-claimed merely from roster order.
 #include <va.h>
+#include "creaturetype.h"
 #include <algorithm>
 #include <direct.h>
 #include <fstream>
@@ -295,10 +296,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         int creature = m_creature;
         int faction;
         if (g_game->m_f1f698 == 0 &&
-            (creature == CREATURE_AIR_ELEMENTAL ||
-             creature == CREATURE_EARTH_ELEMENTAL ||
-             creature == CREATURE_FIRE_ELEMENTAL ||
-             creature == CREATURE_WATER_ELEMENTAL))
+            isBaseElemental(creature))
             faction = -1;
         else
             faction = g_creatureTypeTraits[creature].m_townType;
@@ -2996,11 +2994,11 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            union { int m_integer; TArtifact m_artifact; } artifactValue;
+            int artifactValue;
             short artifactIdWord;
             infile->read(&artifactIdWord, sizeof(artifactIdWord));
-            artifactValue.m_integer = artifactIdWord;
-            artifactPool[whichArtifact].m_artifactId = artifactValue.m_artifact;
+            artifactValue = artifactIdWord;
+            artifactPool[whichArtifact].m_artifactId = TArtifact(artifactValue);
             short artifactExtraWord;
             infile->read(&artifactExtraWord, sizeof(artifactExtraWord));
             artifactPool[whichArtifact].m_extra = artifactExtraWord;

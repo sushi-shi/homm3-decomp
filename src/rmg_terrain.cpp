@@ -1408,9 +1408,7 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
         { TPoint(-1, 1), TPoint(1, -1) },
         { TPoint(1, 1), TPoint(-1, -1) },
         { TPoint(-1, -1), TPoint(1, 1) },
-        {
-            TPoint(1, -1), TPoint(-1, 1)
-        }
+        { TPoint(1, -1), TPoint(-1, 1) }
     };
     int terrain = getTerrain(point);
     const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];

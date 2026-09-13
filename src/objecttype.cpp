@@ -546,21 +546,18 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     std::bitset<48> trigger;
     std::bitset<9> terrainRead;
     std::bitset<9> recommendedRead;
-    union {
-        int m_raw;
-        TAdventureObjectType m_typed;
-    } typeRead;
+    int typeRead;
     int subtype;
     int slotCategory;
     int underlay;
 
     is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
-        >> typeRead.m_raw >> subtype >> slotCategory >> underlay;
+        >> typeRead >> subtype >> slotCategory >> underlay;
 
     objectType.setImageName(imageName).setPassableMask(passable)
         .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
         .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
-        .setObjectType(typeRead.m_typed).setSubtype(subtype)
+        .setObjectType(TAdventureObjectType(typeRead)).setSubtype(subtype)
         .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;
 }

@@ -681,26 +681,6 @@ static long getAttackValue(const army* currentArmy, const army* enemy,
     return damage * combatValue / enemy->m_monInfo.m_hitPoints;
 }
 
-// E:\gamedcs\Army.h:840. The retail slot between find_move_order and
-// get_attack_change holds a 39-byte `ret`-terminated leaf that reads
-// ONLY ecx and answers 0/1 from army's three disabled_* counters -
-// army::IsIncapacitated, whose header-inline COMDAT the linker parked
-// in the ai.obj band. Corroboration: (a) its ONE caller is
-// find_move_order at 0x41f1ee, in a chain of "can this stack act"
-// gates; (b) the identical test appears INLINED at 23 further sites
-// across ai/ai_tactical/army, which is what a header inline looks like
-// after /OPT:ICF folds the duplicate COMDATs down to one copy; (c) the
-// caller tests AL while the callee materialises a full EAX. Dreamcast's
-// S_PUB32 identity ?IsIncapacitated@army@@QBA_NXZ proves the source return
-// is bool; the previous unsigned-char spelling was another score scaffold.
-// The earlier reconstruction forced this header inline out of line with
-// `#pragma auto_inline(off)` to preserve one exact caller. That was a local
-// score maximum, not source evidence. Army.h now owns the unconditional
-// class-body definition; this disabled form retains only the retail claim.
-#if 0  // claim-only home for the Army.h COMDAT
-// Canonical body and VA: include/army.h.
-#endif
-
 VA(0x0041f3b0, 0x1C2)  // dc 0x24a34
 long combatManager::getAttackChange(const army* currentArmy, const army* enemy, type_AI_combat_parameters& data)
 {
@@ -845,30 +825,6 @@ unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell) c
         return 0;
     return 1;
 }
-
-#if 0  // @carcass
-
-// THE COMBAT-AI SEGMENT, 0x41f920..0x4222c0 (2026-08-08). Twenty-two
-// retail rows sit between can_cast_spells (0x41f890, claimed) and
-// compute_fire_shield_damage (0x422440, claimed); the DC roster has
-// twenty-one bodies in the same bracket. Eighteen of the pairings below
-// match the DC dump's own PARAMETER COUNT exactly - `ret` bytes over
-// the thiscall/fastcall registers - and every one of the eighteen also
-// lands inside the SH4->x86 size band, most of them between 0.95x and
-// 1.15x (place_shooter is 398 B against 398 B). The entries are ordered
-// by RETAIL address; three of them are not in DC line order and say so.
-
-// Three DC bodies have no retail slot, and all three are STATICS with a
-// single call site - the /Ob2 case that leaves no out-of-line copy:
-// get_enemy_attack_limit (dc 0x250e0) and the four-parameter
-// find_attack_hexes overload (dc 0x253a8), plus get_move_order above.
-
-// Four retail rows are left UNCLAIMED and are named in place below:
-// 0x420cf0 (a compiler-generated vector teardown), 0x420d20 / 0x420f00
-// (an unresolved two-into-one), and 0x421590 (a moat marker with no DC
-// twin at all).
-
-#endif  // @carcass
 
 VA(0x0041f920, 0x234)  // dc 0x24ef4
 long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEnemies, const type_AI_combat_parameters* estimate) const
@@ -1118,36 +1074,6 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai.cpp:1097
-// OUT OF DC LINE ORDER, exactly like get_area_attack_value above:
-// retail places this static AFTER its caller. Three signals pin it
-// anyway - it saves BOTH ecx and edx as arguments (a /Gr free
-// function, not a method), `ret 0x14` makes that seven parameters
-// which is the DC count exactly, and its only caller is the
-// mark_multiheaded_enemy slot immediately above. The 158 B -> 507 B
-// growth is the one number outside the usual band; the arity, the
-// convention and the caller are not.
-
-// The 507 bytes are almost all ONE INLINED std::vector<long>::push_back:
-// the reachable hexes cost 60 of them and Dinkumware's grow-or-shift
-// expansion the rest.
-
-// Residual (87.1%): an /Ob2 BUDGET divergence one level down inside that
-// expansion - retail leaves `std::vector<long>::size()` as an out-of-line
-// CALL (0x423110) in the reallocate path while our CL still has budget
-// and inlines it, which is the whole 22-vs-21 conditional-branch delta
-// `homm3 vc6 diagnose` reports; everything either side of it, including
-// both _Ufill/_Ucopy/_Destroy call sites and the shift loops, is
-// instruction-for-instruction identical. Nothing in this body reaches the
-// decision: `insert(result->end(), hex)` spelled by hand scores exactly
-// the same 87.11, which proves push_back IS `insert(end(), _X)` and that
-// the divergence is the sequential budget inside insert, not the call
-// form. The remaining under/over-inline pairs diagnose reports are the
-// flat-vs-mangled reloc names of the same STL COMDATs.
-#endif  // @carcass
 
 VA(0x00420060, 0x1FB)  // dc 0x25308
 void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
@@ -1495,25 +1421,6 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
 // uses this retained Dinkumware vector teardown; the implicit member also
 // supplies each caller's expansion without a fabricated source body.
 VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
-
-#if 0  // @carcass
-
-// 0x420d20 AND 0x420f00 ARE TWINS AND ONLY ONE IS THE DC BODY. Both
-// are thiscall `ret 0xc` with an EH frame and a ~1 KB stack buffer,
-// both construct and destroy a type_AI_spellcaster, and both are
-// called from the choose_spell_action slot alongside the resurrect
-// chooser. Size alone prefers 0x420f00 (0.82x against 1.53x) and the
-// question stayed open until ai_tactical was order-mapped: 0x420d20 is
-// the ONLY caller of 0x43c330 and 0x43c4a0, which that map identifies
-// as get_ogre_mage_value and get_caliph_value - the two
-// creature-cast spell valuers, and nothing but choose_creature_spell
-// wants them. 0x420f00 calls neither; its one ai_tactical callee,
-// 0x43c620, is itself retail-only (four parameters where the DC rows
-// left in its bracket all take one). So 0x420f00 and 0x43c620 are a
-// retail-only pair - a third spell chooser and its helper that the
-// Dreamcast port does not carry.
-
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:1635
 // The Master Genie / Dragon Fly chooser: it walks OUR OWN side from the
@@ -2252,10 +2159,6 @@ long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char tel
     m_nextAction = 3;
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00422060, 0x18E)  // dc 0x26fa8
 void combatManager::placeShooter(const army* currentArmy)

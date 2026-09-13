@@ -2478,10 +2478,6 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 VA(0x005a3cc0, 0x175)  // dc 0x153158
 army* combatManager::findResurrectionTarget(int side, int hex,
                                               long creatureSpell)
@@ -2621,10 +2617,6 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     return 0;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 // The Chain Lightning arm skips a cell already holding one of the
 // CASTER'S OWN stacks: the spell is the one that walks from target to
 // target, so a friendly occupant is not an aim point.
@@ -2707,10 +2699,6 @@ void combatManager::markAreaEffect(long hex, long radius,
         }
     }
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // Berserk's own hex sweep, and the ONLY thing that separates it from the
 // generic collector above is where the radius comes from and that it
@@ -2811,10 +2799,6 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 VA(0x005a4920, 0x42)  // dc 0x153aec
 void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
                                      std::vector<army*>& targets)
@@ -2827,10 +2811,6 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
     unsigned char includeCenter = spell != SPELL_FROST_RING;
     markHexAreaEffect(hex, radius, includeCenter, targets);
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // EVERY AREA DAMAGE SPELL'S BODY. The sprite effect goes over the centre
 // hex first, the collector two rows above fills the stack list, and then
@@ -3891,10 +3871,6 @@ void combatManager::clearEffects()
     memset(m_effected, 0, sizeof(m_effected));
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 // The mass-spell applier ClearEffects clears `effected` for, and the
 // body is what slices that row: it rolls the cast SEPARATELY per stack -
 // the same `Random(1, 100) <= chance * 100.0f` SpellCastWorks uses on a
@@ -4518,10 +4494,6 @@ long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mast
                              simulated);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 // THE THREE MODIFIER STAGES, in the order the pushes fix them: the
 // CASTER's own bonuses (hero::modify_spell_damage, artifacts and
 // specialities), then the TARGET's creature traits
@@ -4621,10 +4593,6 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
     }
     return damage;
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 VA(0x005a7bb0, 0xC5)  // dc 0x156dc4
 long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
@@ -5229,11 +5197,6 @@ CSprite* combatManager::loadSpellEffect(int effect)
     }
     return m_powSprite;
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5890
-#endif
 
 VA(0x005a9360, 0x3C)  // dc 0x158090
 TCreatureType getElementalType(SpellID spell)

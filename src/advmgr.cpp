@@ -566,10 +566,6 @@ advManager::advManager()
     m_netMsgHandler = 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // The adventure managers's resource-name tables, retail .data local to
 // this TU. Declared like gLoopingSoundNames below: extern rows with the
 // DATA claims, values left to the data phase (read from the verified
@@ -1420,10 +1416,6 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     m_lastHoverX = m_lastHoverY = -1;
     return eventCell;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004087b0, 0x487)  // dc 0x8644
 int advManager::main(message& msg)
@@ -3201,13 +3193,10 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     case CREATURE_BANK:
-        union {
-            int m_value;
-            type_creature_bank_type m_type;
-        } bankType;
-        bankType.m_value = cell->m_objectIndex;
+        int bankType;
+        bankType = cell->m_objectIndex;
         getCreatureBankHelpText(g_text, cell,
-            bankType.m_type, g_unnamed69778c, separator, 0);
+            type_creature_bank_type(bankType), g_unnamed69778c, separator, 0);
         break;
     case CREATURE_GENERATOR_1: {
         // DC3321/3342 records generator&.
@@ -3884,10 +3873,6 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 
     drawRolloverText(g_text);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The help-text group. Retail files these five statics AFTER
 // SetRolloverText, not before it as the DC source does (the same
@@ -6749,11 +6734,6 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:7537
-#endif  // @carcass
-
 VA(0x00413790, 0x27)  // dc 0x15f7c
 void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
 {
@@ -6987,13 +6967,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case CREATURE_BANK: {
-                union {
-                    int m_value;
-                    type_creature_bank_type m_type;
-                } bankType;
-                bankType.m_value = testCell->m_objectIndex;
+                int bankType;
+                bankType = testCell->m_objectIndex;
                 getCreatureBankHelpText(
-                    g_text, testCell, bankType.m_type, g_unnamed69778c,
+                    g_text, testCell, type_creature_bank_type(bankType), g_unnamed69778c,
                     newLine, 1);
                 break;
             }
@@ -7997,10 +7974,6 @@ void advManager::heroQuickView(int heroId, int x, int y,
     window.quickWindowWait();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // castle.obj's building-name reader, declared file locally (the
 // AI_approximate_strength precedent).
 const char* getBuildingName(int townType, int buildingId);
@@ -8098,12 +8071,9 @@ void advManager::townQuickView(int townId, int x, int y,
         first = 1;
         for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
             if (thisTown->m_built & g_bitNumber[building]) {
-                union {
-                    int m_value;
-                    type_building_id m_building;
-                } storage;
-                storage.m_value = building;
-                if (thisTown->isLegalBuilding(storage.m_building)) {
+                int storage;
+                storage = building;
+                if (thisTown->isLegalBuilding(type_building_id(storage))) {
                     // Retail CALLS basic_string::append(const char*,
                     // size_type) at BOTH of this arm's appends - fn+0x349 for
                     // the separator and fn+0x371 for the name - with the
@@ -8183,10 +8153,6 @@ void advManager::townQuickView(int townId, int x, int y,
     window.quickWindowWait();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9243
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrisonQuickView(int id, int x, int y)
@@ -8224,10 +8190,6 @@ void advManager::garrisonQuickView(int id, int x, int y)
     window.quickWindowWait();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // The strength appraisal, declared file-locally (the events.cpp/townmgr.cpp
 // precedent for ai_combat.obj's address).
 long aiApproximateStrength(const hero* currentHero);
@@ -8238,12 +8200,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     int count = cell->m_extraInfo & 0xfff;
     TCreatureType type;
     {
-        union {
-            int m_value;
-            TCreatureType m_creature;
-        } storage;
-        storage.m_value = cell->m_objectIndex;
-        type = storage.m_creature;
+        type = TCreatureType(cell->m_objectIndex);
     }
 
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -8306,11 +8263,6 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
         delete window;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:9349
-#endif  // @carcass
-
 VA(0x00417420, 0x146)  // dc 0x1a230
 void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
@@ -8359,11 +8311,6 @@ void advManager::deactivateCurrHero(unsigned char waitingPlayer)
         g_currentPlayer->m_currHeroId = -1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:9406
-#endif  // @carcass
-
 VA(0x004175e0, 0x9D)  // dc 0x1a440
 void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
 {
@@ -8387,10 +8334,6 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
                        drawChanges);
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00417680, 0x1AF)  // dc 0x1a520
 void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
@@ -9099,10 +9042,6 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
     return LOOPING_SOUND_INVALID;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // The looping-sound resource names, one per e_looping_sound_id row.
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
@@ -9239,21 +9178,6 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     }
 }
 
-#if 0  // @carcass
-
-// The packed-coordinate body once mistaken for HideRoute is the type_point
-// constructor below. HideRoute itself follows that COMDAT at retail 0x419300.
-// E:\gamedcs\struct.h:102 - moved here from the DC header block to keep
-// the file in retail link order.
-#endif  // @carcass
-
-// The canonical constructor stays in struct.h. ShowRoute now retains this
-// call naturally inside get_target while expanding the get_location copy;
-// the former per-callee pin diagnosis was disproved by its recovered source.
-#if 0  // @carcass -- canonical inline body is in struct.h
-// Canonical body and VA: include/struct.h.
-#endif
-
 VA(0x00419300, 0x14C)  // dc 0x1c484
 void advManager::hideRoute(int updateScreen, int removeTarget,
                            int changeButton)
@@ -9347,10 +9271,6 @@ void advManager::forceNewHover()
         processHover(x, y);
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The per-speed scroll step. Dreamcast advmgr.obj publishes the static
 // (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
@@ -9447,10 +9367,6 @@ void advManager::screenScroll(int dir, int changeMouse)
         process1WindowsMessage();
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
 // definition follows this routine. Retail expands the hover callers' tests.

@@ -427,12 +427,6 @@ process_action:
     return result;
 }
 
-#if 0  // @carcass: claim-only home for the netmsg.h COMDAT below
-
-// Canonical body and VA: include/netmsg.h.
-
-#endif  // @carcass
-
 // E:\gamedcs\command.cpp:475
 // Build the twelve legal approach records around the selected target hex.
 // Dreamcast proves the local names and the two header-inline army helpers;
@@ -1730,10 +1724,6 @@ int combatManager::rightClick(int newIndex)
     viewCastleBallista(1);
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // THE FIVE ORDER CASES all write the same (what, where, how) triple -
 // field_3c the order code, field_44 the target hex and field_40 the

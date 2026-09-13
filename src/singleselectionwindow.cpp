@@ -1506,10 +1506,6 @@ void t_map_list_update::tick()
     m_lastSendTime = GameTime::get();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00578010, 0x272)  // dc 0x1483f8
 inline void CNewPlayerUpdateProc::handleRequests()
 {
@@ -2481,14 +2477,6 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     }
 }
 
-#if 0  // @carcass: claim-only homes for the two header COMDATs below
-
-// Canonical body and VA: include/textwdgt.h.
-
-// Canonical body and VA: include/game.h.
-
-#endif  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:985
 VA(0x0057C7D0, 0x1B)  // dc 0x13035c
 static void sliderChatWindow(int state, heroWindow*)
@@ -2516,16 +2504,6 @@ CNewPlayerUpdateMan::CNewPlayerUpdateMan()
     for (int i = 0; i < 8; ++i)
         m_procs[i] = 0;
 }
-
-#if 0  // @carcass
-
-// --- Member-widget class virtual overrides, relocated here for RVA order.
-// --- All vtable-proven: the TSingleSelectionWindow ctor stores each class's
-// --- vtable, and the overridden slot is named from the exact base-class
-// --- vtable (textEntryWidget 0x242d40 / slider 0x241d50 / textWidget 0x242db0).
-// --- Bodies unreconstructed (RoE-vs-SoD divergent); dc offsets retained.
-
-#endif  // @carcass
 
 VA(0x0057c9d0, 0x2A)  // dc 0x148ad8
 void CChatSlider::setResolution(int num)
@@ -4001,11 +3979,6 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:3461
-#endif  // @carcass
-
 int TSingleSelectionWindow::getFileSpecNbr()
 {
     if (g_game->m_isTutorial) {
@@ -5459,10 +5432,6 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:5085
 DC_ONLY(0x13c724, 0x78)
@@ -5475,10 +5444,6 @@ bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
     onWidgetDeselect(&msg, &exitFlag, 1);
     return true;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // The retail jump-table arm layout and Dreamcast's line table independently
 // prove the shared arm order below.  It is source order, not numeric selector
@@ -6220,10 +6185,6 @@ int TSingleSelectionWindow::exitDialog(message* msg)
     return 2;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // The lobby pump: poll the sound engine, pop the one-shot multiplayer
 // notice, run the base handler (the CAdvPopup one in save mode, the
 // CHeroWindowEx one otherwise), tick the header-transfer jobs, drain the
@@ -6477,10 +6438,6 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x005887a0, 0x9ED)  // dc 0x13fd74
 bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
 {
@@ -6659,10 +6616,6 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
 // retail body at 0x589190 zeroes the eight message words; the former local
 // lobby_message subtype duplicated it and incorrectly cited DC Update.
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x005891b0, 0x45)  // dc 0x1477b0
 int CHostWaitDlg::handleMessage(message& msg)
 {
@@ -6727,10 +6680,6 @@ void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char in
             GameTime::elapsedSince(msg->m_pingTime));
     receiveChat(msg->m_dpidFrom, text, inPopup);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005895C0, 0x14F)  // dc 0x140588
 unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
@@ -6865,10 +6814,6 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
     }
     return true;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
 // helper out of line; Complete expands its sole operation at all three known
@@ -7223,11 +7168,6 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     return 1;
 }
 
-#if 0  // @carcass - the HandleNetMsg dispatch family, order-mapped by its
-// arms (each VA below is the direct callee of exactly one subtype arm).
-
-#endif  // @carcass
-
 VA(0x00589C60, 0xCE)  // dc 0x140898
 unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 {
@@ -7547,10 +7487,6 @@ void TSingleSelectionWindow::displayChat()
     }
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0058AF20, 0x182)  // dc 0x141824
 void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* player)
 {
@@ -7605,10 +7541,6 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
     transmitRemoteDataDPID(&reply, 0, false, true);
     onRequestHeroFaceReplyMsg(&reply, inPopup);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // DC line 7324..7333 proves the pPlayer local (sp+0x10) and a separate
 // `return pPlayer` row (7333). The DC asm also proves the then-arm is an
@@ -8878,10 +8810,6 @@ CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, un
         return 0;
     return handleNetMsg(msg);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0058e340, 0x379)  // dc 0x1451e8
 CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)

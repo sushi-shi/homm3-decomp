@@ -42,11 +42,6 @@
 #include "smackmgr.h"
 #include <stdexcept>
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:46
-#endif  // @carcass
-
 VA(0x004fbf90, 0x61)  // dc 0xeb6a4
 void ExtraInfoUnion::setCellVisited(short player)
 {
@@ -62,11 +57,6 @@ void ExtraInfoUnion::setCellVisited(short player)
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:62
-#endif  // @carcass
-
 VA(0x004fc000, 0x19A)  // dc 0xeb73c
 int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
@@ -81,11 +71,6 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
     }
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:85
-#endif  // @carcass
 
 // The timed-event record.  Field order is fixed independently by Save
 // (0x4fc440, exact): message, seven resource deltas, the player mask, the
@@ -194,11 +179,6 @@ int TTimedEvent::save(TAbstractFile* outfile)
     return static_cast<unsigned>(outfile->write(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
-// E:\gamedcs\mapcell.cpp:179
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
-
 VA(0x004fc500, 0x19A)  // dc 0xebb0c
 int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
@@ -213,10 +193,6 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
     }
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass -- located/reconstruction-pending bodies
 
 VA(0x004fc6a0, 0xC8)  // dc 0xebbbc
 int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
@@ -369,9 +345,6 @@ NewmapCell* NewmapCell::getTriggerCell()
     return g_game->getCell(location);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-#endif  // @carcass
-
 VA(0x004fcbd0, 0x5C)  // dc 0xec098
 TAdventureObjectType NewmapCell::getMapObject() const
 {
@@ -446,11 +419,6 @@ const unsigned char NewmapCell::hasTriggerableEvent() const
     }
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:490
-#endif  // @carcass
 
 VA(0x004fce20, 0x116)  // dc 0xec3b4
 TAdventureObjectType NewmapCell::getSpecialTerrain() const
@@ -946,10 +914,6 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
-
 // E:\gamedcs\mapcell.cpp:809
 // The .h3m map-layer reader, and NOT the twin of saveMapLayer: the map
 // format carries seven bytes per cell where the save format carries the
@@ -1064,10 +1028,6 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
     return size * size;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
-
 VA(0x004fe490, 0x22A)  // dc 0xed384
 int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
@@ -1128,10 +1088,6 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
     }
     return size * size;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
 
 union LegacyUpgradeExtraInfo {
     unsigned long m_value;
@@ -1790,15 +1746,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                union { int m_integer; TArtifact m_artifact; } artifactValue;
-                artifactValue.m_integer = narrow;
-                thisBox->m_artifacts[i] = artifactValue.m_artifact;
+                thisBox->m_artifacts[i] = TArtifact(narrow);
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                union { int m_integer; TArtifact m_artifact; } artifactValue;
-                artifactValue.m_integer = wide;
-                thisBox->m_artifacts[i] = artifactValue.m_artifact;
+                thisBox->m_artifacts[i] = TArtifact(wide);
             }
         }
     }
@@ -1985,10 +1937,6 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
-
 VA(0x00500200, 0x222)  // dc 0xef0a0
 int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
@@ -2003,10 +1951,6 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
     }
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:1914
 // The load twin of saveBlackBox, field for field, plus the one thing Save
@@ -2124,9 +2068,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         int artifact;
         infile->read(&artifact, sizeof(unsigned char));
-        union { int m_integer; TArtifact m_artifact; } artifactValue;
-        artifactValue.m_integer = artifact & 0xff;
-        thisBox->m_artifacts[i] = artifactValue.m_artifact;
+        thisBox->m_artifacts[i] = TArtifact(artifact & 0xff);
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2468,11 +2410,6 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:2579
-#endif  // @carcass
-
 // The map file's wandering-monster record.  Everything it learns is packed
 // into the object's extraInfo, one masked insert per field: the troop count
 // at bits 0..11, the army-size grade at 12..16, the custom-record index at
@@ -2669,10 +2606,6 @@ int NewfullMap::loadMonsterList(TAbstractFile* infile)
     }
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-#endif  // @carcass
 
 VA(0x00501980, 0x6B)  // dc 0xf0824
 int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster)
@@ -3269,11 +3202,6 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     heroData->m_location = heroObject->getTrigger();
     return 0;
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:3229
-#endif  // @carcass
 
 // The map file's garrison record, appended to the game's garrison pool with
 // the object's extraInfo left holding its index.
@@ -4096,11 +4024,6 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
     return static_cast<unsigned>(outfile->write(&value, 1)) < 1 ? -1 : 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\mapcell.cpp:3752
-#endif  // @carcass
-
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
 // is a bool crossing where width and height are plain assignments.  And
 // like Save, this returns 1 on success rather than 0.
@@ -4152,12 +4075,7 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     unsigned short typeValue;
     if (infile->read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
         return -1;
-    union {
-        unsigned long m_raw;
-        TAdventureObjectType m_typed;
-    } convertedType;
-    convertedType.m_raw = typeValue;
-    tempObjectType->m_objectType = convertedType.m_typed;
+    tempObjectType->m_objectType = TAdventureObjectType(typeValue);
 
     int extra;
     if (infile->read(&extra, sizeof(extra)) < sizeof(extra))

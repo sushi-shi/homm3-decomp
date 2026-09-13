@@ -48,10 +48,6 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
     return outfile->write(&m_playerId, 1) == 1;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // E:\gamedcs\event_record.cpp:65. Ordinary static helper, expanded
 // into the four replay bodies and playRecordedEvents. The char parameter
 // narrows the saved seat at the latter call; each replay passes m_playerId.
@@ -853,10 +849,6 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
     unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:784
-#endif  // @carcass
 VA(0x0049b800, 0x15E)  // dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
@@ -946,9 +938,6 @@ unsigned char type_record_player_death::save(TAbstractFile* outfile)
     unsigned char ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049bab0, 0x11A)  // dc 0x8db94
 void type_record_player_death::replay(unsigned char draw)
@@ -997,10 +986,6 @@ type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:935
-#endif  // @carcass
 // Residual (84.04%): the frame is one dword LARGER than retail's (0x14 vs
 // 0x10) and retail keeps the sign-extended count in EBX across the reserve
 // expansion where we home it at [ebp-0x10]; the instruction stream is
@@ -1086,9 +1071,6 @@ void type_record_shroud::undo()
         *getMapExtraPtr(change.m_x, change.m_y, change.m_z) = change.m_oldValue;
     }
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049bf90, 0x1F1)  // dc 0x8dfe0
 void game::recordClaimMine(long id, long newOwner)
@@ -1127,9 +1109,6 @@ void game::recordEraseObject(NewmapCell* cell, type_point point)
                                                  cell->m_extraInfo,
                                                  cell->m_objectIndex));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1071
 // Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
@@ -1142,9 +1121,6 @@ void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
     m_eventRecords.push_back(new type_record_hide_boat(currentBoat, occupied,
                                                      occupyingHero));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049c720, 0x1DD)  // dc 0x8e148
 void game::recordHideHero(hero* who, char newOwner,
@@ -1153,18 +1129,12 @@ void game::recordHideHero(hero* who, char newOwner,
     m_eventRecords.push_back(new type_record_hide_hero(who, newOwner,
                                                      townGarrison));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049c900, 0x217)  // dc 0x8e18c
 void game::recordShowBoat(boat* currentBoat, type_point point)
 {
     m_eventRecords.push_back(new type_record_show_boat(currentBoat, point));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049cb20, 0x226)  // dc 0x8e1d0
 void game::recordShowHero(hero* who, signed char player, type_point point,
@@ -1173,9 +1143,6 @@ void game::recordShowHero(hero* who, signed char player, type_point point,
     m_eventRecords.push_back(new type_record_show_hero(who, player, point,
                                                      reset));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049cd50, 0x1FA)  // dc 0x8e270
 void game::recordMove(hero* who, int direction, type_point destination)
@@ -1326,10 +1293,6 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
 #pragma inline_depth()
     }
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:1239
-#endif  // @carcass
 VA(0x0049d630, 0x8C)  // dc 0x8e730
 void game::clearEventRecords()
 {

@@ -299,10 +299,6 @@ BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x004f8180, 0x5C)  // dc 0xe801c
 void kbChangeMenu(HMENU newMenu)
 {

@@ -440,13 +440,6 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 }
 
-#if 0  // @carcass: claim-only home for the header COMDAT below
-
-// E:\gamedcs\hero.h:669
-// Canonical body and VA: include/hero.h.
-
-#endif  // @carcass
-
 VA(0x005bde80, 0xD4)  // dc 0x166408
 town::town()
 {
@@ -512,25 +505,6 @@ int town::hasGarrison()
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\town.cpp:976
-// Walks a forced hero once, or the visiting and garrison heroes in that
-// order. A spellbook and the active Mage Guild bit gate both paths. Normal
-// towns grant the five six-spell guild rows through Wisdom + 2; a Conflux
-// with its Grail grants every eligible spell outside the town's 70-bit veto
-// set, excluding Titan's Lightning Bolt.
-// Residual (99.92157%): the checked outer loop retains retail's preheader;
-// all 37 blocks and all 23 branch sequences now agree. The sole instruction
-// difference is at the ordinary Mage Guild loop latch: retail reloads `level`
-// before `this`, while VC6 schedules those two independent loads in reverse.
-// Dreamcast lines 992/994/999 separately guard the hero, spellbook and
-// HasBuilding call. Restoring those nested statement groups is byte-flat and
-// retires the old helper-flattening debt; do not recombine them into one `&&`.
-// A 656-shape tree search plus clean loop, lifetime, condition, and CodeView-
-// backed const-member variants either emit this same order or score worse.
-#endif  // @carcass
-
 VA(0x005be030, 0x1D3)  // dc 0x1665a0
 void town::giveSpells(hero* forceHero) const
 {
@@ -582,10 +556,6 @@ void town::giveSpells(hero* forceHero) const
         ++heroIndex;
     }
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005be210, 0xC0)  // dc 0x166688
 void town::view(int alreadyFaded)
@@ -1040,10 +1010,6 @@ unsigned char town::canBuildDock() const
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x005bf4f0, 0x7A)  // dc 0x167388
 void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 {
@@ -1275,20 +1241,6 @@ void town::changeGeneratorBonus(TCreatureType creature, long change)
     if (slot < TOWN_DWELLING_COUNT)
         m_generatorBonus[slot + TOWN_DWELLING_COUNT] += change;
 }
-
-#if 0  // @carcass
-
-// STATIC-HELPERS-AFTER-CALLER, twice over. This whole block is ordered
-// by the CALL GRAPH, not by DC rank, and every edge is a rel32 in the
-// image:
-//     0x005bfeb0 -> 0x005c0220, 0x005c0400      (give_event_reward)
-//     0x005c0670 -> 0x005c08c0 -> 0x005c0c90    (town::initialize)
-// Retail emits each free static helper AFTER the member that calls it,
-// where the Dreamcast source has it before. Arity separates the two
-// kinds cleanly: the members are `ret 4` (ecx + one stack argument),
-// the /Gr free helpers are `ret 0` with their arguments in ecx/edx
-// (check_shipyard_square's third goes on the stack).
-#endif  // @carcass
 
 // The kb.h and castle.h prototypes, repeated file-locally for the
 // reason CheckEndGame above is.
@@ -1775,10 +1727,6 @@ __int64 town::getBuildableMask() const
         mask &= ~g_bitNumber[HALL_CAPITOL_ID];
     return mask;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x005c1080, 0x64)  // dc 0x1688a0
 int* town::getBuildCostArray(type_building_id building) const

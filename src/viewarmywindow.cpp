@@ -47,10 +47,6 @@ const unsigned int g_ctaShooter = 0x4;
 // local copy became a hard C2373 - and the two spell it in the same
 // place with the same value, so the substitution is byte-inert.
 
-// The former isBaseElemental wrapper added an /Ob2 candidate at each
-// of the two constructor sites. That byte-flat comparison probe changed
-// string cleanup inlining, but did not establish an original helper.
-
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
 const int g_moraleHelpIndex = 9;
@@ -354,10 +350,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(getArmyName(m_armyType, 2));
 
     int townType;
-    if (!g_game->m_f1f698 && (m_armyType == CREATURE_AIR_ELEMENTAL
-            || m_armyType == CREATURE_EARTH_ELEMENTAL
-            || m_armyType == CREATURE_FIRE_ELEMENTAL
-            || m_armyType == CREATURE_WATER_ELEMENTAL))
+    if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[m_armyType].m_townType;
@@ -419,9 +412,8 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
         long cost[7];
-        union { int m_value; TCreatureType m_creature; } converted;
         getUpgradeCost(m_armyType,
-                         (converted.m_value = upgrade, converted.m_creature), m_armySize, cost);
+                         TCreatureType(upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
                 widgetSetStatus(UPGRADE_ID, 8);
@@ -439,9 +431,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    union { int m_value; TCreatureType m_creature; } converted;
-    converted.m_value = armyType;
-    m_armyType = converted.m_creature;
+    m_armyType = TCreatureType(armyType);
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
@@ -453,10 +443,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createNameWidget(traits->m_pluralName);
 
     int townType;
-    if (!g_game->m_f1f698 && (armyType == CREATURE_AIR_ELEMENTAL
-            || armyType == CREATURE_EARTH_ELEMENTAL
-            || armyType == CREATURE_FIRE_ELEMENTAL
-            || armyType == CREATURE_WATER_ELEMENTAL))
+    if (!g_game->m_f1f698 && isBaseElemental(armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[armyType].m_townType;
@@ -653,12 +640,9 @@ int TViewArmyWindow::windowHandler(message* msg)
                 long cost[7];
                 int amount;
                 amount = 0;
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } upgradeType;
-                upgradeType.m_value = m_upgrade;
-                getUpgradeCost(m_armyType, upgradeType.m_creature,
+                int upgradeType;
+                upgradeType = m_upgrade;
+                getUpgradeCost(m_armyType, TCreatureType(upgradeType),
                                  m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {

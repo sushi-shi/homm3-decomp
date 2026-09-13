@@ -1592,14 +1592,6 @@ unsigned char TMultiPlayerWindow::onJoin()
     return 0;
 }
 
-// E:\gamedcs\dxplay.h:82
-// OnJoin's expanded GetSessionInfo leaves this header helper out of line.
-// Retail tests the two disabled flag bits separately, then compares the
-// current and maximum player counts exactly as the header definition does.
-#if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
-// Canonical body and VA: include/dxplay.h.
-#endif  // @carcass
-
 VA(0x005112e0, 0x101)  // dc 0x101780
 unsigned char getIPAddress(char* ipAddress)
 {
@@ -1760,17 +1752,6 @@ unsigned char TMultiPlayerWindow::onSearch()
     }
     return 1;
 }
-
-// Retail selects the header-inline CMPInputEdit constructor's /Gy COMDAT
-// immediately after OnSearch. Its 98 meaningful bytes are the same forwarding
-// constructor as DC 0x102210: all sixteen arguments pass to textEntryWidget,
-// then the derived vtable replaces CMPEdit's and the two edit links are
-// cleared. The definition stays in multiplayerwindow.h because CMPInputDlg's
-// inline constructor needs the same body for OnSearch; this claim-only
-// declarator owns the selected copy without changing that inlining decision.
-#if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
-// Canonical body and VA: include/multiplayerwindow.h.
-#endif  // @carcass
 
 VA(0x00511d40, 0xD1)  // dc 0x101c00
 unsigned char TMultiPlayerWindow::onHotSeat()

@@ -36,7 +36,7 @@ class CampaignLoadLifetimeTests(unittest.TestCase):
                                         'scenario.m_days = 0;'), False),
             ('WrongSign', modern.replace('static_cast<signed char>',
                                         'static_cast<unsigned char>'), False),
-            ('WrongArtifact', modern.replace('artifactPool[whichArtifact].m_artifactId = artifactValue.m_artifact;',
+            ('WrongArtifact', modern.replace('artifactPool[whichArtifact].m_artifactId = TArtifact(artifactValue);',
                                              'artifactPool[whichArtifact].m_artifactId = TArtifact(0);'), False),
             ('WrongFlags', modern.replace('m_campaignCompleted + 14,',
                                           'm_campaignCompleted + 15,'), False),
@@ -160,6 +160,8 @@ int main() {
 '''
         declarations, functions, checks = [], [], []
         for name, arm, expected in variants:
+            if not expected:
+                self.assertNotEqual(arm, modern, f'{name} must alter the loaded body')
             declarations.append(f'void load{name}(TAbstractFile*, int);')
             functions.append(f'void SCampaign::load{name}(TAbstractFile* infile, int saveVersion) {{\n'
                 '    int i; int pool;\n    std::vector<MapScore>& rMapScores = m_mapScores;\n'

@@ -371,10 +371,6 @@ unsigned char CDPlay::flushReceiveQueue()
     return 1;
 }
 
-#if 0  // @carcass: the active header-inline body emits this COMDAT
-// Canonical body and VA: include/dxplay.h.
-#endif
-
 VA(0x004977c0, 0x144)  // dc 0x8a7e0
 unsigned char CDPlay::addSessionEnum(const DPSESSIONDESC2* dpSessionDesc, unsigned long flags)
 {

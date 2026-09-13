@@ -70,10 +70,6 @@ void advManager::stopCursor(unsigned char standEnd)
     m_cursorTurning = 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0047f860, 0x2D9)  // dc 0x79b0c
 void advManager::drawCursor(int cellX, int cellY)
 {
@@ -230,11 +226,6 @@ void advManager::turnTo(int newDirection)
     m_cursorTurning = 0;
     m_cursorDirection = newDirection;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\cursor.cpp:393
-#endif  // @carcass
 
 VA(0x00480000, 0x84)  // dc 0x7a45c
 int advManager::getMoveShowIt(hero* currHero, int direction)
@@ -1054,13 +1045,6 @@ void advManager::processMapChangeNew(CMapChange* mapChange)
         break;
     }
 }
-
-// Complete selects the same header-inline comparison as a cursor.obj COMDAT.
-// The active definition remains in struct.h; this anchor records the retained
-// body selected by OnDeadHero without replacing its source-inline boundary.
-#if 0  // @carcass: active header-inline body emits this COMDAT
-// Canonical body and VA: include/struct.h.
-#endif
 
 VA(0x00482390, 0x21)  // dc 0x7c9f8
 void sendMapChange(CMapChange* mapChange)

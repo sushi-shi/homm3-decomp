@@ -2809,18 +2809,6 @@ void TSellCreatureWindow::update(bool update)
         drawWindow(1, -65535, 65535);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// The members below are folded into their callers on x86: the carve places
-// nothing where the DC roster lists them (the 16 SetWidgetOn/Off/Disabled
-// members between update_sell_artifact_widget 0x5ea5d0 and Update 0x5ea6e0,
-// the Trade/Give/Buy ComputeTradeRatios, the five SetupNewTrade and the three
-// TSellArtifactWindow backpack members). They keep no retail body and stay
-// DC_ONLY. Only TSellArtifactWindow's and TSellCreatureWindow's
-// ComputeTradeRatios survive out of line (claimed below get_market_value).
-
-#endif  // @carcass
-
 // E:\gamedcs\tradpost.cpp:2181
 // bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
 // rounded ratios and the resource-limited maximum. Complete expands this
@@ -2914,9 +2902,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
 {
     type_artifact artifact;
     if (inLeftResource < 18) {
-        union { int m_value; TArtifactSlot m_slot; } converted;
-        converted.m_value = inLeftResource;
-        artifact = g_marketHero->getArtifact(converted.m_slot);
+        artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
     }
     else
         artifact = g_marketHero->getBackpack(inLeftResource - 18);

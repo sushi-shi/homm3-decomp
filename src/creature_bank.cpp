@@ -214,10 +214,7 @@ void initializeCreatureBank(type_creature_bank* bank,
 
     if (random(1, 100) <= level->m_upgradeChance) {
         TCreatureType current = bank->m_guards.m_armyTypes[slot];
-        if (!(g_game->m_f1f698 == 0 && (current == CREATURE_AIR_ELEMENTAL
-                || current == CREATURE_EARTH_ELEMENTAL
-                || current == CREATURE_FIRE_ELEMENTAL
-                || current == CREATURE_WATER_ELEMENTAL))
+        if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
             && static_cast<unsigned char>(isBaseCreature(current))) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
             int upgraded = g_game->upgradedCreatureType(promoted);
