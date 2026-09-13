@@ -358,9 +358,9 @@ public:
     // Before normalization (function): CGameTransferSmack::SetPercentage.
     void setPercentage(float pct);
     // Before normalization (function): CGameTransferSmack::DrawCurrentFrame.
-    protected:
+protected:
     void drawCurrentFrame() { drawCurrentSmackFrame(); }
-    public:
+public:
     // Before normalization (function): CGameTransferSmack::Stop.
     void stop();
     // Before normalization (function): CGameTransferSmack::SaveScreen.

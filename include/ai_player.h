@@ -96,7 +96,7 @@ public:
     // Before normalization (function): type_town_threat_checker::check_towns.
     void checkTowns();
     // Before normalization (function): type_town_threat_checker::clear_marks.
-    protected:
+protected:
     virtual void clearMarks();
     // Before normalization (function): type_town_threat_checker::is_marked.
     // Before normalization (locals): our_town.
@@ -104,7 +104,6 @@ public:
     // Before normalization (function): type_town_threat_checker::mark_town.
     // Before normalization (locals): our_town.
     virtual void markTown(town* ourTown);
-    public:
 };
 
 class type_garrison_purchaser : public type_town_threat_checker {
@@ -113,7 +112,7 @@ public:
     type_garrison_purchaser(int newPlayer)
         : type_town_threat_checker(newPlayer) {}
     // Before normalization (function): type_garrison_purchaser::clear_marks.
-    protected:
+protected:
     virtual void clearMarks();
     // Before normalization (function): type_garrison_purchaser::is_marked.
     // Before normalization (locals): our_town.
@@ -121,7 +120,6 @@ public:
     // Before normalization (function): type_garrison_purchaser::mark_town.
     // Before normalization (locals): our_town.
     virtual void markTown(town* ourTown);
-    public:
 };
 
 // Dreamcast records this exact 12-byte value object, and retail's
@@ -388,20 +386,20 @@ public:
     void endTurn();                              // 0x428dd0
     // Before normalization (function): type_AI_player::make_gift.
     // Before normalization (locals): player_id.
-    protected:
+protected:
     void makeGift(long playerId);               // 0x429110
-    public:
+public:
     // Before normalization (function): type_AI_player::start_turn.
     void startTurn();                            // 0x4297c0
     // Before normalization (function): type_AI_player::reset_magus_hut_value.
     void resetMagusHutValue();                 // 0x429ab0
     // Before normalization (function): type_AI_player::calculate_reserve.
-    protected:
+protected:
     void calculateReserve();                     // 0x429ad0
     // Before normalization (function): type_AI_player::get_total_value.
     // Before normalization (locals): basic_value.
     long getTotalValue(long basicValue, int* cost);  // 0x42a150
-    public:
+public:
     // Before normalization (function): type_AI_player::buy_creatures.
     // Before normalization (locals): current_hero, current_town.
     void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
@@ -413,18 +411,17 @@ protected:
     // access and a void/no-argument ordinary member.
     // Before normalization (function): type_AI_player::purchase_buildings.
     void purchaseBuildings();
-public:
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     // Before normalization (function): type_AI_player::purchase_building.
     // Before normalization (locals): prohibited_creatures.
-    protected:
+protected:
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
-    public:
+public:
     // Before normalization (function): type_AI_player::hire_heroes.
     bool hireHeroes();
     // Before normalization (function): type_AI_player::check_trade_supply.
-    protected:
+protected:
     bool checkTradeSupply(const int* cost, long number, int* supply,
                             // Before normalization (locals): trade_qty.
                             std::vector<long>& tradeQty);
@@ -432,15 +429,14 @@ public:
     bool canTradeResources(const int* cost, int* supply,
                              // Before normalization (locals): trade_qty.
                              std::vector<long>& tradeQty);
-    public:
+public:
     // Before normalization (function): type_AI_player::trade_resources.
     void tradeResources(const int* cost, long number);
     // Before normalization (function): type_AI_player::build_markets.
-    protected:
+protected:
     bool buildMarkets(int* supply);
     // Before normalization (function): type_AI_player::do_resource_trade.
     void doResourceTrade(int* supply);
-    public:
 
 private:
     // Before normalization: attack_computer_bonus.

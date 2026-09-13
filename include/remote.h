@@ -62,9 +62,9 @@ public:
     virtual CNetMsg* getAbortPopupMsg();                          // slot 2
     // Before normalization (function): CNetMsgHandler::HandleNetMsg.
     // Before normalization (locals): pNetMsg.
-    protected:
+protected:
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;          // slot 3
-    public:
+public:
 
     // Before normalization (function): CNetMsgHandler::IsInPopup.
     unsigned char isInPopup() { return m_inPopup; }
@@ -207,9 +207,9 @@ public:
     // must NOT reach the queue.
     // Before normalization (function): CDPlayHeroes::HandleLowLevelMsg.
     // Before normalization (locals): pNetMsg.
-    protected:
+protected:
     unsigned char handleLowLevelMsg(CNetMsg* netMsg);
-    public:
+public:
     // Before normalization (function): CDPlayHeroes::TransmitRemoteData.
     // Before normalization (locals): pMsg.
     bool transmitRemoteData(CNetMsg* msg, int toWho,
@@ -381,11 +381,11 @@ public:
     // Before normalization (function): CChatManager::UpdateWidget.
     void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
     // Before normalization (function): CChatManager::KillOldChat.
-    protected:
+protected:
     void killOldChat();
     // Before normalization (function): CChatManager::UpdateWidgetText.
     void updateWidgetText(int numLines, textWidget* widget);
-    public:
+public:
     // Before normalization (function): CChatManager::PauseTimeOuts.
     void pauseTimeOuts();
     // Before normalization (function): CChatManager::ResumeTimeOuts.

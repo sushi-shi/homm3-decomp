@@ -113,9 +113,9 @@ public:
     // Before normalization (function): mouseManager::MouseCoords.
     void mouseCoords(int& x, int& y);
     // DC mousemgr.cpp:934; the ordinary helper used by Update/ShowPointer.
-    private:
+private:
     void getPointerPosition();
-    public:
+public:
     // Before normalization (function): mouseManager::SetPointer.
     // Before normalization (locals): new_frame, new_set.
     void setPointer(int newFrame, EPointerSet newSet);
@@ -124,7 +124,7 @@ public:
     void update(unsigned char forceIt);
     // Before normalization (function): mouseManager::SaveAndDraw.
     // Before normalization (locals): dst_surface, save_surface, dst_rect.
-    private:
+private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,
                      IDirectDrawSurface* saveSurface,
                      const RECT& dstRect, int x, int y);
@@ -132,7 +132,7 @@ public:
     void restoreUnderlying(IDirectDrawSurface* surface,
                            // Before normalization (locals): dst_rect.
                            const RECT& dstRect);
-    public:
+public:
     // Before normalization (function): mouseManager::HidePointer.
     void hidePointer();
     // Before normalization (function): mouseManager::ShowPointer.
@@ -160,9 +160,9 @@ public:
     // Before normalization (function): mouseManager::IsVis.
     unsigned char isVis() const { return m_hideCount == 0; }
     // DC MouseMgr.h:204/205, dc 0xff774: header-inline busy test.
-    private:
+private:
     bool isBusy() const { return m_busy != 0; }
-    public:
+public:
     // Before normalization (function): mouseManager::CheckUpdate.
     void checkUpdate();
     // Before normalization (function): mouseManager::LoadFrame.

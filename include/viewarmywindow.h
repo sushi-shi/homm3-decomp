@@ -125,9 +125,9 @@ public:
     virtual ~TViewArmyWindow();
     // Before normalization (function): TViewArmyWindow::WindowHandler.
     virtual int windowHandler(message* msg);
-    private:
+private:
     int convertID2HelpID(int id) const;
-    public:
+public:
     // Before normalization (function): TViewArmyWindow::QuickView.
     void quickView();
     // Before normalization (function): TViewArmyWindow::DoModal.
@@ -151,7 +151,7 @@ public:
     // allocation.
     // Before normalization (function): TViewArmyWindow::create_background_widget.
     // Before normalization (locals): this_hero.
-    private:
+private:
     void createBackgroundWidget(const hero* thisHero);
     // Before normalization (function): TViewArmyWindow::create_name_widget.
     void createNameWidget(const char* name);
@@ -202,7 +202,6 @@ public:
     void createUpgradeWidget();
     // Before normalization (function): TViewArmyWindow::create_dismiss_widget.
     void createDismissWidget();
-    public:
 };
 SIZE(TViewArmyWindow, 0xb8);
 

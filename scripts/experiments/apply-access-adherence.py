@@ -23,6 +23,7 @@ import argparse
 import ctypes
 import glob
 import os
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -35,6 +36,7 @@ from homm3.build import compilation_database
 from homm3.core import clang, common
 from homm3.core.cc_wrap import ZLIB_INC
 from homm3.core.nb11_types import Types
+from homm3.retail_labels.source import mask_lexical_noise
 
 
 def load_cindex():
@@ -180,7 +182,9 @@ def collect(ci, commands, root, mirror, dc, exclude):
                     "target": target if fix else cur, "fix": fix,
                 })
             if any(x["fix"] for x in members):
+                source_line = Path(loc.name).read_text().splitlines()[rec.extent.start.line - 1]
                 classes[fkey] = {"file": loc.name, "owner": owner,
+                                 "indent": indent_of(source_line),
                                  "members": sorted(members, key=lambda x: x["line"])}
     return classes
 
@@ -208,8 +212,9 @@ def plan_edits(classes) -> dict[str, list[tuple[int, bool, str]]]:
                    and members[j + 1]["target"] == tgt):
                 j += 1
             first, last = members[i], members[j]
-            inserts[info["file"]].append((first["line"] - 1, False, f"{tgt}:"))
-            inserts[info["file"]].append((last["end"], True, "public:"))
+            indent = info["indent"]
+            inserts[info["file"]].append((first["line"] - 1, False, f"{indent}{tgt}:"))
+            inserts[info["file"]].append((last["end"], True, f"{indent}public:"))
             i = j + 1
     return {f: sorted(items, key=lambda e: (-e[0], e[1])) for f, items in inserts.items()}
 
@@ -218,15 +223,21 @@ def indent_of(line: str) -> str:
     return line[: len(line) - len(line.lstrip())]
 
 
+def remove_empty_access_labels(text: str) -> str:
+    """Drop labels with no declaration before the next label or class end."""
+    masked = mask_lexical_noise(text)
+    empty = re.compile(r"^[ \t]*(?:public|private|protected):[ \t]*\n"
+                       r"(?=\s*(?:(?:public|private|protected):|}))", re.M)
+    for match in reversed(list(empty.finditer(masked))):
+        text = text[:match.start()] + text[match.end():]
+    return text
+
+
 def apply_file(path: str, inserts: list[tuple[int, bool, str]]):
     lines = Path(path).read_text().splitlines(keepends=True)
     for idx, _is_close, label in inserts:  # pre-ordered by plan_edits
-        ref = lines[idx] if idx < len(lines) else ""
-        if not ref.strip() or ref.lstrip().startswith("}"):
-            ref = lines[idx - 1] if idx > 0 else ref  # blank/brace: borrow member indent
-        text = indent_of(ref).rstrip("\n") + label + "\n"
-        lines.insert(idx, text)
-    Path(path).write_text("".join(lines))
+        lines.insert(idx, label + "\n")
+    Path(path).write_text(remove_empty_access_labels("".join(lines)))
 
 
 def main() -> int:
