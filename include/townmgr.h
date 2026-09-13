@@ -1071,7 +1071,11 @@ public:
     // Retail 0x5c8080 (dc 0x16d0dc). Latches the clicked troop slot and
     // writes the status line for it.
     // Before normalization (function): townManager::select_army.
+private:
     void selectArmy(strip* fromStrip, int slot, unsigned char isOwnerCell);
+public:
+    // Before normalization (function): townManager::ArmyCommand.
+    void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
     // Retail 0x5d27b0 (dc 0x17484c). Runs the town hall page.
     // Before normalization (function): townManager::DoHall.
 private:

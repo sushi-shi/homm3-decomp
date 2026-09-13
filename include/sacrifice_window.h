@@ -305,7 +305,7 @@ public:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     // Before normalization (function): type_sacrifice_window::DoModal.
     virtual int doModal(unsigned char fadeIn);                 // slot 6
-protected:
+public:
     // Before normalization (function): type_sacrifice_window::ExitDialog.
     virtual int exitDialog(message* msg);                      // slot 14
 private:

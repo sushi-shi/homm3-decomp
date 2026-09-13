@@ -2557,7 +2557,13 @@ public:
     // Before normalization (function): advManager::ProcessSearch.
     int processSearch(int x, int y, int z);
     // Before normalization (function): advManager::get_normal_cursor.
+private:
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);
+    // Before normalization (function): advManager::get_garrison_cursor.
+    type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
+public:
+    // Before normalization (function): advManager::MouseInScrollZone.
+    int mouseInScrollZone();
     // Before normalization (function): advManager::SeedTo.
     void seedTo(type_point target);
     // Before normalization (function): advManager::GetCloudLookup.

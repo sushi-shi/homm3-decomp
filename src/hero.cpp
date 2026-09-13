@@ -7711,7 +7711,7 @@ long hero::getHitPointBonus(int creatureType)
 // fly/water-walk push), and requires cell terrain 8 (water) to agree with
 // it, then checks the cell passability bit 0x40.
 VA(0x004e5ce0, 0xE7)  // anchor-bracket + order-map, dc 0xd5548
-unsigned char hero::canLand()
+unsigned char hero::canLand() const
 {
     type_point point;
     point.m_x = m_x;

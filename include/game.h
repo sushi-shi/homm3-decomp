@@ -429,6 +429,9 @@ public:
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
+    int saveTreasureList(TAbstractFile* outfile);
+    int saveBlackBoxList(TAbstractFile* outfile);
+    int saveMonsterList(TAbstractFile* outfile);
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
     int loadTownEventList(TAbstractFile* infile, int saveVersion);

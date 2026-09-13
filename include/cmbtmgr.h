@@ -1722,7 +1722,9 @@ public:
     // forwards it to the one-argument body at 0x474bf0. UpdateGrid is its
     // only retail caller; DC retains the nullary source signature.
     // Before normalization (function): combatManager::is_computer_action.
+private:
     unsigned char isComputerAction();
+public:
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
     // Before normalization (function): combatManager::DrawBackground.
     void drawBackground();
@@ -2015,7 +2017,14 @@ public:
     // enum waits for the lane that reconstructs the body.
     // Before normalization (function): combatManager::KeepAttack.
     // Before normalization (locals): iTowerPos.
+    // Complete adds the arrow-tower early return in army::rangeAttack
+    // (0x440160), directly calling KeepAttack (0x465ad0). DC lacks that
+    // arm but records KeepAttack private. Grant the specific retail caller
+    // access without widening the recorded manager interface.
+    friend void army::rangeAttack();
+private:
     void keepAttack(int towerPos);                           // 0x465ad0
+public:
     // Retail-only tower AI helper. Its body/callers prove the signature
     // but no roster row supplies a name, so it retains an address ordinal.
     // Before normalization (function): combatManager::Unnamed465f20.

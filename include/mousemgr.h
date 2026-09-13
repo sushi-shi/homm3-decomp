@@ -167,7 +167,12 @@ public:
     void checkUpdate();
     // Before normalization (function): mouseManager::LoadFrame.
     // Before normalization (locals): new_frame.
+    // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
+    // retail 0x601a00 retains that call. Preserve this specific friend.
+    friend unsigned char ddSetFullScreenStatus(int newStatus);
+private:
     void loadFrame(int newFrame);
+public:
     // Before normalization (function): mouseManager::Reset.
     void reset();                 // 0x50cc80
     // Before normalization (function): mouseManager::ShowSystemCursor.

@@ -1,5 +1,51 @@
 # Reviewing Dreamcast source facts
 
+## Member access and method properties
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --all --json
+PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --module adventuremapwindow
+```
+
+This read-only audit uses libclang and each TU's manifest profile to compare
+authored access and ordinary/static/virtual properties with the NB11 class
+records. Owning `Before normalization` comments supply renamed member aliases.
+It deduplicates repeated DC type definitions and authored declarations across
+TUs. Overloads are correlated separately: a unique name/arity is a review
+correlation, and equal-arity alternatives require matching parameter and const
+facts. A retail-only overload does not inherit another overload's access.
+
+Text and JSON use the same exit status: **0** for checked facts without findings
+or gaps, **1** for findings, and **2** for incomplete coverage (including Clang
+errors, failed parses, unmatched or ambiguous members). An adherence percentage
+describes only correlated facts. Missing DC members and authored members that
+cannot be correlated remain explicit; they are not proof of platform changes.
+The audit does not compare SH4 and candidate statement or scope counts.
+
+`apply-access-adherence.py` prints a declaration-only proposal by default;
+`--apply` writes unambiguous public-to-private/protected changes without moving
+members. It aborts on Clang errors and has no keep-public exclusion list.
+Review both the proposal and its callers before applying it. Access changes
+can change VC6 mangled symbols, so run the full `homm3 build` to regenerate
+source-owned bindings and delinked targets.
+
+A C2248 access error is a source-recovery lead. Inspect public wrappers and
+ordinary member helpers before concluding that retail changed the interface.
+For example, MoveHero's DC line table switches to `hero.h:645` for a `can_land`
+call: that call belongs to the expanded `IsFlying` wrapper. Likewise, the
+garrison status handler calls `townManager::ArmyCommand`, whose expansion
+reaches private `select_army`. A missing retained helper body does not make the
+helper a free static function.
+
+Friend declarations need their own evidence. The combat-options and DirectPlay
+callbacks are already free procedures in DC and directly call the restricted
+methods there; retail preserves those callback relationships. This supports
+specific friends. An unexplained external access alone does not. Preserve the
+recovered relationships through compiler-score dips, record the remaining call
+decisions beside their owners, and keep historical peaks in the normal ledger.
+
+## Function declarations and calls
+
 `homm3 dreamcast audit` finds disagreements between positive Dreamcast debug
 records and declarations/calls in the authored C++ AST:
 

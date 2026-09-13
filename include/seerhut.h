@@ -273,7 +273,9 @@ public:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
     // same way from NewfullMap::Save. Declared separately because the
     // TQuestGuard base is private here.
+private:
     int save(TAbstractFile* outfile);
+public:
     // Dreamcast names this source boundary on TSeerHut.  Complete's quest
     // log applies the same predicate to both of its quest pools.
     // Before normalization (function): TSeerHut::QuestActiveforPlayer.

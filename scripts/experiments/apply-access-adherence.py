@@ -1,103 +1,36 @@
 """Align authored member access to Dreamcast-recorded visibility, in place.
 
-Every divergence the audit finds is `public` in our source but `private`/
-`protected` in the DC CodeView field list.  Access is codegen-neutral under
-MSVC (not mangled, no effect on layout or vtable) *as long as no declaration
-moves*, so this transformer never reorders: it brackets each affected member
-with an access label before it and restores the prior access after it, coalescing
-physically-adjacent members that share a target.  Data-member offsets and virtual
-slot order are therefore preserved exactly; only the access label changes.
+This is a declaration-only proposal, never proof that a caller is legal.
+Access changes can alter VC6 mangled names, so finish with a full build to
+refresh the source-owned claims. Declarations stay in their original order.
 
     # dry run -- print the plan, touch nothing
     PYTHONPATH=scripts python scripts/experiments/apply-access-adherence.py
     # apply the edits to the headers
     PYTHONPATH=scripts python scripts/experiments/apply-access-adherence.py --apply
 
-Only `public -> private/protected` tightenings backed by an unanimous DC access
-for that name are applied; ambiguous names (overloads whose DC access disagrees)
-are skipped.  Build afterwards: a tightening that fails to compile means our code
-has an out-of-class caller DC modelled differently -- relax that one and note it.
+Only unambiguously correlated public -> private/protected tightenings are
+proposed. A C2248 error is evidence of a missing source relationship: inspect
+public wrappers, ordinary helper ownership, and positively supported friends.
+Do not revert the recorded access merely to compile. Parse failures abort all
+edits; ambiguous overloads are skipped and reported by the read-only verifier.
 """
 
 import argparse
-import ctypes
-import glob
-import os
-import re
-import subprocess
 import sys
+import re
 from collections import defaultdict
 from pathlib import Path
 
 from homm3 import manifest
 from homm3.analysis.dc_lines import load_symbols
 from homm3.analysis.source_facts import name_key
+from homm3.analysis.access_facts import load_cindex, is_project_file, dc_visibility, correlate
 from homm3.build import compilation_database
 from homm3.core import clang, common
 from homm3.core.cc_wrap import ZLIB_INC
 from homm3.core.nb11_types import Types
 from homm3.retail_labels.source import mask_lexical_noise
-
-
-def load_cindex():
-    for pat in ("*gcc-*-lib/lib/libstdc++.so.6", "*gcc-*/lib*/libstdc++.so.6"):
-        hits = sorted(glob.glob(f"/nix/store/{pat}"))
-        if hits:
-            try:
-                ctypes.CDLL(hits[-1], mode=ctypes.RTLD_GLOBAL)
-            except OSError:
-                pass
-            break
-    lib = os.environ.get("HOMM3_LIBCLANG")
-    if not lib:
-        cands = sorted(glob.glob("/nix/store/*clang-*-lib/lib/libclang.so"))
-        cands += sorted(glob.glob(os.path.expanduser(
-            "~/.cache/uv/**/pylibclang/libclang.so*"), recursive=True))
-        lib = cands[0] if cands else None
-    if not lib:
-        sys.exit("no libclang.so; set HOMM3_LIBCLANG")
-    import clang.cindex as ci
-    ci.Config.set_library_file(lib)
-    ci.Index.create()
-    print(f"# libclang: {lib}", file=sys.stderr)
-    return ci
-
-
-def dc_access_map(types: Types) -> dict[tuple[str, str], str]:
-    """(classKey, memberKey) -> access, only where every DC entry agrees."""
-    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
-    for index in list(types.records):
-        item = types.get(index)
-        if item.get("kind") not in ("class", "struct") or item.get("forward"):
-            continue
-        cname = item.get("name")
-        if not cname or cname.startswith("cv_type_"):
-            continue
-        for field in types.fields(item.get("fields", 0)):
-            if field.get("kind") not in ("method", "member", "static_member"):
-                continue
-            mname = field.get("name")
-            if not mname:
-                continue
-            seen[(name_key(cname), name_key(mname))].add(field.get("access", "unspecified"))
-    return {key: next(iter(accs)) for key, accs in seen.items()
-            if len(accs) == 1 and next(iter(accs)) in ("private", "protected")}
-
-
-def is_project_file(path: Path, root: Path, mirror: Path) -> bool:
-    try:
-        rp = str(path.resolve())
-    except OSError:
-        return False
-    if not rp.startswith(str(root.resolve())):
-        return False
-    for skip in (mirror, root / ZLIB_INC, root / "vendor", root / "build"):
-        try:
-            if rp.startswith(str(skip.resolve())):
-                return False
-        except OSError:
-            continue
-    return True
 
 
 def qualified_owner(cursor, ci) -> str:
@@ -111,25 +44,7 @@ def qualified_owner(cursor, ci) -> str:
     return "::".join(reversed(parts))
 
 
-def load_exclude(path: str | None) -> set[tuple[str, str]]:
-    """`Class::member` per line -> {(classKey, memberKey)} kept public.
-
-    These are members DC records private/protected but our source legitimately
-    calls from outside the class (a caller DC modelled as a friend, or a genuine
-    call-graph platform difference); tightening them would not compile.
-    """
-    out: set[tuple[str, str]] = set()
-    if not path or not Path(path).exists():
-        return out
-    for line in Path(path).read_text().splitlines():
-        line = line.split("#", 1)[0].strip()
-        if "::" in line:
-            cls, _, mem = line.rpartition("::")
-            out.add((name_key(cls), name_key(mem)))
-    return out
-
-
-def collect(ci, commands, root, mirror, dc, exclude):
+def collect(ci, commands, root, mirror, dc):
     """(file, class_usr) -> ordered member decls with access + target + extent."""
     ACCESS = {ci.AccessSpecifier.PUBLIC: "public",
               ci.AccessSpecifier.PROTECTED: "protected",
@@ -149,8 +64,10 @@ def collect(ci, commands, root, mirror, dc, exclude):
             tu = index.parse(str(src), args=args,
                              options=ci.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
         except ci.TranslationUnitLoadError as exc:
-            print(f"#   parse failed: {exc}", file=sys.stderr)
-            continue
+            raise RuntimeError(f"{src}: parse failed: {exc}") from exc
+        errors = [str(d) for d in tu.diagnostics if d.severity >= ci.Diagnostic.Error]
+        if errors:
+            raise RuntimeError("\n".join(errors))
         for rec in tu.cursor.walk_preorder():
             if rec.kind not in record_kinds or not rec.is_definition():
                 continue
@@ -161,8 +78,11 @@ def collect(ci, commands, root, mirror, dc, exclude):
             fkey = (loc.name, usr)
             if fkey in classes:
                 continue
-            owner = qualified_owner(rec, ci) or rec.spelling
+            parent_name = qualified_owner(rec, ci)
+            owner = f"{parent_name}::{rec.spelling}" if parent_name else rec.spelling
             ckey = name_key(owner)
+            source_line = Path(loc.name).read_text().splitlines()[rec.extent.start.line - 1]
+            class_indent = indent_of(source_line)
             members = []
             for m in rec.get_children():
                 if m.kind not in member_kinds:
@@ -173,18 +93,24 @@ def collect(ci, commands, root, mirror, dc, exclude):
                 if cur is None:
                     continue
                 mkey = name_key(m.spelling)
-                target = dc.get((ckey, mkey))
-                fix = bool(target and cur == "public" and target in ("private", "protected")
-                           and (ckey, mkey) not in exclude)
+                is_method = m.kind in (ci.CursorKind.CXX_METHOD, ci.CursorKind.CONSTRUCTOR,
+                                        ci.CursorKind.DESTRUCTOR)
+                rec, gap = correlate({
+                    "class_key": ckey, "member_key": mkey,
+                    "kind": "method" if is_method else "member" if m.kind == ci.CursorKind.FIELD_DECL else "static_member",
+                    "is_method": is_method,
+                    "parameters": [a.type.get_canonical().spelling for a in m.get_arguments()] if is_method else None,
+                    "const": m.is_const_method() if m.kind == ci.CursorKind.CXX_METHOD else False,
+                }, dc)
+                target = rec["access"] if rec else None
+                fix = bool(target in ("private", "protected") and cur == "public")
                 members.append({
                     "name": m.spelling, "line": m.extent.start.line,
                     "end": m.extent.end.line, "cur": cur,
                     "target": target if fix else cur, "fix": fix,
                 })
             if any(x["fix"] for x in members):
-                source_line = Path(loc.name).read_text().splitlines()[rec.extent.start.line - 1]
-                classes[fkey] = {"file": loc.name, "owner": owner,
-                                 "indent": indent_of(source_line),
+                classes[fkey] = {"file": loc.name, "owner": owner, "indent": class_indent,
                                  "members": sorted(members, key=lambda x: x["line"])}
     return classes
 
@@ -229,7 +155,11 @@ def remove_empty_access_labels(text: str) -> str:
     empty = re.compile(r"^[ \t]*(?:public|private|protected):[ \t]*\n"
                        r"(?=\s*(?:(?:public|private|protected):|}))", re.M)
     for match in reversed(list(empty.finditer(masked))):
-        text = text[:match.start()] + text[match.end():]
+        original = text[match.start():match.end()]
+        remainder = re.sub(r"^[ \t]*(?:public|private|protected):[ \t]*",
+                           "", original, count=1)
+        replacement = indent_of(original) + remainder if remainder.strip() else ""
+        text = text[:match.start()] + replacement + text[match.end():]
     return text
 
 
@@ -244,18 +174,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--apply", action="store_true", help="write edits (default: dry run)")
     ap.add_argument("--module", action="append", default=[], help="limit TUs parsed")
-    ap.add_argument("--exclude-file", help="`Class::member` lines kept public (external callers)")
     args = ap.parse_args()
-    exclude = load_exclude(args.exclude_file)
-    if exclude:
-        print(f"# excluded (kept public): {len(exclude)}", file=sys.stderr)
-
     ci = load_cindex()
     root = common.HOMM3_DIR
     mirror = clang.mirror()
+    if mirror is None:
+        ap.error("VC6 header mirror unavailable; run a build first")
     types = Types.from_symbols(load_symbols())
-    dc = dc_access_map(types)
-    print(f"# DC unanimous private/protected members: {len(dc)}", file=sys.stderr)
+    dc = dc_visibility(types)
+    print(f"# DC member names: {len(dc)}", file=sys.stderr)
 
     commands = compilation_database.commands(
         manifest.load(root / "config/units.toml"), root, clang.clang_bin(),
@@ -263,9 +190,18 @@ def main() -> int:
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:
         want = {m.removesuffix(".cpp") for m in args.module}
+        missing = want - {Path(r["file"]).stem for r in commands}
+        if missing:
+            ap.error(f"no TU matched {sorted(missing)}")
         commands = [r for r in commands if Path(r["file"]).stem in want]
 
-    classes = collect(ci, commands, root, mirror, dc, exclude)
+    if not commands:
+        ap.error("no translation units selected")
+    try:
+        classes = collect(ci, commands, root, mirror, dc)
+    except RuntimeError as exc:
+        print(f"No edits applied: {exc}", file=sys.stderr)
+        return 2
     total_fix = sum(1 for info in classes.values() for m in info["members"] if m["fix"])
     edits = plan_edits(classes)
     n_labels = sum(len(v) for v in edits.values())
