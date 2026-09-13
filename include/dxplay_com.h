@@ -30,6 +30,10 @@ public:
 // TU (only forward-declared in the shared header).
 class CDPlayAddressElement {
 public:
+
+    GUID m_guid;              // +0x00
+    // Before normalization: m_pData.
+    char* m_data;            // +0x10
     // Before normalization (locals): lpGuid, pData.
     CDPlayAddressElement(const GUID* guid, const void* data,
         unsigned long dataSize)
@@ -44,10 +48,6 @@ public:
     {
         delete [] m_data;
     }
-
-    GUID m_guid;              // +0x00
-    // Before normalization: m_pData.
-    char* m_data;            // +0x10
     unsigned long m_dataSize; // +0x14
 };
 

@@ -22,15 +22,6 @@ public:
         MOBILE_HERO_CELL_Y = 8
     };
 
-    // Before normalization: obscuring_hero.
-protected:
-    hero* m_obscuringHero;
-    // Before normalization: obscuring_boat.
-    boat* m_obscuringBoat;
-    // Before normalization: mobile_hero.
-    hero* m_mobileHero;
-public:
-
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
     type_cell_adjuster();
     ~type_cell_adjuster();
@@ -39,6 +30,14 @@ public:
     NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
     // Before normalization (function): type_cell_adjuster::restore_cell.
     void restoreCell();
+protected:
+
+    // Before normalization: obscuring_hero.
+    hero* m_obscuringHero;
+    // Before normalization: obscuring_boat.
+    boat* m_obscuringBoat;
+    // Before normalization: mobile_hero.
+    hero* m_mobileHero;
 };
 SIZE(type_cell_adjuster, 0xc);
 
@@ -217,6 +216,18 @@ public:
     // Dreamcast ends its fields with frameOffset at +0xa in a
     // 12-byte CObject. NH3API confirms the trailing alignment byte.
     unsigned char m_paddingAfterFrameOffset;
+    // Before normalization (function): CObject::FindTrigger.
+    void findTrigger(int& resultX, int& resultY) const;
+    // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
+    // FindTrigger's AAH parameters are references, and get_trigger is the
+    // source helper which retail expands into get_trigger_cell.
+    // Before normalization (function): CObject::get_trigger.
+    type_point getTrigger() const;
+
+    // Before normalization (function): CObject::get_object_type_ptr.
+    CObjectType* getObjectTypePtr() const;
+    // Before normalization (function): CObject::get_type.
+    TAdventureObjectType getType() const;
 
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
@@ -240,18 +251,6 @@ public:
         m_extraInfo = newExtraInfo;
         m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
-
-    // Before normalization (function): CObject::get_object_type_ptr.
-    CObjectType* getObjectTypePtr() const;
-    // Before normalization (function): CObject::get_type.
-    TAdventureObjectType getType() const;
-    // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
-    // FindTrigger's AAH parameters are references, and get_trigger is the
-    // source helper which retail expands into get_trigger_cell.
-    // Before normalization (function): CObject::get_trigger.
-    type_point getTrigger() const;
-    // Before normalization (function): CObject::FindTrigger.
-    void findTrigger(int& resultX, int& resultY) const;
 };
 SIZE(CObject, 0xc);
 
@@ -404,8 +403,6 @@ SIZE(TObjectTypeTable, 0x10);
 
 class CObjectType {
 public:
-    CObjectType() {}
-    CObjectType(TObjectType* source);                         // 0x506080
     // MapCell.h:565. Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
     // Before normalization (function): CObjectType::_getBitPos.
@@ -413,6 +410,8 @@ public:
     {
         return 47 - y * 8 - x;
     }
+    CObjectType() {}
+    CObjectType(TObjectType* source);                         // 0x506080
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -

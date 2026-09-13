@@ -87,6 +87,59 @@ access declarations does not certify complete DC source recovery: uncorrelated
 names, overloads and missing older-build declarations remain separate coverage
 gaps, and the whole-corpus audit continues to return 2 for that reason.
 
+## Class declaration order
+
+The access transformer preserves the tree's previous declaration order. Its
+inserted access labels are not evidence of the original header's organization.
+Dreamcast's NB11 `LF_FIELDLIST` supplies a separate recorded sequence: `hero`
+has 185 public member/method entries followed by 14 private entries;
+`advManager` has 231 public entries, 104 private entries, then three public
+special/generated methods. `DoEventArtifact`, `DoArtifactSkillRequirement`,
+`DoEventFreeArtifact`, `FightForArtifact` and `DoCustomArtifact` are consecutive
+private entries. These are observations about the type records, not recovered
+literal access labels or header line numbers.
+
+```sh
+python scripts/experiments/recover-member-order.py --output build/member-order.json
+python scripts/experiments/recover-member-order.py --apply-plan build/member-order.json
+python scripts/experiments/recover-member-order.py --output build/member-order-after.json \
+  --compare-layouts build/member-order.json
+```
+
+The proposal follows the recorded order for unambiguously correlated header
+declarations, retaining owning comments. Duplicate complete DC class records
+must agree on the name-group sequence. An overload group supplies one position;
+it does not establish where individual overload declarations originally sat
+among other names. Authored overload order is therefore retained.
+
+Retail instance-field order and authored virtual-method order are hard
+constraints. DC and Complete can lay out the same class differently; grouping
+all private fields at the bottom would change offsets and constructor order.
+Nested types, friends, uncorrelated declarations, directives and unparsed text
+are fixed boundaries. The tool does not assign invented positions to them or
+move a declaration across a conditional branch. Some repeated access sections
+therefore remain. Their presence alone is neither source evidence nor an error.
+
+Plans record the input hashes, changed declaration sequences, unresolved
+boundaries and Clang layout/interface snapshots. Applying a stale or overlapping
+plan fails before writing files. Compare a subsequent scan's snapshots to
+verify unchanged fields, offsets, class sizes, access, signatures and virtual
+order. Clang is only this structural check: finish with the full retail VC6
+build, the access audit, and a matching-ledger comparison. Reordering declarations
+can change optimizer state without changing a function's source hash; MAX/HIST
+must retain those prior observations.
+
+The access-review ordering pass changes 115 classes in 68 headers and removes
+123 access switches (685 to 562 across the changed headers). Every other source
+and comment line is conserved. The full VC6 build retains all 4,764 matching
+rows, with 4,111 exact; the CUR/MAX/HIST ledger is byte-for-byte unchanged.
+All 753 captured class layout/interface snapshots agree after reordering, and
+a second complete scan proposes zero edits. The independent access audit still
+parses all 152 TUs with zero errors and reports 4,217 access matches, zero access
+mismatches, and the same explicit property findings and coverage gaps.
+This is recovery within the stated constraints, not a claim that the remaining
+uncorrelated or platform-specific declaration positions are known.
+
 ## Function declarations and calls
 
 `homm3 dreamcast audit` finds disagreements between positive Dreamcast debug

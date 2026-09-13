@@ -38,10 +38,10 @@ public:
     void shutDownSystem();
     // Before normalization (function): executive::AddManager.
     int addManager(baseManager* newManager, int newPriority);
-    // Before normalization (function): executive::RemoveManager.
-    void removeManager(baseManager* killManager);
     // Before normalization (function): executive::DoDialog.
     int doDialog(baseManager* newDialog);
+    // Before normalization (function): executive::RemoveManager.
+    void removeManager(baseManager* killManager);
     // Before normalization (function): executive::CallManager.
     void callManager(baseManager* newManager);
     // Before normalization (function): executive::MainLoop.

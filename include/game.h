@@ -304,36 +304,10 @@ public:
     // Layout-neutral: the 0xe80 it occupies came out of game's pad_1fc4c.
     // Before normalization: objectTypeIndex.
     std::vector<CObjectType> m_objectTypeIndex[232];
-
-
-    // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
-    // this class - and retail keeps no out-of-line row for it either.
-    // advManager::ProcessDeSelect's elevation-toggle arm expands it in
-    // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
-    // zero-extended flag plus one, tested against one. Gated to the
-    // compilation personalities whose call sites prove the expansion
-    // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
-    // the same movzx/inc shape, 2026-08-20).
-    // Before normalization (function): NewfullMap::GetNumLevels.
-    int getNumLevels() { return m_hasTwoLevels + 1; }
     // DC records this public const MapCell.h accessor; retail callers
     // read the same size member used by zCell's row and level strides.
     // Before normalization (function): NewfullMap::GetMapSize.
     int getMapSize() const { return m_size; }
-
-private:
-    // DC MapCell.h:847/850: const zCell precedes mutable zCell. Both are
-    // private header helpers. The mutable helper's 82 SH4 bytes are not a
-    // second x86 size: its arithmetic emits the same 49 bytes as 0x408770.
-    const NewmapCell* zCell(int x, int y, int z) const
-    {
-        return m_cellData + x + y * m_size + z * m_size * m_size;
-    }
-    NewmapCell* zCell(int x, int y, int z)
-    {
-        return m_cellData + x + y * m_size + z * m_size * m_size;
-    }
-public:
     // DC MapCell.h:889/895/906: const, mutable, packed-point wrappers.
     // All TUs see these canonical inline definitions; no per-TU body fork.
     const NewmapCell* cell(int x, int y, int z) const
@@ -358,6 +332,32 @@ public:
         // DC 907 calls zCell directly, not the scalar cell wrapper.
         return zCell(point.m_x, point.m_y, point.m_z);
     }
+
+
+    // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
+    // this class - and retail keeps no out-of-line row for it either.
+    // advManager::ProcessDeSelect's elevation-toggle arm expands it in
+    // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
+    // zero-extended flag plus one, tested against one. Gated to the
+    // compilation personalities whose call sites prove the expansion
+    // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
+    // the same movzx/inc shape, 2026-08-20).
+    // Before normalization (function): NewfullMap::GetNumLevels.
+    int getNumLevels() { return m_hasTwoLevels + 1; }
+private:
+
+    // DC MapCell.h:847/850: const zCell precedes mutable zCell. Both are
+    // private header helpers. The mutable helper's 82 SH4 bytes are not a
+    // second x86 size: its arithmetic emits the same 49 bytes as 0x408770.
+    const NewmapCell* zCell(int x, int y, int z) const
+    {
+        return m_cellData + x + y * m_size + z * m_size * m_size;
+    }
+    NewmapCell* zCell(int x, int y, int z)
+    {
+        return m_cellData + x + y * m_size + z * m_size * m_size;
+    }
+public:
     // Before normalization (function): NewfullMap::Load.
     int load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
@@ -403,31 +403,31 @@ public:
     void soDTransformRandomDwellings();
     // Before normalization (function): NewfullMap::LoadShipyards.
     void loadShipyards();
-    // Before normalization (function): NewfullMap::Init.
-private:
-    void init(int size, unsigned char twoLayers);
-public:
-    int loadObject(TAbstractFile* infile, CObject* object);
+    int readObjectType(TAbstractFile* infile, CObjectType& objectType);
+    int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
+    int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
     // DC mapcell.cpp:3449, f1b1c: the serialized object is a reference.
     int saveObject(TAbstractFile* outfile, CObject& tempObject);
-    int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
-    int readObjectType(TAbstractFile* infile, CObjectType& objectType);
-    int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
+    int loadObject(TAbstractFile* infile, CObject* object);
 private:
-    int saveMapObjects(TAbstractFile* outfile);
+    // Before normalization (function): NewfullMap::Init.
+    void init(int size, unsigned char twoLayers);
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
     int readMapLayer(TAbstractFile* infile, int size, int layer);
+    int saveMapObjects(TAbstractFile* outfile);
     // `ret 0x10`: a fourth argument, the save version, which reaches only
     // the per-cell upgrade pass.
     int loadMapLayer(TAbstractFile* infile, int size, int layer,
                      int saveVersion);
-    int saveMapLayer(TAbstractFile* outfile, int size, int layer);
 public:
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
+    int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
-    int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
+private:
+    int saveMapLayer(TAbstractFile* outfile, int size, int layer);
+public:
     int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
     int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                      int saveVersion);
@@ -435,16 +435,16 @@ public:
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
-    int saveTreasureList(TAbstractFile* outfile);
-    int saveBlackBoxList(TAbstractFile* outfile);
-    int saveMonsterList(TAbstractFile* outfile);
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
+    int saveBlackBoxList(TAbstractFile* outfile);
+    int saveTreasureList(TAbstractFile* outfile);
+    int saveMonsterList(TAbstractFile* outfile);
     int loadTownEventList(TAbstractFile* infile, int saveVersion);
-    int readGeneratorData(TAbstractFile* infile, CObject* object);
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
-    int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
     int readResourceData(TAbstractFile* infile, CObject* resourceObject);
+    int readGeneratorData(TAbstractFile* infile, CObject* object);
+    int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
     // Three arguments, readGarrisonData's divergence again: retail's `ret 0xc`
     // against the Dreamcast's two, and mapVersion again picks the creature
     // field's width. readBlackBoxData carries it only to pass it through.
@@ -454,8 +454,8 @@ public:
                          int mapVersion);
     int readEventData(TAbstractFile* infile, CObject* eventObject,
                       int mapVersion);
-    int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
+    int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
     // forwarded verbatim to readTownData, readHeroData, readEventData,
@@ -471,18 +471,18 @@ public:
     // mapVersion picks the creature field's width (1 byte at 14, 2 after).
     int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
                          int mapVersion);
-    int readMineData(TAbstractFile* infile, CObject* object);
-    int readAbandonedMineData(TAbstractFile* infile, CObject* object);
-    int readSignData(TAbstractFile* infile, CObject* object);
-    int loadTreasureList(TAbstractFile* infile);
-    // Before normalization (function): NewfullMap::calc_cell_extra.
-private:
-    void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
-public:
     // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
     // info through it once the object's entry has been spliced out.
     // Before normalization (function): NewfullMap::CalculateCellExtra.
     void calculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+    int readSignData(TAbstractFile* infile, CObject* object);
+    int readMineData(TAbstractFile* infile, CObject* object);
+    int readAbandonedMineData(TAbstractFile* infile, CObject* object);
+    int loadTreasureList(TAbstractFile* infile);
+private:
+    // Before normalization (function): NewfullMap::calc_cell_extra.
+    void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+public:
     // Retail-only helper at 0x505d20, the +0x24-slot twin of 0x505d60
     // below: same walk over the +0xb0 CMapObjectData vector, same two
     // stack arguments (ret 8), but broadcasting virtual slot +0x24 and
@@ -527,21 +527,21 @@ public:
     // spelling follows NewfullMapFn_00505F20's precedent above.
     // Before normalization (function): NewfullMap::NewfullMapFn_00505EA0.
     CObjectType* newfullMapFn00505EA0(int objectType, int extra);
-    // Before normalization (function): NewfullMap::PlaceObject.
-    int placeObject(int objectIndex, unsigned char setExtraInfo);
-    // The second parameter is the 8x6 byte grid the object's draw pass
-    // stamps: retail zeroes exactly 48 bytes through it and walks it with a
-    // row stride of six, so the width index is the OUTER one.
-    // Before normalization (function): NewfullMap::GenerateHeightMap.
-    void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
-    // Before normalization (function): NewfullMap::StampObject.
-    void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
 
     // Both are real retail rows (0x4fd060 / 0x4fd1e0) reconstructed in
     // mapcell.cpp; declaring them here is what stops VC6 synthesising its
     // own. Neither is virtual - the constructor stores no vftable.
     NewfullMap();
     ~NewfullMap();
+    // Before normalization (function): NewfullMap::StampObject.
+    void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+    // The second parameter is the 8x6 byte grid the object's draw pass
+    // stamps: retail zeroes exactly 48 bytes through it and walks it with a
+    // row stride of six, so the width index is the OUTER one.
+    // Before normalization (function): NewfullMap::GenerateHeightMap.
+    void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
+    // Before normalization (function): NewfullMap::PlaceObject.
+    int placeObject(int objectIndex, unsigned char setExtraInfo);
 };
 
 class town;
@@ -984,6 +984,12 @@ public:
 
     // Before normalization (function): VictoryConditionStruct::applies_to_player.
     int appliesToPlayer(long playerId) const;
+    // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
+    // (0x4aaaa0) calls the pair back to back on the same
+    // `gpGame->mapHeader.victoryCondition`, each followed by its own
+    // CheckEndGame(0).
+    // Before normalization (function): VictoryConditionStruct::CheckForTotalCreatures.
+    unsigned char checkForTotalCreatures();
     // Before normalization (function): VictoryConditionStruct::CheckForTotalResources.
     unsigned char checkForTotalResources();
     // 0x5f1d40 (dc 0x190038), reconstructed in the owning TU. Kept out
@@ -991,12 +997,12 @@ public:
     // town.obj joins for BuildBuilding's post-build check (2026-08-20).
     // Before normalization (function): VictoryConditionStruct::CheckForUpgradedTown.
     unsigned char checkForUpgradedTown();
-    // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
-    // (0x4aaaa0) calls the pair back to back on the same
-    // `gpGame->mapHeader.victoryCondition`, each followed by its own
-    // CheckEndGame(0).
-    // Before normalization (function): VictoryConditionStruct::CheckForTotalCreatures.
-    unsigned char checkForTotalCreatures();
+    // Before normalization (function): VictoryConditionStruct::CheckForHeroDefeatWin.
+    bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
+    // Before normalization (function): VictoryConditionStruct::IsTownCaptureTarget.
+    bool isTownCaptureTarget(town* thisTown);
+    // Before normalization (function): VictoryConditionStruct::CheckForTownCaptureWin.
+    unsigned char checkForTownCaptureWin();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
@@ -1006,6 +1012,10 @@ public:
     bool checkForDefeatedMonsterWin(const hero* thisHero,
                                     // Before normalization (locals): monster_loc.
                                     type_point monsterLoc);
+    // Before normalization (function): VictoryConditionStruct::CheckForFlaggedGeneratorWin.
+    unsigned char checkForFlaggedGeneratorWin();
+    // Before normalization (function): VictoryConditionStruct::CheckForFlaggedMineWin.
+    unsigned char checkForFlaggedMineWin();
     // 0x5f2860, and the Dreamcast decoration gives it
     // CheckForDefeatedMonsterWin's exact shape - a const hero and a
     // type_point BY VALUE - which retail's `ret 8` corroborates.
@@ -1014,30 +1024,10 @@ public:
     unsigned char checkForArtifactTransportWin(const hero* thisHero,
                                                // Before normalization (locals): town_loc.
                                                type_point townLoc);
-    // Before normalization (function): VictoryConditionStruct::CheckForHeroDefeatWin.
-    bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
     // Before normalization (function): VictoryConditionStruct::IsGrailTarget.
     unsigned char isGrailTarget(town* thisTown);
-    // Before normalization (function): VictoryConditionStruct::IsTownCaptureTarget.
-    bool isTownCaptureTarget(town* thisTown);
-    // Before normalization (function): VictoryConditionStruct::CheckForTownCaptureWin.
-    unsigned char checkForTownCaptureWin();
-    // Before normalization (function): VictoryConditionStruct::CheckForFlaggedGeneratorWin.
-    unsigned char checkForFlaggedGeneratorWin();
-    // Before normalization (function): VictoryConditionStruct::CheckForFlaggedMineWin.
-    unsigned char checkForFlaggedMineWin();
     // Before normalization (function): VictoryConditionStruct::CheckForTimeSurvival.
     unsigned char checkForTimeSurvival();
-    // Retail 0x5f1ef0 (dc 0x190124), reached as
-    // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
-    // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
-    // mapHeader sits at +0x1f86c and this record 0x30 into it.
-    // Behind a gate of its own because townmgr.cpp is the only consumer
-    // in the admitted surface and this header's declarator count is
-    // load-bearing for every unit that includes it.
-
-    // Before normalization (function): VictoryConditionStruct::CheckForGrailBuildingWin.
-    unsigned char checkForGrailBuildingWin();
     // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
     // hero::GiveArtifact asks it as
     // `gpGame->mapHeader.victoryCondition.CheckForArtifactWin()` - the
@@ -1048,6 +1038,16 @@ public:
 
     // Before normalization (function): VictoryConditionStruct::CheckForArtifactWin.
     unsigned char checkForArtifactWin();
+    // Retail 0x5f1ef0 (dc 0x190124), reached as
+    // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
+    // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
+    // mapHeader sits at +0x1f86c and this record 0x30 into it.
+    // Behind a gate of its own because townmgr.cpp is the only consumer
+    // in the admitted surface and this header's declarator count is
+    // load-bearing for every unit that includes it.
+
+    // Before normalization (function): VictoryConditionStruct::CheckForGrailBuildingWin.
+    unsigned char checkForGrailBuildingWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -1327,6 +1327,8 @@ public:
     std::string m_mapDescription;
     // Before normalization: availableHeroes.
     std::bitset<156> m_availableHeroes;
+    // Before normalization (function): NewSMapHeader::Save.
+    int save(TAbstractFile* outfile);
 
     // bitset's default constructor already zeroes every hero bit. The
     // unsigned-long overload adds a value-loading loop to VC6's pre-inline
@@ -1362,8 +1364,6 @@ public:
         m_mapName = name;
         m_mapDescription = description;
     }
-    // Before normalization (function): NewSMapHeader::Save.
-    int save(TAbstractFile* outfile);
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
     // Before normalization (function): NewSMapHeader::Read.
@@ -1430,6 +1430,7 @@ public:
     int m_startingHero[8];
     // Before normalization: startingBonus.
     signed char m_startingBonus[8];
+    int save(TAbstractFile* outfile);
 
     SGameSetupOptions()
     {
@@ -1450,7 +1451,6 @@ public:
         m_fileInitialized = 0;
         m_initializationNumHumans = 0;
     }
-    int save(TAbstractFile* outfile);
     // Retail 0x4be260, two stack arguments (`ret 8`).
     int load(TAbstractFile* infile, int saveVersion);
 };
@@ -1645,6 +1645,10 @@ public:
     // campaign-specific setup overrides before the scenario stream is read.
     // Before normalization (function): SCampaign::ApplyBriefingChoice.
     void applyBriefingChoice(int option);
+    // Retail 0x486440 is the 325-byte counterpart of the DC 328-byte
+    // CustomCampaign.cpp row and is called on gpGame->campaign here.
+    // Before normalization (function): SCampaign::DoPreLoadCustomization.
+    void doPreLoadCustomization();
     // DC CustomCampaign.h:212 (dc 0xe6ef8); retail 0x4897d0 in
     // customcampaign.obj.
     // Before normalization (function): SCampaign::CampaignComplete.
@@ -1653,10 +1657,6 @@ public:
     int getScore() const;
     // Before normalization (function): SCampaign::get_total_time.
     int getTotalTime() const;
-    // Retail 0x486440 is the 325-byte counterpart of the DC 328-byte
-    // CustomCampaign.cpp row and is called on gpGame->campaign here.
-    // Before normalization (function): SCampaign::DoPreLoadCustomization.
-    void doPreLoadCustomization();
     // Provisional name; PlaceCrossoverHeroes retains this lookup's nested
     // vector::size calls while expanding the ordinary member itself.
     // Before normalization (function): SCampaign::FindCrossoverHero.
@@ -1911,25 +1911,25 @@ public:
     char m_paddingAfterTownId[3];
 
     generator();
+    // Before normalization (function): generator::Initialize.
+    // Before normalization (locals): new_owner.
+    void initialize(long newOwner);
+    // Dreamcast's generator-event xref records three calls to get_owner;
+    // retail expands the signed owner-byte load and has no out-of-line row.
+    // Before normalization (function): generator::get_owner.
+    inline long getOwner() const { return m_playerOwner; }
     unsigned char load(TAbstractFile* infile);
-    unsigned char save(TAbstractFile* outfile);
-    // Before normalization (function): generator::update_bonus.
-    void updateBonus();
     // update_bonus's negative twin. Retail has no out-of-line row for it
     // (nothing fits between generator::save's end at 0x4b8791 and
     // update_bonus at 0x4b87a0), so it is inline-only - the same shape
     // set_owner below carries.
     // Before normalization (function): generator::remove_bonus.
     inline void removeBonus();
+    unsigned char save(TAbstractFile* outfile);
     // Before normalization (function): generator::set_owner.
     inline void setOwner(long owner);
-    // Dreamcast's generator-event xref records three calls to get_owner;
-    // retail expands the signed owner-byte load and has no out-of-line row.
-    // Before normalization (function): generator::get_owner.
-    inline long getOwner() const { return m_playerOwner; }
-    // Before normalization (function): generator::Initialize.
-    // Before normalization (locals): new_owner.
-    void initialize(long newOwner);
+    // Before normalization (function): generator::update_bonus.
+    void updateBonus();
     // `ret 4` in retail against the Dreamcast's zero-parameter
     // prototype - one of the four calibrated "retail carries one more
     // parameter" rows. The body never touches [ebp+8], so the argument
@@ -2132,52 +2132,20 @@ public:
     // it, then copies the complete AI member, including its internal pad.
     // Before normalization: assembledCombinations.
     std::bitset<12> m_assembledCombinations;  // +0xe8
+
+    playerData();
     // AI's production row lands at +0x108, resource values at +0x128,
     // average at +0x160, and artifact value at +0x164, matching the retail
     // get_total_value/calculate_demand accesses independently.
     // Before normalization: ai.
     AI m_ai;                                // +0xf0
-
-    playerData();
     ~playerData();
     int load(TAbstractFile* infile, int saveVersion);
-    // Before normalization (function): playerData::Init.
-    void init();
-    // Before normalization (function): playerData::NextHero.
-    int nextHero();
-    // Before normalization (function): playerData::NextTown.
-    int nextTown();
-    // Before normalization (function): playerData::FindHero.
-    int findHero(int id);
-    // Before normalization (function): playerData::FindTown.
-    int findTown(int id);
-    // Before normalization (function): playerData::AssignNetInfo.
-    // Before normalization (locals): pNetPlayerInfo.
-    void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
-    // Before normalization (function): playerData::ClearNetInfo.
-    void clearNetInfo();
-    // Before normalization (function): playerData::GetName.
-    char* getName();
-    // RETURN TYPE AND CONSTNESS FROM THE DC MANGLING, byte-confirmed:
-    // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
-    // are `_N` (bool), and retail's codegen agrees - it materialises
-    // the answer in AL alone (`mov al,1` / `xor al,al`, and a bare
-    // `setne al` with no `xor eax,eax` ahead of it), which is what a
-    // bool return does and an `unsigned char` return does not.
-    // Before normalization (function): playerData::IsLocalHuman.
-    bool isLocalHuman() const;
     // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
     // Before normalization (function): playerData::IsHuman.
     bool isHuman() const;
-    // Before normalization (function): playerData::HasMobileHero.
-    bool hasMobileHero();
-    // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
-    // can_ever_build and get_buildable_mask all call it on
-    // gpGame->players[town->owner] to veto a second Capitol.
-    // Before normalization (function): playerData::HasCapitol.
-    bool hasCapitol();
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -2190,8 +2158,40 @@ public:
     // Before normalization (function): playerData::add_garrison_hero.
     // Before normalization (locals): our_town.
     unsigned char addGarrisonHero(town* ourTown);
+    // Before normalization (function): playerData::HasMobileHero.
+    bool hasMobileHero();
+    // Before normalization (function): playerData::NextHero.
+    int nextHero();
+    // Before normalization (function): playerData::NextTown.
+    int nextTown();
     // Before normalization (function): playerData::NumOfGivenArtifact.
     int numOfGivenArtifact(int artifact);
+    // Before normalization (function): playerData::FindHero.
+    int findHero(int id);
+    // Before normalization (function): playerData::FindTown.
+    int findTown(int id);
+    // RETURN TYPE AND CONSTNESS FROM THE DC MANGLING, byte-confirmed:
+    // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
+    // are `_N` (bool), and retail's codegen agrees - it materialises
+    // the answer in AL alone (`mov al,1` / `xor al,al`, and a bare
+    // `setne al` with no `xor eax,eax` ahead of it), which is what a
+    // bool return does and an `unsigned char` return does not.
+    // Before normalization (function): playerData::IsLocalHuman.
+    bool isLocalHuman() const;
+    // Before normalization (function): playerData::GetName.
+    char* getName();
+    // Before normalization (function): playerData::AssignNetInfo.
+    // Before normalization (locals): pNetPlayerInfo.
+    void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
+    // Before normalization (function): playerData::ClearNetInfo.
+    void clearNetInfo();
+    // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
+    // can_ever_build and get_buildable_mask all call it on
+    // gpGame->players[town->owner] to veto a second Capitol.
+    // Before normalization (function): playerData::HasCapitol.
+    bool hasCapitol();
+    // Before normalization (function): playerData::Init.
+    void init();
     // 0x4bacb0. town::get_legion_bonus calls it on
     // gpGame->players[town->owner] with artifact id 0x85. The HD cross-build
     // signature and retail's true/false AL materialization type it bool.
@@ -2210,13 +2210,13 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
-    game();
-    ~game();
-    game& __fastcall operator=(const game& that);
 
     static int saveString(
         void* outfile,
         std::basic_string<char, std::char_traits<char>, std::allocator<char> >* value);
+    game();
+    ~game();
+    game& __fastcall operator=(const game& that);
 
     struct TRumour {
         // Before normalization: text.
@@ -2520,11 +2520,6 @@ public:
     // ordinal because neither the Dreamcast roster nor NH3API names it.
     // Before normalization (function): game::GameFn_004CEF10.
     type_point gameFn004CEF10(int identifier);
-    // Before normalization (function): game::get_new_boat_id.
-    int getNewBoatId();                    // 0x4bb170
-    // Before normalization (function): game::CreateBoat.
-    int createBoat(int x, int y, int z, int owner,
-                   unsigned char remoteMove, signed char type); // 0x4bb250
     // `alignment` is spelled int, not TTownType, for the reason
     // armyGroup::armies and MonsterData::Artifact are: every caller feeds
     // it straight out of SGameSetupOptions::alignment[], an eight-element
@@ -2536,6 +2531,11 @@ public:
     // Before normalization (function): game::GetStartingHeroId.
     int getStartingHeroId(int alignment, int playerPos,
                           int mapPosition);                     // 0x4bb400
+    // Before normalization (function): game::get_new_boat_id.
+    int getNewBoatId();                    // 0x4bb170
+    // Before normalization (function): game::CreateBoat.
+    int createBoat(int x, int y, int z, int owner,
+                   unsigned char remoteMove, signed char type); // 0x4bb250
     // Before normalization (function): game::GetNewHeroId.
     int getNewHeroId(int playerPos, THeroClass excluded,
                      // Before normalization (locals): prefer_alignment.
@@ -2549,21 +2549,15 @@ public:
     // no Dreamcast row covers it.
     // Before normalization (function): game::RehomeCampaignHeroSetup.
     void rehomeCampaignHeroSetup(int heroId);                  // 0x486110
-    // Before normalization (function): game::GetRandomArtifactId.
-    TArtifact getRandomArtifactId(int artifactClass);          // 0x4c94d0
-    // Before normalization (function): game::GetRandomSpell.
-    SpellID getRandomSpell(std::bitset<5> spellLevels);        // 0x4c95a0
+    // Before normalization (function): game::get_puzzle_origin.
+    type_point getPuzzleOrigin() const;         // 0x4cea70
     // Before normalization (function): game::SetRandomHeroArmies.
     void setRandomHeroArmies(int heroId, int cheat,
                              unsigned char minimal);           // 0x4c9730
-    // Before normalization (function): game::GetLocalPlayer.
-    playerData* getLocalPlayer();
-    // Before normalization (function): game::GetLocalPlayerGamePos.
-    int getLocalPlayerGamePos();                 // 0x4cea20
+    // Before normalization (function): game::GetRandomArtifactId.
+    TArtifact getRandomArtifactId(int artifactClass);          // 0x4c94d0
     // Before normalization (function): game::CheckHeroConsistency.
     void checkHeroConsistency();                 // DC game.cpp:10132
-    // Before normalization (function): game::get_puzzle_origin.
-    type_point getPuzzleOrigin() const;         // 0x4cea70
     // Before normalization (function): game::SetupDynamicStuff.
     // Before normalization (locals): bUpdate, bForceUpdate.
     void setupDynamicStuff(int update, int forceUpdate); // 0x51bd50
@@ -2574,6 +2568,12 @@ public:
     // Before normalization (function): game::ProcessIconSelect.
     // Before normalization (locals): bRightMouse.
     int processIconSelect(int codeY, unsigned char rightMouse); // 0x51ee50
+    // Before normalization (function): game::GetLocalPlayer.
+    playerData* getLocalPlayer();
+    // Before normalization (function): game::GetLocalPlayerGamePos.
+    int getLocalPlayerGamePos();                 // 0x4cea20
+    // Before normalization (function): game::GetRandomSpell.
+    SpellID getRandomSpell(std::bitset<5> spellLevels);        // 0x4c95a0
     // DC-attested inline helper. Retail's shrine consumer proves the signed
     // [0,8) player guard and the byte bitset at +0x4e344.
     // Before normalization (function): game::GetInfoFlag.
@@ -2583,6 +2583,35 @@ public:
             return 0;
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
+    // Before normalization (function): game::GetHeroBoat.
+    boat* getHeroBoat(int id, unsigned char occupied);       // 0x4ce900
+    // Before normalization (function): game::GetTownId.
+    int getTownId(int x, int y, int z);                      // 0x4bb870
+    // Before normalization (function): game::MineTypesOwned.
+    // Before normalization (locals): iWhichPlayer, iMineType.
+    int mineTypesOwned(int whichPlayer, int mineType);     // 0x4bae70
+    // Before normalization (function): game::GetGeneratorId.
+    int getGeneratorId(int x, int y, int z);                 // 0x4bb900
+    // Before normalization (function): game::GetBoatsBuilt.
+    int getBoatsBuilt();                                     // 0x4cce30
+    // 0x4baf00, its link-order neighbour. countOnly stops at the piece
+    // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
+    // Before normalization (function): game::SetupPuzzlePieces.
+    int setupPuzzlePieces(int whichPlayer, int countOnly);
+    // Before normalization (function): game::GiveArmy.
+    // Before normalization (locals): iMonType, iMonNum.
+    void giveArmy(armyGroup* thisMonInfo, int monType,
+                  int monNum, int slot);                    // 0x4ca340
+    // Before normalization (function): game::ExperienceValueOfStack.
+    int experienceValueOfStack(const armyGroup* whichGroup,
+                               const hero* whichHero);       // 0x4ca3b0
+    // Before normalization (function): game::InsertObject.
+    void insertObject(int x, int y, int z, int objType,
+                      int objectIndex, int extraInfo);        // 0x4c9890
+    // Before normalization (function): game::IsLocalHuman.
+    bool isLocalHuman(int gamePos) const;        // 0x4ce970
+    // Before normalization (function): game::GetPlayerName.
+    char* getPlayerName(int gamePos);            // 0x4ceb60
     // Before normalization (function): game::GetGamePosFromDPID.
     int getGamePosFromDPID(unsigned long dpid);  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
@@ -2590,35 +2619,6 @@ public:
     bool isLastHuman(int gamePos) const;         // 0x4cec50
     // Before normalization (function): game::IsMultiplayer.
     bool isMultiplayer() const;                  // 0x4cec90
-    // Before normalization (function): game::GetPlayerName.
-    char* getPlayerName(int gamePos);            // 0x4ceb60
-    // Before normalization (function): game::IsLocalHuman.
-    bool isLocalHuman(int gamePos) const;        // 0x4ce970
-    // Before normalization (function): game::GetHeroBoat.
-    boat* getHeroBoat(int id, unsigned char occupied);       // 0x4ce900
-    // Before normalization (function): game::MineTypesOwned.
-    // Before normalization (locals): iWhichPlayer, iMineType.
-    int mineTypesOwned(int whichPlayer, int mineType);     // 0x4bae70
-    // 0x4baf00, its link-order neighbour. countOnly stops at the piece
-    // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
-    // Before normalization (function): game::SetupPuzzlePieces.
-    int setupPuzzlePieces(int whichPlayer, int countOnly);
-    // Before normalization (function): game::GetTownId.
-    int getTownId(int x, int y, int z);                      // 0x4bb870
-    // Before normalization (function): game::GetGeneratorId.
-    int getGeneratorId(int x, int y, int z);                 // 0x4bb900
-    // Before normalization (function): game::GetBoatsBuilt.
-    int getBoatsBuilt();                                     // 0x4cce30
-    // Before normalization (function): game::GiveArmy.
-    // Before normalization (locals): iMonType, iMonNum.
-    void giveArmy(armyGroup* thisMonInfo, int monType,
-                  int monNum, int slot);                    // 0x4ca340
-    // Before normalization (function): game::InsertObject.
-    void insertObject(int x, int y, int z, int objType,
-                      int objectIndex, int extraInfo);        // 0x4c9890
-    // Before normalization (function): game::ExperienceValueOfStack.
-    int experienceValueOfStack(const armyGroup* whichGroup,
-                               const hero* whichHero);       // 0x4ca3b0
     // 0x4ca040. Retail carries a parameter the Dreamcast declarator
     // (`?CreateTownHeroes@game@@QAAXXZ`, no arguments) does not: the body
     // ends `ret 4`, tests [ebp+8] for null once per slot and separately
@@ -2627,34 +2627,6 @@ public:
     // overrides GetStartingHeroId for human players.
     // Before normalization (function): game::CreateTownHeroes.
     void createTownHeroes(int* startingHeroIds);
-    // Before normalization (function): game::ClaimTown.
-    void claimTown(int townId, int newPlayerOwner,
-                   // Before normalization (locals): bIsRemoteMove, check_end_game.
-                   unsigned char isRemoteMove,
-                   unsigned char checkEndGame);            // 0x4c61e0
-    // Before normalization (function): game::ClaimMine.
-    void claimMine(int mineId, int newPlayerOwner,
-                   // Before normalization (locals): action_type.
-                   type_action_type actionType);             // 0x4c66e0
-    // Before normalization (function): game::ClaimGenerator.
-    void claimGenerator(int generatorId, int newPlayerOwner); // 0x4c67b0
-    // Before normalization (function): game::ClaimGarrison.
-    void claimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
-    // Before normalization (function): game::ClaimShipyard.
-    void claimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
-    // Before normalization (function): game::record_claim_mine.
-    // Before normalization (locals): new_owner.
-    void recordClaimMine(long id, long newOwner);          // 0x49bf90
-
-    // record_claim_mine's sibling, and the same ~500-byte shape: retail
-    // inlines the whole `new type_record_claim_*` / push_back /
-    // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is
-    // 96 B against retail's 510). game::ClaimTown is the caller that
-    // needs the declarator; the row is a carcass stub in
-    // event_record.cpp and is not claimed here.
-    // Before normalization (function): game::record_claim_town.
-    // Before normalization (locals): new_owner.
-    void recordClaimTown(long id, long newOwner);          // 0x49c190
     // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // retail's out-of-line copy lands in game.obj rather than a .cpp
@@ -2670,6 +2642,34 @@ public:
     // alignment, zero censuses them as neutral.
     // Before normalization (function): game::get_alignment.
     int getAlignment(int creature) const;
+    // Before normalization (function): game::ClaimShipyard.
+    void claimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
+    // Before normalization (function): game::ClaimTown.
+    void claimTown(int townId, int newPlayerOwner,
+                   // Before normalization (locals): bIsRemoteMove, check_end_game.
+                   unsigned char isRemoteMove,
+                   unsigned char checkEndGame);            // 0x4c61e0
+    // Before normalization (function): game::ClaimMine.
+    void claimMine(int mineId, int newPlayerOwner,
+                   // Before normalization (locals): action_type.
+                   type_action_type actionType);             // 0x4c66e0
+    // Before normalization (function): game::ClaimGenerator.
+    void claimGenerator(int generatorId, int newPlayerOwner); // 0x4c67b0
+    // Before normalization (function): game::ClaimGarrison.
+    void claimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
+    // Before normalization (function): game::record_claim_mine.
+    // Before normalization (locals): new_owner.
+    void recordClaimMine(long id, long newOwner);          // 0x49bf90
+
+    // record_claim_mine's sibling, and the same ~500-byte shape: retail
+    // inlines the whole `new type_record_claim_*` / push_back /
+    // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is
+    // 96 B against retail's 510). game::ClaimTown is the caller that
+    // needs the declarator; the row is a carcass stub in
+    // event_record.cpp and is not claimed here.
+    // Before normalization (function): game::record_claim_town.
+    // Before normalization (locals): new_owner.
+    void recordClaimTown(long id, long newOwner);          // 0x49c190
     // Complete adds a parallel upgrade selector retained at 0x529710 from
     // philai.obj. When the map has the base-game creature set, the four
     // base elementals have no upgraded form; every other case delegates to
@@ -2688,6 +2688,24 @@ public:
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
+    static int __fastcall saveString(TAbstractFile* outfile, std::string& s);
+    // DC game.cpp:2492/2531, a7414/a750c: loadString/saveString are
+    // static game methods taking a string reference, not invented free
+    // helpers. Complete replaces the void* gz stream with TAbstractFile*;
+    // its two-register /Gr ABI does not contradict the static membership.
+    static int __fastcall loadString(TAbstractFile* infile, std::string& s);
+private:
+    // Before normalization (function): game::LoadRumours.
+    int loadRumours(TAbstractFile* infile);       // 0x4bbe40
+    // Before normalization (function): game::SaveRumours.
+    int saveRumours(TAbstractFile* outfile);      // 0x4bbc20
+    // Before normalization (function): game::LoadSignPool.
+    int loadSignPool(TAbstractFile* infile);      // 0x4b9070
+    // Before normalization (function): game::SaveSignPool.
+    int saveSignPool(TAbstractFile* outfile);     // 0x4b9270
+public:
+    // Before normalization (function): game::IsHumanTeam.
+    inline bool isHumanTeam(int teamNum) const;
     // 0x42b9e0 (bracket ai_player..ai_tactical, 69 B). Returns bool -
     // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
     // ClaimTown's `test al,al / sete al` is the !bool shape, against the
@@ -2707,37 +2725,61 @@ public:
             return 0;
         return !isHumanAlly(teamNum);
     }
+    // event_record.obj owns 0x49d6c0's body.
+    // Before normalization (function): game::clear_event_records.
+    void clearEventRecords(char playerId);              // 0x49d6c0
+    // Before normalization (function): game::get_underground_gate_exit.
+    // DC game.cpp:11662, get_underground_gate_exit: const game accessor.
+    type_point getUndergroundGateExit(const NewmapCell* cell) const;
+    // Before normalization (function): game::get_random_lith_exit.
+    unsigned char getRandomLithExit(long color, type_point* result);
+    // Before normalization (function): game::get_random_lith.
+    unsigned char getRandomLith(const std::vector<type_point>* points,
+                                  // Before normalization (locals): cell_type.
+                                  type_point* result, long cellType,
+                                  long excluded);            // 0x4cdb80
+    // Before normalization (function): game::get_random_lith.
+    unsigned char getRandomLith(long color, long excluded,
+                                  type_point* result);
+    // Before normalization (function): game::get_random_whirlpool.
+    unsigned char getRandomWhirlpool(long excluded, type_point* result);
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
     // copied into it, reached with the cell and the point on the stack.
     // Before normalization (function): game::record_erase_object.
     void recordEraseObject(NewmapCell* cell, type_point point); // 0x49c390
-    // 0x4ca410. NAMED 2026-08-20, correcting this entry: it used to read
-    // "Retail-only ... no surviving symbol names it", and the Dreamcast
-    // dump does name it - `?SetupAdjacentMons@game@@QAAXXZ`, public,
-    // void, no arguments, dc 0xb61d0, E:\gamedcs\game.cpp:9596. Four
-    // things agree. The DC callee set is GetNumMapLevels +
-    // advManager::FindAdjacentMonster + GetMapExtraPtr, and retail
-    // 0x4ca410 calls FindAdjacentMonster once and GetMapExtraPtr twice
-    // while reading the level count at +0x1fc48. The DC caller set is
-    // advManager::EraseObj, game::Load, game::NewMap and game::PerMonth -
-    // the first two are exactly the retail call sites, and Load's is the
-    // one this gate now serves. evidence/ida carries the HD twin under
-    // the same mangled name. The body sets bit 0x100 in the map-extra
-    // word when a monster is adjacent and clears it otherwise, which is
-    // what the old ordinal note described without a name. The row is
-    // still not claimed here.
-    // Before normalization (function): game::SetupAdjacentMons.
-    void setupAdjacentMons();
-// advmgr.obj joins the gate for the one declarator below. The guard is
-// SPLIT around it rather than moved, so the preprocessed text every
-// events-view consumer sees is unchanged, line for line.
-    // game.cpp:9720 in the Dreamcast roster (dc 0xb6538). Retail preserves
-    // the network-popup guard, aishield.pcx radar blit and bHeroLogoShowing latch
-    // at 0x4ca780; advManager::UpdateRadar is the other caller.
-    // Before normalization (function): game::ShowHeroesLogo.
-    void showHeroesLogo();
+    // Before normalization (function): game::record_show_boat.
+    // Before normalization (locals): current_boat.
+    void recordShowBoat(boat* currentBoat, type_point point); // 0x49c900
+    // Before normalization (function): game::calculate_production.
+    void calculateProduction();                 // 0x4b8af0
+    // kb.obj's pair (DC kb.cpp:4077 / :4095, dc 0xe4298 / 0xe4300; retail
+    // 0x4f3e30 / 0x4f3eb0). Declared here because they are `game` members -
+    // retail passes the record in ECX at both rows - while their bodies stay
+    // with the rest of kb.cpp.
+    // Before normalization (function): game::get_base_map_score.
+    short getBaseMapScore();
+    // Game.h:1390 in the DC roster. Retail expands this short calendar
+    // accessor at every game.obj call site and retains no standalone row.
+    // Before normalization (function): game::get_current_turn.
+    short getCurrentTurn()
+    {
+        return (m_month * 4 + m_week - 5) * 7 + m_day;
+    }
+    // Before normalization (function): game::get_map_score.
+    short getMapScore();
+    // Before normalization (function): game::PerDay.
+    void perDay();
+    // Before normalization (function): game::PerWeek.
+    void perWeek();
+    // Before normalization (function): game::PerMonth.
+    void perMonth();
+    // Before normalization (function): game::SetVisibility.
+    void setVisibility(int startX, int startY, int z,
+                       int whichPlayer, int range,
+                       // Before normalization (locals): remote_move.
+                       unsigned char remoteMove);            // 0x49cdd0
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
@@ -2755,12 +2797,27 @@ public:
     // sweeps. The retail row is 0x4c7c50.
     // Before normalization (function): game::ResetAllPlayerVisibility.
     void resetAllPlayerVisibility();
-    // DC game.cpp:10587 names the received-save body. Retail's transmit-init
-    // handlers independently prove the five arguments and 0x4cbd40 entry.
-    // Before normalization (function): game::ReceiveSaveGame.
-    // Before normalization (locals): iFileSize, iFullGameCRC, iFromWho.
-    int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                        unsigned char inGame, unsigned char isDiff);
+    // Before normalization (function): game::TurnOnAIMusic.
+    void turnOnAIMusic();                        // 0x4c6f80
+    // Before normalization (function): game::TurnOffAIMusic.
+    void turnOffAIMusic();                       // 0x4c6fd0
+    // 0x4ca410. NAMED 2026-08-20, correcting this entry: it used to read
+    // "Retail-only ... no surviving symbol names it", and the Dreamcast
+    // dump does name it - `?SetupAdjacentMons@game@@QAAXXZ`, public,
+    // void, no arguments, dc 0xb61d0, E:\gamedcs\game.cpp:9596. Four
+    // things agree. The DC callee set is GetNumMapLevels +
+    // advManager::FindAdjacentMonster + GetMapExtraPtr, and retail
+    // 0x4ca410 calls FindAdjacentMonster once and GetMapExtraPtr twice
+    // while reading the level count at +0x1fc48. The DC caller set is
+    // advManager::EraseObj, game::Load, game::NewMap and game::PerMonth -
+    // the first two are exactly the retail call sites, and Load's is the
+    // one this gate now serves. evidence/ida carries the HD twin under
+    // the same mangled name. The body sets bit 0x100 in the map-extra
+    // word when a monster is adjacent and clears it otherwise, which is
+    // what the old ordinal note described without a name. The row is
+    // still not claimed here.
+    // Before normalization (function): game::SetupAdjacentMons.
+    void setupAdjacentMons();
     // game.cpp:9660 in the Dreamcast roster (dc 0xb635c). Retail preserves
     // the computer-turn widget/update sweep at 0x4ca5b0; advManager::Open
     // calls it when the incoming player is not the local human.
@@ -2770,94 +2827,37 @@ public:
     // when the protocol is hotseat.
     // Before normalization (function): game::WaitForPlayer.
     void waitForPlayer(char* text, int gamePos);          // 0x4ca840
-    // Before normalization (function): game::record_show_boat.
-    // Before normalization (locals): current_boat.
-    void recordShowBoat(boat* currentBoat, type_point point); // 0x49c900
-    // Before normalization (function): game::SetVisibility.
-    void setVisibility(int startX, int startY, int z,
-                       int whichPlayer, int range,
-                       // Before normalization (locals): remote_move.
-                       unsigned char remoteMove);            // 0x49cdd0
-    // Before normalization (function): game::PerDay.
-    void perDay();
-    // Before normalization (function): game::PerWeek.
-    void perWeek();
-    // Before normalization (function): game::PerMonth.
-    void perMonth();
     // Before normalization (function): game::TransmitSaveGame.
     // Before normalization (locals): iToWho.
     int transmitSaveGame(int toWho, int thisPlayerDead,
                          unsigned char inGame, unsigned char makeOrig);
+    // DC game.cpp:10587 names the received-save body. Retail's transmit-init
+    // handlers independently prove the five arguments and 0x4cbd40 entry.
+    // Before normalization (function): game::ReceiveSaveGame.
+    // Before normalization (locals): iFileSize, iFullGameCRC, iFromWho.
+    int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
+                        unsigned char inGame, unsigned char isDiff);
     // Before normalization (function): game::DoNewTurn.
     void doNewTurn();
-    // event_record.obj owns 0x49d6c0's body.
-    // Before normalization (function): game::clear_event_records.
-    void clearEventRecords(char playerId);              // 0x49d6c0
-    // Game.h:1390 in the DC roster. Retail expands this short calendar
-    // accessor at every game.obj call site and retains no standalone row.
-    // Before normalization (function): game::get_current_turn.
-    short getCurrentTurn()
-    {
-        return (m_month * 4 + m_week - 5) * 7 + m_day;
-    }
-    // kb.obj's pair (DC kb.cpp:4077 / :4095, dc 0xe4298 / 0xe4300; retail
-    // 0x4f3e30 / 0x4f3eb0). Declared here because they are `game` members -
-    // retail passes the record in ECX at both rows - while their bodies stay
-    // with the rest of kb.cpp.
-    // Before normalization (function): game::get_base_map_score.
-    short getBaseMapScore();
-    // Before normalization (function): game::get_map_score.
-    short getMapScore();
-    // Before normalization (function): game::GiveTimeEventReward.
-    void giveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
-    // Before normalization (function): game::CheckForTimeEvent.
-    void checkForTimeEvent();                                 // 0x4cd910
-    // Before normalization (function): game::CheckForTownEvent.
-    void checkForTownEvent();                                 // 0x4cda10
-    // Before normalization (function): game::get_random_lith.
-    unsigned char getRandomLith(const std::vector<type_point>* points,
-                                  // Before normalization (locals): cell_type.
-                                  type_point* result, long cellType,
-                                  long excluded);            // 0x4cdb80
-    // Before normalization (function): game::get_random_lith_exit.
-    unsigned char getRandomLithExit(long color, type_point* result);
-    // Before normalization (function): game::get_random_lith.
-    unsigned char getRandomLith(long color, long excluded,
-                                  type_point* result);
-    // Before normalization (function): game::get_random_whirlpool.
-    unsigned char getRandomWhirlpool(long excluded, type_point* result);
-    // Before normalization (function): game::get_underground_gate_exit.
-    // DC game.cpp:11662, get_underground_gate_exit: const game accessor.
-    type_point getUndergroundGateExit(const NewmapCell* cell) const;
-    // Before normalization (function): game::IsHuman.
-    bool isHuman(int gamePos) const;             // 0x4ce940
-    // Before normalization (function): game::IsHumanTeam.
-    inline bool isHumanTeam(int teamNum) const;
-    // Before normalization (function): game::TurnOnAIMusic.
-    void turnOnAIMusic();                        // 0x4c6f80
-    // Before normalization (function): game::TurnOffAIMusic.
-    void turnOffAIMusic();                       // 0x4c6fd0
+// advmgr.obj joins the gate for the one declarator below. The guard is
+// SPLIT around it rather than moved, so the preprocessed text every
+// events-view consumer sees is unchanged, line for line.
+    // game.cpp:9720 in the Dreamcast roster (dc 0xb6538). Retail preserves
+    // the network-popup guard, aishield.pcx radar blit and bHeroLogoShowing latch
+    // at 0x4ca780; advManager::UpdateRadar is the other caller.
+    // Before normalization (function): game::ShowHeroesLogo.
+    void showHeroesLogo();
     // Before normalization (function): game::SetMapSize.
     void setMapSize(int width, int height);      // 0x4ccef0
-    // Before normalization (function): game::calculate_production.
-    void calculateProduction();                 // 0x4b8af0
-    // Before normalization (function): game::LoadSignPool.
+    // Before normalization (function): game::CheckForTimeEvent.
+    void checkForTimeEvent();                                 // 0x4cd910
+    // Before normalization (function): game::GiveTimeEventReward.
+    void giveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
+    // Before normalization (function): game::CheckForTownEvent.
+    void checkForTownEvent();                                 // 0x4cda10
+    // Before normalization (function): game::IsHuman.
+    bool isHuman(int gamePos) const;             // 0x4ce940
 private:
-    int loadSignPool(TAbstractFile* infile);      // 0x4b9070
-    // Before normalization (function): game::SaveSignPool.
-    int saveSignPool(TAbstractFile* outfile);     // 0x4b9270
-public:
-    // DC game.cpp:2492/2531, a7414/a750c: loadString/saveString are
-    // static game methods taking a string reference, not invented free
-    // helpers. Complete replaces the void* gz stream with TAbstractFile*;
-    // its two-register /Gr ABI does not contradict the static membership.
-    static int __fastcall loadString(TAbstractFile* infile, std::string& s);
-    static int __fastcall saveString(TAbstractFile* outfile, std::string& s);
-private:
-    // Before normalization (function): game::SaveRumours.
-    int saveRumours(TAbstractFile* outfile);      // 0x4bbc20
-    // Before normalization (function): game::LoadRumours.
-    int loadRumours(TAbstractFile* infile);       // 0x4bbe40
     // Before normalization (function): game::LoadMinePool.
     int loadMinePool(TAbstractFile* infile, int saveVersion);
 public:
@@ -2873,26 +2873,6 @@ private:
     int loadGarrisonPool(TAbstractFile* infile, int saveVersion);
     // Before normalization (function): game::LoadTownPool.
     int loadTownPool(TAbstractFile* infile, int saveVersion);
-    // Before normalization (function): game::SaveMinePool.
-    int saveMinePool(TAbstractFile* outfile);     // 0x4b9580
-    // Before normalization (function): game::SaveTownPool.
-    int saveTownPool(TAbstractFile* outfile);
-    // Before normalization (function): game::SaveGarrisonPool.
-    int saveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
-    // Before normalization (function): game::LoadBoatPool.
-    int loadBoatPool(TAbstractFile* infile);      // 0x4b9a00
-    // Before normalization (function): game::SaveBoatPool.
-    int saveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
-    // Before normalization (function): game::LoadObeliskPool.
-    int loadObeliskPool(TAbstractFile* infile);
-    // Before normalization (function): game::LoadBlackMarkets.
-    int loadBlackMarkets(TAbstractFile* infile);
-    // Before normalization (function): game::SaveObeliskPool.
-    int saveObeliskPool(TAbstractFile* outfile);
-    // Before normalization (function): game::SaveBlackMarkets.
-    int saveBlackMarkets(TAbstractFile* outfile);
-    // Before normalization (function): game::Load.
-    int load(TAbstractFile* infile);              // 0x4bcda0
 public:
     // Before normalization (function): game::LoadGame.
     // Before normalization (locals): bIsOrigData, bIsQuickLoad.
@@ -2904,14 +2884,36 @@ public:
                            unsigned char campaignWinMode,
                            unsigned char compressIt,
                            unsigned char xferFile);
-    // Before normalization (function): game::SetupOrigData.
-    void setupOrigData();                      // 0x4bf1a0
-    // Before normalization (function): game::GiveTroopsToNeutralTown.
-    void giveTroopsToNeutralTown(int townId);  // 0x4bf570
+private:
+    // Before normalization (function): game::Load.
+    int load(TAbstractFile* infile);              // 0x4bcda0
+    // Before normalization (function): game::LoadBlackMarkets.
+    int loadBlackMarkets(TAbstractFile* infile);
+    // Before normalization (function): game::SaveBlackMarkets.
+    int saveBlackMarkets(TAbstractFile* outfile);
+    // Before normalization (function): game::SaveMinePool.
+    int saveMinePool(TAbstractFile* outfile);     // 0x4b9580
+    // Before normalization (function): game::SaveGarrisonPool.
+    int saveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
+    // Before normalization (function): game::LoadBoatPool.
+    int loadBoatPool(TAbstractFile* infile);      // 0x4b9a00
+    // Before normalization (function): game::SaveBoatPool.
+    int saveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
+    // Before normalization (function): game::LoadObeliskPool.
+    int loadObeliskPool(TAbstractFile* infile);
+    // Before normalization (function): game::SaveObeliskPool.
+    int saveObeliskPool(TAbstractFile* outfile);
+    // Before normalization (function): game::SaveTownPool.
+    int saveTownPool(TAbstractFile* outfile);
+public:
     // 0x4bf780 (dc 0xaa7e0).
     // Before normalization (function): game::ValidateVictoryLossConditions.
     // Before normalization (locals): check_map_locations.
     void validateVictoryLossConditions(unsigned char checkMapLocations);
+    // Before normalization (function): game::GiveTroopsToNeutralTown.
+    void giveTroopsToNeutralTown(int townId);  // 0x4bf570
+    // Before normalization (function): game::SetupOrigData.
+    void setupOrigData();                      // 0x4bf1a0
     // Retail carries a stream, the optional eight-hero override, a PC-only
     // campaign context, and the map-format/game-version selector (`ret 16`).
     // The Dreamcast declarator has only its filename and hero-array pair.
@@ -2935,22 +2937,22 @@ public:
     void readMapHeroSetups(TAbstractFile* mapFile, int mapVersion);
     // Before normalization (function): game::RandomizeHolyGrail.
     void randomizeHolyGrail();
-    // Before normalization (function): game::InitRandomArtifacts.
-    void initRandomArtifacts();
-    // Raw LF_FIELDLIST 0x3edc orders this shared pair as written. Its
-    // private access flag is DC-only: retail decorates both as public QAEX.
-    // Before normalization (function): game::match_underground_gates.
-private:
-    void matchUndergroundGates();
-    // Before normalization (function): game::randomize_university.
-    void randomizeUniversity(NewmapCell* cell);
-public:
     // Before normalization (function): game::RandomizeEvents.
     void randomizeEvents();
     // Before normalization (function): game::ProcessOnMapTowns.
     void processOnMapTowns();
     // Before normalization (function): game::ProcessOnMapHeroes.
     void processOnMapHeroes();
+    // Before normalization (function): game::InitRandomArtifacts.
+    void initRandomArtifacts();
+private:
+    // Raw LF_FIELDLIST 0x3edc orders this shared pair as written. Its
+    // private access flag is DC-only: retail decorates both as public QAEX.
+    // Before normalization (function): game::match_underground_gates.
+    void matchUndergroundGates();
+    // Before normalization (function): game::randomize_university.
+    void randomizeUniversity(NewmapCell* cell);
+public:
     // Before normalization (function): game::set_recruits.
     void setRecruits(int player);
     // Complete folds the recruit array into playerData and therefore takes
@@ -2968,49 +2970,16 @@ public:
                      NewSMapHeader* mapHeader, TAbstractFile* infile);
     // Before normalization (function): game::ResetGame.
     void resetGame(int difficulty, int version, NewSMapHeader* mapHeader);
-    // Before normalization (function): game::CancelComputerScreen.
-    void cancelComputerScreen();
-    // Before normalization (function): game::SetCannedRumour.
 private:
+    // Before normalization (function): game::Save.
+    int save(TAbstractFile* outfile);             // 0x4be3f0
+    // Before normalization (function): game::SetCannedRumour.
     void setCannedRumour();
     // Before normalization (function): game::SetMapRumour.
     void setMapRumour();
     // Before normalization (function): game::SetSpecialRumour.
     void setSpecialRumour();
-    // Before normalization (function): game::Save.
-    int save(TAbstractFile* outfile);             // 0x4be3f0
 public:
-    // Before normalization (function): game::ComputeDailyGold.
-    int computeDailyGold(int player, unsigned char includeSilo);
-    // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
-    // was 0x4a0f10, which is not a function entry at all - it
-    // disassembles mid-instruction. 0x49d630 walks eventRecords
-    // (+0x4e7ac) backwards calling each element's virtual deleting
-    // destructor and then clears the range, it is the very next carve
-    // row after the located ResetVisibility (0x49d3d0 + 0x260), and the
-    // Dreamcast roster's next row after ResetVisibility is
-    // clear_event_records (dc 0x8e730, 74 B against 140, 1.89x).
-    // game::~game (0x4ce5b0) opens with a call to it.
-    // Before normalization (function): game::clear_event_records.
-    void clearEventRecords();
-    // Before normalization (function): game::MakeTerrainVisible.
-    void makeTerrainVisible(int whichPlayer, unsigned short visMask);
-    // 0x4c9990. town.obj needs this declaration for
-    // town::destroy_extra_capitol; keeping it TU-scoped preserves the
-    // retail-sensitive game member population in the other compilands.
-    // game.obj joins on its own gate for ProcessRandomObjects, which
-    // calls it once per random-object case.
-    // Before normalization (function): game::ConvertObject.
-    void convertObject(NewmapCell* tempCell);
-    // The random-object pass and the monster roll it drives. Both bodies
-    // are claimed in game.cpp.
-    // Before normalization (function): game::GetRandomMonster.
-    TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
-    // Before normalization (function): game::ProcessRandomObjects.
-    void processRandomObjects();                                 // 0x4c9dd0
-    // Before normalization (function): game::record_show_hero.
-    void recordShowHero(hero* who, signed char player, type_point point,
-                          unsigned char reset);                  // 0x49cb20
     // DC game.h:865. Keep the body ahead of the two helpers that call it,
     // matching the original header's definition order. The events compiland
     // selects the exact retail COMDAT when one expansion remains uninlined.
@@ -3024,6 +2993,39 @@ public:
             return playerNum;
         return m_mapHeader.m_teamInfo[playerNum];
     }
+    // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
+    // was 0x4a0f10, which is not a function entry at all - it
+    // disassembles mid-instruction. 0x49d630 walks eventRecords
+    // (+0x4e7ac) backwards calling each element's virtual deleting
+    // destructor and then clears the range, it is the very next carve
+    // row after the located ResetVisibility (0x49d3d0 + 0x260), and the
+    // Dreamcast roster's next row after ResetVisibility is
+    // clear_event_records (dc 0x8e730, 74 B against 140, 1.89x).
+    // game::~game (0x4ce5b0) opens with a call to it.
+    // Before normalization (function): game::clear_event_records.
+    void clearEventRecords();
+    // Before normalization (function): game::record_show_hero.
+    void recordShowHero(hero* who, signed char player, type_point point,
+                          unsigned char reset);                  // 0x49cb20
+    // Before normalization (function): game::ProcessRandomObjects.
+    void processRandomObjects();                                 // 0x4c9dd0
+    // The random-object pass and the monster roll it drives. Both bodies
+    // are claimed in game.cpp.
+    // Before normalization (function): game::GetRandomMonster.
+    TCreatureType getRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
+    // Before normalization (function): game::ComputeDailyGold.
+    int computeDailyGold(int player, unsigned char includeSilo);
+    // Before normalization (function): game::CancelComputerScreen.
+    void cancelComputerScreen();
+    // Before normalization (function): game::MakeTerrainVisible.
+    void makeTerrainVisible(int whichPlayer, unsigned short visMask);
+    // 0x4c9990. town.obj needs this declaration for
+    // town::destroy_extra_capitol; keeping it TU-scoped preserves the
+    // retail-sensitive game member population in the other compilands.
+    // game.obj joins on its own gate for ProcessRandomObjects, which
+    // calls it once per random-object case.
+    // Before normalization (function): game::ConvertObject.
+    void convertObject(NewmapCell* tempCell);
     // The four remaining recorders, all located by the same vtable-store
     // evidence as their claimed siblings: each expands `new type_record_X`
     // in line and the class it constructs is named by the derived vftable
@@ -3036,11 +3038,6 @@ public:
     // Before normalization (locals): current_boat, occupying_hero.
     void recordHideBoat(boat* currentBoat, unsigned char occupied,
                           int occupyingHero);                   // 0x49c560
-    // Before normalization (function): game::record_move.
-    void recordMove(hero* who, int direction,
-                     type_point destination);                    // 0x49cd50
-    // Before normalization (function): game::record_teleport.
-    void recordTeleport(hero* who, type_point destination);     // 0x49cf50
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
@@ -3097,6 +3094,13 @@ public:
                 m_globalInfoFlags[flag] |= 1 << i;
         }
     }
+    // Before normalization (function): game::record_move.
+    void recordMove(hero* who, int direction,
+                     type_point destination);                    // 0x49cd50
+    // Before normalization (function): game::record_teleport.
+    void recordTeleport(hero* who, type_point destination);     // 0x49cf50
+    // Before normalization (function): game::ShowLuckInfo.
+    void showLuckInfo(hero* who, int dialogType);
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
     // 0x74 and 0x75. Both are `ret 8` taking (hero*, dialogType); the
@@ -3110,8 +3114,6 @@ public:
     // every caller in the tree already hands it a plain hero*.
     // Before normalization (function): game::ShowMoraleInfo.
     void showMoraleInfo(hero* who, int dialogType);
-    // Before normalization (function): game::ShowLuckInfo.
-    void showLuckInfo(hero* who, int dialogType);
     // Dreamcast names the shared source boundary record_hide_hero. Complete
     // extends it from (hero*, char) to the retail-proven three-argument
     // record at 0x49c720; SwapHeroes, hero::Deallocate and
@@ -3136,24 +3138,24 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
-    // 0x4cce30 (dc 0xb9a34): counts thieves guilds across the player's
-    // towns; the advmgr quick views gate their view level on its 1/2
-    // thresholds.
-    // Before normalization (function): game::GetNumThievesGuilds.
-    // Before normalization (locals): iWhichPlayer.
-    int getNumThievesGuilds(int whichPlayer);
     // Dreamcast-attested member at retail 0x49da70. The adventure-options
     // constructor uses its byte result to enable the End Turn button.
     // Before normalization (function): game::play_recorded_events.
     void playRecordedEvents();
     // Before normalization (function): game::replay_available.
     unsigned char replayAvailable() const;
+    // 0x4cce30 (dc 0xb9a34): counts thieves guilds across the player's
+    // towns; the advmgr quick views gate their view level on its 1/2
+    // thresholds.
+    // Before normalization (function): game::GetNumThievesGuilds.
+    // Before normalization (locals): iWhichPlayer.
+    int getNumThievesGuilds(int whichPlayer);
+private:
     // 0x49dc60 (dc 0x8ebc4, event_record.cpp:1426). game::Save's last
     // operation and the only guarded one in its tail: it writes the
     // eventRecords count as a dword and then each record through the
     // vtable. Body belongs to event_record.obj.
     // Before normalization (function): game::save_recorded_events.
-private:
     unsigned char saveRecordedEvents(TAbstractFile* outfile);
     // 0x49dac0, save_recorded_events' mirror - and ASYMMETRIC with it.
     // save ends `ret 4`; this one ends `ret 8` at both exits, because
@@ -3172,16 +3174,16 @@ private:
     // Before normalization (function): game::setup_shipyards.
     void setupShipyards();
 public:
-    // Before normalization (function): game::ShowScenInfo.
-    void showScenInfo();
-    // newgame.cpp owns the retail text formatter at 0x513800.
-    // Before normalization (function): game::GetLossConditionText.
-    void getLossConditionText(char* text);
-    // The Complete formatter at 0x5139e0 is the victory-condition twin.
-    // Dreamcast proves the member name/signature and scenarioinfo.obj is its
-    // caller, while retail fixes the one-char* thiscall ABI.
-    // Before normalization (function): game::GetVictoryConditionText.
-    void getVictoryConditionText(char* text);
+    // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
+    // town page opens over a troop slot; declared here for
+    // townManager::DoCommand's two call sites, not reconstructed. The
+    // Dreamcast declarator types the group as a REFERENCE and retail
+    // pushes the pointer, which is the same thing at this call.
+    // Before normalization (function): game::ViewArmy.
+    // Before normalization (locals): this_hero, this_town, show_dismiss.
+    void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
+                  const town* thisTown, int x, int y,
+                  unsigned char showDismiss, unsigned char isQuickView);
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
     // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs
     // SetupNewOverviewType (dc 0x1069fc) -> UpdateFlaggableIcon ->
@@ -3192,28 +3194,6 @@ public:
     // is the caller, which is the role corroboration.
     // Before normalization (function): game::Overview.
     void overview();
-    // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it
-    // abuts the claimed TurnOffAIMusic (0x4c6fd0, 0x10 B) exactly, and
-    // game::NextPlayer (dc 0xb1fd0) is the very next DC roster row after
-    // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
-    // once the "heroes can still move" confirm is past.
-    // Before normalization (function): game::NextPlayer.
-    void nextPlayer();
-    // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
-    // philai's value_of_garrison; its nested vector access remains visible
-    // so the recovered source hierarchy is not flattened again.
-    // Before normalization (function): game::GetGarrison.
-    garrison* getGarrison(int which) { return &m_garrisons[which]; }
-    // Game.h:1380. DC 0x38000 passes all three coordinates to
-    // NewfullMap::cell(int,int,int). This canonical header inline replaces
-    // the separate ai_player/mapcell/events/philai/hero definitions.
-    // The retained ai_player.obj copy at 0x42ed80 remains exact, and
-    // pushPoint/DispatchEvent expand the accessor naturally.
-    // Before normalization (function): game::get_cell.
-    NewmapCell* getCell(type_point point)
-    {
-        return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
-    }
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header. Most retail readers
     // expand it in place; ai_player.obj also retains the selected COMDAT at
@@ -3227,42 +3207,6 @@ public:
         if (which == -1)
             return 0;
         return m_heroes + which;
-    }
-    // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
-    // expands it to the acting player's widened currHero load; no standalone
-    // retail row exists in the adventure-map header-method bracket.
-    // Before normalization (function): game::GetCurrHeroId.
-    int getCurrHeroId();
-    // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
-    // retail expands the map's byte flag plus one at both cheat loops.
-    // Before normalization (function): game::GetNumMapLevels.
-    // DC game.h:1405, dc 0x12cabc: const reference to the whirlpool list.
-    // searchArray::enterTrigger passes its address to enterLith in retail.
-    // Before normalization (function): game::get_whirlpools.
-    const std::vector<type_point>& getWhirlpools() const { return m_whirlpools; }
-    int getNumMapLevels() { return m_worldMap.getNumLevels(); }
-    // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
-    // 1016 - GetHero's twin. ai_player.obj retains its selected COMDAT at
-    // 0x42ba30 while other readers inline it. Its
-    // -1 arm is proven by playerData::HasCapitol (0x4b9f40), which
-    // reaches it with an id straight out of townIds and STILL emits the
-    // `cmp eax,-1` / `xor edx,edx` pair before the 360-byte index -
-    // then dereferences the result unguarded, so the null can never
-    // actually reach a load.
-    // Before normalization (function): game::GetTown.
-    town* getTown(int townId)
-    {
-        if (townId == -1)
-            return 0;
-        return &m_towns[townId];
-    }
-    // Dreamcast Game.h:1410 names this ordinary inline query and retains a
-    // selected out-of-line copy in ai_player.obj. THallWindow expands the
-    // same source operation to the retail town-vector lookup.
-    // Before normalization (function): game::TownAlreadyBuiltOn.
-    bool townAlreadyBuiltOn(int townId) const
-    {
-        return m_towns[townId].m_builtThisTurn != 0;
     }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
@@ -3288,18 +3232,36 @@ public:
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
     // Before normalization (function): game::GetCurrHero.
     hero* getCurrHero();
+    // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
+    // expands it to the acting player's widened currHero load; no standalone
+    // retail row exists in the adventure-map header-method bracket.
+    // Before normalization (function): game::GetCurrHeroId.
+    int getCurrHeroId();
+    // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
+    // 1016 - GetHero's twin. ai_player.obj retains its selected COMDAT at
+    // 0x42ba30 while other readers inline it. Its
+    // -1 arm is proven by playerData::HasCapitol (0x4b9f40), which
+    // reaches it with an id straight out of townIds and STILL emits the
+    // `cmp eax,-1` / `xor edx,edx` pair before the 360-byte index -
+    // then dereferences the result unguarded, so the null can never
+    // actually reach a load.
+    // Before normalization (function): game::GetTown.
+    town* getTown(int townId)
+    {
+        if (townId == -1)
+            return 0;
+        return &m_towns[townId];
+    }
     // Before normalization (function): game::GetCurrTown.
     town* getCurrTown();
-    // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
-    // town page opens over a troop slot; declared here for
-    // townManager::DoCommand's two call sites, not reconstructed. The
-    // Dreamcast declarator types the group as a REFERENCE and retail
-    // pushes the pointer, which is the same thing at this call.
-    // Before normalization (function): game::ViewArmy.
-    // Before normalization (locals): this_hero, this_town, show_dismiss.
-    void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
-                  const town* thisTown, int x, int y,
-                  unsigned char showDismiss, unsigned char isQuickView);
+    // Dreamcast Game.h:1410 names this ordinary inline query and retains a
+    // selected out-of-line copy in ai_player.obj. THallWindow expands the
+    // same source operation to the retail town-vector lookup.
+    // Before normalization (function): game::TownAlreadyBuiltOn.
+    bool townAlreadyBuiltOn(int townId) const
+    {
+        return m_towns[townId].m_builtThisTurn != 0;
+    }
     // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
     // inline-only member: retail has no out-of-line row and
     // townManager::SetupTown 0x5c68a4 expands it in place - the towns
@@ -3316,6 +3278,11 @@ public:
     {
         return m_towns[townId].m_name.c_str();
     }
+    // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
+    // philai's value_of_garrison; its nested vector access remains visible
+    // so the recovered source hierarchy is not flattened again.
+    // Before normalization (function): game::GetGarrison.
+    garrison* getGarrison(int which) { return &m_garrisons[which]; }
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.
@@ -3324,6 +3291,41 @@ public:
     {
         return &m_boats[which];
     }
+    // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
+    // retail expands the map's byte flag plus one at both cheat loops.
+    // Before normalization (function): game::GetNumMapLevels.
+    // DC game.h:1405, dc 0x12cabc: const reference to the whirlpool list.
+    // searchArray::enterTrigger passes its address to enterLith in retail.
+    // Before normalization (function): game::get_whirlpools.
+    const std::vector<type_point>& getWhirlpools() const { return m_whirlpools; }
+    // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it
+    // abuts the claimed TurnOffAIMusic (0x4c6fd0, 0x10 B) exactly, and
+    // game::NextPlayer (dc 0xb1fd0) is the very next DC roster row after
+    // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
+    // once the "heroes can still move" confirm is past.
+    // Before normalization (function): game::NextPlayer.
+    void nextPlayer();
+    int getNumMapLevels() { return m_worldMap.getNumLevels(); }
+    // Before normalization (function): game::ShowScenInfo.
+    void showScenInfo();
+    // Game.h:1380. DC 0x38000 passes all three coordinates to
+    // NewfullMap::cell(int,int,int). This canonical header inline replaces
+    // the separate ai_player/mapcell/events/philai/hero definitions.
+    // The retained ai_player.obj copy at 0x42ed80 remains exact, and
+    // pushPoint/DispatchEvent expand the accessor naturally.
+    // Before normalization (function): game::get_cell.
+    NewmapCell* getCell(type_point point)
+    {
+        return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    }
+    // newgame.cpp owns the retail text formatter at 0x513800.
+    // Before normalization (function): game::GetLossConditionText.
+    void getLossConditionText(char* text);
+    // The Complete formatter at 0x5139e0 is the victory-condition twin.
+    // Dreamcast proves the member name/signature and scenarioinfo.obj is its
+    // caller, while retail fixes the one-char* thiscall ABI.
+    // Before normalization (function): game::GetVictoryConditionText.
+    void getVictoryConditionText(char* text);
 };
 
 // Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting

@@ -116,20 +116,20 @@ public:
     // Before normalization (locals): bFade.
     virtual int doModal(unsigned char fade);  // slot 6
 
-    // Before normalization (function): type_university_window::handle_widget_hover.
-    // Before normalization (locals): current_widget.
-protected:
-    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
-public:
-    // Before normalization (function): type_university_window::ExitDialog.
-    virtual int exitDialog(message* msg);  // slot 14
-
     // Public in the Dreamcast field list. The derived skill button calls it
     // through widget::parentWindow; Complete keeps that exact relationship.
     // Before normalization (function): type_university_window::skill_click.
     void skillClick(TSecondarySkill skill);
-
 protected:
+
+    // Before normalization (function): type_university_window::handle_widget_hover.
+    // Before normalization (locals): current_widget.
+    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+public:
+    // Before normalization (function): type_university_window::ExitDialog.
+    virtual int exitDialog(message* msg);  // slot 14
+protected:
+
     // Before normalization (function): type_university_window::set_selection_mode.
     void setSelectionMode();
     // Before normalization (function): type_university_window::update_skill_button.

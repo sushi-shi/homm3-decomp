@@ -1035,10 +1035,6 @@ public:
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
     army();
-    // Complete retains this ordinary destructor in Army code at 0x43d400,
-    // immediately after army(). Its body owns the member cleanup; callers
-    // such as getCureValue keep the call. DC attributes it to an ai.cpp use site.
-    ~army();
     // Before normalization (function): army::Init.
     void init(int armyId, int newNumTroops, const hero* owner, int side,
               // Before normalization (locals): iGridIndex, iOrigPos.
@@ -1127,6 +1123,10 @@ public:
     unsigned char checkSpecialAttack(army* target);
     // Before normalization (function): army::cast_spell.
     void castSpell(long hex);
+    // Complete retains this ordinary destructor in Army code at 0x43d400,
+    // immediately after army(). Its body owns the member cleanup; callers
+    // such as getCureValue keep the call. DC attributes it to an ai.cpp use site.
+    ~army();
     // Before normalization (function): army::FaerieDragonSpell.
     void faerieDragonSpell();
     // Before normalization (function): army::Unnamed447fe0.
@@ -1429,15 +1429,15 @@ public:
     // combatManager can read this tail without making the Dreamcast-private
     // data public; friendship is the source-level access that preserves both.
     friend class combatManager;
-
 private:
-    // Before normalization (function): army::animate_missile.
-    void animateMissile(army* armyToAttack);
     // Before normalization (function): army::attack_wall.
     void attackWall(TWallTargetId wall, long levelsDestroyed);
     // Before normalization (function): army::attack_wall.
     void attackWall(TWallTargetId wall,
                      const type_ballistics_traits& ballistics);
+
+    // Before normalization (function): army::animate_missile.
+    void animateMissile(army* armyToAttack);
     // Before normalization (function): army::do_fire_shield.
     void doFireShield(long damage);
     // Before normalization (function): army::do_post_attack.

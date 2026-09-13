@@ -99,8 +99,13 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     unsigned char m_paddingBeforeInfluence;
-    // Before normalization: Influence.
+
+    // Before normalization (locals): this_army, show_ok, this_hero, this_town, show_dismiss,
+    // group_alignments, army_type.
+    TViewArmyWindow(const army* thisArmy, int x0, int y0,
+                    unsigned char showOk);
 private:
+    // Before normalization: Influence.
     int m_influence[3];
     // Before normalization: Duration.
     int m_duration[3];
@@ -109,11 +114,6 @@ private:
     // Before normalization: SpriteWidget.
     iconWidget* m_spriteWidget;
 public:
-
-    // Before normalization (locals): this_army, show_ok, this_hero, this_town, show_dismiss,
-    // group_alignments, army_type.
-    TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                    unsigned char showOk);
     // TEN arguments in retail (`ret 0x28`), not the Dreamcast's nine:
     // the trailing unsigned char is the alignment-grouping byte, passed
     // straight through to GetArmyMorale's arg5 and get_morale_description's
@@ -127,15 +127,13 @@ public:
                     unsigned char groupAlignments);
     TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
     virtual ~TViewArmyWindow();
+    // Before normalization (function): TViewArmyWindow::DoModal.
+    void doModal();
+    // Before normalization (function): TViewArmyWindow::QuickView.
+    void quickView();
     // Before normalization (function): TViewArmyWindow::WindowHandler.
     virtual int windowHandler(message* msg);
 private:
-    int convertID2HelpID(int id) const;
-public:
-    // Before normalization (function): TViewArmyWindow::QuickView.
-    void quickView();
-    // Before normalization (function): TViewArmyWindow::DoModal.
-    void doModal();
     // The four row builders the one-army constructor CALLS rather than
     // inlines, located 2026-08-14 from its own reloc census: the ctor's
     // argument lists match the Dreamcast prototypes term for term
@@ -155,33 +153,13 @@ public:
     // allocation.
     // Before normalization (function): TViewArmyWindow::create_background_widget.
     // Before normalization (locals): this_hero.
-private:
     void createBackgroundWidget(const hero* thisHero);
     // Before normalization (function): TViewArmyWindow::create_name_widget.
     void createNameWidget(const char* name);
-    // Before normalization (function): TViewArmyWindow::create_morale_widget.
-    // Before normalization (locals): new_morale.
-    void createMoraleWidget(int newMorale);
-    // Before normalization (function): TViewArmyWindow::create_luck_widget.
-    // Before normalization (locals): new_luck.
-    void createLuckWidget(int newLuck);
-    // Before normalization (function): TViewArmyWindow::create_rollover_widget.
-    void createRolloverWidget();
     // Before normalization (function): TViewArmyWindow::create_portrait_widget.
     // Before normalization (locals): sprite_name, town_type.
     void createPortraitWidget(const char* spriteName, int townType,
                                 int count);                      // 0x5f5060
-    // Before normalization (function): TViewArmyWindow::create_damage_widget.
-    void createDamageWidget(const TCreatureTypeTraits* traits,
-                              // Before normalization (locals): our_hero.
-                              const hero* ourHero);             // 0x5f5860
-    // Before normalization (function): TViewArmyWindow::create_shots_widget.
-    void createShotsWidget(const TCreatureTypeTraits* traits,
-                             // Before normalization (locals): normal_shots, current_shots.
-                             int normalShots, int currentShots);  // 0x5f5b30
-    // Before normalization (function): TViewArmyWindow::create_spell_influence_widgets.
-    // Before normalization (locals): this_army.
-    void createSpellInfluenceWidgets(const army* thisArmy);   // 0x5f65b0
     // Before normalization (function): TViewArmyWindow::create_attack_widget.
     // Before normalization (locals): normal_attack_skill, current_attack_skill.
     void createAttackWidget(int normalAttackSkill,
@@ -190,6 +168,14 @@ private:
     // Before normalization (locals): normal_defense_skill, current_defense_skill.
     void createDefenseWidget(int normalDefenseSkill,
                                int currentDefenseSkill);
+    // Before normalization (function): TViewArmyWindow::create_damage_widget.
+    void createDamageWidget(const TCreatureTypeTraits* traits,
+                              // Before normalization (locals): our_hero.
+                              const hero* ourHero);             // 0x5f5860
+    // Before normalization (function): TViewArmyWindow::create_shots_widget.
+    void createShotsWidget(const TCreatureTypeTraits* traits,
+                             // Before normalization (locals): normal_shots, current_shots.
+                             int normalShots, int currentShots);  // 0x5f5b30
     // Before normalization (function): TViewArmyWindow::create_hitpoints_widget.
     // Before normalization (locals): normal_hitpoints, current_hitpoints.
     void createHitpointsWidget(int normalHitpoints,
@@ -200,12 +186,24 @@ private:
     // Before normalization (function): TViewArmyWindow::create_speed_widget.
     // Before normalization (locals): normal_speed, current_speed.
     void createSpeedWidget(int normalSpeed, int currentSpeed);
+    // Before normalization (function): TViewArmyWindow::create_morale_widget.
+    // Before normalization (locals): new_morale.
+    void createMoraleWidget(int newMorale);
+    // Before normalization (function): TViewArmyWindow::create_luck_widget.
+    // Before normalization (locals): new_luck.
+    void createLuckWidget(int newLuck);
+    // Before normalization (function): TViewArmyWindow::create_spell_influence_widgets.
+    // Before normalization (locals): this_army.
+    void createSpellInfluenceWidgets(const army* thisArmy);   // 0x5f65b0
     // Before normalization (function): TViewArmyWindow::create_ok_widget.
     void createOkWidget();
     // Before normalization (function): TViewArmyWindow::create_upgrade_widget.
     void createUpgradeWidget();
     // Before normalization (function): TViewArmyWindow::create_dismiss_widget.
     void createDismissWidget();
+    // Before normalization (function): TViewArmyWindow::create_rollover_widget.
+    void createRolloverWidget();
+    int convertID2HelpID(int id) const;
 };
 SIZE(TViewArmyWindow, 0xb8);
 

@@ -85,19 +85,6 @@ public:
     // bmpFizzleSource member name.
     // Before normalization: field_4C; reference member heroWindowManager::bmpFizzleSource.
     Bitmap16Bit* m_bmpFizzleSource;
-    // The window list, byte-proven by RemoveWindow (located
-    // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
-    // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
-    // Before normalization: headWindow.
-private:
-    heroWindow* m_headWindow;
-    // Before normalization: tailWindow.
-    heroWindow* m_tailWindow;
-public:
-    // Before normalization: lastActive.
-    heroWindow* m_lastActive;
-    // Before normalization: activeWindow.
-    heroWindow* m_activeWindow;
 
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
@@ -109,17 +96,13 @@ public:
     virtual void close();               // slot 1, retail 0x6022d0
     // Before normalization (function): heroWindowManager::Main.
     virtual int main(message& msg);     // slot 2, retail 0x602320
-    // Before normalization (function): heroWindowManager::ConvertToHover.
-    int convertToHover(message& msg);
-    // Before normalization (function): heroWindowManager::UpdateScreen.
-    void updateScreen(int x, int y, int w, int h);
-    // Before normalization (function): heroWindowManager::BroadcastMessage.
-    int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     // Before normalization (function): heroWindowManager::AddWindow.
     void addWindow(heroWindow* newWindow, int newPriority,
                    unsigned char update);
     // Before normalization (function): heroWindowManager::RemoveWindow.
     void removeWindow(heroWindow* killWindow);
+    // Before normalization (function): heroWindowManager::BroadcastMessage.
+    int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     // Before normalization (function): heroWindowManager::DoDialog.
     int doDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                  // Before normalization (locals): bFadeIn.
@@ -130,6 +113,11 @@ public:
                      TDialogHandler dialogDrawFunction, int fadeIn);
     // Before normalization (function): heroWindowManager::DoQuickView.
     void doQuickView(heroWindow* window);
+    // Before normalization (function): heroWindowManager::UpdateScreen.
+    void updateScreen(int x, int y, int w, int h);
+    // Before normalization (function): heroWindowManager::FadeScreen.
+    // Before normalization (locals): expect_fadein.
+    void fadeScreen(int inOut, int speed, unsigned char expectFadein);
     // 0x602cc0 / 0x602dc0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100): it saves a screen rectangle, redraws the combat frame
     // and fizzles the same rectangle forward over 75 ms, which is the
@@ -143,6 +131,11 @@ public:
     // TDrawbridgeBounds quadruple is what it passes them from.
     // Before normalization (function): heroWindowManager::SaveFizzleSourceX.
     void saveFizzleSourceX(int startX, int startY, int width, int height);
+    void saveFizzleSourceX(const SLimitData& limits)
+    {
+        saveFizzleSourceX(limits.m_minX, limits.m_minY,
+                          limits.width(), limits.height());
+    }
     // Before normalization (function): heroWindowManager::FizzleForwardX.
     void fizzleForwardX(int startX, int startY, int width, int height,
                         // Before normalization (locals): iFadeTime.
@@ -156,24 +149,31 @@ public:
         fizzleForwardX(limits.m_minX, limits.m_minY,
                        limits.width(), limits.height(), fadeTime);
     }
-    void saveFizzleSourceX(const SLimitData& limits)
-    {
-        saveFizzleSourceX(limits.m_minX, limits.m_minY,
-                          limits.width(), limits.height());
-    }
     // 0x6030c0, the fizzle buffer's release. Order-mapped between
     // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
     // field_4C through the virtual slot-0 tail and nulls it.
     // Before normalization (function): heroWindowManager::ReleaseFizzleSource.
     void releaseFizzleSource();
-    // Before normalization (function): heroWindowManager::FadeScreen.
-    // Before normalization (locals): expect_fadein.
-    void fadeScreen(int inOut, int speed, unsigned char expectFadein);
+    // Before normalization (function): heroWindowManager::ConvertToHover.
+    int convertToHover(message& msg);
     // Before normalization (function): heroWindowManager::FadeToBlack.
     // Before normalization (locals): expect_fadein.
     void fadeToBlack(int speed, unsigned char expectFadein);
     // Before normalization (function): heroWindowManager::FadeFromBlack.
     void fadeFromBlack(int speed);
+private:
+    // The window list, byte-proven by RemoveWindow (located
+    // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
+    // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
+    // Before normalization: headWindow.
+    heroWindow* m_headWindow;
+    // Before normalization: tailWindow.
+    heroWindow* m_tailWindow;
+public:
+    // Before normalization: lastActive.
+    heroWindow* m_lastActive;
+    // Before normalization: activeWindow.
+    heroWindow* m_activeWindow;
 };
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);

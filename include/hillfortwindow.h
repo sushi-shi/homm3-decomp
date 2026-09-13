@@ -172,13 +172,13 @@ public:
     // retail 0x4e8850 retains the same callback relationship.
     friend int hillFortWindowHandler(message& msg);
 private:
+    // Before normalization (function): THillFortWindow::HandleClick.
+    void handleClick(message& msg);
     // Before normalization (function): THillFortWindow::Recalculate.
     void recalculate(unsigned char drawDimmedButtons);
     // Before normalization (function): THillFortWindow::UpgradeSlot.
     // Before normalization (locals): show_message.
     void upgradeSlot(int which, unsigned char showMessage);
-    // Before normalization (function): THillFortWindow::HandleClick.
-    void handleClick(message& msg);
 };
 SIZE(THillFortWindow, 0x2a0);
 

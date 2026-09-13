@@ -639,38 +639,38 @@ public:
     virtual ~TSingleSelectionWindow();
     // Before normalization (function): TSingleSelectionWindow::DoModal.
     virtual int doModal(unsigned char fadeIn);
+    // Before normalization (function): TSingleSelectionWindow::UpdatePlayerPositions.
+    void updatePlayerPositions(unsigned char updateCurPlayer);
     // Before normalization (function): TSingleSelectionWindow::WindowHandler.
     virtual int windowHandler(message* msg);  // slot 9
-    // Before normalization (function): TSingleSelectionWindow::ProcessRightSelect.
+    // Before normalization (function): TSingleSelectionWindow::OnChatWindowSlider.
+    void onChatWindowSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::OnDurationSlider.
+    void onDurationSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::OnFileMenuSlider.
+    void onFileMenuSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::UpdateAllyEnemyFlags.
+    void updateAllyEnemyFlags(unsigned char update);
 private:
+    // Before normalization (function): TSingleSelectionWindow::ProcessRightSelect.
     virtual unsigned char processRightSelect(int id);  // slot 11
 public:
     // Before normalization (function): TSingleSelectionWindow::ExitDialog.
     virtual int exitDialog(message* msg);   // slot 14
-    // Before normalization (function): TSingleSelectionWindow::UpdateAllyEnemyFlags.
-    void updateAllyEnemyFlags(unsigned char update);
-    // Before normalization (function): TSingleSelectionWindow::OnFileMenuSlider.
-    void onFileMenuSlider(int newIndex);
-    // Before normalization (function): TSingleSelectionWindow::OnDurationSlider.
-    void onDurationSlider(int newIndex);
-    // Before normalization (function): TSingleSelectionWindow::OnChatWindowSlider.
-    void onChatWindowSlider(int newIndex);
-    // Before normalization (function): TSingleSelectionWindow::UpdatePlayerPositions.
-    void updatePlayerPositions(unsigned char updateCurPlayer);
     // Before normalization (function): TSingleSelectionWindow::Update.
     int update();
-    // Before normalization (function): TSingleSelectionWindow::OnGameTransmitInitMsg.
-    // Before normalization (locals): pNetMsg.
-    unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::GetMapName.
+    const char* getMapName(int which);
     // DC-named row-name getters (dc 0x139a20/0x139b08) and the selected-
     // scenario info panel painter (dc 0x139ccc); retail 0x583f20 /
     // 0x584010 / 0x5840f0, all three called by Update.
     // Before normalization (function): TSingleSelectionWindow::GetFileName.
     const char* getFileName(int which);
-    // Before normalization (function): TSingleSelectionWindow::GetMapName.
-    const char* getMapName(int which);
     // Before normalization (function): TSingleSelectionWindow::DrawBasicMapInfo.
     void drawBasicMapInfo();
+    // Before normalization (function): TSingleSelectionWindow::OnGameTransmitInitMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
     // Retail-only (no DC row): refreshes the filter panel's widget
     // statuses from field_18A0; Update calls it under inFilterOptions.
     // Before normalization (function): TSingleSelectionWindow::UpdateFilterWidgets.
@@ -681,16 +681,35 @@ public:
     // against the refreshed slot attributes.
     // Before normalization (function): TSingleSelectionWindow::SetHumanSlot.
     void setHumanSlot();
+    // Before normalization (function): TSingleSelectionWindow::HandleNetMsg.
+    // Before normalization (locals): pNetMsg.
+    // DC public QAA_NPAVCNetMsg@@AA_N proves bool return / bool& cancel;
+    // its byte-valued CodeView storage does not imply a pointer interface.
+    bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
+    // Before normalization (function): TSingleSelectionWindow::OnSortMaps.
+    void onSortMaps(int how);
+    // Before normalization (function): TSingleSelectionWindow::OnBeginGame.
+    unsigned char onBeginGame();
+    // Before normalization (function): TSingleSelectionWindow::OnPlayerPosClick.
+    void onPlayerPosClick(int pos);
+    // Before normalization (function): TSingleSelectionWindow::GetThisPlayerGamePos.
+    int getThisPlayerGamePos();
+    // Before normalization (function): TSingleSelectionWindow::SetDifficultyHiLite.
+    void setDifficultyHiLite();
+    // Before normalization (function): TSingleSelectionWindow::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    int onWidgetDeselect(message* msg, unsigned char* exitFlag,
+                         unsigned char remoteClick);
+    // Before normalization (function): TSingleSelectionWindow::CanChooseTown.
+    unsigned char canChooseTown(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::CanChooseHero.
+    unsigned char canChooseHero(int gamePos);
     // The advanced-options row accessors (DC names; retail
     // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
     // THeroID from GetDisplayFace; spelled int so the public closure
     // needs no hero enums - retype when the body lands.
     // Before normalization (function): TSingleSelectionWindow::HasMultipleTowns.
     unsigned char hasMultipleTowns(int gamePos);
-    // Before normalization (function): TSingleSelectionWindow::CanChooseTown.
-    unsigned char canChooseTown(int gamePos);
-    // Before normalization (function): TSingleSelectionWindow::CanChooseHero.
-    unsigned char canChooseHero(int gamePos);
     // Before normalization (function): TSingleSelectionWindow::GetDisplayFace.
     int getDisplayFace(int gamePos);
     // Before normalization (function): TSingleSelectionWindow::GetHeroInPos.
@@ -701,47 +720,28 @@ public:
     TTownType getDisplayTown(int gamePos);
     // Before normalization (function): TSingleSelectionWindow::GetHeroName.
     const char* getHeroName(int gamePos);
-    // Before normalization (function): TSingleSelectionWindow::GetThisPlayerGamePos.
-    int getThisPlayerGamePos();
+    // Before normalization (function): TSingleSelectionWindow::OnNameChange.
+    void onNameChange(int gamePos, const char* newName);
     // Before normalization (function): TSingleSelectionWindow::HighlightFile.
     unsigned char highlightFile(char* filename);
+    // Before normalization (function): TSingleSelectionWindow::OnNameClick.
+    void onNameClick(int pos);
     // DC name; retail 0x589d30 (located round 2 - the version matrix
     // the transfer opener and OnNewPlayerMsg gate on).
     // Before normalization (function): TSingleSelectionWindow::IsVersionCompatible.
     unsigned char isVersionCompatible(const char* otherVersion);
-    // Before normalization (function): TSingleSelectionWindow::HandleNetMsg.
-    // Before normalization (locals): pNetMsg.
-    // DC public QAA_NPAVCNetMsg@@AA_N proves bool return / bool& cancel;
-    // its byte-valued CodeView storage does not imply a pointer interface.
-    bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
-    // Before normalization (function): TSingleSelectionWindow::OnWidgetDeselect.
-    // Before normalization (locals): bExitFlag.
-    int onWidgetDeselect(message* msg, unsigned char* exitFlag,
-                         unsigned char remoteClick);
-    // Before normalization (function): TSingleSelectionWindow::SetDifficultyHiLite.
-    void setDifficultyHiLite();
-    // Before normalization (function): TSingleSelectionWindow::OnSortMaps.
-    void onSortMaps(int how);
-    // Before normalization (function): TSingleSelectionWindow::OnNameClick.
-    void onNameClick(int pos);
-    // Before normalization (function): TSingleSelectionWindow::OnNameChange.
-    void onNameChange(int gamePos, const char* newName);
-    // Before normalization (function): TSingleSelectionWindow::OnPlayerPosClick.
-    void onPlayerPosClick(int pos);
-    // Before normalization (function): TSingleSelectionWindow::OnBeginGame.
-    unsigned char onBeginGame();
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     // Before normalization (function): TSingleSelectionWindow::GenerateRandomMap.
     unsigned char generateRandomMap(const char* name);
-    // Before normalization (function): TSingleSelectionWindow::OnDeleteFile.
-    void onDeleteFile();
     // Before normalization (function): TSingleSelectionWindow::SetCurrentMap.
     // Before normalization (locals): bUpdate.
     void setCurrentMap(int map, unsigned char update);
     // Before normalization (function): TSingleSelectionWindow::DrawHeroAdvancedOption.
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
+    // Before normalization (function): TSingleSelectionWindow::OnDeleteFile.
+    void onDeleteFile();
     // Before normalization (function): TSingleSelectionWindow::GetMapCount.
     unsigned int getMapCount() const;
     // Before normalization (function): TSingleSelectionWindow::OnNewSetupInfoMsg.
@@ -762,32 +762,28 @@ public:
     // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx.
     // Before normalization (locals): pNetMsg.
     void onGameHeaderInfoInitMsgEx(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::MakeHeroFilter.
+    void makeHeroFilter();
+    // Before normalization (function): TSingleSelectionWindow::SortMaps.
+    void sortMaps(int how, unsigned char sendSortMsg,
+                  // Before normalization (locals): bUpdate.
+                  unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::OnSetAsHostMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onSetAsHostMsg(CNetMsg* netMsg);
     // Returns 0 when the row number is out of range (retail sets al).
     // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onGameHeaderInfoMsg(CNetMsg* netMsg);
-    // Always returns 1 (retail sets al on every exit); DC agrees.
-    // Before normalization (function): TSingleSelectionWindow::OnMapFileNameMsg.
-    // Before normalization (locals): pNetMsg.
-    unsigned char onMapFileNameMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::OnNewHostMsg.
-    // Before normalization (locals): pNetMsg.
-    void onNewHostMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::OnUpdatePlayerPosMsg.
-    // Before normalization (locals): pNetMsg.
-    void onUpdatePlayerPosMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::OnSetAsHostMsg.
-    // Before normalization (locals): pNetMsg.
-    unsigned char onSetAsHostMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoEndMsg.
+    bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnScrollMsg.
+    bool onScrollMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnBadVersionMsg.
     // Before normalization (locals): pNetMsg.
     unsigned char onBadVersionMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::OnPingMsg.
-    // Before normalization (locals): pNetMsg.
-    void onPingMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::OnPingResponseMsg.
-    // Before normalization (locals): pNetMsg.
-    void onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::SetFilter.
+    void setFilter(int size);
     // Before normalization (function): TSingleSelectionWindow::SendChat.
     // Before normalization (locals): cChat.
     void sendChat(unsigned long dpid, const char* chat);
@@ -795,6 +791,8 @@ public:
     // Before normalization (locals): cChat.
     void receiveChat(unsigned long dpid, char* chat,
                      bool inPopup);
+    // Before normalization (function): TSingleSelectionWindow::DisplayChat.
+    void displayChat();
     // Before normalization (function): TSingleSelectionWindow::OnRequestHeroFaceMsg.
     // Before normalization (locals): pNetMsg.
     void onRequestHeroFaceMsg(CNetMsg* netMsg,
@@ -803,49 +801,56 @@ public:
     // Before normalization (locals): pNetMsg.
     void onRequestHeroFaceReplyMsg(CNetMsg* netMsg,
                                    bool inPopup);
+    // Before normalization (function): TSingleSelectionWindow::OnPingMsg.
+    // Before normalization (locals): pNetMsg.
+    void onPingMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnPingResponseMsg.
+    // Before normalization (locals): pNetMsg.
+    void onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::GetHeroFace.
+    // Before normalization (locals): pPlayer.
+    void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
     // Before normalization (function): TSingleSelectionWindow::OnSetAGRMsg.
     // Before normalization (locals): pNetMsg.
     void onSetAGRMsg(CNetMsg* netMsg, bool inPopup);
-    // Before normalization (function): TSingleSelectionWindow::OnTownUpdateMsg.
+    // Before normalization (function): TSingleSelectionWindow::OnNewHostMsg.
     // Before normalization (locals): pNetMsg.
-    void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
-    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoEndMsg.
-    bool onGameHeaderInfoEndMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::CheckMissingHeaders.
-    unsigned char checkMissingHeaders(unsigned long dpidHost);
-    // Before normalization (function): TSingleSelectionWindow::SortMaps.
-    void sortMaps(int how, unsigned char sendSortMsg,
-                  // Before normalization (locals): bUpdate.
-                  unsigned char update);
-    // Before normalization (function): TSingleSelectionWindow::OnScrollMsg.
-    bool onScrollMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::SetFilter.
-    void setFilter(int size);
+    void onNewHostMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnUpdatePlayerPosMsg.
+    // Before normalization (locals): pNetMsg.
+    void onUpdatePlayerPosMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::CheckFaces.
+    void checkFaces();
+    // Always returns 1 (retail sets al on every exit); DC agrees.
+    // Before normalization (function): TSingleSelectionWindow::OnMapFileNameMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onMapFileNameMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnHeaderConfirmMsg.
     bool onHeaderConfirmMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnReqHeaderConfirmMsg.
     bool onReqHeaderConfirmMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::OnMapHeaderRequestMsg.
     bool onMapHeaderRequestMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::DisplayChat.
-    void displayChat();
-    // Before normalization (function): TSingleSelectionWindow::GetHeroFace.
-    // Before normalization (locals): pPlayer.
-    void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
-    // Before normalization (function): TSingleSelectionWindow::OnClickMsg.
-    bool onClickMsg(CNetMsg* netMsg);
-    // Before normalization (function): TSingleSelectionWindow::MakeHeroFilter.
-    void makeHeroFilter();
-    // Before normalization (function): TSingleSelectionWindow::CheckFaces.
-    void checkFaces();
+    // Before normalization (function): TSingleSelectionWindow::CheckMissingHeaders.
+    unsigned char checkMissingHeaders(unsigned long dpidHost);
     // Before normalization (function): TSingleSelectionWindow::TurnOffScenarioOptions.
     void turnOffScenarioOptions();
     // Before normalization (function): TSingleSelectionWindow::TurnOffAdvancedOptions.
     void turnOffAdvancedOptions();
+    // Before normalization (function): TSingleSelectionWindow::OnClickMsg.
+    bool onClickMsg(CNetMsg* netMsg);
     // Before normalization (function): TSingleSelectionWindow::TurnChatOn.
     void turnChatOn(unsigned char update);
     // Before normalization (function): TSingleSelectionWindow::TurnChatOff.
     void turnChatOff(unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::OnTownUpdateMsg.
+    // Before normalization (locals): pNetMsg.
+    void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
+    // Before normalization (function): TSingleSelectionWindow::UpdateNameLists.
+    void updateNameLists();
+    // Dreamcast and Complete both retain the source-level town enum here.
+    // Before normalization (function): TSingleSelectionWindow::UpdateTown.
+    void updateTown(int pos, TTownType town, unsigned char inPopup);
     // Retail 0x58e700 (past the stale span end) hands the whole incoming
     // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
     // alone. Provisional widening.
@@ -859,11 +864,6 @@ public:
     // Before normalization (function): TSingleSelectionWindow::SetNewPlayerSlot.
     // Before normalization (locals): pPlayer.
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
-    // Dreamcast and Complete both retain the source-level town enum here.
-    // Before normalization (function): TSingleSelectionWindow::UpdateTown.
-    void updateTown(int pos, TTownType town, unsigned char inPopup);
-    // Before normalization (function): TSingleSelectionWindow::UpdateNameLists.
-    void updateNameLists();
     // Before normalization (function): TSingleSelectionWindow::SetupLoadGameMode.
     void setupLoadGameMode();
     // Before normalization (function): TSingleSelectionWindow::SetupNewGameMode.
@@ -878,10 +878,6 @@ public:
     // header transfer completes.
     // Before normalization (function): TSingleSelectionWindow::UpdateGameVars.
     void updateGameVars();
-    // DC singleselectionwindow.cpp:2821 (dc 0x135e80); retail 0x57fb90 is
-    // the constructor's out-of-line callee at +0x2c72.
-    // Before normalization (function): TSingleSelectionWindow::UpdateMainWindow.
-    void updateMainWindow();
     // Dreamcast source method; Complete retail 0x58c290. Only the owning TU
     // calls it (from OnBeginGame), so keep this declaration with that TU's
     // existing private lobby-message/vector view.
@@ -891,6 +887,10 @@ public:
     // other launch arm, likewise private to the owning TU.
     // Before normalization (function): TSingleSelectionWindow::BeginNewGame.
     bool beginNewGame();
+    // DC singleselectionwindow.cpp:2821 (dc 0x135e80); retail 0x57fb90 is
+    // the constructor's out-of-line callee at +0x2c72.
+    // Before normalization (function): TSingleSelectionWindow::UpdateMainWindow.
+    void updateMainWindow();
     // The disk header reader family around it, visible only to the
     // owning TU (the vectors gate): GetHeaders scans the picked
     // directory ("random_maps"/"games"/"maps" by mode) into the lists;
@@ -936,11 +936,11 @@ public:
     unsigned char sendPlayerPositions(unsigned long dpidTo);
     // Before normalization (function): TSingleSelectionWindow::SendSetupInfo.
     unsigned char sendSetupInfo(unsigned long dpid);
-    // Before normalization (function): TSingleSelectionWindow::SendPlayerFaces.
-    void sendPlayerFaces();
     // Before normalization (function): TSingleSelectionWindow::IsHost.
     // DC public QAA_NXZ; preserve the bool chain through CDPlay::IsHost.
     bool isHost();
+    // Before normalization (function): TSingleSelectionWindow::SendPlayerFaces.
+    void sendPlayerFaces();
     // Before normalization (function): TSingleSelectionWindow::IsMultiPlayer.
     unsigned char isMultiPlayer();
     // Before normalization (function): TSingleSelectionWindow::ShowWidget.
@@ -950,13 +950,12 @@ public:
     // boundary, the filter-widget range, and the cleared mode byte.
     // Before normalization (function): TSingleSelectionWindow::TurnOffFilterOptions.
     void turnOffFilterOptions();
-
-private:
-    // Before normalization (function): TSingleSelectionWindow::GetThisPlayer.
-    CNetPlayerHandlerPlayer* getThisPlayer();
-public:
     // Before normalization (function): TSingleSelectionWindow::CalcPosition.
     int calcPosition(int playerPos);
+private:
+
+    // Before normalization (function): TSingleSelectionWindow::GetThisPlayer.
+    CNetPlayerHandlerPlayer* getThisPlayer();
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 

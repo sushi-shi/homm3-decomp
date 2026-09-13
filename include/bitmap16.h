@@ -45,8 +45,15 @@ enum EBitmapGreenBits {
 };
 
 class Bitmap16Bit : public resource {
-    // Before normalization: DataSize.
+public:
+
+    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
+    // background through [vptr]+flag 1. Slot 2 reports the resource's
+    // total in-memory extent: the 0x38-byte object plus DataSize.
+    virtual ~Bitmap16Bit();
+    void clear();
 private:
+    // Before normalization: DataSize.
     int m_dataSize;
     // Before normalization: ImageSize.
     int m_imageSize;
@@ -61,17 +68,61 @@ private:
     // Before normalization: referenced.
     unsigned char m_referenced;
 public:
-
-    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
-    // background through [vptr]+flag 1. Slot 2 reports the resource's
-    // total in-memory extent: the 0x38-byte object plus DataSize.
-    virtual ~Bitmap16Bit();
-    void clear();
     // Before normalization (function): Bitmap16Bit::GetSize.
     virtual unsigned int getSize() const;
 
     Bitmap16Bit(int w, int h);
     Bitmap16Bit(const char* name, int w, int h);
+    void reference(int w, int h, int pitch, unsigned short* data);
+    // Before normalization (function): Bitmap16Bit::Draw.
+    void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
+    // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
+    // graphics remappers expand this wrapper into their retail bodies.
+    // Before normalization (function): Bitmap16Bit::Draw.
+    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
+    {
+        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
+             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
+             flipped);
+    }
+    // Before normalization (function): Bitmap16Bit::Grab.
+    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
+    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
+    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
+    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
+    // the retained raw call at 0x0044e3f0.
+    // Before normalization (function): Bitmap16Bit::Grab.
+    void grab(const Bitmap16Bit* src, int srcX, int srcY)
+    {
+        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
+             src->getPitch());
+    }
+    // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
+    // callers pin it: textWidget::Draw's back-colour fill, and
+    // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
+    // run is the DC signature verbatim.
+    // Before normalization (function): Bitmap16Bit::FillRect.
+    void fillRect(int x, int y, int w, int h, unsigned short color);
+    // Retail bodies 0x44e540 / 0x44e780, both reached from
+    // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
+    // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
+    // load off an int member is what fixes the 16-bit colour parameter.
+    // Before normalization (function): Bitmap16Bit::FrameRect.
+    void frameRect(int x, int y, int w, int h, unsigned short color);
+    // Before normalization (function): Bitmap16Bit::Darken.
+    void darken(int x, int y, int w, int h);
+    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
+    // 0x44e6a0 independently preserve this masked darken overload.
+    // Before normalization (function): Bitmap16Bit::Darken.
+    void darken(int x, int y, int w, int h, Bitmap816* mask,
+                int sx, int sy);
+    // Before normalization (function): Bitmap16Bit::Colorize.
+    void colorize(int x, int y, int width, int height, unsigned short color);
+    // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
+    // retail caller that proves the (hue, saturation) pair as raw dwords.
+    // Before normalization (function): Bitmap16Bit::Colorize.
+    void colorize(int x, int y, int w, int h, float hue, float saturation);
     // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
     // inline because Complete's ResourceManager expands them into its
     // bitmap-remap blit rather than calling the emitted DC copies.
@@ -106,56 +157,6 @@ public:
     // Before normalization (function): Bitmap16Bit::Remap.
     // Before normalization (locals): old_green_bits.
     void remap(int oldGreenBits);
-    void reference(int w, int h, int pitch, unsigned short* data);
-    // Before normalization (function): Bitmap16Bit::Darken.
-    void darken(int x, int y, int w, int h);
-    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
-    // 0x44e6a0 independently preserve this masked darken overload.
-    // Before normalization (function): Bitmap16Bit::Darken.
-    void darken(int x, int y, int w, int h, Bitmap816* mask,
-                int sx, int sy);
-    // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
-    // callers pin it: textWidget::Draw's back-colour fill, and
-    // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
-    // run is the DC signature verbatim.
-    // Before normalization (function): Bitmap16Bit::FillRect.
-    void fillRect(int x, int y, int w, int h, unsigned short color);
-    // Before normalization (function): Bitmap16Bit::Draw.
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
-    // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
-    // graphics remappers expand this wrapper into their retail bodies.
-    // Before normalization (function): Bitmap16Bit::Draw.
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
-              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
-    {
-        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
-             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
-             flipped);
-    }
-    // Before normalization (function): Bitmap16Bit::Grab.
-    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
-    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
-    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
-    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
-    // the retained raw call at 0x0044e3f0.
-    // Before normalization (function): Bitmap16Bit::Grab.
-    void grab(const Bitmap16Bit* src, int srcX, int srcY)
-    {
-        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
-             src->getPitch());
-    }
-    // Retail bodies 0x44e540 / 0x44e780, both reached from
-    // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
-    // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
-    // load off an int member is what fixes the 16-bit colour parameter.
-    // Before normalization (function): Bitmap16Bit::FrameRect.
-    void frameRect(int x, int y, int w, int h, unsigned short color);
-    // Before normalization (function): Bitmap16Bit::Colorize.
-    void colorize(int x, int y, int width, int height, unsigned short color);
-    // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
-    // retail caller that proves the (hue, saturation) pair as raw dwords.
-    // Before normalization (function): Bitmap16Bit::Colorize.
-    void colorize(int x, int y, int w, int h, float hue, float saturation);
 };
 SIZE(Bitmap16Bit, 0x38);
 

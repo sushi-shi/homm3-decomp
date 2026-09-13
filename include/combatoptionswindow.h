@@ -73,18 +73,16 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeRolloverWidget[3];
-    // Before normalization: RolloverWidget.
-private:
-    textWidget* m_rolloverWidget;   // +0x50
-public:
 
     TCombatOptionsWindow();
     virtual ~TCombatOptionsWindow();
-private:
-    int convertID2HelpID(int id) const;
-public:
     // Before normalization (function): TCombatOptionsWindow::DoModal.
     void doModal();
+private:
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;   // +0x50
+    int convertID2HelpID(int id) const;
+public:
     // DC CombatOptionsWindowHandler (0x67b7c) directly calls these private
     // methods; retail 0x46f7b0 expands them. Preserve the callback friendship.
     friend int combatOptionsWindowHandler(message& msg);

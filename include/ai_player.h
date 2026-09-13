@@ -83,12 +83,12 @@ SIZE(CGiftRequestMsg, 28);
 // entries and the corresponding DC public names.
 class type_town_threat_checker {
 protected:
-    // Before normalization (function): type_town_threat_checker::mark_towns.
-    // Before normalization (locals): enemy_hero, search_array.
-    void markTowns(hero* enemyHero, searchArray* currentSearchArray);
 
     // Before normalization: current_player_id.
     int m_currentPlayerId;
+    // Before normalization (function): type_town_threat_checker::mark_towns.
+    // Before normalization (locals): enemy_hero, search_array.
+    void markTowns(hero* enemyHero, searchArray* currentSearchArray);
 public:
 
     // Before normalization (locals): new_player.
@@ -125,14 +125,7 @@ protected:
 // Dreamcast records this exact 12-byte value object, and retail's
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
 struct type_creature_source {
-    // Before normalization: type.
-    TCreatureType m_type;
-    // Before normalization: ptr.
-    short* m_ptr;
-    // Before normalization: number.
-    short m_number;
-    // Before normalization: is_free.
-    unsigned char m_isFree;
+public:
 
     // ai_player.h:299 initializes these three fields; line 300 copies
     // the pointed-to amount. The decorated DC public retains bool (_N).
@@ -143,6 +136,14 @@ struct type_creature_source {
     {
         m_number = *newAmount;
     }
+    // Before normalization: type.
+    TCreatureType m_type;
+    // Before normalization: ptr.
+    short* m_ptr;
+    // Before normalization: number.
+    short m_number;
+    // Before normalization: is_free.
+    unsigned char m_isFree;
 };
 SIZE(type_creature_source, 12);
 
@@ -173,23 +174,25 @@ protected:
 
     // Before normalization (function): type_AI_creature_swapper::get_alignments.
     void getAlignments();
+public:
+
+    type_AI_creature_swapper();
+protected:
     // Before normalization (function): type_AI_creature_swapper::add_creatures.
     void addCreatures(TCreatureType type, short amount, short slot);
+    // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
+    // Before normalization (locals): is_shooter, check_alignments.
+    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::do_best_swap.
     // Before normalization (locals): can_take_all.
     long doBestSwap(bool canTakeAll);
     // Before normalization (function): type_AI_creature_swapper::dump_extra_creature.
     void dumpExtraCreature();
-    // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
-    // Before normalization (locals): is_shooter, check_alignments.
-    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
     // Before normalization (function): type_AI_creature_swapper::value_of_adding_army.
     long valueOfAddingArmy(TCreatureType type, short count,
                               // Before normalization (locals): must_replace_creature.
                               short& slot, unsigned char mustReplaceCreature);
-
 public:
-    type_AI_creature_swapper();
     // Before normalization (function): type_AI_creature_swapper::do_swap.
     // Before normalization (locals): current_hero, source_army, second_hero,
     // new_has_angelic_alliance.
@@ -209,21 +212,8 @@ public:
 SIZE(type_AI_creature_swapper, 0x20);
 
 class type_AI_creature_purchaser : public type_AI_creature_swapper {
-protected:
-    // Before normalization: player_id.
-    long m_playerId;
-    // Before normalization: funds.
-    long* m_funds;
-    // Before normalization: subtract_cost_mode.
-    unsigned char m_subtractCostMode;
-    // Before normalization: creatures.
-    std::vector<type_creature_source> m_creatures;
-
-    // Before normalization (function): type_AI_creature_purchaser::do_best_purchase.
-    // Before normalization (locals): trade_allowed.
-    long doBestPurchase(unsigned char tradeAllowed);
-
 public:
+
     type_AI_creature_purchaser(long player,
                                // Before normalization (locals): current_generator, current_town,
                                // is_free.
@@ -237,6 +227,20 @@ public:
     // No retail out-of-line body (set(town) ends 0x42d418, next row
     // 0x42d420); every caller inlines its clear + one push_back.
     void set(TCreatureType newType, short* newAmount);
+protected:
+
+    // Before normalization (function): type_AI_creature_purchaser::do_best_purchase.
+    // Before normalization (locals): trade_allowed.
+    long doBestPurchase(unsigned char tradeAllowed);
+    // Before normalization: player_id.
+    long m_playerId;
+    // Before normalization: funds.
+    long* m_funds;
+    // Before normalization: subtract_cost_mode.
+    unsigned char m_subtractCostMode;
+    // Before normalization: creatures.
+    std::vector<type_creature_source> m_creatures;
+public:
     // Before normalization (function): type_AI_creature_purchaser::do_purchase.
     // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
     // allow_trade, new_has_angelic_alliance.
@@ -342,8 +346,16 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // set_attack_bonuses(float computer_bonus, float human_bonus) names the
 // order. They are DEFINED by philai.cpp, not here.
 class type_AI_player {
-    // Before normalization: team.
+public:
+
+    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
+    // AI_initialize; retail leaves exactly the team-word store.
+    // Before normalization (locals): new_team.
+    void init(short newTeam) { m_team = newTeam; }
+    // Before normalization (function): type_AI_player::get_attack_bonus.
+    static float getAttackBonus(short player);  // 0x428710
 protected:
+    // Before normalization: team.
     short m_team;
     // Before normalization: magus_hut_value.
     long m_magusHutValue;
@@ -356,13 +368,6 @@ protected:
     // Before normalization: resource_value.
     double m_resourceValue[7];
 public:
-
-    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
-    // AI_initialize; retail leaves exactly the team-word store.
-    // Before normalization (locals): new_team.
-    void init(short newTeam) { m_team = newTeam; }
-    // Before normalization (function): type_AI_player::get_attack_bonus.
-    static float getAttackBonus(short player);  // 0x428710
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
@@ -371,6 +376,14 @@ public:
     {
         return m_resourceValue[resource];
     }
+    // Before normalization (function): type_AI_player::calculate_demand.
+    void calculateDemand();                      // 0x428740
+    // Before normalization (function): type_AI_player::end_turn.
+    void endTurn();                              // 0x428dd0
+    // Before normalization (function): type_AI_player::get_magus_hut_value.
+    long getMagusHutValue() const { return m_magusHutValue; }
+    // Before normalization (function): type_AI_player::start_turn.
+    void startTurn();                            // 0x4297c0
     // Before normalization (function): type_AI_player::set_attack_bonuses.
     // Before normalization (locals): computer_bonus, human_bonus.
     static void setAttackBonuses(float computerBonus,
@@ -379,72 +392,58 @@ public:
         s_attackComputerBonus = computerBonus;
         s_attackHumanBonus = humanBonus;
     }
-    // Before normalization (function): type_AI_player::get_magus_hut_value.
-    long getMagusHutValue() const { return m_magusHutValue; }
-    // Before normalization (function): type_AI_player::calculate_demand.
-    void calculateDemand();                      // 0x428740
-    // Before normalization (function): type_AI_player::end_turn.
-    void endTurn();                              // 0x428dd0
+protected:
     // Before normalization (function): type_AI_player::make_gift.
     // Before normalization (locals): player_id.
-protected:
     void makeGift(long playerId);               // 0x429110
 public:
-    // Before normalization (function): type_AI_player::start_turn.
-    void startTurn();                            // 0x4297c0
     // Before normalization (function): type_AI_player::reset_magus_hut_value.
     // DC ai_player.h:273-274, dc 0x37df0: clear the cached value.
     // Before normalization (function): type_AI_player::clear_magus_hut_value.
     void clearMagusHutValue() { m_magusHutValue = 0; }
-    void resetMagusHutValue();                 // 0x429ab0
-    // Before normalization (function): type_AI_player::calculate_reserve.
-protected:
-    void calculateReserve();                     // 0x429ad0
-    // Before normalization (function): type_AI_player::get_total_value.
-    // Before normalization (locals): basic_value.
-    long getTotalValue(long basicValue, int* cost);  // 0x42a150
-public:
     // Before normalization (function): type_AI_player::buy_creatures.
     // Before normalization (locals): current_hero, current_town.
     void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
     // Before normalization (function): type_AI_player::buy_mage_guild.
     // Before normalization (locals): current_hero, current_town.
     void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
+    // Before normalization (function): type_AI_player::hire_heroes.
+    bool hireHeroes();
+    void resetMagusHutValue();                 // 0x429ab0
+    // Before normalization (function): type_AI_player::trade_resources.
+    void tradeResources(const int* cost, long number);
 protected:
-    // DC public ?purchase_buildings@type_AI_player@@IAAXXZ proves protected
-    // access and a void/no-argument ordinary member.
-    // Before normalization (function): type_AI_player::purchase_buildings.
-    void purchaseBuildings();
+    // Before normalization (function): type_AI_player::build_markets.
+    bool buildMarkets(int* supply);
+    // Before normalization (function): type_AI_player::calculate_reserve.
+    void calculateReserve();                     // 0x429ad0
+    // Before normalization (function): type_AI_player::can_trade_resources.
+    bool canTradeResources(const int* cost, int* supply,
+                             // Before normalization (locals): trade_qty.
+                             std::vector<long>& tradeQty);
+    // Before normalization (function): type_AI_player::check_trade_supply.
+    bool checkTradeSupply(const int* cost, long number, int* supply,
+                            // Before normalization (locals): trade_qty.
+                            std::vector<long>& tradeQty);
+    // Before normalization (function): type_AI_player::do_resource_trade.
+    void doResourceTrade(int* supply);
+    // Before normalization (function): type_AI_player::get_total_value.
+    // Before normalization (locals): basic_value.
+    long getTotalValue(long basicValue, int* cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     // Before normalization (function): type_AI_player::purchase_building.
     // Before normalization (locals): prohibited_creatures.
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
-public:
-    // Before normalization (function): type_AI_player::hire_heroes.
-    bool hireHeroes();
-    // Before normalization (function): type_AI_player::check_trade_supply.
-protected:
-    bool checkTradeSupply(const int* cost, long number, int* supply,
-                            // Before normalization (locals): trade_qty.
-                            std::vector<long>& tradeQty);
-    // Before normalization (function): type_AI_player::can_trade_resources.
-    bool canTradeResources(const int* cost, int* supply,
-                             // Before normalization (locals): trade_qty.
-                             std::vector<long>& tradeQty);
-public:
-    // Before normalization (function): type_AI_player::trade_resources.
-    void tradeResources(const int* cost, long number);
-    // Before normalization (function): type_AI_player::build_markets.
-protected:
-    bool buildMarkets(int* supply);
-    // Before normalization (function): type_AI_player::do_resource_trade.
-    void doResourceTrade(int* supply);
+    // DC public ?purchase_buildings@type_AI_player@@IAAXXZ proves protected
+    // access and a void/no-argument ordinary member.
+    // Before normalization (function): type_AI_player::purchase_buildings.
+    void purchaseBuildings();
+    // Before normalization: attack_human_bonus.
+    static float s_attackHumanBonus;
 
     // Before normalization: attack_computer_bonus.
     static float s_attackComputerBonus;
-    // Before normalization: attack_human_bonus.
-    static float s_attackHumanBonus;
 };
 
 // Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift

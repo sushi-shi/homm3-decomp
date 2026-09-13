@@ -272,17 +272,16 @@ public:
     // structural twin supplies the later method name after retail fixes the
     // receiver and nullary string-return ABI.
     std::string getSeerLogText();
-    // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
-    // same way from NewfullMap::Save. Declared separately because the
-    // TQuestGuard base is private here.
-private:
-    int save(TAbstractFile* outfile);
-public:
     // Dreamcast names this source boundary on TSeerHut.  Complete's quest
     // log applies the same predicate to both of its quest pools.
     // Before normalization (function): TSeerHut::QuestActiveforPlayer.
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const;
+private:
+    // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
+    // same way from NewfullMap::Save. Declared separately because the
+    // TQuestGuard base is private here.
+    int save(TAbstractFile* outfile);
 };
 SIZE(TSeerHut, 0x13);
 

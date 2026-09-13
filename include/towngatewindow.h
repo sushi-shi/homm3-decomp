@@ -62,13 +62,12 @@ public:
     // Before normalization (function): TTownGateWindow::UpdateTownLocators.
     // DC callback 0x169ba8 calls this private method; retail 0x5c2980 agrees.
     friend void townGateSliderCallback(int state, heroWindow* parentWindow);
-private:
-    void updateTownLocators();
-public:
     // Before normalization (function): TTownGateWindow::DoModal.
     void doModal();
     // Before normalization (function): TTownGateWindow::WindowHandler.
     virtual int windowHandler(message* msg);
+private:
+    void updateTownLocators();
 };
 SIZE(TTownGateWindow, 0x7c);
 

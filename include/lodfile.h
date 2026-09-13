@@ -63,8 +63,8 @@ SIZE(LODHeader, 0x5c);
 // Canonical retail layout. The constructor and clear/open/read bodies account
 // for every field and DoNewGame's static storage proves the total 0x18c size.
 class LODFile {
-    // Before normalization: fileptr.
 private:
+    // Before normalization: fileptr.
     FILE* m_fileptr;
     // Before normalization: LODFileName.
     char m_lodFileName[256];
@@ -82,28 +82,25 @@ private:
     int m_matchindex;
     // Before normalization: header.
     LODHeader m_header;
+
+    // Before normalization (function): LODFile::Find.
+    // Before normalization (locals): item_name.
+    void find(unsigned begin, unsigned end, const char* itemName);
+    // Before normalization (locals): item_name.
+    void* getDataPtr(const char* itemName);
 public:
     // Before normalization: numEntries.
     int m_numEntries;
     // Before normalization: subindex.
     std::vector<LODEntry> m_subindex;
+    void clear();
+    unsigned char pointAt(const char* itemName);
+    int read(void* dest, int numBytes);
+    LODEntry* getItemIndex(const char* itemName);
+    int open(const char* filename, int flags);
 
     LODFile();
     ~LODFile();
-    void clear();
-    int open(const char* filename, int flags);
-    // Before normalization (locals): item_name.
-private:
-    void* getDataPtr(const char* itemName);
-public:
-    LODEntry* getItemIndex(const char* itemName);
-    unsigned char pointAt(const char* itemName);
-    int read(void* dest, int numBytes);
-
-private:
-    // Before normalization (function): LODFile::Find.
-    // Before normalization (locals): item_name.
-    void find(unsigned begin, unsigned end, const char* itemName);
 };
 SIZE(LODFile, 0x18c);
 

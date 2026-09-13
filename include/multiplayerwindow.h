@@ -172,10 +172,8 @@ public:
     virtual ~CHotSeatDlg();
     // Before normalization (function): CHotSeatDlg::OnWidgetDeselect.
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CHotSeatDlg::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
-    // Before normalization (function): CHotSeatDlg::OnOK.
-    unsigned char onOK();
+    // Before normalization (function): CHotSeatDlg::OnKillFocus.
+    void onKillFocus(int id);
     // Non-virtual, and the vtable proves it: 0x6401d8 stops after slot 13
     // (0x240210, CHotSeatEdit's table, starts at +0x38). Retail emits no
     // body for these helpers - they expand into CHotSeatEdit's two overrides.
@@ -185,8 +183,10 @@ public:
     int getPlayerCount();
     // Before normalization (function): CHotSeatDlg::UpdateOK.
     void updateOK();
-    // Before normalization (function): CHotSeatDlg::OnKillFocus.
-    void onKillFocus(int id);
+    // Before normalization (function): CHotSeatDlg::OnOK.
+    unsigned char onOK();
+    // Before normalization (function): CHotSeatDlg::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
 };
 SIZE(CHotSeatDlg, 0x114);
 
@@ -234,10 +234,10 @@ public:
     // Before normalization (function): CMPInputDlg::OnWidgetDeselect.
     // Before normalization (locals): bExitFlag.
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): CMPInputDlg::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
     // Before normalization (function): CMPInputDlg::OnOK.
     unsigned char onOK();
+    // Before normalization (function): CMPInputDlg::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
     // Before normalization (function): CMPInputDlg::UpdateOK.
     virtual void updateOK();  // slot 14, retail 0x510980
     // Before normalization (function): CMPInputDlg::DisableOK.
@@ -349,8 +349,57 @@ public:
     unsigned char m_hostJoinScreen;           // +0xc0
     // Before normalization: splash.
     widget* m_splash;                         // +0xc4 (DC bitmapBorder*)
-    // Before normalization: hotSeat.
+
+    TMultiPlayerWindow();
+    virtual ~TMultiPlayerWindow();
+    // Before normalization (function): TMultiPlayerWindow::InitRemote.
+    // Before normalization (locals): sExtra.
+    unsigned char initRemote(eNetGameType netGameType, const char* extra,
+                             _DPCOMPORTADDRESS* comportInfo);
+    // Before normalization (function): TMultiPlayerWindow::JoinSession.
+    // Before normalization (locals): pSession.
+    unsigned char joinSession(CDPlaySession* session, const char* password);
+    // Before normalization (function): TMultiPlayerWindow::HostSession.
+    unsigned char hostSession(const char* sessName, const char* password);
+    // Before normalization (function): TMultiPlayerWindow::OnJoin.
+    unsigned char onJoin();
+    // Before normalization (function): TMultiPlayerWindow::OnHost.
+    unsigned char onHost();
+    // Before normalization (function): TMultiPlayerWindow::OnIPX.
+    unsigned char onIPX();
+    // Before normalization (function): TMultiPlayerWindow::OnTCP.
+    unsigned char onTCP();
+    // Before normalization (function): TMultiPlayerWindow::OnSearch.
+    unsigned char onSearch();
+    // Before normalization (function): TMultiPlayerWindow::OnHotSeat.
+    unsigned char onHotSeat();
+    // Before normalization (function): TMultiPlayerWindow::OnModem.
+    unsigned char onModem();
+    // Before normalization (function): TMultiPlayerWindow::OnDirect.
+    unsigned char onDirect();
+    // Before normalization (function): TMultiPlayerWindow::OnModemJoin.
+    unsigned char onModemJoin();
+    // Before normalization (function): TMultiPlayerWindow::OnModemHost.
+    unsigned char onModemHost();
+    // Before normalization (function): TMultiPlayerWindow::OnDirectHost.
+    unsigned char onDirectHost();
+    // Before normalization (function): TMultiPlayerWindow::OnDirectJoin.
+    unsigned char onDirectJoin();
+    // Before normalization (function): TMultiPlayerWindow::Update.
+    void update();
+    // Before normalization (function): TMultiPlayerWindow::GoSessionList.
+    void goSessionList();
+    // Before normalization (function): TMultiPlayerWindow::GoMainMenu.
+    void goMainMenu();
+    // Before normalization (function): TMultiPlayerWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+    // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    virtual int onWidgetDeselect(int id, bool& exitFlag);
+    // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
 private:
+    // Before normalization: hotSeat.
     widget* m_hotSeat;                        // +0xc8 (DC button*)
     // Before normalization: ipx.
     widget* m_ipx;                            // +0xcc
@@ -378,56 +427,6 @@ private:
     textWidget* m_userNameHeader;             // +0xf8
     // Before normalization: RolloverWidget.
     textWidget* m_rolloverWidget;             // +0xfc
-public:
-
-    TMultiPlayerWindow();
-    virtual ~TMultiPlayerWindow();
-    // Before normalization (function): TMultiPlayerWindow::WindowHandler.
-    virtual int windowHandler(message* msg);
-    // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
-    // Before normalization (locals): bExitFlag.
-    virtual int onWidgetDeselect(int id, bool& exitFlag);
-    // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
-    virtual textWidget* getRolloverWidget();
-    // Before normalization (function): TMultiPlayerWindow::GoSessionList.
-    void goSessionList();
-    // Before normalization (function): TMultiPlayerWindow::GoMainMenu.
-    void goMainMenu();
-    // Before normalization (function): TMultiPlayerWindow::Update.
-    void update();
-    // Before normalization (function): TMultiPlayerWindow::JoinSession.
-    // Before normalization (locals): pSession.
-    unsigned char joinSession(CDPlaySession* session, const char* password);
-    // Before normalization (function): TMultiPlayerWindow::OnHost.
-    unsigned char onHost();
-    // Before normalization (function): TMultiPlayerWindow::OnJoin.
-    unsigned char onJoin();
-    // Before normalization (function): TMultiPlayerWindow::OnTCP.
-    unsigned char onTCP();
-    // Before normalization (function): TMultiPlayerWindow::OnIPX.
-    unsigned char onIPX();
-    // Before normalization (function): TMultiPlayerWindow::OnSearch.
-    unsigned char onSearch();
-    // Before normalization (function): TMultiPlayerWindow::OnHotSeat.
-    unsigned char onHotSeat();
-    // Before normalization (function): TMultiPlayerWindow::OnModem.
-    unsigned char onModem();
-    // Before normalization (function): TMultiPlayerWindow::OnDirect.
-    unsigned char onDirect();
-    // Before normalization (function): TMultiPlayerWindow::HostSession.
-    unsigned char hostSession(const char* sessName, const char* password);
-    // Before normalization (function): TMultiPlayerWindow::InitRemote.
-    // Before normalization (locals): sExtra.
-    unsigned char initRemote(eNetGameType netGameType, const char* extra,
-                             _DPCOMPORTADDRESS* comportInfo);
-    // Before normalization (function): TMultiPlayerWindow::OnModemHost.
-    unsigned char onModemHost();
-    // Before normalization (function): TMultiPlayerWindow::OnDirectHost.
-    unsigned char onDirectHost();
-    // Before normalization (function): TMultiPlayerWindow::OnModemJoin.
-    unsigned char onModemJoin();
-    // Before normalization (function): TMultiPlayerWindow::OnDirectJoin.
-    unsigned char onDirectJoin();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

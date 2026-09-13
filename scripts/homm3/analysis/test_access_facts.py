@@ -20,6 +20,48 @@ def authored(parameters=(), const=False):
 
 
 class AccessFactsTest(unittest.TestCase):
+    def test_member_order_preserves_layout_slots_and_overloads(self):
+        import importlib.util
+        script = Path(__file__).resolve().parents[2] / "experiments/recover-member-order.py"
+        spec = importlib.util.spec_from_file_location("member_order", script)
+        order = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(order)
+        members = [
+            {"kind": "member", "rank": 9},
+            {"kind": "method", "rank": 5, "virtual": True},
+            {"kind": "member", "rank": 1},
+            {"kind": "method", "rank": 0, "virtual": True},
+            {"kind": "method", "rank": 3},
+            {"kind": "method", "rank": 3},
+        ]
+        recovered = order.constrained_order(members)
+        self.assertEqual(recovered, [4, 5, 1, 3, 0, 2])
+        self.assertEqual([i for i in recovered if members[i]["kind"] == "member"], [0, 2])
+        self.assertEqual([i for i in recovered if members[i].get("virtual")], [1, 3])
+        self.assertEqual(order.without_labels(
+            "// owning evidence\nprivate: // access evidence\n    // declaration evidence\n"),
+            "// owning evidence\n// access evidence\n    // declaration evidence\n")
+        result = order.render_segment([
+            {"access": "private", "text": "    void helper();\n"},
+            {"access": "public", "text": "    void run();\n"},
+        ], [1, 0], "")
+        self.assertEqual(result,
+            "public:\n    void run();\nprivate:\n    void helper();\npublic:\n")
+        body = ("Example() : value(make(1, 2))\n"
+                "    {\n        if (value) { --value; }\n    }\n    void next();")
+        end = order.method_end(body, 0)
+        self.assertEqual(body[end:], "\n    void next();")
+        prototype = "void call(int (*callback)(int)) const;\nvoid next();"
+        self.assertEqual(prototype[order.method_end(prototype, 0):], "\nvoid next();")
+        old_key = "Header:Outer::(anonymous union at /tmp/header.h:20:5)"
+        new_key = "Header:Outer::(anonymous union at /tmp/header.h:40:5)"
+        layout = {"size": 4, "fields": [["value", "int", 0]]}
+        self.assertEqual(order.layout_differences({old_key: layout}, {new_key: layout}), [])
+        self.assertTrue(order.layout_differences({old_key: layout},
+            {new_key: {"size": 8, "fields": [["value", "int", 32]]}}))
+        self.assertTrue(order.layout_differences({old_key: layout, new_key: layout},
+                                               {new_key: layout}))
+
     def test_owning_alias_survives_access_label(self):
         source = "// Before normalization: OldField.\nprivate:\n    int m_newField;\n"
         self.assertEqual(facts._aliases(source, {"loc": {"offset": source.index("int ")}}),

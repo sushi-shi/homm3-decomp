@@ -157,11 +157,11 @@ public:
     CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
     // Before normalization (function): CTeamAlignmentDlg::CreateWin.
     unsigned char createWin();
-    // Before normalization (function): CTeamAlignmentDlg::CountNumPlayers.
 protected:
-    int countNumPlayers(int teamNbr);
     // Before normalization (function): CTeamAlignmentDlg::GetTeams.
     void getTeams();
+    // Before normalization (function): CTeamAlignmentDlg::CountNumPlayers.
+    int countNumPlayers(int teamNbr);
 };
 
 // The modal progress bar retail raises around the generator run.  Vtable

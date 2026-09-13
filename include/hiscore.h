@@ -121,6 +121,8 @@ public:
 
     CHSInputDlg(int maxChars);
     virtual ~CHSInputDlg();
+    // Before normalization (function): CHSInputDlg::OnOK.
+    unsigned char onOK();
     // Before normalization (function): CHSInputDlg::WindowHandler.
     virtual int windowHandler(message* msg);
     // Before normalization (function): CHSInputDlg::OnWidgetDeselect.
@@ -128,8 +130,6 @@ public:
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     // Before normalization (function): CHSInputDlg::GetRolloverWidget.
     virtual textWidget* getRolloverWidget();
-    // Before normalization (function): CHSInputDlg::OnOK.
-    unsigned char onOK();
 };
 SIZE(CHSInputDlg, 0x5c);
 
@@ -169,14 +169,6 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeCreatureFrame[3];
-    // Before normalization: iCreatureFrame.
-private:
-    int m_creatureFrame;
-    // Before normalization: lLastServe.
-    unsigned long m_lastServe;
-    // Before normalization: hiScoreBack.
-    Bitmap816* m_hiScoreBack[2];
-public:
 
     THighScoreWindow();
     virtual ~THighScoreWindow();
@@ -184,6 +176,13 @@ public:
     void doModal();
     // Before normalization (function): THighScoreWindow::Update.
     void update();
+private:
+    // Before normalization: iCreatureFrame.
+    int m_creatureFrame;
+    // Before normalization: lLastServe.
+    unsigned long m_lastServe;
+    // Before normalization: hiScoreBack.
+    Bitmap816* m_hiScoreBack[2];
 };
 SIZE(THighScoreWindow, 0x110);
 

@@ -170,11 +170,231 @@ public:
     // the constructor leaves them uninitialized. Preserve the aggregate so
     // setRectangle keeps its original one-statement assignment.
     tagRECT m_validRectangle;
+
+    searchArray();
+    ~searchArray();
+    // Before normalization (function): searchArray::Close.
+    void close();
+    // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
+    // two expansions in check_adjacent_hexes and no retained retail call.
+    // Retail 0x4b3b90 retains this 32-byte bounds-free accessor. Four calls
+    // inside FindCombatPath's mark expansions reach it; PushCombatPoint's
+    // source call expands. The old getCellData name/body was an NH3API
+    // fallback; DC's canonical const helper is byte-identical and owns it.
+    // Before normalization (function): searchArray::get_hex.
+    pathCell* getHex(long x) const
+    {
+        if (m_cellData == 0)
+            return 0;
+        return &m_cellData[x];
+    }
+
+    // Header-inline in the DC roster and expanded by ProcessHover in retail.
+    // The public decoration is
+    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
+    // a const member and _N proves the source parameter was native bool.
+    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
+    // only the low byte and never writes through this.
+    // Before normalization (function): searchArray::get_cell.
+    pathCell* getCell(type_point point, bool flying) const
+    {
+        if (!m_cellData)
+            return m_cellData;
+        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
+                         * g_mapWidth + point.m_x];
+    }
+    // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
+    // Before normalization (function): searchArray::get_danger_value.
+    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
+    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
+    // folded into ai_player.obj's destination chooser on retail x86.  Keep
+    // the boundaries visible in C++ even where the selected lowering is a
+    // vector::size call or direct field/index arithmetic.
+    // Before normalization (function): searchArray::get_visited_count.
+    long getVisitedCount() const { return m_visitedPoints.size(); }
+    // Before normalization (function): searchArray::get_visited_cell.
+    pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
+    // Before normalization (function): searchArray::SeedPosition.
+    // Before normalization (locals): current_hero, is_boat, search_type, iCurTempMobility,
+    // bSeedContinuation.
+    void seedPosition(hero* currentHero, type_point start,
+                      type_point target, int maxMobility,
+                      unsigned char isBoat,
+                      type_search_type searchType,
+                      int curTempMobility,
+                      unsigned char seedContinuation);
+
+    // Before normalization (function): searchArray::BuildPath.
+    // Before normalization (locals): current_hero.
+    int buildPath(const hero* currentHero, long limit);
+
+    // Before normalization (function): searchArray::clear_path.
+    void clearPath()
+    {
+        m_result.erase(m_result.begin(), m_result.end());
+    }
+
+    // Dreamcast FindPath.h:216/226. Both const header helpers retain public
+    // SH4 copies, while Complete expands build_path's calls into the result
+    // vector's size and indexed pointer load.
+    // Before normalization (function): searchArray::get_path_steps.
+    long getPathSteps() const
+    {
+        return m_result.size();
+    }
+    // DC FindPath.h:221-223, get_step: the route direction is a byte result
+    // read from the indexed pathCell, distinct from get_step_cell's pointer.
+    unsigned char getStep(long i) const
+    {
+        return m_result[i]->m_direction;
+    }
+    // Before normalization (function): searchArray::get_step_cell.
+    const pathCell* getStepCell(long i) const
+    {
+        return m_result[i];
+    }
+    // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at
+    // one turn; the null-cellData arm still dereferences (retail reads
+    // [0x18] off a zero base), so the guard is the accessor's, not the
+    // body's.
+    // Before normalization (function): searchArray::get_travel_time.
+    // Before normalization (locals): current_army.
+    long getTravelTime(const army* currentArmy, long hex);
+    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
+    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
+    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
+    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
+    // 16-bit value, and FindCombatPath even does the neighbour's
+    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
+    // add; movsx ecx, cx`) - which only a short parameter forces. The
+    // one call whose argument is already a sign-extended 16-bit value
+    // loses the movsx, exactly as it should.
+    // Before normalization (function): searchArray::is_moat.
+    unsigned char isMoat(short hex) { return m_isMoatSlowed[hex]; }
+    // E:\\gamedcs\\findpath.h:247 (dc 0x37e7c). Retail folds this
+    // const tiny helper into move_hero and AI_choose_destination as the
+    // byte read at +0x20.
+    // Before normalization (function): searchArray::limit_was_reached.
+    bool limitWasReached() const { return m_limitReached != 0; }
+    // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
+    // Before normalization (function): searchArray::lower_door.
+    void lowerDoor();
+    // Before normalization (function): searchArray::FindCombatPath.
+    // Before normalization (locals): current_army, current_group, in_placement_phase,
+    // base_speed.
+    unsigned char findCombatPath(const army* currentArmy, long currentGroup,
+                                 long destination, unsigned char inPlacementPhase,
+                                 long limit, long baseSpeed);  // 0x4b3400
+    // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
+    // enemy occupied cells marked when they border that reachable set.
+    // Before normalization (function): searchArray::mark_teleport.
+    // Before normalization (locals): current_army, current_group.
+    void markTeleport(const army* currentArmy, long currentGroup);
+    // 0x4b2da0. PARAMETER LIST CORRECTED 2026-08-08 to the DC roster's
+    // (thisArmy, current_group, limit, in_placement_phase, base_speed);
+    // the earlier all-long (target, side, budget, start, limit) guess is
+    // withdrawn. The retail body settles it: [ebp+0x14] is read as a
+    // BYTE and tested before every placement-boundary call, and
+    // [ebp+0x18] is the value it compares each cell's cost against and
+    // forwards as FindCombatPath's base_speed.
+    // Before normalization (function): searchArray::SeedCombatPosition.
+    // Before normalization (locals): current_group, in_placement_phase, base_speed.
+    void seedCombatPosition(const army* thisArmy, long currentGroup,
+                            long limit, unsigned char inPlacementPhase,
+                            long baseSpeed);
+    // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
+    // this setter; Complete expands both calls to the +0x6c store.
+    // Before normalization (function): searchArray::set_danger_zones.
+    // Before normalization (locals): danger_zone_map.
+    void setDangerZones(long* dangerZoneMap)
+    {
+        m_dangerZones = dangerZoneMap;
+    }
+    // Before normalization (function): searchArray::set_rectangle.
+    void setRectangle(tagRECT& rect) { m_validRectangle = rect; }
+private:
+    // DC publics prove ordinary private methods returning bool/void/bool.
+    // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.
+    // Before normalization (function): searchArray::build_combat_path.
+    bool buildCombatPath(const army* currentArmy, int startHex,
+                         int endHex, int destination);
+    // DC findpath.cpp:1187. The ValidHex guard belongs to this helper;
+    // retail eliminates it at the already-checked first caller site.
+    // Before normalization (function): searchArray::check_enemy_armies.
+    // Before normalization (locals): current_group.
+    bool checkEnemyArmies(long hex, long cost, long currentGroup,
+                          long destination);
+    // Before normalization (function): searchArray::check_town_portal.
+    // Before normalization (locals): current_hero, start_cell.
+    void checkTownPortal(const hero* currentHero,
+                           const pathCell* startCell, long maxMobility);
+    // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
+    // inside the valid rectangle for every (z, fly-plane) combination.
+    // Before normalization (function): searchArray::Clear.
+    // Before normalization (locals): fly_level, start_z, stop_z.
+    void clear(long flyLevel, long startZ, long stopZ);
+    // Before normalization (function): searchArray::enter_gate.
+    // Before normalization (locals): map_cell.
+    void enterGate(const pathCell* cell, const NewmapCell* mapCell,
+                    long limit);
+    // DC search.cpp:367 proves a pathCell reference; retail passes its
+    // address as the second stack argument. Original: enter_hostile_trigger.
+    unsigned char enterHostileTrigger(const hero* currentHero,
+                                     pathCell& cell);
+    // search.obj 0x56a400 / 0x56a730, the lith-family and underground
+    // gate seeders; both parameter lists are the DC roster's
+    // (search.cpp:155 and :244).
+    // Before normalization (function): searchArray::enter_lith.
+    // Before normalization (locals): current_hero, cell_type, entry_point, search_type.
+    void enterLith(const hero* currentHero,
+                    const std::vector<type_point>* list, long cellType,
+                    long excluded, pathCell* entryPoint, long limit,
+                    type_search_type searchType);
+    // Before normalization (function): searchArray::enter_town.
+    // Before normalization (locals): current_hero, start_town, path_cell, search_type.
+    void enterTown(const hero* currentHero, long startTown,
+                    const pathCell* currentPathCell, long limit,
+                    type_search_type searchType);
+    // Before normalization (function): searchArray::enter_trigger.
+    // Before normalization (locals): current_hero, search_type.
+    unsigned char enterTrigger(const hero* currentHero, pathCell* cell,
+                                long limit, type_search_type searchType);
+    // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
+    // and then re-allocates both maps; SeedCombatPosition calls it
+    // whenever cellData is still null.
+    // Before normalization (function): searchArray::Init.
+    void init();
+    // Before normalization (function): searchArray::mark_enemy.
+    void markEnemy(long hex, long cost);
+    // Before normalization (function): searchArray::PushCombatPoint.
+    void pushCombatPoint(int index, int direction, int cost,
+                         // Before normalization (locals): flight_cost.
+                         int flightCost, int limit);  // 0x4b3bb0
+    // DC findpath.cpp:271 proves both pathCell reference parameters.
+    // Before normalization (function): searchArray::PushPoint.
+    // Before normalization (locals): old_cell, move_cost, barrier_value.
+    void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
+                   int moveCost, int limit, long barrierValue,
+                   type_point monster, int isTrigger);
+    // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
+    // Before normalization (function): searchArray::set_moat.
+    // Before normalization (locals): current_army.
+    void setMoat(const army* currentArmy);
+    // DC's first parameter here is const hero*. The current hero member
+    // declarations require a mutable pointer; retail cannot distinguish it.
+    // Before normalization (function): searchArray::TestPossibleDirections.
+    // Before normalization (locals): current_hero, turn_mobility, adjacent_monster,
+    // monster_location, iPathfinding, search_type, native_terrain.
+    void testPossibleDirections(hero* currentHero, pathCell* source,
+                                long turnMobility, long maxMobility,
+                                unsigned char adjacentMonster,
+                                type_point monsterLocation, long pathfinding,
+                                type_search_type searchType,
+                                long nativeTerrain);
     // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
     // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
     // - a 30-byte stride on _Last, which only a by-value pathCell gives.
     // Before normalization: queue.
-private:
     std::vector<pathCell> m_queue;
     // ELEMENT TYPE PROVEN, 2026-08-08. move_toward (0x41f580) walks
     // this vector's extent with `sar 2` (4-byte elements) and then
@@ -206,237 +426,6 @@ private:
     // load - the danger map is one signed word per cell.
     // Before normalization: danger_zones.
     long* m_dangerZones;
-public:
-
-    searchArray();
-    ~searchArray();
-    // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
-    // and then re-allocates both maps; SeedCombatPosition calls it
-    // whenever cellData is still null.
-    // Before normalization (function): searchArray::Init.
-private:
-    void init();
-public:
-    // Before normalization (function): searchArray::Close.
-    void close();
-    // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
-    // inside the valid rectangle for every (z, fly-plane) combination.
-    // Before normalization (function): searchArray::Clear.
-    // Before normalization (locals): fly_level, start_z, stop_z.
-private:
-    void clear(long flyLevel, long startZ, long stopZ);
-public:
-    // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
-    // two expansions in check_adjacent_hexes and no retained retail call.
-    // Retail 0x4b3b90 retains this 32-byte bounds-free accessor. Four calls
-    // inside FindCombatPath's mark expansions reach it; PushCombatPoint's
-    // source call expands. The old getCellData name/body was an NH3API
-    // fallback; DC's canonical const helper is byte-identical and owns it.
-    // Before normalization (function): searchArray::get_hex.
-    pathCell* getHex(long x) const
-    {
-        if (m_cellData == 0)
-            return 0;
-        return &m_cellData[x];
-    }
-    // DC findpath.cpp:271 proves both pathCell reference parameters.
-    // Before normalization (function): searchArray::PushPoint.
-    // Before normalization (locals): old_cell, move_cost, barrier_value.
-private:
-    void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
-                   int moveCost, int limit, long barrierValue,
-                   type_point monster, int isTrigger);
-    // DC's first parameter here is const hero*. The current hero member
-    // declarations require a mutable pointer; retail cannot distinguish it.
-    // Before normalization (function): searchArray::TestPossibleDirections.
-    // Before normalization (locals): current_hero, turn_mobility, adjacent_monster,
-    // monster_location, iPathfinding, search_type, native_terrain.
-    void testPossibleDirections(hero* currentHero, pathCell* source,
-                                long turnMobility, long maxMobility,
-                                unsigned char adjacentMonster,
-                                type_point monsterLocation, long pathfinding,
-                                type_search_type searchType,
-                                long nativeTerrain);
-    // DC search.cpp:367 proves a pathCell reference; retail passes its
-    // address as the second stack argument. Original: enter_hostile_trigger.
-    unsigned char enterHostileTrigger(const hero* currentHero,
-                                     pathCell& cell);
-    // search.obj 0x56a400 / 0x56a730, the lith-family and underground
-    // gate seeders; both parameter lists are the DC roster's
-    // (search.cpp:155 and :244).
-    // Before normalization (function): searchArray::enter_lith.
-    // Before normalization (locals): current_hero, cell_type, entry_point, search_type.
-    void enterLith(const hero* currentHero,
-                    const std::vector<type_point>* list, long cellType,
-                    long excluded, pathCell* entryPoint, long limit,
-                    type_search_type searchType);
-    // Before normalization (function): searchArray::enter_gate.
-    // Before normalization (locals): map_cell.
-    void enterGate(const pathCell* cell, const NewmapCell* mapCell,
-                    long limit);
-    // Before normalization (function): searchArray::enter_town.
-    // Before normalization (locals): current_hero, start_town, path_cell, search_type.
-    void enterTown(const hero* currentHero, long startTown,
-                    const pathCell* currentPathCell, long limit,
-                    type_search_type searchType);
-    // Before normalization (function): searchArray::enter_trigger.
-    // Before normalization (locals): current_hero, search_type.
-    unsigned char enterTrigger(const hero* currentHero, pathCell* cell,
-                                long limit, type_search_type searchType);
-    // Before normalization (function): searchArray::check_town_portal.
-    // Before normalization (locals): current_hero, start_cell.
-    void checkTownPortal(const hero* currentHero,
-                           const pathCell* startCell, long maxMobility);
-    // Before normalization (function): searchArray::PushCombatPoint.
-    void pushCombatPoint(int index, int direction, int cost,
-                         // Before normalization (locals): flight_cost.
-                         int flightCost, int limit);  // 0x4b3bb0
-public:
-    // Before normalization (function): searchArray::FindCombatPath.
-    // Before normalization (locals): current_army, current_group, in_placement_phase,
-    // base_speed.
-    unsigned char findCombatPath(const army* currentArmy, long currentGroup,
-                                 long destination, unsigned char inPlacementPhase,
-                                 long limit, long baseSpeed);  // 0x4b3400
-    // 0x4b2da0. PARAMETER LIST CORRECTED 2026-08-08 to the DC roster's
-    // (thisArmy, current_group, limit, in_placement_phase, base_speed);
-    // the earlier all-long (target, side, budget, start, limit) guess is
-    // withdrawn. The retail body settles it: [ebp+0x14] is read as a
-    // BYTE and tested before every placement-boundary call, and
-    // [ebp+0x18] is the value it compares each cell's cost against and
-    // forwards as FindCombatPath's base_speed.
-    // Before normalization (function): searchArray::SeedCombatPosition.
-    // Before normalization (locals): current_group, in_placement_phase, base_speed.
-    void seedCombatPosition(const army* thisArmy, long currentGroup,
-                            long limit, unsigned char inPlacementPhase,
-                            long baseSpeed);
-    // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
-    // enemy occupied cells marked when they border that reachable set.
-    // Before normalization (function): searchArray::mark_teleport.
-    // Before normalization (locals): current_army, current_group.
-    void markTeleport(const army* currentArmy, long currentGroup);
-private:
-    // DC publics prove ordinary private methods returning bool/void/bool.
-    // Findpath.cpp:1136, 1172, 1187; none has a retained retail body.
-    // Before normalization (function): searchArray::build_combat_path.
-    bool buildCombatPath(const army* currentArmy, int startHex,
-                         int endHex, int destination);
-    // Before normalization (function): searchArray::mark_enemy.
-    void markEnemy(long hex, long cost);
-    // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
-    // Before normalization (function): searchArray::set_moat.
-    // Before normalization (locals): current_army.
-    void setMoat(const army* currentArmy);
-public:
-    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
-    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
-    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
-    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
-    // 16-bit value, and FindCombatPath even does the neighbour's
-    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
-    // add; movsx ecx, cx`) - which only a short parameter forces. The
-    // one call whose argument is already a sign-extended 16-bit value
-    // loses the movsx, exactly as it should.
-    // Before normalization (function): searchArray::is_moat.
-    unsigned char isMoat(short hex) { return m_isMoatSlowed[hex]; }
-    // DC findpath.cpp:1187. The ValidHex guard belongs to this helper;
-    // retail eliminates it at the already-checked first caller site.
-    // Before normalization (function): searchArray::check_enemy_armies.
-    // Before normalization (locals): current_group.
-private:
-    bool checkEnemyArmies(long hex, long cost, long currentGroup,
-                          long destination);
-public:
-    // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
-    // Before normalization (function): searchArray::lower_door.
-    void lowerDoor();
-    // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at
-    // one turn; the null-cellData arm still dereferences (retail reads
-    // [0x18] off a zero base), so the guard is the accessor's, not the
-    // body's.
-    // Before normalization (function): searchArray::get_travel_time.
-    // Before normalization (locals): current_army.
-    long getTravelTime(const army* currentArmy, long hex);
-    // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
-    // Before normalization (function): searchArray::get_danger_value.
-    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
-
-    // Header-inline in the DC roster and expanded by ProcessHover in retail.
-    // The public decoration is
-    // `?get_cell@searchArray@@QBAPAUpathCell@@Utype_point@@_N@Z`: QB proves
-    // a const member and _N proves the source parameter was native bool.
-    // Retail's selected ai_player.obj COMDAT at 0x42ecc0 independently uses
-    // only the low byte and never writes through this.
-    // Before normalization (function): searchArray::get_cell.
-    pathCell* getCell(type_point point, bool flying) const
-    {
-        if (!m_cellData)
-            return m_cellData;
-        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
-                         * g_mapWidth + point.m_x];
-    }
-
-    // Before normalization (function): searchArray::clear_path.
-    void clearPath()
-    {
-        m_result.erase(m_result.begin(), m_result.end());
-    }
-
-    // Dreamcast FindPath.h:216/226. Both const header helpers retain public
-    // SH4 copies, while Complete expands build_path's calls into the result
-    // vector's size and indexed pointer load.
-    // Before normalization (function): searchArray::get_path_steps.
-    long getPathSteps() const
-    {
-        return m_result.size();
-    }
-    // DC FindPath.h:221-223, get_step: the route direction is a byte result
-    // read from the indexed pathCell, distinct from get_step_cell's pointer.
-    unsigned char getStep(long i) const
-    {
-        return m_result[i]->m_direction;
-    }
-    // Before normalization (function): searchArray::get_step_cell.
-    const pathCell* getStepCell(long i) const
-    {
-        return m_result[i];
-    }
-
-    // Before normalization (function): searchArray::BuildPath.
-    // Before normalization (locals): current_hero.
-    int buildPath(const hero* currentHero, long limit);
-    // Before normalization (function): searchArray::SeedPosition.
-    // Before normalization (locals): current_hero, is_boat, search_type, iCurTempMobility,
-    // bSeedContinuation.
-    void seedPosition(hero* currentHero, type_point start,
-                      type_point target, int maxMobility,
-                      unsigned char isBoat,
-                      type_search_type searchType,
-                      int curTempMobility,
-                      unsigned char seedContinuation);
-    // E:\\gamedcs\\findpath.h:247 (dc 0x37e7c). Retail folds this
-    // const tiny helper into move_hero and AI_choose_destination as the
-    // byte read at +0x20.
-    // Before normalization (function): searchArray::limit_was_reached.
-    bool limitWasReached() const { return m_limitReached != 0; }
-    // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
-    // this setter; Complete expands both calls to the +0x6c store.
-    // Before normalization (function): searchArray::set_danger_zones.
-    // Before normalization (locals): danger_zone_map.
-    void setDangerZones(long* dangerZoneMap)
-    {
-        m_dangerZones = dangerZoneMap;
-    }
-    // Dreamcast FindPath.h:231/236/257.  These source helpers are all
-    // folded into ai_player.obj's destination chooser on retail x86.  Keep
-    // the boundaries visible in C++ even where the selected lowering is a
-    // vector::size call or direct field/index arithmetic.
-    // Before normalization (function): searchArray::get_visited_count.
-    long getVisitedCount() const { return m_visitedPoints.size(); }
-    // Before normalization (function): searchArray::get_visited_cell.
-    pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
-    // Before normalization (function): searchArray::set_rectangle.
-    void setRectangle(tagRECT& rect) { m_validRectangle = rect; }
 };
 
 // findpath.h:265 in the DC roster; no retail row of its own - /Ob2

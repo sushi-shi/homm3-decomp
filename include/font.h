@@ -155,36 +155,36 @@ public:
     // `mov eax,[ecx+0x125c]; add eax,0x1260; ret`.
     // Before normalization (function): font::GetSize.
     virtual unsigned int getSize() const;
-
-    // Before normalization (function): font::DrawStringExecute.
-    // Before normalization (locals): color_scheme.
-private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
-public:
-    // Before normalization (function): font::DrawBoundedString.
-    // Before normalization (locals): color_scheme.
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
-    // Before normalization (function): font::GetCharacterWidth.
-    int getCharacterWidth(unsigned char currChar) const;
     // Before normalization (function): font::SetPalette.
     // Before normalization (locals): new_palette.
     void setPalette(const TPalette16* newPalette);
     // Before normalization (function): font::DrawCharacter.
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
-    // Before normalization (function): font::get_string_width.
-    long getStringWidth(const char* arg);
+    // Before normalization (function): font::DrawBoundedString.
+    // Before normalization (locals): color_scheme.
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
     // Before normalization (function): font::LineLength.
     // DC 0xa246c/0xa2420 proves const LineLength and GetCharacterWidth.
     // Both only inspect font metrics; retail preserves that read-only body.
     int lineLength(const char* str, int boxWidth) const;
-    // Before normalization (function): font::LongestWrappedLineWidth.
-    int longestWrappedLineWidth(const char* str, int boxWidth);
     // Before normalization (function): font::LineWidth.
     int lineWidth(const char* text);
     // Before normalization (function): font::LongestLineWidth.
     int longestLineWidth(const char* str);
+    // Before normalization (function): font::LongestWrappedLineWidth.
+    int longestWrappedLineWidth(const char* str, int boxWidth);
     // Before normalization (function): font::longest_word_length.
     int longestWordLength(const char* str);
+    // Before normalization (function): font::GetCharacterWidth.
+    int getCharacterWidth(unsigned char currChar) const;
+    // Before normalization (function): font::get_string_width.
+    long getStringWidth(const char* arg);
+private:
+
+    // Before normalization (function): font::DrawStringExecute.
+    // Before normalization (locals): color_scheme.
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
     // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and
     // the second parameter as a pixel box width; NH3API corroborates the

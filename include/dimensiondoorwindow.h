@@ -24,9 +24,6 @@ enum EDimensionDoorKey {
 // each holds the fifteen slots the CAdvPopup hierarchy declares, which is
 // what puts ExitDialog in slot 14.
 class TDimensionDoorWindow : public CAdvPopup {
-    // Before normalization: RolloverWidget.
-private:
-    textWidget* m_rolloverWidget;
 public:
 
     TDimensionDoorWindow();
@@ -35,6 +32,9 @@ public:
     virtual int windowHandler(message* msg);
     // Before normalization (function): TDimensionDoorWindow::ExitDialog.
     virtual int exitDialog(message* msg);
+private:
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;
 };
 SIZE(TDimensionDoorWindow, 0x64);
 
@@ -42,9 +42,6 @@ SIZE(TDimensionDoorWindow, 0x64);
 // base widening moves it to +0x60, and the stack instance in the skuttle-boat
 // adventure action proves the resulting 0x64-byte canonical layout.
 class TSkuttleBoatWindow : public CAdvPopup {
-    // Before normalization: RolloverWidget.
-private:
-    textWidget* m_rolloverWidget;
 public:
 
     TSkuttleBoatWindow();
@@ -53,6 +50,9 @@ public:
     virtual int windowHandler(message* msg);
     // Before normalization (function): TSkuttleBoatWindow::ExitDialog.
     virtual int exitDialog(message* msg);
+private:
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;
 };
 SIZE(TSkuttleBoatWindow, 0x64);
 

@@ -79,27 +79,25 @@ public:
     enum EButtonConstants {
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
+    button();
+
+    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
 
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     // Before normalization: click_sample.
     static sample* s_clickSample;
-
-    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    button();
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Before normalization (function): button::Select.
     int select(message* msg);
     // Before normalization (function): button::DeselectSelected.
     int deselectSelected(message* msg);
-
-    // Dreamcast homes SetText and set_hotkey in Button.h itself; the
-    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
-    // was disproven by that body's `ret 0xc`: it is the three-argument
-    // vector<int>::insert implementation, not this one-argument member.
-    // Before normalization (function): button::SetText.
-    // Before normalization (locals): new_text.
-    void setText(const char* newText) { m_text = newText; }
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    // Before normalization (function): button::set_disabled_frame.
+    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The pointer local is load-bearing, and every caller's whole
     // register allocation hangs off it. Retail materialises the inlined
     // `this` for the insert BEFORE the const-ref argument temp - `lea
@@ -129,12 +127,14 @@ public:
     // VC6 sees the same inlining candidate before setHotkey.
     // Before normalization (function): button::clear_hotkeys.
     void clearHotkeys() { m_hotKeyCodes.clear(); }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
-    // Before normalization (function): button::set_disabled_frame.
-    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
+
+    // Dreamcast homes SetText and set_hotkey in Button.h itself; the
+    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
+    // was disproven by that body's `ret 0xc`: it is the three-argument
+    // vector<int>::insert implementation, not this one-argument member.
+    // Before normalization (function): button::SetText.
+    // Before normalization (locals): new_text.
+    void setText(const char* newText) { m_text = newText; }
     // Complete-only, like field_40 itself (the hover/highlight frame,
     // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
     // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
@@ -165,11 +165,6 @@ public:
 // button is 104, so Font@0x68, textColor@0x6c (the dtor Disposes
 // [this+0x68]). Total 112.
 class textButton : public button {
-    // Before normalization: Font.
-private:
-    font* m_font;
-    // Before normalization: textColor.
-    int m_textColor;
 public:
 
     // Before normalization (locals): text_, font_name, new_color.
@@ -179,6 +174,11 @@ public:
     virtual void draw();    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
+private:
+    // Before normalization: Font.
+    font* m_font;
+    // Before normalization: textColor.
+    int m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down

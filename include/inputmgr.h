@@ -135,27 +135,16 @@ public:
     int m_keyCodeType;
     // Before normalization: extendFlag.
     int m_extendFlag;
+    // Before normalization (function): inputManager::MakeScanCodeTable.
+    void makeScanCodeTable();
+    // Before normalization (function): inputManager::AsciiConvert.
+    void asciiConvert(message* msg);
     // Before normalization: currWidgetID.
     int m_currWidgetId;
     // Before normalization: prevDialog.
     int m_prevDialog;
 
     inputManager();
-    // Before normalization (function): inputManager::GetEvent.
-    message getEvent();
-    // Retail 0x4ec640, GetEvent's twin one row over: same queue head,
-    // same AsciiConvert hook, but it normalises iHead instead of
-    // advancing it (`and eax,0x8000003f` on the UN-incremented index).
-    // Before normalization (function): inputManager::PeekEvent.
-    message peekEvent();
-    // Before normalization (function): inputManager::Flush.
-    void flush();
-    // Before normalization (function): inputManager::ForceMouseMove.
-    void forceMouseMove();
-    // Before normalization (function): inputManager::AsciiConvert.
-    void asciiConvert(message* msg);
-    // Before normalization (function): inputManager::MakeScanCodeTable.
-    void makeScanCodeTable();
 
     // Located 2026-08-06 by homm3.analysis.dc_bracket (link-order
     // bracket, gap of 3 between the ctor and Flush) and verified by
@@ -176,6 +165,17 @@ public:
     virtual void close();                 // slot 1, 0x4ec540
     // Before normalization (function): inputManager::Main.
     virtual int main(message& msg);       // slot 2, 0x4ec560
+    // Before normalization (function): inputManager::Flush.
+    void flush();
+    // Before normalization (function): inputManager::GetEvent.
+    message getEvent();
+    // Retail 0x4ec640, GetEvent's twin one row over: same queue head,
+    // same AsciiConvert hook, but it normalises iHead instead of
+    // advancing it (`and eax,0x8000003f` on the UN-incremented index).
+    // Before normalization (function): inputManager::PeekEvent.
+    message peekEvent();
+    // Before normalization (function): inputManager::ForceMouseMove.
+    void forceMouseMove();
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).

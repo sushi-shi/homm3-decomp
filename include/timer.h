@@ -11,19 +11,6 @@
 class CTimer
 {
 public:
-    // Before normalization (locals): _enabled.
-    CTimer(unsigned char enabled)
-        : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
-          m_isRunning(0), m_enabled(enabled)
-    {
-    }
-
-    // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
-    // consumer that proves this trivial header boundary at GlobalTimer+13.
-    void enable()
-    {
-        m_enabled = 1;
-    }
 
     void start()
     {
@@ -45,7 +32,20 @@ public:
         }
     }
 
+    // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
+    // consumer that proves this trivial header boundary at GlobalTimer+13.
+    void enable()
+    {
+        m_enabled = 1;
+    }
+    // Before normalization (locals): _enabled.
+    CTimer(unsigned char enabled)
+        : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
+          m_isRunning(0), m_enabled(enabled)
+    {
+    }
 private:
+
     // Before normalization: startTime.
     unsigned long m_startTime;
     // Before normalization: stopTime.

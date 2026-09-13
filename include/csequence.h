@@ -23,10 +23,10 @@ private:
     CSpriteFrame** m_f;
 
     friend class CSprite;
-    CSequence(int num);
-    ~CSequence();
     // Before normalization (function): CSequence::AddFrame.
     int addFrame(CSpriteFrame* frame);
+    CSequence(int num);
+    ~CSequence();
 };
 SIZE(CSequence, 0x0c);
 

@@ -57,14 +57,14 @@ public:
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
 class TPalette24 : public resource {
 public:
-    // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
-    // Retail copies the same 0x300-byte payload; preserve the native array.
-    // Before normalization: Palette.
-    unsigned char m_palette[768];
 
     TPalette24();
     TPalette24(const unsigned char* data);
     TPalette24(const TRGBA* rgba);
+    // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
+    // Retail copies the same 0x300-byte payload; preserve the native array.
+    // Before normalization: Palette.
+    unsigned char m_palette[768];
     TPalette24(const TPalette24* copy);
     TPalette24& operator=(const TPalette24& from);
     // NO exception specification: Bitmap816::~Bitmap816's retail unwind map
@@ -100,6 +100,20 @@ public:
         // Before normalization: colors.
         palette m_colors;
     };
+    TPalette16();
+    TPalette16(const unsigned short* data);
+    // DC palette.cpp:67/86/92 signatures preserve const TPalette24&.
+    // Retail consumes the same address at +0x1c; source callers pass objects.
+    TPalette16(const TPalette24& p24);
+    TPalette16(const TPalette24& p24,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
+    TPalette16(const TRGBA* rgba,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
+    TPalette16(const char* name, const TPalette24& p24,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
 
     // Retail 0x522650 (22 B): the resource base with an empty name and
     // type 0, plus the vptr store. Declared here because font embeds a
@@ -115,20 +129,6 @@ public:
         s_greenMask = green;
         s_blueMask = blue;
     }
-    TPalette16();
-    TPalette16(const unsigned short* data);
-    // DC palette.cpp:67/86/92 signatures preserve const TPalette24&.
-    // Retail consumes the same address at +0x1c; source callers pass objects.
-    TPalette16(const TPalette24& p24);
-    TPalette16(const TPalette24& p24,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
-    TPalette16(const TRGBA* rgba,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
-    TPalette16(const char* name, const TPalette24& p24,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
     TPalette16(const TPalette16* copy);
 
     // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the
@@ -144,16 +144,12 @@ public:
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
     // retail body at 0x522910.
     TPalette16* operator=(const TPalette16* from);
-    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
-    // /Ob2 expanded it into each of its constructor call sites - but the
-    // boundary is the DC roster's own, not an invention.
-    // Before normalization (function): TPalette16::Convert24to16.
-private:
-    void convert24to16(const unsigned char* p24, int rbits, int rshift,
-                       int gbits, int gshift, int bbits, int bshift);
-public:
     // Before normalization (function): TPalette16::Cycle.
     void cycle(int begin, int end, int step);
+    // Before normalization (function): TPalette16::Gray.
+    void gray();
+    // Before normalization (function): TPalette16::AdjustSaturation.
+    void adjustSaturation(float amount);
     // The three army::DrawToBuffer (0x43e140) needs for its tint arms -
     // the clone's rolling hue (AdjustHSV over PaletteEffect), the petrify
     // desaturation, the Stone-spell gray and the Bloodlust red. Prototypes
@@ -168,10 +164,13 @@ public:
     // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
-    // Before normalization (function): TPalette16::AdjustSaturation.
-    void adjustSaturation(float amount);
-    // Before normalization (function): TPalette16::Gray.
-    void gray();
+private:
+    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
+    // /Ob2 expanded it into each of its constructor call sites - but the
+    // boundary is the DC roster's own, not an invention.
+    // Before normalization (function): TPalette16::Convert24to16.
+    void convert24to16(const unsigned char* p24, int rbits, int rshift,
+                       int gbits, int gshift, int bbits, int bshift);
 };
 
 // The system palette pointer, re-declared here beside its type for

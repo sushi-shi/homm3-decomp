@@ -61,12 +61,6 @@ public:
     // word-aligned lastFocus. Retail shifts them to +0x5c/+0x5d and +0x60;
     // NH3API also leaves +0x5e/+0x5f unnamed.
     unsigned char m_paddingBeforeLastFocus[2];
-    // Before normalization: lastFocus.
-protected:
-    int m_lastFocus;                  // +0x60
-    // Before normalization: sliderFunction.
-    TSliderFunction m_sliderFunction; // +0x64
-public:
 
     slider();
     slider(int x, int y, int w, int h, int id, int num,
@@ -94,6 +88,12 @@ public:
     virtual void setState(int state);               // slot 14
     // Before normalization (function): slider::UpdateResolution.
     virtual void updateResolution(int num);         // slot 15
+protected:
+    // Before normalization: lastFocus.
+    int m_lastFocus;                  // +0x60
+    // Before normalization: sliderFunction.
+    TSliderFunction m_sliderFunction; // +0x64
+public:
     // Retail-only slot 16. The vtable points at the same empty `ret` body as
     // widget::Close (0x5bc690); no independent source body is claimable.
     // Before normalization (function): slider::Close.

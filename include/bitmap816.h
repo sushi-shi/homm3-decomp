@@ -14,10 +14,19 @@ class Bitmap16Bit;
 // bitmapBorder::SetImage (name strcmp at +4, Dispose vcall); the
 // embedded palette pair at +0x50/+0x250 by SetPlayerPaletteColors.
 class Bitmap816 : public resource {
+public:
+    // DC Bitmap816.h:71 (0x5256c) returns Width, while GetMap below
+    // addresses rows through Pitch. Masked Darken's retail loads independently
+    // confirm that distinction; do not replace this helper with m_pitch.
+    // Before normalization (function): Bitmap816::GetPitch.
+    int getPitch() const { return m_width; }
+    // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
+    // Before normalization (function): Bitmap816::GetMap.
+    unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
+private:
     // DC names both dwords; retail vtable slot 2 reads DataSize directly
     // and adds the fixed 0x56c-byte object extent.
     // Before normalization: DataSize.
-private:
     int m_dataSize;   // +0x1c
     // Before normalization: ImageSize.
     int m_imageSize;  // +0x20
@@ -33,17 +42,7 @@ private:
     int m_height;  // +0x28
     // Before normalization: Pitch.
     int m_pitch;   // +0x2c
-public:
-    // DC Bitmap816.h:71 (0x5256c) returns Width, while GetMap below
-    // addresses rows through Pitch. Masked Darken's retail loads independently
-    // confirm that distinction; do not replace this helper with m_pitch.
-    // Before normalization (function): Bitmap816::GetPitch.
-    int getPitch() const { return m_width; }
-    // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
-    // Before normalization (function): Bitmap816::GetMap.
-    unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
     // Before normalization: map.
-private:
     unsigned char* m_map;  // +0x30
 public:
     // Before normalization: p16.
@@ -51,18 +50,19 @@ public:
     // Before normalization: p24.
     TPalette24 m_p24;
 
-    // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
-    // graph records both inlined uses; the retail body reads +0x24/+0x28.
-    // Before normalization (function): Bitmap816::GetWidth.
-    int getWidth() const { return m_width; }
-    // Before normalization (function): Bitmap816::GetHeight.
-    int getHeight() const { return m_height; }
-
     Bitmap816(const char* name, int w, int h, unsigned char* data,
               TPalette16* palette16, int dataSize);
     Bitmap816(const char* name, const char* path,
               int rbits, int rshift, int gbits, int gshift,
               int bbits, int bshift);
+
+    virtual ~Bitmap816();
+    // DC marks the raw-buffer overload virtual; Complete's four-slot
+    // vtable at 0x63ba14 contains only dtor, Dispose, GetSize and the
+    // eight-argument screen wrapper (0x44fdf0). This eleven-argument
+    // implementation at 0x44fba0 has no retail vtable slot.
+    void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
+        int dx, int dy, int dw, int dh, int dpitch, int id) const;
 
     // Blitters, declared for border.cpp's bitmapBorder::Draw /
     // zBufferDraw (0x450450 / 0x4503f0). Argument lists are the DC
@@ -74,16 +74,6 @@ public:
     // Before normalization (function): Bitmap816::Draw.
     void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
         int dy, bool tblit) const;
-    // DC marks the raw-buffer overload virtual; Complete's four-slot
-    // vtable at 0x63ba14 contains only dtor, Dispose, GetSize and the
-    // eight-argument screen wrapper (0x44fdf0). This eleven-argument
-    // implementation at 0x44fba0 has no retail vtable slot.
-    void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
-        int dx, int dy, int dw, int dh, int dpitch, int id) const;
-private:
-    int importPCXFile(const char* filename, int rbits, int rshift,
-        int gbits, int gshift, int bbits, int bshift);
-public:
     // Before normalization (function): Bitmap816::mark_puzzle.
     // Before normalization (locals): dest_x, dest_y.
     void markPuzzle(unsigned char* visible, long destX, long destY);
@@ -94,7 +84,16 @@ public:
     // Before normalization (function): Bitmap816::ResetPalette.
     void resetPalette();
 
-    virtual ~Bitmap816();
+    // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
+    // graph records both inlined uses; the retail body reads +0x24/+0x28.
+    // Before normalization (function): Bitmap816::GetWidth.
+    int getWidth() const { return m_width; }
+    // Before normalization (function): Bitmap816::GetHeight.
+    int getHeight() const { return m_height; }
+private:
+    int importPCXFile(const char* filename, int rbits, int rshift,
+        int gbits, int gshift, int bbits, int bshift);
+public:
     // Before normalization (function): Bitmap816::GetSize.
     virtual unsigned int getSize() const;
     virtual void zBufferDraw(int sx, int sy, int sw, int sh,
