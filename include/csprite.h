@@ -115,14 +115,14 @@ public:
     // Drawing writes through the destination/frame pointers, not this object.
     void draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
               unsigned short* dst, int dx, int dy, int dw, int dh,
-              int dpitch, unsigned char hflip, unsigned char tblit) const;
+              int dpitch, bool hflip, bool tblit) const;
     void drawCreature(int seqnum, int framenum, int sx, int sy, int sw,
                       int sh, unsigned short* dst, int dx, int dy, int dw,
-                      int dh, int dpitch, unsigned char hflip,
+                      int dh, int dpitch, bool hflip,
                       unsigned short outcolor) const;
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     unsigned short* dst, int dx, int dy, int dw, int dh,
-                    int dpitch, unsigned char hflip) const;
+                    int dpitch, bool hflip) const;
     void drawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, unsigned short outcolor,
@@ -131,11 +131,11 @@ public:
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, unsigned char hflip) const;
     void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
-                     int dw, int dh, int dpitch, unsigned char hflip) const;
-    void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip) const;
+                     int dw, int dh, int dpitch, bool hflip) const;
+    void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, bool hflip) const;
     void drawTile(int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
-                  int dpitch, unsigned char hflip, unsigned char vflip) const;
+                  int dpitch, bool hflip, bool vflip) const;
     void drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, unsigned char hflip,
@@ -146,7 +146,7 @@ public:
                         unsigned char vflip) const;
     void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
-                  int dpitch, unsigned char hflip) const;
+                  int dpitch, bool hflip) const;
     void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, unsigned short* dst, int dx, int dy, int dw,
                         int dh, int dpitch, unsigned char hflip) const;
@@ -155,8 +155,8 @@ public:
                        int dh, int dpitch, unsigned char hflip) const;
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
                          int sh, unsigned short* dst, int dx, int dy, int dw,
-                         int dh, int dpitch, unsigned char hflip,
-                         unsigned char alpha) const;
+                         int dh, int dpitch, bool hflip,
+                         bool alpha) const;
     void setPalette(const unsigned short* pal);
     // Original: CSprite::SetPalette; CSprite.h:259, dc 0x744e4.
     // Complete expands this wrapper in ResetPalette.
@@ -167,9 +167,11 @@ public:
         m_p = new TPalette16(&pal);
     }
     void resetPalette();
-    palette* getPalette();
+    unsigned short* getPalette();
     void colorCycle(int begin, int end, int step);
     static int getNumSeqs(int type);
+    // Original GetPalette24, CSprite.h:284, dc 0x57dbc.
+    TPalette24& getPalette24() { return *m_p24; }
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
     // USE re-expands the guard (the else arm constant-folds to a
@@ -195,8 +197,8 @@ public:
     }
     VA(0x004f0050, 0x47)  // COMDAT owner (kb.obj emits ?Draw@CSprite@@QBEXHHHHHHPAVBitmap16Bit@@HHEE@Z), body in csprite.h
     void draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
-              Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
-              unsigned char tblit) const
+              Bitmap16Bit* dst, int dx, int dy, bool hflip,
+              bool tblit) const
     {
         draw(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
              dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip,
@@ -206,7 +208,7 @@ public:
     // 0x87394); retail expands the Bitmap16Bit forwarding in remote.
     void drawCreature(int seqnum, int framenum, int sx, int sy, int sw,
                       int sh, Bitmap16Bit* dst, int dx, int dy,
-                      unsigned char hflip, unsigned short outcolor) const
+                      bool hflip, unsigned short outcolor) const
     {
         drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, outcolor);
@@ -214,7 +216,7 @@ public:
     // DC CSprite.h:355 calls all four Bitmap16Bit accessors before the
     // raw-map overload. Preserve those nested boundaries in retail callers.
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
-                    Bitmap16Bit* dst, int dx, int dy, unsigned char hflip) const
+                    Bitmap16Bit* dst, int dx, int dy, bool hflip) const
     {
         drawAdvObj(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                    dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
@@ -234,19 +236,26 @@ public:
         drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                          dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
+    // CSprite.h:378..381, dc 0xd9f98: bitmap DrawPointer facade.
+    void drawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy,
+                     bool hflip) const
+    {
+        drawPointer(framenum, dst->getMap(0, 0), dx, dy,
+                    dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
     // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
     // byte-prove the Bitmap16Bit member forwarding in retail.
     void drawInterface(int framenum, int sx, int sy, int sw, int sh,
                        Bitmap16Bit* dst, int dx, int dy,
-                       unsigned char hflip) const
+                       bool hflip) const
     {
         drawInterface(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // DC CSprite.h:393 forwards through the same four bitmap accessors.
     void drawTile(int framenum, int sx, int sy, int sw, int sh,
-                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
-                  unsigned char vflip) const
+                  Bitmap16Bit* dst, int dx, int dy, bool hflip,
+                  bool vflip) const
     {
         drawTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                  dst->getWidth(), dst->getHeight(), dst->getPitch(),
@@ -269,7 +278,7 @@ public:
     // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
     // then calls the raw-map overload above.
     void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
-                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip) const
+                  Bitmap16Bit* dst, int dx, int dy, bool hflip) const
     {
         drawHero(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                  dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
@@ -294,6 +303,27 @@ public:
     {
         drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
+    // DC CSprite.h:444/445, dc 0x874dc: const bitmap facade.
+    void drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, Bitmap16Bit* dst, int dx, int dy,
+                        bool hflip) const
+    {
+        drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                     dst->getWidth(), dst->getHeight(), dst->getPitch(),
+                     hflip, 0);
+    }
+    // CSprite.h:450/451 (dc drawing.obj:0x8757c) preserves the same
+    // bitmap forwarding boundary. The public suffix HH_N1@Z proves both
+    // Boolean parameters; its four bitmap accessors remain source calls.
+    // Before normalization (function): CSprite::DrawSpellEffect.
+    void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
+                         int sh, Bitmap16Bit* dst, int dx, int dy,
+                         bool hflip, bool alpha) const
+    {
+        drawSpellEffect(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0),
+                        dx, dy, dst->getWidth(), dst->getHeight(),
+                        dst->getPitch(), hflip, alpha);
     }
 };
 

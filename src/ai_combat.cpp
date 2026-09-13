@@ -91,11 +91,10 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
     0.5, 0.5, 1.0, 1.25, 1.25
 };
 
-// Retail 0x527710, the sole caller is AI_value_of_combat. The helper
-// combines the hero's level with an army's AI value and returns a float
-// multiplier for the experience award. No surviving name is known.
-float __fastcall getExperienceValueModifier(const hero* currentHero,
-                                                armyGroup* currentArmy);
+// value_of_experience is retained at 0x527710 in philai.cpp. Its canonical
+// reference-qualified declaration replaces the former provisional
+// get_experience_value_modifier name and pointer view.
+float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy);
 
 VA(0x00423c80, 0x79)  // dc 0x29978
 long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero, const hero* targetHero) const
@@ -316,14 +315,17 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     if (m_currentHero)
         speedBonus = m_currentHero->getCombatSpeedBonus();
 
+    // DC263's nullary hit-point bonus precedes DC264's speed bonus. Retail
+    // instead calls GetCombatSpeedBonus before this loop and the newer
+    // GetHitPointBonus(int) per creature at 0x4242de. The audit's source-order
+    // lead is this platform/ABI difference, not an omitted shared call.
     m_totalCombatValue = 0;
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        int creatureId = m_currentArmy->m_armies[i];
-        if (creatureId == CREATURE_NONE)
+        TCreatureType creature = m_currentArmy->m_armyTypes[i];
+        if (creature == CREATURE_NONE)
             continue;
 
-        TCreatureType creature;
-        memcpy(&creature, &creatureId, sizeof creature);
+        int creatureId = creature;
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
         if (m_currentHero) {
@@ -331,29 +333,32 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
             hitPoints += hitBonus;
         }
 
+        long speed = traits.m_speed + speedBonus;
+        unsigned int attributes = traits.m_attributes;
+
         unit.m_index = i;
         unit.m_type = creature;
         unit.m_number = m_currentArmy->m_numTroops[i];
         unit.m_originalNumber = unit.m_number;
-        unit.m_speed = traits.m_speed + speedBonus;
+        unit.m_speed = speed;
         unit.m_value = static_cast<long>(
             sqrt(hitPoints / traits.m_hitPoints)
             * traits.m_baseFightValue * forceModifier);
         unit.m_totalValue = unit.m_value * unit.m_number;
-        unit.m_catagory = getCatagory(creature, unit.m_speed);
+        unit.m_catagory = getCatagory(creature, speed);
+        unit.m_combatValuePerHit = static_cast<double>(unit.m_value)
+                               / hitPoints;
         unit.m_meleeModifier = 0.2;
         unit.m_finalMeleeModifier = 1.0;
         unit.m_rangedModifier = 0.0;
-        unit.m_combatValuePerHit = static_cast<double>(unit.m_totalValue)
-                               / hitPoints;
 
         if (unit.m_catagory == const_ranged) {
-            if (!(traits.m_attributes & g_ctaNoMeleePenalty)) {
+            if (!(attributes & g_ctaNoMeleePenalty)) {
                 unit.m_meleeModifier = 0.1;
                 unit.m_finalMeleeModifier = 0.7;
             }
             unit.m_rangedModifier = archeryModifier;
-            if (traits.m_attributes & g_ctaDoubleRangedValue)
+            if (attributes & g_ctaDoubleRangedValue)
                 unit.m_rangedModifier *= 2.0;
             if (m_wallArcheryPenalty && creature != CREATURE_ARCH_MAGE)
                 unit.m_rangedModifier /= 2.0;
@@ -434,13 +439,13 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
         return;
     }
     for (short i = static_cast<short>(m_creatures.size()); i-- > 0; ) {
-        type_monster_data monster = m_creatures[i];
-        if (monster.m_index < 0)
+        type_monster_data unit = m_creatures[i];
+        if (unit.m_index < 0)
             continue;
-        if (monster.m_number == 0)
-            m_currentArmy->dismiss(monster.m_index);
+        if (unit.m_number == 0)
+            m_currentArmy->dismiss(unit.m_index);
         else
-            m_currentArmy->m_numTroops[monster.m_index] = monster.m_number;
+            m_currentArmy->m_numTroops[unit.m_index] = unit.m_number;
     }
 }
 
@@ -509,9 +514,9 @@ inline void type_AI_combat_data::getChainLightningValue(type_spell_choice& choic
 VA(0x00424bf0, 0x123)  // dc 0x2a7e4
 void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extraTargets) const
 {
-    long center = defender.m_creatures[choice.m_target].m_index;
+    long targetIndex = defender.m_creatures[choice.m_target].m_index;
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
-        if (abs(center - defender.m_creatures[i].m_index) != 1)
+        if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.m_currentHero, damage);
@@ -576,9 +581,9 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
 VA(0x00425100, 0x15A)  // dc 0x2a9e8
 void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extraTargets) const
 {
-    long center = defender.m_creatures[choice.m_target].m_index;
+    long targetIndex = defender.m_creatures[choice.m_target].m_index;
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
-        if (abs(center - defender.m_creatures[i].m_index) != 1)
+        if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(
             choice.m_spell, m_currentHero, defender.m_currentHero, damage);
@@ -664,8 +669,9 @@ void type_AI_combat_data::getMassDamageValue(
 // The 48-state boundary family and 96-state hasCreature follow-up exhausted
 // cloned/canonical, retained/removed fences and the three dataflow/lifetime
 // facts. Correct ordinary/unfenced + hasCreature scores castSpell 86.7910;
-// keeping the first inherited fence scores 88.5664. Neither matches retail's
-// distinct nested takeDamage decisions yet. Both old fences are removed.
+// keeping the first inherited fence scores 88.5664. Both old fences are
+// removed. The remaining nested decisions close when castSpell recovers
+// its separate getSummoningValue boundary, as documented below.
 void type_AI_combat_data::castMassDamageSpell(
     type_spell_choice& choice,
     const hero* castingHero)
@@ -718,11 +724,14 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery < eMasteryAdvanced)
             return;
-        type_spell_choice saved = choice;
+        // retail copies the whole 0x24-byte record with one rep movsd
+        // (0x4256b7) and compares the ourChoice value after the second pass
+        // Before normalization (locals): our_choice.
+        type_spell_choice ourChoice = choice;
         defender.getEnchantmentValue(choice, m_currentHero);
         if (choice.m_mastery != eMasteryAdvanced)
             return;
-        if (saved.m_value >= choice.m_value)
+        if (ourChoice.m_value >= choice.m_value)
             return;
         choice.m_secondTargetHex = choice.m_target;
         choice.m_target = -1;
@@ -787,38 +796,73 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:907
-DC_ONLY(0x2afb8, 0x7E)
-void type_AI_combat_data::get_summoning_value(type_spell_choice* choice)
+// Before normalization: get_summoning_value, ai_combat.cpp:907, dc 0x2afb8.
+// The const receiver and reference choice are positive CodeView facts.
+// DC912 dispatches 38/39 to resurrection and 60/66..69 to no-op exits;
+// 924 scans downward, 926 gets the value, 927 compares strictly, and
+// 929/930 store value before target. Retail expands this ordinary helper
+// in castSpell; VC6 reduces its switch to the signed 38..39 range there.
+void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
 {
-    // @stub
+    switch (choice.m_spell) {
+    case SPELL_HYPNOTIZE:
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+    case SPELL_SUMMON_AIR_ELEMENTAL:
+        break;
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+        for (long i = m_creatures.size(); i-- > 0; ) {
+            const type_monster_data& monster = m_creatures[i];
+            long value = monster.getResurrectionValue(choice, m_currentHero);
+            if (value > choice.m_value) {
+                choice.m_value = value;
+                choice.m_target = i;
+            }
+        }
+        break;
+    }
 }
 
-// E:\gamedcs\ai_combat.cpp:941
-DC_ONLY(0x2b038, 0x5A)
-void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
+// Before normalization: cast_summoning, ai_combat.cpp:941, dc 0x2b038.
+// DC943 has the same no-op/resurrection dispatch and 955 calls the
+// selected monster's cast_resurrection. Preserve this ordinary boundary
+// even though retail expands it and retains no separate body.
+void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 {
-    // @stub
+    switch (choice.m_spell) {
+    case SPELL_HYPNOTIZE:
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+    case SPELL_SUMMON_AIR_ELEMENTAL:
+        break;
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+        m_creatures[choice.m_target].castResurrection(choice, m_currentHero);
+        break;
+    }
 }
-
-// E:\gamedcs\ai_combat.cpp:965
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:965
 // Retail decides Complete's spell gates and dispatch classes. DC supplies
 // real helper calls, signatures and mass-damage dataflow, corroborated by the
 // retail expansions rather than inferred from the candidate's source labels.
-// Residual (86.7910%): the first mass arm expands getSpellDamage and calls
-// takeDamage; retail makes the opposite nested decisions. The second arm
-// calls getSpellDamage and expands takeDamage; retail calls both. This gives
-// 100/92 blocks and 60/55 conditionals, with four returns in both versions.
-// The first source mismatch is a four-byte extra frame slot caused by these
-// expansions, not proof that the entry guard or local order is wrong.
+// Exact after restoring DC988's SpellIsAvailable, DC1033's const
+// get_summoning_value, and DC1072's cast_summoning calls. The pasted value
+// loop had enlarged this caller and changed its unrelated mass-damage
+// expansions. Restoring the value helper alone or both helpers reaches
+// 100%; restoring only castSummoning falls to 79.8398% (range) or 79.8008%
+// (switch). The availability accessor alone is byte-flat at 86.7910%.
+// Eighteen source states emit eighteen objects, with ten reproduced
+// finalists. Both complete DC switches and range forms match; retain the
+// switches and all three proven calls. Every other score in ai_combat and
+// ai_player holds. The exact body has retail's 23 named calls at the same
+// offsets, including the now-correct two mass-damage expansion decisions.
 // The 48 mass-boundary and 96 Familiar-boundary states are documented beside
 // the canonical helpers above; min/max and valuation qualifiers do not fix
-// these nested decisions. Both mass fences and the caller-specific clone
+// those nested decisions by themselves. Both mass fences and the caller-specific clone
 // are gone. The prior 93.0273% HIST used the wrong uncapped damage carry.
 // Earlier allocator-only probes (before native vector/dataflow recovery)
 // were byte-flat at 87.0391: register mastery, a dead mastery initializer,
@@ -877,18 +921,7 @@ void type_AI_combat_data::castSpell(
             getEnchantmentValue(choice, defender);
             break;
         case g_aiSpellResurrection:
-            if (choice.m_spell < SPELL_RESURRECTION
-                || choice.m_spell > SPELL_ANIMATE_DEAD)
-                break;
-            for (long i = m_creatures.size(); i-- > 0; ) {
-                type_monster_data& monster = m_creatures[i];
-                long value = monster.getResurrectionValue(
-                    choice, m_currentHero);
-                if (value > choice.m_value) {
-                    choice.m_value = value;
-                    choice.m_target = i;
-                }
-            }
+            getSummoningValue(choice);
             break;
         }
 
@@ -920,10 +953,7 @@ void type_AI_combat_data::castSpell(
         castEnchantment(bestChoice, defender);
         return;
     case g_aiSpellResurrection:
-        if (bestChoice.m_spell >= SPELL_RESURRECTION
-            && bestChoice.m_spell <= SPELL_ANIMATE_DEAD)
-            m_creatures[bestChoice.m_target].castResurrection(
-                bestChoice, m_currentHero);
+        castSummoning(bestChoice);
         return;
     }
 }
@@ -948,6 +978,11 @@ inline void type_AI_combat_data::castSpells(
 #if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1100
+// No retained PC slot: castSpell ends at 0x426163, then alignment leads
+// directly to inflictMeleeDamage at 0x426170. All other span bodies and
+// both flanks are accounted for. DC 0x2b380 filters equality of category
+// before take_damage; PC inflictDamage uses the retained range-based
+// inflictMeleeDamage helper. Keep the old roster entry without a false claim.
 DC_ONLY(0x2b380, 0x88)
 long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory)
 {
@@ -959,11 +994,11 @@ long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catago
 VA(0x00426170, 0x131)  // dc 0x2b408
 long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speedLimit)
 {
-    long total = 0;
+    long sum = 0;
     unsigned i;
     for (i = 0; i < m_creatures.size(); i++)
         if (m_creatures[i].m_catagory >= start && m_creatures[i].m_catagory <= speedLimit)
-            total += m_creatures[i].m_totalValue;
+            sum += m_creatures[i].m_totalValue;
     for (i = 0; i < m_creatures.size(); i++) {
         if (m_creatures[i].m_catagory < start)
             continue;
@@ -972,12 +1007,12 @@ long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speed
         long hits = m_creatures[i].m_totalValue;
         if (hits <= 0)
             continue;
-        long share = static_cast<long>(static_cast<double>(hits) * damage / total);
-        total -= hits;
+        long share = static_cast<long>(static_cast<double>(hits) * damage / sum);
+        sum -= hits;
         damage -= m_creatures[i].takeDamage(share);
         if (damage <= 0)
             break;
-        if (total <= 0)
+        if (sum <= 0)
             break;
     }
     return damage;
@@ -1173,9 +1208,9 @@ VA(0x00426bc0, 0x224)  // dc 0x2bc40
 void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 {
     for (long round = 1; round < 4; round++) {
-        if (m_totalCombatValue <= 0)
+        if (getTotal() <= 0)
             break;
-        if (defender.m_totalCombatValue <= 0)
+        if (defender.getTotal() <= 0)
             break;
         unsigned char weMelee = chooseMelee(
             defender, (type_speed_catagory)round);
@@ -1198,16 +1233,39 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 }
 
 // E:\gamedcs\ai_combat.cpp:1398
-#if 0  // @carcass
-DC_ONLY(0x2bcd8, 0x92)
-void do_eagle_eye(hero* winner, hero* loser)
+// Before normalization: do_eagle_eye. DC marks this free helper static.
+static void doEagleEye(hero* winner, hero* loser)
 {
-    // @stub
+    if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
+        && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            if (!loser->spellIsAvailable(spell)
+                || winner->spellIsAvailable(spell))
+                continue;
+            const SSpellTraits& traits = g_spellTraits[spell];
+            if (winner->m_skillLevel[g_secondarySkillEagleEye] + 1 < traits.m_level)
+                continue;
+            if (!(traits.m_flags & 1))
+                continue;
+            if (traits.m_level <= winner->m_skillLevel[g_secondarySkillWisdom] + 2) {
+                winner->addSpell(spell);
+                return;
+            }
+        }
+    }
 }
-#endif  // @carcass
 
-VA(0x00426df0, 0xED)  // dc 0x2bd6c
-void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup* destination)
+// E:\gamedcs\ai_combat.cpp:1424
+// SIGNATURE CORRECTION: the DC prototype's `short amount` does not
+// survive the bytes. The second (edx) argument is an armyGroup the
+// body walks slot by slot - armies[i] at [esi], numTroops[i] at
+// [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
+// .. 0x426e89) - i.e. the losing side's stacks.
+// Before normalization (function): create_skeletons.
+// Before normalization (locals): current_hero, dead_army, skeleton_hit_points,
+// skeleton_hit_points_f, hit_points.
+VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
+void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup& destination)
 {
     float factor = currentHero->getNecromancyFactor(1);
     if (factor <= 0.0f)
@@ -1231,26 +1289,41 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
     }
     if (total < 1)
         total = 1;
-    destination->add(skeleton, total, -1);
+    destination.add(skeleton, total, -1);
 }
 
-VA(0x00426ee0, 0x1D8)  // dc 0x2be54
-void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town* enemyTown)
+// E:\gamedcs\ai_combat.cpp:1440
+// DC dc0x2be54 proves the reference defender, mutable town pointer and
+// UCHAR retreated. Its line1497 calls the static do_eagle_eye helper above;
+// retaining the original static linkage and both SpellIsAvailable calls
+// preserves all 40 exact scores. The older forced-inline 70.8963% result
+// did not justify pasting the helper into this caller. A single conjunction
+// in the static helper is a measured 89.0061% control; ordered guards and
+// the first-success return reproduce the retail expansion exactly.
+// PC differs in necromancy: createSkeletons takes the defeated army pointer
+// (0x426df0 reads both creature types and counts), whereas DC takes a short
+// amount. Thus DC1448 defender_troop_count/get_creature_total feeding that
+// old amount has no PC counterpart; do not manufacture a redundant count.
+// The hero +0x430 field is the 70-entry available-spells table (AddSpell
+// 0x4d9330 writes the +0x3ea/+0x430 pair), not the former noWallPenalty view.
+// Before normalization (locals): enemy_town.
+VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
+void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemyTown)
 {
-    unsigned char surrendered = 0;
-    armyGroup* defeatedArmy = defender->getArmy();
-    hero* defeatedHero = defender->getHero();
+    unsigned char retreated = 0;
+    armyGroup* defeatedArmy = defender.getArmy();
+    hero* defeatedHero = defender.getHero();
 
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
-        defeatedHero->m_mana = static_cast<short>(defender->m_mana);
+        defeatedHero->m_mana = static_cast<short>(defender.m_mana);
 
     if (m_totalCombatValue > 0) {
         if (m_currentHero) {
             int experience;
             if (defeatedHero && random(0, 100) < 60) {
-                surrendered = 1;
+                retreated = 1;
                 experience = g_game->experienceValueOfStack(
                     defeatedArmy, 0);
             } else {
@@ -1263,7 +1336,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
 
             if (defeatedHero)
                 defeatedHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
-            if (!surrendered && defeatedHero)
+            if (!retreated && defeatedHero)
                 defeatedHero->transferArtifacts(m_currentHero);
 
             if (enemyTown)
@@ -1274,31 +1347,13 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
     }
 
     adjustArmy(1);
-    defender->adjustArmy(1);
+    defender.adjustArmy(1);
 
     if (m_totalCombatValue > 0 && m_currentHero) {
-        createSkeletons(m_currentHero, defeatedArmy, m_currentArmy);
+        createSkeletons(m_currentHero, defeatedArmy, *m_currentArmy);
 
-        if (defeatedHero) {
-            hero* victoriousHero = m_currentHero;
-            if (victoriousHero->m_skillLevel[g_secondarySkillEagleEye] > 0
-                && victoriousHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                    if (!defeatedHero->spellIsAvailable(spell)
-                        || victoriousHero->spellIsAvailable(spell))
-                        continue;
-                    const SSpellTraits& traits = g_spellTraits[spell];
-                    if (victoriousHero->m_skillLevel[g_secondarySkillEagleEye] + 1 < traits.m_level)
-                        continue;
-                    if (!(traits.m_flags & 1))
-                        continue;
-                    if (traits.m_level <= victoriousHero->m_skillLevel[g_secondarySkillWisdom] + 2) {
-                        victoriousHero->addSpell(spell);
-                        break;
-                    }
-                }
-            }
-        }
+        if (defeatedHero)
+            doEagleEye(m_currentHero, defeatedHero);
     }
 
     if (m_currentHero)
@@ -1307,34 +1362,44 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
         defeatedHero->applyBattleLossTemps();
 }
 
-VA(0x004270c0, 0x149)  // dc 0x2c004
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup* defendingArmy, town* defendingTown, NewmapCell* cell)
+// E:\gamedcs\ai_combat.cpp:1511
+// EH-bearing: the two stack-local type_AI_combat_data objects give the
+// function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
+// and the two `mov [ebp-4], state` writes between the constructors.
+// Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town,
+// attacker_modifier, defender_modifier.
+VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
+unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
     type_AI_combat_data attacker(attackingHero, &attackingHero->m_army,
                                  attackerModifier, defendingHero,
                                  defendingTown, cell);
-    type_AI_combat_data defender(defendingHero, defendingArmy,
+    type_AI_combat_data defender(defendingHero, &defendingArmy,
                                  defenderModifier, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
-    if (attacker.m_totalCombatValue > 0) {
-        attacker.doAftermath(&defender, defendingTown);
+    if (attacker.getTotal() > 0) {
+        attacker.doAftermath(defender, defendingTown);
         return 1;
     }
-    defender.doAftermath(&attacker, 0);
+    defender.doAftermath(attacker, 0);
     return 0;
 }
 
-VA(0x00427210, 0x113)  // dc 0x2c140
-void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup* attackingArmy, armyGroup* defendingArmy, const town* defendingTown, NewmapCell* cell)
+// E:\gamedcs\ai_combat.cpp:1539
+// EH-bearing, same shape as AI_quick_combat.
+// Before normalization (locals): attacking_hero, defending_hero, attacking_army, defending_army,
+// defending_town, attacker_modifier, defender_modifier.
+VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
+void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attackingArmy, armyGroup& defendingArmy, const town* defendingTown, NewmapCell* cell)
 {
-    float attackerModifier = random(75, 125) / 100.0f;
+    float attackerLuck = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;
-    type_AI_combat_data attacker(attackingHero, attackingArmy,
-                                 attackerModifier, defendingHero,
+    type_AI_combat_data attacker(attackingHero, &attackingArmy,
+                                 attackerLuck, defendingHero,
                                  defendingTown, cell);
-    type_AI_combat_data defender(defendingHero, defendingArmy,
+    type_AI_combat_data defender(defendingHero, &defendingArmy,
                                  defenderModifier, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
     attacker.adjustArmy(0);
@@ -1375,7 +1440,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     type_AI_combat_data defender(defendingHero, &localDefender,
                                  defenderLuck, attackingHero, 0, cell);
     attacker.simulateCombat(defender);
-    if (attacker.m_totalCombatValue == 0)
+    if (attacker.getTotal() == 0)
         return -1000000000;
 
     attacker.adjustArmy(1);
@@ -1385,10 +1450,12 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
         experienceValue
         * const_cast<hero*>(attackingHero)->getExperienceBonusFactor());
     long value = static_cast<long>(
-        getExperienceValueModifier(attackingHero, &localArmy)
+        valueOfExperience(attackingHero, localArmy)
         * experience);
 
-    createSkeletons(attackingHero, &defendingArmy, &localArmy);
+    // DC1612 first computes get_creature_total for its short-amount helper.
+    // Complete passes the whole defeated army to its species-aware helper.
+    createSkeletons(attackingHero, &defendingArmy, localArmy);
     long originalValue = attackingHero->m_army.getAIValue();
     long armyLoss = originalValue - localArmy.getAIValue();
     value -= armyLoss;
@@ -1424,6 +1491,10 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
 #if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1656
+// DC builds a temporary armyGroup and delegates to the five-argument
+// AI_value_of_combat. No retained PC slot fits: the full evaluator ends
+// at 0x427648 and the first approximate-strength overload starts at
+// 0x427650; all surrounding bodies and native STL tails are identified.
 DC_ONLY(0x2c5e8, 0x2C)
 long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell)
 {
@@ -1435,13 +1506,15 @@ long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, 
 VA(0x00427650, 0x33)  // dc 0x2c614
 long aiApproximateStrength(const hero* currentHero)
 {
-    return aiApproximateStrength(currentHero, &currentHero->m_army);
+    return aiApproximateStrength(currentHero, currentHero->m_army);
 }
 
-VA(0x00427690, 0x2F)  // dc 0x2c628
-long aiApproximateStrength(const hero* currentHero, const armyGroup* currentArmy)
+// E:\gamedcs\ai_combat.cpp:1674
+// LOCATED (hd-crossbuild + ida): same body with the group in edx.
+VA(0x00427690, 0x2F)  // corroborates (hd-crossbuild + ida), dc 0x2c628
+long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy)
 {
-    long value = currentArmy->getAIValue();
+    long value = currentArmy.getAIValue();
     if (currentHero == 0)
         return value;
     return static_cast<long>(currentHero->getCombatValueModifier() * value);

@@ -23,9 +23,9 @@ class paletteHiColor;
 class TPalette24;
 class sample;
 
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
 // The widget base lives in widget.h (owner: widget.obj). Button's
 // vtables (0x63bb54/0x63bb88/0x63bbbc) have 13 slots because WIDGET
@@ -78,8 +78,9 @@ public:
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     static sample* s_clickSample;
+    void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    int select(message* msg);
+    int select(message& msg);
     // Original: button::Deselect; button.cpp:401, dc 0x57854.
     int deselect(message& msg);
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
@@ -102,8 +103,12 @@ public:
     void clearHotkeys() { m_hotKeyCodes.clear(); }
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;  // slot 3
+    virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
+    // Before normalization (function): button::GetRealHeight.
+    virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;  // slot 4, retail 0x456940
+    virtual void dim() const;
 
     virtual ~button();
     // widget slot 12, overridden at 0x456a10 - the only override of it
@@ -117,14 +122,15 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
-    virtual void draw() const;  // slot 4, retail 0x456ca0
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
+
+    virtual void draw() const;    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 
 private:
     font* m_font;
-    int m_textColor;
+    font::TColor m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down

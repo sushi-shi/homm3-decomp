@@ -380,7 +380,7 @@ unsigned long GameTime::get()
 VA(0x004f82f0, 0xCD)  // dc 0xe806c
 void GameTime::delayTil(unsigned long time)
 {
-    while (static_cast<int>(get() - time) < 0) {
+    while (!GameTime::isPast(time)) {
         process1WindowsMessage();
         pollSound();
     }
@@ -389,7 +389,7 @@ void GameTime::delayTil(unsigned long time)
 VA(0x004f83c0, 0xD0)  // dc 0xe8098
 void GameTime::delay(int interval)
 {
-    delayTil(get() + interval);
+    GameTime::delayTil(GameTime::get() + interval);
 }
 
 #if 0  // @carcass

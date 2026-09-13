@@ -35,22 +35,35 @@ DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
 //            animation; 578 is shared with the combat options dialog)
 
 // E:\gamedcs\systemoptionswindow.cpp:43
-// STATEMENT CENSUS + LARGE-MASS RE-SWEEP, 2026-08-14 (98.1326).
-// `*** SRCLINES ***` gives dc 0x15f588 Cb 0x10AC = 89 statement lines over
-// E:\gamedcs\systemoptionswindow.cpp:43-194, one file block, no header line
-// attributed inside the range. This body counts 106, ratio 1.191 - above the
-// exact-function third quartile (1.083; median 0.933 over 807 calibrated
-// bodies) and therefore INSIDE the instrument's noise, not a finding. See
-// levelupwindow.cpp for the calibration.
-// The mass axis was also re-swept far past the old window now that the RE'd
-// budget's LOWER CLAMP is known to hide steps from short sweeps (see
-// ai_combat::do_general_melee): with self-assign pad units the score is
-// 98.1326 / 97.7430 / 89.3196 / 89.3379 / 90.2533 / 89.5409 / 81.4751 /
-// 72.1331 / 69.3297 at masses 0, 8, 16, 32, 48, 64, 96, 128, 192. This body
-// is far above the clamp and mass is monotonically harmful past ~8 - the same
-// re-sweep is negative for combatresultswindow ??0 (96.3788 decaying to 80.85
-// at 128), ai_player::calculate_reserve (96.4566 to 6.56) and perfectly flat
-// 0..128 for ai_combat::do_aftermath. The clamp case is a SMALL-BODY case.
+// Reproduced 99.3013% after recovering the complete UpdateSystemOptions
+// boundary (DC193) and the plain pointer-registration loop (DC121..127).
+// The former extra begin/end guard compensated for the pasted first-update
+// branch. With the complete ordinary helper it scores 85.4266%, while
+// the source-supported for loop reaches 99.3013%; a guarded do loop gives
+// 98.3416% and a named vector reference gives 98.5153% with the for loop.
+// Preserve the standard vector, MemError arm and both true helper callers.
+// Seventeen initial boundary states and twenty flag/accessor states showed
+// that the member dirty flag belongs before the handler's update call:
+// placing its extra conditional inside the helper prevents both expansions.
+// Thirty-three registration/owner states reproduce the joint improvement
+// from 96.3370%/94.3957% to 99.3013%/97.3386% for constructor/handler.
+// The TTextResource subscript calls are source facts and byte-neutral here.
+// Former constructor mismatch was confined to reserve's nested choices:
+// the verified C2 replay has root cb=4467/budget=8934, but reserve's depth-2
+// budget starts at 151. capacity(42) and _Ucopy(60) leave 49; _Destroy(49)
+// expands and size(42) is retained at budget zero. Retail calls _Destroy
+// and expands size instead. The rest of the instruction stream aligns at
+// +0x18 after reserve. Sixteen coordinate/initialization lifetime states
+// (eight objects, all reproduced) show the missing source lever: pass the
+// derived x expression directly at either or both volume constructors.
+// This removes a single-use local while keeping slot induction, all helper
+// calls and all widget values. Either direct-coordinate loop reaches 100%;
+// both named locals leave 99.3013%. The adopted form treats both loops alike.
+// Verified C2: root cb 4457/budget 8914 gives reserve budget 150; after
+// capacity/_Ucopy it has 48, so _Destroy(49) is called and size(42) expands.
+// Keep the original member initializer and plain pointer registration loop;
+// those source alternatives were independently crossed in the controls.
+// No standard-library code, dummy operation or inline pin is needed.
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
@@ -196,16 +209,14 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // end x1, i.e. no guard - but the guard is worth +9.3 here and is
     // therefore standing in for two sites retail has and the DC port does not.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
-        int musicX = 29 + musicSlot * 19;
         m_widgets.push_back(new iconWidget(
-            musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
+            29 + musicSlot * 19, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
     }
 
     for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
-        int effectsX = 29 + effectsSlot * 19;
         m_widgets.push_back(new iconWidget(
-            effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
+            29 + effectsSlot * 19, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
             "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
@@ -250,77 +261,53 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
-        26, 19, 432, 28, g_generalText->getText(569), "bigfont.fnt",
+        26, 19, 432, 28, (*g_generalText)[569], "bigfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 56, 193, 20, g_generalText->getText(570), "medfont.fnt",
+        26, 56, 193, 20, (*g_generalText)[570], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 122, 193, 20, g_generalText->getText(571), "medfont.fnt",
+        26, 122, 193, 20, (*g_generalText)[571], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 188, 193, 20, g_generalText->getText(572), "medfont.fnt",
+        26, 188, 193, 20, (*g_generalText)[572], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 254, 193, 20, g_generalText->getText(21), "medfont.fnt",
+        26, 254, 193, 20, (*g_generalText)[21], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 339, 193, 20, g_generalText->getText(395), "medfont.fnt",
+        26, 339, 193, 20, (*g_generalText)[395], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 406, 193, 20, g_generalText->getText(396), "medfont.fnt",
+        26, 406, 193, 20, (*g_generalText)[396], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
 
     m_widgets.push_back(new textWidget(
-        282, 55, 182, 24, g_generalText->getText(573), "medfont.fnt",
+        282, 55, 182, 24, (*g_generalText)[573], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 87, 182, 24, g_generalText->getText(574), "medfont.fnt",
+        282, 87, 182, 24, (*g_generalText)[574], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 119, 182, 24, g_generalText->getText(575), "medfont.fnt",
+        282, 119, 182, 24, (*g_generalText)[575], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 151, 182, 24, g_generalText->getText(576), "medfont.fnt",
+        282, 151, 182, 24, (*g_generalText)[576], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 183, 182, 24, g_generalText->getText(577), "medfont.fnt",
+        282, 183, 182, 24, (*g_generalText)[577], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 215, 182, 24, g_generalText->getText(578), "medfont.fnt",
+        282, 215, 182, 24, (*g_generalText)[578], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
-    // The registration guard is this constructor's /Ob2 site-count knob, and
-    // it is worth 88.3182 -> 97.6237 (measured 2026-08-14). Mechanism, in the
-    // terms of docs/vc6/inliner.md and mainmenu.cpp: every candidate call site
-    // in the body divides the budget handed to the sites BEFORE it
-    // (`budget / (n - k)`), so the widget list's LAST push_back - the one whose
-    // interior retail leaves as an out-of-line `insert` - only starves if the
-    // body carries more candidate sites AFTER it. Placement law, swept with the
-    // xx_nop probe: two free sites are byte-flat at 88.3182 anywhere before the
-    // last push_back (before `reserve`, straight after it, and after each of
-    // the widget groups) and jump to 97.1811 the moment they sit after it. Two
-    // vector calls on `Widgets` here are exactly that pair: `begin()` for the
-    // hoisted `first`, then `begin()` and `end()` again in the loop. Hoisting
-    // `first` is not cosmetic - it also fixes a `begin()`/`end()` load
-    // transposition at the loop head that the bare
-    // `if (Widgets.begin() != Widgets.end())` guard leaves behind (97.1779),
-    // which is why this spelling beats the xx_nop ceiling. Measured neighbours:
-    // this form 97.6237, the same without the braces around the `for` 97.1779,
-    // as a `while` 97.1779, `if (!Widgets.empty())` 89.0517 (+1 with a byte
-    // cost), `Widgets.size() != 0` 89.0517, `first` also used as the loop
-    // initialiser 89.8628 (a clean +1 - the second `end()` is CSE-folded), an
-    // index loop over `size()`/`operator[]` 88.2661, and a hoisted `last`
-    // 87.8395. Adding sites past this pair regresses exactly as the ladder
-    // predicts: +1 more 95.8281, +2 more 84.6255.
-    widget** first = m_widgets.begin();
-    if (first != m_widgets.end()) {
-        for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-            if (*it)
-                addWidget(*it, -1);
-            else
-                memError();
-        }
+    // DC121 initializes the pointer iterator from begin, checks end at
+    // each iteration, then DC123..126 register the widget or call MemError.
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
+        else
+            memError();
     }
 
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
@@ -397,28 +384,7 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     getWidget(g_unnamed698758.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
-    message networkMessage;
-    networkMessage.m_codeX = 0;
-    networkMessage.m_codeY = 0;
-    networkMessage.m_qualifier = 0;
-    networkMessage.m_mouseX = 0;
-    networkMessage.m_mouseY = 0;
-    networkMessage.m_extra = 0;
-    networkMessage.m_window = 0;
-    networkMessage.m_id = MESSAGE_WIDGET;
-    if (g_networkActive69954c) {
-        getWidget(TMainMenu::RESTART_ID)->enable(0);
-        networkMessage.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        networkMessage.m_extra = widget::WIDGET_ACTIVE;
-        broadcastMessage(&networkMessage);
-        networkMessage.m_codeY = TMainMenu::LOAD_GAME_ID;
-        networkMessage.m_codeX = widget::WIDGET_SET_STATUS;
-        networkMessage.m_extra = widget::WIDGET_DIMMED_NODRAW;
-        broadcastMessage(&networkMessage);
-        networkMessage.m_codeX = widget::WIDGET_CLEAR_STATUS;
-        networkMessage.m_extra = widget::WIDGET_ACTIVE;
-        broadcastMessage(&networkMessage);
-    }
+    updateSystemOptions(1);
 }
 
 VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
@@ -471,20 +437,6 @@ void TSystemOptionsWindow::doModal()
         }
         writePrefs();
     }
-}
-
-// Dreamcast homes this helper after WindowHandler, but retail inlines it at
-// every call site. Its CodeView rows prove the message::message() constructor
-// boundary and retail retains that initialization in the handler's 0x20-byte
-// frame. Use the real constructor rather than a volatile POD surrogate.
-__forceinline void TSystemOptionsWindow::updateSystemOptions(
-    unsigned char firstUpdate)
-{
-    if (!firstUpdate)
-        m_prefsChanged = 1;
-    message updateMessage;
-    updateMessage.m_id = MESSAGE_WIDGET;
-    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:260
@@ -542,234 +494,319 @@ __forceinline void TSystemOptionsWindow::updateSystemOptions(
 // stays before translation; both joins are removed with all 1526 compiled
 // bytes and 96 references/addends unchanged at 94.3957%.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
-int TSystemOptionsWindow::windowHandler(message* msg)
+int TSystemOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     pollSound();
-    register int one = MESSAGE_DISPATCH_CONSUME;
 
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->m_codeX == widget::WIDGET_SELECT
-                || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            int id = msg->m_codeY;
+    bool exitFlag = 0;
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
+    {
+        if (msg.m_codeX == widget::WIDGET_SELECT ||
+            msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+        {
+            int id = msg.m_codeY;
             int helpID = convertID2HelpID(id);
             if (helpID >= 0)
-                normalDialog(g_systemOptionsHelp[helpID].m_text,
-                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
-    } else if (msg->m_id != one && msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
-        case widget::WIDGET_SELECT: {
-            int id = findWidget(msg->m_mouseX, msg->m_mouseY);
-            if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID
-                    && button::s_clickSample) {
-                button::s_clickSample->m_memSample.m_memVolume = 0x40;
-                button::s_clickSample->m_memSample.m_memLooping = one;
-                button::s_clickSample->m_memSample.m_memCindex = 3;
-                g_soundManager->memorySample(button::s_clickSample);
-            }
-            return one;
-        }
-        case widget::WIDGET_DESELECT:
-            break;
-        default:
-            return one;
-        }
-
-        do {
-            {
-                int id = msg->m_codeY;
-
-                if (id == TMainMenu::LOAD_GAME_ID
-                        || id == TMainMenu::MAIN_MENU_ID
-                        || id == TMainMenu::QUIT_ID) {
-                    normalDialog(g_generalText->getText(
-                                     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM),
-                        2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                    if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
-                        return one;
-                    break;
-                }
-                if (id == TMainMenu::SAVE_GAME_ID
-                        || id == TMainMenu::RESTART_ID
-                        || id == DIALOG_RETURN_SPLIT_ACCEPT)
-                    break;
-
-                bool prefsChanged = 1;
-                switch (id) {
-                case VIDEO_QUALITY_LOW:
-                case VIDEO_QUALITY_HIGH: {
-                    g_unnamed698758.m_binkVideo = id - VIDEO_QUALITY_LOW;
-                    for (int i = VIDEO_QUALITY_LOW; i <= VIDEO_QUALITY_HIGH; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DIMMED);
-                    getWidget(g_unnamed698758.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
-                    break;
-                }
-
-                case WINDOW_SCROLL_SLOW:
-                case WINDOW_SCROLL_MEDIUM:
-                case WINDOW_SCROLL_FAST: {
-                    g_unnamed698758.m_windowScrollSpeed = id - WINDOW_SCROLL_SLOW;
-                    for (int i = WINDOW_SCROLL_SLOW; i <= WINDOW_SCROLL_FAST; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DIMMED);
-                    getWidget(g_unnamed698758.m_windowScrollSpeed + WINDOW_SCROLL_SLOW)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
-                    break;
-                }
-
-                case HERO_SPEED_WALK_ID:
-                case HERO_SPEED_CANTER_ID:
-                case HERO_SPEED_GALLOP_ID:
-                case HERO_SPEED_JUMP_ID: {
-                    g_unnamed698758.m_walkSpeed = id - MUSIC_TYPE_MIDI_ID;
-                    for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DIMMED);
-                    getWidget(g_unnamed698758.m_walkSpeed + MUSIC_TYPE_MIDI_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
-                    break;
-                }
-
-                case AI_SPEED_CANTER_ID:
-                case AI_SPEED_GALLOP_ID:
-                case AI_SPEED_JUMP_ID:
-                case AI_SPEED_NONE_ID: {
-                    g_unnamed698758.m_computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
-                    g_unnamed698758.m_blackoutComputer =
-                        g_unnamed698758.m_computerWalkSpeed == AI_SPEED_BLACKOUT_VALUE;
-                    for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DIMMED);
-                    getWidget(g_unnamed698758.m_computerWalkSpeed + HERO_SPEED_GALLOP_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
-                    break;
-                }
-
-                case MUSIC_VOLUME_0_ID:
-                case MUSIC_VOLUME_1_ID: case MUSIC_VOLUME_2_ID:
-                case MUSIC_VOLUME_3_ID: case MUSIC_VOLUME_4_ID:
-                case MUSIC_VOLUME_5_ID: case MUSIC_VOLUME_6_ID:
-                case MUSIC_VOLUME_7_ID: case MUSIC_VOLUME_8_ID:
-                case MUSIC_VOLUME_9_ID: {
-                    if (!g_unk698760 && !g_soundManager->m_ds) {
-                        normalDialog(
-                            g_generalText->getText(
-                                GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
-                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                        return MESSAGE_DISPATCH_CONSUME;
-                    }
-                    g_unk698760 = id - MUSIC_VOLUME_0_ID;
-                    for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DRAWN);
-                    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_unk698760);
-                    int save = g_soundManager->m_playSounds;
-                    g_soundManager->m_playSounds = one;
-                    g_soundManager->adjustMusicVolumes();
-                    g_soundManager->m_playSounds = save;
-                    break;
-                }
-
-                case EFFECTS_VOLUME_0_ID:
-                case EFFECTS_VOLUME_1_ID: case EFFECTS_VOLUME_2_ID:
-                case EFFECTS_VOLUME_3_ID: case EFFECTS_VOLUME_4_ID:
-                case EFFECTS_VOLUME_5_ID: case EFFECTS_VOLUME_6_ID:
-                case EFFECTS_VOLUME_7_ID: case EFFECTS_VOLUME_8_ID:
-                case EFFECTS_VOLUME_9_ID: {
-                    if (!g_unk698764 && !g_soundManager->m_ds) {
-                        normalDialog(
-                            g_generalText->getText(
-                                GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
-                            one, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                        return MESSAGE_DISPATCH_CONSUME;
-                    }
-                    g_unk698764 = id - EFFECTS_VOLUME_0_ID;
-                    g_unnamed698758.m_lastSoundVolume = g_unk698764;
-                    for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                        getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_DRAWN);
-                    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_unk698764);
-                    int save = g_soundManager->m_playSounds;
-                    g_soundManager->m_playSounds = one;
-                    g_soundManager->adjustSoundVolumes();
-                    g_soundManager->m_playSounds = save;
-                    break;
-                }
-
-                case SHOW_PATH_ID:
-                    g_unnamed698758.m_showRoute ^= one;
-                    getWidget(SHOW_PATH_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_showRoute);
-                    break;
-                case MOVE_REMINDER_ID:
-                    g_unnamed698758.m_moveReminder ^= one;
-                    getWidget(MOVE_REMINDER_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_moveReminder);
-                    break;
-                case QUICK_COMBAT_ID:
-                    g_unnamed698758.m_quickCombat ^= one;
-                    getWidget(QUICK_COMBAT_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_quickCombat);
-                    break;
-                case VIDEO_SUBTITLES_ID:
-                    g_unnamed698758.m_videoSubtitles ^= one;
-                    getWidget(VIDEO_SUBTITLES_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_videoSubtitles);
-                    break;
-                case TOWN_OUTLINES_ID:
-                    g_unnamed698758.m_townOutlines ^= one;
-                    getWidget(TOWN_OUTLINES_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_townOutlines);
-                    break;
-                case ANIMATE_SPELLBOOK_ID:
-                    g_unnamed698758.m_animateSpellBook ^= one;
-                    getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_animateSpellBook);
-                    break;
-
-                default:
-                    prefsChanged = 0;
-                    break;
-                }
-
-                if (prefsChanged)
-                    updateSystemOptions(0);
-                return MESSAGE_DISPATCH_CONSUME;
-            }
-
-        } while (0);
-        {
-            int command = msg->m_codeY;
-            msg->m_id = MESSAGE_WIDGET;
-            g_windowManager->m_dialogReturn = command;
-            msg->m_codeY = widget::WIDGET_END_DIALOG;
-            msg->m_codeX = widget::WIDGET_END_DIALOG;
-            return MESSAGE_DISPATCH_FORWARD;
+                normalDialog(g_systemOptionsHelp[helpID].m_text, 4, -1, -1, -1, 0, -1,
+                             0, -1, 0, -1, 0);
         }
     }
-    return one;
+    else if (msg.m_id != MESSAGE_DISPATCH_CONSUME)
+    {
+        if (msg.m_id == MESSAGE_WIDGET)
+        {
+            switch (msg.m_codeX)
+            {
+            case widget::WIDGET_SELECT:
+            {
+                int id = findWidget(msg.m_mouseX, msg.m_mouseY);
+                if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID &&
+                    button::s_clickSample)
+                {
+                    button::s_clickSample->m_memSample.m_memVolume = 0x40;
+                    button::s_clickSample->m_memSample.m_memLooping =
+                        MESSAGE_DISPATCH_CONSUME;
+                    button::s_clickSample->m_memSample.m_memCindex = 3;
+                    g_soundManager->memorySample(button::s_clickSample);
+                }
+                break;
+            }
+            case widget::WIDGET_DESELECT:
+            {
+                int id = msg.m_codeY;
+                if (id == TMainMenu::LOAD_GAME_ID || id == TMainMenu::MAIN_MENU_ID ||
+                    id == TMainMenu::QUIT_ID)
+                {
+                    normalDialog(
+                        (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM],
+                        2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
+                        exitFlag = 1;
+                }
+                else if (id == TMainMenu::SAVE_GAME_ID || id == TMainMenu::RESTART_ID ||
+                         id == DIALOG_RETURN_SPLIT_ACCEPT)
+                    exitFlag = 1;
+
+                else
+                {
+                    bool prefsChanged = 0;
+                    switch (id)
+                    {
+                    case VIDEO_QUALITY_LOW:
+                    case VIDEO_QUALITY_HIGH:
+                    {
+                        g_unnamed698758.m_binkVideo = id - VIDEO_QUALITY_LOW;
+                        for (int i = VIDEO_QUALITY_LOW; i <= VIDEO_QUALITY_HIGH; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DIMMED);
+                        getWidget(g_unnamed698758.m_binkVideo + VIDEO_QUALITY_LOW)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DIMMED);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case WINDOW_SCROLL_SLOW:
+                    case WINDOW_SCROLL_MEDIUM:
+                    case WINDOW_SCROLL_FAST:
+                    {
+                        g_unnamed698758.m_windowScrollSpeed = id - WINDOW_SCROLL_SLOW;
+                        for (int i = WINDOW_SCROLL_SLOW; i <= WINDOW_SCROLL_FAST; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DIMMED);
+                        getWidget(g_unnamed698758.m_windowScrollSpeed +
+                                  WINDOW_SCROLL_SLOW)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DIMMED);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case HERO_SPEED_WALK_ID:
+                    case HERO_SPEED_CANTER_ID:
+                    case HERO_SPEED_GALLOP_ID:
+                    case HERO_SPEED_JUMP_ID:
+                    {
+                        g_unnamed698758.m_walkSpeed = id - MUSIC_TYPE_MIDI_ID;
+                        for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DIMMED);
+                        getWidget(g_unnamed698758.m_walkSpeed + MUSIC_TYPE_MIDI_ID)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DIMMED);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case AI_SPEED_CANTER_ID:
+                    case AI_SPEED_GALLOP_ID:
+                    case AI_SPEED_JUMP_ID:
+                    case AI_SPEED_NONE_ID:
+                    {
+                        g_unnamed698758.m_computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
+                        g_unnamed698758.m_blackoutComputer =
+                            g_unnamed698758.m_computerWalkSpeed ==
+                            AI_SPEED_BLACKOUT_VALUE;
+                        for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DIMMED);
+                        getWidget(g_unnamed698758.m_computerWalkSpeed +
+                                  HERO_SPEED_GALLOP_ID)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DIMMED);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case MUSIC_VOLUME_0_ID:
+                    case MUSIC_VOLUME_1_ID:
+                    case MUSIC_VOLUME_2_ID:
+                    case MUSIC_VOLUME_3_ID:
+                    case MUSIC_VOLUME_4_ID:
+                    case MUSIC_VOLUME_5_ID:
+                    case MUSIC_VOLUME_6_ID:
+                    case MUSIC_VOLUME_7_ID:
+                    case MUSIC_VOLUME_8_ID:
+                    case MUSIC_VOLUME_9_ID:
+                    {
+                        if (!g_unk698760 && !g_soundManager->m_ds)
+                        {
+                            normalDialog(
+                                (*g_generalText)
+                                    [GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE],
+                                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                            return MESSAGE_DISPATCH_CONSUME;
+                        }
+                        g_unk698760 = id - MUSIC_VOLUME_0_ID;
+                        for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DRAWN);
+                        getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DRAWN);
+                        getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_unk698760);
+                        int save = g_soundManager->m_playSounds;
+                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        g_soundManager->adjustMusicVolumes();
+                        g_soundManager->m_playSounds = save;
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case EFFECTS_VOLUME_0_ID:
+                    case EFFECTS_VOLUME_1_ID:
+                    case EFFECTS_VOLUME_2_ID:
+                    case EFFECTS_VOLUME_3_ID:
+                    case EFFECTS_VOLUME_4_ID:
+                    case EFFECTS_VOLUME_5_ID:
+                    case EFFECTS_VOLUME_6_ID:
+                    case EFFECTS_VOLUME_7_ID:
+                    case EFFECTS_VOLUME_8_ID:
+                    case EFFECTS_VOLUME_9_ID:
+                    {
+                        if (!g_unk698764 && !g_soundManager->m_ds)
+                        {
+                            normalDialog(
+                                (*g_generalText)
+                                    [GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE],
+                                MESSAGE_DISPATCH_CONSUME, -1, -1, -1, 0, -1, 0, -1, 0,
+                                -1, 0);
+                            return MESSAGE_DISPATCH_CONSUME;
+                        }
+                        g_unk698764 = id - EFFECTS_VOLUME_0_ID;
+                        g_unnamed698758.m_lastSoundVolume = g_unk698764;
+                        for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
+                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
+                                                      widget::WIDGET_DRAWN);
+                        getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)
+                            ->sendMessage(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DRAWN);
+                        getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_unk698764);
+                        int save = g_soundManager->m_playSounds;
+                        g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
+                        g_soundManager->adjustSoundVolumes();
+                        g_soundManager->m_playSounds = save;
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    }
+
+                    case SHOW_PATH_ID:
+                        g_unnamed698758.m_showRoute ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(SHOW_PATH_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_showRoute);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    case MOVE_REMINDER_ID:
+                        g_unnamed698758.m_moveReminder ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(MOVE_REMINDER_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_moveReminder);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    case QUICK_COMBAT_ID:
+                        g_unnamed698758.m_quickCombat ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(QUICK_COMBAT_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_quickCombat);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    case TOWN_OUTLINES_ID:
+                        g_unnamed698758.m_townOutlines ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(TOWN_OUTLINES_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_townOutlines);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    case VIDEO_SUBTITLES_ID:
+                        g_unnamed698758.m_videoSubtitles ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(VIDEO_SUBTITLES_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_videoSubtitles);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+                    case ANIMATE_SPELLBOOK_ID:
+                        g_unnamed698758.m_animateSpellBook ^= MESSAGE_DISPATCH_CONSUME;
+                        getWidget(ANIMATE_SPELLBOOK_ID)
+                            ->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                                          g_unnamed698758.m_animateSpellBook);
+                        prefsChanged = 1;
+                        m_prefsChanged = 1;
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    if (prefsChanged)
+                    {
+                        updateSystemOptions(0);
+                    }
+                }
+                break;
+            }
+            }
+        }
+    }
+    if (exitFlag)
+    {
+        int command = msg.m_codeY;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = command;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:667
 // Retail has no post-handler entry before the next compiland's unrelated
 // 0x5b3780 constructor; the helper is inlined at its call sites.
+
+// Before normalization (locals): bFirstUpdate.
+// DC668 constructs msg, 669 sets its id, 671 guards the first-update
+// network path, and 696 guards redraw with !firstUpdate. The dirty flag
+// is set by the handler's preference arms (DC624/625 etc.). Moving
+// that store back here suppresses expansion at both callers (96.5620%
+// constructor / 88.3110% handler under the former registration spelling).
+void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
+{
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    if (firstUpdate && g_networkActive69954c) {
+        getWidget(TMainMenu::RESTART_ID)->enable(0);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(msg);
+        msg.m_codeY = TMainMenu::LOAD_GAME_ID;
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+        broadcastMessage(msg);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(msg);
+    }
+    if (!firstUpdate)
+        drawWindow(1, 0xffff0001, 0xffff);
+}
 
 // E:\gamedcs\systemoptionswindow.cpp:194
 #if 0  // @carcass -- represented by VA_COMPGEN above

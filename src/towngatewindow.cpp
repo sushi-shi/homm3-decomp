@@ -105,13 +105,13 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_codeY = SELECTOR_ID;
     msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     m_exitCommand = -1;
 }
@@ -145,12 +145,12 @@ void TTownGateWindow::updateTownLocator(int i)
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
 
         strcpy(g_text, g_game->getTownName(m_towns[m_topTown + i]));
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_extraText = g_text;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
 
         msg.m_codeX = widget::WIDGET_SET_COLOR;
         const town* whichTown = g_game->getTown(m_towns[m_topTown + i]);
@@ -158,23 +158,23 @@ void TTownGateWindow::updateTownLocator(int i)
             && whichTown->m_visitingHeroId < 0) {
             msg.m_extra = font::PRIMARY;
             if (m_topTown + i == m_selectedTown) {
-                broadcastMessage(&msg);
+                broadcastMessage(msg);
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_codeY = SELECTOR_ID;
                 msg.m_extra = widget::WIDGET_DRAWN;
-                broadcastMessage(&msg);
+                broadcastMessage(msg);
                 msg.m_codeX = widget::WIDGET_SET_Y;
                 msg.m_extra = 25 * i + 151;
             }
         } else {
             msg.m_extra = font::PRIMARY_HIGHLIGHT;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_extra = widget::WIDGET_ACTIVE;
         }
     }
 
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 }
 
 // E:\gamedcs\towngatewindow.cpp:168
@@ -188,7 +188,7 @@ void TTownGateWindow::updateTownLocators()
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_codeY = SELECTOR_ID;
     msg.m_extra = widget::WIDGET_DRAWN;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     for (int i = 0; i < NUM_TOWN_ENTRIES; ++i)
         updateTownLocator(i);
@@ -204,7 +204,7 @@ void TTownGateWindow::doModal()
     msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = SLIDER_ID;
     msg.m_extra = m_towns.size() - (NUM_TOWN_ENTRIES - 1);
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     updateTownLocators();
 
@@ -212,34 +212,51 @@ void TTownGateWindow::doModal()
     heroWindow::doModal(0);
 }
 
-VA(0x005c2840, 0x13B)  // dc 0x169ae0
-int TTownGateWindow::windowHandler(message* msg)
+// E:\gamedcs\towngatewindow.cpp:208
+// The two widget verdicts this window answers: a list-row select moves the
+// highlight, and a button deselect stamps gpWindowManager->dialogReturn with
+// the chosen town id (or -1 for Cancel) and rewrites the message into the
+// shared END_DIALOG forward. Every state read goes through the file-local
+// window pointer, not `this` - only GetWidget uses the receiver.
+// The END_DIALOG forward is written out in BOTH deselect arms. Written
+// once after the inner switch it is a two-predecessor join, and VC6 sinks
+// it past the CANCEL arm while retail lets the OK arm fall straight into
+// it and reaches it from CANCEL with a backward jmp; the duplicate leaves
+// the first copy single-predecessor, and the cross-jumper then merges the
+// shared tail into retail's exact layout. This also dissolved what a
+// standing note here called a pure register permutation (retail homes msg
+// in ESI, `this` in EDI, the zero in EBX): the whole allocation falls into
+// line behind the block order. 69.8969 -> 100.0000, 2026-09-05. A `goto`
+// into the OK arm expresses the same merge and is byte-flat with the
+// unduplicated form - only the duplicate moves it.
+VA(0x005c2840, 0x13B)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler, dc 0x169ae0
+int TTownGateWindow::windowHandler(message& msg)
 {
     int handled = CAdvPopup::windowHandler(msg);
     if (handled != 0)
         return handled;
 
-    if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->m_codeY >= TOWN_0_ID && msg->m_codeY <= TOWN_8_ID) {
+            if (msg.m_codeY >= TOWN_0_ID && msg.m_codeY <= TOWN_8_ID) {
                 g_townGateWindow->m_selectedTown =
-                    g_townGateWindow->m_topTown + msg->m_codeY - TOWN_0_ID;
+                    g_townGateWindow->m_topTown + msg.m_codeY - TOWN_0_ID;
                 if (g_currentPlayer->isLocalHuman())
                     getWidget(DIALOG_RETURN_OK)->enable(1);
                 g_townGateWindow->updateTownLocators();
             }
             break;
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case DIALOG_RETURN_CANCEL:
                 g_windowManager->m_dialogReturn = -1;
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_OK:
                 g_windowManager->m_dialogReturn =
                     g_townGateWindow->m_towns[g_townGateWindow->m_selectedTown];
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;

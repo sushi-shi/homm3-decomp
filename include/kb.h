@@ -90,8 +90,8 @@ public:
 
     type_normal_dialog_frame(long x, long y, long w, long h, long id,
                              EGameResource resource, long qualifier);
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_normal_dialog_frame, 0x40);
 

@@ -107,33 +107,34 @@ int TPuzzleWindow::convertID2HelpID(int id)
 }
 #endif
 
-VA(0x0052c640, 0x78)  // dc 0x115328
-int TPuzzleWindow::windowHandler(message* msg)
+// E:\gamedcs\puzzlewindow.cpp:203
+VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
+int TPuzzleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     pollSound();
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case DIALOG_CLOSE_KEY:
         case DIALOG_ACCEPT_KEY:
-            msg->m_codeY = ACCEPT_ID;
+            msg.m_codeY = ACCEPT_ID;
             break;
         default:
             return MESSAGE_DISPATCH_CONSUME;
         }
-    } else if (msg->m_id != MESSAGE_WIDGET ||
-               msg->m_codeX != widget::WIDGET_DESELECT ||
-               msg->m_codeY != ACCEPT_ID) {
+    } else if (msg.m_id != MESSAGE_WIDGET ||
+               msg.m_codeX != widget::WIDGET_DESELECT ||
+               msg.m_codeY != ACCEPT_ID) {
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    msg->m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg->m_codeY;
-    msg->m_codeY = widget::WIDGET_END_DIALOG;
-    msg->m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_id = MESSAGE_WIDGET;
+    g_windowManager->m_dialogReturn = msg.m_codeY;
+    msg.m_codeY = widget::WIDGET_END_DIALOG;
+    msg.m_codeX = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 

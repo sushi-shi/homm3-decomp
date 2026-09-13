@@ -97,7 +97,32 @@ int border::main(message& msg)
     return 0;
 }
 
-VA(0x00450130, 0x6D)  // dc 0x54650
+// E:\gamedcs\border.cpp:153/154. The DC body returns zero; its public
+// UAA_N_N0 signature proves native bool for the return and both parameters.
+// Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
+// Keep border's canonical source body without a duplicate retail claim.
+// Before normalization (locals): down_click, right_click.
+DC_ONLY(0x54590, 0x4)
+bool border::handleClick(bool downClick, bool rightClick)
+{
+    return false;
+}
+
+// E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
+// constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
+// dwords; six of them go to widget::initialize in x,y,w,h,id,style order
+// and the ODD one out - [ebp+0x1c], the sixth argument - is the dword
+// stored to [this+0x30], which is what fixes the DC parameter order
+// (..., int color_, int style) and colour's int width. [this+0x34] is
+// zeroed as a BYTE, fixing colorize's type.
+//
+// The base is entered through ??0widget@@QAE@XZ with a SINGLE derived
+// vtable store: border's default ctor is expanded in place and its
+// ??_7border@@6B@ store dead-store-eliminated. widget::initialize runs
+// in the ctor BODY (not a base initializer), which is why VC6 wraps the
+// whole thing in an fs:[0] frame - the base subobject has to be
+// unwindable across that call.
+VA(0x00450130, 0x6D)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color, int style)
 {
@@ -167,13 +192,6 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 // E:\gamedcs\border.cpp:67
 DC_ONLY(0x54408, 0x36)
 void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:153
-DC_ONLY(0x54590, 0x4)
-unsigned char border::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -288,8 +306,8 @@ void bitmapBorder::setImage(const char* bitmapName)
 VA(0x00450520, 0x2D)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(&m_image->m_p16.m_colors, whichPlayer);
-    ::setPlayerPaletteColors(&m_image->m_p24, whichPlayer);
+    ::setPlayerPaletteColors(m_image->m_p16.m_colors.m_data, whichPlayer);
+    ::setPlayerPaletteColors(m_image->m_p24, whichPlayer);
 }
 
 VA(0x00450550, 0x132)  // dc 0x54a20
@@ -430,14 +448,14 @@ int bitmapBorder16::main(message& msg)
 
 // E:\gamedcs\border.cpp:431
 DC_ONLY(0x54c2c, 0x20)
-int bitmapBorder16::getRealWidth()
+int bitmapBorder16::getRealWidth() const
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
-int bitmapBorder16::getRealHeight()
+int bitmapBorder16::getRealHeight() const
 {
     // @stub
 }

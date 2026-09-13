@@ -776,7 +776,7 @@ public:
     void drawBottomView(unsigned char update);
     inline void setBackgroundAnimation(unsigned char enable);
     void setBottomView(class type_bottom_view_window* newView);
-    void updateResourceDisplay(unsigned char draw, unsigned char update);
+    void updateResourceDisplay(bool draw, bool update);
     void setAdvWinButtonPalette(int id, int player);
     void drawChatText(unsigned char update);
     void updateButtons(unsigned char draw, unsigned char update);
@@ -1472,24 +1472,24 @@ public:
     void drawRolloverText(char* text);
     void setRolloverText(NewmapCell* testCell, int rx, int ry);
     NewmapCell* getCell(type_point point);
-    void castSpell(int whichSpell);
+    void castSpell(SpellID whichSpell);
     // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
     // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
     // 0x22510). SkuttleBoat and TownGate retain the DC-proven mastery enum.
     // Its former AI int typedef has been removed; there is one canonical
     // TSkillMastery definition in herospec.h.
-    void summonBoat(int level);
+    void summonBoat(TSkillMastery level);
     void skuttleBoat(TSkillMastery level);
-    void dimensionDoor(int level);
+    void dimensionDoor(TSkillMastery level);
     // The four handlers RETAIL HAS NO BODY FOR. Dreamcast keeps each one out
     // of line (advspells.cpp:605 / 629 / 654 / 674, dc 0x228e8 / 0x229c4 /
     // 0x22a40 / 0x22a9c); every one has exactly one call site - its own arm
     // of CastSpell's jump table - so /Ob2 expands them all, and their 668 DC
     // bytes are what makes retail's CastSpell 1028 against the DC's 344.
-    void identify(int level);
-    void flight(int level);
-    void disguise(int level);
-    void waterWalk(int level);
+    void identify(TSkillMastery level);
+    void flight(TSkillMastery level);
+    void disguise(TSkillMastery level);
+    void waterWalk(TSkillMastery level);
     void townGate(TSkillMastery level);
     void teleportTo(hero* who, type_point destination, const char* sampleName,
                     unsigned char isRemoteMove, unsigned char drawChanges,
@@ -1553,7 +1553,7 @@ public:
     // is `i == 0`, and both `int*` slots are read back immediately
     // after the call as the no-move / fought-battle verdicts.
     NewmapCell* moveHero(int direction, unsigned char standEnd,
-                         type_point* triggerPoint, int* noMove,
+                         type_point& triggerPoint, int* noMove,
                          unsigned char computerMove, int* foughtBattle,
                          unsigned char isRemoteMove);
     int getMoveShowIt(class hero* currHero, int direction);

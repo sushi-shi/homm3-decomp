@@ -140,8 +140,33 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
-VA(0x00405730, 0x1FC)  // dc 0x5204
-int TAdventureOptionsWindow::windowHandler(message* msg)
+// E:\gamedcs\adventureoptionswindow.cpp:143
+// EXACT 2026-08-28 (99.9367 -> 99.8734 -> 100.0). The old near-match erased
+// Dreamcast's explicit exit-state carrier and duplicated its shared tail;
+// restoring closeDialog also selects retail's EAX/ECX argument staging for
+// the direct line-211 findWidget call. The attested const findWidget pair and
+// distinct gAdventureOptionsHelp identity are restored as well.
+//
+// SOURCE-SHAPE AUDIT 2026-09-01: convertID2HelpID now lives at its attested
+// out-of-class boundary, owns the two bounds, and retains DC's result-local
+// switch. Both call sites remain exact. Keeping the caller bounds as well as
+// the helper's DC negative guard duplicates two blocks (100.0 -> 97.4684);
+// the old header-resident immediate-return body was byte-exact but erased the
+// positive helper boundary and statement shape.
+//
+// Complete moves the campaign-side ShowScenInfo work from this handler into
+// advManager::DoAdventureOptions: retail forwards the selected code through
+// dialogReturn here, and the byte-exact outer switch handles VIEW_SCENARIO_ID
+// unconditionally. Dreamcast splits the same operation between this handler
+// (campaign) and the outer function (non-campaign). This is a paired retail
+// contradiction of the older helper location, not a score-based skew claim.
+// Retail also selects the rollover field for right-click help where Dreamcast
+// loads the other THelpText field; both are direct byte-level Complete changes.
+// DC's nested help/widget scopes preserve the common dispatch epilogue.
+// Restoring them removes all three gotos at 100%; duplicating returns instead
+// falls to 87.4684%. All four independent scope combinations are exact.
+VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
+int TAdventureOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -150,22 +175,22 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
     unsigned char closeDialog = false;
     pollSound();
 
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->m_codeX == widget::WIDGET_SELECT
-            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
-            int helpID = convertID2HelpID(msg->m_codeY);
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            int helpID = convertID2HelpID(msg.m_codeY);
             if (helpID != -1)
                 normalDialog(g_adventureOptionsHelp[helpID].m_text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        if (msg->m_codeX == widget::WIDGET_DESELECT
-            && (msg->m_codeY == ADVENTURE_OPTION_ACCEPT_ID
-                || (msg->m_codeY > 0 && msg->m_codeY <= 5))) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeX == widget::WIDGET_DESELECT
+            && (msg.m_codeY == ADVENTURE_OPTION_ACCEPT_ID
+                || (msg.m_codeY > 0 && msg.m_codeY <= 5))) {
             closeDialog = true;
         }
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             g_lastImHoverId = hoverID;
             const char* rollover = "";
@@ -183,10 +208,10 @@ int TAdventureOptionsWindow::windowHandler(message* msg)
     }
 
     if (closeDialog) {
-        msg->m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg->m_codeY;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

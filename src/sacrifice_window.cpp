@@ -443,14 +443,14 @@ void type_sacrifice_window::handleWidgetHover(widget* current_widget)
 // transformer-slot rows is ExitDialog, not this. WindowHandler has no retail
 // row of its own in this bracket; ExitDialog is reconstructed below.
 DC_ONLY(0x127484, 0x36)
-int type_sacrifice_window::windowHandler(message* msg)
+int type_sacrifice_window::windowHandler(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1859
 DC_ONLY(0x1274bc, 0x38)
-int type_sacrifice_window::exitDialog(message* msg)
+int type_sacrifice_window::exitDialog(message& msg)
 {
     // @stub
 }
@@ -513,14 +513,14 @@ void type_skeleton_window::creatureClick(long side, long slot, unsigned char rig
 
 // E:\gamedcs\sacrifice_window.cpp:2281
 DC_ONLY(0x128048, 0x36)
-int type_skeleton_window::windowHandler(message* msg)
+int type_skeleton_window::windowHandler(message& msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2293
 DC_ONLY(0x128080, 0x16)
-int type_skeleton_window::exitDialog(message* msg)
+int type_skeleton_window::exitDialog(message& msg)
 {
     // @stub
 }
@@ -1601,9 +1601,15 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
     m_itemNumber = newItemNumber;
 }
 
-VA(0x0055fce0, 0x26)  // dc 0x123f88
-unsigned char type_doll_slot_widget::handleClick(
-    unsigned char downClick, unsigned char rightClick)
+// E:\gamedcs\sacrifice_window.cpp:178
+// The doll-slot twin of the two below: one carve row ahead of them, in the
+// Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
+// body shape, and forwarding to artifact_click - the equipped-slot handler.
+// The public UAA_N_N0 signature preserves native Boolean click values.
+VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
+bool type_doll_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         static_cast<type_sacrifice_window*>(m_parentWindow)->artifactClick(
@@ -1613,9 +1619,11 @@ unsigned char type_doll_slot_widget::handleClick(
     return 0;
 }
 
+// The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd10, 0x26)
-unsigned char type_backpack_slot_widget::handleClick(
-    unsigned char downClick, unsigned char rightClick)
+bool type_backpack_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         static_cast<type_sacrifice_window*>(m_parentWindow)->backpackClick(
@@ -1625,9 +1633,11 @@ unsigned char type_backpack_slot_widget::handleClick(
     return 0;
 }
 
+// The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x0055fd40, 0x26)
-unsigned char type_artifact_offering_widget::handleClick(
-    unsigned char downClick, unsigned char rightClick)
+bool type_artifact_offering_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         static_cast<type_sacrifice_window*>(m_parentWindow)->offeringClick(
@@ -1645,9 +1655,16 @@ unsigned char type_artifact_offering_widget::handleClick(
 VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
            type_transformer_slot)
 
-VA(0x0055fda0, 0x2a)  // dc 0x12416c
-unsigned char type_army_slot_widget::handleClick(
-    unsigned char downClick, unsigned char rightClick)
+// E:\gamedcs\sacrifice_window.cpp:272
+// The army-slot member of the same family, 0x2a rather than 0x26 because it
+// forwards a THIRD value: the byte at +0x4c alongside the dword at +0x48.
+// That is creature_click's (slot, right_click, left_pane) exactly, and the
+// pair matches the Dreamcast constructor's (new_slot, _left_pane).
+// The public UAA_N_N0 signature preserves native Boolean click values.
+VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
+bool type_army_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         static_cast<type_sacrifice_window*>(m_parentWindow)->creatureClick(
@@ -2463,7 +2480,7 @@ void type_sacrifice_window::artifactClick(
 
         if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
             TSpellbookWindow spellbook(
-                m_currentHero, 0, TSpellbookWindow::eContextNeither,
+                *m_currentHero, 0, TSpellbookWindow::eContextNeither,
                 m_currentHero->getSpecialTerrain());
             spellbook.doModal(0);
             return;
@@ -3120,14 +3137,21 @@ void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x00565430, 0x80)  // dc 0x1274bc
-int type_sacrifice_window::exitDialog(message* msg)
+// E:\gamedcs\sacrifice_window.cpp:1859
+// Vtable 0x641620 slot 14 fixes the identity. Complete returns any held
+// artifact to its original equipped slot where possible, then tries an
+// arbitrary equipped slot, the backpack, and finally the arbitrary equipped
+// path once more before closing the modal dialog.
+// DC line 1866 calls return_artifact. The existing ordinary returnArtifact
+// expands naturally here and preserves 100% while removing three failure joins.
+VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
+int type_sacrifice_window::exitDialog(message& msg)
 {
     type_artifact_offering* artifact = &m_holdingArtifact;
-    msg->m_id = MESSAGE_WIDGET;
+    msg.m_id = MESSAGE_WIDGET;
     g_windowManager->m_dialogReturn = 0;
-    msg->m_codeY = widget::WIDGET_END_DIALOG;
-    msg->m_codeX = widget::WIDGET_END_DIALOG;
+    msg.m_codeY = widget::WIDGET_END_DIALOG;
+    msg.m_codeX = widget::WIDGET_END_DIALOG;
 
     if (artifact->m_artifactId != -1) {
         returnArtifact(*artifact);
@@ -3138,9 +3162,11 @@ int type_sacrifice_window::exitDialog(message* msg)
 
 VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x128764
 
-VA(0x005654c0, 0x2a)  // dc 0x127598
-unsigned char type_transformer_slot::handleClick(
-    unsigned char downClick, unsigned char rightClick)
+// The public UAA_N_N0 signature preserves native Boolean click values.
+VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
+bool type_transformer_slot::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    bool downClick, bool rightClick)
 {
     if (downClick) {
         static_cast<type_skeleton_window*>(m_parentWindow)->creatureClick(
@@ -3405,14 +3431,17 @@ void type_skeleton_window::creatureClick(
     }
 }
 
-VA(0x005666f0, 0x2e)  // dc 0x128048
-int type_skeleton_window::windowHandler(message* msg)
+// E:\gamedcs\sacrifice_window.cpp:2281
+// Slot 9, sitting two rows past creature_click 0x566490 - the call target the
+// transformer slot above pins - in the Dreamcast roster's order.
+VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
+int type_skeleton_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
-    if (msg->m_id == MESSAGE_MOUSE_MOVE)
-        return g_windowManager->convertToHover(*msg);
+    if (msg.m_id == MESSAGE_MOUSE_MOVE)
+        return g_windowManager->convertToHover(msg);
     return 0;
 }
 

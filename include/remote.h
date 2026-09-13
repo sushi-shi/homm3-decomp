@@ -214,7 +214,7 @@ public:
     int getPosition() { return m_position; }
     void setPosition(int newPos);
     void setMaxLines(int maxChatLines);
-    unsigned char chatChanged() { return m_changed || m_chatKilled; }
+    bool chatChanged() { return m_changed || m_chatKilled; }
     unsigned char hasOldChat();
 
 protected:

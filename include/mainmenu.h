@@ -55,7 +55,7 @@ private:
 };
 SIZE(TMainMenu, 0x54);
 
-int mainMenuHandler(message& msg);
+
 
 // SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
 // oldmain both dispatch on this value before the front-end is opened.

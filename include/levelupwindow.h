@@ -41,7 +41,7 @@ public:
     TLevelUpWindow(hero* thisHero, int gainedSkill,
                    int firstChoice, int secondChoice);
     virtual ~TLevelUpWindow();
-    virtual int windowHandler(message* msg); // slot 9
+    virtual int windowHandler(message& msg); // slot 9
 
     int m_leftSkill;   // +0x60 retail (+0x58 DC)
     int m_rightSkill;  // +0x64 retail (+0x5c DC)

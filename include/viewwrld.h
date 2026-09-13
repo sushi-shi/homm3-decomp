@@ -65,7 +65,7 @@ public:
     void init(type_point newCenter, unsigned char updateFlag);
     using CAdvPopup::drawWindow;
     void drawWindow();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     int convertID2HelpID(int id) const;

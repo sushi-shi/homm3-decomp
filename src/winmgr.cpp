@@ -110,7 +110,7 @@ int heroWindowManager::main(message& msg)
     for (heroWindow* w = m_tailWindow; w; w = w->m_prevWindow) {
         if (w->m_sleepCount > 0)
             continue;
-        result = w->broadcastMessage(&msg);
+        result = w->broadcastMessage(msg);
         if (result > 0 && result <= MESSAGE_DISPATCH_FORWARD)
             break;
     }
@@ -263,7 +263,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                         if (dialogWindow
                             && (msg.m_id != MESSAGE_MOUSE_MOVE
                                 || g_sendMouseMoveMessages)) {
-                            int result = dialogWindow->broadcastMessage(&msg);
+                            int result = dialogWindow->broadcastMessage(msg);
                             if (result == MESSAGE_DISPATCH_CONSUME)
                                 continue;
                             if (result == MESSAGE_DISPATCH_FORWARD
@@ -363,7 +363,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                         if (dialogWindow
                             && (msg.m_id != MESSAGE_MOUSE_MOVE
                                 || g_sendMouseMoveMessages)) {
-                            if (dialogWindow->broadcastMessage(&msg)
+                            if (dialogWindow->broadcastMessage(msg)
                                     == MESSAGE_DISPATCH_FORWARD
                                 && msg.m_id == MESSAGE_WIDGET
                                 && msg.m_codeX == widget::WIDGET_END_DIALOG) {

@@ -35,7 +35,7 @@ public:
         // identity is recorded rather than renamed.
         struct myABC {
             int m_abcA;
-            int m_abcB;
+            unsigned int m_abcB;
             int m_abcC;
         };
 
@@ -126,19 +126,23 @@ public:
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
-    void setPalette(const TPalette16* newPalette);
+    void setPalette(const TPalette16& newPalette);
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
     int lineWidth(const char* text) const;
     int longestLineWidth(const char* str) const;
     int longestWrappedLineWidth(const char* str, int boxWidth) const;
     int longestWordLength(const char* str) const;
     int getCharacterWidth(unsigned char currChar) const;
+    // Original DrawCursor, font.cpp:123; ordinary member, expanded in retail.
+    void drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+                    int clipX, int clipY, int clipWidth, int clipHeight,
+                    bool highlighted);
     long getStringWidth(const char* arg) const;
 
 private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
 
 public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
@@ -147,6 +151,9 @@ public:
     // name and the three-parameter shape only.
     void fillLinesVector(const char* str, int boxWidth,
                          std::vector<std::string>& result);
+private:
+    // Original GetColor, font.cpp:56; ordinary member.
+    int getColor(font::TColor colorScheme, bool highlighted);
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

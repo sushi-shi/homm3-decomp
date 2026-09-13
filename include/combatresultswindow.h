@@ -13,7 +13,7 @@ class message;
 class TCombatResultsWindow : public heroWindow {
 public:
     TCombatResultsWindow(const hero* attacker, const hero* defender,
-        int mySide, int winningSide, unsigned char isSiege,
+        int mySide, int winningSide, bool isSiege,
         int experience);
     virtual ~TCombatResultsWindow();
     virtual int open(int newPriority, unsigned char update);

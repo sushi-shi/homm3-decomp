@@ -767,7 +767,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                         msg.m_codeY = rowWidgetId + item + 119;
                         msg.m_extra = widget::WIDGET_DRAWN;
-                        g_overWin->broadcastMessage(&msg);
+                        g_overWin->broadcastMessage(msg);
                     }
                     offsetToMon += 48;
                 }
@@ -776,7 +776,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             g_textButtonDynamic[row * 3] = new textButton(
                 386, row * 116 + 70, 108, 16,
                 rowWidgetId + 128, "OvButn3.def", (*g_generalText)[260],
-                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3], -1);
@@ -784,7 +784,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             g_textButtonDynamic[row * 3 + 1] = new textButton(
                 498, row * 116 + 70, 108, 16,
                 rowWidgetId + 129, "OvButn3.def", (*g_generalText)[262],
-                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 1])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3 + 1], -1);
@@ -792,7 +792,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             g_textButtonDynamic[row * 3 + 2] = new textButton(
                 610, row * 116 + 70, 108, 16,
                 rowWidgetId + 138, "OvButn3.def", (*g_generalText)[263],
-                "smalfont.fnt", 0, 1, 0, 0, 2, 7);
+                "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 2])
                 memError();
             g_overWin->addWidget(g_textButtonDynamic[row * 3 + 2], -1);
@@ -858,11 +858,11 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = 8;
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     msg.m_codeY = 195 + (g_overviewType != 0);
     msg.m_codeX = widget::WIDGET_SET_STATUS;
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     unsigned short titleXOffs[6] = {
         28, 435, 459, 28, 266, 499
@@ -918,18 +918,18 @@ void TOverviewWindow::updateFlaggableIcon(int i)
     if (g_overviewFlaggableTop + i >= m_flaggableItems.size()) {
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         m_flaggableCountWidgets[i]->sendMessage(
             widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
     } else {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
 
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = m_flaggableItems[g_overviewFlaggableTop + i].m_itemType;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
 
         m_flaggableCountWidgets[i]->setText(
             formatString(
@@ -1054,10 +1054,10 @@ void game::overview()
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     msg.m_codeY = 197;
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     setWinText(g_overWin, 9);
 
@@ -1081,7 +1081,7 @@ void game::overview()
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                 res[resource]);
         msg.m_codeY = resource + 20;
-        g_overWin->broadcastMessage(&msg);
+        g_overWin->broadcastMessage(msg);
     }
 
     g_overviewFlaggableTop = 0;
@@ -1092,7 +1092,7 @@ void game::overview()
     msg.m_extraText = g_text;
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
             computeDailyGold(g_game->getLocalPlayerGamePos(), 1));
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     setupNewOverviewType(g_overviewType, 0);
     g_overWin->doModal(1);
@@ -1176,7 +1176,7 @@ static inline void showArtifact(hero* currHero,
 {
     if (artifact.m_artifactId == ARTIFACT_SPELLBOOK) {
         TSpellbookWindow spellBookWindow(
-            currHero, 0, TSpellbookWindow::eContextNeither,
+            *currHero, 0, TSpellbookWindow::eContextNeither,
             currHero->getSpecialTerrain());
         spellBookWindow.doModal(0);
     } else if (artifact.m_artifactId != ARTIFACT_NONE) {
@@ -1939,7 +1939,7 @@ void TOverviewWindow::updateRollover(char* text)
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 37;
     msg.m_extraText = text;
-    g_overWin->broadcastMessage(&msg);
+    g_overWin->broadcastMessage(msg);
 
     g_overWin->drawWindow(1, 36, 37);
 }
@@ -2494,7 +2494,7 @@ void game::overview()
 // controls are retained to alter the budget.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
-int TOverviewWindow::windowHandler(message* msg)
+int TOverviewWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -2503,19 +2503,19 @@ int TOverviewWindow::windowHandler(message* msg)
     int res = 0;
     unsigned char rightMouse = 0;
 
-    if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
             rightMouse = 1;
             // The source intentionally shares the ordinary-select tail.
         case widget::WIDGET_SELECT:
-            if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+            if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
                 rightMouse = 1;
-            res = g_game->processIconSelect(msg->m_codeY, rightMouse);
+            res = g_game->processIconSelect(msg.m_codeY, rightMouse);
             break;
 
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case OVERVIEW_FLAGGABLE_HOME_ID:
                 doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
                 break;
@@ -2530,7 +2530,7 @@ int TOverviewWindow::windowHandler(message* msg)
                 break;
             case OVERVIEW_CONTROL_14_ID:
                 res = 1;
-                g_windowManager->m_dialogReturn = msg->m_codeY;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
                 break;
 
             case OVERVIEW_SELECT_HEROES_ID:
@@ -2706,17 +2706,17 @@ int TOverviewWindow::windowHandler(message* msg)
         }
     }
 
-    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        g_windowManager->convertToHover(*msg);
-        if (g_windowManager->m_lastHover == msg->m_codeY)
+    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(msg);
+        if (g_windowManager->m_lastHover == msg.m_codeY)
             return MESSAGE_DISPATCH_CONSUME;
-        g_windowManager->m_lastHover = msg->m_codeY;
-        doRollover(msg->m_codeY);
+        g_windowManager->m_lastHover = msg.m_codeY;
+        doRollover(msg.m_codeY);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case VK_PRIOR:
             g_overviewTop[g_overviewType] -= 4;
             if (g_overviewTop[g_overviewType] < 0)
@@ -2744,8 +2744,8 @@ int TOverviewWindow::windowHandler(message* msg)
     }
 
     if (res == 1) {
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2772,7 +2772,7 @@ void updateBackpack(int slot)
         artifact = currHero->getBackpack(
             (g_overviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
         msg.m_extra = artifact.m_artifactId;
-        g_overWin->broadcastMessage(&msg);
+        g_overWin->broadcastMessage(msg);
 
         if (artifact.m_artifactId == -1)
             g_overWin->widgetClearStatus(i + slotOff + 130, 4);
@@ -2866,7 +2866,7 @@ void TOverviewWindow::doRollover(int codeY)
 
 // E:\gamedcs\overview.cpp:2546
 DC_ONLY(0x10997c, 0x87C)
-int TOverviewWindow::windowHandler(message* msg)
+int TOverviewWindow::windowHandler(message& msg)
 {
     // @stub
 }

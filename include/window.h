@@ -118,7 +118,7 @@ public:
 
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
-    int broadcastMessage(message* msg);
+    int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
     int widgetClearStatus(int id, int status);
@@ -200,9 +200,9 @@ public:
     VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
     virtual int handleMessage(message& msg)
     {
-        return windowHandler(&msg);
+        return windowHandler(msg);
     }
-    virtual int windowHandler(message* msg);                            // slot 9
+    virtual int windowHandler(message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char processRightSelect(int id);                   // slot 11
     void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);

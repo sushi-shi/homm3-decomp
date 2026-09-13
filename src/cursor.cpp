@@ -55,7 +55,7 @@ VA(0x0047f7d0, 0x82)  // dc 0x79a84
 void advManager::stopCursor(unsigned char standEnd)
 {
     if (standEnd) {
-        hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+        hero* curr = g_game->getCurrHero();
         if (curr)
             m_cursorSequence = curr->getStandSequence();
         else
@@ -296,15 +296,19 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, un
                          curr->m_x, curr->m_y, standEnd, foughtBattle);
 }
 
-// E:\gamedcs\cursor.cpp:490
-// Residual (97.7237%): all 17 blocks and the whole instruction stream agree.
-// The delta is one binding - retail lands `kWalkSpeedPixels[walk_speed]` in
-// EDI and keeps the old index alive in ECX, this compile reuses ECX as the
-// destination and must then spill/order the counter and startVals loads
-// around it (ecx->edi x3, eax->edx x2). why-reg v2's model reports the first
-// definitions agreeing (esi<-this, edi<-curr, ebx<-xInc) and all seven
-// catalog mutations are flat or worse; the DC statement order (521 delay,
-// 522 pixels, then the 32/walk_speed divide) is already what this body has.
+// E:\gamedcs\cursor.cpp:490. Exact with separate preference index and
+// pixel step: DC 520 loads the pixel table, DC 521 the delay table, and DC 522
+// divides 32 by the pixel step. The pinned DC tables at 0x1b045c/0x1b0470
+// contain {2,8,10,16,32}/{100,50,50,50,100}; both use the original index.
+// A separate speedIndex preserves that value while walk_speed becomes the
+// pixel step. VC6 schedules the delay load first but assigns the step to
+// EDI, recovering retail's division, spills and startVals-load ordering.
+// Fifteen index/timer-lifetime states emit three reproduced objects:
+// separate index + pixels-first reaches 100%; delay-first stays 97.7237%,
+// and a late index snapshot + pixels-first falls to 95.6513%. Timer lifetime
+// is byte-flat. Retain next_frame_time in the loop and all canonical calls.
+// All 17 CFG blocks and 604 bytes agree after resolving the two equivalent
+// startVals+4 / retail const_23d6f4 operands. No table bytes were changed.
 VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
 void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 {
@@ -316,8 +320,9 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
     curr->m_y += yInc;
 
     if (g_completeDrawEnabled) {
-        int walkSpeed;
-        walkSpeed = (&g_unnamed698758.m_computerWalkSpeed)
+        // Before normalization (locals): walk_speed, iScrollDelayValue, next_frame_time.
+        int speedIndex;
+        speedIndex = (&g_unnamed698758.m_computerWalkSpeed)
             [g_currentPlayer->isLocalHuman()];
 
         m_radarOrigin.m_x = curr->m_x - 9;
@@ -325,17 +330,18 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
         m_radarOrigin.m_z = curr->m_z;
         m_forceCompleteDraw = 1;
 
-        if (walkSpeed == CURSOR_INSTANT_WALK_SPEED) {
+        if (speedIndex == CURSOR_INSTANT_WALK_SPEED) {
             completeDraw(0);
             g_windowManager->updateScreen(0, 8, 608, 544);
         } else {
+            int walkSpeed;
             int iterations;
             DATA(0x0063d6f0)
             static const int startVals[3] = { -32, 0, 32 };
             int scrollDelayValue;
 
-            scrollDelayValue = g_scrollDelayValues[walkSpeed];
-            walkSpeed = g_walkSpeedPixels[walkSpeed];
+            walkSpeed = g_walkSpeedPixels[speedIndex];
+            scrollDelayValue = g_scrollDelayValues[speedIndex];
             iterations = CURSOR_TILE_PIXELS / walkSpeed;
 
             m_scrollX = startVals[xInc + 1];
@@ -383,7 +389,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 // for IsFlying, including its can_land call. Complete expands that same
 // checkTerrain=1 wrapper; canLand is private, not a direct cursor API.
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
-NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point* triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
+NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
     unsigned char becameBoat = 0;
     hero* curr;
@@ -405,15 +411,15 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     *noMove = 0;
     returnCell = 0;
 
-    curr = g_game->getHero(g_currentPlayer->m_currHeroId);
-    origY = curr->m_y;
+    curr = g_game->getCurrHero();
     origX = curr->m_x;
+    origY = curr->m_y;
     xInc = g_normalDirTable[direction].m_x;
     yInc = g_normalDirTable[direction].m_y;
 
-    triggerPoint->m_x = curr->m_x + xInc;
-    triggerPoint->m_y = curr->m_y + yInc;
-    triggerPoint->m_z = curr->m_z;
+    triggerPoint.m_x = curr->m_x + xInc;
+    triggerPoint.m_y = curr->m_y + yInc;
+    triggerPoint.m_z = curr->m_z;
 
     g_completeDrawEnabled = getMoveShowIt(curr, direction);
     if (m_netMsgHandler && m_netMsgHandler->isInPopup())
@@ -422,26 +428,23 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     // Dreamcast's two line groups preserve this source lookup separately
     // from the destination lookup even though its result is unused.
     getCell(curr->getLocation());
-    NewmapCell* destCell = getCell(*triggerPoint);
+    NewmapCell* destCell = getCell(triggerPoint);
 
     curMoveCost = getTerrainCost(curr, curr->getLocation(), direction,
                                  curr->m_movePoints);
-    // MEASURED AND REJECTED 2026-09-05 (89.5139 -> 86.4535):
-    // naming `curr->skillLevel[0]` in an `int` local above this if/else.
-    // Retail DOES read it once - `movsx edx,[esi+0xc9]` at 0x4805cf, right
-    // after GetTerrainCost and before the flags test, homed at [ebp-0x10]
-    // and reloaded in both arms - where we re-read the member inside each
-    // arm; but the named local costs three points here, so the single read
-    // is a scheduling consequence of something else in this frame, not the
-    // local it looks like.
+    // DC 617/623 independently expands get_secondary_skill in these arms.
+    // Retail schedules one widened read before the flags test. A historical
+    // named-int cache lowered 89.5139% to 86.4535%; that alone did not prove
+    // the absence of a local. Keep both proven accessor calls and their
+    // original scopes while recovering the remaining scheduling differences.
     if (curr->m_flags & 0x40000) {
         nextMoveMinCost = minimumTerrainCost(
-            destCell, curr->m_movePoints - curMoveCost, curr->m_skillLevel[0],
+            destCell, curr->m_movePoints - curMoveCost, curr->getSecondarySkill(eSecSkillPathfinding),
             -1, -1,
             curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     } else {
         nextMoveMinCost = minimumTerrainCost(
-            destCell, curr->m_movePoints - curMoveCost, curr->m_skillLevel[0],
+            destCell, curr->m_movePoints - curMoveCost, curr->getSecondarySkill(eSecSkillPathfinding),
             curr->m_flightLevel, curr->m_waterWalkLevel,
             curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     }
@@ -472,7 +475,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 
         g_game->recordHideHero(curr, curr->m_owner, 0);
         g_game->recordShowBoat(oldBoat, curr->getLocation());
-        g_game->recordShowHero(curr, curr->m_owner, *triggerPoint, 0);
+        g_game->recordShowHero(curr, curr->m_owner, triggerPoint, 0);
 
         oldBoat->m_x = curr->m_x;
         oldBoat->m_y = curr->m_y;
@@ -491,7 +494,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         *getRouteArrayPtr(curr->m_x + xInc, curr->m_y + yInc, curr->m_z) = 0;
 
     enteredBoat = 0;
-    if ((!curr->isFlying(0) || curr->getTarget() == *triggerPoint)
+    if ((!curr->isFlying(0) || curr->getTarget() == triggerPoint)
         && destCell->m_isTrigger
         && validMoveWithEvent(curr, direction)) {
         switch (destCell->m_type) {
@@ -505,7 +508,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                 g_game->recordHideHero(curr, curr->m_owner, 0);
                 g_game->recordHideBoat(newBoat, 1, curr->m_id);
                 g_game->recordShowHero(curr, curr->m_owner,
-                                         *triggerPoint, 1);
+                                         triggerPoint, 1);
                 becameBoat = 1;
                 if (g_networkActive69954c && isRemoteMove) {
                     curr->restoreCell();
@@ -571,7 +574,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     sendMapChange(&msg);
 
     if (!becameBoat)
-        g_game->recordMove(curr, direction, *triggerPoint);
+        g_game->recordMove(curr, direction, triggerPoint);
 
     g_game->setVisibility(curr->m_x + xInc, curr->m_y + yInc, curr->m_z,
                           curr->m_owner, curr->getVisibility(),
@@ -647,12 +650,12 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     setEnvironmentOrigin(point, 0);
     m_scrollX = m_scrollY = 0;
 
-    NewmapCell* eventCell = getCell(*triggerPoint);
+    NewmapCell* eventCell = getCell(triggerPoint);
     if (eventCell->m_isTrigger
         || ((curr->m_flags & 0x40000)
             && eventCell->m_type == ANCHOR_POINT)) {
         if ((!curr->isFlying(0)
-             || curr->getTarget() == *triggerPoint)
+             || curr->getTarget() == triggerPoint)
             && (!g_adventureObjectTraits[eventCell->m_type][0]
                 || !curr->isFlying(1)
                 || eventCell->m_type == BOAT))
@@ -660,7 +663,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 
         switch (eventCell->m_type) {
         case GARRISON:
-            if (curr->getTarget() != *triggerPoint
+            if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman()
                 && g_game->onSameTeam(
                     g_game->m_garrisons[eventCell->m_extraInfo].m_playerOwner,
@@ -669,7 +672,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             break;
 
         case BORDER_GATE:
-            if (curr->getTarget() != *triggerPoint
+            if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman())
                 returnCell = 0;
             break;
@@ -701,7 +704,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     if (hasEvent) {
         g_unnamed69777c = 1;
         stopCursor(1);
-        handleMapEvent(curr, destCell, *triggerPoint, !computerMove);
+        handleMapEvent(curr, destCell, triggerPoint, !computerMove);
     }
     return returnCell;
 }
@@ -734,7 +737,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
 void advManager::checkAdjacentMon(int* foughtBattle)
 {
-    hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+    hero* curr = g_game->getCurrHero();
     type_point location = curr->getLocation();
     type_point monster(0xff, 0xff, 0xff);
 
@@ -859,7 +862,7 @@ void advManager::onMoveHero(CMapChange* mapChange)
     g_advManager->setHeroContext(change->m_heroId, 0, 0, 1);
     type_point triggerPoint;
     NewmapCell* eventCell = moveHero(
-        change->m_dir, change->m_standEnd != 0, &triggerPoint, &dummy1,
+        change->m_dir, change->m_standEnd != 0, triggerPoint, &dummy1,
         1, &dummy2, 1);
     if (eventCell && (eventCell->m_type == ANCHOR_POINT
                        || eventCell->m_type == BOAT))

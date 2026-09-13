@@ -469,7 +469,7 @@ void VRKeyboard::~VRKeyboard()
 
 // E:\gamedcs\inputmgr.cpp:1231
 DC_ONLY(0xded94, 0x138)
-int VRKeyboard::windowHandler(message* msg)
+int VRKeyboard::windowHandler(message& msg)
 {
     // @stub
 }

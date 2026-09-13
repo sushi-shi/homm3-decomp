@@ -68,12 +68,12 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
     sprintf(g_text, "%d", m_sourceTroops);
     msg.m_codeY = 4;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     sprintf(g_text, "%d", m_destinationTroops);
     msg.m_codeY = 5;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -234,7 +234,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = 6;
@@ -246,7 +246,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
         g_splitWindow->m_sourceMustKeep = 0;
         msg.m_extra = g_splitWindow->m_totalTroops + 1;
     }
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     if (inDestRestricted && ag->getNumArmies() == 1)
         g_splitWindow->m_minimumTransfer = 1;
@@ -256,7 +256,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     msg.m_codeX = widget::WIDGET_SET_SLIDER_STATE;
     msg.m_extra = g_splitWindow->m_destinationTroops
         - g_splitWindow->m_minimumTransfer;
-    g_splitWindow->broadcastMessage(&msg);
+    g_splitWindow->broadcastMessage(msg);
 
     g_splitWindow->m_destinationEntry->setFocus(1);
     g_splitWindow->updateSplitArmy(0);
@@ -308,31 +308,39 @@ inline void TSplitWindow::setRolloverText(int codeY)
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
-VA(0x0044a180, 0x2DF)  // dc 0x4e428
-int TSplitWindow::windowHandler(message* msg)
+// E:\gamedcs\armygrp.cpp:229
+// EXACT 2026-08-28 (99.9170 -> 70.4149 -> 94.9378 -> 100.0). Dreamcast line
+// 230 initializes the two state values consumed by the shared close/update
+// tails at lines 322-332; line 291 has one shared SetState after both edit
+// arms; and lines 313-318 keep the changed-hover work in a positive scope
+// with its own return. The former duplicated-tail spelling was a local
+// maximum, not source proof. UpdateSplitArmy and SetRolloverText retain their
+// CodeView-proven helper boundaries and inline into this exact retail body.
+VA(0x0044a180, 0x2DF)  // dc 0x4e428 (+ 0x4e388 inlined)
+int TSplitWindow::windowHandler(message& msg)
 {
     unsigned char closeDialog = false, updateArmy = false;
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->m_id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        switch (msg->m_codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            msg->m_codeX = widget::WIDGET_GET_TEXT;
+            msg.m_codeX = widget::WIDGET_GET_TEXT;
             broadcastMessage(msg);
 
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SPLIT_WIDGET_SOURCE_ENTRY:
-                m_sourceTroops = atoi(msg->m_extraText);
+                m_sourceTroops = atoi(msg.m_extraText);
                 m_sourceTroops = limit(0, m_sourceTroops, m_totalTroops);
                 m_destinationTroops = m_totalTroops - m_sourceTroops;
                 m_destinationEntry->setFocus(0);
                 break;
 
             case SPLIT_WIDGET_DESTINATION_ENTRY:
-                m_destinationTroops = atoi(msg->m_extraText);
+                m_destinationTroops = atoi(msg.m_extraText);
                 m_destinationTroops = limit(
                     0, m_destinationTroops, m_totalTroops);
                 m_sourceTroops = m_totalTroops - m_destinationTroops;
@@ -346,10 +354,10 @@ int TSplitWindow::windowHandler(message* msg)
             break;
 
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case DIALOG_RETURN_SPLIT_CLOSE:
             case DIALOG_RETURN_SPLIT_CANCEL:
-                g_windowManager->m_dialogReturn = msg->m_codeY;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
                 break;
             case DIALOG_RETURN_SPLIT_ACCEPT:
                 g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
@@ -362,18 +370,18 @@ int TSplitWindow::windowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        g_windowManager->convertToHover(*msg);
-        if (msg->m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            setRolloverText(msg->m_codeY);
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         return MESSAGE_DISPATCH_CONSUME;
 
     }
 
     if (closeDialog == true) {
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (updateArmy)
@@ -447,12 +455,12 @@ const std::bitset<9>& armyGrpFn0044A460()
 // a post-switch artifact selector scores 75.4607%. Initializing chance at
 // function entry gives 95.0429%; keep its assignment after the spell gates.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
-float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* castingHero, const hero* targetHero)
+float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
     const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
-    const SSpellTraits* spellRec = &g_spellTraits[spell];
     unsigned int attrs = creatureRec->m_attributes;
+    const SSpellTraits* spellRec = &g_spellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
         && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
         return 0.0f;  // Power of the Dragon Father
@@ -470,12 +478,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
         return 0.0f;
     switch (spell) {
     case SPELL_BLIND:
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
-            return 0.0f;
-        if (targetArmyType == CREATURE_TROGLODYTE || targetArmyType == CREATURE_INFERNAL_TROGLODYTE)
-            return 0.0f;
-        if (attrs & g_ctaUndead)
+        if ((targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
+            || targetArmyType == CREATURE_TROGLODYTE
+            || targetArmyType == CREATURE_INFERNAL_TROGLODYTE
+            || (attrs & g_ctaUndead))
             return 0.0f;
         break;
     case SPELL_BERSERK:
@@ -529,17 +536,15 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_DEATH_RIPPLE:
-        if (attrs & g_ctaUndead)
-            return 0.0f;
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
+        if ((attrs & g_ctaUndead)
+            || (targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE)))
             return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
-        if (!(attrs & g_ctaUndead))
-            return 0.0f;
-        if (targetHero
-            && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
+        if ((!(attrs & g_ctaUndead))
+            || (targetHero
+                && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH)))
             return 0.0f;
         break;
     case SPELL_MIRTH:
@@ -612,8 +617,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 return 0.0f;
             }
             if (targetHero)
-                chance -= 1.0f - const_cast<hero*>(targetHero)
-                                         ->getMagicResistanceFactor();
+                chance -= 1.0f - targetHero->getMagicResistanceFactor();
         }
         if (spellRec->m_karma > 0) {
             return 1.0f;
@@ -1568,7 +1572,10 @@ std::string armyGroup::getLuckDescription(
     // 0x44c346 before the enemy-group arm at 0x44c34e. DC 0x4fab4
     // (armygrp.cpp:1464) has the older cursed-ground-only parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+        && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL))) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a
         // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
@@ -1590,7 +1597,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            currentLuck -= 2;
+            luck -= 2;
             result.append(g_cloverFieldLuckText);
             break;
         default:
@@ -1626,9 +1633,9 @@ std::string armyGroup::getLuckDescription(
         currentLuck = 1;
     }
 
-    int otherModifier = luck - currentLuck;
-    if (otherModifier)
-        result += formatString(g_otherStatModifiersFormat, otherModifier);
+    luck -= currentLuck;
+    if (luck)
+        result += formatString(g_otherStatModifiersFormat, luck);
 
     return result;
 }

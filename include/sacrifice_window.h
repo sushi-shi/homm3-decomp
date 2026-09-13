@@ -200,7 +200,7 @@ public:
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual int doModal(unsigned char fadeIn);                 // slot 6
-    virtual int exitDialog(message* msg);                      // slot 14
+    virtual int exitDialog(message& msg);                      // slot 14
 
 private:
     unsigned char addArtifact(type_artifact artifact, long source);
@@ -276,8 +276,8 @@ public:
 
     type_doll_slot_widget(const type_doll_slot_definition& def, long id);
 
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_doll_slot_widget, 0x4c);
 
@@ -288,8 +288,8 @@ public:
     type_backpack_slot_widget(const type_icon_definition& def,
                               long newSlot, long id);
 
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_backpack_slot_widget, 0x4c);
 
@@ -301,8 +301,8 @@ public:
                                   long newItemNumber, long id,
                                   const char* image);
 
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_artifact_offering_widget, 0x4c);
 
@@ -319,8 +319,8 @@ public:
                           long newSlot, long newId, const char* image,
                           unsigned char newLeftPane);
 
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_army_slot_widget, 0x50);
 
@@ -337,7 +337,7 @@ public:
     virtual ~type_skeleton_window();
     void creatureClick(long side, long slot, unsigned char rightClick);
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
-    virtual int windowHandler(message* msg);                   // slot 9
+    virtual int windowHandler(message& msg);                   // slot 9
 
 private:
     void createCreatureIcons(
@@ -381,8 +381,8 @@ public:
                           long newGroup, long newSlot, long newId,
                           const char* image);
 
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
 };
 SIZE(type_transformer_slot, 0x50);
 

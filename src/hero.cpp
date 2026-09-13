@@ -1774,32 +1774,32 @@ void hero::updateArmies()
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
             msg.m_codeY = slot + 0x36;
-            g_heroScreenWindow->broadcastMessage(&msg);
+            g_heroScreenWindow->broadcastMessage(msg);
             msg.m_codeY = slot + 0x3d;
-            g_heroScreenWindow->broadcastMessage(&msg);
+            g_heroScreenWindow->broadcastMessage(msg);
             if (g_heroScreenArmyStripLive)
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_codeY = slot + 0x44;
-            g_heroScreenWindow->broadcastMessage(&msg);
+            g_heroScreenWindow->broadcastMessage(msg);
             continue;
         }
 
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = m_army.m_armies[slot] + 2;
         msg.m_codeY = slot + 0x36;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
 
         sprintf(g_text, "%d", m_army.m_numTroops[slot]);
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = slot + 0x3d;
         msg.m_extraText = g_text;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
 
         if (g_heroScreenArmySlot == slot) {
             if (g_heroScreenArmyStripLive)
@@ -2553,11 +2553,11 @@ void updateArtifactSlot(long id, TArtifact artifact)
     } else {
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = artifact;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
     }
-    g_heroScreenWindow->broadcastMessage(&msg);
+    g_heroScreenWindow->broadcastMessage(msg);
 }
 
 VA(0x004daf90, 0x23A)  // dc 0xcd6e8
@@ -2643,18 +2643,18 @@ void updateBackpack()
                        : widget::WIDGET_SET_STATUS;
     arrows.m_extra = widget::WIDGET_DIMMED_NODRAW;
     arrows.m_codeY = 0x4d;
-    g_heroScreenWindow->broadcastMessage(&arrows);
+    g_heroScreenWindow->broadcastMessage(arrows);
     arrows.m_codeY = 0x4e;
-    g_heroScreenWindow->broadcastMessage(&arrows);
+    g_heroScreenWindow->broadcastMessage(arrows);
 
     arrows.m_codeX = g_currentHero->getLastBackpackIndex() + 1 > 5
                        ? widget::WIDGET_SET_STATUS
                        : widget::WIDGET_CLEAR_STATUS;
     arrows.m_extra = widget::WIDGET_ACTIVE;
     arrows.m_codeY = 0x4d;
-    g_heroScreenWindow->broadcastMessage(&arrows);
+    g_heroScreenWindow->broadcastMessage(arrows);
     arrows.m_codeY = 0x4e;
-    g_heroScreenWindow->broadcastMessage(&arrows);
+    g_heroScreenWindow->broadcastMessage(arrows);
 }
 
 VA(0x004db350, 0x86)  // dc 0xcd86c
@@ -2962,7 +2962,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     update.m_codeX = widget::WIDGET_SET_TEXT;
     update.m_codeY = STATUS_BAR_ID;
     update.m_extraText = g_text;
-    broadcastMessage(&update);
+    broadcastMessage(update);
     drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
 }
 
@@ -3540,13 +3540,21 @@ void handleBackpackClick(long code, unsigned char right_mouse)
 
 #endif  // @carcass
 
-VA(0x004dd2a0, 0x2C)  // dc 0xcebe0
-int THeroScreenWindow::exitDialog(message* msg)
+// E:\gamedcs\hero.cpp:3229
+// ANCHOR-VTABLE: 0x004dd2a0 has no rel32 caller at all - it is reached
+// only through slot 14 of vtable 0x63eae8, and 0x63eae8 is the vtable
+// THeroScreenWindow's destructor (0x004e1550, claimed below) stores. It
+// is `ret 4` returning 2 and it fills the pointed-to message with
+// {0x200, 10, 10}, matching `int ExitDialog(message*)`.
+// Retail emits it AFTER the two description bodies, where the DC source
+// has it before ShowWidgets; ShowWidgets itself has no retail row.
+VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
+int THeroScreenWindow::exitDialog(message& msg)
 {
     g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
-    msg->m_id = MESSAGE_WIDGET;
-    msg->m_codeY = 10;
-    msg->m_codeX = 10;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = 10;
+    msg.m_codeX = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -3701,7 +3709,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
     if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
 #pragma inline_depth(0)
         TSpellbookWindow spellbook(
-            g_currentHero, 0, TSpellbookWindow::eContextNeither,
+            *g_currentHero, 0, TSpellbookWindow::eContextNeither,
             g_currentHero->getSpecialTerrain());
 #pragma inline_depth()
         spellbook.doModal(0);
@@ -3973,7 +3981,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
-int THeroScreenWindow::windowHandler(message* msg)
+int THeroScreenWindow::windowHandler(message& msg)
 {
     int exitFlag = 0;
     int result = CAdvPopup::windowHandler(msg);
@@ -3982,42 +3990,42 @@ int THeroScreenWindow::windowHandler(message* msg)
 
     playerData* localPlayer = g_game->getLocalPlayer();
     unsigned char rightMouse;
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
         rightMouse = 1;
     else
         rightMouse = 0;
 
-    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        g_windowManager->convertToHover(*msg);
-        if (g_windowManager->m_lastHover == msg->m_codeY)
+    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(msg);
+        if (g_windowManager->m_lastHover == msg.m_codeY)
             return MESSAGE_DISPATCH_CONSUME;
-        g_windowManager->m_lastHover = msg->m_codeY;
-        updateHeroScreenStatusBar(msg);
+        g_windowManager->m_lastHover = msg.m_codeY;
+        updateHeroScreenStatusBar(&msg);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg->m_id == MESSAGE_KEY_UP
-        && (msg->m_codeX == g_keyCodeLeftShift
-            || msg->m_codeX == g_keyCodeRightShift)) {
+    if (msg.m_id == MESSAGE_KEY_UP
+        && (msg.m_codeX == g_keyCodeLeftShift
+            || msg.m_codeX == g_keyCodeRightShift)) {
         g_windowManager->m_lastHover = -1;
         g_inputManager->forceMouseMove();
     }
-    if (msg->m_id == MESSAGE_KEY_DOWN
-        && (msg->m_codeX == g_keyCodeLeftShift
-            || msg->m_codeX == g_keyCodeRightShift)) {
+    if (msg.m_id == MESSAGE_KEY_DOWN
+        && (msg.m_codeX == g_keyCodeLeftShift
+            || msg.m_codeX == g_keyCodeRightShift)) {
         g_windowManager->m_lastHover = -1;
         g_inputManager->forceMouseMove();
     }
-    if (msg->m_id != MESSAGE_WIDGET)
+    if (msg.m_id != MESSAGE_WIDGET)
         return MESSAGE_DISPATCH_CONSUME;
 
     g_windowManager->m_lastHover = -1;
 
-    switch (msg->m_codeX) {
+    switch (msg.m_codeX) {
     case widget::WIDGET_DESELECT:
         if (rightMouse)
             break;
-        switch (msg->m_codeY) {
+        switch (msg.m_codeY) {
         case HERO_NAME_ID:
             normalDialog(g_generalText->getText(23), 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
@@ -4063,14 +4071,14 @@ int THeroScreenWindow::windowHandler(message* msg)
 
     case widget::WIDGET_SELECT:
     case widget::WIDGET_RIGHT_SELECT:
-        switch (msg->m_codeY) {
+        switch (msg.m_codeY) {
         case PRIMARY_SKILL_0_ID:
         case PRIMARY_SKILL_1_ID:
         case PRIMARY_SKILL_2_ID:
         case PRIMARY_SKILL_3_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            g_currentHero->viewStat(msg->m_codeY - PRIMARY_SKILL_0_ID,
+            g_currentHero->viewStat(msg.m_codeY - PRIMARY_SKILL_0_ID,
                                             rightMouse);
             break;
 
@@ -4150,7 +4158,7 @@ int THeroScreenWindow::windowHandler(message* msg)
         case ARMY_SLOT_5_ID:
         case ARMY_SLOT_6_ID:
             {
-                long slot = msg->m_codeY - ARMY_SLOT_0_ID;
+                long slot = msg.m_codeY - ARMY_SLOT_0_ID;
                 if (!rightMouse
                     && g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
@@ -4203,7 +4211,7 @@ int THeroScreenWindow::windowHandler(message* msg)
                     }
                 } else if (!rightMouse) {
                     if ((g_heroScreenArmyStripLive
-                         || (msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS))
+                         || (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS))
                         && (g_currentHero->m_army.m_armies[slot] == CREATURE_NONE
                             || g_currentHero->m_army.m_armies[slot]
                                    == g_currentHero->m_army
@@ -4241,7 +4249,7 @@ int THeroScreenWindow::windowHandler(message* msg)
                 }
                 if (!rightMouse) {
                     g_windowManager->m_lastHover = -1;
-                    updateHeroScreenStatusBar(msg);
+                    updateHeroScreenStatusBar(&msg);
                 }
             }
             break;
@@ -4256,14 +4264,14 @@ int THeroScreenWindow::windowHandler(message* msg)
         case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
         case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
         case ARTIFACT_SLOT_18_ID:
-            handleArtifactClick(msg->m_codeY - ARTIFACT_SLOT_0_ID,
+            handleArtifactClick(msg.m_codeY - ARTIFACT_SLOT_0_ID,
                                   rightMouse);
             break;
 
         case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
         case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
         case BACKPACK_SLOT_4_ID:
-            handleBackpackClick(msg->m_codeY - BACKPACK_SLOT_0_ID,
+            handleBackpackClick(msg.m_codeY - BACKPACK_SLOT_0_ID,
                                   rightMouse);
             break;
 
@@ -4274,7 +4282,7 @@ int THeroScreenWindow::windowHandler(message* msg)
             if (rightMouse) {
                 TQuickHeroWindow quick(
                     g_game->getHero(localPlayer->m_heroes[
-                        m_topHero + msg->m_codeY - HERO_LOCATOR_0_ID]),
+                        m_topHero + msg.m_codeY - HERO_LOCATOR_0_ID]),
                     TQuickHeroWindow::ViewAll);
                 quick.m_x = 0x1a4;
                 quick.m_y = 0x172;
@@ -4286,7 +4294,7 @@ int THeroScreenWindow::windowHandler(message* msg)
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
             g_heroScreenHeroPosition =
-                m_topHero + msg->m_codeY - HERO_LOCATOR_0_ID;
+                m_topHero + msg.m_codeY - HERO_LOCATOR_0_ID;
             g_currentHero =
                 g_game->getHero(localPlayer->m_heroes[g_heroScreenHeroPosition]);
             setupHeroView();
@@ -4330,7 +4338,7 @@ int THeroScreenWindow::windowHandler(message* msg)
             // this widget-id/rightMouse popup or justify a new wrapper.
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            int code = msg->m_codeY;
+            int code = msg.m_codeY;
             int nth;
             if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
                 && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
@@ -4362,9 +4370,9 @@ int THeroScreenWindow::windowHandler(message* msg)
     }
 
     if (exitFlag) {
-        g_windowManager->m_dialogReturn = msg->m_codeY;
-        msg->m_codeY = 10;
-        msg->m_codeX = 10;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = 10;
+        msg.m_codeX = 10;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -4871,19 +4879,19 @@ void hero::updateStats()
     for (int i = 0; i < 4; i++) {
         sprintf(g_text, "%d", g_currentHero->getPrimarySkill(i));
         msg.m_codeY = i + 0x2e;
-        g_heroScreenWindow->broadcastMessage(&msg);
+        g_heroScreenWindow->broadcastMessage(msg);
     }
 
     int luckFrame = limit(-3, getLuck(0, 0, 1), 3) + 3;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x75;
     msg.m_extra = luckFrame;
-    g_heroScreenWindow->broadcastMessage(&msg);
+    g_heroScreenWindow->broadcastMessage(msg);
 
     int moraleFrame = limit(-3, getMorale(0, 0, 1), 3) + 3;
     msg.m_codeY = 0x74;
     msg.m_extra = moraleFrame;
-    g_heroScreenWindow->broadcastMessage(&msg);
+    g_heroScreenWindow->broadcastMessage(msg);
 }
 
 VA(0x004e1800, 0x24F)  // dc 0xd2e80
@@ -4961,20 +4969,20 @@ void THeroScreenWindow::setupHeroView()
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     strcpy(g_text, g_currentHero->m_name);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x1;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     sprintf(g_text,
             g_generalText->getText(GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT),
             g_currentHero->m_level, g_currentHero->heroFn004D8F70());
     msg.m_codeY = 0x8c;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (g_unnamed6aa9d8) {
         widgetClearStatus(0x8a, widget::WIDGET_DRAWN);
@@ -4986,7 +4994,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_extra = widget::WIDGET_DRAWN;
     for (int slotIcon = 0; slotIcon < 7; slotIcon++) {
         msg.m_codeY = slotIcon + 0x44;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     }
 
     if (!noDismiss && !g_unnamed6aa9d8 &&
@@ -5014,34 +5022,34 @@ void THeroScreenWindow::setupHeroView()
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x76;
     msg.m_extra = g_currentHero->m_id;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     sprintf(g_text, g_heroSpecificAbilities[g_currentHero->m_id].m_shortText);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x8b;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     sprintf(g_text, "%d", g_currentHero->m_experience);
     msg.m_codeY = 0x70;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (g_currentHero->m_formation & 1) {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = 0x7c;
         msg.m_extra = widget::WIDGET_HIGHLIGHTED;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x7a;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     } else {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = 0x7a;
         msg.m_extra = widget::WIDGET_HIGHLIGHTED;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_codeY = 0x7c;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     }
 
     if (g_currentHero->hasSecondarySkill(eSecSkillBattleTactics)) {
@@ -5067,7 +5075,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x71;
     msg.m_extraText = g_text;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = 0x8d;
@@ -5075,7 +5083,7 @@ void THeroScreenWindow::setupHeroView()
         msg.m_extra = 8;
     else
         msg.m_extra = g_currentHero->m_owner;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     g_currentHero->updateArmies();
 
@@ -5086,40 +5094,40 @@ void THeroScreenWindow::setupHeroView()
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = i + 0x4f;
             msg.m_extra = skill * 3 + g_currentHero->m_skillLevel[skill] + 2;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             strcpy(g_text, g_sSkillTraits[skill].m_name);
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = i + 0x57;
             msg.m_extraText = g_text;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             strcpy(g_text,
                    g_skillMasteryNamesBiased[g_currentHero->m_skillLevel[skill]]);
             msg.m_codeY = i + 0x5f;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
 
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_codeY = i + 0x4f;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             msg.m_codeY = i + 0x57;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             msg.m_codeY = i + 0x5f;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
         } else {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = i + 0x4f;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             msg.m_codeY = i + 0x57;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
             msg.m_codeY = i + 0x5f;
             msg.m_extra = widget::WIDGET_DRAWN;
-            broadcastMessage(&msg);
+            broadcastMessage(msg);
         }
     }
 
@@ -5129,7 +5137,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_codeY = 0x7f;
     msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     if (!g_currentPlayer->isLocalHuman()) {
         getWidget(0x44)->enable(0);

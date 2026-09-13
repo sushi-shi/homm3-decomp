@@ -23,6 +23,11 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// DC S_LPROC32 identifies this ordinary callback as TU-local.
+// Before normalization (function): MainMenuHandler.
+static int mainMenuHandler(message& msg);
+
+// Before normalization: gpMainMenu.
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
 // its own DC-named static below.
@@ -93,25 +98,24 @@ TMainMenu::TMainMenu()
     g_mainMenu = this;
     m_showCdMessage = g_noCdRom && !g_cdMessageShown;
 
-    std::vector<widget*>* widgets = &m_widgets;
-    widgets->reserve(NWIDGETS);
-    widgets->insert(widgets->end(), new button(
+    m_widgets.reserve(NWIDGETS);
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[0].m_x, g_mainMenuButtonRects[0].m_y,
         g_mainMenuButtonRects[0].m_width, g_mainMenuButtonRects[0].m_height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[1].m_x, g_mainMenuButtonRects[1].m_y,
         g_mainMenuButtonRects[1].m_width, g_mainMenuButtonRects[1].m_height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[2].m_x, g_mainMenuButtonRects[2].m_y,
         g_mainMenuButtonRects[2].m_width, g_mainMenuButtonRects[2].m_height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[3].m_x, g_mainMenuButtonRects[3].m_y,
         g_mainMenuButtonRects[3].m_width, g_mainMenuButtonRects[3].m_height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
-    widgets->insert(widgets->end(), new button(
+    m_widgets.push_back(new button(
         g_mainMenuButtonRects[4].m_x, g_mainMenuButtonRects[4].m_y,
         g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
@@ -125,10 +129,9 @@ TMainMenu::TMainMenu()
 
     if (g_dPlayReady) {
         if (g_dPlay && g_dPlay->isHost()) {
-            widget* disabledWidget = getWidget(HIGH_SCORE_ID);
-            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            disabledWidget = getWidget(CREDITS_ID);
-            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            // DC mainmenu.cpp:102/103 calls widget::hide at both sites.
+            getWidget(HIGH_SCORE_ID)->hide();
+            getWidget(CREDITS_ID)->hide();
         }
         g_lastDiskSpaceCheck = GameTime::get();
     }
@@ -174,7 +177,7 @@ void TMainMenu::doModal()
 // final goto at 93.1746%. Bool, byte and int results are score-identical;
 // a do/while(0) confirmation scope instead lowers it to 91.5690%.
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
-int mainMenuHandler(message& msg)
+static int mainMenuHandler(message& msg)
 {
     unsigned char updatePlease = 0;
     unsigned char hoverChanged = 0;
@@ -190,26 +193,23 @@ int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = g_generalText->getText(
-            GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
+        const char* fill = (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT];
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
-            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
-            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
-                : g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+        if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
+            g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                g_generalText->getText(
-                    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
-                drive, fill, fill, fill, fill).c_str(),
+                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT],
+                fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
+            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
+                ? (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5]
+                : (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6];
             normalDialog(formatString(
-                g_generalText->getText(
-                    GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
-                fill, fill, fill, fill).c_str(),
+                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT],
+                drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         g_cdMessageShown = 1;
@@ -246,7 +246,7 @@ int mainMenuHandler(message& msg)
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_dPlayReady) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     videoResume();
@@ -330,7 +330,7 @@ void VideomodeChoice::Test()
 
 // E:\gamedcs\mainmenu.cpp:410
 DC_ONLY(0xeb248, 0xF4)
-int VideomodeChoice::windowHandler(message* msg)
+int VideomodeChoice::windowHandler(message& msg)
 {
     // @stub
 }

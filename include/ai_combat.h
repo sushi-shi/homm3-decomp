@@ -199,7 +199,7 @@ public:
                         const town* enemyTown, NewmapCell* mapCell);
     type_AI_combat_data(const type_AI_combat_data& other);
     void adjustArmy(unsigned char dismissHero);
-    void doAftermath(type_AI_combat_data* defender, const town* enemyTown);
+    void doAftermath(type_AI_combat_data& defender, town* enemyTown);
     void simulateCombat(type_AI_combat_data& defender);
 
 protected:
@@ -214,6 +214,10 @@ protected:
     void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
     void castMassDamageSpell(type_spell_choice& choice,
                                 const hero* castingHero);
+    void getSummoningValue(type_spell_choice& choice) const;
+    // Before normalization: cast_summoning.
+    void castSummoning(type_spell_choice& choice);
+    // Before normalization (function): type_AI_combat_data::cast_spell.
     void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
     void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
     void checkWallArcheryPenalty(const town* enemyTown);
@@ -267,10 +271,10 @@ protected:
 };
 
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
-                              armyGroup* defendingArmy, town* defendingTown,
+                              armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 void aiAutoCombat(hero* attackingHero, hero* defendingHero,
-                    armyGroup* attackingArmy, armyGroup* defendingArmy,
+                    armyGroup& attackingArmy, armyGroup& defendingArmy,
                     const town* defendingTown, NewmapCell* cell);
 long aiValueOfCombat(const hero* attackingHero,
                         const hero* defendingHero,
@@ -279,7 +283,7 @@ long aiValueOfCombat(const hero* attackingHero,
                         NewmapCell* cell);
 
 long aiApproximateStrength(const hero* currentHero);
-long aiApproximateStrength(const hero* currentHero, const armyGroup* currentArmy);
+long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);

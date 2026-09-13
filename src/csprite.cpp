@@ -121,10 +121,15 @@ int CSprite::addFrame(int seqnum, const char* name, int w, int h, unsigned char*
 
 #endif  // @carcass
 
-VA(0x0047bcc0, 0x0e)  // dc 0x7258c
-palette* CSprite::getPalette()
+// E:\gamedcs\csprite.cpp:226
+// DC 228 returns the unsigned-short table, not the bootstrap palette view.
+// Complete's 14-byte body retains the null/array-address conditional; the
+// older SpriteDataReload guard depends on cache fields absent from this
+// retail class (as in its GetNumFrames and IsValidSeq accessors).
+VA(0x0047bcc0, 0x0e)  // vtable-era TU order + p/data layout, dc 0x7258c
+unsigned short* CSprite::getPalette()
 {
-    return m_p ? &m_p->m_colors : 0;
+    return m_p ? m_p->m_data : 0;
 }
 
 #if 0  // @carcass
@@ -147,7 +152,7 @@ void CSprite::colorCycle(int begin, int end, int step)
 VA(0x0047bcf0, 0x52)  // dc 0x72664
 void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
-                   int dpitch, unsigned char hflip, unsigned char tblit) const
+                   int dpitch, bool hflip, bool tblit) const
 {
     m_s[seqnum]->m_f[framenum]->draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, tblit);
@@ -163,7 +168,7 @@ VA(0x0047bd60, 0x54)  // dc 0x726f4
 void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
                            int sw, int sh, unsigned short* dst,
                            int dx, int dy, int dw, int dh, int dpitch,
-                           unsigned char hflip, unsigned short outcolor) const
+                           bool hflip, unsigned short outcolor) const
 {
     m_s[seqnum]->m_f[framenum]->drawCreature(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
@@ -173,7 +178,7 @@ void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
 VA(0x0047bdc0, 0x4c)  // sequence zero + adv-object implementation
 void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
-                         int dpitch, unsigned char hflip) const
+                         int dpitch, bool hflip) const
 {
     m_s[0]->m_f[framenum]->drawAdvObj(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
@@ -201,7 +206,7 @@ void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
 
 VA(0x0047beb0, 0x4a)  // full-frame pointer draw through sequence zero
 void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
-                          int dw, int dh, int dpitch, unsigned char hflip) const
+                          int dw, int dh, int dpitch, bool hflip) const
 {
     CSpriteFrame* frame = m_s[0]->m_f[framenum];
     frame->draw(0, 0, frame->getWidth(), frame->getHeight(),
@@ -211,7 +216,7 @@ void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
 VA(0x0047bf00, 0x4c)  // sequence zero + transparent draw forwarding
 void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
-                            int dh, int dpitch, unsigned char hflip) const
+                            int dh, int dpitch, bool hflip) const
 {
     m_s[0]->m_f[framenum]->draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 1);
@@ -220,7 +225,7 @@ void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
 VA(0x0047bf50, 0x4e)  // sequence zero + tile forwarding
 void CSprite::drawTile(int framenum, int sx, int sy, int sw, int sh,
                        unsigned short* dst, int dx, int dy, int dw, int dh,
-                       int dpitch, unsigned char hflip, unsigned char vflip) const
+                       int dpitch, bool hflip, bool vflip) const
 {
     m_s[0]->m_f[framenum]->drawTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
@@ -253,7 +258,7 @@ void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
 VA(0x0047c080, 0x50)  // selected sequence + adv-object implementation
 void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
-                       int dh, int dpitch, unsigned char hflip) const
+                       int dh, int dpitch, bool hflip) const
 {
     m_s[seqnum]->m_f[framenum]->drawHero(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
@@ -283,7 +288,7 @@ VA(0x0047c170, 0x52)  // selected sequence + spell-effect implementation
 void CSprite::drawSpellEffect(int seqnum, int framenum, int sx, int sy,
                               int sw, int sh, unsigned short* dst,
                               int dx, int dy, int dw, int dh, int dpitch,
-                              unsigned char hflip, unsigned char alpha) const
+                              bool hflip, bool alpha) const
 {
     m_s[seqnum]->m_f[framenum]->drawSpellEffect(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, alpha);
@@ -323,21 +328,21 @@ int CSprite::getNumSeqs(int type)
 
 // E:\gamedcs\csprite.cpp:274
 DC_ONLY(0x72784, 0x90)
-void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned short outcolor)
+void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned short outcolor) const
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:298
 DC_ONLY(0x72944, 0x8C)
-void CSprite::drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip)
+void CSprite::drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip) const
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:396
 DC_ONLY(0x72ea8, 0x8C)
-void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip)
+void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip) const
 {
     // @stub
 }
