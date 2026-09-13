@@ -230,6 +230,17 @@ def _call_name(node: dict, source: str) -> str | None:
     return None
 
 
+def semantic_name_key(name: str) -> str:
+    """Fold the documented scope/Hungarian convention, not arbitrary renames.
+
+    Callers must retain exact-name priority and reject ambiguous fallbacks.
+    This is for value names; class/type spelling uses name_key unchanged.
+    """
+    name = re.sub(r"^[msg]_", "", name)
+    name = re.sub(r"^(?:psz|sz|dw|lp|b|c|d|f|i|n|p|s|u|w)(?=[A-Z])", "", name)
+    return name_key(name)
+
+
 def _aliases(source: str, node: dict) -> list[str]:
     """Use owning comments, never invent a second name ledger."""
     at = _begin(node).get("offset", _loc(node).get("offset", 0))
@@ -400,7 +411,7 @@ def compare_facts(expected: dict, candidate: dict) -> dict:
     else:
         gaps.append(f"parameter inventory differs ({len(dc_params)} recorded, {len(cpp_params)} authored); "
                     "optimized-out/hidden parameters or a platform ABI difference need review")
-    # Match locals only through their names or an explicit owning alias comment.
+    # Prefer names/legacy aliases, then the documented naming convention.
     local_index = defaultdict(list)
     for row in candidate.get("locals", []):
         # An explicit owning alias takes precedence over coincidental spelling:
@@ -409,9 +420,17 @@ def compare_facts(expected: dict, candidate: dict) -> dict:
         for key in {name_key(name) for name in names}:
             local_index[key].append(row)
     dc_counts = Counter(name_key(row["name"]) for row in expected.get("locals", []))
+    semantic_counts = Counter(semantic_name_key(row["name"])
+                              for row in expected.get("locals", []))
     for row in expected.get("locals", []):
         matches = local_index[name_key(row["name"])]
-        if len(matches) != 1 or dc_counts[name_key(row["name"])] != 1:
+        count = dc_counts[name_key(row["name"])]
+        if not matches:
+            key = semantic_name_key(row["name"])
+            matches = [cpp for cpp in candidate.get("locals", [])
+                       if not cpp.get("aliases") and semantic_name_key(cpp["name"]) == key]
+            count = semantic_counts[key]
+        if len(matches) != 1 or count != 1:
             gaps.append(f"local {row['name']}: " + ("no named/annotated C++ counterpart" if not matches
                         else "ambiguous shadowed name; scope correlation required"))
         else:
