@@ -171,53 +171,42 @@ public:
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
     // Keep the retail virtual slot order as one block. CodeView's header
     // bodies at 144/147 and 186/187 precede the text/status helpers below.
-    virtual ~widget();
+    virtual ~widget();  // slot 0
     void initialize(int x, int y, int w, int h, int id, int style);
-                                      // slot 0
-    virtual int open(int newPriority, heroWindow* parent);
+    virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
     // earlier obj, ICF-folded with other empty bodies). Declared only;
     // no local definition, so calls stay extern.
     void close();
-  // slot 1
     // DC Main(message&) is shared by the widget overrides; retail passes
     // the same address through slot 2.
-    virtual int main(message& msg) = 0;
-                     // slot 2
+    virtual int main(message& msg) = 0;  // slot 2
     // Complete widened the Dreamcast nil-argument draw hook. The shared
     // vtable representative at 0x5bc7e0 is `ret 8`, and
     // TCampaignBrief dispatches this slot with the z-buffer and widget id.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0;
- // slot 3
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0;  // slot 3
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
     // These hooks write to the destination bitmap through its pointer.
-    virtual void draw() const = 0;
-                                // slot 4
+    virtual void draw() const = 0;  // slot 4
     VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
-    virtual int getRealHeight() const { return m_height; }
-          // slot 5
+    virtual int getRealHeight() const { return m_height; }  // slot 5
     VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
-    virtual int getRealWidth() const { return m_width; }
-            // slot 6
-    virtual void processHover();
-                           // slot 7
-    virtual void dim() const;
-                                     // slot 8
-    virtual void enable(unsigned char on);
+    virtual int getRealWidth() const { return m_width; }  // slot 6
+    virtual void processHover();  // slot 7
+    virtual void dim() const;  // slot 8
+    virtual void enable(unsigned char on);  // slot 9
     void setHelpText(const char* text, const char* rclick, unsigned char copyText);
     int sendMessage(widget::ECommands command, int extra);
 
-                  // slot 9
-    virtual void onSetFocus() {}
-                            // slot 10
-    virtual void onKillFocus() {}
+    VA(0x00404df0, 0x1)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
+    virtual void onSetFocus() {}  // slot 10
+    virtual void onKillFocus() {}  // slot 11
 
     // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
     // emitted; it is not an inlined-away static.
     // DC Widget.h:225-226, dc 0x12859c: static hover reset.
     static void clearHoverWidget() { s_lastHoverWidget = 0; }
-                          // slot 12
 
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
@@ -268,15 +257,12 @@ protected:
     static widget* s_lastHoverWidget;
 
 public:
-                           // slot 11
     // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
     // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
     // no claimable home, and leaving it undefined here is also what
     // keeps button's override (0x456a10) emitting a real call instead
     // of an /Ob2-inlined nothing.
-    virtual void vslot12(int on);
-
-
+    virtual void vslot12(int on);  // slot 12
 };
 SIZE(widget, 48);
 

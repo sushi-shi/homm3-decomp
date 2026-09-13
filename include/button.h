@@ -100,20 +100,16 @@ public:
     // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
     // TAdvMenu::SetSleepImage retains this call in its source line table.
     void clearHotkeys() { m_hotKeyCodes.clear(); }
-    virtual int main(message& msg);
-  // slot 2, retail 0x456190
+    virtual int main(message& msg);  // slot 2, retail 0x456190
 
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
- // slot 3
-    virtual void draw() const;
-  // slot 4, retail 0x456940
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;  // slot 3
+    virtual void draw() const;  // slot 4, retail 0x456940
 
     virtual ~button();
     // widget slot 12, overridden at 0x456a10 - the only override of it
     // in the image. Placeholder name inherited from widget.h.
     virtual void vslot12(int on);
     void setPlayerPaletteColors(int whichPlayer);
-
 };
 
 // Dreamcast roster: Font@96, textColor@100 (font::TColor) - retail
@@ -122,8 +118,7 @@ public:
 class textButton : public button {
 public:
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
-    virtual void draw() const;
-    // slot 4, retail 0x456ca0
+    virtual void draw() const;  // slot 4, retail 0x456ca0
 
     virtual ~textButton();
 
@@ -143,8 +138,7 @@ public:
     type_func_button(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);
-    virtual int main(message& msg);
-  // slot 2, retail 0x456e50
+    virtual int main(message& msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();
   // retail 0x456db0

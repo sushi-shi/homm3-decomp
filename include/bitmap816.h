@@ -14,26 +14,20 @@ class Bitmap816 : public resource {
 private:
     // DC names both dwords; retail vtable slot 2 reads DataSize directly
     // and adds the fixed 0x56c-byte object extent.
-    int m_dataSize;
-   // +0x1c
-    int m_imageSize;
-  // +0x20
+    int m_dataSize;  // +0x1c
+    int m_imageSize;  // +0x20
     // Byte-proven 2026-08-08 by bitmapBorder::GetRealWidth /
     // GetRealHeight (0x4504a0 / 0x4504b0), which read +0x24 and +0x28
     // off this object; the names are the DC fieldlist's (Width@36,
     // Height@40 - the same offsets, since resource is 0x1c on both
     // builds). The rest of the head stays padded until a retail body
     // reads it.
-    int m_width;
-   // +0x24
-    int m_height;
-  // +0x28
-    int m_pitch;
-   // +0x2c
-    unsigned char* m_map;
+    int m_width;  // +0x24
+    int m_height;  // +0x28
+    int m_pitch;  // +0x2c
+    unsigned char* m_map;  // +0x30
 
 public:
-  // +0x30
     TPalette16 m_p16;
     TPalette24 m_p24;
     Bitmap816(const char* name, int w, int h, unsigned char* data,
@@ -71,7 +65,6 @@ public:
     virtual unsigned int getSize() const;
     virtual void zBufferDraw(int sx, int sy, int sw, int sh,
         unsigned short* zBuffer, int dx, int dy, int id) const;
-
 };
 SIZE(Bitmap816, 0x56c);
 

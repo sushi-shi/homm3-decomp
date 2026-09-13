@@ -2,11 +2,11 @@
 #ifndef HOMM3_PUZZLEWINDOW_H
 #define HOMM3_PUZZLEWINDOW_H
 
-struct type_point;
-
 #include <bitset>
 #include "advmgr_popup.h"
 #include "struct.h"
+
+struct type_point;
 
 class Bitmap816;
 class NewmapCell;

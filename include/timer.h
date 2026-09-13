@@ -47,7 +47,6 @@ private:
     unsigned long m_elapsedTime;
     unsigned char m_isRunning;
     unsigned char m_enabled;
-
 };
 SIZE(CTimer, 16);
 

@@ -45,7 +45,6 @@ public:
         unsigned short* m_longName;
         char* m_longNameA;
     };
-
 };
 SIZE(DPNAME, 0x10);
 
@@ -71,7 +70,6 @@ public:
     unsigned long m_user2;
     unsigned long m_user3;
     unsigned long m_user4;
-
 };
 SIZE(DPSESSIONDESC2, 0x50);
 
@@ -84,7 +82,6 @@ public:
     GUID m_guidSp;
     void* m_address;
     unsigned long m_addressSize;
-
 };
 SIZE(DPLCONNECTION, 0x28);
 
@@ -104,7 +101,6 @@ public:
     DPNAME m_dpnName;
     unsigned long m_dpIdParent;
     unsigned long m_flags;
-
 };
 
 // dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
@@ -147,27 +143,17 @@ enum EDPlayReceiveError {
 // layout and disjoint member sets, and this is the union.
 class CDPlaySession {
 public:
-    unsigned long m_flags;
-      // +0x00
-    GUID m_guidInstance;
-          // +0x04
-    GUID m_guidApp;
-               // +0x14
-    unsigned long m_maxPlayers;
-   // +0x24
-    unsigned long m_playerCount;
-  // +0x28
-    char m_sessionName[128];
-      // +0x2c
-    char m_password[80];
-          // +0xac
-    unsigned long m_user1;
-      // +0xfc
-    unsigned long m_user2;
-      // +0x100
-    unsigned long m_user3;
-      // +0x104
-    unsigned long m_user4;
+    unsigned long m_flags;  // +0x00
+    GUID m_guidInstance;  // +0x04
+    GUID m_guidApp;  // +0x14
+    unsigned long m_maxPlayers;  // +0x24
+    unsigned long m_playerCount;  // +0x28
+    char m_sessionName[128];  // +0x2c
+    char m_password[80];  // +0xac
+    unsigned long m_user1;  // +0xfc
+    unsigned long m_user2;  // +0x100
+    unsigned long m_user3;  // +0x104
+    unsigned long m_user4;  // +0x108
     // E:\gamedcs\dxplay.h:57
     CDPlaySession(const DPSESSIONDESC2* session)
     {
@@ -188,7 +174,6 @@ public:
                 m_password[0] = 0;
         }
     }
-      // +0x108
 
     VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
     unsigned char isJoinDisabled()
@@ -206,7 +191,6 @@ public:
             return 1;
         return 0;
     }
-
 };
 SIZE(CDPlaySession, 0x10c);
 
@@ -215,13 +199,10 @@ SIZE(CDPlaySession, 0x10c);
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
-    GUID m_guidSp;
-                       // +0x00
-    unsigned char* m_connection;
-        // +0x10
-    char m_name[128];
-                   // +0x14
-    unsigned long m_size;
+    GUID m_guidSp;  // +0x00
+    unsigned char* m_connection;  // +0x10
+    char m_name[128];  // +0x14
+    unsigned long m_size;  // +0x94
     CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
         char* name)
     {
@@ -235,7 +216,6 @@ public:
     {
         delete [] m_connection;
     }
-                // +0x94
 };
 SIZE(CDPlayConnection, 0x98);
 
@@ -284,7 +264,6 @@ public:
         m_dataSize = 0;
         return 1;
     }
-
 };
 SIZE(CDPlayMsg, 0x08);
 
@@ -307,10 +286,8 @@ public:
 protected:
     // DC dxplay.h:211
 
-    char m_name[0x100];
-      // +0x00
-    unsigned long m_dpid;
-     // +0x100
+    char m_name[0x100];  // +0x00
+    unsigned long m_dpid;  // +0x100
 };
 SIZE(CDPlayPlayer, 0x104);
 
@@ -325,10 +302,8 @@ public:
         strcpy(m_name, name);
         m_dpid = dpid;
     }
-    char m_name[0x100];
-      // +0x00
-    unsigned long m_dpid;
-     // +0x100
+    char m_name[0x100];  // +0x00
+    unsigned long m_dpid;  // +0x100
 };
 
 // The address-element records one DirectPlay SP address chunk EnumAddress splits
@@ -338,9 +313,8 @@ public:
 // constructor/destructor in dxplay.h:244/257.
 class CDPlayAddressElement {
 public:
-    GUID m_guid;
-              // +0x00
-    char* m_data;
+    GUID m_guid;  // +0x00
+    char* m_data;  // +0x10
     CDPlayAddressElement(const GUID* guid, const void* data,
         unsigned long dataSize)
     {
@@ -353,9 +327,7 @@ public:
     {
         delete [] m_data;
     }
-            // +0x10
-    unsigned long m_dataSize;
- // +0x14
+    unsigned long m_dataSize;  // +0x14
 };
 
 // Dreamcast CodeView proves this complete virtual order. Retail's
@@ -506,13 +478,11 @@ public:
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
-    char m_caps[0x28];
+    char m_caps[0x28];  // +0x04
 
 protected:
-                  // +0x04
-    void* m_dp;
-                       // +0x2c
-    GUID m_guid;
+    void* m_dp;  // +0x2c
+    GUID m_guid;  // +0x30
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
@@ -526,28 +496,18 @@ protected:
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-                        // +0x30
-    long m_res;
-                        // +0x40, DC long / SDK HRESULT
-    CAutoArray<CDPlaySession>* m_sessionArray;
-       // +0x44
-    CAutoArray<CDPlayConnection>* m_connectionArray;
- // +0x48
-    CAutoArray<CDPlayGroup>* m_groupArray;
-           // +0x4c
-    CAutoArray<CDPlayPlayer>* m_playerArray;
-          // +0x50
-    unsigned char m_connected;
-          // +0x54
-    unsigned char m_inSession;
-          // +0x55
-    bool m_isHost;
-                      // +0x56 (original m_isHost)
+    long m_res;  // +0x40, DC long / SDK HRESULT
+    CAutoArray<CDPlaySession>* m_sessionArray;  // +0x44
+    CAutoArray<CDPlayConnection>* m_connectionArray;  // +0x48
+    CAutoArray<CDPlayGroup>* m_groupArray;  // +0x4c
+    CAutoArray<CDPlayPlayer>* m_playerArray;  // +0x50
+    unsigned char m_connected;  // +0x54
+    unsigned char m_inSession;  // +0x55
+    bool m_isHost;  // +0x56 (original m_isHost)
     // Dreamcast CDPlay ends with connected/inSession/isHost at
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
     // this last byte aligns the complete object.
     char m_tailPadding;
-
 };
 SIZE(CDPlay, 0x58);
 
@@ -608,13 +568,11 @@ public:
     friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
 
 protected:
-    void* m_lobby;
-                         // +0x58
-    CAutoArray<CDPlayAddressElement>* m_addressArray;
+    void* m_lobby;  // +0x58
+    CAutoArray<CDPlayAddressElement>* m_addressArray;  // +0x5c
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
- // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
 

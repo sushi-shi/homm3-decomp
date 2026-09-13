@@ -110,7 +110,6 @@ public:
     {
         return m_armySide >= 0;
     }
-
 };
 SIZE(hexcell, 0x70);
 

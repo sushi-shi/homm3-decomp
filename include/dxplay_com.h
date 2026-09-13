@@ -91,7 +91,6 @@ enum EDPlaySysMsgType {
 struct DPMSG_GENERIC {
 public:
     unsigned long m_type;
-
 };
 
 // DirectPlay value structures consumed only by this TU's wrapper bodies.
@@ -99,15 +98,12 @@ public:
 // DPCHAT stays private and its 0xc extent is fixed by SendChat.
 struct DPCHAT {
 public:
-    unsigned long m_size;
-             // +0x00
-    unsigned long m_flags;
-            // +0x04
+    unsigned long m_size;  // +0x00
+    unsigned long m_flags;  // +0x04
     union {
         unsigned short* m_message;  // +0x08
         char* m_messageA;
     };
-
 };
 SIZE(DPCHAT, 0x0c);
 
@@ -116,28 +112,17 @@ SIZE(DPCHAT, 0x0c);
 // trailing field beyond the stock lobby descriptor.
 struct DPAPPLICATIONDESC {
 public:
-    unsigned long m_size;
-              // +0x00
-    unsigned long m_flags;
-            // +0x04
-    char* m_applicationNameA;
-       // +0x08
-    GUID m_guidApplication;
-             // +0x0c
-    char* m_filenameA;
-              // +0x1c
-    char* m_commandLineA;
-           // +0x20
-    char* m_pathA;
-                  // +0x24
-    char* m_currentDirectoryA;
-      // +0x28
-    char* m_descriptionA;
-           // +0x2c
-    unsigned short* m_descriptionW;
- // +0x30
-    char* m_executableA;
-            // +0x34
+    unsigned long m_size;  // +0x00
+    unsigned long m_flags;  // +0x04
+    char* m_applicationNameA;  // +0x08
+    GUID m_guidApplication;  // +0x0c
+    char* m_filenameA;  // +0x1c
+    char* m_commandLineA;  // +0x20
+    char* m_pathA;  // +0x24
+    char* m_currentDirectoryA;  // +0x28
+    char* m_descriptionA;  // +0x2c
+    unsigned short* m_descriptionW;  // +0x30
+    char* m_executableA;  // +0x34
 };
 SIZE(DPAPPLICATIONDESC, 0x38);
 
@@ -184,12 +169,9 @@ DATA(0x00643e08) static const GUID g_spIpx =
 struct _DPCOMPORTADDRESS;
 struct DPCOMPOUNDADDRESSELEMENT {
 public:
-    GUID m_guidDataType;
-         // +0x00
-    unsigned long m_dataSize;
-  // +0x10
-    const void* m_data;
-        // +0x14
+    GUID m_guidDataType;  // +0x00
+    unsigned long m_dataSize;  // +0x10
+    const void* m_data;  // +0x14
 };
 SIZE(DPCOMPOUNDADDRESSELEMENT, 0x18);
 
@@ -209,151 +191,81 @@ typedef int (__stdcall* DPENUMADDRESSCB)(const GUID*, unsigned long, const void*
 
 struct IDirectPlay4A {
 public:
-    virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;
-                 // 0x00
-    virtual unsigned long __stdcall AddRef() = 0;
-                                            // 0x04
-    virtual unsigned long __stdcall Release() = 0;
-                                           // 0x08
-    virtual long __stdcall AddPlayerToGroup(unsigned long idGroup, unsigned long idPlayer) = 0;
- // 0x0c
-    virtual long __stdcall Close() = 0;
-                                                      // 0x10
-    virtual long __stdcall CreateGroup(unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0;
- // 0x14
-    virtual long __stdcall CreatePlayer(unsigned long* lpidPlayer, DPNAME* playerName, void* event, void* data, unsigned long dataSize, unsigned long flags) = 0;
- // 0x18
-    virtual long __stdcall DeletePlayerFromGroup(unsigned long idGroup, unsigned long idPlayer) = 0;
- // 0x1c
-    virtual long __stdcall DestroyGroup(unsigned long idGroup) = 0;
-                          // 0x20
-    virtual long __stdcall DestroyPlayer(unsigned long idPlayer) = 0;
-                        // 0x24
-    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;
- // 0x28
-    virtual long __stdcall EnumGroups(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;
- // 0x2c
-    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;
- // 0x30
-    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long timeout, DPENUMSESSIONSCB2 enumCallback, void* context, unsigned long flags) = 0;
- // 0x34
-    virtual long __stdcall GetCaps(DPCAPS* dpCaps, unsigned long flags) = 0;
-             // 0x38
-    virtual long __stdcall GetGroupData(unsigned long idGroup, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0;
- // 0x3c
-    virtual long __stdcall GetGroupName(unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x40
-    virtual long __stdcall GetMessageCount(unsigned long idPlayer, unsigned long* lpdwCount) = 0;
- // 0x44
-    virtual long __stdcall GetPlayerAddress(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x48
-    virtual long __stdcall GetPlayerCaps(unsigned long idPlayer, DPCAPS* playerCaps, unsigned long flags) = 0;
- // 0x4c
-    virtual long __stdcall GetPlayerData(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0;
- // 0x50
-    virtual long __stdcall GetPlayerName(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x54
-    virtual long __stdcall GetSessionDesc(void* data, unsigned long* lpdwDataSize) = 0;
-    // 0x58
-    virtual long __stdcall Initialize(GUID* guid) = 0;
-                                     // 0x5c
-    virtual long __stdcall Open(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;
-            // 0x60
-    virtual long __stdcall Receive(unsigned long* lpidFrom, unsigned long* lpidTo, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x64
-    virtual long __stdcall Send(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize) = 0;
- // 0x68
-    virtual long __stdcall SetGroupData(unsigned long idGroup, void* data, unsigned long dataSize, unsigned long flags) = 0;
- // 0x6c
-    virtual long __stdcall SetGroupName(unsigned long idGroup, DPNAME* groupName, unsigned long flags) = 0;
- // 0x70
-    virtual long __stdcall SetPlayerData(unsigned long idPlayer, void* data, unsigned long dataSize, unsigned long flags) = 0;
- // 0x74
-    virtual long __stdcall SetPlayerName(unsigned long idPlayer, DPNAME* playerName, unsigned long flags) = 0;
- // 0x78
-    virtual long __stdcall SetSessionDesc(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;
-  // 0x7c
-    virtual long __stdcall AddGroupToGroup(unsigned long idParentGroup, unsigned long idGroup) = 0;
- // 0x80
-    virtual long __stdcall CreateGroupInGroup(unsigned long idParentGroup, unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0;
- // 0x84
-    virtual long __stdcall DeleteGroupFromGroup(unsigned long idParentGroup, unsigned long idGroup) = 0;
- // 0x88
-    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, DPENUMCONNECTIONSCB enumCallback, void* context, unsigned long flags) = 0;
- // 0x8c
-    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;
- // 0x90
-    virtual long __stdcall GetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x94
-    virtual long __stdcall InitializeConnection(void* connection, unsigned long flags) = 0;
- // 0x98
-    virtual long __stdcall SecureOpen(const DPSESSIONDESC2* lpsd, unsigned long flags, const void* security, const void* credentials) = 0;
- // 0x9c
-    virtual long __stdcall SendChatMessage(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* chatMessage) = 0;
- // 0xa0
-    virtual long __stdcall SetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* connection) = 0;
- // 0xa4
-    virtual long __stdcall StartSession(unsigned long flags, unsigned long idGroup) = 0;
-   // 0xa8
-    virtual long __stdcall GetGroupFlags(unsigned long idGroup, unsigned long* lpdwFlags) = 0;
- // 0xac
-    virtual long __stdcall GetGroupParent(unsigned long idGroup, unsigned long* lpidParent) = 0;
- // 0xb0
-    virtual long __stdcall GetPlayerAccount(unsigned long idPlayer, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0;
- // 0xb4
-    virtual long __stdcall GetPlayerFlags(unsigned long idPlayer, unsigned long* lpdwFlags) = 0;
- // 0xb8
-    virtual long __stdcall GetGroupOwner(unsigned long idGroup, unsigned long* lpidOwner) = 0;
- // 0xbc
-    virtual long __stdcall SetGroupOwner(unsigned long idGroup, unsigned long idOwner) = 0;
-  // 0xc0
-    virtual long __stdcall SendEx(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize, unsigned long priority, unsigned long timeout, void* context, unsigned long* lpdwMsgID) = 0;
- // 0xc4
-    virtual long __stdcall GetMessageQueue(unsigned long idFrom, unsigned long idTo, unsigned long flags, unsigned long* lpdwNumMsgs, unsigned long* lpdwNumBytes) = 0;
- // 0xc8
+    virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;  // 0x00
+    virtual unsigned long __stdcall AddRef() = 0;  // 0x04
+    virtual unsigned long __stdcall Release() = 0;  // 0x08
+    virtual long __stdcall AddPlayerToGroup(unsigned long idGroup, unsigned long idPlayer) = 0;  // 0x0c
+    virtual long __stdcall Close() = 0;  // 0x10
+    virtual long __stdcall CreateGroup(unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0;  // 0x14
+    virtual long __stdcall CreatePlayer(unsigned long* lpidPlayer, DPNAME* playerName, void* event, void* data, unsigned long dataSize, unsigned long flags) = 0;  // 0x18
+    virtual long __stdcall DeletePlayerFromGroup(unsigned long idGroup, unsigned long idPlayer) = 0;  // 0x1c
+    virtual long __stdcall DestroyGroup(unsigned long idGroup) = 0;  // 0x20
+    virtual long __stdcall DestroyPlayer(unsigned long idPlayer) = 0;  // 0x24
+    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;  // 0x28
+    virtual long __stdcall EnumGroups(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;  // 0x2c
+    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;  // 0x30
+    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long timeout, DPENUMSESSIONSCB2 enumCallback, void* context, unsigned long flags) = 0;  // 0x34
+    virtual long __stdcall GetCaps(DPCAPS* dpCaps, unsigned long flags) = 0;  // 0x38
+    virtual long __stdcall GetGroupData(unsigned long idGroup, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0;  // 0x3c
+    virtual long __stdcall GetGroupName(unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0;  // 0x40
+    virtual long __stdcall GetMessageCount(unsigned long idPlayer, unsigned long* lpdwCount) = 0;  // 0x44
+    virtual long __stdcall GetPlayerAddress(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0;  // 0x48
+    virtual long __stdcall GetPlayerCaps(unsigned long idPlayer, DPCAPS* playerCaps, unsigned long flags) = 0;  // 0x4c
+    virtual long __stdcall GetPlayerData(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0;  // 0x50
+    virtual long __stdcall GetPlayerName(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0;  // 0x54
+    virtual long __stdcall GetSessionDesc(void* data, unsigned long* lpdwDataSize) = 0;  // 0x58
+    virtual long __stdcall Initialize(GUID* guid) = 0;  // 0x5c
+    virtual long __stdcall Open(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;  // 0x60
+    virtual long __stdcall Receive(unsigned long* lpidFrom, unsigned long* lpidTo, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0;  // 0x64
+    virtual long __stdcall Send(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize) = 0;  // 0x68
+    virtual long __stdcall SetGroupData(unsigned long idGroup, void* data, unsigned long dataSize, unsigned long flags) = 0;  // 0x6c
+    virtual long __stdcall SetGroupName(unsigned long idGroup, DPNAME* groupName, unsigned long flags) = 0;  // 0x70
+    virtual long __stdcall SetPlayerData(unsigned long idPlayer, void* data, unsigned long dataSize, unsigned long flags) = 0;  // 0x74
+    virtual long __stdcall SetPlayerName(unsigned long idPlayer, DPNAME* playerName, unsigned long flags) = 0;  // 0x78
+    virtual long __stdcall SetSessionDesc(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;  // 0x7c
+    virtual long __stdcall AddGroupToGroup(unsigned long idParentGroup, unsigned long idGroup) = 0;  // 0x80
+    virtual long __stdcall CreateGroupInGroup(unsigned long idParentGroup, unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0;  // 0x84
+    virtual long __stdcall DeleteGroupFromGroup(unsigned long idParentGroup, unsigned long idGroup) = 0;  // 0x88
+    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, DPENUMCONNECTIONSCB enumCallback, void* context, unsigned long flags) = 0;  // 0x8c
+    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0;  // 0x90
+    virtual long __stdcall GetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0;  // 0x94
+    virtual long __stdcall InitializeConnection(void* connection, unsigned long flags) = 0;  // 0x98
+    virtual long __stdcall SecureOpen(const DPSESSIONDESC2* lpsd, unsigned long flags, const void* security, const void* credentials) = 0;  // 0x9c
+    virtual long __stdcall SendChatMessage(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* chatMessage) = 0;  // 0xa0
+    virtual long __stdcall SetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* connection) = 0;  // 0xa4
+    virtual long __stdcall StartSession(unsigned long flags, unsigned long idGroup) = 0;  // 0xa8
+    virtual long __stdcall GetGroupFlags(unsigned long idGroup, unsigned long* lpdwFlags) = 0;  // 0xac
+    virtual long __stdcall GetGroupParent(unsigned long idGroup, unsigned long* lpidParent) = 0;  // 0xb0
+    virtual long __stdcall GetPlayerAccount(unsigned long idPlayer, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0;  // 0xb4
+    virtual long __stdcall GetPlayerFlags(unsigned long idPlayer, unsigned long* lpdwFlags) = 0;  // 0xb8
+    virtual long __stdcall GetGroupOwner(unsigned long idGroup, unsigned long* lpidOwner) = 0;  // 0xbc
+    virtual long __stdcall SetGroupOwner(unsigned long idGroup, unsigned long idOwner) = 0;  // 0xc0
+    virtual long __stdcall SendEx(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize, unsigned long priority, unsigned long timeout, void* context, unsigned long* lpdwMsgID) = 0;  // 0xc4
+    virtual long __stdcall GetMessageQueue(unsigned long idFrom, unsigned long idTo, unsigned long flags, unsigned long* lpdwNumMsgs, unsigned long* lpdwNumBytes) = 0;  // 0xc8
 };
 
 // IDirectPlayLobby3A - the lobby object at CDPlayLobby::m_lpLobby (+0x58).
 struct IDirectPlayLobby3A {
 public:
-    virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;
-                 // 0x00
-    virtual unsigned long __stdcall AddRef() = 0;
-                                            // 0x04
-    virtual unsigned long __stdcall Release() = 0;
-                                           // 0x08
-    virtual long __stdcall Connect(unsigned long flags, void** lplpDP, void* unk) = 0;
-    // 0x0c
-    virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* data, unsigned long dataSize, void* address, unsigned long* lpdwAddressSize) = 0;
- // 0x10
-    virtual long __stdcall EnumAddress(DPENUMADDRESSCB enumAddressCallback, const void* address, unsigned long addressSize, void* context) = 0;
- // 0x14
-    virtual long __stdcall EnumAddressTypes(void* callback, const GUID& guidSP, void* context, unsigned long flags) = 0;
- // 0x18
-    virtual long __stdcall EnumLocalApplications(void* callback, void* context, unsigned long flags) = 0;
- // 0x1c
-    virtual long __stdcall GetConnectionSettings(unsigned long appID, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x20
-    virtual long __stdcall ReceiveLobbyMessage(unsigned long flags, unsigned long appID, unsigned long* lpdwMessageFlags, void* data, unsigned long* lpdwDataSize) = 0;
- // 0x24
-    virtual long __stdcall RunApplication(unsigned long flags, unsigned long* lpdwAppID, void* conn, void* receiveEvent) = 0;
- // 0x28
-    virtual long __stdcall SendLobbyMessage(unsigned long flags, unsigned long appID, void* data, unsigned long dataSize) = 0;
- // 0x2c
-    virtual long __stdcall SetConnectionSettings(unsigned long flags, unsigned long appID, void* conn) = 0;
- // 0x30
-    virtual long __stdcall SetLobbyMessageEvent(unsigned long flags, unsigned long appID, void* receiveEvent) = 0;
- // 0x34
-    virtual long __stdcall CreateCompoundAddress(const void* elements, unsigned long elementCount, void* address, unsigned long* lpdwAddressSize) = 0;
- // 0x38
-    virtual long __stdcall ConnectEx(unsigned long flags, const GUID& riid, void** lplpDP, void* unk) = 0;
- // 0x3c
-    virtual long __stdcall RegisterApplication(unsigned long flags, void* appDesc) = 0;
-  // 0x40
-    virtual long __stdcall UnregisterApplication(unsigned long flags, const GUID& guidApplication) = 0;
- // 0x44
-    virtual long __stdcall WaitForConnectionSettings(unsigned long flags) = 0;
-             // 0x48
+    virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;  // 0x00
+    virtual unsigned long __stdcall AddRef() = 0;  // 0x04
+    virtual unsigned long __stdcall Release() = 0;  // 0x08
+    virtual long __stdcall Connect(unsigned long flags, void** lplpDP, void* unk) = 0;  // 0x0c
+    virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* data, unsigned long dataSize, void* address, unsigned long* lpdwAddressSize) = 0;  // 0x10
+    virtual long __stdcall EnumAddress(DPENUMADDRESSCB enumAddressCallback, const void* address, unsigned long addressSize, void* context) = 0;  // 0x14
+    virtual long __stdcall EnumAddressTypes(void* callback, const GUID& guidSP, void* context, unsigned long flags) = 0;  // 0x18
+    virtual long __stdcall EnumLocalApplications(void* callback, void* context, unsigned long flags) = 0;  // 0x1c
+    virtual long __stdcall GetConnectionSettings(unsigned long appID, void* data, unsigned long* lpdwDataSize) = 0;  // 0x20
+    virtual long __stdcall ReceiveLobbyMessage(unsigned long flags, unsigned long appID, unsigned long* lpdwMessageFlags, void* data, unsigned long* lpdwDataSize) = 0;  // 0x24
+    virtual long __stdcall RunApplication(unsigned long flags, unsigned long* lpdwAppID, void* conn, void* receiveEvent) = 0;  // 0x28
+    virtual long __stdcall SendLobbyMessage(unsigned long flags, unsigned long appID, void* data, unsigned long dataSize) = 0;  // 0x2c
+    virtual long __stdcall SetConnectionSettings(unsigned long flags, unsigned long appID, void* conn) = 0;  // 0x30
+    virtual long __stdcall SetLobbyMessageEvent(unsigned long flags, unsigned long appID, void* receiveEvent) = 0;  // 0x34
+    virtual long __stdcall CreateCompoundAddress(const void* elements, unsigned long elementCount, void* address, unsigned long* lpdwAddressSize) = 0;  // 0x38
+    virtual long __stdcall ConnectEx(unsigned long flags, const GUID& riid, void** lplpDP, void* unk) = 0;  // 0x3c
+    virtual long __stdcall RegisterApplication(unsigned long flags, void* appDesc) = 0;  // 0x40
+    virtual long __stdcall UnregisterApplication(unsigned long flags, const GUID& guidApplication) = 0;  // 0x44
+    virtual long __stdcall WaitForConnectionSettings(unsigned long flags) = 0;  // 0x48
 };
 
 #endif  /* HOMM3_DXPLAY_COM_H */

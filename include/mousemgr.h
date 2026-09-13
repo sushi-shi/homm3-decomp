@@ -64,10 +64,8 @@ public:
     // The written destructor belongs in mousemgr.cpp (CodeView line 344);
     // its expansion inside a generated wrapper does not imply header ownership.
     virtual int open(int newPriority);
-    virtual void close();
-                // slot 1, retail 0x50cc40
-    virtual int main(message& msg);
-      // slot 2, folded onto 0x4ec560
+    virtual void close();  // slot 1, retail 0x50cc40
+    virtual int main(message& msg);  // slot 2, folded onto 0x4ec560
     virtual ~mouseManager();
     void hidePointer();
     void showPointer(bool restore);
@@ -112,13 +110,11 @@ public:
     // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
     // retail 0x601a00 retains that call. Preserve this specific friend.
     friend unsigned char ddSetFullScreenStatus(int newStatus);
-                 // 0x50cc80
     void showSystemCursor(unsigned char showIt);
-    void reset();
+    void reset();  // 0x50cc80
 
 private:
     void loadFrame(int newFrame);
-
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

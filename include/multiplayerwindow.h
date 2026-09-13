@@ -12,6 +12,7 @@
 // CDPlaySession and CAutoArray<T> live with their owning compiland; this
 // header used to carry private copies of both behind a per-TU macro.
 #include "dxplay.h"
+#include "hotseat.h"
 
 struct _DPCOMPORTADDRESS;
 
@@ -28,11 +29,8 @@ union TIPv4SocketAddress {
 public:
     sockaddr_in m_internet;
     sockaddr m_generic;
-
 };
 SIZE(TIPv4SocketAddress, 0x10);
-
-#include "hotseat.h"
 
 // The private edit hierarchy is defined in multiplayerwindow.cpp.
 class CHotSeatEdit;
@@ -53,10 +51,8 @@ public:
         OKAY_ID = 519,
         BACK_ID = 520
     };
-    CHotSeatEdit* m_edit[8];
-       // +0x50
-    textWidget* m_rollover;
-      // +0x70
+    CHotSeatEdit* m_edit[8];  // +0x50
+    textWidget* m_rollover;  // +0x70
     THelpText m_hotSeatHelp[20];
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
@@ -71,7 +67,6 @@ public:
     void updateOK();
     unsigned char onOK();
     virtual textWidget* getRolloverWidget();
-
 };
 SIZE(CHotSeatDlg, 0x114);
 
@@ -86,7 +81,6 @@ public:
     };
     bool getSessionInfo(unsigned long index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
-
 };
 SIZE(CHeroSessions, 0x14);
 
@@ -125,30 +119,18 @@ public:
         PLAYER_NAME_ID = 125,
         IP_ADDRESS_ID = 126
     };
-    CSprite* m_gameState;
-                     // +0x50
-    unsigned char m_inSessionList;
-            // +0x54
-    unsigned char m_showSplash;
-               // +0x55
-    int m_currentGame;
-                        // +0x58
-    int m_currentIndex;
-                       // +0x5c
-    CHeroSessions* m_sessions;
-               // +0x60
-    unsigned long m_sessTimer;
-                // +0x64
-    unsigned long m_sessionRefreshTimeout;
-    // +0x68
-    char m_localIpAddress[80];
-                // +0x6c
-    textWidget* m_playerName;
-                 // +0xbc (DC textEntryWidget*)
-    unsigned char m_hostJoinScreen;
-           // +0xc0
-    widget* m_splash;
-             // +0xfc
+    CSprite* m_gameState;  // +0x50
+    unsigned char m_inSessionList;  // +0x54
+    unsigned char m_showSplash;  // +0x55
+    int m_currentGame;  // +0x58
+    int m_currentIndex;  // +0x5c
+    CHeroSessions* m_sessions;  // +0x60
+    unsigned long m_sessTimer;  // +0x64
+    unsigned long m_sessionRefreshTimeout;  // +0x68
+    char m_localIpAddress[80];  // +0x6c
+    textWidget* m_playerName;  // +0xbc (DC textEntryWidget*)
+    unsigned char m_hostJoinScreen;  // +0xc0
+    widget* m_splash;  // +0xc4 (DC bitmapBorder*)
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
@@ -181,35 +163,20 @@ public:
     }
 
 private:
-                         // +0xc4 (DC bitmapBorder*)
-    widget* m_hotSeat;
-                        // +0xc8 (DC button*)
-    widget* m_ipx;
-                            // +0xcc
-    widget* m_tcp;
-                            // +0xd0
-    widget* m_modem;
-                          // +0xd4
-    widget* m_direct;
-                         // +0xd8
-    widget* m_online;
-                         // +0xdc
-    widget* m_host;
-                           // +0xe0
-    widget* m_join;
-                           // +0xe4
-    widget* m_search;
-                         // +0xe8
-    widget* m_cancel;
-                         // +0xec
-    widget* m_gameSlider;
-                     // +0xf0 (DC slider*)
-    textWidget* m_sessNameHeader;
-             // +0xf4
-    textWidget* m_userNameHeader;
-             // +0xf8
-    textWidget* m_rolloverWidget;
-
+    widget* m_hotSeat;  // +0xc8 (DC button*)
+    widget* m_ipx;  // +0xcc
+    widget* m_tcp;  // +0xd0
+    widget* m_modem;  // +0xd4
+    widget* m_direct;  // +0xd8
+    widget* m_online;  // +0xdc
+    widget* m_host;  // +0xe0
+    widget* m_join;  // +0xe4
+    widget* m_search;  // +0xe8
+    widget* m_cancel;  // +0xec
+    widget* m_gameSlider;  // +0xf0 (DC slider*)
+    textWidget* m_sessNameHeader;  // +0xf4
+    textWidget* m_userNameHeader;  // +0xf8
+    textWidget* m_rolloverWidget;  // +0xfc
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

@@ -40,7 +40,6 @@ public:
     std::vector<textWidget*> m_lineImages;
     type_text_slider* m_textSlider;
     Bitmap16Bit* m_background;
-
 };
 SIZE(type_text_scroller, 0x5c);
 

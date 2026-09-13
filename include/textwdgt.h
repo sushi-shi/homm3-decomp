@@ -43,7 +43,6 @@ public:
     // Main calls this canonical header helper at textwdgt.cpp:152; retail
     // expands its single member store in the WIDGET_SET_COLOR arm.
     void setColor(font::TColor newColor) { m_color = newColor; }
-
 };
 
 class Bitmap816;
@@ -64,8 +63,7 @@ public:
                            int style);
     // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw() const;
-  // slot 4, retail 0x5bc7f0
+    virtual void draw() const;  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

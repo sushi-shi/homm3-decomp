@@ -47,7 +47,6 @@ public:
         m_extra = 0;
         m_window = 0;
     }
-
 };
 SIZE(message, 32);
 
@@ -106,7 +105,6 @@ public:
         int dx = m_x - p2.m_x;
         return dx * dx + dy * dy;
     }
-
 };
 
 // The shared inclusive rectangle used by the adventure and combat drawing
@@ -158,7 +156,6 @@ public:
         if (m_maxY < limits.m_maxY)
             m_maxY = limits.m_maxY;
     }
-
 };
 SIZE(SLimitData, 0x10);
 
@@ -169,10 +166,8 @@ extern int* g_videoGameState;
 
 class CNetPlayerInfo {
 public:
-    unsigned long m_dpid;
-   // +0x00
-    char m_name[24];
-       // +0x04
+    unsigned long m_dpid;  // +0x00
+    char m_name[24];  // +0x04
     int m_version;
     VA(0x0057F720, 0x18)  // dc 0x11f5e4
     CNetPlayerInfo()
@@ -188,7 +183,6 @@ public:
         strcpy(m_name, name);
         m_version = *g_videoGameState;
     }
-
 };
 SIZE(CNetPlayerInfo, 32);
 
@@ -196,12 +190,9 @@ SIZE(CNetPlayerInfo, 32);
 // Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.
 class GameTime {
 public:
-    static unsigned long get();
-             // 0x4f82e0
-    static void delayTil(unsigned long time);
-  // 0x4f82f0
-    static void delay(int interval);
-        // 0x4f83c0
+    static unsigned long get();  // 0x4f82e0
+    static void delayTil(unsigned long time);  // 0x4f82f0
+    static void delay(int interval);  // 0x4f83c0
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
@@ -239,7 +230,6 @@ public:
             lag = interval;
         return thisFrame + lag;
     }
-
 };
 
 #endif /* HOMM3_STRUCT_H */

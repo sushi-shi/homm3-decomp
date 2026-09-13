@@ -31,8 +31,7 @@ public:
     ~TGzFile();
     virtual int read(void* data, int size);
     virtual int write(const void* data, int size);
-    void* m_file;
-  // +0x04, the gzFile handle gzopen returned
+    void* m_file;  // +0x04, the gzFile handle gzopen returned
 };
 
 #endif  /* HOMM3_GZFILE_H */

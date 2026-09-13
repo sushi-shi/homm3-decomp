@@ -11,11 +11,9 @@ class border : public widget {
 public:
     border(int x, int y, int w, int h, int id, int style);
     border();
-    virtual int main(message& msg);
-  // slot 2, retail 0x44ff60
+    virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw() const;
-             // slot 4
+    virtual void draw() const;  // slot 4
     // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
@@ -52,8 +50,7 @@ public:
                        int color, int style);
     // Implicit destructor; CodeView dc 0x54dd8 compgenx.
     virtual int main(message& msg);
-    virtual void draw() const;
-             // slot 4, retail 0x4501e0
+    virtual void draw() const;  // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
 
@@ -90,13 +87,12 @@ public:
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;
     void draw2() const;
-    virtual int main(message& msg);
+    virtual int main(message& msg);  // slot 2, retail 0x450860
     // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
     // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned
     // COMDAT. Its inlined `return` is what gives Main retail's single
     // `return 1` tail rather than a duplicated epilogue.
     void setImage(const char* bitmapName);
-  // slot 2, retail 0x450860
 };
 
 // The free palette painters (declared for button.cpp in button.h;

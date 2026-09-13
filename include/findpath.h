@@ -159,7 +159,7 @@ public:
                          * g_mapWidth + point.m_x];
     }
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
-    long getDangerValue(type_point point) const;
+    long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
                       unsigned char isBoat,
@@ -167,7 +167,6 @@ public:
                       int curTempMobility,
                       unsigned char seedContinuation);
     int buildPath(const hero* currentHero, long limit);
-  // 0x42ed30 (ai_player.obj)
 
     void clearPath()
     {
@@ -213,14 +212,12 @@ public:
     bool limitWasReached() const { return m_limitReached != 0; }
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lowerDoor();
-  // 0x4b3bb0
     unsigned char findCombatPath(const army* currentArmy, long currentGroup,
                                  long destination, unsigned char inPlacementPhase,
-                                 long limit, long baseSpeed);
+                                 long limit, long baseSpeed);  // 0x4b3400
     // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
     // enemy occupied cells marked when they border that reachable set.
     void markTeleport(const army* currentArmy, long currentGroup);
-  // 0x4b3400
     // 0x4b2da0. PARAMETER LIST CORRECTED 2026-08-08 to the DC roster's
     // (thisArmy, current_group, limit, in_placement_phase, base_speed);
     // the earlier all-long (target, side, budget, start, limit) guess is
@@ -279,7 +276,7 @@ private:
     void init();
     void markEnemy(long hex, long cost);
     void pushCombatPoint(int index, int direction, int cost,
-                         int flightCost, int limit);
+                         int flightCost, int limit);  // 0x4b3bb0
     // DC findpath.cpp:271 proves both pathCell reference parameters.
     void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
                    int moveCost, int limit, long barrierValue,
@@ -324,7 +321,6 @@ private:
     // +0x6c. `long*` (not void*) from get_danger_value's `[ecx + edx*4]`
     // load - the danger map is one signed word per cell.
     long* m_dangerZones;
-
 };
 
 // Original: get_danger_cell; FindPath.h:265, dc 0x37e98. No retail row - /Ob2
@@ -370,7 +366,6 @@ public:
     signed char m_x;
     signed char m_y;
     short m_frameOffset;
-
 };
 SIZE(tilePoint, 4);
 

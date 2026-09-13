@@ -60,10 +60,6 @@
 #include "turn_update_msg.h"
 #include "spellbookwindow.h"
 #include "townmgr_globals.h"
-// puzzlewindow.h contains the complete UI class and tile layout. game.obj
-// needs only this narrow cross-TU entry point; keeping the declaration here
-// avoids importing unrelated UI types into its codegen-sensitive closure.
-type_point aiAttemptPuzzleGuess(long player);
 // playerData::ClearNetInfo and GetName read the default player name from
 // the canonical genrltxt.txt TTextResource;
 // playerData::AssignNetInfo reads a CNetPlayerInfo.
@@ -79,7 +75,6 @@ type_point aiAttemptPuzzleGuess(long player);
 #include "netgame.h"
 #include "kb.h"
 #include "kbwin.h"
-#include "kb.h"
 #include "cursor.h"
 #include "mousemgr.h"
 #include "puzzlewindow.h"
@@ -100,6 +95,8 @@ type_point aiAttemptPuzzleGuess(long player);
 #include <fcntl.h>
 #include <io.h>
 #include <sys/stat.h>
+
+type_point aiAttemptPuzzleGuess(long player);
 
 // Retail/HD evidence names the hourglass animation phase; NextPlayer is its
 // game.obj writer. The second dword is the byte-proven autosave preference

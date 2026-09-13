@@ -174,7 +174,6 @@ public:
     // splits the packed count|creature dword with `shr 16`, which a
     // signed long cannot produce.
     unsigned long m_qualifier;
-
 };
 SIZE(type_dialog_resource, 8);
 
@@ -186,7 +185,6 @@ public:
     TCreatureType m_creature;
     short m_bonus;
     short m_dwelling;
-
 };
 SIZE(type_horde_effect, 8);
 
@@ -220,7 +218,6 @@ public:
     char m_isGrouped;
     std::bitset<70> m_spells;
     std::bitset<70> m_fixedSpells;
-
 };
 SIZE(TownExtra, 0x88);
 
@@ -629,7 +626,6 @@ protected:
     // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
     static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
-
 };
 SIZE(town, 360);
 

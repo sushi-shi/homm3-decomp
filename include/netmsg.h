@@ -151,7 +151,6 @@ public:
         m_dpidFrom = 0;
         m_uncompressedSize = 0;
     }
-
 };
 SIZE(CNetMsg, 20);
 
@@ -161,7 +160,6 @@ class CReadyToPlayMsg : public CNetMsg {
 public:
     CReadyToPlayMsg()
         : CNetMsg(RS_READY_TO_PLAY, sizeof(CReadyToPlayMsg)) {}
-
 };
 SIZE(CReadyToPlayMsg, 0x14);
 
@@ -172,7 +170,6 @@ public:
     // header at 0x5550c2..0x5550d8; no default-base workaround is needed.
     CAllReadyToPlayMsg()
         : CNetMsg(RS_ALL_READY_TO_PLAY, sizeof(CAllReadyToPlayMsg)) {}
-
 };
 SIZE(CAllReadyToPlayMsg, 0x14);
 
@@ -201,7 +198,6 @@ public:
         m_nextActionGridIndex2 = nextActionGridIndex2;
         m_seed = seed;
     }
-
 };
 SIZE(CCombatMainMsg, 0x28);
 
@@ -233,8 +229,7 @@ public:
     // include-set-sensitive rows of the five includers on merge.
     unsigned char remoteFn00512C80(unsigned long dpid, bool compressMsg,
                                     bool guaranteed);
-    CNetMsg m_netmsg;
-  // +0x04
+    CNetMsg m_netmsg;  // +0x04
 };
 SIZE(t_complex_net_message, 0x18);
 
@@ -266,40 +261,23 @@ public:
     }
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
-    type_point m_point;
-             // +0x018
-    unsigned char m_leftHero;
-       // +0x01c
-    unsigned char m_rightTown;
-      // +0x01d
-    unsigned char m_rightHero;
-      // +0x01e
-    int m_seed;
-                     // +0x020
-    int m_winner;
-                   // +0x024
-    unsigned char m_retreatWin;
-     // +0x028
-    unsigned char m_combatSurrender;
-    // +0x029
-    int m_leftOwner;
-                // +0x02c
-    int m_leftGold;
-                 // +0x030
-    int m_rightOwner;
-               // +0x034
-    int m_rightGold;
-                // +0x038
-    armyGroup m_leftArmyGroup;
-      // +0x03c
-    armyGroup m_rightArmyGroup;
-     // +0x074
-    town m_town;
-                    // +0x0b0
-    hero m_leftHeroData;
-            // +0x218
-    hero m_rightHeroData;
-           // +0x6aa
+    type_point m_point;  // +0x018
+    unsigned char m_leftHero;  // +0x01c
+    unsigned char m_rightTown;  // +0x01d
+    unsigned char m_rightHero;  // +0x01e
+    int m_seed;  // +0x020
+    int m_winner;  // +0x024
+    unsigned char m_retreatWin;  // +0x028
+    unsigned char m_combatSurrender;  // +0x029
+    int m_leftOwner;  // +0x02c
+    int m_leftGold;  // +0x030
+    int m_rightOwner;  // +0x034
+    int m_rightGold;  // +0x038
+    armyGroup m_leftArmyGroup;  // +0x03c
+    armyGroup m_rightArmyGroup;  // +0x074
+    town m_town;  // +0x0b0
+    hero m_leftHeroData;  // +0x218
+    hero m_rightHeroData;  // +0x6aa
 };
 SIZE(CCombatInitMsg, 0xb40);
 
@@ -332,7 +310,6 @@ public:
           m_makeOrig(makeOrig)
     {
     }
-
 };
 SIZE(CGameTransmitInitMsg, 0x24);
 
@@ -347,7 +324,6 @@ public:
           m_blockNbr(blockNbr)
     {
     }
-
 };
 SIZE(CGameTransmitReqMsg, 0x18);
 
@@ -388,7 +364,6 @@ public:
 
 protected:
     CGameTransmitMainMsg();
-
 };
 SIZE(CGameTransmitMainMsg, 0x1c);
 
@@ -399,7 +374,6 @@ public:
                   sizeof(CGameTransmitConfirmEndMsg))
     {
     }
-
 };
 SIZE(CGameTransmitConfirmEndMsg, 0x14);
 
@@ -421,7 +395,6 @@ public:
           m_diffSize(diffSize)
     {
     }
-
 };
 SIZE(CGameTransmitEndMsg, 0x28);
 
@@ -439,7 +412,6 @@ public:
     {
         return strlen(m_text) + sizeof(CNetMsg) + 1;
     }
-
 };
 
 // netmsg.h:423 in the DC roster. Retail's CDPlayHeroes drop paths prove the
@@ -454,14 +426,12 @@ public:
     {
         m_dpidFrom = dpid;
     }
-
 };
 SIZE(CPlayerDropMsg, 0x18);
 
 class CPlayerDroppedMsg : public CNetMsg {
 public:
     int m_gamePos;
-
 };
 
 // Dreamcast supplies the class/member names and the 24-byte size. Retail's
@@ -473,7 +443,6 @@ public:
     CTurnUpdateMsg(int gamePos)
         : CNetMsg(RS_TURN_UPDATE, sizeof(CTurnUpdateMsg)),
           m_gamePos(gamePos) {}
-
 };
 SIZE(CTurnUpdateMsg, 24);
 
@@ -486,7 +455,6 @@ public:
     CPlayerDropUpdateMsg(unsigned long dpidDropped)
         : CNetMsg(RS_PLAYER_DROP_UPDATE, sizeof(CPlayerDropUpdateMsg)),
           m_dpidDropped(dpidDropped) {}
-
 };
 SIZE(CPlayerDropUpdateMsg, 0x18);
 
@@ -500,7 +468,6 @@ public:
     CPlayerDeadMsg(int gamePos)
         : CNetMsg(RS_PLAYER_DEAD, sizeof(CPlayerDeadMsg)),
           m_gamePos(gamePos) {}
-
 };
 SIZE(CPlayerDeadMsg, 0x18);
 
@@ -509,13 +476,10 @@ SIZE(CPlayerDeadMsg, 0x18);
 // extent and every PC offset while copying the two skill bands into a hero.
 class CHeroLevelUpdateMsg : public CNetMsg {
 public:
-    int m_hero;
-                    // +0x14
-    signed char m_ssLevel[28];
-     // +0x18
-    signed char m_stats[4];
-        // +0x34
-    int m_numSSs;
+    int m_hero;  // +0x14
+    signed char m_ssLevel[28];  // +0x18
+    signed char m_stats[4];  // +0x34
+    int m_numSSs;  // +0x38
     // DC netmsg.h:488 (dc 0x9cb78): DoCombat expands this header body.
     CHeroLevelUpdateMsg(int hero, int numSSs,
                         signed char* ssLevel,
@@ -527,7 +491,6 @@ public:
         memcpy(m_stats, stats, sizeof(m_stats));
         m_numSSs = numSSs;
     }
-                  // +0x38
 };
 SIZE(CHeroLevelUpdateMsg, 0x3c);
 
@@ -549,7 +512,6 @@ public:
         this->m_gamePos = gamePos;
         m_victoryCondition = victoryConditionStruct;
     }
-
 };
 SIZE(CPlayerWonMsg, 0x64);
 
@@ -569,7 +531,6 @@ public:
         this->m_loser = loser;
         m_lossCondition = lossConditionStruct;
     }
-
 };
 SIZE(CPlayerLostMsg, 0x3c);
 
@@ -579,7 +540,6 @@ public:
     // this CNetMsg construction as a distinct source boundary.
     CMapChange(eRS_Messages id, unsigned long size)
         : CNetMsg(id, size) {}
-
 };
 
 // Dreamcast CodeView names CMCMoveHero and its m_heroId/m_dir/m_standEnd/
@@ -607,7 +567,6 @@ public:
         : CMapChange(RS_MOVE_HERO, 0x1c),
           m_heroId(heroId), m_dir(direction), m_standEnd(standEnd),
           m_point(point) {}
-
 };
 #pragma pack(pop)
 SIZE(CMCMoveHero, 0x1b);
@@ -625,7 +584,6 @@ public:
     // above it. Same member-initialiser shape as CMCMoveHero's next door.
     CMCTeleportHero(int id, type_point location)
         : CMapChange(RS_TELEPORT_HERO, 0x1c), m_heroId(id), m_point(location) {}
-
 };
 SIZE(CMCTeleportHero, 0x1c);
 
@@ -644,7 +602,6 @@ public:
         m_mineId = id;
         m_playerPos = player;
     }
-
 };
 SIZE(CMCClaimMine, 0x1c);
 
@@ -658,7 +615,6 @@ public:
         m_townId = id;
         m_playerPos = player;
     }
-
 };
 SIZE(CMCClaimTown, 0x1c);
 
@@ -669,7 +625,6 @@ public:
     CMCClaimGenerator(int id, int player)
         : CMapChange(RS_CLAIM_GENERATOR, sizeof(CMCClaimGenerator)),
           m_generatorId(id), m_playerPos(player) {}
-
 };
 
 class CMCClaimGarrison : public CMapChange {
@@ -684,7 +639,6 @@ public:
           m_garrisonId(id), m_playerPos(player)
     {
     }
-
 };
 
 class CMCClaimShipYard : public CMapChange {
@@ -694,7 +648,6 @@ public:
     CMCClaimShipYard(type_point location, int player)
         : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
           m_point(location), m_playerPos(player) {}
-
 };
 
 class CMCBuildBoat : public CMapChange {
@@ -704,7 +657,6 @@ public:
     CMCBuildBoat(type_point location, int player)
         : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
           m_point(location), m_playerPos(player) {}
-
 };
 
 // Dreamcast CodeView names the class, its single `m_point` member at +0x14
@@ -719,7 +671,6 @@ public:
     CMCEraseObject(type_point location)
         : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject)),
           m_point(location) {}
-
 };
 SIZE(CMCEraseObject, 0x18);
 
@@ -737,7 +688,6 @@ public:
           m_point(location)
     {
     }
-
 };
 SIZE(CMCDeadHero, 0x1c);
 
@@ -755,7 +705,6 @@ public:
           m_heroId(id), m_point(location), m_playerPos(player)
     {
     }
-
 };
 SIZE(CMCRecruitHero, 0x20);
 
@@ -769,7 +718,6 @@ public:
     CMCDeadPlayer(int player)
         : CMapChange(RS_DEAD_PLAYER, sizeof(CMCDeadPlayer)),
           m_playerPos(player) {}
-
 };
 SIZE(CMCDeadPlayer, 0x18);
 
@@ -791,7 +739,6 @@ public:
     {
         this->m_heroId = heroId;
     }
-
 };
 
 // advmgr.obj joins the gate for CSetVisibilityMsg alone (its two
@@ -812,7 +759,6 @@ public:
     CSetVisibilityMsg(type_point point, int playerPos, int range)
         : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg)),
           m_point(point), m_playerPos(playerPos), m_range(range) {}
-
 };
 SIZE(CSetVisibilityMsg, 0x20);
 
@@ -830,7 +776,6 @@ public:
     CResetVisibilityMsg(type_point point, int playerPos, int range)
         : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg)),
           m_point(point), m_playerPos(playerPos), m_range(range) {}
-
 };
 SIZE(CResetVisibilityMsg, 0x20);
 
@@ -841,7 +786,6 @@ public:
     CEndPlacementPhaseMsg()
         : CNetMsg(RS_END_PLACEMENT_PHASE,
                   sizeof(CEndPlacementPhaseMsg)) {}
-
 };
 SIZE(CEndPlacementPhaseMsg, 0x14);
 
@@ -859,7 +803,6 @@ public:
     {
         m_quick = quick;
     }
-
 };
 SIZE(CCombatTypeMsg, 0x18);
 
@@ -878,7 +821,6 @@ public:
         m_left = *left;
         m_right = *right;
     }
-
 };
 SIZE(CTradeRequestMsg, 0x938);
 
@@ -889,7 +831,6 @@ public:
     unsigned long m_pingTime;
     CPingMsg(unsigned long pingTime, eRS_Messages id)
         : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
-
 };
 SIZE(CPingMsg, 0x18);
 
@@ -903,7 +844,6 @@ public:
     unsigned long m_pingTime;
     CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
         : CNetMsg(id, sizeof(CPingResponseMsg)), m_pingTime(pingTime) {}
-
 };
 SIZE(CPingResponseMsg, 0x18);
 
@@ -918,7 +858,6 @@ public:
     CGiftMsg(int niceGuy, int resource, int qty)
         : CNetMsg(RS_GIFT, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
           m_resource(resource), m_qty(qty) {}
-
 };
 SIZE(CGiftMsg, 32);
 
@@ -930,7 +869,6 @@ public:
         : CNetMsg(RS_GIFT_REQUEST, sizeof(CGiftRequestMsg)),
           m_greedyGuy(greedyGuy),
           m_resource(resource) {}
-
 };
 
 SIZE(CGiftRequestMsg, 28);
@@ -949,7 +887,6 @@ public:
     {
         this->m_gamePos = gamePos;
     }
-
 };
 SIZE(CNormalWinMsg, 0x18);
 
@@ -961,7 +898,6 @@ public:
           m_dpid(dpid)
     {
     }
-
 };
 SIZE(CDestroyPlayerMsg, 0x18);
 
@@ -974,7 +910,6 @@ public:
         : CNetMsg(RS_GAME_TRANSMIT_ACK, sizeof(CGameXferAckMsg))
     {
     }
-
 };
 SIZE(CGameXferAckMsg, 0x14);
 

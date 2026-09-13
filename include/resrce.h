@@ -71,7 +71,7 @@ enum EResourceType {
 class resource {
 public:
     resource(const char* newName, EResourceType newType);
-    virtual ~resource();
+    virtual ~resource();  // slot 0
     // Original: resource::get_resType / get_Name; resrce.h:33/34.
     EResourceType getResType() const { return m_resType; }
     const char* getName() const { return m_name; }
@@ -100,11 +100,8 @@ private:
     int m_referenceCount;
 
 public:
-         // slot 0
-    virtual void dispose();
-      // slot 1, base body 0x55d0f0
-    virtual unsigned int getSize() const = 0;
-  // slot 2, pure at the base
+    virtual void dispose();  // slot 1, base body 0x55d0f0
+    virtual unsigned int getSize() const = 0;  // slot 2, pure at the base
 };
 SIZE(resource, 28);
 

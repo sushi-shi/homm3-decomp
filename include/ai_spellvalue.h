@@ -109,18 +109,12 @@ protected:
                                long timesCastable) const;
     long getMassDamageSpellValue(SpellID spell, int mastery,
                                      long timesCastable) const;
-    const hero* m_ourHero;
-   // +0x00
-    long m_stackValue;
-       // +0x04
-    long m_power;
-             // +0x08
-    long m_duration;
-          // +0x0c
-    long m_mana;
-              // +0x10
-    std::vector<type_creature_value> m_list;
-  // +0x14
+    const hero* m_ourHero;  // +0x00
+    long m_stackValue;  // +0x04
+    long m_power;  // +0x08
+    long m_duration;  // +0x0c
+    long m_mana;  // +0x10
+    std::vector<type_creature_value> m_list;  // +0x14
 };
 SIZE(type_spellvalue, 0x24);
 

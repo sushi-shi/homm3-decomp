@@ -12,6 +12,7 @@
 #include "armygrp.h"
 // SMonFrameInfo, the type of the embedded `sMonFrameInfo` row at +0x110.
 #include "monframeinfo.h"
+#include "includes.h"
 
 class hero;
 class armyGroup;
@@ -20,8 +21,6 @@ class sample;
 class CSprite;
 
 inline const char* getArmyName(int type, int count);
-
-#include "includes.h"
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7

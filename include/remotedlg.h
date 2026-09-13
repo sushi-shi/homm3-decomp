@@ -57,40 +57,28 @@ public:
     CAnimatedDlg();
     virtual ~CAnimatedDlg();
     virtual unsigned char setup(const char* text, font* currentFont,
-                                const char* spriteName, int seq);
-  // slot 13
+                                const char* spriteName, int seq);  // slot 13
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
-                                int& winWidth, int& winHeight);
-  // slot 12
-    virtual int handleMessage(message& msg);
-                    // slot 3
+                                int& winWidth, int& winHeight);  // slot 12
+    virtual int handleMessage(message& msg);  // slot 3
     virtual void drawWindow(unsigned char update, int lowID,
-                            int highID);
+                            int highID);  // slot 5
     void tickAnimation();
     void drawSprite();
 
 protected:
-    unsigned long m_lastTick;
-    // +0x58
-    int m_spriteX;
-               // +0x5c
-    int m_spriteY;
-               // +0x60
-    int m_spriteFrame;
-           // +0x64
-    int m_seq;
-                        // slot 5
+    unsigned long m_lastTick;  // +0x58
+    int m_spriteX;  // +0x5c
+    int m_spriteY;  // +0x60
+    int m_spriteFrame;  // +0x64
+    int m_seq;  // +0x68
 
     void calcSpriteDimensions(CSprite* sprite, int& maxWidth,
                               int& maxHeight, int& minY);
-                   // +0x68
-    const char* m_spriteName;
-       // +0x6c
-    unsigned char m_palUpdated;
-  // +0x70
-    CSprite* m_sprite;
-          // +0x74
+    const char* m_spriteName;  // +0x6c
+    unsigned char m_palUpdated;  // +0x70
+    CSprite* m_sprite;  // +0x74
 };
 SIZE(CAnimatedDlg, 0x78);
 
@@ -102,23 +90,18 @@ SIZE(CAnimatedDlg, 0x78);
 // slot 3 replaced by this class's deleting destructor and message handler.
 class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
-    unsigned long m_startTime;
-             // +0x78
-    unsigned long m_lastMsg;
-               // +0x7c
-    CNetMsgHandlerPause m_netMsgHandler;
+    unsigned long m_startTime;  // +0x78
+    unsigned long m_lastMsg;  // +0x7c
+    CNetMsgHandlerPause m_netMsgHandler;  // +0x80
     CWaitForReadyPlayersDlg();
     void wait();
-    virtual int handleMessage(message& msg);
+    virtual int handleMessage(message& msg);  // slot 3
     bool allPlayersReady();
 
 protected:
-  // +0x80
-    unsigned char m_playerReady[8];
-  // slot 3
+    unsigned char m_playerReady[8];  // +0x90
 
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
-         // +0x90
 };
 SIZE(CWaitForReadyPlayersDlg, 0x98);
 
@@ -138,23 +121,19 @@ SIZE(CWaitForReadyPlayersDlg, 0x98);
 // DrawWindow (0x554e90).
 class CLevelPickWaitDlg : public CAnimatedDlg {
 public:
-    int m_fromWho;
-                        // +0x78
-    CNetMsgHandlerPause m_netMsgHandler;
-  // +0x7c
+    int m_fromWho;  // +0x78
+    CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
     // Public: advManager::DoCombat re-runs the local CheckLevel when the
     // remote player dropped mid-pick. Access-only change.
-    unsigned char m_playerDropped;
+    unsigned char m_playerDropped;  // +0x8c
     CLevelPickWaitDlg();
     void waitForLevels(int fromWho);
-    virtual int handleMessage(message& msg);
+    virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-  // slot 3
 
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
     void onHeroLevelUpdate(CNetMsg* netMsg);
-        // +0x8c
 };
 SIZE(CLevelPickWaitDlg, 0x90);
 
@@ -168,15 +147,13 @@ SIZE(CLevelPickWaitDlg, 0x90);
 // by those three bodies.
 class CWaitForRemoteBattleDlg : public CAnimatedDlg {
 public:
-    int m_playerPos;
-                         // +0x78
+    int m_playerPos;  // +0x78
     CCombatInitMsg* m_combatInitMsgPointer;
     CWaitForRemoteBattleDlg();
     void wait(int playerPos);
-    virtual int handleMessage(message& msg);
+    virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-  // slot 3
 
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
@@ -184,12 +161,9 @@ public:
     // Public tail: advManager::DoCombat reads the received flag and
     // hands the payload message straight to ReceiveHeroTownData.
     // Access-only change - no member moved, no declarator added.
-    CCombatInitMsg m_combatInitMsg;
-          // +0x80 (retail by-value copy)
-    CNetMsgHandlerPause m_netMsgHandler;
-     // +0xbc0
-    unsigned char m_combatInitMsgReceived;
-   // +0xbd0
+    CCombatInitMsg m_combatInitMsg;  // +0x80 (retail by-value copy)
+    CNetMsgHandlerPause m_netMsgHandler;  // +0xbc0
+    unsigned char m_combatInitMsgReceived;  // +0xbd0
 };
 // CCombatInitMsg gives the containing dialog eight-byte alignment, so the
 // received byte's +0xbd1 end rounds to 0xbd8. DoCombat's local begins at
@@ -216,12 +190,9 @@ public:
     unsigned char isSaved();
 
 protected:
-    unsigned char m_screenSaved;
-  // +0x38
-    int m_x;
-                    // +0x3c
-    int m_y;
-                    // +0x40
+    unsigned char m_screenSaved;  // +0x38
+    int m_x;  // +0x3c
+    int m_y;  // +0x40
 };
 SIZE(CSaveScreen, 0x44);
 
@@ -249,21 +220,14 @@ public:
     void restoreScreen();
 
 protected:
-    int m_x;
-                     // +0x00
-    int m_y;
-                     // +0x04
-    int m_lastFrame;
-             // +0x08
-    unsigned char m_started;
-     // +0x0c
-    unsigned char m_sending;
-     // +0x0d
-    unsigned char m_drawText;
-    // +0x0e
-    CSaveScreen* m_saveScreen;
+    int m_x;  // +0x00
+    int m_y;  // +0x04
+    int m_lastFrame;  // +0x08
+    unsigned char m_started;  // +0x0c
+    unsigned char m_sending;  // +0x0d
+    unsigned char m_drawText;  // +0x0e
+    CSaveScreen* m_saveScreen;  // +0x10
     void drawCurrentFrame();
-   // +0x10
 };
 SIZE(CGameTransferSmack, 0x14);
 
@@ -282,20 +246,16 @@ SIZE(CGameTransferSmack, 0x14);
 // nothing here to declare or claim for it.
 class CGameTransferDlg : public CTextDialog {
 public:
-  // slot 12
     // Public in DC field list 0x4e47; TransmitSaveGame selects this member
     // when the progress window, rather than the adventure view, owns it.
-    CGameTransferSmack m_smack;
+    CGameTransferSmack m_smack;  // +0x58
     CGameTransferDlg(unsigned char sending);
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
-                                int& winWidth, int& winHeight);
+                                int& winWidth, int& winHeight);  // slot 12
 
 protected:
-    // +0x58
-
-    unsigned char m_sending;
-     // +0x6c
+    unsigned char m_sending;  // +0x6c
 };
 SIZE(CGameTransferDlg, 0x70);
 

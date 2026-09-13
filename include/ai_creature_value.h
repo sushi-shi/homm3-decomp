@@ -21,7 +21,6 @@ public:
     {
         return m_value > arg.m_value;
     }
-
 };
 
 #endif

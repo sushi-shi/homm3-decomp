@@ -80,7 +80,6 @@ public:
             m_available[i] = 1;
         m_numbersLeft = m_available.size();
     }
-
 };
 
 #endif

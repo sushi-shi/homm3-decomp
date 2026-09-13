@@ -54,7 +54,7 @@ public:
     // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
     void init(short newTeam) { m_team = newTeam; }
-    static float getAttackBonus(short player);
+    static float getAttackBonus(short player);  // 0x428710
 
 protected:
     short m_team;
@@ -65,16 +65,12 @@ protected:
     double m_resourceValue[7];
 
 public:
-    void calculateDemand();
-                      // 0x428740
-    void endTurn();
+    void calculateDemand();  // 0x428740
+    void endTurn();  // 0x428dd0
     long getMagusHutValue() const { return m_magusHutValue; }
-
-               // 0x429110
 
     // DC ai_player.h:273-274, dc 0x37df0: clear the cached value.
     void clearMagusHutValue() { m_magusHutValue = 0; }
-  // 0x428710
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
@@ -82,8 +78,7 @@ public:
     {
         return m_resourceValue[resource];
     }
-               // 0x429110
-    void startTurn();
+    void startTurn();  // 0x4297c0
     static void setAttackBonuses(float computerBonus,
                                    float humanBonus)
     {
@@ -92,40 +87,32 @@ public:
     }
 
 protected:
-                              // 0x428dd0
-    void makeGift(long playerId);
+    void makeGift(long playerId);  // 0x429110
 
 public:
-  // 0x42a150
-    void buyCreatures(hero* currentHero, town* currentTown);
-  // 0x42ba60
-    void buyMageGuild(hero* currentHero, town* currentTown);
+    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
+    void buyMageGuild(hero* currentHero, town* currentTown);  // 0x42beb0
     bool hireHeroes();
-                            // 0x4297c0
-    void resetMagusHutValue();
+    void resetMagusHutValue();  // 0x429ab0
     void tradeResources(const int* cost, long number);
 
 protected:
     bool buildMarkets(int* supply);
-                 // 0x429ab0
-    void calculateReserve();
+    void calculateReserve();  // 0x429ad0
     bool canTradeResources(const int* cost, int* supply,
                              std::vector<long>& tradeQty);
     bool checkTradeSupply(const int* cost, long number, int* supply,
                             std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
-                     // 0x429ad0
-    long getTotalValue(long basicValue, int* cost);
+    long getTotalValue(long basicValue, int* cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
- // 0x42beb0
     // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
     // helper; the prohibited-creature array belongs to its body.
     void purchaseBuildings();
     static float s_attackHumanBonus;
     static float s_attackComputerBonus;
-
 };
 
 // Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
@@ -148,7 +135,6 @@ public:
     short* m_ptr;
     short m_number;
     unsigned char m_isFree;
-
 };
 SIZE(type_creature_source, 12);
 
@@ -193,7 +179,6 @@ public:
     // E:\gamedcs\ai_player.h:307, dc 0x114bd8: returns army_value_increase
     // at +0x18. The former getArmyValueIncrease spelling obscured this identity.
     long getArmyIncrease() const { return m_armyValueIncrease; }
-
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
@@ -227,7 +212,6 @@ public:
                             const long* newFunds,
                             unsigned char newHasAngelicAlliance);
     void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
-
 };
 SIZE(type_AI_creature_purchaser, 0x3c);
 
@@ -700,7 +684,6 @@ public:
     virtual ~type_artifact_effect();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
@@ -745,7 +728,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     long m_bonus;
-
 };
 
 class type_combat_artifact : public type_artifact_effect {
@@ -754,7 +736,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     long m_bonus;
-
 };
 
 class type_might_artifact : public type_combat_artifact {
@@ -762,7 +743,6 @@ public:
     type_might_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_power_artifact : public type_combat_artifact {
@@ -770,7 +750,6 @@ public:
     type_power_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_knowledge_artifact : public type_combat_artifact {
@@ -778,7 +757,6 @@ public:
     type_knowledge_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_necromancy_artifact : public type_combat_artifact {
@@ -786,7 +764,6 @@ public:
     type_necromancy_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_movement_artifact : public type_combat_artifact {
@@ -794,7 +771,6 @@ public:
     type_movement_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_spellcaster_artifact : public type_combat_artifact {
@@ -802,7 +778,6 @@ public:
     type_spellcaster_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_morale_artifact : public type_combat_artifact {
@@ -810,7 +785,6 @@ public:
     type_morale_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_luck_artifact : public type_combat_artifact {
@@ -818,7 +792,6 @@ public:
     type_luck_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_antimorale_artifact : public type_artifact_effect {
@@ -826,7 +799,6 @@ public:
     type_antimorale_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_antiluck_artifact : public type_artifact_effect {
@@ -834,7 +806,6 @@ public:
     type_antiluck_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_creature_growth_artifact : public type_artifact_effect {
@@ -846,7 +817,6 @@ public:
     // is the second constructor argument stored at +8.
     long m_bonus;
     long m_growthBonus;
-
 };
 
 class type_undead_king_cloak_artifact : public type_necromancy_artifact {
@@ -854,7 +824,6 @@ public:
     type_undead_king_cloak_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_duration_artifact : public type_power_artifact {
@@ -862,7 +831,6 @@ public:
     type_duration_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_school_artifact : public type_power_artifact {
@@ -871,7 +839,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     TSpellSchool m_school;
-
 };
 
 class type_antimagic_artifact : public type_artifact_effect {
@@ -880,7 +847,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     long m_bonus;
-
 };
 
 // Retail's vtable at 0x63b74c identifies the concrete spell-granting
@@ -893,7 +859,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     SpellID m_spell;
-
 };
 
 class type_shooter_bonus_artifact : public type_combat_artifact {
@@ -901,7 +866,6 @@ public:
     type_shooter_bonus_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_angelic_alliance_artifact : public type_might_artifact {
@@ -909,7 +873,6 @@ public:
     type_angelic_alliance_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_elixir_of_life_artifact : public type_artifact_effect {
@@ -917,7 +880,6 @@ public:
     type_elixir_of_life_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_statue_of_legion_artifact : public type_artifact_effect {
@@ -925,7 +887,6 @@ public:
     type_statue_of_legion_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
-
 };
 
 class type_tome_artifact : public type_combat_artifact {
@@ -934,7 +895,6 @@ public:
     virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
     TSpellSchool m_school;
-
 };
 
 // Retail get_value (0x432d20) prices amount * the owning AI player's
@@ -949,7 +909,6 @@ public:
                            unsigned char exact) const;
     long m_amount;
     enum EGameResource m_resource;
-
 };
 
 // --- type_artifact_effect ---

@@ -944,6 +944,18 @@ class LinkOrderOriginTest(unittest.TestCase):
 
 
 class HeaderClaimOwnershipTest(unittest.TestCase):
+    def test_removed_claim_cannot_hide_a_banked_header_body(self):
+        from dataclasses import replace
+        from homm3.match.source_ownership import header_claim_ownership
+        from homm3.match.status import MatchRow
+        d = replace(definition(), mangled='?draw@Widget@@QAEXXZ')
+        banked = {('carrier', d.mangled): MatchRow(None, 100, 100, 0x1000)}
+        self.assertTrue(header_claim_ownership([d], [], banked))
+        self.assertEqual(header_claim_ownership(
+            [replace(d, va=0x401000)], [], banked), [])
+        self.assertEqual(header_claim_ownership(
+            [replace(d, mangled='?unrelated@Widget@@QAEXXZ')], [], banked), [])
+
     def test_inactive_cpp_claim_does_not_own_header_body(self):
         from dataclasses import replace
         from types import SimpleNamespace

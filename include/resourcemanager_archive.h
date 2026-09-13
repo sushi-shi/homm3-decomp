@@ -14,7 +14,6 @@ struct TResourceArchiveList {
 public:
     int m_count;
     int* m_indices;
-
 };
 
 struct TResourceArchiveContext {
@@ -22,7 +21,6 @@ public:
     TResourceArchiveList m_sprites;
     TResourceArchiveList m_bitmaps;
     TResourceArchiveList m_sounds;
-
 };
 SIZE(TResourceArchiveContext, 0x18);
 
@@ -33,7 +31,6 @@ public:
     int m_dataSize;
     int m_width;
     int m_height;
-
 };
 SIZE(TBitmapResourceHeader, 0x0c);
 
@@ -48,7 +45,6 @@ public:
     SoundHeaderStruct** m_sounds;
     int* m_count;
     HANDLE* m_file;
-
 };
 SIZE(TSoundHeaderDescriptor, 0x0c);
 

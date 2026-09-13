@@ -238,7 +238,6 @@ public:
     signed long m_resourcePrice : 4;
     unsigned long m_guardQty : 15;
     unsigned long m_custom : 1;
-
 };
 
 struct CurrentArtifactInfo {
@@ -248,7 +247,6 @@ public:
     signed long m_resourcePrice : 4;
     unsigned long m_guardQty : 14;
     unsigned long m_custom : 1;
-
 };
 
 struct LegacySkeletonInfo {
@@ -258,7 +256,6 @@ public:
     unsigned long m_artifact : 7;
     unsigned long m_hasTreasure : 1;
     unsigned long m_tail : 18;
-
 };
 
 struct LegacyMonsterInfo {
@@ -269,7 +266,6 @@ public:
     unsigned long m_dontGrow : 1;
     unsigned long m_index : 12;
     unsigned long m_custom : 1;
-
 };
 
 struct LegacyPyramidInfo {
@@ -279,7 +275,6 @@ public:
     unsigned long m_visitedBits : 8;
     signed long m_spell : 8;
     unsigned long m_tail : 12;
-
 };
 
 struct LegacyTreasureInfo {
@@ -288,7 +283,6 @@ public:
     unsigned long m_isArtifact : 1;
     unsigned long m_goldAmount : 4;
     unsigned long m_tail : 19;
-
 };
 
 struct LegacyWagonInfo {
@@ -300,7 +294,6 @@ public:
     signed long m_artifact : 8;
     signed long m_resource : 4;
     unsigned long m_tail : 5;
-
 };
 
 struct CurrentUpgradeWagonInfo {
@@ -312,7 +305,6 @@ public:
     signed long m_artifact : 10;
     signed long m_resource : 4;
     unsigned long m_tail : 3;
-
 };
 
 struct LegacyTombInfo {
@@ -322,7 +314,6 @@ public:
     unsigned long m_visitedBits : 8;
     signed long m_artifact : 8;
     unsigned long m_tail : 11;
-
 };
 
 struct CurrentVisitedInfo {
@@ -330,7 +321,6 @@ public:
     unsigned long m_head : 5;
     unsigned long m_visitedBits : 8;
     unsigned long m_tail : 19;
-
 };
 
 struct ShipyardInfo {
@@ -340,7 +330,6 @@ public:
     unsigned int m_boatX : 8;
     unsigned int m_boatY : 8;
     unsigned int m_unused : 8;
-
 };
 SIZE(ShipyardInfo, 4);
 
@@ -369,7 +358,6 @@ public:
     unsigned long m_index : 8;
     unsigned long m_unused27 : 4;
     unsigned long m_custom : 1;
-
 };
 SIZE(MonsterInfo, 4);
 
@@ -384,7 +372,6 @@ struct CampfireInfo {
 public:
     unsigned long m_resource : 4;
     unsigned long m_size : 28;
-
 };
 SIZE(CampfireInfo, 4);
 
@@ -400,7 +387,6 @@ public:
     unsigned long m_hasArtifact : 1;
     unsigned long m_gold : 4;
     unsigned long m_tail : 17;
-
 };
 SIZE(TreasureInfo, 4);
 
@@ -438,7 +424,6 @@ public:
     signed long m_secondary : 7;
     signed long m_spell : 10;
     unsigned long m_tail : 9;
-
 };
 SIZE(ScholarInfo, 4);
 
@@ -455,7 +440,6 @@ public:
     unsigned long m_head : 13;
     signed long m_spell : 10;
     unsigned long m_tail : 9;
-
 };
 SIZE(ShrineInfo, 4);
 
@@ -485,7 +469,6 @@ struct type_water_wheel_info {
 public:
     unsigned long m_gold : 5;
     unsigned long m_tail : 27;
-
 };
 SIZE(type_water_wheel_info, 4);
 
@@ -499,7 +482,6 @@ public:
     unsigned long m_unused : 9;
     unsigned long m_amount : 4;
     unsigned long m_tail : 15;
-
 };
 SIZE(type_windmill_info, 4);
 
@@ -516,7 +498,6 @@ public:
     unsigned long m_amount : 4;
     unsigned long m_resource : 4;
     unsigned long m_tail : 18;
-
 };
 SIZE(type_lean_to_info, 4);
 
@@ -529,7 +510,6 @@ public:
     unsigned long m_unused : 1;
     unsigned long m_full : 1;
     unsigned long m_tail : 25;
-
 };
 SIZE(type_magic_spring_info, 4);
 
@@ -544,7 +524,6 @@ public:
     EGameResource m_resource : 4;
     unsigned long m_full : 1;
     unsigned long m_tail : 21;
-
 };
 SIZE(type_garden_info, 4);
 
@@ -559,7 +538,6 @@ public:
     unsigned long m_unused : 12;
     signed long m_artifact : 10;
     unsigned long m_tail : 9;
-
 };
 SIZE(type_tomb_info, 4);
 
@@ -572,7 +550,6 @@ public:
     unsigned long m_unused : 13;
     signed long m_skill : 7;
     unsigned long m_tail : 12;
-
 };
 SIZE(type_witch_hut_info, 4);
 
@@ -586,7 +563,6 @@ public:
     unsigned long m_unused : 13;
     signed long m_luck : 4;
     unsigned long m_tail : 15;
-
 };
 SIZE(type_fountain_info, 4);
 
@@ -599,7 +575,6 @@ public:
     unsigned long m_unused : 5;
     unsigned long m_visited : 8;
     unsigned long m_tail : 19;
-
 };
 SIZE(type_cell_visited_info, 4);
 
@@ -619,7 +594,6 @@ public:
     unsigned long m_unused : 12;
     signed long m_spell : 8;
     unsigned long m_tail : 11;
-
 };
 SIZE(type_pyramid_info, 4);
 
@@ -663,7 +637,6 @@ public:
     signed long m_artifact : 10;
     unsigned long m_hasTreasure : 1;
     unsigned long m_tail : 15;
-
 };
 SIZE(type_skeleton_info, 4);
 
@@ -679,7 +652,6 @@ public:
     EGameResource m_resourcePrice : 4;
     unsigned long m_guardQty : 14;
     unsigned long m_custom : 1;
-
 };
 SIZE(MapArtifactInfo, 4);
 
@@ -692,7 +664,6 @@ public:
     unsigned long m_unused : 13;
     signed long m_price : 3;
     unsigned long m_tail : 16;
-
 };
 SIZE(type_tree_info, 4);
 
@@ -704,7 +675,6 @@ public:
     unsigned long m_unused : 13;
     unsigned long m_index : 12;
     unsigned long m_tail : 7;
-
 };
 SIZE(type_creature_bank_info, 4);
 
@@ -713,7 +683,6 @@ public:
     unsigned long m_unused : 13;
     unsigned long m_index : 12;
     unsigned long m_tail : 7;
-
 };
 SIZE(type_university_info, 4);
 
@@ -727,7 +696,6 @@ public:
     signed long m_reward : 3;
     signed long m_artifact : 10;
     unsigned long m_tail : 19;
-
 };
 SIZE(SeaChestInfo, 4);
 
@@ -826,7 +794,6 @@ public:
     void setWindmill(enum EGameResource resource, short amount);
     int getWitchSkill() const;
     void setWitchSkill(int skill);
-
 };
 SIZE(ExtraInfoUnion, 4);
 
@@ -843,7 +810,6 @@ public:
     armyGroup m_guardians;
     // Original: TreasureData::TreasureData; MapCell.h:333, dc 0xf4790.
     TreasureData() : m_hasCustomGuardians(0) {}
-
 };
 SIZE(TreasureData, 0x4c);
 
@@ -856,36 +822,24 @@ struct SecondarySkillData {
 public:
     TSecondarySkill m_type;
     TSkillMastery m_level;
-
 };
 SIZE(SecondarySkillData, 8);
 
 class BlackBoxData : public TreasureData {
 public:
-    unsigned char m_hasCustomTreasure;
-       // +0x4c
-    int m_experienceBonus;
-                   // +0x50
-    int m_manaBonus;
-                         // +0x54
-    signed char m_moraleBonus;
-               // +0x58
-    signed char m_luckBonus;
-                 // +0x59
-    int m_resQty[7];
-                         // +0x5c
-    signed char m_primarySkillBonus[4];
-      // +0x78
-    std::vector<SecondarySkillData> m_secondarySkills;
- // +0x7c
+    unsigned char m_hasCustomTreasure;  // +0x4c
+    int m_experienceBonus;  // +0x50
+    int m_manaBonus;  // +0x54
+    signed char m_moraleBonus;  // +0x58
+    signed char m_luckBonus;  // +0x59
+    int m_resQty[7];  // +0x5c
+    signed char m_primarySkillBonus[4];  // +0x78
+    std::vector<SecondarySkillData> m_secondarySkills;  // +0x7c
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
-    std::vector<TArtifact> m_artifacts;
-             // +0x8c
-    std::vector<SpellID> m_spells;
-                // +0x9c
-    armyGroup m_creatures;
-                    // +0xac
+    std::vector<TArtifact> m_artifacts;  // +0x8c
+    std::vector<SpellID> m_spells;  // +0x9c
+    armyGroup m_creatures;  // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
     // TreasureData base and the three vectors have run their own, the only
@@ -919,7 +873,6 @@ public:
     int read(TAbstractFile* infile, int saveVersion);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile, int saveVersion);
-
 };
 SIZE(TTimedEvent, 0x34);
 
@@ -944,7 +897,6 @@ public:
     int read(TAbstractFile* infile, int mapVersion);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile, int saveVersion);
-
 };
 SIZE(TTownEvent, 0x50);
 
@@ -959,7 +911,6 @@ public:
     // this written empty default for the existing resize temporaries.
     // DC class 0x309b has only generated default/copy constructors (0x103).
     CObjectType() {}
-                         // 0x506080
     // Original: CObjectType::_getBitPos; MapCell.h:565, dc 0x1f958.
     // Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
@@ -967,7 +918,7 @@ public:
     {
         return 47 - y * 8 - x;
     }
-    CObjectType(TObjectType* source);
+    CObjectType(TObjectType* source);  // 0x506080
     // The DC field list names every member of this record - ImageName,
     // Width, Height, then the FOUR 48-cell masks PlacementMask,
     // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -
@@ -1014,7 +965,6 @@ public:
     // explicitly copies a word at +0x42; the old pad_41[3] hid that real
     // field and also made VC6 copy the otherwise-skipped +0x41 byte.
     unsigned short m_objectTypeIndex;
-
 };
 SIZE(CObjectType, 0x44);
 
@@ -1074,7 +1024,6 @@ public:
         m_extraInfo = newExtraInfo;
         m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
-
 };
 SIZE(CObject, 0xc);
 
@@ -1223,10 +1172,8 @@ public:
         TAdventureObjectType m_type;  // +0x1e
         unsigned long m_typeValue;
     };
-    short m_objectIndex;
-          // +0x22
-    short m_objectTypeIndex;
-    // +0x24
+    short m_objectIndex;  // +0x22
+    short m_objectTypeIndex;  // +0x24
 
     // Original: NewmapCell::NewmapCell; MapCell.h:685, dc 0xf49a4.
     // The retained vector-construction callback belongs to this header body;
@@ -1258,7 +1205,6 @@ public:
     unsigned char cellIsTrigger() const;
     TArtifact getArtifactIndex() const;
     NewmapCell* getTriggerCell();
-
 };
 #pragma pack(pop)
 
@@ -1296,7 +1242,6 @@ public:
     // constructor's and has been removed there.
     // Original: MonsterData::MonsterData; MapCell.h:735, dc 0xf4a50.
     MonsterData() { m_artifact = ARTIFACT_NONE; }
-
 };
 SIZE(MonsterData, 0x30);
 
@@ -1906,14 +1851,10 @@ public:
     // +0x14 and objectTypes with a SIXTY-EIGHT-byte one out of +0x04, which
     // is sizeof(CObject) and sizeof(CObjectType) exactly; the three vectors
     // fill the same 0x30 the pad did.
-    std::vector<CObjectType> m_objectTypes;
-      // +0x00, first at +0x04
-    std::vector<CObject> m_objects;
-              // +0x10, first at +0x14
-    std::vector<CSprite*> m_sprites;
-             // +0x20
-    std::vector<TreasureData> m_customTreasure;
- // +0x30, first at +0x34
+    std::vector<CObjectType> m_objectTypes;  // +0x00, first at +0x04
+    std::vector<CObject> m_objects;  // +0x10, first at +0x14
+    std::vector<CSprite*> m_sprites;  // +0x20
+    std::vector<TreasureData> m_customTreasure;  // +0x30, first at +0x34
     // +0x40, first at +0x44. DoWanderingMonsterResult indexes it with the
     // cell's eight-bit custom-record field and a 48-byte stride, which is
     // exactly sizeof(MonsterData) once the Dinkumware string is 16 wide;
@@ -1922,26 +1863,19 @@ public:
     // matching std::vector<MonsterData> operator[]/begin rows in
     // events.obj.
     std::vector<MonsterData> m_customMonsterList;
-    std::vector<BlackBoxData> m_blackBoxes;
-      // +0x50, first at +0x54
-    std::vector<TSeerHut> m_seerHutList;
-         // +0x60
-    std::vector<TQuestGuard> m_questGuardList;
-   // +0x70
-    std::vector<TTimedEvent> m_timedEventList;
-   // +0x80
-    std::vector<TTownEvent> m_townEventList;
-     // +0x90
+    std::vector<BlackBoxData> m_blackBoxes;  // +0x50, first at +0x54
+    std::vector<TSeerHut> m_seerHutList;  // +0x60
+    std::vector<TQuestGuard> m_questGuardList;  // +0x70
+    std::vector<TTimedEvent> m_timedEventList;  // +0x80
+    std::vector<TTownEvent> m_townEventList;  // +0x90
     // +0xa0 and +0xc0, sliced by readObject: it appends a sixteen-byte
     // record to each through push_back's `insert(_Last, 1, x)`, reading
     // _Last at +0xa8 and +0xc8.
     std::vector<HeroPlaceholderData> m_heroPlaceholders;
-    std::vector<CMapObjectData*> m_mapObjectData;
- // +0xb0
-    std::vector<RandomDwellingData> m_randomDwellings;
+    std::vector<CMapObjectData*> m_mapObjectData;  // +0xb0
+    std::vector<RandomDwellingData> m_randomDwellings;  // +0xc0
 
 private:
- // +0xc0
     NewmapCell* m_cellData;
     int m_size;
     unsigned char m_hasTwoLevels;
@@ -2118,7 +2052,6 @@ public:
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
-
 };
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.

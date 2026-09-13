@@ -1,4 +1,5 @@
 // singleselectionwindow.cpp - E:\gamedcs\singleselectionwindow.cpp (compiland singleselectionwindow.obj)
+
 #include <algorithm>
 #include <io.h>
 #include <direct.h>
@@ -40,7 +41,6 @@
 // Module-local dialogs, network messages and header-transfer jobs.
 #include <bitset>
 #include <vector>
-
 #include "gamecontext.h"
 #include "inputmgr.h"
 #include "slider.h"
@@ -59,6 +59,8 @@
 #include "multiplayerwindow.h"
 #include "campaignbrief.h"
 #include "misc.h"
+#include "soundmgr.h"
+#include "u2dvers.h"
 
 // The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message
 // proves the two tail fields (the polled message pointer at +0x78, the awaited
@@ -358,8 +360,6 @@ public:
 // 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
 // message& (not message*) so it binds the int(*)(message&) TDialogHandler.
 int update(message& msg);
-#include "soundmgr.h"
-#include "u2dvers.h"
 
 // E:\gamedcs\singleselectionwindow.cpp:164
 // Dreamcast preserves these two helpers as standalone functions. Complete

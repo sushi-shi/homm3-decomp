@@ -97,7 +97,6 @@ public:
     unsigned char checkForTimeSurvival();
     unsigned char checkForArtifactWin();
     unsigned char checkForGrailBuildingWin();
-
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -123,7 +122,6 @@ public:
     unsigned char checkForDefeatedTownLoss(int oldOwner,
                                            const town* lostTown);
     unsigned char checkForTimeLimitExpired();
-
 };
 SIZE(LossConditionStruct, 0x24);
 

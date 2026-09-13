@@ -99,8 +99,6 @@ public:
     TObjectType& setSubtype(int subtype);
     TObjectType& setSlotCategory(int category);
     TObjectType& setUnderlay(bool underlay);
-
-
 };
 SIZE(TObjectType, 0x4c);
 
@@ -129,7 +127,6 @@ class TObjectTypeTable {
 public:
     std::vector<TObjectType> m_objectTypes;
     void load(char* filename);
-
 };
 SIZE(TObjectTypeTable, 0x10);
 

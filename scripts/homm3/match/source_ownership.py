@@ -947,18 +947,27 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                                  dc_only, win_only)
     errors.extend(violations)
     claims = all_claims()
-    errors.extend(header_claim_ownership(definitions, claims))
+    from homm3.match.status import load_baseline
+    errors.extend(header_claim_ownership(
+        definitions, claims, load_baseline(root / 'config/match_baseline.tsv')))
     errors.extend(claim_identity(definitions, claims))
     return dict(definitions=len(definitions), counts=counts, violations=errors,
                 unpaired_generated_claims=unpaired_generated_claims(claims), reached=reached)
 
 
-def header_claim_ownership(definitions: list[Definition], claims) -> list[str]:
+def header_claim_ownership(definitions: list[Definition], claims, banked=None) -> list[str]:
     """A matching inactive .cpp stub cannot substitute for the header VA."""
     by_name = defaultdict(set)
     for claim in claims:
         if claim.kind == 'func' and claim.channel.startswith('src-VA'):
             by_name[claim.name].add(claim.rva + common.IMAGE_BASE)
+    # Removing an annotation also removes its source claim. The ledger still
+    # knows that exact mangled identity, including when CUR is now unmatched.
+    # Check it independently so the missing annotation cannot erase the gate's
+    # own evidence that this header body needs a retail binding.
+    for (_unit, name), row in (banked or {}).items():
+        if row.rva is not None:
+            by_name[name].add(row.rva + common.IMAGE_BASE)
     errors = []
     for d in claim_definitions(definitions):
         if not d.file.startswith('include/') or not d.mangled:

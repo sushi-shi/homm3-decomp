@@ -11,14 +11,12 @@ union Bitmap16MapPointer {
 public:
     unsigned short* m_pixels;
     unsigned char* m_bytes;
-
 };
 
 union Bitmap16ConstMapPointer {
 public:
     const unsigned short* m_pixels;
     const unsigned char* m_bytes;
-
 };
 
 // Bootstrap VIEW of Bitmap16Bit (resource lineage). Layout PROVEN at
@@ -121,7 +119,6 @@ public:
              src->getPitch());
     }
     void remap(int oldGreenBits);
-
 };
 SIZE(Bitmap16Bit, 0x38);
 

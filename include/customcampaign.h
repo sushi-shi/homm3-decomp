@@ -9,6 +9,8 @@
 #include "hero.h"
 #include "campaignmusic.h"
 
+class CMapHeaderData;
+
 // The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
 // TCampaignWindow's constructor is the proof: `gpGame->campaign =
 // SCampaign()` is a compiler-generated memberwise assignment there, and it
@@ -42,7 +44,6 @@ public:
         : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
     {
     }
-
 };
 SIZE(CampaignScenarioInfo, 0x14);
 
@@ -156,7 +157,6 @@ public:
     {
         return &m_mapScores[m_currentMap];
     }
-
 };
 SIZE(SCampaign, 0x7c);
 
@@ -362,7 +362,6 @@ public:
     // 0x485000: every prerequisite scenario the record marks must already
     // be completed in gpGame->campaign.mapScores.
     virtual bool slot12(void* scenario, int value) const;
-
 };
 
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.

@@ -148,7 +148,6 @@ public:
     // name and the three-parameter shape only.
     void fillLinesVector(const char* str, int boxWidth,
                          std::vector<std::string>& result);
-
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

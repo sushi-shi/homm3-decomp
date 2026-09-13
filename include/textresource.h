@@ -316,10 +316,8 @@ public:
     const char* operator[](int i) const { return getText(i); }
 
 private:
-    TTextArray m_text;
-  // +0x1c (_First +0x20)
-    char* m_data;
-       // +0x2c
+    TTextArray m_text;  // +0x1c (_First +0x20)
+    char* m_data;  // +0x2c
 };
 SIZE(TTextResource, 48);
 
@@ -351,12 +349,9 @@ public:
     const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
 
 private:
-    TArray m_spreadsheet;
-  // +0x1c (_First +0x20, _Last +0x24)
-    char* m_data;
-          // +0x2c
-    int m_dataSize;
-        // +0x30, retail constructor stores size here
+    TArray m_spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
+    char* m_data;  // +0x2c
+    int m_dataSize;  // +0x30, retail constructor stores size here
 };
 SIZE(TSpreadsheetResource, 52);
 

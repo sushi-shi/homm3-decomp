@@ -205,7 +205,6 @@ private:
     void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;
-
 };
 SIZE(CSpriteFrame, 0x48);
 

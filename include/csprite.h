@@ -58,7 +58,7 @@ enum creature_seqid {
 class CSprite : public resource {
 public:
     CSprite(const char* name, int sprtype, int w, int h);
-    virtual ~CSprite();
+    virtual ~CSprite();  // slot 0
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
     int getWidth() const { return m_width; }
@@ -85,9 +85,8 @@ private:
     int m_height;
 
 public:
-      // slot 0
     virtual void dispose();
-    virtual unsigned int getSize() const;
+    virtual unsigned int getSize() const;  // slot 2, retail 0x47bd50
     // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;
     // the retail remote caller expands these in place.
     int getCroppedX(int seq, int frame) const
@@ -170,7 +169,6 @@ public:
     void resetPalette();
     palette* getPalette();
     void colorCycle(int begin, int end, int step);
-  // slot 2, retail 0x47bd50
     static int getNumSeqs(int type);
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
@@ -297,7 +295,6 @@ public:
         drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
-
 };
 
 // --- globals ---

@@ -25,27 +25,18 @@ public:
     enum {
         CAMPAIGN_LIST_ROWS = 18
     };
-    textWidget* m_nameWidgets[CAMPAIGN_LIST_ROWS];
-   // +0x50
-    textWidget* m_countWidgets[CAMPAIGN_LIST_ROWS];
-  // +0x98
-    textWidget* m_selectedName;
-         // +0xe0
-    type_text_scroller* m_description;
-  // +0xe4
-    slider* m_campaignSlider;
-           // +0xe8
-    int m_firstVisible;
-                 // +0xec
-    int m_selected;
-                     // +0xf0
-    unsigned long m_lastClickTime;
-      // +0xf4
+    textWidget* m_nameWidgets[CAMPAIGN_LIST_ROWS];  // +0x50
+    textWidget* m_countWidgets[CAMPAIGN_LIST_ROWS];  // +0x98
+    textWidget* m_selectedName;  // +0xe0
+    type_text_scroller* m_description;  // +0xe4
+    slider* m_campaignSlider;  // +0xe8
+    int m_firstVisible;  // +0xec
+    int m_selected;  // +0xf0
+    unsigned long m_lastClickTime;  // +0xf4
     // LoadCampaignList binds insert's const T& straight to its
     // CampaignHeaderStruct* local (address-taken, memory-homed), which a
     // void* element would have copied through a temporary first.
-    std::vector<TCampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;
-  // +0xf8
+    std::vector<TCampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;  // +0xf8
 
     TCustomCampaignWindow();
     virtual ~TCustomCampaignWindow();
@@ -53,7 +44,6 @@ public:
     void loadCampaignList();
     void updateList();
     bool acceptSelection();
-
 };
 SIZE(TCustomCampaignWindow, 0x108);
 
@@ -65,7 +55,6 @@ class CampaignHeaderPointerLess {
 public:
     bool operator()(TCampaignBrief::CampaignHeaderStruct* left,
                     TCampaignBrief::CampaignHeaderStruct* right) const;
-
 };
 
 #endif // HOMM3_CUSTOMCAMPAIGNWINDOW_H

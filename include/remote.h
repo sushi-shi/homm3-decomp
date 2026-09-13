@@ -42,7 +42,6 @@ public:
             return 0;
         return m_names[player];
     }
-
 };
 SIZE(CHotSeatMan, 0xac);
 
@@ -63,7 +62,6 @@ public:
 
 protected:
     char m_logFileName[351];
-
 };
 SIZE(CLogFile, 351);
 
@@ -117,20 +115,14 @@ public:
                                       bool, bool);
     friend int transmitRemoteData(CNetMsg*, int,
                                   bool, bool);
-    CDPlayMsg m_dpMsg;
-                       // +0x60
-    std::deque<CNetMsg*> m_msgQueue;
-         // +0x68..+0x97
-    char m_localIpAddress[80];
-              // +0x98..+0xe7
-    unsigned long m_confirmId;
-               // +0xe8
-    unsigned long m_currMessageId;
+    CDPlayMsg m_dpMsg;  // +0x60
+    std::deque<CNetMsg*> m_msgQueue;  // +0x68..+0x97
+    char m_localIpAddress[80];  // +0x98..+0xe7
+    unsigned long m_confirmId;  // +0xe8
+    unsigned long m_currMessageId;  // +0xec
 
 protected:
-           // +0xec
-    CNetMsgHandler* m_netMsgHandler;
- // +0xf0
+    CNetMsgHandler* m_netMsgHandler;  // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
 
@@ -177,53 +169,40 @@ public:
     void __cdecl playerEnterMsg(const char* format, ...);
 
 protected:
-    CChatStr* m_msgArray;
-       // +0x00
-    int m_currMsg;
-              // +0x04
-    int m_msgCount;
-             // +0x08
-    char* m_widgetText;
-         // +0x0c
-    unsigned long m_pauseTime;
-  // +0x10
-    unsigned char m_changed;
+    CChatStr* m_msgArray;  // +0x00
+    int m_currMsg;  // +0x04
+    int m_msgCount;  // +0x08
+    char* m_widgetText;  // +0x0c
+    unsigned long m_pauseTime;  // +0x10
+    unsigned char m_changed;  // +0x14
 
 public:
-    // +0x14
     // Dreamcast places changed at +0x14 and lastWidget at +0x18,
     // matching retail. These three bytes align the pointer.
     char m_paddingBeforeLastWidget[3];
 
 protected:
-    textWidget* m_lastWidget;
-   // +0x18
-    int m_maxLines;
-             // +0x1c
-    int m_position;
-             // +0x20
-    unsigned char m_chatKilled;
+    textWidget* m_lastWidget;  // +0x18
+    int m_maxLines;  // +0x1c
+    int m_position;  // +0x20
+    unsigned char m_chatKilled;  // +0x24
 
 public:
- // +0x24
     // Retail retains chatKilled at +0x24 and adds the sample handle
     // at +0x28. Three bytes align that pointer; DC has no such handle.
     char m_paddingBeforeChatMemSample[3];
     // Retail PC adds the live Miles handle that AddChat/TurnDurationMsg
     // reuse. The DC record lacks it: isSysMsg moves from +0x25 to
     // +0x2c, and the five resource pointers move by eight bytes.
-    ds_memsample* m_chatMemSample;
+    ds_memsample* m_chatMemSample;  // +0x28
 
 protected:
- // +0x28
-    unsigned char m_isSysMsg;
+    unsigned char m_isSysMsg;  // +0x2c
 
 public:
-        // +0x2c
     // The PC isSysMsg byte moves to +0x2c after the new handle.
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
- // +0x40
 
     void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
     void pauseTimeOuts();
@@ -239,15 +218,11 @@ public:
     unsigned char hasOldChat();
 
 protected:
-    sample* m_chatSample;
-        // +0x30
-    sample* m_playerDropSample;
-  // +0x34
-    sample* m_sysMsgSample;
-      // +0x38
-    sample* m_turnDurSample;
-     // +0x3c
-    sample* m_playerEnterSample;
+    sample* m_chatSample;  // +0x30
+    sample* m_playerDropSample;  // +0x34
+    sample* m_sysMsgSample;  // +0x38
+    sample* m_turnDurSample;  // +0x3c
+    sample* m_playerEnterSample;  // +0x40
     // remote.cpp:1060/1065, DC 0x11c71c/0x11c738; the publics prove
     // protected access. AddChat calls the first canonical helper, while
     // KillOldChat calls the second. Retail expands these source calls.
@@ -255,7 +230,6 @@ protected:
     int getNextMsgNbr(int msgNbr);
     void killOldChat();
     void updateWidgetText(int numLines, textWidget* widget);
-
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
@@ -280,22 +254,14 @@ public:
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
     virtual ~CChatEdit();
-    virtual int onKeyPress(message* msg);
-                       // slot 15
-    virtual unsigned char ignoreKey(message* msg);
-              // slot 16
-    virtual void updateScreen();
-                                // slot 19
-    virtual int onEnter(message msg);
-                            // slot 20
-    virtual int onEscape(message msg);
-                           // slot 21
-    virtual int onFunctionKey(message msg, int toWho);
-           // slot 22
-    virtual bool isOpen();
-                                      // slot 23
-    virtual void sendChat(const char* text, int toWho) = 0;
-      // slot 24
+    virtual int onKeyPress(message* msg);  // slot 15
+    virtual unsigned char ignoreKey(message* msg);  // slot 16
+    virtual void updateScreen();  // slot 19
+    virtual int onEnter(message msg);  // slot 20
+    virtual int onEscape(message msg);  // slot 21
+    virtual int onFunctionKey(message msg, int toWho);  // slot 22
+    virtual bool isOpen();  // slot 23
+    virtual void sendChat(const char* text, int toWho) = 0;  // slot 24
 };
 
 // Dreamcast remote.h proves this intermediate class. Retail constructors for
@@ -314,7 +280,6 @@ public:
     virtual void activate();
     unsigned char m_activated;
     char m_paddingAfterActivated[3];
-
 };
 
 // E:\gamedcs\remote.h:441
@@ -396,7 +361,6 @@ protected:
     unsigned long m_currDuration;
     unsigned long m_nextWarning;
     unsigned long m_pauseTime;
-
 };
 SIZE(CTurnDuration, 0x14);
 
@@ -421,7 +385,6 @@ public:
 
 protected:
     unsigned char m_thread;
-
 };
 SIZE(CHourGlass, 1);
 
@@ -444,7 +407,6 @@ public:
 
 protected:
     CNetMsg* m_netMsg;
-
 };
 SIZE(CMessageKill, 0x4);
 
@@ -466,11 +428,9 @@ public:
     // A CALL SITE corroborates slot 0 independently: townManager::Close
     // (0x5c71b0) deletes its CTownNetMsgHandler through vtable slot 0, so
     // CheckHandleNet cannot live there.
-    virtual ~CNetMsgHandler();
-                                    // slot 0
+    virtual ~CNetMsgHandler();  // slot 0
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);
-  // slot 1
+                                    unsigned char* msgReceived);  // slot 1
     unsigned char isInPopup() { return m_inPopup; }
     // E:\gamedcs\remote.h:629
     VA(0x00557900, 0x4)  // dc 0x201f8
@@ -478,7 +438,6 @@ public:
     {
         return m_abortPopupMsg;
     }
-          // slot 3
 
     VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
     void copy(CNetMsgHandler* other)
@@ -499,12 +458,10 @@ protected:
     // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
     // is an out-of-line body - the derived dispatcher touches the raw
     // members, so retail's access let it.
-    unsigned char m_inPopup;
-    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;
-       // +0x04
+    unsigned char m_inPopup;  // +0x04
+    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;  // slot 3
     char m_paddingBeforeAbortPopupMsg[3];
-    CNetMsg* m_abortPopupMsg;
-      // +0x08
+    CNetMsg* m_abortPopupMsg;  // +0x08
 };
 SIZE(CNetMsgHandler, 0x0c);
 
@@ -526,7 +483,7 @@ SIZE(CNetMsgHandler, 0x0c);
 // in the 0x557exx run with the rest of the class.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
-    CNetMsgHandler* m_netMsgHandlerSave;
+    CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
     CNetMsgHandlerPause();
     virtual ~CNetMsgHandlerPause();
     // at all. Retail retains their header COMDATs beside Copy, separately
@@ -544,7 +501,6 @@ public:
     {
         return 0;
     }
-  // +0x0c
 };
 SIZE(CNetMsgHandlerPause, 0x10);
 
@@ -557,7 +513,6 @@ protected:
     void handleGiftRequestMsg(CNetMsg* netMsg);
     void handleGiftMsg(CNetMsg* netMsg);
     virtual void handleTradeRequestMsg(CNetMsg* netMsg);
-
 };
 SIZE(CAdvMgrNetMsgHandler, 0x0c);
 

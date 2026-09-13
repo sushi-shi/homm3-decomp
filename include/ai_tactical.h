@@ -21,14 +21,10 @@ struct pathCell;
 // whole 0x140-byte block cleared by one rep stosd of 0x50 dwords.
 struct type_AI_enemy_data {
 public:
-    const army* m_enemy;
-          // +0x00
-    long m_damage;
-                // +0x04
-    long m_count;
-                 // +0x08
-    long m_totalDamage;
-          // +0x0c
+    const army* m_enemy;  // +0x00
+    long m_damage;  // +0x04
+    long m_count;  // +0x08
+    long m_totalDamage;  // +0x0c
 };
 
 // The 0..3 rungs of that index. Byte-proven as a domain by
@@ -50,22 +46,16 @@ public:
 // members - so the record ends at +0x14 and derives.
 struct type_enchant_data {
 public:
-    SpellID m_spell;
-              // +0x00
-    TSkillMastery m_mastery;
-      // +0x04
-    long m_power;
-                 // +0x08
-    long m_duration;
-              // +0x0c
+    SpellID m_spell;  // +0x00
+    TSkillMastery m_mastery;  // +0x04
+    long m_power;  // +0x08
+    long m_duration;  // +0x0c
     // Both ctors seed it to 1; no located consumer reads it yet.
-    unsigned char m_checkResistance;
-     // +0x10
+    unsigned char m_checkResistance;  // +0x10
 
     type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
     long getMasteryValue() const;
-
 };
 SIZE(type_enchant_data, 0x14);
 
@@ -79,19 +69,14 @@ public:
     // is cast_enchantment's fallback slot (0x425b2e), value is
     // get_area_value's accumulator (0x424ce7). The ctors seed
     // -1/-1/0/0.
-    long m_target;
-                // +0x14 (-1)
-    long m_secondTargetHex;
-              // +0x18 (-1)
-    long m_value;
-                 // +0x1c (0)
-    unsigned char m_castNow;
-     // +0x20 (0)
+    long m_target;  // +0x14 (-1)
+    long m_secondTargetHex;  // +0x18 (-1)
+    long m_value;  // +0x1c (0)
+    unsigned char m_castNow;  // +0x20 (0)
 
     type_spell_choice();
     type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
-
 };
 SIZE(type_spell_choice, 0x24);
 
@@ -102,41 +87,30 @@ SIZE(type_spell_choice, 0x24);
 // because type_AI_spellcaster embeds it at +0x20 and owns +0x48.
 struct type_AI_combat_parameters {
 public:
-    long m_lowestAttack;
-         // +0x00
-    long m_lowestDefense;
-        // +0x04
-    unsigned char m_killsOnly;
-   // +0x08
-    unsigned char m_simulated;
-    // +0x09
+    long m_lowestAttack;  // +0x00
+    long m_lowestDefense;  // +0x04
+    unsigned char m_killsOnly;  // +0x08
+    unsigned char m_simulated;  // +0x09
     // Dreamcast and retail byte-field boundaries agree: this gap
     // aligns the following four-byte field or aggregate.
     char m_paddingBeforeFriendlyCombatValue[0x2];
     // Original Dreamcast type_AI_combat_parameters::friendly_combat_value; retail field role agrees.
-    long m_friendlyCombatValue;
-             // +0x0c  get_total_combat_value(side, .., 1)
+    long m_friendlyCombatValue;  // +0x0c  get_total_combat_value(side, .., 1)
     // Original Dreamcast type_AI_combat_parameters::enemy_combat_value; retail field role agrees.
-    long m_enemyCombatValue;
-           // +0x10  ... (enemy_side, .., 1)
+    long m_enemyCombatValue;  // +0x10  ... (enemy_side, .., 1)
     // Original Dreamcast type_AI_combat_parameters::awake_friendly_value; retail field role agrees.
-    long m_awakeFriendlyValue;
-        // +0x14  ... (side, .., 0)
+    long m_awakeFriendlyValue;  // +0x14  ... (side, .., 0)
     // Original Dreamcast type_AI_combat_parameters::awake_enemy_value; retail field role agrees.
-    long m_awakeEnemyValue;
-      // +0x18  ... (enemy_side, .., 0)
+    long m_awakeEnemyValue;  // +0x18  ... (enemy_side, .., 0)
     // Original Dreamcast type_AI_combat_parameters::rounds_left; retail field role agrees.
-    long m_roundsLeft;
-                  // +0x1c  1..7, from the 0x63b798 ladder
+    long m_roundsLeft;  // +0x1c  1..7, from the 0x63b798 ladder
     // Original Dreamcast type_AI_combat_parameters::our_group; retail field role agrees.
-    long m_ourGroup;
-                  // +0x20
+    long m_ourGroup;  // +0x20
     // Original Dreamcast type_AI_combat_parameters::enemy_group; retail field role agrees.
-    long m_enemyGroup;
+    long m_enemyGroup;  // +0x24
     type_AI_combat_parameters(const combatManager* combat, long side);
     long getExchangeEffect(const army& currentArmy, const army& enemy,
                              long distance) const;
-            // +0x24
 
     long getGroup() const { return m_ourGroup; }
     long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
@@ -155,7 +129,6 @@ public:
     void simulateSingleAttack(const army& currentArmy, long& ourHits,
                                 const army& enemy, long& enemyHits,
                                 unsigned char ranged, long distance) const;
-
 };
 SIZE(type_AI_combat_parameters, 0x28);
 
@@ -164,36 +137,25 @@ SIZE(type_AI_combat_parameters, 0x28);
 // +0 (attacker) and +0x20 (the chosen hex).
 struct type_AI_attack_hex_chooser {
 public:
-    const army* m_attackArmy;
+    const army* m_attackArmy;  // +0x00
 
 protected:
-    // +0x00
-    long m_speed;
+    long m_speed;  // +0x04
 
 public:
-                 // +0x04
-    const army* m_enemyArmy;
-     // +0x08
-    searchArray* m_searchData;
-   // +0x0c
-    const long* m_enemyAttackArray;
- // +0x10
-    long m_enemyTroopsLeft;
-     // +0x14
-    long m_ourTroops;
+    const army* m_enemyArmy;  // +0x08
+    searchArray* m_searchData;  // +0x0c
+    const long* m_enemyAttackArray;  // +0x10
+    long m_enemyTroopsLeft;  // +0x14
+    long m_ourTroops;  // +0x18
 
 protected:
-            // +0x18
-    long m_bestValue;
-            // +0x1c
-    long m_bestHex;
+    long m_bestValue;  // +0x1c
+    long m_bestHex;  // +0x20
 
 public:
-              // +0x20
-    long m_bestAttackTime;
-              // +0x24
-    const type_AI_combat_parameters* m_data;
-  // +0x28
+    long m_bestAttackTime;  // +0x24
+    const type_AI_combat_parameters* m_data;  // +0x28
 
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
                                const long* attackArray, searchArray* search,
@@ -212,7 +174,6 @@ protected:
     void checkAdjacentHexes(long enemyHex, long startDirection,
                               long stopDirection);
     long getHexAttackValue(long hex, long& checked);
-
 };
 
 // PROVEN offsets (2026-08-07) from the ctor 0x4369c0 (vptr, +4/+8 the
@@ -224,48 +185,37 @@ struct type_AI_spellcaster {
 public:
     // +0x00 is the compiler's own vptr (vftable 0x63b7d8, one slot:
     // the scalar deleting destructor at 0x436bf0).
-    hero* m_ourHero;
+    hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
 
 protected:
-             // +0x04 combat->[0x53cc + side*4]
-    hero* m_enemyHero;
+    hero* m_enemyHero;  // +0x08 combat->[0x53cc + enemy_side*4]
 
 public:
-           // +0x08 combat->[0x53cc + enemy_side*4]
-    long m_side;
-                  // +0x0c
-    long m_enemySide;
-            // +0x10
+    long m_side;  // +0x0c
+    long m_enemySide;  // +0x10
     // Bitmask over army::bitIndex of the stacks this caster is allowed
     // to act against: should_attack_now (0x436c60) answers 0 outright
     // when the enemy's bit is clear. Name pending a writer.
-    long m_enemyCanAttack;
-              // +0x14
+    long m_enemyCanAttack;  // +0x14
     // A SECOND bitmask, sliced 2026-08-08 out of the old pad by
     // find_enemy_attacks (0x43c040): the census clears +0x18 and +0x14
     // together at entry and then folds `1 << j` into +0x18 for every
     // MELEE enemy it counts while folding `1 << enemy->bitIndex` into
     // +0x14 for every enemy of either kind - so +0x18 is indexed by the
     // enemy's SLOT and +0x14 by its bitIndex. Name pending a reader.
-    long m_canBeAttacked;
-              // +0x18
-    unsigned char m_winLikely;
-     // +0x1c
+    long m_canBeAttacked;  // +0x18
+    unsigned char m_winLikely;  // +0x1c
     // Original Dreamcast type_AI_spellcaster::is_creature_spell; retail field role agrees.
-    unsigned char m_isCreatureSpell;
- // +0x1d
+    unsigned char m_isCreatureSpell;  // +0x1d
     // Dreamcast and retail byte-field boundaries agree: this gap
     // aligns the following four-byte field or aggregate.
     char m_paddingBeforeEstimate[0x2];
     // Original Dreamcast type_AI_spellcaster::estimate; retail field role agrees.
-    type_AI_combat_parameters m_estimate;
- // +0x20
+    type_AI_combat_parameters m_estimate;  // +0x20
     // Original Dreamcast type_AI_spellcaster::enemy_caster; retail field role agrees.
-    type_AI_spellcaster* m_enemyCaster;
-      // +0x48
+    type_AI_spellcaster* m_enemyCaster;  // +0x48
     // Original Dreamcast type_AI_spellcaster::owns_enemy_caster; retail field role agrees.
-    unsigned char m_ownsEnemyCaster;
-        // +0x4c
+    unsigned char m_ownsEnemyCaster;  // +0x4c
     // Dreamcast and retail byte-field boundaries agree: this gap
     // aligns the following four-byte field or aggregate.
     char m_paddingBeforeMeleeEnemies[0x3];
@@ -274,10 +224,8 @@ public:
     // get_defense_boost_value (0x4387c0) sums total_damage from BOTH
     // (this + i*16 + 0x5c and this + i*16 + 0x19c).
     // Original Dreamcast type_AI_spellcaster::melee_enemies; retail field role agrees.
-    type_AI_enemy_data m_meleeEnemies[20];
-   // +0x50
-    type_AI_enemy_data m_attacks[20];
-  // +0x2d0
+    type_AI_enemy_data m_meleeEnemies[20];  // +0x50
+    type_AI_enemy_data m_attacks[20];  // +0x190
 
     // dc 0x3d604 (ai_tactical.cpp:793). ai.cpp's choose_creature_spell
     // (0x420d20) builds one on the stack with exactly (this, side, 1)
@@ -309,14 +257,13 @@ protected:
     // act?" - inlined into consider_teleport, consider_resurrect and
     // consider_single_enchantment, with no retail body of its own.
     unsigned char isLastAction() const;
-   // +0x190
     // A THIRD census on the same 16-byte stride, byte-proven by
     // get_defense_skill_value (0x438910): it reads the record's `enemy`
     // pointer as `(bitIndex + 0x2d) * 16 + this`, i.e. this + 0x2d0 +
     // bitIndex*16, and bails when it is null. The DC roster's
     // set_worst_enemies (dc 0x42170) is the only unlocated writer left
     // that fits, so the name is provisional.
-    type_AI_enemy_data m_worstEnemies[20];
+    type_AI_enemy_data m_worstEnemies[20];  // +0x2d0
 
 public:
     long getFaerieDragonSpellValue(long hex, long power, SpellID spell);
@@ -430,7 +377,6 @@ protected:
                                 hero* targetHero) const;
     void setMeleeEnemies();
     unsigned char spellsNotRequired() const;
-
 };
 SIZE(type_AI_spellcaster, 0x410);
 

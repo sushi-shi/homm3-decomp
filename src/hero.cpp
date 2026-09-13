@@ -5584,7 +5584,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // whose doctrinal lever is caller-shrink, and a 437-byte body with no
 // liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
-                       // 0x4e29dc catch funclet (boundary correction 2026-09-06b)
+    // 0x4e29dc catch funclet (boundary correction 2026-09-06b)
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
     const std::bitset<19>& allowable =

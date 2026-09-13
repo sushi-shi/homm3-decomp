@@ -32,7 +32,6 @@ public:
 private:
     mutable unsigned char m_owns;
     T* m_ptr;
-
 };
 
 #endif

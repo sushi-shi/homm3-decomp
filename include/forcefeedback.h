@@ -119,7 +119,6 @@ protected:
     // releases their COM interfaces. Total 0x2c matches retail allocation.
     IFeelit* m_api;               // SDK m_piApi.
     IFeelitDevice* m_device;      // SDK m_piDevice.
-
 };
 
 // The compound effect a project hands back. Non-virtual throughout
@@ -204,7 +203,6 @@ protected:
     // Start 0x8101 tests this before GetCursorPos and SetCenter.
     int m_useMousePosAtStart;     // +dc, SDK m_bUseMousePosAtStart.
     // Total 0xe0 matches the game's allocation. No newer m_pInsideEffect.
-
 };
 
 // The project file. Its constructor is NOT in the import table and

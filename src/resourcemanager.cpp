@@ -11,6 +11,22 @@
 #include "abstractfile.h"
 #include "resourcemanager_sprite_headers.h"
 #include "textresource.h"
+#include "lodfile.h"
+#include "bitmap16.h"
+#include "bitmap24.h"
+#include "bitmap816.h"
+#include "csprite.h"
+#include "cspriteframe.h"
+#include "font.h"
+#include "ownership.h"
+#include "palette.h"
+#include <memory>
+#include <stdlib.h>
+#include <string>
+#include <windows.h>
+#include <sstream>
+#include "sample.h"
+#include "smackmgr.h"
 
 class LODFile;
 
@@ -167,22 +183,6 @@ TTextResource* ResourceManager::getText(const char* name)
 // E:\gamedcs\resourcemanager.cpp:1461
 #endif
 
-// The adapters are the first reconstructed retail bodies that need the full
-// archive surface. Keep the remaining implementation headers at this first
-// complete-type use.
-#include "lodfile.h"
-#include "bitmap16.h"
-#include "bitmap24.h"
-#include "bitmap816.h"
-#include "csprite.h"
-#include "cspriteframe.h"
-#include "font.h"
-#include "ownership.h"
-#include "palette.h"
-#include <memory>
-#include <stdlib.h>
-#include <string>
-
 // ResourceManager's retail archive pool is eight interleaved 0x190-byte
 // slots. Open proves the leading dword is the archive pathname and every
 // resource lookup independently proves the LODFile subobject at +4.
@@ -248,9 +248,6 @@ DATA(0x0069d854) int g_greenMaskBits;
 DATA(0x0069d85c) int g_lastMaskShift;
 DATA(0x0069e5a0) int g_lastMaskBits;
 DATA(0x0069e4f0) std::string g_resourcePath;
-
-#include <windows.h>
-#include <sstream>
 
 // Complete's common missing-resource reporter has no Dreamcast identity, but
 // its thirteen retail callers prove the fastcall surface. The dense 0..96
@@ -1029,11 +1026,6 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         return result;
     }
 }
-
-// Kept at the first complete-type use. Earlier C1-sensitive cache code was
-// compiled with the original narrow include population.
-#include "bitmap16.h"
-#include "font.h"
 
 // This getter family is one retail template: only the load callee and result
 // type differ. The scoped lookup locals let C1 reuse their frame slots for
@@ -2286,17 +2278,6 @@ void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceMa
 }
 
 #endif
-
-// Kept at the point of use: the two already reconstructed cache functions
-// above were compiled without this large header in retail-sensitive C1
-// contexts, while this wrapper needs the canonical LODFile member surface.
-#include "lodfile.h"
-#include "bitmap16.h"
-#include "bitmap816.h"
-#include "sample.h"
-#include "smackmgr.h"
-#include <memory>
-#include <windows.h>
 
 namespace ResourceManager {
 bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);

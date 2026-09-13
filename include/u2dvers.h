@@ -32,7 +32,6 @@ private:
     // Original: TFileVersionInfo::GetVersionInfo, const in CodeView
     // u2dvers.cpp:63; GetProductVersion is const at u2dvers.h:149.
     unsigned char getVersionInfo(const char* name, std::string* buffer) const;
-
 };
 SIZE(TFileVersionInfo, 4);
 

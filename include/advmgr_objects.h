@@ -6,6 +6,7 @@
 #include <vector>
 #include "armygrp.h"
 #include "mapcell.h"
+#include "objecttype.h"
 
 class CSprite;
 class textWidget;
@@ -31,7 +32,6 @@ protected:
     hero* m_obscuringHero;
     boat* m_obscuringBoat;
     hero* m_mobileHero;
-
 };
 SIZE(type_cell_adjuster, 0xc);
 
@@ -152,8 +152,5 @@ enum EReadObjectTypeResult {
     READ_OBJECT_TYPE_OK = 1,
     READ_OBJECT_TYPE_DEFAULT_MASK = 100
 };
-
-// Complete object-template records are owned by the object-type module.
-#include "objecttype.h"
 
 #endif /* HOMM3_ADVMGR_OBJECTS_H */

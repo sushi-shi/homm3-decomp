@@ -53,8 +53,6 @@ public:
             && m_quest;
     }
     int load(TAbstractFile* infile, int saveVersion);
-
-
 };
 SIZE(TQuestGuard, 0x5);
 
@@ -121,7 +119,6 @@ public:
     int getValue(const hero* currentHero);
     void giveReward(hero* currentHero, bool humanPlayer);
     int getRewardExtra(const hero* thisHero);
-
 };
 SIZE(TSeerReward, 0xc);
 
@@ -233,8 +230,6 @@ private:
     // same way from NewfullMap::Save. Declared separately because the
     // seer and guard records each own their serialization interface.
     int save(TAbstractFile* outfile);
-
-
 };
 SIZE(TSeerHut, 0x13);
 

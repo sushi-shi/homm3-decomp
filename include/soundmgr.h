@@ -2,11 +2,11 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
-void pollSound();
-
 #include <windows.h>
 #include "basemgr.h"
 #include "kbwin.h"
+
+void pollSound();
 
 class sample;
 class ds_memsample;

@@ -125,7 +125,6 @@ private:
 public:
     heroWindow* m_lastActive;
     heroWindow* m_activeWindow;
-
 };
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);

@@ -315,8 +315,7 @@ public:
     // Declared for InitMainClasses' `new`: retail calls a real constructor
     // (3 B at 0x524360) on the one-byte allocation.
     CAITurnDriver69928c();
-    void startPlayerTurn(int gamePos);
-  // 0x525e80
+    void startPlayerTurn(int gamePos);  // 0x525e80
 };
 extern CAITurnDriver69928c* g_unnamed69928c;
 
@@ -468,7 +467,6 @@ struct soundNode {
 public:
     e_looping_sound_id m_soundId;
     int m_priority;
-
 };
 SIZE(soundNode, 8);
 
@@ -576,7 +574,6 @@ public:
     int m_y;
     int m_id;
     TDrawParts() : m_isValid(false) {}
-
 };
 SIZE(TDrawParts, 0x10);
 
@@ -696,8 +693,7 @@ public:
     // its widget x/y/width/height fields.
     widget* m_radarWidget;
     widget* m_mapWidget;
-    textWidget* m_chatTextWidget;
-  // +0x54, CompleteDraw's chat update target
+    textWidget* m_chatTextWidget;  // +0x54, CompleteDraw's chat update target
     // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
     // versus 0x44). Applying that independently proven shift to the DC
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
@@ -707,8 +703,7 @@ public:
     textEntryWidget* m_chatEdit;
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* m_resourceDisplay;
-    class bitmapBackedTextWidget* m_rolloverTextWidget;
-  // +0x60
+    class bitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60
     // DC names these topHero/topTown (member offsets 88/92). Retail moved
     // RolloverWidget ahead of the pair, so the DC->retail shift here is
     // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
@@ -788,7 +783,6 @@ public:
 
 private:
     int convertID2HelpID(int id) const;
-
 };
 SIZE(TAdventureMapWindow, 0xa0);
 
@@ -906,22 +900,16 @@ public:
     // supplies the name and types the slot as the BASE pointer, which is
     // what retail's delete needs: the destructor is CNetMsgHandler's.
     CNetMsgHandler* m_netMsgHandler;
-    unsigned char m_debugShowFps;
-  // +0x3c, DC name; retail FPS branch proves it
-    unsigned char m_debugViewAll;
-  // +0x3d, bypasses hover ownership checks
+    unsigned char m_debugShowFps;  // +0x3c, DC name; retail FPS branch proves it
+    unsigned char m_debugViewAll;  // +0x3d, bypasses hover ownership checks
     // Dreamcast DebugShowFPS/DebugViewAll (+0x50/+0x51) is byte storage; retail
     // retains it at +0x3c/+0x3d. This gap aligns the following
     // original advCommand dword to four bytes.
     char m_paddingBeforeAdvCommand[2];
-    int m_advCommand;
-              // +0x40, set by map-hover actions
-    TAdventureMapWindow* m_advWindow;
-  // +0x44 (the button-status target)
-    unsigned short* m_routeArray;
-      // +0x48 (GetRouteArrayPtr)
-    int m_showRoute;
-                  // +0x4c, gates both arrow draw passes
+    int m_advCommand;  // +0x40, set by map-hover actions
+    TAdventureMapWindow* m_advWindow;  // +0x44 (the button-status target)
+    unsigned short* m_routeArray;  // +0x48 (GetRouteArrayPtr)
+    int m_showRoute;  // +0x4c, gates both arrow draw passes
     // Dreamcast supplies both names. Retail SeedTo independently proves the
     // pair at +0x50/+0x54: a zero seedingValid starts a fresh search, while a
     // set fullySeeded suppresses an attempted continuation.
@@ -938,24 +926,15 @@ public:
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
-    CSprite* m_groundTileset[10];
-  // +0x60
-    CSprite* m_riverTileset[5];
-    // +0x88
-    CSprite* m_roadTileset[4];
-     // +0x9c
-    CSprite* m_borderTileset;
-      // +0xac
-    CSprite* m_arrowTileset;
-       // +0xb0
-    CSprite* m_gemIcons[4];
-        // +0xb4
-    CSprite* m_starTileset;
-        // +0xc4
-    CSprite* m_radarIcons;
-         // +0xc8
-    CSprite* m_cloudIcons;
-         // +0xcc
+    CSprite* m_groundTileset[10];  // +0x60
+    CSprite* m_riverTileset[5];  // +0x88
+    CSprite* m_roadTileset[4];  // +0x9c
+    CSprite* m_borderTileset;  // +0xac
+    CSprite* m_arrowTileset;  // +0xb0
+    CSprite* m_gemIcons[4];  // +0xb4
+    CSprite* m_starTileset;  // +0xc4
+    CSprite* m_radarIcons;  // +0xc8
+    CSprite* m_cloudIcons;  // +0xcc
     // +0xd0, sixteen bytes. Close proves the Dinkumware vector shape
     // directly: it reads _First at +0xd4 and _Last at +0xd8, derives
     // size() as VC6 spells it (`_First == 0 ? 0 : _Last - _First`, the
@@ -971,29 +950,21 @@ public:
     // twelve bytes against Dinkumware's sixteen, which is the whole of
     // the 232->244 versus 0xd0->0xe0 drift.
     std::vector<resource*> m_cachedGraphics;
-    CSprite* m_movingObjectSprite;
-  // +0xe0, transient object draw override
+    CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
     type_point m_radarOrigin;
-    type_point m_lastMapHover;
-       // +0xe8
-    int m_lastHoverX;
-                // +0xec
-    int m_lastHoverY;
-                // +0xf0
-    int m_scrollX;
-                  // +0xf4, DC advManager::scrollX
-    int m_scrollY;
-                  // +0xf8, DC advManager::scrollY
+    type_point m_lastMapHover;  // +0xe8
+    int m_lastHoverX;  // +0xec
+    int m_lastHoverY;  // +0xf0
+    int m_scrollX;  // +0xf4, DC advManager::scrollX
+    int m_scrollY;  // +0xf8, DC advManager::scrollY
     // Dreamcast original animFrame/animCtr at +0x110/+0x114;
     // NH3API confirms retail +0xfc/+0x100 after scrollX/scrollY.
     // The constructor zeros both. Retail increments and uses the second
     // for animation modulo, so the former name at +0x100 was shifted.
-    int m_animFrame;
-                  // +0xfc
-    int m_animCtr;
-                    // +0x100
+    int m_animFrame;  // +0xfc
+    int m_animCtr;  // +0x100
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
     // while this byte is set. Dreamcast supplies the surviving member name.
     unsigned char m_animCtrPaused;
@@ -1006,65 +977,41 @@ public:
     int m_flagFrame;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
-    CSprite* m_cursorIcons[18];
-       // +0x10c, indexed by hero class
-    CSprite* m_boatIcons[3];
-          // +0x154, indexed by boat type
-    CSprite* m_boatFrothIcons[3];
-     // +0x160, indexed by boat type
-    CSprite* m_flagIcons[8];
-          // +0x16c, indexed by player owner
-    CSprite* m_boatFlagIcons[3][8];
-   // +0x18c, [boat type][player owner]
-    unsigned char m_drawCursor;
-     // +0x1ec, gates map cursor overlays
+    CSprite* m_cursorIcons[18];  // +0x10c, indexed by hero class
+    CSprite* m_boatIcons[3];  // +0x154, indexed by boat type
+    CSprite* m_boatFrothIcons[3];  // +0x160, indexed by boat type
+    CSprite* m_flagIcons[8];  // +0x16c, indexed by player owner
+    CSprite* m_boatFlagIcons[3][8];  // +0x18c, [boat type][player owner]
+    unsigned char m_drawCursor;  // +0x1ec, gates map cursor overlays
     // Dreamcast cursorVisible (+0x1f8) is byte storage; retail
     // retains it at +0x1ec. This gap aligns the following
     // original cursorType dword to four bytes.
     char m_paddingBeforeCursorType[3];
-    int m_cursorType;
-               // +0x1f0, hover cursor-mode discriminator
+    int m_cursorType;  // +0x1f0, hover cursor-mode discriminator
     // Cursor animation run. Dreamcast supplies the five consecutive names
     // at +0x200..+0x210; retail's independently proven cursor-array extent
     // and TurnTo body place the same run twelve bytes earlier.
-    int m_cursorDirection;
-          // +0x1f4
-    int m_cursorBaseFrame;
-          // +0x1f8
-    int m_cursorSequence;
-           // +0x1fc
-    int m_cursorFrameCount;
-         // +0x200
-    int m_cursorTurning;
-            // +0x204
-    int m_cursorDrawn;
-       // +0x208, cleared at the start of CompleteDraw
-    unsigned char m_curHeroMobile;
-  // +0x20c, DC name; Mobilize bails when set
+    int m_cursorDirection;  // +0x1f4
+    int m_cursorBaseFrame;  // +0x1f8
+    int m_cursorSequence;  // +0x1fc
+    int m_cursorFrameCount;  // +0x200
+    int m_cursorTurning;  // +0x204
+    int m_cursorDrawn;  // +0x208, cleared at the start of CompleteDraw
+    unsigned char m_curHeroMobile;  // +0x20c, DC name; Mobilize bails when set
     // Dreamcast bCurHeroMobile (+0x218) is byte storage; retail
     // retains it at +0x20c. This gap aligns the following
     // original iShowMode dword to four bytes.
     char m_paddingBeforeShowMode[3];
-    int m_showMode;
-                 // +0x210, DC name
-    int m_forceCompleteDraw;
-       // +0x214, DC name
-    int m_movingObjectIndex;
-        // +0x218, transient object-pool index
-    int m_movingObjectSequence;
-     // +0x21c
-    int m_movingObjectFrame;
-        // +0x220
-    int m_touchedSounds;
-             // +0x224, DC name
-    soundNode m_soundArray[4];
-       // +0x228, DC name and extent
-    sample* m_loopedSample[LOOPING_SOUND_COUNT];
-  // +0x248, DC name
-    sample* m_heroSamples[11];
-       // +0x360, DC name and extent
-    int m_heroLogoShowing;
-          // +0x38c, DC name
+    int m_showMode;  // +0x210, DC name
+    int m_forceCompleteDraw;  // +0x214, DC name
+    int m_movingObjectIndex;  // +0x218, transient object-pool index
+    int m_movingObjectSequence;  // +0x21c
+    int m_movingObjectFrame;  // +0x220
+    int m_touchedSounds;  // +0x224, DC name
+    soundNode m_soundArray[4];  // +0x228, DC name and extent
+    sample* m_loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
+    sample* m_heroSamples[11];  // +0x360, DC name and extent
+    int m_heroLogoShowing;  // +0x38c, DC name
     // +0x390. SetHeroContext's tail gates the closing
     // ForceMouseMove/lastHoverX reset on Dreamcast's bHeroMoving byte.
     unsigned char m_heroMoving;
@@ -1077,18 +1024,13 @@ public:
     EBottomViewType m_bottomViewType;
 
 private:
-    EBottomViewType m_bottomViewOverride;
+    EBottomViewType m_bottomViewOverride;  // +0x398
 
 public:
-  // +0x398
-    unsigned long m_bottomViewDeadline;
-    // +0x39c
-    int m_bottomViewResourceType;
-           // +0x3a0
-    int m_bottomViewResourceQuantity;
-       // +0x3a4
-    std::string m_bottomViewMessage;
-        // +0x3a8
+    unsigned long m_bottomViewDeadline;  // +0x39c
+    int m_bottomViewResourceType;  // +0x3a0
+    int m_bottomViewResourceQuantity;  // +0x3a4
+    std::string m_bottomViewMessage;  // +0x3a8
 
     advManager();
     virtual int open(int newPriority);
@@ -1649,8 +1591,6 @@ private:
                                        int* foughtBattle,
                                        long curMoveCost,
                                        long nextMoveMinCost);
-
-
 };
 
 unsigned short getMapExtra(int x, int y, int z);

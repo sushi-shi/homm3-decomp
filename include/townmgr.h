@@ -2,6 +2,10 @@
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 
+#include "advmgr_popup.h"
+#include "remote.h"
+#include "basemgr.h"
+
 struct type_point;
 
 unsigned char doTavern();
@@ -23,9 +27,6 @@ enum EThievesGuildStat {
     TG_STAT_ARMY_STRENGTH = 7,
     TG_STAT_INCOME = 8
 };
-
-#include "advmgr_popup.h"
-#include "remote.h"
 
 // The three states townManager::SetupMage sorts a mage-guild slot into
 // before it drives the page's two widget runs. The values are retail's
@@ -101,32 +102,20 @@ public:
         GUILD_LIT_FIRST_FRAME = 10,
         GUILD_LIT_FRAME_END = 20
     };
-    int m_numFrames;
-          // +0x00
-    int m_currFrame;
-          // +0x04
-    int m_x;
-                  // +0x08
-    int m_y;
-                  // +0x0c
-    int m_w;
-                  // +0x10
-    int m_h;
-      // +0x2c
+    int m_numFrames;  // +0x00
+    int m_currFrame;  // +0x04
+    int m_x;  // +0x08
+    int m_y;  // +0x0c
+    int m_w;  // +0x10
+    int m_h;  // +0x14
 
     townObject(int townType, int objPos, const char* basename);
-                  // +0x14
-    int m_visible;
-            // +0x18
-    int m_objId;
-              // +0x1c
-    CSprite* m_objIcon;
-       // +0x20
-    Bitmap816* m_objOutline;
-  // +0x24
-    Bitmap816* m_objHotspot;
-  // +0x28
-    border* m_objBorder;
+    int m_visible;  // +0x18
+    int m_objId;  // +0x1c
+    CSprite* m_objIcon;  // +0x20
+    Bitmap816* m_objOutline;  // +0x24
+    Bitmap816* m_objHotspot;  // +0x28
+    border* m_objBorder;  // +0x2c
     // The DC roster gives it its own row (dc 0x16a1a4, 128 SH4 bytes)
     // and retail has NO out-of-line body for it: townmgr.obj's first
     // carve row is the constructor at 0x5c2ea0 (the `%s.def` sprintf +
@@ -139,7 +128,6 @@ public:
     // CycleOutline's two expansions of the town-redraw block are the
     // arity evidence: thiscall plus two pushed 1s.
     void draw(int incFrame, unsigned char drawHotspots);
-
 };
 SIZE(townObject, 0x30);
 
@@ -329,8 +317,7 @@ public:
     };
     // Dreamcast TTownScreenWindow::topTown at +0x44 shifts to PC
     // +0x4c. Locator indexing and both scroll buttons corroborate the role.
-    int m_topTown;
-    // +0x4c  town-list scroll offset (UpdateTownLocators)
+    int m_topTown;  // +0x4c  town-list scroll offset (UpdateTownLocators)
     // +0x50: the panorama's hotspot buffer, one word per pixel, freed
     // with plain operator delete. DC name and type (zBuffer,
     // T_32PUSHORT); SetCommandAndText reads the word under the mouse
@@ -363,7 +350,6 @@ public:
 
 private:
     void updateTownLocator(int i);
-
 };
 
 class TThievesGuildWindow : public CAdvPopup {
@@ -414,8 +400,7 @@ public:
     void setupThievesGuild(int thievesGuilds);
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg) OVERRIDE;
-   // slot 9, 0x5c9930
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5c9930
 };
 
 // The town hall page: one background per town type over a grid of
@@ -435,13 +420,11 @@ public:
     // and chains. The reconstructed castle.obj setupCastle also supplies
     // no access to +0x60. An external consumer is not established.
     // Allocation extent alone does not identify the slot's type or role.
-    int m_field60;
-  // +0x60
+    int m_field60;  // +0x60
 
     THallWindow(int which);
     virtual ~THallWindow();
     virtual int windowHandler(message* msg) OVERRIDE;
-
 };
 
 // The mage guild, one full-screen page of five spell rows: twenty frame
@@ -455,8 +438,7 @@ public:
     TMageGuildWindow();
     virtual ~TMageGuildWindow();
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg) OVERRIDE;
-   // slot 9, 0x5ce370
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5ce370
 };
 
 class type_garrison_base_window : public CAdvPopup {
@@ -494,10 +476,8 @@ public:
     // carries, tested together and refreshed together before the status
     // line is rewritten - the same shape TTavernWindow's pair has. The
     // handler reaches them through msg->window, not through `this`.
-    int m_lastHover;
-      // +0x64
-    int m_lastQualifier;
-  // +0x68
+    int m_lastHover;  // +0x64
+    int m_lastQualifier;  // +0x68
     // +0x6c: a byte the base constructor clears and
     // type_monster_join_window's sets to 1; SetCommandAndText 0x5d05f0
     // rides it through both troop runs as select_army's third argument
@@ -511,11 +491,10 @@ public:
     virtual ~type_garrison_base_window();
 
 protected:
-    virtual int windowHandler(message* msg) OVERRIDE;
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5d0910
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
     void setCommandAndText(message* msg);
-   // slot 9, 0x5d0910
 };
 
 // The two derived garrison windows have EMPTY destructors: retail inlines
@@ -556,21 +535,16 @@ public:
     // initialises it, which is retail's own behaviour and not an
     // omission here: the first hover simply compares against whatever
     // the allocation left behind.
-    int m_lastHover;
-            // +0x60
-    int m_townType;
-             // +0x64  selects the machine and its artifact
-    int m_field68;
-             // +0x68  cleared by the constructor
-    iconWidget* m_machineIcon;
-  // +0x6c
+    int m_lastHover;  // +0x60
+    int m_townType;  // +0x64  selects the machine and its artifact
+    int m_field68;  // +0x68  cleared by the constructor
+    iconWidget* m_machineIcon;  // +0x6c
 
     TBlacksmithWindow(int heroID, int inTownType);
     virtual ~TBlacksmithWindow();
     void setRightClickText(int id);
     void setRolloverText(int id);
-    virtual int windowHandler(message* msg) OVERRIDE;
-   // slot 9, 0x5d1c60
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5d1c60
 };
 
 // The shipyard dialog. Constructor 0x5d1ef0 writes both members past
@@ -586,15 +560,12 @@ public:
     // it and WindowHandler 0x5d25a0 is the only other body that touches
     // it: it steps the frame on every message and wraps at the boat
     // sequence's own length.
-    int m_boatFrame;
-         // +0x60
-    iconWidget* m_boatIcon;
-  // +0x64
+    int m_boatFrame;  // +0x60
+    iconWidget* m_boatIcon;  // +0x64
 
     TShipWindow(int type);
     virtual ~TShipWindow();
-    virtual int windowHandler(message* msg) OVERRIDE;
-   // slot 9, 0x5d25a0
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5d25a0
 };
 
 // The "build this?" confirmation popup. Both members past CAdvPopup's
@@ -611,16 +582,13 @@ public:
         CANCEL_BUTTON_ID = 0x7801,
         BUY_BUTTON_ID = 0x7802
     };
-    textWidget* m_rolloverText;
-  // +0x60
-    int m_buildingId;
-            // +0x64
+    textWidget* m_rolloverText;  // +0x60
+    int m_buildingId;  // +0x64
 
     TBuyBuildWindow(int x2, int y2, int id);
     virtual ~TBuyBuildWindow();
     void setPrerequisiteText(const town* currentTown, int building);
-    virtual int windowHandler(message* msg) OVERRIDE;
-   // slot 9, 0x5d6810
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5d6810
 };
 
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
@@ -649,30 +617,23 @@ public:
     // both bodies below read it as the index into playerData::recruits.
     // Role-derived name: the portrait click stores slot 0 or 1, and
     // the hire/detail paths index the local player's recruits with this value.
-    int m_selectedRecruit;
-              // +0x60  cleared by the constructor
+    int m_selectedRecruit;  // +0x60  cleared by the constructor
     // +0x64 / +0x68, NAMED 2026-08-21 by WindowHandler 0x5d7b30: the
     // hover pair the whole compiland's dialog family carries, tested
     // together and refreshed together before the rollover line is
     // rewritten. Same shape as TBlacksmithWindow's lastHover, with the
     // qualifier alongside it because this page's rollover changes on a
     // right-click as well as on a move.
-    int m_lastHover;
-             // +0x64
-    int m_lastQualifier;
-         // +0x68
-    textWidget* m_rolloverText;
-  // +0x6c
+    int m_lastHover;  // +0x64
+    int m_lastQualifier;  // +0x68
+    textWidget* m_rolloverText;  // +0x6c
 
     TTavernWindow(int x2, int y2);
     virtual ~TTavernWindow();
     void setRolloverText(int id);
-    virtual int open(int zOrder, unsigned char update);
-  // slot 1
-    virtual void close(unsigned char update);
-            // slot 2
-    virtual int windowHandler(message* msg) OVERRIDE;
-    // slot 9, 0x5d7b30
+    virtual int open(int zOrder, unsigned char update);  // slot 1
+    virtual void close(unsigned char update);  // slot 2
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5d7b30
 };
 
 // The fort page: one row per creature dwelling - a separator strip, a
@@ -734,7 +695,7 @@ public:
     TResourceDisplay* m_castleBank;
     TCastleWindow();
     virtual ~TCastleWindow();
-    virtual int windowHandler(message* msg) OVERRIDE;
+    virtual int windowHandler(message* msg) OVERRIDE;  // slot 9, 0x5dcf80
 
 private:
     // +0x68..+0x87, DC `SpriteWidget`: the eight dwelling animations.
@@ -753,10 +714,7 @@ private:
     void setRolloverText(message* msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void recruit(int i);
-   // slot 9, 0x5dcf80
 };
-
-#include "basemgr.h"
 
 class town;
 class strip;
@@ -783,8 +741,7 @@ class CTownNetMsgHandler;
 // the three slots of vtable 0x643720.
 class townManager : public baseManager {
 public:
-    town* m_townToView;
-             // +0x38
+    town* m_townToView;  // +0x38
     // +0x3c: the panorama background, a bitmapBorder16 -
     // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,
     // 374, 147, gText, 0x800)` and Main paces its animation with the
@@ -792,8 +749,7 @@ public:
     // every existing site assigns or deletes it).
     // Dreamcast panorama at +0x44; retail background construction and
     // animation corroborate the corresponding PC pointer at +0x3c.
-    bitmapBorder16* m_panorama;
-     // +0x3c
+    bitmapBorder16* m_panorama;  // +0x3c
     // +0x40, NAMED AND TYPED 2026-08-14. The Dreamcast fieldlist's
     // `MonPix` is an LF_ARRAY of seven CSprite* at its own 72, which is
     // this offset under the same -8 shift that puts currTown/panorama/
@@ -809,80 +765,60 @@ public:
     // the town window and frees the object - which is ~townObject
     // inlined, so the array is townObject* and the count is its own.
     townObject* m_townObjects[44];
-    int m_townObjectCount;
-          // +0x10c
-    int m_loadedTownType;
-                // +0x110  ctor -1
-    int m_saveWin;
-                // +0x114
-    heroWindow* m_townWindow;
-       // +0x118
+    int m_townObjectCount;  // +0x10c
+    int m_loadedTownType;  // +0x110  ctor -1
+    int m_saveWin;  // +0x114
+    heroWindow* m_townWindow;  // +0x118
     // Dreamcast garrisonStrip/heroStrip/currStrip/currIndex/srcStrip/
     // srcIndex/destStrip/destIndex are the consecutive +0x128..+0x144
     // slots; retail retains this sequence at +0x11c..+0x138. newStrips
     // (0x5c6e10) binds garrison and visiting armies. selectArmy (0x5c8080)
     // records the current pair; doCommand (0x5d4c10) latches the source
     // and merges/splits/swaps it into the destination pair.
-    strip* m_garrisonStrip;
-             // +0x11c
-    strip* m_heroStrip;
-             // +0x120
+    strip* m_garrisonStrip;  // +0x11c
+    strip* m_heroStrip;  // +0x120
     // +0x124 / +0x128, NAMED AND TYPED 2026-08-14 by select_army
     // 0x5c8080: it stores the strip that was clicked and the slot
     // inside it, in that order, before anything else it does.
-    strip* m_currStrip;
-         // +0x124
-    int m_currIndex;
-                // +0x128  ctor -1
-    strip* m_srcStrip;
-             // +0x12c
-    int m_srcIndex;
-                // +0x130  ctor -1
-    strip* m_destStrip;
-             // +0x134
-    int m_destIndex;
-                // +0x138  ctor -1
+    strip* m_currStrip;  // +0x124
+    int m_currIndex;  // +0x128  ctor -1
+    strip* m_srcStrip;  // +0x12c
+    int m_srcIndex;  // +0x130  ctor -1
+    strip* m_destStrip;  // +0x134
+    int m_destIndex;  // +0x138  ctor -1
     // +0x13c: the town page's resource bar. Typed by recruitUnit::Close
     // (0x550344), which calls ?Update@TResourceDisplay@@QAEXEE@Z through
     // it; the manager constructs it, owns it and deletes it in ::Close.
-    TResourceDisplay* m_resourceDisplay;
-   // +0x13c
+    TResourceDisplay* m_resourceDisplay;  // +0x13c
     // +0x140, TYPED 2026-08-14 by DoHall 0x5d27b0: it deletes whatever
     // is here through vtable slot 0, puts a fresh
     // `TResourceDisplay(hallWindow, 1)` in its place, calls Update on
     // it and hands it to the net handler - the same bar as +0x13c, but
     // the one a modal page owns for as long as it is up.
-    TResourceDisplay* m_dialogResourceDisplay;
-   // +0x140
+    TResourceDisplay* m_dialogResourceDisplay;  // +0x140
     // +0x144, NAMED 2026-08-14: RedrawTownScreen 0x5d5410 hands its
     // ADDRESS to the page's status widget as a message's extraText, so
     // the run is a buffer this object owns, not padding. The extent is
     // still only bounded by the next proven member at +0x194.
-    char m_statusText[0x50];
-        // +0x144
+    char m_statusText[0x50];  // +0x144
     // +0x194 / +0x198, NAMED 2026-08-14 from the Dreamcast fieldlist
     // (lastHover@416, lastQualifier@420 - this pair under the same -8
     // shift, less the four bytes retail dropped with townMenu). The
     // fort page's WindowHandler 0x5dcf80 is the reader: it refreshes
     // the rollover line only when the pair actually changes.
-    int m_lastHover;
-                // +0x194  ctor -1
-    int m_lastQualifier;
-            // +0x198  ctor -1
+    int m_lastHover;  // +0x194  ctor -1
+    int m_lastQualifier;  // +0x198  ctor -1
     // Dreamcast command at +0x1a8 maps to PC +0x19c; Main and the
     // garrison handler pass this action code directly to doCommand.
-    int m_command;
-                // +0x19c  ctor -1
+    int m_command;  // +0x19c  ctor -1
     // +0x1a0/+0x1a8: Dreamcast townManager fields `canBuyMask` and
     // `canBuildMask`, both T_QUAD. SetupCastle independently proves the
     // Complete layout: it clears each pair of dwords, ORs affordable
     // buildings into the first, and stores town::get_buildable_mask in the
     // second. The -0x10 retail shift is the same one already established by
     // lastHover/lastQualifier and currentDwellingIDOff.
-    __int64 m_canBuyMask;
-            // +0x1a0
-    __int64 m_canBuildMask;
-          // +0x1a8
+    __int64 m_canBuyMask;  // +0x1a0
+    __int64 m_canBuildMask;  // +0x1a8
     // +0x1b0, NAMED AND TYPED 2026-08-14 by DoHall 0x5d27b0, which
     // writes the page's resource bar into +0xc of this object twice -
     // once on the way in and once on the way out. That is
@@ -902,25 +838,20 @@ public:
     // handle stream absorbs one declaration here. +0x1bc keeps the base
     // pointer for the same budget reason - a second declaration would
     // spend room that buys no bytes, DoHall being byte-exact without it.
-    CTownNetMsgHandler* m_netMsgHandler;
-    // +0x1b0
+    CTownNetMsgHandler* m_netMsgHandler;  // +0x1b0
     // +0x1b4: the previous CDPlayHeroes message handler, saved by Open
     // through GetNetMsgHandler (0x5537a0) and restored by Close through
     // SetNetMsgHandler (0x553770).
     CNetMsgHandler* m_netMsgHandlerSave;
-    int m_objToBuild;
-                // +0x1b8  ctor -1
+    int m_objToBuild;  // +0x1b8  ctor -1
     // +0x1bc, NAMED AND TYPED 2026-08-14: DoHall 0x5d27b0 stores its
     // `new THallWindow(townToView->type)` here and drives the whole
     // modal run - DrawWindow, DoModal, delete - through it. Held as the
     // base pointer for the reason the note on +0x1b0 gives.
-    heroWindow* m_hallWindow;
-       // +0x1bc
-    int m_multiWin;
-                // +0x1c0
-    int m_divideStatus;
-                // +0x1c4  ResetStrips
-    char m_recruitSelected[0x4];
+    heroWindow* m_hallWindow;  // +0x1bc
+    int m_multiWin;  // +0x1c0
+    int m_divideStatus;  // +0x1c4  ResetStrips
+    char m_recruitSelected[0x4];  // +0x1c8  untouched by the retail bodies
     // Retail 0x5d8480 (dc 0x17b318). Inferno's Castle Gate.
     void doTownGate();
     void updateTownInfo();
@@ -930,7 +861,6 @@ public:
     void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
     void swapHeroes();
     void moveHeroToGarrison();
-            // +0x1c8  untouched by the retail bodies
     // +0x1cc, seven bytes - the dwelling slot each of the fort page's
     // seven base rows is currently showing. TCastleWindow's
     // constructor uses each byte as the column of this town's 14-wide
@@ -989,10 +919,8 @@ public:
     void doUniversity();
     void handleMageGuildClick();
     void setHeroCommand();
-    virtual int open(int newPriority) OVERRIDE;
-   // slot 0, 0x5c63c0
-    virtual void close() OVERRIDE;
-                // slot 1, 0x5c71b0
+    virtual int open(int newPriority) OVERRIDE;  // slot 0, 0x5c63c0
+    virtual void close() OVERRIDE;  // slot 1, 0x5c71b0
     virtual int main(message& msg) OVERRIDE;
     void doTownTavern();
 

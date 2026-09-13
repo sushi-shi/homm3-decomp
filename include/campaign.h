@@ -49,7 +49,6 @@ public:
     virtual ~TCampaignSetWindow();
     virtual int handleMessage(message& msg);
     void doModal();
-
 };
 SIZE(TCampaignSetWindow, 0x4c);
 

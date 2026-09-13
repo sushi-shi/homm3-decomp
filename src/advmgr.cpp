@@ -78,11 +78,6 @@
 #include "recruit.h"
 #include "remote.h"
 #include "sample.h"
-
-// Adventure-turn ownership for this machine. Dreamcast publishes the
-// original name; retail fixes the dword at 0x697788 through this routine and
-// every remote-turn consumer.
-DATA(0x00697788) int g_thisNetGotAdventureControl;
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textntry.h"
@@ -97,6 +92,11 @@ DATA(0x00697788) int g_thisNetGotAdventureControl;
 #include "singleselectionwindow.h"
 #include "netgame.h"
 #include "systemoptionswindow.h"
+
+// Adventure-turn ownership for this machine. Dreamcast publishes the
+// original name; retail fixes the dword at 0x697788 through this routine and
+// every remote-turn consumer.
+DATA(0x00697788) int g_thisNetGotAdventureControl;
 
 // includes.h:134 supplies the shared limit calls below.
 
