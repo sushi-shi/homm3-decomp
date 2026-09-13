@@ -754,9 +754,7 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
     g_colorMaskBlue = redMask;
     g_colorMaskGreen = greenMask;
     g_colorMaskRed = blueMask;
-    TPalette16::s_redMask = redMask;
-    TPalette16::s_greenMask = greenMask;
-    TPalette16::s_blueMask = blueMask;
+    TPalette16::setPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
     g_spriteMaskLast = blueMask;
@@ -2657,7 +2655,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 {
     Bitmap816* source = getBitmap816(resName);
     if (source) {
-        source->draw(0, 0, source->m_width, source->m_height,
+        source->draw(0, 0, source->getWidth(), source->getHeight(),
                      destBmap, 0, 0, false);
         source->dispose();
     } else {
@@ -2747,7 +2745,7 @@ void resource::dispose()
 {
     if (this) {
         release();
-        if (m_referenceCount == 0) {
+        if (getReferenceCount() == 0) {
             ResourceManager::TCacheMap::iterator found =
                 g_resourceCache.find(getName());
             if (found != g_resourceCache.end()) {
@@ -2766,7 +2764,7 @@ void CSprite::dispose()
 {
     if (this) {
         release();
-        if (m_referenceCount == 0) {
+        if (getReferenceCount() == 0) {
             int sequenceCount = getNumSeqs(getResType());
             for (int sequence = 0; sequence < sequenceCount; ++sequence) {
                 if (isValidSeq(sequence)) {

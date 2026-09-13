@@ -22,15 +22,15 @@ public:
         TILE_SIZE = 256
     };
 
-    // Before normalization: beginID.
-    int m_beginId;
-    // Before normalization: endID.
-    int m_endId;
-
     TDialogBox(int winX, int winY, int winWidth, int winHeight,
                unsigned winType);
     TDialogBox(unsigned winType);
     virtual ~TDialogBox();
+
+    // Before normalization: beginID.
+    int m_beginId;
+    // Before normalization: endID.
+    int m_endId;
     // Before normalization (function): TDialogBox::Setup.
     virtual unsigned char setup(int winX, int winY,
                                 int winWidth, int winHeight);

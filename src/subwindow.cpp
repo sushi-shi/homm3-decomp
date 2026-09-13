@@ -95,9 +95,9 @@ void TSubWindow::saveBackground()
     m_background = new Bitmap16Bit(m_width, m_height);
     pollSound();
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    m_background->grab(screen->m_map,
+    m_background->grab(screen->getMap(0, 0),
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-        screen->m_width, screen->m_height, screen->m_pitch);
+        screen->getWidth(), screen->getHeight(), screen->getPitch());
     pollSound();
 }
 
@@ -109,9 +109,9 @@ void TSubWindow::restoreBackground()
         int drawX = m_x + m_parentWindow->m_x;
         int drawY = m_y + m_parentWindow->m_y;
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_background->draw(0, 0, m_background->m_width, m_background->m_height,
-            screen->m_map, drawX, drawY,
-            screen->m_width, screen->m_height, screen->m_pitch, false);
+        m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+            screen->getMap(0, 0), drawX, drawY,
+            screen->getWidth(), screen->getHeight(), screen->getPitch(), false);
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
         delete m_background;
         m_background = 0;

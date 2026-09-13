@@ -1392,10 +1392,10 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 offsetToMon -= currTown->getHordeBonus(slot);
             }
 
-            if (currTown->m_generatorBonus[slot] > 0) {
+            if (currTown->getGeneratorBonus(slot) > 0) {
                 rightText += formatString(g_generalText->getText(592),
-                                            currTown->m_generatorBonus[slot]);
-                offsetToMon -= currTown->m_generatorBonus[slot];
+                                            currTown->getGeneratorBonus(slot));
+                offsetToMon -= currTown->getGeneratorBonus(slot);
             }
 
             if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, 1))
@@ -2566,6 +2566,27 @@ void townManager::selectArmy(strip* fromStrip, int slot,
     m_command = 0;
 }
 
+
+// DC townmgr.cpp:3825..3838 (0x16d1e0) proves this ordinary member and
+// its SetArmyCommand/select_army calls. SetCommandAndText's two slot arms
+// call ArmyCommand at DC line 4951; Complete expands it in both arms.
+// Before normalization (function): townManager::ArmyCommand.
+// Before normalization (locals): join_dialog.
+void townManager::armyCommand(strip* whichStrip, int i, int shift,
+                              unsigned char joinDialog)
+{
+    if (whichStrip->m_group) {
+        if (m_srcIndex >= 0 && m_srcStrip->m_owner == g_netLocalGamePos) {
+            m_destStrip = whichStrip;
+            m_destIndex = i;
+            setArmyCommand(m_divideStatus || shift, joinDialog);
+        } else {
+            selectArmy(whichStrip, i, joinDialog);
+        }
+    }
+}
+
+
 // E:\gamedcs\townmgr.cpp:3859
 // Before normalization (locals): num_guilds.
 VA(0x005c8190, 0x14C8)  // anchor-vtable 0x643764 + anchor-string TPRank.pcx + arity, dc 0x16d298
@@ -2662,7 +2683,7 @@ TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     // combatresultswindow's residual, seen there from the other side.
     button* mageButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    mageButton->m_hotKeyCodes.push_back(1);
+    mageButton->setHotkey(1);
     m_widgets.push_back(mageButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3351,7 +3372,7 @@ TMageGuildWindow::TMageGuildWindow()
     // in retail's slots rotated by one (98.49% -> 100%).
     button* exitButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    exitButton->m_hotKeyCodes.push_back(1);
+    exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3830,7 +3851,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     // push_back spelling is worth 93.8825 -> 100.0000 (docs/vc6/inliner.md
     // 6b - the rung's sign is per-site, and a site's sign moves when
     // anything upstream in the body does).
-    okButton->m_hotKeyCodes.push_back(1);
+    okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3899,29 +3920,13 @@ type_garrison_base_window::~type_garrison_base_window()
 // The command slot is cleared to -2 on the way IN, before the dispatch,
 // so an arm that sets nothing leaves the page with no command.
 //
-// The two seven-slot runs (0x73..0x79 over the top strip, 0x8c..0x92
-// over the bottom one) are written LONGHAND rather than folded: retail
-// emits both bodies in full, and the only differences between them are
-// the strip and the base id. Each run decides between a command and a
-// plain selection on one test - the manager already has a slot latched
-// AND that slot's strip belongs to this machine's player - and between
-// the split and the plain command on the divide latch or a held shift.
-//
-// `field_6c`, the base window's own byte, rides through both runs as the
-// third argument of select_army and the second of SetArmyCommand;
-// retail spills it to the dead parameter home ([ebp+8], the message
-// pointer's own slot) rather than keeping a register, which is the
-// parameter-recycling idiom this tree already records.
-
-// E:\gamedcs\townmgr.cpp
-// Residual (95.6856%): a whole-arm EAX/EDX binding mirror. Retail carries
-// `qualifier` in EDX and the strip in EAX; this compile has them the other
-// way round, which is also why retail needs an explicit `xor eax,eax` for
-// the zero argument where we reuse the just-tested register. Tried and
-// rejected: declaring `thisStrip` (and its `mgr`) BEFORE `qualifier` so the
-// strip pseudo is created first - 95.6856 -> 95.4367, so creation order is
-// not what selects this pair. The `field_19c` sentinel store and the
-// isOwnerCell spill also sit one slot earlier than retail schedules them.
+// Both seven-slot runs call the DC-proven ArmyCommand member. Complete
+// expands its group/ownership gates and retains SetArmyCommand/selectArmy.
+// Recovering that boundary improves 95.6856% to 98.8384% with all 34 CFG
+// blocks and the named call sequence agreeing. Four instruction rows remain
+// different, beginning with the register used for the manager load.
+// Earlier flattened-arm control: moving thisStrip/mgr before qualifier
+// worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
 VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
 void type_garrison_base_window::setCommandAndText(message* msg)
 {
@@ -3935,26 +3940,9 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     case TOP_SLOT_FIRST_ID + 4:
     case TOP_SLOT_FIRST_ID + 5:
     case TOP_SLOT_FIRST_ID + 6: {
-        unsigned char isOwnerCell = m_isJoinDialog;
-        int slot = msg->m_codeY - TOP_SLOT_FIRST_ID;
-        int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
-        townManager* mgr = g_townManager;
-        strip* thisStrip = mgr->m_garrisonStrip;
-        if (thisStrip->m_group) {
-            if (mgr->m_srcIndex >= 0
-                && mgr->m_srcStrip->m_owner == g_netLocalGamePos) {
-                mgr->m_destStrip = thisStrip;
-                mgr->m_destIndex = slot;
-                // ONE call site: retail materialises the flag in EAX
-                // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
-                // pushes the register, which is tail DUPLICATION of a single
-                // computed argument - two written call sites push the
-                // immediates instead.
-                mgr->setArmyCommand(mgr->m_divideStatus || qualifier, isOwnerCell);
-            } else {
-                mgr->selectArmy(thisStrip, slot, isOwnerCell);
-            }
-        }
+        g_townManager->armyCommand(g_townManager->m_garrisonStrip,
+            msg->m_codeY - TOP_SLOT_FIRST_ID,
+            msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
 
@@ -3971,26 +3959,9 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     case BOTTOM_SLOT_FIRST_ID + 4:
     case BOTTOM_SLOT_FIRST_ID + 5:
     case BOTTOM_SLOT_FIRST_ID + 6: {
-        unsigned char isOwnerCell = m_isJoinDialog;
-        int slot = msg->m_codeY - BOTTOM_SLOT_FIRST_ID;
-        int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
-        townManager* mgr = g_townManager;
-        strip* thisStrip = mgr->m_heroStrip;
-        if (thisStrip->m_group) {
-            if (mgr->m_srcIndex >= 0
-                && mgr->m_srcStrip->m_owner == g_netLocalGamePos) {
-                mgr->m_destStrip = thisStrip;
-                mgr->m_destIndex = slot;
-                // ONE call site: retail materialises the flag in EAX
-                // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
-                // pushes the register, which is tail DUPLICATION of a single
-                // computed argument - two written call sites push the
-                // immediates instead.
-                mgr->setArmyCommand(mgr->m_divideStatus || qualifier, isOwnerCell);
-            } else {
-                mgr->selectArmy(thisStrip, slot, isOwnerCell);
-            }
-        }
+        g_townManager->armyCommand(g_townManager->m_heroStrip,
+            msg->m_codeY - BOTTOM_SLOT_FIRST_ID,
+            msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
 
@@ -5268,9 +5239,7 @@ static void bonusRightClick(TTownScreenWindow* win, long id)
     int creature = win->m_bonusCreatures[id];
     if (creature != -1) {
         widget* w = win->m_growthBonusIcon[id];
-        const char* popupText = w->m_rightClick;
-        if (!popupText)
-            popupText = w->m_rollOver;
+        const char* popupText = w->getRclickText();
         normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
                      -1, 0, -1, 0, -1, 0);
     }
@@ -6726,7 +6695,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     setBuybuildPalette(window, msg);
 
     CSprite* icons = ResourceManager::getSprite("Resource.def");
-    int iconWidth = icons->m_width;
+    int iconWidth = icons->getWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
         textWidget* amountText = new textWidget(

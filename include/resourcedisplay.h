@@ -44,13 +44,21 @@ public:
     };
 
     // Before normalization: isSmall.
+
+private:
     unsigned char m_isSmall;
+
+public:
     // Before normalization: pad_35.
     // Dreamcast places IsSmall immediately before three alignment
     // bytes and the widget array; NH3API confirms the PC +0x34/+0x38 offsets.
     char m_paddingBeforeResourceWidgets[3];
     // Before normalization: resourceWidgets.
+
+private:
     textWidget* m_resourceWidgets[7];
+
+public:
     // Before normalization: resourceBorders.
     border* m_resourceBorders[7];
     // Before normalization: resourceBackground.

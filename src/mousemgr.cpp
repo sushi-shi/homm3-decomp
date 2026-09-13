@@ -291,8 +291,8 @@ void mouseManager::update(unsigned char forceIt)
 
     pointerRect.left = m_imageX;
     pointerRect.top = m_imageY;
-    pointerRect.right = m_imageX + m_sprite->m_width;
-    pointerRect.bottom = m_imageY + m_sprite->m_height;
+    pointerRect.right = m_imageX + m_sprite->getWidth();
+    pointerRect.bottom = m_imageY + m_sprite->getHeight();
     if (pointerRect.left < 0)
         pointerRect.left = 0;
     if (pointerRect.top < 0)
@@ -735,8 +735,8 @@ void mouseManager::loadFrame(int newFrame)
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
         CSprite* sprite = m_sprite;
-        sprite->drawPointer(newFrame, bitmap.m_map, 0, 0,
-            bitmap.m_width, bitmap.m_height, bitmap.m_pitch, 0);
+        sprite->drawPointer(newFrame, bitmap.getMap(0, 0), 0, 0,
+            bitmap.getWidth(), bitmap.getHeight(), bitmap.getPitch(), 0);
         g_ddsMouseSurface->Unlock(0);
         m_frame = newFrame;
     }

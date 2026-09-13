@@ -215,18 +215,6 @@ public:
     // byte of this int. Natural alignment now places the full member at
     // +0xa0, between the retail +0x9c flag and +0xa4 updateNeeded.
     int m_addIndex;
-    // Before normalization: updateNeeded.
-    int m_updateNeeded;
-    // Before normalization: errorExit.
-    int m_errorExit;
-    // Before normalization: maxAvail.
-    int m_maxAvail;
-    // Before normalization: totalGold.
-    long m_totalGold;
-    // Before normalization: totalResources.
-    int m_totalResources;
-    // Before normalization: numberToBuy.
-    int m_numberToBuy;
 
     // Before normalization (locals): bGroupIsTownGarrison, _MonType1, _numMon1, _MonType2,
     // _numMon2, _MonType3, _numMon3, _MonType4, _numMon4, _thisHero, bInInTownMainScreen.
@@ -240,6 +228,18 @@ public:
         TCreatureType monType2, short* numMon2,
         TCreatureType monType3, short* numMon3,
         TCreatureType monType4, short* numMon4);
+    // Before normalization: updateNeeded.
+    int m_updateNeeded;
+    // Before normalization: errorExit.
+    int m_errorExit;
+    // Before normalization: maxAvail.
+    int m_maxAvail;
+    // Before normalization: totalGold.
+    long m_totalGold;
+    // Before normalization: totalResources.
+    int m_totalResources;
+    // Before normalization: numberToBuy.
+    int m_numberToBuy;
     // What opened this recruit. The two dialog flavours above leave -1;
     // only the town constructor tags itself, and ::Close tests the tag
     // before it refreshes the town page behind the dialog. The 0x62
@@ -251,6 +251,14 @@ public:
     };
 
     recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen);
+
+
+    // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
+    // recruit.cpp line table attests.  It remains inline: retail emits no
+    // standalone body and expands the nested GetMonsterCost loop at all four
+    // recruitUnit call sites.
+    // Before normalization (function): recruitUnit::UpdateCost.
+    inline void updateCost();
     // The three baseManager slots of vtable 0x640c70. Only Close is
     // reconstructed; the other two are declared so the class is
     // concrete, which is what `new recruitUnit(...)` at the fort page's
@@ -268,14 +276,6 @@ public:
     void update(unsigned char newMonster, long slot);
     // Before normalization (function): recruitUnit::SetRolloverText.
     void setRolloverText(int codeY);
-
-
-    // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
-    // recruit.cpp line table attests.  It remains inline: retail emits no
-    // standalone body and expands the nested GetMonsterCost loop at all four
-    // recruitUnit call sites.
-    // Before normalization (function): recruitUnit::UpdateCost.
-    inline void updateCost();
 };
 SIZE(recruitUnit, 188);
 

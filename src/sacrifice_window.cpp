@@ -2353,7 +2353,7 @@ void type_sacrifice_window::setArtifactMode()
         updateArtifactOffering(i);
 
     for (i = 0; i < m_backpackWidgets.size(); ++i)
-        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->m_backpack[i]);
+        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->getBackpack(i));
 
     // Before normalization (locals): scroll_backpack.
     unsigned char scrollBackpack =
@@ -2627,7 +2627,7 @@ void type_sacrifice_window::artifactClick(
     // Before normalization (locals): right_click, old_artifact.
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->m_equipped[slot];
+    type_artifact oldArtifact = m_currentHero->getArtifact(slot);
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -2682,7 +2682,7 @@ void type_sacrifice_window::updateBackpack()
 {
     for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
         updateArtifactWidget(m_backpackWidgets[i],
-                               m_currentHero->m_backpack[i]);
+                               m_currentHero->getBackpack(i));
 
     // Before normalization (locals): scroll_backpack.
     unsigned char scrollBackpack =
@@ -2709,7 +2709,7 @@ void type_sacrifice_window::backpackClick(
     // Before normalization (locals): right_click, old_artifact.
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->m_backpack[slot];
+    type_artifact oldArtifact = m_currentHero->getBackpack(slot);
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
@@ -2872,7 +2872,7 @@ void type_sacrifice_window::emptyBackpack()
     while (m_currentHero->getNumberInBackpack(1) > 0) {
         long i;
         for (i = 0; i < SACRIFICE_BACKPACK_ARTIFACT_COUNT; ++i) {
-            artifact = m_currentHero->m_backpack[i];
+            artifact = m_currentHero->getBackpack(i);
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 break;
         }
@@ -2941,7 +2941,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
             static_cast<type_sacrifice_window*>(msg.m_window);
         type_artifact artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
-            artifact = window->m_currentHero->m_equipped[slot];
+            artifact = window->m_currentHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 if (!window->addArtifact(artifact, slot))
                     break;
@@ -3377,10 +3377,10 @@ int type_sacrifice_window::doModal(unsigned char fadeIn)
 VA(0x005653f0, 0x3b)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x12743c
 void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!currentWidget->m_rollOver)
+    if (!currentWidget->getHelpText())
         m_rolloverText->setText(g_emptyRolloverText);
     else
-        m_rolloverText->setText(currentWidget->m_rollOver);
+        m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -3711,7 +3711,7 @@ void type_skeleton_window::creatureClick(
         update(side, slot);
         update(m_selectedGroup, m_selectedIndex);
 
-        widget::s_lastHoverWidget = 0;
+        widget::clearHoverWidget();
         m_selectedGroup = -1;
         m_selectedIndex = -1;
 
@@ -3743,10 +3743,10 @@ int type_skeleton_window::windowHandler(message* msg)
 VA(0x00566720, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x128098
 void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!currentWidget->m_rollOver)
+    if (!currentWidget->getHelpText())
         m_rolloverText->setText(g_emptyRolloverText);
     else
-        m_rolloverText->setText(currentWidget->m_rollOver);
+        m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 

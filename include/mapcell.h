@@ -753,24 +753,24 @@ public:
     short m_objectTypeIndex;    // +0x24
 
     NewmapCell();
-    ~NewmapCell();
-    // Before normalization (function): NewmapCell::HasTriggerableEvent.
-    const unsigned char hasTriggerableEvent();
 
     // 0x4fce20, exact in src/mapcell.cpp. Declared here because findpath's
     // CalcTerrainCost calls it with the const cell in ECX.
     // Before normalization (function): NewmapCell::get_special_terrain.
     TAdventureObjectType getSpecialTerrain() const;
+    // Before normalization (function): NewmapCell::HasTriggerableEvent.
+    const unsigned char hasTriggerableEvent();
+    ~NewmapCell();
     // Before normalization (function): NewmapCell::get_magic_terrain_type.
     int getMagicTerrainType();
+    // Before normalization (function): NewmapCell::is_diggable.
+    unsigned char isDiggable();
     // Before normalization (function): NewmapCell::get_map_object.
     TAdventureObjectType getMapObject();
     // Before normalization (function): NewmapCell::get_map_extraInfo.
     unsigned long getMapExtraInfo();
     // Before normalization (function): NewmapCell::cell_is_trigger.
     unsigned char cellIsTrigger();
-    // Before normalization (function): NewmapCell::is_diggable.
-    unsigned char isDiggable();
     // The visibility lane is EIGHT BITS WIDE and the mask is byte-load-bearing
     // at every inlined site: both operands stay dword (`mov eax,1 /
     // shl eax,cl` and `mov ecx,[cell] / shr ecx,5`) and retail then tests only

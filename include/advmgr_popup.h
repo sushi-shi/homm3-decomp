@@ -30,6 +30,7 @@ public:
     virtual ~CAdvPopup();
     // Before normalization (function): CAdvPopup::WindowHandler.
     virtual int windowHandler(message* msg);             // slot 9
+
 protected:
     // Before normalization (function): CAdvPopup::ExitDialog.
     virtual int exitDialog(message* msg);                 // slot 14

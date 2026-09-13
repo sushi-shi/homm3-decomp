@@ -886,40 +886,17 @@ public:
         // Before normalization: armyTypes.
         TCreatureType m_armyTypes[ARMY_GROUP_SLOT_COUNT];
     };
-    // Before normalization: numTroops.
-    int m_numTroops[ARMY_GROUP_SLOT_COUNT];
 
     armyGroup();
     armyGroup(TCreatureType type, int amount);
+    // Before normalization: numTroops.
+    int m_numTroops[ARMY_GROUP_SLOT_COUNT];
     // Before normalization (function): armyGroup::Initialize.
     void initialize();
-    // Before normalization (function): armyGroup::HasCreatures.
-    unsigned char hasCreatures() const;
-    // Before normalization (function): armyGroup::HasAllUndead.
-    unsigned char hasAllUndead() const;
-    // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
-    // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
-    // the unreferenced out-of-line copy from retail.
-    // Before normalization (function): armyGroup::HasSomeUndead.
-    unsigned char hasSomeUndead() const;
-    // Before normalization (function): armyGroup::IsMember.
-    unsigned char isMember(TCreatureType monType) const;
-    // Before normalization (function): armyGroup::CanJoin.
-    int canJoin(int monType) const;
     // Before normalization (function): armyGroup::GetAlignments.
     int getAlignments(unsigned char* alignments) const;
     // Before normalization (function): armyGroup::get_AI_value.
     long getAIValue() const;
-    // Before normalization (function): armyGroup::GetNativeTerrain.
-    TTerrainType getNativeTerrain() const;
-    // Before normalization (function): armyGroup::SplitArmy.
-    void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
-                   unsigned char inSrcRestricted,
-                   unsigned char inDestRestricted);
-    // Before normalization (function): armyGroup::Merge.
-    unsigned char merge(armyGroup* ag);
-    // Before normalization (function): armyGroup::merge_armies.
-    void mergeArmies(armyGroup* source);
     // Overload set, both DC-attested and both byte-located 2026-08-08
     // by arity inside the Swap..GetArmySizeName bracket: the no-arg
     // form is retail 0x44ada0 (`ret`, dc 0x4ef88, 1 param) and the
@@ -930,6 +907,29 @@ public:
     int getCreatureTotal() const;
     // Before normalization (function): armyGroup::get_creature_total.
     int getCreatureTotal(TCreatureType monType) const;
+    // Before normalization (function): armyGroup::IsMember.
+    unsigned char isMember(TCreatureType monType) const;
+    // Before normalization (function): armyGroup::CanJoin.
+    int canJoin(int monType) const;
+    // Before normalization (function): armyGroup::HasAllUndead.
+    unsigned char hasAllUndead() const;
+    // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
+    // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
+    // the unreferenced out-of-line copy from retail.
+    // Before normalization (function): armyGroup::HasSomeUndead.
+    unsigned char hasSomeUndead() const;
+    // Before normalization (function): armyGroup::Merge.
+    unsigned char merge(armyGroup* ag);
+    // Before normalization (function): armyGroup::merge_armies.
+    void mergeArmies(armyGroup* source);
+    // Before normalization (function): armyGroup::SplitArmy.
+    void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
+                   unsigned char inSrcRestricted,
+                   unsigned char inDestRestricted);
+    // Before normalization (function): armyGroup::HasCreatures.
+    unsigned char hasCreatures() const;
+    // Before normalization (function): armyGroup::GetNativeTerrain.
+    TTerrainType getNativeTerrain() const;
     // Param 4 is a full int MODE in retail (dword load, sentinel
     // values 2 and 5) - the DC prototype's on_cursed_ground uchar
     // name does not survive the bytes; class forward-decls suffice
@@ -987,19 +987,19 @@ public:
                              const class hero* enemyHero,
                              const armyGroup* enemyGroup,
                              int magicTerrain) const;
-    // Before normalization (function): armyGroup::GetNumArmies.
-    int getNumArmies() const;
+    int save(TAbstractFile* outfile);
+    int load(TAbstractFile* infile);
     // Before normalization (function): armyGroup::Add.
     int add(int armyType, int newNumTroops, int newIndex);
+    // Before normalization (function): armyGroup::Dismiss.
+    void dismiss(int whichIndex);
+    // Before normalization (function): armyGroup::Swap.
+    void swap(int srcIndex, armyGroup* destGroup, int destIndex);
+    // Before normalization (function): armyGroup::GetNumArmies.
+    int getNumArmies() const;
     // Before normalization (function): armyGroup::GetArmySizeName.
     // Before normalization (locals): iNameSet.
     static const char* getArmySizeName(int howMany, int nameSet);
-    // Before normalization (function): armyGroup::Swap.
-    void swap(int srcIndex, armyGroup* destGroup, int destIndex);
-    // Before normalization (function): armyGroup::Dismiss.
-    void dismiss(int whichIndex);
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile);
 };
 SIZE(armyGroup, 56);
 

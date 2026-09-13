@@ -352,7 +352,7 @@ inline void TCombatWindow::setRollover(const char* newText)
 VA(0x00472b80, 0x67)
 void TCombatWindow::handleWidgetHover(widget* currentWidget)
 {
-    const char* newText = currentWidget->m_rollOver;
+    const char* newText = currentWidget->getHelpText();
     if (m_combatMessageCount > 0
         && (!newText || currentWidget->m_id == COMBAT_LOG_SCROLL_UP_ID
             || currentWidget->m_id == COMBAT_LOG_SCROLL_DOWN_ID))

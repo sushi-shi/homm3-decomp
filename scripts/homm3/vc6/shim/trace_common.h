@@ -5,7 +5,10 @@ static void writeHex(HANDLE h, unsigned long value)
     unsigned i;
     for (i = 0; i < 8; ++i)
         text[7-i] = "0123456789abcdef"[(value >> (4*i)) & 15];
-    { DWORD n; WriteFile(h, text, 8, &n, 0); }
+    {
+        DWORD n;
+        WriteFile(h, text, 8, &n, 0);
+    }
 }
 
 static char g_filter[256];

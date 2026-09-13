@@ -960,7 +960,7 @@ long findMagusHutValue(long playerId, unsigned char exploreMode)
 {
     long value = 0;
     type_point point;
-    for (point.m_z = 0; point.m_z < g_game->m_worldMap.m_hasTwoLevels + 1; point.m_z++) {
+    for (point.m_z = 0; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
                 NewmapCell* cell = g_game->getCell(point);
@@ -3924,10 +3924,10 @@ void markDangerZones(const hero* ourHero, long* dangerZones)
                         const_AI_enemy_search, mobility, 0);
 
                     for (long visitedIndex =
-                             g_searchArray->m_visitedPoints.size();
+                             g_searchArray->getVisitedCount();
                          visitedIndex--;) {
                         const type_point& point = g_searchArray
-                            ->m_visitedPoints[visitedIndex]->m_point;
+                            ->getVisitedCell(visitedIndex)->m_point;
                         if (value >= -500000000) {
                             *getDangerCell(dangerZones, point) += value;
                         } else {
@@ -4038,7 +4038,7 @@ static void unblockLith(hero* currentHero,
     // mov [ebp+0x17],cl` at 0x42e3f0); `is_on_map()`'s bool facade
     // normalizes it through `setne` and cannot produce that pair. Same
     // later-revision spelling search.cpp:581 already carries.
-    unsigned char wasOnMap = currentHero->m_valid;
+    unsigned char wasOnMap = currentHero->isOnMap();
     currentHero->restoreCell();
     NewmapCell* cell =
         g_game->getCell(currentHero->getLocation());
@@ -4647,11 +4647,7 @@ long markDestinations(hero* currentHero, long maxDistance,
     {
         type_point dangerPoint(currentHero->m_x, currentHero->m_y,
                                 currentHero->m_z);
-        long* dangerZones = currentSearchArray->m_dangerZones;
-        if (dangerZones == 0)
-            heroDanger = 0;
-        else
-            heroDanger = *getDangerCell(dangerZones, dangerPoint);
+        heroDanger = currentSearchArray->getDangerValue(dangerPoint);
     }
     g_advManager->m_advWindow->animateBottomView(0);
     type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
@@ -4695,9 +4691,9 @@ long markDestinations(hero* currentHero, long maxDistance,
             targetCell->m_groundSet == eTerrainWater, const_AI_allied_search,
             friendly->m_maxMovePoints, 0);
 
-        for (int j = static_cast<int>(friendlySearch.m_visitedPoints.size());
+        for (int j = static_cast<int>(friendlySearch.getVisitedCount());
              j-- != 0;) {
-            pathCell* visited = friendlySearch.m_visitedPoints[j];
+            pathCell* visited = friendlySearch.getVisitedCell(j);
             if (currentHero->isInPatrolRadius(visited->m_point)) {
                 int index = visited->m_point.m_z * mapCells
                     + visited->m_point.m_y * g_mapWidth + visited->m_point.m_x;
@@ -4924,7 +4920,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
             return 0;
         if (eventCell->getMapObject() == HUT_OF_MAGI
             && eventCell->cellIsTrigger())
-            g_aiPlayers[currentHero->m_owner].m_magusHutValue = 0;
+            g_aiPlayers[currentHero->m_owner].clearMagusHutValue();
         aiSetHeroBonuses(currentHero);
     }
 
@@ -5828,7 +5824,7 @@ long type_power_artifact::getValue(const hero* owner, unsigned char, unsigned ch
 {
     if (exact)
         return 0;
-    return owner->m_valueOfPower * m_bonus;
+    return owner->getValueOfPower() * m_bonus;
 }
 
 // E:\gamedcs\ai_player.cpp:5134
@@ -5837,7 +5833,7 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
 {
     if (exact)
         return 0;
-    return owner->m_valueOfKnowledge * m_bonus;
+    return owner->getValueOfKnowledge() * m_bonus;
 }
 
 // Residual (85.8871%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
@@ -5891,7 +5887,7 @@ long type_movement_artifact::getValue(const hero* owner, unsigned char, unsigned
 VA(0x00432720, 0x54)  // artifact get_value cluster order-map + get_AI_value, dc 0x3659c
 long type_spellcaster_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
 {
-    if (owner->m_valueOfPower == 0)
+    if (owner->getValueOfPower() == 0)
         return 0;
     if (owner->m_skillLevel[eSecSkillWisdom] == 0)
         return 0;
@@ -5937,7 +5933,7 @@ long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned
 {
     if (exact)
         return 0;
-    return owner->m_valueOfDuration * m_bonus;
+    return owner->getValueOfDuration() * m_bonus;
 }
 
 // E:\gamedcs\ai_player.cpp:5293
@@ -6003,24 +5999,10 @@ long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped
     if (!equipped)
         return value;
     if (m_bonus == 0) {
-        signed char sp = owner->m_stats[2];
-        int m;
-        if (sp > 99)
-            m = 99;
-        else if (sp > 0)
-            m = sp;
-        else
-            m = 1;
+        int m = owner->getPrimarySkill(2);
         return value - m * 50;
     }
-    signed char sp = owner->m_stats[2];
-    int m;
-    if (sp > 99)
-        m = 99;
-    else if (sp > 0)
-        m = sp;
-    else
-        m = 1;
+    int m = owner->getPrimarySkill(2);
     return value - m * 25;
 }
 
@@ -6168,9 +6150,9 @@ long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
 {
     if (exact)
         return 0;
-    if (owner->m_inSpellbook[m_spell])
+    if (owner->isInSpellbook(spellIdFromInt(m_spell)))
         return 0;
-    if (!equipped && owner->m_availableSpells[m_spell])
+    if (!equipped && owner->spellIsAvailable(m_spell))
         return 0;
 
     type_spellvalue caster(owner);
@@ -6401,9 +6383,9 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
     long value = 0;
     switch (artifact.m_artifactId) {
     case ARTIFACT_SPELL_SCROLL:
-        if (owner->m_inSpellbook[artifact.m_extra])
+        if (owner->isInSpellbook(spellIdFromInt(artifact.m_extra)))
             return 0;
-        if (!equipped && owner->m_availableSpells[artifact.m_extra])
+        if (!equipped && owner->spellIsAvailable(artifact.m_extra))
             return 0;
         return aiGetSpellValue(owner, spellIdFromInt(artifact.m_extra));
 
@@ -6512,13 +6494,12 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
         aiGetValueOfArtifact(artifact, ourHero, 0, exact), 0L);
     if (slot >= 19) {
         long replacedValue = 0;
-        const type_artifact* equipped = ourHero->m_equipped;
         for (int equippedSlot = 0; equippedSlot < 19;
-             ++equippedSlot, ++equipped) {
+             ++equippedSlot) {
             if (const_cast<hero*>(ourHero)->heroFn004E2840(
                     artifact.m_artifactId, equippedSlot)) {
                 replacedValue = aiGetValueOfArtifact(
-                    *equipped, ourHero, 1, exact);
+                    ourHero->getArtifact(equippedSlot), ourHero, 1, exact);
             }
         }
         value = cppMax(0L, value - replacedValue);
@@ -6595,7 +6576,7 @@ long removeNegativeArtifacts(hero* ourHero)
         return bestValue;
 
     for (int slot = 0; slot < 17; ++slot) {
-        artifact = ourHero->m_equipped[slot];
+        artifact = ourHero->getArtifact(slot);
         if (artifact.m_artifactId != ARTIFACT_NONE) {
             ourHero->removeArtifact(slot);
             long value = getFullValue(ourHero);
@@ -6687,7 +6668,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
         if (!ourHero->heroFn004E2840(artifact.m_artifactId, slot))
             continue;
 
-        oldArtifact = ourHero->m_equipped[slot];
+        oldArtifact = ourHero->getArtifact(slot);
         long value = 0;
         unsigned char isSwap = 0;
         if (sourceValue)
@@ -6729,7 +6710,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
     if (bestSlot == THeroScreenWindow::ARTIFACT_SLOT_COUNT)
         return 0;
 
-    oldArtifact = ourHero->m_equipped[bestSlot];
+    oldArtifact = ourHero->getArtifact(bestSlot);
     if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
         ourHero->removeArtifact(bestSlot);
         if (bestIsSwap) {
@@ -6754,7 +6735,7 @@ void aiSwapArtifacts(hero* source, hero* dest)
     long destValue = removeNegativeArtifacts(dest);
 
     for (int slot = 0; slot < 17; ++slot) {
-        artifact = source->m_equipped[slot];
+        artifact = source->getArtifact(slot);
         if (artifact.m_artifactId != ARTIFACT_NONE) {
             source->removeArtifact(slot);
             long newSourceValue = getFullValue(source);
@@ -6770,7 +6751,7 @@ void aiSwapArtifacts(hero* source, hero* dest)
 
     int backpackSlot = source->getLastBackpackIndex() + 1;
     while (backpackSlot-- > 0) {
-        artifact = source->m_backpack[backpackSlot];
+        artifact = source->getBackpack(backpackSlot);
         if (artifact.m_artifactId != ARTIFACT_NONE
             && addArtifact(dest, artifact, &destValue, 0, 19, 0, 0)) {
             source->removeBackpackArtifact(backpackSlot);

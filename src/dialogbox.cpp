@@ -177,7 +177,7 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
 
     m_textWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,
-        text, currentFont->m_name, font::PRIMARY, -1, 1, 0, 8);
+        text, currentFont->getName(), font::PRIMARY, -1, 1, 0, 8);
     m_widgets.push_back(m_textWidget);
     addWidget(m_textWidget, -1);
     return 1;

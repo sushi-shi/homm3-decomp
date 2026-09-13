@@ -158,6 +158,8 @@ public:
     void doModal();
 
     // Before normalization: slot.
+
+private:
     TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
     // Before normalization: totalCost.
     long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
@@ -166,13 +168,19 @@ public:
     // Before normalization: RolloverWidget.
     widget* m_rolloverWidget;                                // +0x29c
 
+public:
+    // DC free HillFortWindowHandler (0xd7458) calls these private methods;
+    // retail 0x4e8850 retains the same callback relationship.
+    friend int hillFortWindowHandler(message& msg);
+
+private:
+    // Before normalization (function): THillFortWindow::HandleClick.
+    void handleClick(message& msg);
     // Before normalization (function): THillFortWindow::Recalculate.
     void recalculate(unsigned char drawDimmedButtons);
     // Before normalization (function): THillFortWindow::UpgradeSlot.
     // Before normalization (locals): show_message.
     void upgradeSlot(int which, unsigned char showMessage);
-    // Before normalization (function): THillFortWindow::HandleClick.
-    void handleClick(message& msg);
 };
 SIZE(THillFortWindow, 0x2a0);
 

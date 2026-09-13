@@ -18,6 +18,7 @@
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
 struct type_point {
+public:
     // Before normalization: x.
     short m_x : 10;
     // Before normalization: y.
@@ -37,6 +38,11 @@ struct type_point {
         m_y = newY;
         m_z = newZ;
     }
+    // Before normalization (function): type_point::is_valid.
+    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
+    // Its ordinary body remains in findpath.cpp:36; do not move it here
+    // to force expansions in adventure drawing.
+    bool isValid() const;
     unsigned char operator==(const type_point* arg);
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand. Keep the pointer overload above
@@ -52,11 +58,6 @@ struct type_point {
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
-    // Before normalization (function): type_point::is_valid.
-    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
-    // Its ordinary body remains in findpath.cpp:36; do not move it here
-    // to force expansions in adventure drawing.
-    bool isValid() const;
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS

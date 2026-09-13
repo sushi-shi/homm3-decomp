@@ -60,22 +60,9 @@ enum creature_seqid {
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
 class CSprite : public resource {
 public:
-    // Before normalization: s.
-    CSequence** m_s;
-    // Before normalization: p.
-    TPalette16* m_p;
-    // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
-    // it by passing p24+0x1c (the resource head) to the raw palette ctor.
-    // Before normalization: p24.
-    TPalette24* m_p24;
-    // Before normalization: numSequences.
-    int m_numSequences;
-    // Before normalization: validSeqMask.
-    int* m_validSeqMask;
-    // Before normalization: Width.
-    int m_width;
-    // Before normalization: Height.
-    int m_height;
+    CSprite(const char* name, int sprtype, int w, int h);
+
+    virtual ~CSprite();      // slot 0
 
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
@@ -86,55 +73,38 @@ public:
     // both accessors while retail VC6 folds them to the two dword loads.
     // Before normalization (function): CSprite::GetHeight.
     int getHeight() const { return m_height; }
-
-    CSprite(const char* name, int sprtype, int w, int h);
     // Before normalization (function): CSprite::AllocateSeq.
     void allocateSeq(int seqnum, int numFrames);
     // Before normalization (function): CSprite::AddFrame.
     int addFrame(int seqnum, CSpriteFrame* frame);
 
-    virtual ~CSprite();      // slot 0
+private:
+    // Before normalization: s.
+    CSequence** m_s;
+
+public:
+    // Before normalization: p.
+    TPalette16* m_p;
+    // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
+    // it by passing p24+0x1c (the resource head) to the raw palette ctor.
+    // Before normalization: p24.
+    TPalette24* m_p24;
+
+private:
+    // Before normalization: numSequences.
+    int m_numSequences;
+    // Before normalization: validSeqMask.
+    int* m_validSeqMask;
+    // Before normalization: Width.
+    int m_width;
+    // Before normalization: Height.
+    int m_height;
+
+public:
     // Before normalization (function): CSprite::Dispose.
     virtual void dispose();  // slot 1, retail body 0x55d1a0
     // Before normalization (function): CSprite::GetSize.
     virtual unsigned int getSize() const;  // slot 2, retail 0x47bd50
-    // Before normalization (function): CSprite::GetNumSeqs.
-    static int getNumSeqs(int type);
-
-    // DC CSprite.h:154 (0x122ba8) proves this non-const header accessor.
-    // Complete's dispose frame loop expands the same sequence/frame loads.
-    // Before normalization (function): CSprite::GetFrame.
-    CSpriteFrame* getFrame(int sequence, int frame)
-    {
-        return m_s[sequence]->m_f[frame];
-    }
-
-    // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
-    // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
-    // USE re-expands the guard (the else arm constant-folds to a
-    // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
-    // frame-count local cannot reproduce.
-    // DC 0x1f1fc calls IsValidSeq; its true/false values join at 0x1f220
-    // before a single return. Keep that helper and conditional expression.
-    // An if/return spelling spills the third boat-row divisor into a
-    // parameter home; this expression closes both VWDrawHeroPart twins.
-    // The preceding DC SpriteDataReload guard belongs to its removed cache
-    // fields; Complete's frame walkers have no corresponding reload arm.
-    // Before normalization (function): CSprite::GetNumFrames.
-    int getNumFrames(int seq) const
-    {
-        return isValidSeq(seq) ? m_s[seq]->m_numFrames : 0;
-    }
-
-    // E:\gamedcs\CSprite.h:294
-    // The attack-frame chooser uses this header boundary rather than reading
-    // numSequences/validSeqMask directly. Retail VC6 folds it back to the
-    // same two loads and tests at each constant-sequence call site.
-    // Before normalization (function): CSprite::IsValidSeq.
-    int isValidSeq(int seqnum) const
-    {
-        return seqnum < m_numSequences && m_validSeqMask[seqnum] != 0;
-    }
 
     // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;
     // the retail remote caller expands these in place.
@@ -159,16 +129,13 @@ public:
         return m_s[seq]->m_f[frame]->getCroppedHeight();
     }
 
-    // Before normalization (function): CSprite::GetPalette.
-    palette* getPalette();
-    // Before normalization (function): CSprite::ColorCycle.
-    void colorCycle(int begin, int end, int step);
-    // Before normalization (function): CSprite::SetPalette.
-    void setPalette(const unsigned short* pal);
-    // Before normalization (function): CSprite::SetPalette.
-    void setPalette(TPalette16& pal);
-    // Before normalization (function): CSprite::ResetPalette.
-    void resetPalette();
+    // DC CSprite.h:154 (0x122ba8) proves this non-const header accessor.
+    // Complete's dispose frame loop expands the same sequence/frame loads.
+    // Before normalization (function): CSprite::GetFrame.
+    CSpriteFrame* getFrame(int sequence, int frame)
+    {
+        return m_s[sequence]->m_f[frame];
+    }
     // Before normalization (function): CSprite::Draw.
     void draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
               unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -202,80 +169,8 @@ public:
                       int sh, Bitmap16Bit* dst, int dx, int dy,
                       unsigned char hflip, unsigned short outcolor)
     {
-        drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                     dst->m_width, dst->m_height, dst->m_pitch, hflip, outcolor);
-    }
-    // Before normalization (function): CSprite::DrawPointer.
-    void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
-                     int dw, int dh, int dpitch, unsigned char hflip);
-    // Before normalization (function): CSprite::DrawInterface.
-    void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
-    // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
-    // byte-prove the Bitmap16Bit member forwarding in retail.
-    // Before normalization (function): CSprite::DrawInterface.
-    void drawInterface(int framenum, int sx, int sy, int sw, int sh,
-                       Bitmap16Bit* dst, int dx, int dy,
-                       unsigned char hflip)
-    {
-        drawInterface(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                      dst->m_width, dst->m_height, dst->m_pitch, hflip);
-    }
-    // Before normalization (function): CSprite::DrawHero.
-    void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
-                  unsigned short* dst, int dx, int dy, int dw, int dh,
-                  int dpitch, unsigned char hflip);
-    // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
-    // then calls the raw-map overload above.
-    // Before normalization (function): CSprite::DrawHero.
-    void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
-                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
-    {
-        drawHero(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                 dst->m_width, dst->m_height, dst->m_pitch, hflip);
-    }
-    // Before normalization (function): CSprite::DrawHeroShadow.
-    void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
-                        int sh, unsigned short* dst, int dx, int dy, int dw,
-                        int dh, int dpitch, unsigned char hflip);
-    // Before normalization (function): CSprite::DrawHeroShadow.
-    void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
-                        int sh, Bitmap16Bit* dst, int dx, int dy,
-                        unsigned char hflip)
-    {
-        drawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip);
-    }
-    // Before normalization (function): CSprite::DrawHeroAlpha.
-    void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
-                       int sh, unsigned short* dst, int dx, int dy, int dw,
-                       int dh, int dpitch, unsigned char hflip);
-    // E:\\gamedcs\\CSprite.h:438. DrawCursorAlpha reaches the bitmap
-    // overload four times; Dreamcast's line table shows this header boundary
-    // and Complete expands it into the raw map/width/height/pitch call.
-    // Before normalization (function): CSprite::DrawHeroAlpha.
-    void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
-                       int sh, Bitmap16Bit* dst, int dx, int dy,
-                       unsigned char hflip)
-    {
-        drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                      dst->m_width, dst->m_height, dst->m_pitch, hflip);
-    }
-    // Before normalization (function): CSprite::DrawSpellEffect.
-    void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
-                         int sh, unsigned short* dst, int dx, int dy, int dw,
-                         int dh, int dpitch, unsigned char hflip,
-                         unsigned char alpha);
-    // Before normalization (function): CSprite::DrawAdvObjShadow.
-    void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
-                          unsigned short* dst, int dx, int dy, int dw,
-                          int dh, int dpitch, unsigned char hflip);
-    // Before normalization (function): CSprite::DrawAdvObjShadow.
-    void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
-                          Bitmap16Bit* dst, int dx, int dy,
-                          unsigned char hflip)
-    {
-        drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                         dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                     dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, outcolor);
     }
     // Before normalization (function): CSprite::DrawAdvObj.
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
@@ -300,9 +195,36 @@ public:
                             Bitmap16Bit* dst, int dx, int dy,
                             unsigned short outcolor, unsigned char hflip)
     {
-        drawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                           dst->m_width, dst->m_height, dst->m_pitch, outcolor,
+        drawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                           dst->getWidth(), dst->getHeight(), dst->getPitch(), outcolor,
                            hflip);
+    }
+    // Before normalization (function): CSprite::DrawAdvObjShadow.
+    void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          unsigned short* dst, int dx, int dy, int dw,
+                          int dh, int dpitch, unsigned char hflip);
+    // Before normalization (function): CSprite::DrawAdvObjShadow.
+    void drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          Bitmap16Bit* dst, int dx, int dy,
+                          unsigned char hflip)
+    {
+        drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                         dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
+    // Before normalization (function): CSprite::DrawPointer.
+    void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
+                     int dw, int dh, int dpitch, unsigned char hflip);
+    // Before normalization (function): CSprite::DrawInterface.
+    void drawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
+    // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
+    // byte-prove the Bitmap16Bit member forwarding in retail.
+    // Before normalization (function): CSprite::DrawInterface.
+    void drawInterface(int framenum, int sx, int sy, int sw, int sh,
+                       Bitmap16Bit* dst, int dx, int dy,
+                       unsigned char hflip)
+    {
+        drawInterface(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawTile.
     void drawTile(int framenum, int sx, int sy, int sw, int sh,
@@ -328,8 +250,8 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         unsigned char hflip, unsigned char vflip)
     {
-        drawTileShadow(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip, vflip);
+        drawTileShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
     }
     // Before normalization (function): CSprite::DrawShroudTile.
     void drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
@@ -341,8 +263,93 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         unsigned char hflip, unsigned char vflip)
     {
-        drawShroudTile(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip, vflip);
+        drawShroudTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
+    }
+    // Before normalization (function): CSprite::DrawHero.
+    void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  unsigned short* dst, int dx, int dy, int dw, int dh,
+                  int dpitch, unsigned char hflip);
+    // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
+    // then calls the raw-map overload above.
+    // Before normalization (function): CSprite::DrawHero.
+    void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+    {
+        drawHero(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                 dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
+    // Before normalization (function): CSprite::DrawHeroShadow.
+    void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, unsigned short* dst, int dx, int dy, int dw,
+                        int dh, int dpitch, unsigned char hflip);
+    // Before normalization (function): CSprite::DrawHeroShadow.
+    void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, Bitmap16Bit* dst, int dx, int dy,
+                        unsigned char hflip)
+    {
+        drawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
+    // Before normalization (function): CSprite::DrawHeroAlpha.
+    void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
+                       int sh, unsigned short* dst, int dx, int dy, int dw,
+                       int dh, int dpitch, unsigned char hflip);
+    // E:\\gamedcs\\CSprite.h:438. DrawCursorAlpha reaches the bitmap
+    // overload four times; Dreamcast's line table shows this header boundary
+    // and Complete expands it into the raw map/width/height/pitch call.
+    // Before normalization (function): CSprite::DrawHeroAlpha.
+    void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
+                       int sh, Bitmap16Bit* dst, int dx, int dy,
+                       unsigned char hflip)
+    {
+        drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+    }
+    // Before normalization (function): CSprite::DrawSpellEffect.
+    void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
+                         int sh, unsigned short* dst, int dx, int dy, int dw,
+                         int dh, int dpitch, unsigned char hflip,
+                         unsigned char alpha);
+    // Before normalization (function): CSprite::SetPalette.
+    void setPalette(const unsigned short* pal);
+    // Before normalization (function): CSprite::SetPalette.
+    void setPalette(TPalette16& pal);
+    // Before normalization (function): CSprite::ResetPalette.
+    void resetPalette();
+
+    // Before normalization (function): CSprite::GetPalette.
+    palette* getPalette();
+    // Before normalization (function): CSprite::ColorCycle.
+    void colorCycle(int begin, int end, int step);
+    // Before normalization (function): CSprite::GetNumSeqs.
+    static int getNumSeqs(int type);
+
+    // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
+    // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
+    // USE re-expands the guard (the else arm constant-folds to a
+    // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
+    // frame-count local cannot reproduce.
+    // DC 0x1f1fc calls IsValidSeq; its true/false values join at 0x1f220
+    // before a single return. Keep that helper and conditional expression.
+    // An if/return spelling spills the third boat-row divisor into a
+    // parameter home; this expression closes both VWDrawHeroPart twins.
+    // The preceding DC SpriteDataReload guard belongs to its removed cache
+    // fields; Complete's frame walkers have no corresponding reload arm.
+    // Before normalization (function): CSprite::GetNumFrames.
+    int getNumFrames(int seq) const
+    {
+        return isValidSeq(seq) ? m_s[seq]->m_numFrames : 0;
+    }
+
+    // E:\gamedcs\CSprite.h:294
+    // The attack-frame chooser uses this header boundary rather than reading
+    // numSequences/validSeqMask directly. Retail VC6 folds it back to the
+    // same two loads and tests at each constant-sequence call site.
+    // Before normalization (function): CSprite::IsValidSeq.
+    int isValidSeq(int seqnum) const
+    {
+        return seqnum < m_numSequences && m_validSeqMask[seqnum] != 0;
     }
 };
 

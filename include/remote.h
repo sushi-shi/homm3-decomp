@@ -26,7 +26,7 @@ public:
     // Before normalization (function): CLogFile::Log.
     void log(char* format, ...);
 
-private:
+protected:
     char m_logFileName[351];
 };
 SIZE(CLogFile, 351);
@@ -58,16 +58,11 @@ public:
     // Before normalization (function): CNetMsgHandler::CheckHandleNet.
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1
-    // Before normalization (function): CNetMsgHandler::GetAbortPopupMsg.
-    virtual CNetMsg* getAbortPopupMsg();                          // slot 2
-    // Before normalization (function): CNetMsgHandler::HandleNetMsg.
-    // Before normalization (locals): pNetMsg.
-    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;          // slot 3
 
     // Before normalization (function): CNetMsgHandler::IsInPopup.
     unsigned char isInPopup() { return m_inPopup; }
-    // Before normalization (function): CNetMsgHandler::SetInPopup.
-    void setInPopup(unsigned char b) { m_inPopup = b; }
+    // Before normalization (function): CNetMsgHandler::GetAbortPopupMsg.
+    virtual CNetMsg* getAbortPopupMsg();                          // slot 2
     // Dreamcast remote.h:632-635 retains the IsInPopup call before the
     // virtual abort-message read. Retail expands the first accessor and
     // calls vtable slot 2; it also retains Copy's own body at 0x555150.
@@ -81,18 +76,23 @@ public:
     // Before normalization (function): CNetMsgHandler::SetAbortPopupMsg.
     // Before normalization (locals): pNetMsg.
     void setAbortPopupMsg(CNetMsg* netMsg);
+    // Before normalization (function): CNetMsgHandler::SetInPopup.
+    void setInPopup(unsigned char b) { m_inPopup = b; }
 
+protected:
     // A pure virtual may still have an out-of-line definition. Retail's
     // vtable keeps _purecall in slot 3, while two direct base-qualified
     // dispatcher calls land on that definition at 0x557920.
 
-protected:
     // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
     // HandleNetMsg's defer arms store the abort message DIRECTLY
     // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
     // is an out-of-line body - the derived dispatcher touches the raw
     // members, so retail's access let it.
     unsigned char m_inPopup;       // +0x04
+    // Before normalization (function): CNetMsgHandler::HandleNetMsg.
+    // Before normalization (locals): pNetMsg.
+    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;          // slot 3
     // Before normalization: pad_05.
     // Dreamcast has the popup byte at +4 and abort-message pointer
     // at +8, matching retail. Three bytes align the pointer.
@@ -120,7 +120,11 @@ SIZE(CNetMsgHandler, 0x0c);
 // in the 0x557exx run with the rest of the class.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
+    // Before normalization: m_pNetMsgHandlerSave.
+    CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
     CNetMsgHandlerPause();
+    // DC's ordinary destructor predates Complete's virtual base dtor;
+    // retail 0x640f04 slot 0 is this class's deleting wrapper 0x557eb0.
     virtual ~CNetMsgHandlerPause();
     // Before normalization (function): CNetMsgHandlerPause::CheckHandleNet.
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
@@ -128,10 +132,6 @@ public:
     // Before normalization (function): CNetMsgHandlerPause::HandleNetMsg.
     // Before normalization (locals): pNetMsg.
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);              // slot 3
-
-protected:
-    // Before normalization: m_pNetMsgHandlerSave.
-    CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
 };
 SIZE(CNetMsgHandlerPause, 0x10);
 
@@ -172,58 +172,7 @@ public:
     virtual ~CDPlayHeroes();
     // Before normalization (function): CDPlayHeroes::DestroyMsgQueue.
     void destroyMsgQueue();
-    // RESOLVED 2026-08-14, and the earlier measurement is now explained.
-    // Both handler accessors have OUT-OF-LINE retail bodies, and both of
-    // them live in remote.cpp: 0x5537a0 is GetNetMsgHandler's seven bytes
-    // (`mov eax,[ecx+0xf0]; ret`) and 0x553770 is SetNetMsgHandler's
-    // forty-eight. That is the whole resolution of "advmgr's CAdvPopup
-    // constructor drops 100.00 -> 69.33 when these get bodies": a body in
-    // THIS HEADER is visible to advmgr, whose constructor has a live
-    // `pDPlay->GetNetMsgHandler()` call site at advmgr.cpp:4838 that retail
-    // leaves as a call - so an inline here rewrites advmgr's own code. It
-    // was a semantic dependency, never an include-set perturbation. Put the
-    // bodies in remote.cpp instead and /Ob2 inlines them at remote.obj's own
-    // call sites, exactly as retail does, while every other TU keeps the
-    // call. Declarations only here.
-    // Before normalization (function): CDPlayHeroes::GetNetMsgHandler.
-    CNetMsgHandler* getNetMsgHandler();
-    // Before normalization (function): CDPlayHeroes::SetNetMsgHandler.
-    // Before normalization (locals): pNetMsgHandler.
-    void setNetMsgHandler(CNetMsgHandler* netMsgHandler);
-    // Out of line at 0x553040 (`ret 8`), and reached from two directions in
-    // remote.obj alone: the free GetRemoteData wrapper at 0x554400 passes
-    // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
-    // (0x557860) calls it with the literal pair (1, 0). Declaration only,
-    // for the same reason as the pair above.
-    // Before normalization (function): CDPlayHeroes::GetRemoteData.
-    CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                           unsigned char* wasCompressed);
-    // Before normalization (function): CDPlayHeroes::PollRemote.
-    bool pollRemote();
-    // Retail 0x552db0, DC remote.cpp:304. PollRemote's per-message filter:
-    // it answers whether the message was fully handled at this level and so
-    // must NOT reach the queue.
-    // Before normalization (function): CDPlayHeroes::HandleLowLevelMsg.
-    // Before normalization (locals): pNetMsg.
-    unsigned char handleLowLevelMsg(CNetMsg* netMsg);
-    // Before normalization (function): CDPlayHeroes::TransmitRemoteData.
-    // Before normalization (locals): pMsg.
-    bool transmitRemoteData(CNetMsg* msg, int toWho,
-                            bool compressMsg, bool guaranteed);
-    // Before normalization (function): CDPlayHeroes::TransmitRemoteDataDPID.
-    // Before normalization (locals): pMsg.
-    bool transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
-                                bool compressMsg, bool guaranteed);
-    // Retail 0x5533d0, DC remote.cpp:578. The free transmit wrappers stamp
-    // their sender fields and optional compression, then call this retrying
-    // DirectPlay sender with the final message buffer.
-    // Before normalization (function): CDPlayHeroes::SendIt.
-    // Before normalization (locals): pMsg.
-    bool sendIt(CNetMsg* msg, unsigned long dpidTo, bool guaranteed);
-    // Before normalization (function): CDPlayHeroes::HandlePlayerDrop.
-    void handlePlayerDrop(unsigned long dpid);
 
-protected:
     // The three other system-message overrides, all of them CDPlay slots
     // this class replaces rather than introduces (retail 0x552530 /
     // 0x552740 / 0x552920, in the DC roster's own order between
@@ -240,15 +189,67 @@ protected:
     // Before normalization (function): CDPlayHeroes::SysMsgCreatePlayerOrGroup.
     virtual unsigned char sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
+    // Before normalization (function): CDPlayHeroes::PollRemote.
+    bool pollRemote();
+    // Out of line at 0x553040 (`ret 8`), and reached from two directions in
+    // remote.obj alone: the free GetRemoteData wrapper at 0x554400 passes
+    // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
+    // (0x557860) calls it with the literal pair (1, 0). Declaration only,
+    // for the same reason as the pair above.
+    // Before normalization (function): CDPlayHeroes::GetRemoteData.
+    CNetMsg* getRemoteData(unsigned char removeFromQueue,
+                           unsigned char* wasCompressed);
+    // Before normalization (function): CDPlayHeroes::TransmitRemoteData.
+    // Before normalization (locals): pMsg.
+    bool transmitRemoteData(CNetMsg* msg, int toWho,
+                            bool compressMsg, bool guaranteed);
+    // Before normalization (function): CDPlayHeroes::TransmitRemoteDataDPID.
+    // Before normalization (locals): pMsg.
+    bool transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
+                                bool compressMsg, bool guaranteed);
+    // Retail 0x5533d0, DC remote.cpp:578. The free transmit wrappers stamp
+    // their sender fields and optional compression, then call this retrying
+    // DirectPlay sender with the final message buffer.
+    // Before normalization (function): CDPlayHeroes::SendIt.
+    // Before normalization (locals): pMsg.
+    bool sendIt(CNetMsg* msg, unsigned long dpidTo, bool guaranteed);
+    // Before normalization (function): CDPlayHeroes::SetNetMsgHandler.
+    // Before normalization (locals): pNetMsgHandler.
+    void setNetMsgHandler(CNetMsgHandler* netMsgHandler);
+    // RESOLVED 2026-08-14, and the earlier measurement is now explained.
+    // Both handler accessors have OUT-OF-LINE retail bodies, and both of
+    // them live in remote.cpp: 0x5537a0 is GetNetMsgHandler's seven bytes
+    // (`mov eax,[ecx+0xf0]; ret`) and 0x553770 is SetNetMsgHandler's
+    // forty-eight. That is the whole resolution of "advmgr's CAdvPopup
+    // constructor drops 100.00 -> 69.33 when these get bodies": a body in
+    // THIS HEADER is visible to advmgr, whose constructor has a live
+    // `pDPlay->GetNetMsgHandler()` call site at advmgr.cpp:4838 that retail
+    // leaves as a call - so an inline here rewrites advmgr's own code. It
+    // was a semantic dependency, never an include-set perturbation. Put the
+    // bodies in remote.cpp instead and /Ob2 inlines them at remote.obj's own
+    // call sites, exactly as retail does, while every other TU keeps the
+    // call. Declarations only here.
+    // Before normalization (function): CDPlayHeroes::GetNetMsgHandler.
+    CNetMsgHandler* getNetMsgHandler();
+    // Before normalization (function): CDPlayHeroes::HandlePlayerDrop.
+    void handlePlayerDrop(unsigned long dpid);
+
+protected:
+    // Before normalization (function): CDPlayHeroes::QueueMsg.
+    // Before normalization (locals): pNetMsg.
+    void queueMsg(CNetMsg* netMsg);
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
     // Before normalization (function): CDPlayHeroes::CompressMsg.
     // Before normalization (locals): pNetMsg.
     CNetMsg* compressMsg(CNetMsg* netMsg);
-    // Before normalization (function): CDPlayHeroes::QueueMsg.
+    // Retail 0x552db0, DC remote.cpp:304. PollRemote's per-message filter:
+    // it answers whether the message was fully handled at this level and so
+    // must NOT reach the queue.
+    // Before normalization (function): CDPlayHeroes::HandleLowLevelMsg.
     // Before normalization (locals): pNetMsg.
-    void queueMsg(CNetMsg* netMsg);
+    unsigned char handleLowLevelMsg(CNetMsg* netMsg);
     // Before normalization (function): TransmitRemoteDataDPID.
     friend int transmitRemoteDataDPID(CNetMsg*, unsigned long,
                                       bool, bool);
@@ -256,8 +257,9 @@ protected:
     friend int transmitRemoteData(CNetMsg*, int,
                                   bool, bool);
 
-private:
     // Before normalization: dpMsg.
+
+public:
     CDPlayMsg m_dpMsg;                       // +0x60
     // Before normalization: msgQueue.
     std::deque<CNetMsg*> m_msgQueue;         // +0x68..+0x97
@@ -268,6 +270,8 @@ private:
     // Before normalization: currMessageId.
     unsigned long m_currMessageId;           // +0xec
     // Before normalization: m_pNetMsgHandler.
+
+protected:
     CNetMsgHandler* m_netMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
@@ -323,8 +327,18 @@ public:
     // Before normalization: CChatManager::AddChat, PlayerDropMsg, cChatMsg.
     void addChat(const char* format, ...);
     void playerDropMsg(const char* format, ...);
+    // DC remote.cpp:904/947/990 records these variadic members too.
+    // Their explicit stack receiver in retail is the VC6 member-varargs ABI.
+    // Before normalization (function): CChatManager::TurnDurationMsg.
+    void turnDurationMsg(const char* format, ...);
+    // Before normalization (function): CChatManager::SystemMsg.
+    void systemMsg(const char* format, ...);
+    // Before normalization (function): CChatManager::PlayerEnterMsg.
+    void playerEnterMsg(const char* format, ...);
 
     // Before normalization: msgArray.
+
+protected:
     CChatStr* m_msgArray;       // +0x00
     // Before normalization: currMsg.
     int m_currMsg;              // +0x04
@@ -336,11 +350,15 @@ public:
     unsigned long m_pauseTime;  // +0x10
     // Before normalization: changed.
     unsigned char m_changed;    // +0x14
+
+public:
     // Before normalization: pad_15.
     // Dreamcast places changed at +0x14 and lastWidget at +0x18,
     // matching retail. These three bytes align the pointer.
     char m_paddingBeforeLastWidget[3];
     // Before normalization: lastWidget.
+
+protected:
     textWidget* m_lastWidget;   // +0x18
     // Before normalization: maxLines.
     int m_maxLines;             // +0x1c
@@ -348,6 +366,8 @@ public:
     int m_position;             // +0x20
     // Before normalization: chatKilled.
     unsigned char m_chatKilled; // +0x24
+
+public:
     // Before normalization: pad_25.
     // Retail retains chatKilled at +0x24 and adds the sample handle
     // at +0x28. Three bytes align that pointer; DC has no such handle.
@@ -358,11 +378,43 @@ public:
     // Before normalization: g_chatMemSample.
     ds_memsample* m_chatMemSample; // +0x28
     // Before normalization: isSysMsg.
+
+protected:
     unsigned char m_isSysMsg;        // +0x2c
+
+public:
     // Before normalization: pad_2d.
     // The PC isSysMsg byte moves to +0x2c after the new handle.
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
+
+    // Before normalization (function): CChatManager::UpdateWidget.
+    void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
+    // Before normalization (function): CChatManager::PauseTimeOuts.
+    void pauseTimeOuts();
+    // Before normalization (function): CChatManager::ResumeTimeOuts.
+    void resumeTimeOuts();
+    // Before normalization (function): CChatManager::ClearChat.
+    void clearChat();
+    // DC remote.h:320-321, dc 0x1474a0/0x1474ac. The lobby slider
+    // expands these count and position reads at +0x08/+0x20 in retail.
+    // Before normalization (function): CChatManager::GetCount.
+    int getCount() { return m_msgCount; }
+    // Before normalization (function): CChatManager::GetPosition.
+    int getPosition() { return m_position; }
+    // Before normalization (function): CChatManager::SetPosition.
+    void setPosition(int newPos);
+    // Before normalization (function): CChatManager::SetMaxLines.
+    void setMaxLines(int maxChatLines);
+    // remote.h:326, DC 0x87620. Complete expands this accessor in DrawFrame;
+    // no retail out-of-line copy survives. The DC public decoration proves
+    // that the original member is non-const.
+    // Before normalization (function): CChatManager::ChatChanged.
+    unsigned char chatChanged() { return m_changed || m_chatKilled; }
+    // Before normalization (function): CChatManager::HasOldChat.
+    unsigned char hasOldChat();
+
+protected:
     // Before normalization: g_chatSample.
     sample* m_chatSample;        // +0x30
     // Before normalization: g_playerDropSample.
@@ -373,26 +425,6 @@ public:
     sample* m_turnDurSample;     // +0x3c
     // Before normalization: g_playerEnterSample.
     sample* m_playerEnterSample; // +0x40
-
-    // Before normalization (function): CChatManager::UpdateWidget.
-    void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
-    // Before normalization (function): CChatManager::KillOldChat.
-    void killOldChat();
-    // Before normalization (function): CChatManager::UpdateWidgetText.
-    void updateWidgetText(int numLines, textWidget* widget);
-    // Before normalization (function): CChatManager::PauseTimeOuts.
-    void pauseTimeOuts();
-    // Before normalization (function): CChatManager::ResumeTimeOuts.
-    void resumeTimeOuts();
-    // Before normalization (function): CChatManager::HasOldChat.
-    unsigned char hasOldChat();
-    // Before normalization (function): CChatManager::ClearChat.
-    void clearChat();
-    // Before normalization (function): CChatManager::SetMaxLines.
-    void setMaxLines(int maxChatLines);
-    // Before normalization (function): CChatManager::SetPosition.
-    void setPosition(int newPos);
-protected:
     // remote.cpp:1060/1065, DC 0x11c71c/0x11c738; the publics prove
     // protected access. AddChat calls the first canonical helper, while
     // KillOldChat calls the second. Retail expands these source calls.
@@ -400,29 +432,16 @@ protected:
     int getNextFreeMsgNbr();
     // Before normalization (function): CChatManager::GetNextMsgNbr.
     int getNextMsgNbr(int msgNbr);
-public:
-    // remote.h:326, DC 0x87620. Complete expands this accessor in DrawFrame;
-    // no retail out-of-line copy survives. The DC public decoration proves
-    // that the original member is non-const.
-    // Before normalization (function): CChatManager::ChatChanged.
-    unsigned char chatChanged() { return m_changed || m_chatKilled; }
+    // Before normalization (function): CChatManager::KillOldChat.
+    void killOldChat();
+    // Before normalization (function): CChatManager::UpdateWidgetText.
+    void updateWidgetText(int numLines, textWidget* widget);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
 
 // Before normalization: chatMan.
 DATA(0x0069d7b0) extern CChatManager g_chatMan;
-
-// The remaining formatter declarations below still use the legacy explicit
-// receiver model. Stack arguments alone do not prove free ownership:
-// see docs/vc6/variadic-members.md and the recovered AddChat/PlayerDropMsg
-// interfaces above. Their source ownership remains to be corrected separately.
-// Before normalization (function): TurnDurationMsg.
-void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...);
-// Before normalization (function): SystemMsg.
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
-// Before normalization (function): PlayerEnterMsg.
-void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...);
 
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
@@ -436,16 +455,16 @@ public:
     unsigned char isOn();
     // Before normalization (function): CTurnDuration::IsExpired.
     unsigned char isExpired();
-    // Before normalization (function): CTurnDuration::CheckForWarning.
-    void checkForWarning();
     // Before normalization (function): CTurnDuration::IsClose.
     unsigned char isClose(unsigned long howClose);
+    // Before normalization (function): CTurnDuration::Start.
+    void start();
     // Before normalization (function): CTurnDuration::Clear.
     void clear();
     // Before normalization (function): CTurnDuration::SetDuration.
     void setDuration(unsigned long ms);
-    // Before normalization (function): CTurnDuration::Start.
-    void start();
+    // Before normalization (function): CTurnDuration::CheckForWarning.
+    void checkForWarning();
     // Before normalization (function): CTurnDuration::Pause.
     void pause();
     // Before normalization (function): CTurnDuration::Resume.
@@ -458,8 +477,7 @@ public:
     {
         return m_currDuration != 0 && !g_unk69774c;
     }
-    friend void __cdecl turnDurationMsg(
-        CChatManager* manager, const char* format, ...);
+
 protected:
     unsigned long m_lastWarned;
     unsigned long m_turnStartTime;
@@ -505,7 +523,6 @@ SIZE(CHourGlass, 1);
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 // Before normalization (locals): pNetMsg.
 void destroyMsg(CNetMsg* netMsg);
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
 // Before normalization (function): HandlePlayerDrop.
 void handlePlayerDrop(unsigned long dpid);
 // Before normalization (function): OnPlayerDropUpdateMsg.
@@ -601,7 +618,6 @@ extern int g_unnamed6994e4;
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 void destroyMsg(CNetMsg* netMsg);
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
 void handlePlayerDrop(unsigned long dpid);
 void onPlayerDropUpdateMsg(unsigned long dpid);
 void handlePlayerDead(int deadGuy, unsigned char showMsg);

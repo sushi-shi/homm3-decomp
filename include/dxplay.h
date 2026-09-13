@@ -284,6 +284,9 @@ public:
     virtual void setGuid(GUID guid);
     // Before normalization (function): CDPlay::GetGuid.
     virtual GUID* getGuid();
+
+    // Before normalization (function): CDPlay::GetLastError.
+    long getLastError() { return m_res; }
     // Before normalization (function): CDPlay::Send.
     virtual unsigned char send(void* data, unsigned long size,
         unsigned long fromId, unsigned long toId, unsigned char guaranteed);
@@ -314,9 +317,6 @@ public:
     virtual unsigned char getReceiveQueueSize(
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
-
-    // Before normalization (function): CDPlay::GetLastError.
-    long getLastError() { return m_res; }
 
 protected:
     // Before normalization (function): CDPlay::ReceiveMsg.
@@ -367,11 +367,30 @@ protected:
     // Before normalization (function): CDPlay::SysMsgDestroyPlayerOrGroup.
     virtual unsigned char sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
+
 public:
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
     // Before normalization (function): CDPlay::AddGroupEnum.
+    // DC free enum callbacks 0x8bbc4..0x8bc28 call the protected virtuals;
+    // retail 0x499e50..0x499ed0 preserves their address-taken stdcall ABI.
+    friend int __stdcall enumSession(const DPSESSIONDESC2* dpSessionDesc, unsigned long* lpdwTimeOut, unsigned long flags, void* context);
+    friend int __stdcall enumConnectionsCallback(const GUID* lpguidSP, void* connection, unsigned long connectionSize, const DPNAME* name, unsigned long flags, void* context);
+    friend int __stdcall enumGroupsCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
+    friend int __stdcall enumPlayersCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
+
+    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
+    // m_isHost and the array pointers directly, exactly as retail does.
+    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
+    // offsets. The intervening names are Dreamcast CodeView's and agree
+    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
+    char m_caps[0x28];                  // +0x04
+
+protected:
+    // Before normalization: m_lpDP.
+    void* m_dp;                       // +0x2c
+    GUID m_guid;                        // +0x30
     virtual unsigned char addGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     // Before normalization (function): CDPlay::AddPlayerEnum.
@@ -385,17 +404,6 @@ public:
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-
-protected:
-    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
-    // m_isHost and the array pointers directly, exactly as retail does.
-    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
-    // offsets. The intervening names are Dreamcast CodeView's and agree
-    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
-    char m_caps[0x28];                  // +0x04
-    // Before normalization: m_lpDP.
-    void* m_dp;                       // +0x2c
-    GUID m_guid;                        // +0x30
     long m_res;                        // +0x40, DC long / SDK HRESULT
     // Before normalization: m_pSessionArray.
     CAutoArray<CDPlaySession>* m_sessionArray;       // +0x44
@@ -441,10 +449,6 @@ public:
     // Before normalization (function): CDPlayLobby::CreateSerialConnection.
     CDPlayConnection* createSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
-    // Before normalization (function): CDPlayLobby::TestLobbied.
-    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
-    // procedure record renders its storage as unsigned char. Retail uses AL.
-    bool testLobbied();
     // Before normalization (function): CDPlayLobby::GetConnectionSettings.
     DPLCONNECTION* getConnectionSettings(
         unsigned long appId, unsigned long* size);
@@ -453,6 +457,10 @@ public:
         unsigned long appId, DPLCONNECTION* connection);
     // Before normalization (function): CDPlayLobby::Connect.
     unsigned char connect();
+    // Before normalization (function): CDPlayLobby::TestLobbied.
+    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
+    // procedure record renders its storage as unsigned char. Retail uses AL.
+    bool testLobbied();
     // Before normalization (function): CDPlayLobby::EnumLobbyConnections.
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
@@ -486,17 +494,20 @@ protected:
     // Before normalization (function): CDPlayLobby::HandleSystemLobbyMsg.
     virtual unsigned char handleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
+
 public:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     // Before normalization (function): CDPlayLobby::AddAddressEnum.
-    virtual unsigned char addAddressEnum(
-        const GUID* type, unsigned long size, const void* data);
+    // DC 0x8bba4 and retail 0x499e20 directly call this protected virtual.
+    friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
 
-private:
+protected:
     // Before normalization: m_lpLobby.
     void* m_lobby;                         // +0x58
     // Before normalization: m_pAddressArray.
     CAutoArray<CDPlayAddressElement>* m_addressArray; // +0x5c
+    virtual unsigned char addAddressEnum(
+        const GUID* type, unsigned long size, const void* data);
 };
 SIZE(CDPlayLobby, 0x60);
 
@@ -506,22 +517,21 @@ SIZE(CDPlayLobby, 0x60);
 // Destroy(), which frees pData and clears the pair.
 class CDPlayMsg {
 public:
+    // Before normalization: pData.
+    unsigned char* m_data;
+    // Before normalization: dataSize.
+    unsigned long m_dataSize;
     CDPlayMsg();
-    // Before normalization (function): CDPlayMsg::AllocSize.
-    unsigned char allocSize(unsigned long dSize);
-    // Before normalization (function): CDPlayMsg::Destroy.
-    unsigned char destroy();
 
     // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
     ~CDPlayMsg()
     {
         destroy();
     }
-
-    // Before normalization: pData.
-    unsigned char* m_data;
-    // Before normalization: dataSize.
-    unsigned long m_dataSize;
+    // Before normalization (function): CDPlayMsg::AllocSize.
+    unsigned char allocSize(unsigned long dSize);
+    // Before normalization (function): CDPlayMsg::Destroy.
+    unsigned char destroy();
 };
 SIZE(CDPlayMsg, 0x08);
 
@@ -564,6 +574,14 @@ inline unsigned char CDPlayMsg::destroy()
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
+    // Before normalization: guidSP.
+    GUID m_guidSp;                       // +0x00
+    // Before normalization: pConnection.
+    unsigned char* m_connection;        // +0x10
+    // Before normalization: sName.
+    char m_name[128];                   // +0x14
+    // Before normalization: size.
+    unsigned long m_size;                // +0x94
     // Before normalization (locals): lpGuid, lpConn.
     CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
         char* name)
@@ -579,15 +597,6 @@ public:
     {
         delete [] m_connection;
     }
-
-    // Before normalization: guidSP.
-    GUID m_guidSp;                       // +0x00
-    // Before normalization: pConnection.
-    unsigned char* m_connection;        // +0x10
-    // Before normalization: sName.
-    char m_name[128];                   // +0x14
-    // Before normalization: size.
-    unsigned long m_size;                // +0x94
 };
 SIZE(CDPlayConnection, 0x98);
 
@@ -601,9 +610,6 @@ SIZE(CDPlayConnection, 0x98);
 // layout and disjoint member sets, and this is the union.
 class CDPlaySession {
 public:
-    // Before normalization (locals): lpSession.
-    CDPlaySession(const DPSESSIONDESC2* session);
-
     // Before normalization: dwFlags.
     unsigned long m_flags;      // +0x00
     // Before normalization: guidInstance.
@@ -626,6 +632,8 @@ public:
     unsigned long m_user3;      // +0x104
     // Before normalization: dwUser4.
     unsigned long m_user4;      // +0x108
+    // Before normalization (locals): lpSession.
+    CDPlaySession(const DPSESSIONDESC2* session);
 
     // Before normalization (function): CDPlaySession::IsJoinDisabled.
     unsigned char isJoinDisabled()

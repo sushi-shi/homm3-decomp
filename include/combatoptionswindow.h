@@ -73,19 +73,23 @@ public:
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeRolloverWidget[3];
-    // Before normalization: RolloverWidget.
-    textWidget* m_rolloverWidget;   // +0x50
 
     TCombatOptionsWindow();
     virtual ~TCombatOptionsWindow();
-    int convertID2HelpID(int id) const;
     // Before normalization (function): TCombatOptionsWindow::DoModal.
     void doModal();
-    // Retail emits no out-of-line body for any of the four: /Ob2 expands
-    // them at every call site, and the free handler is one of those sites,
-    // so they cannot be private. HighlightCombatSpeed's expansion is
-    // register-visible - the inlined `this` is the EDI retail holds across
-    // the whole speed sweep, where a direct global load reloads per call.
+
+private:
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;   // +0x50
+    int convertID2HelpID(int id) const;
+
+public:
+    // DC CombatOptionsWindowHandler (0x67b7c) directly calls these private
+    // methods; retail 0x46f7b0 expands them. Preserve the callback friendship.
+    friend int combatOptionsWindowHandler(message& msg);
+
+private:
     // Before normalization (function): TCombatOptionsWindow::HighlightCombatSpeed.
     void highlightCombatSpeed();
     // Before normalization (function): TCombatOptionsWindow::HighlightGrid.

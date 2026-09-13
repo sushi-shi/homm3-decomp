@@ -1269,30 +1269,6 @@ void hero::initialize(short index)
 // unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 //
-// The four artifact loops HeroFn_004D8B30 runs when the setup record
-// carries a custom loadout. One call site, so /Ob2 expands it and emits
-// no out-of-line body; splitting it out is the /Ob2 budget lever that
-// mark_spells and HeroFn_004E6120 both needed.
-// Before normalization (function): apply_setup_artifacts.
-static void applySetupArtifacts(hero* who, const HeroExtra* setup)
-{
-    int i;
-    for (i = 0; i < 19; i++) {
-        if (who->m_equipped[i].m_artifactId != ARTIFACT_NONE)
-            who->removeArtifact(i);
-    }
-    for (i = 0; i < 19; i++) {
-        if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
-            who->equipArtifact(&setup->m_artifacts[i], i);
-    }
-    for (i = 0; i < 64; i++)
-        who->m_backpack[i] = type_artifact();
-    for (i = 0; i < 64; i++) {
-        if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
-            who->addToBackpack(&setup->m_backpack[i], -1);
-    }
-}
-
 // 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
@@ -1415,8 +1391,23 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
         }
     }
 
-    if (setup->m_customArtifacts)
-        applySetupArtifacts(this, setup);
+    if (setup->m_customArtifacts) {
+        int i;
+        for (i = 0; i < 19; i++) {
+            if (getArtifact(i).m_artifactId != ARTIFACT_NONE)
+                removeArtifact(i);
+        }
+        for (i = 0; i < 19; i++) {
+            if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
+                equipArtifact(&setup->m_artifacts[i], i);
+        }
+        for (i = 0; i < 64; i++)
+            m_backpack[i] = type_artifact();
+        for (i = 0; i < 64; i++) {
+            if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
+                addToBackpack(&setup->m_backpack[i], -1);
+        }
+    }
 
     if (setup->m_sex != -1)
         m_sex = setup->m_sex;
@@ -2958,7 +2949,7 @@ DC_ONLY(0xcd76c, 0x22)
 inline void updateBackpackItem(int i)
 {
     updateArtifactSlot(i + 0x28,
-                       TArtifact(g_currentHero->m_backpack[i].m_artifactId));
+                       TArtifact(g_currentHero->getBackpack(i).m_artifactId));
 }
 
 // E:\gamedcs\hero.cpp:2399
@@ -3250,14 +3241,14 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
     case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
     case ARTIFACT_SLOT_18_ID:
-        g_currentHero->m_equipped[msg->m_codeY - ARTIFACT_SLOT_0_ID]
+        g_currentHero->getArtifact(msg->m_codeY - ARTIFACT_SLOT_0_ID)
             .getRolloverText(g_text);
         break;
 
     case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
     case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
     case BACKPACK_SLOT_4_ID:
-        g_currentHero->m_backpack[msg->m_codeY - BACKPACK_SLOT_0_ID]
+        g_currentHero->getBackpack(msg->m_codeY - BACKPACK_SLOT_0_ID)
             .getRolloverText(g_text);
         break;
 
@@ -4038,7 +4029,7 @@ void THeroScreenWindow::show_skills()
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     long slot = code;
-    type_artifact record = g_currentHero->m_equipped[slot];
+    type_artifact record = g_currentHero->getArtifact(slot);
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
         if (rightMouse)
@@ -4113,7 +4104,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     g_combinationArtifacts[targetCombo].m_components;
                 for (int k = 0; k < 19; k++) {
                     int worn =
-                        g_currentHero->m_equipped[k].m_artifactId;
+                        g_currentHero->getArtifact(k).m_artifactId;
                     if (worn != ARTIFACT_NONE)
                         missing[worn] = false;
                 }
@@ -4194,7 +4185,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     long index = code;
-    type_artifact record = g_currentHero->m_backpack[index];
+    type_artifact record = g_currentHero->getBackpack(index);
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
         if (rightMouse)
@@ -4230,20 +4221,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
     if (!g_currentPlayer->isLocalHuman())
         return;
     g_heroScreenDraggedArtifact = record;
-    short i = static_cast<short>(index);
-    if (g_currentHero->m_backpack[i].m_artifactId != ARTIFACT_NONE) {
-        // Same site-granular pin: retail CALLS get_last_backpack_index
-        // from WindowHandler (base x0 vs retail x1) where our CL expands
-        // its descending walk inline.
-#pragma inline_depth(0)
-        long last = g_currentHero->getLastBackpackIndex();
-#pragma inline_depth()
-        for (; i < last; i++)
-            g_currentHero->m_backpack[i] =
-                g_currentHero->m_backpack[i + 1];
-        g_currentHero->m_backpack[i].m_artifactId = ARTIFACT_NONE;
-        g_currentHero->m_backpackCount--;
-    }
+    g_currentHero->removeBackpackArtifact(static_cast<short>(index));
     updateBackpack();
     for (long j = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
          j < THeroScreenWindow::ARTIFACT_SLOT_COUNT; j++)
@@ -7221,9 +7199,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
         && invalid.m_z == point.m_z)
         return NOTHING;
 
-    int size = g_game->m_worldMap.m_size;
-    const NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-        (point.m_z * size + point.m_y) * size + point.m_x];
+    const NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
     return cell->getSpecialTerrain();
 }
 
@@ -7711,16 +7687,14 @@ long hero::getHitPointBonus(int creatureType)
 // fly/water-walk push), and requires cell terrain 8 (water) to agree with
 // it, then checks the cell passability bit 0x40.
 VA(0x004e5ce0, 0xE7)  // anchor-bracket + order-map, dc 0xd5548
-unsigned char hero::canLand()
+unsigned char hero::canLand() const
 {
     type_point point;
     point.m_x = m_x;
     point.m_y = m_y;
     point.m_z = m_z;
 
-    int size = g_game->m_worldMap.m_size;
-    NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-        (point.m_z * size + point.m_y) * size + point.m_x];
+    NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
     if ((cell->m_groundSet == eTerrainWater)
         == ((m_flags & 0x40000) == 0)) {
         return 0;

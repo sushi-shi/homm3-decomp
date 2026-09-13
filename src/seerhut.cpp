@@ -697,14 +697,7 @@ VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
 unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 {
     for (int i = 0; i < 4; ++i) {
-        int have;
-
-        if (currentHero->m_stats[i] > 99)
-            have = 99;
-        else if (currentHero->m_stats[i] > 0)
-            have = currentHero->m_stats[i];
-        else
-            have = i >= 2;
+        int have = currentHero->getPrimarySkill(i);
         if (have < m_requiredSkills[i])
             return 0;
     }
@@ -2945,7 +2938,7 @@ int TSeerReward::getValue(const hero* currentHero)
             * currentHero->m_turnExperienceToRvRatio);
 
     case eRewardMana:
-        return currentHero->m_valueOfKnowledge * m_value.m_dwords[0] / 20;
+        return currentHero->getValueOfKnowledge() * m_value.m_dwords[0] / 20;
 
     case eRewardMorale:
         return const_cast<hero*>(currentHero)->moraleIncreaseValue(
@@ -2973,9 +2966,9 @@ int TSeerReward::getValue(const hero* currentHero)
                 * currentHero->m_turnExperienceToRvRatio * experience);
         }
         case ePriSkillPower:
-            return m_value.m_primarySkill.m_bonus * currentHero->m_valueOfPower;
+            return m_value.m_primarySkill.m_bonus * currentHero->getValueOfPower();
         case ePriSkillKnowledge:
-            return m_value.m_primarySkill.m_bonus * currentHero->m_valueOfKnowledge;
+            return m_value.m_primarySkill.m_bonus * currentHero->getValueOfKnowledge();
         default:
             return 0;
         }
@@ -3084,7 +3077,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[m_value.m_dwords[0]].m_level
                 <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-            && !currentHero->m_inSpellbook[m_value.m_dwords[0]])
+            && !currentHero->isInSpellbook(m_value.m_dwords[0]))
             currentHero->addSpell(m_value.m_dwords[0]);
         break;
 

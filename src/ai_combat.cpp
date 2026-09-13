@@ -480,7 +480,7 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
         m_wallSpeedLimit = 6;
     }
     if (m_currentHero) {
-        if (m_currentHero->m_availableSpells[SPELL_EARTHQUAKE]) {
+        if (m_currentHero->spellIsAvailable(SPELL_EARTHQUAKE)) {
             m_wallArcheryPenalty = 0;
             m_wallSpeedLimit = 0;
         }
@@ -1004,7 +1004,7 @@ void type_AI_combat_data::castSpell(
     TSkillMastery mastery;
 
     for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
-        if (!m_currentHero->m_availableSpells[spell])
+        if (!m_currentHero->spellIsAvailable(spell))
             continue;
 
         if (g_spellTraits[spell].m_level > 1
@@ -1545,8 +1545,8 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data* defender, const town*
             if (victoriousHero->m_skillLevel[g_secondarySkillEagleEye] > 0
                 && victoriousHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                    if (!defeatedHero->m_availableSpells[spell]
-                        || victoriousHero->m_availableSpells[spell])
+                    if (!defeatedHero->spellIsAvailable(spell)
+                        || victoriousHero->spellIsAvailable(spell))
                         continue;
                     const SSpellTraits& traits = g_spellTraits[spell];
                     if (victoriousHero->m_skillLevel[g_secondarySkillEagleEye] + 1 < traits.m_level)
@@ -1610,9 +1610,9 @@ void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup* attacking
     attacker.simulateCombat(defender);
     attacker.adjustArmy(0);
     defender.adjustArmy(0);
-    attackingHero->m_mana = static_cast<short>(attacker.m_mana);
+    attackingHero->m_mana = static_cast<short>(attacker.getMana());
     if (defendingHero)
-        defendingHero->m_mana = static_cast<short>(defender.m_mana);
+        defendingHero->m_mana = static_cast<short>(defender.getMana());
 }
 
 // E:\gamedcs\ai_combat.cpp:1565

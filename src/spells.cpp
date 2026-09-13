@@ -3386,8 +3386,8 @@ void combatManager::armageddon(int level, int power)
             } }
         } }
 
-        long twidth = m_powSprite->m_width;
-        long theight = m_powSprite->m_height;
+        long twidth = m_powSprite->getWidth();
+        long theight = m_powSprite->getHeight();
         long xtiles = (twidth + 799) / twidth;
         long ytiles = (theight + 599) / theight;
         { for (int frame = 0; frame < maxFrames; frame++) {
@@ -3422,11 +3422,11 @@ void combatManager::armageddon(int level, int power)
                         if (sw > 800 - dx)
                             sw = 800 - dx;
                         m_powSprite->draw(0, frame, 0, 0, sw, sh,
-                                        g_windowManager->m_screenBitmap->m_map,
+                                        g_windowManager->m_screenBitmap->getMap(0, 0),
                                         dx, dy,
-                                        g_windowManager->m_screenBitmap->m_width,
-                                        g_windowManager->m_screenBitmap->m_height,
-                                        g_windowManager->m_screenBitmap->m_pitch,
+                                        g_windowManager->m_screenBitmap->getWidth(),
+                                        g_windowManager->m_screenBitmap->getHeight(),
+                                        g_windowManager->m_screenBitmap->getPitch(),
                                         0, 0);
                         dx += twidth;
                     } }
@@ -5364,10 +5364,10 @@ void combatManager::earthquake(int level)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         g_mouseManager->hidePointer();
-        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap->m_map, 0, 0,
-                         g_windowManager->m_screenBitmap->m_width,
-                         g_windowManager->m_screenBitmap->m_height,
-                         g_windowManager->m_screenBitmap->m_pitch);
+        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap->getMap(0, 0), 0, 0,
+                         g_windowManager->m_screenBitmap->getWidth(),
+                         g_windowManager->m_screenBitmap->getHeight(),
+                         g_windowManager->m_screenBitmap->getPitch());
         long shakeDelay = static_cast<long>(
             g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 15.0f);
         int pass = 3;
@@ -5375,13 +5375,13 @@ void combatManager::earthquake(int level)
             for (int step = 0; step < 15; step++) {
                 unsigned long shakeTil = GameTime::get() + shakeDelay;
                 pollSound();
-                m_saveScreenPostGrid->draw(0, 0, m_saveScreenPostGrid->m_width, m_saveScreenPostGrid->m_height,
-                                 g_windowManager->m_screenBitmap->m_map,
+                m_saveScreenPostGrid->draw(0, 0, m_saveScreenPostGrid->getWidth(), m_saveScreenPostGrid->getHeight(),
+                                 g_windowManager->m_screenBitmap->getMap(0, 0),
                                  g_earthquakeShakeOffsets[step][0],
                                  g_earthquakeShakeOffsets[step][1],
-                                 g_windowManager->m_screenBitmap->m_width,
-                                 g_windowManager->m_screenBitmap->m_height,
-                                 g_windowManager->m_screenBitmap->m_pitch, 0);
+                                 g_windowManager->m_screenBitmap->getWidth(),
+                                 g_windowManager->m_screenBitmap->getHeight(),
+                                 g_windowManager->m_screenBitmap->getPitch(), 0);
                 updateCombatArea();
                 GameTime::delayTil(shakeTil);
             }
@@ -5428,8 +5428,8 @@ void combatManager::earthquake(int level)
             for (int i = 0; i < WALL_TARGET_COUNT; i++) {
                 if (counts[i] == 0)
                     continue;
-                int w = blast->m_width;
-                int h = blast->m_height;
+                int w = blast->getWidth();
+                int h = blast->getHeight();
                 int x = s_wallTargets[i].m_hitX;
                 int y = s_wallTargets[i].m_hitY;
                 int left = x - w / 2;
@@ -5454,11 +5454,11 @@ void combatManager::earthquake(int level)
                 blast->draw(0, frame, 0, 0,
                             bounds->m_maxX - bounds->m_minX + 1,
                             bounds->m_maxY - bounds->m_minY + 1,
-                            g_windowManager->m_screenBitmap->m_map,
-                            x - blast->m_width / 2, y - blast->m_height / 2,
-                            g_windowManager->m_screenBitmap->m_width,
-                            g_windowManager->m_screenBitmap->m_height,
-                            g_windowManager->m_screenBitmap->m_pitch, 0, 1);
+                            g_windowManager->m_screenBitmap->getMap(0, 0),
+                            x - blast->getWidth() / 2, y - blast->getHeight() / 2,
+                            g_windowManager->m_screenBitmap->getWidth(),
+                            g_windowManager->m_screenBitmap->getHeight(),
+                            g_windowManager->m_screenBitmap->getPitch(), 0, 1);
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
                     bounds->m_maxX - bounds->m_minX + 1,

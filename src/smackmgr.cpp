@@ -203,18 +203,18 @@ void videoRealignBuffers()
                             ? g_smackBuffer565 : g_smackBuffer555;
     if (g_smackVideo)
         _SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
-            g_windowManager->m_screenBitmap->m_pitch,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getPitch(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
     if (g_smackVideo2)
         _SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
-            g_windowManager->m_screenBitmap->m_pitch,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getPitch(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
     g_binkSurfaceType = _BinkDDSurfaceType(g_ddsBack);
     g_binkBuffer = static_cast<unsigned char*>(static_cast<void*>(g_windowManager->m_screenBitmap->getMap(g_binkX, g_binkY)));
-    g_binkPitch = g_windowManager->m_screenBitmap->m_pitch;
-    g_binkHeight = g_windowManager->m_screenBitmap->m_height;
+    g_binkPitch = g_windowManager->m_screenBitmap->getPitch();
+    g_binkHeight = g_windowManager->m_screenBitmap->getHeight();
 }
 
 // E:\gamedcs\smackmgr.cpp:130
@@ -278,9 +278,9 @@ int videoPlay(int id, int x, int y, int w, int h)
             pos.x = g_smackX;
             pos.y = g_smackY;
             _SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
-                g_windowManager->m_screenBitmap->m_pitch,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+                g_windowManager->m_screenBitmap->getPitch(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
             aborted = 0;
             g_inputManager->flush();
             while (1) {

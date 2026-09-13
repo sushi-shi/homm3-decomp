@@ -93,14 +93,22 @@ void button::setPalette(const char* palette_name)
     // @stub
 }
 
-// E:\gamedcs\button.cpp:115
-DC_ONLY(0x57268, 0x66)
+#endif  // @carcass
+
+// Dreamcast button.cpp:115-127 (dc 0x57268); textButton's constructor
+// calls this ordinary helper at line 509. Retail 0x456a50 expands it,
+// including the Complete-only highlighted-frame initialization.
 void button::initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
 {
-    // @stub
+    widget::initialize(x, y, w, h, id, style);
+    m_normalFrame = normal;
+    m_selectedFrame = selected;
+    m_disabledFrame = 2;
+    m_highlightedFrame = 3;
+    m_endDialog = end;
+    setHotkey(hotkey);
+    m_buttonIcon = ResourceManager::getSprite(image);
 }
-
-#endif  // @carcass
 
 // homm2's inline DeselectSelected survives with the endDialog variant;
 // /Ob2 expands it at all four Main sites and emits no standalone copy
@@ -385,11 +393,7 @@ void button::draw()
     if (!(m_status & WIDGET_DRAWN))
         return;
     int frame = m_normalFrame;
-    int frameCount;
-    if (m_buttonIcon->m_numSequences > 0 && m_buttonIcon->m_validSeqMask[0])
-        frameCount = m_buttonIcon->m_s[0]->m_numFrames;
-    else
-        frameCount = 0;
+    int frameCount = m_buttonIcon->getNumFrames(0);
     if ((m_status & WIDGET_HIGHLIGHTED) && !(m_status & WIDGET_SELECTED)) {
         frame = m_highlightedFrame;
     } else if (!(m_status & (WIDGET_DIMMED | WIDGET_DISABLED))) {
@@ -400,12 +404,12 @@ void button::draw()
     }
     if (frame >= frameCount)
         frame = 0;
-    m_buttonIcon->drawInterface(frame, 0, 0, m_buttonIcon->m_width, m_buttonIcon->m_height,
-                              g_windowManager->m_screenBitmap->m_map,
+    m_buttonIcon->drawInterface(frame, 0, 0, m_buttonIcon->getWidth(), m_buttonIcon->getHeight(),
+                              g_windowManager->m_screenBitmap->getMap(0, 0),
                               m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                              g_windowManager->m_screenBitmap->m_width,
-                              g_windowManager->m_screenBitmap->m_height,
-                              g_windowManager->m_screenBitmap->m_pitch, 0);
+                              g_windowManager->m_screenBitmap->getWidth(),
+                              g_windowManager->m_screenBitmap->getHeight(),
+                              g_windowManager->m_screenBitmap->getPitch(), 0);
 }
 
 #if 0  // @carcass
@@ -487,21 +491,14 @@ VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 // stopping it above max_size/_Eos.
 //
 // Builds on the inlined button() default, then initializes through
-// widget::initialize - the DC shape, not a delegation to the eleven-arg
+// button::initialize - the DC shape, not a delegation to the eleven-arg
 // button ctor.
 // Before normalization (locals): text_, font_name, new_color.
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
 textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor)
     : button()
 {
-    initialize(x, y, w, h, id, style);
-    m_normalFrame = normal;
-    m_selectedFrame = selected;
-    m_disabledFrame = 2;
-    m_highlightedFrame = 3;
-    m_endDialog = end;
-    setHotkey(hotkey);
-    m_buttonIcon = ResourceManager::getSprite(image);
+    initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
     setText(text);
     m_font = ResourceManager::getFont(fontName);
     m_textColor = newColor;

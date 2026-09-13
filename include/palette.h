@@ -57,14 +57,13 @@ public:
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
 class TPalette24 : public resource {
 public:
+    TPalette24();
+    TPalette24(const unsigned char* data);
+    TPalette24(const TRGBA* rgba);
     // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
     // Retail copies the same 0x300-byte payload; preserve the native array.
     // Before normalization: Palette.
     unsigned char m_palette[768];
-
-    TPalette24();
-    TPalette24(const unsigned char* data);
-    TPalette24(const TRGBA* rgba);
     TPalette24(const TPalette24* copy);
     TPalette24& operator=(const TPalette24& from);
     // NO exception specification: Bitmap816::~Bitmap816's retail unwind map
@@ -82,29 +81,24 @@ public:
 SIZE(TPalette24, 0x31c);
 
 class TPalette16 : public resource {
-public:
     // Dreamcast CodeView names these three class statics directly. Retail's
     // SetPixelFormat stores its red/green/blue arguments at the corresponding
     // three addresses, and every 16-bit palette transform reads them back.
     // Before normalization: red_mask.
+private:
     static unsigned int s_redMask;
     // Before normalization: green_mask.
     static unsigned int s_greenMask;
     // Before normalization: blue_mask.
     static unsigned int s_blueMask;
 
+public:
     union {
         // Before normalization: data.
         unsigned short m_data[256];
         // Before normalization: colors.
         palette m_colors;
     };
-
-    // Retail 0x522650 (22 B): the resource base with an empty name and
-    // type 0, plus the vptr store. Declared here because font embeds a
-    // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
-    // its constructor 0x4b5070 runs this body on that subobject as a
-    // member initializer. Declaration only - the body stays palette's.
     TPalette16();
     TPalette16(const unsigned short* data);
     // DC palette.cpp:67/86/92 signatures preserve const TPalette24&.
@@ -119,6 +113,21 @@ public:
     TPalette16(const char* name, const TPalette24& p24,
                int rbits, int rshift, int gbits, int gshift,
                int bbits, int bshift);
+
+    // Retail 0x522650 (22 B): the resource base with an empty name and
+    // type 0, plus the vptr store. Declared here because font embeds a
+    // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
+    // its constructor 0x4b5070 runs this body on that subobject as a
+    // member initializer. Declaration only - the body stays palette's.
+    // DC Palette.h:137-140, dc 0x122b08. No receiver; three mask stores.
+    // Retail ResourceManager::setPixelFormat expands this header helper.
+    // Before normalization (function): TPalette16::SetPixelFormat.
+    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
+    {
+        s_redMask = red;
+        s_greenMask = green;
+        s_blueMask = blue;
+    }
     TPalette16(const TPalette16* copy);
 
     // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the
@@ -134,14 +143,12 @@ public:
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
     // retail body at 0x522910.
     TPalette16* operator=(const TPalette16* from);
-    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
-    // /Ob2 expanded it into each of its constructor call sites - but the
-    // boundary is the DC roster's own, not an invention.
-    // Before normalization (function): TPalette16::Convert24to16.
-    void convert24to16(const unsigned char* p24, int rbits, int rshift,
-                       int gbits, int gshift, int bbits, int bshift);
     // Before normalization (function): TPalette16::Cycle.
     void cycle(int begin, int end, int step);
+    // Before normalization (function): TPalette16::Gray.
+    void gray();
+    // Before normalization (function): TPalette16::AdjustSaturation.
+    void adjustSaturation(float amount);
     // The three army::DrawToBuffer (0x43e140) needs for its tint arms -
     // the clone's rolling hue (AdjustHSV over PaletteEffect), the petrify
     // desaturation, the Stone-spell gray and the Bloodlust red. Prototypes
@@ -156,10 +163,14 @@ public:
     // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
-    // Before normalization (function): TPalette16::AdjustSaturation.
-    void adjustSaturation(float amount);
-    // Before normalization (function): TPalette16::Gray.
-    void gray();
+
+private:
+    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
+    // /Ob2 expanded it into each of its constructor call sites - but the
+    // boundary is the DC roster's own, not an invention.
+    // Before normalization (function): TPalette16::Convert24to16.
+    void convert24to16(const unsigned char* p24, int rbits, int rshift,
+                       int gbits, int gshift, int bbits, int bshift);
 };
 
 // The system palette pointer, re-declared here beside its type for

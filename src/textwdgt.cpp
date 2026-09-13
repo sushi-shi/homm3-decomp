@@ -416,8 +416,8 @@ void bitmapBackedTextWidget::draw()
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
-    int blitWidth = cppMin<int>(m_image->m_width, m_width);
-    int blitHeight = cppMin<int>(m_image->m_height, m_height);
+    int blitWidth = cppMin<int>(m_image->getWidth(), m_width);
+    int blitHeight = cppMin<int>(m_image->getHeight(), m_height);
     m_image->draw(0, 0, blitWidth, blitHeight,
                 g_windowManager->m_screenBitmap, drawX, drawY, 0);
     textWidget::draw();

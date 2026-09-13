@@ -3206,8 +3206,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
     double flatness = 2.0 * abs(deltaX) / static_cast<double>(nframes);
 
-    int width = missile->m_width;
-    int height = missile->m_height;
+    int width = missile->getWidth();
+    int height = missile->getHeight();
     startX -= width / 2;
     startY -= height / 2;
     int x = startX;
@@ -3235,16 +3235,16 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                     (deltaY - remaining * flatness) * step
                     / static_cast<double>(nframes) + startY);
             }
-            saved.grab(g_windowManager->m_screenBitmap->m_map, x, y,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch);
+            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                       g_windowManager->m_screenBitmap->getWidth(),
+                       g_windowManager->m_screenBitmap->getHeight(),
+                       g_windowManager->m_screenBitmap->getPitch());
             const_cast<CSprite*>(missile)->draw(
                 0, frame, 0, 0, width, height,
-                g_windowManager->m_screenBitmap->m_map, x, y,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, 0, 1);
+                g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), 0, 1);
             int right = x + width - 1;
             int bottom = y + height - 1;
             if (updateArea.m_minX > x)
@@ -3268,10 +3268,10 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 updateArea.m_maxX - updateArea.m_minX + 1,
                 updateArea.m_maxY - updateArea.m_minY + 1);
             saved.draw(0, 0, width, height,
-                       g_windowManager->m_screenBitmap->m_map, x, y,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch, false);
+                       g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                       g_windowManager->m_screenBitmap->getWidth(),
+                       g_windowManager->m_screenBitmap->getHeight(),
+                       g_windowManager->m_screenBitmap->getPitch(), false);
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;
@@ -3386,8 +3386,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     }
 
     CSprite* const missile = ResourceManager::getSprite(fileNames[spriteIndex]);
-    int width = missile->m_width;
-    int height = missile->m_height;
+    int width = missile->getWidth();
+    int height = missile->getHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -3511,8 +3511,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         addY = deltaY;
     }
 
-    int width = missile->m_width;
-    int height = missile->m_height;
+    int width = missile->getWidth();
+    int height = missile->getHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -3559,10 +3559,10 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         unsigned long nextFrameTime = GameTime::get() + arrowdelay;
         if (step != 0) {
             saved.draw(0, 0, width, height,
-                       g_windowManager->m_screenBitmap->m_map, x, y,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch, false);
+                       g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                       g_windowManager->m_screenBitmap->getWidth(),
+                       g_windowManager->m_screenBitmap->getHeight(),
+                       g_windowManager->m_screenBitmap->getPitch(), false);
             updateArea.m_minX = x;
             updateArea.m_minY = y;
             updateArea.m_maxX = right;
@@ -3572,19 +3572,19 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             y += addY;
             bottom += addY;
         }
-        saved.grab(g_windowManager->m_screenBitmap->m_map, x, y,
-                   g_windowManager->m_screenBitmap->m_width,
-                   g_windowManager->m_screenBitmap->m_height,
-                   g_windowManager->m_screenBitmap->m_pitch);
+        saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                   g_windowManager->m_screenBitmap->getWidth(),
+                   g_windowManager->m_screenBitmap->getHeight(),
+                   g_windowManager->m_screenBitmap->getPitch());
         // DC's own mangling makes `missile` a `const CSprite*`
         // (PBVCSprite) while CSprite::Draw is non-const on both builds,
         // so the cast is retail's, not ours.
         const_cast<CSprite*>(missile)->draw(
             0, frame, 0, 0, width, height,
-            g_windowManager->m_screenBitmap->m_map, x, y,
-            g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, flipped, 1);
+            g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+            g_windowManager->m_screenBitmap->getWidth(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
         if (updateArea.m_minX > x)
             updateArea.m_minX = x;
         if (updateArea.m_minY > y)
@@ -3607,10 +3607,10 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         GameTime::delayTil(nextFrameTime);
     }
 
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->m_map, x, y,
-               g_windowManager->m_screenBitmap->m_width,
-               g_windowManager->m_screenBitmap->m_height,
-               g_windowManager->m_screenBitmap->m_pitch, false);
+    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+               g_windowManager->m_screenBitmap->getWidth(),
+               g_windowManager->m_screenBitmap->getHeight(),
+               g_windowManager->m_screenBitmap->getPitch(), false);
     g_windowManager->updateScreen(x, y, width, height);
 }
 
@@ -4586,7 +4586,7 @@ static int isUnlootableArtifact(int artifactId)
 static int lootEquippedSlot(hero* winner, hero* dead, int slot,
                               std::vector<type_artifact>* loot)
 {
-    type_artifact artifact = dead->m_equipped[slot];
+    type_artifact artifact = dead->getArtifact(slot);
     if (isUnlootableArtifact(artifact.m_artifactId))
         return 1;
     if (!winner->giveArtifact(&artifact, 1, 0))
@@ -4606,7 +4606,7 @@ static int lootEquippedSlot(hero* winner, hero* dead, int slot,
 static int lootBackpackSlot(hero* winner, hero* dead, int index,
                               std::vector<type_artifact>* loot)
 {
-    type_artifact artifact = dead->m_backpack[index];
+    type_artifact artifact = dead->getBackpack(index);
     if (isUnlootableArtifact(artifact.m_artifactId))
         return 1;
     if (!winner->giveArtifact(&artifact, 1, 0))

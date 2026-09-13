@@ -105,13 +105,13 @@ public:
     // Before normalization (function): bitmapBorder::GetRealWidth.
     virtual int getRealWidth();   // slot 6, retail 0x4504a0
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
+    // Before normalization (function): bitmapBorder::Main.
+    virtual int main(message& msg);  // slot 2, retail 0x450550
     // Before normalization (function): bitmapBorder::SetImage.
     // Before normalization (locals): bitmap_name.
     void setImage(const char* bitmapName);
     // Before normalization (function): bitmapBorder::SetPlayerPaletteColors.
     void setPlayerPaletteColors(int whichPlayer);
-    // Before normalization (function): bitmapBorder::Main.
-    virtual int main(message& msg);  // slot 2, retail 0x450550
 };
 
 class Bitmap16Bit;
@@ -132,6 +132,8 @@ public:
     virtual void draw();  // slot 4, retail 0x4507b0
     // Before normalization (function): bitmapBorder16::Draw2.
     void draw2();
+    // Before normalization (function): bitmapBorder16::Main.
+    virtual int main(message& msg);  // slot 2, retail 0x450860
     // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
     // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned
     // COMDAT. Its inlined `return` is what gives Main retail's single
@@ -139,8 +141,6 @@ public:
     // Before normalization (function): bitmapBorder16::SetImage.
     // Before normalization (locals): bitmap_name.
     void setImage(const char* bitmapName);
-    // Before normalization (function): bitmapBorder16::Main.
-    virtual int main(message& msg);  // slot 2, retail 0x450860
 };
 
 // The free palette painters (declared for button.cpp in button.h;

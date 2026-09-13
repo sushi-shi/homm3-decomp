@@ -36,14 +36,15 @@ public:
         ADVENTURE_OPTION_ACCEPT_HOTKEY_2 = 1
     };
 
-    // Before normalization: RolloverWidget.
-    textWidget* m_rolloverWidget;
-
     TAdventureOptionsWindow();
     virtual ~TAdventureOptionsWindow();
-    int convertID2HelpID(int id) const;
     // Before normalization (function): TAdventureOptionsWindow::WindowHandler.
     virtual int windowHandler(message* msg);
+
+private:
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;
+    int convertID2HelpID(int id) const;
 };
 SIZE(TAdventureOptionsWindow, 0x64);
 
