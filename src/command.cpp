@@ -40,14 +40,6 @@ static const int g_combatActionAttackWall = 9;
 static const int g_combatActionCastCreatureSpell = 10;
 static const int g_combatActionFirstAid = 11;
 
-// Dreamcast calls the later SRandom helper. Complete's retail relocation
-// instead targets the exact Random body, so keep the original source-visible
-// boundary as an adapter that /Ob2 folds before relocation emission.
-inline int sRandom(int lower, int upper)
-{
-    return random(lower, upper);
-}
-
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -435,16 +427,6 @@ process_action:
     return result;
 }
 
-#if 0  // @carcass: claim-only home for the netmsg.h COMDAT below
-
-VA(0x00474680, 0xC)  // exact selected header COMDAT, dc 0x70ad0
-void CMessageKill::~CMessageKill()
-{
-    // @stub - active definition is the netmsg.h class-body inline
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\command.cpp:475
 // Build the twelve legal approach records around the selected target hex.
 // Dreamcast proves the local names and the two header-inline army helpers;
@@ -626,8 +608,11 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
     return inCombatCommand;
 }
 
-// E:\gamedcs\command.cpp header inline in the DC build. DC publishes three
-// int arguments; Complete adds an unsigned-byte "pointer changed" result.
+// DC class function types 0x1fd5/0x4c8e declare a void member with three
+// int arguments, without a procedure or inline source row. Complete adds
+// an unsigned-byte "pointer changed" result consumed by ProcessCombatMsg.
+// Its retained body belongs to command.cpp's retail band; no DC header
+// definition or inline qualifier is inferred from that declaration.
 // The standalone retail body is independently fixed by its exact field graph:
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
@@ -700,7 +685,8 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     return 0;
 }
 
-VA(0x00474ba0, 0x4A)
+// E:\gamedcs\command.cpp:928, dc 0x6bebc.
+VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::isComputerAction()
 {
     if (static_cast<const combatManager*>(this)->isQuickCombat())
@@ -708,7 +694,61 @@ unsigned char combatManager::isComputerAction()
     return isComputerAction(getCurrentArmy());
 }
 
-VA(0x00474bf0, 0x188)  // dc 0x6bebc
+// Complete adds this one-argument policy overload. CodeView's full class
+// field lists (method types 0x4354, 0x4ca2 and 0x6700) declare only the
+// nullary method above; that DC body obtains its stack through
+// get_current_army before applying the policy. Retail retains both entries:
+// the adapter calls this worker at 0x474bf0, whose `ret 4` and reads at
+// stack offsets +0x34, +0x288 and +0xf4 prove the explicit army argument.
+
+// THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
+// dwords this body reads land inside SUnnamed698758 (retail .bss
+// 0x698758, claimed in misc.cpp): combatCatapult (+0x44),
+// combatBallista (+0x48), combatFirstAidTent (+0x4c) and
+// combatAutoCreatures (+0x3c) - the same five war-machine flags
+// SetDefaultCombatOptions initialises, which is what fixes the DEFAULT
+// arm's field as combatAutoCreatures rather than a catch-all.
+
+// The byte at 0x691209 is soundmgr's gbUnk691209. Nothing here
+// contradicts that TU's reading: the address is an ordinal-named byte
+// flag with two independent readers, and both do nothing but test it
+// non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
+// `field_84 || gbUnk691209` and this body's `gbUnk691209 && field_132b4`
+// are both consistent with a single global "an automated/attract mode is
+// running" latch; neither reader constrains the other, so the name
+// stays soundmgr's.
+
+// CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
+// the tail maps 0x91..0x95 onto four blocks, and those blocks are
+// EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
+// default - so the switch was written with the artillery pair first.
+// Each of the three machine arms repeats the same three guards
+// verbatim; retail duplicates them rather than factoring, and the two
+// `return 1` epilogues (one shared, one tail-duplicated at the end of
+// each arm) are what that longhand costs.
+
+// Only the artillery arm null-checks the owner. That asymmetry is
+// retail's, not a modelling gap: the catapult and first-aid arms
+// dereference get_owner's result unguarded.
+
+// Residual (81.4%): the merged-return family, and nothing else - every
+// instruction, operand and immediate agrees, the two arms that matter
+// are byte-for-byte, and the whole 36-byte gap is three tail-merge
+// decisions our SP3 CL takes and retail does not. Retail lays a LOCAL
+// `return 1` epilogue at the fall-through of the first-aid arm, of the
+// default arm and of the post-switch 0x691209 guard; our CL cross-jumps
+// all three into the shared copy it parked in the catapult arm (and
+// turns the first-aid tail into a bare `jmp` into the catapult tail).
+// Tried and rejected: spelling the default arm's `&&` as two `== 0`
+// breaks with the `return 1` last, which flips the polarity our CL
+// already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
+// CORRECTED 2026-09-05: "every instruction and operand agrees" was not true
+// of the RELOCATION. The owner load's call edge is `army::get_controller`
+// (0x442690), not `get_owner` (0x4426d0) - the flipped-side reader, which is
+// also what the hypnotize ternary below re-derives. objdiff scores relocs at
+// function_reloc_diffs=none, so the wrong callee cost no fuzzy and hid here;
+// the census is now clean and the residual really is the merged-return family.
+VA(0x00474bf0, 0x188)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {
     if (static_cast<const combatManager*>(this)->isQuickCombat())
@@ -1290,12 +1330,12 @@ void combatManager::resetRound()
     if (m_someCreaturesVanish)
         makeCreaturesVanish();
 
-    for (TObstacle* obstacle = m_obstacles.m_begin;
-            obstacle != m_obstacles.m_end; ++obstacle) {
+    for (TObstacle* obstacle = m_obstacles.begin();
+            obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_duration > 0) {
             obstacle->m_duration--;
             if (obstacle->m_duration == 0) {
-                removeObstacle(obstacle - m_obstacles.m_begin);
+                removeObstacle(obstacle - m_obstacles.begin());
                 if (obstacle->m_dispelEffect != -1)
                     spellEffect(obstacle->m_dispelEffect, obstacle->m_hex, 100, 0);
             }
@@ -1684,10 +1724,6 @@ int combatManager::rightClick(int newIndex)
     viewCastleBallista(1);
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // THE FIVE ORDER CASES all write the same (what, where, how) triple -
 // field_3c the order code, field_44 the target hex and field_40 the

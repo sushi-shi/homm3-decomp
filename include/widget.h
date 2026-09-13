@@ -96,7 +96,6 @@ public:
     // house ordinal placeholder - the role is proven, the spelling is
     // not attested anywhere we may read.
     int m_sleepCount;
-
     // Dreamcast widget::EStatusFlags, values byte-corroborated by the
     // retail ctor (status = WIDGET_ACTIVE | WIDGET_DRAWN) and enable
     // (WIDGET_DISABLED mask).
@@ -112,14 +111,12 @@ public:
         WIDGET_ASLEEP = 8192,
         WIDGET_UPDATE = 16384
     };
-
     // widget::style values; 0x1000 is homm2's WIDGET_KIND_AUTO_REPEAT
     // role (button::Main's repeat-timer head keys on it) - name
     // provisional.
     enum EStyles {
         WIDGET_STYLE_AUTO_REPEAT = 0x1000
     };
-
     // Dreamcast widget::EReturnCodes, verbatim - plus one retail-only
     // member. DoDialogDraw's pump switches the SAME codeX domain on a
     // fifth value 0x20 (WIDGET_END_DIALOG re-draws nothing and ends the
@@ -136,7 +133,6 @@ public:
         WIDGET_RIGHT_SELECT = 14,
         WIDGET_RETURN_32 = 0x20
     };
-
     // Dreamcast widget::ECommands, verbatim.
     enum ECommands {
         WIDGET_ACTIVATE = 1,
@@ -169,10 +165,13 @@ public:
         WIDGET_SET_COLORIZE = 63,
         WIDGET_SET_FOCUS = 64
     };
+    // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
+    // emitted; it is not an inlined-away static.
     widget();
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
-
-    virtual ~widget();                                      // slot 0
+    // Keep the retail virtual slot order as one block. CodeView's header
+    // bodies at 144/147 and 186/187 precede the text/status helpers below.
+    virtual ~widget();  // slot 0
     void initialize(int x, int y, int w, int h, int id, int style);
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
@@ -180,43 +179,43 @@ public:
     // earlier obj, ICF-folded with other empty bodies). Declared only;
     // no local definition, so calls stay extern.
     void close();
-    virtual int main(message& msg) = 0;                     // slot 2
-    // Dreamcast records this const two-argument interface, including the
-    // textWidget and bitmapBorder overrides. Retail corroborates it with
-    // TCampaignBrief's dispatch and the shared `ret 8` at 0x5bc7e0.
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
-    virtual void draw() = 0;                                // slot 4
-    virtual int getRealHeight() const { return m_height; }          // slot 5
-    virtual int getRealWidth() const { return m_width; }            // slot 6
-    virtual void processHover();                           // slot 7
-    virtual void dim() const;                               // slot 8
-    virtual void enable(unsigned char on);                  // slot 9
+    // DC Main(message&) is shared by the widget overrides; retail passes
+    // the same address through slot 2.
+    virtual int main(message& msg) = 0;  // slot 2
+    // Complete widened the Dreamcast nil-argument draw hook. The shared
+    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // TCampaignBrief dispatches this slot with the z-buffer and widget id.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0;  // slot 3
+    // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
+    // These hooks write to the destination bitmap through its pointer.
+    virtual void draw() const = 0;  // slot 4
+    VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+    virtual int getRealHeight() const { return m_height; }  // slot 5
+    VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+    virtual int getRealWidth() const { return m_width; }  // slot 6
+    virtual void processHover();  // slot 7
+    virtual void dim() const;  // slot 8
+    virtual void enable(unsigned char on);  // slot 9
+    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
+    int sendMessage(widget::ECommands command, int extra);
 
-    // Dreamcast header inlines used by mode-switch paths.
-    void hide()
-    {
-        sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    }
-    void show()
-    {
-        sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    }
+    VA(0x00404df0, 0x1)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
+    virtual void onSetFocus() {}  // slot 10
+    virtual void onKillFocus() {}  // slot 11
+
+    // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
+    // emitted; it is not an inlined-away static.
+    // DC Widget.h:225-226, dc 0x12859c: static hover reset.
+    static void clearHoverWidget() { s_lastHoverWidget = 0; }
+
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     const char* getHelpText() const { return m_rollOver; }
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
-    const char* getRclickText()
+    const char* getRclickText() const
     {
         return m_rightClick ? m_rightClick : m_rollOver;
-    }
-    void setHelpText(const char* text, const char* rclick, unsigned char copyText);
-    void setVisible(unsigned char arg)
-    {
-        if (arg)
-            sendMessage(WIDGET_SET_STATUS, WIDGET_DRAWN);
-        else
-            sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
     // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
     // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
@@ -233,14 +232,23 @@ public:
                 vslot12(0);
         }
     }
-    int sendMessage(widget::ECommands command, int extra);
-
-    // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
-    // emitted; it is not an inlined-away static.
-    // DC Widget.h:225-226, dc 0x12859c: static hover reset.
-    static void clearHoverWidget() { s_lastHoverWidget = 0; }
-    virtual void onSetFocus() {}                            // slot 10
-    virtual void onKillFocus() {}                           // slot 11
+    // Dreamcast header inlines used by mode-switch paths.
+    void hide()
+    {
+        sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    }
+    void show()
+    {
+        sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    }
+    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
+    void setVisible(unsigned char arg)
+    {
+        if (arg)
+            sendMessage(WIDGET_SET_STATUS, WIDGET_DRAWN);
+        else
+            sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
+    }
 
 protected:
     // Dreamcast: protected static widget* last_hover_widget
@@ -254,7 +262,7 @@ public:
     // no claimable home, and leaving it undefined here is also what
     // keeps button's override (0x456a10) emitting a real call instead
     // of an /Ob2-inlined nothing.
-    virtual void vslot12(int on);                          // slot 12
+    virtual void vslot12(int on);  // slot 12
 };
 SIZE(widget, 48);
 

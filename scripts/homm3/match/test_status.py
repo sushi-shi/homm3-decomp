@@ -189,6 +189,36 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual(rows, {})
         self.assertEqual(stats["retired"], 1)
 
+    def test_canonical_header_hash_preserves_comment_cleanup_history(self):
+        import tempfile
+        from pathlib import Path
+        from homm3.match import status
+
+        key = ("carrier", "?helper@@YAHXZ")
+        with tempfile.TemporaryDirectory() as directory:
+            header = Path(directory) / "helper.h"
+            header.write_text("VA(0x00401000, 4)\n"
+                              "inline int helper() { /* evidence */ return 1; }\n")
+            with mock.patch.object(status, "function_rvas", return_value={key: 0x1000}), \
+                    mock.patch("homm3.build.configure.load_manifest", return_value=({}, {}, [])), \
+                    mock.patch("homm3.retail_labels.headers.claim_files", return_value=[header]):
+                legacy = status.source_hashes(legacy=True)
+                hashes = status.source_hashes()
+                previous = {key: MatchRow(90, 100, 100, 0x1000, legacy[key])}
+                migrated = status.migrate_source_hashes(previous, hashes, legacy)
+                header.write_text("VA(0x00401000, 4)\n"
+                                  "inline int helper()\n{\n    return 1;\n}\n")
+                cleaned = status.source_hashes()
+                self.assertEqual(hashes, cleaned)
+                rows, stats = update_rows({key: 90}, migrated, {key: 0x1000}, cleaned)
+                self.assertEqual(rows[key].max, 100)
+                self.assertEqual(stats["reset"], 0)
+                header.write_text(header.read_text().replace("return 1", "return 2"))
+                rows, stats = update_rows({key: 90}, migrated, {key: 0x1000},
+                                          status.source_hashes())
+                self.assertEqual((rows[key].max, rows[key].hist), (90, 100))
+                self.assertEqual(stats["reset"], 1)
+
     def test_missing_positive_history_is_retained(self):
         key = ("unit", "lost")
         rows, _stats = update_rows(

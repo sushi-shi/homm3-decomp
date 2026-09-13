@@ -7,7 +7,6 @@
 #include "combatcontrolsubwindow.h"
 #include "font.h"
 #include "game.h"
-#include "cheatcode.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -68,7 +67,7 @@ void checkCombatCheatCode(std::string& chatString)
         recognized = 1;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            type_artifact spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(&spellbook, 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {

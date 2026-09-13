@@ -74,7 +74,6 @@ public:
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding,
                  int cw, int ch, int cx, int cy);
-
     virtual ~CSpriteFrame();
     static TBlendMask s_div2mask;
     static unsigned short s_div4mask;
@@ -98,6 +97,17 @@ public:
               int dx, int dy, int dw, int dh, int dpitch,
               TPalette16& pal, unsigned char hflip,
               unsigned char tblit) const;
+
+    // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
+    // consumers expand these one-field accessors in place.
+    int getCroppedWidth() const { return m_croppedWidth; }
+
+    int getCroppedHeight() const { return m_croppedHeight; }
+
+    int getCroppedX() const { return m_croppedX; }
+
+    int getCroppedY() const { return m_croppedY; }
+
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; retail inlines its fixed zero-alpha forwarding.
     void drawCreature(int sx, int sy, int sw, int sh,
@@ -108,7 +118,6 @@ public:
         drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 0);
     }
-
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
     // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
     void drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
@@ -149,6 +158,23 @@ public:
     {
         drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
     }
+    void drawSpellEffect(int sx, int sy, int sw, int sh,
+                         unsigned short* dst, int dx, int dy, int dw, int dh,
+                         int dpitch, TPalette16& pal, unsigned char hflip,
+                         unsigned char alpha) const;
+    // DC CSpriteFrame field list records these public const accessors;
+    // CSprite::drawPointer expands the corresponding retail width/height loads.
+    // Width loads in retail CSprite::drawPointer identify this field.
+    // The DC declaration survives, but no body source location does.
+    // Header ownership is provisional; no source order is claimed.
+    // @dc-declaration-only: 0x1799
+    int getWidth() const { return m_width; }
+    // Height loads in retail CSprite::drawPointer identify this field.
+    // The DC declaration survives, but no body source location does.
+    // Header ownership is provisional; no source order is claimed.
+    // @dc-declaration-only: 0x1799
+    int getHeight() const { return m_height; }
+
     // DC CSpriteFrame.h:198..200 (0x74484): canonical zero-flag wrapper.
     // DrawSpellEffect calls it at DC line 3792; retail expands the wrapper
     // and calls DrawAdvObjWithFlagAlpha with flagcolor=0 at 0x47efca.
@@ -159,22 +185,6 @@ public:
         drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                                 pal, 0, hflip);
     }
-    void drawSpellEffect(int sx, int sy, int sw, int sh,
-                         unsigned short* dst, int dx, int dy, int dw, int dh,
-                         int dpitch, TPalette16& pal, unsigned char hflip,
-                         unsigned char alpha) const;
-    // DC CSpriteFrame field list records these public const accessors;
-    // CSprite::drawPointer expands the corresponding retail width/height loads.
-    int getWidth() const { return m_width; }
-    int getHeight() const { return m_height; }
-
-    // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
-    // consumers expand these one-field accessors in place.
-    int getCroppedWidth() const { return m_croppedWidth; }
-    int getCroppedHeight() const { return m_croppedHeight; }
-    int getCroppedX() const { return m_croppedX; }
-    int getCroppedY() const { return m_croppedY; }
-
     static void setPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
 
@@ -192,7 +202,6 @@ private:
                               unsigned short* dst, int dx, int dy, int dw,
                               int dh, int dpitch, TPalette16& pal,
                               unsigned char hflip) const;
-
     void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;

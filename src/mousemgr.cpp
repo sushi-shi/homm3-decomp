@@ -42,16 +42,23 @@ DATA(0x0067ff38) const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS]
 // closes exactly at the first pointer-name string at 0x6815d0.
 DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 
-TCSLock::TCSLock(CRITICAL_SECTION* criticalSection)
-    : m_section(criticalSection)
-{
-    EnterCriticalSection(m_section);
-}
+// E:\gamedcs\mousemgr.cpp:291
+// mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
+// original source owns both in-class bodies here at lines 291/298. Retail
+// expands or calls each retained body per site; the fs:[0] frame in users
+// is the unwind scaffolding).
+class TCSLock {
+public:
+    VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
+    TCSLock(CRITICAL_SECTION* criticalSection)
+        : m_section(criticalSection) {
+        EnterCriticalSection(m_section);
+    }
+    VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
+    ~TCSLock() { LeaveCriticalSection(m_section); }
 
-TCSLock::~TCSLock()
-{
-    LeaveCriticalSection(m_section);
-}
+    CRITICAL_SECTION* m_section;
+};
 
 VA(0x0050cb50, 0x6F)  // dc 0xfe9d4
 mouseManager::mouseManager()
@@ -67,6 +74,16 @@ mouseManager::mouseManager()
     InitializeCriticalSection(&m_sectionMouse);
 }
 
+// E:\gamedcs\mousemgr.cpp:344, dc 0xfea50
+// The written ordinary destructor precedes Open. Retail expands this body
+// into the scalar deleting destructor at 0x50cbc0.
+mouseManager::~mouseManager()
+{
+    DeleteCriticalSection(&m_sectionMouse);
+}
+
+// Slot 3 of vtable 0x640028: own-vptr store, DeleteCriticalSection at
+// +0x78, then the flags&1 operator-delete tail. No standalone retail claim.
 VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 
 VA(0x0050cbf0, 0x4A)  // dc 0xfea80
@@ -163,16 +180,6 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
     m_busy--;
     g_mouseSetPointerBusy = 0;
 }
-
-#if 0  // @carcass
-
-VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
-void TCSLock::~TCSLock()
-{
-    // @stub - the ordinary definition precedes mouseManager's constructor
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:526
 // RETAIL-RECONSTRUCTED 2026-08-09. The 72-block CFG now agrees exactly,
@@ -461,76 +468,6 @@ void mouseManager::getPointerPosition()
     m_currentY = y;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\mousemgr.cpp:955
-// DECODED 2026-08-06 (bytes; homm2 twin CheckUpdateMousePos is only a
-// skeleton - retail grew a scheduler):
-//   TCSLock guard; two one-time-init bits in a BYTE global (bit 1 ->
-//   deadline1 = time() + 0x21, bit 2 -> deadline2 = time() + 0x64);
-//   if (IsIconic(hwndApp)) leave;
-//   if ((int)(time() - deadline1) < 0 || field_74 != 0) leave;
-//   if (time() - deadline1(? second read) < 0x21) deadline1 = time
-//     ... else deadline1 = time() + 0x21; SetPointer/Update(0);
-//   GetForegroundWindow()==<other import>() gate, then bounds
-//   field_6c in [0,800) && field_70 in [0,600):
-//     in-bounds:  if (field_64) { Update?(0); ShowCursor(0);
-//                 field_64 = 0; }
-//     out:        if (!field_64) { ShowCursor(1); <inner TCSLock at
-//                 ebp-0x10>; ++field_68 == 1 -> IsIconic path ... ;
-//                 field_64 = 1; }  (tail still to transcribe past
-//                 +0x184)
-//   All addresses resolved 2026-08-06: init-bits byte 0x69ca20,
-//   deadline1 0x69ca18 (+0x21ms), deadline2 0x69ca1c (+0x64ms); the
-//   time source is the 6-byte thunk `Get` at rva 0xf82e0 (jmp through
-//   an IAT slot - claim it as the timeGetTime thunk in kbwin's
-//   region); the thread gate is GetWindowThreadProcessId(hwndApp,...)
-//   == GetCurrentThreadId(); the +0x141 callee 0x10d890 is the
-//   OUT-OF-LINE TCSLock ctor (claimed below) - CheckUpdate's inner
-//   lock is constructed by call, not inline; +0x1e7 calls LoadFrame
-//   (0x10d8b0), and Update(0) runs at +0xd0/+0x16d/+0x1f0.
-//   STRUCTURE (verified to +0x1ab):
-//     TCSLock lock(&section_mouse);
-//     if (!(init&1)) { init|=1; deadline1 = timeGetTime()+33; }
-//     if (!(init&2)) { init|=2; deadline2 = timeGetTime()+100; }
-//     if (IsIconic(hwndApp)) return;
-//     if ((int)(timeGetTime()-deadline1) >= 0 && field_74 == 0) {
-//       deadline1 = max(now, deadline1+33);   // ternary catch-up:
-//         // sub;cmp 0x21;jge skips the mov eax,0x21 - now vs old+33
-//       Update(0);
-//       if (GetWindowThreadProcessId(hwndApp,0)==GetCurrentThreadId())
-//         if (field_6c in [0,800) && field_70 in [0,600)) {
-//           if (field_64) { ShowPointer(0); ShowCursor(0);
-//                           field_64 = 0; } }
-//         else if (!field_64) { ShowCursor(1);
-//           TCSLock inner(&section_mouse);   // the out-of-line call
-//           if (++field_68 == 1 && !IsIconic(hwndApp)) Update(1);
-//           field_64 = 1; }
-//     }
-//     if ((int)(timeGetTime()-deadline2) >= 0 && field_74 == 0) {
-//       elapsed = timeGetTime() - deadline2;
-//       deadline2 += elapsed >= 100 ? elapsed : 100;   // same shape
-//         // as deadline1's catch-up (jge skips the mov imm)
-//       if (field_4c == 3) {              // animated-pointer mode
-//         int frames = (field_54->f28 > 0 && *field_54->f2c)
-//                          ? **(int**)field_54->f1c : 0;
-//         // ^ sprite obj at [esi+0x54]; count [f+0x28], ptr [f+0x2c],
-//         //   double-deref [f+0x1c] - type it from csprite.h before
-//         //   writing (note: frames==0 path feeds idiv - retail
-//         //   divides by zero if the sprite is empty; keep faithful)
-//         LoadFrame((field_50 + 1) % frames);
-//         Update(1);
-//       }
-//     }
-//   FULLY TRANSCRIBED - implementation is now mechanical: declare the
-//   three globals + timeGetTime (no dllimport), add CheckUpdate/
-//   LoadFrame decls to the class, type the field_54 sprite view.
-//   Globals: init byte 0x69ca20, deadline1 0x69ca18, deadline2
-//   0x69ca1c (BSS, mousemgr-owned, names provisional); timeGetTime
-//   declared WITHOUT dllimport (retail calls the 6-byte thunk at
-//   0xf82e0 rel32).
-#endif  // @carcass
-
 // DC 0xff484 calls the canonical GameTime helpers, isBusy,
 // ShowSystemCursor and GetNumFrames. Retail expands ShowSystemCursor's
 // selected arm at each site, retaining ShowPointer but expanding HidePointer.
@@ -599,21 +536,9 @@ void mouseManager::checkUpdate()
 // E:\gamedcs\mousemgr.cpp:298 - TCSLock::~TCSLock (dc 0xff800) lives
 // at 0x50cd80, the ten-byte row directly after SetPointer: `mov
 // eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`.
-// Retail files it HERE, between SetPointer and Update, not at the DC
-// tail position - and our build already emits the identical COMDAT
-// (the EH unwind funclets need a callable copy even though every use
-// site inlines it). The reviewed carcass declarator pairs that existing
-// COMDAT exactly; no header annotation or duplicate definition is needed.
-
-#if 0  // @carcass
-
-VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
-void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
-{
-    // @stub - the ordinary definition precedes mouseManager's constructor
-}
-
-#endif  // @carcass
+// The retail linker places its COMDAT between SetPointer and Update.
+// The canonical in-class body and VA stay above in CodeView source order;
+// EH unwind funclets still use its retained callable copy.
 
 VA(0x0050d8b0, 0x16B)  // dc 0xff610
 void mouseManager::loadFrame(int newFrame)
@@ -678,12 +603,10 @@ unsigned rgBto16(int r, int g, int b)
 }
 
 // E:\gamedcs\mousemgr.cpp:291
-// (moved to retail link order between CheckUpdate and LoadFrame; the
-// out-of-line TCSLock ctor claim lives there)
+// Canonical constructor and VA are on the source-local class above.
 
 // E:\gamedcs\mousemgr.cpp:298
-// (moved to retail link order between SetPointer and Update; the
-// out-of-line TCSLock dtor claim lives there)
+// Canonical destructor and VA are on the source-local class above.
 
 // E:\gamedcs\mousemgr.cpp:332
 DC_ONLY(0xff818, 0x34)

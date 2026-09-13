@@ -23,6 +23,10 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
+// Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
+type_creature_bank_level::type_creature_bank_level() {}
+
+// E:\gamedcs\creature_bank.cpp:25
 VA(0x0047aad0, 0x5E)  // dc 0x714e0
 type_creature_bank_traits::type_creature_bank_traits()
 {
@@ -126,16 +130,6 @@ unsigned char initializeCreatureBankTraits()
     return 1;
 }
 
-// The four-way base-elemental compare gpGame->f_1f698 gates. Byte-identical
-// to the longhand chain when expanded, and armygrp.cpp / viewarmywindow.cpp
-// already carry the same inline for the same reason; retail expands it twice
-// in initialize_creature_bank below.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
-
 // E:\gamedcs\creature_bank.cpp:146, dc 0x71218. Retail expands this file
 // static at all five of initialize_creature_bank's call sites, so no
 // out-of-line row survives. The free-slot cursor starts AT the slot being
@@ -169,6 +163,8 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // five groups and slot 2 is the candidate, two become 2+3 with slot 3, and
 // three become 2+2 with slot 0.
 
+// Historical match before canonical-helper cleanup (2026-09-07,
+// 98.1132% -> 100%): preserving the `groups` parameter
 VA(0x0047ad90, 0x36E)  // dc 0x712d0
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)
@@ -221,11 +217,7 @@ void initializeCreatureBank(type_creature_bank* bank,
         if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
             && static_cast<unsigned char>(isBaseCreature(current))) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
-            int upgraded;
-            if (g_game->m_f1f698 == 0 && isBaseElemental(promoted))
-                upgraded = -1;
-            else
-                upgraded = upgradedCreatureType(promoted);
+            int upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;
         }
     }

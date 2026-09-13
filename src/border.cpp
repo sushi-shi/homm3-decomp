@@ -12,24 +12,12 @@
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 
-#if 0  // @carcass
-
-VA(0x00404df0, 0x1)  // anchor-vtable (0x63ba4c, 0x643cb8), dc 0x54d1c
-void widget::onSetFocus()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:34
-DC_ONLY(0x5433c, 0x3C)
-void border::border()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:62
-
-#endif  // @carcass
+// Original: border::border; border.cpp:34, dc 0x5433c.
+// Ordinary source-local body. Retail expands it in the three derived
+// constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
+// constructor call and a single derived vtable store. No explicit inline
+// declaration is needed to expose this body to those same-TU callers.
+border::border() {}
 
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
 
@@ -145,13 +133,13 @@ coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 
-VA(0x004501d0, 0xB)  // dc 0x54dd8
-coloredBorderFrame::~coloredBorderFrame()
-{
-}
+// inlined ~border, so only ??_7border@@6B@ survives before the
+// CodeView dc 0x54dd8: CV_fldattr_t.compgenx marks this destructor
+// as implicit. Its retained retail body performs only base/member teardown.
+VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 
 VA(0x004501e0, 0x5B)  // dc 0x546d4
-void coloredBorderFrame::draw()
+void coloredBorderFrame::draw() const
 {
     if (m_colorize)
         g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
@@ -281,7 +269,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 }
 
 VA(0x00450450, 0x44)  // dc 0x548fc
-void bitmapBorder::draw()
+void bitmapBorder::draw() const
 {
     if (m_image)
         m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
@@ -314,10 +302,6 @@ void bitmapBorder::setImage(const char* bitmapName)
     }
     m_image = ResourceManager::getBitmap816(bitmapName);
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x00450520, 0x2D)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
@@ -359,10 +343,6 @@ int bitmapBorder::main(message& msg)
     return border::main(msg);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00450690, 0x8C)  // dc 0x54a98
 bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
                                const char* image, int style)
@@ -395,7 +375,7 @@ void bitmapBorder16::zBufferDraw()
 #endif  // @carcass
 
 VA(0x004507b0, 0x55)  // dc 0x54ba8
-void bitmapBorder16::draw()
+void bitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
@@ -406,7 +386,7 @@ void bitmapBorder16::draw()
 }
 
 VA(0x00450810, 0x44)  // dc 0x54bf0
-void bitmapBorder16::draw2()
+void bitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;

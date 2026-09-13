@@ -82,7 +82,7 @@ void font::setPalette(const TPalette16& newPalette)
 }
 
 VA(0x004b51a0, 0xA9)  // dc 0xa1d58
-void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
+void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
         return;
@@ -435,12 +435,6 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\font.cpp:413
-
-#endif  // @carcass
-
 VA(0x004b57a0, 0x25)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {
@@ -449,7 +443,7 @@ int font::getCharacterWidth(unsigned char currChar) const
 }
 
 VA(0x004b57d0, 0x44)  // dc 0xa2438
-long font::getStringWidth(const char* arg)
+long font::getStringWidth(const char* arg) const
 {
     long width = 0;
     for (const char* p = arg; *p;)
@@ -497,7 +491,7 @@ int font::lineLength(const char* str, int boxWidth) const
 }
 
 VA(0x004b5920, 0x64)  // dc 0xa2554
-int font::lineWidth(const char* text)
+int font::lineWidth(const char* text) const
 {
     int len = strlen(text);
     int idx = 0;
@@ -513,7 +507,7 @@ int font::lineWidth(const char* text)
 }
 
 VA(0x004b5990, 0x76)  // dc 0xa25c8
-int font::longestLineWidth(const char* str)
+int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
     int best = 0;
@@ -533,7 +527,7 @@ int font::longestLineWidth(const char* str)
 }
 
 VA(0x004b5a10, 0x6F)  // dc 0xa2650
-int font::longestWordLength(const char* str)
+int font::longestWordLength(const char* str) const
 {
     int best = 0;
     const char* p = str;
@@ -555,7 +549,7 @@ int font::longestWordLength(const char* str)
 }
 
 VA(0x004b5a80, 0x110)  // dc 0xa26d4
-int font::longestWrappedLineWidth(const char* str, int boxWidth)
+int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int maxWidth = 0;

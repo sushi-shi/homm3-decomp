@@ -16,21 +16,7 @@
 #include "spellbookwindow.h"
 #include "towngatewindow.h"
 #include "winmgr.h"
-#include "homm3_minmax.h"
-
-// VC6's own <xutility> reference-returning max, declared file-locally for
-// the reason ai_combat.cpp's copy records at length: retail materialises
-// BOTH operands into stack temps and selects between their ADDRESSES,
-// which is what a by-value parameter does and what the real `const _Ty&`
-// signature cannot. advManager::TownGate 0x41d564..0x41d57b is this TU's
-// witness - `mov [ebp+8],0` for one operand, a copy of the just-stored
-// movePoints into the dead cost slot for the other, then `lea`/`lea` and
-// a load through the winner.
-template <class _TYPE>
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
+#include "includes.h"
 
 VA(0x0041c2f0, 0x192)  // dc 0x2194c
 void advManager::checkCastSpell()
@@ -308,7 +294,7 @@ void advManager::skuttleBoat(TSkillMastery level)
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
         // one row, so the receiver cast costs no bytes and buys the name.
         boat& theBoat = g_game->m_boats[
-            getCell(static_cast<const advManager*>(this)->getMapCenter())
+            getCell(get_mouse_map_point())
                 ->m_extraInfo];
         theBoat.restoreCell();
 
@@ -386,7 +372,7 @@ void advManager::dimensionDoor(TSkillMastery level)
         doorWin.doModal(0);
     }
 
-    type_point destination = getMapCenter();
+    type_point destination = get_mouse_map_point();
     if (destination.isValid() && g_windowManager->m_dialogReturn == 1) {
         NewmapCell* cell = getCell(destination);
         if (((who->m_flags & 0x40000) != 0

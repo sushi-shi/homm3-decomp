@@ -1,5 +1,5 @@
 // quicktownwindow.cpp - E:\gamedcs\quicktownwindow.cpp (compiland quicktownwindow.obj)
-#include "homm3_limit.h"
+#include "includes.h"
 #include <va.h>
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.

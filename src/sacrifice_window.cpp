@@ -1,5 +1,6 @@
 // sacrifice_window.cpp - E:\gamedcs\sacrifice_window.cpp (compiland sacrifice_window.obj)
 #include <va.h>
+#include "creaturetype.h"
 #include "sacrifice_window.h"
 #include "border.h"
 #include "button.h"
@@ -1570,19 +1571,6 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
         m_value * owner->getExperienceBonusFactor());
 }
 
-// The window member takes the ordinary empty-artifact construction. The
-// builder's local uses type_artifact's one-argument form, whose id-then-
-// auxiliary store order is proved by the Dreamcast header body and retail's
-// exact value_of_town expansion.
-inline type_artifact_offering::type_artifact_offering()
-{
-}
-
-inline type_artifact_offering::type_artifact_offering(TArtifact artifact)
-    : type_artifact(artifact)
-{
-}
-
 // E:\gamedcs\sacrifice_window.cpp:170
 // All Complete calls are expanded into the artifact widget builder.
 inline type_doll_slot_widget::type_doll_slot_widget(
@@ -1856,7 +1844,9 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_rightBackpackButton);
     m_artifactWidgets.push_back(m_rightBackpackButton);
 
-    type_artifact_offering artifactOffering(ARTIFACT_NONE);
+    // Original local: artifact_offering; DC line 446 invokes the generated
+    // default constructor, whose base call supplies TArtifact(-1).
+    type_artifact_offering artifactOffering;
     long itemCount = 0;
     textWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
@@ -2204,7 +2194,9 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 VA(0x00562840, 0x166)  // dc 0x125b3c
 void type_sacrifice_window::updateSlot(long slot)
 {
-    type_artifact artifact = m_currentHero->getArtifact(slot);
+    TArtifactSlot artifactSlot;
+    memcpy(&artifactSlot, &slot, sizeof artifactSlot);
+    type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
         && m_currentHero->heroFn004E2840(
@@ -2225,18 +2217,6 @@ void type_sacrifice_window::updateSlot(long slot)
             g_artifactSlotTraits[slot].m_name, 0, 1);
     }
 }
-
-// Header-inline on Dreamcast (Widget.h:263) and in widget.h here; the
-// Complete linker retained the COMDAT copy this compiland emitted. Its DC
-// signature and the HD masked identity agree. Claimed as a carcass row so
-// the one source body stays the header's.
-#if 0 // @carcass
-VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
-void widget::setVisible(unsigned char arg)
-{
-    // @stub
-}
-#endif
 
 VA(0x005629e0, 0x33)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
@@ -2315,14 +2295,6 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
             g_sacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].m_text,
             0, 1);
     }
-}
-
-static inline const char* getArmyName(int type, int count)
-{
-    return type >= 0 && type <= 0x96
-               ? (count == 1 ? g_creatureTypeTraits[type].m_name
-                             : g_creatureTypeTraits[type].m_pluralName)
-               : g_emptyRolloverText;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:914
@@ -2472,15 +2444,6 @@ void type_sacrifice_window::pickUpArtifact(
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-// CODEGEN SCAFFOLD: this partial reconstruction is one source-level inline
-// candidate short of retail's /Ob2 divisor in create_creature_icons below.
-// The empty tail call emits no instructions; it only keeps the third nested
-// vector::insert out of line, as retail does. Remove it when the missing
-// original source expression that supplied that candidate is recovered.
-static void transformerGridInlineSurface()
-{
-}
-
 // E:\gamedcs\sacrifice_window.cpp:1053
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
@@ -2504,7 +2467,7 @@ VA(0x005632a0, 0x417)  // dc 0x1262e4
 void type_sacrifice_window::artifactClick(
     long slot, unsigned char rightClick)
 {
-    type_artifact oldArtifact = m_currentHero->getArtifact(slot);
+    type_artifact oldArtifact = m_currentHero->getArtifact(TArtifactSlot(slot));
 
     if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE)
@@ -2602,7 +2565,7 @@ void type_sacrifice_window::backpackClick(
             normalDialog(
                 m_currentHero
                     ->getBackpackError(
-                        artifactFromInt(m_holdingArtifact.m_artifactId))
+                        m_holdingArtifact.m_artifactId)
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
@@ -2794,7 +2757,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
             static_cast<type_sacrifice_window*>(msg.m_window);
         type_artifact artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
-            artifact = window->m_currentHero->getArtifact(slot);
+            artifact = window->m_currentHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 if (!window->addArtifact(artifact, slot))
                     break;
@@ -3534,7 +3497,6 @@ void type_skeleton_window::createCreatureIcons(
         textY += 98;
         iconY += 98;
     }
-    transformerGridInlineSurface();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385

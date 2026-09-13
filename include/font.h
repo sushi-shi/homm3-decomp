@@ -62,7 +62,6 @@ public:
         unsigned long m_offset[256];
     };
     SIZE(TFontSpec, 0x1020);
-
     // Glyph pixel encoding (byte-derived from DrawCharacter 0x4b51a0):
     // 0 draws nothing, SOLID takes the color slot, every other value
     // takes the shadow slot (palette.data[32]). Name is a bootstrap
@@ -70,7 +69,6 @@ public:
     enum EGlyphPixel {
         GLYPH_PIXEL_SOLID = 0xff
     };
-
     // Dreamcast font::EJustify, verbatim. Retail corroborates the
     // whole roster: DrawBoundedString strips bit 4 for vertical
     // centering, bit 8 for bottom alignment, then switches the
@@ -83,7 +81,6 @@ public:
         VERT_CENTER_JUSTIFIED = 4,
         BOTTOM_JUSTIFIED = 8
     };
-
     // Dreamcast font::TColor, verbatim. Retail corroborates
     // CUSTOM_COLOR: DrawBoundedString's cursor path tests it with
     // `test ah,1` and clears it with `and ah,-2`.
@@ -107,15 +104,14 @@ public:
         CHAT_DIM = 15,
         CUSTOM_COLOR = 256
     };
-
     // DC LF_MEMBER `fs`, offset 28.
     TFontSpec m_fs;
+
+private:
     // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
     // retail constructor 0x4b5070 runs TPalette16's default constructor
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
-
-private:
     TPalette16 m_palette;
     // DC LF_MEMBER `Data`.
     void* m_data;
@@ -126,25 +122,24 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
-
     font(const char* name, const TFontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
     void setPalette(const TPalette16& newPalette);
-    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
+    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
-    int lineWidth(const char* text);
-    int longestLineWidth(const char* str);
-    int longestWrappedLineWidth(const char* str, int boxWidth);
-    int longestWordLength(const char* str);
+    int lineWidth(const char* text) const;
+    int longestLineWidth(const char* str) const;
+    int longestWrappedLineWidth(const char* str, int boxWidth) const;
+    int longestWordLength(const char* str) const;
     int getCharacterWidth(unsigned char currChar) const;
     // Original DrawCursor, font.cpp:123; ordinary member, expanded in retail.
     void drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                     int clipX, int clipY, int clipWidth, int clipHeight,
                     bool highlighted);
-    long getStringWidth(const char* arg);
+    long getStringWidth(const char* arg) const;
 
 private:
     void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);

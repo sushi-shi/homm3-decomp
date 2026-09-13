@@ -3,7 +3,6 @@
 #define HOMM3_KBWIN_H
 
 #include <windows.h>
-
 #include "struct.h"
 
 void appExit();                         // 0x4f7fa0
@@ -82,7 +81,7 @@ extern unsigned char g_appDeactivated;   // 0x699609 (system cursor shown while
 extern unsigned char g_musicWasPlaying;  // 0x699614 (deactivate latch; name
                                         // provisional)
 extern SMenuEnableStatus g_menuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
-                                        // 0x67f930 (.data; homm2 kept the
+    // 0x67f930 (.data; homm2 kept the
                                         // table in KB.cpp - homm3 owner TU
                                         // unproven, defined in kbwin.cpp as
                                         // its only known consumer)

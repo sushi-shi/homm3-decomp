@@ -12,6 +12,7 @@
 // CDPlaySession and CAutoArray<T> live with their owning compiland; this
 // header used to carry private copies of both behind a per-TU macro.
 #include "dxplay.h"
+#include "hotseat.h"
 
 struct _DPCOMPORTADDRESS;
 
@@ -25,88 +26,14 @@ extern int g_unnamed699288;
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.
 union TIPv4SocketAddress {
+public:
     sockaddr_in m_internet;
     sockaddr m_generic;
 };
 SIZE(TIPv4SocketAddress, 0x10);
 
-#include "hotseat.h"
-
-// The text-entry widgets the two multiplayer dialogs use. All three add the
-// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
-// dialog can chase focus around its field ring; the hierarchy is proven by
-// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
-// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
-
-// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
-// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
-// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
-// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
-// constructor: this is the only model that preserves the retail constructor's
-// later vector-inlining state. Its DC OnKeyPress nevertheless reuses
-// CMPEdit::OnKeyPress, and retail table 0x640210 folds the identical
-// SetFocus/OnNextEdit/OnPrevEdit bodies onto CMPEdit's addresses.
-// CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
-// OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
-// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
-// OnKeyPress(15) and carries its own ring-walk pair.
-class CMPEdit : public textEntryWidget {
-public:
-    CMPEdit* m_nextEdit;   // +0x70
-    CMPEdit* m_prevEdit;   // +0x74
-
-    CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
-            const char* fontName, font::TColor color, unsigned justification,
-            const char* backgroundIcon, int backgroundFrame, int id,
-            int style, int readType, int insetX, int insetY);
-    void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
-    void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
-    virtual void setFocus(unsigned char state);
-    virtual int onKeyPress(message* msg);
-    virtual void onNextEdit();
-    virtual void onPrevEdit();                   // slot 20, retail 0x510870
-};
-
-class CMPInputEdit : public CMPEdit {
-public:
-    CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
-                 unsigned justification, const char* backgroundIcon,
-                 int backgroundFrame, int id, int style, int readType,
-                 int insetX, int insetY)
-        : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
-                  backgroundIcon, backgroundFrame, id, style, readType, insetX,
-                  insetY)
-    {
-    }
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50de50
-};
-
-class CHotSeatEdit : public textEntryWidget {
-public:
-    CHotSeatEdit* m_nextEdit;   // +0x70
-    CHotSeatEdit* m_prevEdit;   // +0x74
-
-    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
-                 const char* fontName, font::TColor color,
-                 unsigned justification, const char* backgroundIcon,
-                 int backgroundFrame, int id, int style, int readType,
-                 int insetX, int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-        m_nextEdit = 0;
-        m_prevEdit = 0;
-    }
-    void setNextEdit(CHotSeatEdit* nextEdit) { m_nextEdit = nextEdit; }
-    void setPrevEdit(CHotSeatEdit* prevEdit) { m_prevEdit = prevEdit; }
-    virtual void onKillFocus();                   // slot 11, retail 0x50dee0
-    virtual void setFocus(unsigned char state);
-    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50df60
-    virtual void onNextEdit();                    // slot 19, folded 0x510850
-    virtual void onPrevEdit();                    // slot 20, folded 0x510870
-};
+// The private edit hierarchy is defined in multiplayerwindow.cpp.
+class CHotSeatEdit;
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
@@ -124,11 +51,9 @@ public:
         OKAY_ID = 519,
         BACK_ID = 520
     };
-
-    CHotSeatEdit* m_edit[8];       // +0x50
-    textWidget* m_rollover;      // +0x70
+    CHotSeatEdit* m_edit[8];  // +0x50
+    textWidget* m_rollover;  // +0x70
     THelpText m_hotSeatHelp[20];
-
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
@@ -145,55 +70,6 @@ public:
 };
 SIZE(CHotSeatDlg, 0x114);
 
-// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
-// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
-// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
-// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
-// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
-// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
-// The vtable 0x6400f4 is FIFTEEN slots, not fourteen: it runs 0x2400f4 to
-// 0x24012f and CMPInputEdit's own table starts at 0x240130, so slot 14 is
-// real and holds 0x510980 - UpdateOK. That is the one place this dialog
-// diverges from CHotSeatDlg's roster (whose table stops at slot 13), and
-// CMPInputEdit::OnKeyPress 0x50de50 calls it through `[edx+0x38]` rather
-// than inlining it, which is the other half of the same proof.
-// DisableOK/OnOK stay non-virtual. field1/field2 are DC CMPInputEdit* but
-// reached only as textWidget here.
-class CMPInputDlg : public CHeroWindowEx {
-public:
-    enum {
-        BACKGROUND_ID = 500,
-        FIELD1_ID = 501,
-        FIELD2_ID = 502,
-        HEADER1_ID = 503,
-        HEADER2_ID = 504,
-        OKAY_ID = 505,
-        BACK_ID = 506,
-        ROLLOVER_ID = 507
-    };
-
-    // Original members: CMPInputDlg::field1/field2 (DC class 0x4484,
-    // +0x4c/+0x50). These name the two text-entry fields, not unknown
-    // offsets. The PC base shifts both by four bytes; retain OG names.
-    CMPInputEdit* m_field1;  // +0x50
-    CMPInputEdit* m_field2;  // +0x54
-    textWidget* m_header1;   // +0x58
-    textWidget* m_header2;   // +0x5c
-    textWidget* m_rollover;  // +0x60
-
-    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
-    virtual ~CMPInputDlg();
-    virtual int onWidgetDeselect(int id, bool& exitFlag);
-    unsigned char onOK();
-    virtual textWidget* getRolloverWidget();
-    virtual void updateOK();  // slot 14, retail 0x510980
-    __forceinline void disableOK()
-    {
-        getWidget(OKAY_ID)->enable(0);
-    }
-};
-SIZE(CMPInputDlg, 0x64);
-
 class CSprite;
 
 class CHeroSessions : public CAutoArray<CDPlaySession> {
@@ -203,34 +79,10 @@ public:
         open,
         password
     };
-
     bool getSessionInfo(unsigned long index, char* sessName, char* userName,
-                        int& numPlayers, eSessionStatus& status);
-    bool getSessionInfo(int index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
-
-// CMultiPlayerWindowEdit - the text-entry widget the session-host name field
-// uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
-// its only addition is the slot-15 key-handler override that gives it a
-// distinct vtable (retail 0x640054, stored by the TMultiPlayerWindow
-// constructor).
-class CMultiPlayerWindowEdit : public textEntryWidget {
-public:
-    CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
-                           const char* text, const char* fontName,
-                           font::TColor color, unsigned justification,
-                           const char* backgroundIcon, int backgroundFrame,
-                           int id, int style, int readType, int insetX,
-                           int insetY)
-        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
-                          justification, backgroundIcon, backgroundFrame, id,
-                          style, readType, insetX, insetY)
-    {
-    }
-    virtual int onKeyPress(message* msg);  // slot 15, retail 0x50ed60
-};
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
 // DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
@@ -267,19 +119,18 @@ public:
         PLAYER_NAME_ID = 125,
         IP_ADDRESS_ID = 126
     };
-
-    CSprite* m_gameState;                     // +0x50
-    unsigned char m_inSessionList;            // +0x54
-    unsigned char m_showSplash;               // +0x55
-    int m_currentGame;                        // +0x58
-    int m_currentIndex;                       // +0x5c
-    CHeroSessions* m_sessions;               // +0x60
-    unsigned long m_sessTimer;                // +0x64
-    unsigned long m_sessionRefreshTimeout;    // +0x68
-    char m_localIpAddress[80];                // +0x6c
-    textWidget* m_playerName;                 // +0xbc (DC textEntryWidget*)
-    unsigned char m_hostJoinScreen;           // +0xc0
-    widget* m_splash;                         // +0xc4 (DC bitmapBorder*)
+    CSprite* m_gameState;  // +0x50
+    unsigned char m_inSessionList;  // +0x54
+    unsigned char m_showSplash;  // +0x55
+    int m_currentGame;  // +0x58
+    int m_currentIndex;  // +0x5c
+    CHeroSessions* m_sessions;  // +0x60
+    unsigned long m_sessTimer;  // +0x64
+    unsigned long m_sessionRefreshTimeout;  // +0x68
+    char m_localIpAddress[80];  // +0x6c
+    textWidget* m_playerName;  // +0xbc (DC textEntryWidget*)
+    unsigned char m_hostJoinScreen;  // +0xc0
+    widget* m_splash;  // +0xc4 (DC bitmapBorder*)
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
@@ -304,23 +155,28 @@ public:
     void goMainMenu();
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
-    virtual textWidget* getRolloverWidget();
+    // Original: TMultiPlayerWindow::GetRolloverWidget; MultiPlayerWindow.h:91, dc 0x101da0.
+    VA(0x0050ed50, 0x7)  // dc 0x101da0
+    virtual textWidget* getRolloverWidget()
+    {
+        return m_rolloverWidget;
+    }
 
 private:
-    widget* m_hotSeat;                        // +0xc8 (DC button*)
-    widget* m_ipx;                            // +0xcc
-    widget* m_tcp;                            // +0xd0
-    widget* m_modem;                          // +0xd4
-    widget* m_direct;                         // +0xd8
-    widget* m_online;                         // +0xdc
-    widget* m_host;                           // +0xe0
-    widget* m_join;                           // +0xe4
-    widget* m_search;                         // +0xe8
-    widget* m_cancel;                         // +0xec
-    widget* m_gameSlider;                     // +0xf0 (DC slider*)
-    textWidget* m_sessNameHeader;             // +0xf4
-    textWidget* m_userNameHeader;             // +0xf8
-    textWidget* m_rolloverWidget;             // +0xfc
+    widget* m_hotSeat;  // +0xc8 (DC button*)
+    widget* m_ipx;  // +0xcc
+    widget* m_tcp;  // +0xd0
+    widget* m_modem;  // +0xd4
+    widget* m_direct;  // +0xd8
+    widget* m_online;  // +0xdc
+    widget* m_host;  // +0xe0
+    widget* m_join;  // +0xe4
+    widget* m_search;  // +0xe8
+    widget* m_cancel;  // +0xec
+    widget* m_gameSlider;  // +0xf0 (DC slider*)
+    textWidget* m_sessNameHeader;  // +0xf4
+    textWidget* m_userNameHeader;  // +0xf8
+    textWidget* m_rolloverWidget;  // +0xfc
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

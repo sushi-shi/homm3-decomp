@@ -2,6 +2,54 @@
 #ifndef HOMM3_STRUCT_H
 #define HOMM3_STRUCT_H
 
+#include <va.h>
+#include <string.h>
+
+class heroWindow;
+
+// Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
+// extra, window, oldX@32, oldY@36 (40 B). The retail frames in
+// widget::send_message/enable are 0x20 B - retail dropped oldX/oldY.
+// The Dreamcast xref graph also proves the default constructor at dc 0x2d58.
+// This is one class shape, not a per-TU optimizer view: the constructor is
+// canonical and VC6 may remove fields overwritten before their first read.
+class message {
+public:
+    int m_id;
+    int m_codeX;
+    int m_codeY;
+    int m_qualifier;
+    int m_mouseX;
+    int m_mouseY;
+    union {
+        int m_extra;
+        const char* m_extraText;
+    };
+    heroWindow* m_window;
+    // DC type 0x1020 proves this overload's declaration, but no body or
+    // inline source row has been recovered. Keep the declaration alone;
+    // overview's zero-initialization uses the proven default constructor.
+    message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, heroWindow* window);
+    // Original: message::message; struct.h:42, dc 0x2d58.
+    // Retail RS_CLICK constructs this 32-byte local at 0x588e3d before
+    // setting codeY and passing it to OnWidgetDeselect. The retained body
+    // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
+    VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
+    message()
+    {
+        m_id = 0;
+        m_codeX = 0;
+        m_codeY = 0;
+        m_qualifier = 0;
+        m_mouseX = 0;
+        m_mouseY = 0;
+        m_extra = 0;
+        m_window = 0;
+    }
+};
+SIZE(message, 32);
+
 // A packed map coordinate. The DC layout (classes.csv: 4 B, three
 // members) puts x at offset 0 and BOTH y and z at offset 2 - the
 // signature of short-based bitfields, where x:10 fills the first
@@ -20,20 +68,24 @@ public:
     short m_x : 10;
     short m_y : 10;
     short m_z : 4;
-
     type_point() {}
+    VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
     type_point(short newX, short newY, short newZ)
     {
         m_x = newX;
         m_y = newY;
         m_z = newZ;
     }
+    // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
     bool isValid() const;
-    unsigned char operator==(const type_point* arg);
+    // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
+    // const member, const-reference operand.
+    VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
     bool operator==(const type_point& arg) const
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
+    VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
     bool operator!=(const type_point& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
@@ -61,11 +113,11 @@ public:
 // Its type-handle collateral is banked in score history rather than hidden
 // behind consumer-specific declarations.
 struct SLimitData {
+public:
     int m_minX;
     int m_minY;
     int m_maxX;
     int m_maxY;
-
     SLimitData() {}
     SLimitData(int minx, int miny, int maxx, int maxy)
         : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
@@ -106,6 +158,33 @@ struct SLimitData {
     }
 };
 SIZE(SLimitData, 0x10);
+
+// CodeView struct.h:340/346 owns this network player record. Complete
+// extends DC's 28-byte dpid/name pair with the version dword at +0x1c;
+// retail's seat-record constructor proves the same base initialization.
+extern int* g_videoGameState;
+
+class CNetPlayerInfo {
+public:
+    unsigned long m_dpid;  // +0x00
+    char m_name[24];  // +0x04
+    int m_version;
+    VA(0x0057F720, 0x18)  // dc 0x11f5e4
+    CNetPlayerInfo()
+    {
+        m_dpid = 0;
+        m_name[0] = 0;
+        m_version = *g_videoGameState;
+    }
+    // E:\gamedcs\struct.h:346
+    CNetPlayerInfo(char* name, unsigned long dpid)
+    {
+        m_dpid = dpid;
+        strcpy(m_name, name);
+        m_version = *g_videoGameState;
+    }
+};
+SIZE(CNetPlayerInfo, 32);
 
 // GameTime has header-inline helpers in struct.h (DC lines 411-438);
 // Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.

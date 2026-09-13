@@ -19,8 +19,9 @@ struct type_artifact_offering : public type_artifact {
     long m_source;
     long m_value;
 
-    type_artifact_offering();
-    explicit type_artifact_offering(TArtifact artifact);
+    // CodeView marks default construction generated (dc 0x128714).
+    // Its base call passes -1 to type_artifact(TArtifact), so the inherited
+    // default-argument path supplies construction without written wrappers.
 
     void set(const type_artifact* artifact, long slot, const hero* owner);
 };

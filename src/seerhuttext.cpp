@@ -1,7 +1,7 @@
-// seerhuttext.cpp - the Complete-only compiland between search.obj and
-// seerhut.obj (0x16bd30..0x16d3e0). No Dreamcast roster covers it, so the
-// compiland's real name and every identifier below are PROVISIONAL; the
-// retail bodies are the only evidence.
+// seerhuttext.cpp - provisional owner for Complete's text-table helpers.
+// Retail bodies prove these layouts and helpers; the original source filename
+// is unresolved. InitializeSeerHutText belongs to seerhut.cpp (DC line 50),
+// so the neighboring RVA range does not establish a separate compiland.
 #include <string>
 #include <vector>
 
@@ -71,33 +71,6 @@ void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
 DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
 DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
 DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
-
-VA(0x0056c3e0, 0x183)
-unsigned char initializeSeerHutText()
-{
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
-        DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
-    if (!sheet)
-        return 0;
-
-    if (sheet->getNumberOfRows() < 60)
-        return 0;
-
-    for (int c = 0; c < 3; ++c) {
-        loadSeerHutTextColumn(sheet, &g_seerHutTextB[c], c + 1);
-        loadSeerHutTextColumn(sheet, &g_seerHutTextA[c], c + 4);
-    }
-
-    for (int row = 50; row < sheet->getNumberOfRows(); ++row) {
-        const char* name = sheet->getRow(row)[0];
-        if (!name[0] || name[0] == ' ')
-            continue;
-        g_seerHutNames.insert(g_seerHutNames.end(), name);
-    }
-
-    sheet->dispose();
-    return 1;
-}
 
 // Both separator arms expand basic_string::append in full and the
 // cross-jumper merges their copy tails, which is what two `+=` statements in

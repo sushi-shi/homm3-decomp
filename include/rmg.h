@@ -499,6 +499,9 @@ struct TRmgGridPoint {
 
     TRmgGridPoint() {}
 
+    // The four late point constructions in RepairTerrainPoint pass x and y by
+    // reference. The retained two-store body is 24 bytes including ret 8.
+    VA(0x005B76B0, 0x18)
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
     TRmgGridPoint(const TPoint& point);

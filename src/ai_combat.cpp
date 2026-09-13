@@ -43,6 +43,7 @@
 #include "misc.h"
 #include "hero.h"
 #include "town.h"
+#include "includes.h"
 
 // DC includes.h min/max (0x2da4/0x1ef28) return int by value after
 // calling the reference-returning selectors. Retail 0x4249a1's two argument
@@ -81,23 +82,6 @@ const unsigned int g_ctaFlying = 0x2;
 const unsigned int g_ctaShooter = 0x4;
 const unsigned int g_ctaNoMeleePenalty = 0x1000;
 const unsigned int g_ctaDoubleRangedValue = 0x8000;
-
-// armyGroup deliberately models its mutable roster as int while the
-// consumers' domain is TCreatureType. This bit-preserving inline bridge
-// avoids lying with an enum cast; VC6 reduces the four-byte copy to a move.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    TCreatureType creature;
-    memcpy(&creature, &value, sizeof creature);
-    return creature;
-}
-
-inline type_speed_catagory speedCatagoryFromLong(long value)
-{
-    type_speed_catagory catagory;
-    memcpy(&catagory, &value, sizeof catagory);
-    return catagory;
-}
 
 // Retail .data 0x6604d0: five doubles selected by the game's signed
 // difficulty byte. AI_value_of_combat uses the row when either combat
@@ -439,7 +423,9 @@ type_speed_catagory type_AI_combat_data::getCatagory(
         catagory = const_slow;
     if (m_wallSpeedLimit > catagory && !(attributes & g_ctaFlying))
         catagory = m_wallSpeedLimit;
-    return speedCatagoryFromLong(catagory);
+    type_speed_catagory result;
+    memcpy(&result, &catagory, sizeof result);
+    return result;
 }
 
 VA(0x00424880, 0xDB)  // dc 0x2a588
@@ -463,6 +449,10 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
     }
 }
 
+// E:\gamedcs\ai_combat.cpp:437. Line 444 explicitly calls includes.h's
+// max (dc 0x1ef28). That wrapper owns the operand copies; calling the
+// reference selector directly is the negative control (78.0638%, missing
+// retail's second operand home). Preserve the wrapper and canonical selector.
 VA(0x00424960, 0x65)  // dc 0x2a644
 long type_AI_combat_data::getFastestSpeed() const
 {

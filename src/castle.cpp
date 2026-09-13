@@ -45,10 +45,6 @@ const char* getBuildingName(int townType, int buildingId)
     return g_buildingNamesUpgrade[buildingId + townType * 14];
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x00461130, 0x5C)  // dc 0x5c228
 int canBuy(const town* currTown, int buildingId)
 {

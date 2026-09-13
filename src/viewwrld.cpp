@@ -22,7 +22,7 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-#include "homm3_minmax.h"
+#include "includes.h"
 
 // Dreamcast publishes this source-private renderer state by name. Retail
 // independently fixes each address through the repeated view-world draw

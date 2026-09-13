@@ -10,8 +10,6 @@
 
 #include <va.h>
 
-class TTextResource;
-
 enum {
     // The loader's own bound: it zeroes 232 rows, walks 232 text rows
     // (`cmp edx,0x3a0` over a four-byte stride) and stops the name-copy
@@ -39,23 +37,6 @@ struct TAdvObjectNameRow {
     int m_objectType;
     int m_nameRow;
 };
-
-// Scope guard around a text resource. Retail's unwind funclet for the
-// loader's state 0 jumps to the destructor at 0x41bd90, which tests the
-// byte at +0 and then the pointer at +4 before the virtual Dispose, and
-// the loader's normal exit expands that same test pair.
-class TTextResourceGuard {
-public:
-    TTextResourceGuard(TTextResource* resource)
-        : m_have(resource != 0), m_text(resource)
-    {
-    }
-    ~TTextResourceGuard();
-
-    bool m_have;
-    TTextResource* m_text;
-};
-SIZE(TTextResourceGuard, 8);
 
 extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 

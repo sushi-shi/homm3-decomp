@@ -1,5 +1,5 @@
 // armygrp.cpp - E:\gamedcs\armygrp.cpp (compiland armygrp.obj)
-#include "homm3_limit.h"
+#include "includes.h"
 #include <va.h>
 #include <algorithm>
 #include <stdlib.h>
@@ -13,6 +13,7 @@
 // town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
 // see town.h for why the inline's visibility is scoped.
 #include "armygrp.h"
+#include "spelldefs.h"
 #include "creaturetype.h"
 #include "game.h"
 #include "hero.h"
@@ -34,34 +35,6 @@
 
 // DC includes.h:134 names limit at the split-window and army-rating
 // sites below. homm3_limit.h owns its shared reference-selector chain.
-
-// The four-way base-elemental compare the magic-terrain gates share -
-// eight of them in this compiland, in both polarities. Byte-identical to
-// the longhand chain when expanded (viewarmywindow's own copy is the
-// byte-proven precedent, and the full-tree diff over all eight sites here
-// has ONE mover and no regressions: TSplitWindow 98.4605 -> 99.9895) and
-// free at cb <= 0x28, so it costs the /Ob2 allowance one candidate site
-// per use - which is the point, since three of this file's plateaued rows
-// are measured to be short of exactly that.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
-
-inline int creatureBackgroundAlignment(TCreatureType type)
-{
-    if (!g_game->m_f1f698 && isBaseElemental(type))
-        return -1;
-    return g_creatureTypeTraits[type].m_townType;
-}
-
-inline const char* armygrpCreaturePluralName(TCreatureType creature)
-{
-    if (creature >= 0 && creature <= 150)
-        return g_creatureTypeTraits[creature].m_pluralName;
-    return "";
-}
 
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
@@ -105,13 +78,6 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
-
-// Unimplemented carcass stubs stay lexically present (labels and the
-// va-claims gate scan text) but outside compilation until each body
-// is reconstructed.
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004496a0, 0x16)  // dc 0x4dae4
 unsigned char armyGroup::hasCreatures() const
@@ -162,15 +128,6 @@ unsigned char armyGroup::hasCreatures() const
 //     armygrp.cpp's static-set accessor, promoted out of this block
 //     below.  It has no DC row because the DC build linked STLport.
 
-// UpdateSplitArmy and SetRolloverText are therefore inlined-and-
-// eliminated (the HasSomeUndead pattern in this same file): single
-// call site, /Ob2 inlines, /OPT:REF drops the now-unreferenced body.
-// ===================================================================
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:82
-#endif  // @carcass
-
 VA(0x004496c0, 0xC3)  // dc 0x4db88
 void splitSliderCallback(int state, heroWindow*)
 {
@@ -199,7 +156,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgrounds[
-        creatureBackgroundAlignment(m_creature)]);
+        g_game->getAlignment(m_creature)]);
 
     m_widgets.push_back(new bitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
@@ -259,11 +216,6 @@ TSplitWindow::~TSplitWindow()
             delete *it;
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:143
-#endif  // @carcass
 
 VA(0x00449e90, 0x2EF)  // dc 0x4e180
 void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
@@ -686,10 +638,6 @@ int armyGroup::save(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044aa40, 0x3A)  // dc 0x4ea78
 int armyGroup::load(TAbstractFile* infile)
 {
@@ -700,20 +648,12 @@ int armyGroup::load(TAbstractFile* infile)
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044aa80, 0x1F)  // dc 0x4eab8
 armyGroup::armyGroup()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044aaa0, 0x5A)  // dc 0x4ead0
 armyGroup::armyGroup(TCreatureType type, int amount)
@@ -729,20 +669,12 @@ armyGroup::armyGroup(TCreatureType type, int amount)
     }
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ab00, 0x1D)  // dc 0x4eb2c
 void armyGroup::initialize()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ab20, 0x3A)  // dc 0x4eb50
 unsigned char armyGroup::hasAllUndead() const
@@ -778,10 +710,6 @@ void armyGroup::dismiss(int whichIndex)
     m_numTroops[whichIndex] = 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ab80, 0x21)  // dc 0x4ebd0
 unsigned char armyGroup::isMember(TCreatureType monType) const
 {
@@ -791,10 +719,6 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044abb0, 0x97)  // dc 0x4ebf0
 int armyGroup::getAlignments(unsigned char* alignments) const
@@ -845,10 +769,6 @@ int armyGroup::canJoin(int monType) const
     return 0;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044ac80, 0x39)  // dc 0x4ecdc
 long armyGroup::getAIValue() const
 {
@@ -860,10 +780,6 @@ long armyGroup::getAIValue() const
     return value;
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
 VA(0x0044acc0, 0x14)  // dc 0x4ed28
 int armyGroup::getNumArmies() const
 {
@@ -874,10 +790,6 @@ int armyGroup::getNumArmies() const
     }
     return numArmies;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ace0, 0x76)  // dc 0x4ed4c
 int armyGroup::add(int armyType, int newNumTroops, int newIndex)
@@ -906,10 +818,6 @@ int armyGroup::add(int armyType, int newNumTroops, int newIndex)
     m_numTroops[newIndex] += newNumTroops;
     return 1;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0044ad60, 0x36)  // dc 0x4edcc
 void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
@@ -1021,6 +929,10 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
+// FULLY TRANSCRIBED 2026-08-06. Complete has SIX params (ret 0x18),
+// extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
+// 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
+// to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
 VA(0x0044b100, 0x1C9)  // dc 0x4f160
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
@@ -1308,119 +1220,27 @@ void armyGroup::mergeArmies(armyGroup* source)
     }
 }
 
-// E:\gamedcs\armygrp.cpp:1347
-// Retail Complete adds a full-width magic-terrain mode and the alignment-
-// grouping byte to the older Dreamcast signature. `ret 24h` proves the hidden
-// result plus eight explicit arguments. The required DC pass records lines
-// 1347..1451, `result`, `alignments[9]`, and `angel_type`; retail's extra
-// terrain modes require the ten-byte alignment array used below.
+// E:\gamedcs\armygrp.cpp:1347, dc 0x4f708. Complete adds the full-width
+// magic-terrain mode and alignment-grouping byte; ret 24h proves the hidden
+// result and eight explicit parameters. DC lines 1347..1451 retain result,
+// alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
+// Complete's neutral alignment requires the ten-byte array below.
 
-// Retail 0x44b960 proves the accumulator shape that closes the frame and
-// register allocation. GetMorale's result is `currentMorale` in the dead
-// groupAlignments home [ebp+0x28]. The four terrain arms instead mutate the
-// incoming `morale` home [ebp+0x10] with the inverse sign, then the tail does
-// `morale -= currentMorale` in place. This gives retail's 0x50-byte frame and
-// keeps the creature-row offset in the dead magicTerrain home [ebp+0x24].
-// Updating currentMorale was behaviorally close for ordinary values but left a
-// 0x54-byte frame and scored 93.97%; the retail accumulator reaches 96.07%.
+// Retail 0x44b960 mutates the incoming morale home in the terrain arms with
+// the inverse sign, then subtracts currentMorale at the tail. Keep that
+// accumulator and the town-type load within each terrain arm. Values 0..2
+// and 3..5 select good/evil; 6..8 and out-of-range values leave it unchanged.
+// The Spirit temporary is assigned: the call at +0x6ce is string::assign,
+// despite the former append relocation scoring identically under masking.
 
-// Both terrain selectors load `g_creatureTypeTraits[creature].m_townType`
-// inside their own arm. Passing a precomputed town type loads it too early.
-// Values 0..2 and 3..5 select the good/evil actions; 6..8 and out-of-range
-// values join the exit. The goto form reproduces retail B6..B26, including the
-// four-way shared strlen/append tail. Flattening both selectors or splitting
-// one back into the caller changes the inline phase; the best split reached
-// 96.53% numerically but duplicated a terrain strlen, introduced B27, and
-// shifted every later CFG block. The combined ordinary helper is retained.
-
-// Other retail/DC facts retained here: both short string arms use operator+=;
-// the penalty is `numAlignments >= 5 ? -3 : 2 - numAlignments`; the angel arm
-// performs `IsMember(ANGEL) || IsMember(ARCHANGEL)` and then tests ARCHANGEL
-// again. DC attributes GetArmyName at that last name lookup, but in the newer
-// retail body its candidate site changes the final append frontier and drops
-// the combined-helper match to 89.41%; the direct constant-bounded traits
-// lookup restores retail's exact CFG through B103.
-
-// Residual at 96.07%: 102/126 candidate blocks are exact against 131 retail
-// blocks, and every branch through the Spirit-of-Oppression condition agrees.
-// Candidate keeps the Spirit temporary's nested basic_string::_Tidy call and
-// the final operator+= path's nested _Eos call; retail expands both, adding the
-// five remaining blocks and one delete call. With the nested DC scopes and
-// operator spellings below, the traced caller is cb=1040, budget=2080: the
-// Spirit destructor receives 145 for _Tidy's cb=152, while the tail append
-// leaves 10 for _Eos's cb=46. Direct/split terrain and explicit-temporary
-// controls overshoot other library boundaries. Exhaustive crosses of the
-// grouping, Minotaur/Spirit scopes, string operators, terrain gate, and the
-// canonical plural-name predicate produced many byte-distinct objects but no
-// score above 96.07%. This is a compiler-state wall rather than permission to
-// flatten helpers or retain a budget probe.
-static void applyMoraleMagicTerrain(int magicTerrain, TCreatureType creature,
-                                    int& morale, std::string& result)
-{
-    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (g_creatureTypeTraits[creature].m_townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto holyGroundGood;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto holyGroundEvil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto done;
-        }
-        goto done;
-
-    holyGroundGood:
-        --morale;
-        result += g_holyGroundGoodMoraleText;
-        goto done;
-
-    holyGroundEvil:
-        ++morale;
-        result += g_holyGroundEvilMoraleText;
-        goto done;
-    }
-    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-        && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
-        switch (g_creatureTypeTraits[creature].m_townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto evilFogGood;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto evilFogEvil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto done;
-        }
-        goto done;
-
-    evilFogGood:
-        ++morale;
-        result += g_evilFogGoodMoraleText;
-        goto done;
-
-    evilFogEvil:
-        --morale;
-        result += g_evilFogEvilMoraleText;
-        goto done;
-    }
-
-done:
-    ;
-}
-
-// The Spirit-of-Oppression arm assigns the formatted temporary to `result`.
-// Retail calls basic_string::assign at that site; append is the wrong source
-// operation even though both are equivalent while `result` is empty.
+// Historical extraction controls: an invented terrain helper reached 96.07%
+// with a 0x50 frame and agreement through the Spirit condition. Its site
+// changed the nested _Tidy/_Eos decisions; splitting it could reach 96.53%
+// while duplicating a terrain strlen and changing the CFG. Those optimizer
+// observations do not establish an original helper. The Complete-only arms
+// stay in this caller, and all three DC GetArmyName calls remain canonical.
+// Named traits references materialize an address rather than retail's reused
+// creature-row offset; keep the individual table accesses.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::getMoraleDescription(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1449,7 +1269,69 @@ std::string armyGroup::getMoraleDescription(
     if (ownerHero)
         result = ownerHero->getMoraleDescription();
 
-    applyMoraleMagicTerrain(magicTerrain, creature, morale, result);
+    // Complete terrain arms: mutate the incoming morale home, then subtract
+    // currentMorale at the tail, as proved by retail 0x44b960.
+    {
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
+            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+            switch (g_creatureTypeTraits[creature].m_townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                goto holyGroundGood;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                goto holyGroundEvil;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto moraleTerrainDone;
+            }
+            goto moraleTerrainDone;
+
+        holyGroundGood:
+            --morale;
+            result += g_holyGroundGoodMoraleText;
+            goto moraleTerrainDone;
+
+        holyGroundEvil:
+            ++morale;
+            result += g_holyGroundEvilMoraleText;
+            goto moraleTerrainDone;
+        }
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
+            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+            switch (g_creatureTypeTraits[creature].m_townType) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                goto evilFogGood;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                goto evilFogEvil;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto moraleTerrainDone;
+            }
+            goto moraleTerrainDone;
+
+        evilFogGood:
+            ++morale;
+            result += g_evilFogGoodMoraleText;
+            goto moraleTerrainDone;
+
+        evilFogEvil:
+            --morale;
+            result += g_evilFogEvilMoraleText;
+            goto moraleTerrainDone;
+        }
+
+    moraleTerrainDone:
+        ;
+    }
 
     unsigned char alignments[10];
     int numAlignments = getAlignments(alignments);
@@ -1482,7 +1364,7 @@ std::string armyGroup::getMoraleDescription(
         if (isMember(CREATURE_ARCHANGEL))
             angelType = CREATURE_ARCHANGEL;
         result += formatString(g_angelMoraleFormat,
-                                g_creatureTypeTraits[angelType].m_pluralName);
+                                getArmyName(angelType, 2));
     }
 
     if (otherGroup) {
@@ -1494,7 +1376,7 @@ std::string armyGroup::getMoraleDescription(
         if (dragonType != CREATURE_NONE)
             result += formatString(
                 g_enemyCreatureStatFormat,
-                armygrpCreaturePluralName(dragonType));
+                getArmyName(dragonType, 2));
     }
 
     if (ownerTown) {
@@ -1511,7 +1393,7 @@ std::string armyGroup::getMoraleDescription(
         || creature == CREATURE_MINOTAUR_KING) {
         if (currentMorale < 1) {
             result += formatString(g_alwaysPositiveMoraleFormat,
-                                    armygrpCreaturePluralName(creature));
+                                    getArmyName(creature, 2));
             currentMorale = 1;
         }
     }
@@ -1626,16 +1508,19 @@ std::string armyGroup::getMoraleDescription(
 // to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
 // gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
 
+// Historical extraction probes for the former apply_luck_magic_terrain:
+// the arm now belongs directly to getLuckDescription. An inline-budget
+// improvement alone does not establish a helper boundary.
 // THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
 // 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
 // `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
-// lifting the clover arm into `apply_luck_magic_terrain` below pushes it the
+// lifting the clover arm into `apply_luck_magic_terrain` pushed it the
 // same direction with real code instead of padding.  Same lever, same round,
 // +12.20 on get_morale_description.  Two further doses measured on top of
 // this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
 // devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
-// body, like its twin, wants exactly one lift and it is the magic-terrain
-// arm.  The old +4-site probe has now been re-measured against this baseline
+// body, like its twin, peaked at the magic-terrain extraction in that
+// experiment.  The old +4-site probe has now been re-measured against this baseline
 // (2026-08-21): four `limit` candidates in the lifted clover helper regress
 // 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
 // VERIFY family is not the remaining lever at the retained source shape.
@@ -1657,8 +1542,6 @@ std::string armyGroup::getMoraleDescription(
 // conditional branches and symbolic branch targets. A generated one-line
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
-
-
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::getLuckDescription(
     TCreatureType creature, int luck, const hero* ourHero,

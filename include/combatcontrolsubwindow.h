@@ -153,7 +153,6 @@ public:
     void show();
 
     void unShow();
-    bool isShown() const { return m_shown; }
 };
 SIZE(TCombatCreatureSubWindow, 0x70);
 

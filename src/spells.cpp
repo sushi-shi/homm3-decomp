@@ -1,5 +1,6 @@
 // spells.cpp - E:\gamedcs\spells.cpp (compiland spells.obj)
 #include <va.h>
+#include <windows.h>  // tagPOINT, the CodeView axial-coordinate type
 // AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
 #include "armygrp.h"
@@ -26,7 +27,7 @@
 // army::Fly does; drawing.h is where this tree parks that unowned table.
 #include "drawing.h"           // gCombatSpeedFactors
 #include "resourcemanager.h"   // ResourceManager::GetSprite
-#include "game.h"     // PlayImmEffect, Resurrect's force-feedback cue
+#include "game.h"     // playImmEffect, Resurrect's force-feedback cue
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
 #include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
@@ -48,76 +49,8 @@
 #include "spellbookwindow.h"  // TSpellbookWindow, the row ViewSpells opens
 #include "winmgr.h"  // gpWindowManager, DoBolt's per-pass UpdateScreen
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
-#include <math.h>    // sqrt for the chain-lightning bounce search;
-                     // sin/cos for DoBolt's fork heading
-
-// VC6's own <xutility> reference-returning max, declared file-locally
-// exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
-// mark_area_effect materialises BOTH operands into stack temps and then
-// selects between their ADDRESSES, which is the signature of this
-// by-value template and not of the <xutility> `const _Ty&` one; that
-// experiment was run and refuted on the AI TUs (see ai_combat.cpp).
-template <class _TYPE>
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
-
-// VC6's own <xutility> reference-returning min, declared file-locally
-// for exactly the reason _cpp_max above is: ChainLightning's segment
-// clamp selects between the operands' ADDRESSES with two LEAs, which no
-// value-returning spelling produces. combatresultswindow.cpp,
-// ai_combat.cpp and ai_tactical.cpp already carry the same copy.
-template <class _TYPE>
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-// The third of cmbtmgr.h's axial-coordinate helpers; the other two are
-// class-body inlines there and this one lives here for _cpp_max. A CONST
-// member, not the static the DC record implies: mark_berserk_area_effect,
-// which expands it, is EXACT this way and 99.2085 static.
-inline long combatManager::getDistance(hex_point start, hex_point stop) const
-{
-    long dx = start.m_x - stop.m_x;
-    long dy = start.m_y - stop.m_y;
-    if ((dx < 0) == (dy < 0))
-        return cppMax(abs(dx), abs(dy));
-    return abs(dx) + abs(dy);
-}
-
-// army::GetName (0x440100) as retail's spells.cpp saw it - the DC roster
-// puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline this TU
-// could expand, and every message body here expands it rather than
-// calling 0x440100. Spelled file-locally for exactly the reason
-// cmbtmgr.cpp's identical copy is; static with no surviving reference,
-// so no slot is expected.
-static const char* creatureName(int type, long count)
-{
-    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
-        if (count == 1)
-            return g_creatureTypeTraits[type].m_name;
-        return g_creatureTypeTraits[type].m_pluralName;
-    }
-    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
-    // literal; the linker folds our COMDAT onto it, so the only delta is
-    // a reloc NAME (masked).
-    return "";
-}
-
-// army::get_controlling_side (0x440140) as retail's spells.cpp saw it.
-// The DC roster puts that body in Army.h too (Army.h:800), i.e. an
-// inline this TU could expand, and every site here expands it rather
-// than calling 0x440140 - army.cpp keeps the out-of-line copy that the
-// /Ob2 extern-linkage rule emits regardless. Spelled file-locally for
-// exactly the reason CreatureName above is.
-static int controllingSide(const army* stack)
-{
-    if (stack->m_spellInfluence[60])
-        return 1 - stack->m_combatSide;
-    return stack->m_combatSide;
-}
+#include <math.h>    // sqrt for chain-lightning; sin/cos for DoBolt.
+#include "includes.h"
 
 // SpellCastWorkChance's board-wide ban: it refuses every spell of level
 // 3 and up the moment EITHER combat hero wields artifact 0x53, walking
@@ -250,7 +183,7 @@ unsigned char combatManager::checkFireWall(long hex, army* current_army, unsigne
 // already two separate `return -1;` statements, which is the form the
 // house rule prescribes.
 VA(0x0059e900, 0x34F)  // anchor-callee DoCommand's spell-book case and ProcessCombatMsg call it with `this` only and forward the result to InitiateSpell; anchor-callee TSpellbookWindow's ctor/DoModal/dtor triple; the row ends exactly where the claimed InitiateSpell begins, dc-order spells.cpp:97
-int combatManager::viewSpells()
+int combatManager::viewSpells() const
 {
     int i;
 
@@ -583,7 +516,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             gender = g_generalText->getText(540);
         else
             gender = g_generalText->getText(541);
-        const char* creatureNameText = creatureName(m_summonedElemental[side], 2);
+        const char* creatureNameText = getArmyName(m_summonedElemental[side], 2);
         sprintf(g_text, g_generalText->getText(539), castingHero->m_name,
                 creatureNameText, gender);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -746,6 +679,16 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
     }
 }
 
+// Source-ownership recovery, 2026-09-09: CastSpell's four obstacle appends
+// are push_back in DC spells.cpp:849/925/962/996. The Quicksand, Land Mine
+// and Fire Wall jsr targets are loaded in the preceding line group at
+// dc 0x14feaa/0x1500be/0x1502c0; Force Field names it at dc 0x150212.
+// Native vector push_back restores retail's retained count-insert calls
+// (+0x64e/+0x86c/+0x9a2/+0xae4), preserving the original record passed to
+// placeObstacle after the append. All 16 per-arm choices were measured:
+// four push_back calls recover 72.8210 -> 93.9814 (HIST was 93.3687).
+// Direct count-insert expands those bodies and loses the caller boundaries.
+// The older per-arm notes below describe their dated checkpoints.
 // Residual (92.78%, 2026-09-05, opened at 91.47): the per-arm size census
 // below is the map. Decode retail's 38-entry jump table at fn+0x2970 and
 // its 71-byte index table at fn+0x2a08, invert them onto SpellID, and
@@ -978,7 +921,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newQuicksand.m_spellDamage = 0;
             newQuicksand.m_duration = 0;
             newQuicksand.m_dispelEffect = 0x3a;
-            m_obstacles.insert(m_obstacles.m_end, 1, newQuicksand);
+            m_obstacles.push_back(newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newQuicksand, obstacleSlot, hex, 4);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1031,7 +974,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newLandmine.m_spellDamage = damage;
             newLandmine.m_duration = 0;
             newLandmine.m_dispelEffect = 0x3b;
-            m_obstacles.insert(m_obstacles.m_end, 1, newLandmine);
+            m_obstacles.push_back(newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newLandmine, obstacleSlot, hex, 8);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1061,7 +1004,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         newWall.m_spellDamage = 0;
         newWall.m_duration = 2;
         newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
-        m_obstacles.insert(m_obstacles.m_end, 1, newWall);
+        m_obstacles.push_back(newWall);
         int obstacleSlot = m_obstacles.size() - 1;
         placeObstacle(&newWall, obstacleSlot, targetIndex, 0x22);
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1086,7 +1029,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newWall.m_spellDamage = damage;
             newWall.m_duration = 2;
             newWall.m_dispelEffect = 0x42;
-            m_obstacles.insert(m_obstacles.m_end, 1, newWall);
+            m_obstacles.push_back(newWall);
             int obstacleSlot = m_obstacles.size() - 1;
             placeObstacle(&newWall, obstacleSlot, hex, 0x10);
             drawFrame(1, 0, 0, 0, 1, 0);
@@ -1478,11 +1421,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             showSpellMessage(isMonsterSpell, spellId, 0);
             showMassSpell(m_effected, traits->m_effect, 0);
 
-            for (TObstacle* obstacle = m_obstacles.m_begin;
-                 obstacle != m_obstacles.m_end; ++obstacle) {
+            for (TObstacle* obstacle = m_obstacles.begin();
+                 obstacle != m_obstacles.end(); ++obstacle) {
                 if (obstacle->m_sprite
                     && (m_cells[obstacle->m_hex].m_attributes & 0x3c)) {
-                    removeObstacle(obstacle - m_obstacles.m_begin);
+                    removeObstacle(obstacle - m_obstacles.begin());
                     if (obstacle->m_dispelEffect != -1)
                         spellEffect(obstacle->m_dispelEffect, obstacle->m_hex,
                                     100, 0);
@@ -1714,7 +1657,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 formatString(DATA_COMPGEN(
                                   0x00688450, acidBreathDefenseFormat,
                                   "Acid breath reduces the defense of the %s by %i"),
-                              creatureName(target->m_creatureType,
+                              getArmyName(target->m_creatureType,
                                            target->m_numTroops),
                               reduction)
                     .c_str(),
@@ -1777,7 +1720,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             for (int index = 0; index < m_numArmies[side]; ++index) {
                 army* currentArmy = &m_armies[side][index];
                 if (currentArmy->m_creatureType == CREATURE_FAMILIAR
-                    && controllingSide(currentArmy) != m_currentSide) {
+                    && currentArmy->getControllingSide() != m_currentSide) {
                     numFamiliars += currentArmy->m_numTroops;
                 }
             }
@@ -1789,11 +1732,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 std::string msg;
                 if (numFamiliars == 1) {
                     msg = formatString(g_generalText->getText(112),
-                                        creatureName(CREATURE_FAMILIAR, 1),
+                                        getArmyName(CREATURE_FAMILIAR, 1),
                                         manaRecovered);
                 } else {
                     msg = formatString(g_generalText->getText(113),
-                                        creatureName(CREATURE_FAMILIAR, 2),
+                                        getArmyName(CREATURE_FAMILIAR, 2),
                                         manaRecovered);
                 }
                 m_combatWindow->combatMessage(msg.c_str(), 1, 0);
@@ -2529,15 +2472,11 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
                                                   int castingSide,
                                                   const army* targetArmy,
                                                   unsigned char firstTarget,
-                                                  long creatureSpell)
+                                                  long creatureSpell) const
 {
     return spellCastWorkChance(spellId, castingSide, targetArmy, 0,
                                firstTarget, creatureSpell) > 0.0;
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 VA(0x005a3cc0, 0x175)  // dc 0x153158
 army* combatManager::findResurrectionTarget(int side, int hex,
@@ -2678,10 +2617,6 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     return 0;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 // The Chain Lightning arm skips a cell already holding one of the
 // CASTER'S OWN stacks: the spell is the one that walks from target to
 // target, so a friendly occupant is not an aim point.
@@ -2704,30 +2639,40 @@ unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
     return 0;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:3103
-DC_ONLY(0x153638, 0x54)
+// The full CodeView class field lists mark these methods static. A prior
+// const-member spelling scored higher in mark_berserk_area_effect, but
+// an inlining score alone does not override the recovered declaration.
+// E:\gamedcs\spells.cpp:3103, dc 0x153638.
 tagPOINT combatManager::hexToPoint(long hex)
 {
-    // @stub
+    long col = gridX(hex);
+    long row = gridY(hex);
+    tagPOINT point;
+    point.x = col - (row + 1) / 2;
+    point.y = col + row / 2;
+    return point;
 }
 
-// E:\gamedcs\spells.cpp:3121
-DC_ONLY(0x15368c, 0x48)
+// E:\gamedcs\spells.cpp:3121, dc 0x15368c.
 long combatManager::pointToHex(tagPOINT point)
 {
-    // @stub
+    long col = (point.x + point.y + 1) / 2;
+    long row = point.y - point.x;
+    if (col > 0 && col < COMBAT_GRID_LAST_COLUMN && row >= 0
+            && row < COMBAT_GRID_CELLS / COMBAT_GRID_ROW_STRIDE)
+        return getHexIndex(col, row);
+    return -1;
 }
 
-// E:\gamedcs\spells.cpp:3138
-DC_ONLY(0x1536d4, 0x60)
+// E:\gamedcs\spells.cpp:3138, dc 0x1536d4.
 long combatManager::getDistance(tagPOINT start, tagPOINT stop)
 {
-    // @stub
+    long dx = start.x - stop.x;
+    long dy = start.y - stop.y;
+    if ((dx < 0) == (dy < 0))
+        return cppMax(abs(dx), abs(dy));
+    return abs(dx) + abs(dy);
 }
-
-#endif  // @carcass
 
 // The whole of vector<long>::insert is expanded INLINE here where the
 // army-vector shells two rows down get an out-of-line call: the /Ob2
@@ -2738,11 +2683,11 @@ void combatManager::markAreaEffect(long hex, long radius,
                                      unsigned char includeCenter,
                                      std::vector<long>& hexes)
 {
-    hex_point center = hexToPoint(hex);
-    hex_point point;
-    for (point.m_x = center.m_x - radius; point.m_x <= center.m_x + radius; point.m_x++) {
-        for (point.m_y = center.m_y - radius; point.m_y <= center.m_y + radius;
-             point.m_y++) {
+    tagPOINT center = hexToPoint(hex);
+    tagPOINT point;
+    for (point.x = center.x - radius; point.x <= center.x + radius; point.x++) {
+        for (point.y = center.y - radius; point.y <= center.y + radius;
+             point.y++) {
             if (getDistance(center, point) > radius)
                 continue;
             long marked = pointToHex(point);
@@ -2754,10 +2699,6 @@ void combatManager::markAreaEffect(long hex, long radius,
         }
     }
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // Berserk's own hex sweep, and the ONLY thing that separates it from the
 // generic collector above is where the radius comes from and that it
@@ -2772,12 +2713,12 @@ VA(0x005a4430, 0x2B8)  // dc 0x1537d8
 void combatManager::markBerserkAreaEffect(long hex, long mastery,
                                              std::vector<long>& hexes)
 {
-    hex_point center = hexToPoint(hex);
-    hex_point point;
-    for (point.m_x = center.m_x - g_berserkRadius[mastery];
-         point.m_x <= center.m_x + g_berserkRadius[mastery]; point.m_x++) {
-        for (point.m_y = center.m_y - g_berserkRadius[mastery];
-             point.m_y <= center.m_y + g_berserkRadius[mastery]; point.m_y++) {
+    tagPOINT center = hexToPoint(hex);
+    tagPOINT point;
+    for (point.x = center.x - g_berserkRadius[mastery];
+         point.x <= center.x + g_berserkRadius[mastery]; point.x++) {
+        for (point.y = center.y - g_berserkRadius[mastery];
+             point.y <= center.y + g_berserkRadius[mastery]; point.y++) {
             if (getDistance(center, point) > g_berserkRadius[mastery])
                 continue;
             long marked = pointToHex(point);
@@ -2858,10 +2799,6 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 VA(0x005a4920, 0x42)  // dc 0x153aec
 void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
                                      std::vector<army*>& targets)
@@ -2874,10 +2811,6 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
     unsigned char includeCenter = spell != SPELL_FROST_RING;
     markHexAreaEffect(hex, radius, includeCenter, targets);
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // EVERY AREA DAMAGE SPELL'S BODY. The sprite effect goes over the centre
 // hex first, the collector two rows above fills the stack list, and then
@@ -3814,18 +3747,6 @@ static const int g_earthquakeShakeOffsets[15][2] = {
 // one particular DEF - rather than a count.
 const int g_earthquakeImpactFrame = 5;
 
-// combatManager::DamageWall's first slot is TWallTargetId while
-// Earthquake's own walk of wallTargets is an int counter; this
-// bit-preserving inline bridges the crossing rather than lying with an
-// enum cast, exactly as ai_combat.cpp's creature_type_from_int and
-// ai_player.cpp's twin do. VC6 reduces the four-byte copy to a move.
-inline TWallTargetId wallTargetFromInt(int value)
-{
-    TWallTargetId wall;
-    memcpy(&wall, &value, sizeof wall);
-    return wall;
-}
-
 // Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
 // makes ONE by-value copy our CL does not fold - retail lets the
 // address _cpp_max returned flow straight into _cpp_min and compares the
@@ -3949,10 +3870,6 @@ void combatManager::clearEffects()
 {
     memset(m_effected, 0, sizeof(m_effected));
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // The mass-spell applier ClearEffects clears `effected` for, and the
 // body is what slices that row: it rolls the cast SEPARATELY per stack -
@@ -4093,7 +4010,7 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
                 }
             }
         } }
-        PlayImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
+        playImmEffect(g_spellEffectTraits[spellEffect].m_immName, 1);
         { for (int frame = 0; frame < frames; frame++) {
             { for (int side = 0; side < 2; side++) {
                 for (int i = 0; i < m_numArmies[side]; i++) {
@@ -4325,7 +4242,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
         m_combatWindow->combatMessage(
             formatString(g_generalText->getText(676),
                           m_heroes[m_currentSide]->m_name, count,
-                          creatureName(monType, count))
+                          getArmyName(monType, count))
                 .c_str(),
             1, 0);
     }
@@ -4390,7 +4307,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 
     long raised = caster->getResurrectionSize(target);
     long origPosition = target->m_originalIndex;
-    army* demons = addArmy(controllingSide(caster),
+    army* demons = addArmy(caster->getControllingSide(),
                            army::ARMY_CREATURE_DEMON, raised,
                            target->m_gridIndex, 0, 1);
     demons->m_originalIndex = origPosition;
@@ -4400,10 +4317,10 @@ void combatManager::demonicResurrection(const army* caster, army* target)
         drawFrame(1, 0, 0, 0, 1, 0);
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(117), raised,
-                    creatureName(demons->m_creatureType, raised));
+                    getArmyName(demons->m_creatureType, raised));
         else
             sprintf(g_text, g_generalText->getText(118), raised,
-                    creatureName(demons->m_creatureType, raised));
+                    getArmyName(demons->m_creatureType, raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -4485,10 +4402,10 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long raised = targetArmy->m_numTroops - oldCount;
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(117), raised,
-                    creatureName(targetArmy->m_creatureType, raised));
+                    getArmyName(targetArmy->m_creatureType, raised));
         else
             sprintf(g_text, g_generalText->getText(118), raised,
-                    creatureName(targetArmy->m_creatureType, raised));
+                    getArmyName(targetArmy->m_creatureType, raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
 
         int effect = g_spellTraits[SPELL_RESURRECTION].m_effect;
@@ -4498,7 +4415,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
             targetArmy->m_stdIcon->getNumFrames(cs_death);
         long frames = cppMax(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
-        PlayImmEffect(g_spellEffectTraits[effect].m_immName, 1);
+        playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
         long back = deathFrames - 1;
         { for (long i = 0; i < frames; i++) {
             m_powFrameIndex = i;
@@ -4555,7 +4472,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x00688440, magicResistanceSampleName, "MagicRes.wav"));
         sprintf(g_text, g_generalText->getText(190),
-                creatureName(targetArmy->m_creatureType,
+                getArmyName(targetArmy->m_creatureType,
                              targetArmy->m_numTroops),
                 g_generalText->getText(targetArmy->m_numTroops == 1
                                            ? 145
@@ -4569,17 +4486,13 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
 VA(0x005a7890, 0x4D)  // dc 0x156b94
 long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mastery,
                                        hero* castingHero, hero* targetHero,
-                                       const army* target, unsigned char simulated)
+                                       const army* target, unsigned char simulated) const
 {
     long damage = g_spellTraits[spell].m_masteryBonus[mastery]
         + g_spellTraits[spell].m_powerFactor * spellPower;
     return modifySpellDamage(damage, spell, castingHero, targetHero, target,
                              simulated);
 }
-
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
 
 // THE THREE MODIFIER STAGES, in the order the pushes fix them: the
 // CASTER's own bonuses (hero::modify_spell_damage, artifacts and
@@ -4634,7 +4547,7 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                                       const hero* castingHero,
                                       const hero* affectedHero,
                                       const army* targetArmy,
-                                      unsigned char printResult)
+                                      unsigned char printResult) const
 {
     long damage = baseDamage;
     if (castingHero)
@@ -4681,13 +4594,9 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
     return damage;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-#endif  // @carcass
-
 VA(0x005a7bb0, 0xC5)  // dc 0x156dc4
 long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
-                                               const army* target)
+                                               const army* target) const
 {
     if (!target)
         return damage;
@@ -4844,8 +4753,11 @@ void combatManager::earthquake(int level)
                     bounds->m_maxX = g_combatDrawLimits694f18.m_maxX;
                 if (bounds->m_maxY > g_combatDrawLimits694f18.m_maxY)
                     bounds->m_maxY = g_combatDrawLimits694f18.m_maxY;
-                if (frame == g_earthquakeImpactFrame)
-                    damageWall(wallTargetFromInt(i), counts[i]);
+                if (frame == g_earthquakeImpactFrame) {
+                    TWallTargetId wall;
+                    memcpy(&wall, &i, sizeof wall);
+                    damageWall(wall, counts[i]);
+                }
                 blast->draw(0, frame, 0, 0,
                             bounds->m_maxX - bounds->m_minX + 1,
                             bounds->m_maxY - bounds->m_minY + 1,
@@ -4864,8 +4776,11 @@ void combatManager::earthquake(int level)
         blast->dispose();
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
-        for (int i = 0; i < WALL_TARGET_COUNT; i++)
-            damageWall(wallTargetFromInt(i), counts[i]);
+        for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+            TWallTargetId wall;
+            memcpy(&wall, &i, sizeof wall);
+            damageWall(wall, counts[i]);
+        }
     }
     g_mouseManager->showPointer(0);
 }
@@ -4875,7 +4790,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          const army* target,
                                          unsigned char redirected,
                                          unsigned char firstTarget,
-                                         long creatureSpell)
+                                         long creatureSpell) const
 {
     hero* castingHero = m_heroes[side];
     hero* targetHero = target->getController();
@@ -4927,7 +4842,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     if (target->m_allUnitsKilled)
         return 0.0f;
     if (spell == SPELL_SACRIFICE && !firstTarget
-        && controllingSide(target) != side)
+        && target->getControllingSide() != side)
         return 0.0f;
     int benefit = traits->m_karma;
     if (!redirected) {
@@ -5016,7 +4931,7 @@ VA(0x005a8640, 0x49)  // dc 0x157828
 unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             const army* target,
                                             unsigned char redirected,
-                                            long creatureSpell)
+                                            long creatureSpell) const
 {
     int chance = spellCastWorkChance(spell, side, target, redirected, 1,
                                      creatureSpell) * 100.0f;
@@ -5043,11 +4958,11 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
         if (firstTarget) {
             target = findResurrectionTarget(m_currentSide, targetIndex, 0);
             sprintf(g_text, g_generalText->getText(549),
-                    creatureName(target->m_creatureType, target->m_numTroops));
+                    getArmyName(target->m_creatureType, target->m_numTroops));
         } else {
             target = cell->getArmy();
             sprintf(g_text, g_generalText->getText(550),
-                    creatureName(target->m_creatureType, target->m_numTroops));
+                    getArmyName(target->m_creatureType, target->m_numTroops));
         }
         m_combatWindow->combatMessage(g_text, 0, 0);
         return;
@@ -5086,7 +5001,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 
     if (target)
         sprintf(g_text, g_generalText->getText(28), g_spellTraits[spellId].m_name,
-                creatureName(target->m_creatureType, target->m_numTroops));
+                getArmyName(target->m_creatureType, target->m_numTroops));
     else
         sprintf(g_text, g_generalText->getText(27), g_spellTraits[spellId].m_name);
     m_combatWindow->combatMessage(g_text, 0, 0);
@@ -5214,7 +5129,7 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
             // stack whose turn it is - and then appends the target
             // clause only if there is a target to name.
             const army* caster = &m_armies[m_actingSide][m_actingSlot];
-            const char* casterName = creatureName(caster->m_creatureType,
+            const char* casterName = getArmyName(caster->m_creatureType,
                                                   caster->m_numTroops);
             if (caster->m_numTroops == 1)
                 message = formatString(g_generalText->getText(566),
@@ -5283,11 +5198,6 @@ CSprite* combatManager::loadSpellEffect(int effect)
     return m_powSprite;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5890
-#endif
-
 VA(0x005a9360, 0x3C)  // dc 0x158090
 TCreatureType getElementalType(SpellID spell)
 {
@@ -5315,14 +5225,31 @@ unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
     return getElementalType(spell) == m_summonedElemental[side];
 }
 
-#if 0 // @carcass - remaining Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5928
-DC_ONLY(0x158108, 0x78)
-int combatManager::getSpellWallHex(int base_index, int row_offset, int side)
+// Original: combatManager::GetSpellWallHex; spells.cpp:5928, dc 0x158108.
+// DC line5934 calls the canonical GridY and RowIsOdd header helpers.
+// ONE result variable, defaulted before the row test: retail's
+// expansion in HandleCastWallSpell (0x5a3250) copies baseIndex into
+// the result register ahead of the `rowOffset == 1` branch and
+// stores it once at the join, which three separate returns cannot
+// give (they store per arm, measured 94.08 -> 100 on that body).
+int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
 {
-    // @stub
+    int hex = baseIndex;
+    if (rowOffset == 1) {
+        hex = baseIndex - COMBAT_GRID_ROW_STRIDE;
+        if (rowIsOdd(gridY(baseIndex))) {
+            if (side == 1)
+                --hex;
+        } else if (side == 0) {
+            ++hex;
+        }
+    } else if (rowOffset == SPELL_WALL_SECOND_ROW) {
+        hex = baseIndex - 2 * COMBAT_GRID_ROW_STRIDE;
+    }
+    return hex;
 }
+
+#if 0 // @carcass - remaining Dreamcast roster rows
 
 // E:\gamedcs\Army.h:835
 DC_ONLY(0x158180, 0x20)

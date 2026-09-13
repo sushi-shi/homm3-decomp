@@ -92,18 +92,7 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
-// E:\gamedcs\button.cpp:82
-// The homm2 template (BASE/BUTTON.cpp) is `inline button::~button()
-// { gpResourceManager->Dispose(m_icon); }` - retail moved Dispose onto
-// the resource. The `inline` idiom carries over: retail inlines this
-// body into both derived dtors (0x456bf0/0x456db0) while the vtables
-// keep this out-of-line copy.
-// E:\gamedcs\button.cpp:82
-VA(0x004560f0, 0x9A)  // anchor-global, dc 0x571ec
+VA(0x004560f0, 0x9A)  // dc 0x571ec
 inline button::~button()
 {
     m_buttonIcon->dispose();
@@ -143,37 +132,48 @@ void button::initialize(int x, int y, int w, int h, int id,
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
-// E:\gamedcs\button.cpp:131..359. DC136 calls ElapsedSince; 158..176
-// handles widget commands before keyboard/mouse arms and calls SetPalette.
-// Retail's palette success/failure paths both return after the helper;
-// SET_ICON_NAME separately disposes the old sprite before GetSprite. DC168
-// calls ResourceManager::Dispose; retail uses the sprite virtual Dispose
-// boundary (Main +0x580), reflecting Complete resource ownership. The
-// earlier transcription wrongly reloaded the sprite on palette failure and
-// omitted disposal on icon replacement, despite its old residual comment.
-// Restore those source/behavior facts and the canonical initializer below.
-// The corrected resource paths reach 99.7788% from 88.1009%. Retail B87
-// tests DRAWN only for RIGHT_BUTTON_DOWN; all other unhandled paths enter
-// B88 widget::Main directly. DC235..252 owns the right-hit-test scope and
-// DC359 the final delegation. Restoring that case scope reaches 99.9734%;
-// the former shared tail wrongly turned other events into right selections.
-// DC329..335 and retail +0x2c1 separately test selection after capture:
-// selected calls Deselect then returns 2; cancellation returns 1. Returning
-// Deselect directly incorrectly returned 0 when capture ended outside.
-//
-// Preserve the shared capture-loop exit: separate Deselect statements
-// expand the helper twice (the older 67.38% control). Select/Deselect retain
-// retail's absence of DC's CombatIsOver polling; both are independently exact
-// without those Dreamcast-only pump calls. The raw elapsed subtraction was
-// byte-flat, but the documented GameTime helper belongs in the source.
-// The final string-terminator SIB difference is sensitive to the actual
-// keyboard index lifetime. One unsigned index, reinitialized in either key
-// arm, makes the entire handler exact; separate case-local indices leave
-// 99.9823%. Twenty-four caller-lifetime states reproduce ten retained
-// candidates. Only this shared-index form (with or without a text argument
-// local) reaches 100%; keep the direct SetText call and byte disabled flag.
-// DC records the two searches at 195/199 and 216/220 but no named locals;
-// sharing their index is a retail-tested source hypothesis, not a DC fact.
+// E:\gamedcs\button.cpp:131
+// Residual (88.1%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
+// GONE. (1) The capture loop's two exits now BREAK to one shared
+// `return Deselect(*msg)`; spelling either as its own `return`
+// expands the inlined deselect body twice (+8.4 points). (2) The
+// WIDGET sub-switch case ORDER is retail's emission order -
+// SET_PALETTE, SET_ICON_NAME, SET_TEXT, SET_PLAYER_PALETTE_COLORS -
+// not ascending by value (+8.9 points); retail's jump table lands the
+// palette body first and cross-jumps SET_ICON_NAME onto the
+// palette-failure tail. Spelling the palette case positively likewise
+// restores retail's success-first layout (+2.75 points).
+// CORRECTED 2026-08-08 (closeout lane): the auto-repeat guard calls
+// GameTime::Get(), NOT timeGetTime(). The delinked target reads
+// `call ?Get@GameTime@@SIKXZ` at +0x37 where this TU was emitting the
+// winmm thunk; kbwin's GameTime::Get (0x4f82e0) is a 6-byte
+// `jmp [__imp__timeGetTime@0]`, so the two are observationally equal
+// at runtime but a different callee in the object. button::Select's
+// timeGetTime at +0x188 stays the thunk form - the per-TU import-form
+// note below still applies to THAT call, not to this one.
+// DC-census verdict (2026-08-14), both rows negative: `GameTime::ElapsedSince`
+// x1 (E:\gamedcs\struct.h:411, dc 0x1eed4 = `Elapsed(Get(), t)`) against the
+// `(int)(GameTime::Get() - repeatTime) > 0` below is byte-EXACTLY flat at
+// 88.1009 modelled file-locally - it folds. And `combatManager::CombatIsOver`
+// x3 is pure Dreamcast platform delta: the DC census records it from
+// button::Select x1 and button::Deselect x1 as well, and both of those are
+// already EXACT here without it, so the DC widget pump polls combat-over where
+// retail does not. slider::Main carries the identical ElapsedSince row with
+// the identical verdict.
+// What is left is (a) a whole-body esi/edi role swap (retail pins msg
+// in ESI) that source order does not steer, and (b) the /Ob2 boundary
+// inside button::SetText. `Text = new_text` recovers retail's strlen and
+// raw movsd/movsb tail, but this compile expands std::string::_Grow while
+// retail calls its two-argument COMDAT at 0x404a90. The same header body
+// makes the opposite inline-boundary choice in the textButton ctor, so
+// this is translation-unit optimizer state rather than a text-layout gap.
+// `inline_depth(1..4)` and scoped auto_inline did not move the decision.
+// The left-click capture loop pumps the mouse manager and input queue
+// until a button-up, toggling selection as the pointer crosses the
+// widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
+// sub-switch inlines SetText and the palette swap; a failed palette
+// load falls back to reloading the icon sprite by the same name.
+// E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
 int button::main(message& msg)
 {
@@ -410,7 +410,7 @@ void button::zBufferDraw(unsigned short* zBuffer, int id) const
 // frame past the sequence-0 count clamps to 0.
 // E:\gamedcs\button.cpp:446
 VA(0x00456940, 0x99)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
-void button::draw()
+void button::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -513,19 +513,8 @@ textButton::~textButton()
     m_font->dispose();
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
-// E:\gamedcs\button.cpp:525
-// The pressed state nudges the caption right and down by one; dimmed
-// or disabled shifts the color scheme by two; VC6's inlined c_str()
-// supplies the empty-string literal when Text is unallocated. Keeping the
-// shared parentWindow pointer as a named local reproduces retail's paired
-// allocation: status stays in CX and the parent pointer occupies EAX.
-// E:\gamedcs\button.cpp:525
-VA(0x00456ca0, 0x82)  // vtable-slot 4 of textButton (0x63bb88), dc 0x57b98
-void textButton::draw()
+VA(0x00456ca0, 0x82)  // dc 0x57b98
+void textButton::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
         return;
@@ -549,12 +538,7 @@ void textButton::draw()
                             drawX, drawY, m_width, m_height, font::TColor(color), 5, -1);
 }
 
-#if 0  // @carcass
-
-#endif  // @carcass
-
-// E:\gamedcs\button.cpp:557
-VA(0x00456d30, 0x46)  // linkorder bracket; button-ctor delegate byte-proven, dc 0x57c4c
+VA(0x00456d30, 0x46)  // dc 0x57c4c
 type_func_button::type_func_button(long x, long y, long w, long h, long id,
                                    const char* image,
                                    handler_type newHandler,

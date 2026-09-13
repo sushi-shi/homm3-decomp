@@ -156,6 +156,10 @@ void highScoreManager::viewHiScore()
     highScoreWindow.doModal();
 }
 
+// The retail build inlines this sole constructor use into
+// AddScoreToHighScore.  Every widget argument below is byte-visible in that
+// expansion; the three-entry reserve followed by four pushes also explains
+// the one reallocating final insertion.
 
 
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
@@ -179,12 +183,7 @@ void writeHighScores()
     }
 }
 
-// The retail build inlines this sole constructor use into
-// AddScoreToHighScore.  Every widget argument below is byte-visible in that
-// expansion; the three-entry reserve followed by four pushes also explains
-// the one reallocating final insertion.
-
-
+// E:\gamedcs\hiscore.cpp:772
 VA(0x004e91d0, 0x4CC)  // dc 0xd7c3c
 int highScoreManager::addScoreToHighScore(int score, int days,
     int difficulty, int scoreType, const char* land)

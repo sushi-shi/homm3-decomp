@@ -63,15 +63,6 @@ void CSprite::setPalette(const unsigned short* pal)
     m_p = new TPalette16(pal);
 }
 
-// DC emits this CSprite.h wrapper at 0x744e4. Complete expands it into
-// ResetPalette, retaining the source palette constructor's returned `this`.
-inline void CSprite::setPalette(TPalette16& pal)
-{
-    if (m_p)
-        delete m_p;
-    m_p = new TPalette16(&pal);
-}
-
 VA(0x0047bc00, 0xb8)  // dc 0x72538
 void CSprite::resetPalette()
 {

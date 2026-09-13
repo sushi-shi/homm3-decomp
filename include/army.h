@@ -12,6 +12,7 @@
 #include "armygrp.h"
 // SMonFrameInfo, the type of the embedded `sMonFrameInfo` row at +0x110.
 #include "monframeinfo.h"
+#include "includes.h"
 
 class hero;
 class armyGroup;
@@ -20,9 +21,6 @@ class sample;
 class CSprite;
 
 inline const char* getArmyName(int type, int count);
-
-// Shared includes.h limit helpers used by the class-body accessors.
-#include "homm3_limit.h"
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -1834,6 +1832,8 @@ inline int army::getLuck(unsigned char applyLimits) const
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
+    // E:\gamedcs\Army.h:736
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
 inline int army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
@@ -1900,6 +1900,8 @@ inline int army::getOwningSide() const
         return m_combatSide;
     }
 
+    // E:\gamedcs\Army.h:800
+VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 inline int army::getControllingSide() const
     {
         if (m_spellInfluence[60])
@@ -1944,6 +1946,7 @@ inline bool army::isInAura() const
         return m_auraSources.size() > 0;
     }
 
+VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
 inline bool army::isIncapacitated() const
     {
         return m_spellInfluence[62] || m_spellInfluence[70]

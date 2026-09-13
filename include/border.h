@@ -10,21 +10,10 @@
 class border : public widget {
 public:
     border(int x, int y, int w, int h, int id, int style);
-    // The default ctor has NO retail row of its own, and it is DC-attested
-    // (dc 0x5433c) and byte-corroborated from the other side too:
-    // coloredBorderFrame's retail constructor (0x450130) builds its border
-    // base by calling ??0widget@@QAE@XZ DIRECTLY, which is what an empty
-    // inline border::border() collapses to. Every derived ctor
-    // (0x450130 / 0x4502d0 / 0x450690) opens with a direct
-    // ??0widget@@QAE@XZ call and a SINGLE derived vtable store, i.e. the
-    // base default ctor was expanded in place and its ??_7border@@6B@
-    // store dead-store-eliminated. Header-inline is what reproduces that;
-    // DC emitted it out of line (dc 0x5433c) because the port compiled
-    // border.cpp without /Ob2.
-    border() {}
+    border();
     virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();             // slot 4
+    virtual void draw() const;  // slot 4
     // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
@@ -56,12 +45,11 @@ public:
     // three alignment bytes. Retail constructor 0x450130 preserves that tail
     // after its smaller base, ending at 0x38.
     char m_paddingAfterColorize[3];
-
     coloredBorderFrame(int x, int y, int w, int h, int id,
                        int color, int style);
-    virtual ~coloredBorderFrame();
+    // Implicit destructor; CodeView dc 0x54dd8 compgenx.
     virtual int main(message& msg);
-    virtual void draw();             // slot 4, retail 0x4501e0
+    virtual void draw() const;  // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
 
@@ -73,11 +61,10 @@ class Bitmap816;
 class bitmapBorder : public border {
 public:
     Bitmap816* m_image;
-
     bitmapBorder(int x, int y, int w, int h, int id,
                  const char* image, int style);
     virtual ~bitmapBorder();
-    virtual void draw();
+    virtual void draw() const;
     virtual int getRealHeight() const;
     virtual int getRealWidth() const;
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
@@ -93,13 +80,12 @@ class Bitmap16Bit;
 class bitmapBorder16 : public border {
 public:
     Bitmap16Bit* m_image;
-
     bitmapBorder16(int x, int y, int w, int h, int id,
                    const char* image, int style);
     virtual ~bitmapBorder16();
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();
-    void draw2();
+    virtual void draw() const;
+    void draw2() const;
     virtual int main(message& msg);  // slot 2, retail 0x450860
     // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
     // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned

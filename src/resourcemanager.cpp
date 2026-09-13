@@ -7,12 +7,72 @@
 #include <utility>
 #include "resource.h"
 #include "resourcemanager.h"
-#include "resourcemanager_cache.h"
-#include "resourcemanager_file_adapter.h"
+#include "resourcemanager_archive.h"
+#include "abstractfile.h"
 #include "resourcemanager_sprite_headers.h"
 #include "textresource.h"
+#include "lodfile.h"
+#include "bitmap16.h"
+#include "bitmap24.h"
+#include "bitmap816.h"
+#include "csprite.h"
+#include "cspriteframe.h"
+#include "font.h"
+#include "ownership.h"
+#include "palette.h"
+#include <memory>
+#include <stdlib.h>
+#include <string>
+#include <windows.h>
+#include <sstream>
+#include "sample.h"
+#include "smackmgr.h"
+
+class LODFile;
 
 namespace ResourceManager {
+
+// Complete's resource readers adapt either an ordinary FILE or a selected
+// LODFile to the common three-slot stream ABI. The HD names are admitted only
+// after retail proves both layouts (vptr + one pointer), vtable slots and read
+// behavior at these addresses. These implementation types are used only by
+// this resource-loading module; they have no shared header interface.
+// Both Write methods fold with CHeroWindowEx::OnWidgetDeselect at 0x559140.
+class t_stdio_file_adapter : public TAbstractFile {
+public:
+    explicit t_stdio_file_adapter(FILE* value) : m_file(value) {}
+
+    virtual int read(void* data, int size);
+    VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
+    virtual int write(const void*, int) { return 0; }
+
+    FILE* m_file;
+};
+
+class t_lod_file_adapter : public TAbstractFile {
+public:
+    explicit t_lod_file_adapter(LODFile* value) : m_lodFile(value) {}
+
+    virtual int read(void* data, int size);
+    virtual int write(const void*, int) { return 0; }
+
+    LODFile* m_lodFile;
+};
+
+// Dreamcast resourcemanager.cpp:121/126 proves the class, constructor and
+// ordinary const operator< (original field: name). Retail 0x55ac20 copies
+// twelve bytes and terminates byte 12; 0x55ebd0 compares these keys with
+// _stricmp. Complete's map node has its key at +0xc and resource* at +0x1c.
+class TCacheMapKey {
+public:
+    char m_name[13];
+    TCacheMapKey(const char* name);
+    bool operator<(const TCacheMapKey& other) const;
+};
+
+typedef std::map<TCacheMapKey, resource*> TCacheMap;
+SIZE(TCacheMapKey, 13);
+SIZE(TCacheMap, 16);
 
 Bitmap16Bit* loadBitmap16(const char* name);
 TPalette16* loadPalette(const char* name);
@@ -123,21 +183,16 @@ TTextResource* ResourceManager::getText(const char* name)
 // E:\gamedcs\resourcemanager.cpp:1461
 #endif
 
-// The adapters are the first reconstructed retail bodies that need the full
-// archive surface. Keep the remaining implementation headers at this first
-// complete-type use.
-#include "lodfile.h"
-#include "bitmap16.h"
-#include "bitmap24.h"
-#include "bitmap816.h"
-#include "csprite.h"
-#include "cspriteframe.h"
-#include "font.h"
-#include "ownership.h"
-#include "palette.h"
-#include <memory>
-#include <stdlib.h>
-#include <string>
+// ResourceManager's retail archive pool is eight interleaved 0x190-byte
+// slots. Open proves the leading dword is the archive pathname and every
+// resource lookup independently proves the LODFile subobject at +4.
+struct TResourceLODSlot {
+    const char* m_archiveName;
+    LODFile m_file;
+
+    TResourceLODSlot(const char* name);
+};
+SIZE(TResourceLODSlot, 0x190);
 
 VA(0x005590f0, 0x1D)  // stdio adapter vtable slot 1
 int ResourceManager::t_stdio_file_adapter::read(void* data, int size)
@@ -150,16 +205,6 @@ int ResourceManager::t_lod_file_adapter::read(void* data, int size)
 {
     return m_lodFile->read(data, size) ? 0 : size;
 }
-
-#if 0  // @carcass: claim-only home for the header COMDAT below
-
-VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
-int ResourceManager::t_stdio_file_adapter::write(const void*, int)
-{
-    return 0;
-}
-
-#endif  // @carcass
 
 VA(0x005591e0, 0x1A)
 TResourceLODSlot::TResourceLODSlot(const char* name)
@@ -203,9 +248,6 @@ DATA(0x0069d854) int g_greenMaskBits;
 DATA(0x0069d85c) int g_lastMaskShift;
 DATA(0x0069e5a0) int g_lastMaskBits;
 DATA(0x0069e4f0) std::string g_resourcePath;
-
-#include <windows.h>
-#include <sstream>
 
 // Complete's common missing-resource reporter has no Dreamcast identity, but
 // its thirteen retail callers prove the fastcall surface. The dense 0..96
@@ -600,7 +642,8 @@ void ResourceManager::saturateGraphics()
 // inverse. Pinning pop_back is the negative control (80.6210%). Vector and
 // pathname expression variants were flat or worse, so this is a bounded
 // A8/A9 inliner wall rather than missing archive behavior.
-VA(0x0055a250, 0x2F1)  // sole retail caller + dc name/two flag parameters
+// The flags arrive in ECX/EDX; ret 4 removes the added error-code pointer.
+VA(0x0055a250, 0x2F1)  // sole retail caller + two flags/error output, dc 0x12173c
 bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 {
     try {
@@ -753,19 +796,15 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
-static inline FILE* openResourcePath(const char* name)
-{
-    return fopen((g_resourcePath + name).c_str(), "rb");
-}
-
 // Dreamcast fixes the public name/signature and the two Bitmap816 constructor
 // forms. Retail supplies the Complete-only cache head, ordinary-file probe,
 // active-LOD fallback walk, its `bmpHeader` local and 12-byte record, packed
-// 24-bit palette and six-mask conversion tuple. Residual (97.6325%):
-// OpenResourcePath closes the
-// positional string boundary without a site pragma; both sides now have 34
-// blocks and the same 20-branch sequence. The remaining early-cache insertion
-// and archive-local coloring differ. Replacing the explicit public-map wrapper
+// 24-bit palette and six-mask conversion tuple. Historical residual with
+// OpenResourcePath (97.6325%): the wrapper changed the string boundary without
+// a site pragma; both sides then had 34 blocks and the same branch sequence.
+// The wrapper was introduced only for that compiler effect; the path-open
+// expression now belongs directly to each resource loader. The remaining
+// early-cache insertion and archive-local coloring differed in that probe. Replacing the explicit public-map wrapper
 // with AddToCache or the natural insert expression regresses to 90.14/89.45;
 // a fully nested pair/value/wrapper expression is a separate 92.61 negative
 // control. why-reg's best volatile-remaining probe reduces its masked distance
@@ -792,7 +831,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     if (cached)
         return cached;
 
-    FILE* file = openResourcePath(name);
+    FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     Bitmap816* result;
     if (file) {
@@ -899,6 +938,9 @@ bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
     return _stricmp(m_name, other.m_name) < 0;
 }
 
+// independently fixed by cleanup. The Bitmap24Bit guard is VC6 std::auto_ptr
+// from <memory>, whose owns flag, pointer and scalar-delete destructor were
+// formerly duplicated by TAutoPtr. Pixel data uses scalar operator delete as
 VA(0x0055ac40, 0x388)
 Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 {
@@ -908,7 +950,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
     if (file) {
         fclose(file);
 
-        TAutoPtr<Bitmap24Bit> source(
+        std::auto_ptr<Bitmap24Bit> source(
             new Bitmap24Bit(name, g_resourcePath.c_str()));
         if (g_graphicsSaturated)
             source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
@@ -972,7 +1014,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             new unsigned char[header.m_dataSize]);
         lodFile->read(data.get(), header.m_dataSize);
 
-        TAutoPtr<Bitmap24Bit> source(new Bitmap24Bit(
+        std::auto_ptr<Bitmap24Bit> source(new Bitmap24Bit(
             name, header.m_width, header.m_height, data.get(), header.m_dataSize));
         if (g_graphicsSaturated)
             source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
@@ -985,11 +1027,12 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
     }
 }
 
-// Kept at the first complete-type use. Earlier C1-sensitive cache code was
-// compiled with the original narrow include population.
-#include "bitmap16.h"
-#include "font.h"
-
+// This getter family is one retail template: only the load callee and result
+// type differ. The scoped lookup locals let C1 reuse their frame slots for
+// AddToCache's insertion pair, exactly as in GetSpreadsheet below. Restoring
+// that helper's std::pair conversion closes every member of the family.
+// Complete removes ignore_cache: ECX supplies the name and the body always
+// performs the shared cache lookup before loading, then returns with ret.
 VA(0x0055afd0, 0x8A)
 Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
 {
@@ -1144,7 +1187,9 @@ TPalette16* ResourceManager::loadPalette(const char* name)
     }
 }
 
-VA(0x0055b3e0, 0x8A)
+// Like GetBitmap16, Complete always consults the cache and removes the
+// Dreamcast ignore_cache argument; the retained body ends with plain ret.
+VA(0x0055b3e0, 0x8A)  // dc public GetPalette + retail getter family, dc 0x121d90
 TPalette16* ResourceManager::getPalette(const char* name)
 {
     TPalette16* cached = static_cast<TPalette16*>(getFromCache(name));
@@ -1194,7 +1239,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     TPalette24* result;
     char header[24];
     TRGBA rgba[256];
-    FILE* file = openResourcePath(name);
+    FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
@@ -1306,10 +1351,15 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
+// Historical exact result (2026-08-26) used the artificial OpenResourcePath
+// wrapper to steer c_str()/_Tidy(true) expansion. The ordinary-file/archive
+// branches, error reports, original-name getItemIndex and stream adapters
+// remain. The path-open expression is restored to this loader: temporary
+// scheduling alone does not establish an additional source helper boundary.
 VA(0x0055b8d0, 0x229)
 font* ResourceManager::loadFont(const char* name)
 {
-    FILE* file = openResourcePath(name);
+    FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     if (file) {
         try {
@@ -1601,12 +1651,13 @@ int ResourceManager::getBitmapResourceSize(const char* name)
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2141
-DC_ONLY(0x122530, 0x90)
-void ResourceManager::dispose(resource* kill)
-{
-    // @stub
-}
+#endif  // @carcass
+
+// E:\gamedcs\resourcemanager.cpp:2141, dc 0x122530.
+// Complete routes disposal through the resource virtual method.
+void ResourceManager::dispose(resource* value) { value->dispose(); }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2196
 DC_ONLY(0x1225c0, 0x1C)
@@ -1615,19 +1666,19 @@ void ResourceManager::dispose(sample* sam)
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2204
-DC_ONLY(0x1225dc, 0xF6)
-void ResourceManager::dispose(CSprite* kill)
-{
-    // @stub
-}
+#endif  // @carcass
 
-// E:\gamedcs\resourcemanager.cpp:2280
-DC_ONLY(0x1226d4, 0x1D6)
+// E:\gamedcs\resourcemanager.cpp:2204, dc 0x1225dc.
+// Complete routes disposal through the resource virtual method.
+void ResourceManager::dispose(CSprite* value) { value->dispose(); }
+
+// E:\gamedcs\resourcemanager.cpp:2280, dc 0x1226d4.
+// Complete retains no work at the cache-sweep call sites.
 void ResourceManager::delSprFromCache()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2359
 DC_ONLY(0x1228ac, 0x7C)
@@ -1636,12 +1687,28 @@ void ResourceManager::Expunge()
     // @stub
 }
 
-// E:\gamedcs\resourcemanager.cpp:2377
-DC_ONLY(0x122928, 0x5C)
-resource* ResourceManager::GetFromCache(const char* name)
+#endif  // @carcass
+
+// Original: ResourceManager::GetFromCache; resourcemanager.cpp:2377,
+// dc 0x122928. CodeView names iterator i and the key-ctor/find/end/AddRef
+// sequence. Complete expands that sequence in its cache-first getters and sprite
+// frame lookup.
+// Earlier getter score/probe notes describe those expanded caller forms.
+// Those formerly repeated the helper body (GetBitmap816 also pasted the key
+// constructor). Keep one ordinary helper and the canonical name constructor.
+// The public std::map::find owns the lookup; its underlying tree helper
+// remains a separate library enrollment.
+resource* ResourceManager::getFromCache(const char* name)
 {
-    // @stub
+    TCacheMap::iterator found = g_resourceCache.find(name);
+    if (found == g_resourceCache.end())
+        return 0;
+    resource* value = found->second;
+    value->addRef();
+    return value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2397
 DC_ONLY(0x122984, 0x72)
@@ -2212,19 +2279,16 @@ void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceMa
 
 #endif
 
-// Kept at the point of use: the two already reconstructed cache functions
-// above were compiled without this large header in retail-sensitive C1
-// contexts, while this wrapper needs the canonical LODFile member surface.
-#include "lodfile.h"
-#include "bitmap16.h"
-#include "bitmap816.h"
-#include "sample.h"
-#include "resourcemanager_sound.h"
+namespace ResourceManager {
+bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
+}
 
 DATA(0x0069e500)
 TSoundHeaderDescriptor g_soundHeaderDescriptors[3];
 
-VA(0x0055c130, 0x28F)
+// ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
+// Win32 file read replaces Dreamcast's separate data/header outputs.
+VA(0x0055c130, 0x28F)  // dc GetSoundFile + caller/record layout, dc 0x1221fc
 bool ResourceManager::getSoundFile(const char* localName,
                                    std::auto_ptr<char>& data,
                                    int* size)
@@ -2264,34 +2328,17 @@ bool ResourceManager::getSoundFile(const char* localName,
     return false;
 }
 
-static __forceinline void reportMissingSample(const char* name)
-{
-#pragma inline_depth(0)
-    std::ostringstream message;
-#pragma inline_depth()
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << name
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-#pragma inline_depth(0)
-}
-#pragma inline_depth()
-
 namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
+// Historical wrapper-based result: exact across 25 blocks / 854 bytes.
+// Complete's PC loader first tries an
+// that closes an ordinary file on failure. Retail owns both error-stream
+// scopes at 0x55c501..0x55c5c4 and 0x55c5dd..0x55c69a, with destruction
+// before fallback lookup or return. The unsupported reportMissingSample
+// wrapper and its diagnostic inline-depth pins were removed; each error
+// scope remains in this canonical loader.
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -2321,11 +2368,45 @@ sample* ResourceManager::loadSample(const char* name)
     std::auto_ptr<char> data;
     int size;
     if (!getSoundFile(name, data, &size)) {
-        reportMissingSample(name);
+        {
+            std::ostringstream message;
+            message
+                << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                                "ResourceManager::")
+                << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
+                << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                                " could not find the \"")
+                << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
+                << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+                << name
+                << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+            MessageBoxA(
+                GetForegroundWindow(), message.str().c_str(),
+                DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                             "ResourceManager"),
+                0);
+        }
         const char* fallbackName = DATA_COMPGEN(
             0x006410dc, defaultSampleName, "default.wav");
         if (!getSoundFile(fallbackName, data, &size)) {
-            reportMissingSample(fallbackName);
+            {
+                std::ostringstream message;
+                message
+                    << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                                    "ResourceManager::")
+                    << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
+                    << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                                    " could not find the \"")
+                    << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
+                    << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+                    << fallbackName
+                    << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+                MessageBoxA(
+                    GetForegroundWindow(), message.str().c_str(),
+                    DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                                 "ResourceManager"),
+                    0);
+            }
             return 0;
         }
     }
@@ -2626,7 +2707,7 @@ int ResourceManager::getBitmapResourceSize(const char* name)
     return entry->m_size;
 }
 
-VA(0x0055d0d0, 0x11)  // hd-crossbuild + caller-family merge
+VA(0x0055d0d0, 0x11)  // caller-family merge + explicit LOD receiver/ret 4, dc 0x1224cc
 int ResourceManager::readFromBitmapResource(LODFile* resource, void* data,
                                              int numBytes)
 {
@@ -2649,6 +2730,13 @@ void resource::dispose()
     }
 }
 
+// CSprite's retail vtable fixes this Complete-only override as slot 1.
+// DC CSprite type 0x17d3 / fields 0x17d4 has no Dispose virtual; its
+// ResourceManager disposal functions supply the older frame-walk semantics.
+// Retail proves that GetNumSeqs consumes resType and
+// that every live frame is released before the base cache-removal path. The
+// complete 25-block / 280-byte body is exact, including the map/tree iterator
+// return boundary retained inside the inlined base disposal.
 VA(0x0055d1a0, 0x118)
 void CSprite::dispose()
 {
@@ -2674,15 +2762,6 @@ void CSprite::dispose()
 // Dreamcast resourcemanager.cpp:2377/2380/2382/2391: one map lookup,
 // end test, resource extraction and AddRef. Complete expands this ordinary
 // helper in the getters; the nested map/tree decisions are compiler-owned.
-resource* ResourceManager::getFromCache(const char* name)
-{
-    TCacheMap::iterator found = g_resourceCache.find(name);
-    if (found == g_resourceCache.end())
-        return 0;
-    resource* value = found->second;
-    value->addRef();
-    return value;
-}
 
 VA_COMPGEN(0x0055D2C0, 0xBE, CLASS_CTOR, map)
 

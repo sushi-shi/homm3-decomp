@@ -1,63 +1,164 @@
-// customcampaign.h - prototypes of customcampaign.cpp (compiland customcampaign.obj)
+// customcampaign.h - canonical campaign state and Complete campaign types.
+// CodeView places SCampaign's constructor and completion query in this header.
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
 #include <string>
 #include <vector>
-#include "window.h"
-#include "campaignbrief.h"
+#include <string.h>
+#include "hero.h"
 #include "campaignmusic.h"
 
-class slider;
-class textWidget;
-class type_text_scroller;
+class CMapHeaderData;
 
-// The Complete-only "Select a Campaign" list (constructor 0x4827b0,
-// "CamCust.pcx"). Every field is byte-proven by the constructor's stores
-// and the members' reads: the two eighteen-row textWidget arrays at
-// +0x50 / +0x98 (ids 100..117 name, 118..135 count - the deselect
-// override maps that range back to a row), the selected-name text at
-// +0xe0, the description scroller at +0xe4, the slider at +0xe8, the
-// scroll origin at +0xec, the selection at +0xf0, the double-click
-// timestamp at +0xf4 (GameTime::Get) and the header vector at +0xf8.
-// Names INVENTED (no Dreamcast twin).
-class TCustomCampaignWindow : public CHeroWindowEx {
+// The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
+// TCampaignWindow's constructor is the proof: `gpGame->campaign =
+// SCampaign()` is a compiler-generated memberwise assignment there, and it
+// calls a distinct out-of-line operator= for each slot (0x45f5e0, 0x45f810)
+// with the mirror destructors in the temporary's teardown (0x45f560,
+// 0x45f7b0). Both destructors walk an outer array of 0x10-byte vectors and
+// free each one, i.e. both members are std::vector<std::vector<T> >:
+// 0x45f560's leaves are destroyed one at a time with a 0x492 stride - the
+// byte-for-byte size of `hero`, which with the Dreamcast's
+// SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
+// +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
+// inner elements are trivially destroyed and its element type stays
+// unidentified. SCampaign carries both slots as those nested vectors (the
+// retail PC layout agrees with IDA's independently recovered type record).
+// The two four-dword opaque twins that once shadowed them for
+// campaignwindow.obj alone are RETIRED (2026-09-05).
+
+// Complete's per-scenario campaign progress record. The name and return type
+// survive in the independently located HD GetCurrentScenario signature;
+// retail fixes the 0x14 stride and the completed/days/score head. The two
+// four-byte tail fields complete the same cross-build record instead of
+// leaving source-visible state as anonymous padding.
+struct CampaignScenarioInfo {
+public:
+    bool m_completed;
+    int m_days;
+    int m_score;
+    int m_index;
+    int m_completeOrder;
+    CampaignScenarioInfo()
+        : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
+    {
+    }
+};
+SIZE(CampaignScenarioInfo, 0x14);
+
+class SCampaign {
 public:
     enum {
-        CAMPAIGN_LIST_ROWS = 18
+        PRE36_CAMPAIGN_REMAP_SOURCE = 13,
+        PRE36_CAMPAIGN_REMAP_TARGET = 20,
+        // The constructor's currentCampaign sentinel, one past the last
+        // built-in campaign ordinal.
+        CAMPAIGN_NONE = 21,
+        // ApplyBriefingChoice's two alignment-choice sites: the third map
+        // of campaigns 0 and 4 rewrites setup.alignment[2] (names
+        // provisional, from the retail compares).
+        ALIGNMENT_CHOICE_CAMPAIGN_A = 0,
+        ALIGNMENT_CHOICE_CAMPAIGN_B = 4,
+        ALIGNMENT_CHOICE_MAP = 2,
+        BRIEFING_CHOICE_FIRST = 0,
+        BRIEFING_CHOICE_SECOND = 1
     };
-
-    textWidget* m_nameWidgets[CAMPAIGN_LIST_ROWS];   // +0x50
-    textWidget* m_countWidgets[CAMPAIGN_LIST_ROWS];  // +0x98
-    textWidget* m_selectedName;         // +0xe0
-    type_text_scroller* m_description;  // +0xe4
-    slider* m_campaignSlider;           // +0xe8
-    int m_firstVisible;                 // +0xec
-    int m_selected;                     // +0xf0
-    unsigned long m_lastClickTime;      // +0xf4
-    // LoadCampaignList binds insert's const T& straight to its
-    // CampaignHeaderStruct* local (address-taken, memory-homed), which a
-    // void* element would have copied through a temporary first.
-    std::vector<TCampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;  // +0xf8
-
-    TCustomCampaignWindow();
-    virtual ~TCustomCampaignWindow();
-    virtual int onWidgetDeselect(int id, bool& exitFlag);
-    void loadCampaignList();
-    void updateList();
-    bool acceptSelection();
+    // Compatibility spelling for the already reconstructed vector helpers;
+    // as a typedef it still gives VC6 the authoritative global element type.
+    typedef CampaignScenarioInfo MapScore;
+    unsigned char m_isCheater;
+    unsigned char m_secretActive;
+    signed char m_currentMap;
+    // The alignment gaps after currentMap, crossoverArrayIndex and
+    // campaignCompleted are deliberately IMPLICIT. Retail's generated
+    // assignment does not copy them; naming them as char members created two
+    // extra byte-copy loops in TCampaignWindow's constructor.
+    int m_currentCampaign;
+    int m_numMapRegions;
+    signed char m_crossoverArrayIndex;
+    int m_briefingChoice;
+    // +0x14, and a std::string rather than the char[0x10] this was: the
+    // memberwise assignment in TCampaignWindow's constructor drives the
+    // slot through basic_string::assign(that, 0, npos) (0x404860, with the
+    // npos word at 0x63a60c) and the temporary's teardown ends on
+    // basic_string::_Tidy(true) against it. Same 0x10 width, so nothing
+    // after it moves.
+    std::string m_campaignFilename;
+    std::string getCampaignFileName() const;
+    unsigned char m_campaignCompleted[21];
+    // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
+    // (proved by the two out-of-line operator=/destructor pairs above).
+    std::vector<std::vector<hero> > m_carryOverHeroes;
+    std::vector<std::vector<type_artifact> > m_carryoverArtifact;
+    std::vector<MapScore> m_mapScores;
+    // +0x6c, the fourth assignable sub-object. Its operator= is the
+    // four-byte-element vector::operator= at 0x50ac00 and its teardown is
+    // INLINE in the same constructor - _Destroy over [_First, _Last),
+    // operator delete on _First, then all three words zeroed - so the slot
+    // is a std::vector over a 4-byte element whose identity is unproven.
+    std::vector<int> m_assignedCarryover;
+    // Restoring these canonical header bodies preserves all banked RVAs but
+    // changes their VC6 emission/expansion decisions. The constructor's
+    // standalone comparison is missing (0%, MAX 100); TCampaignWindow's ctor
+    // moves 97.27 -> 84.30, game's ctor 87.85 -> 77.16, SavedGameHeader's ctor
+    // 98.88 -> 66.98, and oldmain 78.94 -> 77.03. The changed include closure
+    // also removes kb's retained CSprite::Draw occurrence (MAX 100). No dummy
+    // emitter or private alternate body is introduced; all peaks remain banked.
+    // Original: SCampaign::SCampaign; CustomCampaign.h:199, dc 0xbcd90.
+    VA(0x00489500, 0x88)  // dc 0xbcd90
+    SCampaign()
+    {
+        m_isCheater = 0;
+        m_secretActive = 0;
+        m_currentMap = -1;
+        m_numMapRegions = -1;
+        m_briefingChoice = -1;
+        m_crossoverArrayIndex = -1;
+        m_currentCampaign = CAMPAIGN_NONE;
+        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+    }
+    void selectCampaign(int campaignIndex, const char* filename);
+    // nameable before the campaign-brief declarations; the receiver,
+    void playScenarioPrologue(void* campaignHeader);
+    // Retail 0x48a2a0, the prologue player's twin on the scenario's
+    // epilogue record; oldmain's end-of-campaign arm calls the two
+    // Complete-only members below on gpGame->campaign, 0x489820 before
+    // SaveGame(1) and this one after it. 0x489e20 is 0x489820's own tail
+    // call. Same opaque campaign-header parameter and the same reason,
+    // and all three names are role-based and provisional: the Dreamcast
+    // customcampaign.obj roster stops before them.
+    void completeCurrentMap(void* campaignHeader);
+    void pruneCrossoverHeroes(void* campaignHeader);
+    void playScenarioEpilogue(void* campaignHeader);
+    void applyBriefingChoice(int option);
+    void doPreLoadCustomization();
+    // Original: SCampaign::CampaignComplete; CustomCampaign.h:212, dc 0xe6ef8.
+    VA(0x004897d0, 0x43)  // dc 0xe6ef8
+    unsigned char campaignComplete()
+    {
+        for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+            if (!m_mapScores[i].m_completed)
+                return 0;
+        }
+        return 1;
+    }
+    int getScore() const;
+    int getTotalTime() const;
+    // Provisional name; PlaceCrossoverHeroes retains this lookup's nested
+    // vector::size calls while expanding the ordinary member itself.
+    hero* findCrossoverHero(int heroId);
+    void save(TAbstractFile* outfile);
+    // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
+    // stream and save version and the callee reads both.
+    void load(TAbstractFile* infile, int saveVersion);
+    VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
+    CampaignScenarioInfo* getCurrentScenario()
+    {
+        return &m_mapScores[m_currentMap];
+    }
 };
-SIZE(TCustomCampaignWindow, 0x108);
-
-// Complete's custom-campaign list orders its header pointers through this
-// predicate. The predicate body is a separate retail helper; this owner
-// header carries its one authoritative type shape for the retained STL sort
-// specialization in customcampaign.obj.
-class CampaignHeaderPointerLess {
-public:
-    bool operator()(TCampaignBrief::CampaignHeaderStruct* left,
-                    TCampaignBrief::CampaignHeaderStruct* right) const;
-};
+SIZE(SCampaign, 0x7c);
 
 // Retail's reference cell at 0x66c218 contains 0x66c090, the same
 // SCampaignMusicCue table populated by initializeCampaignMusicTable.
@@ -65,31 +166,6 @@ public:
 // integer: the loader at 0x45e250 stores pooled CmpMusic.txt strings there.
 // Keep the canonical record from campaignmusic.h for both readers/writer.
 extern const SCampaignMusicCue* g_campaignMusicTraits;
-
-// The ordering both of SCampaign::PruneCrossoverHeroes' std::sort calls
-// instantiate: strongest crossover hero first, by primary skills plus the 28
-// secondary mastery bytes, then by experience, then by hero id. Retail emits
-// the operator() (0x483f80) as a plain customcampaign.obj body immediately
-// behind the two TStreamBufFile virtuals, and `this` is dead in it - the
-// functor is empty. The class name is a ROLE invention; no Dreamcast row
-// survives for it.
-class hero;
-struct CrossoverHeroStronger {
-    bool operator()(hero& lhs, hero& rhs) const;
-};
-
-// The map's own hero placeholders are sorted by their power rating before
-// the campaign hands out its carried heroes: the strongest placeholder gets
-// the first carried hero. Retail instantiates std::sort over it in
-// customcampaign.obj (0x48eec0 and its helpers). The rating is compared
-// SIGNED. Role name; no Dreamcast row covers it.
-struct HeroPlaceholderData;
-struct HeroPlaceholderStronger {
-    bool operator()(const HeroPlaceholderData& left,
-                    const HeroPlaceholderData& right) const;
-};
-
-int getCrossoverHeroValue(hero* candidate);
 
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
 // bonus-list reader at 0x485190, which switches a type byte 0..7 and
@@ -254,6 +330,40 @@ enum ECampaignBonusType {
     CAMPAIGN_BONUS_RESOURCE = 7
 };
 
+class TCampaignStartOption {
+public:
+    // UpdateBonusIcons centres the frames when there are two choices.
+    enum EChoiceCount {
+        CHOICE_COUNT_PAIR = 2
+    };
+    // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
+    // one vptr store with no `mov eax,ecx`, which no VC6 constructor emits.
+    // Defined out of line in the .cpp so the plain body is emitted at all;
+    // 0x484f50, the root's `??_G`, then inlines it, as does every derived
+    // destructor.
+    virtual ~TCampaignStartOption();
+    virtual bool isBuildingBonus(int which) const = 0;
+    virtual int getCount() const = 0;
+    virtual const char* getIconDefName(void* scenario, int which) const = 0;
+    virtual int getIconIndex(int which) const = 0;
+    // 0x484f80, inherited by the bonus and the third option: sums the
+    // 5-dword bit block through the nibble table at 0x67729c and answers
+    // the campaign's crossover index.
+    virtual int slot5(void* scenario, int which) const;
+    virtual std::string getText(void* scenario, int which) const = 0;
+    virtual int slot7(int which) const;
+    virtual int getPlayer(int which) const = 0;
+    virtual void read(TAbstractFile* file) = 0;
+    // `ret 4`: the slot takes one argument this option never reads, and
+    // both sibling options answer it with the shared do-nothing at
+    // 0x485d80.
+    virtual void apply(void* scenario) = 0;
+    virtual void setTown(CMapHeaderData* header) = 0;
+    // 0x485000: every prerequisite scenario the record marks must already
+    // be completed in gpGame->campaign.mapScores.
+    virtual bool slot12(void* scenario, int value) const;
+};
+
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 class TCampaignStartBonusOption : public TCampaignStartOption {
 public:
@@ -277,8 +387,8 @@ SIZE(TCampaignStartBonusOption, 0x18);
 // both one std::vector at +4 behind the shared 13-slot base. The type byte
 // ScenarioStruct::Read switches on picks between the three: 1 is the bonus
 // list above, 2 the crossover-hero choices and 3 the starting-hero choices.
-// NAMES ARE ROLE INVENTIONS - customcampaign.obj has no Dreamcast twin and
-// no RTTI descriptor names either class - but the ROLES are byte-proven off
+// Names are role inventions. Dreamcast's older customcampaign.obj has no
+// counterpart of either starting-option class; their roles are proven by
 // the icon getters: the crossover option's icon is the large portrait of
 // the first hero in gpGame->campaign.carryOverHeroes[mapScores[s].index]
 // (0x4854c0) and the starting-hero option's is akHeroTraits[hero]'s own
@@ -323,11 +433,11 @@ struct TCampaignHeroChoice {
     int m_hero;
 };
 
-// Vftable 0x63db0c. This one DOES have a user-declared constructor: retail
-// emits it out of line at 0x4883d0 and calls it from ScenarioStruct::Read,
-// where the two sibling options inline their implicit ones. It is the only
-// option that overrides slot 7 (0x485d60), and it inherits the base's slot
-// 5 and slot 12 unchanged.
+// Vftable 0x63db0c. ScenarioStruct::Read calls the retained default
+// constructor at 0x4883d0. This Complete-only class has no CodeView source
+// counterpart; the written constructor below preserves that call boundary.
+// The implicit-form probe in customcampaign.cpp explains its current spelling.
+// This class overrides slot 7 and inherits slots 5 and 12 unchanged.
 class TCampaignStartHeroOption : public TCampaignStartOption {
 public:
     TCampaignStartHeroOption();
@@ -375,7 +485,7 @@ enum ECampaignBonusResource {
 };
 
 // The seven localized resource names, as advmgr.h / ai_player.h /
-// newgame.h / tradpost_widgets.h already declare them; the resource
+// newgame.h / tradpost.cpp already declare them; the resource
 // bonus's description indexes the same table and this is the cheaper
 // include-set edge.
 extern const char* g_resourceNames[7];

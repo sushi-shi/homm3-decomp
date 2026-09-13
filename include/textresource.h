@@ -296,6 +296,31 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5 = 763
 };
 
+// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
+// the text pointer vector begins at +0x1c and its Dinkumware _First
+// member is loaded from +0x20. This is the same retail vector layout as
+// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
+// +0x2c position follows the adjacent vector/data members used by both
+// text-resource variants.
+class TTextResource : public resource {
+public:
+    typedef std::vector<char*> TTextArray;
+    TTextResource();
+    TTextResource(const char* name, int size, const char* data);
+    virtual ~TTextResource();
+    virtual unsigned int getSize() const;
+    // E:\gamedcs\TextResource.h:66
+    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
+    const char* getText(int r) const { return m_text[r]; }
+    // E:\gamedcs\TextResource.h:73
+    const char* operator[](int i) const { return getText(i); }
+
+private:
+    TTextArray m_text;  // +0x1c (_First +0x20)
+    char* m_data;  // +0x2c
+};
+SIZE(TTextResource, 48);
+
 // PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
 // Spreadsheet row vector sits at +0x1c on the resource base - VC6
 // Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
@@ -310,11 +335,9 @@ class TSpreadsheetResource : public resource {
 public:
     typedef std::vector<char*> TStringVector;
     typedef std::vector<TStringVector*> TArray;
-
     TSpreadsheetResource();
     TSpreadsheetResource(const char* name, int size, const char* data);
     virtual ~TSpreadsheetResource();
-
     virtual unsigned int getSize() const;
     int getNumberOfRows() const { return m_spreadsheet.size(); }
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
@@ -327,38 +350,10 @@ public:
 
 private:
     TArray m_spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
-    char* m_data;          // +0x2c
-    int m_dataSize;        // +0x30, retail constructor stores size here
+    char* m_data;  // +0x2c
+    int m_dataSize;  // +0x30, retail constructor stores size here
 };
 SIZE(TSpreadsheetResource, 52);
-
-// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
-// the text pointer vector begins at +0x1c and its Dinkumware _First
-// member is loaded from +0x20. This is the same retail vector layout as
-// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
-// +0x2c position follows the adjacent vector/data members used by both
-// text-resource variants.
-class TTextResource : public resource {
-public:
-    typedef std::vector<char*> TTextArray;
-
-    TTextResource();
-    TTextResource(const char* name, int size, const char* data);
-    virtual ~TTextResource();
-
-    virtual unsigned int getSize() const;
-    const char* getText(int r) const { return m_text[r]; }
-    // E:\gamedcs\TextResource.h:73
-    const char* operator[](int i) const { return getText(i); }
-
-    // DC-private backing vector. Callers use GetText or operator[];
-    // retail expands the indexing at the same +0x20 vector pointer.
-
-private:
-    TTextArray m_text;  // +0x1c (_First +0x20)
-    char* m_data;       // +0x2c
-};
-SIZE(TTextResource, 48);
 
 extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
 

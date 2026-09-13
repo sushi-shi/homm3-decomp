@@ -730,8 +730,8 @@ unit = "spelldefs"
 source = "src/spelldefs.cpp"
 flags = "game_o2_ml_gr_windows"
 
-# Complete-only compiland between search.obj and seerhut.obj; no Dreamcast
-# roster names it, so the unit name is provisional.
+# Provisional source owner for Complete text-table helpers whose original
+# filename is unresolved. Nearby RVAs alone do not prove a compiland boundary.
 [[unit]]
 unit = "seerhuttext"
 source = "src/seerhuttext.cpp"

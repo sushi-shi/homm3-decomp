@@ -18,7 +18,7 @@
 // closing it. Those are the excluded initializer class and are not claimed.
 #include <va.h>
 
-#include "campaignwindow.h"
+#include "campaign.h"
 
 #include "button.h"
 #include "kb.h"

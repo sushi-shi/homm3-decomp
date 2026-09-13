@@ -47,6 +47,7 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 // teardown, so retail uses VC6's own STL, not DC's STLport). Total 104.
 // No SIZE assert: the clang arm's host STL sizes differ.
 class button : public widget {
+public:
     // DC textButton::Draw (0x57b98, button.cpp:538) directly passes
     // button::Text at +84 to string::c_str; its field record is private.
     // Retail 0x456ca0 does the same at +0x58: this specific derived class
@@ -73,58 +74,46 @@ public:
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
     button();
-
     void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     static sample* s_clickSample;
     void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     int select(message& msg);
+    // Original: button::Deselect; button.cpp:401, dc 0x57854.
     int deselect(message& msg);
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
-    // /Ob2 candidate site wherever a caller uses it - see
-    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
-    // sequence is reproduced only with this setter in its six loops.
-    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
-    void setHotkey(int code)
-    {
-        m_hotKeyCodes.push_back(code);
-    }
-    // Dreamcast button.h:120-122 proves this separate wrapper and its single
-    // vector<int>::clear call.  Its call from TAdvMenu::SetSleepImage is also
-    // explicit in the Dreamcast line table; preserve the helper boundary so
-    // VC6 sees the same inlining candidate before setHotkey.
-    void clearHotkeys() { m_hotKeyCodes.clear(); }
-
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
     void setText(const char* newText) { m_text = newText; }
-    // Complete-only, like field_40 itself (the hover/highlight frame,
-    // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
-    // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
-    // vector<widget*>::insert sequence needs exactly two free candidate
-    // sites per loop iteration, and the loop body has exactly two stores.
-    void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
-
+    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+    // /Ob2 candidate site wherever a caller uses it - see
+    // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
+    // sequence is reproduced only with this setter in its six loops.
+    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
+    VA(0x004e1370, 0x1AF)
+    void setHotkey(int code)
+    {
+        m_hotKeyCodes.push_back(code);
+    }
+    // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
+    // TAdvMenu::SetSleepImage retains this call in its source line table.
+    void clearHotkeys() { m_hotKeyCodes.clear(); }
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
     virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
     // Before normalization (function): button::GetRealHeight.
     virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw();  // slot 4, retail 0x456940
+    virtual void draw() const;  // slot 4, retail 0x456940
     virtual void dim() const;
 
     virtual ~button();
-
     // widget slot 12, overridden at 0x456a10 - the only override of it
     // in the image. Placeholder name inherited from widget.h.
     virtual void vslot12(int on);
-
     void setPlayerPaletteColors(int whichPlayer);
 };
 
@@ -135,7 +124,7 @@ class textButton : public button {
 public:
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
 
-    virtual void draw();    // slot 4, retail 0x456ca0
+    virtual void draw() const;    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 
@@ -151,7 +140,6 @@ class type_func_button : public button {
 public:
     typedef int (*handler_type)(message& msg);
     handler_type m_handler;
-
     type_func_button(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);

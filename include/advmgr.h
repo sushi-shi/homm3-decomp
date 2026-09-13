@@ -8,11 +8,13 @@
 #include "secondaryskill.h"
 #include "herospec.h"
 #include "struct.h"
+#include "mapcell.h"
 // EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
 // `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
 // must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
+#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
 
 class BlackBoxData;
 class CNetMsgHandler;
@@ -20,7 +22,7 @@ class resource;
 class sample;
 class ds_memsample;
 class TreasureData;
-union ExtraInfoUnion;
+struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
 class armyGroup;
@@ -29,430 +31,6 @@ class armyGroup;
 // supplies the name and THelpText row type; Complete fixes its 0x6a56e0 base
 // through overview and town-screen readers of both columns.
 extern THelpText g_adventureWindowHelp[];
-
-// MapCell.h's artifact-price domain, published in full by Dreamcast.  It
-// lives beside MapArtifactInfo rather than in events.h: the enum is part of
-// the packed map-cell representation and is also the return type of
-// ExtraInfoUnion::GetArtifactPrice.
-enum ArtifactPrices {
-    const_free_artifact = 0,
-    const_artifact_costs_2000 = 1,
-    const_artifact_requires_wisdom = 2,
-    const_artifact_requires_leadership = 3,
-    const_artifact_costs_2500 = 4,
-    const_artifact_costs_3000 = 5,
-    const_artifact_defended = 6
-};
-
-// events.obj needs the plain packed dword arm plus the object views its
-// reconstructed handlers actually read. Keeping this narrow avoids
-// importing the remaining eighteen bitfield views into its TU.
-
-// do_event_water_wheel (0x4a7de0) loads bits 0..4 with `mov al,[cell] /
-// and eax,0x1f`, multiplies the result by 500 and clears the same bits
-// again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
-// 500-gold units.
-struct type_water_wheel_info {
-    unsigned long m_gold : 5;
-    unsigned long m_tail : 27;
-};
-SIZE(type_water_wheel_info, 4);
-
-// do_event_windmill (0x4a7fc0) reads a SIGNED four-bit resource id at
-// bits 0..3 (`shl eax,0x1c / sar eax,0x1c`) and an UNSIGNED four-bit
-// amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
-// clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
-struct type_windmill_info {
-    EGameResource m_resource : 4;
-    unsigned long m_unused : 9;
-    unsigned long m_amount : 4;
-    unsigned long m_tail : 15;
-};
-SIZE(type_windmill_info, 4);
-
-// DoEventLeanTo (0x4a31a0) reads a five-bit id at bits 0..4 (`mov al,
-// [cell] / and eax,0x1f`), an UNSIGNED four-bit amount at bits 6..9 and
-// an UNSIGNED four-bit resource id at bits 10..13 (`shr eax,N / and
-// eax,0xf` both times). Emptying the lean-to rewrites all three fields at
-// once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
-// nobody's and puts the tail at 14.
-struct type_lean_to_info {
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    unsigned long m_amount : 4;
-    unsigned long m_resource : 4;
-    unsigned long m_tail : 18;
-};
-SIZE(type_lean_to_info, 4);
-
-// DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
-// "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
-// alone (`and dword ptr [cell], 0xffffffbf`).
-struct type_magic_spring_info {
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    unsigned long m_full : 1;
-    unsigned long m_tail : 25;
-};
-SIZE(type_magic_spring_info, 4);
-
-// DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
-// four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
-// one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
-// emptying it clears that bit alone (`and ah,0xfb`).
-struct type_garden_info {
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    EGameResource m_resource : 4;
-    unsigned long m_full : 1;
-    unsigned long m_tail : 21;
-};
-SIZE(type_garden_info, 4);
-
-// do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
-// (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
-// 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
-// alone (`and al,0xfe` over the whole dword), so the two lanes are
-// separate fields rather than one packed value.
-struct type_tomb_info {
-    unsigned long m_hasArtifact : 1;
-    unsigned long m_unused : 12;
-    signed long m_artifact : 10;
-    unsigned long m_tail : 9;
-};
-SIZE(type_tomb_info, 4);
-
-// do_event_witch_hut (0x4a8080) reads a SIGNED seven-bit secondary-skill
-// id at bits 13..19 (`shl esi,0xc / sar esi,0x19`) and compares it with
-// -1 - the all-ones encoding this header already names
-// WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
-struct type_witch_hut_info {
-    unsigned long m_unused : 13;
-    signed long m_skill : 7;
-    unsigned long m_tail : 12;
-};
-SIZE(type_witch_hut_info, 4);
-
-// The Fountain of Fortune's luck tier, a SIGNED four-bit field at bits
-// 13..16. DoEventFountain (0x4a2480) proves both ends of it: the value
-// reads are `shl eax,0xf / sar eax,0x1c`, the signature of a signed
-// bitfield at bit 13, and the range check that guards the jump table is
-// `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
-struct type_fountain_info {
-    unsigned long m_unused : 13;
-    signed long m_luck : 4;
-    unsigned long m_tail : 15;
-};
-SIZE(type_fountain_info, 4);
-
-// The eight-bit team-visibility lane SetCellVisited writes. Proven from
-// the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
-// narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
-// which is only legal because the field is exactly eight bits wide.
-struct type_cell_visited_info {
-    unsigned long m_unused : 5;
-    unsigned long m_visited : 8;
-    unsigned long m_tail : 19;
-};
-SIZE(type_cell_visited_info, 4);
-
-// The Pyramid's guarded flag at bit 0 and signed eight-bit spell lane at
-// bits 13..20. Retail's out-of-line set_pyramid merges the two bitfield
-// assignments into one dword read-modify-write.
-struct type_pyramid_info {
-    unsigned long m_guarded : 1;
-    unsigned long m_unused : 12;
-    signed long m_spell : 8;
-    unsigned long m_tail : 11;
-};
-SIZE(type_pyramid_info, 4);
-
-// DoEventWagon (0x4a69b0) packs five lanes into the one dword and the
-// arm proves every width: an UNSIGNED five-bit resource amount at bits
-// 0..4, read with a BYTE load because the field ends inside the first
-// byte (`mov al,[cell] / and eax,0x1f`); a "still loaded" flag at bit 13
-// and a "carries an artifact" flag at bit 14, both `shr / test cl,1`
-// against the SAME cached dword; a SIGNED ten-bit artifact id at bits
-// 15..24 (`shl eax,7 / sar eax,0x16`); and a SIGNED four-bit resource id
-// at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
-// bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
-// read-modify-write SetGardenEmpty produces at bit 10.
-struct type_wagon_info {
-    unsigned long m_amount : 5;
-    unsigned long m_unused : 8;
-    unsigned long m_full : 1;
-    unsigned long m_hasArtifact : 1;
-    signed long m_artifact : 10;
-    EGameResource m_resource : 4;
-    unsigned long m_tail : 3;
-};
-SIZE(type_wagon_info, 4);
-
-// DoEventSkeleton (0x4a5480) - the Corpse, adventure object 22, whose
-// per-player flag game.h already names DeadGuyFlags. Three lanes: a
-// five-bit UNSIGNED item id at bits 0..4, read with a BYTE load
-// (`mov cl,[cell] / and ecx,0x1f`); a SIGNED ten-bit artifact at bits
-// 6..15 (`shl eax,0x10 / sar eax,0x16`); and the "still holds something"
-// flag at bit 16 (`shr eax,0x10 / test al,1`). Bit 5 belongs to nobody,
-// and the emptying write is what proves it: SetSkeleton folds its three
-// stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
-// that spares bit 5 while clearing the id lane and bit 16, and an OR
-// rather than a masked insert because the artifact is set to -1.
-struct type_skeleton_info {
-    unsigned long m_id : 5;
-    unsigned long m_unused : 1;
-    signed long m_artifact : 10;
-    unsigned long m_hasTreasure : 1;
-    unsigned long m_tail : 15;
-};
-SIZE(type_skeleton_info, 4);
-
-// Dreamcast CodeView publishes all five MapArtifactInfo fields and their
-// order. Complete retains that record but expands the guard lane from eight
-// to nine bits for its larger creature domain; AI_value_of_event proves the
-// resulting retail positions directly: signed price 0..3, signed guard
-// 4..12, signed resource 13..16, a 14-bit guard count, and custom at bit 31.
-struct MapArtifactInfo {
-    ArtifactPrices m_price : 4;
-    TCreatureType m_guard : 9;
-    EGameResource m_resourcePrice : 4;
-    unsigned long m_guardQty : 14;
-    unsigned long m_custom : 1;
-};
-SIZE(MapArtifactInfo, 4);
-
-// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
-// it reads it through the same GetItemId, as the Dreamcast line table
-// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
-// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
-struct type_tree_info {
-    unsigned long m_unused : 13;
-    signed long m_price : 3;
-    unsigned long m_tail : 16;
-};
-SIZE(type_tree_info, 4);
-
-// Two more retail-used arms of the four-byte union. Both getters extract
-// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
-// The other DC arms remain unmodelled until a retail consumer needs them.
-struct type_creature_bank_info {
-    unsigned long m_unused : 13;
-    unsigned long m_index : 12;
-    unsigned long m_tail : 7;
-};
-SIZE(type_creature_bank_info, 4);
-
-struct type_university_info {
-    unsigned long m_unused : 13;
-    unsigned long m_index : 12;
-    unsigned long m_tail : 7;
-};
-SIZE(type_university_info, 4);
-
-union ExtraInfoUnion {
-    unsigned long m_value;
-    MapArtifactInfo m_artifactInfo;
-    type_water_wheel_info m_waterWheelInfo;
-    type_windmill_info m_windmillInfo;
-    type_lean_to_info m_leanToInfo;
-    type_magic_spring_info m_magicSpringInfo;
-    type_garden_info m_gardenInfo;
-    type_tomb_info m_tombInfo;
-    type_witch_hut_info m_witchHutInfo;
-    type_fountain_info m_fountainInfo;
-    type_cell_visited_info m_cellVisitedInfo;
-
-public:
-    type_pyramid_info m_pyramidInfo;
-    type_wagon_info m_wagonInfo;
-    type_skeleton_info m_skeletonInfo;
-    type_tree_info m_treeInfo;
-    ShrineInfo m_shrineInfo;
-    type_creature_bank_info m_creatureBankInfo;
-    type_university_info m_universityInfo;
-    ScholarInfo m_scholarInfo;
-    // MapCell.h:923-945. These are source-real accessors, not convenience
-    // wrappers: Dreamcast publishes their decorated signatures and bodies,
-    // while Complete inlines them into the artifact event/appraisal paths.
-    bool isCustomized() const { return m_artifactInfo.m_custom != 0; }
-    TCreatureType getArtifactDefender() const { return m_artifactInfo.m_guard; }
-    ArtifactPrices getArtifactPrice() const { return m_artifactInfo.m_price; }
-    bool isDefendedArtifact() const
-    {
-        return m_artifactInfo.m_price == const_artifact_defended;
-    }
-    enum EGameResource getArtifactResourceCost() const
-    {
-        return m_artifactInfo.m_resourcePrice;
-    }
-
-    BlackBoxData* getBlackBox() const;
-    type_creature_bank& getCreatureBank() const;
-    void clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
-    short getItemId() const { return m_skeletonInfo.m_id; }
-
-    bool playerKnowsCell(short player) const
-    {
-        if (player < 0 || player >= 8)
-            return 0;
-        return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
-    }
-
-    void setCellVisited(short player);
-
-    // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
-    // is `unsigned char () const` and its `(value >> 10) & 1` shape is
-    // what retail inlines; a direct bitfield test would fold to a byte
-    // `test` on cell+1 instead.
-    unsigned char gardenIsFull() const { return m_gardenInfo.m_full; }
-    enum EGameResource getGardenResource() const { return m_gardenInfo.m_resource; }
-    void setGardenEmpty() { m_gardenInfo.m_full = 0; }
-
-    // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
-    // GetLeanToAmount is decorated `short` and that WIDTH is what makes
-    // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
-    // dialog argument a `movsx`. GetLeanToResource is decorated
-    // EGameResource; it is spelled `int` here because the field is read
-    // UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
-    // what the bytes constrain and an enum return is int-wide anyway, so
-    // no truncation barrier is lost. The id has no DC accessor and is
-    // read off the arm directly.
-    short getLeanToAmount() const { return m_leanToInfo.m_amount; }
-    int getLeanToResource() const { return m_leanToInfo.m_resource; }
-    void setLeanTo(short id, short amount, int resource)
-    {
-        m_leanToInfo.m_id = id;
-        m_leanToInfo.m_amount = amount;
-        m_leanToInfo.m_resource = resource;
-    }
-
-    // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
-    // new state rather than clearing unconditionally, which is what the
-    // DC decoration `void (unsigned char)` says and what makes the
-    // drink-it write a plain bit clear at the one site that passes 0.
-    unsigned char magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
-    void fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
-    void setPyramid(bool guards, int newSpell);
-
-    // MapCell.h:1063..1089, dc 0x9c898..0x9c8bc and 0xbca4c.
-    // These accessors belong to ExtraInfoUnion. Retail DoEventScholar
-    // sign-extends the same 3/3/7/10-bit lanes; scalar bridges preserve
-    // the recovered enum return types over their packed representation.
-    ScholarAwards getScholarAward() const
-    {
-        union {
-            int m_integer;
-            ScholarAwards m_award;
-        } converted;
-        converted.m_integer = m_scholarInfo.m_award;
-        return converted.m_award;
-    }
-    TPrimarySkill getScholarPrimarySkill() const
-    {
-        return primarySkillFromInt(m_scholarInfo.m_primary);
-    }
-    TSecondarySkill getScholarSecondarySkill() const
-    {
-        union {
-            int m_integer;
-            TSecondarySkill m_skill;
-        } converted;
-        converted.m_integer = m_scholarInfo.m_secondary;
-        return converted.m_skill;
-    }
-    SpellID getScholarSpell() const { return m_scholarInfo.m_spell; }
-    void setScholar(ScholarAwards award, TPrimarySkill primary,
-                    TSecondarySkill secondary, SpellID spell)
-    {
-        m_scholarInfo.m_award = award;
-        m_scholarInfo.m_primary = primary;
-        m_scholarInfo.m_secondary = secondary;
-        m_scholarInfo.m_spell = spell;
-    }
-    SpellID getShrineSpell() const
-    {
-        return m_shrineInfo.m_spell;
-    }
-
-    // The corpse's four MapCell.h accessors, named and decorated by the
-    // Dreamcast line table over DoEventSkeleton (dc 0x95650):
-    // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
-    // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
-    // MapCell.h:1104, which this file's carcass already carried.
-    // GetSkeletonArtifact is spelled `int` for the reason get_tomb_artifact
-    // is: retail stores the sign-extended ten-bit field straight into the
-    // artifact record with NO `movsx`, which a short return would have
-    // forced.
-
-    // SetSkeleton's ID PARAMETER IS INT-WIDE and the Dreamcast's `F` is
-    // not: the three folded stores end in `and eax,0xfffeffe0 / xor edx,eax
-    // / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
-    // and the artifact constant last. A `short` parameter makes VC6
-    // reassociate the same value as `(id | 0xffc0) | masked` and emit the
-    // two ops the other way round. All four width combinations were
-    // measured against the retail bytes and exactly one is exact - short
-    // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
-    // so the width is byte-determined, not a guess.
-    bool skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
-    int getSkeletonArtifact() const { return m_skeletonInfo.m_artifact; }
-    void setSkeleton(int id, bool hasTreasure, short artifact)
-    {
-        m_skeletonInfo.m_id = id;
-        m_skeletonInfo.m_artifact = artifact;
-        m_skeletonInfo.m_hasTreasure = hasTreasure;
-    }
-
-    // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
-    // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-    // and spelled `int` for get_tomb_artifact's reason.
-    int getTreePrice() const { return m_treeInfo.m_price; }
-    type_university* getUniversity() const;
-    void emptyWagon() { m_wagonInfo.m_full = 0; }
-    short getWagonAmount() const { return m_wagonInfo.m_amount; }
-    int getWagonArtifact() const { return m_wagonInfo.m_artifact; }
-    enum EGameResource getWagonResource() const { return m_wagonInfo.m_resource; }
-    bool wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
-
-    // The wagon's six MapCell.h accessors, all six named and decorated by
-    // the Dreamcast line table over DoEventWagon (dc 0x96784):
-    // WagonIsFull and WagonHasArtifact are `_N` - bool, not the unsigned
-    // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
-    // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
-    // which is what makes the payout argument a `movsx ecx,di`) and
-    // EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
-    // same reason get_tomb_artifact is: TArtifact has no modelled
-    // definition here and an enum return is int-wide under VC6 anyway.
-    bool wagonIsFull() const { return m_wagonInfo.m_full; }
-    void setWagon(enum EGameResource resource, short amount);
-    void setWagon(int artifact);
-    void emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
-    int getTombArtifact() const { return m_tombInfo.m_artifact; }
-    unsigned char tombIsFull() const { return m_tombInfo.m_hasArtifact; }
-
-    // The five MapCell.h accessors the two mill handlers inline. The
-    // Dreamcast publishes all five with their signatures - get_wheel_gold
-    // and get_windmill_amount return `short` (?...@@QBAFXZ),
-    // get_windmill_resource returns EGameResource, and both setters take
-    // the same pair - and the retail bytes fix the bodies:
-    //   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
-    //     do_event_water_wheel truncates the product with `movsx esi,ax`
-    //     even though 31*500 provably fits in a short;
-    //   * set_windmill writes BOTH fields, which is why the payout tail
-    //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
-    //     instead of two read-modify-writes.
-    short getWheelGold() const { return m_waterWheelInfo.m_gold * 500; }
-    void setWheelGold(short amount) { m_waterWheelInfo.m_gold = amount / 500; }
-    short getWindmillAmount() const { return m_windmillInfo.m_amount; }
-    enum EGameResource getWindmillResource() const { return m_windmillInfo.m_resource; }
-    void setWindmill(enum EGameResource resource, short amount)
-    {
-        m_windmillInfo.m_resource = resource;
-        m_windmillInfo.m_amount = amount;
-    }
-    int getWitchSkill() const { return m_witchHutInfo.m_skill; }
-    void setWitchSkill(int skill);
-};
-SIZE(ExtraInfoUnion, 4);
 
 struct type_creature_bank;
 struct type_university;
@@ -886,6 +464,7 @@ enum e_looping_sound_id {
 // member names. Retail TrimLoopingSounds independently proves the four-entry
 // array, stride, and soundId field.
 struct soundNode {
+public:
     e_looping_sound_id m_soundId;
     int m_priority;
 };
@@ -989,11 +568,11 @@ DATA(0x00696a04) extern unsigned char g_completeDrawMessageBypass;
 // fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
 // surviving CodeView signature/layout evidence.
 struct TDrawParts {
+public:
     bool m_isValid;
     int m_x;
     int m_y;
     int m_id;
-
     TDrawParts() : m_isValid(false) {}
 };
 SIZE(TDrawParts, 0x10);
@@ -1087,7 +666,6 @@ public:
         NUM_HERO_BUTTONS = 5,
         NUM_TOWN_BUTTONS = 5
     };
-
     // Retail-only ids accepted by convertID2HelpID. Their numeric identity
     // and help-row mapping are byte-proven; no surviving symbol source gives
     // the widget roles, so keep the spellings explicitly provisional.
@@ -1109,7 +687,6 @@ public:
         HELP_WIDGET_1014_ID,
         HELP_WIDGET_1015_ID
     };
-
     // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
@@ -1136,10 +713,10 @@ public:
     // at +0x6c below is unmoved, so the pair exactly fills the old pad.
     int m_topHero;
     int m_topTown;
-    // DC member name at +0x64; retail's independently proven 8-byte base
-    // shift places it at +0x6c, exactly where animate_bottom_view reads it.
 
 private:
+    // DC member name at +0x64; retail's independently proven 8-byte base
+    // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     unsigned char m_animateInBackground;
 
 public:
@@ -1155,9 +732,9 @@ public:
     // the loops bound on 5 and 0x70 + 2*5*4 lands exactly on bottomView.
     class bitmapBorder* m_heroPortraits[5];
     class bitmapBorder* m_heroLocators[5];
-    // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
 
 private:
+    // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
     class type_bottom_view_window* m_bottomView;
 
 public:
@@ -1165,7 +742,6 @@ public:
     // it; the ctor initializes the pointer before installing this vtable.
     // The public name is not attested, so retain the cross-build role name.
     void* m_immersion;
-
     TAdventureMapWindow();
     ~TAdventureMapWindow();
     virtual int open(int zOrder, unsigned char update);
@@ -1198,14 +774,10 @@ public:
     void animateBottomView(unsigned char inBackground);
     void clearBottomView();
     void drawBottomView(unsigned char update);
-    // DC AdventureMapWindow.h:238-240, dc 0xbd0a0, is a single flag
-    // store. Retail doNewTurn expands it around the calendar dialog.
-    void setBackgroundAnimation(unsigned char enable)
-    {
-        m_animateInBackground = enable;
-    }
+    inline void setBackgroundAnimation(unsigned char enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
+    void setAdvWinButtonPalette(int id, int player);
     void drawChatText(unsigned char update);
     void updateButtons(unsigned char draw, unsigned char update);
 
@@ -1233,7 +805,6 @@ public:
         BOTTOM_VIEW_7,
         BOTTOM_VIEW_8
     };
-
     enum ECursorDrawCell {
         CURSOR_DEST_Y0 = 7,
         CURSOR_DEST_Y1 = 8,
@@ -1241,7 +812,6 @@ public:
         CURSOR_DEST_X1 = 9,
         CURSOR_DEST_X2 = 10
     };
-
     // cursorType is DC-attested as a plain int. Retail ProcessHover proves
     // only this distinguished state, so retain an ordinal spelling rather
     // than inventing a semantic domain name.
@@ -1252,18 +822,15 @@ public:
         // Ordinal for the reason 8 is: no surviving name covers the domain.
         CURSOR_TYPE_34 = 0x22
     };
-
     enum EObjectDrawLayer {
         OBJECT_DRAW_LAYER_HERO_FRONT = 1,
         OBJECT_DRAW_LAYER_HERO_BACK = 2,
         OBJECT_DRAW_LAYER_LAST = 6
     };
-
     enum ECompleteDrawExtent {
         COMPLETE_DRAW_LAST_X = 19,
         COMPLETE_DRAW_LAST_Y = 17
     };
-
     // The view-relative tile the acting hero is always parked on. The
     // adventure view is COMPLETE_DRAW_LAST_X+1 by COMPLETE_DRAW_LAST_Y+1
     // tiles and every recentring path derives radarOrigin as
@@ -1280,7 +847,6 @@ public:
         HERO_VIEW_TILE_X = 9,
         HERO_VIEW_TILE_Y = 8
     };
-
     enum EHoverBounds {
         HOVER_SCREEN_WIDTH = 800,
         HOVER_SCREEN_HEIGHT = 600,
@@ -1290,7 +856,6 @@ public:
         HOVER_SCROLL_POINTER_FIRST = 32,
         HOVER_SCROLL_POINTER_LAST = 39
     };
-
     enum ECloudDrawFrame {
         CLOUD_DRAW_FRAME_1 = 1,
         CLOUD_DRAW_FRAME_3 = 3,
@@ -1298,7 +863,6 @@ public:
         CLOUD_DRAW_FRAME_5 = 5,
         CLOUD_DRAW_FLIPPED_OFFSET = 100
     };
-
     enum EAdventureScreenUpdate {
         ADVENTURE_SCREEN_X = 0,
         ADVENTURE_SCREEN_Y = 8,
@@ -1306,7 +870,6 @@ public:
         ADVENTURE_SCREEN_HEIGHT = 544,
         ADVENTURE_ANIMATION_MAX_ELAPSED = 180
     };
-
     // The adventure screen's help-id band, proven by ProcessSelect's
     // shared tail: after the widget switch it answers a right-click
     // (MESSAGE_MODIFIER_RIGHT) on any id in this inclusive range with one
@@ -1317,19 +880,16 @@ public:
         ADV_HELP_ID_FIRST = 2000,
         ADV_HELP_ID_LAST = 2200
     };
-
     enum EAdventureSoundExtent {
         ADVENTURE_ACTIVE_SOUND_COUNT = 4,
         ADVENTURE_XLARGE_MAP_WIDTH = 144
     };
-
     // Open's load-bar pacing: the two mid-batch IncProgressBar ticks fire
     // at the halfway index of the cached-graphics and cursor-icon loops.
     enum EAdventureOpenProgress {
         CACHED_GRAPHIC_TICK = 19,
         CURSOR_ICON_TICK = 9
     };
-
     // +0x38, the townManager::netMsgHandler counterpart. Retail proves the
     // identity across three bodies: the constructor nulls the slot, Open
     // allocates the handler (its inlined ctor calls ??0CNetMsgHandler@@QAE@XZ
@@ -1346,10 +906,10 @@ public:
     // retains it at +0x3c/+0x3d. This gap aligns the following
     // original advCommand dword to four bytes.
     char m_paddingBeforeAdvCommand[2];
-    int m_advCommand;              // +0x40, set by map-hover actions
+    int m_advCommand;  // +0x40, set by map-hover actions
     TAdventureMapWindow* m_advWindow;  // +0x44 (the button-status target)
-    unsigned short* m_routeArray;      // +0x48 (GetRouteArrayPtr)
-    int m_showRoute;                  // +0x4c, gates both arrow draw passes
+    unsigned short* m_routeArray;  // +0x48 (GetRouteArrayPtr)
+    int m_showRoute;  // +0x4c, gates both arrow draw passes
     // Dreamcast supplies both names. Retail SeedTo independently proves the
     // pair at +0x50/+0x54: a zero seedingValid starts a fresh search, while a
     // set fullySeeded suppresses an attempted continuation.
@@ -1367,14 +927,14 @@ public:
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
     CSprite* m_groundTileset[10];  // +0x60
-    CSprite* m_riverTileset[5];    // +0x88
-    CSprite* m_roadTileset[4];     // +0x9c
-    CSprite* m_borderTileset;      // +0xac
-    CSprite* m_arrowTileset;       // +0xb0
-    CSprite* m_gemIcons[4];        // +0xb4
-    CSprite* m_starTileset;        // +0xc4
-    CSprite* m_radarIcons;         // +0xc8
-    CSprite* m_cloudIcons;         // +0xcc
+    CSprite* m_riverTileset[5];  // +0x88
+    CSprite* m_roadTileset[4];  // +0x9c
+    CSprite* m_borderTileset;  // +0xac
+    CSprite* m_arrowTileset;  // +0xb0
+    CSprite* m_gemIcons[4];  // +0xb4
+    CSprite* m_starTileset;  // +0xc4
+    CSprite* m_radarIcons;  // +0xc8
+    CSprite* m_cloudIcons;  // +0xcc
     // +0xd0, sixteen bytes. Close proves the Dinkumware vector shape
     // directly: it reads _First at +0xd4 and _Last at +0xd8, derives
     // size() as VC6 spells it (`_First == 0 ? 0 : _Last - _First`, the
@@ -1394,17 +954,17 @@ public:
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
     type_point m_radarOrigin;
-    type_point m_lastMapHover;       // +0xe8
-    int m_lastHoverX;                // +0xec
-    int m_lastHoverY;                // +0xf0
-    int m_scrollX;                  // +0xf4, DC advManager::scrollX
-    int m_scrollY;                  // +0xf8, DC advManager::scrollY
+    type_point m_lastMapHover;  // +0xe8
+    int m_lastHoverX;  // +0xec
+    int m_lastHoverY;  // +0xf0
+    int m_scrollX;  // +0xf4, DC advManager::scrollX
+    int m_scrollY;  // +0xf8, DC advManager::scrollY
     // Dreamcast original animFrame/animCtr at +0x110/+0x114;
     // NH3API confirms retail +0xfc/+0x100 after scrollX/scrollY.
     // The constructor zeros both. Retail increments and uses the second
     // for animation modulo, so the former name at +0x100 was shifted.
-    int m_animFrame;                  // +0xfc
-    int m_animCtr;                    // +0x100
+    int m_animFrame;  // +0xfc
+    int m_animCtr;  // +0x100
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
     // while this byte is set. Dreamcast supplies the surviving member name.
     unsigned char m_animCtrPaused;
@@ -1417,41 +977,41 @@ public:
     int m_flagFrame;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
-    CSprite* m_cursorIcons[18];       // +0x10c, indexed by hero class
-    CSprite* m_boatIcons[3];          // +0x154, indexed by boat type
-    CSprite* m_boatFrothIcons[3];     // +0x160, indexed by boat type
-    CSprite* m_flagIcons[8];          // +0x16c, indexed by player owner
-    CSprite* m_boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
-    unsigned char m_drawCursor;     // +0x1ec, gates map cursor overlays
+    CSprite* m_cursorIcons[18];  // +0x10c, indexed by hero class
+    CSprite* m_boatIcons[3];  // +0x154, indexed by boat type
+    CSprite* m_boatFrothIcons[3];  // +0x160, indexed by boat type
+    CSprite* m_flagIcons[8];  // +0x16c, indexed by player owner
+    CSprite* m_boatFlagIcons[3][8];  // +0x18c, [boat type][player owner]
+    unsigned char m_drawCursor;  // +0x1ec, gates map cursor overlays
     // Dreamcast cursorVisible (+0x1f8) is byte storage; retail
     // retains it at +0x1ec. This gap aligns the following
     // original cursorType dword to four bytes.
     char m_paddingBeforeCursorType[3];
-    int m_cursorType;               // +0x1f0, hover cursor-mode discriminator
+    int m_cursorType;  // +0x1f0, hover cursor-mode discriminator
     // Cursor animation run. Dreamcast supplies the five consecutive names
     // at +0x200..+0x210; retail's independently proven cursor-array extent
     // and TurnTo body place the same run twelve bytes earlier.
-    int m_cursorDirection;          // +0x1f4
-    int m_cursorBaseFrame;          // +0x1f8
-    int m_cursorSequence;           // +0x1fc
-    int m_cursorFrameCount;         // +0x200
-    int m_cursorTurning;            // +0x204
-    int m_cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
+    int m_cursorDirection;  // +0x1f4
+    int m_cursorBaseFrame;  // +0x1f8
+    int m_cursorSequence;  // +0x1fc
+    int m_cursorFrameCount;  // +0x200
+    int m_cursorTurning;  // +0x204
+    int m_cursorDrawn;  // +0x208, cleared at the start of CompleteDraw
     unsigned char m_curHeroMobile;  // +0x20c, DC name; Mobilize bails when set
     // Dreamcast bCurHeroMobile (+0x218) is byte storage; retail
     // retains it at +0x20c. This gap aligns the following
     // original iShowMode dword to four bytes.
     char m_paddingBeforeShowMode[3];
-    int m_showMode;                 // +0x210, DC name
-    int m_forceCompleteDraw;       // +0x214, DC name
-    int m_movingObjectIndex;        // +0x218, transient object-pool index
-    int m_movingObjectSequence;     // +0x21c
-    int m_movingObjectFrame;        // +0x220
-    int m_touchedSounds;             // +0x224, DC name
-    soundNode m_soundArray[4];       // +0x228, DC name and extent
+    int m_showMode;  // +0x210, DC name
+    int m_forceCompleteDraw;  // +0x214, DC name
+    int m_movingObjectIndex;  // +0x218, transient object-pool index
+    int m_movingObjectSequence;  // +0x21c
+    int m_movingObjectFrame;  // +0x220
+    int m_touchedSounds;  // +0x224, DC name
+    soundNode m_soundArray[4];  // +0x228, DC name and extent
     sample* m_loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
-    sample* m_heroSamples[11];       // +0x360, DC name and extent
-    int m_heroLogoShowing;          // +0x38c, DC name
+    sample* m_heroSamples[11];  // +0x360, DC name and extent
+    int m_heroLogoShowing;  // +0x38c, DC name
     // +0x390. SetHeroContext's tail gates the closing
     // ForceMouseMove/lastHoverX reset on Dreamcast's bHeroMoving byte.
     unsigned char m_heroMoving;
@@ -1467,10 +1027,10 @@ private:
     EBottomViewType m_bottomViewOverride;  // +0x398
 
 public:
-    unsigned long m_bottomViewDeadline;    // +0x39c
-    int m_bottomViewResourceType;           // +0x3a0
-    int m_bottomViewResourceQuantity;       // +0x3a4
-    std::string m_bottomViewMessage;        // +0x3a8
+    unsigned long m_bottomViewDeadline;  // +0x39c
+    int m_bottomViewResourceType;  // +0x3a0
+    int m_bottomViewResourceQuantity;  // +0x3a4
+    std::string m_bottomViewMessage;  // +0x3a8
 
     advManager();
     virtual int open(int newPriority);
@@ -1481,7 +1041,7 @@ public:
     TreasureData* getTreasureData(NewmapCell* cell) const;
     void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
     NewmapCell* doAdvCommand(type_point* triggerPoint);
-// advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
+    // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every events-view consumer sees is unchanged, line for line.
@@ -1848,8 +1408,14 @@ private:
 
 public:
     void drawAdventureCursor();
-    type_point getMapCenter();
-    type_point getMapCenter() const;
+    // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
+    // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    type_point getMapCenter() const
+    {
+        return type_point(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
+                          m_radarOrigin.m_y + HERO_VIEW_TILE_Y,
+                          m_radarOrigin.m_z);
+    }
     void turnTo(int newDirection);
     // cursor.cpp:52 (dc 0x79a48). Complete has no retained body, but
     // animate_move contains this ordinary helper's complete expansion.
@@ -1949,14 +1515,17 @@ public:
     e_looping_sound_id getSoundId(int x, int y, int z);
     void disableButtons();
     void enableButtons();
+    // Original: advManager::MouseInScrollZone (advmgr.cpp:10756, dc 0x1ccf8).
     int mouseInScrollZone();
     void processMapChangeNew(class CMapChange* change);
     void viewWorld(int whatToDraw, int level);
     int inMapArea(int x, int y);
+    type_point get_mouse_map_point() const;
     unsigned short* getRouteArrayPtr(int x, int y, int z);
 
 private:
     void garrisonQuickView(int id, int x, int y);
+    // Original: advManager::get_garrison_cursor (advmgr.cpp:4514, dc 0xf23c).
     type_adventure_cursor getGarrisonCursor(NewmapCell* currCell);
     type_adventure_cursor getNormalCursor(NewmapCell* currCell);
     static int getForceModifier(float strengthRatio);

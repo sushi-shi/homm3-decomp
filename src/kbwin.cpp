@@ -275,7 +275,13 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
 }
 #pragma auto_inline(on)
 
-VA(0x004f8140, 0x37)  // dc 0xe8018
+// Win32 About-dialog callback; AppCommand passes 0x4f8140 to
+// DialogBoxParamA at 0x4f80a7. The body handles WM_INITDIALOG and
+// WM_COMMAND, calls EndDialog on IDOK, and returns with ret 16.
+// Dreamcast UpdateDfltMenu is a separate menu helper: its old link-order
+// pairing here was incorrect. AppAbout naming follows homm2 kbwin.cpp
+// (buka 0x471883); retail returns 1 from the WM_COMMAND arm.
+VA(0x004f8140, 0x37)  // address-taken DialogBoxParamA callback, retail-only
 BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     unsigned short command;
@@ -292,10 +298,6 @@ BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
     pollSound();
     return 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004f8180, 0x5C)  // dc 0xe801c
 void kbChangeMenu(HMENU newMenu)

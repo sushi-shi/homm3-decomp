@@ -4125,3 +4125,517 @@ caller when correcting such interfaces: the pointer-taking `TPalette24` copy
 constructor otherwise permits an old pointer argument to create an unintended
 temporary before reference binding. Full-build caller scores confirm unchanged
 current results after the calls are corrected.
+
+### Recovering video callers with canonical header helpers
+
+`generate-video-recovery-family.py` compares the sound guard, resume guard
+and pause-draining loop while retaining the ordinary `videoSoundOnOff`,
+`videoResume` and `videoClose` calls. The shared `serviceSounds` body stays
+inline in its proven `soundmgr.h` owner. The PC retail bodies prove the
+four-handle sound predicate, zero-count protection, decrement-before-resume
+transition and sound/Smacker/Bink close order; Dreamcast's port stubs provide
+only declarations and source order for these video functions.
+
+Against PR #3's `03a62eeb`, context `b675e964de23c1bd96c6` exhausts 48 source
+candidates, produces 33 distinct emitted objects and reproduces ten retained
+candidates. The adopted `1ca50e84d3aa84df22bc70b1` combines the sound guards
+into one service call and the resume early-outs into one short-circuit guard.
+Its production object reproduces the normalized candidate's complete code
+and named relocation identity. The stricter raw COFF comparison also agrees
+on all 125 sections, 936 relocation destinations and function locations.
+All 30 tracked rows are compared:
+
+| Function | Before CUR | Recovered CUR |
+| --- | ---: | ---: |
+| `videoClose` | 7.6923% | 38.1538% |
+| `showVideo` | 39.1274% | 67.8147% |
+
+Every other tracked score holds, including the two edited helpers. Neither
+caller body changes. The sound-guard-only control recovers `videoClose` but
+leaves `showVideo` unchanged. The resume-guard-only control gives `showVideo`
+73.5019% but leaves `videoClose` at 7.6923%; the combined candidate recovers
+more fuzzy-weighted retail bytes across the two functions. No new exact
+function is claimed. The historical 100% peaks remain recovery leads.
+
+The named sequence still shows two expanded `serviceSounds` operations in
+`videoClose` where retail calls them; the final `closeBinkVideo` tail call
+and the four indirect video-library calls agree. The current source-labelled
+`showVideo` comparison first diverges at its first `videoClose` site. These
+are remaining inlining/context differences, not grounds to move the sound
+helper back into a `.cpp`, flatten the ordinary video helpers, or add a pin.
+The finite guard/loop family bounds this PR's recovery; it does not close
+`smackmgr` or recover every peak lost through header ownership.
+
+`homm3.vc6.test_video_recovery` imports the actual three helper bodies and all
+48 generated combinations. An independent transition/effect oracle covers
+all 16 handle-presence masks, pause depths 0–5, both initial pause states and
+all three entry points. Five negative controls reject missing sound service,
+a wrong Bink pause argument, a missing pause-state clear, a missing Smacker
+close and reversed close order. The host fixture validates these state and
+call-order contracts; VC6 remains the byte verdict. The generator accepts
+the reviewed adopted body as its unchanged control and retains the original
+alternatives, rather than silently applying stale anchors.
+
+The final full build, including fresh retail delinking, passes all gates and
+raises executable matching from 94.81% to 94.83%. Exactly two CUR rows rise;
+none fall. The 4,784 canonical definitions retain zero ownership violations,
+and the existing 200 inline-depth pins are unchanged. Both edited helper
+bodies remain at CUR 0%; their new source hashes reset MAX from 100% to 0%,
+while HIST remains 100%. All 4,752 ledger rows and every historical peak
+survive; the unchanged caller bodies retain their own MAX 100% peaks.
+
+### Save recovery bounds after header ownership
+
+`generate-save-local-recovery-family.py` uses the `game::Save` Dreamcast
+local roster and retail narrow writes to test byte-buffer reuse/scope,
+unsigned-word staging, the signed map-extra size, loop-index declaration
+lifetime and the native-bool vector writer result. Context
+`0db47607a4972b3ef94c` exhausts 48 states, emits six distinct objects and
+reproduces ten candidates. `game::save` ranges from 59.2838% to 59.6005%
+against 59.5944% unchanged; every other game row holds. The tiny gain does
+not recover the `SavedGameHeader::reset`/`save` calls or the retail frame,
+so none of these alternatives is adopted.
+
+`generate-save-header-placement-family.py` separately compares the existing
+class location, moving it beside the late inline definitions, and embedding
+those same bodies inside the class there. Field order, signatures, body
+operations and `game.h` ownership stay fixed. Compiler dependency records
+select all 64 affected TUs. Moving the class alone is score-neutral; embedding
+the methods does not improve `game::save` and slightly lowers two unrelated
+rows. The existing class structure is retained. Context
+`183778ec3eb1bc6b45bb` scores all three states, produces two distinct objects
+and reproduces both retained candidates against a fixed snapshot. A prior
+run rejected its final checkpoint after concurrent source edits and is not
+counted as a completed search.
+
+### Spell obstacle appends, filter widgets and sound service recovery
+
+These searches start from PR #4's `ecca3a3d` full-build checkpoint and retain
+canonical source ownership. The spell and initial filter generators require
+that source checkpoint; replay them in a checkout of it with these experiment
+scripts available. Their exact anchors deliberately reject a changed body.
+The filter refinement also checks the parent snapshot and reproduced objects.
+Sound variants accept either reviewed body as the unchanged control.
+
+| Family | Scored source states | Distinct emitted objects | Reproduced retained candidates |
+| --- | ---: | ---: | ---: |
+| Four obstacle append boundaries | 16 | 16 | 10 |
+| Filter allocation/loop lifetimes | 54 | 36 | 10 |
+| Filter pointer conversion/refinement | 61 | 61 | 10 per generation |
+| Sound service locals and guards, 51 dependent TUs | 30 | 14 | 10 |
+
+`generate-spell-obstacle-append-family.py` tests the four source-proven
+`push_back` sites in `combatManager::castSpell`. DC spells.cpp lines
+849/925/962/996 supply positive call evidence. Three SH4 sites load the named
+callee before the line block containing the indirect `jsr`: inspect
+0x14feaa, 0x1500be and 0x1502c0 as well as Force Field's direct attribution
+at 0x150212. The dossier's local call attribution alone misses those names.
+Retail keeps count-insert bodies at +0x64e/+0x86c/+0x9a2/+0xae4; the native
+vector's `push_back` supplies this nested call boundary. All four restored
+calls reproduce 93.9814%, up from 72.8210% and above HIST 93.3687%, in context
+`034c7ecf3f258f5bbaef`, candidate `eb22de398dcc8adf2e3cd0bf`. The complete
+obstacle locals, append-before-slot order, and original-record arguments to
+`placeObstacle` are unchanged. No container replacement or new helper is used.
+
+`generate-filter-widget-recovery-family.py` exhausts 54 allocation-result,
+button-binding, public append API and loop-scope choices in context
+`3916b52e69a9a5b42b8c`. `generate-filter-widget-refinement-family.py` then
+adds real widget-pointer conversions and a vector reference to ten reproduced
+parents, deduplicating to 61 choices in `88fa5370dc9a8dba6348`. Candidate
+`b6b839d0becb8fff58c7d6ce` reaches 92.9883% from 84.8995%. It retains all
+constructors, the direct highlight field store and the proven disabled-frame
+helper. The retired highlight setter is not restored. The only sibling
+movement is `CEnterNameEdit::onKeyPress` 100% -> 99.8868%, one matching byte;
+its source is unchanged, so MAX and HIST remain 100%. The best alternative
+with no sibling movement reaches 92.7301%; the selected source recovers more
+retail bytes overall. These are retail-only filter controls, so no Dreamcast
+local roster is claimed for the inferred pointer lifetimes.
+
+The independent native filter oracle checks all 56 widget identities,
+constructor arguments, defaults, display fields, order and array identity,
+with both fresh and reserved vectors and three preexisting-widget counts.
+All initial and refined candidates passed before adoption. The permanent
+`test_filter_widget_recovery` imports the current builder and canonical
+`setDisabledFrame` body; five negative controls reject wrong highlight,
+disabled frame, defaults, missing append and widget ID. This validates UI
+construction behavior; it is not an x86 ABI model.
+
+`generate-sound-service-recovery-family.py` takes all 51 header-dependent TUs
+from compiler dependency records. Context `bf4bbe51a427f361ce69`, reproduced
+candidate `7173bdb9b7e2604dc1808b27`, captures the stream after `AIL_serve` and
+nests the three real state guards. `serviceSounds` stays inline in SoundMgr.h
+and its retained body stays exact. DC 0xe6ef4 is a WinCE stub proving source
+ownership; the nonempty PC behavior comes from retail 0x59a7d0. `showVideo`
+rises from 67.8147% to 94.1120%, with every other tracked score holding across
+the 51 units. The unchanged combined guard is the negative byte control.
+The native test imports the current body and all 30 variants. It checks lock
+receiver identity separately from the global manager, stream changes during
+Miles service, state guards and call order; six negative controls fail.
+
+The generators preserve real helper boundaries and operations. No inline
+pins, release VERIFYs, synthetic caller weight, or duplicated helper bodies
+are introduced. Remaining mismatches require further evidence; these finite
+families do not establish TU closure or exhaustion of the wider recovery queue.
+
+The adopted production objects match the reproduced candidates in section
+bytes, relocation destinations and function locations: spells 170 sections /
+1,979 relocations, singleselectionwindow 836 / 7,378, smackmgr 125 / 939.
+The final full build and fresh delink raise executable matching from 94.83%
+to 94.98%, with 3,937/4,751 current exact functions. Exactly three CUR rows
+rise and only the keyboard-handler byte falls. All 4,752 ledger rows and all
+historical peaks survive. Ownership remains 4,784 definitions with zero
+violations, and the existing 200 inline-depth pins are unchanged.
+
+Post-adoption source/call inspection confirms the four obstacle count-insert
+calls. `castSpell` still has a 0x80 frame against retail's 0x94 and different
+shared spell-effect tails. The filter's first remaining difference is the
+vector-base load before its first allocation and the append argument's stack
+slot (-0x24 versus -0x20). `showVideo` now retains both early sound-service
+calls, as retail does; its later expanded `videoSoundOnOff` still leaves a
+`serviceSounds` call where retail calls that ordinary helper. Source-labelled
+comparison first differs at the Smacker-handle guard. These specific residuals
+remain recovery leads; equal call totals are not evidence of equal boundaries.
+
+### Restoring map readers and the enemy-marking implementation
+
+The next recovery starts from PR #4's `30ecbab7` full-build checkpoint.
+`NewfullMap::readObject` had four Dreamcast-proven ordinary readers flattened
+into its switch while their named definitions remained inactive stubs.
+Restore `readBoatData`, `readHolyGrailData`, `readShrineData` and
+`readShipyardData` in mapcell.cpp at their original source positions, with
+ordinary declarations using the PC `TAbstractFile` stream. DC 0xed984,
+0xedd14, 0xedde8 and 0xefe28 prove the signatures, locals, reads and status
+returns; DC readObject calls them at source lines 3350/3379/3388/3406.
+Retail's corresponding arms prove their inline expansions, field layout and
+character conversions. Complete defers the old shipyard terrain scan to
+`loadShipyards`. Grail/shrine retain their final short-read checks in the
+helper; the caller discards status, so those final comparisons disappear
+naturally in the retail expansion.
+
+`generate-map-reader-helper-family.py` records the initial two-state byte
+control in context `a70571d26b1e09d9f9f3`, comparing all 76 header-dependent
+TUs. Both objects reproduce; candidate `6835a1c0264f821a3d5faaff` raises the
+reader from 56.6382% to 60.0594%. Restoring the helpers also exposes an older
+placement error: the existing inline `CObject::getTrigger` (DC line 1119)
+sat before line 1095's reader. The final source moves it between
+`getObjectTypePtr` and `findTrigger`; its body and declaration are preserved.
+That mandatory source-order correction is score-neutral, and the next full
+checkpoint passes the ownership gate. Replay the initial generator at
+`30ecbab7` with the experiment script available; the control itself predates
+this separate order correction.
+
+The host reader oracle imports both the recovered helper source and the
+actual four caller arms. It covers all 256 byte values and every short-read
+boundary, including partial shipyard state, boat arguments, read sizes/order,
+and discarded caller status. Five negative controls reject wrong boat owner,
+grail radius, shrine value, boat coordinate and status. This is an effect
+oracle, not a replacement for VC6 layout or byte validation.
+
+`generate-quest-guard-append-family.py` then tests 36 source choices at the
+corrected full checkpoint (`376ad64f07b280fd969d`): DC's function-scope
+read-count local and five separate read/result-test statements, plus actual
+quest-vector iterator/reference lifetimes and public append spelling.
+Twenty distinct objects and ten retained candidates reproduce. Candidate
+`159e2077aa36cf6abc2d1005` keeps the count local and uses `push_back` in the
+QUEST_GUARD arm, reaching 60.9729% without any sibling movement. The count
+alone is byte-flat; preserve its positive source evidence. Named vector
+references and inline data-end expressions add no gain. Both insertion
+workers still expand where retail keeps two-argument calls, and the seer
+constructor still expands: this is partial recovery, not a closed boundary.
+The native quest-arm oracle imports the actual constructor and reader and
+checks append-before-index behavior, record copy, existing vector contents,
+null quests and optional data registration across empty/reserved vectors.
+Every explored arm passes; five wrong controls fail. The generator accepts
+an adopted member only after an exact round trip through its finite family.
+
+The active `searchArray::markEnemy` body was a more direct failure: an
+integrated carcass stub replaced the existing implementation. The earlier
+source still contains the real body after its inactive reference stub, and
+DC 0xa0a44 independently proves get_hex, the nested minimum-cost guard,
+valid-move flag and unsigned-short cost store. Retail contains the matching
+expansions in both callers. Restoring that one ordinary body in place gives:
+
+| Function | Before CUR | Recovered CUR |
+| --- | ---: | ---: |
+| `findCombatPath` | 50.9545% | 92.2920% |
+| `markTeleport` | 71.6135% | 100% |
+| Retained `getHex` | 0% | 100% |
+
+`generate-mark-enemy-restoration-family.py` exhausts the two-state control
+in `8a71980a4ee16edd6844`; both objects reproduce. The adopted implementation
+is candidate `10a61ce51f0271cdda248e93`. The native oracle imports its actual
+body and covers existing flags, cheaper/equal/dearer costs, negative and
+32-bit boundary costs, unsigned-short narrowing, neighboring-cell preservation
+and accessor ordering. The empty-body control and four incorrect controls
+fail. Retail comparison verifies the four retained getHex calls inside
+findCombatPath's mark expansions; teleport marking and the retained accessor
+are exact again. The previous combat-path peak is fully recovered.
+
+An audit of all 4,784 active definitions at the original checkpoint found
+only this explicit active stub. The source-ownership gate now rejects
+`ACTIVE-STUB` even when ownership and signature are correct. It enumerates
+active definitions through the AST, then checks placeholder comments while
+ignoring string/character literals. Tests cover inactive stubs, unannotated
+source/header bodies, actual empty constructors and literal marker text. The
+new gate also rejects the real pre-fix markEnemy snapshot as a negative control.
+
+### Crossover lifetime recovery bound
+
+`generate-crossover-lifetime-family.py` tests the current retail-only
+`SCampaign::pruneCrossoverHeroes` body, preserving the repeated inflated-size
+read after the virtual pool query, signed scenario count, canonical max,
+artifact accessors, sort and vector assignment. Thirty-six combinations of
+real hero references/pointers, scenario-vector access, sort endpoints and
+front/begin access produce 24 distinct objects and ten reproduced retained
+candidates (`98fcd19748a92c53c1fc`). None improves the original 20.6088%.
+The caller stays unchanged. Its former five extracted phase wrappers have
+no independent source evidence and are not restored to regain their score.
+
+The combined map/path checkpoint passes the full build, fresh retail delink
+and all gates: 95.04% executable matching (from 94.98%), 3,940/4,751 current
+exact functions, 4,788 canonical definitions and zero ownership violations.
+All 71 relevant ownership and native-oracle tests pass. The final mapcell
+object matches its reproduced refinement object across 434 sections and
+2,094 relocation destinations; findpath matches its restoration object across
+54 sections and 238 relocation destinations, with function locations checked.
+
+Five CUR rows improve. Two unchanged-source rows move with the four required
+map-header declarations: `army::doAttack` 99.9424% -> 99.9040%, and
+`advManager::doCombat` 98.5379% -> 98.1758%. Their MAX and HIST remain held.
+`CEnterNameEdit::onKillFocus` returns from 99.8710% to exact. All 4,752 ledger
+rows and all historical peaks survive; no unchanged-source MAX is lowered.
+The existing 200 inline-depth pins are unchanged. These results preserve
+source structure through measured header collateral and leave the wider
+map/campaign recovery queue open.
+
+### Campaign read buffers and map-save result lifetimes
+
+The follow-up starts at `028e1b09` with a clean, full-build checkpoint.
+`SCampaign::load` is Complete-only: the full Dreamcast roster has no matching
+procedure. Retail's six unsigned counts/identifiers use dword loads followed
+by masks after one- or two-byte reads. That is not proof of an int source
+buffer. `generate-campaign-load-buffer-family.py` exhausts 64 independent
+width combinations in `906a2aed32d636cfd8eb`: two distinct emitted identities,
+both reproduced, and **no score changes in any tracked function**. Keep the
+narrow buffers; replay this historical-width control at `028e1b09`.
+
+The useful alternative is lexical lifetime. Retail gives the modern scenario
+fields distinct scratch homes, and the previously removed synthetic scalar
+helpers left isolated read/assignment blocks. The generator
+`generate-campaign-load-lifetime-family.py` tests named locals in their real
+enclosing prefix/loop scopes for four groups, plus separate days/score scopes.
+All 32 states compile, nine objects reproduce in `20be28ec9c6caccae8c7`.
+Candidate `3937da971249f1010a4be6b1` (`scopes-11010`) raises the loader from
+50.8734% to **52.7064%**, with every sibling unchanged. It names the leading,
+scenario and artifact buffers; count buffers keep their existing scopes and
+days/score remain in the loop scope. It preserves the complete legacy arm.
+
+The emitted modern artifact-pool and hero-pool shrinking paths now retain
+additional vector size calls. The first two clear/erase workers, implicit
+legacy array iterator, legacy string assignment and most nested size calls
+still disagree with retail. The result is partial recovery; the historical
+79.2531% remains a lead. No constructor body, scalar helper or pragma is added.
+The native oracle imports the actual modern arm and every generated arm,
+checks versions 28/35/36 for all 256 leading byte values, empty and populated
+vectors, exact read-size order, campaign remapping, signed artifact/assigned
+words and completion-flag widening. Five incorrect controls fail. It does
+not claim host layout or legacy-construction coverage.
+
+`NewfullMap::Save` has stronger source evidence: dc:0xecdf8 names function-scope
+`int count` and assigns each ordinary helper result before its negative test.
+The Complete seer/quest loops still belong in the caller. DC's static
+`TSeerHut::SaveSeerList` (0x12d7e8) uses the global list and checks per-record
+save results; retail uses the current map and ignores those results. This
+semantic contradiction rules out restoring that older helper interface.
+
+`generate-map-save-lifetime-family.py` exhausts 24 combinations of result
+assignment, list-count sharing, unsigned loop-index scope and final failure
+check in `a58ef16d0c060ff7bba4`. Sixteen objects are distinct; ten retained
+candidates reproduce. The adopted `d929d6f793d422be39225cf3` restores the DC
+result local and spells the final negative-result check explicitly, reaching
+**35.5206% from 32.1267%**, with every sibling unchanged. Count assignment
+alone is neutral; the explicit tail supplies the gain. Sharing the two
+Complete list-count buffers is worse, and a shared loop index adds no gain.
+The early list size queries and both event-list helper expansions remain
+unresolved. The native oracle imports the actual driver and all 24 variants,
+checks each helper failure, both layers, short/negative write results, ignored
+quest-write and seer-save results, serialized counts, and list growth during
+saving. Four incorrect controls fail. Both adopted-state generators require
+an exact round trip through their finite family before admitting the body.
+
+The combined full checkpoint passes all 149 units, fresh retail delinking and
+every gate. Exactly the two intended CUR rows improve; all 4,752 ledger rows,
+all historical peaks and every unchanged-source MAX survive. Executable
+matching remains 95.04% at the displayed precision, with 3,940/4,751 exact
+functions, 4,788 canonical definitions and the same 200 existing pins.
+All 73 relevant tests pass. Production customcampaign and mapcell objects
+match their reproduced candidates in executable section bytes, relocation
+destinations and function-symbol locations: respectively 391/312 sections,
+1,930/1,862 relocations and 344/274 function locations. The broader recovery
+queue remains open.
+
+### Bink ownership and the misplaced obstacle-insert claim
+
+The Bink Dreamcast bodies are port stubs, but their static member declarations
+remain positive source evidence. The retained draw/advance/close/play bodies
+now use the existing `BinkManager` declarations; callers no longer refer to
+provisional free functions. The restart caller previously referenced an
+undefined free `restartBinkVideo`, despite the existing `restartBink` member.
+OpenBink's dossier (dc:0x50a84) gives six ints and an unsigned char, correcting
+the former bool class declaration. Its retained body and the forwarding
+VideoOpen caller remain exact after the member/signature restoration.
+Two full ownership checkpoints preserve every current score. Five function
+names migrate by retail RVA, preserving their historical peaks. Own-source
+hash changes reset the frame pump's and VideoClose's current-source MAX to
+CUR; their historical 92.9245% and 100% peaks remain available.
+
+`generate-bink-pump-family.py` tests pointer selection, readiness guards,
+paused scopes, frame-end orientation and the playback cleanup call. All 48
+states compile in `68e3947857975ce4f7e9`; two distinct objects reproduce, with
+**no score changes**. Keep the original pump guards. Replace the duplicated
+playback pause/close/reset block with the existing ordinary `closeBink` call
+at the same 88.1802%. Retail's four SDK cleanup calls remain expanded there.
+The retained pump's current zero score is not an absent body: its native
+function is present, but the shared header-owned `serviceSounds` expands
+Miles/locking operations where retail calls it. The old 92.92% block-layout
+comment described the earlier ordinary-cpp sound-helper model.
+
+The native Bink oracle imports the actual pump and close member plus all 24
+pump forms and both cleanup forms. It checks 1,024 track/guard combinations,
+both descriptor-callback modes, ordering and arguments of SDK/sound/fade
+operations, dirty/paused/ready state and track resets. Five incorrect controls
+fail, including a stale descriptor read after servicing sound. The existing
+video oracle now calls the canonical Bink member and keeps its close-order
+negative control. The family generator admits the adopted cleanup form only
+through its two reviewed alternatives; it does not add a wrapper to retain
+an emission or use a pragma.
+
+A separate emission audit found that 0x46aeb0 was incorrectly claimed as
+`objecttype`'s `vector<TImageInfo>::insert(ptr, count, const&)`. Its actual
+retail callers are `combatManager::placeObstacle` (0x466010) and `castSpell`
+(0x59fe30), operating on the manager's TObstacle vector. The function also
+precedes cmbtmgr's native `_Ucopy`/`_Ufill` cluster. Both cmbtmgr and spells
+already emit the native TObstacle specialization: all **740 retail bytes**
+agree outside two relocations, whose operator new/delete destinations also
+agree. Twelve following alignment bytes are outside the admitted extent.
+The identical 24-byte stride had made TImageInfo a misleading proxy.
+
+Move the existing claim to cmbtmgr's `VECTOR_INSERT_COUNT, TObstacle` without
+changing C++ operations, adding an instantiation, or inventing a source call.
+Fresh delinking restores the native body to **100%**, preserves the old peak
+by RVA, and lowers generated emission debt from 39 to 38. The full adopted
+checkpoint reaches **95.08% executable matching**, 3,941/4,751 exact functions,
+4,788 canonical definitions and zero ownership violations; the existing 200
+pins are unchanged. This fixes a type/owner error rather than forcing the
+image-cache overload to emit. The Bink inline-boundary residual remains open.
+
+Final validation passes all 75 ownership and native-oracle tests. The fresh
+retail comparison for 0x46aeb0 has 55 exact blocks, matching branches, calls
+and relocation destinations, and equal masked assembly. The RVA-based ledger
+audit retains all 4,752 rows and every HIST peak: this batch has one CUR gain
+and no CUR declines. Restoring Bink member names changes the own-source hashes
+of `nextBinkFrame` and `videoClose`, resetting their MAX values to their
+unchanged current scores (0% and 38.1538%); their 92.9245% and 100% HIST peaks
+remain available. Every unchanged-source MAX is preserved.
+
+
+## Sound definition placement and shared native library bodies
+
+`generate-sound-placement-family.py` isolates a remaining sound inlining
+hypothesis after the guard/binding and Bink-pump families plateau. Dreamcast's
+`SoundMgr.h:140` member (dc 0xe6ef4) is a WinCE stub: it proves the header
+boundary, but not whether the PC body was defined inside its class. Retail
+NextBinkFrame (0x44daa0) calls the retained service member; the current VC6
+header body expands there. Preserve the inline declaration and exact body.
+Compare the current header, moving its real Miles/global dependencies before
+the class, and defining that body inside the class. No duplicate declarations,
+new helper, dummy caller or pragma is introduced.
+
+All **three states** compile and score across all **51 dependent TUs** in
+`acc470ea6c108d3aa715`, producing two reproduced object identities and identical
+score vectors. The dependency-only move is code-identical; the in-class body
+has a different aggregate identity without any tracked score changes. Keep
+the authored placement and guards. The generator keeps those placements as
+reviewable controls, not arbitrary declaration-count perturbations.
+
+The next emission audit finds retained canonical library bodies in other
+real consumers. A source enrollment in a TU that has ceased emitting a
+COMDAT does not mean the shared library definition is absent everywhere.
+Move only the enrollments, retaining the existing native definitions and
+calls. Retail callers and raw bytes establish these identities independently
+of the matching score:
+
+| Retained body | Emitting consumer | Retail evidence |
+| --- | --- | --- |
+| String assign from pointer/count, 0x404150 | advmgr | Hero assignment and getArmyHelpText call it, as does SendChat. All 161 bytes agree outside four matching named calls. |
+| Vector size, 0x517750 | objecttype / TImageInfo | Image-cache insertion and setupAndLoadObstacles share the 24-byte element implementation. All 33 bytes agree with no relocations. |
+| Single string-vector insertion, 0x4af350 | seerhut | Five quest dialogs, creatureBankEvent and text scrolling call the same 387-byte retained body. |
+| String-vector destroy/copy, 0x4af500 / 0x4af800 | seerhut | The retained insertion calls these exact 77/56-byte specializations. |
+| String fill/copy_backward, 0x4af870 / 0x4af9d0 | seerhut | The insertion's shift/fill arms call these exact 340/357-byte loops. |
+| Mutable/const int copy, 0x5093c0 / 0x54df40 | rmg | The addObject costs worklist and BlackBoxData/RMG helper paths use the two overloads; both emitted bodies agree with all 37 bytes. |
+
+For the 1,217-byte string-vector chain, every non-relocation byte agrees.
+Allocation/deallocation and the retained _Construct/_Ufill targets match.
+The size call at 0x4af4e0 names a folded vector<vector<hero> > representative;
+its native string-vector size matches every byte. The remaining runtime/data
+references are the invalid-position throw, overlap-safe memmove, npos at
+0x63a60c and the empty string at 0x63a608. Inspect the actual destinations,
+including the backward-copy arm and the zero/-1 data, before accepting their
+differing generated labels. Do not add a type proxy, explicit instantiation
+or a game call to force these COMDATs back into their former consumer.
+
+The full checkpoint restores all nine rows from 0% to **100%**, reaching
+**95.15% executable matching** and **3,950/4,751 exact functions**. Generated
+emission debt falls from 38 to **29**. All 4,752 ledger rows survive, with
+nine CUR gains, no CUR declines, no MAX resets and every historical peak
+preserved. Ownership remains 4,788 canonical definitions with zero
+violations, and the existing 200 inline-depth pins are unchanged. All 76
+ownership and native-oracle tests pass, including the sound-service callback
+and receiver checks.
+
+Seven edited TUs retain their cached native code/relocation identities.
+The cached RMG raw identity differs from its fresh compile, but recompiling
+the frozen pre-edit source and headers reproduces the current object exactly:
+the enrollment edits introduce no code change. RMG's pre-existing score rows
+also remain unchanged. This control is necessary before attributing a cached
+object difference to a comment/enrollment edit.
+
+
+## Remaining bitset and scenario emission audit
+
+The same native-consumer audit identifies four more retained bodies without
+changing their canonical source definitions or adding callers:
+
+| Retained body | Emitting consumer | Proof |
+| --- | --- | --- |
+| bitset<4>::test, 0x4cf960 | singleselectionwindow | Retail readMapPlayerSlot and setNewPlayerSlot share the 52-byte body and its _Xran call. |
+| bitset<4>::_Xran, 0x4d1850 | singleselectionwindow | The feature-test and advanced-options paths call it; all 203 instruction bytes agree outside relocations. |
+| bitset<70>::_Tidy, 0x4cfa10 | hero | Retail markArtifactSpells, loadMap and readTownData use the three-word fill/six-bit trim; all 37 bytes agree without relocations. |
+| ScenarioStruct deleting destructor, 0x488eb0 | campaignbrief | Its scenario delete loop emits the 33-byte wrapper shared by retail CampaignHeaderStruct::load and selectCampaign; both calls agree. |
+
+The _Xran proof includes exception metadata. Both implementations install
+a two-state unwind map, destroy the temporary string at EBP-36 and the
+exception at EBP-64, and use the same invalid-bitset-position message,
+out_of_range throw information, vtable and five ordinary calls. The two
+native `__except_list` relocations resolve to the retail FS:[0] offsets.
+Retail's string cleanup at 0x4fca60 is folded with TreasureData's destructor;
+the native string destructor has identical blocks, instructions and its
+operator-delete target. The three unreachable pops after throwing remain
+inside the admitted 203-byte extent. Relocating the enrollment preserves
+this metadata ownership and the canonical <bitset> definition.
+
+The byte-vector fill at 0x48db70 also has a byte-identical native copy in
+rmg_terrain. That copy already represents the separate retained 0x5b8060,
+so it cannot recover another row by taking over that enrollment. Keep both
+retail identities and leave the campaign copy's emission debt visible.
+Likewise, no other TU currently emits the matching TSeerHut/university resize
+or map-hero/university copy specializations; matching a same-stride unrelated
+type would not establish their source identity.
+
+The full build restores all four rows to **100%**, reaching **95.17% executable
+matching** and **3,954/4,751 exact functions**, with **25** unpaired generated
+enrollments. Every one of the five edited TUs retains identical native code,
+function locations and named relocations. All 76 ownership/native-oracle tests
+pass. The RVA audit has four CUR gains, no declines or MAX resets, and retains
+all 4,752 ledger rows plus every historical peak. Ownership remains 4,788
+canonical definitions with zero violations; the 200 existing pins are unchanged.
