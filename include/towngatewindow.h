@@ -48,7 +48,7 @@ public:
     // DC callback 0x169ba8 calls this private method; retail 0x5c2980 agrees.
     friend void townGateSliderCallback(int state, heroWindow* parentWindow);
     void doModal();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     void updateTownLocators();

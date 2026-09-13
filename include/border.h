@@ -29,8 +29,8 @@ public:
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
-    virtual unsigned char handleClick(unsigned char downClick,
-                                       unsigned char rightClick);
+    virtual bool handleClick(bool downClick,
+                                       bool rightClick);
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -78,8 +78,8 @@ public:
                  const char* image, int style);
     virtual ~bitmapBorder();
     virtual void draw();
-    virtual int getRealHeight();
-    virtual int getRealWidth();
+    virtual int getRealHeight() const;
+    virtual int getRealWidth() const;
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual int main(message& msg);
     void setImage(const char* bitmapName);
@@ -113,9 +113,9 @@ public:
 class palette;
 class paletteHiColor;
 class TPalette24;
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:323, dc 0x54988) void bitmapBorder::SetPalette(const char* palette_name);

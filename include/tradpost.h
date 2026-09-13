@@ -51,7 +51,7 @@ public:
     TTradeResourceWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TTradeResourceWindow();
 };
 SIZE(TTradeResourceWindow, 0x68);
@@ -75,7 +75,7 @@ public:
     TGiveResourceWindow(int x2, int y2);
     void update(bool update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TGiveResourceWindow();
 };
 SIZE(TGiveResourceWindow, 0x8c);
@@ -87,7 +87,7 @@ public:
     TBuyArtifactWindow(int x2, int y2);
     void update(unsigned char update);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TBuyArtifactWindow();
 };
 SIZE(TBuyArtifactWindow, 0x64);
@@ -110,7 +110,7 @@ public:
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellArtifactWindow();
 };
 SIZE(TSellArtifactWindow, 0x64);
@@ -129,7 +129,7 @@ public:
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg);   // slot 9
+    virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellCreatureWindow();
 };
 SIZE(TSellCreatureWindow, 0x68);

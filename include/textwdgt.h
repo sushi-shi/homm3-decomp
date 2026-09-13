@@ -16,7 +16,7 @@ class textWidget : public widget {
 public:
     std::string m_text;
     font* m_font;
-    int m_color;
+    font::TColor m_color;
     int m_backColor;
     unsigned int m_justify;
 

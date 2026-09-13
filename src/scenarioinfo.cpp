@@ -25,23 +25,31 @@
 #include "winmgr.h"
 
 // E:\gamedcs\scenarioinfo.cpp:258
-// 2026-09-05: 95.7756 -> 95.9787 by moving the `vc` and `lc` pointers down
-// to their only use. Retail's first instruction after the CAdvPopup base
-// ctor reads `[esi+0x34]` - a member of the object under construction, the
-// Widgets vector for reserve(100) - where the hoisted declarations made this
-// compile load gpGame and spill both derived pointers to frame slots first.
-// Spelling the two conditions inline with no local at all is byte-identical
-// at 95.9787, so the locals are kept for the DC source shape.
-// Residual (95.98%): the frame is 0xa5c against retail's 0xa78 - seven
-// dwords of named locals this reconstruction does not have - and one branch
-// is missing (164 against 163 with 331 = 331 blocks).
+// Residual (98.4998%): frame 0xa68 versus retail 0xa78, local homes and
+// row-value/store scheduling; the canonical call sequence agrees. The
+// Complete row widget has no DC body. Two source families (30/57 states,
+// 10/16 distinct objects, ten reproduced retained states each) tested direct
+// stores, captured locals, ordinary/in-class setters, y induction, buffer
+// declaration order, constructor argument ownership/order, optional-hero
+// initialization, and parameter/member portrait reads. None improved the
+// corrected baseline. Setters recover retail's 0x1f7d4/0x1f640 loop bases
+// and frame 0xa74, but still schedule the row stores differently (98.42%).
+// Keep the recorded vc/lc pointers, pre-map-name lifetime and helper calls.
+// The named Widgets-vector reference makes reserve read through the vector
+// address; direct member spelling previously scored lower. Do not infer
+// missing named locals from the frame-size difference alone.
 VA(0x00567290, 0x2109)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
 CScenarioInfoDlg::CScenarioInfoDlg()
-    : CAdvPopup(7, 18, 763, 585, 2)
+    // DC 258 centers against SCREEN_WIDTH/HEIGHT; retail +0x2f/+0x31
+    // pushes y=7 then x=18 for the fixed 800x600 screen.
+    : CAdvPopup((WINDOW_SCREEN_WIDTH - 763) / 2,
+                (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
     char tempText[256];
+    // Before normalization (locals): LossText.
     char lossText[1024];
     char tempName[256];
+    // Before normalization (locals): VictoryText.
     char victoryText[1024];
 
     // The widget vector NAMED AS A REFERENCE across all 42 uses:
@@ -55,31 +63,31 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(new bitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
-    sprintf(g_text, "%s:", g_generalText->getText(493));
+    sprintf(g_text, "%s:", (*g_generalText)[493]);
     widgets.push_back(new textWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 132,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    sprintf(g_text, "%s:", g_generalText->getText(219));
+    sprintf(g_text, "%s:", (*g_generalText)[219]);
     widgets.push_back(new textWidget(
         662, 429, 84, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 133,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        411, 429, 90, 19, g_generalText->getText(495), "smalfont.fnt",
+        411, 429, 90, 19, (*g_generalText)[495], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 21, 278, 18, g_generalText->getText(496), "smalfont.fnt",
+        419, 21, 278, 18, (*g_generalText)[496], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 131, 278, 18, g_generalText->getText(497), "smalfont.fnt",
+        419, 131, 278, 18, (*g_generalText)[497], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 282, 278, 18, g_generalText->getText(498), "smalfont.fnt",
+        419, 282, 278, 18, (*g_generalText)[498], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 338, 278, 18, g_generalText->getText(499), "smalfont.fnt",
+        419, 338, 278, 18, (*g_generalText)[499], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     iconWidget* mapSizeIcon = new iconWidget(
@@ -87,18 +95,20 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         iconWidget::ICON_STYLE_PLAIN);
     widgets.push_back(mapSizeIcon);
 
-    sprintf(g_text, "%s:", g_generalText->getText(391));
+    sprintf(g_text, "%s:", (*g_generalText)[391]);
     widgets.push_back(new textWidget(
         411, 397, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
-    sprintf(g_text, "%s:", g_generalText->getText(392));
+    sprintf(g_text, "%s:", (*g_generalText)[392]);
     widgets.push_back(new textWidget(
         576, 397, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
 
     NewSMapHeader& mapHeader = g_game->m_mapHeader;
-    VictoryConditionStruct& vc = mapHeader.m_victoryCondition;
-    LossConditionStruct& lc = mapHeader.m_lossCondition;
+    // DC locals and lines 299..300 prove pointers, with initialization
+    // before the map-name widget. Retail keeps both addresses until icons.
+    VictoryConditionStruct* vc = &mapHeader.m_victoryCondition;
+    LossConditionStruct* lc = &mapHeader.m_lossCondition;
 
     widgets.push_back(new textWidget(
         419, 39, 324, 30, mapHeader.m_mapName.c_str(),
@@ -107,24 +117,27 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         mapHeader.m_mapDescription.c_str(), 419, 149, 319, 115,
         "smalfont.fnt", font::WHITE, slider::BLUE));
 
+    // Retail +0x6c0/+0x743 passes justify=5 for the difficulty labels;
+    // +0x7c3/+0x822 passes justify=4 for the victory/loss descriptions.
     widgets.push_back(new textWidget(
         411, 448, 89, 48,
         g_unnamed6a77ec[mapHeader.m_difficulty], "smalfont.fnt",
-        font::WHITE, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
+        font::WHITE, 100,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(tempText, "%d%%",
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
     widgets.push_back(new textWidget(
         663, 448, 83, 48, tempText, "smalfont.fnt", font::WHITE, 100,
-        font::VERT_CENTER_JUSTIFIED, 0, 8));
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     g_game->getVictoryConditionText(victoryText);
     g_game->getLossConditionText(lossText);
     widgets.push_back(new textWidget(
         453, 299, 288, 32, victoryText, "smalfont.fnt", font::WHITE, 100,
-        font::CENTER_JUSTIFIED, 0, 8));
+        font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
         453, 358, 288, 32, lossText, "smalfont.fnt", font::WHITE, 100,
-        font::CENTER_JUSTIFIED, 0, 8));
+        font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     int i;
     for (i = 0; i < 8; ++i) {
@@ -138,7 +151,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
 
     widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
     widgets.push_back(new textWidget(
-        55, 84, 104, 36, g_generalText->getText(518), "smalfont.fnt",
+        55, 84, 104, 36, (*g_generalText)[518], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 339,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
@@ -147,19 +160,19 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
         gameTypeId = 342;
     widgets.push_back(new textWidget(
-        160, 84, 75, 36, g_generalText->getText(519), "smalfont.fnt",
+        160, 84, 75, 36, (*g_generalText)[519], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, gameTypeId,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        236, 84, 75, 36, g_generalText->getText(520), "smalfont.fnt",
+        236, 84, 75, 36, (*g_generalText)[520], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 343,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        312, 84, 75, 36, g_generalText->getText(521), "smalfont.fnt",
+        312, 84, 75, 36, (*g_generalText)[521], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 344,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        55, 528, 334, 20, g_generalText->getText(522), "smalfont.fnt",
+        55, 528, 334, 20, (*g_generalText)[522], "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 340,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new button(
@@ -185,7 +198,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(durationSlider);
 
     widgets.push_back(new textWidget(
-        55, 18, 334, 59, g_generalText->getText(662), "bigfont.fnt",
+        55, 18, 334, 59, (*g_generalText)[662], "bigfont.fnt",
         font::HEADING_HIGHLIGHT, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
@@ -193,6 +206,13 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         "smalfont.fnt", font::WHITE, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
+    // Complete-only rows are absent from DC's body in the 366..412 gap;
+    // that gap does not recover their source or explain their omission.
+    // Retail +0x1436..+0x1457 increments the display index and y only after
+    // adding an active row; +0x1457 advances the player index even on skip.
+    // Widget IDs retain i so ProcessRightSelect can find the owning player.
+    // Retail +0xf86 reads hero traits +0x30 (small portrait), not +0x34.
+    int rowPosition = 0;
     for (i = 0; i < 8; ++i) {
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
@@ -216,57 +236,41 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         row->m_playerName = g_game->m_players[i].m_name;
         row->m_handicapText = g_unnamed6a7800[g_game->m_setup.m_handicap[i]];
         row->m_playerTypeText = g_unnamed6a7e18[playerType];
-        row->m_playerPosition = i;
+        row->m_playerPosition = rowPosition;
         row->m_startingBonus = g_game->m_setup.m_startingBonus[i];
         row->m_bonusSprite = m_bonusSprite;
         row->m_startingHero = startingHero;
         row->m_heroPortrait = ResourceManager::getBitmap816(
             startingHero
-                ? g_heroTraits[startingHero->m_portrait].m_largePortraitName
+                ? g_heroTraits[startingHero->m_portrait].m_smallPortraitName
                 : "hpsrand6.pcx");
         widgets.push_back(row);
 
-        int y = 124 + i * 50;
+        int y = 124 + rowPosition * 50;
         widgets.push_back(new CHotspotWidget(173, y, 48, 32, 370 + i));
         widgets.push_back(new CHotspotWidget(249, y, 48, 32, 362 + i));
         widgets.push_back(new CHotspotWidget(325, y, 48, 32, 378 + i));
+        ++rowPosition;
     }
 
-    // 2026-09-06: the row constructor's `id = 390 + i` store is byte-proven
-    // (retail 0x5680ec `mov word ptr [edi+0x10], dx` after `add edx,0x186`,
-    // inside the new-expression's succeeded arm) and ProcessRightSelect
-    // fetches the row straight back through GetWidget(390 + playerPosition).
-    // Adding it reproduces that four-instruction block exactly and moves the
-    // frame 0xa5c -> 0xa60 toward retail's 0xa78, at a 96.3650 -> 96.2262
-    // scheduling knock-on further down; the store is retail evidence, so it
-    // stays and the banked MAX records the earlier peak.
-    // Residual (96.36%): retail forms all three of these addresses from ONE
-    // gpGame load at the mapName statement - `lea edi,[eax+0x1f86c]` (this
-    // reference), `lea edx,[eax+0x1f89c]` (victoryCondition) and
-    // `add eax,0x1f8e8` (lossCondition), spilling the last two to
-    // [ebp-0x20]/[ebp-0x18] - which is why the two condition references are
-    // declared here and not at their icons. Hoisting them is worth
-    // 95.9787 -> 96.3603. MEASURED AND REJECTED at the same plateau:
-    // pointers instead of references (byte-flat, 96.3603); dropping the
-    // `mapHeader` reference and hoisting only vc/lc (96.2189); spelling the
-    // player loop's slot through `mapHeader` too (95.7259); dropping the
-    // `slot` cache for three longhand subscripts (95.7649, and it ADDS a
-    // branch). The remaining delta is the player loop: retail tests
-    // `playerPos[i] < 0` as `cmp byte ptr [..],0 / jl` in the block that
-    // falls out of the loop preheader while we emit a `jmp` into it (our one
-    // surplus branch), and retail's two strength-reduced loop bases are
-    // 0x20 higher than ours (0x1f7d4/0x1f640 against 0x1f7b4/0x1f620) with
-    // an extra `add edx,0x70` third base at [ebp-0x3c].
+    // DC 415..418 and 424..427 place SetIconFrame in each condition arm.
+    // Retail merges their common call after selecting the frame argument.
     iconWidget* victory = new iconWidget(
         417, 302, 32, 24, -1, "scnrvict.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    victory->setIconFrame(vc.m_type >= 0 ? vc.m_type : 11);
+    if (vc->m_type >= 0)
+        victory->setIconFrame(vc->m_type);
+    else
+        victory->setIconFrame(11);
     widgets.push_back(victory);
 
     iconWidget* loss = new iconWidget(
         417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    loss->setIconFrame(lc.m_type >= 0 ? lc.m_type : 3);
+    if (lc->m_type >= 0)
+        loss->setIconFrame(lc->m_type);
+    else
+        loss->setIconFrame(3);
     widgets.push_back(loss);
 
     widgets.push_back(new button(
@@ -277,9 +281,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
     widgets.push_back(new button(
         599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    button* lastDifficultyButton = new button(
-        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2);
-    widgets.push_back(lastDifficultyButton);
+    widgets.push_back(new button(
+        631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     addWidgetsToMessageStream();
     updateAllyEnemyFlags();
@@ -299,7 +302,9 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // here. Keep the declaration non-inline and let VC6 choose this caller.
     setDifficultyHiLite();
     setHelpText(g_singleSelectionHelp, 104, 345, 0);
-    lastDifficultyButton->enable(0);
+    // Retail +0xccd saves the duration slider in [ebp-0x10]; +0x205c
+    // reloads that same object for Enable(false), after SetHelpText.
+    durationSlider->enable(0);
     m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
 }
 
@@ -489,7 +494,7 @@ void CScenarioInfoDlg::setDifficultyHiLite()
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     msg.m_codeY = g_game->m_setup.m_difficulty + 107;
     msg.m_extra = widget::WIDGET_HIGHLIGHTED;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 }
 
 VA(0x005699C0, 0x320)  // dc 0x12ac28

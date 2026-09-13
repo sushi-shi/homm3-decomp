@@ -1270,7 +1270,7 @@ TViewWorldWindow::TViewWorldWindow()
     msg.m_codeY = 17;
     msg.m_codeX = 5;
     msg.m_extra = 16;
-    broadcastMessage(&msg);
+    broadcastMessage(msg);
 
     m_undergroundButton->sendMessage(
         widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
@@ -1574,13 +1574,13 @@ void TViewWorldWindow::updateViewWorld(message* msg)
         msg2.m_codeY = i + 16;
         msg2.m_codeX = 6;
         msg2.m_extra = 16;
-        broadcastMessage(&msg2);
+        broadcastMessage(msg2);
     }
     msg2.m_id = MESSAGE_WIDGET;
     msg2.m_codeY = msg->m_codeY;
     msg2.m_codeX = 5;
     msg2.m_extra = 16;
-    broadcastMessage(&msg2);
+    broadcastMessage(msg2);
 
     type_point center(m_origin.m_x + g_viewHalfWidth,
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
@@ -1625,8 +1625,18 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
     g_windowManager->updateScreen(8, 8, 592, 544);
 }
 
-VA(0x005fcb10, 0x37F)  // dc 0x1964dc
-int TViewWorldWindow::windowHandler(message* msg)
+// E:\gamedcs\viewwrld.cpp:1710
+// Both dispatch levels are the compiler's own tells. The message-id test
+// is an IF-CHAIN (`cmp`, arms emitted in place); the two codeX tests and
+// the widget-id test are SWITCHES (`sub`/`dec` descent, arms sunk behind
+// the default), and the map-dimension divisor is a switch too - its three
+// arms sit after the 1.0f default in reverse-ascending order, which no
+// if-chain produces. The accept arm and the key arm share their last two
+// statements, which is why retail duplicates only the dialogReturn store.
+// The radar drag is a pump: hold the button, keep the LAST mouse-move
+// seen, and re-centre once per outer pass until the button comes up.
+VA(0x005fcb10, 0x37F)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
+int TViewWorldWindow::windowHandler(message& msg)
 {
     message rMsg;
     message rSaveMsg;
@@ -1642,18 +1652,18 @@ int TViewWorldWindow::windowHandler(message* msg)
         g_soundManager->switchAmbientMusic(
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
 
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case KEYCODE_ESCAPE:
         case KEYCODE_ENTER:
-            g_windowManager->m_dialogReturn = msg->m_codeY;
-            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+            g_windowManager->m_dialogReturn = msg.m_codeY;
+            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->m_codeY != RADAR_ID)
+            if (msg.m_codeY != RADAR_ID)
                 break;
             if (m_viewableWidth == g_mapWidth && m_viewableHeight == g_mapHeight)
                 break;
@@ -1671,7 +1681,7 @@ int TViewWorldWindow::windowHandler(message* msg)
                 radarDivisor = 1.0f;
                 break;
             }
-            updateRadar(msg->m_mouseX, msg->m_mouseY, radarDivisor);
+            updateRadar(msg.m_mouseX, msg.m_mouseY, radarDivisor);
             do {
                 process1WindowsMessage();
                 rSaveMsg = rMsg = g_inputManager->getEvent();
@@ -1688,21 +1698,21 @@ int TViewWorldWindow::windowHandler(message* msg)
             } while (rMsg.m_id != MESSAGE_LEFT_BUTTON_UP);
             break;
         case widget::WIDGET_DESELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case MAGNIFY_FAR_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
                 g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
-                updateViewWorld(msg);
+                updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case PUZZLE_ID:
                 g_windowManager->fadeScreen(1, 4, 0);
@@ -1719,8 +1729,8 @@ int TViewWorldWindow::windowHandler(message* msg)
                 g_windowManager->updateScreen(0, 0, 800, 600);
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
-                g_windowManager->m_dialogReturn = msg->m_codeY;
-                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
+                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;

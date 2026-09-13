@@ -302,7 +302,7 @@ public:
     void update();
     void goSessionList();
     void goMainMenu();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
 

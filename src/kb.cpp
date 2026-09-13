@@ -566,7 +566,7 @@ void creditsWait()
     credits->fillRect(0, 0, credits->getWidth(), credits->getHeight(), 1);
     creditsFont->drawBoundedString(g_credits[0], credits, 0, 0,
                                    credits->getWidth(), credits->getHeight(),
-                                   284, 5, -1);
+                                   font::TColor(284), 5, -1);
     g_inputManager->flush();
     if (videoNeedsUpdate())
         videoDrawRects();
@@ -615,7 +615,7 @@ void creditsWait()
                     if (endOffset < 435)
                         g_smallFont->drawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
-                            328, 580, 13, 8, -1);
+                            328, 580, font::CHAT, 8, -1);
                 } else {
                     done = 1;
                 }
@@ -2225,9 +2225,10 @@ VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 // source order - and the Dreamcast statement map (kb.cpp:2452..2538)
 // agrees arm for arm, down to the __divls/__modls pair the secondary
 // skill arm needs.
+// The public UAA_N_N0 signature preserves native Boolean click values.
 VA(0x004f0b20, 0x491)  // anchor-vtable + jump-table domain, dc 0xe1e58
-unsigned char type_normal_dialog_frame::handleClick(unsigned char downClick,
-                                                     unsigned char rightClick)
+bool type_normal_dialog_frame::handleClick(bool downClick,
+                                                     bool rightClick)
 {
     if (downClick && rightClick) {
         switch (m_resource) {
@@ -3949,7 +3950,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
     for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
         x = i * 160;
         currentFont->drawBoundedString(labels[i], g_windowManager->m_screenBitmap,
-                                 x, 450, 160, 100, 281, 5, -1);
+                                 x, 450, 160, 100, font::TColor(281), 5, -1);
         switch (i) {
         case CONGRATS_COLUMN_DAYS:
             sprintf(temp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
@@ -3971,7 +3972,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
             break;
         }
         currentFont->drawBoundedString(temp, g_windowManager->m_screenBitmap,
-                                 x, 540, 160, 50, 281, 5, -1);
+                                 x, 540, 160, 50, font::TColor(281), 5, -1);
     }
     g_windowManager->updateScreen(0, 0, 800, 600);
     while (!smk && videoPlaying()) {
@@ -3994,7 +3995,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                     x = i * 160;
                     currentFont->drawBoundedString(labels[i],
                                              g_windowManager->m_screenBitmap,
-                                             x, 450, 160, 100, 281, 5, -1);
+                                             x, 450, 160, 100, font::TColor(281), 5, -1);
                     switch (i) {
                     case CONGRATS_COLUMN_DAYS:
                         sprintf(temp, DATA_COMPGEN(0x00660a1c,
@@ -4018,7 +4019,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                     }
                     currentFont->drawBoundedString(temp,
                                              g_windowManager->m_screenBitmap,
-                                             x, 540, 160, 50, 281, 5, -1);
+                                             x, 540, 160, 50, font::TColor(281), 5, -1);
                 }
                 videoDrawRects();
             }

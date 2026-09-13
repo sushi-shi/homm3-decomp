@@ -171,25 +171,28 @@ void TQuestLogWindow::updateQuestLocator(int i)
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = i + 1;
         msg.m_extraText = g_text;
-        broadcastMessage(&msg);
+        broadcastMessage(msg);
     }
 }
 
 // Dreamcast preserves this helper as a 12-row loop.  Complete expands the
 // same source boundary into DoQuestLog after increasing the visible list to
 // 16 rows; the singular retail callee and loop schedule prove the revision.
-inline void TQuestLogWindow::updateQuestLocators()
+// Keep the ordinary source helper (questlogwindow.cpp:105..107); retail's
+// expansions in DoQuestLog and QuestSliderCallback do not prove `inline`.
+void TQuestLogWindow::updateQuestLocators()
 {
     for (int i = 0; i < 16; ++i)
         updateQuestLocator(i);
 }
 
-VA(0x0052e410, 0x1d)  // dc 0x116ca4
-int TQuestLogWindow::windowHandler(message* msg)
+// E:\gamedcs\questlogwindow.cpp:111
+VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4
+int TQuestLogWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
     if (!result)
-        result = trueFalseDialogHandler(msg);
+        result = trueFalseDialogHandler(&msg);
     return result;
 }
 
@@ -202,14 +205,28 @@ int TQuestLogWindow::windowHandler(message* msg)
 // load after the visited-player test.  The remaining delta is register
 // scheduling inside otherwise exact 19-branch/1-ret flow, not permission to
 // flatten either QuestActiveforPlayer or UpdateQuestLocators.
-// Residual (96.5463%): 38/38 blocks exact, register-distance 36. Two
-// spelling-shaped rows are NOT source-reachable - `test al,dl` vs `test dl,al`
-// on the visited-players mask is unchanged by writing `(1 << playerNum) &
-// visitedPlayers` (VC6 canonicalises `&`), and the vector receiver's
-// `add ecx,N` vs `lea ecx,[eax+N]` follows the same binding. `homm3 vc6
-// diagnose` routes this to predict-inline claiming quest_text_row is
-// under-inlined; that is a MIS-PAIRING - retail's `game_12e430_sub02_12e6b0`
-// IS the call to it (0x52e6b0), and no TU defines a body to inline.
+// Current residual (84.9444%, HIST 96.5463): the retained questTextRow
+// definition is now visible and VC6 expands it in the SeerHut predicate.
+// Retail calls it after questType. The current body has 41/38 blocks,
+// 20/19 branches and 12/13 calls; this precedes the old register-only delta.
+// A passive C2 trace reproduces the object: caller cb 348, budget 1000;
+// SeerHut predicate cb 91 receives budget 98, allowing the 47-byte-cost
+// row helper. The guard predicate receives 144 and expands questTexts.
+// Making UpdateQuestLocators ordinary preserves all eight TU scores.
+//
+// The 18-state shared-helper family and its 36-state type-order follow-up
+// each reproduced ten retained controls (18 and 36 distinct objects).
+// Replacing the predicates with a shared questTexts composition restores
+// the row call at 93.7917, but orders it BEFORE questType, unlike retail.
+// Explicit type/index-then-row locals match all 13 named calls but score
+// 82.6296..88.3056 and change the guard-loop order and other callers.
+// A header definition also over-inlines questTextRow in the previously
+// exact belong-to-player/resource setDefaultText bodies. Keeping it in this
+// TU while adding calls to questTexts instead retains extra calls in the
+// smaller seerhut/adventuremapwindow users. Thus neither visibility model
+// establishes the proposed shared composition; no shared-header alternative
+// is adopted. Do not restore the stale assertion that this is a mispaired
+// call or that the helper has no available definition.
 VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
 void doQuestLog(int player)
 {
@@ -239,7 +256,7 @@ void doQuestLog(int player)
     msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
     msg.m_codeY = 17;
     msg.m_extra = g_questLogWindow->m_seerHutLogList.size() - 15;
-    g_questLogWindow->broadcastMessage(&msg);
+    g_questLogWindow->broadcastMessage(msg);
 
     g_questLogWindow->updateQuestLocators();
     g_questLogWindow->doModal(0);

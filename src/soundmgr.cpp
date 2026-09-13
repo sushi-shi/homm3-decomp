@@ -140,6 +140,10 @@ soundManager::soundManager()
 // result-carrier loop below (84.53%), and an explicit long-lived
 // set-preference pointer (same bytes). The remaining layout/RA choice is not
 // source-addressable without distorting the proven retry semantics.
+// The pointer probe is removed: five direct AIL_set_preference source calls
+// preserve 84.5280% and clear the audit's five unresolved indirect-call gaps.
+// Retail's cached import pointer is an optimizer result, not source proof of
+// a local function pointer. Further source hypotheses remain possible.
 VA(0x005997d0, 0x2BF)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
@@ -150,11 +154,9 @@ int soundManager::open(int newPriority)
     if (!g_noSound) {
         AIL_startup();
         if (!g_unk698a28 && !m_ds) {
-            typedef int (__stdcall* SetPreferenceProc)(int, int);
-            SetPreferenceProc setPreference = AIL_set_preference;
-            setPreference(15, 0);
-            setPreference(33, 1);
-            setPreference(34, 100);
+            AIL_set_preference(15, 0);
+            AIL_set_preference(33, 1);
+            AIL_set_preference(34, 100);
 
             AILDigitalDriver* driver;
             AILDigitalDriver* result;
@@ -196,7 +198,7 @@ int soundManager::open(int newPriority)
                         break;
                     }
                     AIL_waveOutClose(driver);
-                    setPreference(15, 1);
+                    AIL_set_preference(15, 1);
                 } else if (AIL_get_preference(15)) {
                     g_soundSampleRate /= 2;
                     if (g_soundSampleRate >= 11025)
@@ -209,7 +211,7 @@ int soundManager::open(int newPriority)
                     result = 0;
                     break;
                 }
-                setPreference(15, 1);
+                AIL_set_preference(15, 1);
             }
             m_ds = result;
         }

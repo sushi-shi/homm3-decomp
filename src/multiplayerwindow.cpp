@@ -737,14 +737,14 @@ void TMultiPlayerWindow::update()
                     int fontColor = isSelected ? 5 : 1;
                     g_unnamed698a08->drawBoundedString(
                         nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
-                        0x80, 0x16, fontColor, 5, -1);
+                        0x80, 0x16, font::TColor(fontColor), 5, -1);
                     g_unnamed698a08->drawBoundedString(
                         userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
-                        0x80, 0x16, fontColor, 5, -1);
+                        0x80, 0x16, font::TColor(fontColor), 5, -1);
                     sprintf(countBuf, "%d", numPlayers);
                     g_unnamed698a08->drawBoundedString(
                         countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
-                        wy, 0x1e, 0x16, fontColor, 5, -1);
+                        wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
                     ++row;
                     wy += 0x19;
                 } while (row < count);
@@ -1020,8 +1020,10 @@ return_to_main_menu:
     return 1;
 }
 
-VA(0x0050f940, 0xC5)
-int TMultiPlayerWindow::windowHandler(message* msg)
+VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
+                      // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
+                      // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
+int TMultiPlayerWindow::windowHandler(message& msg)
 {
     pollSound();
     unsigned long timer = m_sessTimer;
@@ -1808,7 +1810,7 @@ textWidget* CHotSeatDlg::getRolloverWidget()
 #if 0  // @carcass
 // E:\gamedcs\multiplayerwindow.cpp:786
 DC_ONLY(0x102e24, 0x140)
-int CHotSeatDlg::windowHandler(message* msg)
+int CHotSeatDlg::windowHandler(message& msg)
 {
     // @stub
 }

@@ -118,7 +118,7 @@ public:
 
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
-    int broadcastMessage(message* msg);
+    int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
     int widgetClearStatus(int id, int status);
@@ -198,7 +198,7 @@ public:
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
 
     virtual int handleMessage(message& msg);                         // slot 3, 0x405680
-    virtual int windowHandler(message* msg);                            // slot 9
+    virtual int windowHandler(message& msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char processRightSelect(int id);                   // slot 11
     void setHelpText(THelpText* helpText, int start, int stop, unsigned char copyText);

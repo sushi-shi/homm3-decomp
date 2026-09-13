@@ -81,7 +81,7 @@ public:
     void showPointer(bool restore);
     void setPointer(int newFrame, EPointerSet newSet);
     void mouseCoords(int& x, int& y);
-    void update(unsigned char forceIt);
+    void update(bool forceIt);
     void checkUpdate();
     // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
     // mutating it in this build. SetPointer discards both results, so retail
@@ -118,7 +118,7 @@ public:
     // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
     // retail 0x601a00 retains that call. Preserve this specific friend.
     friend unsigned char ddSetFullScreenStatus(int newStatus);
-    void showSystemCursor(unsigned char showIt);
+    void showSystemCursor(bool showIt);
     void reset();                 // 0x50cc80
 
 private:

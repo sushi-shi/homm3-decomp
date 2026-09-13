@@ -210,23 +210,31 @@ void heroWindow::RemoveAndDeleteWidget(int inID)
 
 #endif  // @carcass
 
-VA(0x005fede0, 0x5E)  // dc 0x197480
-int heroWindow::broadcastMessage(message* msg)
+// E:\gamedcs\window.cpp:381
+// DC's message& parameter and GetWidget(m_focusId) call at 391 are canonical.
+// The two-state helper control preserves all retained function bytes; retail
+// expands GetWidget's tailWidget/prevWidget walk here. DC413's combat-over
+// handling is absent from Complete's 94-byte body: retail goes directly from
+// the focused widget's result to the ordinary widget traversal.
+// The /Ob2 witness: this body recurs inlined inside the 4-int
+// overload and both WidgetSet/ClearStatus while the out-of-line copy
+// still serves the external callers - auto-inlining with
+// unconditional emission (see the profile note in units.toml).
+VA(0x005fede0, 0x5E)  // linkorder bracket; widget Main-slot calls byte-proven, dc 0x197480
+int heroWindow::broadcastMessage(message& msg)
 {
     int result = 0;
     widget* current = m_tailWidget;
     if (m_focusId != -1) {
-        widget* focused = m_tailWidget;
-        while (focused && focused->m_id != m_focusId)
-            focused = focused->m_prevWidget;
+        widget* focused = getWidget(m_focusId);
         if (focused) {
-            result = focused->main(*msg);
+            result = focused->main(msg);
             if (result)
                 return result;
         }
     }
     while (current) {
-        result = current->main(*msg);
+        result = current->main(msg);
         if (result > 0 && result <= 2)
             return result;
         current = current->m_prevWidget;
@@ -246,7 +254,7 @@ int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
     msg.m_mouseY = 0;
     msg.m_extra = extra;
     msg.m_window = 0;
-    return broadcastMessage(&msg);
+    return broadcastMessage(msg);
 }
 
 VA(0x005feed0, 0x8E)  // dc 0x197570
@@ -261,7 +269,7 @@ int heroWindow::widgetSetStatus(int id, int status)
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_STATUS;
-    return broadcastMessage(&msg);
+    return broadcastMessage(msg);
 }
 
 VA(0x005fef60, 0x8E)  // dc 0x19758c
@@ -276,7 +284,7 @@ int heroWindow::widgetClearStatus(int id, int status)
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    return broadcastMessage(&msg);
+    return broadcastMessage(msg);
 }
 
 VA(0x005feff0, 0x22)  // dc 0x1975a8
@@ -386,6 +394,9 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // did not close that swap. RTM and SP3 emit the same bytes, so compiler age
 // is not the explanation. Do not invent a fifth local or remove the proven
 // saved height to steer allocation; helper/scope restoration is not closure.
+// Thirty-two conditional-compound/declaration-shape controls also emit one
+// reproduced object: braces around the default, clamp and damage-bound pairs,
+// crossed with separate saved-local declarations, leave 92.8767% unchanged.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
 void heroWindow::centerWindow(int centerX, int centerY)
 {
@@ -599,29 +610,34 @@ unsigned char CHeroWindowEx::processRightSelect(int id)
     return 1;
 }
 
-VA(0x005ff820, 0xA5)  // dc 0x197eb4
-int CHeroWindowEx::windowHandler(message* msg)
+// E:\gamedcs\window.cpp:1036 - vtable 0x243ce8 slot 9. The three arms
+// dispatch through slots 11/10/12 in that order (the [vptr+0x2c],
+// [vptr+0x28] and [vptr+0x30] call sites are what pin the roster
+// order), and the no-match arm returns 0 WITHOUT re-testing the exit
+// flag - retail jumps straight to the shared `xor eax,eax` tail.
+VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
+int CHeroWindowEx::windowHandler(message& msg)
 {
     bool exitFlag = 0;
 
-    if ((msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
-        && (msg->m_codeX == widget::WIDGET_SELECT
-            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT)) {
-        if (processRightSelect(msg->m_codeY))
+    if ((msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
+        && (msg.m_codeX == widget::WIDGET_SELECT
+            || msg.m_codeX == widget::WIDGET_RIGHT_SELECT)) {
+        if (processRightSelect(msg.m_codeY))
             return 1;
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        if (processHover(msg->m_mouseX, msg->m_mouseY))
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        if (processHover(msg.m_mouseX, msg.m_mouseY))
             return 1;
-    } else if (msg->m_id == MESSAGE_WIDGET
-               && msg->m_codeX == widget::WIDGET_DESELECT) {
-        onWidgetDeselect(msg->m_codeY, exitFlag);
+    } else if (msg.m_id == MESSAGE_WIDGET
+               && msg.m_codeX == widget::WIDGET_DESELECT) {
+        onWidgetDeselect(msg.m_codeY, exitFlag);
     } else {
         return 0;
     }
     if (exitFlag) {
-        msg->m_id = MESSAGE_WIDGET;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return 2;
     }
     return 0;
@@ -723,7 +739,7 @@ void setWinText(heroWindow* win, int winId)
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = g_winSetup[i].m_widgetId;
             msg.m_extraText = g_winSetup[i].m_text;
-            win->broadcastMessage(&msg);
+            win->broadcastMessage(msg);
         }
     }
 }

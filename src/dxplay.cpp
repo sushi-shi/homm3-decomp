@@ -1043,6 +1043,14 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // 77.5439% and do not reproduce retail's fourth return path.
 // Restoring the DC-public bool return type is byte-flat at 88.4211%,
 // including both remote.cpp callers; it preserves the branch-folding residual.
+// Sixteen connection-validity result controls (two reproduced objects) are
+// also flat at 88.4210%: returning the already validated buffer, with implicit
+// or explicit bool conversion, does not restore the branch. Both final test
+// polarities and void*/DPLCONNECTION* buffer types preserve all 86 exact
+// siblings. The missing separate exits remain unexplained.
+// Eight native-bool literal/polarity controls under the restored signature
+// emit one reproduced object: true/false versus integer return constants
+// leaves the same branchless result and all sibling scores unchanged.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
 bool CDPlayLobby::testLobbied()

@@ -1279,7 +1279,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
                     int noMove;
                     int foughtBattle;
                     eventCell = moveHero(g_searchArray->getStep(i),
-                                         i == 0, triggerPoint, &noMove, 0,
+                                         i == 0, *triggerPoint, &noMove, 0,
                                          &foughtBattle, 0);
                     m_advWindow->updateHeroLocator(-1, 1, 1);
                     if (eventCell)
@@ -2026,7 +2026,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             type_point walkTrigger;
             int noMove;
             int foughtBattle;
-            *peventCell = moveHero(moveDir, 1, &walkTrigger, &noMove, 0,
+            *peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
                                    &foughtBattle, 0);
             m_advWindow->updateHeroLocator(-1, 1, 1);
             g_mouseManager->showPointer(1);
@@ -8394,7 +8394,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
     Bitmap816* bmp = ResourceManager::getBitmap816("AdvMap.pcx");
 
     if (bmp) {
-        setPlayerPaletteColors(&bmp->m_p16.m_colors, playerId);
+        setPlayerPaletteColors(bmp->m_p16.m_colors.m_data, playerId);
         bmp->draw(0, 0, bmp->getWidth(), bmp->getHeight(),
                   g_windowManager->m_screenBitmap, 0, 0, 0);
         bmp->dispose();
@@ -10300,18 +10300,26 @@ CAdvPopup::~CAdvPopup()
     }
 }
 
-VA(0x0041b190, 0x2D)  // dc 0x1ec80
-int CAdvPopup::exitDialog(message* msg)
+// E:\gamedcs\advmgr.cpp:11528
+// Retail keeps the same seven-statement, branchless shape: publish the saved
+// result, rewrite the message from this object's three command fields, and
+// forward it to the executive.
+VA(0x0041b190, 0x2D)  // CAdvPopup vtable 0x63a6a8 slot 14, dc 0x1ec80
+int CAdvPopup::exitDialog(message& msg)
 {
     g_windowManager->m_dialogReturn = m_exitCommand;
-    msg->m_id = m_exitId;
-    msg->m_codeX = m_exitCodeX;
-    msg->m_codeY = 10;
+    msg.m_id = m_exitId;
+    msg.m_codeX = m_exitCodeX;
+    msg.m_codeY = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x0041b1c0, 0x87)  // dc 0x1ecb4
-int CAdvPopup::windowHandler(message* msg)
+// E:\gamedcs\advmgr.cpp:11539
+// Dreamcast proves the local inventory and statement order. Retail preserves
+// that control flow but gates the network pump on Complete's bVideoPaused:
+// base handler, expired-turn exit, CheckHandleNet, abort-message exit.
+VA(0x0041b1c0, 0x87)  // CAdvPopup vtable 0x63a6a8 slot 9, dc 0x1ecb4
+int CAdvPopup::windowHandler(message& msg)
 {
     int ret = CHeroWindowEx::windowHandler(msg);
     if (ret)
@@ -10370,7 +10378,7 @@ long GameTime::elapsedSince(unsigned long time)
 
 // E:\gamedcs\struct.h:419
 DC_ONLY(0x1ef04, 0x24)
-unsigned char GameTime::isPast(unsigned long time)
+bool GameTime::isPast(unsigned long time)
 {
     // @stub
 }

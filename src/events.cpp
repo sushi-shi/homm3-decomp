@@ -7742,7 +7742,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     if (!rightHuman && !leftHuman && !replay) {
         int winner;
         NewmapCell* target = g_game->m_worldMap.cell(point);
-        if (aiQuickCombat(leftHero, rightHero, rightArmyGroup, rightTown,
+        if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
                             target)) {
             winningPlayer = leftPlayer;
             winner = 0;

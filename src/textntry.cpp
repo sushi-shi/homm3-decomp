@@ -429,22 +429,22 @@ void textEntryWidget::draw()
         if (m_hasFocus)
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, m_color, m_justify, m_cursorIndex);
+                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, m_cursorIndex);
         else
             m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
-                m_boxWidth, m_boxHeight, m_color, m_justify, -1);
+                m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, -1);
     } else if (m_hasFocus) {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            (m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color,
+            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
             m_justify, m_cursorIndex);
     } else {
         m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
-            (m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color,
+            font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
             m_justify, -1);
     }
 }

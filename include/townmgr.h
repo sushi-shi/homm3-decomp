@@ -435,7 +435,7 @@ public:
     void setupThievesGuild(int thievesGuilds);
     // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5c9930
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5c9930
 };
 
 // The town hall page: one background per town type over a grid of
@@ -460,7 +460,7 @@ public:
 
     THallWindow(int which);
     virtual ~THallWindow();
-    virtual int windowHandler(message* msg) OVERRIDE;
+    virtual int windowHandler(message& msg) OVERRIDE;
 };
 
 // The mage guild, one full-screen page of five spell rows: twenty frame
@@ -475,7 +475,7 @@ public:
     TMageGuildWindow();
     virtual ~TMageGuildWindow();
     void setRolloverText(int codeY);
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5ce370
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5ce370
 };
 
 class type_garrison_base_window : public CAdvPopup {
@@ -530,7 +530,7 @@ public:
     virtual ~type_garrison_base_window();
 
 protected:
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d0910
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d0910
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
     void setCommandAndText(message* msg);
@@ -582,7 +582,7 @@ public:
     virtual ~TBlacksmithWindow();
     void setRightClickText(int id);
     void setRolloverText(int id);
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d1c60
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d1c60
 };
 
 // The shipyard dialog. Constructor 0x5d1ef0 writes both members past
@@ -604,7 +604,7 @@ public:
 
     TShipWindow(int type);
     virtual ~TShipWindow();
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d25a0
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d25a0
 };
 
 // The "build this?" confirmation popup. Both members past CAdvPopup's
@@ -628,7 +628,7 @@ public:
     TBuyBuildWindow(int x2, int y2, int id);
     virtual ~TBuyBuildWindow();
     void setPrerequisiteText(const town* currentTown, int building);
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d6810
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d6810
 };
 
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
@@ -674,7 +674,7 @@ public:
     void setRolloverText(int id);
     virtual int open(int zOrder, unsigned char update);  // slot 1
     virtual void close(unsigned char update);            // slot 2
-    virtual int windowHandler(message* msg) OVERRIDE;    // slot 9, 0x5d7b30
+    virtual int windowHandler(message& msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 
 // The fort page: one row per creature dwelling - a separator strip, a
@@ -739,7 +739,7 @@ public:
 
     TCastleWindow();
     virtual ~TCastleWindow();
-    virtual int windowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
+    virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5dcf80
 
 private:
     // +0x68..+0x87, DC `SpriteWidget`: the eight dwelling animations.

@@ -5,6 +5,7 @@
 #include "advmgr_popup.h"
 #include "spellschool.h"
 
+#include "herospec.h"
 class armyGroup;
 class bitmapBackedTextWidget;
 class bitmapBorder;
@@ -93,17 +94,17 @@ public:
     class TSpellbookEntry {
     public:
         TSpellbookEntry(SpellID id, TSpellSchool school,
-                        int mastery)
+                        TSkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
         bool operator<(const TSpellbookEntry& y) const;
         SpellID m_id;
         TSpellSchool m_school;
-        int m_mastery;
+        TSkillMastery m_mastery;
     };
 
-    TSpellbookWindow(const hero* h, const armyGroup* g,
+    TSpellbookWindow(const hero& h, const armyGroup* g,
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
     virtual int open(int newPriority, unsigned char update);
@@ -118,7 +119,7 @@ public:
     void previousPage();
     void nextPage();
     static void reset();
-    virtual int windowHandler(message* msg);
+    virtual int windowHandler(message& msg);
 
 private:
     const TSpellContext m_allowedContext;       // +0x60

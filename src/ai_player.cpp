@@ -4407,7 +4407,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     int noMove;
     int foughtBattle;
     NewmapCell* eventCell = g_advManager->moveHero(
-        currentPathCell->m_direction, standEnd, &triggerPoint, &noMove, 1,
+        currentPathCell->m_direction, standEnd, triggerPoint, &noMove, 1,
         &foughtBattle, 0);
     if (retargeted) {
         currentHero->m_pathTargetX = savedX;

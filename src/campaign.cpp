@@ -67,8 +67,20 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // spilling `this` into a third slot at [ebp-0x18], while ours coalesces the
 // pair onto [ebp-0x10] (26 uses) and puts `this` at [ebp-0x14]. Every
 // displacement is masked by the comparison, so the frame size is the whole
-// residual. The alternation is the phase button.h's set_hotkey note
-// describes and is not reachable from this body.
+// reported residual. This score therefore understates the differing frame
+// operands; raw instructions must also agree before this body is closed.
+// Pointer-lifetime control: 66 states varied all five actual plate pointers
+// between button and type_func_button, separate block lifetimes, and one
+// shared pointer. Three emitted objects and all retained candidates reproduce;
+// none exceeds 99.9458%, and no exact sibling changes. These source forms do
+// not recover the extra frame slot; no pointer or scope change is retained.
+// Container-entry control: all 243 combinations of implicit widget* conversion,
+// insertion-scoped widget* locals and enclosing-block const pointer locals
+// preserve all nine exact siblings. The best reproduced candidates reach
+// 99.9639% and allocate retail's frame, but raw review of all 243 still finds
+// at least ten wrong temporary-slot operands. A named ROE entry alone is
+// enough to reach that plateau; it does not explain retail's alternating
+// allocation/reserve, widget-entry and hotkey homes. No such local is retained.
 VA(0x00456ec0, 0x337)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
 TCampaignSetWindow::TCampaignSetWindow()
     : heroWindow(0, 0, 800, 600, 0)

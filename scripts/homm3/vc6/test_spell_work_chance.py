@@ -12,12 +12,15 @@ class SpellWorkChanceTests(unittest.TestCase):
     def test_actual_body_and_wrong_routing_negative_controls(self):
         root = Path(__file__).resolve().parents[3]
         header = (root / "include/armygrp.h").read_text()
+        artifact_header = (root / "include/artifact_type.h").read_text()
         helper_start = header.index("inline unsigned char isMindSpell(")
         helper = header[helper_start:header.index("\n}", helper_start) + 2]
         enums = []
-        for name in ("TCreatureType", "ESpellId", "EArtifactId"):
-            start = header.index("enum " + name + " {")
-            enums.append(header[start:header.index("\n};", start) + 3])
+        for declaration, name in ((header, "TCreatureType"),
+                                  (header, "ESpellId"),
+                                  (artifact_header, "TArtifact")):
+            start = declaration.index("enum " + name + " {")
+            enums.append(declaration[start:declaration.index("\n};", start) + 3])
         source = (root / "src/armygrp.cpp").read_text()
         start = source.index("float getSpellWorkChance(")
         body = source[start:source.index("\n}", start) + 2]

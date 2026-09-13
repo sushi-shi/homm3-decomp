@@ -202,6 +202,27 @@ parse errors remain coverage gaps. When Clang recovers a selected definition
 despite errors elsewhere in its TU, findings are still useful, but the report
 remains incomplete. Invalid/recovery nodes in the selected body reject it.
 
+A raw formal type can itself reflect lowering. For example, Dreamcast's
+`TCombatHeroSubWindow::Update` records `on_cursed_ground` as `T_UCHAR(0020)`,
+but its public symbol `?Update@TCombatHeroSubWindow@@QAAXABVhero@@PBV2@_N@Z`
+encodes native `bool`. `town::HasBuilding` has the same disagreement between
+its byte record and `_N` public ABI. The hero-update `bool` and `unsigned char`
+forms emit identical retail instructions, so byte equality cannot decide the
+source type. Retain the `bool` declaration established by the public symbol
+and explain the record conflict beside the function; an unsigned-byte finding
+alone does not justify changing that source interface. Check the public
+symbol before acting on this kind of primitive-type disagreement.
+
+The same distinction matters across callers. CSprite Draw/DrawCreature/
+DrawSpellEffect use public `_N` flags; preserving unsigned-char flip locals
+in three missile callers adds a `test`/`setne` conversion which retail lacks.
+Native Boolean locals remove that conversion and recover the prior caller
+scores. A byte-sized field forwarded directly to a proven Boolean parameter
+can supply the same evidence, as iconWidget IsFlipped and combatManager
+SaveBiggestExtent do. The public signature proves the callee type; the actual
+retail forwarding instructions are needed to infer the local or field type.
+Do not infer every byte field is bool from its name or zero/one values.
+
 Each JSON finding has an ID derived from its kind, subject and compared facts.
 The report also carries source identity, source hash, checked categories and
 coverage gaps. It does not edit source, suppress findings, alter matching
@@ -238,3 +259,62 @@ for custom traits/allocators, a different character type, and cv/ref changes.
 PYTHONPATH=scripts python -m unittest homm3.analysis.test_source_facts \
   homm3.analysis.test_dreamcast homm3.analysis.test_dc_source_layout
 ```
+
+## Check lookup destinations as well as instructions
+
+A matching visible CFG can still hide wrong switch results.
+`TSpellbookWindow::windowHandler` initially scored 99.9011%, with every
+instruction in the displayed CFG aligned. Both inlined `convertID2HelpID`
+pools nevertheless selected the wrong help rows: the reconstruction numbered
+rows by widget ID instead of the retail display order. Decoding the actual
+pool destinations and their returned constants recovered Previous/Next 0/1,
+Adventure/Combat 2/3, school tabs 4..8, spell points 9, and cancel 10. Repairing
+the canonical helper made both right-click and rollover lookups exact.
+
+The current default sema view for this handler ends at its first physical
+epilogue, +0x657; rollover code continues through +0xabb. An explicit
+`--base-range +0x65a:+0xabc --target-range +0x65a:+0xabc` covers that tail.
+Check the complete claimed carve and internal relocation addends as well:
+in this case all 54 direct calls and 38 internal references now agree.
+Identical unrelocated instruction bytes do not establish correct dispatch
+semantics, and an incomplete displayed range does not establish full coverage.
+
+
+## Recover reference parameters across virtual interfaces
+
+The earlier CodeView rendering flattened message& to message* in the popup
+hierarchy. The richer records retain message& in CHeroWindowEx::WindowHandler
+(window.cpp:1036), CAdvPopup::WindowHandler (advmgr.cpp:11539) and
+CAdvPopup::ExitDialog (advmgr.cpp:11528). Retail's x86 address passing alone
+cannot distinguish those source declarations.
+
+Restore the base, every override and the forwarding call together. Here the
+coordinated edit covers 41 implemented methods and fifteen address-valued
+calls to other helpers. The full VC6 build preserves all current scores and
+all 42 emitted vtables, including their extents and every method relocation.
+A normalized code comparison, allowing only the explicit method-signature
+rename, finds identical executable sections in all 152 units. Source audit
+coverage remains separate: existing Clang errors or ambiguous local names do
+not become checked facts merely because the reference declaration is repaired.
+
+## Distinguish lowered Boolean parameters from record padding
+
+`CDiffHeader` has a complete 12-byte class record (type 0x54d4) with three
+fields at offsets 0, 4 and 8. Its public constructor symbol,
+`??0CDiffHeader@@QAA@H_NH@Z`, proves a native `bool` argument where the formal
+record renders `T_UCHAR`. Restore that parameter without assuming that its
+one-byte destination field must also be Boolean. The class's final three
+bytes are ABI padding; a fourth, named padding-array member was unsupported.
+
+Sixteen constructor/layout/local-name controls preserve all diff scores and
+all function instructions. The restored model's 64 non-debug raw sections,
+including data and relocation destinations, agree after checking equivalent
+compiler-local symbol ordinals. The other 151 normalized objects remain
+byte-identical. This is source-model evidence, not a new exact match:
+`MakeDiff` remains 437 bytes against retail's 447 at 83.9244%.
+
+The three scoped `diffHeader` locals retain their original names, but the
+current audit cannot correlate their repeated names to individual scopes.
+The constructor itself has no standalone retail claim. Both are explicit
+audit coverage gaps; the public symbol, complete class record and compiled
+layout supply the evidence for this correction.

@@ -23,9 +23,9 @@ class paletteHiColor;
 class TPalette24;
 class sample;
 
-void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24& pal, int whichPlayer);
 
 // The widget base lives in widget.h (owner: widget.obj). Button's
 // vtables (0x63bb54/0x63bb88/0x63bbbc) have 13 slots because WIDGET
@@ -79,9 +79,10 @@ public:
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     static sample* s_clickSample;
+    void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    int select(message* msg);
-    int deselectSelected(message* msg);
+    int select(message& msg);
+    int deselect(message& msg);
     // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
     // /Ob2 candidate site wherever a caller uses it - see
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
@@ -111,8 +112,12 @@ public:
 
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
+    virtual int getRealWidth() const;  // slot 6, folded retail 0x4eab20
+    // Before normalization (function): button::GetRealHeight.
+    virtual int getRealHeight() const; // slot 5, folded retail 0x4eab30
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw();  // slot 4, retail 0x456940
+    virtual void dim() const;
 
     virtual ~button();
 
@@ -128,7 +133,7 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
 
     virtual void draw();    // slot 4, retail 0x456ca0
 
@@ -136,7 +141,7 @@ public:
 
 private:
     font* m_font;
-    int m_textColor;
+    font::TColor m_textColor;
 };
 
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down

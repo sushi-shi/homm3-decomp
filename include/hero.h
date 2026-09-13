@@ -822,11 +822,10 @@ public:
 
     int getPrimarySkill(int skill) const
     {
-        signed char value = m_stats[skill];
-        if (value > 99)
+        if (m_stats[skill] > 99)
             return 99;
-        if (value > 0)
-            return value;
+        if (m_stats[skill] > 0)
+            return m_stats[skill];
         return skill >= 2 ? 1 : 0;
     }
 
@@ -1072,7 +1071,7 @@ public:
     // E:\gamedcs\Hero.h:334, dc 0x1fbc8. DrawHeroPart and its shadow
     // twin call this header helper at each sprite draw; retail folds the
     // branchless facing > 4 body into the caller.
-    unsigned char getHflip()
+    bool getHflip()
     {
         return m_facing > kFacingS;
     }
@@ -1159,7 +1158,7 @@ public:
     }
     void giveResource(int whichRes, int howMuch);
     int getVisibility();
-    float getMagicResistanceFactor();
+    float getMagicResistanceFactor() const;
     // The rest of the specialty factor family, all one shape (see the
     // note over GetOffenseFactor in src/hero.cpp): 0x4e42b0 / 0x4e4310 /
     // 0x4e48b0 / 0x4e4920.
@@ -1541,7 +1540,7 @@ public:
 
     THeroScreenWindow();
     virtual ~THeroScreenWindow();
-    virtual int windowHandler(class message* msg);
+    virtual int windowHandler(class message& msg);
     void updateSlot(TArtifactSlot slot);
     void updateAllSlots();
     void updateHeroScreenStatusBar(class message* msg);
@@ -1552,7 +1551,7 @@ public:
     // all - `this` only ever feeds member calls - so the layout above
     // needs nothing for it.
     void setupHeroView();
-    virtual int exitDialog(class message* msg);
+    virtual int exitDialog(class message& msg);
 };
 SIZE(THeroScreenWindow, 0x68);
 

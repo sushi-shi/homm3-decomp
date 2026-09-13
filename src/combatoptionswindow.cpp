@@ -216,7 +216,7 @@ TCombatOptionsWindow::~TCombatOptionsWindow()
 // E:\gamedcs\combatoptionswindow.cpp:194
 // Retail inlines this mapping into CombatOptionsWindowHandler; no separate
 // entry exists between the destructor and DoModal.
-inline int TCombatOptionsWindow::convertID2HelpID(int id) const
+int TCombatOptionsWindow::convertID2HelpID(int id) const
 {
     if (id == DIALOG_RETURN_SPLIT_ACCEPT)
         return 0;
@@ -241,9 +241,10 @@ void TCombatOptionsWindow::doModal()
 // inlined `this` in EDI across the whole three-widget sweep, which is what
 // retail's Default and speed cases do and what a direct
 // `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
-// Spelled `inline` so no out-of-line copy lands in this obj either.
+// Keep ordinary definitions in their recorded source order; retail makes
+// the automatic expansion decision without an authored inline qualifier.
 // E:\gamedcs\combatoptionswindow.cpp:230
-inline void TCombatOptionsWindow::highlightCombatSpeed()
+void TCombatOptionsWindow::highlightCombatSpeed()
 {
     for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
         getWidget(speed)->sendMessage(widget::WIDGET_CLEAR_STATUS,
@@ -253,35 +254,31 @@ inline void TCombatOptionsWindow::highlightCombatSpeed()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:243
-inline void TCombatOptionsWindow::highlightGrid()
+void TCombatOptionsWindow::highlightGrid()
 {
     getWidget(SHOW_GRID_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_showCombatGrid);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:254
-inline void TCombatOptionsWindow::highlightMovementShadow()
+void TCombatOptionsWindow::highlightMovementShadow()
 {
     getWidget(MOVEMENT_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_combatShadeLevel);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:265
-inline void TCombatOptionsWindow::highlightMouseShadow()
+void TCombatOptionsWindow::highlightMouseShadow()
 {
     getWidget(MOUSE_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
         g_unnamed698758.m_showCombatMouseHex);
 }
 
-// Dreamcast homes this helper after the handler, but retail inlines it at
-// both call sites (the next retail entry after the handler, 0x46fee0, is an
-// unrelated cinit). Both sites pass 0, so the gate folds away.
-__forceinline void updateCombatOptions(unsigned char firstUpdate)
-{
-    if (!firstUpdate)
-        g_combatOptionsWindow->m_prefsChanged = 1;
-    g_combatOptionsWindow->drawWindow(1, 0xffff0001, 0xffff);
-}
+// Original: UpdateCombatOptions(int bFirstUpdate), DC 0x68098,
+// combatoptionswindow.cpp:651..654. The helper only redraws when firstUpdate
+// is zero; preference-member writes belong to the individual handler cases.
+// Its original source position is after the handler.
+static void updateCombatOptions(int firstUpdate);
 
 // E:\gamedcs\combatoptionswindow.cpp:278
 
@@ -358,7 +355,8 @@ int combatOptionsWindowHandler(message& msg)
             }
         }
     } else if (msg.m_id != MESSAGE_KEY_DOWN && msg.m_id == MESSAGE_WIDGET) {
-        if (msg.m_codeX == widget::WIDGET_SELECT) {
+        switch (msg.m_codeX) {
+        case widget::WIDGET_SELECT: {
             int id = g_combatOptionsWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
             if (id >= TCombatOptionsWindow::AUTO_CREATURES_ID
                     && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
@@ -369,7 +367,8 @@ int combatOptionsWindowHandler(message& msg)
                 g_soundManager->memorySample(button::s_clickSample);
             }
             return MESSAGE_DISPATCH_CONSUME;
-        } else if (msg.m_codeX == widget::WIDGET_DESELECT) {
+        }
+        case widget::WIDGET_DESELECT: {
             int id = msg.m_codeY;
             if (id == DIALOG_RETURN_SPLIT_ACCEPT) {
                 exitFlag = 1;
@@ -417,6 +416,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_animateSpellBook);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -450,6 +450,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME, g_unk698760);
                     g_soundManager->adjustMusicVolumes();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -485,6 +486,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME, g_unk698764);
                     g_soundManager->adjustSoundVolumes();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -495,6 +497,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_animateSpellBook);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CREATURES_ID:
@@ -504,6 +507,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatAutoCreatures);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_SPELLS_ID:
@@ -513,6 +517,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatAutoSpells);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CATAPULT_ID:
@@ -522,6 +527,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatCatapult);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_BALLISTA_ID:
@@ -531,6 +537,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatBallista);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
@@ -540,6 +547,7 @@ int combatOptionsWindowHandler(message& msg)
                         widget::WIDGET_SET_ICON_FRAME,
                         g_unnamed698758.m_combatFirstAidTent);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::COMBAT_SPEED_0_ID:
@@ -549,6 +557,7 @@ int combatOptionsWindowHandler(message& msg)
                         id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
                     g_combatOptionsWindow->highlightCombatSpeed();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
                 }
 
@@ -569,6 +578,7 @@ int combatOptionsWindowHandler(message& msg)
                         g_unnamed698758.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID:
@@ -588,24 +598,28 @@ int combatOptionsWindowHandler(message& msg)
                         g_unnamed698758.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::SHOW_GRID_ID:
                     g_unnamed698758.m_showCombatGrid ^= 1;
                     g_combatOptionsWindow->highlightGrid();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
                     g_unnamed698758.m_combatShadeLevel ^= 1;
                     g_combatOptionsWindow->highlightMovementShadow();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOUSE_SHADOW_ID:
                     g_unnamed698758.m_showCombatMouseHex ^= 1;
                     g_combatOptionsWindow->highlightMouseShadow();
                     prefsChanged = 1;
+                    g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 default:
@@ -614,6 +628,9 @@ int combatOptionsWindowHandler(message& msg)
                 if (prefsChanged)
                     updateCombatOptions(0);
             }
+
+        }
+        break;
         }
     }
     if (exitFlag) {
@@ -625,6 +642,14 @@ int combatOptionsWindowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
+// DC combatoptionswindow.cpp:651..654, source-private ordinary helper.
+static void updateCombatOptions(int firstUpdate)
+{
+    if (!firstUpdate) {
+        g_combatOptionsWindow->drawWindow(1, 0xffff0001, 0xffff);
+    }
+}
+
 
 // E:\gamedcs\combatoptionswindow.cpp:171
 #if 0  // @carcass -- represented by VA_COMPGEN above

@@ -179,8 +179,61 @@ TLevelUpWindow::~TLevelUpWindow()
     deleteWidgets();
 }
 
-VA(0x004f9780, 0x440)  // dc 0xe8c64
-int TLevelUpWindow::windowHandler(message* msg)
+// E:\gamedcs\levelupwindow.cpp:170
+// Residual (77.73%): the retail object duplicates the identical
+// enable/DrawWindow/return tail in all four selection arms (12 GetWidget calls),
+// while this CL cross-jumps every arm to one shared tail (9 calls); it also
+// merges the several `return 0` exits that retail keeps distinct (9 rets vs our
+// 11). predict-inline's only unpaired row is exactly that GetWidget 9-vs-12
+// count, so the tail merge IS the whole remaining residual.
+// NEW 2026-08-14: the generation hypothesis in the old note is now DISPROVEN -
+// `homm3 vc6 ab run` compiles this body with the RTM C2 12.00.8168 and gets
+// output byte-identical to SP3 (104+36 both), verdict `neither`. The cross-jump
+// is therefore a source-input difference we have not found, not a stale-CL
+// artifact. Tried and rejected: repeated longhand tails, switch-vs-if dispatch,
+// reordered selection arms, an inline helper.
+// Re-audited 2026-09-01: retail has 43 blocks / 315 instructions / 9 returns,
+// candidate 49 / 289 / 11; the first eight blocks are exact and why-branch
+// reports distance 36. Its guided unsigned-hover-id, reverse-case, and
+// swap-case controls are all byte-flat at 77.72727%, so none is retained.
+// Macro/source-carrier audit (2026-08-21): conventional release VERIFY of
+// each accept lookup (`(void)((accept = GetWidget(id)) != 0)`) is byte-flat,
+// as are release-elided call-shaped diagnostic doses of 1/3/5/9 sites at
+// entry. Carrying the accept object as its concrete `button*` type is also
+// byte-flat. Enabling from the natural selection invariant
+// `Selected != 0` regresses to 68.2665 and leaves the same branch-shape
+// distance. VERIFY/TRACE/ASSERT source history therefore cannot select the
+// retail tail topology through any conventional release expansion tested.
+// DC-census verdict (2026-08-14): this handler's census is CLEAN. Its
+// `heroWindow::GetWidget` x12 matches our twelve sites exactly and its
+// `widget::set_visible` x4 matches our four send_message pairs. The one
+// under-count row, `GameTime::IsPast` x1 (dc 0x1ef04 = `ElapsedSince(t) >= 0`,
+// itself `(long)(Get() - t)`), is now preserved below and remains byte-
+// EXACTLY flat at 77.7273 even though it nests three inline levels deep.
+// What DID move it 73.18 -> 77.73: retail materialises each GetWidget() object
+// BEFORE pushing the member function's arguments (`push id; call GetWidget;
+// push 4; push 6; mov ecx,eax; call send_message`), where the fused
+// `GetWidget(id)->send_message(a,b)` spelling pushes the arguments first. Each
+// widget is bound to a pointer local below to reproduce retail's order.
+// EXACT 2026-09-05 (77.73 -> 100.00): the "tail topology" above was the
+// RETURN STRUCTURE. Retail shares one `return 0` epilogue (+0x10eb) among
+// the KEY breaks, the mouse-move fallthrough, the non-widget id, the codeX
+// default and the right-qualifier test, and keeps a second copy only at the
+// codeY switch's fallthrough (+0x11dc): an if / else-if / else-if chain
+// over msg->id with ONE trailing `return 0;`, the RIGHT_SELECT arm falling
+// through into DESELECT (retail's chain fallthrough arm at +0x1109 runs into
+// the qualifier test), `break` where the arms bail, and one `return 0;`
+// after the codeY switch. Seven separate `return 0;` statements had cost
+// seven duplicated epilogues AND made VC6 cross-jump the four
+// enable/DrawWindow/`return 1` tails that retail keeps separate.
+// DC levelupwindow.cpp:267/274 (0xe8e90/0xe8ed8) directly index
+// akSSkillTraits, the canonical TSSkillTraits table in sskilltraits.h.
+// Retail 0x4f99e4/0x4f9a2a reads that same reference at 0x67dcf0,
+// then selects the mastery string before NormalDialog at 0x4f9a39.
+// The former LevelUpSkillName helper and TLevelUpSkillTraits table copy
+// had no separate CodeView source boundary.
+VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
+int TLevelUpWindow::windowHandler(message& msg)
 {
     if (!g_dialogDeadline697784) {
         int result = CAdvPopup::windowHandler(msg);
@@ -195,16 +248,16 @@ int TLevelUpWindow::windowHandler(message* msg)
 
     unsigned long deadline = g_dialogDeadline697784;
     if (deadline && GameTime::isPast(deadline)) {
-        msg->m_id = MESSAGE_WIDGET;
+        msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = 9999;
-        msg->m_codeY = widget::WIDGET_END_DIALOG;
-        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
-    if (msg->m_id == MESSAGE_KEY_DOWN) {
-        switch (msg->m_codeX) {
+    if (msg.m_id == MESSAGE_KEY_DOWN) {
+        switch (msg.m_codeX) {
         case LEVELUP_SELECT_RIGHT_KEY: {
             if (g_levelUpWindow->m_rightSkill == -1)
                 break;
@@ -240,17 +293,17 @@ int TLevelUpWindow::windowHandler(message* msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
         }
-    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = g_levelUpWindow->findWidget(msg->m_mouseX, msg->m_mouseY);
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = g_levelUpWindow->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             g_lastImHoverId = hoverID;
             if (hoverID != -1)
                 g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         }
-    } else if (msg->m_id == MESSAGE_WIDGET) {
-        switch (msg->m_codeX) {
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
                 normalDialog(levelUpSkillName(g_levelUpWindow->m_leftSkill),
@@ -264,10 +317,10 @@ int TLevelUpWindow::windowHandler(message* msg)
             }
             // The right-click arm shares the selection tail below.
         case widget::WIDGET_DESELECT:
-            if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+            if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
                 break;
 
-            switch (msg->m_codeY) {
+            switch (msg.m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID: {
                 widget* rightBorder =
@@ -306,10 +359,10 @@ int TLevelUpWindow::windowHandler(message* msg)
             }
 
             case LEVELUP_ACCEPT_ID:
-                msg->m_id = MESSAGE_WIDGET;
+                msg.m_id = MESSAGE_WIDGET;
                 g_windowManager->m_dialogReturn = g_levelUpWindow->m_selected;
-                msg->m_codeY = widget::WIDGET_END_DIALOG;
-                msg->m_codeX = widget::WIDGET_END_DIALOG;
+                msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.m_codeX = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             return 0;

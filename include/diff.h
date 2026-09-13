@@ -8,11 +8,10 @@ public:
     int m_numBytes;
     int m_oldNumBytes;
     unsigned char m_copy;
-    // Dreamcast has two dwords and a byte; retail serializes a
-    // 12-byte header. These three bytes align the header extent.
-    unsigned char m_tailPadding[3];
+    // DC type 0x54d4 records three fields. Retail serializes the naturally
+    // aligned 12-byte extent; its public constructor symbol proves bool.
 
-    CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
+    CDiffHeader(int numBytes, bool copy, int oldNumBytes)
         : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
     {
     }

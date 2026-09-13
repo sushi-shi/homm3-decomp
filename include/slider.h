@@ -63,8 +63,8 @@ public:
     virtual int main(message& msg);                 // slot 2
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw();                            // slot 4
-    virtual int getRealHeight();                    // slot 5
-    virtual int getRealWidth();                     // slot 6
+    virtual int getRealHeight() const;                    // slot 5
+    virtual int getRealWidth() const;                     // slot 6
     virtual void enable(unsigned char on);          // slot 9
     virtual void onSetFocus();                      // slot 10
     virtual void onKillFocus();                     // slot 11

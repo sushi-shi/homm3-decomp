@@ -33,14 +33,24 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // basic_string::_Eos terminator, where retail encodes `mov byte ptr
 // [ecx + eax], 0` and we encode `mov byte ptr [eax + ecx], 0` - the same
 // instruction with the SIB base and index exchanged. The other three
-// expansions of the same statement already agree, so this is the bounded
-// B18 class, not a source fact.
+// expansions of the same statement already agree. The current divergent
+// block is B8, within text4 assignment; source labels do not recover the
+// original expression. Nine row/record lifetime variants emit six objects,
+// all reproduced: direct row expressions remain 99.9621 with an indexed,
+// reference or pointer destination; a local row base or paired induction
+// drops to 89.6136..89.7917. All five scored siblings remain exact.
 // The recovered spreadsheet cell accessor is not interchangeable with this
 // caller's row-access model: replacing all seven getRow(row)[column] sites
 // with getSpreadsheet(row,column) scores53.0833 and changes the call stream.
 // The four-state caller/sibling family reproduces all four objects; changing
 // initializeSeerHutText alone also loses its exact body (99.7101). No
 // Dreamcast counterpart proves either replacement in this Complete-only TU.
+// Sixty further cell/endpoint lifetime states produce six objects, all
+// reproduced. Actual char-pointer, destination-reference and row-reference
+// bindings preserve the seven reads/assignments, but none improves 99.9621%.
+// Shared input-pointer lifetime falls to 99.8712%; binding both endpoint
+// destinations reaches 98.7121% (98.6212% combined). All five siblings stay
+// exact. These meaningful local bindings do not explain the SIB choice.
 VA(0x0056c120, 0x2A3)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col)

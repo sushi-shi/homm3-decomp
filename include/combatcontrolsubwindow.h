@@ -45,7 +45,7 @@ public:
     // independently preserve the same PBD/JJ arguments; only the generated
     // prototype comments below lost them.
     virtual void setRollover(const char* newText);
-    virtual void setRolloverButtons(int first, int second);
+    virtual void setRolloverButtons(long first, long second);
     virtual void disableAllButtons();
 };
 SIZE(type_combat_sub_window, 0x38);
@@ -65,6 +65,10 @@ public:
     TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
     virtual void setRollover(const char* newText);
+    // Before normalization: set_rollover_buttons; retained DC public: JJ.
+    virtual void setRolloverButtons(long first, long second);
+    // Before normalization: DisableAllButtons; DC271 delegates to the base.
+    virtual void disableAllButtons();
 };
 SIZE(TCombatControlSubWindow, 0x40);
 
@@ -145,7 +149,7 @@ public:
     // ProcessCombatMsg's retail call sites independently prove their
     // pointer ABI.  They remain out of line just like the sibling hero
     // panel methods.
-    void update(const army* info, const hero* owner);
+    void update(const army& info, const hero* owner);
     void show();
 
     void unShow();

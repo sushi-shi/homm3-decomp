@@ -186,8 +186,8 @@ public:
     // TCampaignBrief's dispatch and the shared `ret 8` at 0x5bc7e0.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0; // slot 3
     virtual void draw() = 0;                                // slot 4
-    virtual int getRealHeight() { return m_height; }          // slot 5
-    virtual int getRealWidth() { return m_width; }            // slot 6
+    virtual int getRealHeight() const { return m_height; }          // slot 5
+    virtual int getRealWidth() const { return m_width; }            // slot 6
     virtual void processHover();                           // slot 7
     virtual void dim() const;                               // slot 8
     virtual void enable(unsigned char on);                  // slot 9

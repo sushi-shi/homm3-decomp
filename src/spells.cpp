@@ -295,7 +295,7 @@ int combatManager::viewSpells()
     // the literal eContextCombat and it is `magicTerrain` that receives the
     // combat's spell-restriction code.
     {
-        TSpellbookWindow spellbook(m_heroes[m_currentSide],
+        TSpellbookWindow spellbook(*m_heroes[m_currentSide],
                                    m_armyGroups[1 - m_currentSide],
                                    TSpellbookWindow::eContextCombat,
                                    m_magicTerrain);

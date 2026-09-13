@@ -167,23 +167,30 @@ inline int min(int a, int b)
 // mass axis has a three-statement window, and naming more widgets overshoots
 // it (M=20 is 95.5336, M=24 96.1640). What is left is the frame-slot
 // permutation described above, not the inliner.
+// Native bool is_siege is proved by DC public
+// ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
+// record is a lowered storage type; retail also consumes the flag as a byte.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int mySide, int winningSide,
-    unsigned char isSiege, int experience)
+    bool isSiege, int experience)
     : heroWindow(165, 19, 470, 561, 0x10)
 {
     g_combatResultsWindow = this;
 
     long amount;
     TCreatureType type;
+    // Before normalization (locals): iDeadArmyTypes.
     int deadArmyTypes[2][20];
+    // Before normalization (locals): iDeadArmyNumTroops.
     int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
     const hero* const myHero = mySide == 0 ? attacker : defender;
 
+    // Before normalization (locals): iTtlDeadArmies.
     int ttlDeadArmies[2];
+    // Before normalization (locals): cText.
     char text[100];
     int firstX;
 
@@ -309,6 +316,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         else
             strcpy(g_text, (*g_generalText)[305]);
         if (myHero) {
+            // Before normalization (locals): cTemp.
             char temp[150];
             sprintf(temp, (*g_generalText)[306],
                 myHero->m_name, experience);
@@ -367,25 +375,35 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         68, 202, 332, 70, g_text, "smalfont.fnt", font::WHITE,
         RESULTS, 5, 0, 8));
 
+    // DC277 writes the enum to sp+0x38 and DC279 the loss count to
+    // sp+0x3c, the locations recorded for type/amount. Reuse those typed
+    // locals here; source identity cannot be inferred from slot sharing
+    // alone, but this preserves the named declarations and statement order.
+    // Thirty VC6 states tested independent/together reuse, typed separate
+    // locals, hero-choice orientation and array declarator grouping. Reuse
+    // is score-flat at 99.8607%; reversing the hero choice costs 99.7300%.
+    // Six objects and six reproduced elites preserve all six exact siblings.
+    // Direct initialization of the const hero pointer (also with an extra
+    // parenthesis pair) is rejected by VC6 as a function declaration.
     // Losses, aggregated per side into (creature, count) rows: the display
     // is data-driven, so every icon and every count text it emits carries
     // BACKGROUND_ID rather than one of the Dreamcast-only LOSS ids.
     for (int side = 0; side < 2; side++) {
         ttlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
-            int creature = g_combatManager->m_armies[side][slot].m_creatureType;
-            int lost = g_combatManager->m_armies[side][slot].m_origNumTroops
+            type = g_combatManager->m_armies[side][slot].m_creatureType;
+            amount = g_combatManager->m_armies[side][slot].m_origNumTroops
                 - g_combatManager->m_armies[side][slot].m_numTroops;
-            if (creature != -1 && lost > 0) {
+            if (type != -1 && amount > 0) {
                 int row;
                 for (row = 0; row < ttlDeadArmies[side]; row++)
-                    if (deadArmyTypes[side][row] == creature)
+                    if (deadArmyTypes[side][row] == type)
                         break;
                 if (row < ttlDeadArmies[side]) {
-                    deadArmyNumTroops[side][row] += lost;
+                    deadArmyNumTroops[side][row] += amount;
                 } else {
-                    deadArmyTypes[side][row] = creature;
-                    deadArmyNumTroops[side][row] = lost;
+                    deadArmyTypes[side][row] = type;
+                    deadArmyNumTroops[side][row] = amount;
                     ttlDeadArmies[side]++;
                 }
             }
@@ -398,6 +416,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             m_widgets.push_back(new textWidget(
                 42, rowY + 10, 384, 36, (*g_generalText)[32],
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
+        // Before normalization (locals): iMaxToShow.
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;
         for (int row = 0; row < maxToShow; row++) {
@@ -415,8 +434,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     m_widgets.push_back(new bitmapBorder(
         384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
 
-    button* accept = 0;
-    accept = new button(
+    button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
     accept->setHotkey(28);
@@ -484,9 +502,11 @@ int combatResultsWindowHandler(message& msg)
             exitFlag = 1;
     }
 
+    // DC445 calls IsPast; retail 0x471bc5 expands Get/sub/js. Preserve
+    // the canonical helper, including its ElapsedSince delegation.
     unsigned long deadline = g_dialogDeadline697784;
     if (deadline > 0
-        && static_cast<long>(GameTime::get() - deadline) >= 0) {
+        && GameTime::isPast(deadline)) {
         msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
         exitFlag = 1;
     }

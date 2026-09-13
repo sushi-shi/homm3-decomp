@@ -437,13 +437,13 @@ TAdventureMapWindow::TAdventureMapWindow()
 // widget.h's two accessor slots, emitted here because CAdventurMapChatEdit's
 // vtable is the reference that instantiates them.
 VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
-int widget::getRealHeight()
+int widget::getRealHeight() const
 {
     // @stub - active definition is the widget.h class-body inline
 }
 
 VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
-int widget::getRealWidth()
+int widget::getRealWidth() const
 {
     // @stub - active definition is the widget.h class-body inline
 }
@@ -1446,8 +1446,16 @@ void TAdventureMapWindow::clearBottomView()
     }
 }
 
-VA(0x00403f00, 0x1E)  // dc 0x11bc
-void TAdventureMapWindow::updateResourceDisplay(unsigned char draw, unsigned char update)
+// E:\gamedcs\adventuremapwindow.cpp:1253
+// DC public ?UpdateResourceDisplay@TAdventureMapWindow@@QAAX_N0@Z
+// proves native bools despite the lowered T_UCHAR formal records. Both this
+// forwarding interface and TResourceDisplay::update must preserve that ABI:
+// a byte-to-bool boundary inserts two setne conversions absent at 0x403f00.
+// Retail has the !draw reset and unconditional two-argument Update only.
+// DC1257's update guard and DC1261's UpdateScreen call are port-specific;
+// the 30-byte retail body has neither extra branch nor screen update.
+VA(0x00403f00, 0x1E)  // anchor-global, dc 0x11bc
+void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 {
     if (!draw)
         update = 0;
@@ -1523,7 +1531,7 @@ void TAdvMenu::~TAdvMenu()
 
 // E:\gamedcs\adventuremapwindow.cpp:1486
 DC_ONLY(0x1ab8, 0x64E)
-int TAdvMenu::windowHandler(message* msg)
+int TAdvMenu::windowHandler(message& msg)
 {
     // @stub
 }
@@ -1712,14 +1720,14 @@ int CHeroWindowEx::handleMessage(message* msg)
 
 // E:\gamedcs\Widget.h:144
 DC_ONLY(0x2de4, 0x4)
-int widget::getRealHeight()
+int widget::getRealHeight() const
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:147
 DC_ONLY(0x2de8, 0x4)
-int widget::getRealWidth()
+int widget::getRealWidth() const
 {
     // @stub
 }

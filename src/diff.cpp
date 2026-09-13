@@ -121,8 +121,9 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
     }
 }
 
-// Residual (current 83.9244%, banked MAX 83.9477%): exact 447-byte extent,
-// exact 14-block retail CFG, and the exact 0x3c retail frame.  Dreamcast proves
+// Residual (current/MAX/HIST 83.9593%): the current body is 436
+// bytes versus retail 447, with fourteen matching CFG flows and frame 0x3c.
+// Dreamcast proves
 // the max/CountSameBytes/FindNextSame helpers, three scoped CDiffHeader objects,
 // and both payload memcpy arms.  Its lower-bound local inventory and tail line
 // rows favor no separately named `count`; spelling m_newSize-newOffset directly
@@ -139,8 +140,19 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // store swap) are flat or worse.  Earlier exhaustive controls also reject all
 // 120 prologue orderings, ternary max, mutable-offset CountSameBytes,
 // placement-new headers, a shared terminal tail, function-scope sameCount,
-// register hints, and inert type-count probes.  This is a measured C1
-// front-end-handle wall, not license to invent an alias local absent from DC.
+// register hints, and inert type-count probes. These controls leave the C1
+// front-end processing order unresolved; they do not justify an alias local.
+// The 24-state allocation-owner family (5cb0d43dafe69b8969a4) is flat for
+// the current initialization order; moving allocation before diffSize's
+// initialization scores 78.7558 and contradicts retail's initial size store.
+// The 16-state copy-operand family (75922f0d8c44cd926995) finds pointer-add
+// commutation byte-neutral. Restoring newOffset before oldOffset in the
+// changed-data arm, as DC lines 214/215 show, raises 83.9244 to 83.9593.
+// The 16-state comparison family (cad26bea333fe0344900) keeps that gain:
+// integer-index commutation is flat; reversing CountSameBytes' equality
+// operands falls to 76.6105 with the restored increment order. All three
+// exact siblings hold in these families. The same-data arm retains its
+// distinct oldOffset/newOffset order from DC lines 242/243.
 // E:\gamedcs\diff.cpp:174
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
@@ -160,18 +172,18 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
             int oldCount = 0;
             int newCount = 0;
             if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
-                CDiffHeader header(newCount, 1, oldCount);
-                memcpy(diff->getBase() + diffOffset, &header,
+                CDiffHeader diffHeader(newCount, 1, oldCount);
+                memcpy(diff->getBase() + diffOffset, &diffHeader,
                        sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
                 memcpy(diff->getBase() + diffOffset,
                        m_newData + newOffset, newCount);
                 diffOffset += newCount;
-                oldOffset += oldCount;
                 newOffset += newCount;
+                oldOffset += oldCount;
             } else {
-                CDiffHeader header(m_newSize - newOffset, 1, 0);
-                memcpy(diff->getBase() + diffOffset, &header,
+                CDiffHeader diffHeader(m_newSize - newOffset, 1, 0);
+                memcpy(diff->getBase() + diffOffset, &diffHeader,
                        sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
                 memcpy(diff->getBase() + diffOffset,
@@ -182,8 +194,8 @@ CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
                 return diff;
             }
         } else {
-            CDiffHeader header(sameCount, 0, 0);
-            memcpy(diff->getBase() + diffOffset, &header,
+            CDiffHeader diffHeader(sameCount, 0, 0);
+            memcpy(diff->getBase() + diffOffset, &diffHeader,
                    sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);
             oldOffset += sameCount;

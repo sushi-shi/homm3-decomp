@@ -519,7 +519,7 @@ public:
     virtual ~TSingleSelectionWindow();
     virtual int doModal(unsigned char fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
-    virtual int windowHandler(message* msg);  // slot 9
+    virtual int windowHandler(message& msg);  // slot 9
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
@@ -529,7 +529,7 @@ private:
     virtual unsigned char processRightSelect(int id);  // slot 11
 
 public:
-    virtual int exitDialog(message* msg);   // slot 14
+    virtual int exitDialog(message& msg);   // slot 14
     int update();
     const char* getMapName(int which);
     const char* getFileName(int which);
@@ -905,7 +905,7 @@ extern int g_unnamed697774;
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4099, dc 0x139b08) const char* TSingleSelectionWindow::GetMapName(int which);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4141, dc 0x139ccc) void TSingleSelectionWindow::DrawBasicMapInfo();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4219, dc 0x13a2f8) int TSingleSelectionWindow::MaxPlayers();
-// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4239, dc 0x13a380) int TSingleSelectionWindow::Update(message* msg);
+// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4239, dc 0x13a380) int TSingleSelectionWindow::Update(message& msg);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4446, dc 0x13b178) unsigned char TSingleSelectionWindow::SetNewPlayerSlot(unsigned long dpid);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4470, dc 0x13b22c) void TSingleSelectionWindow::SetHumanSlot();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4621, dc 0x13b704) void TSingleSelectionWindow::OnSortMaps(int how);
@@ -913,7 +913,7 @@ extern int g_unnamed697774;
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:4773, dc 0x13bc60) void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:5000, dc 0x13c434) void TSingleSelectionWindow::SetFilter(int size);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:5085, dc 0x13c724) unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg);
-// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:5100, dc 0x13c79c) int TSingleSelectionWindow::OnWidgetDeselect(message* msg, unsigned char* bExitFlag, unsigned char remoteClick);
+// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:5100, dc 0x13c79c) int TSingleSelectionWindow::OnWidgetDeselect(message& msg, unsigned char* bExitFlag, unsigned char remoteClick);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:6296, dc 0x13f748) int TSingleSelectionWindow::GetThisPlayerGamePos();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:6443, dc 0x13fd74) unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:6664, dc 0x140508) unsigned char TSingleSelectionWindow::OnMapHeaderRequestMsg(CNetMsg* pNetMsg);

@@ -49,8 +49,8 @@ public:
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
     int distanceSquared(const type_point& p2) const
     {
-        int dy = m_y - p2.m_y;
         int dx = m_x - p2.m_x;
+        int dy = m_y - p2.m_y;
         return dx * dx + dy * dy;
     }
 };
@@ -106,5 +106,61 @@ struct SLimitData {
     }
 };
 SIZE(SLimitData, 0x10);
+
+// GameTime has header-inline helpers in struct.h (DC lines 411-438);
+// Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.
+// The public names use @@YA (namespace functions), and their NB11 records
+// are LF_PROCEDURE; static class members in the same corpus use @@SA and
+// member-function records. GameTime has no object type or instance users.
+namespace GameTime {
+    unsigned long get();             // 0x4f82e0
+    void delayTil(unsigned long time);  // 0x4f82f0
+    void delay(int interval);        // 0x4f83c0
+    // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
+    // header inlines of the same family; no retail out-of-line body
+    // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
+    // is the expansion that proves the shape: the deadline argument is
+    // loaded into a callee-saved register BEFORE the Get() call (an
+    // argument evaluated ahead of its guard), and the result is tested
+    // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
+    // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
+    // Before normalization (function): GameTime::Elapsed.
+    // The stop/start subtraction is retained by the upstream mouse timing helper.
+    inline long elapsed(unsigned long stop, unsigned long start)
+    {
+        return static_cast<long>(stop - start);
+    }
+    // DC struct.h:412 explicitly calls Get then Elapsed(stop, start).
+    // Retain the canonical call even where retail expands the subtraction.
+    inline long elapsedSince(unsigned long time)
+    {
+        return elapsed(get(), time);
+    }
+    // DC public ?IsPast@GameTime@@YA_NK@Z proves native bool although
+    // NB11 lowers its return record to T_UCHAR. DC struct.h:420 calls
+    // ElapsedSince then tests the sign, as retail caller expansions do.
+    inline bool isPast(unsigned long time)
+    {
+        return elapsedSince(time) >= 0;
+    }
+    // DC struct.h:438 (dc 0x4c994, 44 B on SH4) - the frame-pacing
+    // step, and a HEADER INLINE: no retail out-of-line body exists,
+    // /Ob2 expands it at every site. army::Fly (0x4b4a40) is the
+    // expansion that proves the shape - `this_frame` is homed to a
+    // stack slot BEFORE the Get() call and read back twice afterwards,
+    // which a hand-spelled `timer += lag` (two independent global
+    // loads) cannot produce, and the clamp compares `cmp interval, lag;
+    // jle`, i.e. the INTERVAL is the left operand.
+    // DC struct.h:439 calls ElapsedSince before the clamp/add at line442.
+    // The old direct subtraction erased that proven helper boundary.
+    inline unsigned long nextFrameTime(unsigned long thisFrame,
+                                       long interval)
+    {
+        long lag = elapsedSince(thisFrame);
+        if (interval > lag)
+            lag = interval;
+        return thisFrame + lag;
+    }
+} // namespace GameTime
 
 #endif /* HOMM3_STRUCT_H */
