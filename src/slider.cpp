@@ -1,5 +1,4 @@
 // slider.cpp - E:\gamedcs\slider.cpp (compiland slider.obj)
-// HAND-OWNED after admission. Retail Complete x86 is authoritative; the
 // Dreamcast roster supplies names and source-level signatures.
 #include <va.h>
 #include "bitmap816.h"
@@ -17,7 +16,6 @@
 
 // Dreamcast names slider.obj's private left/right modifier latch. Retail's
 // Select stores the message mask here and Deselect consumes and clears it.
-// Before normalization: iLeftRightSave.
 DATA(0x0069fdd4)
 static int g_leftRightSave;
 
@@ -33,9 +31,7 @@ slider::slider()
 }
 #endif
 
-// E:\gamedcs\slider.cpp:50
-// Before normalization (locals): resource_name.
-VA(0x00596050, 0x7D)  // literal/callee/field-layout proof, dc 0x149a48
+VA(0x00596050, 0x7D)  // dc 0x149a48
 void slider::initialize(const char* resourceName)
 {
     if (m_width > m_height) {
@@ -58,8 +54,7 @@ void slider::initialize(const char* resourceName)
     m_currentState = 0;
 }
 
-// E:\gamedcs\slider.cpp:96
-VA(0x005960D0, 0xA8)  // ctor/EH/vtable/literal proof, dc 0x149ae8
+VA(0x005960D0, 0xA8)  // dc 0x149ae8
 slider::slider(int x, int y, int w, int h, int id, int num,
                TSliderFunction func, EGraphics graphics, int page,
                unsigned char hotKey)
@@ -86,16 +81,14 @@ slider::slider(int x, int y, int w, int h, int id, int num,
     m_hotKeys = hotKey;
 }
 
-// E:\gamedcs\slider.cpp:124
-VA(0x00596180, 0x59)  // vtable/resource Dispose/base dtor, dc 0x149ba4
+VA(0x00596180, 0x59)  // dc 0x149ba4
 slider::~slider()
 {
     m_sliderBitmap->dispose();
     m_sliderSprite->dispose();
 }
 
-// E:\gamedcs\slider.cpp:143
-VA(0x005961E0, 0x4C)  // contiguous slider block, dc 0x149bec
+VA(0x005961E0, 0x4C)  // dc 0x149bec
 void slider::setState(int state)
 {
     if (state < 0)
@@ -111,8 +104,7 @@ void slider::setState(int state)
         m_knobPos = m_knobStart + m_knobRange * state / (m_numStates - 1);
 }
 
-// E:\gamedcs\slider.cpp:159
-VA(0x00596230, 0x2A2)  // contiguous slider block, dc 0x149c90
+VA(0x00596230, 0x2A2)  // dc 0x149c90
 void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 {
     m_status |= WIDGET_SELECTED;
@@ -187,19 +179,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
     }
 }
 
-// E:\gamedcs\slider.cpp:244
-// Retail's direct 0x48..0x51 jump table proves that KP4 shares KP8's
-// decrement arm and KP6 shares KP2's increment arm. Letting all four action
-// arms reach the common zero return, and making the state-message arm join
-// its common success tail, reproduces all 85 blocks, 60 branches, 11 returns,
-// and ten jump-table slots exactly.
-// Goto audit: Replacing the five callWidgetMain jumps with direct base
-// calls/returns scores 89.6667% versus 100%; the shared call tail remains.
-// The base-widget exits break the outer switch and remain exact. A handled
-// result also removes the state-message join with all 1184 bytes and 29
-// relocation names/addends unchanged. Its direct return control still costs
-// 0.0123 points; the ordinary setState/setResolution calls stay canonical.
-VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
+VA(0x005964E0, 0x4A0)  // dc 0x149f04
 int slider::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
@@ -351,8 +331,7 @@ int slider::main(message& msg)
     return widget::main(msg);
 }
 
-// E:\gamedcs\slider.cpp:477
-VA(0x00596980, 0x167)  // contiguous slider block, dc 0x14a380
+VA(0x00596980, 0x167)  // dc 0x14a380
 int slider::select(message* msg, unsigned char dragging)
 {
     m_status |= WIDGET_SELECTED;
@@ -405,11 +384,7 @@ int slider::select(message* msg, unsigned char dragging)
     return 2;
 }
 
-// E:\gamedcs\slider.cpp:545
-// DC lines 553-574 place the coordinate-specific decrement/increment arms
-// in separate scopes. Two else-if pairs preserve the exact common redraw
-// tail without gotos or an extra EBX save.
-VA(0x00596AF0, 0x143)  // contiguous slider block, dc 0x14a508
+VA(0x00596AF0, 0x143)  // dc 0x14a508
 int slider::deselect(message* msg)
 {
     if (!(m_status & WIDGET_SELECTED))
@@ -469,8 +444,7 @@ DC_ONLY(0x14a6ac, 0x4)
 void slider::zBufferDraw() {}
 #endif
 
-// E:\gamedcs\slider.cpp:613
-VA(0x00596C40, 0x3D5)  // contiguous slider block, dc 0x14a6b0
+VA(0x00596C40, 0x3D5)  // dc 0x14a6b0
 void slider::draw()
 {
     if (m_width > m_height) {
@@ -548,17 +522,9 @@ void slider::draw()
     }
 }
 
-// E:\gamedcs\slider.cpp:706
-VA(0x00597020, 0x84)  // contiguous slider block, dc 0x14aaa0
+VA(0x00597020, 0x84)  // dc 0x14aaa0
 void slider::setKnob(int inX)
 {
-    // EXACT 2026-09-07 (88.44 -> 100.0). The old candidate collapsed the
-    // width/height choice into a ternary fed by named `knobSize` and `base`
-    // locals, then diagnosed the resulting ESI/EDI swap as a front-end wall.
-    // Dreamcast line 707..710 instead proves two source arms and records no
-    // locals. Repeating the member expression in those arms lets VC6 hoist
-    // m_knobStart by itself; retail's register binding, subtraction order,
-    // separate clamp test, and all ten blocks then match exactly.
     if (m_width > m_height)
         inX -= m_knobStart / 2 + m_x + m_knobStart;
     else
@@ -576,8 +542,7 @@ void slider::setKnob(int inX)
         m_knobPos = m_knobStart;
 }
 
-// E:\gamedcs\slider.cpp:726
-VA(0x005970B0, 0x35)  // virtual SetState dispatch, dc 0x14ab4c
+VA(0x005970B0, 0x35)  // dc 0x14ab4c
 void slider::updateResolution(int num)
 {
     if (num != m_numStates) {
@@ -589,8 +554,7 @@ void slider::updateResolution(int num)
     }
 }
 
-// E:\gamedcs\slider.cpp:739
-VA(0x005970F0, 0x2A)  // contiguous slider block, dc 0x14ab7c
+VA(0x005970F0, 0x2A)  // dc 0x14ab7c
 void slider::setResolution(int num)
 {
     m_knobPos = m_knobStart;
@@ -602,22 +566,19 @@ void slider::setResolution(int num)
         m_numStates = 1;
 }
 
-// E:\gamedcs\slider.cpp:751
-VA(0x00597120, 0x5)  // one-store body, dc 0x14aba0
+VA(0x00597120, 0x5)  // dc 0x14aba0
 void slider::onSetFocus()
 {
     m_scrolling = 1;
 }
 
-// E:\gamedcs\slider.cpp:756
-VA(0x00597130, 0x5)  // one-store body, dc 0x14aba8
+VA(0x00597130, 0x5)  // dc 0x14aba8
 void slider::onKillFocus()
 {
     m_scrolling = 0;
 }
 
-// E:\gamedcs\slider.cpp:761
-VA(0x00597140, 0x45)  // two status-message pairs, dc 0x14abb0
+VA(0x00597140, 0x45)  // dc 0x14abb0
 void slider::enable(unsigned char arg)
 {
     if (arg) {

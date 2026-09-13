@@ -1,6 +1,6 @@
 // gzinflatebuf.h - the gzip-inflating streambuf and its TAbstractFile
 // adapter that Complete's campaign loader reads .h3c payloads through.
-//
+
 // NEITHER CLASS HAS A DREAMCAST ROW. TGzInflateBuf's bodies sit in the
 // gametypewindow..hero link-order bracket (the compiland opened by cinit
 // 0x4d5f70..0x4d5fb0: 0x4d5fd0 get-byte helper, 0x4d6050 constructor,
@@ -45,38 +45,23 @@ public:
     // three-slot copy of Dinkumware's {deleting dtor, what, _Doraise}.
     class TDataError;
 
-    // Before normalization: source.
     std::streambuf* m_source;      // +0x38
     // zlib 1.1.3's z_stream, 56 B: next_in/avail_in at +0x3c/+0x40 are what
     // the get-byte helper refills, next_out/avail_out at +0x48/+0x4c are the
     // window underflow drains, and the destructor calls inflateEnd on it.
     // The vendored zlib-1.1.3 IS retail's library (it matches 100%), so its
     // own header is the record - cc_wrap puts that directory on INCLUDE.
-    // Before normalization: stream.
     z_stream m_stream;             // +0x3c
-    // Before normalization: buffer.
     unsigned char* m_buffer;       // +0x74, new[0x400]
-    // Before normalization: out_buffer.
     unsigned char* m_outBuffer;   // +0x78, buffer + 0x200
-    // Before normalization: crc.
     unsigned long m_crc;           // +0x7c
-    // Before normalization: ok.
     unsigned char m_ok;            // +0x80
-    // Before normalization: source_eof.
     unsigned char m_sourceEof;    // +0x81
-    // Before normalization: inflating.
     unsigned char m_inflating;     // +0x82
-    // Before normalization: pad_83; reference member TGzInflateBuf::m_open.
     char m_open;
 
 private:
-    // Two private readers the bodies need. 0x4d5fd0 refills next_in from the
-    // source buffer and returns the next byte or -1; 0x4d6ba0 is the same
-    // read with the malformed-member throw attached, which retail keeps out
-    // of line at four of underflow's eight trailer reads.
-    // Before normalization (function): TGzInflateBuf::get_byte.
     int getByte();              // 0x4d5fd0
-    // Before normalization (function): TGzInflateBuf::read_byte.
     int readByte();             // 0x4d6ba0
 };
 SIZE(TGzInflateBuf, 0x84);
@@ -95,12 +80,9 @@ public:
 class TStreamBufFile : public TAbstractFile {
 public:
     TStreamBufFile(std::streambuf* newBuffer) : m_buffer(newBuffer) {}
-    // Before normalization (function): TStreamBufFile::Read.
     virtual int read(void* data, int size);         // 0x483f10
-    // Before normalization (function): TStreamBufFile::Write.
     virtual int write(const void* data, int size);  // 0x483f30
 
-    // Before normalization: buffer.
     std::streambuf* m_buffer;  // +4
 };
 

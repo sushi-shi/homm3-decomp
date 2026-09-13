@@ -1,6 +1,6 @@
 // tiles.h - prototypes of tiles.cpp, the map-grid neighbourhood helper
 // compiland.
-//
+
 // THE COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER (which carries no
 // random-map generator at all) and its name is an inference the link order
 // bounds rather than proves, exactly like campaignmusic.obj: retail's .text
@@ -34,11 +34,8 @@ enum ETileDirection {
 };
 
 struct TPoint;
-// Before normalization: gTileDirections.
 extern TPoint g_tileDirections[TILE_DIR_COUNT];
 
-// Retail 0x5bc910. Fills an eight-entry byte mask with "this neighbour is on
-// the map", clearing the three directions each grid edge removes.
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists);
 

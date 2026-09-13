@@ -6,13 +6,9 @@
 
 #include "armygrp.h"
 
-// Before normalization (function): IsBaseCreature.
 int isBaseCreature(TCreatureType monType);
-// Before normalization (function): IsSiegeWeapon.
 unsigned char isSiegeWeapon(TCreatureType creature);
-// Before normalization (function): UpgradedCreatureType.
 TCreatureType upgradedCreatureType(TCreatureType type);
-// Before normalization (function): DowngradedCreatureType.
 TCreatureType downgradedCreatureType(TCreatureType type);
 
 #endif  /* HOMM3_CREATURETYPE_FWD_H */

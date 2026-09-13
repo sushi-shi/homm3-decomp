@@ -8,7 +8,6 @@ public:
     int m_numBytes;
     int m_oldNumBytes;
     unsigned char m_copy;
-    // Before normalization: _pad.
     // Dreamcast has two dwords and a byte; retail serializes a
     // 12-byte header. These three bytes align the header extent.
     unsigned char m_tailPadding[3];
@@ -18,7 +17,6 @@ public:
     {
     }
 
-    // Before normalization (function): CDiffHeader::GetData.
     unsigned char* getData()
     {
         // The payload follows the serialized 12-byte header, not a field
@@ -37,10 +35,8 @@ private:
 public:
     unsigned int m_numBytes;
 
-    // Before normalization (function): CDiffFile::GetData.
     unsigned char* getData();
 
-    // Before normalization (function): CDiffFile::GetBase.
     unsigned char* getBase()
     {
         // MakeDiff writes offsets from the allocation/header base (retail
@@ -48,7 +44,6 @@ public:
         return static_cast<unsigned char*>(static_cast<void*>(this));
     }
 
-    // Before normalization (function): CDiffFile::Apply.
     void* apply(unsigned char* oldSaveGame, int oldSaveGameSize);
 };
 
@@ -63,13 +58,10 @@ public:
     CDiffMaker(unsigned char* oldData, int oldSize,
                unsigned char* newData, int newSize);
 
-    // Before normalization (function): CDiffMaker::MakeDiff.
     CDiffFile* makeDiff(unsigned long& diffSize);
 
 protected:
-    // Before normalization (function): CDiffMaker::CountSameBytes.
     int countSameBytes(int oldOffset, int newOffset);
-    // Before normalization (function): CDiffMaker::FindNextSame.
     bool findNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);
 };

@@ -15,28 +15,18 @@ class TAbstractFile;
 // makes VC6's generated copies treat retail padding as a real member.
 class TTimedEvent {
 public:
-    // Before normalization: Message.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
-    // Before normalization: ResQty.
     int m_resQty[7];
-    // Before normalization: PlayerFlags.
     unsigned char m_playerFlags;
-    // Before normalization: ApplyToHuman.
     unsigned char m_applyToHuman;
-    // Before normalization: ApplyToComputer.
     unsigned char m_applyToComputer;
-    // Before normalization: FirstTime.
     unsigned short m_firstTime;
-    // Before normalization: Interval.
     unsigned short m_interval;
 
     // `ret 8`: the save version is a second argument, gating the
     // apply-to-human flag at 28 exactly as LoadGarrisonPool does.
-    // Before normalization (function): TTimedEvent::Read.
     int read(TAbstractFile* infile, int saveVersion);
-    // Before normalization (function): TTimedEvent::Save.
     int save(TAbstractFile* outfile);
-    // Before normalization (function): TTimedEvent::Load.
     int load(TAbstractFile* infile, int saveVersion);
 };
 SIZE(TTimedEvent, 0x34);
@@ -48,11 +38,8 @@ SIZE(TTimedEvent, 0x34);
 // implicit so generated copies do not copy padding bytes.
 class TTownEvent : public TTimedEvent {
 public:
-    // Before normalization: TownNum.
     signed char m_townNum;
-    // Before normalization: BuildBuildings.
     __int64 m_buildBuildings;
-    // Before normalization: generatorBonuses.
     unsigned short m_generatorBonuses[7];
 
     // MapCell.h:400 in the DC roster - a header-inline default constructor.

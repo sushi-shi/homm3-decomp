@@ -18,15 +18,10 @@
 // bytes before artifacts stay implicit so generated copies skip them.
 struct type_creature_bank {
 public:
-    // Before normalization: guards.
     armyGroup m_guards;
-    // Before normalization: resources.
     int m_resources[7];
-    // Before normalization: reward_creature.
     TCreatureType m_rewardCreature;
-    // Before normalization: reward_creatures.
     signed char m_rewardCreatures;
-    // Before normalization: artifacts.
     std::vector<TArtifact> m_artifacts;
     unsigned char load(void* infile);
     ~type_creature_bank();

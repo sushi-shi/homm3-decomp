@@ -23,16 +23,13 @@ enum EMonsterQuantityPreset {
 
 class MonsterData {
 public:
-    // Before normalization: Message.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
-    // Before normalization: ResQty.
     int m_resQty[7];
     // Spelled int, not TArtifact, for the reason armyGroup::armies is
     // spelled int: readMonsterData deserializes it from a one- or two-byte
     // stream field and saveMonsterData narrows it back to a byte, so an
     // enum here would put a cast on every crossing.  ARTIFACT_NONE still
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
-    // Before normalization: Artifact.
     int m_artifact;
 
     // loadMonsterList's resize temp proves a header-inline constructor: the

@@ -1,7 +1,6 @@
 // textscroller.h - prototypes of textscroller.cpp, the Complete-era
 // compiland that owns the scenario-description scroller.
-// HAND-OWNED after admission.
-//
+
 // PROVISIONAL UNIT NAME. The Dreamcast roster has no module between
 // text.obj and textntry.obj, and no DC compiland declares either class
 // below, so the 0x5b9f80..0x5ba8cf block is Complete-only: its own
@@ -23,7 +22,6 @@
 // slots and overrides only slot 16, the state-change hook, at 0x5b9fa0.
 class type_text_slider : public slider {
 public:
-    // Before normalization: owner.
     type_text_scroller* m_owner;  // +0x68
 
     type_text_slider(int x, int y, int w, int h, int id, int num,
@@ -34,7 +32,6 @@ public:
         m_owner = scroller;
     }
 
-    // Before normalization (function): type_text_slider::Close.
     virtual void close();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
