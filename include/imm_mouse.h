@@ -1,5 +1,5 @@
 // Retail-only Immersion force-feedback mouse integration used by game.obj.
-//
+
 // The Immersion API itself, the enclosure wrapper and the globals now live
 // in forcefeedback.h beside the compiland that defines them (RTTI-proven
 // ForceFeedback.cpp); this header keeps only the effect holder game.obj
@@ -51,11 +51,6 @@ public:
         t_initialize_failure() : std::runtime_error(std::string()) {}
     };
 
-    // Retail 0x4b6260, 1122 bytes: the window origin, the iFeel error
-    // policy, the mouse device, the effect project read from H3Shad.ifr
-    // (with a LOD fallback in its catch), and the three globals it
-    // publishes.
-    // Before normalization (locals): hInst.
     TImmMouseRuntime(void* instance, void* hwnd);
     // Retail's atexit thunk at 0x4b6910 - the address InitImmMouse hands to
     // _atexit, 58 B - is this destructor EXPANDED, so it is defined inline

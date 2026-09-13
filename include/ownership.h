@@ -30,9 +30,7 @@ public:
     T* get() const { return m_ptr; }
 
 private:
-    // Before normalization: _m_bOwns.
     mutable unsigned char m_owns;
-    // Before normalization: _m_ptr.
     T* m_ptr;
 };
 
@@ -54,9 +52,7 @@ public:
     T* operator->() const { return m_ptr; }
 
 private:
-    // Before normalization: _m_bOwns.
     mutable unsigned char m_owns;
-    // Before normalization: _m_ptr.
     T* m_ptr;
 };
 
@@ -79,9 +75,7 @@ public:
     T* operator->() const { return m_ptr; }
 
 private:
-    // Before normalization: _m_bOwns.
     mutable unsigned char m_owns;
-    // Before normalization: _m_ptr.
     T* m_ptr;
 };
 
@@ -103,7 +97,6 @@ public:
     T* get() const { return m_ptr; }
 
 private:
-    // Before normalization: _m_ptr.
     T* m_ptr;
 };
 

@@ -1,7 +1,6 @@
 // crt_stdio.h - the CRT stream/memory surface, declared WITHOUT pulling
 // <stdio.h> or <string.h>.
-// HAND-OWNED after admission.
-//
+
 // Why this header exists rather than the real CRT headers: the
 // include-set sensitivity class (initialize_game_data precedent,
 // byte-proven) makes the COUNT OF USER-DEFINED TYPE DEFINITIONS visible
@@ -10,13 +9,13 @@
 // 100.0 -> 96.09 for a single added type definition in a shared
 // header's closure. <stdio.h> would add its own definitions to every
 // TU that needs so much as fopen.
-//
+
 // A bare `struct _iobuf;` FORWARD declaration is in the proven-inert
 // set (blank lines, comments, typedefs, `extern int` and bare
 // `struct X;` do NOT move the class), so this header buys the CRT calls
 // with no type DEFINITION at all. _CRTIMP is empty under /ML, so these
 // match the real declarations and the CRT's own linkage.
-//
+
 // Same doctrine as winmm_thunks.h: a declaration whose SPELLING is
 // load-bearing lives in one reviewed header, not re-typed per .cpp.
 // Include it only in the TUs that actually call these.

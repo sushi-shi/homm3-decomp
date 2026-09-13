@@ -3,7 +3,6 @@
 
 // E:\gamedcs\includes.h:124-134, DC 0x20d2c/0x1ef5c.
 // The integer instance is published as ?t_limit@@YAABHABH00@Z.
-// Before normalization: t_limit; parameters min, value, max.
 // Retail 0x4e6750 has the same three-reference ABI, lower-bound-first
 // comparisons and selected-reference return. The by-value limit wrapper
 // owns the three copies whose addresses its callers pass to this selector.

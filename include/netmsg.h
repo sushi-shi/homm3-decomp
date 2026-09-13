@@ -135,22 +135,13 @@ enum EGameTransmitLimits {
 
 class CNetMsg {
 public:
-    // Before normalization: field_00; reference member CNetMsg::m_from.
     int m_from;
-    // Before normalization: field_04; reference member CNetMsg::m_dpidFrom.
     int m_dpidFrom;
-    // Before normalization: subType.
     int m_subType;
-    // Before normalization: size.
     unsigned long m_size;
-    // Before normalization: field_10; reference member CNetMsg::m_UncompressedSize.
     int m_uncompressedSize;
 
     CNetMsg() {}
-    // Raw Dreamcast CodeView names these parameters `subType` and `size` and
-    // types the first as eRS_Messages (0x2CCD), the same type rendered on the
-    // CMapChange `id` parameter. Keep the five body statements in lines
-    // 169/172-175 order; member-shadow spelling is source material here.
     CNetMsg(eRS_Messages subType, unsigned long size)
     {
         this->m_subType = subType;
@@ -171,11 +162,6 @@ public:
 };
 SIZE(CEndPlacementPhaseMsg, 0x14);
 
-// The header-inline owner delegates to the process-wide recycler. remote.cpp
-// can see and inline that wrapper down to delete; command.cpp retains the
-// retail out-of-line DestroyMsg call.
-// Before normalization (function): DestroyMsg.
-// Before normalization (locals): pNetMsg.
 void destroyMsg(CNetMsg* netMsg);
 
 class CReadyToPlayMsg : public CNetMsg {
@@ -204,7 +190,6 @@ SIZE(CAllReadyToPlayMsg, 0x14);
 // both into their command/remote callers.
 class CMessageKill {
 public:
-    // Before normalization (locals): pNetMsg.
     CMessageKill(CNetMsg* netMsg) : m_netMsg(netMsg) {}
     ~CMessageKill()
     {
@@ -212,11 +197,7 @@ public:
             destroyMsg(m_netMsg);
     }
 
-    // Before normalization (function): CMessageKill::SetMessage.
-    // Before normalization (locals): pNetMsg.
     void setMessage(CNetMsg* netMsg) { m_netMsg = netMsg; }
-
-    // Before normalization: m_pNetMsg.
 
 protected:
     CNetMsg* m_netMsg;
@@ -280,7 +261,6 @@ SIZE(CHeroLevelUpdateMsg, 0x3c);
 class CGameTransmitInitMsg : public CNetMsg {
 public:
     unsigned long m_fileSize;
-    // Before normalization: m_fullGameCRC.
     unsigned long m_fullGameCrc;
     unsigned long m_thisPlayerDead;
     unsigned char m_isDiff;
@@ -322,12 +302,10 @@ public:
     unsigned long m_blockNbr;
     unsigned long m_blockSize;
 
-    // Before normalization (function): CGameTransmitMainMsg::CreateMsg.
     static CGameTransmitMainMsg* createMsg(unsigned long maxSize)
     {
         // DC netmsg.h:325..333 records pTemp first, then pMsg; neither the
         // removed `size` local nor a direct typed allocation exists there.
-        // Before normalization (locals): pTemp, pMsg.
         unsigned char* temp = static_cast<unsigned char*>(
             ::operator new(sizeof(CGameTransmitMainMsg) + maxSize));
         memset(temp, 0, sizeof(CGameTransmitMainMsg) + maxSize);
@@ -337,8 +315,6 @@ public:
         return msg;
     }
 
-    // Before normalization (function): CGameTransmitMainMsg::Update.
-    // Before normalization (locals): pData, pTemp.
     void update(unsigned char* data, unsigned long blockSize)
     {
         m_blockSize = blockSize;
@@ -352,9 +328,7 @@ public:
         m_size = getSize();
     }
 
-    // Before normalization (function): CGameTransmitMainMsg::GetSize.
     unsigned long getSize() { return m_blockSize + sizeof(*this); }
-    // Before normalization (function): CGameTransmitMainMsg::GetData.
     unsigned char* getData()
     {
         return static_cast<unsigned char*>(static_cast<void*>(this))
@@ -390,17 +364,12 @@ SIZE(CGameXferAckMsg, 0x14);
 
 class CGameTransmitEndMsg : public CNetMsg {
 public:
-    // Before normalization: m_iMonthType.
     int m_monthType;
-    // Before normalization: m_iMonthTypeExtra.
     int m_monthTypeExtra;
-    // Before normalization: m_iWeekType.
     int m_weekType;
-    // Before normalization: m_iWeekTypeExtra.
     int m_weekTypeExtra;
     unsigned long m_diffSize;
 
-    // Before normalization (locals): iMonthType, iMonthTypeExtra, iWeekType, iWeekTypeExtra.
     CGameTransmitEndMsg(int monthType, int monthTypeExtra,
                         int weekType, int weekTypeExtra,
                         unsigned long diffSize)
@@ -439,7 +408,6 @@ public:
     }
 
     // The wire extent; readers consume only the address of m_text.
-    // Before normalization (function): CChatMsg::GetSize.
     unsigned long getSize()
     {
         return strlen(m_text) + sizeof(CNetMsg) + 1;
@@ -519,14 +487,10 @@ public:
 };
 SIZE(CPlayerDeadMsg, 0x18);
 
-
 class CTradeRequestMsg : public CNetMsg {
 public:
-    // Before normalization: playerPos.
     int m_playerPos;
-    // Before normalization: resource.
     int m_resource;
-    // Before normalization: amount.
     int m_amount;
 };
 SIZE(CTradeRequestMsg, 0x20);
@@ -593,9 +557,7 @@ SIZE(CMCMoveHero, 0x1b);
 // expansions store, in the CNetMsg base's own field order.
 class CMCClaimMine : public CMapChange {
 public:
-    // Before normalization: mineId.
     signed char m_mineId;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCClaimMine(signed char id, int player)
@@ -609,9 +571,7 @@ SIZE(CMCClaimMine, 0x1c);
 
 class CMCClaimTown : public CMapChange {
 public:
-    // Before normalization: townId.
     signed char m_townId;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCClaimTown(signed char id, int player)
@@ -625,22 +585,15 @@ SIZE(CMCClaimTown, 0x1c);
 
 class CMCClaimGarrison : public CMapChange {
 public:
-    // Before normalization: garrisonId.
     int m_garrisonId;
-    // Before normalization: playerPos.
     int m_playerPos;
 
-    // Dreamcast attributes the constructor to netmsg.h:619 (dc 0xbd290).
-    // The canonical body in game.cpp is retained by randomizeEvents and
-    // expanded into claimGarrison's full-expression temporary in retail.
     CMCClaimGarrison(int id, int player);
 };
 
 class CMCClaimGenerator : public CMapChange {
 public:
-    // Before normalization: generatorId.
     int m_generatorId;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCClaimGenerator(int id, int player)
@@ -650,9 +603,7 @@ public:
 
 class CMCClaimShipYard : public CMapChange {
 public:
-    // Before normalization: point.
     type_point m_point;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCClaimShipYard(type_point location, int player)
@@ -662,9 +613,7 @@ public:
 
 class CMCBuildBoat : public CMapChange {
 public:
-    // Before normalization: point.
     type_point m_point;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCBuildBoat(type_point location, int player)
@@ -733,9 +682,7 @@ SIZE(CResetVisibilityMsg, 0x20);
 // +0x18 and the same 0x1c wire extent.
 class CMCTeleportHero : public CMapChange {
 public:
-    // Before normalization: heroId.
     int m_heroId;
-    // Before normalization: point.
     type_point m_point;
 
     // Retail has NO out-of-line body: advManager::TeleportTo (0x41d930) is
@@ -753,11 +700,8 @@ SIZE(CMCTeleportHero, 0x1c);
 // independently publishes the same three-member class and constructor.
 class CMCRecruitHero : public CMapChange {
 public:
-    // Before normalization: heroId.
     int m_heroId;
-    // Before normalization: point.
     type_point m_point;
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCRecruitHero(int id, type_point location, int player);
@@ -770,9 +714,7 @@ SIZE(CMCRecruitHero, 0x20);
 // signed char: retail copies the whole dword out of hero::id.
 class CMCDeadHero : public CMapChange {
 public:
-    // Before normalization: heroId.
     int m_heroId;
-    // Before normalization: point.
     type_point m_point;
 
     CMCDeadHero(int id, type_point location);
@@ -785,7 +727,6 @@ SIZE(CMCDeadHero, 0x1c);
 // landing at +0x14.
 class CMCDeadPlayer : public CMapChange {
 public:
-    // Before normalization: playerPos.
     int m_playerPos;
 
     CMCDeadPlayer(int player)
@@ -798,7 +739,6 @@ SIZE(CMCDeadPlayer, 0x18);
 // (0x4b9fc0) broadcasts the same record town::SwapHeroes does.
 class CMCHideHero : public CMapChange {
 public:
-    // Before normalization: heroId.
     int m_heroId;
 
     // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary

@@ -18,8 +18,8 @@ keyword, so it is displayed but folded into the virtual family for the verdict.
         --module herowindow --module adventuremapwindow
     PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --all --json
 
-Name correlation reuses the project's case/underscore folding and owning
-normalization comments. Overloads retain their signature/cv alternatives.
+Name correlation uses the project's naming convention, with exact names and
+legacy owning aliases first. Overloads retain their signature/cv alternatives.
 Only records defined under the repo (not the header mirror or vendored zlib)
 count as authored, and only DC classes we author at least one member of are
 scored -- the number is about our code, never STL/MFC surface.
@@ -38,6 +38,7 @@ from pathlib import Path
 from homm3 import manifest
 from homm3.analysis.dc_lines import load_symbols
 from homm3.analysis.source_facts import name_key, _aliases, type_differences, type_facts
+from homm3.analysis.source_facts import semantic_name_key
 from homm3.build import compilation_database
 from homm3.core import clang, common
 from homm3.core.cc_wrap import ZLIB_INC
@@ -292,6 +293,17 @@ def correlate(fact, dc):
         for rec in dc.get((fact["class_key"], key), []):
             if rec["kind"] == fact["kind"] and rec not in candidates:
                 candidates.append(rec)
+    if not candidates and fact.get("name"):
+        # Work from original case/prefix spelling, before lossy key folding.
+        key = semantic_name_key(fact["name"])
+        for (owner, _), records in dc.items():
+            if owner != fact["class_key"]:
+                continue
+            for rec in records:
+                if (rec["kind"] == fact["kind"]
+                        and semantic_name_key(rec["display"].rsplit("::", 1)[-1]) == key
+                        and rec not in candidates):
+                    candidates.append(rec)
     if not candidates:
         return None, "name"
     if fact["is_method"]:

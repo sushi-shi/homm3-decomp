@@ -57,9 +57,7 @@ struct rmgTerrainTile {
 };
 
 struct TRmgTerrainFlip {
-    // Before normalization: flipX.
     unsigned char m_flipX;
-    // Before normalization: flipY.
     unsigned char m_flipY;
 
     TRmgTerrainFlip() {}
@@ -78,30 +76,19 @@ enum TRmgTerrainNeighbourKind {
 // retail cluster. Its constructor clears only the validity bit; the upper
 // two bits survive every fill from the map adapter.
 struct TRmgPackedTerrainCell {
-    // Before normalization: initialized.
     unsigned short m_initialized : 1;
-    // Before normalization: terrain.
     unsigned short m_terrain : 4;
-    // Before normalization: frame.
     unsigned short m_frame : 7;
-    // Before normalization: flipX.
     unsigned short m_flipX : 1;
-    // Before normalization: flipY.
     unsigned short m_flipY : 1;
-    // Before normalization: unknown14.
     unsigned short m_unknown14 : 2;
 
     TRmgPackedTerrainCell() : m_initialized(0) {}
 
-    // Before normalization (function): TRmgPackedTerrainCell::GetTerrain.
     inline int getTerrain() const { return m_terrain; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFrame.
     inline int getFrame() const { return m_frame; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFlipX.
     inline unsigned char getFlipX() const { return m_flipX; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetFlipY.
     inline unsigned char getFlipY() const { return m_flipY; }
-    // Before normalization (function): TRmgPackedTerrainCell::GetTile.
     inline rmgTerrainTile getTile() const
     {
         rmgTerrainTile tile;
@@ -111,15 +98,10 @@ struct TRmgPackedTerrainCell {
         tile.m_flipY = getFlipY();
         return tile;
     }
-    // Before normalization (function): TRmgPackedTerrainCell::SetInitialized.
     inline void setInitialized() { m_initialized = 1; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetTerrain.
     inline void setTerrain(int value) { m_terrain = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFrame.
     inline void setFrame(int value) { m_frame = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFlipX.
     inline void setFlipX(unsigned char value) { m_flipX = value; }
-    // Before normalization (function): TRmgPackedTerrainCell::SetFlipY.
     inline void setFlipY(unsigned char value) { m_flipY = value; }
 };
 
@@ -128,7 +110,6 @@ struct TRmgPackedTerrainCell {
 // and its source spellings remain unknown.
 class TRmgTerrainRule {
 public:
-    // Before normalization: blendsWithOtherTerrain.
     unsigned char m_blendsWithOtherTerrain; // +0x04
     // Previously opaque0005; needsTerrainRepair and repairTerrainPoint
     // consult this byte before joining separated neighbour regions.
@@ -140,15 +121,10 @@ public:
         : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
     virtual ~TRmgTerrainRule();
-    // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
-    // Before normalization (function): TRmgTerrainRule::IsSpecialFrame.
     virtual unsigned char isSpecialFrame(int frame) = 0;
-    // Before normalization (function): TRmgTerrainRule::GetEntry.
     virtual int getEntry(int index) = 0;
-    // Before normalization (function): TRmgTerrainRule::SelectBaseFrame.
     virtual int selectBaseFrame(int value, int oldFrame) = 0;
-    // Before normalization (function): TRmgTerrainRule::SelectTransitionFrame.
     virtual int selectTransitionFrame(
         int transition,
         TRmgTerrainFlip requestedFlip,
@@ -226,7 +202,6 @@ class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
     virtual ~TRmgTableTerrainRule();
-    // Before normalization (function): TRmgTableTerrainRule::HasEntries.
     virtual unsigned char hasEntries();
     virtual unsigned char isSpecialFrame(int frame);
     virtual int getEntry(int index);
@@ -239,15 +214,12 @@ public:
 };
 
 // Retail 0x642bd8 is a pointer table in the read-only .rdata section.
-// Before normalization: gRmgTerrainRules.
 extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
 // RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
 struct TRmgTerrainGap {
     unsigned int m_weight;
-    // Before normalization: start.
     unsigned int m_start;
-    // Before normalization: length.
     unsigned int m_length;
 };
 
@@ -350,7 +322,6 @@ public:
 // auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
 class TRmgTerrainBrush {
 public:
-    // Before normalization: painter.
     std::auto_ptr<rmgTerrainPainter> m_painter;
 
     TRmgTerrainBrush(TRmgMapInterface* map, int terrain, int strength);

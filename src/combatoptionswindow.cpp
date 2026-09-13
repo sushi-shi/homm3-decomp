@@ -1,5 +1,4 @@
 // combatoptionswindow.cpp - E:\gamedcs\combatoptionswindow.cpp (compiland combatoptionswindow.obj)
-// HAND-OWNED after admission - retail-byte claims with Dreamcast CodeView prototypes.
 #include <va.h>
 #include "combatoptionswindow.h"
 #include "border.h"
@@ -19,24 +18,11 @@
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before widget teardown.
-// Before normalization: gpCombatOptionsWindow.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
 DATA(0x006a55ac) THelpText g_combatOptionsHelp[39];
 
-// genrltxt.txt rows this dialog labels itself with. They are consumed
-// nowhere else in the image, so no EGeneralTextIndex name is coined for
-// them; the retail index is the evidence and the comment is the role:
-//   393 window title            394/395/396 left-column group headings
-//   397/398 right-column group headings
-//   399..401,152,402 the five auto-combat labels (creatures, spells,
-//                    catapult, ballista, first aid tent)
-//   403/404 creature-info verbose/compact
-//   405/406/407 grid, movement shadow, mouse shadow
-//   578 spell book animation
-
-// E:\gamedcs\combatoptionswindow.cpp:60
-VA(0x0046e3b0, 0x1320)  // combatManager caller + cmpopbck.pcx + vtable/global stores, dc 0x66c48
+VA(0x0046e3b0, 0x1320)  // dc 0x66c48
 TCombatOptionsWindow::TCombatOptionsWindow()
     : heroWindow(159, 84, 481, 431, 0x12)
 {
@@ -59,12 +45,6 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     accept->setHotkey(1);
     m_widgets.push_back(accept);
 
-    // The loop variable is the SLOT, not the x: retail keeps the raw 0..9 in
-    // its frame slot and adds the id base at the use (`add edx,0xca`), while
-    // the x lives in the linear-function-test-replaced derived induction
-    // variable (`add edi,0x13`, `cmp edi,0xdb`). Walking x directly and
-    // counting the slot by hand makes the slot a SECONDARY induction
-    // variable, which VC6 folds the id base into (`mov [ebp-0x10],0xca`).
     for (int musicSlot = 0; musicSlot < 10; ++musicSlot)
         m_widgets.push_back(new iconWidget(
             29 + musicSlot * 19, 303, 18, 36,
@@ -221,12 +201,9 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 }
 
-// Retail emits the generated wrapper immediately after the constructor;
-// Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0046f6d0, 0x21, SCALAR_DELETING_DTOR, TCombatOptionsWindow)
 
-// E:\gamedcs\combatoptionswindow.cpp:180
-VA(0x0046f700, 0x75)  // vtable/global/widget teardown, dc 0x679ac
+VA(0x0046f700, 0x75)  // dc 0x679ac
 TCombatOptionsWindow::~TCombatOptionsWindow()
 {
     g_combatOptionsWindow = 0;
@@ -248,8 +225,7 @@ inline int TCombatOptionsWindow::convertID2HelpID(int id) const
     return -1;
 }
 
-// E:\gamedcs\combatoptionswindow.cpp:214
-VA(0x0046f780, 0x28)  // handler address-take + WritePrefs tail, dc 0x67a40
+VA(0x0046f780, 0x28)  // dc 0x67a40
 void TCombatOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
@@ -300,8 +276,6 @@ inline void TCombatOptionsWindow::highlightMouseShadow()
 // Dreamcast homes this helper after the handler, but retail inlines it at
 // both call sites (the next retail entry after the handler, 0x46fee0, is an
 // unrelated cinit). Both sites pass 0, so the gate folds away.
-// Before normalization (function): UpdateCombatOptions.
-// Before normalization (locals): bFirstUpdate.
 __forceinline void updateCombatOptions(unsigned char firstUpdate)
 {
     if (!firstUpdate)
@@ -310,14 +284,14 @@ __forceinline void updateCombatOptions(unsigned char firstUpdate)
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:278
-//
+
 // NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
 // retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
 // TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
 // - based off the function's own end, which retail places 0x58 later than
 // ours because retail's body is that much longer.  No TCombatOptionsWindow
 // member is involved.
-//
+
 // Residual (83.4%): the tail-block class, in both directions. Retail parks
 // the translate-command and audio-unavailable arms at the tail and reaches
 // them with `je`, where our CL hoists each to its single goto site; and

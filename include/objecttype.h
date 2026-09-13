@@ -1,6 +1,6 @@
 // objecttype.h - the Complete-only image-name registry shared by
 // TObjectType::GetImageName and TObjectType::setImageName.
-//
+
 // Kept out of advmgr_objects.h deliberately: objecttype.cpp is the only
 // consumer, and advmgr_objects.h reaches nine compilands through game.h and
 // mapcell.h.
@@ -30,16 +30,14 @@
 // do not distinguish the two source representations. The
 // registry's growth path in setImageName confirms it from the other side:
 // it inserts into the tree and then push_backs the RETURNED ITERATOR.
-//
+
 // NAMES ARE PROVISIONAL - nothing attests this class; only the offsets, the
 // node size and the two accessors' arithmetic are retail-proven.
 class TObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
 
-    // Before normalization: nameIndex.
     TNameIndex m_nameIndex;
-    // Before normalization: rows.
     std::vector<TNameIndex::iterator> m_rows;
 
     // Provisional name and boundary inferred from retail setImageName:
@@ -69,7 +67,7 @@ public:
 };
 
 // --- the object-type filter family -----------------------------------------
-//
+
 // Fifteen file-scope filter objects and the fifteen-entry table of pointers
 // to them at 0x640288, all retail-proven and all Complete-only (no Dreamcast
 // row covers any of it), so every NAME below is a role description. What the
@@ -86,7 +84,6 @@ public:
     virtual ~TObjectTypeFilter();
     // Retail 0x5141bd returns its literal zero through AL. The native-terrain
     // override is exact with this byte result and a direct logical tail.
-    // Before normalization (function): TObjectTypeFilter::Accepts.
     virtual unsigned char accepts(const TObjectType* objectType) const = 0;
 };
 
@@ -98,7 +95,6 @@ public:
 class TNativeTerrainObjectFilter : public TObjectTypeFilter {
 public:
     explicit TNativeTerrainObjectFilter(int terrain);
-    // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
     virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_terrain;
@@ -110,7 +106,6 @@ public:
 class TAnyTerrainObjectFilter : public TObjectTypeFilter {
 public:
     TAnyTerrainObjectFilter();
-    // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
     virtual unsigned char accepts(const TObjectType* objectType) const;
 };
 
@@ -119,7 +114,6 @@ public:
 class TSlotCategoryObjectFilter : public TObjectTypeFilter {
 public:
     explicit TSlotCategoryObjectFilter(int slotCategory);
-    // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
     virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_slotCategory;
@@ -129,13 +123,8 @@ enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 
-// Before normalization: gObjectTypeFilters.
 extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
-// The per-row parser TObjectTypeTable::load runs over each objects.txt
-// line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
-// stream arrives in ECX and the record in EDX, and it answers the stream
-// so the caller can chain.
 std::istream& operator>>(std::istream& is, TObjectType& objectType);
 
 #endif  /* HOMM3_OBJECTTYPE_H */

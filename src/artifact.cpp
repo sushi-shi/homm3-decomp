@@ -1,5 +1,4 @@
 // artifact.cpp - E:\gamedcs\artifact.cpp (compiland artifact.obj)
-// HAND-OWNED after admission. Retail Complete inlines the static traits
 // helper and ownership wrappers into the table initializer. The adjacent
 // bitset bodies are Dinkumware COMDATs, not source claims.
 #include <va.h>
@@ -25,18 +24,15 @@ namespace {
 // Column 2 of artraits.txt names the final physical slot, while column 20
 // names slot zero. The one exception is column 7, the two-handed weapon
 // class (slot 18), which sits between slots 13 and 12 in the file.
-// Before normalization: kArtifactSlotColumnBits.
 DATA(0x0063b940)
 static const int g_artifactSlotColumnBits[19] = {
     17, 16, 15, 14, 13, 18, 12, 11, 10, 9,
     8, 7, 6, 5, 4, 3, 2, 1, 0
 };
 
-// Before normalization: kDisabledArtifacts.
 DATA(0x0063b98c)
 static const int g_disabledArtifacts[3] = { 141, 142, 143 };
 
-// Before normalization: kSpellGivingArtifacts.
 DATA(0x0063b998)
 static const int g_spellGivingArtifacts[9] = {
     1, 128, 123, 124, 86, 87, 88, 89, 135
@@ -46,43 +42,15 @@ static const int g_spellGivingArtifacts[9] = {
 // at 0x44c700..0x44cd4f. Their storage and source initializers are a separate
 // admission; declaring the byte-proven addresses here makes this function's
 // data references authoritative without pretending the cinits are claims.
-// Before normalization: aArtifactTraits.
 DATA(0x006939f8)
 static TArtifactTraits g_artifactTraitsStorage[144];
 
-// Before normalization: aArtifactSlotTraits.
 DATA(0x00694bf8)
 static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
 
 } // namespace
 
-// The two table builders. They are retail rows of their own - file statics
-// with no name of their own in the image, kept OUT of this file's unnamed
-// namespace because VC6 mangles that one with the absolute source path -
-// and the variadic signature is what fixes them: `count` gets a memory home
-// because `va_start` takes its
-// address, which is why retail writes the decremented counter back to
-// `[ebp+0xc]` every iteration and never strength-reduces the walk. The bit
-// default-constructed local is the inline `_Tidy` (one zero store for the
-// 19-bit width, the five-word downward fill for the 144-bit one).
-//
-// Retail FuncInfo 0x649538 / 0x6495a0 each has one catch-all handler
-// covering states 0..2. The handlers at 0x44c7e7 / 0x44c907 rethrow;
-// va_end is a no-op on Win32 but belongs on both exit paths. Restoring
-// that try/catch makes the bitset range throw expand into the loop.
-// Subscript assignment then retains basic_string::assign at the right
-// depth inside that throw. Both builders now match at 100%.
-//
-// Negative controls: without the catch, both set(i) and [i] = true stay
-// at 22.16% / 32.15%; adding an explicit zero constructor or making the
-// slot builder a function template is byte-flat. With the catch restored,
-// set(i) reaches 67.91% for 19 bits but expands basic_string::assign too
-// far. Earlier explicit-throw and union-word-view probes duplicated the
-// bounds check or sank the throw after the epilogue. The old diagnosis
-// that the EH frame was solely an inliner consequence was wrong: the
-// retail try-block map independently proves the missing catch scope.
-// Before normalization (function): MakeArtifactSlotMask.
-VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
+VA(0x0044c720, 0x10B)
 static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
 {
     std::bitset<19> mask;
@@ -101,8 +69,7 @@ static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
     return mask;
 }
 
-// Before normalization (function): MakeArtifactComponentMask.
-VA(0x0044c830, 0x122)  // anchor-callee the aCombinationArtifacts cinit's 12 calls, retail-only file static
+VA(0x0044c830, 0x122)
 static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 {
     std::bitset<144> mask;
@@ -194,13 +161,13 @@ static void initializeArtifactTraits(int id,
 // parameters. Complete's pooled string copies belong to the caller; adding
 // a char*& buffer parameter to the helper is a weaker retail hypothesis.
 // The resource guards and static array owners reproduce retail cleanup.
-//
+
 // Residual (81.376236%): the nested bitset<19> _Tidy and equality calls stay
 // out of line where retail expands them. The first size loop still hoists
 // the sheet's row-vector base, and late range-error construction differs.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
-//
+
 // Controls: removing the old unsupported dead printf carrier alone gives
 // 76.87327%. Restoring the helper with pooled copies and a char*& gives
 // 74.41782%; unsigned flag loops give 73.65148%. The iterator search raises
@@ -322,7 +289,6 @@ unsigned char initializeArtifactTraitsTable()
     return 1;
 }
 
-// Before normalization: InitializeArtifactTraits, static, dc 0x50058.
 // DC's signature is void(int, const vector<char*>&). Retail replaces the
 // individual name/description allocations with the caller's pooled copies,
 // and its 0x44cf32 call has the checked bitset::set(size_t,bool) body.
@@ -496,17 +462,8 @@ unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
 
 #endif  // @carcass
 
-// COMDAT pairing: bitset<19>::_Xran - `cmp <reg>, 0x13` guards the call at
-// 0x4d380 and at hero's HeroFn_004E2550, and artifact.obj is the only object
-// that emits `?_Xran@?$bitset@$0BD@@`. The nineteen artifact slots.
-// Artifact's slot-mask setup naturally emits this checked bit setter. The
-// 19-bit bound and its retained _Xran call identify all 96 retail bytes.
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)
 
-// COMDAT pairing: bitset<19>'s default `_Tidy`, the one out-of-line copy in
-// this object. Its sole caller is the aArtifactSlotMasks cinit's class-0
-// entry (`push 0 / lea ecx,[ebp-4] / call`); every other default
-// construction in the unit is inlined.
 VA_COMPGEN(0x0044d3e0, 0x17, BITSET_TIDY, Bitset19)
 
 VA_COMPGEN(0x0044d400, 0xCB, BITSET_XRAN, Bitset19)

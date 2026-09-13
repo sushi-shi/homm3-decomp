@@ -26,29 +26,16 @@
 #include "kbwin.h"
 #include "winmgr.h"
 
-// The three address-taken callbacks the constructor hands to its Begin
-// and Back buttons and to the slider (retail 0x483880 / 0x4838c0 /
-// 0x4838f0). Names provisional.
-// Before normalization (function): CustomCampaignBeginHandler.
 static int customCampaignBeginHandler(message& msg);
-// Before normalization (function): CustomCampaignBackHandler.
 static int customCampaignBackHandler(message& msg);
-// Before normalization (function): CustomCampaignSliderHandler.
 static void customCampaignSliderHandler(int state, heroWindow* window);
 
 // Complete-only. The window's widget ids run from 200 for the frame,
 // title, two buttons and selected-name text (the slider takes the next
 // one), while the eighteen list rows use the fixed 100.. / 118.. ranges
 // OnWidgetDeselect decodes.
-//
-// The three `send_message(WIDGET_CLEAR_STATUS, 6)` sites are
-// widget::hide(): each expansion is an /Ob2 candidate site, and the site
-// count is what decides the push_back whose vector::insert retail expands
-// (the second one inside the loop and the slider's, never the first).
-// Written as raw send_message calls the first loop push_back expands too
-// and the row sits at 71.96; a dead candidate site after the loop
-// measured the same lever at 97.43 before the real construct was named.
-VA(0x004827b0, 0x727)  // DoCampaignWindow's CUSTOM_CAMPAIGN_ID arm + CamCust.pcx, retail-only
+
+VA(0x004827b0, 0x727)
 TCustomCampaignWindow::TCustomCampaignWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
@@ -119,10 +106,7 @@ TCustomCampaignWindow::TCustomCampaignWindow()
 
 VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
 
-// Complete-only. Frees every campaign header the scanner kept, then the
-// widgets; the header vector's own teardown and ~heroWindow follow as
-// compiler-generated member and base destruction.
-VA(0x00482f10, 0xB1)  // scalar-dtor callee + derived vtable 0x63d6fc, retail-only
+VA(0x00482f10, 0xB1)
 TCustomCampaignWindow::~TCustomCampaignWindow()
 {
     for (unsigned i = 0; i < m_campaignHeaders.size(); i++) {
@@ -132,23 +116,7 @@ TCustomCampaignWindow::~TCustomCampaignWindow()
     deleteWidgets();
 }
 
-// Complete-only. Scans Maps\\*.h3c through the CRT _find family (each step
-// bracketed by a _getcwd retail kept), keeps every header that loads with
-// at least one map, sorts by campaign name and sizes the slider for the
-// eighteen-row list.
-//
-// The std::sort shape (retail CALLS _Sort and _Insertion_sort_1 and
-// EXPANDS _Unguarded_insert) followed from the slider's `show()` site and
-// the header vector's element type: with a void* element the push_back
-// bound insert's const T& to a temporary copy of `header` instead of the
-// local itself (65.03 -> 91.75 -> 99.92).
-//
-// Residual (99.92%): four frame bytes. Retail keeps the predicate copy
-// _Unguarded_insert takes by value in its own slot ([ebp-0x20]) with the
-// insert value at [ebp-0x1c]; our frame lets the value reuse the sort
-// predicate's slot. Tried and rejected: a named predicate local and an
-// explicit empty predicate constructor (both byte-flat).
-VA(0x00482fd0, 0x264)  // TCustomCampaignWindow ctor callee + _findfirst("*.h3c"), retail-only
+VA(0x00482fd0, 0x264)
 void TCustomCampaignWindow::loadCampaignList()
 {
     char currentDirectory[100];
@@ -192,11 +160,7 @@ void TCustomCampaignWindow::loadCampaignList()
     updateList();
 }
 
-// Complete-only: the sort predicate, by campaign name. Retail evaluates
-// the right operand's name first (VC6's right-to-left argument order for
-// the inlined string operator<) and destroys the two temporaries in
-// reverse.
-VA(0x00483240, 0xEA)  // _Insertion_sort_1/_Sort predicate call sites, retail-only
+VA(0x00483240, 0xEA)
 bool CampaignHeaderPointerLess::operator()(
     TCampaignBrief::CampaignHeaderStruct* left,
     TCampaignBrief::CampaignHeaderStruct* right) const
@@ -208,7 +172,7 @@ bool CampaignHeaderPointerLess::operator()(
 // origin, highlights the selected one, hides the rows past the end of
 // the list, and mirrors the selection into the name text and the
 // description scroller.
-//
+
 // Residual (93.80%): `this` and `i` are homed ebx/edi where retail has
 // edi/ebx; every block is otherwise identical. The swap arrived with the
 // header vector's retype (void* -> CampaignHeaderStruct*, worth +8 on
@@ -257,13 +221,7 @@ void TCustomCampaignWindow::updateList()
     }
 }
 
-// Complete-only. Widget ids 100..117 are the name column and 118..135
-// the map-count column; either selects its row. A second click on the
-// same row inside 400 ms accepts the campaign and closes the dialog.
-// Before normalization (locals): bExitFlag.
-// Slot 12 overrides CHeroWindowEx::OnWidgetDeselect(int, bool&); retail
-// passes the same one-byte exit flag used by the Dreamcast-proven family.
-VA(0x004835c0, 0xA4)  // anchor-vtable (slot 12 of 0x63d6fc), retail-only
+VA(0x004835c0, 0xA4)
 int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id < 100 || id > 135)
@@ -291,7 +249,7 @@ int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 
 // Complete-only. The campaign ordinal 20 is the custom-campaign slot
 // select_campaign reserves for a file chosen here.
-VA(0x00483670, 0xCE)  // OnWidgetDeselect + Begin-button callee, retail-only
+VA(0x00483670, 0xCE)
 bool TCustomCampaignWindow::acceptSelection()
 {
     int index = m_selected + m_firstVisible;
@@ -302,10 +260,7 @@ bool TCustomCampaignWindow::acceptSelection()
     return 1;
 }
 
-// The header-inline by-value getter retail retained as a /Gy COMDAT in
-// this object (see campaignbrief.h); the body is the string copy
-// constructor.
-VA(0x00483740, 0x134)  // AcceptSelection's callee, retail-only
+VA(0x00483740, 0x134)
 std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
 {
     return m_fileName;
@@ -313,7 +268,7 @@ std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
 
 // Complete-only. The Begin button accepts the selection and closes the
 // modal loop with codeY 1; the Back button closes it with codeY 0.
-VA(0x00483880, 0x3C)  // ctor address-take (Begin button), retail-only
+VA(0x00483880, 0x3C)
 static int customCampaignBeginHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
@@ -328,7 +283,7 @@ static int customCampaignBeginHandler(message& msg)
     return 0;
 }
 
-VA(0x004838c0, 0x2E)  // ctor address-take (Back button), retail-only
+VA(0x004838c0, 0x2E)
 static int customCampaignBackHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
@@ -340,7 +295,7 @@ static int customCampaignBackHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x004838f0, 0x25)  // ctor address-take (slider callback), retail-only
+VA(0x004838f0, 0x25)
 static void customCampaignSliderHandler(int state, heroWindow* window)
 {
     TCustomCampaignWindow* campaignWindow =
@@ -349,7 +304,6 @@ static void customCampaignSliderHandler(int state, heroWindow* window)
     campaignWindow->updateList();
     campaignWindow->drawWindow(1, 0xffff0001, 0xffff);
 }
-
 
 // Exact Dinkumware _Insertion_sort_1 body retained by the Complete-only
 // custom-campaign list sort. Retail proves four-byte pointer elements, the
