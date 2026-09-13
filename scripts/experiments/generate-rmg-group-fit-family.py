@@ -243,6 +243,9 @@ def admitted_bodies():
     for _, method in semantic_forms():
         result.add(method)
         result.update(text for _, text in entry_refinements(method))
+    from homm3.vc6.test_rmg_families import generator
+    origin = generator("generate-rmg-fit-origin-vector.py")
+    result.update(text for _, text in origin.variants(early_failure(body(1, 5, 0))))
     return frozenset(result)
 
 

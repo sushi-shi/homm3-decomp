@@ -124,20 +124,24 @@ public:
     int getCroppedY() const { return m_croppedY; }
 
     // Before normalization (function): CSpriteFrame::Clip.
+    private:
     void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;
+    public:
     // Before normalization (function): CSpriteFrame::Draw.
     void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch,
               TPalette16& pal, unsigned char hflip,
               unsigned char tblit) const;
     // Before normalization (function): CSpriteFrame::DrawCreatureImpl.
+private:
     void drawCreatureImpl(int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, TPalette16& pal,
                           unsigned char hflip, unsigned short outcolor,
                           unsigned char alpha) const;
+public:
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; retail inlines its fixed zero-alpha forwarding.
     // Before normalization (function): CSpriteFrame::DrawCreature.
@@ -150,10 +154,45 @@ public:
                          pal, hflip, outcolor, 0);
     }
     // Before normalization (function): CSpriteFrame::DrawAdvObjImpl.
+private:
     void drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, unsigned char hflip,
                         unsigned short flagcolor) const;
+public:
+
+    // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
+    // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
+    // Before normalization (function): CSpriteFrame::DrawAdvObj.
+    void drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+    {
+        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+    }
+    // Before normalization (function): CSpriteFrame::DrawAdvObjWithFlag.
+    void drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst,
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned short flagcolor, unsigned char hflip) const
+    {
+        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, flagcolor);
+    }
+    // Before normalization (function): CSpriteFrame::DrawAdvObjShadow.
+    void drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+    {
+        drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
+    }
+    // Before normalization (function): CSpriteFrame::DrawHero.
+    void drawHero(int sx, int sy, int sw, int sh, unsigned short* dst,
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+    {
+        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+    }
+    // Before normalization (function): CSpriteFrame::DrawHeroShadow.
+    void drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+                 int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
+    {
+        drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
+    }
     // Before normalization (function): CSpriteFrame::DrawAdvObjWithFlagAlpha.
     void drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                  unsigned short* dst, int dx, int dy,
@@ -172,10 +211,12 @@ public:
                                 pal, 0, hflip);
     }
     // Before normalization (function): CSpriteFrame::DrawAdvObjShadowImpl.
+private:
     void drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                               unsigned short* dst, int dx, int dy, int dw,
                               int dh, int dpitch, TPalette16& pal,
                               unsigned char hflip) const;
+public:
     // Before normalization (function): CSpriteFrame::DrawTile.
     void drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                   int dx, int dy, int dw, int dh, int dpitch,

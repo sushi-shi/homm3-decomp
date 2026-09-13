@@ -24,31 +24,30 @@ class RmgSpatialFrontierTests(unittest.TestCase):
             path = Path(raw) / "manifest.json"
             path.write_text(json.dumps(payload))
             _, originals, axes = source_families.load_manifest(path, self.root)
-        self.assertEqual([len(axis.options) for axis in axes], [6, 6, 5])
+        self.assertEqual([len(axis.options) for axis in axes], [6, 7, 5])
         self.assertEqual(source_families.render(originals, axes, (0, 0, 0)), originals)
         return [source_families.render(originals, axes, choices)[self.module.SOURCE]
-                for choices in itertools.product(range(6), range(6), range(5))]
+                for choices in itertools.product(range(6), range(7), range(5))]
 
-    def test_three_independent_axes_keep_baseline_and_rebase_all_180_states(self):
+    def test_three_independent_axes_keep_baseline_and_rebase_all_210_states(self):
         states = self.states()
-        self.assertEqual(len(set(states)), 180)
+        self.assertEqual(len(set(states)), 210)
         for text in states:
             axes = self.module.make_axes(text)
-            self.assertEqual([len(axis["options"]) for axis in axes], [6, 6, 5])
+            self.assertEqual([len(axis["options"]) for axis in axes], [6, 7, 5])
             for axis in axes:
                 self.assertEqual(axis["find"], axis["options"][0]["replace"])
             bounds, island, junction = (axis["find"] for axis in axes)
             self.assertEqual(bounds.count("getLevelPosition()"), 1)
             self.assertEqual(bounds.count("std::_cpp_min<long>"), 2)
             self.assertEqual(bounds.count("std::_cpp_max<long>"), 2)
-            self.assertEqual(island.count("pending.insert("), 1)
-            self.assertEqual(island.count("pending.push_back("), 2)
+            self.assertEqual(island.count("pending.insert(") + island.count("pending.push_back("), 3)
             self.assertEqual(junction.count("m_map.getMapItem("), 2)
             self.assertEqual(island.count("rand()"), 1)
             self.assertEqual(junction.count("rand()"), 1)
         for before, after in (
                 ("minimumY = 0;", "minimumY = 1;"),
-                ("pending.insert(pending.end(), to);", "pending.push_back(to);"),
+                ("pending.push_back(to);", "pending.push_back(from);"),
                 ("m_map.getMapItem(column, row, position.m_z);", "m_map.getMapItem(column, row, 0);")):
             with self.assertRaisesRegex(ValueError, "review the current"):
                 self.module.make_axes(self.source.replace(before, after))
@@ -64,7 +63,7 @@ class RmgSpatialFrontierTests(unittest.TestCase):
             start = header.index("struct " + name + " {")
             values.append(header[start:header.index("\n};", start) + 3])
         values.append("TRmgVector operator-(TPoint left, TPoint right);")
-        value_helpers = [helper.definition(support, name) for name in (
+        value_helpers = [helper.definition(support + "\n" + self.source, name) for name in (
             "TRmgMapPosition::TRmgMapPosition", "TRmgVector::length")]
         value_helpers += [helper.definition(self.source, name) for name in (
             "TRmgZone::getLevelPosition",
@@ -88,14 +87,15 @@ class RmgSpatialFrontierTests(unittest.TestCase):
         # bodies; repeated scans of the unrelated 9,000-line TU add no coverage.
         options = [axis["options"] for axis in self.module.make_axes(self.source)]
         combinations = list(itertools.product(*options))
-        self.assertEqual(len(combinations), 180)
+        self.assertEqual(len(combinations), 210)
         for index, choices in enumerate(combinations):
             label = "Candidate" + str(index)
             programs.append(candidate(label, [option["replace"] for option in choices]))
             checks.append('if (!check<' + label + '>()) { std::fprintf(stderr, "failed state ' + str(index) + '\\n"); return 1; }')
         negatives = (
             ("WrongBounds", 0, "position.m_x + size + 1", "position.m_x + size + 2"),
-            ("WrongEndpoint", 1, "pending.insert(pending.end(), to);", "pending.insert(pending.end(), from);"),
+            ("WrongEndpoint", 1, "std::vector<TPoint> pending;\n    pending.push_back(to);",
+             "std::vector<TPoint> pending;\n    pending.push_back(from);"),
             ("WrongLevel", 2, "m_map.getMapItem(column, row, position.m_z);", "m_map.getMapItem(column, row, 0);"),
         )
         for label, index, before, after in negatives:

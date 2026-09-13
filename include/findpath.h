@@ -211,14 +211,18 @@ public:
     // and then re-allocates both maps; SeedCombatPosition calls it
     // whenever cellData is still null.
     // Before normalization (function): searchArray::Init.
+    private:
     void init();
+    public:
     // Before normalization (function): searchArray::Close.
     void close();
     // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
     // inside the valid rectangle for every (z, fly-plane) combination.
     // Before normalization (function): searchArray::Clear.
     // Before normalization (locals): fly_level, start_z, stop_z.
+    private:
     void clear(long flyLevel, long startZ, long stopZ);
+    public:
     // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
     // two expansions in check_adjacent_hexes and no retained retail call.
     // Retail 0x4b3b90 retains this 32-byte bounds-free accessor. Four calls
@@ -235,6 +239,7 @@ public:
     // DC findpath.cpp:271 proves both pathCell reference parameters.
     // Before normalization (function): searchArray::PushPoint.
     // Before normalization (locals): old_cell, move_cost, barrier_value.
+    private:
     void pushPoint(const pathCell& oldCell, pathCell& point, int direction,
                    int moveCost, int limit, long barrierValue,
                    type_point monster, int isTrigger);
@@ -283,6 +288,7 @@ public:
     void pushCombatPoint(int index, int direction, int cost,
                          // Before normalization (locals): flight_cost.
                          int flightCost, int limit);  // 0x4b3bb0
+    public:
     // Before normalization (function): searchArray::FindCombatPath.
     // Before normalization (locals): current_army, current_group, in_placement_phase,
     // base_speed.
@@ -318,7 +324,9 @@ public:
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
+    private:
     void setMoat(const army* currentArmy);
+    public:
     // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
     // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
     // retail bodies prove: move_toward (0x41f580) and FindCombatPath

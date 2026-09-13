@@ -112,7 +112,8 @@ class RmgGroupSelectTests(unittest.TestCase):
             result = []
             for name in names:
                 matches = [line.split("//")[0].strip() for line in text.splitlines()
-                           if re.search(r"\b" + name + r";", line.split("//")[0])]
+                           if re.search(r"\b" + name + r";", line.split("//")[0])
+                           and not line.lstrip().startswith("return ")]
                 self.assertEqual(len(matches), 1, name)
                 result.append(matches[0])
             return "\n".join(result)
@@ -120,7 +121,7 @@ class RmgGroupSelectTests(unittest.TestCase):
         helper = self.module.helpers()
         types = [block(header, "struct " + name + " {") for name in
                  ("TRmgVector", "TPoint", "TRmgMapPosition", "TRmgZoneBounds", "TRmgZoneCellState")]
-        value_helpers = [helper.definition(support, "TRmgMapPosition::TRmgMapPosition")]
+        value_helpers = [helper.definition(self.source, "TRmgMapPosition::TRmgMapPosition")]
         value_helpers += [helper.definition(self.source, name,
                           parameters="TRmgMapPosition point" if name == "type_random_map::getMapItem" else None) for name in
                           ("TRmgZone::getLevelPosition", "type_random_map::getMapItem",
@@ -175,7 +176,7 @@ class RmgGroupSelectTests(unittest.TestCase):
                 ("SLOT_FIELDS", fields(block(header, "struct TRmgTownSlot {"), ("m_zoneIndex",))),
                 ("ZONE_FIELDS", fields(block(header, "struct TRmgZone {"), ("m_slot", "m_bounds", "m_levelPosition"))),
                 ("GROUP_FIELDS", fields(block(header, "struct TRmgTreasureGroup {"), ("m_bounds",))),
-                ("MAP_FIELDS", fields(block(header, "class type_random_map :"), ("m_mapItems", "m_mapWidth", "m_mapHeight"))),
+                ("MAP_FIELDS", fields(block(header, "class type_random_map :"), ("m_mapItems", "m_size"))),
                 ("SCALAR_LOOKUP", lookup), ("VALUE_HELPERS", "\n".join(value_helpers)),
                 ("CANDIDATES", "\n".join(programs)), ("CHECKS", "\n".join(checks))):
             program = program.replace("// @" + marker + "@", replacement)

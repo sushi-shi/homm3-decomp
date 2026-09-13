@@ -148,7 +148,7 @@ def placement_body(original, coordinates, lookup, terrain, returned):
         setup += (f"    {point}.m_x -= prototype->m_triggerCell.m_x;\n"
                   f"    {point}.m_y -= prototype->m_triggerCell.m_y;\n    ++{point}.m_y;\n")
         x, y, z = (point + ".m_" + field for field in "xyz")
-    setup += f"    if ({y} >= m_mapHeight)\n        return 0;\n"
+    setup += f"    if ({y} >= m_size.m_y)\n        return 0;\n"
     args = point if lookup == "point" else f"{x}, {y}, {z}"
     setup += f"    TRmgMapItem* item = getMapItem({args});\n"
     tail = original[end:]

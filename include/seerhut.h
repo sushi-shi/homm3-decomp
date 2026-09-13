@@ -249,7 +249,9 @@ public:
     // 2026-09-06 when the body came in: none of retail's four exits sets a
     // return register (the >= 28 path leaves the last Read's result in EAX
     // only because nothing after it touches EAX), exactly as read does.
+    private:
     void load(TAbstractFile* infile, int saveVersion);
+    public:
 
     // The TQuestGuard pair's twin, and it splits CROSSWISE: 0x5741b0 and
     // 0x5743e0 are 556 B each and differ only in the separator relocation,
@@ -271,7 +273,9 @@ public:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
     // same way from NewfullMap::Save. Declared separately because the
     // TQuestGuard base is private here.
+private:
     int save(TAbstractFile* outfile);
+public:
     // Dreamcast names this source boundary on TSeerHut.  Complete's quest
     // log applies the same predicate to both of its quest pools.
     // Before normalization (function): TSeerHut::QuestActiveforPlayer.

@@ -28,6 +28,7 @@ def previous():
 
 def variants(original):
     prior = previous()
+    original = prior.copied_control(original)
     begin = original.index("\n{\n") + 3
     tail = original[original.index("    connection.m_present = 0;", begin):]
     calls = list(prior.CALLS[:2])

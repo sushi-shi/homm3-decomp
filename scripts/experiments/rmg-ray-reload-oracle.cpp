@@ -13,11 +13,11 @@ struct TRmgMapItem {
     bool hasSubterraneanGate() const { return gate; }
 };
 struct Root {
-    int m_mapWidth, m_mapHeight;
+    TRmgMapPosition m_size;
     std::vector<TRmgMapItem> tiles;
-    Root() : m_mapWidth(7), m_mapHeight(7), tiles(98) {}
+    Root() : m_size(7,7,2), tiles(98) {}
     TRmgMapItem* getMapItem(TRmgMapPosition position) {
-        return &tiles[(position.m_z * m_mapHeight + position.m_y) * m_mapWidth + position.m_x];
+        return &tiles[(position.m_z * m_size.m_y + position.m_y) * m_size.m_x + position.m_x];
     }
 };
 
@@ -34,8 +34,8 @@ TPoint reference(Root& map, TPoint start, TPoint toward, int level) {
     for (int step = 1; step < 50; ++step) {
         TPoint point = lattice(start, dx, dy, step);
         TPoint previous = lattice(start, dx, dy, step - 1);
-        if (point.m_x < 1 || point.m_x >= map.m_mapWidth - 1
-            || point.m_y < 1 || point.m_y >= map.m_mapHeight - 1)
+        if (point.m_x < 1 || point.m_x >= map.m_size.m_x - 1
+            || point.m_y < 1 || point.m_y >= map.m_size.m_y - 1)
             return previous;
         if (step > 2) {
             for (int x = point.m_x - 1; x <= point.m_x + 1; ++x)

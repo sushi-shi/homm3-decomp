@@ -41,7 +41,7 @@ class RmgSourceFamilyTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[3]
         original = {name: (root / name).read_text() for name in (module.HEADER, module.SOURCE)}
         axes = module.make_axes(original[module.HEADER], original[module.SOURCE])
-        self.assertEqual([len(item["options"]) for item in axes], [6, 4, 2, 8])
+        self.assertEqual([len(item["options"]) for item in axes], [6, 4, 2])
         for item in axes:
             self.assertEqual(item["find"], item["options"][0]["replace"])
             for option in item["options"]:
@@ -54,35 +54,35 @@ class RmgSourceFamilyTests(unittest.TestCase):
                     self.assertNotIn("inline", edit["replace"])
                     changed[edit["source"]] = changed[edit["source"]].replace(edit["find"], edit["replace"])
                 rebased = module.make_axes(changed[module.HEADER], changed[module.SOURCE])
-                self.assertEqual([len(axis["options"]) for axis in rebased], [6, 4, 2, 8])
+                self.assertEqual([len(axis["options"]) for axis in rebased], [6, 4, 2])
 
     def test_line_proxy_copy_family_rebases_declarations_definitions_and_callers(self):
         module = generator("generate-rmg-line-proxy-copy-family.py")
         root = Path(__file__).resolve().parents[3]
         original = {name: (root / name).read_text() for name in (module.HEADER, module.SOURCE)}
         axes = module.make_axes(original[module.HEADER], original[module.SOURCE])
-        self.assertEqual([len(item["options"]) for item in axes], [7, 4, 2, 2])
+        self.assertEqual([len(item["options"]) for item in axes], [7, 4, 2])
         for item in axes:
             self.assertEqual(item["find"], item["options"][0]["replace"])
             for option in item["options"]:
                 changed = self.edit_family_sources(original, [item], [option])
                 rebased = module.make_axes(changed[module.HEADER], changed[module.SOURCE])
-                self.assertEqual([len(axis["options"]) for axis in rebased], [7, 4, 2, 2])
+                self.assertEqual([len(axis["options"]) for axis in rebased], [7, 4, 2])
                 # After adopting any explicit copy, the previous value-ctor
                 # family must still select its own overload unambiguously.
                 previous = module.parent().make_axes(changed[module.HEADER], changed[module.SOURCE])
-                self.assertEqual([len(axis["options"]) for axis in previous], [6, 4, 2, 8])
+                self.assertEqual([len(axis["options"]) for axis in previous], [6, 4, 2])
                 for restored in rebased[0]["options"]:
                     final = self.edit_family_sources(changed, [rebased[0]], [restored])
                     self.assertEqual([len(axis["options"]) for axis in module.make_axes(
-                        final[module.HEADER], final[module.SOURCE])], [7, 4, 2, 2])
+                        final[module.HEADER], final[module.SOURCE])], [7, 4, 2])
 
     def test_line_proxy_binding_family_preserves_retained_at_abi_and_rebases(self):
         module = generator("generate-rmg-line-proxy-binding-family.py")
         root = Path(__file__).resolve().parents[3]
         original = {name: (root / name).read_text() for name in (module.HEADER, module.SOURCE)}
         axes = module.make_axes(original[module.HEADER], original[module.SOURCE])
-        self.assertEqual([len(item["options"]) for item in axes], [12, 4, 2, 2])
+        self.assertEqual([len(item["options"]) for item in axes], [12, 4, 2])
         for item in axes:
             self.assertEqual(item["find"], item["options"][0]["replace"])
             for option in item["options"]:
@@ -91,9 +91,9 @@ class RmgSourceFamilyTests(unittest.TestCase):
                 body = module.helpers().definition(changed[module.SOURCE], "TRmgLinePainterInterface::at")
                 self.assertIn("TRmgLinePainterInterface::at(const TRmgGridPoint& point)", body)
                 rebased = module.make_axes(changed[module.HEADER], changed[module.SOURCE])
-                self.assertEqual([len(axis["options"]) for axis in rebased], [12, 4, 2, 2])
+                self.assertEqual([len(axis["options"]) for axis in rebased], [12, 4, 2])
                 previous = module.parent().parent().make_axes(changed[module.HEADER], changed[module.SOURCE])
-                self.assertEqual([len(axis["options"]) for axis in previous], [6, 4, 2, 8])
+                self.assertEqual([len(axis["options"]) for axis in previous], [6, 4, 2])
 
     @unittest.skipUnless(shutil.which("g++"), "portable source-family check needs g++")
     def test_line_refresh_generated_cpp_preserves_proxy_values_and_grid_translation(self):
@@ -123,12 +123,20 @@ class RmgSourceFamilyTests(unittest.TestCase):
         for index, options in enumerate(itertools.product(*(item["options"] for item in axes))):
             changed = self.edit_family_sources(original, axes, options)
             header, source = changed[module.HEADER], changed[module.SOURCE]
-            point_start = header.index("struct TRmgGridPoint {")
-            point = header[point_start:header.index("\n};", point_start) + 3]
+            def block(text, start):
+                at = text.index(start)
+                return text[at:text.index("\n};", at) + 3]
+            point = (block(header, "struct TRmgVector {") + "\n"
+                     + block(header, "struct TPoint {") + "\n"
+                     + "template<class Coordinate>\n" + block(header, "struct TRmgGridPointT {")
+                     + "\ntypedef TRmgGridPointT<unsigned int> TRmgGridPoint;\n")
+            at = source.index("TRmgGridPointT<Coordinate>::TRmgGridPointT(const TPoint& point)")
+            point += "template<class Coordinate>\n" + source[at:source.index("\n}", at) + 2] + "\n"
+            point += module.helpers().definition(source, "TPoint::operator+=", parameters="const TPoint& offset") + "\n"
+            point += module.helpers().definition(terrain_header, "operator+", parameters="const TPoint& point, const TPoint& offset") + "\n"
             model_start = header.index("class TRmgLinePainterInterface {")
             model = header[model_start:header.index("SIZE(TRmgLinePainterTile,", model_start)]
             program.extend([f"namespace Case{index} {{\n",
-                            "struct TPoint { int m_x, m_y; TPoint(int x, int y) : m_x(x), m_y(y) {} };\n",
                             point, "\n", tile, "\nstruct TRmgLinePatternTable {};\n",
                             "struct TRmgLinePainterTile;\n", model, "\n", interface_constructor, "\n"])
             program.extend([module.constructor_definition(source), "\n",
@@ -444,7 +452,8 @@ int main() {
                 self.assertEqual(body.count(kind + " " + local), 1)
                 self.assertEqual(body.count(f"{local} = {member};"), 1)
                 self.assertLess(call, body.index(f"{local} = {member};"))
-            self.assertTrue(body.endswith(item["find"][item["find"].index("    connection.m_present = 0;"):]))
+            control = module.previous().copied_control(item["find"])
+            self.assertTrue(body.endswith(control[control.index("    connection.m_present = 0;"):]))
             self.assertNotIn("#pragma", body)
         for option in (item["options"][17], item["options"][-1]):
             rebased, = module.make_axes(source.replace(item["find"], option["replace"]))
@@ -457,8 +466,9 @@ int main() {
         item, = module.make_axes(source)
         self.assertIn(len(item["options"]), (216, 217))
         self.assertEqual(item["find"], item["options"][0]["replace"])
-        tail = item["find"][item["find"].index("    connection.m_present = 0;"):]
-        for option in item["options"]:
+        control = module.copied_control(item["find"])
+        tail = control[control.index("    connection.m_present = 0;"):]
+        for option in item["options"][1:]:
             body = option["replace"]
             self.assertTrue(body.endswith(tail))
             self.assertEqual(sum(body.count(call.strip()) for _, call in module.CALLS), 1)
@@ -817,9 +827,9 @@ int main() {
         module = generator("generate-rmg-border-flood-family.py")
         source = ("void type_random_map_generator::markBorderObjectArea()\n{\n"
                   "    int minimumX = max(position.m_x - 1, 0);\n"
-                  "    int maximumX = min(position.m_x + 2, m_map.m_mapWidth);\n"
+                  "    int maximumX = min(position.m_x + 2, m_map.m_size.m_x);\n"
                   "    int minimumY = max(position.m_y - 1, 0);\n"
-                  "    int maximumY = min(position.m_y + 2, m_map.m_mapHeight);\n"
+                  "    int maximumY = min(position.m_y + 2, m_map.m_size.m_y);\n"
                   "    for (int y = minimumY; y < maximumY; ++y) {\n"
                   "        for (int x = minimumX; x < maximumX; ++x) {}\n    }\n}")
         seen = set()
@@ -852,7 +862,7 @@ int main() {
             new_source = source.replace(axes[2]["find"], option["replace"])
             if option["name"].endswith("expression") or option["name"] == "baseline":
                 rebased = module.make_axes(terrain, new_source)
-                self.assertIn(len(rebased[2]["options"]), (18, 19))
+                self.assertIn(len(rebased[2]["options"]), (6, 7, 18, 19))
             self.assertEqual(option["replace"].count("m_objects.erase("), 1)
         directions = ["NORTH", "SOUTH", "WEST", "EAST", "NORTHWEST", "NORTHEAST", "SOUTHWEST", "SOUTHEAST"]
         for construction, query in itertools.product(

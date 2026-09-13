@@ -11,7 +11,7 @@
 // @TILE_TYPES@
 struct TRmgMapItem { unsigned m_guard; TRmgGroundTile m_tile; TRmgGroundTileData m_tileData; };
 struct type_random_map {
-    int m_mapWidth, m_mapHeight, m_numberLevels;
+    TRmgMapPosition m_size;
     TRmgMapItem* m_mapItems;
     // @ACCESSOR@
 };
@@ -98,8 +98,8 @@ struct State {
         m_root(root), m_cells(m_expected.m_data.size()), m_calls(0), m_bad(false) {
         m_progress[0].m_id = 1; m_progress[1].m_id = 2;
         root->m_progress = scenario.m_progress ? &m_progress[scenario.m_progress - 1] : 0;
-        root->m_map.m_mapWidth = scenario.m_width; root->m_map.m_mapHeight = scenario.m_height;
-        root->m_map.m_numberLevels = scenario.m_levels; root->m_map.m_mapItems = &m_cells[1];
+        root->m_map.m_size.m_x = scenario.m_width; root->m_map.m_size.m_y = scenario.m_height;
+        root->m_map.m_size.m_z = scenario.m_levels; root->m_map.m_mapItems = &m_cells[1];
         for (unsigned i = 0; i < m_cells.size(); ++i) {
             uint32_t tile = initial(i, scenario.m_seed), data = initial(i, scenario.m_seed + 7);
             std::memcpy(&m_cells[i].m_tile, &tile, sizeof(tile));
@@ -123,8 +123,8 @@ void TargetRoot::markRiverCoastTarget(TRmgMapPosition position, int direction) {
     ++s.m_calls;
     if (s.m_scenario.m_mutate) {
         if (s.m_calls == 1) {
-            m_map.m_mapWidth = s.m_scenario.m_width > 1 ? s.m_scenario.m_width - 1 : 1;
-            m_map.m_mapHeight = s.m_scenario.m_height > 1 ? s.m_scenario.m_height - 1 : 1;
+            m_map.m_size.m_x = s.m_scenario.m_width > 1 ? s.m_scenario.m_width - 1 : 1;
+            m_map.m_size.m_y = s.m_scenario.m_height > 1 ? s.m_scenario.m_height - 1 : 1;
         }
         int size = s.m_scenario.m_width * s.m_scenario.m_height * (s.m_scenario.m_levels ? s.m_scenario.m_levels : 1);
         int index = 1 + (s.m_calls * 5 + 1) % size;
@@ -147,7 +147,7 @@ template<class Candidate> bool check() {
         State state(scenario, &root); g_state = &state;
         root.markRiverTargets();
         if (state.m_bad || !state.equalCells() || state.m_trace != state.m_expected.m_trace ||
-            root.m_map.m_mapWidth != state.m_expected.m_width || root.m_map.m_mapHeight != state.m_expected.m_height)
+            root.m_map.m_size.m_x != state.m_expected.m_width || root.m_map.m_size.m_y != state.m_expected.m_height)
             return false;
     }
     return true;
