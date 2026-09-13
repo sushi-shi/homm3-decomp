@@ -179,7 +179,9 @@ struct type_AI_attack_hex_chooser {
     // Before normalization: attack_army.
     const army* m_attackArmy;    // +0x00
     // Before normalization: speed.
+protected:
     long m_speed;                 // +0x04
+public:
     // Before normalization: enemy_army.
     const army* m_enemyArmy;     // +0x08
     // Before normalization: search_data.
@@ -191,9 +193,11 @@ struct type_AI_attack_hex_chooser {
     // Before normalization: our_troops.
     long m_ourTroops;            // +0x18
     // Before normalization: best_value.
+protected:
     long m_bestValue;            // +0x1c
     // Before normalization: best_hex.
     long m_bestHex;              // +0x20
+public:
     // Before normalization: field_24; reference member type_AI_attack_hex_chooser::best_attack_time.
     long m_bestAttackTime;              // +0x24
     // Before normalization: data.
@@ -211,6 +215,14 @@ public:
     // retail body of its own.
     // Before normalization (function): type_AI_attack_hex_chooser::get_attack_time.
     long getAttackTime(const pathCell* cell);
+    // DC ai_tactical.h:471..482 (0x27fdc/0x27fe0/0x27fe4) returns
+    // best_attack_time, best_hex and best_value, at the retail-proven offsets.
+    // Before normalization (function): type_AI_attack_hex_chooser::get_attack_time.
+    long getAttackTime() const { return m_bestAttackTime; }
+    // Before normalization (function): type_AI_attack_hex_chooser::get_best_hex.
+    long getBestHex() const { return m_bestHex; }
+    // Before normalization (function): type_AI_attack_hex_chooser::get_hex_value.
+    long getHexValue() const { return m_bestValue; }
 protected:
     // Before normalization (function): type_AI_attack_hex_chooser::check_adjacent_hexes.
     // Before normalization (locals): enemy_hex, start_direction, stop_direction.
@@ -232,7 +244,9 @@ struct type_AI_spellcaster {
     // Before normalization: our_hero.
     hero* m_ourHero;             // +0x04 combat->[0x53cc + side*4]
     // Before normalization: enemy_hero.
+protected:
     hero* m_enemyHero;           // +0x08 combat->[0x53cc + enemy_side*4]
+public:
     // Before normalization: side.
     long m_side;                  // +0x0c
     // Before normalization: enemy_side.
@@ -288,7 +302,9 @@ struct type_AI_spellcaster {
     // set_worst_enemies (dc 0x42170) is the only unlocated writer left
     // that fits, so the name is provisional.
     // Before normalization: worst_enemies.
+protected:
     type_AI_enemy_data m_worstEnemies[20];  // +0x2d0
+public:
 
     // dc 0x3d604 (ai_tactical.cpp:793). ai.cpp's choose_creature_spell
     // (0x420d20) builds one on the stack with exactly (this, side, 1)
@@ -526,7 +542,6 @@ protected:
     void considerResurrect(type_spell_choice* choice);
     // Before normalization (function): type_AI_spellcaster::consider_spell.
     void considerSpell(type_spell_choice* choice);
-protected:
     // Before normalization: type_AI_spellcaster::spells_not_required.
     unsigned char spellsNotRequired() const;
 public:

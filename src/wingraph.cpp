@@ -1523,8 +1523,8 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     unsigned long savedRed = 0;
     if (!g_closingApp) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        savedScreen.grab(screen->m_map, 0, 0, screen->m_width, screen->m_height,
-                         screen->m_pitch);
+        savedScreen.grab(screen->getMap(0, 0), 0, 0, screen->getWidth(), screen->getHeight(),
+                         screen->getPitch());
         savedBlue = g_colorMaskBlue;
         savedGreen = g_colorMaskGreen;
         savedRed = g_colorMaskRed;
@@ -1560,8 +1560,8 @@ unsigned char ddSetFullScreenStatus(int newStatus)
             ResourceManager::remapGraphics();
         }
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        savedScreen.draw(0, 0, 800, 600, screen->m_map, 0, 0, screen->m_width,
-                         screen->m_height, screen->m_pitch, false);
+        savedScreen.draw(0, 0, 800, 600, screen->getMap(0, 0), 0, 0, screen->getWidth(),
+                         screen->getHeight(), screen->getPitch(), false);
     }
 
     g_mouseManager->reset();

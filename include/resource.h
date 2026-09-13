@@ -66,19 +66,24 @@ enum EResourceType {
 //   slot 2  _purecall - the resource-size query; concrete derived bodies
 //                     return their fixed extent plus owned data bytes
 class resource {
-public:
     // Before normalization: Name.
+private:
     char m_name[13];
     // Before normalization: resType.
     EResourceType m_resType;
     // Before normalization: ReferenceCount.
     int m_referenceCount;
+public:
 
     // Dreamcast resrce.h:33-37; the cache getters and disposal paths
     // expand these same field operations in Complete. Original spellings:
     // get_resType, get_Name, AddRef, Release.
     EResourceType getResType() const { return m_resType; }
     const char* getName() const { return m_name; }
+    // DC resource::GetReferenceCount is public const; retail disposal
+    // callers test the reference-count field through this inline boundary.
+    // Before normalization (function): resource::GetReferenceCount.
+    int getReferenceCount() const { return m_referenceCount; }
     int addRef() { return ++m_referenceCount; }
     int release()
     {

@@ -176,12 +176,18 @@ SIZE(type_monster_data, 0x48);
 //                     check_wall_archery_penalty's only outputs.
 class type_AI_combat_data {
 public:
+    // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
+    // Before normalization (function): type_AI_combat_data::get_mana.
+    long getMana() const { return m_mana; }
+
     // DC original: creatures (previous reconstruction: monsters).
     std::vector<type_monster_data> m_creatures; // +0x00
     // Before normalization: terrain.
     long m_terrain;                    // +0x10
     // Before normalization: mana.
+protected:
     long m_mana;                       // +0x14
+public:
     // DC original: can_cast_spells (previous reconstruction: can_cast).
     unsigned char m_canCastSpells;          // +0x18, natural padding to +0x1c
     // DC original: total_combat_value (previous reconstruction:
@@ -200,13 +206,17 @@ public:
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
     // Before normalization: tactics_advantage.
+protected:
     long m_tacticsAdvantage;          // +0x20
+public:
     // DC original: current_hero (previous reconstruction: my_hero).
     hero* m_currentHero;                   // +0x24
     // DC original: current_army (previous reconstruction: my_army).
     armyGroup* m_currentArmy;              // +0x28
     // Before normalization: enemy_hero.
+protected:
     hero* m_enemyHero;                // +0x2c
+public:
     // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
     unsigned char m_wallArcheryPenalty;      // +0x30, natural padding at +0x31
     // DC original: wall_speed_limit (previous reconstruction: penalty_distance).

@@ -433,7 +433,9 @@ public:
     // Spelled 14 rather than TOWN_DWELLING_SLOTS because ETownConstants
     // is declared below this class; the .cpp uses the named constant.
     // Before normalization: generatorBonus.
+protected:
     int m_generatorBonus[14];
+public:
     // Three 64-bit building bitfields, all read as pairs of dwords by
     // retail's __int64 lowering (the DC's own set_mask/
     // get_buildable_mask signatures are __int64 too; the DC build
@@ -471,8 +473,10 @@ public:
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
     // Retail's +0x158 band is m_active; getBuildableMask expands this read.
     __int64 getBuildingMask() const { return m_active; }
+    // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
+    // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     // Before normalization (function): town::get_generator_bonus.
-    long getGeneratorBonus(long dwelling) const;
+    long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
     // linker kept an out-of-line copy in advmgr.obj). Packs the town's
     // three map bytes into a type_point and returns it BY VALUE - the
@@ -825,6 +829,7 @@ public:
     // NeutralBuildingCosts' leading bound is the only soft number: the
     // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
     // Before normalization: NeutralBuildingCosts.
+protected:
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
     // Before normalization: SpecialBuildingCosts.
     static int s_specialBuildingCosts[9][9][NUM_RESOURCES];

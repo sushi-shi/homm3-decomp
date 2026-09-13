@@ -76,6 +76,7 @@ public:
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
     TCreatureType m_armyType;
     // Before normalization: ArmySize.
+private:
     int m_armySize;
     // Before normalization: morale.
     int m_morale;
@@ -93,11 +94,13 @@ public:
     unsigned char m_showingDismissButton;
     // Before normalization: ShowingOkButton.
     unsigned char m_showingOkButton;
+public:
     // Before normalization: pad_97.
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     unsigned char m_paddingBeforeInfluence;
     // Before normalization: Influence.
+private:
     int m_influence[3];
     // Before normalization: Duration.
     int m_duration[3];
@@ -105,6 +108,7 @@ public:
     textWidget* m_rolloverWidget;
     // Before normalization: SpriteWidget.
     iconWidget* m_spriteWidget;
+public:
 
     // Before normalization (locals): this_army, show_ok, this_hero, this_town, show_dismiss,
     // group_alignments, army_type.

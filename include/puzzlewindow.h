@@ -104,11 +104,13 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforePuzzleResourceBar[3];
     // Before normalization: puzzleResourceBar.
+private:
     TResourceDisplay* m_puzzleResourceBar;
     // Before normalization: puzzlePieces.
     Bitmap816* m_puzzlePieces[48];
     // Before normalization: puzWhich.
     int m_puzWhich;
+public:
 
     TPuzzleWindow(int puzzlenum);
     virtual ~TPuzzleWindow();

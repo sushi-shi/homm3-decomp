@@ -64,9 +64,10 @@ extern int g_showIntro;              // .bss 0x6993c0
 // byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
 // vector<bool>, a platform-library divergence rather than x86 evidence.
 class TPickANumber {
-public:
     // Before normalization: low.
+protected:
     int m_low;
+public:
     // Before normalization: count.
     int m_count;
     // Before normalization: marks.

@@ -21,24 +21,31 @@ public:
     // Retail reordered the Dreamcast fields after widget. Every offset below
     // is read or written by 0x596050..0x597184; the resulting size is 0x68.
     // Before normalization: sliderSprite.
+protected:
     CSprite* m_sliderSprite;          // +0x30
     // Before normalization: sliderBitmap.
     Bitmap816* m_sliderBitmap;        // +0x34
     // Before normalization: oldState.
     int m_oldState;                   // +0x38
+public:
     // Before normalization: currentState.
     int m_currentState;               // +0x3c
     // Before normalization: knobPos.
     int m_knobPos;                    // +0x40
     // Before normalization: knobRange.
+protected:
     int m_knobRange;                  // +0x44
+public:
     // Before normalization: numStates.
     int m_numStates;                  // +0x48
     // Before normalization: length.
+protected:
     int m_length;                     // +0x4c
+public:
     // Before normalization: pageSize.
     int m_pageSize;                   // +0x50
     // Before normalization: knob_start.
+protected:
     long m_knobStart;                // +0x54
     // Before normalization: clickX.
     short m_clickX;                   // +0x58
@@ -48,15 +55,18 @@ public:
     unsigned char m_hotKeys;          // +0x5c
     // Before normalization: scrolling.
     unsigned char m_scrolling;        // +0x5d
+public:
     // Before normalization: pad_5e.
     // Dreamcast declares hotKeys/scrolling as bytes followed by a
     // word-aligned lastFocus. Retail shifts them to +0x5c/+0x5d and +0x60;
     // NH3API also leaves +0x5e/+0x5f unnamed.
     unsigned char m_paddingBeforeLastFocus[2];
     // Before normalization: lastFocus.
+protected:
     int m_lastFocus;                  // +0x60
     // Before normalization: sliderFunction.
     TSliderFunction m_sliderFunction; // +0x64
+public:
 
     slider();
     slider(int x, int y, int w, int h, int id, int num,

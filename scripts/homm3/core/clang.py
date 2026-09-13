@@ -28,7 +28,7 @@ compilers agree on the mangled name, and nothing more:
 THE INCLUDE MIRROR. VC6 ships its headers UPPERCASE (`BITSET`, `VECTOR`,
 `STRING`) and its STL predates the standard it targets, so on a
 case-sensitive filesystem clang cannot even open `<bitset>`, and once it
-can, seven headers do not parse. `mirror()` generates a symlink farm under
+can, several headers still need compatibility fixes. `mirror()` generates a symlink farm under
 lowercase names and replaces exactly the files that need a conformance fix
 (see PATCHES - each entry states what cl accepts and clang does not). The
 real toolchain headers are never touched: only cl reads those, and only
@@ -57,7 +57,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 2
+PATCH_VERSION = 3
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -136,6 +136,19 @@ def _qualify_ios_enumerators(names):
     return apply
 
 
+def _fstream(text: str) -> str:
+    """Keep the VC6 stream entities while spelling dependent-base names explicitly."""
+    text = _drop_redundant_traits_default(text)
+    return re.sub(r"(?<![:\w])(in|out|trunc|failbit)(?!\w)",
+                  r"ios_base::\1", text)
+
+
+def _limits(text: str) -> str:
+    """VC6 omits template<> on numeric_limits explicit specializations."""
+    return re.sub(r"^class _CRTIMP numeric_limits<",
+                  "template<> class _CRTIMP numeric_limits<", text, flags=re.M)
+
+
 #: {mirror file name: rewrite}. Every entry states, in its rewrite's
 #: docstring, what cl accepts that clang does not.
 PATCHES = {
@@ -149,6 +162,8 @@ PATCHES = {
     "istream": lambda t: _qualify_ios_enumerators(
         ("skipws", "oct", "hex", "dec"))(_drop_redundant_traits_default(t)),
     "sstream": _sstream,
+    "fstream": _fstream,
+    "limits": _limits,
 }
 
 
@@ -164,7 +179,7 @@ def mirror() -> Path | None:
     """The generated lowercase, conformance-patched VC6 include tree.
 
     Regenerated whenever the toolchain root or PATCH_VERSION changes; the
-    symlinks cost nothing and the patched copies are 7 small files."""
+    symlinks cost nothing and only headers requiring conformance fixes are copied."""
     root = msvc_dir() / "include"
     if not root.is_dir():
         return None
@@ -173,8 +188,13 @@ def mirror() -> Path | None:
         return MIRROR
     MIRROR.parent.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(dir=str(MIRROR.parent)))
-    for entry in sorted(root.iterdir()):
-        (tmp / entry.name.lower()).symlink_to(entry)
+    for entry in sorted(root.rglob("*")):
+        destination = tmp.joinpath(*(part.lower() for part in entry.relative_to(root).parts))
+        if entry.is_dir():
+            destination.mkdir(parents=True, exist_ok=True)
+        else:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.symlink_to(entry)
     for name, rewrite in PATCHES.items():
         link = tmp / name
         if not link.exists():

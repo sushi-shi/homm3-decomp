@@ -179,6 +179,7 @@ public:
     // Before normalization (locals): new_hero, cur_player.
     type_sacrifice_window(hero* newHero, int curPlayer);
     // Before normalization: current_hero.
+private:
     hero* m_currentHero;
     // Before normalization: holding_artifact.
     type_artifact_offering m_holdingArtifact;  // +0x64
@@ -193,11 +194,13 @@ public:
     unsigned char m_canSacrificeArtifacts;
     // Before normalization: can_sacrifice_creatures.
     unsigned char m_canSacrificeCreatures;   // +0x76
+public:
     // Before normalization: pad_77.
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     unsigned char m_paddingBeforeTotalExperience;
     // Before normalization: total_experience.
+private:
     long m_totalExperience;                   // +0x78
     // Before normalization: experience_widget.
     textWidget* m_experienceWidget;           // +0x7c
@@ -207,6 +210,7 @@ public:
     textWidget* m_currentArtifactValue;       // +0x84
     // Before normalization: creature_name_widget.
     textWidget* m_creatureNameWidget;         // +0x88
+public:
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
     // type_skeleton_window keeps at +0x60 and type_university_window at
@@ -217,6 +221,7 @@ public:
     // Retail's proven 8-byte base delta moves that run to +0x90..+0xb8;
     // update_experience independently proves sacrifice_button at +0xa4.
     // Before normalization: current_artifact_widget.
+private:
     iconWidget* m_currentArtifactWidget;      // +0x90
     // Before normalization: creature_slider.
     slider* m_creatureSlider;                  // +0x94
@@ -258,6 +263,7 @@ public:
     std::vector<widget*> m_artifactWidgets;                   // +0x21c
     // Before normalization: creature_widgets.
     std::vector<widget*> m_creatureWidgets;                   // +0x22c
+public:
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
@@ -305,7 +311,6 @@ public:
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     // Before normalization (function): type_sacrifice_window::DoModal.
     virtual int doModal(unsigned char fadeIn);                 // slot 6
-public:
     // Before normalization (function): type_sacrifice_window::ExitDialog.
     virtual int exitDialog(message* msg);                      // slot 14
 private:
@@ -451,6 +456,7 @@ public:
     // Before normalization: rolloverText.
     textWidget* m_rolloverText;  // +0x60
     // Before normalization: sacrifice_button.
+private:
     type_func_button* m_sacrificeButton;         // +0x64
     // Before normalization: all_creatures_button.
     type_func_button* m_allCreaturesButton;     // +0x68
@@ -476,6 +482,7 @@ public:
     // the only delta, since nothing before it is a vector - lands it here.
     // Before normalization: death_samples.
     std::vector<sample*> m_deathSamples;
+public:
 
     // 0x5654f0 (dc 0x1275c0). Declared for townManager::
     // DoSkeletonTransformer, which builds one of these on the STACK -

@@ -120,10 +120,12 @@ protected:
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
     // Before normalization: startTime.
+public:
     unsigned long m_startTime;             // +0x78
     // Before normalization: lastMsg.
     unsigned long m_lastMsg;               // +0x7c
     CNetMsgHandlerPause m_netMsgHandler;  // +0x80
+protected:
     // Before normalization: playerReady.
     unsigned char m_playerReady[8];         // +0x90
 };
@@ -168,11 +170,11 @@ protected:
     // Before normalization (locals): pNetMsg.
     void onHeroLevelUpdate(CNetMsg* netMsg);
 
+public:
     int m_fromWho;                        // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
     // Public: advManager::DoCombat re-runs the local CheckLevel when the
     // remote player dropped mid-pick. Access-only change.
-public:
     unsigned char m_playerDropped;        // +0x8c
 };
 SIZE(CLevelPickWaitDlg, 0x90);
@@ -288,6 +290,7 @@ protected:
     // Before normalization (locals): pNetMsg.
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
+public:
     int m_playerPos;                         // +0x78
     // Before normalization: m_pCombatInitMsg.
     CCombatInitMsg* m_combatInitMsgPointer;        // +0x7c (DC name)
@@ -295,11 +298,8 @@ protected:
     // Public tail: advManager::DoCombat reads the received flag and
     // hands the payload message straight to ReceiveHeroTownData.
     // Access-only change - no member moved, no declarator added.
-public:
     CCombatInitMsg m_combatInitMsg;          // +0x80 (retail by-value copy)
-protected:
     CNetMsgHandlerPause m_netMsgHandler;     // +0xbc0
-public:
     unsigned char m_combatInitMsgReceived;   // +0xbd0
 };
 // CCombatInitMsg gives the containing dialog eight-byte alignment, so the

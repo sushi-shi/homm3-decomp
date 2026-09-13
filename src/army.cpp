@@ -658,7 +658,7 @@ void army::loadResources()
     if (m_stdIcon)
         m_stdIcon->dispose();
     m_stdIcon = icon;
-    m_imageHeight = 267 - m_stdIcon->m_s[cs_wait]->m_f[0]->m_croppedY;
+    m_imageHeight = 267 - m_stdIcon->getFrame(cs_wait, 0)->getCroppedY();
 
     if (is(1u << 2)) {
         const char* missileName;
@@ -1076,7 +1076,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         }
 
         long drawX =
-            m_facing == 0 ? x - m_stdIcon->m_width + 196 : x - 196;
+            m_facing == 0 ? x - m_stdIcon->getWidth() + 196 : x - 196;
         long drawY = y - 267;
         g_combatManager->drawCreature(
             m_stdIcon, m_currFrameType, m_currFrameIndex, drawX, drawY, 0,
@@ -1171,31 +1171,31 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 ex = g_combatManager->m_cells[m_gridIndex].m_refX;
                 if (m_monInfo.m_attributes & 1)
                     ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->m_width / 2;
+                ex -= g_combatManager->m_powSprite->getWidth() / 2;
                 ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->m_height;
+                     - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
                 ex = g_combatManager->m_cells[m_gridIndex].m_refX;
                 if (m_monInfo.m_attributes & 1)
                     ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->m_width / 2;
+                ex -= g_combatManager->m_powSprite->getWidth() / 2;
                 ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->m_height / 2
+                     - g_combatManager->m_powSprite->getHeight() / 2
                      - m_imageHeight / 2;
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
                 ex = g_combatManager->m_cells[m_gridIndex].m_refX;
                 if (m_monInfo.m_attributes & 1)
                     ex += m_facing ? 22 : -22;
-                ex -= g_combatManager->m_powSprite->m_width / 2;
+                ex -= g_combatManager->m_powSprite->getWidth() / 2;
                 ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->m_height
+                     - g_combatManager->m_powSprite->getHeight()
                      - m_imageHeight;
                 break;
             case SPELL_EFFECT_PLACE_FLANK: {
-                long edge = m_stdIcon->m_s[cs_wait]->m_f[0]->m_croppedX
-                            + m_stdIcon->m_s[cs_wait]->m_f[0]->m_croppedWidth
+                long edge = m_stdIcon->getFrame(cs_wait, 0)->getCroppedX()
+                            + m_stdIcon->getFrame(cs_wait, 0)->getCroppedWidth()
                             - 196;
                 if (m_facing == 0)
                     ex = g_combatManager->m_cells[m_gridIndex].m_refX
@@ -1204,9 +1204,9 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                     ex = g_combatManager->m_cells[m_gridIndex].m_refX
                          + edge;
                 if (m_facing == 0)
-                    ex -= g_combatManager->m_powSprite->m_width;
+                    ex -= g_combatManager->m_powSprite->getWidth();
                 ey = g_combatManager->m_cells[m_gridIndex].m_refY
-                     - g_combatManager->m_powSprite->m_height / 2
+                     - g_combatManager->m_powSprite->getHeight() / 2
                      - m_imageHeight / 2;
                 break;
             }
@@ -1462,8 +1462,7 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     m_isAreaEffectTarget = arg;
     g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     if (m_isAreaEffectTarget) {
-        if (m_stdIcon->m_numSequences > cs_fidget
-            && m_stdIcon->m_validSeqMask[cs_fidget] != 0
+        if (m_stdIcon->isValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
             m_currFrameType = cs_fidget;
             m_currFrameIndex = 0;
@@ -1695,8 +1694,8 @@ void army::animateMissile(army* armyToAttack)
         stepX = deltaX;
         stepY = deltaY;
     }
-    int width = m_missileIcon->m_width;
-    int height = m_missileIcon->m_height;
+    int width = m_missileIcon->getWidth();
+    int height = m_missileIcon->getHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -1714,10 +1713,10 @@ void army::animateMissile(army* armyToAttack)
                 GameTime::get() + missileperiod;
             if (frame != 0) {
                 saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap->m_map, x, y,
-                           g_windowManager->m_screenBitmap->m_width,
-                           g_windowManager->m_screenBitmap->m_height,
-                           g_windowManager->m_screenBitmap->m_pitch, false);
+                           g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                           g_windowManager->m_screenBitmap->getWidth(),
+                           g_windowManager->m_screenBitmap->getHeight(),
+                           g_windowManager->m_screenBitmap->getPitch(), false);
                 updateArea.m_minX = x;
                 updateArea.m_minY = y;
                 updateArea.m_maxX = right;
@@ -1727,16 +1726,16 @@ void army::animateMissile(army* armyToAttack)
                 right += stepX;
                 bottom += stepY;
             }
-            saved.grab(g_windowManager->m_screenBitmap->m_map, x, y,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch);
+            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                       g_windowManager->m_screenBitmap->getWidth(),
+                       g_windowManager->m_screenBitmap->getHeight(),
+                       g_windowManager->m_screenBitmap->getPitch());
             unsigned char flipped = targetX < startX;
             m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
-                              g_windowManager->m_screenBitmap->m_map, x, y,
-                              g_windowManager->m_screenBitmap->m_width,
-                              g_windowManager->m_screenBitmap->m_height,
-                              g_windowManager->m_screenBitmap->m_pitch,
+                              g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
+                              g_windowManager->m_screenBitmap->getWidth(),
+                              g_windowManager->m_screenBitmap->getHeight(),
+                              g_windowManager->m_screenBitmap->getPitch(),
                               flipped, 1);
             if (updateArea.m_minX > x)
                 updateArea.m_minX = x;
@@ -1761,10 +1760,10 @@ void army::animateMissile(army* armyToAttack)
             GameTime::delayTil(nextFrameTime);
         }
     }
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->m_map,
-               x, y, g_windowManager->m_screenBitmap->m_width,
-               g_windowManager->m_screenBitmap->m_height,
-               g_windowManager->m_screenBitmap->m_pitch, false);
+    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->getMap(0, 0),
+               x, y, g_windowManager->m_screenBitmap->getWidth(),
+               g_windowManager->m_screenBitmap->getHeight(),
+               g_windowManager->m_screenBitmap->getPitch(), false);
     g_windowManager->updateScreen(x, y, width, height);
 }
 
@@ -3007,18 +3006,18 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     unsigned char succeeded = 1;
     long stop;
     if (!g_combatManager->m_creaturePlacement) {
-        stop = g_searchArray->m_result.size() - getSpeed();
+        stop = g_searchArray->getPathSteps() - getSpeed();
         if (stop < 0)
             stop = 0;
     } else {
         stop = 0;
     }
-    long last = g_searchArray->m_result.size() - 1;
+    long last = g_searchArray->getPathSteps() - 1;
     unsigned char atRest = 1;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
-        long direction = g_searchArray->m_result[i]->m_direction;
+        long direction = g_searchArray->getStep(i);
         long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
         if (g_combatManager->shouldLowerDoor(this, nextHex)) {
             if (!atRest) {
@@ -3039,7 +3038,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
             g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
             atRest = 1;
         }
-        if (g_searchArray->m_isMoatSlowed[static_cast<short>(nextHex)]) {
+        if (g_searchArray->isMoat(static_cast<short>(nextHex))) {
             stop = i;
             succeeded = 0;
         } else if (g_combatManager->m_cells[nextHex].m_attributes & 4) {
@@ -3053,7 +3052,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
             long secondHex = getAdjacentCellIndex(m_gridIndex, direction)
                               + (m_facing ? 1 : -1);
             if (g_searchArray
-                    ->m_isMoatSlowed[static_cast<short>(secondHex)]) {
+                    ->isMoat(static_cast<short>(secondHex))) {
                 stop = i;
                 succeeded = 0;
             } else if (g_combatManager->m_cells[secondHex].m_attributes & 4) {
@@ -3064,7 +3063,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
                 stop = i;
             }
         }
-        walk(g_searchArray->m_result[i]->m_direction, i == stop, atRest);
+        walk(g_searchArray->getStep(i), i == stop, atRest);
         atRest = 0;
         if (m_creatureType != ARMY_CREATURE_ARROW_TOWER)
             g_combatManager->checkObstacleAttacks(this, i != stop);
@@ -5676,12 +5675,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         levelsDestroyed == 0
             ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
             : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
-    long halfWidth = explosion->m_width / 2;
+    long halfWidth = explosion->getWidth() / 2;
     long x = targetX - halfWidth;
-    long halfHeight = explosion->m_height / 2;
+    long halfHeight = explosion->getHeight() / 2;
     long y = targetY - halfHeight;
-    long bottom = explosion->m_height - halfHeight + targetY - 1;
-    long right = explosion->m_width - halfWidth + targetX - 1;
+    long bottom = explosion->getHeight() - halfHeight + targetY - 1;
+    long right = explosion->getWidth() - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
         bounds.m_minX = x;
@@ -5713,12 +5712,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                         g_combatManager->m_drawbridgeBounds.m_maxY
                             - g_combatManager->m_drawbridgeBounds.m_minY
                             + 1,
-                        g_windowManager->m_screenBitmap->m_map,
-                        targetX - explosion->m_width / 2,
-                        targetY - explosion->m_height / 2,
-                        g_windowManager->m_screenBitmap->m_width,
-                        g_windowManager->m_screenBitmap->m_height,
-                        g_windowManager->m_screenBitmap->m_pitch, 0, 1);
+                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        targetX - explosion->getWidth() / 2,
+                        targetY - explosion->getHeight() / 2,
+                        g_windowManager->m_screenBitmap->getWidth(),
+                        g_windowManager->m_screenBitmap->getHeight(),
+                        g_windowManager->m_screenBitmap->getPitch(), 0, 1);
         g_windowManager->updateScreen(
             g_combatManager->m_drawbridgeBounds.m_minX,
             g_combatManager->m_drawbridgeBounds.m_minY,
@@ -5998,10 +5997,10 @@ void army::setupAnimation()
     g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
     m_letsPretendImNotHere = 0;
     g_windowManager->m_screenBitmap->draw(
-        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid->m_map, 0, 0,
-        g_combatManager->m_saveScreenPostGrid->m_width,
-        g_combatManager->m_saveScreenPostGrid->m_height,
-        g_combatManager->m_saveScreenPostGrid->m_pitch, false);
+        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid->getMap(0, 0), 0, 0,
+        g_combatManager->m_saveScreenPostGrid->getWidth(),
+        g_combatManager->m_saveScreenPostGrid->getHeight(),
+        g_combatManager->m_saveScreenPostGrid->getPitch(), false);
     g_combatManager->m_backgroundDrawn = 0;
 }
 
@@ -6038,11 +6037,11 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             frame.m_minX, frame.m_minY,
             frame.m_maxX - frame.m_minX + 1,
             frame.m_maxY - frame.m_minY + 1,
-            g_windowManager->m_screenBitmap->m_map,
+            g_windowManager->m_screenBitmap->getMap(0, 0),
             frame.m_minX, frame.m_minY,
-            g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, false);
+            g_windowManager->m_screenBitmap->getWidth(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getPitch(), false);
 
         g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
         g_combatManager->m_saveBiggestExtent = 1;

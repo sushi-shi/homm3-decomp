@@ -287,8 +287,8 @@ VA(0x0044efd0, 0x37)
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const
 {
-    draw(sx, sy, sw, sh, dst->m_map, dx, dy,
-         dst->m_width, dst->m_height, dst->m_pitch);
+    draw(sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+         dst->getWidth(), dst->getHeight(), dst->getPitch());
 }
 
 // E:\gamedcs\bitmap24.cpp:280. Dreamcast proves the clipped rectangle,

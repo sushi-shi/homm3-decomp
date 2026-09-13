@@ -515,7 +515,6 @@ private:
     // same rows. The unused synthetic TLargeObstacleInfo/LargeObstacleInfo
     // declaration duplicated this type: opaque_04 was x/y; opaque_3e was
     // two alignment bytes followed by FileName. Keep one owning record.
-private:
     struct SElevationOverlay {
         // Before normalization: terrainMask.
         unsigned short m_terrainMask;
@@ -562,7 +561,9 @@ public:
         short m_tailPadding;
     };
     // Before normalization: akWallTraits.
+private:
     static TWallTraits s_wallTraits[9][18];
+public:
 
     // Dreamcast CodeView records this exact nested type and the public static
     // `combatManager::wallTargets` member. Retail independently proves the
@@ -1359,7 +1360,9 @@ public:
     // start at +0x13d78. This byte aligns the records, as in Dreamcast.
     char m_paddingBeforeArchers[0x1];
     // Before normalization: archers.
+private:
     TArcher m_archers[3];               // +0x13d78; armySlot at +0x20
+public:
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -1421,7 +1424,9 @@ public:
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     // Before normalization: mapPoint.
+private:
     type_point m_mapPoint;              // +0x13ff0
+public:
     // Before normalization: combatCellGridBitmap.
     Bitmap816* m_combatCellGridBitmap;   // +0x13ff4
     // Before normalization: combatShadowBitmap.
@@ -1948,8 +1953,9 @@ public:
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
+    // DC dc 0x70a2c has x/y only, no receiver: this is static.
     // Before normalization (function): combatManager::InCombatArea.
-    unsigned char inCombatArea(int x, int y)
+    static unsigned char inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
@@ -2019,8 +2025,9 @@ public:
     // Before normalization (locals): iTowerPos.
     // Complete adds the arrow-tower early return in army::rangeAttack
     // (0x440160), directly calling KeepAttack (0x465ad0). DC lacks that
-    // arm but records KeepAttack private. Grant the specific retail caller
-    // access without widening the recorded manager interface.
+    // arm but records KeepAttack private. This narrow friendship is a
+    // retail-supported source hypothesis: bytes do not distinguish it from
+    // an unrecorded inline wrapper, and no original friend syntax survives.
     friend void army::rangeAttack();
 private:
     void keepAttack(int towerPos);                           // 0x465ad0
@@ -2243,7 +2250,6 @@ private:
         // Before normalization (locals): current_army, best_value.
         const army* currentArmy, long* bestValue,
         type_AI_combat_parameters* estimate);                 // 0x421000
-private:
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
     // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
@@ -2256,7 +2262,6 @@ private:
         type_AI_combat_parameters& estimate);                 // 0x420f00
     // Before normalization (function): combatManager::choose_defense_hex.
     // Before normalization (locals): current_army, best_hex, open_hexes, search_array.
-private:
     unsigned char chooseDefenseHex(const army* currentArmy,
                                      const army* client, long* bestHex,
                                      long* openHexes,
@@ -2377,7 +2382,6 @@ public:
 private:
     unsigned char shouldStayInCastle(
         type_AI_combat_parameters* estimate);                 // 0x4213f0
-private:
     // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy and
     // immediately follows should_stay_in_castle there; the retail call from
     // CombatMessage proves that Complete retained the source member too.
@@ -2393,7 +2397,6 @@ private:
                                int dialogTimeout);
     // Before normalization (function): combatManager::place_shooter.
     // Before normalization (locals): current_army.
-private:
     void placeShooter(const army* currentArmy);             // 0x422060
     // Before normalization (function): combatManager::choose_shooter_action.
     // Before normalization (locals): current_army.
@@ -2774,18 +2777,20 @@ public:
     // The grid is 17 columns by 11 rows with every other row offset half
     // a hex, so a straight (row, column) box is the wrong shape for a
     // radius; these two skew it into a space where the box is right.
+    // DC spells.cpp:3103/3121 (0x153638/0x15368c) has no receiver
+    // for either conversion. Retail expansions use only the coordinates.
     // Before normalization (function): combatManager::hex_to_point.
-    hex_point hexToPoint(long hex) const
+    static hex_point hexToPoint(long hex)
     {
-        long col = hex % COMBAT_GRID_ROW_STRIDE;
-        long row = hex / COMBAT_GRID_ROW_STRIDE;
+        long col = gridX(hex);
+        long row = gridY(hex);
         hex_point point;
         point.m_x = col - (row + 1) / 2;
         point.m_y = col + row / 2;
         return point;
     }
     // Before normalization (function): combatManager::point_to_hex.
-    long pointToHex(hex_point point) const
+    static long pointToHex(hex_point point)
     {
         long col = (point.m_x + point.m_y + 1) / 2;
         long row = point.m_y - point.m_x;

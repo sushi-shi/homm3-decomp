@@ -129,9 +129,12 @@ public:
     // Before normalization: Widgets.
     std::vector<widget*> m_widgets;
     // Before normalization: focusId.
+protected:
     int m_focusId;
     // Before normalization: background.
+private:
     Bitmap16Bit* m_background;
+public:
     // Before normalization: field_48; reference member heroWindow::sleepCount.
     int m_sleepCount;
 
@@ -264,7 +267,6 @@ protected:
     // protected virtual access and bool&, also shared by its overrides.
     virtual int onWidgetDeselect(int id, bool& exitFlag);  // slot 12
     // Before normalization (function): CHeroWindowEx::GetRolloverWidget.
-protected:
     virtual textWidget* getRolloverWidget();                            // slot 13
 };
 

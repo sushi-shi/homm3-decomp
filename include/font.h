@@ -134,10 +134,12 @@ public:
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
     // Before normalization: palette.
+private:
     TPalette16 m_palette;
     // DC LF_MEMBER `Data`.
     // Before normalization: data.
     void* m_data;
+public:
     // The glyph payload's byte count, byte-proven by GetSize below: the
     // whole class is 0x1260 and the only member past `data` is the dword
     // at 0x125c that the size query adds to it. DC has no such member -

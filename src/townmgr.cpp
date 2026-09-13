@@ -1392,10 +1392,10 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 offsetToMon -= currTown->getHordeBonus(slot);
             }
 
-            if (currTown->m_generatorBonus[slot] > 0) {
+            if (currTown->getGeneratorBonus(slot) > 0) {
                 rightText += formatString(g_generalText->getText(592),
-                                            currTown->m_generatorBonus[slot]);
-                offsetToMon -= currTown->m_generatorBonus[slot];
+                                            currTown->getGeneratorBonus(slot));
+                offsetToMon -= currTown->getGeneratorBonus(slot);
             }
 
             if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, 1))
@@ -2683,7 +2683,7 @@ TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     // combatresultswindow's residual, seen there from the other side.
     button* mageButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    mageButton->m_hotKeyCodes.push_back(1);
+    mageButton->setHotkey(1);
     m_widgets.push_back(mageButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3372,7 +3372,7 @@ TMageGuildWindow::TMageGuildWindow()
     // in retail's slots rotated by one (98.49% -> 100%).
     button* exitButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    exitButton->m_hotKeyCodes.push_back(1);
+    exitButton->setHotkey(1);
     m_widgets.push_back(exitButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -3851,7 +3851,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     // push_back spelling is worth 93.8825 -> 100.0000 (docs/vc6/inliner.md
     // 6b - the rung's sign is per-site, and a site's sign moves when
     // anything upstream in the body does).
-    okButton->m_hotKeyCodes.push_back(1);
+    okButton->setHotkey(1);
     m_widgets.push_back(okButton);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -5239,9 +5239,7 @@ static void bonusRightClick(TTownScreenWindow* win, long id)
     int creature = win->m_bonusCreatures[id];
     if (creature != -1) {
         widget* w = win->m_growthBonusIcon[id];
-        const char* popupText = w->m_rightClick;
-        if (!popupText)
-            popupText = w->m_rollOver;
+        const char* popupText = w->getRclickText();
         normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
                      -1, 0, -1, 0, -1, 0);
     }
@@ -6697,7 +6695,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     setBuybuildPalette(window, msg);
 
     CSprite* icons = ResourceManager::getSprite("Resource.def");
-    int iconWidth = icons->m_width;
+    int iconWidth = icons->getWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
         textWidget* amountText = new textWidget(

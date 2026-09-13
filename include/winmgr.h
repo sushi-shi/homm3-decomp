@@ -89,9 +89,11 @@ public:
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
     // Before normalization: headWindow.
+private:
     heroWindow* m_headWindow;
     // Before normalization: tailWindow.
     heroWindow* m_tailWindow;
+public:
     // Before normalization: lastActive.
     heroWindow* m_lastActive;
     // Before normalization: activeWindow.

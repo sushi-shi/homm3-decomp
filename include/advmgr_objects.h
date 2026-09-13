@@ -23,11 +23,13 @@ public:
     };
 
     // Before normalization: obscuring_hero.
+protected:
     hero* m_obscuringHero;
     // Before normalization: obscuring_boat.
     boat* m_obscuringBoat;
     // Before normalization: mobile_hero.
     hero* m_mobileHero;
+public:
 
     // Ordinary DC constructor; body stays in advmgr.cpp before its callers.
     type_cell_adjuster();

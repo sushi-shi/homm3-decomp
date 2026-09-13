@@ -211,7 +211,9 @@ public:
     // Before normalization: reward.
     TSeerReward m_reward;
     // Before normalization: NameIndex.
+private:
     signed char m_nameIndex;
+public:
     // Original: CompletedByPlayer (Dreamcast TSeerHut +0x11).
     // DC save 0x12d8c0 writes the old object in member order. Retail load
     // 0x574a90's version<28 arm reads artifact + reward, then preserves

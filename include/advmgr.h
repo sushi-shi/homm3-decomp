@@ -1352,7 +1352,9 @@ public:
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     // Before normalization: animateInBackground.
+private:
     unsigned char m_animateInBackground;
+public:
     // Before normalization: pad_06d.
     // Dreamcast places three alignment bytes after animate_in_background.
     // Complete keeps the byte at +0x6c before the pointer array at +0x70.
@@ -1370,7 +1372,9 @@ public:
     class bitmapBorder* m_heroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
     // Before normalization: bottomView.
+private:
     class type_bottom_view_window* m_bottomView;
+public:
     // Complete-only owned popup state: Open constructs it and Close deletes
     // it; the ctor initializes the pointer before installing this vtable.
     // The public name is not attested, so retain the cross-build role name.
@@ -1431,6 +1435,13 @@ public:
     void updateSpellButton(const class hero* thisHero);
     // Before normalization (function): TAdventureMapWindow::draw_bottom_view.
     void drawBottomView(unsigned char update);
+    // DC AdventureMapWindow.h:238-240, dc 0xbd0a0, is a single flag
+    // store. Retail doNewTurn expands it around the calendar dialog.
+    // Before normalization (function): TAdventureMapWindow::set_background_animation.
+    void setBackgroundAnimation(unsigned char enable)
+    {
+        m_animateInBackground = enable;
+    }
     // Before normalization (function): TAdventureMapWindow::animate_bottom_view.
     // Before normalization (locals): in_background.
     void animateBottomView(unsigned char inBackground);
@@ -1765,7 +1776,9 @@ public:
     // Before normalization: bottomViewType.
     EBottomViewType m_bottomViewType;
     // Before normalization: bottomViewOverride.
+private:
     EBottomViewType m_bottomViewOverride;  // +0x398
+public:
     // Before normalization: bottomViewDeadline.
     unsigned long m_bottomViewDeadline;    // +0x39c
     // Before normalization: bottomViewResourceType.
@@ -2087,7 +2100,6 @@ private:
     // Before normalization (locals): current_hero, human_player.
     void fightForArtifact(class hero* currentHero, NewmapCell* cell,
                           type_point point, bool humanPlayer);
-private:
     // Before normalization (function): advManager::DoEventFreeArtifact.
     // Before normalization (locals): current_hero, human_player.
     void doEventFreeArtifact(class hero* currentHero, NewmapCell* cell,
@@ -2101,7 +2113,6 @@ private:
                         bool humanPlayer);
     // Before normalization (function): advManager::DoArtifactSkillRequirement.
     // Before normalization (locals): current_hero, dialog_text, human_player.
-private:
     void doArtifactSkillRequirement(class hero* currentHero,
                                     NewmapCell* cell, type_point point,
                                     int skill, const char* dialogText,

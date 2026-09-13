@@ -1067,16 +1067,18 @@ void CChatManager::addChat(const char* format, ...)
 }
 
 // E:\gamedcs\remote.cpp:904
-// Legacy explicit-receiver declaration, not proven free ownership (see
-// docs/vc6/variadic-members.md). The display guard is IsClose(59000) with the
+// Variadic member ownership follows DC; the stack receiver is VC6 ABI.
+// The display guard is IsClose(59000) with the
 // adventure-suspended and popup checks; the sound tail prefers timeover.wav
 // and falls back to chat.wav. A positive display scope removes the
 // skip-chat goto with identical VC6 scores throughout this TU, retaining
 // the common sound tail and the order of the short-circuit time checks.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
-void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
+void CChatManager::turnDurationMsg(const char* format, ...)
 {
+    // Before normalization: cOut.
     char chatText[1024];
+    // Before normalization: cOut2.
     char finalText[1024];
     va_list args;
     va_start(args, format);
@@ -1093,36 +1095,31 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
             canDisplay = 0;
     }
 
-    if (!(g_turnDuration69d630.m_currDuration != 0
-        && !g_unk69774c
-        && g_turnDuration69d630.m_turnStartTime != 0
-        && g_turnDuration69d630.m_pauseTime == 0
-        && GameTime::get() + 59000
-               > g_turnDuration69d630.m_turnStartTime
-                     + g_turnDuration69d630.m_currDuration
-        && !canDisplay)) {
+    // DC line 918 calls CTurnDuration::IsClose; preserve the helper
+    // instead of accessing its protected timer fields from this formatter.
+    if (!g_turnDuration69d630.isClose(59000) || canDisplay) {
 
         sprintf(
             finalText,
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+            (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
             chatText);
-        manager->m_isSysMsg = 1;
-        manager->addChat(finalText);
-        manager->m_isSysMsg = 0;
+        m_isSysMsg = 1;
+        addChat(finalText);
+        m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = manager->m_turnDurSample;
-    if (manager->m_chatMemSample
+    sample* sampleToPlay = m_turnDurSample;
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1131,7 +1128,7 @@ void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
 // The system-message twin of TurnDurationMsg has no timer/popup guard and
 // selects sysmsg.wav before the common chat.wav fallback.
 VA(0x00553aa0, 0xC0)  // anchor-callees + arity/order-map, dc 0x11c558
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
+void CChatManager::systemMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1144,21 +1141,21 @@ void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    manager->addChat(finalText);
-    sample* sampleToPlay = manager->m_sysMsgSample;
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_sysMsgSample;
+    m_isSysMsg = 0;
 
-    if (manager->m_chatMemSample
+    if (m_chatMemSample
         && g_soundManager->getSampleInfo(
-            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->m_chatSample;
+        sampleToPlay = m_chatSample;
     if (sampleToPlay) {
         int soundWasEnabled = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
         g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
@@ -1203,7 +1200,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 // E:\gamedcs\remote.cpp:990
 // The byte-identical structural twin selects playcome.wav instead.
 VA(0x00553c30, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c658
-void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
+void CChatManager::playerEnterMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1216,24 +1213,24 @@ void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->m_isSysMsg = 1;
-    manager->addChat(finalText);
-    sample* sampleToPlay = manager->m_playerEnterSample;
+    m_isSysMsg = 1;
+    addChat(finalText);
+    sample* sampleToPlay = m_playerEnterSample;
 
-    if (!(manager->m_chatMemSample
+    if (!(m_chatMemSample
           && g_soundManager->getSampleInfo(
-              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
+              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->m_chatSample;
+            sampleToPlay = m_chatSample;
         if (sampleToPlay) {
             int soundWasEnabled = g_soundManager->m_playSounds;
             g_soundManager->m_playSounds = 1;
-            manager->m_chatMemSample =
+            m_chatMemSample =
                 g_soundManager->memorySample(sampleToPlay);
             g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->m_isSysMsg = 0;
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1033
@@ -1752,12 +1749,9 @@ void sendChat(const char* chatString, int toWho)
     if (_strcmpi(chatString,
                  g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-            systemMsg(&g_chatMan,
-                      g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
         } else {
-            systemMsg(
-                &g_chatMan,
-                g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
                 g_game->getPlayerName(toWho));
         }
 
@@ -1891,16 +1885,16 @@ void CAnimatedDlg::calcSpriteDimensions(
     int height = 0;
 
     int numFrames = sprite->getNumFrames(m_seq);
-    CSpriteFrame* firstFrame = sprite->m_s[m_seq]->m_f[0];
-    int baseX = firstFrame->m_croppedX;
-    int baseY = firstFrame->m_croppedY;
+    CSpriteFrame* firstFrame = sprite->getFrame(m_seq, 0);
+    int baseX = firstFrame->getCroppedX();
+    int baseY = firstFrame->getCroppedY();
 
     for (int i = 0; i < numFrames; ++i) {
-        CSpriteFrame* frame = sprite->m_s[m_seq]->m_f[i];
-        int frameHeight = frame->m_croppedHeight;
-        int frameWidth = frame->m_croppedWidth;
-        int frameX = frame->m_croppedX - baseX;
-        int frameY = frame->m_croppedY - baseY;
+        CSpriteFrame* frame = sprite->getFrame(m_seq, i);
+        int frameHeight = frame->getCroppedHeight();
+        int frameWidth = frame->getCroppedWidth();
+        int frameX = frame->getCroppedX() - baseX;
+        int frameY = frame->getCroppedY() - baseY;
         if (frameX < minX)
             minX = frameX;
         if (frameY < minY)
@@ -2161,7 +2155,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    systemMsg(&g_chatMan, g_generalText->getText(471));
+                    g_chatMan.systemMsg(g_generalText->getText(471));
                     break;
 
                 case RS_SESSION_LOST:
@@ -2701,7 +2695,7 @@ void handleNewHost()
             }
         }
     }
-    systemMsg(&g_chatMan, g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(471));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -2984,6 +2978,14 @@ int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
     return 0;
 }
 
+// The incoming level-update packet restores the raw four-byte skill band,
+// rather than the clamped gameplay accessor. Name provisional; retain an
+// ordinary body before its caller so VC6 can expand the copy.
+void hero::setPrimarySkills(const signed char* stats)
+{
+    memcpy(m_stats, stats, sizeof(m_stats));
+}
+
 // E:\gamedcs\remote.cpp:2567. DC names the message fields; retail proves
 // their offsets by copying the 28 secondary-skill levels and four primary
 // stats into the selected hero before replacing the secondary-skill count.
@@ -2996,8 +2998,7 @@ void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
     if (targetHero) {
         memcpy(targetHero->m_skillLevel, levelMsg->m_ssLevel,
                sizeof(levelMsg->m_ssLevel));
-        memcpy(targetHero->m_stats, levelMsg->m_stats,
-               sizeof(levelMsg->m_stats));
+        targetHero->setPrimarySkills(levelMsg->m_stats);
         targetHero->m_skillCount = levelMsg->m_numSSs;
     }
 }
@@ -3056,7 +3057,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                systemMsg(&g_chatMan, g_generalText->getText(471));
+                g_chatMan.systemMsg(g_generalText->getText(471));
                 break;
 
             case RS_SESSION_LOST:
@@ -3135,10 +3136,7 @@ void CSaveScreen::save(int x, int y)
     m_x = x;
     m_y = y;
     m_screenSaved = 1;
-    grab(g_windowManager->m_screenBitmap->m_map, x, y,
-        g_windowManager->m_screenBitmap->m_width,
-        g_windowManager->m_screenBitmap->m_height,
-        g_windowManager->m_screenBitmap->m_pitch);
+    grab(g_windowManager->m_screenBitmap, x, y);
 }
 
 // E:\gamedcs\remote.cpp:2689 - blit the saved rectangle back, and only
@@ -3150,12 +3148,12 @@ VA(0x00557390, 0x69)  // anchor-callee (Bitmap16Bit::Draw), dc 0x11ebc8
 void CSaveScreen::restore(unsigned char update)
 {
     if (m_screenSaved) {
-        draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap->m_map,
-            m_x, m_y, g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, 0);
+        // DC remote.cpp:2694 calls the Bitmap16Bit destination overload
+        // (dc 0x4ca8c); its raw-buffer argument expansion belongs there.
+        draw(0, 0, getWidth(), getHeight(), g_windowManager->m_screenBitmap,
+             m_x, m_y, 0);
         if (update)
-            g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
+            g_windowManager->updateScreen(m_x, m_y, getWidth(), getHeight());
     }
 }
 
@@ -4086,9 +4084,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(629));
+            g_chatMan.turnDurationMsg(g_generalText->getText(629));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(630), minutes);
+            g_chatMan.turnDurationMsg(g_generalText->getText(630), minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -4100,9 +4098,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            turnDurationMsg(&g_chatMan, g_generalText->getText(627));
+            g_chatMan.turnDurationMsg(g_generalText->getText(627));
         else
-            turnDurationMsg(&g_chatMan, g_generalText->getText(628), seconds);
+            g_chatMan.turnDurationMsg(g_generalText->getText(628), seconds);
     }
 
     m_lastWarned = currTime;

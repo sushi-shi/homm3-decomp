@@ -438,9 +438,9 @@ VA(0x004fcc30, 0x4D)  // anchor-global, dc 0xec114
 unsigned long NewmapCell::getMapExtraInfo()
 {
     if (m_type == HERO)
-        return g_game->getHero(m_extraInfo)->m_extraInfo;
+        return g_game->getHero(m_extraInfo)->getObscuredExtraInfo();
     if (m_type == BOAT)
-        return g_game->m_boats[m_extraInfo].m_extraInfo;
+        return g_game->m_boats[m_extraInfo].getObscuredExtraInfo();
     return m_extraInfo;
 }
 
@@ -450,11 +450,11 @@ unsigned char NewmapCell::cellIsTrigger()
 {
     if (m_type == HERO) {
         hero* obscurer = g_game->getHero(m_extraInfo);
-        return obscurer->m_valid && obscurer->m_wasTrigger;
+        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     if (m_type == BOAT) {
         boat* obscurer = &g_game->m_boats[m_extraInfo];
-        return obscurer->m_valid && obscurer->m_wasTrigger;
+        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
     }
     return m_isTrigger;
 }

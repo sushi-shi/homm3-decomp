@@ -80,6 +80,7 @@ public:
     static unsigned short s_div4mask;
 
     // Before normalization: DataSize.
+private:
     int m_dataSize;
     // Before normalization: ImageSize.
     int m_imageSize;
@@ -101,6 +102,7 @@ public:
     int m_pitch;
     // Before normalization: map.
     unsigned char* m_map;
+public:
 
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
@@ -116,6 +118,12 @@ public:
     // consumers expand these one-field accessors in place.
     // Before normalization (function): CSpriteFrame::GetCroppedWidth.
     int getCroppedWidth() const { return m_croppedWidth; }
+    // DC CSpriteFrame field list records these public const accessors;
+    // CSprite::drawPointer expands the corresponding retail width/height loads.
+    // Before normalization (function): CSpriteFrame::GetWidth.
+    int getWidth() const { return m_width; }
+    // Before normalization (function): CSpriteFrame::GetHeight.
+    int getHeight() const { return m_height; }
     // Before normalization (function): CSpriteFrame::GetCroppedHeight.
     int getCroppedHeight() const { return m_croppedHeight; }
     // Before normalization (function): CSpriteFrame::GetCroppedX.

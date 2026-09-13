@@ -185,6 +185,19 @@ def authored_property(cursor, ci) -> str:
     return "ordinary"
 
 
+def owning_member_keys(source, offset, owner, spelling):
+    """Correlate normalized names only through the declaration's own evidence."""
+    keys = {name_key(spelling)}
+    for alias in _aliases(source, {"loc": {"offset": offset}}):
+        if "::" in alias:
+            alias_owner, _, alias = alias.rpartition("::")
+            if name_key(alias_owner) != name_key(owner):
+                continue
+        if ";" not in alias:
+            keys.add(name_key(alias))
+    return sorted(keys)
+
+
 def collect_authored(ci, commands, root: Path, mirror: Path, want_class: set[str]):
     """usr -> authored member fact, deduped across TUs."""
     ACCESS = {ci.AccessSpecifier.PUBLIC: "public",
@@ -244,16 +257,8 @@ def collect_authored(ci, commands, root: Path, mirror: Path, want_class: set[str
             path = Path(loc.name)
             if path not in sources:
                 sources[path] = path.read_text()
-            aliases = _aliases(sources[path], {"loc": {"offset": cursor.extent.start.offset}})
-            keys = {name_key(cursor.spelling)}
-            # Only owning comments authorize a rename; never strip m_/s_ blindly.
-            for alias in aliases:
-                if "::" in alias:
-                    alias_owner, _, alias = alias.rpartition("::")
-                    if name_key(alias_owner) != name_key(owner):
-                        continue
-                if ";" not in alias:
-                    keys.add(name_key(alias))
+            keys = owning_member_keys(sources[path], cursor.extent.start.offset,
+                                      owner, cursor.spelling)
             facts[usr] = {
                 "owner": owner, "name": cursor.spelling,
                 "class_key": name_key(owner), "member_key": name_key(cursor.spelling),
@@ -266,6 +271,12 @@ def collect_authored(ci, commands, root: Path, mirror: Path, want_class: set[str
                 "const": cursor.is_const_method() if cursor.kind == ci.CursorKind.CXX_METHOD else False,
                 "file": str(path.relative_to(root)), "line": cursor.location.line,
             }
+    # Cursor offsets belong to the parsed snapshot. A header edited during
+    # a corpus scan can otherwise attach an unrelated owning-name comment.
+    diagnostics.extend({"file": str(path),
+                        "diagnostic": "source changed during audit; rerun on a stable tree"}
+                       for path, original in sources.items()
+                       if path.read_text() != original)
     return facts, {"parsed": parsed, "failures": failures, "diagnostics": diagnostics}
 
 
@@ -421,7 +432,9 @@ def main() -> int:
                  "parameters": f["parameters"], "file": f["file"], "line": f["line"]}
                 for f, d, _ in access_mismatch],
             "property_mismatches": [
-                {"member": f"{f['owner']}::{f['name']}", "authored": f["family"], "dc": d}
+                {"member": f"{f['owner']}::{f['name']}", "authored": f["family"], "dc": d,
+                 "parameters": f["parameters"], "const": f["const"],
+                 "file": f["file"], "line": f["line"]}
                 for f, d, _ in prop_mismatch],
             "coverage_missing": sorted(cover_missing),
             "correlation_gaps": gap_members,

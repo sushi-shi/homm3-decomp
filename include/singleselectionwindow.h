@@ -34,7 +34,7 @@ struct GameSelectionHeadersStruct;
 // references the same addresses initialized and owned by
 // singleselectionwindow.obj, which proves external rather than file linkage.
 // Before normalization: gTurnDurationText.
-extern char* g_turnDurationText[11];
+extern const char* g_turnDurationText[11];
 // Before normalization: gDifficultyRatingPercent.
 extern int g_difficultyRatingPercent[5];
 // Before normalization: gUnnamed6a77ec.
@@ -331,6 +331,11 @@ SIZE(CSingleSelectionNetMsgHandler, 0x10);
 // flagBack at +0x1870. The constructor further proves the DC-named embedded
 // netMsgHandler at +0x1888; the tail after it remains under reconstruction.
 class TSingleSelectionWindow : public CAdvPopup {
+    // DC CNewPlayerUpdateProc::Go at singleselectionwindow.cpp:1277
+    // loads private gameVersion directly for the message constructor
+    // (dc 0x1480cc); retail 0x5789f0 preserves that relationship.
+    friend class CNewPlayerUpdateProc;
+
 public:
     // DC names the constructor's timeGetTime snapshot clickTime; retail
     // places it at the first derived dword.
@@ -486,7 +491,9 @@ public:
     GameSelectionHeadersStruct* m_currentHeader;         // 0x1060
     CNetPlayerHandler m_players;       // 0x1064
     // Before normalization: receivedMaps.
+private:
     unsigned char m_receivedMaps;        // 0x1834 (DC receivedMaps)
+public:
     // Before normalization: pad_1835.
     // Dreamcast receivedMaps is one byte, followed by aligned chatSlider.
     // Retail retains that boundary at +0x1834 and +0x1838.
@@ -497,6 +504,7 @@ public:
     // file slider - is the DURATION slider DoModal resets to state 11
     // (the unlimited-turn index) on teardown.
     // Before normalization: chatSlider.
+private:
     slider* m_chatSlider;                // 0x1838
     // Before normalization: fileSlider.
     slider* m_fileSlider;                // 0x183c
@@ -523,6 +531,7 @@ public:
     unsigned char m_mapChanged;          // 0x1854
     // Before normalization: readingMaps.
     unsigned char m_readingMaps;         // 0x1855
+public:
     // Before normalization: pad_1856.
     // Dreamcast mapChanged/readingMaps are bytes preceding chatEdit;
     // retail retains two alignment bytes before the pointer at +0x1858.
@@ -530,6 +539,7 @@ public:
     // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
     // focuses its id on chat-open. Base-typed until its widget lands.
     // Before normalization: chatEdit.
+private:
     textEntryWidget* m_chatEdit;         // 0x1858
     // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
     // an earlier note here claimed; OnNewHostMsg resets it on the host
@@ -537,6 +547,7 @@ public:
     // chatEdit null).
     // Before normalization: sortWhich.
     int m_sortWhich;                     // 0x185c
+public:
     // The scenario size filter (0 = all, else an EMapDimension):
     // SortMaps admits a row into SelectionHeaders only when it is clear
     // or equal to the row's Size; SetFilter stores it.
@@ -545,9 +556,11 @@ public:
     // DC scenarioOptionsStarted (2876 on the linear run); cleared by
     // the host-handover reset before SetupScenarioOptions(0).
     // Before normalization: scenarioOptionsStarted.
+private:
     unsigned char m_scenarioOptionsStarted;  // 0x1864
     // Before normalization: chatShowing.
     unsigned char m_chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
+public:
     // Before normalization: pad_1866.
     // Dreamcast scenarioOptionsStarted/chatShowing are bytes before
     // chatToggle; retail preserves two alignment bytes at +0x1866.
@@ -555,14 +568,17 @@ public:
     // DC chatToggle: the show/hide-chat textButton whose label the
     // TurnChat pair rewrites from general-text rows 532/533.
     // Before normalization: chatToggle.
+private:
     textButton* m_chatToggle;            // 0x1868
     // Before normalization: receivingMaps.
     unsigned char m_receivingMaps;       // 0x186c (DC receivingMaps), cleared on header-end
+public:
     // Before normalization: pad_186d.
     // Dreamcast receivingMaps is one byte followed by aligned flagBack;
     // retail preserves this three-byte pointer-alignment gap.
     char m_paddingBeforeFlagBack[0x1870 - 0x186d];
     // Before normalization: flagBack.
+private:
     CSaveScreen* m_flagBack;             // 0x1870, DC-attested name
     // DC gameVersion (a 20-byte TFileVersionInfo product string there);
     // OnBadVersionMsg formats it against the offender's.
@@ -574,6 +590,7 @@ public:
     // include view keeps the same proven extent without importing remote.h.
     // Before normalization: netMsgHandler.
     CSingleSelectionNetMsgHandler m_netMsgHandler;  // 0x1888
+public:
     // Previously field_1898. Retail 0x58ea00 intersects the seated humans'
     // version feature sets and returns their highest common version.
     // Construction seeds this from the local version; join/drop refresh it.

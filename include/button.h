@@ -49,8 +49,13 @@ void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 // teardown, so retail uses VC6's own STL, not DC's STLport). Total 104.
 // No SIZE assert: the clang arm's host STL sizes differ.
 class button : public widget {
-public:
+    // DC textButton::Draw (0x57b98, button.cpp:538) directly passes
+    // button::Text at +84 to string::c_str; its field record is private.
+    // Retail 0x456ca0 does the same at +0x58: this specific derived class
+    // therefore needs friendship, with no intervening text accessor.
+    friend class textButton;
     // Before normalization: buttonIcon.
+private:
     CSprite* m_buttonIcon;
     // Before normalization: normalFrame.
     int m_normalFrame;
@@ -58,14 +63,17 @@ public:
     int m_selectedFrame;
     // Before normalization: disabled_frame.
     int m_disabledFrame;
+public:
     // Before normalization: field_40; reference member button::highlightedFrame.
     int m_highlightedFrame;
     // Before normalization: endDialog.
+private:
     unsigned char m_endDialog;
     // Before normalization: hotKeyCodes.
     std::vector<int> m_hotKeyCodes;
     // Before normalization: Text.
     std::string m_text;
+public:
 
     // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
     enum EButtonConstants {
@@ -77,6 +85,7 @@ public:
     // Before normalization: click_sample.
     static sample* s_clickSample;
 
+    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     button();
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     // Before normalization (function): button::Select.
@@ -156,11 +165,12 @@ public:
 // button is 104, so Font@0x68, textColor@0x6c (the dtor Disposes
 // [this+0x68]). Total 112.
 class textButton : public button {
-public:
     // Before normalization: Font.
+private:
     font* m_font;
     // Before normalization: textColor.
     int m_textColor;
+public:
 
     // Before normalization (locals): text_, font_name, new_color.
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);

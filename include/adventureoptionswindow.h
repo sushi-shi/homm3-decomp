@@ -37,7 +37,9 @@ public:
     };
 
     // Before normalization: RolloverWidget.
+private:
     textWidget* m_rolloverWidget;
+public:
 
     TAdventureOptionsWindow();
     virtual ~TAdventureOptionsWindow();

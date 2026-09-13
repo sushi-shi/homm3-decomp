@@ -357,7 +357,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
         "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
     m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
-    m_logScrollUpButton->m_disabledFrame = 1;
+    m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
     widgets.push_back(m_logScrollUpButton);
 
@@ -366,7 +366,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
         g_combatSubWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
-    m_logScrollDownButton->m_disabledFrame = 3;
+    m_logScrollDownButton->setDisabledFrame(3);
     widgets.push_back(m_logScrollDownButton);
 
     for (widget** it = widgets.begin(); it != widgets.end(); ++it) {

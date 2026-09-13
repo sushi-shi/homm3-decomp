@@ -59,9 +59,10 @@ enum creature_seqid {
 // Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
 // slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
 class CSprite : public resource {
-public:
     // Before normalization: s.
+private:
     CSequence** m_s;
+public:
     // Before normalization: p.
     TPalette16* m_p;
     // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
@@ -69,6 +70,7 @@ public:
     // Before normalization: p24.
     TPalette24* m_p24;
     // Before normalization: numSequences.
+private:
     int m_numSequences;
     // Before normalization: validSeqMask.
     int* m_validSeqMask;
@@ -76,6 +78,7 @@ public:
     int m_width;
     // Before normalization: Height.
     int m_height;
+public:
 
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
@@ -202,8 +205,8 @@ public:
                       int sh, Bitmap16Bit* dst, int dx, int dy,
                       unsigned char hflip, unsigned short outcolor)
     {
-        drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                     dst->m_width, dst->m_height, dst->m_pitch, hflip, outcolor);
+        drawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                     dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, outcolor);
     }
     // Before normalization (function): CSprite::DrawPointer.
     void drawPointer(int framenum, unsigned short* dst, int dx, int dy,
@@ -217,8 +220,8 @@ public:
                        Bitmap16Bit* dst, int dx, int dy,
                        unsigned char hflip)
     {
-        drawInterface(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                      dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawInterface(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawHero.
     void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
@@ -230,8 +233,8 @@ public:
     void drawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
     {
-        drawHero(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                 dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawHero(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                 dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawHeroShadow.
     void drawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
@@ -242,8 +245,8 @@ public:
                         int sh, Bitmap16Bit* dst, int dx, int dy,
                         unsigned char hflip)
     {
-        drawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawHeroAlpha.
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
@@ -257,8 +260,8 @@ public:
                        int sh, Bitmap16Bit* dst, int dx, int dy,
                        unsigned char hflip)
     {
-        drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                      dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawSpellEffect.
     void drawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
@@ -274,8 +277,8 @@ public:
                           Bitmap16Bit* dst, int dx, int dy,
                           unsigned char hflip)
     {
-        drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                         dst->m_width, dst->m_height, dst->m_pitch, hflip);
+        drawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                         dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
     }
     // Before normalization (function): CSprite::DrawAdvObj.
     void drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
@@ -300,8 +303,8 @@ public:
                             Bitmap16Bit* dst, int dx, int dy,
                             unsigned short outcolor, unsigned char hflip)
     {
-        drawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                           dst->m_width, dst->m_height, dst->m_pitch, outcolor,
+        drawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                           dst->getWidth(), dst->getHeight(), dst->getPitch(), outcolor,
                            hflip);
     }
     // Before normalization (function): CSprite::DrawTile.
@@ -328,8 +331,8 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         unsigned char hflip, unsigned char vflip)
     {
-        drawTileShadow(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip, vflip);
+        drawTileShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
     }
     // Before normalization (function): CSprite::DrawShroudTile.
     void drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
@@ -341,8 +344,8 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         unsigned char hflip, unsigned char vflip)
     {
-        drawShroudTile(framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-                       dst->m_width, dst->m_height, dst->m_pitch, hflip, vflip);
+        drawShroudTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
     }
 };
 

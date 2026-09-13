@@ -384,10 +384,10 @@ int heroWindow::saveBackground()
         m_background = new Bitmap16Bit(m_width + 8, m_height + 8);
     else
         m_background = new Bitmap16Bit(m_width, m_height);
-    m_background->grab(g_windowManager->m_screenBitmap->m_map, m_x, m_y,
-                     g_windowManager->m_screenBitmap->m_width,
-                     g_windowManager->m_screenBitmap->m_height,
-                     g_windowManager->m_screenBitmap->m_pitch);
+    m_background->grab(g_windowManager->m_screenBitmap->getMap(0, 0), m_x, m_y,
+                     g_windowManager->m_screenBitmap->getWidth(),
+                     g_windowManager->m_screenBitmap->getHeight(),
+                     g_windowManager->m_screenBitmap->getPitch());
     return 0;
 }
 
@@ -397,13 +397,13 @@ void heroWindow::restoreBackground(unsigned char update)
 {
     if (!m_background)
         return;
-    m_background->draw(0, 0, m_background->m_width, m_background->m_height,
-                     g_windowManager->m_screenBitmap->m_map, m_x, m_y,
-                     g_windowManager->m_screenBitmap->m_width,
-                     g_windowManager->m_screenBitmap->m_height,
-                     g_windowManager->m_screenBitmap->m_pitch, 0);
+    m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+                     g_windowManager->m_screenBitmap->getMap(0, 0), m_x, m_y,
+                     g_windowManager->m_screenBitmap->getWidth(),
+                     g_windowManager->m_screenBitmap->getHeight(),
+                     g_windowManager->m_screenBitmap->getPitch(), 0);
     if (update)
-        g_windowManager->updateScreen(m_x, m_y, m_background->m_width, m_background->m_height);
+        g_windowManager->updateScreen(m_x, m_y, m_background->getWidth(), m_background->getHeight());
     delete m_background;
     m_background = 0;
 }
@@ -677,7 +677,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
         const char* emptyText = g_emptyRolloverText;
         const char* text = emptyText;
         if (hit) {
-            text = hit->m_rollOver;
+            text = hit->getHelpText();
             if (!text)
                 text = emptyText;
             g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
@@ -703,12 +703,9 @@ unsigned char CHeroWindowEx::processRightSelect(int id)
     widget* current = getWidget(id);
     if (!current)
         return 0;
-    const char* text = current->m_rightClick;
-    if (!text) {
-        text = current->m_rollOver;
-        if (!text)
-            return 0;
-    }
+    const char* text = current->getRclickText();
+    if (!text)
+        return 0;
     if (strlen(text) == 0)
         return 0;
     normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

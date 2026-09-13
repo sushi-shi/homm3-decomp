@@ -216,8 +216,8 @@ public:
     // Before normalization (locals): pNetMsg.
     void setMessage(CNetMsg* netMsg) { m_netMsg = netMsg; }
 
-private:
     // Before normalization: m_pNetMsg.
+protected:
     CNetMsg* m_netMsg;
 };
 SIZE(CMessageKill, 0x4);

@@ -98,11 +98,13 @@ public:
     // Before normalization: height.
     short m_height;
     // Before normalization: RollOver.
+protected:
     char* m_rollOver;
     // Before normalization: RightClick.
     char* m_rightClick;
     // Before normalization: freeText.
     unsigned char m_freeText;
+public:
     // Sleep nesting depth; see the CORRECTION note above. Name is the
     // house ordinal placeholder - the role is proven, the spelling is
     // not attested anywhere we may read.
@@ -186,10 +188,15 @@ public:
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
     // cleared by the dtor when the dying widget is the hoveree.
     // Before normalization: last_hover_widget.
+protected:
     static widget* s_lastHoverWidget;
+public:
 
     // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
     // emitted; it is not an inlined-away static.
+    // DC Widget.h:225-226, dc 0x12859c: static hover reset.
+    // Before normalization (function): widget::clear_hover_widget.
+    static void clearHoverWidget() { s_lastHoverWidget = 0; }
     widget();
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
     // Before normalization (locals): _x, _y, _w, _h, _id, _style.

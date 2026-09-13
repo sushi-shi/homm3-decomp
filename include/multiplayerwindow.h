@@ -350,6 +350,7 @@ public:
     // Before normalization: splash.
     widget* m_splash;                         // +0xc4 (DC bitmapBorder*)
     // Before normalization: hotSeat.
+private:
     widget* m_hotSeat;                        // +0xc8 (DC button*)
     // Before normalization: ipx.
     widget* m_ipx;                            // +0xcc
@@ -377,6 +378,7 @@ public:
     textWidget* m_userNameHeader;             // +0xf8
     // Before normalization: RolloverWidget.
     textWidget* m_rolloverWidget;             // +0xfc
+public:
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();

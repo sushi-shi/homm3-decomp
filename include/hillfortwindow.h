@@ -158,6 +158,7 @@ public:
     void doModal();
 
     // Before normalization: slot.
+private:
     TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
     // Before normalization: totalCost.
     long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
@@ -165,6 +166,7 @@ public:
     int m_upgradeAllButtonState;                             // +0x298
     // Before normalization: RolloverWidget.
     widget* m_rolloverWidget;                                // +0x29c
+public:
 
     // DC free HillFortWindowHandler (0xd7458) calls these private methods;
     // retail 0x4e8850 retains the same callback relationship.

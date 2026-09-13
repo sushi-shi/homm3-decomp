@@ -1137,7 +1137,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (m_heroes[hero]->m_equipped[i].m_artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->getArtifact(i).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }

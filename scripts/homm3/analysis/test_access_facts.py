@@ -32,6 +32,34 @@ class AccessFactsTest(unittest.TestCase):
         field["member_keys"] = ["mread", "read"]
         self.assertEqual(facts.correlate(field, dc)[0]["access"], "private")
 
+    def test_shared_owning_keys_reject_neighbor_class_alias(self):
+        source = ("// Before normalization: OldField.\n"
+                  "// Before normalization (function): Other::unrelated.\n"
+                  "private:\n    int m_newField;\n")
+        self.assertEqual(facts.owning_member_keys(
+            source, source.index("int "), "Widget", "m_newField"),
+            ["mnewfield", "oldfield"])
+
+    def test_access_formatter_preserves_nested_and_conditional_access(self):
+        import importlib.util
+        script = Path(__file__).resolve().parents[2] / "experiments/apply-access-adherence.py"
+        spec = importlib.util.spec_from_file_location("access_transform", script)
+        transform = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(transform)
+        source = ("class Outer {\npublic:\n    int first;\n"
+                  "public: // retain evidence\n    int second;\n"
+                  "    class Inner {\n    private:\n        int secret;\n    };\n"
+                  "public:\n    void method();\n#if FLAG\nprivate:\n    int a;\n"
+                  "#else\npublic:\n    int b;\n#endif\npublic:\n    int last;\n"
+                  "private:\n};\n")
+        result = transform.remove_redundant_access_labels(source)
+        self.assertIn("// retain evidence", result)
+        self.assertIn("    private:\n        int secret;", result)
+        self.assertIn("#else\npublic:\n    int b;\n#endif\npublic:", result)
+        self.assertNotIn("private:\n};", result)
+        self.assertNotIn("public:\n    void method", result)
+        self.assertEqual(transform.remove_redundant_access_labels(result), result)
+
     def test_overloads_can_have_different_access(self):
         dc = {("widget", "read"): [method(), method("public", ["int"])]}
         self.assertEqual(facts.correlate(authored(), dc)[0]["access"], "private")

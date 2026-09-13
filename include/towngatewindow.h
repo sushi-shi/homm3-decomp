@@ -39,6 +39,7 @@ public:
     };
 
     // Before normalization: Towns.
+private:
     std::vector<int> m_towns;
     // Before normalization: topTown.
     int m_topTown;
@@ -46,6 +47,7 @@ public:
     int m_selectedTown;
     // Before normalization: adventure_spell.
     bool m_adventureSpell;
+public:
 
     // Before normalization (locals): adventure_spell.
     TTownGateWindow(bool adventureSpell);

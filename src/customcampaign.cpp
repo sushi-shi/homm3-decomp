@@ -312,13 +312,13 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 VA(0x00484230, 0x46)  // anchor-vtable (0x63daa0+0x10), retail-only
 std::string TCampaignSpellBonus::getText() const
 {
-    return formatString(g_generalText->m_text[716], g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(716), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)  // anchor-vtable (0x63da20+0x10), retail-only
 std::string TCampaignSpellScrollBonus::getText() const
 {
-    return formatString(g_generalText->m_text[717], g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(717), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)  // anchor-vtable (0x63da20+0x14), retail-only
@@ -428,7 +428,7 @@ std::string TCampaignCreatureBonus::getText() const
         name = g_creatureTypeTraits[m_creature].m_name;
     else
         name = g_creatureTypeTraits[m_creature].m_pluralName;
-    return formatString(g_generalText->m_text[718], m_count, name);
+    return formatString(g_generalText->getText(718), m_count, name);
 }
 
 VA(0x004845f0, 0x24)  // anchor-vtable (0x63da60+0x18), retail-only
@@ -495,7 +495,7 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
 VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
 std::string TCampaignBuildingBonus::getText() const
 {
-    const char* format = g_generalText->m_text[716];
+    const char* format = g_generalText->getText(716);
     return formatString(format, getBuildingName(m_town, m_building));
 }
 
@@ -515,7 +515,7 @@ const char* TCampaignArtifactBonus::getIconDefName() const
 VA(0x00484820, 0x40)  // anchor-vtable (0x63da40+0x10), retail-only
 std::string TCampaignArtifactBonus::getText() const
 {
-    return formatString(g_generalText->m_text[716],
+    return formatString(g_generalText->getText(716),
                          g_artifactTraits[m_artifact].m_name);
 }
 
@@ -590,12 +590,12 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 m_skills[stat], g_primarySkillNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += g_generalText->m_text[142];
+                list += g_generalText->getText(142);
             else if (remaining > 0)
                 list += ", ";
         }
     }
-    list = formatString(g_generalText->m_text[716], list.c_str());
+    list = formatString(g_generalText->getText(716), list.c_str());
     return list;
 }
 
@@ -610,14 +610,8 @@ void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
     if (target != 0) {
         // Before normalization (locals): iStat.
         for (int stat = 0; stat < 4; ++stat) {
-            int current;
-            if (target->m_stats[stat] > 99)
-                current = 99;
-            else if (target->m_stats[stat] > 0)
-                current = target->m_stats[stat];
-            else
-                current = stat >= 2;
-            target->m_stats[stat] = current + m_skills[stat];
+            int current = target->getPrimarySkill(stat);
+            target->setPrimarySkill(stat, current + m_skills[stat]);
         }
     }
 }
@@ -646,7 +640,7 @@ int TCampaignSecondarySkillBonus::getIconIndex() const
 VA(0x00484c50, 0x4B)  // anchor-vtable (0x63d9e0+0x10), retail-only
 std::string TCampaignSecondarySkillBonus::getText() const
 {
-    return formatString(g_generalText->m_text[719],
+    return formatString(g_generalText->getText(719),
                          g_skillMasteryNamesBiased[m_level],
                          g_sSkillTraits[m_skill].m_name);
 }
@@ -724,15 +718,15 @@ std::string TCampaignResourceBonus::getText() const
         name = g_resourceNames[m_resource];
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        name = g_generalText->m_text[722];
+        name = g_generalText->getText(722);
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        name = g_generalText->m_text[723];
+        name = g_generalText->getText(723);
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
     }
-    return formatString(g_generalText->m_text[718], m_amount, name);
+    return formatString(g_generalText->getText(718), m_amount, name);
 }
 
 // Every arm re-reads the amount out of the object; retail never keeps it
@@ -1067,7 +1061,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     if (campaign->load())
         campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
                                                    &mapHeader, source);
-    return formatString(g_generalText->m_text[720], mapHeader.m_mapName.c_str());
+    return formatString(g_generalText->getText(720), mapHeader.m_mapName.c_str());
 }
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
@@ -1156,8 +1150,8 @@ VA(0x00485a90, 0xBA)  // anchor-vtable (0x63db0c+0x18), retail-only
 std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
     if (m_choices[which].m_hero == -1)
-        return g_generalText->m_text[721];
-    return formatString(g_generalText->m_text[716],
+        return g_generalText->getText(721);
+    return formatString(g_generalText->getText(716),
                          g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
@@ -1380,6 +1374,17 @@ void SCampaign::doPreLoadCustomization()
     }
 }
 
+// Complete-only helper hypothesis, name provisional. At 0x486590 the
+// retained-spellbook arm zeroes hero's two 70-byte tables before AddSpell
+// rebuilds them from the source hero. The DC method roster predates this
+// campaign path, so it supplies neither this name nor an inline keyword.
+// Keep the ordinary body visible before its caller for VC6 auto-inlining.
+void hero::clearSpells()
+{
+    memset(m_inSpellbook, 0, sizeof(m_inSpellbook));
+    memset(m_availableSpells, 0, sizeof(m_availableSpells));
+}
+
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
 // artifact source boundaries. Retail independently proves the ScenarioStruct
@@ -1415,7 +1420,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             savedArtifacts[slot] = type_artifact();
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->m_equipped[slot];
+            type_artifact artifact = currentHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE) {
                 savedArtifacts[slot] = artifact;
                 currentHero->removeArtifact(slot);
@@ -1423,7 +1428,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->m_equipped[slot];
+            type_artifact artifact = sourceHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1434,7 +1439,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->m_equipped[slot];
+            type_artifact artifact = currentHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
@@ -1502,18 +1507,15 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
 
     if (m_retainSpellbook) {
-        memset(currentHero->m_inSpellbook, 0,
-               sizeof(currentHero->m_inSpellbook));
-        memset(currentHero->m_availableSpells, 0,
-               sizeof(currentHero->m_availableSpells));
+        currentHero->clearSpells();
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-            if (sourceHero->m_inSpellbook[spell])
+            if (sourceHero->isInSpellbook(spell))
                 currentHero->addSpell(spell);
         }
         if (!m_retainArtifacts
-            && sourceHero->m_equipped[hero::EQUIPPED_SLOT_SPELLBOOK].m_artifactId
+            && sourceHero->getArtifact(hero::EQUIPPED_SLOT_SPELLBOOK).m_artifactId
                 == ARTIFACT_SPELLBOOK
-            && currentHero->m_equipped[hero::EQUIPPED_SLOT_SPELLBOOK].m_artifactId
+            && currentHero->getArtifact(hero::EQUIPPED_SLOT_SPELLBOOK).m_artifactId
                 == ARTIFACT_NONE) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
             currentHero->equipArtifact(&spellbook, -1);
@@ -1522,12 +1524,12 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     if (m_retainArtifacts) {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = currentHero->m_equipped[slot];
+            type_artifact artifact = currentHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->removeArtifact(slot);
         }
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->m_equipped[slot];
+            type_artifact artifact = sourceHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 currentHero->equipArtifact(&artifact, slot);
         }
@@ -1536,22 +1538,22 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
                 static_cast<short>(currentHero->getLastBackpackIndex()));
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-            if (sourceHero->m_backpack[slot].m_artifactId != ARTIFACT_NONE)
-                currentHero->addToBackpack(&sourceHero->m_backpack[slot], -1);
+            if (sourceHero->getBackpack(slot).m_artifactId != ARTIFACT_NONE)
+                currentHero->addToBackpack(&sourceHero->getBackpack(slot), -1);
         }
     } else {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
-            type_artifact artifact = sourceHero->m_equipped[slot];
+            type_artifact artifact = sourceHero->getArtifact(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts.test(artifact.m_artifactId)) {
-                type_artifact displaced = currentHero->m_equipped[slot];
+                type_artifact displaced = currentHero->getArtifact(slot);
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
                 currentHero->equipArtifact(&artifact, slot);
             }
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-            type_artifact artifact = sourceHero->m_backpack[slot];
+            type_artifact artifact = sourceHero->getBackpack(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts.test(artifact.m_artifactId)) {
                 currentHero->addToBackpack(&artifact, -1);
@@ -1828,12 +1830,12 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             int slotIndex;
             for (slotIndex = 0; slotIndex < g_crossoverEquippedArtifactSlots;
                  ++slotIndex) {
-                type_artifact heroArtifact = carried.m_equipped[slotIndex];
+                type_artifact heroArtifact = carried.getArtifact(slotIndex);
                 if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
             for (slotIndex = 0; slotIndex < HERO_BACKPACK_CAPACITY; ++slotIndex) {
-                type_artifact heroArtifact = carried.m_backpack[slotIndex];
+                type_artifact heroArtifact = carried.getBackpack(slotIndex);
                 if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
@@ -2473,9 +2475,9 @@ void TCampaignBrief::MapTextStruct::play()
                                 textHeight + g_bigFont->m_fs.m_height);
         if (!strip)
             memError();
-        strip->fillRect(0, 0, strip->m_width, strip->m_height, 0);
+        strip->fillRect(0, 0, strip->getWidth(), strip->getHeight(), 0);
         g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
-                                     strip->m_width, strip->m_height,
+                                     strip->getWidth(), strip->getHeight(),
                                      g_campaignSubtitleColor,
                                      font::CENTER_JUSTIFIED, -1);
     }
@@ -2534,12 +2536,12 @@ void TCampaignBrief::MapTextStruct::play()
                 if (scrollDelay) {
                     strip->draw(0, 0, g_campaignSubtitleWidth,
                                 g_campaignSubtitleHeight - scrollDelay,
-                                g_windowManager->m_screenBitmap->m_map,
+                                g_windowManager->m_screenBitmap->getMap(0, 0),
                                 g_campaignSubtitleX,
                                 g_campaignSubtitleY + scrollDelay,
-                                g_windowManager->m_screenBitmap->m_width,
-                                g_windowManager->m_screenBitmap->m_height,
-                                g_windowManager->m_screenBitmap->m_pitch, false);
+                                g_windowManager->m_screenBitmap->getWidth(),
+                                g_windowManager->m_screenBitmap->getHeight(),
+                                g_windowManager->m_screenBitmap->getPitch(), false);
                 } else {
                     if (scrollY >= textHeight - g_campaignSubtitleHeight) {
                         if (!textDone)
@@ -2548,11 +2550,11 @@ void TCampaignBrief::MapTextStruct::play()
                     }
                     strip->draw(0, scrollY, g_campaignSubtitleWidth,
                                 g_campaignSubtitleHeight,
-                                g_windowManager->m_screenBitmap->m_map,
+                                g_windowManager->m_screenBitmap->getMap(0, 0),
                                 g_campaignSubtitleX, g_campaignSubtitleY,
-                                g_windowManager->m_screenBitmap->m_width,
-                                g_windowManager->m_screenBitmap->m_height,
-                                g_windowManager->m_screenBitmap->m_pitch, false);
+                                g_windowManager->m_screenBitmap->getWidth(),
+                                g_windowManager->m_screenBitmap->getHeight(),
+                                g_windowManager->m_screenBitmap->getPitch(), false);
                 }
                 if (redraw) {
                     g_windowManager->updateScreen(g_campaignSubtitleX,
@@ -3212,7 +3214,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                         newHero.addSpell(spell);
                 }
                 for (int stat = 0; stat < 4; ++stat)
-                    newHero.m_stats[stat] = oldHero.m_stats[stat];
+                    newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
             }
         }
         return;

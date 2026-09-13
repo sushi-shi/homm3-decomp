@@ -393,13 +393,14 @@ protected:
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
 
-protected:
     // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
     // m_isHost and the array pointers directly, exactly as retail does.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
+public:
     char m_caps[0x28];                  // +0x04
+protected:
     // Before normalization: m_lpDP.
     void* m_dp;                       // +0x2c
     GUID m_guid;                        // +0x30
@@ -502,7 +503,6 @@ protected:
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
-private:
     // Before normalization: m_lpLobby.
     void* m_lobby;                         // +0x58
     // Before normalization: m_pAddressArray.

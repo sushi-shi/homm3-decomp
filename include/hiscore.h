@@ -139,7 +139,14 @@ SIZE(CHSInputDlg, 0x5c);
 // at +0xfc, followed by iCreatureFrame/lLastServe at +0x100/+0x104.
 // Its GetBitmap816 calls store the two captured backgrounds at +0x108/+0x10c;
 // the destructor independently reads those same final two slots.
+// DC retains UpdateCreatures as a free TU helper, preceding the handler.
+static void updateCreatures();
 class THighScoreWindow : public heroWindow {
+    // DC hiscore.cpp:1014-1031/1034-1184 directly reads/writes private
+    // bIsStandard and lLastServe in these free functions; the class method
+    // record contains no category/clock accessors. Retail 0x4ea1d0 agrees.
+    friend void updateCreatures();
+    friend int highScoreWindowHandler(message& msg);
 public:
     // The two family selectors and the reset control the constructor gives
     // ids 1001/1002/1003, and the three cases HighScoreWindowHandler's
@@ -155,17 +162,21 @@ public:
     // Before normalization: CreatureFrames.
     int m_creatureFrames[2][11];
     // Before normalization: bIsStandard.
+private:
     unsigned char m_isStandard;
+public:
     // Before normalization: pad_fd.
     // The preceding byte field and following four-byte field establish
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeCreatureFrame[3];
     // Before normalization: iCreatureFrame.
+private:
     int m_creatureFrame;
     // Before normalization: lLastServe.
     unsigned long m_lastServe;
     // Before normalization: hiScoreBack.
     Bitmap816* m_hiScoreBack[2];
+public:
 
     THighScoreWindow();
     virtual ~THighScoreWindow();

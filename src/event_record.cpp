@@ -276,7 +276,7 @@ VA(0x0049a910, 0x65)  // anchor-vtable, dc 0x8c9ec
 void type_record_move_hero::undo()
 {
     // Before normalization (locals): was_on_map.
-    unsigned char wasOnMap = m_currentHero->m_valid;
+    unsigned char wasOnMap = m_currentHero->isOnMap();
     m_currentHero->restoreCell();
     m_currentHero->m_facing = m_restoreFlag;
     m_currentHero->m_x = m_source.m_x;

@@ -283,11 +283,13 @@ public:
     // Before normalization: randomDwellings.
     std::vector<RandomDwellingData> m_randomDwellings; // +0xc0
     // Before normalization: cellData.
+private:
     NewmapCell* m_cellData;
     // Before normalization: Size.
     int m_size;
     // Before normalization: HasTwoLevels.
     unsigned char m_hasTwoLevels;
+public:
     // +0xdc, and it is a MEMBER, not the pad `game` used to carry after
     // worldMap: NewfullMap::NewfullMap (0x4fd060) hands `this+0xdc` to the
     // `vector constructor iterator' with count 0xe8 and stride 0x10, and
@@ -314,6 +316,10 @@ public:
     // the same movzx/inc shape, 2026-08-20).
     // Before normalization (function): NewfullMap::GetNumLevels.
     int getNumLevels() { return m_hasTwoLevels + 1; }
+    // DC records this public const MapCell.h accessor; retail callers
+    // read the same size member used by zCell's row and level strides.
+    // Before normalization (function): NewfullMap::GetMapSize.
+    int getMapSize() const { return m_size; }
 
 private:
     // DC MapCell.h:847/850: const zCell precedes mutable zCell. Both are
@@ -1894,9 +1900,11 @@ public:
     // Before normalization: mapZ.
     unsigned char m_mapZ;         // +0x56
     // Before normalization: playerOwner.
+protected:
     char m_playerOwner;           // +0x57
     // Before normalization: town_id.
     char m_townId;               // +0x58
+public:
     // Before normalization: pad_59.
     // Dreamcast ends its members with town_id at +0x58 and rounds
     // the object to 0x5c, matching the PC record: three trailing alignment bytes.
@@ -1918,7 +1926,7 @@ public:
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
     // Before normalization (function): generator::get_owner.
-    inline long getOwner() { return m_playerOwner; }
+    inline long getOwner() const { return m_playerOwner; }
     // Before normalization (function): generator::Initialize.
     // Before normalization (locals): new_owner.
     void initialize(long newOwner);
@@ -2471,9 +2479,11 @@ public:
     // Before normalization: lithExitPools.
     std::vector<type_point> m_lithExitPools[8];  // +0x4e6fc
     // Before normalization: whirlpools.
+private:
     std::vector<type_point> m_whirlpools;        // +0x4e77c
     // Before normalization: undergroundGateExits.
     std::vector<type_point> m_undergroundGateExits; // +0x4e78c
+public:
     // One reciprocal exit index per entry above.  Dreamcast names the
     // std::vector<long> operator[] calls in match_underground_gates, while
     // retail compares and stores each four-byte element as a signed index.
@@ -2849,7 +2859,6 @@ private:
     // Before normalization (function): game::LoadRumours.
     int loadRumours(TAbstractFile* infile);       // 0x4bbe40
     // Before normalization (function): game::LoadMinePool.
-private:
     int loadMinePool(TAbstractFile* infile, int saveVersion);
 public:
     // Retail 0x4ced40, exact but PROVISIONALLY NAMED. readMonsterData ends by
@@ -3227,6 +3236,10 @@ public:
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
     // retail expands the map's byte flag plus one at both cheat loops.
     // Before normalization (function): game::GetNumMapLevels.
+    // DC game.h:1405, dc 0x12cabc: const reference to the whirlpool list.
+    // searchArray::enterTrigger passes its address to enterLith in retail.
+    // Before normalization (function): game::get_whirlpools.
+    const std::vector<type_point>& getWhirlpools() const { return m_whirlpools; }
     int getNumMapLevels() { return m_worldMap.getNumLevels(); }
     // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
     // 1016 - GetHero's twin. ai_player.obj retains its selected COMDAT at

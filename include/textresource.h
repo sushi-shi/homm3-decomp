@@ -364,12 +364,11 @@ public:
     // E:\gamedcs\TextResource.h:73
     const char* operator[](int i) const { return getText(i); }
 
-public:
-    // Canonical backing vector. Public while the decompilation still has
-    // direct retail consumers; this replaces the former fake +0x20 view.
+    // DC-private backing vector. Callers use GetText or operator[];
+    // retail expands the indexing at the same +0x20 vector pointer.
     // Before normalization: Text.
-    TTextArray m_text;  // +0x1c (_First +0x20)
 private:
+    TTextArray m_text;  // +0x1c (_First +0x20)
     // Before normalization: Data.
     char* m_data;       // +0x2c
 };

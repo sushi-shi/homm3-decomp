@@ -194,7 +194,7 @@ unsigned char initializeCreatureGeneratorNames()
     int i;
     for (i = 0; i < 80; i++)
         g_creatureGenerator1RolloverNames[i] =
-            g_creatureGenerator1Text->m_text[i];
+            g_creatureGenerator1Text->getText(i);
 
     g_creatureGenerator4Text = ResourceManager::getText(
         DATA_COMPGEN(0x0066026c, creatureGenerator4TextName, "crgen4.txt"));
@@ -202,7 +202,7 @@ unsigned char initializeCreatureGeneratorNames()
         return 0;
     for (i = 0; i < 2; i++)
         g_creatureGenerator4RolloverNames[i] =
-            g_creatureGenerator4Text->m_text[i];
+            g_creatureGenerator4Text->getText(i);
     return 1;
 }
 
@@ -217,7 +217,7 @@ unsigned char initializeExtraInfoText()
     if (g_extraInfoText == 0)
         return 0;
     for (int i = 0; i < 28; i++)
-        g_globalInfoFlagNames[i] = g_extraInfoText->m_text[i];
+        g_globalInfoFlagNames[i] = g_extraInfoText->getText(i);
     return 1;
 }
 
@@ -312,7 +312,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            systemMsg(&g_chatMan, g_generalText->getText(352),
+            g_chatMan.systemMsg(g_generalText->getText(352),
                       g_currentPlayer->m_name);
             g_unnamed69d810 = g_netLocalGamePos;
         }
@@ -444,8 +444,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        systemMsg(
-            &g_chatMan, g_generalText->getText(40),
+        g_chatMan.systemMsg(g_generalText->getText(40),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -769,10 +768,10 @@ int advManager::open(int newPriority)
     g_completeDrawEnabled = 0;
 
     if (m_routeArray == 0) {
-        m_routeArray = new unsigned short[(g_game->m_worldMap.m_hasTwoLevels + 1)
+        m_routeArray = new unsigned short[(g_game->m_worldMap.getNumLevels())
                                         * g_mapHeight * g_mapWidth];
         memset(m_routeArray, 0,
-               (g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapHeight * g_mapWidth
+               (g_game->m_worldMap.getNumLevels()) * g_mapHeight * g_mapWidth
                    * sizeof(unsigned short));
         if (m_routeArray == 0)
             memError();
@@ -789,7 +788,7 @@ int advManager::open(int newPriority)
             memError();
     }
     g_windowManager->addWindow(m_advWindow, 0, 1);
-    if (g_game->m_worldMap.m_hasTwoLevels + 1 < 2)
+    if (g_game->m_worldMap.getNumLevels() < 2)
         m_advWindow->widgetSetStatus(4, 8);
 
     // The cache loop's counter is UNSIGNED: retail closes it with
@@ -1353,7 +1352,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         currHero->m_isSleeping = 0;
         m_advWindow->setSleepImage(0);
 
-        if (static_cast<int>(g_searchArray->m_result.size()) <= 0)
+        if (static_cast<int>(g_searchArray->getPathSteps()) <= 0)
             break;
 
         int savedShowRoute = m_showRoute;
@@ -1368,13 +1367,13 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         g_inputManager->flush();
 
         unsigned char interrupted = 0;
-        int i = g_searchArray->m_result.size() - 1;
+        int i = g_searchArray->getPathSteps() - 1;
         if (i >= 0) {
             while (1) {
                 {
                     int noMove;
                     int foughtBattle;
-                    eventCell = moveHero(g_searchArray->m_result[i]->m_direction,
+                    eventCell = moveHero(g_searchArray->getStep(i),
                                          i == 0, triggerPoint, &noMove, 0,
                                          &foughtBattle, 0);
                     m_advWindow->updateHeroLocator(-1, 1, 1);
@@ -1928,7 +1927,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         {
             type_point cellPoint = heroPoint;
             if (!cellPoint.isValid())
-                standingOn = m_fullMap->m_cellData;
+                standingOn = m_fullMap->cell(0, 0, 0);
             else
                 standingOn = m_fullMap->cell(cellPoint.m_x, cellPoint.m_y,
                                            cellPoint.m_z);
@@ -2853,16 +2852,10 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     {
         type_point cellPoint = m_lastMapHover;
         if (!cellPoint.isValid())
-            cell = m_fullMap->m_cellData;
+            cell = m_fullMap->cell(0, 0, 0);
         else
-            // LONGHAND, not `cell(cellPoint)`: retail expands the index
-            // arithmetic here (`imul Size` twice off the packed point's
-            // two words, at fn+0xef..+0x133) and leaves no relocation, so
-            // calling the member emits a call retail does not have. Same
-            // treatment DoAdvCommand's five is_valid()/cell() pairs get.
-            cell = &m_fullMap->m_cellData[
-                (cellPoint.m_z * m_fullMap->m_size + cellPoint.m_y) * m_fullMap->m_size
-                + cellPoint.m_x];
+            // Use the recovered cell helper; retail chooses its expansion.
+            cell = m_fullMap->cell(cellPoint.m_x, cellPoint.m_y, cellPoint.m_z);
     }
 
     if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
@@ -3145,7 +3138,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
         // The preceding -1 gate lets retail index the hero pool directly;
         // spelling this through GetHero would retain its redundant null arm.
         m_mobileHero = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
-        if (m_mobileHero && !m_mobileHero->m_valid) {
+        if (m_mobileHero && !m_mobileHero->isOnMap()) {
             m_mobileHero->obscureCell();
             return mapCell;
         }
@@ -4543,7 +4536,7 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
                 type_point cellPoint = point;
                 NewmapCell* currCell;
                 if (!cellPoint.isValid())
-                    currCell = m_fullMap->m_cellData;
+                    currCell = m_fullMap->cell(0, 0, 0);
                 else
                     currCell = m_fullMap->cell(cellPoint.m_x, cellPoint.m_y,
                                              cellPoint.m_z);
@@ -4782,7 +4775,7 @@ int advManager::processHover(int mouseX, int mouseY)
         // in retail's own source.
         NewmapCell* currCell;
         if (!m_lastMapHover.isValid())
-            currCell = m_fullMap->m_cellData;
+            currCell = m_fullMap->cell(0, 0, 0);
         else
             currCell = m_fullMap->cell(m_lastMapHover.m_x, m_lastMapHover.m_y,
                                      m_lastMapHover.m_z);
@@ -5063,7 +5056,7 @@ int advManager::processSearch(int x, int y, int z)
 
     type_point lookupPoint = point;
     if (!lookupPoint.isValid())
-        currCell = m_fullMap->m_cellData;
+        currCell = m_fullMap->cell(0, 0, 0);
     else
         currCell = m_fullMap->cell(lookupPoint.m_x, lookupPoint.m_y, lookupPoint.m_z);
 
@@ -5471,7 +5464,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
         else
             thisHero = &g_game->m_heroes[extraInfo];
         type = thisHero->m_obscuredType;
-        extraInfo = thisHero->m_extraInfo;
+        extraInfo = thisHero->getObscuredExtraInfo();
     }
 
     switch (type) {
@@ -5488,7 +5481,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
         break;
     case CREATURE_GENERATOR_1:
     case CREATURE_GENERATOR_4:
-        owner = g_game->m_generators[extraInfo].m_playerOwner;
+        owner = g_game->m_generators[extraInfo].getOwner();
         break;
     case SHIPYARD:
         owner = extraInfo << 24 >> 24;
@@ -5773,10 +5766,9 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* thisCell;
     if (z >= 0)
-        thisCell = &m_fullMap->m_cellData[(z * m_fullMap->m_size + srcY)
-                                     * m_fullMap->m_size + srcX];
+        thisCell = m_fullMap->cell(srcX, srcY, z);
     else
-        thisCell = m_fullMap->m_cellData;
+        thisCell = m_fullMap->cell(0, 0, 0);
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
@@ -6092,7 +6084,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     unsigned char valid = point.isValid();
     NewfullMap* map = m_fullMap;
     if (!valid)
-        thisCell = map->m_cellData;
+        thisCell = map->cell(0, 0, 0);
     else
         thisCell = map->cell(point.m_x, point.m_y, point.m_z);
 
@@ -6313,10 +6305,9 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     point = type_point(srcX, srcY, z);
     NewmapCell* thisCell;
     if (!point.isValid()) {
-        thisCell = m_fullMap->m_cellData;
+        thisCell = m_fullMap->cell(0, 0, 0);
     } else {
-        thisCell = &m_fullMap->m_cellData[
-            (point.m_z * m_fullMap->m_size + point.m_y) * m_fullMap->m_size + point.m_x];
+        thisCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     }
     if (!thisCell->m_riverSet)
         return;
@@ -6363,10 +6354,9 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     point = type_point(srcX, srcY, z);
     NewmapCell* thisCell;
     if (!point.isValid()) {
-        thisCell = m_fullMap->m_cellData;
+        thisCell = m_fullMap->cell(0, 0, 0);
     } else {
-        thisCell = &m_fullMap->m_cellData[
-            (point.m_z * m_fullMap->m_size + point.m_y) * m_fullMap->m_size + point.m_x];
+        thisCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     }
     if (!thisCell->m_roadSet)
         return;
@@ -6679,7 +6669,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 unsigned char valid = triggerPoint.isValid();
                 NewfullMap* map = m_fullMap;
                 if (!valid)
-                    triggerCell = map->m_cellData;
+                    triggerCell = map->cell(0, 0, 0);
                 else
                     triggerCell = map->cell(
                         triggerPoint.m_x, triggerPoint.m_y, triggerPoint.m_z);
@@ -6966,16 +6956,16 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     unsigned short* destRow;
     if (g_mapHeight == MAP_DIMENSION_SMALL
         || g_mapHeight == MAP_DIMENSION_MEDIUM) {
-        destRow = g_windowManager->m_screenBitmap->m_map
-                  + g_windowManager->m_screenBitmap->m_pitch * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
+                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
     } else if (g_mapHeight == MAP_DIMENSION_LARGE) {
         rowPhase = 0;
         blockPhase = 0;
-        destRow = g_windowManager->m_screenBitmap->m_map
-                  + g_windowManager->m_screenBitmap->m_pitch * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
+                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
     } else {
-        destRow = g_windowManager->m_screenBitmap->m_map
-                  + g_windowManager->m_screenBitmap->m_pitch * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
+                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
     }
 
     unsigned char visibilityBit = g_mapVisibilityBit;
@@ -6983,28 +6973,27 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         unsigned short* dest = destRow;
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            destRow += 4 * g_windowManager->m_screenBitmap->m_pitch;
+            destRow += 4 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_MEDIUM:
-            destRow += 2 * g_windowManager->m_screenBitmap->m_pitch;
+            destRow += 2 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_LARGE:
-            destRow += g_windowManager->m_screenBitmap->m_pitch;
+            destRow += g_windowManager->m_screenBitmap->getPitch();
             if (++rowPhase > 2) {
                 rowPhase = 0;
-                destRow += g_windowManager->m_screenBitmap->m_pitch;
+                destRow += g_windowManager->m_screenBitmap->getPitch();
             } else if (rowPhase == 0) {
-                destRow += g_windowManager->m_screenBitmap->m_pitch;
+                destRow += g_windowManager->m_screenBitmap->getPitch();
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            destRow += g_windowManager->m_screenBitmap->m_pitch;
+            destRow += g_windowManager->m_screenBitmap->getPitch();
             break;
         }
 
         for (int x = 0; x <= lastColumn; x++) {
-            NewmapCell* cell = &m_fullMap->m_cellData[
-                (origin.m_z * m_fullMap->m_size + y) * m_fullMap->m_size + x];
+            NewmapCell* cell = m_fullMap->cell(x, y, origin.m_z);
 
             unsigned char revealed =
                 !g_completeDrawAllCells
@@ -7082,7 +7071,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             if (trigger)
                                 colour = g_unnamed6aacb0->m_data[64 +
                                     g_game->m_generators[trigger
-                                        ->getMapExtraInfo()].m_playerOwner];
+                                        ->getMapExtraInfo()].getOwner()];
                         }
                         break;
                     case GARRISON:
@@ -7242,8 +7231,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         srcY = 0;
 
     CSprite* icons = m_radarIcons;
-    int drawWidth = icons->m_width - srcX;
-    int drawHeight = icons->m_height - srcY;
+    int drawWidth = icons->getWidth() - srcX;
+    int drawHeight = icons->getHeight() - srcY;
 
     int destX;
     if (origin.m_x < 0)
@@ -7256,10 +7245,10 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     else
         destY = static_cast<long>(rectY + origin.m_y * scale);
 
-    if (icons->m_width + destX > rectX + rectWidth)
-        drawWidth += rectWidth - icons->m_width - destX + rectX;
-    if (icons->m_height + destY > rectY + rectHeight)
-        drawHeight += rectHeight - icons->m_height - destY + rectY;
+    if (icons->getWidth() + destX > rectX + rectWidth)
+        drawWidth += rectWidth - icons->getWidth() - destX + rectX;
+    if (icons->getHeight() + destY > rectY + rectHeight)
+        drawHeight += rectHeight - icons->getHeight() - destY + rectY;
     if (drawWidth < 0)
         drawWidth = 0;
     if (drawHeight < 0)
@@ -7267,10 +7256,10 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
     if (!suppressIcon)
         icons->drawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
-                             g_windowManager->m_screenBitmap->m_map, destX,
-                             destY, g_windowManager->m_screenBitmap->m_width,
-                             g_windowManager->m_screenBitmap->m_height,
-                             g_windowManager->m_screenBitmap->m_pitch, 0);
+                             g_windowManager->m_screenBitmap->getMap(0, 0), destX,
+                             destY, g_windowManager->m_screenBitmap->getWidth(),
+                             g_windowManager->m_screenBitmap->getHeight(),
+                             g_windowManager->m_screenBitmap->getPitch(), 0);
 
     if (updateFlag)
         g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
@@ -8893,7 +8882,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
 
     if (bmp) {
         setPlayerPaletteColors(&bmp->m_p16.m_colors, playerId);
-        bmp->draw(0, 0, bmp->m_width, bmp->m_height,
+        bmp->draw(0, 0, bmp->getWidth(), bmp->getHeight(),
                   g_windowManager->m_screenBitmap, 0, 0, 0);
         bmp->dispose();
         m_heroLogoShowing = 0;
@@ -9175,13 +9164,10 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
 
         type_point cellPoint = heroPoint;
         if (!cellPoint.isValid())
-            cell = m_fullMap->m_cellData;
+            cell = m_fullMap->cell(0, 0, 0);
         else
-            // LONGHAND for the same reason as ProcessMapSelect's copy:
-            // retail expands the index arithmetic and emits no call.
-            cell = &m_fullMap->m_cellData[
-                (cellPoint.m_z * m_fullMap->m_size + cellPoint.m_y) * m_fullMap->m_size
-                + cellPoint.m_x];
+            // Use the recovered cell helper; retail chooses its expansion.
+            cell = m_fullMap->cell(cellPoint.m_x, cellPoint.m_y, cellPoint.m_z);
     }
 
     if (!waitingPlayer) {
@@ -9518,8 +9504,7 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
-    NewmapCell* thisCell = &m_fullMap->m_cellData[
-        (z * m_fullMap->m_size + y) * m_fullMap->m_size + x];
+    NewmapCell* thisCell = m_fullMap->cell(x, y, z);
 
     if (thisCell->m_groundSet == eTerrainWater && thisCell->m_groundIndex < 21)
         return LOOPING_SOUND_69;
@@ -10276,7 +10261,7 @@ void popupPlayerTurnInfo()
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
     if (!g_currentPlayer->isLocalHuman())
-        g_advManager->m_bottomViewOverride = advManager::BOTTOM_VIEW_DEFAULT;
+        g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
 
     g_soundManager->m_playSounds = 1;
     SAMPLE2 sample2 = loadPlaySample("SysMsg.wav");
@@ -10562,7 +10547,7 @@ void advManager::enableButtons()
 static inline NewmapCell* findAdjacentMapCell(
     NewfullMap* map, int x, int y, int z)
 {
-    return &map->m_cellData[(z * map->m_size + y) * map->m_size + x];
+    return map->cell(x, y, z);
 }
 
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
@@ -10708,12 +10693,12 @@ void advManager::viewPuzzle()
         // Byte-flat (a call relocation's name is not scored) but it stops
         // the call census reporting a phantom divergence here.
         m_arrowTileset->drawTile(
-            0, 0, 0, 32, 32, g_windowManager->m_screenBitmap->m_map,
-            (grailX - centre.m_x) * 32 + (32 - m_arrowTileset->m_width) / 2,
-            (grailY - centre.m_y) * 32 + (32 - m_arrowTileset->m_height) / 2,
-            g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, 0, 0);
+            0, 0, 0, 32, 32, g_windowManager->m_screenBitmap->getMap(0, 0),
+            (grailX - centre.m_x) * 32 + (32 - m_arrowTileset->getWidth()) / 2,
+            (grailY - centre.m_y) * 32 + (32 - m_arrowTileset->getHeight()) / 2,
+            g_windowManager->m_screenBitmap->getWidth(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getPitch(), 0, 0);
         g_windowManager->m_screenBitmap->colorize(8, 8, 592, 544, 0.625f,
                                                 0.0f);
         int revealed = puzzle.updatePuzzle(0);

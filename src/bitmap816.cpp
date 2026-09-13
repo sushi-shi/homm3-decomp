@@ -296,8 +296,8 @@ VA(0x0044fdb0, 0x3B)  // hd-crossbuild; dc 0x541b0
 void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                      int dx, int dy, bool tblit) const
 {
-    draw(sx, sy, sw, sh, dst->m_map, dx, dy,
-         dst->m_width, dst->m_height, dst->m_pitch, tblit);
+    draw(sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+         dst->getWidth(), dst->getHeight(), dst->getPitch(), tblit);
 }
 
 // Retail vtable 0x63ba14 slot 3. The screen z-buffer wrapper supplies the

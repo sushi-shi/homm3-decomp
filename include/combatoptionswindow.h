@@ -74,7 +74,9 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeRolloverWidget[3];
     // Before normalization: RolloverWidget.
+private:
     textWidget* m_rolloverWidget;   // +0x50
+public:
 
     TCombatOptionsWindow();
     virtual ~TCombatOptionsWindow();

@@ -194,9 +194,11 @@ struct type_obscuring_object {
     // Before normalization: z.
     short m_z;                              // +0x04 (DC mapZ)
     // Before normalization: valid.
+private:
     unsigned char m_valid;                  // +0x06
     // Before normalization: obscured_location.
     type_point m_obscuredLocation;         // +0x07
+public:
     // Before normalization: pad_0b.
     // Retail packs the four-byte location at +0x07 and keeps the type
     // at +0x0c. NH3API explicitly leaves the intervening byte unnamed.
@@ -204,14 +206,18 @@ struct type_obscuring_object {
     // Before normalization: obscuredType.
     TAdventureObjectType m_obscuredType;    // +0x0c (DC type)
     // Before normalization: was_trigger.
+private:
     unsigned char m_wasTrigger;            // +0x10
+public:
     // Before normalization: pad_11.
     // Dreamcast proves a one-byte was_trigger at +0x10 and extra_info
     // at +0x14. Retail load/save also serialize just that byte; these three
     // alignment bytes are not the upper part of NH3API's bool32 facade.
     char m_paddingBeforeExtraInfo[3];
     // Before normalization: extra_info.
+private:
     unsigned long m_extraInfo;             // +0x14
+public:
 
     type_obscuring_object();
     void initialize();
@@ -236,6 +242,10 @@ struct type_obscuring_object {
     // hero's underlying map cell.
     // Before normalization (function): type_obscuring_object::is_on_map.
     bool isOnMap() const { return m_valid != 0; }
+    // DC records the public const accessor; NewmapCell::getExtraInfo
+    // expands its +0x14 load for obscuring heroes and boats in retail.
+    // Before normalization (function): type_obscuring_object::get_obscured_extra_info.
+    unsigned long getObscuredExtraInfo() const { return m_extraInfo; }
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.
@@ -763,13 +773,16 @@ public:
     // Before normalization: field_129; reference member hero::visionsPower.
     int m_visionsPower;                      // +0x129
     // Before normalization: equipped.
+private:
     type_artifact m_equipped[19];
+public:
     // One byte per artifact slot class. remove_artifact decrements the
     // component's class after dismantling a combination artifact, except
     // for the first component occupying the assembled artifact's class.
     // Before normalization: artifactSlotCounts.
     unsigned char m_artifactSlotCounts[15]; // +0x1c5
     // Before normalization: backpack.
+private:
     type_artifact m_backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
@@ -777,6 +790,7 @@ public:
     // both the offset and the SIGNED char width. Name provisional.
     // Before normalization: backpackCount.
     signed char m_backpackCount;          // +0x3d4
+public:
     // Per-hero sex copied from THeroTraits during initialize. The retail
     // build added this four-byte field ahead of the custom-name state.
     // Before normalization: sex.
@@ -817,9 +831,11 @@ public:
     // from the Dreamcast build.
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     // Before normalization: in_spellbook.
+private:
     unsigned char m_inSpellbook[NUM_SPELLS];     // +0x3ea
     // Before normalization: available_spells.
     unsigned char m_availableSpells[NUM_SPELLS]; // +0x430
+public:
     // DC hero.h:1016, dc 0x37ddc. The const-bool mangling
     // (?is_in_spellbook@hero@@QBA_NW4SpellID@@@Z) and CastSpell's direct
     // retail byte load prove this is a source-visible header inline.
@@ -831,7 +847,7 @@ public:
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
     // Before normalization (function): hero::SpellIsAvailable.
-    unsigned char spellIsAvailable(SpellID spell) const
+    unsigned char spellIsAvailable(int spell) const
     {
         return m_availableSpells[spell];
     }
@@ -840,7 +856,9 @@ public:
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     // Before normalization: stats.
+private:
     signed char m_stats[4];                       // +0x476
+public:
     // DC-attested header inline (E:\gamedcs\hero.h:687, dc 0x70a1c, 16
     // SH4 bytes, params `skill` and `amount` both T_INT4) - and its own
     // command.obj attribution is the reason it is written out here:
@@ -863,6 +881,7 @@ public:
     // +0x47e/+0x486. The +0x1e cross-build shift follows the already-proven
     // retail packing above; the band still closes SIZE(hero) exactly.
     // Before normalization: value_of_power.
+private:
     long m_valueOfPower;
     // Before normalization: value_of_duration.
     long m_valueOfDuration;
@@ -872,6 +891,7 @@ public:
     long m_valueOfSpring;
     // Before normalization: value_of_well.
     long m_valueOfWell;
+public:
 
     // Dreamcast keeps these five source-visible setter boundaries. Retail
     // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
@@ -902,6 +922,16 @@ public:
     {
         return m_valueOfPower;
     }
+    // DC hero.h:991 (0x37dc4) and the class signature record the const
+    // long-returning duration accessor used by AI reward valuation.
+    // Before normalization (function): hero::get_value_of_duration.
+    long getValueOfDuration() const { return m_valueOfDuration; }
+    // DC hero.h:1006/1011, dc 0x114b88/0x114b90; each is one
+    // cached-value load, also expanded by the retail philai callers.
+    // Before normalization (function): hero::get_value_of_spring.
+    long getValueOfSpring() const { return m_valueOfSpring; }
+    // Before normalization (function): hero::get_value_of_well.
+    long getValueOfWell() const { return m_valueOfWell; }
     // Before normalization (function): hero::get_value_of_knowledge.
     __forceinline long getValueOfKnowledge() const
     {
@@ -951,6 +981,12 @@ public:
         return skill >= 2 ? 1 : 0;
     }
 
+    // Retail level-update messages carry the raw four-byte skill band,
+    // including values outside GetPrimarySkill's clamped gameplay range.
+    // Bulk-copy boundary names provisional; bodies precede their callers.
+    void copyPrimarySkills(signed char* stats) const;
+    void setPrimarySkills(const signed char* stats);
+
     // Before normalization (function): hero::HasArtifact.
     // DC hero.cpp:1422 proves const; Complete's callers test AL.
     unsigned char hasArtifact(int whichArtifact) const;
@@ -964,6 +1000,9 @@ public:
     }
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     // Before normalization (function): hero::AddSpell.
+    // Complete's campaign carry-over resets both spell tables together.
+    // No DC counterpart survives for that added path; name provisional.
+    void clearSpells();
     void addSpell(int whichSpell);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
     // Before normalization (function): hero::update_spell_list.
@@ -1031,7 +1070,9 @@ public:
     // DC row with NO retail body - GiveExperience carries it expanded.
     // Before normalization (function): hero::GetLevel.
     // Before normalization (locals): iExperience.
-    int getLevel(int experience);
+    // DC hero.cpp:1862 has only the experience parameter, no receiver;
+    // retail GiveExperience expands the same receiver-independent helper.
+    static int getLevel(int experience);
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
@@ -1170,7 +1211,10 @@ public:
     static int getExperienceIncrement(int level);
     // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
-    // static overload above.
+    // static overload above. DC LF_METHOD incorrectly tags both overloads
+    // static: the nullary LF_MFUNCTION has const-this type 0x2072 and its
+    // dc 0x2e60 procedure reads this->level. Keep that stronger signature
+    // and body evidence; the raw property conflict remains in the audit.
     // Before normalization (function): hero::GetExperienceIncrement.
     __forceinline int getExperienceIncrement() const
     {

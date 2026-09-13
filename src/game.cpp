@@ -808,7 +808,7 @@ unsigned char initializeRandomTavernText()
     if (g_randomTavernText == 0)
         return 0;
     for (int i = 0; i < 256; i++)
-        g_cannedRumours[i] = g_randomTavernText->m_text[i];
+        g_cannedRumours[i] = g_randomTavernText->getText(i);
     return 1;
 }
 
@@ -2422,7 +2422,7 @@ int playerData::numOfGivenArtifact(int whichArtifact)
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
         hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
         for (int slot = 0; slot < 19; slot++) {
-            if (currentHero->m_equipped[slot].m_artifactId == whichArtifact)
+            if (currentHero->getArtifact(slot).m_artifactId == whichArtifact)
                 count++;
         }
     }
@@ -2432,7 +2432,7 @@ int playerData::numOfGivenArtifact(int whichArtifact)
         if (currentTown->m_garrisonHeroId >= 0) {
             hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
             for (int slot = 0; slot < 19; slot++) {
-                if (currentHero->m_equipped[slot].m_artifactId == whichArtifact)
+                if (currentHero->getArtifact(slot).m_artifactId == whichArtifact)
                     count++;
             }
         }
@@ -3999,7 +3999,7 @@ int game::load(TAbstractFile* infile)
     // read through the GLOBAL gpGame rather than this->worldMap, and the
     // *2 applied LAST (retail's `lea edi,[eax+eax]` follows both imuls).
     unsigned int mapExtraBytes =
-        (g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapWidth * g_mapHeight *
+        (g_game->m_worldMap.getNumLevels()) * g_mapWidth * g_mapHeight *
         sizeof(unsigned short);
     if (infile->read(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
@@ -4554,7 +4554,7 @@ int game::save(TAbstractFile* outfile)
     // `lea edi,[eax+eax]` follows both imuls. The count is computed once
     // into one local because a virtual call sits between its two uses.
     unsigned int mapExtraBytes =
-        (g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapWidth * g_mapHeight *
+        (g_game->m_worldMap.getNumLevels()) * g_mapWidth * g_mapHeight *
         sizeof(unsigned short);
     if (outfile->write(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
@@ -5262,7 +5262,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     if (g_unk69774c && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
         hero* campaignHero = &m_heroes[45];
-        if (campaignHero->m_equipped[hero::EQUIPPED_SLOT_SPELLBOOK].m_artifactId
+        if (campaignHero->getArtifact(hero::EQUIPPED_SLOT_SPELLBOOK).m_artifactId
             != -1)
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
@@ -6057,7 +6057,7 @@ void game::randomizeEvents()
 
                 case CREATURE_GENERATOR_1:
                     id = getGeneratorId(x, y, z);
-                    claimGenerator(id, m_generators[id].m_playerOwner);
+                    claimGenerator(id, m_generators[id].getOwner());
                     break;
 
                 case g_retailCreatureGenerator2:
@@ -6076,7 +6076,7 @@ void game::randomizeEvents()
 
                 case CREATURE_GENERATOR_4:
                     id = getGeneratorId(x, y, z);
-                    claimGenerator(id, m_generators[id].m_playerOwner);
+                    claimGenerator(id, m_generators[id].getOwner());
                     break;
 
                 case DEAD_GUY:
@@ -8596,8 +8596,8 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
 
     if (!isRemoteMove) {
         for (i = 0; i < m_generators.size(); i++) {
-            if (m_generators[i].m_playerOwner == oldOwner
-                || m_generators[i].m_playerOwner == newPlayerOwner)
+            if (m_generators[i].getOwner() == oldOwner
+                || m_generators[i].getOwner() == newPlayerOwner)
                 m_generators[i].removeBonus();
         }
     }
@@ -8656,7 +8656,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
             if (thisTown->hasBuilding(HOLY_GRAIL_ID, 0)) {
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
                                       newPlayerOwner, g_mapWidth, 0);
-                if (g_game->m_worldMap.m_hasTwoLevels + 1 > 1)
+                if (g_game->m_worldMap.getNumLevels() > 1)
                     g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
                                           newPlayerOwner, g_mapWidth, 0);
             }
@@ -8664,13 +8664,13 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     }
 
     for (i = 0; i < m_generators.size(); i++) {
-        if (m_generators[i].m_playerOwner == oldOwner
-            || m_generators[i].m_playerOwner == newPlayerOwner) {
+        if (m_generators[i].getOwner() == oldOwner
+            || m_generators[i].getOwner() == newPlayerOwner) {
             generator* thisGenerator = &m_generators[i];
-            if (thisGenerator->m_playerOwner < 0)
+            if (thisGenerator->getOwner() < 0)
                 continue;
 
-            playerData* player = &g_game->m_players[thisGenerator->m_playerOwner];
+            playerData* player = &g_game->m_players[thisGenerator->getOwner()];
             int creature = thisGenerator->m_type[0];
             if (!g_game->m_f1f698 &&
                 (creature == CREATURE_AIR_ELEMENTAL ||
@@ -9496,9 +9496,9 @@ void game::resetAllPlayerVisibility()
     }
 
     for (i = 0; i < m_generators.size(); ++i) {
-        if (m_generators[i].m_playerOwner != -1) {
+        if (m_generators[i].getOwner() != -1) {
             setVisibility(m_generators[i].m_mapX, m_generators[i].m_mapY,
-                          m_generators[i].m_mapZ, m_generators[i].m_playerOwner,
+                          m_generators[i].m_mapZ, m_generators[i].getOwner(),
                           3, 0);
         }
     }
@@ -9699,7 +9699,7 @@ void game::setRecruits(int playerPos)
         hero* newHero = &m_heroes[heroId];
         int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
-            artifact = newHero->m_backpack[backpackSlot];
+            artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
                 && newHero->equipArtifact(&artifact, -1))
                 newHero->removeBackpackArtifact(backpackSlot);
@@ -10570,7 +10570,7 @@ void game::processRandomObjects()
     int y, z, x;
     NewmapCell* tempCell;
 
-    for (z = 0; z < m_worldMap.m_hasTwoLevels + 1; ++z) {
+    for (z = 0; z < m_worldMap.getNumLevels(); ++z) {
         for (y = 0; y < g_mapHeight; ++y) {
             for (x = 0; x < g_mapWidth; ++x) {
                 tempCell = m_worldMap.cell(x, y, z);
@@ -10739,12 +10739,11 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
     }
 
     unsigned short playerMask = players;
-    for (int z = 0; z < m_worldMap.m_hasTwoLevels + 1; ++z) {
+    for (int z = 0; z < m_worldMap.getNumLevels(); ++z) {
         for (int x = 0; x < g_mapWidth; ++x) {
             for (int y = 0; y < g_mapHeight; ++y) {
                 unsigned int mask = visMask;
-                NewmapCell* cell = &m_worldMap.m_cellData[
-                    (z * m_worldMap.m_size + y) * m_worldMap.m_size + x];
+                NewmapCell* cell = m_worldMap.cell(x, y, z);
                 if (mask & (1 << cell->m_groundSet))
                     *getMapExtraPtr(x, y, z) |= playerMask;
             }
@@ -11866,7 +11865,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 break;
 
             case RS_SET_AS_HOST:
-                systemMsg(&g_chatMan, (*g_generalText)[471]);
+                g_chatMan.systemMsg((*g_generalText)[471]);
                 break;
 
             case RS_CHAT_MSG: {
@@ -12101,9 +12100,9 @@ void game::doNewTurn()
     g_soundManager->m_playSounds = 1;
     launchSample(sample, 30000, 3);
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-    g_advManager->m_advWindow->m_animateInBackground = 1;
+    g_advManager->m_advWindow->setBackgroundAnimation(1);
     normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    g_advManager->m_advWindow->m_animateInBackground = 0;
+    g_advManager->m_advWindow->setBackgroundAnimation(0);
 }
 
 // E:\gamedcs\game.cpp:11170

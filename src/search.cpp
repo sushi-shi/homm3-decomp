@@ -449,7 +449,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case WHIRLPOOL:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_whirlpools, WHIRLPOOL,
+        enterLith(currentHero, &g_game->getWhirlpools(), WHIRLPOOL,
                    mapCell->m_extraInfo, cell, limit, searchType);
         return 0;
     case TOWN:
@@ -606,7 +606,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     // Dreamcast's older source calls is_on_map here, but its bool facade
     // normalizes the value; the retail load is direct evidence for this
     // later-revision spelling.
-    unsigned char wasOnMap = currentHero->m_valid;
+    unsigned char wasOnMap = currentHero->isOnMap();
     currentHero->restoreCell();
 
     m_limitReached = 0;

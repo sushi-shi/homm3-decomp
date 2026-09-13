@@ -834,6 +834,7 @@ public:
     // eighth goes into the widget list on its own and a seven-trip
     // loop pushes the rest.
     // Before normalization: SpriteWidget.
+private:
     iconWidget* m_spriteWidget[8];
     // +0x88, DC `castleType` - the fort tier whose name the page
     // header prints. int rather than the DC's type_building_id for the
@@ -841,6 +842,7 @@ public:
     // enum, and an enum member would need a cast at the one read.
     // Before normalization: castleType.
     int m_castleType;
+public:
 
     TCastleWindow();
     virtual ~TCastleWindow();

@@ -63,8 +63,8 @@ SIZE(LODHeader, 0x5c);
 // Canonical retail layout. The constructor and clear/open/read bodies account
 // for every field and DoNewGame's static storage proves the total 0x18c size.
 class LODFile {
-public:
     // Before normalization: fileptr.
+private:
     FILE* m_fileptr;
     // Before normalization: LODFileName.
     char m_lodFileName[256];
@@ -82,6 +82,7 @@ public:
     int m_matchindex;
     // Before normalization: header.
     LODHeader m_header;
+public:
     // Before normalization: numEntries.
     int m_numEntries;
     // Before normalization: subindex.

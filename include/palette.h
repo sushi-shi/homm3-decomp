@@ -82,16 +82,17 @@ public:
 SIZE(TPalette24, 0x31c);
 
 class TPalette16 : public resource {
-public:
     // Dreamcast CodeView names these three class statics directly. Retail's
     // SetPixelFormat stores its red/green/blue arguments at the corresponding
     // three addresses, and every 16-bit palette transform reads them back.
     // Before normalization: red_mask.
+private:
     static unsigned int s_redMask;
     // Before normalization: green_mask.
     static unsigned int s_greenMask;
     // Before normalization: blue_mask.
     static unsigned int s_blueMask;
+public:
 
     union {
         // Before normalization: data.
@@ -105,6 +106,15 @@ public:
     // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
     // its constructor 0x4b5070 runs this body on that subobject as a
     // member initializer. Declaration only - the body stays palette's.
+    // DC Palette.h:137-140, dc 0x122b08. No receiver; three mask stores.
+    // Retail ResourceManager::setPixelFormat expands this header helper.
+    // Before normalization (function): TPalette16::SetPixelFormat.
+    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
+    {
+        s_redMask = red;
+        s_greenMask = green;
+        s_blueMask = blue;
+    }
     TPalette16();
     TPalette16(const unsigned short* data);
     // DC palette.cpp:67/86/92 signatures preserve const TPalette24&.

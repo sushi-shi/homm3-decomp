@@ -1863,7 +1863,7 @@ TOverviewWindow::TOverviewWindow()
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
         generator& current = g_game->m_generators[i];
-        if (current.m_playerOwner != localPlayer)
+        if (current.getOwner() != localPlayer)
             continue;
 
         current.m_genClass = 17;

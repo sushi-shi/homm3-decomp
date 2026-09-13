@@ -23,8 +23,10 @@ cannot be correlated remain explicit; they are not proof of platform changes.
 The audit does not compare SH4 and candidate statement or scope counts.
 
 `apply-access-adherence.py` prints a declaration-only proposal by default;
-`--apply` writes unambiguous public-to-private/protected changes without moving
-members. It aborts on Clang errors and has no keep-public exclusion list.
+`--apply` tightens unambiguously correlated public or protected declarations
+without moving members. It shares the auditor's owning-name aliases and preserves
+nested records and conditional access sections while removing redundant labels.
+It aborts on Clang errors and has no keep-public exclusion list.
 Review both the proposal and its callers before applying it. Access changes
 can change VC6 mangled symbols, so run the full `homm3 build` to regenerate
 source-owned bindings and delinked targets.
@@ -43,6 +45,47 @@ methods there; retail preserves those callback relationships. This supports
 specific friends. An unexplained external access alone does not. Preserve the
 recovered relationships through compiler-score dips, record the remaining call
 decisions beside their owners, and keep historical peaks in the normal ledger.
+
+The completed access pass restores all 312 remaining correlated field-access
+mismatches. Rendering, map/path searches, inventory, resource tables and UI
+callers now use their recorded interfaces. Chat formatters retain their
+variadic member ownership (see [VC6 member varargs](vc6/variadic-members.md)).
+The text-button constructor calls the ordinary `button::initialize` helper;
+backpack removal and saved-screen drawing likewise retain their owning helpers.
+The toolchain mirror fixes let the audit parse every TU without Clang errors.
+
+Five method-property findings remain visible after review:
+
+| Declaration | Evidence for the authored property |
+| --- | --- |
+| `widget::open` | Complete widget vtable 0x643c90 slot 1 is 0x5fe4d0; DC's method is ordinary. |
+| `hero::getExperienceIncrement() const` | DC's LF_METHOD marks both overloads static, but the nullary LF_MFUNCTION and dc 0x2e60 have a const receiver and read its level. The one-argument overload is static. |
+| `sample::~sample` | Complete vtable 0x6416d0 has the deleting destructor in slot 0. |
+| `Bitmap816::zBufferDraw` with eleven arguments | Complete's four-slot vtable 0x63ba14 contains only the eight-argument screen wrapper at 0x44fdf0; the raw-buffer body 0x44fba0 has no slot. |
+| `CNetMsgHandlerPause::~CNetMsgHandlerPause` | Complete adds the virtual base destructor and the derived deleting wrapper 0x557eb0 in vtable 0x640f04 slot 0. |
+
+DC-supported friendships include
+`textButton` reading private `button::Text`, the high-score free callbacks,
+and `CNewPlayerUpdateProc` reading the lobby version for its outgoing message.
+They are documented at the owning declarations, not placed in an exclusion list.
+The specific `army::rangeAttack` friend is a separate retail-only hypothesis:
+Complete adds a tower arm calling private `keepAttack`, absent from DC's caller.
+The call supports this narrowly scoped reconstruction, but cannot distinguish
+friendship from an unrecorded inline wrapper; the owning comment keeps that
+limit explicit.
+
+Three additional hero boundaries have **provisional names**: `clearSpells`,
+`copyPrimarySkills`, and `setPrimarySkills`. The retail campaign reset and network
+skill copies establish their operations; no DC declaration proves these helper
+names or an `inline` keyword. Their ordinary definitions precede the relevant
+callers. Network copies preserve raw signed skill bytes; `getPrimarySkill` is
+reserved for gameplay values because it clamps to 0/1..99. These hypotheses
+remain explicit for source review.
+
+Full-build matching differences are retained in MAX/HIST. Adherence to correlated
+access declarations does not certify complete DC source recovery: uncorrelated
+names, overloads and missing older-build declarations remain separate coverage
+gaps, and the whole-corpus audit continues to return 2 for that reason.
 
 ## Function declarations and calls
 

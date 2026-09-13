@@ -138,8 +138,8 @@ extern int g_mapHeight;
 // implicit vector teardowns. valid_rectangle (0x28..0x37) stays
 // uninitialized by the ctor - Init fills it.
 class searchArray {
-public:
     // Before normalization: maxQueueCount.
+private:
     int m_maxQueueCount;
     // Before normalization: pay_transition_costs.
     unsigned char m_payTransitionCosts;
@@ -165,6 +165,7 @@ public:
     unsigned char m_limitReached;
     // Before normalization: cellData.
     pathCell* m_cellData;
+public:
     // Dreamcast fieldlist: valid_rectangle at +0x28. Init fills the bounds;
     // the constructor leaves them uninitialized. Preserve the aggregate so
     // setRectangle keeps its original one-statement assignment.
@@ -173,6 +174,7 @@ public:
     // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
     // - a 30-byte stride on _Last, which only a by-value pathCell gives.
     // Before normalization: queue.
+private:
     std::vector<pathCell> m_queue;
     // ELEMENT TYPE PROVEN, 2026-08-08. move_toward (0x41f580) walks
     // this vector's extent with `sar 2` (4-byte elements) and then
@@ -204,6 +206,7 @@ public:
     // load - the danger map is one signed word per cell.
     // Before normalization: danger_zones.
     long* m_dangerZones;
+public:
 
     searchArray();
     ~searchArray();
@@ -323,7 +326,6 @@ private:
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     // Before normalization (function): searchArray::set_moat.
     // Before normalization (locals): current_army.
-private:
     void setMoat(const army* currentArmy);
 public:
     // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte

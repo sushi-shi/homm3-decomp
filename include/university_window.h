@@ -79,6 +79,7 @@ public:
     // by the byte-proven eight-byte CAdvPopup widening; the constructor and
     // modal/callback bodies independently corroborate every used offset.
     // Before normalization: current_hero.
+protected:
     hero* m_currentHero;                       // +0x60
     // Before normalization: purchase_button.
     class type_func_button* m_purchaseButton; // +0x64
@@ -96,6 +97,7 @@ public:
     std::vector<widget*> m_selectionWidgets;    // +0xd8
     // Before normalization: purchase_widgets.
     std::vector<widget*> m_purchaseWidgets;     // +0xe8
+public:
 
     // Retail 0x5ef500. `bTownUniversity` is the retail-added third
     // parameter the Dreamcast pair does not have, and both image-wide

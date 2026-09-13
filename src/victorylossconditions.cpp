@@ -503,7 +503,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
-        int owner = g_game->m_generators[i].m_playerOwner;
+        int owner = g_game->m_generators[i].getOwner();
         if (!sameTeam(g_game, owner, g_netLocalGamePos))
             return 0;
     }

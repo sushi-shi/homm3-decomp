@@ -780,8 +780,8 @@ void TMultiPlayerWindow::update()
                     }
 
                     m_gameState->draw(0, status, 0, 0,
-                                    g_multiPlayerWindow->m_gameState->m_width,
-                                    g_multiPlayerWindow->m_gameState->m_height,
+                                    g_multiPlayerWindow->m_gameState->getWidth(),
+                                    g_multiPlayerWindow->m_gameState->getHeight(),
                                     g_windowManager->m_screenBitmap, wx + 0x12,
                                     wy, 0, 1);
                     int fontColor = isSelected ? 5 : 1;

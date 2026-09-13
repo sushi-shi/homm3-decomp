@@ -236,14 +236,14 @@ unsigned char iconWidget::handleClick(unsigned char downClick, unsigned char rig
 VA(0x004eab20, 0x7)  // anchor-vtable (slot 6 of 0x63ec48), dc 0xd96bc
 int iconWidget::getRealWidth()
 {
-    return m_sprite->m_width;
+    return m_sprite->getWidth();
 }
 
 // E:\gamedcs\iconwdgt.cpp:269
 VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
 int iconWidget::getRealHeight()
 {
-    return m_sprite->m_height;
+    return m_sprite->getHeight();
 }
 
 // E:\gamedcs\iconwdgt.cpp:280
@@ -322,11 +322,11 @@ void iconWidget::draw()
         sx = 0;
         sy = 0;
         sprite = m_sprite;
-        sw = sprite->m_width;
-        sh = sprite->m_height;
-        frame = sprite->m_s[cs_wait]->m_f[0];
+        sw = sprite->getWidth();
+        sh = sprite->getHeight();
+        frame = sprite->getFrame(cs_wait, 0);
         boxWidth = m_width;
-        offX = boxWidth / 2 - frame->m_croppedWidth / 2 - frame->m_croppedX;
+        offX = boxWidth / 2 - frame->getCroppedWidth() / 2 - frame->getCroppedX();
         boxHeight = m_height;
         offY = boxHeight - 275;
         if (offX < 0) {
@@ -344,141 +344,141 @@ void iconWidget::draw()
         if (offY + sh > boxHeight)
             sh = boxHeight - offY;
         sprite->drawCreature(m_seqId, m_frame, sx, sy, sw, sh,
-            g_windowManager->m_screenBitmap->m_map, offX + drawX, offY + drawY,
-            g_windowManager->m_screenBitmap->m_width,
-            g_windowManager->m_screenBitmap->m_height,
-            g_windowManager->m_screenBitmap->m_pitch, 0, 0);
+            g_windowManager->m_screenBitmap->getMap(0, 0), offX + drawX, offY + drawY,
+            g_windowManager->m_screenBitmap->getWidth(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getPitch(), 0, 0);
         break;
     }
 
     case ICON_STYLE_CENTERED:
-        if (m_sprite->m_width < m_width)
-            drawX += (m_width - m_sprite->m_width) / 2;
-        if (m_sprite->m_height + 2 < m_height)
-            drawY += m_height - m_sprite->m_height - 2;
-        switch (m_sprite->m_resType) {
+        if (m_sprite->getWidth() < m_width)
+            drawX += (m_width - m_sprite->getWidth()) / 2;
+        if (m_sprite->getHeight() + 2 < m_height)
+            drawY += m_height - m_sprite->getHeight() - 2;
+        switch (m_sprite->getResType()) {
         case SPRITE_RES_SPRITE:
-            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 1);
+            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 1);
             break;
         case SPRITE_RES_CREATURE:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         case SPRITE_RES_ADVOBJ:
-            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_HERO:
-            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_TILESET:
-            m_sprite->drawTile(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawTile(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         case SPRITE_RES_POINTER:
-            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->m_map,
-                drawX, drawY, g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->getMap(0, 0),
+                drawX, drawY, g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_INTERFACE:
-            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_COMBAT_HERO:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         }
         break;
 
     case ICON_STYLE_PLAIN:
-        switch (m_sprite->m_resType) {
+        switch (m_sprite->getResType()) {
         case SPRITE_RES_SPRITE:
-            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 1);
+            m_sprite->draw(m_seqId, m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 1);
             break;
         case SPRITE_RES_CREATURE:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         case SPRITE_RES_ADVOBJ:
-            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawAdvObj(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_HERO:
-            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawHero(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_TILESET:
-            m_sprite->drawTile(m_frame, 0, 0, m_sprite->m_width, m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawTile(m_frame, 0, 0, m_sprite->getWidth(), m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         case SPRITE_RES_POINTER:
-            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->m_map,
-                drawX, drawY, g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawPointer(m_frame, g_windowManager->m_screenBitmap->getMap(0, 0),
+                drawX, drawY, g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_INTERFACE:
-            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped);
+            m_sprite->drawInterface(m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped);
             break;
         case SPRITE_RES_COMBAT_HERO:
-            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->m_width,
-                m_sprite->m_height,
-                g_windowManager->m_screenBitmap->m_map, drawX, drawY,
-                g_windowManager->m_screenBitmap->m_width,
-                g_windowManager->m_screenBitmap->m_height,
-                g_windowManager->m_screenBitmap->m_pitch, m_isFlipped, 0);
+            m_sprite->drawCreature(m_seqId, m_frame, 0, 0, m_sprite->getWidth(),
+                m_sprite->getHeight(),
+                g_windowManager->m_screenBitmap->getMap(0, 0), drawX, drawY,
+                g_windowManager->m_screenBitmap->getWidth(),
+                g_windowManager->m_screenBitmap->getHeight(),
+                g_windowManager->m_screenBitmap->getPitch(), m_isFlipped, 0);
             break;
         }
         break;

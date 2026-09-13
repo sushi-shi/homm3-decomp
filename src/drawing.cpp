@@ -1577,8 +1577,8 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
         paletteIndex = 96;
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     const_cast<CSprite*>(sprite)->drawCreature(
-        sequence, frame, 0, 0, sprite->m_width, 232, screen->m_map,
-        x, y, screen->m_width, screen->m_height, screen->m_pitch,
+        sequence, frame, 0, 0, sprite->getWidth(), 232, screen->getMap(0, 0),
+        x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(),
         isFlipped, g_systemPalette->m_data[paletteIndex]);
     return 1;
 }
@@ -1614,8 +1614,8 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     const_cast<CSprite*>(sprite)->drawCreature(
-        sequence, frame, 0, 0, sprite->m_width, sprite->m_height, screen->m_map,
-        x, y, screen->m_width, screen->m_height, screen->m_pitch,
+        sequence, frame, 0, 0, sprite->getWidth(), sprite->getHeight(), screen->getMap(0, 0),
+        x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(),
         isFlipped, color);
     return 1;
 }
@@ -1652,8 +1652,8 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     const_cast<CSprite*>(sprite)->drawCreature(
-        sequence, frame, 0, 0, sprite->m_width, sprite->m_height, screen->m_map,
-        x, y, screen->m_width, screen->m_height, screen->m_pitch, isFlipped, 0);
+        sequence, frame, 0, 0, sprite->getWidth(), sprite->getHeight(), screen->getMap(0, 0),
+        x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(), isFlipped, 0);
     return 1;
 }
 
@@ -1667,8 +1667,8 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
                                    unsigned char isFlipped,
                                    unsigned char isAlpha)
 {
-    SLimitData limits(x, y, x + sprite->m_width - 1,
-                      y + sprite->m_height - 1);
+    SLimitData limits(x, y, x + sprite->getWidth() - 1,
+                      y + sprite->getHeight() - 1);
 
     if (limits.m_minX < g_combatDrawLimits694f18.m_minX)
         limits.m_minX = g_combatDrawLimits694f18.m_minX;
@@ -1703,8 +1703,8 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     const_cast<CSprite*>(sprite)->drawSpellEffect(
-        0, frame, 0, 0, sprite->m_width, limits.m_maxY - y + 1,
-        screen->m_map, x, y, screen->m_width, screen->m_height, screen->m_pitch,
+        0, frame, 0, 0, sprite->getWidth(), limits.m_maxY - y + 1,
+        screen->getMap(0, 0), x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(),
         isFlipped, isAlpha);
     return 1;
 }
@@ -1717,8 +1717,8 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
                                     int x, int y,
                                     unsigned char isFlipped)
 {
-    SLimitData limits(x, y, x + sprite->m_width - 1,
-                      y + sprite->m_height - 1);
+    SLimitData limits(x, y, x + sprite->getWidth() - 1,
+                      y + sprite->getHeight() - 1);
 
     if (limits.m_minX < g_combatDrawLimits694f18.m_minX)
         limits.m_minX = g_combatDrawLimits694f18.m_minX;
@@ -1753,8 +1753,8 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     const_cast<CSprite*>(sprite)->draw(
-        0, frame, 0, 0, sprite->m_width, limits.m_maxY - y + 1,
-        screen->m_map, x, y, screen->m_width, screen->m_height, screen->m_pitch,
+        0, frame, 0, 0, sprite->getWidth(), limits.m_maxY - y + 1,
+        screen->getMap(0, 0), x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(),
         isFlipped, 1);
     return 1;
 }
@@ -2358,7 +2358,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
         m_powSprite->drawSpellEffect(
             0, frame, 0, 0, m_powSprite->getWidth(), m_powSprite->getHeight(),
-            screen->m_map, x, y, screen->m_width, screen->m_height, screen->m_pitch,
+            screen->getMap(0, 0), x, y, screen->getWidth(), screen->getHeight(), screen->getPitch(),
             0, (traits.m_flags >> 8) & 1);
         updateCombatArea();
     }

@@ -45,8 +45,8 @@ enum EBitmapGreenBits {
 };
 
 class Bitmap16Bit : public resource {
-public:
     // Before normalization: DataSize.
+private:
     int m_dataSize;
     // Before normalization: ImageSize.
     int m_imageSize;
@@ -60,6 +60,7 @@ public:
     unsigned short* m_map;
     // Before normalization: referenced.
     unsigned char m_referenced;
+public:
 
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
     // background through [vptr]+flag 1. Slot 2 reports the resource's

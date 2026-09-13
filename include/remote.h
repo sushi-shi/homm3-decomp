@@ -26,7 +26,7 @@ public:
     // Before normalization (function): CLogFile::Log.
     void log(char* format, ...);
 
-private:
+protected:
     char m_logFileName[351];
 };
 SIZE(CLogFile, 351);
@@ -123,6 +123,8 @@ SIZE(CNetMsgHandler, 0x0c);
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
     CNetMsgHandlerPause();
+    // DC's ordinary destructor predates Complete's virtual base dtor;
+    // retail 0x640f04 slot 0 is this class's deleting wrapper 0x557eb0.
     virtual ~CNetMsgHandlerPause();
     // Before normalization (function): CNetMsgHandlerPause::CheckHandleNet.
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
@@ -131,7 +133,6 @@ public:
     // Before normalization (locals): pNetMsg.
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);              // slot 3
 
-protected:
     // Before normalization: m_pNetMsgHandlerSave.
     CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
 };
@@ -227,7 +228,6 @@ public:
     // Before normalization (function): CDPlayHeroes::HandlePlayerDrop.
     void handlePlayerDrop(unsigned long dpid);
 
-public:
     // The three other system-message overrides, all of them CDPlay slots
     // this class replaces rather than introduces (retail 0x552530 /
     // 0x552740 / 0x552920, in the DC roster's own order between
@@ -261,8 +261,8 @@ protected:
     friend int transmitRemoteData(CNetMsg*, int,
                                   bool, bool);
 
-private:
     // Before normalization: dpMsg.
+public:
     CDPlayMsg m_dpMsg;                       // +0x60
     // Before normalization: msgQueue.
     std::deque<CNetMsg*> m_msgQueue;         // +0x68..+0x97
@@ -273,6 +273,7 @@ private:
     // Before normalization: currMessageId.
     unsigned long m_currMessageId;           // +0xec
     // Before normalization: m_pNetMsgHandler.
+protected:
     CNetMsgHandler* m_netMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
@@ -328,8 +329,17 @@ public:
     // Before normalization: CChatManager::AddChat, PlayerDropMsg, cChatMsg.
     void addChat(const char* format, ...);
     void playerDropMsg(const char* format, ...);
+    // DC remote.cpp:904/947/990 records these variadic members too.
+    // Their explicit stack receiver in retail is the VC6 member-varargs ABI.
+    // Before normalization (function): CChatManager::TurnDurationMsg.
+    void turnDurationMsg(const char* format, ...);
+    // Before normalization (function): CChatManager::SystemMsg.
+    void systemMsg(const char* format, ...);
+    // Before normalization (function): CChatManager::PlayerEnterMsg.
+    void playerEnterMsg(const char* format, ...);
 
     // Before normalization: msgArray.
+protected:
     CChatStr* m_msgArray;       // +0x00
     // Before normalization: currMsg.
     int m_currMsg;              // +0x04
@@ -341,11 +351,13 @@ public:
     unsigned long m_pauseTime;  // +0x10
     // Before normalization: changed.
     unsigned char m_changed;    // +0x14
+public:
     // Before normalization: pad_15.
     // Dreamcast places changed at +0x14 and lastWidget at +0x18,
     // matching retail. These three bytes align the pointer.
     char m_paddingBeforeLastWidget[3];
     // Before normalization: lastWidget.
+protected:
     textWidget* m_lastWidget;   // +0x18
     // Before normalization: maxLines.
     int m_maxLines;             // +0x1c
@@ -353,6 +365,7 @@ public:
     int m_position;             // +0x20
     // Before normalization: chatKilled.
     unsigned char m_chatKilled; // +0x24
+public:
     // Before normalization: pad_25.
     // Retail retains chatKilled at +0x24 and adds the sample handle
     // at +0x28. Three bytes align that pointer; DC has no such handle.
@@ -363,12 +376,15 @@ public:
     // Before normalization: g_chatMemSample.
     ds_memsample* m_chatMemSample; // +0x28
     // Before normalization: isSysMsg.
+protected:
     unsigned char m_isSysMsg;        // +0x2c
+public:
     // Before normalization: pad_2d.
     // The PC isSysMsg byte moves to +0x2c after the new handle.
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
     // Before normalization: g_chatSample.
+protected:
     sample* m_chatSample;        // +0x30
     // Before normalization: g_playerDropSample.
     sample* m_playerDropSample;  // +0x34
@@ -378,6 +394,7 @@ public:
     sample* m_turnDurSample;     // +0x3c
     // Before normalization: g_playerEnterSample.
     sample* m_playerEnterSample; // +0x40
+public:
 
     // Before normalization (function): CChatManager::UpdateWidget.
     void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
@@ -395,6 +412,12 @@ public:
     unsigned char hasOldChat();
     // Before normalization (function): CChatManager::ClearChat.
     void clearChat();
+    // DC remote.h:320-321, dc 0x1474a0/0x1474ac. The lobby slider
+    // expands these count and position reads at +0x08/+0x20 in retail.
+    // Before normalization (function): CChatManager::GetCount.
+    int getCount() { return m_msgCount; }
+    // Before normalization (function): CChatManager::GetPosition.
+    int getPosition() { return m_position; }
     // Before normalization (function): CChatManager::SetMaxLines.
     void setMaxLines(int maxChatLines);
     // Before normalization (function): CChatManager::SetPosition.
@@ -419,17 +442,6 @@ SIZE(CChatManager, 0x44);
 
 // Before normalization: chatMan.
 DATA(0x0069d7b0) extern CChatManager g_chatMan;
-
-// The remaining formatter declarations below still use the legacy explicit
-// receiver model. Stack arguments alone do not prove free ownership:
-// see docs/vc6/variadic-members.md and the recovered AddChat/PlayerDropMsg
-// interfaces above. Their source ownership remains to be corrected separately.
-// Before normalization (function): TurnDurationMsg.
-void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...);
-// Before normalization (function): SystemMsg.
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
-// Before normalization (function): PlayerEnterMsg.
-void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...);
 
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
@@ -465,8 +477,6 @@ public:
     {
         return m_currDuration != 0 && !g_unk69774c;
     }
-    friend void __cdecl turnDurationMsg(
-        CChatManager* manager, const char* format, ...);
 protected:
     unsigned long m_lastWarned;
     unsigned long m_turnStartTime;
@@ -512,7 +522,6 @@ SIZE(CHourGlass, 1);
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 // Before normalization (locals): pNetMsg.
 void destroyMsg(CNetMsg* netMsg);
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
 // Before normalization (function): HandlePlayerDrop.
 void handlePlayerDrop(unsigned long dpid);
 // Before normalization (function): OnPlayerDropUpdateMsg.
@@ -608,7 +617,6 @@ extern int g_unnamed6994e4;
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 void destroyMsg(CNetMsg* netMsg);
-void __cdecl systemMsg(CChatManager* manager, const char* format, ...);
 void handlePlayerDrop(unsigned long dpid);
 void onPlayerDropUpdateMsg(unsigned long dpid);
 void handlePlayerDead(int deadGuy, unsigned char showMsg);

@@ -610,7 +610,7 @@ int mainMenuHandler(message& msg)
 
     if (g_checkDiskSpace) {
         if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
-            normalDialog(g_generalText->m_text[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
+            normalDialog(g_generalText->getText(GENERAL_TEXT_MAIN_MENU_LOW_DISK),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
             g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;

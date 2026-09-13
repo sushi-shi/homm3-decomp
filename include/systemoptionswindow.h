@@ -98,7 +98,9 @@ public:
     // this alignment gap; the reference layout retains the same boundary.
     char m_paddingBeforeQuickCombatSave[3];
     // Before normalization: quickCombatSave.
+private:
     int m_quickCombatSave;           // +0x64
+public:
 
     TSystemOptionsWindow();
     virtual ~TSystemOptionsWindow();

@@ -330,7 +330,7 @@ void town::setSummoningGenerator()
     int i;
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
-        if (g_game->m_generators[i].m_playerOwner == m_owner)
+        if (g_game->m_generators[i].getOwner() == m_owner)
             generators.push_back(i);
     }
 
@@ -1200,9 +1200,7 @@ void town::updateShipyard()
         point.m_y = m_dockSiteY;
         point.m_z = m_mapZ;
 
-        int size = g_game->m_worldMap.m_size;
-        NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-            (point.m_z * size + point.m_y) * size + point.m_x];
+        NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
         if (cell->m_isTrigger && (cell->m_type == BOAT || cell->m_type == HERO)) {
             if (!(m_active & g_bitNumber[DOCK_WITH_BOAT_ID])) {
                 createBuilding(DOCK_WITH_BOAT_ID);
@@ -1428,9 +1426,8 @@ long town::townFn005BF900(long dwelling)
         // Constructor form, not default-then-assign: it merges the y|z
         // bitfield unit into one clear-then-or (99.8469 -> 100.0000).
         type_point point(m_mapX, m_mapY, m_mapZ);
-        int size = currentGame->m_worldMap.m_size;
-        NewmapCell* cell = &currentGame->m_worldMap.m_cellData[
-            (point.m_z * size + point.m_y) * size + point.m_x];
+
+        NewmapCell* cell = currentGame->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
         if (cell->m_type == HERO)
             visitingHero = currentGame->getHero(cell->m_extraInfo);
     }
@@ -2028,9 +2025,8 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
         if (x < g_mapWidth) {
             if (y >= 0) {
                 if (y < g_mapHeight) {
-                    int size = g_game->m_worldMap.m_size;
-                    NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-                        (currentTown->m_mapZ * size + y) * size + x];
+
+                    NewmapCell* cell = g_game->m_worldMap.cell(x, y, currentTown->m_mapZ);
                     // Retail materialises the 8 ONCE in ebx and reuses
                     // it for the BOAT compare below - two distinct
                     // source constants (eTerrainWater and BOAT) that

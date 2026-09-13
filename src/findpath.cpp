@@ -114,7 +114,7 @@ void searchArray::init()
     m_validRectangle.right = g_mapWidth;
     m_validRectangle.top = 0;
     m_validRectangle.bottom = g_mapHeight;
-    m_cellData = new pathCell[(g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapHeight
+    m_cellData = new pathCell[(g_game->m_worldMap.getNumLevels()) * g_mapHeight
             * g_mapWidth * 2];
     m_isMoatSlowed = new unsigned char[187];
 }
@@ -889,7 +889,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
         if (destCell->m_type == HERO && destCell->m_isTrigger) {
             hero* other = g_game->getHero(destCell->m_extraInfo);
-            if (other->m_wasTrigger && other->m_obscuredType == SANCTUARY
+            if (other->obscuredIsTrigger() && other->m_obscuredType == SANCTUARY
                     && other->m_owner != currentHero->m_owner) {
                 blocked = 1;
                 candidate.m_canStop = 0;

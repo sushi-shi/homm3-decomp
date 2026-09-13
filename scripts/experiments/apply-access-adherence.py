@@ -9,7 +9,7 @@ refresh the source-owned claims. Declarations stay in their original order.
     # apply the edits to the headers
     PYTHONPATH=scripts python scripts/experiments/apply-access-adherence.py --apply
 
-Only unambiguously correlated public -> private/protected tightenings are
+Only unambiguously correlated public/protected -> tighter access changes are
 proposed. A C2248 error is evidence of a missing source relationship: inspect
 public wrappers, ordinary helper ownership, and positively supported friends.
 Do not revert the recorded access merely to compile. Parse failures abort all
@@ -25,7 +25,7 @@ from pathlib import Path
 from homm3 import manifest
 from homm3.analysis.dc_lines import load_symbols
 from homm3.analysis.source_facts import name_key
-from homm3.analysis.access_facts import load_cindex, is_project_file, dc_visibility, correlate
+from homm3.analysis.access_facts import load_cindex, is_project_file, dc_visibility, correlate, owning_member_keys
 from homm3.build import compilation_database
 from homm3.core import clang, common
 from homm3.core.cc_wrap import ZLIB_INC
@@ -54,6 +54,7 @@ def collect(ci, commands, root, mirror, dc):
     record_kinds = (ci.CursorKind.CLASS_DECL, ci.CursorKind.STRUCT_DECL, ci.CursorKind.UNION_DECL)
     index = ci.Index.create()
     classes: dict[tuple, dict] = {}
+    sources = {}
     for n, row in enumerate(commands, 1):
         src = Path(row["file"])
         print(f"# [{n}/{len(commands)}] {src.name}", file=sys.stderr)
@@ -81,7 +82,8 @@ def collect(ci, commands, root, mirror, dc):
             parent_name = qualified_owner(rec, ci)
             owner = f"{parent_name}::{rec.spelling}" if parent_name else rec.spelling
             ckey = name_key(owner)
-            source_line = Path(loc.name).read_text().splitlines()[rec.extent.start.line - 1]
+            source = sources.setdefault(loc.name, Path(loc.name).read_text())
+            source_line = source.splitlines()[rec.extent.start.line - 1]
             class_indent = indent_of(source_line)
             members = []
             for m in rec.get_children():
@@ -97,13 +99,17 @@ def collect(ci, commands, root, mirror, dc):
                                         ci.CursorKind.DESTRUCTOR)
                 rec, gap = correlate({
                     "class_key": ckey, "member_key": mkey,
+                    "member_keys": owning_member_keys(source, m.extent.start.offset,
+                                                       owner, m.spelling),
                     "kind": "method" if is_method else "member" if m.kind == ci.CursorKind.FIELD_DECL else "static_member",
                     "is_method": is_method,
                     "parameters": [a.type.get_canonical().spelling for a in m.get_arguments()] if is_method else None,
                     "const": m.is_const_method() if m.kind == ci.CursorKind.CXX_METHOD else False,
                 }, dc)
                 target = rec["access"] if rec else None
-                fix = bool(target in ("private", "protected") and cur == "public")
+                fix = bool(target in ("private", "protected") and
+                           {"private": 0, "protected": 1, "public": 2}[target]
+                           < {"private": 0, "protected": 1, "public": 2}[cur])
                 members.append({
                     "name": m.spelling, "line": m.extent.start.line,
                     "end": m.extent.end.line, "cur": cur,
@@ -116,33 +122,19 @@ def collect(ci, commands, root, mirror, dc):
 
 
 def plan_edits(classes) -> dict[str, list[tuple[int, bool, str]]]:
-    """file -> list of (index, is_close, text) inserts, `index` a 0-based
-    position to insert BEFORE.  Ordered so a whole file can be applied in
-    sequence: descending index (later inserts never shift earlier ones), and at
-    an equal index opens are applied before closes so the close label lands on
-    top -- i.e. when a run's `public:` restore meets the next run's open label at
-    the same boundary, `public:` precedes the new label in the file and the next
-    member sits under the intended label, not a stale `public:`."""
-    inserts: dict[str, list[tuple[int, bool, str]]] = defaultdict(list)
+    """Bracket each declaration without changing intervening nested records."""
+    inserts = defaultdict(list)
     for info in classes.values():
-        members = info["members"]
-        i = 0
-        while i < len(members):
-            if not members[i]["fix"]:
-                i += 1
+        for member in info["members"]:
+            if not member["fix"]:
                 continue
-            j = i
-            tgt = members[i]["target"]
-            # extend run over physically-adjacent fix members with same target
-            while (j + 1 < len(members) and members[j + 1]["fix"]
-                   and members[j + 1]["target"] == tgt):
-                j += 1
-            first, last = members[i], members[j]
             indent = info["indent"]
-            inserts[info["file"]].append((first["line"] - 1, False, f"{indent}{tgt}:"))
-            inserts[info["file"]].append((last["end"], True, f"{indent}public:"))
-            i = j + 1
-    return {f: sorted(items, key=lambda e: (-e[0], e[1])) for f, items in inserts.items()}
+            inserts[info["file"]].append((member["line"] - 1, False,
+                                          f"{indent}{member['target']}:"))
+            inserts[info["file"]].append((member["end"], True,
+                                          f"{indent}{member['cur']}:"))
+    return {f: sorted(items, key=lambda e: (-e[0], e[1]))
+            for f, items in inserts.items()}
 
 
 def indent_of(line: str) -> str:
@@ -163,11 +155,45 @@ def remove_empty_access_labels(text: str) -> str:
     return text
 
 
+def remove_redundant_access_labels(text: str) -> str:
+    """Remove repeated access in one brace scope; branch directives are barriers."""
+    text = remove_empty_access_labels(text)
+    masked = mask_lexical_noise(text)
+    tokens = re.compile(r"^[ \t]*#[ \t]*(?:if\w*|else|elif|endif)\b[^\n]*"
+                        r"|^[ \t]*(public|private|protected):[ \t]*"
+                        r"|[{}]", re.M)
+    access = [None]
+    edits = []
+    for token in tokens.finditer(masked):
+        value = token.group().strip()
+        if value.startswith("#"):
+            access = [None] * len(access)
+        elif value == "{":
+            access.append(None)
+        elif value == "}":
+            if len(access) > 1:
+                access.pop()
+        else:
+            current = token.group(1)
+            if current == access[-1]:
+                # The mask blanks comments too: only erase the actual label.
+                original = text[token.start():]
+                label = re.match(r"[ \t]*(?:public|private|protected):[ \t]*", original)
+                end = token.start() + label.end()
+                if end < len(text) and text[end] == "\n":
+                    end += 1
+                edits.append((token.start(), end))
+            access[-1] = current
+    for start, end in reversed(edits):
+        text = text[:start] + text[end:]
+    return text
+
+
 def apply_file(path: str, inserts: list[tuple[int, bool, str]]):
     lines = Path(path).read_text().splitlines(keepends=True)
     for idx, _is_close, label in inserts:  # pre-ordered by plan_edits
         lines.insert(idx, label + "\n")
-    Path(path).write_text(remove_empty_access_labels("".join(lines)))
+    Path(path).write_text(remove_redundant_access_labels("".join(lines)))
 
 
 def main() -> int:

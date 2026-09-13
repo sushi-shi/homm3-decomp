@@ -87,9 +87,9 @@ protected:
     // Before normalization (locals): enemy_hero, search_array.
     void markTowns(hero* enemyHero, searchArray* currentSearchArray);
 
-public:
     // Before normalization: current_player_id.
     int m_currentPlayerId;
+public:
 
     // Before normalization (locals): new_player.
     type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
@@ -342,8 +342,8 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // set_attack_bonuses(float computer_bonus, float human_bonus) names the
 // order. They are DEFINED by philai.cpp, not here.
 class type_AI_player {
-public:
     // Before normalization: team.
+protected:
     short m_team;
     // Before normalization: magus_hut_value.
     long m_magusHutValue;
@@ -355,6 +355,7 @@ public:
     long m_resourceDemand[7];
     // Before normalization: resource_value.
     double m_resourceValue[7];
+public:
 
     // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
@@ -392,6 +393,9 @@ public:
     // Before normalization (function): type_AI_player::start_turn.
     void startTurn();                            // 0x4297c0
     // Before normalization (function): type_AI_player::reset_magus_hut_value.
+    // DC ai_player.h:273-274, dc 0x37df0: clear the cached value.
+    // Before normalization (function): type_AI_player::clear_magus_hut_value.
+    void clearMagusHutValue() { m_magusHutValue = 0; }
     void resetMagusHutValue();                 // 0x429ab0
     // Before normalization (function): type_AI_player::calculate_reserve.
 protected:
@@ -415,7 +419,6 @@ protected:
     // pass purchase_buildings drives).
     // Before normalization (function): type_AI_player::purchase_building.
     // Before normalization (locals): prohibited_creatures.
-protected:
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
 public:
     // Before normalization (function): type_AI_player::hire_heroes.
@@ -438,7 +441,6 @@ protected:
     // Before normalization (function): type_AI_player::do_resource_trade.
     void doResourceTrade(int* supply);
 
-private:
     // Before normalization: attack_computer_bonus.
     static float s_attackComputerBonus;
     // Before normalization: attack_human_bonus.

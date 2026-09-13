@@ -14,15 +14,14 @@ class CSpriteFrame;
 // retail's int constructor writes all three fields at +0/+4/+8. button::Draw
 // independently reads numFrames through CSprite::s[0].
 class CSequence {
-public:
     // Before normalization: numFrames.
+private:
     int m_numFrames;
     // Before normalization: allocatedFrames.
     int m_allocatedFrames;
     // Before normalization: f.
     CSpriteFrame** m_f;
 
-private:
     friend class CSprite;
     CSequence(int num);
     ~CSequence();

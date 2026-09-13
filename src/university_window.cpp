@@ -501,10 +501,10 @@ void type_university_window::skillClick(TSecondarySkill skill)
 VA(0x005f0dc0, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x18f868
 void type_university_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!currentWidget->m_rollOver)
+    if (!currentWidget->getHelpText())
         m_rolloverWidget->setText(g_emptyRolloverText);
     else
-        m_rolloverWidget->setText(currentWidget->m_rollOver);
+        m_rolloverWidget->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
