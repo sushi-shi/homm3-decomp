@@ -19,7 +19,6 @@ public:
     int m_color;
     int m_backColor;
     unsigned int m_justify;
-
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, int style);
@@ -29,54 +28,24 @@ public:
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int main(message& msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();
+    virtual void draw() const;
+    // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
     virtual void dim() const;
-
-    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
-    // Main calls this canonical header helper at textwdgt.cpp:152; retail
-    // expands its single member store in the WIDGET_SET_COLOR arm.
-    void setColor(font::TColor newColor) { m_color = newColor; }
+    VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
     virtual void setText(const char* newText) { m_text = newText; }
-
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.
     // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     const char* getText() { return m_text.c_str(); }
+    // Original spelling SetColor(new_color), TextWdgt.h:78..81 (dc 0x1652f4).
+    // Main calls this canonical header helper at textwdgt.cpp:152; retail
+    // expands its single member store in the WIDGET_SET_COLOR arm.
+    void setColor(font::TColor newColor) { m_color = newColor; }
 };
 
 class Bitmap816;
 class Bitmap16Bit;
-class type_text_slider;
-
-// The scenario-description scroller shared by the selection window and the
-// stand-alone scenario-info popup. Retail fixes its original type identity,
-// constructor ABI, member offsets, and complete 0x5c extent.
-class type_text_scroller : public widget {
-public:
-    type_text_scroller(const char* text, int x, int y, int w, int h,
-                       const char* fontName, font::TColor color,
-                       slider::EGraphics graphics);
-    virtual ~type_text_scroller();
-    virtual int open(int priority, heroWindow* parent);
-    virtual int main(message& msg);
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();
-    void setText(const char* text);
-    void refresh(int knobRange);
-
-    const char* m_fontFilename;
-    std::vector<std::string> m_textLines;
-    std::vector<textWidget*> m_lineImages;
-    type_text_slider* m_textSlider;
-    Bitmap16Bit* m_background;
-};
-SIZE(type_text_scroller, 0x5c);
-
-// Compatibility spelling for already reconstructed callers. Being a typedef,
-// it emits the retail `type_text_scroller` decorated names rather than a
-// second source-false class identity.
-typedef type_text_scroller CScrollTextWidget;
 
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
@@ -87,14 +56,13 @@ public:
     // result here, and Draw 0x5bc7f0 blits out of it after clamping the
     // widget extent against its +0x24/+0x28 Width/Height.
     Bitmap816* m_image;
-
     bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
                            const char* fontName, const char* backName,
                            font::TColor color, int id, unsigned justify,
                            int style);
-    virtual ~bitmapBackedTextWidget();
+    // Implicit destructor; CodeView dc 0x1653b0 compgenx.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
-    virtual void draw();  // slot 4, retail 0x5bc7f0
+    virtual void draw() const;  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

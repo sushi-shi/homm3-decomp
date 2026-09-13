@@ -116,24 +116,16 @@ public:
     static void setPixelFormat(unsigned long redMask,
                                unsigned long greenMask,
                                unsigned long blueMask);
-    static void openBink(int id, int x, int y, int w, int h, int flags,
-                         bool updateScreen);
+    // DC dc:0x50a84 gives six ints followed by unsigned char, not bool.
+    // Retail stores the final low byte in the dirty-rectangle flag.
+    static void openBink(int id, int x, int y, int w, int h, int loop,
+                         unsigned char useDirtyRects);
     static void drawCurrentBinkFrame();
     static void restartBink();
     static void nextBinkFrame();
     static void closeBink();
     static int playBink(int id, int x, int y, int w, int h);
 };
-
-// The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
-// smack set in smackmgr.cpp): the VideoPlay/VideoOpen bink arms and
-// the per-frame advance/draw/close/restart quartet.
-int playBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
-void openBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
-void nextBinkFrame();           // 0x44daa0
-void drawCurrentBinkFrame();    // 0x44d9e0
-void closeBinkVideo();          // 0x44dcc0
-void restartBinkVideo();        // 0x44da50
 
 // Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
 // names provisional, mirrored from smackmgr.cpp's smack set).

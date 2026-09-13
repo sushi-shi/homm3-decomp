@@ -52,7 +52,7 @@ class type_event_record {
 public:
     type_event_record();
     virtual ~type_event_record();
-    virtual type_event_record_type getType() = 0;
+    virtual type_event_record_type getType() const = 0;
     virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
@@ -68,7 +68,7 @@ public:
 class type_record_move_hero : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -98,7 +98,7 @@ public:
     type_record_teleport() {}
 
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
 };
 
@@ -108,7 +108,7 @@ public:
 class type_record_claim_mine : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -130,7 +130,7 @@ public:
     type_record_claim_town() {}
 
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 };
@@ -143,7 +143,7 @@ public:
 class type_record_hide_boat : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -174,7 +174,7 @@ public:
 class type_record_show_boat : public type_record_hide_boat {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -192,7 +192,7 @@ public:
 class type_record_erase : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -213,7 +213,7 @@ public:
 class type_record_hide_hero : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -229,28 +229,13 @@ public:
     unsigned char m_townGarrison; // +0x0e
 };
 
-class type_record_player_death : public type_event_record {
-public:
-    static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
-    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
-    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
-    virtual void replay(unsigned char draw) OVERRIDE;
-    type_record_player_death() {}
-
-    // Retail replay sign-extends this serialized byte for both the player-name
-    // lookup and the dialog payload; the role is still unknown, but its
-    // signedness is byte-proven.
-    signed char m_extra;  // +0x08 - second serialized byte (role TBD)
-};
-
 // show_hero extends hide_hero with the replay and undo map locations followed
 // by the corresponding aboard-boat flags. Retail replay reads the first pair;
 // undo reads the second pair.
 class type_record_show_hero : public type_record_hide_hero {
 public:
     static type_event_record* create();
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -265,6 +250,21 @@ public:
     unsigned char m_previousBoat;  // +0x19 - restored by undo
 };
 
+class type_record_player_death : public type_event_record {
+public:
+    static type_event_record* create();
+    virtual type_event_record_type getType() const OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    type_record_player_death() {}
+
+    // Retail replay sign-extends this serialized byte for both the player-name
+    // lookup and the dialog payload; the role is still unknown, but its
+    // signedness is byte-proven.
+    signed char m_extra;  // +0x08 - second serialized byte (role TBD)
+};
+
 class type_record_shroud : public type_event_record {
 public:
     struct type_shroud_change : public type_point {
@@ -274,7 +274,7 @@ public:
 
     static type_event_record* create();
 
-    virtual type_event_record_type getType() OVERRIDE;
+    virtual type_event_record_type getType() const OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;

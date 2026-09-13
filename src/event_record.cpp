@@ -13,6 +13,7 @@
 #include "prefs.h"
 #include "advmgr.h"
 #include "kb.h"
+#include "includes.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the
@@ -22,55 +23,6 @@
 // boat record's occupancy/hero-ID tail; type_record_hide_boat::load has to
 // step over it, and the cleanliness floor wants the domain named.
 const int g_saveVersionBoatFieldsAbsent = 0x1c;
-
-// E:\gamedcs\includes.h - the reference-returning clamp templates the
-// visibility sweeps use. Both take BY VALUE and return `const T&`, which is
-// what puts their two temporaries in stack slots and makes retail select
-// between them with a `lea` pair rather than a cmov-style fold.
-template <class _TYPE>
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-inline const _TYPE& maxRef(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
-
-inline type_record_erase::type_record_erase(type_point location,
-                                            long objectId,
-                                            unsigned long extraInfo,
-                                            long objectIndex)
-{
-    m_location = location;
-    m_objectId = objectId;
-    m_extraInfo = extraInfo;
-    m_objectIndex = objectIndex;
-}
-
-inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
-                                                    unsigned char townGarrison)
-{
-    // DC preserves this helper boundary; the two retail inline expansions
-    // prove the snapshot is written before the requested replacement owner.
-    m_currentHero = who;
-    m_prevOwner = who->m_owner;
-    m_newOwner = newOwner;
-    m_townGarrison = townGarrison;
-}
-
-inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
-                                                    type_point location,
-                                                    unsigned char onBoat)
-    : type_record_hide_hero(who, newOwner, 0)
-{
-    m_previousBoat = (who->m_flags >> 18) & 1;
-    m_onBoat = onBoat;
-    m_previousLocation = type_point(who->m_x, who->m_y, who->m_z);
-    m_location = location;
-}
 
 // E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
 // construction site expands it - but the expansions prove the whole body:
@@ -95,10 +47,6 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
 {
     return outfile->write(&m_playerId, 1) == 1;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:65. Ordinary static helper, expanded
 // into the four replay bodies and playRecordedEvents. The char parameter
@@ -174,7 +122,7 @@ type_event_record* type_record_move_hero::create()
 }
 
 VA(0x0049a680, 0x6)  // dc 0x8c7e8
-type_event_record_type type_record_move_hero::getType()
+type_event_record_type type_record_move_hero::getType() const
 {
     return RECORD_MOVE_HERO;
 }
@@ -276,7 +224,7 @@ type_event_record* type_record_teleport::create()
 }
 
 VA(0x0049a9b0, 0x6)  // dc 0x8caec
-type_event_record_type type_record_teleport::getType()
+type_event_record_type type_record_teleport::getType() const
 {
     return RECORD_TELEPORT;
 }
@@ -465,7 +413,7 @@ type_event_record* type_record_hide_boat::create()
 }
 
 VA(0x0049acf0, 0x6)  // dc 0x8ced8
-type_event_record_type type_record_hide_boat::getType()
+type_event_record_type type_record_hide_boat::getType() const
 {
     return RECORD_HIDE_BOAT;
 }
@@ -580,7 +528,7 @@ type_event_record* type_record_show_boat::create()
 }
 
 VA(0x0049af30, 0x6)  // dc 0x8d06c
-type_event_record_type type_record_show_boat::getType()
+type_event_record_type type_record_show_boat::getType() const
 {
     return RECORD_SHOW_BOAT;
 }
@@ -649,6 +597,18 @@ type_event_record* type_record_erase::create()
 
 #endif  // @carcass
 
+inline type_record_erase::type_record_erase(type_point location,
+                                            long objectId,
+                                            unsigned long extraInfo,
+                                            long objectIndex)
+{
+    m_location = location;
+    m_objectId = objectId;
+    m_extraInfo = extraInfo;
+    m_objectIndex = objectIndex;
+}
+
+// E:\gamedcs\event_record.cpp:544
 VA(0x0049b150, 0x27)  // dc 0x8d290
 type_event_record* type_record_erase::create()
 {
@@ -656,7 +616,7 @@ type_event_record* type_record_erase::create()
 }
 
 VA(0x0049b180, 0x6)  // dc 0x8d2b8
-type_event_record_type type_record_erase::getType()
+type_event_record_type type_record_erase::getType() const
 {
     return RECORD_ERASE;
 }
@@ -734,6 +694,18 @@ type_event_record_type type_record_hide_hero::getType()
 
 #endif  // @carcass
 
+inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
+                                                    unsigned char townGarrison)
+{
+    // DC preserves this helper boundary; the two retail inline expansions
+    // prove the snapshot is written before the requested replacement owner.
+    m_currentHero = who;
+    m_prevOwner = who->m_owner;
+    m_newOwner = newOwner;
+    m_townGarrison = townGarrison;
+}
+
+// E:\gamedcs\event_record.cpp:638
 VA(0x0049b400, 0x27)  // dc 0x8d500
 type_event_record* type_record_hide_hero::create()
 {
@@ -834,6 +806,18 @@ type_event_record_type type_record_show_hero::getType()
 
 #endif  // @carcass
 
+inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
+                                                    type_point location,
+                                                    unsigned char onBoat)
+    : type_record_hide_hero(who, newOwner, 0)
+{
+    m_previousBoat = (who->m_flags >> 18) & 1;
+    m_onBoat = onBoat;
+    m_previousLocation = type_point(who->m_x, who->m_y, who->m_z);
+    m_location = location;
+}
+
+// E:\gamedcs\event_record.cpp:736
 VA(0x0049b6a0, 0x27)  // dc 0x8d7c0
 type_event_record* type_record_show_hero::create()
 {
@@ -865,10 +849,6 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
     unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:784
-#endif  // @carcass
 VA(0x0049b800, 0x15E)  // dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
@@ -937,7 +917,7 @@ type_event_record* type_record_player_death::create()
 }
 
 VA(0x0049ba30, 0x6)  // dc 0x8dae8
-type_event_record_type type_record_player_death::getType()
+type_event_record_type type_record_player_death::getType() const
 {
     return RECORD_PLAYER_DEATH;
 }
@@ -958,9 +938,6 @@ unsigned char type_record_player_death::save(TAbstractFile* outfile)
     unsigned char ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049bab0, 0x11A)  // dc 0x8db94
 void type_record_player_death::replay(unsigned char draw)
@@ -1005,14 +982,10 @@ type_event_record* type_record_shroud::create()
 }
 
 VA(0x0049bc80, 0x6)  // dc 0x8dcd4
-type_event_record_type type_record_shroud::getType()
+type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:935
-#endif  // @carcass
 // Residual (84.04%): the frame is one dword LARGER than retail's (0x14 vs
 // 0x10) and retail keeps the sign-extended count in EBX across the reserve
 // expansion where we home it at [ebp-0x10]; the instruction stream is
@@ -1098,9 +1071,6 @@ void type_record_shroud::undo()
         *getMapExtraPtr(change.m_x, change.m_y, change.m_z) = change.m_oldValue;
     }
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049bf90, 0x1F1)  // dc 0x8dfe0
 void game::recordClaimMine(long id, long newOwner)
@@ -1139,9 +1109,6 @@ void game::recordEraseObject(NewmapCell* cell, type_point point)
                                                  cell->m_extraInfo,
                                                  cell->m_objectIndex));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:1071
 // Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
@@ -1154,9 +1121,6 @@ void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
     m_eventRecords.push_back(new type_record_hide_boat(currentBoat, occupied,
                                                      occupyingHero));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049c720, 0x1DD)  // dc 0x8e148
 void game::recordHideHero(hero* who, char newOwner,
@@ -1165,18 +1129,12 @@ void game::recordHideHero(hero* who, char newOwner,
     m_eventRecords.push_back(new type_record_hide_hero(who, newOwner,
                                                      townGarrison));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049c900, 0x217)  // dc 0x8e18c
 void game::recordShowBoat(boat* currentBoat, type_point point)
 {
     m_eventRecords.push_back(new type_record_show_boat(currentBoat, point));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049cb20, 0x226)  // dc 0x8e1d0
 void game::recordShowHero(hero* who, signed char player, type_point point,
@@ -1185,9 +1143,6 @@ void game::recordShowHero(hero* who, signed char player, type_point point,
     m_eventRecords.push_back(new type_record_show_hero(who, player, point,
                                                      reset));
 }
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x0049cd50, 0x1FA)  // dc 0x8e270
 void game::recordMove(hero* who, int direction, type_point destination)
@@ -1247,9 +1202,9 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = maxRef(startX - range, 0);
+    int x0 = max(startX - range, 0);
     int x1 = cppMin(startX + range + 1, g_mapWidth);
-    int y0 = maxRef(startY - range, 0);
+    int y0 = max(startY - range, 0);
     int y1 = cppMin(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
@@ -1303,9 +1258,9 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = maxRef(startX - range, 0);
+    int x0 = max(startX - range, 0);
     int x1 = cppMin(startX + range + 1, g_mapWidth);
-    int y0 = maxRef(startY - range, 0);
+    int y0 = max(startY - range, 0);
     int y1 = cppMin(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
@@ -1338,10 +1293,6 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
 #pragma inline_depth()
     }
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:1239
-#endif  // @carcass
 VA(0x0049d630, 0x8C)  // dc 0x8e730
 void game::clearEventRecords()
 {

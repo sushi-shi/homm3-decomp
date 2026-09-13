@@ -101,12 +101,6 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
     }
 }
 
-VA(0x00405680, 0x10)
-int CHeroWindowEx::handleMessage(message& msg)
-{
-    return windowHandler(&msg);
-}
-
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 
 VA(0x004056c0, 0x6B)  // dc 0x514c

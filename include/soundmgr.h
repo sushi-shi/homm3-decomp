@@ -2,10 +2,11 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
-void pollSound();
-
 #include <windows.h>
 #include "basemgr.h"
+#include "kbwin.h"
+
+void pollSound();
 
 class sample;
 class ds_memsample;
@@ -54,9 +55,9 @@ struct LaunchedSample {
 };
 
 // The thread entry launch_sample hands to _beginthread, retail
-// 0x59a6b0 - a file-static in retail (the delinker bands it under
-// launch_sample), reached only by address-take. Declared non-static
-// here because its body is not claimed; name provisional.
+// 0x59a6b0, reached by the _beginthread address-take at 0x59a68e.
+// Its retained body is claimed in soundmgr.cpp; the name is provisional.
+// The delinker's function grouping does not establish source linkage.
 void __cdecl waitEndSampleThread(void* arglist);
 
 // Retail .bss 0x699258, DC-attested name (?NULL_SAMPLE2@@3USAMPLE2@@A):
@@ -188,8 +189,8 @@ public:
     CRITICAL_SECTION m_sectionMp3NameChange;
 
     soundManager();
-    // Complete-only (no Dreamcast row): ShutDown (0x4f3690) deletes the
-    // manager with this body expanded - the vftable store and the three
+    // DC SoundMgr.h:124 (dc 0xe6ebc). Complete's ShutDown (0x4f3690)
+    // deletes the manager with this body expanded - the vftable store and the three
     // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
     // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
     // three slots.
@@ -436,6 +437,47 @@ extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
+
+// Header-ownership checkpoint, 2026-09-06: the canonical header body makes
+// VC6 expand additional callers and omit the retained 0x59a7d0 COMDAT.
+// Whole-tree exact count 3669 -> 3660; fuzzy 95.81 -> 95.69. Measured callers:
+// BinkManager::GetBinkFilePtr 100 -> 65.67, NextBinkFrame 92.92 -> 0,
+// LostGame 100 -> 50.18, StartMouseThread 100 -> 38.33,
+// SmackManager::NextSmackerFrame 90.73 -> 73.42, OpenSmackerTrack 100 -> 69.28,
+// VideoClose 100 -> 7.69, VideoSoundOnOff 100 -> 0,
+// townManager::Main 90.21 -> 88.48. Historical MAX values remain banked.
+// The prior ordinary .cpp definition retained the call decisions, but
+// contradicted the CodeView header owner; recover the natural caller/TU
+// inlining state without moving this body back or forcing its emission.
+// Recovery, 2026-09-09: the exact retained body is currently emitted in
+// singleselectionwindow.obj. Capture the stream after AIL_serve, as retail
+// does, and preserve its three ordered guards as nested scopes. This keeps
+// the retained member exact and recovers showVideo 67.8147 -> 94.1120;
+// every other tracked score holds across all 51 dependent TUs. The combined
+// guard control stays at 67.8147. No declaration or helper owner changes.
+// Definition-placement control: moving the existing Miles/global dependencies
+// before this class is code-identical; defining this same inline body inside
+// the class produces a second object identity but changes no tracked score
+// across all 51 consumers. NextBinkFrame still expands serviceSounds where
+// retail 0x44daa0 calls 0x59a7d0. Keep this placement and its proven guards.
+// Original: soundManager::service_sounds; SoundMgr.h:140, dc 0xe6ef4.
+VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
+inline void soundManager::serviceSounds()
+{
+    EnterCriticalSection(&m_sectionSoundCall);
+    AIL_serve();
+    void* stream = g_mp3Stream;
+    if (stream) {
+        if (g_soundManager->m_mp3Playing) {
+            if (!g_shutDownDone)
+                AIL_service_stream(stream, 1);
+        }
+    }
+    Sleep(1);
+    LeaveCriticalSection(&m_sectionSoundCall);
+}
+
+// --- globals ---
 
 // --- soundManager ---
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:322, dc 0x14b240) int soundManager::Open(int newPriority);

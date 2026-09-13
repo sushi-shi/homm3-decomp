@@ -2,6 +2,14 @@
 #ifndef HOMM3_ADVENTUREMAPWINDOW_H
 #define HOMM3_ADVENTUREMAPWINDOW_H
 
+#include "advmgr.h"
+
+// E:\gamedcs\AdventureMapWindow.h:238, dc 0xbd0a0.
+inline void TAdventureMapWindow::setBackgroundAnimation(unsigned char enable)
+{
+    m_animateInBackground = enable;
+}
+
 class message;
 
 void sendChat(const char* chat, int toWho);

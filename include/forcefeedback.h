@@ -35,7 +35,8 @@
 
 // Binary API descriptors use the pristine vendor boundary declarations.
 // FEELIT_EFFECT (0x48) and FEELIT_ENCLOSURE (0x38) match IFC 2.0.3.
-class CImmProject;
+// RTTI 0x6778c0 proves t_initializer in this file's unnamed namespace.
+namespace { class t_initializer; }
 
 // The error-policy singleton. `?m_dwErrHandlingFlags@CIFCErrors@@0KA` is
 // the ONLY member the image touches, and the trailing `0KA` types it as a
@@ -48,8 +49,10 @@ private:
     // (`mov eax,[__imp_?m_dwErrHandlingFlags@CIFCErrors@@0KA] / mov
     // [eax],1`), which only a friend can do; the vendor header must have
     // named retail's own initializer class here.
-    friend class TImmMouseRuntime;
+    friend class t_initializer;
 };
+
+class CImmProject;
 
 // IFC 2.0.3 effect-cache layout: AddEffect at DLL RVA 0x7300 allocates
 // eight-byte nodes (effect +0, next +4); list destruction at 0x72e0 walks
@@ -116,7 +119,6 @@ protected:
     // releases their COM interfaces. Total 0x2c matches retail allocation.
     IFeelit* m_api;               // SDK m_piApi.
     IFeelitDevice* m_device;      // SDK m_piDevice.
-
 };
 
 // The compound effect a project hands back. Non-virtual throughout
@@ -201,7 +203,6 @@ protected:
     // Start 0x8101 tests this before GetCursorPos and SetCenter.
     int m_useMousePosAtStart;     // +dc, SDK m_bUseMousePosAtStart.
     // Total 0xe0 matches the game's allocation. No newer m_pInsideEffect.
-
 };
 
 // The project file. Its constructor is NOT in the import table and
@@ -252,40 +253,14 @@ DATA(0x00696d7c) extern HWND g_immWindow;
 
 // The three singletons the initializer publishes: the mouse (handed out
 // as the device everywhere), the loaded project, and the effect currently
-// playing. PlayImmEffect destroys the previous effect before creating the
+// playing. playImmEffect destroys the previous effect before creating the
 // next, so the last is a single slot rather than a set.
 DATA(0x00696d80) extern CImmDevice* g_immDevice;
 DATA(0x00696d84) extern CImmProject* g_immProject;
 DATA(0x00696d88) extern CImmCompoundEffect* g_immEffect;
 
-namespace force_feedback {
+namespace force_feedback { class t_enclosure; }
 
-// One tracked enclosure. Eight bytes - a `std::auto_ptr<CImmEnclosure>`,
-// whose `{ bool _Owns; _Ty* _Ptr; }` layout is exactly what the
-// constructor at 0x4b6a50 writes (`test eax,eax / setne cl / mov [esi],cl
-// / mov [esi+4],eax` is auto_ptr's `_Owns(_P != 0), _Ptr(_P)` verbatim)
-// and what the out-of-line auto_ptr destructor at 0x4b7020 reads back.
-class t_enclosure {
-public:
-    // `.?AVt_create_failure@t_enclosure@force_feedback@@` (0x65f2b0), a
-    // 28-byte runtime_error with no members of its own: its CatchableType
-    // array 0x64ce08 lists exactly {itself, runtime_error, exception} at
-    // sizes 28/28/12, and the throw at 0x4b6b8c hands the base a
-    // DEFAULT-constructed string.
-    class t_create_failure : public std::runtime_error {
-    public:
-        t_create_failure() : std::runtime_error(std::string()) {}
-    };
-
-    t_enclosure(const RECT* rect, long a, unsigned long b, unsigned long c,
-                unsigned char d, unsigned char e);
-    ~t_enclosure();
-
-    std::auto_ptr<CImmEnclosure> m_enclosure;
-};
-
-}  // namespace force_feedback
-
-unsigned char PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+unsigned char playImmEffect(const char* effectName, int count);  // 0x4b69f0
 
 #endif  /* HOMM3_FORCEFEEDBACK_H */

@@ -238,3 +238,15 @@ for custom traits/allocators, a different character type, and cv/ref changes.
 PYTHONPATH=scripts python -m unittest homm3.analysis.test_source_facts \
   homm3.analysis.test_dreamcast homm3.analysis.test_dc_source_layout
 ```
+
+`homm3 source-ownership` reports reviewed declaration-only bodies separately
+from located definitions. A source annotation `// @dc-declaration-only: 0xTYPE`
+can retain a recovered accessor whose exact CodeView declaration survives but
+whose body has no procedure or foreign-header line attribution. The adjacent
+comment must identify the retail field/caller evidence and state that header
+ownership is provisional. This annotation supplies no source line and cannot
+establish definition order. The gate requires the exact name, field-list type,
+argument types, constness, return type, and one in-class inline header body; it
+rejects duplicate bodies, retained VA claims, and annotations hiding located
+procedures. These entries remain explicit coverage gaps in the build output,
+not Windows-only exemptions or recovered source locations.

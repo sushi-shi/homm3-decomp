@@ -12,8 +12,9 @@ class SpellWorkChanceTests(unittest.TestCase):
     def test_actual_body_and_wrong_routing_negative_controls(self):
         root = Path(__file__).resolve().parents[3]
         header = (root / "include/armygrp.h").read_text()
-        helper_start = header.index("inline unsigned char isMindSpell(")
-        helper = header[helper_start:header.index("\n}", helper_start) + 2]
+        spell_header = (root / "include/spelldefs.h").read_text()
+        helper_start = spell_header.index("inline unsigned char isMindSpell(")
+        helper = spell_header[helper_start:spell_header.index("\n}", helper_start) + 2]
         enums = []
         for name in ("TCreatureType", "ESpellId", "EArtifactId"):
             start = header.index("enum " + name + " {")

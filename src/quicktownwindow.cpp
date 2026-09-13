@@ -1,5 +1,5 @@
 // quicktownwindow.cpp - E:\gamedcs\quicktownwindow.cpp (compiland quicktownwindow.obj)
-#include "homm3_limit.h"
+#include "includes.h"
 #include <va.h>
 // The hall, silo and fort tests are town::HasBuilding calls in the
 // Dreamcast body (dc 0x117e48, seven `jsr @r11` with r5 = 11/12/13,

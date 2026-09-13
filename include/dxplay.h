@@ -11,26 +11,7 @@ class CDPlayConnection;
 class CDPlayAddressElement;
 class CDPlayGroup;
 class CDPlayMsg;
-// DC's complete 0x104-byte class: a 0x100-byte name (members.csv puts
-// m_dpid at 256) followed by the DPID. Retail independently proves that
-// tail: UpdateCurrentPlayers compares the result of CAutoArray::Get at
-// +0x100. The constructor (DC dxplay.h:203) is in-class: AddPlayerEnum
-// news one per enumerated player and expands it there.
-class CDPlayPlayer {
-public:
-    CDPlayPlayer(char* name, unsigned long dpid)
-    {
-        strcpy(m_name, name);
-        m_dpid = dpid;
-    }
-    char* getName() { return m_name; }         // DC dxplay.h:210
-    unsigned long getId() { return m_dpid; }    // DC dxplay.h:211
 
-protected:
-    char m_name[0x100];      // +0x00
-    unsigned long m_dpid;     // +0x100
-};
-SIZE(CDPlayPlayer, 0x104);
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
@@ -53,6 +34,7 @@ struct DPMSG_STARTSESSION;
 // layouts are published in the Dreamcast CodeView stream and independently
 // fixed on PC by the field loads in LobbyLaunchConnect.
 struct DPNAME {
+public:
     unsigned long m_size;
     unsigned long m_flags;
     union {
@@ -67,6 +49,7 @@ struct DPNAME {
 SIZE(DPNAME, 0x10);
 
 struct DPSESSIONDESC2 {
+public:
     unsigned long m_size;
     unsigned long m_flags;
     GUID m_guidInstance;
@@ -91,6 +74,7 @@ struct DPSESSIONDESC2 {
 SIZE(DPSESSIONDESC2, 0x50);
 
 struct DPLCONNECTION {
+public:
     unsigned long m_size;
     unsigned long m_flags;
     DPSESSIONDESC2* m_sessionDesc;
@@ -106,6 +90,7 @@ SIZE(DPLCONNECTION, 0x28);
 // id of the station that left, which is what fixes them at +4 and +8; the
 // tail follows dplay.h's published record so the struct is not a fake.
 struct DPMSG_DESTROYPLAYERORGROUP {
+public:
     unsigned long m_type;
     unsigned long m_playerType;
     unsigned long m_dpId;
@@ -146,6 +131,203 @@ enum EDPlaySendError {
 // m_hRes against it before deciding the session is broken.
 enum EDPlayReceiveError {
     DPLAY_RECEIVE_ERROR_NO_MESSAGES = 0x887700be
+};
+
+// The Windows structure consumed here preserves the complete Dreamcast
+// value layout (E:\gamedcs\dxplay.h:57 for the constructor, :96 for
+// IsPasswordProtected).  HandleMPlayerLaunch's inlined Get(0) reaches
+// guidInstance at +4, which is the retail proof needed by that TU, and the
+// three predicates are the multiplayer window's - IsJoinDisabled has its own
+// retail row at 0x5112c0.  This class was carried a SECOND time in
+// multiplayerwindow.h behind a per-TU macro; the two copies had the same
+// layout and disjoint member sets, and this is the union.
+class CDPlaySession {
+public:
+    unsigned long m_flags;  // +0x00
+    GUID m_guidInstance;  // +0x04
+    GUID m_guidApp;  // +0x14
+    unsigned long m_maxPlayers;  // +0x24
+    unsigned long m_playerCount;  // +0x28
+    char m_sessionName[128];  // +0x2c
+    char m_password[80];  // +0xac
+    unsigned long m_user1;  // +0xfc
+    unsigned long m_user2;  // +0x100
+    unsigned long m_user3;  // +0x104
+    unsigned long m_user4;  // +0x108
+    // E:\gamedcs\dxplay.h:57
+    CDPlaySession(const DPSESSIONDESC2* session)
+    {
+        if (session) {
+            m_flags = session->m_flags;
+            m_guidInstance = session->m_guidInstance;
+            m_guidApp = session->m_guidApplication;
+            m_maxPlayers = session->m_maxPlayers;
+            m_playerCount = session->m_currentPlayers;
+            m_user1 = session->m_user1;
+            m_user2 = session->m_user2;
+            m_user3 = session->m_user3;
+            m_user4 = session->m_user4;
+            strcpy(m_sessionName, session->m_sessionNameA);
+            if (session->m_passwordA)
+                strcpy(m_password, session->m_passwordA);
+            else
+                m_password[0] = 0;
+        }
+    }
+
+    VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
+    unsigned char isJoinDisabled()
+    {
+        if (m_flags & 0x20)
+            return 1;
+        if (m_flags & 1)
+            return 1;
+        unsigned char disabled = m_playerCount == m_maxPlayers;
+        return disabled;
+    }
+    unsigned char isPasswordProtected()
+    {
+        if (m_flags & 0x400)
+            return 1;
+        return 0;
+    }
+};
+SIZE(CDPlaySession, 0x10c);
+
+// Dreamcast publishes the complete 0x98-byte value layout. Retail's two
+// inlined delete paths in remote::InitConnection independently prove the
+// owned connection buffer at +0x10 and the trivial non-virtual destructor.
+class CDPlayConnection {
+public:
+    GUID m_guidSp;  // +0x00
+    unsigned char* m_connection;  // +0x10
+    char m_name[128];  // +0x14
+    unsigned long m_size;  // +0x94
+    CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
+        char* name)
+    {
+        m_guidSp = *guid;
+        m_size = connSize;
+        m_connection = new unsigned char[connSize];
+        memcpy(m_connection, conn, m_size);
+        strcpy(m_name, name);
+    }
+    ~CDPlayConnection()
+    {
+        delete [] m_connection;
+    }
+};
+SIZE(CDPlayConnection, 0x98);
+
+// Dreamcast fixes both fields and the eight-byte extent. Retail's
+// CDPlayHeroes constructor/destructor independently show these header-inline
+// members: construction clears both dwords, while destruction delegates to
+// Destroy(), which frees pData and clears the pair.
+class CDPlayMsg {
+public:
+    unsigned char* m_data;
+    unsigned long m_dataSize;
+    // CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8).  The constructor's
+    // separate line rows prove body assignments rather than an initializer list;
+    // Complete folds the helper into its callers while preserving both stores.
+    CDPlayMsg()
+    {
+        m_data = 0;
+        m_dataSize = 0;
+    }
+    // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
+    VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
+    ~CDPlayMsg()
+    {
+        destroy();
+    }
+    // CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc).  Dreamcast proves the
+    // early size guard, conditional delete, allocation, and size store; retail's
+    // inlined cmp/jb fixes this equivalent operand order.
+    unsigned char allocSize(unsigned long dSize)
+    {
+        if (dSize < m_dataSize)
+            return 1;
+        if (m_data)
+            delete m_data;
+        m_data = new unsigned char[dSize];
+        m_dataSize = dSize;
+        return 1;
+    }
+    // CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c)
+    unsigned char destroy()
+    {
+        if (!m_data)
+            return 0;
+        delete m_data;
+        m_data = 0;
+        m_dataSize = 0;
+        return 1;
+    }
+};
+SIZE(CDPlayMsg, 0x08);
+
+// DC's complete 0x104-byte class: a 0x100-byte name (members.csv puts
+// m_dpid at 256) followed by the DPID. Retail independently proves that
+// tail: UpdateCurrentPlayers compares the result of CAutoArray::Get at
+// +0x100. The constructor (DC dxplay.h:203) is in-class: AddPlayerEnum
+// news one per enumerated player and expands it there.
+class CDPlayPlayer {
+public:
+    CDPlayPlayer(char* name, unsigned long dpid)
+    {
+        strcpy(m_name, name);
+        m_dpid = dpid;
+    }
+    char* getName() { return m_name; }
+         // DC dxplay.h:210
+    unsigned long getId() { return m_dpid; }
+
+protected:
+    // DC dxplay.h:211
+
+    char m_name[0x100];  // +0x00
+    unsigned long m_dpid;  // +0x100
+};
+SIZE(CDPlayPlayer, 0x104);
+
+// The group enum trampoline's backing record: a 0x100-byte name buffer
+// followed by the DPID at +0x100 (0x104 total). AddGroupEnum news one,
+// strcpys the enumerated short name in, and stores the id. CDPlayGroup is
+// defined in dxplay.h:231, following its player-record twin.
+class CDPlayGroup {
+public:
+    CDPlayGroup(char* name, unsigned long dpid)
+    {
+        strcpy(m_name, name);
+        m_dpid = dpid;
+    }
+    char m_name[0x100];  // +0x00
+    unsigned long m_dpid;  // +0x100
+};
+
+// The address-element records one DirectPlay SP address chunk EnumAddress splits
+// out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and
+// its size at +0x14. AddAddressEnum news one per enumerated chunk; the array's
+// inlined teardown frees the buffer, then the element. CodeView places the
+// constructor/destructor in dxplay.h:244/257.
+class CDPlayAddressElement {
+public:
+    GUID m_guid;  // +0x00
+    char* m_data;  // +0x10
+    CDPlayAddressElement(const GUID* guid, const void* data,
+        unsigned long dataSize)
+    {
+        m_guid = *guid;
+        m_dataSize = dataSize;
+        m_data = new char[dataSize];
+        memcpy(m_data, data, m_dataSize);
+    }
+    ~CDPlayAddressElement()
+    {
+        delete [] m_data;
+    }
+    unsigned long m_dataSize;  // +0x14
 };
 
 // Dreamcast CodeView proves this complete virtual order. Retail's
@@ -206,9 +388,17 @@ public:
         GUID* instance, unsigned long flags);
     virtual unsigned char enumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, GUID* instance, unsigned long flags);
-    virtual void setGuid(GUID guid);
-    virtual GUID* getGuid();
-
+    VA(0x00496c70, 0x21)  // dc 0x8bee8
+    virtual void setGuid(GUID guid)
+    {
+        m_guid = guid;
+    }
+    VA(0x00496ca0, 0x4)  // dc 0x8bf04
+    virtual GUID* getGuid()
+    {
+        return &m_guid;
+    }
+    // E:\gamedcs\dxplay.h:375
     long getLastError() { return m_res; }
     virtual unsigned char send(void* data, unsigned long size,
         unsigned long fromId, unsigned long toId, unsigned char guaranteed);
@@ -217,7 +407,11 @@ public:
     virtual unsigned char receive(unsigned long* fromId, unsigned long* toId,
         CDPlayMsg* message, unsigned long flags);
     virtual void getErrorDesc(long error, char* description);
-    virtual bool isHost();
+    VA(0x00496cb0, 0x4)  // dc 0x8bf0c
+    virtual bool isHost()
+    {
+        return m_isHost;
+    }
     virtual unsigned char flushReceiveQueue();
     virtual unsigned char* getPlayerAddress(
         unsigned long playerId, unsigned long* size);
@@ -230,12 +424,18 @@ public:
         unsigned long* numMessages, unsigned long* numBytes);
 
 protected:
-    virtual unsigned char receiveMsg(
-        unsigned long fromId, unsigned long toId, CDPlayMsg* message);
+    VA(0x00496cc0, 0x5)  // dc 0x8bf14
+    virtual unsigned char receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
+    {
+        return 1;
+    }
     virtual unsigned char receiveSystemMsg(
         unsigned long toId, CDPlayMsg* message);
-    virtual unsigned char sysMsgAddGroupToGroup(
-        DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
+    VA(0x00496cd0, 0x5)  // dc 0x8bf18
+    virtual unsigned char sysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
+    {
+        return 1;
+    }
     virtual unsigned char sysMsgAddPlayerToGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
     virtual unsigned char sysMsgChat(
@@ -273,17 +473,19 @@ public:
     friend int __stdcall enumConnectionsCallback(const GUID* lpguidSP, void* connection, unsigned long connectionSize, const DPNAME* name, unsigned long flags, void* context);
     friend int __stdcall enumGroupsCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
     friend int __stdcall enumPlayersCallback(unsigned long dpid, unsigned long playerType, const DPNAME* name, unsigned long flags, void* context);
-
     // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
     // m_isHost and the array pointers directly, exactly as retail does.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
-    char m_caps[0x28];                  // +0x04
+    char m_caps[0x28];  // +0x04
 
 protected:
-    void* m_dp;                       // +0x2c
-    GUID m_guid;                        // +0x30
+    void* m_dp;  // +0x2c
+    GUID m_guid;  // +0x30
+    // The DirectPlay enum trampolines are file-scope callbacks that forward to
+    // these virtuals through the lpContext object; keep them reachable without
+    // reordering (vtable slots 58-61 are unchanged).
     virtual unsigned char addGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     virtual unsigned char addPlayerEnum(
@@ -294,14 +496,14 @@ protected:
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
-    long m_res;                        // +0x40, DC long / SDK HRESULT
-    CAutoArray<CDPlaySession>* m_sessionArray;       // +0x44
-    CAutoArray<CDPlayConnection>* m_connectionArray; // +0x48
-    CAutoArray<CDPlayGroup>* m_groupArray;           // +0x4c
-    CAutoArray<CDPlayPlayer>* m_playerArray;          // +0x50
-    unsigned char m_connected;          // +0x54
-    unsigned char m_inSession;          // +0x55
-    bool m_isHost;                      // +0x56 (original m_isHost)
+    long m_res;  // +0x40, DC long / SDK HRESULT
+    CAutoArray<CDPlaySession>* m_sessionArray;  // +0x44
+    CAutoArray<CDPlayConnection>* m_connectionArray;  // +0x48
+    CAutoArray<CDPlayGroup>* m_groupArray;  // +0x4c
+    CAutoArray<CDPlayPlayer>* m_playerArray;  // +0x50
+    unsigned char m_connected;  // +0x54
+    unsigned char m_inSession;  // +0x55
+    bool m_isHost;  // +0x56 (original m_isHost)
     // Dreamcast CDPlay ends with connected/inSession/isHost at
     // 84/85/86. Retail retains the same bytes and 0x58-byte size;
     // this last byte aligns the complete object.
@@ -333,6 +535,7 @@ public:
     unsigned char setConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char connect();
+    // DC public ?TestLobbied@CDPlayLobby@@QAA_NXZ proves bool; the
     bool testLobbied();
     virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
@@ -365,139 +568,13 @@ public:
     friend int __stdcall enumAddressCallback(const GUID* guidDataType, unsigned long dataSize, const void* data, void* context);
 
 protected:
-    void* m_lobby;                         // +0x58
-    CAutoArray<CDPlayAddressElement>* m_addressArray; // +0x5c
+    void* m_lobby;  // +0x58
+    CAutoArray<CDPlayAddressElement>* m_addressArray;  // +0x5c
+    // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 };
 SIZE(CDPlayLobby, 0x60);
-
-// Dreamcast fixes both fields and the eight-byte extent. Retail's
-// CDPlayHeroes constructor/destructor independently show these header-inline
-// members: construction clears both dwords, while destruction delegates to
-// Destroy(), which frees pData and clears the pair.
-class CDPlayMsg {
-public:
-    unsigned char* m_data;
-    unsigned long m_dataSize;
-    CDPlayMsg();
-
-    // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
-    ~CDPlayMsg()
-    {
-        destroy();
-    }
-    unsigned char allocSize(unsigned long dSize);
-    unsigned char destroy();
-};
-SIZE(CDPlayMsg, 0x08);
-
-// CODEVIEW(E:\gamedcs\dxplay.h:137, dc 0x8bda8).  The constructor's
-// separate line rows prove body assignments rather than an initializer list;
-// Complete folds the helper into its callers while preserving both stores.
-inline CDPlayMsg::CDPlayMsg()
-{
-    m_data = 0;
-    m_dataSize = 0;
-}
-
-// CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc).  Dreamcast proves the
-// early size guard, conditional delete, allocation, and size store; retail's
-// inlined cmp/jb fixes this equivalent operand order.
-inline unsigned char CDPlayMsg::allocSize(unsigned long dSize)
-{
-    if (dSize < m_dataSize)
-        return 1;
-    if (m_data)
-        delete m_data;
-    m_data = new unsigned char[dSize];
-    m_dataSize = dSize;
-    return 1;
-}
-
-// CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c)
-inline unsigned char CDPlayMsg::destroy()
-{
-    if (!m_data)
-        return 0;
-    delete m_data;
-    m_data = 0;
-    m_dataSize = 0;
-    return 1;
-}
-
-// Dreamcast publishes the complete 0x98-byte value layout. Retail's two
-// inlined delete paths in remote::InitConnection independently prove the
-// owned connection buffer at +0x10 and the trivial non-virtual destructor.
-class CDPlayConnection {
-public:
-    GUID m_guidSp;                       // +0x00
-    unsigned char* m_connection;        // +0x10
-    char m_name[128];                   // +0x14
-    unsigned long m_size;                // +0x94
-    CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
-        char* name)
-    {
-        m_guidSp = *guid;
-        m_size = connSize;
-        m_connection = new unsigned char[connSize];
-        memcpy(m_connection, conn, m_size);
-        strcpy(m_name, name);
-    }
-
-    ~CDPlayConnection()
-    {
-        delete [] m_connection;
-    }
-};
-SIZE(CDPlayConnection, 0x98);
-
-// The Windows structure consumed here preserves the complete Dreamcast
-// value layout (E:\gamedcs\dxplay.h:57 for the constructor, :96 for
-// IsPasswordProtected).  HandleMPlayerLaunch's inlined Get(0) reaches
-// guidInstance at +4, which is the retail proof needed by that TU, and the
-// three predicates are the multiplayer window's - IsJoinDisabled has its own
-// retail row at 0x5112c0.  This class was carried a SECOND time in
-// multiplayerwindow.h behind a per-TU macro; the two copies had the same
-// layout and disjoint member sets, and this is the union.
-class CDPlaySession {
-public:
-    unsigned long m_flags;      // +0x00
-    GUID m_guidInstance;          // +0x04
-    GUID m_guidApp;               // +0x14
-    unsigned long m_maxPlayers;   // +0x24
-    unsigned long m_playerCount;  // +0x28
-    char m_sessionName[128];      // +0x2c
-    char m_password[80];          // +0xac
-    unsigned long m_user1;      // +0xfc
-    unsigned long m_user2;      // +0x100
-    unsigned long m_user3;      // +0x104
-    unsigned long m_user4;      // +0x108
-    CDPlaySession(const DPSESSIONDESC2* session);
-
-    unsigned char isJoinDisabled()
-    {
-        if (m_flags & 0x20)
-            return 1;
-        if (m_flags & 1)
-            return 1;
-        unsigned char disabled = m_playerCount == m_maxPlayers;
-        return disabled;
-    }
-
-    bool isJoinDisabledInline()
-    {
-        return (m_flags & 0x21) || m_playerCount == m_maxPlayers;
-    }
-
-    unsigned char isPasswordProtected()
-    {
-        if (m_flags & 0x400)
-            return 1;
-        return 0;
-    }
-};
-SIZE(CDPlaySession, 0x10c);
 
 // --- globals ---
 // CODEVIEW(C:\WCEDreamcast\inc\objbase.h:519, dc 0x8bc84) int operator==(const _GUID* guidOne, const _GUID* guidOther);
@@ -517,6 +594,8 @@ SIZE(CDPlaySession, 0x10c);
 
 // --- CAutoArray<CDPlayPlayer> ---
 // CODEVIEW(E:\gamedcs\array.h:51, dc 0x8c068) void CAutoArray<CDPlayPlayer>::Destroy(unsigned char deleteData);
+
+// --- CAutoArray<CDPlaySession> ---
 
 // --- CDPlay ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:66, dc 0x8a074) void CDPlay::CDPlay();

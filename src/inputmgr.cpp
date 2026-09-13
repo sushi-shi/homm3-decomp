@@ -174,6 +174,9 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
     return e->m_id == 0;
 }
 
+// construction rather than this constructor body. The message array uses
+// its canonical default constructor; repeating its stores in an additional
+// derived wrapper would introduce a second clear pass absent from retail.
 VA(0x004ec460, 0x6F)  // dc 0xdd97c
 inputManager::inputManager()
 {
@@ -186,10 +189,6 @@ inputManager::inputManager()
     m_currWidgetId = -1;
     m_prevDialog = 0;
 }
-
-#if 0  // @carcass
-
-#endif  // @carcass
 
 VA(0x004ec4d0, 0x6D)  // dc 0xdd9e4
 int inputManager::open(int keyboardFilter)
@@ -231,10 +230,12 @@ void inputManager::flush()
     m_head = 0;
 }
 
+// canonical message clear, and both call the already-claimed
+
 VA(0x004ec590, 0xAE)  // dc 0xdda74
 message inputManager::getEvent()
 {
-    inputBufferMessage msg;
+    message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {
@@ -254,7 +255,7 @@ message inputManager::getEvent()
 VA(0x004ec640, 0xAD)  // dc 0xddc14
 message inputManager::peekEvent()
 {
-    inputBufferMessage msg;
+    message msg;
 
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {

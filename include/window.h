@@ -197,7 +197,11 @@ public:
 
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
 
-    virtual int handleMessage(message& msg);                         // slot 3, 0x405680
+    VA(0x00405680, 0x10)  // shared slot-3 header forwarder, dc 0x2dcc
+    virtual int handleMessage(message& msg)
+    {
+        return windowHandler(&msg);
+    }
     virtual int windowHandler(message* msg);                            // slot 9
     virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char processRightSelect(int id);                   // slot 11

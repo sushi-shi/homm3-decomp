@@ -36,38 +36,6 @@
 void startMouseThread();
 void stopMouseThread();
 
-// E:\gamedcs\netmsg.h:264. DC supplies the member names and the header
-// source boundary; retail independently proves the PC offsets and this exact
-// body in both advManager::DoNetCombat and the wait-dialog constructor.
-inline CCombatInitMsg::CCombatInitMsg()
-    : t_complex_net_message(RS_COMBAT_INIT)
-{
-    m_point = type_point(0, 0, 0);
-    m_leftHero = 0;
-    m_rightTown = 0;
-    m_rightHero = 0;
-    m_seed = 0;
-    m_winner = 0;
-    m_retreatWin = 0;
-    m_combatSurrender = 0;
-    m_leftOwner = 0;
-    m_leftGold = 0;
-    m_rightOwner = 0;
-    m_rightGold = 0;
-}
-
-inline CLogFile::CLogFile(char* logFileName)
-{
-    strcpy(m_logFileName, logFileName);
-}
-
-inline CNetPlayerInfo::CNetPlayerInfo()
-{
-    m_dpid = 0;
-    m_name[0] = 0;
-    m_version = *g_videoGameState;
-}
-
 DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 VA_COMPGEN(0x00552260, 0x2A, STATIC_CTOR, g_logFile)
@@ -77,7 +45,40 @@ DATA(0x0063dc18) const GUID guidHeroes3 = {
     { 0x80, 0x8a, 0x00, 0x60, 0x08, 0x95, 0xfb, 0x43 }
 };
 
-VA(0x005522d0, 0x1E)  // dc 0x11b940
+// DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
+// `__inside__`; retail's two inlined error paths fix it at 0x69d814.
+DATA(0x0069d814) static unsigned char g_inside;
+
+// E:\gamedcs\remote.cpp:102 - Dreamcast retains this as an out-of-line
+// helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
+// three beeps, 200-byte local error buffer and recursion guard are visible in
+// both byte-identical expansions.
+inline void dpsd(int dpErr, char* file, int line)
+{
+    if (g_inside)
+        return;
+
+    g_inside = 1;
+    char errorText[200];
+    if (!g_dPlay)
+        strcpy(errorText,
+               DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
+                            "Initialization failed!"));
+    else
+        g_dPlay->getErrorDesc(g_dPlay->getLastError(), errorText);
+
+    MessageBeep(0);
+    MessageBeep(0);
+    MessageBeep(0);
+    sprintf(g_text,
+            DATA_COMPGEN(0x00682a48, remoteDirectPlayError,
+                         "DirectPlay Error:\n\n'%s'\n\n  File:'%s'\n Line# %d"),
+            errorText, file, line);
+    shutDown(g_text);
+    g_inside = 0;
+}
+
+VA(0x005522d0, 0x1E)  // dc order-map (DPSD, calc_crc_long, CDPlayHeroes::CDPlayHeroes) + anchor-callee @crc32@12 twice, dc 0x11b940
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len)
 {
     unsigned long seed = crc32(0, 0, 0);
@@ -235,39 +236,7 @@ DATA(0x00682a38) unsigned char g_followPlayerMode;
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
 DATA(0x006993e0) char g_mapName[260];
-// DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
-// `__inside__`; retail's two inlined error paths fix it at 0x69d814.
 DATA(0x0069d818) static unsigned long g_lastActiveUpdate;
-DATA(0x0069d814) static unsigned char g_inside;
-
-// E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
-// retail bodies - /Ob2 expands each into the one caller it has, the
-// constructor and the destructor claimed further down - but their SHAPE is
-// readable there: each arm ends in a mouse-thread call when the guard was
-// built with a worker thread, and in a direct pointer store when it was
-// not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
-// later destructor both stop the thread, exactly as retail does.
-
-// A previous reading had these two as single-armed (`if (m_thread)` with no
-// else) and recorded the constructor and destructor as having no retail
-// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
-// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
-// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
-inline void CHourGlass::stop()
-{
-    if (m_thread)
-        stopMouseThread();
-    else
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-}
-
-inline void CHourGlass::start()
-{
-    if (m_thread)
-        startMouseThread();
-    else
-        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
-}
 
 static const long g_playerActiveUpdateInterval = 600000;
 
@@ -896,7 +865,7 @@ void CChatManager::addChat(const char* format, ...)
 // skip-chat goto with identical VC6 scores throughout this TU, retaining
 // the common sound tail and the order of the short-circuit time checks.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
-void CChatManager::turnDurationMsg(const char* format, ...)
+void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -945,7 +914,7 @@ void CChatManager::turnDurationMsg(const char* format, ...)
 }
 
 VA(0x00553aa0, 0xC0)  // dc 0x11c558
-void CChatManager::systemMsg(const char* format, ...)
+void __cdecl CChatManager::systemMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1012,7 +981,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 }
 
 VA(0x00553c30, 0xCA)  // dc 0x11c658
-void CChatManager::playerEnterMsg(const char* format, ...)
+void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1092,6 +1061,8 @@ inline int CChatManager::getNextFreeMsgNbr()
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
+// E:\gamedcs\remote.cpp:1065. Original: CChatManager::GetNextMsgNbr.
+// Retail KillOldChat expands this helper at both surviving call sites.
 inline int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
@@ -1742,29 +1713,6 @@ void waitForReadyToPlayMsg()
     dlg.wait();
 }
 
-// E:\gamedcs\remote.h:632 - the canonical body lives with its accessors
-// in remote.h. Dreamcast calls IsInPopup before the virtual abort-message
-// getter; retail expands the first accessor and retains vtable slot 2.
-#if 0  // @carcass: claim-only, header-origin Copy body
-VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
-void CNetMsgHandler::copy(CNetMsgHandler* pOther)
-{
-}
-#endif
-
-VA(0x00555170, 0x5)  // dc 0x11f80c
-CNetMsg* CNetMsgHandlerPause::checkHandleNet(unsigned char inPopup,
-                                             unsigned char* msgReceived)
-{
-    return 0;
-}
-
-VA(0x00555180, 0x5)  // dc 0x11f810
-CNetMsg* CNetMsgHandlerPause::handleNetMsg(CNetMsg* netMsg)
-{
-    return 0;
-}
-
 VA(0x00555190, 0x319)  // dc 0x11f9f0
 int CWaitForReadyPlayersDlg::handleMessage(message& msg)
 {
@@ -1846,35 +1794,6 @@ unsigned char createDPlayObject()
     g_logFile.log(DATA_COMPGEN(0x00682b58, remoteDPlayInitialized,
                              "DPlay initialized"));
     return 1;
-}
-
-// E:\gamedcs\remote.cpp:102 - Dreamcast retains this as an out-of-line
-// helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
-// three beeps, 200-byte local error buffer and recursion guard are visible in
-// both byte-identical expansions.
-inline void dpsd(int dpErr, char* file, int line)
-{
-    if (g_inside)
-        return;
-
-    g_inside = 1;
-    char errorText[200];
-    if (!g_dPlay)
-        strcpy(errorText,
-               DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
-                            "Initialization failed!"));
-    else
-        g_dPlay->getErrorDesc(g_dPlay->getLastError(), errorText);
-
-    MessageBeep(0);
-    MessageBeep(0);
-    MessageBeep(0);
-    sprintf(g_text,
-            DATA_COMPGEN(0x00682a48, remoteDirectPlayError,
-                         "DirectPlay Error:\n\n'%s'\n\n  File:'%s'\n Line# %d"),
-            errorText, file, line);
-    shutDown(g_text);
-    g_inside = 0;
 }
 
 VA(0x005556e0, 0x224)  // dc 0x11d770
@@ -2685,6 +2604,8 @@ void CGameTransferSmack::start()
     showVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
 }
 
+// DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
+// helper below calls the current-handle video wrapper at 0x598e80.
 VA(0x005574b0, 0x12D)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
@@ -2711,6 +2632,15 @@ void CGameTransferSmack::setPercentage(float pct)
     g_windowManager->updateScreen(m_x, m_y, 160, 160);
 }
 
+// Original: CGameTransferSmack::DrawCurrentFrame; remote.cpp:2784, dc 0x11ede8.
+// DC retains an empty body on the console; retail SetPercentage calls the
+// Windows video draw wrapper through this source helper.
+inline void CGameTransferSmack::drawCurrentFrame()
+{
+    drawCurrentSmackFrame();
+}
+
+// E:\gamedcs\remote.cpp:2789
 VA(0x005575e0, 0x15)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
@@ -3312,12 +3242,7 @@ CNetMsgHandler::~CNetMsgHandler()
         g_dPlay->setNetMsgHandler(0);
 }
 
-VA(0x00557900, 0x4)  // dc 0x201f8
-CNetMsg* CNetMsgHandler::getAbortPopupMsg()
-{
-    return m_abortPopupMsg;
-}
-
+// E:\gamedcs\remote.cpp:2875
 VA(0x00557910, 0xD)  // dc 0x11efcc
 void CNetMsgHandler::setAbortPopupMsg(CNetMsg* netMsg)
 {
@@ -3467,10 +3392,13 @@ void CTurnDuration::checkForWarning()
         m_nextWarning = 0;
 }
 
+// Original IsClose calls IsOn (remote.cpp:2920, dc 0x11f070). Keep the
+// ordinary helper above visible to this caller; the former IsOnInline
+// copy invented a second source boundary to steer its expansion.
 VA(0x00557d00, 0x55)  // dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
-    if (!isOnInline())
+    if (!isOn())
         return 0;
     if (m_turnStartTime == 0)
         return 0;
@@ -3594,6 +3522,35 @@ VA(0x00557fc0, 0x1A)  // dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
     stop();
+}
+
+// E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
+// retail bodies - /Ob2 expands each into the one caller it has, the
+// constructor and the destructor claimed further down - but their SHAPE is
+// readable there: each arm ends in a mouse-thread call when the guard was
+// built with a worker thread, and in a direct pointer store when it was
+// not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
+// later destructor both stop the thread, exactly as retail does.
+
+// A previous reading had these two as single-armed (`if (m_thread)` with no
+// else) and recorded the constructor and destructor as having no retail
+// bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
+// bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
+// on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
+inline void CHourGlass::stop()
+{
+    if (m_thread)
+        stopMouseThread();
+    else
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+}
+
+inline void CHourGlass::start()
+{
+    if (m_thread)
+        startMouseThread();
+    else
+        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against

@@ -1,5 +1,6 @@
 // tradpost.cpp - E:\gamedcs\tradpost.cpp (compiland tradpost.obj)
 #include <stdio.h>
+#include "creaturetype.h"
 #include <string.h>
 #include <va.h>
 #include "tradpost.h"
@@ -17,19 +18,13 @@
 #include "winmgr.h"
 #include "mousemgr.h"
 #include "slider.h"
-#include "tradpost_widgets.h"
+#include "netmsg.h"
+#include "remote.h"
+#include "customcampaign.h"
 
 void tradeResourceSlider(int state, heroWindow* parentWindow);
 void giveResourceSlider(int state, heroWindow* parentWindow);
 void sellCreatureSlider(int state, heroWindow* parentWindow);
-
-static inline const char* getArmyName(int type, int count)
-{
-    return type >= 0 && type <= 0x96
-               ? (count == 1 ? g_creatureTypeTraits[type].m_name
-                             : g_creatureTypeTraits[type].m_pluralName)
-               : g_emptyRolloverText;
-}
 
 // Market state the slider callbacks reach (declared ahead of their
 // definitions inside the dialog band below; the rest of the file-static
@@ -1593,7 +1588,7 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 {
     type_artifact art;
     if (i < 18) {
-        art = g_marketHero->getArtifact(i);
+        art = g_marketHero->getArtifact(TArtifactSlot(i));
     } else {
         long numInBackpack = g_marketHero->getNumberInBackpack(1);
         if (numInBackpack < 6)
@@ -2440,7 +2435,7 @@ void TSellArtifactWindow::update(unsigned char update)
         else
             rightQty = 1;
         if (g_selectedArtifact < 18) {
-            art = g_marketHero->getArtifact(g_selectedArtifact).m_artifactId;
+            art = g_marketHero->getArtifact(TArtifactSlot(g_selectedArtifact)).m_artifactId;
         } else {
             art = g_marketHero->getBackpack(
                 (g_backpackStart + g_selectedArtifact - 18)
@@ -2501,8 +2496,8 @@ void TSellArtifactWindow::update(unsigned char update)
             if (i2 == 0) {
                 msg.m_codeY = 9;
                 if (g_selectedArtifact < 18) {
-                    msg.m_extra = g_marketHero->getArtifact(
-                        g_selectedArtifact).m_artifactId;
+                    msg.m_extra = g_marketHero->getArtifact(TArtifactSlot(
+                        g_selectedArtifact)).m_artifactId;
                 } else {
                     msg.m_extra = g_marketHero->getBackpack(
                         (g_backpackStart + g_selectedArtifact - 18)
@@ -2814,18 +2809,6 @@ void TSellCreatureWindow::update(bool update)
         drawWindow(1, -65535, 65535);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// The members below are folded into their callers on x86: the carve places
-// nothing where the DC roster lists them (the 16 SetWidgetOn/Off/Disabled
-// members between update_sell_artifact_widget 0x5ea5d0 and Update 0x5ea6e0,
-// the Trade/Give/Buy ComputeTradeRatios, the five SetupNewTrade and the three
-// TSellArtifactWindow backpack members). They keep no retail body and stay
-// DC_ONLY. Only TSellArtifactWindow's and TSellCreatureWindow's
-// ComputeTradeRatios survive out of line (claimed below get_market_value).
-
-#endif  // @carcass
-
 // E:\gamedcs\tradpost.cpp:2181
 // bInLeftDenominated, iInMaxUnitsToTrade. DC 2184..2197 proves both
 // rounded ratios and the resource-limited maximum. Complete expands this
@@ -2918,8 +2901,9 @@ VA(0x005ecdc0, 0xbb)  // dc 0x18afd4
 void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
-    if (inLeftResource < 18)
-        artifact = g_marketHero->getArtifact(inLeftResource);
+    if (inLeftResource < 18) {
+        artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
+    }
     else
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
 
@@ -3266,8 +3250,11 @@ int TGiveResourceWindow::windowHandler(message* msg)
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
                 if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
-                    TGiveNetMsg m(g_game->getLocalPlayerGamePos(),
-                                  g_selectedArtifact, g_rightAmount);
+                    // CGiftMsg belongs to netmsg.h (DC line 828). Retail
+                    // 0x5ed651..0x5ed67d writes its giver/resource/quantity
+                    // payload at +0x14/+0x18/+0x1c, subtype 0x432, size 32.
+                    CGiftMsg m(g_game->getLocalPlayerGamePos(),
+                               g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);
                 }
                 g_leftDenominated = 1;
@@ -3374,8 +3361,7 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                     g_currentPlayer->m_resources[g_selectedArtifact] -=
                         g_giveQuantity * g_rightAmount;
                     type_artifact artifact(
-                        g_marketArtifacts[g_leftResource],
-                        -1);
+                        g_marketArtifacts[g_leftResource]);
                     g_marketHero->giveArtifact(&artifact, 1, 1);
                     g_marketArtifacts[g_leftResource] =
                         ARTIFACT_NONE;
@@ -3480,8 +3466,7 @@ int TBuyArtifactWindow::windowHandler(message* msg)
                 return MESSAGE_DISPATCH_CONSUME;
             type_artifact artifact(
                 g_marketArtifacts[
-                    msg->m_codeY - BUY_ARTIFACT_SLOT_0_ID],
-                -1);
+                    msg->m_codeY - BUY_ARTIFACT_SLOT_0_ID]);
             g_marketHero->viewArtifact(&artifact, 1);
             return MESSAGE_DISPATCH_CONSUME;
         }
@@ -3662,7 +3647,7 @@ int TSellArtifactWindow::windowHandler(message* msg)
             int artifactSlot = msg->m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
             type_artifact artifact;
             if (artifactSlot < 18) {
-                artifact = g_marketHero->getArtifact(artifactSlot);
+                artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
                 g_marketHero->viewArtifact(&artifact, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             } else {
@@ -3782,7 +3767,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
         type_artifact artifact;
         if (slot < 18) {
-            artifact = g_marketHero->getArtifact(slot);
+            artifact = g_marketHero->getArtifact(TArtifactSlot(slot));
         } else {
             long backpackIndex = ((g_backpackStart & 0xff) + slot - 18)
                                  % g_marketHero->getNumberInBackpack(1);

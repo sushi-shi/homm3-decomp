@@ -27,13 +27,6 @@
 // filename into a 500-byte frame buffer, then NormalDialog.
 void unnamed4f3a60(char* filename);
 
-// Unimplemented carcass stubs stay lexically present (labels and the
-// va-claims gate scan text) but outside compilation until each body
-// is reconstructed.
-#if 0  // @carcass
-
-#endif  // @carcass
-
 // Use the timer during video playback so the game RNG sequence stays unchanged.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
@@ -776,17 +769,6 @@ long fileSize(char* filename)
     return size;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\misc.cpp:796
-DC_ONLY(0xfe0d0, 0x3C)
-int sRandom(int iLower, int iUpper)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Retail's only three references to this scratch are format_string's
 // vsprintf destination, strlen source and copy source.  Its 512-byte extent
 // is bounded exactly by the next referenced bss cell at 0x6998cc.
@@ -808,6 +790,26 @@ void sRand(int seed)
     srand(seed);
 }
 
+// Original: SRandom; misc.cpp:796, dc 0xfe0d0.
+// CodeView proves both degenerate-range returns, then rand at line 805 and
+// the inclusive remainder at 806. Restore this ordinary source body instead
+// of three caller-local adapters to Random. Retail callers reach 0x50b230,
+// whose guards/rand/remainder also implement Random; the identical-body
+// comparison is checked separately from ownership. No second RVA is claimed.
+// VC6 verification: `sema compare 0x50b230 --unit misc --symbol
+// ?sRandom@@YIHHH@Z --no-build --why-bytes` agrees in every view, including
+// the rand relocation. The two source bodies can therefore share retail's
+// retained code without replacing SRandom's implementation with an adapter.
+int sRandom(int lower, int upper)
+{
+    if (lower == upper)
+        return upper;
+    if (upper < lower)
+        return lower;
+    int value = rand();
+    return lower + value % (upper - lower + 1);
+}
+
 VA(0x0050c600, 0xDD)  // dc 0xfe10c
 std::string formatString(const char* format, ...)
 {
@@ -821,17 +823,18 @@ std::string formatString(const char* format, ...)
 VA(0x0050c6e0, 0x55)  // dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
     : m_low(lowBound),
-      m_count(high - lowBound + 1),
-      m_marks(m_count, 1)
+      m_numbersLeft(high - lowBound + 1),
+      m_available(m_numbersLeft, 1)
 {
 }
 
+// E:\gamedcs\misc.cpp:849. Original: TPickANumber::Pick.
 VA(0x0050c740, 0x52)  // dc 0xfe190
 int TPickANumber::pick()
 {
-    if (m_count <= 0)
+    if (m_numbersLeft <= 0)
         return m_low - 1;
-    int m = m_count - 1;
+    int m = m_numbersLeft - 1;
     int skip;
     if (m == 0)
         skip = 0;
@@ -841,15 +844,15 @@ int TPickANumber::pick()
         skip = rand() % (m + 1);
     int idx = 0;
     for (;;) {
-        if (m_marks[idx]) {
+        if (m_available[idx]) {
             if (skip == 0)
                 break;
             skip--;
         }
         idx++;
     }
-    m_count--;
-    m_marks[idx] = 0;
+    m_numbersLeft--;
+    m_available[idx] = 0;
     return m_low + idx;
 }
 

@@ -31,6 +31,7 @@
 // and the per-widget temp to esi where our CL binds them the other way, a swap
 // the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
 // remain @stub; CTeamAlignmentDlg is reconstructed below.
+#include "includes.h"
 #include <va.h>
 #include "singleselectionpopups.h"
 #include "bitmap816.h"
@@ -47,17 +48,6 @@
 #include "resourcemanager.h"
 #include "font.h"
 
-// VC6's own <xutility> reference-returning min, declared file-locally for the
-// same reason textwdgt.cpp declares one: TRandomMapProgress::Advance stores
-// BOTH operands to stack temps and selects between their ADDRESSES with two
-// LEAs, which no value-returning spelling produces, and the TU needs no other
-// STL surface.
-template <class _TYPE>
-inline const _TYPE& sspCppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
 // ============================================================================
@@ -70,10 +60,6 @@ CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId)
     m_width = w;
     m_height = h;
     m_id = widgetId;
-}
-
-CHotspotWidget::~CHotspotWidget()
-{
 }
 
 VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x6419a4 slot0, dc 0x12f2b8
@@ -154,32 +140,6 @@ CBonusDlg::CBonusDlg(unsigned char newGameMode)
 {
 }
 
-VA(0x00575430, 0x8f)  // dc 0x12ef28
-int CSingleSelPopup::handleMessage(message& msg)
-{
-    if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
-        if (g_videoPaused && g_dPlay) {
-            CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
-            if (handler) {
-                handler->checkHandleNet(1, 0);
-                if (handler->getAbortPopupMsg()) {
-                    msg.m_id = MESSAGE_WIDGET;
-                    g_windowManager->m_dialogReturn = msg.m_codeY;
-                    msg.m_codeY = widget::WIDGET_END_DIALOG;
-                    msg.m_codeX = widget::WIDGET_END_DIALOG;
-                    return 2;
-                }
-            }
-        }
-        return heroWindow::handleMessage(msg);
-    }
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
-    return 2;
-}
-
 VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // dc 0x12f304
 
 VA(0x005754f0, 0x254)  // dc 0x12dff0
@@ -202,7 +162,7 @@ unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame
 // ============================================================================
 
 VA(0x00575750, 0x54)  // dc 0x12f0c8
-void CSpriteWidget::draw()
+void CSpriteWidget::draw() const
 {
     m_sprite->draw(0, m_frame, 0, 0, m_width, m_height,
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
@@ -256,7 +216,7 @@ int CSpriteWidget::main(message& msg)
 // ============================================================================
 
 VA(0x00575a20, 0x3e)  // dc 0x12f1fc
-void CBitmapWidget::draw()
+void CBitmapWidget::draw() const
 {
     m_image->draw(0, 0, m_image->getWidth(), m_image->getHeight(),
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
@@ -273,6 +233,11 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
     m_y = yPos;
     m_width = image->getWidth();
     m_height = image->getHeight();
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:121, dc 0x12f2ec.
+CHotspotWidget::~CHotspotWidget()
+{
 }
 
 VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
@@ -631,6 +596,10 @@ const char* getStartingResourceDescription(int town)
 // TRandomMapProgress - the modal progress bar around the generator run.
 // ============================================================================
 
+// Complete adds this random-map generation window. The Dreamcast popup
+// procedure inventory ends with the team-alignment dialog, and its full
+// CodeView class field lists contain no RMG/progress class. The five exact
+// Windows-only method identities are reviewed in config/win_only.tsv.
 // The whole family is vtable-proven: 0x641b14 slot 0 is the scalar deleting
 // destructor 0x577090, slot 1 the SetTotal override 0x577300 and slot 2 the
 // Advance override 0x577320, and 0x576f00 is the only body that stores that
@@ -721,10 +690,17 @@ void TRandomMapProgress::setTotal(int totalSteps)
     loadProgFn00577180();
 }
 
+// Slot 2 - the base's pure Advance. Retail 0x577320 copies both operands
+// before selecting their addresses (fn+0x10..0x24). The canonical includes.h
+// min wrapper owns those copies and dereferences _cpp_min's reference while
+// they are alive. The former file-local ssp_cpp_min returned a reference to
+// its own parameter copy, conflating these two proven source boundaries.
+// Restoring min from includes.h preserves the exact 49-byte retail body;
+// the separate popup-destructor source-order move is also byte-neutral.
 VA(0x00577320, 0x31)
 void TRandomMapProgress::advance(int amount)
 {
-    m_done = sspCppMin<int>(m_done + amount, m_steps);
+    m_done = min(m_done + amount, m_steps);
     loadProgFn00577180();
 }
 

@@ -61,24 +61,24 @@ public:
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
-    virtual int handleMessage(message& msg);                    // slot 3
+    virtual int handleMessage(message& msg);  // slot 3
     virtual void drawWindow(unsigned char update, int lowID,
-                            int highID);                        // slot 5
+                            int highID);  // slot 5
     void tickAnimation();
     void drawSprite();
 
 protected:
-    unsigned long m_lastTick;    // +0x58
-    int m_spriteX;               // +0x5c
-    int m_spriteY;               // +0x60
-    int m_spriteFrame;           // +0x64
-    int m_seq;                   // +0x68
+    unsigned long m_lastTick;  // +0x58
+    int m_spriteX;  // +0x5c
+    int m_spriteY;  // +0x60
+    int m_spriteFrame;  // +0x64
+    int m_seq;  // +0x68
 
     void calcSpriteDimensions(CSprite* sprite, int& maxWidth,
                               int& maxHeight, int& minY);
-    const char* m_spriteName;       // +0x6c
+    const char* m_spriteName;  // +0x6c
     unsigned char m_palUpdated;  // +0x70
-    CSprite* m_sprite;          // +0x74
+    CSprite* m_sprite;  // +0x74
 };
 SIZE(CAnimatedDlg, 0x78);
 
@@ -90,8 +90,8 @@ SIZE(CAnimatedDlg, 0x78);
 // slot 3 replaced by this class's deleting destructor and message handler.
 class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
-    unsigned long m_startTime;             // +0x78
-    unsigned long m_lastMsg;               // +0x7c
+    unsigned long m_startTime;  // +0x78
+    unsigned long m_lastMsg;  // +0x7c
     CNetMsgHandlerPause m_netMsgHandler;  // +0x80
     CWaitForReadyPlayersDlg();
     void wait();
@@ -99,7 +99,7 @@ public:
     bool allPlayersReady();
 
 protected:
-    unsigned char m_playerReady[8];         // +0x90
+    unsigned char m_playerReady[8];  // +0x90
 
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 };
@@ -121,85 +121,21 @@ SIZE(CWaitForReadyPlayersDlg, 0x98);
 // DrawWindow (0x554e90).
 class CLevelPickWaitDlg : public CAnimatedDlg {
 public:
-    int m_fromWho;                        // +0x78
+    int m_fromWho;  // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
     // Public: advManager::DoCombat re-runs the local CheckLevel when the
     // remote player dropped mid-pick. Access-only change.
-    unsigned char m_playerDropped;        // +0x8c
+    unsigned char m_playerDropped;  // +0x8c
     CLevelPickWaitDlg();
     void waitForLevels(int fromWho);
     virtual int handleMessage(message& msg);  // slot 3
 
 protected:
+
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
     void onHeroLevelUpdate(CNetMsg* netMsg);
 };
 SIZE(CLevelPickWaitDlg, 0x90);
-
-class TAbstractFile;
-
-// Retail's complex wire-message base is a vptr followed by an ordinary
-// 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
-// that layout, and 0x512e00 copies a received header into netmsg before
-// dispatching the remaining payload through virtual read(). The ordinal name
-// is retained because neither retail nor DC names that PC-only bridge.
-class t_complex_net_message {
-public:
-    // The no-subtype form at 0x512c20 (stores the base vtable and
-    // zeroes the netmsg image); singleselectionwindow's received-row
-    // message constructs through it. ADDITIVE 2026-08-27 - one
-    // declarator; re-measure the include-set-sensitive rows of the
-    // five includers on merge.
-    t_complex_net_message();
-    t_complex_net_message(eRS_Messages subType);
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
-    unsigned char remoteFn00512E00(CNetMsg* netMsg);
-    unsigned char remoteFn00512D40(int toWho, bool compressMsg,
-                                    bool guaranteed);
-    // 0x512c80, the DPID-addressed send twin (its args mirror
-    // TransmitRemoteDataDPID's tail); CNewPlayerUpdateProc's
-    // HandleRequests hands each re-requested header row through it.
-    // ADDITIVE 2026-08-27 (round 3) - one declarator; re-measure the
-    // include-set-sensitive rows of the five includers on merge.
-    unsigned char remoteFn00512C80(unsigned long dpid, bool compressMsg,
-                                    bool guaranteed);
-
-    CNetMsg m_netmsg;  // +0x04
-};
-SIZE(t_complex_net_message, 0x18);
-
-// DC supplies all seventeen payload names and their order. Retail shifts the
-// scalar prefix by four bytes for t_complex_net_message's vptr, retains both
-// 0x38-byte army groups, aligns town to +0xb0, and widens each hero to 0x492.
-// The last hero ends at +0xb3c; town's natural eight-byte alignment rounds the
-// complete PC class to 0xb40, exactly the stack extent in DoNetCombat and the
-// member extent in the wait-dialog constructor.
-class CCombatInitMsg : public t_complex_net_message {
-public:
-    CCombatInitMsg();
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
-
-    type_point m_point;             // +0x018
-    unsigned char m_leftHero;       // +0x01c
-    unsigned char m_rightTown;      // +0x01d
-    unsigned char m_rightHero;      // +0x01e
-    int m_seed;                     // +0x020
-    int m_winner;                   // +0x024
-    unsigned char m_retreatWin;     // +0x028
-    unsigned char m_combatSurrender;// +0x029
-    int m_leftOwner;                // +0x02c
-    int m_leftGold;                 // +0x030
-    int m_rightOwner;               // +0x034
-    int m_rightGold;                // +0x038
-    armyGroup m_leftArmyGroup;      // +0x03c
-    armyGroup m_rightArmyGroup;     // +0x074
-    town m_town;                    // +0x0b0
-    hero m_leftHeroData;            // +0x218
-    hero m_rightHeroData;           // +0x6aa
-};
-SIZE(CCombatInitMsg, 0xb40);
 
 // The remote-combat wait dialog shares CAnimatedDlg's 0x78-byte prefix.
 // Dreamcast proves the method names and m_playerPos at the first derived
@@ -211,22 +147,23 @@ SIZE(CCombatInitMsg, 0xb40);
 // by those three bodies.
 class CWaitForRemoteBattleDlg : public CAnimatedDlg {
 public:
-    int m_playerPos;                         // +0x78
+    int m_playerPos;  // +0x78
     CCombatInitMsg* m_combatInitMsgPointer;
     CWaitForRemoteBattleDlg();
     void wait(int playerPos);
     virtual int handleMessage(message& msg);  // slot 3
 
 protected:
+
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
 public:
     // Public tail: advManager::DoCombat reads the received flag and
     // hands the payload message straight to ReceiveHeroTownData.
     // Access-only change - no member moved, no declarator added.
-    CCombatInitMsg m_combatInitMsg;          // +0x80 (retail by-value copy)
-    CNetMsgHandlerPause m_netMsgHandler;     // +0xbc0
-    unsigned char m_combatInitMsgReceived;   // +0xbd0
+    CCombatInitMsg m_combatInitMsg;  // +0x80 (retail by-value copy)
+    CNetMsgHandlerPause m_netMsgHandler;  // +0xbc0
+    unsigned char m_combatInitMsgReceived;  // +0xbd0
 };
 // CCombatInitMsg gives the containing dialog eight-byte alignment, so the
 // received byte's +0xbd1 end rounds to 0xbd8. DoCombat's local begins at
@@ -254,8 +191,8 @@ public:
 
 protected:
     unsigned char m_screenSaved;  // +0x38
-    int m_x;                    // +0x3c
-    int m_y;                    // +0x40
+    int m_x;  // +0x3c
+    int m_y;  // +0x40
 };
 SIZE(CSaveScreen, 0x44);
 
@@ -283,14 +220,14 @@ public:
     void restoreScreen();
 
 protected:
-    int m_x;                     // +0x00
-    int m_y;                     // +0x04
-    int m_lastFrame;             // +0x08
-    unsigned char m_started;     // +0x0c
-    unsigned char m_sending;     // +0x0d
-    unsigned char m_drawText;    // +0x0e
-    CSaveScreen* m_saveScreen;   // +0x10
-    void drawCurrentFrame() { drawCurrentSmackFrame(); }
+    int m_x;  // +0x00
+    int m_y;  // +0x04
+    int m_lastFrame;  // +0x08
+    unsigned char m_started;  // +0x0c
+    unsigned char m_sending;  // +0x0d
+    unsigned char m_drawText;  // +0x0e
+    CSaveScreen* m_saveScreen;  // +0x10
+    void drawCurrentFrame();
 };
 SIZE(CGameTransferSmack, 0x14);
 
@@ -311,18 +248,22 @@ class CGameTransferDlg : public CTextDialog {
 public:
     // Public in DC field list 0x4e47; TransmitSaveGame selects this member
     // when the progress window, rather than the adventure view, owns it.
-    CGameTransferSmack m_smack;    // +0x58
+    CGameTransferSmack m_smack;  // +0x58
     CGameTransferDlg(unsigned char sending);
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
 
 protected:
-    unsigned char m_sending;     // +0x6c
+    unsigned char m_sending;  // +0x6c
 };
 SIZE(CGameTransferDlg, 0x70);
 
+// --- CSaveScreen ---
+
 // --- CGameTransferSmack ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2784, dc 0x11ede8) void CGameTransferSmack::DrawCurrentFrame();
+
+// --- CGameTransferDlg ---
 
 #endif  /* HOMM3_REMOTEDLG_H */

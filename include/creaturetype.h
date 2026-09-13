@@ -10,6 +10,10 @@
 // GetArmyName's retail range guard proves the inclusive upper bound.
 const int g_creatureTypeLast = 0x96;
 
+// E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
+// events.cpp also expands this at monsters_flee/join/sell_out, passing a
+// literal count so each singular/plural selection folds at its call site.
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
@@ -22,6 +26,10 @@ inline const char* getArmyName(int type, int count)
         }
     }
 }
+
+#define isBaseElemental(type) \
+    ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \
+        || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);

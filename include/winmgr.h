@@ -75,7 +75,6 @@ public:
     // source the Save/Release pair works on. Dreamcast supplies the
     // bmpFizzleSource member name.
     Bitmap16Bit* m_bmpFizzleSource;
-
     heroWindowManager();
     virtual int open(int newPriority);
     virtual void close();
@@ -92,11 +91,6 @@ public:
     void updateScreen(int x, int y, int w, int h);
     void fadeScreen(int inOut, int speed, unsigned char expectFadein);
     void saveFizzleSourceX(int startX, int startY, int width, int height);
-    void saveFizzleSourceX(const SLimitData& limits)
-    {
-        saveFizzleSourceX(limits.m_minX, limits.m_minY,
-                          limits.width(), limits.height());
-    }
     void fizzleForwardX(int startX, int startY, int width, int height,
                         int fadeTime);
     // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
@@ -107,6 +101,11 @@ public:
     {
         fizzleForwardX(limits.m_minX, limits.m_minY,
                        limits.width(), limits.height(), fadeTime);
+    }
+    void saveFizzleSourceX(const SLimitData& limits)
+    {
+        saveFizzleSourceX(limits.m_minX, limits.m_minY,
+                          limits.width(), limits.height());
     }
     // 0x6030c0, the fizzle buffer's release. Order-mapped between
     // FizzleForwardX and FadeToBlack and byte-shaped: it deletes

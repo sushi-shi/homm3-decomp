@@ -3,33 +3,11 @@
 #define HOMM3_TEXTNTRY_H
 
 #include "textwdgt.h"
-#include "bitmap16.h"
 
 class Bitmap816;
 
-// The background snapshot textEntryWidget hangs off saveBack@0x54.
-// Retail keeps NO out-of-line body for any of it - every method is
-// inlined into its single textntry.cpp call site (SetAutoDraw 0x5bbac0
-// opens with `push 0x3c` and closes with the vtable store + the
-// `[+0x38]=0` flag; SaveBackground 0x5bba70 carries Save's `[+0x38]=1`
-// and Grab verbatim; Draw 0x5bb400 reads the flag inline). Extent
-// PROVEN 0x3c by that allocation size against Bitmap16Bit's 0x38;
-// vtable 0x642d8c = {0x557310, 0x55d0f0, 0x44e240}, its own scalar
-// deleting destructor over Bitmap16Bit's two inherited slots.
-
-// Save's body needs gpWindowManager, which this header must not pull
-// in, so it is defined `inline` at the top of textntry.cpp.
-class CTextEntrySave : public Bitmap16Bit {
-public:
-    unsigned char m_saved;  // +0x38
-
-    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
-    CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { m_saved = 0; }
-    // E:\gamedcs\textntry.cpp:44 (dc 0x163750)
-    void save(int saveX, int saveY);
-    // E:\gamedcs\textntry.cpp:50 (dc 0x16377c)
-    unsigned char isSaved() const { return m_saved; }
-};
+// The snapshot implementation is local to textntry.cpp.
+class CTextEntrySave;
 
 // textEntryWidget derives from textWidget in retail (the dtor calls
 // ~textWidget as its base) - Dreamcast agrees. Vtable 0x642d40, 19
@@ -56,7 +34,6 @@ public:
     enum EField68 {
         FIELD_68_SCROLLED = 3
     };
-
     // The constructor's readType domain. Only one value is
     // recoverable - the one both retail call sites (armygrp.obj's two
     // split-count entries) pass and the only one the constructor
@@ -66,16 +43,15 @@ public:
     enum EReadType {
         READ_TYPE_INSET = 4
     };
-
-    Bitmap816* m_textBack;         // 0x50, ResourceManager::GetBitmap816
-    CTextEntrySave* m_saveBack;    // 0x54
+    Bitmap816* m_textBack;  // 0x50, ResourceManager::GetBitmap816
+    CTextEntrySave* m_saveBack;  // 0x54
     unsigned short m_cursorIndex;  // 0x58, = Text.size() after every edit
-    unsigned short m_maxLength;    // 0x5a, the ctor's textStringSize
-    short m_boxWidth;              // 0x5c, the inset text box
-    short m_boxHeight;             // 0x5e
-    short m_boxX;                  // 0x60
-    short m_boxY;                  // 0x62
-    short m_textLines;              // 0x64, ctor stores 1. OnKeyPress
+    unsigned short m_maxLength;  // 0x5a, the ctor's textStringSize
+    short m_boxWidth;  // 0x5c, the inset text box
+    short m_boxHeight;  // 0x5e
+    short m_boxX;  // 0x60
+    short m_boxY;  // 0x62
+    short m_textLines;  // 0x64, ctor stores 1. OnKeyPress
                                  // compares it against
                                  // Font->LineLength(Text, boxWidth) and
                                  // rolls the edit back when the typed
@@ -84,26 +60,25 @@ public:
                                  // ordinal placeholder: 1 is the only
                                  // value attested and only the ctor
                                  // writes it.
-    short m_attributes;              // 0x66, ctor stores the inset flag
-    short m_type;              // 0x68, compared against 3 by Draw /
+    short m_attributes;  // 0x66, ctor stores the inset flag
+    short m_type;  // 0x68, compared against 3 by Draw /
                                  // SetupDisplayString / OnKeyPress. NO
                                  // retail body anywhere in the image
                                  // writes it - scanned every 8/16/32-bit
                                  // store form at this displacement.
-    short m_displayStart;          // 0x6a, first shown character
-    unsigned char m_cursorFlashOn;      // 0x6c, the caret blink phase: OnKeyPress
+    short m_displayStart;  // 0x6a, first shown character
+    unsigned char m_cursorFlashOn;  // 0x6c, the caret blink phase: OnKeyPress
                                  // forces it to 1 on every keystroke and
                                  // SetupDisplayString toggles it
                                  // (`1 - field_6C`) every 360 ticks off
                                  // glTimers[0]. Nothing in the image
                                  // READS it in this class; Dreamcast
                                  // independently supplies its name.
-    unsigned char m_hasFocus;     // 0x6d, stored by SetFocus 0x5bab50
-    unsigned char m_autoDraw;     // 0x6e, gates SetFocus's redraw
+    unsigned char m_hasFocus;  // 0x6d, stored by SetFocus 0x5bab50
+    unsigned char m_autoDraw;  // 0x6e, gates SetFocus's redraw
     // Dreamcast ends the 0x70-byte editor with autoDraw at +0x6e.
     // NH3API confirms that the last byte is alignment in the PC object.
     char m_paddingAfterAutoDraw[1];
-
     textEntryWidget(int x, int y, int w, int h, int textSize,
                     const char* text, const char* fontName,
                     font::TColor color, unsigned justification,
@@ -111,7 +86,7 @@ public:
                     int style, int readType, int insetX, int insetY);
     virtual ~textEntryWidget();
     virtual int main(message& msg);
-    virtual void draw();
+    virtual void draw() const;
     void setupDisplayString(char* core, unsigned short inCursorIndex);
     char getCharPressed(message* msg);
     virtual void onSetFocus();
@@ -123,7 +98,7 @@ public:
     virtual void setAutoDraw(unsigned char b);
 
 protected:
-    virtual void saveBackground() const;         // slot 18, retail 0x5bba70
+    virtual void saveBackground() const;  // slot 18, retail 0x5bba70
 };
 // No SIZE() assert: the class rides std::string, whose extent differs
 // between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and

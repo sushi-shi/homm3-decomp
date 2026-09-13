@@ -62,9 +62,9 @@ public:
 
     virtual int main(message& msg);                 // slot 2
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw();                            // slot 4
-    virtual int getRealHeight();                    // slot 5
-    virtual int getRealWidth();                     // slot 6
+    virtual void draw() const;                            // slot 4
+    virtual int getRealHeight() const;                    // slot 5
+    virtual int getRealWidth() const;                     // slot 6
     virtual void enable(unsigned char on);          // slot 9
     virtual void onSetFocus();                      // slot 10
     virtual void onKillFocus();                     // slot 11
@@ -82,7 +82,10 @@ public:
     virtual void close();
 
     int getMaximum() const { return m_numStates; }
-    int getState() const { return m_currentState; }
+    // Original: slider::get_state, ordinary declaration in CodeView type
+    // 0x2368. No procedure/source location or active caller is known;
+    // retain the API without borrowing get_maximum's body position.
+    int getState() const;
     int select(message* msg, unsigned char dragging);
     int deselect(message* msg);
     void keyAccel(int x1, int x2, int x3, int x4, int key);

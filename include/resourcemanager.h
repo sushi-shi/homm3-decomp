@@ -8,8 +8,6 @@ class resource;
 class sample;
 class TPalette24;
 class LODFile;
-struct TResourceLODSlot;
-extern TResourceLODSlot g_resourceLodSlots[];
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -21,32 +19,7 @@ class TPalette16;
 class TSpreadsheetResource;
 class TTextResource;
 
-// The four state-selected rows at retail 0x69e538 contain three
-// (count, LOD-index-list) pairs. The first serves sprites, the second
-// bitmaps, and the final pair remains byte-proven but semantically unnamed.
-struct TResourceArchiveList {
-    int m_count;
-    int* m_indices;
-};
-
-struct TResourceArchiveContext {
-    TResourceArchiveList m_sprites;
-    TResourceArchiveList m_bitmaps;
-    TResourceArchiveList m_sounds;
-};
-SIZE(TResourceArchiveContext, 0x18);
-
-// Dreamcast CodeView's function-local GetBitmap16 record (type 0x289c),
-// independently byte-proven by retail's three archive-header reads.
-struct TBitmapResourceHeader {
-    int m_dataSize;
-    int m_width;
-    int m_height;
-};
-SIZE(TBitmapResourceHeader, 0x0c);
-
 extern int* g_videoGameState;
-extern TResourceArchiveContext g_resourceArchiveContexts[4];
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
 // toggles it before selecting the palette transform.
 extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0
@@ -77,13 +50,9 @@ void addToCache(resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
 resource* getFromCache(const char* name);
 
-// Dreamcast retains this cache sweep out of line and calls it from window
-// construction/destruction sites. Complete has neither that body nor emitted
-// call instructions at those sites, so model the source boundary as a
-// retail-neutral inline no-op for the PC build.
-inline void delSprFromCache()
-{
-}
+void dispose(resource* value);
+void dispose(CSprite* value);
+void delSprFromCache();
 
 LODFile* pointToSpriteResource(const char* name);
 LODFile* pointToBitmapResource(const char* name);
@@ -92,6 +61,9 @@ int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // Retail 0x55d070 walks the active context's bitmap LOD list until
 // getItemIndex finds the named entry, then returns that entry's +0x14 size.
 int getBitmapResourceSize(const char* name);
+
+// Original: ResourceManager::GetFromCache, resourcemanager.cpp:2377.
+resource* getFromCache(const char* name);
 
 }
 

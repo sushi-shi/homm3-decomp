@@ -22,28 +22,7 @@
 #include "creaturetype.h"
 #include "soundmgr.h"
 #include "misc.h"
-
-// Dinkumware-era max source shape used by retail: arguments are copied into
-// homes and the selected home is returned by reference.
-template <class T>
-inline const T& cppMax(T left, T right)
-{
-    return left < right ? right : left;
-}
-
-// Integer-input adapter, not an original union claim. DC proves the bare
-// constructor's army_type parameter and Upgrade are int, whereas ArmyType
-// and army::creatureType are TCreatureType. Keep the actual input boundaries;
-// displayed member values no longer need local representation bridges.
-inline TCreatureType creatureTypeFromInt(int value)
-{
-    union {
-        int m_value;
-        TCreatureType m_creature;
-    } storage;
-    storage.m_value = value;
-    return storage.m_creature;
-}
+#include "includes.h"
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
 // 48 bytes sitting in this TU's own band that
@@ -67,26 +46,6 @@ const unsigned int g_ctaShooter = 0x4;
 // armygrp.h's own ungated ESpellId enumerator as of 2026-08-20 - the
 // local copy became a hard C2373 - and the two spell it in the same
 // place with the same value, so the substitution is byte-inert.
-
-// The four BASE elementals, tested behind the version gate everywhere the
-// game asks whether a creature has an alignment at all - eight times in
-// armygrp.cpp, four in game.cpp, once each in cmbtmgr.cpp and
-// quickherowindow.cpp, and TWICE in this file. TU-local for the reason
-// CTA_SHOOTER and SPELL_BIND above are: the shared header stays as small as
-// its own consumers need.
-
-// This is a CODEGEN construct as much as a spelling, and the constructor at
-// 0x5f4210 is where that was proven: it expands to exactly the four
-// `cmp eax,0x7N / je` compares the longhand chain gives (both call sites in
-// this file are byte-flat under the substitution), while costing the /Ob2
-// allowance one more candidate site in each caller - which is what stops
-// the SECOND std::string member's `_Tidy` from being expanded there. See
-// that constructor's note.
-inline bool isBaseElemental(int type)
-{
-    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
-        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
-}
 
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
@@ -454,7 +413,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     if (upgrade != -1) {
         long cost[7];
         getUpgradeCost(m_armyType,
-                         creatureTypeFromInt(upgrade), m_armySize, cost);
+                         TCreatureType(upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
                 widgetSetStatus(UPGRADE_ID, 8);
@@ -468,11 +427,11 @@ VA(0x005f4210, 0x3C1)  // dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      m_armyType(creatureTypeFromInt(armyType)),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
+    m_armyType = TCreatureType(armyType);
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
@@ -681,12 +640,9 @@ int TViewArmyWindow::windowHandler(message* msg)
                 long cost[7];
                 int amount;
                 amount = 0;
-                union {
-                    int m_value;
-                    TCreatureType m_creature;
-                } upgradeType;
-                upgradeType.m_value = m_upgrade;
-                getUpgradeCost(m_armyType, upgradeType.m_creature,
+                int upgradeType;
+                upgradeType = m_upgrade;
+                getUpgradeCost(m_armyType, TCreatureType(upgradeType),
                                  m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {

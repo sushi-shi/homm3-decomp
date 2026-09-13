@@ -103,6 +103,12 @@ def parse_unit(path: Path):
             entries.append((origin[0], origin[1], "DC_ONLY",
                             int(m.group(1), 16), int(m.group(2), 0)))
             origin = None
+            continue
+        # Source evidence attaches to the next declarator, including an
+        # unannotated inline body. It cannot cross that body and accidentally
+        # assign its source owner to a later unrelated VA claim.
+        if line.strip() and not line.lstrip().startswith(('//', '#')):
+            origin = None
     return entries
 
 

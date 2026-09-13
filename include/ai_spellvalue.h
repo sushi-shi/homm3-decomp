@@ -12,14 +12,8 @@
 #include <va.h>
 #include <vector>
 #include "armygrp.h"
-// The value list's element. The Dreamcast puts it in its own
-// ai_creature_value.h; this tree models it in ai_player.h, which is where
-// the include comes from until someone splits it out. Its `type` is a
-// plain int because ai_player.cpp's calculate_reserve indexes the list BY
-// creature ordinal and stores the loop counter straight into it;
-// philai.cpp bridges the int/TCreatureType crossing at its one call site
-// with the bit-preserving inline it already uses for armyGroup's roster.
-#include "ai_player.h"
+// CodeView owns the value-list element and its inline comparisons here.
+#include "ai_creature_value.h"
 
 class hero;
 
@@ -73,15 +67,15 @@ enum ESpellValueClass {
 class type_spellvalue {
 public:
     type_spellvalue(const hero* newHero);
+    // CodeView LF_ONEMETHOD marks ~type_spellvalue compiler-generated
+    // (compgenx, attributes 0x103). Let the vector member generate it;
+    // ai.cpp enrolls the retained retail body.
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
     unsigned char canCastSpells() const { return m_power > 0; }
-    // DC ai_spellvalue.h:99/119 - the mana pair (dc 0x114bdc/0x114be0
-    // are philai.obj's 4-byte out-of-line copies).  Retail
-    // AI_set_hero_bonuses (0x527760) is the byte-proven consumer: it
-    // reseeds the valuer from hero::mana and reads the initial pool for
-    // the well/spring valuations.
+    // DC ai_spellvalue.h:99, dc 0x114bdc (philai.obj). AI_set_hero_bonuses
+    // (0x527760) reads this initial pool for the well/spring valuations.
     long getMana() const { return m_mana; }
     long getBestSpellValue(long bits) const;
     // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
@@ -91,16 +85,17 @@ public:
     // (AI_set_hero_bonuses expands it at all six probe sites).
     long getValueOfIncrease(long baseValue, long powerChange,
                                long durationChange, long manaChange);
-
     long getRawSpellValue(SpellID spell) const;
     // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
     // type_school_artifact::get_value call sites in retail.
     void setPower(long arg) { m_power = arg; }
+    // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
+    // reseeds the valuer from hero::mana through this setter.
     void setMana(long arg) { m_mana = arg; }
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
     // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
-    // combatManager::do_combat_ai is a located caller: it writes the
-    // side's whole combat value here before asking for a spell value.
+    // combatManager::do_combat_ai writes the side's whole combat value
+    // here before asking for a spell value.
     void setStackValue(long arg) { m_stackValue = arg; }
 
 protected:
@@ -108,26 +103,18 @@ protected:
     // into the constructor, but the Dreamcast member boundary and local
     // inventory remain authoritative source-shape evidence.
     void fillCreatureValueList();
-
     long getDamageSpellValue(SpellID spell, int mastery,
                                 long timesCastable, long combatValue) const;
     long getEnchantmentValue(SpellID spell, int mastery,
                                long timesCastable) const;
     long getMassDamageSpellValue(SpellID spell, int mastery,
                                      long timesCastable) const;
-
-    const hero* m_ourHero;   // +0x00
-    long m_stackValue;       // +0x04
-    long m_power;             // +0x08
-    long m_duration;          // +0x0c
-    long m_mana;              // +0x10
+    const hero* m_ourHero;  // +0x00
+    long m_stackValue;  // +0x04
+    long m_power;  // +0x08
+    long m_duration;  // +0x0c
+    long m_mana;  // +0x10
     std::vector<type_creature_value> m_list;  // +0x14
-
-public:
-    // Non-trivial solely because of list. Keeping the empty body inline
-    // preserves the compiler-generated expansion at each use while giving
-    // ai.cpp a source spelling for retail's retained COMDAT copy.
-    ~type_spellvalue() {}
 };
 SIZE(type_spellvalue, 0x24);
 

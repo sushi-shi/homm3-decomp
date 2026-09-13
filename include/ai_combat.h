@@ -68,23 +68,22 @@ enum type_speed_catagory {
 // value, total_value. The old hit_points names were misleading: the
 // population code computes value from baseFightValue and forceModifier.
 struct type_monster_data {
-    long m_index;                     // +0x00
-    TCreatureType m_type;        // +0x04
-    long m_number;                    // +0x08
-    long m_originalNumber;           // +0x0c
-    long m_speed;                    // +0x10
+public:
+    long m_index;  // +0x00
+    TCreatureType m_type;  // +0x04
+    long m_number;  // +0x08
+    long m_originalNumber;  // +0x0c
+    long m_speed;  // +0x10
     // Synthetic field_14 was alignment: Dreamcast type 0x5d4f and
     // NH3API both place the first double at +0x18 after speed at +0x10.
     // The four-byte gap is implicit under the proven eight-byte alignment.
-    double m_meleeModifier;            // +0x18
-    double m_finalMeleeModifier;      // +0x20
-    double m_rangedModifier;           // +0x28
-    double m_combatValuePerHit;        // +0x30
+    double m_meleeModifier;  // +0x18
+    double m_finalMeleeModifier;  // +0x20
+    double m_rangedModifier;  // +0x28
+    double m_combatValuePerHit;  // +0x30
     type_speed_catagory m_catagory;  // +0x38
-    long m_value;               // +0x3c
-    long m_totalValue;         // +0x40
-
-public:
+    long m_value;  // +0x3c
+    long m_totalValue;  // +0x40
     long getSpellDamage(SpellID spell, const hero* castingHero,
                           const hero* targetHero, long damage) const;
 
@@ -151,21 +150,22 @@ class type_AI_combat_data {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
     long getMana() const { return m_mana; }
-
     // DC original: creatures (previous reconstruction: monsters).
-    std::vector<type_monster_data> m_creatures; // +0x00
-    long m_terrain;                    // +0x10
+    std::vector<type_monster_data> m_creatures;  // +0x00
+    long m_terrain;  // +0x10
 
 protected:
-    long m_mana;                       // +0x14
+    long m_mana;  // +0x14
 
 public:
     // DC original: can_cast_spells (previous reconstruction: can_cast).
-    unsigned char m_canCastSpells;          // +0x18, natural padding to +0x1c
+    unsigned char m_canCastSpells;  // +0x18, natural padding to +0x1c
     // DC original: total_combat_value (previous reconstruction:
     // total_hit_points). initializeCreatures adds each unit's combat value,
     // not its raw hit points (retail 0x424120; DC 0x29f58).
-    long m_totalCombatValue;           // +0x1c
+    long m_totalCombatValue;  // +0x1c
+
+protected:
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
     // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
@@ -177,24 +177,22 @@ public:
     // carries after `creatures` because VC6's std::vector is 16 B where
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
-
-protected:
-    long m_tacticsAdvantage;          // +0x20
+    long m_tacticsAdvantage;  // +0x20
 
 public:
     // DC original: current_hero (previous reconstruction: my_hero).
-    hero* m_currentHero;                   // +0x24
+    hero* m_currentHero;  // +0x24
     // DC original: current_army (previous reconstruction: my_army).
-    armyGroup* m_currentArmy;              // +0x28
+    armyGroup* m_currentArmy;  // +0x28
 
 protected:
-    hero* m_enemyHero;                // +0x2c
+    hero* m_enemyHero;  // +0x2c
 
 public:
     // DC original: wall_archery_penalty (previous reconstruction: wall_penalty).
-    unsigned char m_wallArcheryPenalty;      // +0x30, natural padding at +0x31
+    unsigned char m_wallArcheryPenalty;  // +0x30, natural padding at +0x31
     // DC original: wall_speed_limit (previous reconstruction: penalty_distance).
-    short m_wallSpeedLimit;          // +0x32
+    short m_wallSpeedLimit;  // +0x32
 
     type_AI_combat_data(const hero* newHero, const armyGroup* newArmy,
                         double baseModifier, const hero* enemyHero,
@@ -202,10 +200,6 @@ public:
     type_AI_combat_data(const type_AI_combat_data& other);
     void adjustArmy(unsigned char dismissHero);
     void doAftermath(type_AI_combat_data* defender, const town* enemyTown);
-    // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
-    // expands the corresponding this+0x1c load in chooseMelee. Vector
-    // cardinality is creatures.size(), not this game accessor.
-    long getTotal() const { return m_totalCombatValue; }
     void simulateCombat(type_AI_combat_data& defender);
 
 protected:
@@ -233,7 +227,15 @@ protected:
     void getAreaValue(type_spell_choice& choice,
                         const type_AI_combat_data& defender,
                         long damage, long extraTargets) const;
-    armyGroup* getArmy() { return m_currentArmy; }
+    armyGroup* getArmy() const { return m_currentArmy; }
+
+public:
+    // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
+    // expands the corresponding this+0x1c load in chooseMelee. Vector
+    // cardinality is creatures.size(), not this game accessor.
+    long getTotal() const { return m_totalCombatValue; }
+
+protected:
     long getAttack(type_speed_catagory speedLimit,
                     unsigned char shootersBlocked) const;
     void getDamageSpellValue(type_spell_choice& choice,
@@ -248,7 +250,7 @@ protected:
                                type_AI_combat_data& defender) const;
     long getFastestSpeed() const;
     long getFinalMeleeValue() const;
-    hero* getHero() { return m_currentHero; }
+    hero* getHero() const { return m_currentHero; }
     long getMassDamageValue(type_spell_choice& choice,
                                const hero* castingHero) const;
     void getMassDamageValue(type_spell_choice& choice,

@@ -1,6 +1,7 @@
 // quickinfowindow.cpp - E:\gamedcs\quickinfowindow.cpp (compiland quickinfowindow.obj)
 // 4 functions in link order.
 #include <va.h>
+#include "creaturetype.h"
 #include <stdio.h>
 #include <string.h>
 #include "quickinfowindow.h"
@@ -8,14 +9,6 @@
 #include "iconwdgt.h"
 #include "kb.h"
 #include "textwdgt.h"
-
-static const char* getArmyName(int type, int count)
-{
-    return type >= 0 && type <= 150
-               ? (count == 1 ? g_creatureTypeTraits[type].m_name
-                             : g_creatureTypeTraits[type].m_pluralName)
-               : "";
-}
 
 VA(0x0052f8c0, 0x430)  // dc 0x11787c
 TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
