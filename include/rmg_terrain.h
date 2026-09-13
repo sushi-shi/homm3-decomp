@@ -7,6 +7,17 @@
 #include <vector>
 #include "rmg.h"
 
+// Grid points add tile directions through the signed TPoint: refresh and
+// both paintPoints build `point + g_tileDirections[d]` as a TPoint copy, the
+// retained TPoint::operator+= and a copied result, then convert back through
+// the retained TRmgGridPoint(const TPoint&) constructor at 0x4fa520. The sum
+// lives here with its only users; in rmg.h it perturbs rmg the same way.
+inline TPoint operator+(const TPoint& point, const TPoint& offset)
+{
+    TPoint result = point;
+    return result += offset;
+}
+
 // Retail adapter slots 1 and 4 exchange this three-dword value. The first
 // two dwords are the terrain and frame fields; the low two bytes of the last
 // dword are the independent sprite flips. The names in this file describe
@@ -25,6 +36,12 @@ struct rmgTerrainTile {
     rmgTerrainTile() {}
     rmgTerrainTile(int newTerrain, int newFrame)
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
+    // Frame and flip accessors: the line refresh compares the current tile
+    // through them so its neighbour helper keeps retail's three retained
+    // calls (2026-09-12); the painters' own copies still use the fields.
+    int getFrame() const { return m_frame; }
+    unsigned char getFlipX() const { return m_flipX; }
+    unsigned char getFlipY() const { return m_flipY; }
     // 0x55edc0 constructs its snapshot separately from adapter return values.
     // Those returns keep an implicit copy boundary: a custom copy constructor
     // changes the retained 0x5b3dd0 fill and its expanded terrain callers.
@@ -250,8 +267,7 @@ public:
     TRmgMapInterface* m_adapter;                // +0x00; prior role: adapter
     int m_paintTerrain;                               // +0x04; prior role: paintTerrain
     int m_transitionStrength;                         // +0x08; prior role: transitionStrength
-    unsigned int m_width;                             // +0x0c; prior role: width
-    unsigned int m_height;                            // +0x10; prior role: height
+    TRmgGridPoint m_size;                             // +0x0c; prior roles: width, height
     std::set<TRmgGridPoint> m_primaryPoints;            // +0x14; prior role: primaryPoints
     std::set<TRmgGridPoint> m_secondaryPoints;          // +0x24; prior role: secondaryPoints
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34; prior role: packedCells
@@ -265,7 +281,7 @@ public:
     // Prior provisional role: Finish
     void finish();
     // Prior provisional role: ChangeTerrain
-    void changeTerrain(int terrain, int strength);
+    int changeTerrain(int terrain, int strength);
     // Prior provisional role: PaintRectangle
     void paintRectangle(
         unsigned int x, unsigned int y,
@@ -280,6 +296,7 @@ public:
     // required even though it has no separately located retail body.
     // Prior provisional role: GetTerrain
     int getTerrain(const TRmgGridPoint& point);
+    int getFrame(const TRmgGridPoint& point);
     // Provisional dimension accessors inferred from paintTransitions' scalar
     // loads and inline boundaries. Unused declarations are byte-neutral;
     // the source calls restore all but one of its retained cache reads.
@@ -291,6 +308,7 @@ public:
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     // Prior provisional role: SetTile
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    void paintBaseTile(const TRmgGridPoint& point);
     int getPaintTerrain() const;
     unsigned char isPaintTerrain(const TRmgGridPoint& point);
 

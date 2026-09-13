@@ -1041,6 +1041,18 @@ These are consequences of a shared value-copy boundary; no STL body or inline
 control changed. The map size accessor and terrain-brush destructor currently
 dip, with their 100% peaks retained. `createRiver` remains at 85.9575%.
 
+**Corrected 2026-09-12.** The grid copy constructor was the wrong boundary.
+Retail's `at()` (0x4fa050) and `getSize` (0x532240) copy `TRmgGridPoint`
+memberwise, which no written copy constructor reproduces in either field
+order, and the retained 22-byte body at 0x4fa520 is the conversion from the
+signed `TPoint` that refresh calls after the retained `TPoint::operator+=`
+(0x4fa540). With the trivial copy the brush destructor, `at()`,
+`clearRmgLineRectangle` and `getSize` are exact and the river-painter
+constructor stays exact; `changeTerrain` and `buildNeighbourKinds` lose the
+45-unit drains their decisions leaned on (81.33% and 77.66%) and need their
+own budget evidence. The measured alternatives are recorded beside
+`TRmgGridPoint` in rmg.h.
+
 ### Scalar read boundaries affect an earlier alternative branch
 
 `TSeerHut::load` (`0x574a90`) reaches 100% from 35.38% when its single-byte
@@ -1965,3 +1977,287 @@ if/return-0 tail lets C2 self-inline a recursive call, so check the
 standalone bytes and the callers' skeletons after every step. Sweep the
 callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
 `town::buildBuilding` moved with these costs, the exact rows did not.
+
+## The vector single-insert wrapper is refused only one level down
+
+Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around
+the 469-unit count insert. Written as `v.insert(v.end(), x)` it sits at depth
+1, where the /Ob2 size test (`budget < cb` against the caller's whole budget)
+always expands it, so the emitted call is the count insert with an extra
+`push 1`. Written as `v.push_back(x)` the wrapper sits at depth 2 with budget
+`d1 budget / sites remaining`, which refuses it whenever that quotient is below
+64 and yields retail's `call insert(iterator, const T&)`.
+`drawIslandBoundary` (0x53cd30) closed from 99.4615% to 100% on that one
+change: its seed push had 1051/23 = 45 and was refused, while the two later
+pushes had 79 and 82 and expanded, all as retail. `positionZone`'s two pushes
+still get 64 and 70 after the change, so they stay expanded; two more
+candidate sites after the first push, or a smaller caller, would refuse them.
+Read the retail call form first: `QAEPA...PAU3@ABU3@@Z` is the wrapper,
+`QAEXPA...IABU3@@Z` the count insert, and ICF folds equal-sized element types
+onto one name, so compare the signature shape, not the element type.
+
+Two practical notes for the trace tool: concurrent `predict-inline --trace`
+runs on the same unit collide (every trace after the first reports no
+budget data), so scan a unit serially; and any `build --fast` of that unit
+while a trace runs invalidates the trace's object gate the same way.
+
+## Free accessor sites are the lever behind retail's refused calls
+
+A nested body budget is `(site budget - callee cb) / remaining sites`, and
+every inline candidate site counts in `remaining`, including free ones
+(cb <= 40, never subtracted). So when retail keeps a call that we expand,
+the missing ingredient is usually candidate sites after the call: the inline
+accessors and small helpers a period class would have. The quad-edge Voronoi
+code in `rmg_support.cpp` (a Graphics Gems IV port; no Dreamcast counterpart)
+closed on exactly that:
+
+- `removeEdge` (0x5fd5b0, 76% -> 100%): `edge->getTwin()` after `detach()`
+  makes ten remaining sites instead of nine, so detach's nested budget drops
+  from 104 to 93 and the second splice (65) is refused after the first.
+- `TRmgVoronoi::TRmgVoronoi` (0x5fd010, 80% -> 100%): `getTwin()` in the four
+  fan splices and a `connectEdges` helper for the diagonal give the first
+  createEdge expansion 13 remaining sites (nested 64, so its second insert
+  wrapper still expands) and the diagonal a nested budget of 197 - 98 = 99,
+  which refuses createEdge (107) and the second splice while expanding the
+  first. The bracket needs splice at cost 63..71: `std::swap` of the
+  predecessors plus a manual successor swap costs 65 with the same bytes
+  (two std::swap calls cost 52, four temporaries 77-82).
+- `addSite` (0x5fd790, 45% -> 91%): with accessors, `connectEdges`, a ccw
+  layer under RightOf and the inline line equation, 22 sites follow the
+  segment predicate, and every retail call decision reproduces.
+- `buildVertices` (0x5fdb40, 32% -> 88%): retail's seven retained operator
+  calls sit one level down, inside a three-point free helper (cost 171) whose
+  nested budget is (958 - 171) / 8 = 98 thanks to seven accessor/setter sites
+  after it; the first subtraction (51) expands, the rest are refused.
+
+Two limits seen on the way. C1XX stops saving a body somewhere above cb ~200:
+member helpers reading `m_next->m_twin->m_sitePosition` chains, or the same
+arithmetic with inline dot products, were never candidates (callee flags
+`0x2a`, no `0x40`), while the by-value form with a dot helper (171-179) was.
+And callees with flag `0x100` (createEdge, which allocates) are gated out of
+non-EH bodies before any budget test: addSite calls createEdge regardless of
+budget, while the EH-bearing constructor budget-tests it.
+
+Byte-identical spellings carry different costs, so bracket a callee from its
+callers' retail decisions and then pick the spelling in the bracket (splice
+above; `TRmgBoundaryVertex` constructors 132..157 and 87..112). Accessors
+returning `TPoint` by value versus `const TPoint&` also changed addSite's
+coincidence test (both coordinates loaded before the compares) and its
+copies inside the circle test.
+
+### Leads from the 2026-09-11 RMG trace scan
+
+A serial `predict-inline --trace` pass over the 82 rmg/rmg_terrain/rmg_support
+rows below 96% found that most residuals are register/slot allocation with
+every call decision already matching; the accessor-site lever applies where
+the trace lists UNDER/OVER callees:
+
+- `filterZonePositions` (0x53b2f0, 94.45% -> 98.85%): the first expanded
+  `countPlacedZoneConnections` had a nested budget of exactly 42 with the
+  connection-vector `size` at cost 42 (slack 0); reading the two later zone
+  sizes through `TRmgZone::getSize()` adds two sites, lowers it to 40, and
+  retail's four size calls all reappear.
+- `TRmgMapPosition::TRmgMapPosition(int, int, int)` is retained at 0x5355c0,
+  directly before `canFitObject`, so it belongs in `rmg.cpp`; it lives in
+  `rmg_support.cpp` today so no rmg.cpp caller can expand it. Moving it makes
+  it a candidate at every three-argument construction: canPlaceObject
+  86.68 -> 91.18, createMonolithConnection 86.74 -> 88.81 and createRoads
+  72.69 -> 80.44 gain, but connectZones 93.62 -> 83.24, commitTreasureGroup
+  99.91 -> 93.30, canPlaceTreasureGroup 99.99 -> 96.90, createRiver,
+  markRiverCoastTarget and createRiverToObject lose 6-12 points, so the move
+  needs those callers' site counts settled first. Not adopted.
+- `openConnectionPath` (0x5408e0): retail calls the by-value-position
+  `getMapItem` overload at the entry lookup (budget 1120, cb 41) and expands
+  the same call at the loop end; no budget rule explains the first refusal,
+  so it is a non-budget gate to identify.
+- `TRmgLineWalker::paintPoint` (0x4fa3c0): retail refuses the first
+  `TRmgGridPoint::operator+=` (cost 43) inside the first neighbour pass at a
+  site whose budget is 187 here; only a helper around that pass (nested
+  budget below 43) would reproduce it.
+- `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
+  (nested 148 here) while expanding the third; four more candidate sites
+  after the second terrain query would do it.
+
+### Leads from the 2026-09-12 terrain painter families
+
+Seven source families (about 350 states) over `rmg_terrain` after the grid
+point became trivially copyable. What they settle and what they leave:
+
+- `buildNeighbourKinds` closed (plain point locals plus a helper cost of
+  87..104); `paintPoint` reached 98.68% and now has one wrapper expansion
+  and its downstream direction-pointer register left.
+- `getPackedCell` (cost 90) and `initializePackedCell` (128) have no
+  byte-identical spelling with a different cost: the reference, pointer and
+  unindexed forms break the retained 0x5b48d0 body, and the three fill
+  spellings are one object. The six callers where retail calls
+  `getPackedCell` but expands `initializePackedCell` elsewhere
+  (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
+  `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
+  site structure, not a cheaper cache pair.
+- `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
+  inserts' pair constructor (cost 41) and the cache reads (90) through the
+  north-east arm, then expands the south-east fill (128). With the budget
+  model that needs more than 41 remaining candidate sites at the first
+  insert and about 695 units at the last read; the traced body has 25
+  sites and 351 units. Closed in the second round below.
+- `refreshRmgLinePoint` (71.92%): retail calls `TPoint::operator+=`, the
+  grid conversion and `at()` from a loop body whose own budget is above
+  700, so those three sit in a nested context under 42 units in retail; the
+  signed-point arithmetic reproduces the operand shapes but not the nesting.
+- `changeTerrain` (81.33%) needs the erase body under 231 units: ten more
+  units in `finish` or the painter's `changeTerrain`, or one more site after
+  the erase. `size()`/`empty()`/`!= 0` spellings are one object; direct
+  initialization or an iterator local in `finish` drops its body-saved flag
+  (0x40) and stops it inlining anywhere.
+
+### Second terrain round, 2026-09-12: what the accessor lever settled
+
+- `changeTerrain` closed by cost alone: the painter's changeTerrain at 43
+  units gives finish 957 and the erase(key) body 234; any byte-neutral
+  cost from 53 (a returned previous terrain is 54, parameter copies 53,
+  const-reference parameters only 47) puts the erase body at 230 and keeps
+  the tagged `_Distance` a call. finish is rigid at 169 in every
+  byte-identical spelling; direct-initialized or iterator-local copies drop
+  its body-saved flag, and splitting paintTransitions out costs the brush
+  destructor.
+- Both diagonal checks and `paintRectangle` closed through sites, not
+  costs: grid-point and TPoint coordinate accessors, the width and height
+  accessors and an else-chain clamp give the first neighbour query ten to
+  twelve remaining sites so its cache read stays a call (checkFirstDiagonal
+  89.7 -> 100 once the first point is constructed from both clamps, since
+  constructor arguments evaluate right to left; checkSecondDiagonal 70.3 ->
+  100 with one point reused through the setters and the last read spelled
+  `getPackedCell(p)->getTerrain()`, whose two depth-one sites replace the
+  candidate site the dropped second point took with it). A helper's cost
+  is subtracted before the division by the remaining sites, so a small
+  terrain-test wrapper around a read cannot starve that read.
+- Store order of reference-bound arguments follows the order the argument
+  temporaries are created: `clamp(value, 0, maximum)` stores the literal
+  before the value, while evaluating `maximum` and then `value` into locals
+  ahead of the call stores the literal last. checkSecondDiagonal's second
+  query needs the latter and its first query the former.
+  `paintRectangle` needs two candidate sites from its terrain test on (a
+  direct field compare and the base-tile block as a helper), and that
+  helper alone drops the body under the saved-body cliff so the brush
+  wrapper expands it; walking the rectangle through the accessors keeps
+  it unsaved (72.8 -> 100).
+- The saved-body cliff bites in both directions: a body of 157 units is
+  saved and expanded by its wrapper; 193 is not. A tiny painter `getFrame`
+  sibling of getTerrain and a secondary-queue helper both compiled as
+  non-candidates when defined next to their callers, so a new helper's
+  candidate status has to be read from the trace before its budgets mean
+  anything.
+- `queueOtherTerrainNeighbours` (63.6 -> 100): the eight arms need the
+  remaining-site count to fall steeply, from over 40 at the first insert
+  to two at the last read. Reading every coordinate through the grid
+  point's accessors in the guards and the constructions (five or six free
+  sites per cardinal arm, four to six per diagonal) does exactly that with
+  the insert called directly: pair copies 32/35/39 refused then 46
+  expanded, reads 31..68 refused then 105 and 463 expanded, the last fill
+  at 186. A secondary-queue helper nesting the insert (78.2) was a dead
+  end: it divides the helper's own budget, so the north/south arms lose
+  the whole insert (54/62 against 64) and no site count gives the
+  north-west arm 105 while the north-east read stays under 90. Model
+  first, then probe: a simulator of the running-budget arithmetic over
+  candidate site structures (scratch qo-sim) found the accessor structure
+  before any compile.
+- `paintTransitions` (84.1): retail refuses all twelve pre-loop reads and
+  expands only the last two; ours expands three earlier ones (nested
+  budgets 104/127/145 against 90). The point constructions and edge-count
+  indices are the natural accessor sites; a family over their placement
+  is the next step.
+- `TRmgLineWalker::paintPoint` (80.6): retail calls `TPoint::operator+=`
+  once inside the first neighbour loop where our nested budget is 110
+  against 43; that needs about twelve more remaining sites, the same
+  shape of gap as `refreshRmgLinePoint`. Closed further below.
+
+### Third terrain round, 2026-09-12: the budget model as a simulator
+
+The running-budget rule reads, in full: every site list (the caller's
+depth-one sites, and each expanded body's own sites) has a running budget;
+a site whose cost is over 40 is refused when that running budget is below
+its cost and otherwise subtracts its cost from every enclosing running
+budget; an expanded site's body gets `(budget - cost if over 40) /
+remaining siblings including itself` as its own running budget. A short
+replay of a `predict-inline --trace` tree under that rule (scratch
+`sim-tree.py`, validated against every traced row) predicts the decisions
+of any site insertion before compiling, so a family only needs to spell
+the structures the replay admits. What it found:
+
+- `queueOtherTerrainNeighbours` and `buildMatchingNeighbourMask` need the
+  remaining-site count to fall steeply through their arms. Point accessors
+  in every guard and construction do it for the first; for the second the
+  clamped coordinates held as two corner points whose accessors feed the
+  diagonal temporaries (three sites per diagonal) and one reused point
+  moved through its setters for the cardinal reads (kept in a block so the
+  diagonal temporaries take its slot, retail's 0x30 frame) match every
+  read and fill decision. A reused point for the diagonals is unconditional
+  and changes the flow; conversion-built temporaries give the same sites
+  with a larger frame. 99.27%: the south-east fill's SIB order and cell
+  base register are C2 state that no declaration order moves.
+- `getTransitionStrength` keeps two reads per arm: the frame read sits in
+  a `getFrame` sibling of `getTerrain` so its cost divides like the terrain
+  read's, and each neighbour is constructed at the cell and stepped by one
+  setter from the parameter's coordinate (the point's own coordinate shifts
+  in place and keeps the terrain parameter in EBX where retail keeps the
+  rule pointer). 100%.
+- `paintTransitions` needed five more candidate sites after its twelfth
+  read: point accessors in the edge-count indices, loop increments and
+  neighbour constructions; constructing each neighbour directly from the
+  offset coordinates instead of a compound add settled the registers. 100%.
+- The pattern-table constructor: indexing the fixed table at every use
+  anchors the strength-reduced scan at the X-flip byte as retail; a named
+  entry pointer anchors it at the Y-flip byte. 100%.
+- The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
+  the sum, conversion and factory sites of a neighbour query can only be
+  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  on the painter interface holds them; the current tile's frame and flip
+  accessors give the refresh's tail the sites the helper's budget divides
+  by, the proxy's initializer-list copy keeps the walker's compound add
+  retained, and a plain copy of the selected pattern lets retail's EDI
+  survive `rand()`. 74 -> 97.35 and 80.6 -> 87.1; both residuals were
+  callee-saved role swaps at entry (see regalloc.md, B1). The walker then
+  closed (100): a rectangle constructor taking its size as a grid point
+  materializes the one-cell rectangle's two unit extents from one register
+  copied into another, the painter alias and availability mask scoped to
+  the first pass give retail's frame, and naming the converted sum inside
+  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  the coordinates). Refresh keeps its entry swap.
+- Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
+  loop erase's `_Distance` wrapper had to be refused while the final
+  insert's pair copy stayed expanded, and no site insertion did that; the
+  replay showed that only a predicate costing 41-52 units in place of the
+  free 38-unit `isPaintTerrain`, or a caller 17-26 units cheaper, flips
+  exactly that decision. The guard-return spelling costs 47 and closed the
+  row, byte-identical in its own expansion. Simulate the callee's cost
+  (`cost=needle:cb`) before spelling it.
+- The painter constructor (97.92 -> 100): the dimensions as one grid-point
+  member assigned from the virtual size result, with the packed-cell count
+  as the product of the ordinary width/height queries; those two free
+  sites leave the product reading the width back from the member, which
+  retail's first block does.
+- A helper wrapping a read cannot starve it: the helper's cost is
+  subtracted before the division by its remaining siblings, a few units.
+- The STL `_Tree::insert` row (79.8) is an exception-frame difference:
+  retail compiled the instantiation before the grid-point comparator's
+  body, so the `_Lockit` scope needs a frame; our comparator, a regular
+  function or an inline one emitted at its first use, is compiled first
+  and known not to throw. Only declaring it restores the frame (100%) but
+  removes the body the `_Lbound`/`_Ubound` instantiations expand. Retail
+  places the comparator between the two `_Distance` instantiations, but
+  spelling it inline in either header, as an in-class friend, or inline
+  early in the file leaves every row byte-identical (2026-09-12). The
+  mechanism, measured on small units through `cc_wrap`: C1XX writes an
+  inline function's body right after the function whose processing first
+  needs it; template member bodies always go to the deferred region, and
+  an inline comparator referenced only from `less<T>::operator()` lands
+  there too (after `insert`, which then gets its frame) unless the
+  instantiation batch runs at the end of a regular function, which
+  happens once enough distinct instantiations are pending (a unit with
+  vector/list/set traffic in its constructor pulled the comparator out
+  right after the first set user). In `rmg_terrain` that batch runs at
+  `paintPoint`'s end, so the comparator is compiled before `insert`;
+  every `paintPoint` edit that defers it (dropping the secondary find
+  guard, an arm, the loop or the tail) also changes `paintPoint`'s
+  retained calls, and the trigger is not monotone in the number of set
+  calls. Open.

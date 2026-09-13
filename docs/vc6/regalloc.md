@@ -993,6 +993,14 @@ declaration, inline control, or unused operation is needed. This is a measured
 source/value-lifetime model for a retail-only function, not proof of the
 original local names or lexical scope.
 
+The same lever closed `checkSecondDiagonal` (2026-09-12): its second
+neighbour query stores the clamp's literal minimum after the value where the
+first query stores it before, and only naming the height limit and then the
+offset sum ahead of the call reproduces that order (the locals in the other
+order, one of them alone, or the sum before the x assignment all differ).
+The named locals take no frame slot of their own; the frame stays at retail's
+0x28. See the second terrain round in [inliner.md](inliner.md).
+
 ### 6l. A retained comparison distinguishes free and member interfaces
 
 The grid-set lookup in `PaintPoint` calls 0x5b8ca0 with the two point addresses
@@ -1499,3 +1507,39 @@ slots (0xcc frame); parameter ownership restores retail's 0x48 frame and
 load/store order. Sixteen source states produce eight reproduced objects;
 removing `__forceinline`, restoring plain pixel pointers, and moving the
 zero-area check to an early return independently leave scores unchanged.
+
+### Field-bound references, scoped copies, and loop-variable reuse (addSite)
+
+`TRmgVoronoi::addSite` (0x5fd790) closed from 97.6518% to 100% with every
+call decision already matching; the last three residuals were frame and
+register facts, each isolated by a single-axis control from a complete
+64-state source family (2 x 4 x 4 x 2, all scored):
+
+- **A reference bound to a member field loads it once; a by-value copy
+  through an accessor is re-read from the object.** The segment predicate's
+  line origin as `const TPoint& origin = edge->m_sitePosition;` loads
+  `org.x` into ecx once and spills the derived `dx`/`dy` to
+  [ebp-8]/[ebp-0xc] for the four products, as retail. `TPoint origin =
+  edge->getSitePosition();` re-reads `[ebx]` for each use and keeps `dx` in
+  a register; with the other three spellings exact it scores 90.3482%.
+- **Two by-value copies in one scope allocate in a different order than
+  two copies that die in turn.** The coincidence test as two scoped blocks,
+  each copying one endpoint and comparing, reads eax/ecx then ecx/edx as
+  retail; declaring both copies before one `||` condition keeps the same
+  0x30 frame and swaps those registers over 14 rows (98.5536%). A single
+  `||` over the accessor calls, or two bare `if`s, scores 93.7411%.
+- **Assigning a call result back to the loop variable before deriving
+  from it homes it differently from a named temporary.** `base =
+  connectEdges(edge, base->getTwin()); edge = base->getPrevious();` homes
+  `base` in [ebp-8] and the connected edge in the dead `zone` argument
+  slot; a named `next` local in any assignment order shares `base`'s slot
+  (90.6-90.9%).
+- **Reading a site through `getTwin()->getSitePosition()` rather than
+  `getOppositeSitePosition()`** in both suspect tests keeps `point.m_y` in
+  EDI and `edge` in EBX; the composite accessor swaps them (93.7411%).
+
+All four are byte-neutral in the helpers they touch and change no call
+decision, so `predict-inline --trace` cannot see them; a family that holds
+the inline state fixed and varies only lifetimes and access spellings is
+the tool. None of these is a recovered Dreamcast scope: RMG has no
+symbols, and the spellings are period-style guesses that VC6 confirms.
